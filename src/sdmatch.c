@@ -123,6 +123,9 @@ static Cstring startup_commands[] = {
    "toggle singing call",
    "toggle reverse singing call",
    "initialize session file",
+#ifdef THIS_MESSES_UP_HEADS_START
+   "help",
+#endif
    "change output file",
    "change title",
    (Cstring) 0
@@ -215,9 +218,7 @@ extern void matcher_initialize(void)
       }
 
       /* Pick out concepts that will be produced when certain function keys are pressed. */
-
-      if (p->kind == concept_twice && p->value.arg2 == 2)
-         twice_concept_ptr = p;
+      if (p->kind == concept_twice) twice_concept_ptr = p;
       if (p->kind == concept_centers_or_ends && p->value.arg1 == selector_centers) centers_concept_ptr = p;
       if (p->kind == concept_sequential) two_calls_concept_ptr = p;
 
@@ -1776,19 +1777,10 @@ Private void search_menu(uims_reply kind)
 
       for (i = 0; i < menu_length; i++) {
          everyones_real_result.match.index = i;
-
-         if (kind == ui_command_select &&
+         everyones_real_result.yield_depth =
+            (kind == ui_command_select && 
              static_call_menu != match_resolve_extra_commands &&
-             command_command_values[i] == command_help)
-            everyones_real_result.yield_depth = 1;
-#ifdef THIS_MESSES_UP_HEADS_START
-         else if (kind == ui_start_select &&
-             i == (int) start_select_help)
-            everyones_real_result.yield_depth = 1;
-#endif
-         else
-            everyones_real_result.yield_depth = 0;
-
+             command_command_values[i] == command_help) ? 1 : 0;
          match_pattern(menu[i], (concept_descriptor *) 0);
       }
    }

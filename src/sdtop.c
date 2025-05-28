@@ -143,19 +143,6 @@ static expand_thing exp_hrgl_bighrgl_stuff= {
 static expand_thing exp_dhrgl_bigdhrgl_stuff = {
    {1, 4, 3, 2, 7, 10, 9, 8}, 8, s_dhrglass, sbigdhrgl, 0};
 static expand_thing exp_bone_bigh_stuff   = {{1, 8, 10, 11, 7, 2, 4, 5}, 8, s_bone, sbigh, 0};
-
-static expand_thing exp_dxwv_bbx_stuff    = {
-   {2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15}, 12, sdeepxwv, sbigbigx, 0};
-
-static expand_thing exp_dxwv_rig_stuff    = {
-   {3, 10, 6, 7, 9, 4, 0, 1}, 8, s_rigger, sdeepxwv, 0};
-
-static expand_thing exp_dxwv_2x4_stuff    = {
-   {5, 4, 3, 2, 11, 10, 9, 8}, 8, s2x4, sdeepxwv, 1};
-
-static expand_thing exp_brig_bbx_stuff    = {
-   {0, 1, 2, 3, 5, 14, 8, 9, 10, 11, 13, 6}, 12, sbigrig, sbigbigx, 0};
-
 static expand_thing exp_xwv_bigx_stuff    = {
    {2, 3, 4, 5, 8, 9, 10, 11}, 8, s_crosswave, sbigx, 0};
 static expand_thing exp_1x3d_bigx_stuff   = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s1x3dmd, sbigx, 0};
@@ -403,15 +390,11 @@ extern void update_id_bits(setup *ss)
       else if (livemask == 07474UL || livemask == 06363UL) ptr = id_bit_table_3x4_offset;
       break;
    case s_d3x4:
-      if ((livemask & 01616UL) != 01616UL) ptr = (id_bit_table *) 0;
+      if ((livemask & 0x38EUL) != 0x38EUL) ptr = (id_bit_table *) 0;
       break;
    case s4x4:
       /* We recognize centers and ends if this is populated as a butterfly. */
       if (livemask != 0x9999UL) ptr = (id_bit_table *) 0;
-      break;
-   case sdeepxwv:
-      /* We recognize outer pairs if they are fully populated. */
-      if ((livemask & 00303UL) != 00303UL) ptr = (id_bit_table *) 0;
       break;
    case s3dmd:
       /* The standard table requires all points, and centers of center diamond only, occupied.
@@ -945,7 +928,7 @@ extern void do_matrix_expansion(
 
    for (;;) {
       if (     needprops == CONCPROP__NEEDK_4X4 ||
-               needprops == CONCPROP__NEEDK_QUAD_1X4 ||
+               needprops == CONCPROP__NEEDK_4X4_1X16 ||
                needprops == CONCPROP__NEEDK_BLOB ||
                needprops == CONCPROP__NEEDK_4X6 ||
                needprops == CONCPROP__NEEDK_TWINDMD ||
@@ -998,254 +981,242 @@ extern void do_matrix_expansion(
       switch (needprops) {
          uint32 livemask, j;
 
-      case CONCPROP__NEEDK_BLOB:
-         if (ss->kind == s4x4) {
-            eptr = &exp_4x4_blob_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_4X5:
-         if (ss->kind == s3x4) {
-            eptr = &exp_3x4_4x5_stuff; goto expand_me;
-         }
-         else if (ss->kind == s2x5) {
-            eptr = &exp_2x5_4x5_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_4D_4PTPD:
-         if (ss->kind == s_ptpd) {
-            eptr = &exp_ptp_4ptp_stuff; goto expand_me;
-         }
-         /* FALL THROUGH!!! */
-      case CONCPROP__NEEDK_4DMD:
-         /* FELL THROUGH!!! */
-         switch (ss->kind) {
-         case s1x8:
-            eptr = &exp_1x8_4dm_stuff; goto expand_me;
-         case s_qtag:
-            eptr = &exp_qtg_4dm_stuff; goto expand_me;
-         case s3x4:
-            if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[10].id1 | ss->people[11].id1)) {
-               eptr = &exp_3x4_4dm_stuff; goto expand_me;
+         case CONCPROP__NEEDK_BLOB:
+            if (ss->kind == s4x4) {
+               eptr = &exp_4x4_blob_stuff; goto expand_me;
             }
             break;
-         case s2x4:
-            if (!(ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1)) {
-               eptr = &exp_2x4_4dm_stuff; goto expand_me;
+         case CONCPROP__NEEDK_4X5:
+            if (ss->kind == s3x4) {
+               eptr = &exp_3x4_4x5_stuff; goto expand_me;
+            }
+            else if (ss->kind == s2x5) {
+               eptr = &exp_2x5_4x5_stuff; goto expand_me;
             }
             break;
-         case s4x4:
-            for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
-               if (ss->people[i].id1) livemask |= j;
+         case CONCPROP__NEEDK_4D_4PTPD:
+            if (ss->kind == s_ptpd) {
+               eptr = &exp_ptp_4ptp_stuff; goto expand_me;
             }
+            /* FALL THROUGH!!! */
+         case CONCPROP__NEEDK_4DMD:
+            /* FELL THROUGH!!! */
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_4dm_stuff; goto expand_me;
+               case s_qtag:
+                  eptr = &exp_qtg_4dm_stuff; goto expand_me;
+               case s3x4:
+                  if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[10].id1 | ss->people[11].id1)) {
+                     eptr = &exp_3x4_4dm_stuff; goto expand_me;
+                  }
+                  break;
+               case s2x4:
+                  if (!(ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1)) {
+                     eptr = &exp_2x4_4dm_stuff; goto expand_me;
+                  }
+                  break;
+               case s4x4:
+                  for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
+                     if (ss->people[i].id1) livemask |= j;
+                  }
    
-            if (livemask == 0x1717UL) {
-               eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
-            }
-            else if (livemask == 0x7171UL) {
-               eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
-            }
-            break;
-         }
-         break;
-      case CONCPROP__NEEDK_3DMD:
-         switch (ss->kind) {                /* Need to expand to real triple diamonds. */
-         case s3x1dmd:
-            eptr = &exp_3x1d_3d_stuff; goto expand_me;
-         case s1x3dmd:
-            eptr = &exp_1x3d_3d_stuff; goto expand_me;
-         case s_323:
-            eptr = &exp_323_3d_stuff; goto expand_me;
-         case s_343:
-            eptr = &exp_343_3d_stuff; goto expand_me;
-         case s1x2:
-            eptr = &exp_1x2_3d_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_2X8:
-         switch (ss->kind) {
-         case s2x4:
-            eptr = &exp_2x4_2x8_stuff; goto expand_me;
-         case s2x6:
-            eptr = &exp_2x6_2x8_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_2X12:
-         switch (ss->kind) {
-         case s2x4:
-            eptr = &exp_2x4_2x12_stuff; goto expand_me;
-         case s2x6:
-            eptr = &exp_2x6_2x12_stuff; goto expand_me;
-         case s2x8:
-            eptr = &exp_2x8_2x12_stuff; goto expand_me;
-         case s2x10:
-            eptr = &exp_2x10_2x12_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_3X8:
-         switch (ss->kind) {
-         case s3x4:
-            eptr = &exp_3x4_3x8_stuff; goto expand_me;
-         case s3x6:
-            eptr = &exp_3x6_3x8_stuff; goto expand_me;
-         case s1x8:
-            eptr = &exp_1x8_3x8_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_3X6:
-         switch (ss->kind) {
-         case s3x4:
-            eptr = &exp_3x4_3x6_stuff; goto expand_me;
-         case s4dmd:
-            if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 |
-                  ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1)) {
-               eptr = &exp_4dmd_3x6_stuff; goto expand_me;
+                  if (livemask == 0x1717UL) {
+                     eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
+                  }
+                  else if (livemask == 0x7171UL) {
+                     eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
+                  }
+                  break;
             }
             break;
-         }
-         break;
-      case CONCPROP__NEEDK_2X6:
-         if (ss->kind == s2x4) {
-            eptr = &exp_2x4_2x6_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_4X6:
-         if (ss->kind == s2x6) {
-            eptr = &exp_2x6_4x6_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_TWINDMD: case CONCPROP__NEEDK_TWINQTAG:
-         if (ss->kind == s2x6) {
-            eptr = &exp_2x6_4x6_stuff; goto expand_me;
-         }
-         else if (ss->kind == s4x4) {
-            uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
-               ss->people[11].id1 | ss->people[15].id1;
+         case CONCPROP__NEEDK_3DMD:
+            switch (ss->kind) {                /* Need to expand to real triple diamonds. */
+               case s3x1dmd:
+                  eptr = &exp_3x1d_3d_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_3d_stuff; goto expand_me;
+               case s_323:
+                  eptr = &exp_323_3d_stuff; goto expand_me;
+               case s_343:
+                  eptr = &exp_343_3d_stuff; goto expand_me;
+               case s1x2:
+                  eptr = &exp_1x2_3d_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_2X8:
+            switch (ss->kind) {
+               case s2x4:
+                  eptr = &exp_2x4_2x8_stuff; goto expand_me;
+               case s2x6:
+                  eptr = &exp_2x6_2x8_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_2X12:
+            switch (ss->kind) {
+               case s2x4:
+                  eptr = &exp_2x4_2x12_stuff; goto expand_me;
+               case s2x6:
+                  eptr = &exp_2x6_2x12_stuff; goto expand_me;
+               case s2x8:
+                  eptr = &exp_2x8_2x12_stuff; goto expand_me;
+               case s2x10:
+                  eptr = &exp_2x10_2x12_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_3X8:
+            switch (ss->kind) {
+               case s3x4:
+                  eptr = &exp_3x4_3x8_stuff; goto expand_me;
+               case s3x6:
+                  eptr = &exp_3x6_3x8_stuff; goto expand_me;
+               case s1x8:
+                  eptr = &exp_1x8_3x8_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_3X6:
+            switch (ss->kind) {
+            case s3x4:
+               eptr = &exp_3x4_3x6_stuff; goto expand_me;
+            case s4dmd:
+               if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 |
+                     ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1)) {
+                  eptr = &exp_4dmd_3x6_stuff; goto expand_me;
+               }
+               break;
+            }
+            break;
+         case CONCPROP__NEEDK_2X6:
+            if (ss->kind == s2x4) {
+               eptr = &exp_2x4_2x6_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_4X6:
+            if (ss->kind == s2x6) {
+               eptr = &exp_2x6_4x6_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_TWINDMD: case CONCPROP__NEEDK_TWINQTAG:
+            if (ss->kind == s2x6) {
+               eptr = &exp_2x6_4x6_stuff; goto expand_me;
+            }
+            else if (ss->kind == s4x4) {
+               uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
+                  ss->people[11].id1 | ss->people[15].id1;
    
-            if (ctrs != 0 && (ctrs & 011) != 011) {
-               if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
-               eptr = (ctrs & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a; goto expand_me;
+               if (ctrs != 0 && (ctrs & 011) != 011) {
+                  if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
+                  eptr = (ctrs & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a; goto expand_me;
+               }
             }
-         }
-         break;
-      case CONCPROP__NEEDK_CTR_2X2:
-         switch (ss->kind) {
-         case s2x4:
-            eptr = &exp_2x4_2x6_stuff; goto expand_me;
-         case s_rigger:
-            eptr = &exp_rig_bigrig_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_END_2X2:
-         switch (ss->kind) {
-         case s2x4:
-            eptr = &exp_2x4_2x6_stuff; goto expand_me;
-         case s_qtag:
-            eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
-         case s_bone:
-            eptr = &exp_bone_bigbone_stuff; goto expand_me;
-         case s_hrglass:
-            eptr = &exp_hrgl_bighrgl_stuff; goto expand_me;
-         case s_dhrglass:
-            eptr = &exp_dhrgl_bigdhrgl_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_CTR_DMD:
-         switch (ss->kind) {
-         case s3x1dmd:
-            eptr = &exp_3x1d_3d_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_END_DMD:
-         switch (ss->kind) {
-         case s3x1dmd:
-            eptr = &exp_3x1d_3d_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_1X10:
-         switch (ss->kind) {
-         case s1x8:
-            eptr = &exp_1x8_1x10_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_1X12:
-         switch (ss->kind) {
-         case s1x8:
-            eptr = &exp_1x8_1x12_stuff; goto expand_me;
-         case s1x10:
-            eptr = &exp_1x10_1x12_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_TRIPLE_1X4:
-         switch (ss->kind) {
-         case s1x8:
-            eptr = &exp_1x8_1x12_stuff; goto expand_me;
-         case s1x10:
-            eptr = &exp_1x10_1x12_stuff; goto expand_me;
-         case s_bone:
-            eptr = &exp_bone_bigh_stuff; goto expand_me;
-         case s_crosswave:
-            eptr = &exp_xwv_bigx_stuff; goto expand_me;
-         case s1x3dmd:
-            eptr = &exp_1x3d_bigx_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_CTR_1X4:
-         switch (ss->kind) {
-         case s_qtag:
-            eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
-         case s_bone:
-            eptr = &exp_bone_bigbone_stuff; goto expand_me;
-         case s1x8:
-            eptr = &exp_1x8_1x12_stuff; goto expand_me;
-         case s1x10:
-            eptr = &exp_1x10_1x12_stuff; goto expand_me;
-         case s_crosswave:
-            eptr = &exp_xwv_bigx_stuff; goto expand_me;
-         case s1x3dmd:
-            eptr = &exp_1x3d_bigx_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_END_1X4:
-         switch (ss->kind) {
-            /* **** also create 4x4 */
-         case s_rigger:
-            eptr = &exp_rig_bigrig_stuff; goto expand_me;
-         case s1x8:
-            eptr = &exp_1x8_1x12_stuff; goto expand_me;
-         case s1x10:
-            eptr = &exp_1x10_1x12_stuff; goto expand_me;
-         case s_bone:
-            eptr = &exp_bone_bigh_stuff; goto expand_me;
-         case s_crosswave:
-            eptr = &exp_xwv_bigx_stuff; goto expand_me;
-         case s1x3dmd:
-            eptr = &exp_1x3d_bigx_stuff; goto expand_me;
-         }
-         break;
-      case CONCPROP__NEEDK_QUAD_1X4:
-         if (ss->kind == sdeepxwv) {
-            eptr = &exp_dxwv_bbx_stuff; goto expand_me;
-         }
-         else if (ss->kind == s_rigger) {
-            eptr = &exp_dxwv_rig_stuff; goto expand_me;
-         }
-         else if (ss->kind == sbigrig) {
-            eptr = &exp_brig_bbx_stuff; goto expand_me;
-         }
-         /* FALL THROUGH!!! */
-      case CONCPROP__NEEDK_1X16:
-         /* FELL THROUGH!!! */
-         switch (ss->kind) {
-         case s1x8:
-            eptr = &exp_1x8_1x12_stuff; goto expand_me;
-         case s1x10:
-            eptr = &exp_1x10_1x12_stuff; goto expand_me;
-         case s1x12:
-            eptr = &exp_1x12_1x14_stuff; goto expand_me;
-         case s1x14:
-            eptr = &exp_1x14_1x16_stuff; goto expand_me;
-         }
-         break;
+            break;
+         case CONCPROP__NEEDK_CTR_2X2:
+            switch (ss->kind) {
+               case s2x4:
+                  eptr = &exp_2x4_2x6_stuff; goto expand_me;
+               case s_rigger:
+                  eptr = &exp_rig_bigrig_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_END_2X2:
+            switch (ss->kind) {
+               case s2x4:
+                  eptr = &exp_2x4_2x6_stuff; goto expand_me;
+               case s_qtag:
+                  eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigbone_stuff; goto expand_me;
+               case s_hrglass:
+                  eptr = &exp_hrgl_bighrgl_stuff; goto expand_me;
+               case s_dhrglass:
+                  eptr = &exp_dhrgl_bigdhrgl_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_CTR_DMD:
+            switch (ss->kind) {
+               case s3x1dmd:
+                  eptr = &exp_3x1d_3d_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_END_DMD:
+            switch (ss->kind) {
+               case s3x1dmd:
+                  eptr = &exp_3x1d_3d_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_1X10:
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_1x10_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_1X12:
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_TRIPLE_1X4:
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigh_stuff; goto expand_me;
+               case s_crosswave:
+                  eptr = &exp_xwv_bigx_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_CTR_1X4:
+            switch (ss->kind) {
+               case s_qtag:
+                  eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigbone_stuff; goto expand_me;
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s_crosswave:
+                  eptr = &exp_xwv_bigx_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_END_1X4:
+            switch (ss->kind) {
+               /* **** also create 4x4 */
+               case s_rigger:
+                  eptr = &exp_rig_bigrig_stuff; goto expand_me;
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigh_stuff; goto expand_me;
+               case s_crosswave:
+                  eptr = &exp_xwv_bigx_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_1X16: case CONCPROP__NEEDK_4X4_1X16:
+            switch (ss->kind) {             /* Need to expand to a 1x16. */
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s1x12:
+                  eptr = &exp_1x12_1x14_stuff; goto expand_me;
+               case s1x14:
+                  eptr = &exp_1x14_1x16_stuff; goto expand_me;
+            }
+            break;
       }
 
       /* If get here, we did NOT see any concept that requires a setup expansion. */
@@ -1293,24 +1264,6 @@ extern void normalize_setup(setup *ss, normalize_action action)
    if (ss->kind == sbigh) {
       if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1))
          compress_setup(&exp_bone_bigh_stuff, ss);
-   }
-
-   if (ss->kind == sbigbigx) {
-      if (!(ss->people[0].id1 | ss->people[1].id1 |
-            ss->people[8].id1 | ss->people[9].id1))
-         compress_setup(&exp_dxwv_bbx_stuff, ss);
-      else if (!(ss->people[4].id1 | ss->people[15].id1 |
-                 ss->people[12].id1 | ss->people[7].id1))
-         compress_setup(&exp_brig_bbx_stuff, ss);
-   }
-
-   if (ss->kind == sdeepxwv) {
-      if (!(ss->people[2].id1 | ss->people[11].id1 |
-            ss->people[5].id1 | ss->people[8].id1))
-         compress_setup(&exp_dxwv_rig_stuff, ss);
-      else if (!(ss->people[0].id1 | ss->people[1].id1 |
-            ss->people[6].id1 | ss->people[7].id1))
-         compress_setup(&exp_dxwv_2x4_stuff, ss);
    }
 
    if (ss->kind == sbigx) {

@@ -23,8 +23,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "32.0"
-#define TIME_STAMP "wba@an.hp.com  13 September 98 $"
+#define VERSION_STRING "32.0b"
+#define TIME_STAMP "wba@an.hp.com  15 August 98 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -1529,8 +1529,7 @@ Private long_boolean backup_one_item(void)
 
    parse_block **this_ptr = parse_state.concept_write_base;
 
-   if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
-      this_ptr = &((*this_ptr)->next);
+   if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle) this_ptr = &((*this_ptr)->next);
 
    for (;;) {
       parse_block **last_ptr;
@@ -2092,6 +2091,13 @@ int main(int argc, char *argv[])
       (void) uims_do_header_popup(header_comment);
       need_new_header_comment = FALSE;
       goto new_sequence;
+#ifdef THIS_MESSES_UP_HEADS_START
+   case start_select_help:
+      writestuff("The program wants you to start a sequence.  Type 'heads start', press enter,");
+      writestuff("and then type a call, such as 'pass the ocean', and press enter again.");
+      newline();
+      goto new_sequence;
+#endif
    }
    
    history_ptr = 1;              /* Clear the position history. */
@@ -2196,27 +2202,25 @@ int main(int argc, char *argv[])
          while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
          initialize_parse();
 
-         if (history_ptr <= 1 ||
-             (history_ptr == 2 && startinfolist[history[1].centersp].into_the_middle))
-            specialfail("Can't cut past this point.");
+         if (history_ptr > 1) {
+            clipboard_size++;
 
-         clipboard_size++;
+            if (clipboard_allocation < clipboard_size) {
+               configuration *t;
+               clipboard_allocation = clipboard_size;
+               /* Increase by 50% beyond what we have now. */
+               clipboard_allocation += clipboard_allocation >> 1;
+               t = (configuration *)
+                  get_more_mem_gracefully(clipboard,
+                                          clipboard_allocation * sizeof(configuration));
+               if (!t) specialfail("Not enough memory!");
+               clipboard = t;
+            }
 
-         if (clipboard_allocation < clipboard_size) {
-            configuration *t;
-            clipboard_allocation = clipboard_size;
-            /* Increase by 50% beyond what we have now. */
-            clipboard_allocation += clipboard_allocation >> 1;
-            t = (configuration *)
-               get_more_mem_gracefully(clipboard,
-                                       clipboard_allocation * sizeof(configuration));
-            if (!t) specialfail("Not enough memory!");
-            clipboard = t;
+            clipboard[clipboard_size-1] = history[history_ptr-1];
+            clipboard[clipboard_size-1].command_root = history[history_ptr].command_root;
+            history_ptr--;
          }
-
-         clipboard[clipboard_size-1] = history[history_ptr-1];
-         clipboard[clipboard_size-1].command_root = history[history_ptr].command_root;
-         history_ptr--;
          goto start_cycle;
       case command_delete_entire_clipboard:
          if (clipboard_size != 0) {
@@ -2235,8 +2239,7 @@ int main(int argc, char *argv[])
          while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
          initialize_parse();
 
-         if (history_ptr >= 1 &&
-             (history_ptr >= 2 || !startinfolist[history[1].centersp].into_the_middle)) {
+         if (history_ptr > 1) {
             uint32 status = 0;
 
             while (clipboard_size != 0) {
@@ -2248,11 +2251,6 @@ int main(int argc, char *argv[])
                uint32 mask = 0777777;
 
                history[history_ptr+1] = clipboard[clipboard_size-1];
-
-               /* Save the entire parse tree, in case it gets damaged
-                  by an aborted selector replacement. */
-
-               saved_root = copy_parse_tree(history[history_ptr+1].command_root);
 
                /* If the setup, population, and facing directions don't match, the
                   call execution is problematical.  We don't translate selectors.
@@ -2306,15 +2304,18 @@ int main(int argc, char *argv[])
                /* If error happened, be sure everyone knows about it. */
                if ((mask & 07777000000) == 07777000000) mask &= ~07777000000;
 
+               /* Save the entire parse tree, in case it gets damaged by an aborted
+                  selector replacement. */
+
+               saved_root = copy_parse_tree(history[history_ptr+1].command_root);
+
                status |=
                   translate_selector_fields(history[history_ptr+1].command_root,
                                             (mask << 1) | ((new->rotation ^ old->rotation) & 1));
 
                if (status & 2) {
                   reset_parse_tree(saved_root, history[history_ptr+1].command_root);
-                  specialfail("Sorry, can't fix person identifier.  "
-                              "You can give the command 'delete one call from clipboard' "
-                              "to remove this call.");
+                  specialfail("Sorry, can't fix person identifier.  You can give the command 'delete one call from clipboard' to remove this call.");
                }
 
             doitanyway:
@@ -2331,9 +2332,7 @@ int main(int argc, char *argv[])
                   interactivity = interactivity_normal;
                   testing_fidelity = FALSE;
                   reset_parse_tree(saved_root, history[history_ptr+1].command_root);
-                  specialfail("The pasted call has failed.  "
-                              "You can give the command 'delete one call from clipboard' "
-                              "to remove it.");
+                  specialfail("The pasted call has failed.  You can give the command 'delete one call from clipboard' to remove it.");
                }
 
                toplevelmove(); /* does longjmp if error */
@@ -2370,8 +2369,7 @@ int main(int argc, char *argv[])
          else {
             /* There were no concepts entered.  Throw away the entire preceding line. */
             if (history_ptr > 1) history_ptr--;
-            /* Going to start_cycle will make sure written_history_items
-               does not exceed history_ptr. */
+            /* Going to start_cycle will make sure written_history_items does not exceed history_ptr. */
             goto start_cycle;
          }
       case command_erase:
@@ -2384,71 +2382,35 @@ int main(int argc, char *argv[])
             written_history_items = history_ptr-1;
          goto simple_restart;
       case command_help:
-         {
-            char help_string[MAX_ERR_LENGTH];
-            Const char *prefix;
-            int current_length;
-
-            switch (parse_state.call_list_to_use) {
-            case call_list_lin:
-               prefix = "You are in facing lines."
-                  "  Try typing something like 'pass thru' and pressing Enter.";
-               break;
-            case call_list_lout:
-               prefix = "You are in back-to-back lines."
-                  "  Try typing something like 'wheel and deal' and pressing Enter.";
-               break;
-            case call_list_8ch:
-               prefix = "You are in an 8-chain."
-                           "  Try typing something like 'pass thru' and pressing Enter.";
-               break;
-            case call_list_tby:
-               prefix = "You are in a trade-by."
-                           "  Try typing something like 'trade by' and pressing Enter.";
-               break;
-            case call_list_rcol: case call_list_lcol:
-               prefix = "You are in columns."
-                           "  Try typing something like 'column circulate' and pressing Enter.";
-               break;
-            case call_list_rwv: case call_list_lwv:
-               prefix = "You are in waves."
-                           "  Try typing something like 'swing thru' and pressing Enter.";
-               break;
-            case call_list_r2fl: case call_list_l2fl:
-               prefix = "You are in 2-faced lines."
-                           "  Try typing something like 'ferris wheel' and pressing Enter.";
-               break;
-            case call_list_dpt:
-               prefix = "You are in a starting DPT."
-                           "  Try typing something like 'double pass thru' and pressing Enter.";
-               break;
-            case call_list_cdpt:
-               prefix = "You are in a completed DPT."
-                           "  Try typing something like 'cloverleaf' and pressing Enter.";
-               break;
-            default:
-               prefix = "Type a call and press Enter.";
-               break;
-            }
-
-            (void) strncpy(help_string, prefix, MAX_ERR_LENGTH);
-            help_string[MAX_ERR_LENGTH-1] = '\0';
-            current_length = strlen(help_string);
-
-            if (sequence_is_resolved()) {
-               (void) strncpy(&help_string[current_length],
-                              "  You may also write out this finished sequence "
-                              "by typing 'write this sequence'.",
-                              MAX_ERR_LENGTH-current_length);
-            }
-            else {
-               (void) strncpy(&help_string[current_length],
-                              "  You may also type 'resolve'.",
-                              MAX_ERR_LENGTH-current_length);
-            }
-
-            help_string[MAX_ERR_LENGTH-1] = '\0';
-            specialfail(help_string);
+         switch (parse_state.call_list_to_use) {
+         case call_list_lin:
+            specialfail("You are in facing lines."
+                        "  Try typing something like 'pass thru' and pressing Enter.");
+         case call_list_lout:
+            specialfail("You are in back-to-back lines."
+                        "  Try typing something like 'wheel and deal' and pressing Enter.");
+         case call_list_8ch:
+            specialfail("You are in an 8-chain."
+                        "  Try typing something like 'pass thru' and pressing Enter.");
+         case call_list_tby:
+            specialfail("You are in a trade-by."
+                        "  Try typing something like 'trade by' and pressing Enter.");
+         case call_list_rcol: case call_list_lcol:
+            specialfail("You are in columns."
+                        "  Try typing something like 'column circulate' and pressing Enter.");
+         case call_list_rwv: case call_list_lwv:
+            specialfail("You are in waves."
+                        "  Try typing something like 'swing thru' and pressing Enter.");
+         case call_list_r2fl: case call_list_l2fl:
+            specialfail("You are in 2-faced lines."
+                        "  Try typing something like 'ferris wheel' and pressing Enter.");
+         case call_list_dpt:
+            specialfail("You are in a starting DPT."
+                        "  Try typing something like 'double pass thru' and pressing Enter.");
+         case call_list_cdpt:
+            specialfail("You are in a completed DPT."
+                        "  Try typing something like 'cloverleaf' and pressing Enter.");
+         default: specialfail("Type a call and press Enter.");
          }
       case command_change_outfile:
          {

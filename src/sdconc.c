@@ -2444,7 +2444,6 @@ static concmerge_thing merge_maps[] = {
    {s1x8,          s2x4, 0x99,  0x66, 0x1E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {-1, 0, 2, -1, -1, 4, 6, -1},{1, -1, -1, 7, 5, -1, -1, 3}},
    {s1x8,          s2x4, 0xAA,  0x66, 0x0E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1},{1, -1, -1, 7, 5, -1, -1, 3}},
    {s2x2,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0}},
-   {s2x2,          s2x8, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 4, 11, 12},             {0}},
    /* New */
    {s2x4,          s2x6, 0x99,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 3, 8, -1, -1, 9, 2, -1}, {0}},
    {s2x2,          s4x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {0}},
@@ -2595,7 +2594,6 @@ static concmerge_thing merge_maps[] = {
    {sdmd,          s2x6, 0,    0x30C, 0x0D, 0x0, schema_matrix,         sbighrgl,    nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
    {sdmd,          s2x6, 0,    0x30C, 0x0E, 0x0, schema_matrix,         sbigdhrgl,   nothing,  warn__none, 0, 0, {9, 2, 3, 8},               {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
    {s2x4,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
-   {s2x4,          s2x6, 0,        0, 0x0D, 0x0, schema_matrix,         s4x6,         nothing,  warn__none, 0, 0, {3, 8, 21, 14, 15, 20, 9, 2}, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}},
    {s2x4,          s2x8, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 4, 5, 10, 11, 12, 13},{0}},
    {s1x4,          s1x6, 0xA,      0, 0x0D, 0x1, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 2}},
    {s1x6,          s1x6, 066,      0, 0x2D, 0x1, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 3}},
@@ -2788,8 +2786,13 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    if (res1->kind == s2x4 && res2->kind == s2x4 && (r&1)) {
       long_boolean going_to_stars;
       long_boolean going_to_o;
-      long_boolean go_to_4x4_anyway;
       long_boolean conflict_at_4x4;
+      uint32 t1, t2, t3, t4;
+
+      t1 = res2->people[0].id1 | res2->people[1].id1 | res2->people[4].id1 | res2->people[5].id1;
+      t2 = res2->people[2].id1 | res2->people[3].id1 | res2->people[6].id1 | res2->people[7].id1;
+      t3 = res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1;
+      t4 = res1->people[2].id1 | res1->people[3].id1 | res1->people[6].id1 | res1->people[7].id1;
 
       conflict_at_4x4 = (
          (res2->people[1].id1 & res1->people[6].id1) |
@@ -2797,15 +2800,10 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          (res2->people[5].id1 & res1->people[2].id1) |
          (res2->people[6].id1 & res1->people[5].id1)) != 0;
 
-      going_to_stars =
-         ((mask1 == 0x33) && (mask2 == 0xCC)) ||
-         ((mask1 == 0xCC) && (mask2 == 0x33));
+      going_to_stars = ((mask1 == 0x33) && (mask2 == 0xCC)) || ((mask1 == 0xCC) && (mask2 == 0x33));
       going_to_o = ((mask1 | mask2) & 0x66) == 0;
-      go_to_4x4_anyway = (mask1 == 0x99) || (mask2 == 0x99);
 
-      if ((action == merge_strict_matrix && !going_to_stars && !conflict_at_4x4) ||
-          go_to_4x4_anyway ||
-          going_to_o) {
+      if (   (action == merge_strict_matrix && !going_to_stars && !conflict_at_4x4) || going_to_o) {
          result->kind = s4x4;
          clear_people(result);
          scatter(result, res1, matrixmap1, 7, 011);
@@ -2813,11 +2811,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          for (i=0 ; i<8 ; i++) install_person(result, matrixmap2[i], res2, i);
       }
       else {
-         uint32 t1 = mask2 & 0x33;
-         uint32 t2 = mask2 & 0xCC;
-         uint32 t3 = mask1 & 0x33;
-         uint32 t4 = mask1 & 0xCC;
-
          result->kind = s_c1phan;
          scatter(result, res1, phanmap1, 7, 011);
          scatter(result, res2, phanmap2, 7, 0);

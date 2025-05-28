@@ -1,1 +1,1 @@
-zip sd%1 *.c *.h *.cmd makefile.* configure.* sd_calls.txt db_doc.txt cwsdpmi.exe sdtty.pif sdtty.ico pcfiles.lst
+zip sd%1 *.c *.h *.cmd makefile.* configure.* sd_calls.txt db_doc.txt cwsdpmi.exe sdtty.pif sd.ico pcfiles.lst
