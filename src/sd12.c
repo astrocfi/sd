@@ -26,40 +26,40 @@
 
 
 typedef struct qwerty {
-   short mapqt1[8];   /* In quarter-tag: first triangle (upright), then second triangle (inverted), then idle. */
-   short mapcp1[8];   /* In C1 phantom: first triangle (inverted), then second triangle (upright), then idle. */
-   short map241[3];   /* First triangle (inverted) in 2x4. */
-   short map242[3];   /* Second triangle (upright) in 2x4. */
-   short map24i[2];   /* Idle people in 2x4. */
-   setup_kind kind;
-   struct qwerty *other;
-   } tgl_map;
+   Const veryshort mapqt1[8];   /* In quarter-tag: first triangle (upright), then second triangle (inverted), then idle. */
+   Const veryshort mapcp1[8];   /* In C1 phantom: first triangle (inverted), then second triangle (upright), then idle. */
+   Const veryshort map241[3];   /* First triangle (inverted) in 2x4. */
+   Const veryshort map242[3];   /* Second triangle (upright) in 2x4. */
+   Const veryshort map24i[2];   /* Idle people in 2x4. */
+   Const setup_kind kind;
+   Const struct qwerty *other;
+} tgl_map;
 
 /* These need to be predeclared so that they can refer to each other. */
-Private tgl_map map1b;
-Private tgl_map map2b;
-Private tgl_map map1i;
-Private tgl_map map2i;
+static Const tgl_map map1b;
+static Const tgl_map map2b;
+static Const tgl_map map1i;
+static Const tgl_map map2i;
 
 /*                                  mapqt1                          mapcp1                   map241     map242   map24i   kind     other */
-Private tgl_map map1b = {{4, 3, 2,   0, 7, 6,   1, 5}, {6,  8, 10,   14,  0,  2,   4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
-Private tgl_map map2b = {{5, 6, 7,   1, 2, 3,   0, 4}, {3, 15, 13,   11,  7,  5,   1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
+static Const tgl_map map1b = {{4, 3, 2,   0, 7, 6,   1, 5}, {6,  8, 10,   14,  0,  2,   4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
+static Const tgl_map map2b = {{5, 6, 7,   1, 2, 3,   0, 4}, {3, 15, 13,   11,  7,  5,   1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
 /* Interlocked triangles: */
-Private tgl_map map1i = {{0, 0, 0,   0, 0, 0,   0, 0}, {4,  8, 10,   12,  0,  2,   6, 14}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map2i};
-Private tgl_map map2i = {{0, 0, 0,   0, 0, 0,   0, 0}, {1, 15, 13,   9,   7,  5,   3, 11}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map1i};
+static Const tgl_map map1i = {{0, 0, 0,   0, 0, 0,   0, 0}, {4,  8, 10,   12,  0,  2,   6, 14}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map2i};
+static Const tgl_map map2i = {{0, 0, 0,   0, 0, 0,   0, 0}, {1, 15, 13,   9,   7,  5,   3, 11}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map1i};
 
 
 Private void do_glorious_triangles(
    setup *ss,
    int startingrot,
-   tgl_map *map_ptr,
+   Const tgl_map *map_ptr,
    setup *result)
 {
    int i, r;
    setup a1, a2;
    setup idle;
-   setup res1, res2;
-   short *mapnums;
+   setup res[2];
+   Const veryshort *mapnums;
 
    if (startingrot == 2) {
       mapnums = map_ptr->mapcp1;
@@ -70,10 +70,8 @@ Private void do_glorious_triangles(
       r = 0;
    }
 
-   for (i=0; i<3; i++) {
-      (void) copy_rot(&a1, i, ss, mapnums[i], r);
-      (void) copy_rot(&a2, i, ss, mapnums[i+3], r^022);
-   }
+   gather(&a1, ss, mapnums, 2, r);
+   gather(&a2, ss, &mapnums[3], 2, r^022);
 
    /* Save the two people who don't move. */
    (void) copy_person(&idle, 0, ss, mapnums[6]);
@@ -88,46 +86,45 @@ Private void do_glorious_triangles(
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
-   move(&a1, FALSE, &res1);
-   move(&a2, FALSE, &res2);
+   move(&a1, FALSE, &res[0]);
+   move(&a2, FALSE, &res[1]);
 
-   if (res1.kind != res2.kind || res1.rotation != res2.rotation)
-      fail("Improper result from triangle call.");
+   if (fix_n_results(2, res)) {
+      result->kind = nothing;
+      result->result_flags = 0;
+      return;
+   }
 
-   res1.rotation &= 3;     /* Just making sure. */
+   result->result_flags = get_multiple_parallel_resultflags(res, 2);
 
-   result->rotation = res1.rotation;
+   res[0].rotation &= 3;     /* Just making sure. */
 
-   r = ((-res1.rotation) & 3) * 011;
+   result->rotation = res[0].rotation;
 
-   if (res1.rotation & 2)
+   r = ((-res[0].rotation) & 3) * 011;
+
+   if (res[0].rotation & 2)
       result->kind = map_ptr->other->kind;
    else
       result->kind = map_ptr->kind;
 
-   if (res1.kind == s_trngl) {
-      if (res1.rotation == 0) {
+   if (res[0].kind == s_trngl) {
+      if (res[0].rotation == 0) {
          if (result->kind == nothing) fail("Can't do shape-changer in interlocked triangles.");
          result->kind = s_qtag;
          /* Restore the two people who don't move. */
          (void) copy_person(result, map_ptr->mapqt1[6], &idle, 0);
          (void) copy_person(result, map_ptr->mapqt1[7], &idle, 1);
-   
-         for (i=0; i<3; i++) {
-            (void) copy_person(result, map_ptr->mapqt1[i], &res1, i);
-            (void) copy_rot(result, map_ptr->mapqt1[i+3], &res2, i, 022);
-         }
+         scatter(result, &res[0], map_ptr->mapqt1, 2, 0);
+         scatter(result, &res[1], &map_ptr->mapqt1[3], 2, 022);
       }
-      else if (res1.rotation == 2) {
+      else if (res[0].rotation == 2) {
          result->kind = s_c1phan;
          /* Restore the two people who don't move. */
          (void) copy_rot(result, map_ptr->mapcp1[7], &idle, 0, r);
          (void) copy_rot(result, map_ptr->mapcp1[6], &idle, 1, r);
-         
-         for (i=0; i<3; i++) {
-            (void) copy_person(result, map_ptr->mapcp1[i+3], &res1, i);
-            (void) copy_rot(result, map_ptr->mapcp1[i], &res2, i, 022);
-         }
+         scatter(result, &res[0], &map_ptr->mapcp1[3], 2, 0);
+         scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
       }
       else {
          if (result->kind == nothing) fail("Can't do shape-changer in interlocked triangles.");
@@ -135,41 +132,35 @@ Private void do_glorious_triangles(
          map_ptr = map_ptr->other;
 
          if (result->kind == s_c1phan) {
-             /* Restore the two people who don't move. */
-             (void) copy_rot(result, map_ptr->mapcp1[6], &idle, 0, r);
-             (void) copy_rot(result, map_ptr->mapcp1[7], &idle, 1, r);
+            /* Restore the two people who don't move. */
+            (void) copy_rot(result, map_ptr->mapcp1[6], &idle, 0, r);
+            (void) copy_rot(result, map_ptr->mapcp1[7], &idle, 1, r);
    
              /* Copy the triangles. */
-             for (i=0; i<3; i++) {
-                (void) copy_person(result, map_ptr->mapcp1[i+3], &res1, i);
-                (void) copy_rot(result, map_ptr->mapcp1[i], &res2, i, 022);
-             }
+            scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
+            scatter(result, &res[0], &map_ptr->mapcp1[3], 2, 0);
          }
          else {
-             /* Restore the two people who don't move. */
-             (void) copy_rot(result, map_ptr->mapqt1[7], &idle, 0, r);
-             (void) copy_rot(result, map_ptr->mapqt1[6], &idle, 1, r);
-   
-             /* Copy the triangles. */
-             for (i=0; i<3; i++) {
-                (void) copy_person(result, map_ptr->mapqt1[i], &res1, i);
-                (void) copy_rot(result, map_ptr->mapqt1[i+3], &res2, i, 022);
-             }
+            /* Restore the two people who don't move. */
+            (void) copy_rot(result, map_ptr->mapqt1[7], &idle, 0, r);
+            (void) copy_rot(result, map_ptr->mapqt1[6], &idle, 1, r);
+
+            /* Copy the triangles. */
+            scatter(result, &res[0], map_ptr->mapqt1, 2, 0);
+            scatter(result, &res[1], &map_ptr->mapqt1[3], 2, 022);
          }
       }
    }
-   else if (res1.kind == s1x3) {
+   else if (res[0].kind == s1x3) {
       if (result->kind == nothing) fail("Can't do shape-changer in interlocked triangles.");
 
       result->kind = s2x4;
 
-      if (res1.rotation == 0) {
+      if (res[0].rotation == 0) {
          (void) copy_person(result, map_ptr->map24i[0], &idle, 0);
          (void) copy_person(result, map_ptr->map24i[1], &idle, 1);
-         for (i=0; i<3; i++) {
-            (void) copy_person(result, map_ptr->map241[i], &res1, i);
-            (void) copy_rot(result, map_ptr->map242[i], &res2, i, 022);
-         }
+         scatter(result, &res[0], map_ptr->map241, 2, 0);
+         scatter(result, &res[1], map_ptr->map242, 2, 022);
       }
       else {
          map_ptr = map_ptr->other;
@@ -177,18 +168,17 @@ Private void do_glorious_triangles(
          if (map_ptr->kind == s_qtag) {    /* What a crock! */
             (void) copy_rot(result, map_ptr->map24i[0], &idle, 0, r);
             (void) copy_rot(result, map_ptr->map24i[1], &idle, 1, r);
+
             for (i=0; i<3; i++) {
-               (void) copy_person(result, map_ptr->map242[i], &res1, 2-i);
-               (void) copy_rot(result, map_ptr->map241[i], &res2, 2-i, 022);
+               (void) copy_person(result, map_ptr->map242[i], &res[0], 2-i);
+               (void) copy_rot(result, map_ptr->map241[i], &res[1], 2-i, 022);
             }
          }
          else {
             (void) copy_rot(result, map_ptr->map24i[1], &idle, 0, r);
             (void) copy_rot(result, map_ptr->map24i[0], &idle, 1, r);
-            for (i=0; i<3; i++) {
-               (void) copy_person(result, map_ptr->map241[i], &res1, i);
-               (void) copy_rot(result, map_ptr->map242[i], &res2, i, 022);
-            }
+            scatter(result, &res[0], map_ptr->map241, 2, 0);
+            scatter(result, &res[1], map_ptr->map242, 2, 022);
          }
       }
    }
@@ -197,14 +187,12 @@ Private void do_glorious_triangles(
 
    if (result->kind == s2x4)
        warn(warn__check_2x4);
-   else if (res1.rotation != startingrot) {
+   else if (res[0].rotation != startingrot) {
       if (result->kind == s_c1phan)
           warn(warn__check_c1_phan);
       else
           warn(warn__check_dmd_qtag);
    }
-
-   result->result_flags = res1.result_flags | res2.result_flags;
 }
 
 
@@ -219,7 +207,7 @@ Private void wv_tand_base_move(
    uint32 tbonetest;
    int t;
    calldef_schema schema;
-   tgl_map *map_ptr;
+   Const tgl_map *map_ptr;
 
    switch (s->kind) {
       case s_galaxy:
@@ -295,7 +283,7 @@ extern void triangle_move(
    setup *result)
 {
    uint32 tbonetest;
-   tgl_map *map_ptr;
+   Const tgl_map *map_ptr;
    calldef_schema schema;
    int indicator = parseptr->concept->value.arg1;
 

@@ -1433,10 +1433,12 @@ unselect
       "selected".  See the description of "select" above.
 
 select_near_select
-      applies to 1x2, 1x4, 1x8, and 2x4 setups only.  Returns TRUE if the
+      applies to 1x2, 1x4, 1x8, 2x4, and qtag setups only.  Returns TRUE if the
       person under test and the "near" person are both selected.  The "near"
       person is the partner of the person under test, assuming they are in
-      lines.  If in columns, it is the "tandem partner".  Note that this
+      lines.  If in columns, it is the "tandem partner".  In a quarter-tag, it
+      is the "near" person if on the end, or the "near" person in the center
+      1x4, the same as it would mean on that 1x4 directly.  Note that this
       person's position is found without reference to anyone's facing
       direction.  For this predicate and others that test the selectedness
       of another person, if that other person is a phantom, an error is raised
@@ -1461,6 +1463,17 @@ conc_from_select
       applies to 1x4 or 1x8 only.  Returns TRUE if the single-concentric
       other person from the person under test (other center or other end,
       as appropriate) is selected.  It does not examine the selectedness
+      of the person under test.  Returns FALSE otherwise.  See the
+      descriptions of "select" and "select_near_select" above.
+
+grand_conc_from_select
+      applies to 1x8 and qtag only.  For a 1x8, returns TRUE if the
+      grand-concentric other person from the person under test (other
+      very center, other far end, etc.) is selected.  For a 1/4 tag,
+      it is only appropriate for the centers, and examines the selectedness
+      of the opposite person in the center 1x4.  Actually, it tests
+      the selectedness of the global opposite in any 8-person setup.
+      It does not examine the selectedness
       of the person under test.  Returns FALSE otherwise.  See the
       descriptions of "select" and "select_near_select" above.
 
@@ -1541,6 +1554,46 @@ lines_couple
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the same direction.  Returns FALSE if the partner is
       a phantom or faces the opposite way or is T-boned.
+
+miniwave_side_of_in_3n1_line
+couple_side_of_in_3n1_line
+miniwave_side_of_out_3n1_line
+couple_side_of_out_3n1_line
+      apply to 1x4 or 2x4 lines only.  An "in" 3&1 line is a line in which the
+      person facing the direction opposite from the other 3 is a center.  An
+      "out" 3&1 line is one in which the odd person is an end.  These return
+      TRUE only if the setup is a 3&1 line of the type indicated, and the
+      person under test is in the miniwave or couple side of the line, as
+      indicated.  Otherwise they return FALSE.  There must be no phantoms --
+      all 4 or 8 people must be present.  If not, FALSE is returned.
+      Furthermore, if the setup is a 2x4, the 3&1 lines must be symmetrical
+      to each other; otherwise FALSE is returned.  These will malfunction
+      if any person is in column orientation.
+
+antitandem_side_of_in_3n1_col
+tandem_side_of_in_3n1_col
+antitandem_side_of_out_3n1_col
+tandem_side_of_out_3n1_col
+      apply to 1x4 or 2x4 lines only.  These are similar to the above, except
+      that everyone must be in columns.  The "antitandem side" is anologous
+      to the "couple" side -- it contains the person facing the opposite
+      direction from the other 3, and hence the two people on that side are
+      either facing each other or are back-to-back.  The "tandem side" has
+      the two people facing the same direction, that is, in tandem with each other.
+
+miniwave_side_of_2n1_line
+couple_side_of_2n1_line
+      apply to 2x3 lines only.  The lines must be fully occupied and form a
+      symmetric setup.  The ends of each line must be facing opposite directions,
+      with the center of course facing the same way as one of them.  The end
+      that faces the opposite direction as the adjacent center is on the "miniwave
+      side".  The end that faces the same direction as the adjacent center is on
+      the "couple side".  When evaluating the center, the next clockwise person
+      is used as the reference.  That is, if the center faces the opposite direction
+      from the next clockwise end, that center is considered to be on the
+      "miniwave side".  There must be no phantoms -- all 6 people must be present.
+      If not, or if the setup is not completely symmetrical, FALSE is returned.
+      These will malfunction if any person is in column orientation.
 
 cast_normal
       applies to 1x2, 1x4, or 1x6 lines only.
@@ -1898,7 +1951,7 @@ x22_girl_facing_boy
 
 dmd_ctrs_rh
       applies to a diamond, single general 1/4-tag, or a short6 or spindle.
-      Returns TRUE if the center two people or the diamond or 1/4 tag are in a
+      Returns TRUE if the center two people of the diamond or 1/4 tag are in a
       right-handed miniwave.  Returns FALSE if they are in a left-handed
       miniwave.  For a short6 or spindle, tests whether all 2 or 3 miniwaves
       have right or left handedness, respectively.  This predicate is lax in the
@@ -2024,8 +2077,9 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
    wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x3 - two "waves" -- people not in tandem with each other;
                                     2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave; 2x2 - real box; 4x4 - consistent waves;
-                                    qtag - wave in center; pqtag - wave in center
-                                    (use only if center people have no legal move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
+                                    qtag - wave in center; pqtag - wave in center (use only if center people have no legal
+                                       move from pqtag, only from qtag);
+                                    3x2/4x2/6x2/8x2 - column */
    wave_unless_say_2faced,
    all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
    1fl_only,                     /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */

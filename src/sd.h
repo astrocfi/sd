@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -979,53 +973,8 @@ typedef struct {
       with names like CMD_MISC2__???.
 
    cmd_frac_flags
-      In nonzero, fractionalization info controlling the execution of the call.
-      This can be in either of two forms, depending on the 0x00200000 bit.
-
-      If that bit is off, we have the old regime, which is used for miscellaneous
-      concepts like "replace the Nth part".  The "new regime" is used for more
-      systematic and straightforward concepts like "fractional" and "reverse order".
-      It is more sophisticated in the way it operates, and allows the concepts to
-      which it applies to be nested, but it can't do obscure things yet.
-
-      Old regime:
-
-          0700 bits     070 bits         07 bits
-            "key"       "denom"          "numer"
-
-              0            0             nonzero       Do first <numer> parts of the call.
-
-              1/3          0             nonzero       Do stuff strictly after first <numer> parts of the call.
-                                                       If key=3, demand that "finish_means_skip_first_part" is on.
-
-              0         nonzero          nonzero       Do first <numer>/<denom> of the call.
-
-              1         nonzero          nonzero       Do stuff strictly after first <numer>/<denom> of the call.
-
-              2            0             nonzero       Do just the part <numer>, set
-                                                           RESULTFLAG__DID_LAST_PART if it was last part.
-
-              2            1             nonzero       Do just the part size-<numer>, that is, N=1 means do
-                                                           last part, N=2 means do next-to-last, etc. set
-                                                           RESULTFLAG__DID_LAST_PART if it was first part.
-
-      New regime:
-         3rd digit -
-            0x00200000 bit always on
-            0x00100000 bit = reverse order
-         4th digit (0x000F0000 bits) = if nonzero, pick out just this specific part (1-based)
-                  of whatever portion of the call the remaining digits say
-         5th digit (0x0000F000 bits) = numerator of start point
-         6th digit (0x00000F00 bits) = denominator of start point
-         7th digit (0x000000F0 bits) = numerator of stop point
-         8th digit (0x0000000F bits) = denominator of stop point
-
-      The null encoding in the new regime is 0x00200111, that is, do not reverse,
-      do not pick out single part, start at 0.0 (fraction 0/1), end at 1.0
-      (fraction 1/1).  We do not actually use this encoding as the default state,
-      because it would preclude use of the old regime.  Instead, we let the word be
-      zero when fractionalization is not in use, and then encode some nonzero value
-      whenever new or old regime fractionalization is required.
+      If nonzero, fractionalization info controlling the execution of the call.
+      See the comments in front of "get_fraction_info" in sdmoves.c for details.
 
    cmd_assume
       Any "assume waves" type command.
@@ -1078,8 +1027,8 @@ typedef struct {
 } setup;
 
 typedef struct {
-   long_boolean (*predfunc) (setup *, int, int, int, short *);
-   short *extra_stuff;
+   long_boolean (*predfunc) (setup *, int, int, int, Const short *);
+   Const short *extra_stuff;
 } predicate_descriptor;
 
 typedef struct predptr_pair_struct {
@@ -2086,6 +2035,8 @@ extern uint32 copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople
 extern void swap_people(setup *ss, int oneplace, int otherplace);
 extern void install_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
 extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
+extern void scatter(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount);
+extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount);
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,

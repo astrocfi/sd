@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -82,6 +76,8 @@ Private tm_thing maps_isearch_twosome[] = {
    {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17},
                      {0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},  {0}, {0},      0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
    {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s2x3,  s3x4},
+   {{2, 5, 7, 8, 11, 0},            {-1, -1, 6, -1, -1, 1},       {0}, {0},      0,   0x00C3,         6, 1,  0,  0, 0,  s2x3,  s3x4},
+   {{2, 5, 7, 9, 11, 1},            {3, -1, -1, 8, -1, -1},       {0}, {0},      0,   0x030C,         6, 1,  0,  0, 0,  s2x3,  s3x4},
    {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
    {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22},
                      {1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23}, {0}, {0}, 0x555555, 0xFFFFFF,      12, 0,  0,  0, 0,  s3x4,  s3x8},

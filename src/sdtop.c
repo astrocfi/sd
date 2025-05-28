@@ -29,17 +29,17 @@
 #include "sd.h"
 
 typedef struct {
-   short source_indices[16];
-   int size;
-   setup_kind inner_kind;
-   setup_kind outer_kind;
-   int rot;
+   Const veryshort source_indices[16];
+   Const int size;
+   Const setup_kind inner_kind;
+   Const setup_kind outer_kind;
+   Const int rot;
 } expand_thing;
 
 typedef struct {
-   warning_index warning;
-   int forbidden_elongation;
-   expand_thing *expand_lists;
+   Const warning_index warning;
+   Const int forbidden_elongation;
+   Const expand_thing *expand_lists;
 } full_expand_thing;
 
 Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
@@ -69,6 +69,8 @@ Private expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 
 Private expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, nothing, s4x6, 1};
 Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
 Private expand_thing exp_2x4_4x4_stuff     = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
+Private expand_thing exp_c1phan_4x4_stuff1 = {{-1, 13, -1, 15, -1, 1, -1, 3, -1, 5, -1, 7, -1, 9, -1, 11}, 16, s_c1phan, s4x4, 0};
+Private expand_thing exp_c1phan_4x4_stuff2 = {{10, -1, 15, -1, 14, -1, 3, -1, 2, -1, 7, -1, 6, -1, 11, -1}, 16, s_c1phan, s4x4, 0};
 Private expand_thing exp_4x4_blob_stuff    = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
 Private expand_thing exp_4dmd_3x4_stuff    = {{0, 1, 2, 3, 4, 4, 4, 4, 6, 7, 8, 9}, 12, s4dmd, s3x4, 0};
 Private expand_thing exp_4dmd_4x4_stuff    = {{12, 13, 14, 0, 1, 1, 1, 1, 4, 5, 6, 8}, 12, s4dmd, s4x4, 0};
@@ -77,23 +79,12 @@ Private expand_thing exp_4dmd_4x4_stuff    = {{12, 13, 14, 0, 1, 1, 1, 1, 4, 5, 
 
 Private void compress_setup(expand_thing *thing, setup *stuff)
 {
-   int i;
    setup temp = *stuff;
 
    stuff->kind = thing->inner_kind;
-
-   if (thing->rot) {
-      for (i=0; i<thing->size; i++) {
-         (void) copy_rot(stuff, i, &temp, thing->source_indices[i], 011);
-      }
-      stuff->rotation--;
-      canonicalize_rotation(stuff);
-   }
-   else {
-      for (i=0; i<thing->size; i++) {
-         (void) copy_person(stuff, i, &temp, thing->source_indices[i]);
-      }
-   }
+   gather(stuff, &temp, thing->source_indices, thing->size-1, thing->rot * 011);
+   stuff->rotation -= thing->rot;
+   canonicalize_rotation(stuff);
 }
 
 
@@ -244,6 +235,7 @@ Private expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, nothing, s1x4, 0};
 Private expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
 Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8, 0};
+Private expand_thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, 8, nothing, s_bone, 0};
 Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
 Private expand_thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s_rigger, 0};
 Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
@@ -270,6 +262,7 @@ Private full_expand_thing step_2x2v_pair     = {warn__none,       2, &step_2x2v_
 Private full_expand_thing step_2x2h_pair     = {warn__none,       1, &step_2x2h_stuff};
 Private full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
 Private full_expand_thing step_li_pair       = {warn__none,       0, &step_li_stuff};
+Private full_expand_thing step_bn_pair       = {warn__none,       0, &step_bn_stuff};
 Private full_expand_thing step_tby_pair      = {warn__none,       0, &step_tby_stuff};
 Private full_expand_thing step_2x4_rig_pair  = {warn__some_touch, 0, &step_2x4_rig_stuff};
 Private full_expand_thing step_1x2_pair      = {warn__none,       0, &step_1x2_stuff};
@@ -294,11 +287,11 @@ extern void touch_or_rear_back(
    long_boolean did_mirror,
    int callflags1)
 {
-   int i;
+   int i, r;
    uint32 directions, livemask;
    setup stemp;
-   full_expand_thing *tptr;
-   expand_thing *zptr;
+   Const full_expand_thing *tptr;
+   Const expand_thing *zptr;
 
    if (setup_attrs[scopy->kind].setup_limits < 0) return;          /* We don't understand absurd setups. */
 
@@ -317,6 +310,8 @@ extern void touch_or_rear_back(
 
    if (callflags1 & CFLAG1_REAR_BACK_FROM_R_WAVE) {
       if (scopy->kind == s1x4 && (livemask == 0xFFUL) && (directions == 0x28UL)) {
+         if (scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)
+            scopy->cmd.prior_elongation_bits = (scopy->cmd.prior_elongation_bits & (~3)) | scopy->rotation+1;
          tptr = &rear_wave_pair;          /* Rear back from a wave to facing couples. */
       }
       else if (scopy->kind == s1x2 && (livemask == 0xFUL) && (directions == 0x2UL)) {
@@ -436,6 +431,8 @@ extern void touch_or_rear_back(
                tptr = &step_li_pair;          /* Check for stepping to a grand wave from lines facing. */
             else if (livemask == 0xFFFFUL && (directions & 0x7D7DUL) == 0x5D75UL)
                tptr = &step_tby_pair;         /* Check for stepping to some kind of 1/4 tag from a DPT or trade-by or whatever. */
+            else if (livemask == 0xFFFFUL && (directions & 0x7D7DUL) == 0x6941UL)
+               tptr = &step_bn_pair;          /* Check for stepping to a bone from a squared set or whatever. */
             else if (livemask == 0xFFFFUL && directions == 0x963CUL)
                tptr = &step_2x4_rig_pair;         /* Check for stepping to rigger from suitable T-bone. */
             else if (livemask == 0xC3C3UL && directions == 0x8200UL)
@@ -567,31 +564,18 @@ extern void touch_or_rear_back(
 
    stemp = *scopy;
    clear_people(scopy);
+   r = zptr->rot * 033;
 
-   if (zptr->rot) {
-      for (i=0; i<zptr->size; i++) {
-         int idx = zptr->source_indices[i];
-         if (idx < 0) {
-            if (stemp.people[i].id1) fail("Don't understand this setup at all.");
-         }
-         else {
-            (void) copy_rot(scopy, idx, &stemp, i, 033);
-         }
+   for (i=0; i<zptr->size; i++) {
+      int idx = zptr->source_indices[i];
+      if (idx < 0) {
+         if (stemp.people[i].id1) fail("Don't understand this setup at all.");
       }
-      scopy->rotation++;
-   }
-   else {
-      for (i=0; i<zptr->size; i++) {
-         int idx = zptr->source_indices[i];
-         if (idx < 0) {
-            if (stemp.people[i].id1) fail("Don't understand this setup at all.");
-         }
-         else {
-            (void) copy_person(scopy, idx, &stemp, i);
-         }
-      }
+      else
+         (void) copy_rot(scopy, idx, &stemp, i, r);
    }
 
+   scopy->rotation += zptr->rot;
    scopy->kind = zptr->outer_kind;
    canonicalize_rotation(scopy);
 }
@@ -618,6 +602,16 @@ extern void do_matrix_expansion(
                needprops == CONCPROP__NEEDK_TWINQTAG) {
          if (ss->kind == s2x4) {
             eptr = &exp_2x4_4x4_stuff; goto expand_me;
+         }
+         else if (ss->kind == s_c1phan) {
+            if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1 |
+                     ss->people[8].id1 | ss->people[10].id1 | ss->people[12].id1 | ss->people[14].id1)) {
+               eptr = &exp_c1phan_4x4_stuff1; warn(warn__check_4x4); goto expand_me;
+            }
+            else if (!(ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1 |
+                     ss->people[9].id1 | ss->people[11].id1 | ss->people[13].id1 | ss->people[15].id1)) {
+               eptr = &exp_c1phan_4x4_stuff2; warn(warn__check_4x4); goto expand_me;
+            }
          }
 /* ***** This is a kludge to make threesome work!!!! */
          else if (ss->kind == s_qtag) {
@@ -809,16 +803,11 @@ extern void do_matrix_expansion(
       expand_me:
    
       /* If get here, we DID see a concept that requires a setup expansion. */
-   
+
       stemp = *ss;
       clear_people(ss);
-      if (eptr->rot) {
-         for (i=0; i<eptr->size; i++) (void) copy_rot(ss, eptr->source_indices[i], &stemp, i, 033);
-         ss->rotation++;
-      }
-      else {
-         for (i=0; i<eptr->size; i++) (void) copy_person(ss, eptr->source_indices[i], &stemp, i);
-      }
+      scatter(ss, &stemp, eptr->source_indices, eptr->size-1, eptr->rot * 033);
+      ss->rotation += eptr->rot;
    
       /* Global selectors are disabled if we expanded the matrix. */
       for (i=0; i<MAX_PEOPLE; i++) ss->people[i].id2 &= ~GLOB_BITS_TO_CLEAR;

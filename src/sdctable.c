@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -727,7 +721,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"TWICE",                                 concept_twice,                 4, l_mainstream, {0, 0, 2}},
    {"@9 TIMES",                              concept_n_times,               4, l_mainstream, {0, 1}},
    {"DO THE LAST @9/@9",                     concept_fractional,            4, l_c1,         {0, 1}},
-   {"REVERSE ORDER",                         concept_meta,                  4, l_c3,         {0, 5}},
+   {"REVERSE ORDER",                         concept_meta,                  4, l_mainstream, {0, 5}},
    {"INTERLACE",                             concept_interlace,             0, l_c3x},
    {"INITIALLY",                             concept_meta,                  4, l_c3a,         {0, 3}},
    {"FINALLY",                               concept_meta,                  4, l_c4,         {0, 7}},
@@ -741,9 +735,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"REPLACE THE @u PART",                   concept_replace_nth_part,      0, l_c1,         {0, 0}},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,      0, l_c1,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 52
-#define mm__3_3x3 46
-#define mm__3_4x4 47
+#define mm__3_size 53
+#define mm__3_3x3 47
+#define mm__3_4x4 48
    {"INSIDE TRIANGLES",                      concept_randomtrngl,           4, l_c1,         {0, 2}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,           4, l_c1,         {0, 3}},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,           4, l_c1,         {0, 5}},
@@ -784,6 +778,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"COMMON SPOT COLUMNS",                   concept_common_spot,           4, l_c4,         {0, 1}},
    {"COMMON POINT DIAMONDS",                 concept_common_spot,           4, l_c4,         {0, 2}},
    {"COMMON END LINES",                      concept_common_spot,           4, l_c4,         {0, 3}},
+   {"COMMON END WAVES",                      concept_common_spot,           4, l_c4,         {0, 16+3}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"1X2",                                   concept_1x2,                   4, l_c3},
    {"2X1",                                   concept_2x1,                   4, l_c3},

@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: May 22, 1996
+@set Time-stamp: June 16, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.67
+@set sd-version 31.70
 @set full-manual
 @c %**end of header
 @iftex
@@ -61,11 +61,11 @@ Permission is granted to make and distribute verbatim copies of this manual
 provided the copyright notice and this permission notice are preserved
 intact on all copies.
 
-The authors disclaim all liability for your use of this software and 
-documentation and make no representation as to the suitability of the 
-software for any purpose.  THE SOFTWARE IS PROVIDED ``AS IS'' WITHOUT 
-WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, 
-WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+The authors disclaim all liability for your use of this software and
+documentation and make no representation as to the suitability of the
+software for any purpose.  THE SOFTWARE IS PROVIDED ``AS IS'' WITHOUT
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO,
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 NONINFRINGMENT.
 
 @page	@c end of copyright page
@@ -134,7 +134,7 @@ The Initialization File
 
 Calling
 
-* Startup Screen::              The Startup Screen
+* Startup Menu::                The Startup Menu
 * Heads/Sides Start::             starting with the heads or sides
 * 1P2P Lines::                    starting with 1P2P lines
 * Just As They Are::              starting with a squared set
@@ -179,7 +179,7 @@ Call Notes
 * Spread::                      Spread
 * <ANYTHING> and circle::       <ANYTHING> and circle
 * Centers Back Away::           Centers Back Away
-* So-and-so Promenade::         So-and-so Promenade
+* <ANYONE> Promenade::          <ANYONE> Promenade
 * Ends Divide::                 Ends Divide
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
@@ -211,6 +211,21 @@ Concept Notes
 
 @node Getting Started, The Completing Reader for Sdtty, Intro, Top
 @chapter Getting Started
+
+If you are using a PC and have installed @code{Sdtty} to run under Windows 3.1
+or Windows 95, start the program in the usual way by clicking its icon.
+@code{Sdtty} is actually a DOS program, so, once it is started, it will not
+use the mouse.
+
+The first thing it will do (assuming you are not using the session control feature
+of the initialization file) is ask you for the level.  Type the desired level,
+and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+@key{<ENTER>}.
+@end ifinfo
 
 @code{Sd} or @code{Sdtty} can be run from a shell (on Unix or DOS) by typing its name
 and the level you want to write sequences for, e.g.,
@@ -401,9 +416,16 @@ to calls.  All concepts and special commands (@code{resolve}, for example)
 are always listed whenever either character is typed.
 
 The output from typing a question mark or exclamation point may be quite lengthy.
-If it fills more than one screenful, @code{sdtty} will stop and display
+If it fills more than one screenful, @code{Sdtty} will stop and display
 @samp{--More--} at the
-bottom of the screen.  Type @key{<Space>} to go on to the next screenful.  Type
+bottom of the screen.  Type
+@iftex
+@keycap{SPACE}
+@end iftex
+@ifinfo
+@key{<SPACE>}
+@end ifinfo
+to go on to the next screenful.  Type
 @iftex
 @keycap{ENTER}
 @end iftex
@@ -480,15 +502,15 @@ These commands don't differ until the @samp{t} in @samp{part}.  If you type
 @ifinfo
 @key{<ENTER>}
 @end ifinfo
-after @samp{part}, @code{sdtty} will know that you want the
-first of these commands.  If you type a space and then a
+after @samp{part}, @code{Sdtty} will know that you want the
+first of these commands.  If you type a space and then
 @iftex
 @keycap{ENTER},
 @end iftex
 @ifinfo
 @key{<ENTER>},
 @end ifinfo
-@code{sdtty} will know that you want the second.  Does this mean that you
+@code{Sdtty} will know that you want the second.  Does this mean that you
 must type the whole command up to @samp{part}, followed by a space or
 @iftex
 @keycap{ENTER}?
@@ -521,7 +543,7 @@ and then
 @end ifinfo
 to get the @samp{heads do your part (while the others)}
 concept.  You could, of course, type the complete phrase @samp{(while the others)}
-after the space, but there is no need to.  Once you type the space, @code{sdtty}
+after the space, but there is no need to.  Once you type the space, @code{Sdtty}
 knows exactly which command you want.
 
 What would happen if you tried to shorten the command still further by typing
@@ -562,7 +584,7 @@ followed by
 is still a good way to proceed.
 
 @node Invoking Sd, The Initialization File, The Completing Reader for Sdtty, Top
-@chapter Invoking Sd via Command Line
+@chapter Invoking Sd via Command Line (DOS or UNIX only)
 
 @display
 @t{sd} level [ Xt options @dots{} ] [ Sd options @dots{} ]
@@ -581,7 +603,7 @@ click from Windows, the program will ask you for it.
 However it is specified,
 the level determines the calls and concepts that will be made
 available, according to our best guess of what the levels mean.  Various
-optional arguments are permitted to control the window system, 
+optional arguments are permitted to control the window system,
 customize the list of calls used, and set other options.
 These will be described later.
 
@@ -597,9 +619,9 @@ from a few seconds to over a minute.
 @end menu
 
 @node Command-Line Options, Abridgement,  , Invoking Sd
-@section Command-Line Options
+@section Command-Line Options (DOS or UNIX only)
 
-There are a number of option keywords that can be given to @code{sd} or @code{sdtty}
+There are a number of option keywords that can be given to @code{Sd} or @code{Sdtty}
 when the program is started.  These control various aspects of the program's
 operation.  These keywords are placed on the command line with which the
 program was invoked from the Unix shell or the DOS prompt.  Each keyword
@@ -617,7 +639,7 @@ in the ``options'' section of the initialization file.  @xref{Option Control}.
 When this is done, the options will always be in force, and do not need to
 be specified each time the program is run.
 
-The following options are used by both @code{sd} and @code{sdtty}:
+The following options are used by both @code{Sd} and @code{Sdtty}:
 
 @table @code
 @item -db @var{filename}
@@ -684,7 +706,7 @@ name to look up resources under.  default: program name.
 an X resource manager string.
 @end table
 
-These options are specific to the terminal-based version, @code{sdtty}.
+These options are specific to the terminal-based version, @code{Sdtty}.
 
 @table @code
 @item -no_cursor
@@ -763,7 +785,7 @@ call in the menu is simply ignored.  The order of the lines is not important.
 @node The Initialization File, Calling, Invoking Sd, Top
 @chapter The Initialization File
 
-When @code{sd} or @code{sdtty} starts, it looks for a file @file{sd.ini}.
+When @code{Sd} or @code{Sdtty} starts, it looks for a file @file{sd.ini}.
 This file, if present, contains information about dances
 you might be working on, and about possible individual preferences
 you might have for the way the program runs.
@@ -777,9 +799,9 @@ singlespace
 [Sessions]
 sequence.C3       C3           12     NACC, June 1995
 sequence.C4       C4           31     NACC, June 1995
-workshop          C1           75     My Wednesday group
-a2stuff           A2           9      NESRDC/1995
-a1stuff           A1           2      Lake Shore Farm Weekend
++                 C1           75     My Wednesday group
++                 A2           9      NESRDC/1995
+*                 A1           2      Lake Shore Farm Weekend
 @end example
 
 @menu
@@ -806,9 +828,9 @@ Do you want to use one of the following sessions?
   0     (no session)
   1  sequence.C3          C3         12      NACC, June 1995
   2  sequence.C4          C4         31      NACC, June 1995
-  3  workshop             C1         75      My wednesday group
-  4  a2stuff              A2          9      NESRDC/1995
-  5  a1stuff              A1          2      Lake Shore Farm Weekend
+  3  +                    C1         75      My wednesday group
+  4  +                    A2          9      NESRDC/1995
+  5  *                    A1          2      Lake Shore Farm Weekend
   6     (create a new session)
 
 Enter the number of the desired session:
@@ -824,7 +846,7 @@ If you enter ``0'', or just press
 the program will ignore
 the sessions and proceed normally.  If you enter the
 number of one of the lines of the file, the program will operate
-at that level (ignoring any level designator you might have given),
+at that level,
 and use the named output file and title.  It will also
 print a sequence number on each card, starting with the number shown.
 For example, if you entered ``3'' after the file above is displayed,
@@ -911,7 +933,7 @@ You can edit the file with an editor such as @samp{notepad}.
 @node Sample Initialization Files, , Option Control, The Initialization File
 @section Sample Initialization Files
 
-When @code{sd} or @code{sdtty} is installed, no initialization file exists,
+When @code{Sd} or @code{Sdtty} is installed, no initialization file exists,
 but the files @file{sample1.ini} and @file{sample2.ini} are provided for you
 in the working directory.  The @file{sample1.ini} file shows an example of
 the ``session'' mechanism only, and @file{sample2.ini} show both mechanisms.
@@ -925,7 +947,7 @@ This chapter describes how to use the program in its normal mode to
 generate a sequence of calls of your choosing.
 
 @menu
-* Startup Screen::              The Startup Screen
+* Startup Menu::                The Startup Menu
 * Entering Calls::              Entering Calls
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
@@ -933,15 +955,18 @@ generate a sequence of calls of your choosing.
 * Asymmetric Selectors::        Asymmetric Selectors
 @end menu
 
-@node Startup Screen, Entering Calls,  , Calling
-@section The Startup Screen
+@node Startup Menu, Entering Calls,  , Calling
+@section The Startup Menu
 
 The startup menu is displayed when the program starts and after each
-sequence has been completed and written to a file.  In addition to the
-obvious program exit button, this permits you to select the starting
-operation.  The selections here, and almost everywhere else in the
-program, are made by moving the mouse until the cursor is over the
+sequence has been completed and written to a file.
+In addition to the program exit choice, this permits you to select
+the starting operation.  The selections here, and almost everywhere else
+in the program, are made in @code{Sd} by moving the mouse until the
+cursor is over the
 chosen item, and pressing Mouse Button 1 (typically the left button).
+In @code{Sdtty}, selections are made by typing them.  To see the ``menu'',
+that is, the list of things you could type, type a question mark.
 
 @menu
 * Heads/Sides Start::           starting with the heads or sides
@@ -949,30 +974,39 @@ chosen item, and pressing Mouse Button 1 (typically the left button).
 * Just As They Are::            starting with a squared set
 @end menu
 
-@node Heads/Sides Start, 1P2P Lines,  , Startup Screen
+@node Heads/Sides Start, 1P2P Lines,  , Startup Menu
 @subsection Heads/Sides Start
 
-If you click on @code{heads start} or @code{sides start}, the sequence will begin
+If you click or type @code{heads start} or @code{sides start}, the sequence will begin
 with @samp{heads} or @samp{sides} and the first call.  Normally this means that the
 designated people will move into the center and do the first call while
 the others wait.  Subsequent calls will be directed to everyone.  For
-example, one might click on @code{heads start}, and then @code{star thru}, and
-then @code{double pass thru}, and so on.  You can also click on @code{heads start}
+example, one might select @code{heads start}, and then @code{star thru}, and
+then @code{double pass thru}, and so on.  You can also select @code{heads start}
 or @code{sides start} followed by a call such as @i{split square thru} or @i{split
 dixie style to a wave}.  Use the @code{split} concept to get these.
 
+When using @code{Sdtty}, you must press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+after typing @code{heads start} or @code{sides start}.
+
 If you want to have the heads go into the middle and do several calls
 before the sides join in, as in @i{head ladies chain ; heads square thru 4},
-or @i{heads touch 1/4 ; walk and dodge}, you must click on @code{centers}
+or @i{heads touch 1/4 ; walk and dodge}, you must select @code{centers}
 before all calls after the initial one.  Typically, you won't need to read
 the card that way, but can rely on precise phrasing and inflection of your
 voice to express what you want.
 
-@node 1P2P Lines, Just As They Are, Heads/Sides Start, Startup Screen
+@node 1P2P Lines, Just As They Are, Heads/Sides Start, Startup Menu
 @subsection 1P2P Lines
 
 The @code{heads 1P2P} and @code{sides 1P2P} starting actions refer to caller jargon
-for a common starting maneuver, typified by @i{so-and-so lead right and
+for a common starting maneuver, typified by @i{<ANYONE> lead right and
 circle up 4}.  You can read the card that way, or as @i{wheel thru and
 circle up 4}, or as @i{step right}, or as @i{bring us together}, or whatever
 improvisation you like.  The promenade distance printed at the end of the
@@ -981,21 +1015,20 @@ thru})} and circle up 4}.
 
 Whether you consider 1P2P openings to be overused is up to you.
 
-@node Just As They Are,  , 1P2P Lines, Startup Screen
+@node Just As They Are,  , 1P2P Lines, Startup Menu
 @subsection Just As They Are
 
-The @code{just as they are} button starts the sequence on squared set spots,
-without having the heads or sides begin.  This is nearly useless, since
-the program doesn't know about the @i{all 4 couples} concept or about
-thars or alamo rings.  This shortcoming may be fixed in the future.
+The @code{just as they are} selection starts the sequence on squared set spots,
+without having the heads or sides begin.  This is generally useful only if
+the @i{all 4 couples} concept is to be used.
 
-@node Entering Calls, Entering Concepts, Startup Screen, Calling
+@node Entering Calls, Entering Concepts, Startup Menu, Calling
 @section Entering Calls
 
 The usual thing you do when writing a sequence is to select calls from
 the call menu, perhaps preceded by one or more concepts.  (Concepts are
-discussed in the next section.)  In @code{sd}, a call is selected by clicking
-on the desired menu item.  In @code{sdtty}, a call is selected by typing
+discussed in the next section.)  In @code{Sd}, a call is selected by clicking
+on the desired menu item.  In @code{Sdtty}, a call is selected by typing
 its name, followed by
 @iftex
 @keycap{ENTER}.
@@ -1006,40 +1039,56 @@ its name, followed by
 The completing reader
 (@ref{The Completing Reader for Sdtty}) lets you abbreviate calls.
 
-It is important to be aware that a number of @dfn{modifier} words like 
-@code{grand} and @code{cross} are treated as @i{concepts} by @code{sd}
-and @code{sdtty}.  While concepts don't officially exist below the
-Advanced program, @code{sd} and @code{sdtty} consider the Mainstream
-and Plus words @code{cross}, @code{left} and @code{grand}, among others,
-to be concepts.  This means that, when using @code{sd}, you generally need
-to click on these concepts (they are in the concept menu in the lower
-left corner of the screen) before clicking on the call.  For example, to get
-a @i{grand swing thru}, click on @code{grand} in the concept menu, and
-then @code{swing thru} in the call menu.  There is no item @code{grand
-swing thru} in the call menu.  The menus would be too unwieldy if such
-things were listed separately.
+You should be aware that a number of @dfn{modifier} words like @code{cross},
+@code{left}, and @code{grand} are treated as @i{concepts} by @code{Sd}
+and @code{Sdtty}.  While concepts don't officially exist below the
+Advanced program, @code{Sd} and @code{Sdtty} consider words such as these
+to be concepts.  When using @code{Sdtty}, this generally makes no difference.
+Because of the way the program operates, you can just type the call, with
+whatever concepts or modifier words it has, in the natural way.  For example,
+you could type:
 
-In @code{sdtty}, the equivalent action is to type @code{grand}, press
+@example
 @iftex
-@keycap{ENTER},
+@kbd{grand swing thru} @keycap{ENTER}
 @end iftex
 @ifinfo
-@key{<ENTER>},
+@kbd{grand swing thru} <ENTER>
 @end ifinfo
-type @code{swing thru}, and press
+@end example
+
+or:
+
+@example
+@iftex
+ @kbd{centers cross run} @keycap{ENTER}
+@end iftex
+@ifinfo
+@kbd{centers cross run} <ENTER>
+@end ifinfo
+@end example
+
+In a few cases, either because a concept has a complex structure
+(e.g., @code{checkpoint}), or because an utterance is ambiguous
+(e.g., doing 1/2 of a @i{stable swing thru} vs. doing a @i{1/2 stable swing thru}),
+it is necessary to type concepts by themselves, pressing
 @iftex
 @keycap{ENTER}
 @end iftex
 @ifinfo
 @key{<ENTER>}
 @end ifinfo
-again.
-However, for a great many modifiers (@code{grand} among them) you can type
-the whole thing on one line.  This one-line form form of modifier
-entry to the completing reader will be discussed below.
+after each one.  This will be discussed further in @ref{Entering Concepts}.
 
-A number of calls have limitations or quirks that you should be aware of.
-@xref{Call Notes}.
+When using @code{Sd}, all concepts, modifier words, and calls are listed
+separately in the menus.  For example, to get
+a @i{grand swing thru}, click on @code{grand} in the concept menu, and
+then @code{swing thru} in the call menu.  There is no item @code{grand
+swing thru} in the call menu.  The menus would be too unwieldy if such
+things were listed separately.  To do 1/2 of a @i{stable swing thru},
+click on the @code{1/2} concept (actually the @code{<N>/<N>} concept),
+followed by the @code{stable} concept.  To do a @i{1/2 stable swing thru},
+click on the @code{1/2 stable} (that is, @code{<N>/4 stable}) concept.
 
 @menu
 * Call Variations::             How to write variations on calls
@@ -1063,14 +1112,14 @@ of reasons.  Because of this, various methods are used to shorten the menus
 and to allow the user to specify the desired variation.  These methods will
 be discussed in detail presently, but in most cases what happens is the following:
 
-In @code{sd}, the menus list only the base calls with special keywords
+In @code{Sd}, the menus list only the base calls with special keywords
 as in @code{quarter <DIRECTION>} or @code{square thru <N>}.  When you
 click on such a menu item, a popup menu appears listing the possible choices.
 
-In @code{sdtty}, the @dfn{menu} (that is, what you see if you type a question
+In @code{Sdtty}, the @dfn{menu} (that is, what you see if you type a question
 mark) also has keywords.  You can type the item just as shown, e.g.,
 @code{quarter <DIRECTION>} or @code{square thru <N>} (you would actually type the
-angle brackets) and then answer the question that @code{sdtty} asks.  But there is
+angle brackets) and then answer the question that @code{Sdtty} asks.  But there is
 an easier way---you can type what you want directly.  That is, just type
 @code{quarter left} or @code{square thru 3}.  If you want to see the choices,
 type @code{quarter <DIRECTION>} or whatever, and then type a question mark.
@@ -1084,7 +1133,7 @@ When using @code{sd}, after you click on such a call, a popup will appear listin
 all possible directions.  Click on the one you want.  If you decide you don't
 want that call, just move the mouse away from the popup.
 
-When using @code{sdtty}, you can either type @code{pass <DIRECTION>} literally,
+When using @code{Sdtty}, you can either type @code{pass <DIRECTION>} literally,
 and then answer the question that the program will ask, or just type the actual call,
 for example, @code{pass in}.
 
@@ -1102,7 +1151,7 @@ The program will turn it into @code{N/4} (or, if @code{N}=2, into @code{1/2}).
 If you decide you don't
 want that call, just move the mouse away from the popup.
 
-When using @code{sdtty}, you can either type the keyword literally,
+When using @code{Sdtty}, you can either type the keyword literally,
 and then answer the question, or just type the number just as you want it to
 appear in the call.  That is, you can type @code{invert the column <N/4>} and then
 @code{3}, or @code{invert the column 3/4}.  You can type @code{1/2} or
@@ -1120,9 +1169,9 @@ in their names.  Examples are @code{quarter thru}, @code{quarter the deucey},
 @code{quarter mix}, @code{quarter the alter}, and @code{quarter chain and circulate in}.
 These are listed in the Callerlab lists with the words spelled out, though
 individual preferences vary.  Some people prefer to write @code{1/4 thru} and
-@code{3/4 thru}.  @code{Sd} and @code{sdtty} list the call as @code{<N/4> thru}
+@code{3/4 thru}.  @code{Sd} and @code{Sdtty} list the call as @code{<N/4> thru}
 in the menu.  In @code{sd}, you click on that and then click on a number (only 1 and 3
-are legal, of course).  In @code{sdtty}, you can type @code{<N/4> thru} and then type
+are legal, of course).  In @code{Sdtty}, you can type @code{<N/4> thru} and then type
 1 or 3, or you can type the call directly, either in numbers or in words.  That is,
 you can type either @code{1/4 thru} or @code{quarter thru}.  No matter how you
 enter one of these calls, it will always be printed out in words, as in
@@ -1131,7 +1180,7 @@ enter one of these calls, it will always be printed out in words, as in
 @subsubheading Person designators
 These work like the others in a straightforward way.  The calls appear in the menu
 with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.  In @code{sd},
-you click on that and then make a selection from a popup menu.  In @code{sdtty},
+you click on that and then make a selection from a popup menu.  In @code{Sdtty},
 you can either type the @code{<ANYONE>} literally and then answer the question,
 or you can type in the desired call directly, as in @code{patch the sides}.
 
@@ -1155,18 +1204,18 @@ If you want to designate the 4 people in the center of the set, use @code{center
 @subsubheading Tagging Calls
 Calls that use tagging calls have the keyword @code{<ATC>} (for Any Tagging Call) in
 them, as in @code{<ATC> your neighbor} or @code{<ATC> chain thru and scatter reaction}.
-Specify these in the usual way.  In @code{sdtty} you can type the @code{<ATC>} directly
+Specify these in the usual way.  In @code{Sdtty} you can type the @code{<ATC>} directly
 or you can enter the complete call.
 
 At C3 and above, the tagging calls include the calls @code{revert <ATC>} and
 @code{reflected <ATC>} that make use of another tagging call.  In @code{sd}, you
-will be presented with another popup.  In @code{sdtty}, you can type in the
+will be presented with another popup.  In @code{Sdtty}, you can type in the
 entire call directly, as in @code{revert cross flip chain thru reactivate}.
 
 @subsubheading <ANYTHING> Calls
 Calls that use the ``<ANYTHING>'' mechanism, such as @code{in roll motivate},
 have the keyword @code{<ANYTHING>} in them, as in @code{<ANYTHING> motivate}.
-In @code{sdtty}, you can type in the entire call directly.  In @code{sd},
+In @code{Sdtty}, you can type in the entire call directly.  In @code{sd},
 click on the call with the word @code{<ANYTHING>} in it.  A popup will appear,
 asking for the replacement for the circulate.
 
@@ -1180,7 +1229,7 @@ with brackets, as in @code{[swing the fractions] motivate}.
 
 @subsubheading Subcalls
 Mandatory subcalls appear in the menu as the keyword @code{<ANYTHING>}, as
-in @code{clover and <ANYTHING>}.  The handling of these in @code{sdtty} is not as
+in @code{clover and <ANYTHING>}.  The handling of these in @code{Sdtty} is not as
 nice as for the keywords discussed previously.  It is not possible to type in the call
 just the way you want it to appear.  @i{You must literally type the <ANYTHING>}.
 That is, you type @code{clover and <ANYTHING>} or @code{slant <ANYTHING> and <ANYTHING>}.
@@ -1208,11 +1257,11 @@ Some calls use these concepts in ways that have a tricky word order.
 
 Whether the word order is tricky or not, you can always enter the concept
 followed by the call as separate items.
-For example, in @code{sd}, you can click on @code{left} followed by
-@code{chase right}.  In @code{sdtty}, you can type in @code{left} and then
+For example, in @code{Sd}, you can click on @code{left} followed by
+@code{chase right}.  In @code{Sdtty}, you can type in @code{left} and then
 @code{chase right}, on two separate lines.
 
-In addition, @code{sdtty} allows more natural text entry.  You can type in
+In addition, @code{Sdtty} allows more natural text entry.  You can type in
 @code{grand swing thru} or @code{chase left} directly.
 
 Other examples of this phenomenon are
@@ -1237,7 +1286,7 @@ menu just as they are spelled.
 @node Call Menus, Scrolling, Call Variations, Entering Calls
 @subsection Call Menus
 
-In @code{sd}, the call menu is the long menu near the center of the screen.  There are
+In @code{Sd}, the call menu is the long menu near the center of the screen.  There are
 actually 17 menus that can appear here, each tailored to the current
 setup.  For example, if the current setup is right-hand waves, a menu
 will appear that contains only those calls that the program believes
@@ -1256,7 +1305,7 @@ Hence, @code{<ANYONE> run} and @code{<ATC> your neighbor}
 will be found near the beginning of the menu.
 
 @node Scrolling,  , Call Menus, Entering Calls
-@subsection Scrolling
+@subsection Scrolling (Sd only)
 
 The call menu can be scrolled with the scroll bar to its left.  Move the
 mouse into the scroll bar area.  Clicking the left mouse button will scroll
@@ -1274,57 +1323,195 @@ middle mouse button is held down, the menu will scroll in real time.
 A call may be preceded by concepts, which modify the action of the call.
 These may be nested (@dfn{stacked}) to any reasonable depth.
 
-In @code{sdtty}, just type the concept you want.  The completing reader will
-operate in the usual way.  Many concepts may be entered in a natural way,
+In @code{Sdtty}, just type the concept you want.  The completing reader will
+operate in the usual way.  Nearly all concepts may be entered in a natural way,
 on the same line as the call that they affect.  As discussed previously,
-modifiers like @code{cross} and @code{left} are all in this category.
-Many other concepts can be typed this way also.  For example, you can
-type @code{random tandem swing thru} all on one line.
-
-For reasons of ambiguity in the language, many concepts may @i{not}
-be entered in this way.  The most notorious of these are the @code{so-and-so}
-concepts, such as @code{boys}.  You must type an
+this means that you can type things like
+@example
 @iftex
-@keycap{ENTER}
+@kbd{grand swing thru} @keycap{ENTER}
 @end iftex
 @ifinfo
-@key{<ENTER>}
+@kbd{grand swing thru} <ENTER>
 @end ifinfo
-after each such concept,
-even though the concept and the call that it modifies will appear
-on the same line in the finished text.
-
-Since it is difficult to remember which concepts must be typed on separate
-lines, @code{sdtty} always permits you to do so.  When in doubt, type concepts
-on separate lines with an
+@end example
+or
+@example
 @iftex
-@keycap{ENTER}
+@kbd{boys 1/2 stable split the difference} @keycap{ENTER}
 @end iftex
 @ifinfo
-@key{<ENTER>}
+@kbd{boys 1/2 stable split the difference} <ENTER>
 @end ifinfo
-after each one.  With practice, you will develop
-a feel for which things you can type naturally and which ones are difficult.
-
-Whether you typed concepts on separate lines or on one line, the result is
+@end example
+or
+@example
+@iftex
+@kbd{random tandem swing thru} @keycap{ENTER}
+@end iftex
+@ifinfo
+@kbd{random tandem swing thru} <ENTER>
+@end ifinfo
+@end example
+Whether you typed concepts separately or together, the result is
 the same, and the output file will look the same.
 For example, the following are all legal and equivalent.
-
 @example
-   reverse random tandem swing thru
-   
-   reverse random
-   tandem swing thru
-   
-   reverse
-   random
-   tandem
-   swing thru
+@group
+@iftex
+   @kbd{reverse random tandem swing thru} @keycap{ENTER}
+@end iftex
+@ifinfo
+   @kbd{reverse random tandem swing thru} <ENTER>
+@end ifinfo
+@end group
 @end example
-
+@example
+@group
+@iftex
+   @kbd{reverse random} @keycap{ENTER}
+   @kbd{tandem swing thru} @keycap{ENTER}
+@end iftex
+@ifinfo
+   @kbd{reverse random} <ENTER>
+   @kbd{tandem swing thru} <ENTER>
+@end ifinfo
+@end group
+@end example
+@example
+@group
+@iftex
+   @kbd{reverse} @keycap{ENTER}
+   @kbd{random} @keycap{ENTER}
+   @kbd{tandem} @keycap{ENTER}
+   @kbd{swing thru} @keycap{ENTER}
+@end iftex
+@ifinfo
+   @kbd{reverse} <ENTER>
+   @kbd{random} <ENTER>
+   @kbd{tandem} <ENTER>
+   @kbd{swing thru} <ENTER>
+@end ifinfo
+@end group
+@end example
 In the output file, they will all be shown as @code{reverse random tandem swing thru}.
 
-In @code{sd}, click on the concept from a menu.  In a
+Occasionally some ambiguous situations can arise.  What if you wanted
+the boys to do 1/2 of a @i{stable split the difference}?  The phrase
+@code{boys 1/2 stable split the difference} is ambiguous.  Whenever @code{Sdtty}
+is confronted with an ambiguity, it chooses the option that nests concepts least deeply.
+A single application of the @i{1/2 stable} concept is less deep (simpler) than
+an application of the @i{1/2} concept followed by an application of the
+@i{stable} concept, so it chooses the former.  If you really want to tell
+the program to do the latter, you must make clear that you mean the @i{1/2}
+concept by itself.  The way to do this is to enter each concept separately, pressing
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+after each one.  That is, type
+@example
+@group
+@iftex
+@kbd{boys} @keycap{ENTER}
+@kbd{1/2} @keycap{ENTER}
+@kbd{stable} @keycap{ENTER}
+@kbd{split the difference} @keycap{ENTER}
+@end iftex
+@ifinfo
+@kbd{boys} <ENTER>
+@kbd{1/2} <ENTER>
+@kbd{stable} <ENTER>
+@kbd{split the difference} <ENTER>
+@end ifinfo
+@end group
+@end example
+
+When @code{Sdtty} resolves an ambiguity, it shows how it did so through
+the judicious use of commas.  For example, the preceding operation will
+be printed as
+@code{boys, 1/2, stable, split the difference}, as opposed to
+@code{boys, 1/2 stable, split the difference}.  Do not type the commas in.
+
+Whenever you run into trouble typing concepts, try typing each one separately,
+pressing
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+after each one.
+
+Some concepts require two calls (e.g., @code{checkpoint} and @code{interlace}).
+@i{You must enter such concepts by themselves}.  That is, you must press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+after typing any of these concepts.  You can't type
+@example
+@group
+@iftex
+   checkpoint ah so by recycle @keycap{ENTER}
+@end iftex
+@ifinfo
+   checkpoint ah so by recycle <ENTER>
+@end ifinfo
+@end group
+@end example
+or
+@example
+@group
+@iftex
+   boys trade (while the others) u-turn back @keycap{ENTER}
+@end iftex
+@ifinfo
+   boys trade (while the others) u-turn back <ENTER>
+@end ifinfo
+@end group
+@end example
+You must type
+@example
+@group
+@iftex
+   checkpoint @keycap{ENTER}
+   ah so @keycap{ENTER}
+   recycle @keycap{ENTER}
+@end iftex
+@ifinfo
+   checkpoint <ENTER>
+   ah so <ENTER>
+   recycle <ENTER>
+@end ifinfo
+@end group
+@end example
+or
+@example
+@group
+@iftex
+   boys (while the others) @keycap{ENTER}
+   trade @keycap{ENTER}
+   u-turn back @keycap{ENTER}
+@end iftex
+@ifinfo
+   boys (while the others) <ENTER>
+   trade <ENTER>
+   u-turn back <ENTER>
+@end ifinfo
+@end group
+@end example
+
+After choosing such a concept, enter the first call, preceded by
+whatever concepts apply to it.  The program will then prompt you
+for the second call.  A complex tree of concepts and calls can
+thus be constructed.
+
+In @code{Sd}, click on the concept from a menu.  In a
 perhaps hopeless attempt to keep the concept menus from becoming too
 unwieldy, concepts have been organized into a general concept menu and
 several submenus organized by topics.  The main concept menu is in the
@@ -1344,11 +1531,6 @@ Some concepts require a numeric designator (e.g., @code{interrupt after the 3rd
 part}) or a people designator (e.g., @code{girls are stable}).  The handling
 is the same as for calls that require these.
 
-Some concepts require two calls (e.g., @code{checkpoint} and @code{interlace}).  After
-choosing such a concept, enter the first call, preceded by whatever concepts
-apply to it.  The program will then prompt you for the second call.
-A complex tree of concepts and calls can thus be constructed.
-
 The program recognizes the level at which concepts are legal, but lets you
 override this if you wish.  The @code{toggle concept levels} command toggles
 (turns on or off) the state of off-level concept permission.
@@ -1362,7 +1544,7 @@ Some calls can be modified in a natural way, such as @samp{catch fan the top 3},
 and @samp{vertical tag your neighbor}, or in unnatural ways, such as @samp{trade
 the diamond but replace the diamond circulate with explode the diamond}.
 To form such a call, you must first enable call modifications
-by clicking on @code{simple modifications} or @code{allow modifications}
+by selecting @code{simple modifications} or @code{allow modifications}
 before choosing the call.
 
 There are two levels of this feature.  If you click on @code{simple
@@ -1383,7 +1565,7 @@ call in brackets and spelled out in full, as in @code{[in roll circulate] motiva
 However, there is a better way to get these particular types of modifications---select
 @code{<ANYTHING> motivate} and then select the replacement for the circulate.
 The result will look natural, for example, @code{in roll motivate}.
-In @code{sdtty} you can type in such a call directly.
+In @code{Sdtty} you can type in such a call directly.
 
 When either level of modifications is selected, the line at the top of
 the text transcript area indicates this.  Also, the universal call menu
@@ -1441,7 +1623,7 @@ file.  @xref{The Initialization File}.
 
 The people selector popup contains various asymmetric selectors such as
 @code{near line} and @code{far box}.  You can use these selectors with
-the @code{so-and-so do your part} concept to call @i{near column
+the @code{<ANYONE> do your part} concept to call @i{near column
 pass thru}, etc.  The resultant setup must be reasonable---shape-changers
 on one side of the set may lead to problems.
 Most calls have not been checked for
@@ -1480,8 +1662,8 @@ first, the program reports that too.
 
 Whenever the @samp{resolve} message appears, you can end the sequence and
 write it to a file by selecting @code{write this sequence}.
-In @code{sd}, the button for this is in the group in the upper left
-portion of the screen.  In @code{sdtty}, simply type the command, with
+In @code{Sd}, the button for this is in the group in the upper left
+portion of the screen.  In @code{Sdtty}, simply type the command, with
 the usual completion mechanism.
 
 There are
@@ -1506,7 +1688,7 @@ The transcript area shows the effect of that resolution.
 
 You can select @code{find another} to search for another resolution and add
 it to its stored list.  When the list has more than one resolution in it,
-selecting on @code{previous} and @code{next} will move around in its
+selecting @code{previous} and @code{next} will move around in its
 list of previously found resolutions and show whichever one you want.
 In this way, you can search
 for a better resolution than the one you already have, but go back to
@@ -1527,7 +1709,7 @@ is equivalent to @code{accept} followed by whatever that action
 is.  So, for example, you can select @code{write this sequence} as soon as
 you see a resolution that you like.
 
-When using @code{sdtty}, these special commands are typed into the completing reader
+When using @code{Sdtty}, these special commands are typed into the completing reader
 in the usual way.  To make it more convenient to enter them, the command names
 have been chosen to be unambiguous from just one or two letters.  So, for example,
 @code{p} means @code{previous}, @code{n} means @code{next}, and @code{f}
@@ -1722,7 +1904,7 @@ At any time when the sequence is resolved (for example, after a successful
 use of the @code{resolve} operation), you can select @code{write this sequence}.
 (This command used to be called @code{end this sequence}.)
 This will append the current sequence to the current output file, and then
-go back to the startup screen.  You will be given an opportunity to enter
+go back to the startup menu.  You will be given an opportunity to enter
 a line of text to be used as a subtitle, for example ``very hard interlace''
 or ``stupid biggie.''  The written sequence will also be annotated with the
 level, the current date and time, and the version numbers of the program and
@@ -1737,7 +1919,7 @@ resolving isn't enough.
 
 You can change the name of the file to which the program writes its
 output by selecting the @code{Change output file} command.  A popup
-will appear, prompting you for a new file name, or @code{sdtty} will
+will appear, prompting you for a new file name, or @code{Sdtty} will
 ask you to type in the new name.  This action will become
 effective the next time a sequence is written out.  Sequences previously
 written will stay under their old name.
@@ -1750,7 +1932,7 @@ be written back to that file at the end of the session.
 
 You can change the title that will be printed at the top of each sequence
 by selecting the @code{Change Title} command.  A popup
-will appear, prompting you for a new title, or @code{sdtty} will
+will appear, prompting you for a new title, or @code{Sdtty} will
 ask you to type in the new title.  This action will become
 effective the next time a sequence is written out.  Sequences previously
 written will keep their old title.  You can remove the title by just
@@ -1783,7 +1965,7 @@ what normally happens when you double-click the special control button in the
 upper left corner of the @code{sd} window.
 
 If you select the @code{abort} command, the program will abort the sequence
-but not exit.  It will go back to the startup screen to allow you to
+but not exit.  It will go back to the startup menu to allow you to
 start another sequence.  It will ask for confirmation first.
 
 If you select the @code{undo} command while no call is partially entered,
@@ -1802,8 +1984,8 @@ to trick the program into doing it by means of several other calls, it is useful
 to enter a comment saying what you originally wanted.  This can guide you
 when editing the transcript file.
 
-To enter a comment, select @code{insert a comment}.  In @code{sd}, a popup
-will appear into which you may enter the text.  In @code{sdtty}, simply type
+To enter a comment, select @code{insert a comment}.  In @code{Sd}, a popup
+will appear into which you may enter the text.  In @code{Sdtty}, simply type
 the comment text on the next line.  The comment will be enclosed in curly braces
 in the transcript.
 
@@ -1826,14 +2008,14 @@ box'') click on @code{keep picture}.
 @node Changing Modes, , Keeping Pictures, Misc Commands
 @section Changing Modes
 
-There are two commands that change some aspect of the way @code{sd}
-or @code{sdtty} run.  The two commands are @code{toggle concept levels}
+There are two commands that change some aspect of the way @code{Sd}
+or @code{Sdtty} run.  The two commands are @code{toggle concept levels}
 and @code{toggle active phantoms}.  Normally, both of these are off.
 You may want to turn one or both of them on for your own personal
 preference, or for some special reason.  These commands @dfn{toggle} their
 respective modes.  That is, they turn the mode on if it was off, and
 off if it was on.  The current state of the modes is always displayed
-in the input prompt in @code{sdtty}, or the mode line in the upper
+in the input prompt in @code{Sdtty}, or the mode line in the upper
 right corner in @code{sd}.
 
 The @code{toggle concept levels} command changes the legality of concepts
@@ -1846,7 +2028,7 @@ phantoms during certain calls.  @xref{Assume Waves}.
 @chapter Terminal Interface
 
 @menu
-* Sdtty::                       The @code{sdtty} program
+* Sdtty::                       The @code{Sdtty} program
 * Function Keys in Sdtty::      Function Keys
 * Sdtty on the PC::             The PC version
 * Sdtty on Unix::               The Unix version
@@ -1855,7 +2037,7 @@ phantoms during certain calls.  @xref{Assume Waves}.
 @node Sdtty, Function Keys in Sdtty,  , Terminal Interface
 @section Sdtty
 
-The program @code{sdtty} uses the completing reader for call,
+The program @code{Sdtty} uses the completing reader for call,
 concept, and command entry.
 
 When typing, press @key{Space} to complete the current word.
@@ -1876,18 +2058,18 @@ or
 to complete as much as possible.
 Type @kbd{C-u} (that is, Control U) to clear a partially-typed line.
 
-@code{sdtty} has a special command @code{refresh display}
+@code{Sdtty} has a special command @code{refresh display}
 that has no counterpart in
 the window-based version.  It causes a complete clean transcript
 of the current sequence to be printed.  This can be used if the display got
 messed up due to such things as unreliable terminal or modem behavior.
 
-@code{sdtty} tries to keep the screen up-to-date efficiently,
+@code{Sdtty} tries to keep the screen up-to-date efficiently,
 maintaining a clean transcript of the current sequence on the screen
 at all times, by using whatever Operating System facilities it thinks are
 appropriate.  If, for any reason, this doesn't work properly for you,
 you can give the @code{-no_cursor} switch at program startup to disable
-that.  This will cause @code{sdtty} to treat the computer's display as
+that.  This will cause @code{Sdtty} to treat the computer's display as
 if it were a dumb typewriter.  When started in this way, the part of
 the transcript that has changed with each command is simply redisplayed.
 This will inevitably lead to a choppy appearance on the screen or
@@ -1900,20 +2082,22 @@ On the PC, @code{Sdtty} recognizes a number of function keys.  These
 perform the following commands:
 
 @example
-key      normal                    shift                  control
+@group
+key      normal                   shift                    control
 
-F1   heads start              sides start           just as they are
+F1   heads start              sides start              just as they are
 F2   two calls in succession  twice
-F3   pick random call         pick concept call     pick simple call
-F4   resolve                  reconcile             normalize
-F5   refresh display          keep picture          insert a comment
+F3   pick random call         pick concept call        pick simple call
+F4   resolve                  reconcile                normalize
+F5   refresh display          keep picture             insert a comment
 F6   simple modifications     allow modifications
 F7   toggle concept levels    toggle active phantoms
 F8   <anything>               <concept>
 F9   undo last call           abort the search
 F10  write this sequence      change output file
 F11  pick level call          pick 8 person level call
-F12  accept current choice    find another
+F12  find another             accept current choice    previous
+@end group
 @end example
 
 All of these except @samp{<anything>} and @samp{<concept>} execute the command
@@ -1949,7 +2133,7 @@ should be at least 175 kilobytes of memory free in the first 640Kb.
 The authors have not actually tried it on a system this small, and we
 would be interested in your experiences.
 
-@code{Sd} is believed to be
+@code{Sd} and @code{Sdtty} are believed to be
 insensitive to slight inaccuracies in floating-point division.
 
 To deal with different types of display hardware with various screen sizes,
@@ -2060,7 +2244,7 @@ you may need to use the @code{disconnected} concept.  For example, if
 you had waves with the boys on the ends, and you had just done a
 @samp{1/2, acey deucey}, the boys have a big diamond around the outside.
 You can't just do a @code{BOYS diamond circulate}, because the
-@code{so-and-so} concept is extremely fussy.
+@code{<ANYONE>} concept is extremely fussy.
 @xref{Designating Certain People}.  The way to do this is with
 @code{BOYS DISCONNECTED diamond circulate}.  This concept is only
 legitimate at C2, so you will need @code{toggle concept levels} below that.
@@ -2080,7 +2264,7 @@ appropriate to get the dancers through the action that you intend.
 * Spread::                      Spread
 * <ANYTHING> and circle::       <ANYTHING> and circle
 * Centers Back Away::           Centers Back Away
-* So-and-so Promenade::         So-and-so Promenade
+* <ANYONE> Promenade::          <ANYONE> Promenade
 * Ends Divide::                 Ends Divide
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
@@ -2149,13 +2333,13 @@ only.  So you could select @code{simple modifications}, then
 If all else fails, there is a call @code{and circle 1/4} that just
 does the final circling part.
 
-@node Centers Back Away, So-and-so Promenade, <ANYTHING> and circle, Call Notes
+@node Centers Back Away, <ANYONE> Promenade, <ANYTHING> and circle, Call Notes
 @section Centers Back Away
 
 This call is intended for use in sequences that begin with heads or
 sides doing a @samp{ladies chain} or @samp{right and left thru} or
 something similar.  After they do such a call, they will remain in
-the center.  To have them do the next call (for example, @samp{pass the
+the center.  To have the same people do the next call (for example, @samp{pass the
 ocean} or @samp{star thru}), just use the @samp{centers} concept.
 If you want the @emph{inactive} dancers to come in and do the next call,
 use the call @samp{centers back away, others come in and <ANYTHING>}.
@@ -2169,8 +2353,8 @@ So, for example, you might enter:
 You might read this as ``head ladies chain, then the sides move in and
 star thru''.
 
-@node So-and-so Promenade, Ends Divide, Centers Back Away, Call Notes
-@section So-and-so Promenade
+@node <ANYONE> Promenade, Ends Divide, Centers Back Away, Call Notes
+@section <ANYONE> Promenade
 
 These calls are intended for use in sequences that begin with heads
 or sides promenading halfway around the set.  The calls are
@@ -2187,7 +2371,7 @@ fact that the displayed setup will look strange before the promenade.
 You will be prompted for the @samp{<ANYTHING>} call, which will be
 done by the appropriate people in the center of the set.
 
-@node Ends Divide, Little/Little More/Plenty, So-and-so Promenade, Call Notes
+@node Ends Divide, Little/Little More/Plenty, <ANYONE> Promenade, Call Notes
 @section Ends Divide
 
 This is a call that should be used when you want the outsides to move
@@ -2201,8 +2385,7 @@ the word @samp{ends}.  So, for example, you might enter:
    heads start
    swing thru
    ends divide
-   ends
-   touch 1/4
+   ends touch 1/4
    6x2 acey deucey
 @end example
 You might read this as ``heads swing thru, while the sides divide
@@ -2267,7 +2450,7 @@ Hence, the separate call @samp{snag circulate} has been provided.
 
 Because of the peculiarity of this call, this call was not implemented
 with the @samp{funny} concept.  Instead, it is a call by itself.
-This means that, in @code{sdtty}, you type @code{funny square thru <n>}
+This means that, in @code{Sdtty}, you type @code{funny square thru <n>}
 on one line, rather than pressing
 @iftex
 @keycap{ENTER}
@@ -2276,7 +2459,7 @@ on one line, rather than pressing
 @key{<ENTER>}
 @end ifinfo
 after the word @code{funny}.
-In @code{sd}, the call menu will have @code{funny square thru <n>}.
+In @code{Sd}, the call menu will have @code{funny square thru <n>}.
 
 @node Rotate from Columns, Recycle, Funny Square Thru, Call Notes
 @section Rotate from Columns
@@ -2301,7 +2484,7 @@ as being fractionalizable in some setups but not others, and the
 facing-couples version of recycle is not fractionalizable.
 To permit fractional use of recycle, as with
 @samp{interlace} or @samp{random}, we have provided a call
-@samp{recycle (by parts)}, which can be done only from lines.  Use this call
+@samp{recycle (by parts)}, which can be done only from waves.  Use this call
 (but don't read the ``by parts'' phrase) when fractions are required.
 
 @node Going Through Impossible Situations,  , Recycle, Call Notes
@@ -2323,7 +2506,7 @@ the collision after the first one, they can do it.
 The program doesn't like to do this.  Just calling @code{twice split trade
 circulate} won't work, because the program will have multiple dancers on
 the same spot after the first one.  You can trick the program into doing
-it anyway, by using the @code{so-and-so do your part} concept.  Enter something
+it anyway, by using the @code{<ANYONE> do your part} concept.  Enter something
 like @code{heads do your part, twice split trade circulate while the
 others twice split trade circulate}.  Exactly who has to be designated
 depends on the the setup.
@@ -2365,7 +2548,7 @@ will attempt to describe just what the program understands
 them to mean.
 
 For many of the less straightforward cases, the words that the
-program uses are not the words that you would use to get the
+program uses are not necessarily the words that you would use to get the
 dancers to do the equivalent thing.  You must always use your
 own judgement.  No claim is made that the program's notion
 of what the words literally mean is the universally accepted
@@ -2375,8 +2558,73 @@ In the menu-based program (Sd), most of these concepts are on
 special menus that are brought up by clicking on one of the
 concept icons on the left side of the screen.  There are far too
 many concepts to make them all visible on the screen at the same time.
-In sdtty, just type the name of the concept without worrying about what
+In @code{Sdtty}, just type the name of the concept without worrying about what
 menu it would be on.
+
+Be aware that those concepts that take two calls, such as @code{checkpoint},
+@code{two calls in succession}, or @code{<ANYONE> do your part (while the others)}
+must be entered by themselves.  That is, you must press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+after typing any of these concepts.  You can't type
+@example
+@group
+@iftex
+   checkpoint ah so by recycle @keycap{ENTER}
+@end iftex
+@ifinfo
+   checkpoint ah so by recycle <ENTER>
+@end ifinfo
+@end group
+@end example
+or
+@example
+@group
+@iftex
+   boys trade (while the others) u-turn back @keycap{ENTER}
+@end iftex
+@ifinfo
+   boys trade (while the others) u-turn back <ENTER>
+@end ifinfo
+@end group
+@end example
+You must type
+@example
+@group
+@iftex
+   checkpoint @keycap{ENTER}
+   ah so @keycap{ENTER}
+   recycle @keycap{ENTER}
+@end iftex
+@ifinfo
+   checkpoint <ENTER>
+   ah so <ENTER>
+   recycle <ENTER>
+@end ifinfo
+@end group
+@end example
+or
+@example
+@group
+@iftex
+   boys (while the others) @keycap{ENTER}
+   trade @keycap{ENTER}
+   u-turn back @keycap{ENTER}
+@end iftex
+@ifinfo
+   boys (while the others) <ENTER>
+   trade <ENTER>
+   u-turn back <ENTER>
+@end ifinfo
+@end group
+@end example
+
+The concepts to watch out for are labeled ``[must be entered by itself]''
+in the following lists.
 
 Just what constitutes a ``concept'' and what constitutes a mere
 ``variation'' of a call is not always clearly delineated.  We list
@@ -2384,7 +2632,7 @@ below only those things that the program considers to be ``concepts.''
 There are many other variations of calls, such as @i{square chain thru
 to a wave} that are not listed here.  In general, variations of this sort
 can be obtained simply by clicking on them or typing them.  They should
-be visible on the call menu, and, if you type a question mark to @code{sdtty}
+be visible on the call menu, and, if you type a question mark to @code{Sdtty}
 while typing the call name, these variations should be displayed.
 
 In the concept names, ``C/L/W'' has the usual meaning of ``columns,
@@ -2395,7 +2643,7 @@ in which no assumption is made about anyone's facing direction.
 ``GT'' means ``general 1/4 tags'', in which the ends could individually
 be facing either in or out.
 
-In all concepts that can be done either from lines or waves,
+In all concepts that can specify either lines or waves,
 the ``waves'' version has an implicit ``assume waves'' operation
 in it.  Under normal circumstances, this means that the live people can make use of
 the assumption of waves in order to decide how to start the call.  For example,
@@ -2574,16 +2822,19 @@ Any of the above twosome/threesome/whateversome may also be
 Any of the above may be used with the @code{phantom} concept in front
 of it.  There are no concepts like @code{phantom tandem} listed
 separately---you must use the @code{phantom} concept followed by the
-concept that you want.
-When using sdtty, you must press
+concept that you want.  Of course, when using @code{Sdtty}, this issue doesn't make any
+difference---you can just type
+
+@example
+@group
 @iftex
-@keycap{ENTER}
+   phantom tandem swing thru @keycap{ENTER}
 @end iftex
 @ifinfo
-@key{<ENTER>}
+   phantom tandem swing thru @key{<ENTER>}
 @end ifinfo
-after typing the word @code{phantom}.
-You can't type, for example, @code{phantom tandem} on one line.
+@end group
+@end example
 
 The @i{phantom tandem/as couples} concepts expand the people into a 4x4
 matrix whenever possible.  When that is not possible, a 2x8 matrix is
@@ -2653,7 +2904,7 @@ These concepts are quite obscure.
 These are done from ``blocks''.  The two lines or columns work together
 in a 2x3 matrix, doing a 6-person call.
 @item distorted tidal C/L/W (singular)
-These are done from a 2x8 matrix in which ther real people form some
+These are done from a 2x8 matrix in which the real people form some
 kind of distorted 1x8.
 @item <ANYONE> in your distorted C/L/W/B/D (singular)
 These are done from a variety of setups, in which the designated people
@@ -2808,7 +3059,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item <ANYONE> are stable
 @item <N/4> stable
 @item <ANYONE> are <N/4> stable
-@item trace
+@item trace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item ferris
 @item release
 @item stretch
@@ -2818,54 +3069,35 @@ This is used in front of concepts like @samp{split phantom lines}.
 These are straightforward.
 @item centers
 @item ends
-@item centers and ends
+@item centers and ends@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item center 6
 @item outer 6
 @item center 2
 @item outer 2
-@item center 6/outer 2
-@item center 2/outer 6
+@item center 6/outer 2@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item center 2/outer 6@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item <ANYONE>
-@item <ANYONE> (while the others)
+@item <ANYONE> (while the others)@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item <ANYONE> disconnected
-@item <ANYONE> disconnected (while the others)
+@item <ANYONE> disconnected (while the others)@ @ @ [must be entered by itself]
 @item <ANYONE> do your part
-@item <ANYONE> do your part (while the others)
-@item on your own
-@item own the <ANYONE>
+@item <ANYONE> do your part (while the others)@ @ @ [must be entered by itself]
+@item on your own@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item own the <ANYONE>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item ignore the <ANYONE>
-These are straightforward.  @i{You must enter these concepts by themselves.}
-That is, you must press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-@key{<ENTER>}
-@end ifinfo
-after typing any of these concepts.  This is
-true of all of the concepts that designate certain people.  You can't just type
-@code{centers trade}, because it is ambiguous.  Similarly, you can't just
-type @code{boys disconnected swing thru}.  You must press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-@key{<ENTER>}
-@end ifinfo
-after @code{boys disconnected}.  See @ref{Designating Certain People} for a detailed
-discussion of these concepts.
+These are straightforward.  See @ref{Designating Certain People} for a detailed discussion of these concepts.
 @item <ANYONE> lead for a
 This is used from a ``promenade, do not stop @dots{}'' situation.  The call
 will be done as if in 2-faced lines, with the designated people in the
 lead.  The final promenade distance will be computed as though you had allowed
 the dancers to promenade about halfway around the set before they did the call.
 @item ends concentric
-@item centers and ends concentric
+@item centers and ends concentric@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These are like @samp{ends} and @samp{centers and ends}, except that the
 concentric rules (e.g., lines-to-lines and columns-to-columns) are used
 to dictate where the ends should finish.
-@item checkpoint
-@item reverse checkpoint
+@item checkpoint@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item reverse checkpoint@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item checkerboard
 @item checkerbox
 @item checkerdiamond
@@ -2898,7 +3130,7 @@ type the concept, press
 @key{<ENTER>},
 @end ifinfo
 and type the call.
-@item two calls in succession
+@item two calls in succession@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 This concept allows a pair of calls to be executed atomically under a concept.
 This makes it possible to do a @samp{concentric (recycle ; roll)} and have the
 lines-to-lines rule embrace the roll.  It also makes it possible to place two
@@ -2908,8 +3140,8 @@ parentheses, and separated by a semicolon.  The proper way
 to say the concept when calling is problematical.  Something like @samp{consider
 the following two calls to be one unit, and do a stable swing thru and turn thru}
 might be appropriate.
-@item precede it by
-@item follow it by
+@item precede it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item follow it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 The concepts @code{precede it by} and @code{follow it by} take two subject
 calls.  They perform the first call (first in textual order, that is)
 @i{before} or @i{after}, respectively, the second.  For example,
@@ -2937,31 +3169,10 @@ These are straightforward.
 @item twice
 @item <N> times
 @item do the last <N>/<N>
-@i{You must enter these concepts by themselves.}
-That is, you must press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-@key{<ENTER>}
-@end ifinfo
-after typing any of these concepts.  This is
-necessary to avoid the difficulties of deciphering such things as
-@samp{1/2, mix}, @samp{3/4, mix}, @samp{3/4 mix}, and @samp{2/3, 3/4 mix}.
-In the finished transcript, a comma will appear after these concepts
-to resolve the ambiguity.  You never type the comma---pressing
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-@key{<ENTER>}
-@end ifinfo
-at the appropriate moment tells the program how you want the ambiguity resolved.
-
 The @code{M/N} concept, where @code{M} and @code{N} are numbers, causes that
 fraction of the subject call to be executed, as in @samp{3/5 swing the fractions}.
-In @code{sdtty}, just type in the numbers directly, as in @code{3/5}.
-In @code{sd}, the concept is listed as @code{<M/N>}.  A popup will appear asking
+In @code{Sdtty}, just type in the numbers directly, as in @code{3/5}.
+In @code{Sd}, the concept is listed as @code{<M/N>}.  A popup will appear asking
 for the numbers.  Enter two of them.
 
 The @code{1-M/N} concept causes the subject call to be executed once and the indicated
@@ -2973,14 +3184,41 @@ It will always appear before the call in the transcript, but you might want to
 say the fraction after the call, as in @samp{swing the fractions four fifths} or
 @samp{split circulate once and a half}.
 
+In extremely tricky cases, such as @samp{1/2, mix}, @samp{3/4, mix}, @samp{3/4 mix},
+and @samp{2/3, 3/4 mix}. these concepts can lead to ambiguity.  It may
+be necessary to type the concept by itself, that is, to press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+at the appropriate moment, to get what you want.  If you really want 3/4 of the
+call @samp{mix}, type
+@example
+@group
+@iftex
+   3/4 @keycap{ENTER}
+   mix @keycap{ENTER}
+@end iftex
+@ifinfo
+   3/4 <ENTER>
+   mix <ENTER>
+@end ifinfo
+@end group
+@end example
+
+In the finished transcript, a comma will appear after fractionalizing concepts,
+but not in the call @code{3/4 mix}.  You of course never type any commas.
+
 The @code{twice} concept simply causes the subject call to be executed
 twice.  This is a notion familiar at all levels from Mainstream
 (@samp{spin chain thru, the girls double circulate}) to C4 (@samp{piecewise
 twice, recoil}).
 
-The @code{<N> Times} concept causes the subject call to be executed that number
-of times.  In @code{sdtty}, just type in the number directly, as in @code{3 times}.
-In @code{sd}, the concept is listed as @code{<N> times}.  A popup will appear
+The @code{<N> times} concept causes the subject call to be executed that number
+of times.  In @code{Sdtty}, just type in the number directly, as in @code{3 times}.
+In @code{Sd}, the concept is listed as @code{<N> times}.  A popup will appear
 asking for the number.
 
 No universally recognized words for these exist, so the program uses the generic
@@ -2991,34 +3229,10 @@ such as @samp{twice}, @samp{thrice}, @samp{circulate two positions}, or whatever
 @item finally
 @item random
 @item reverse random
-These are followed by the concept to which they apply.  You may enter the
-concepts and call separately, as in
-@example
-@iftex
-reverse @keycap{ENTER}
-random @keycap{ENTER}
-tandem @keycap{ENTER}
-swing thru @keycap{ENTER}
-@end iftex
-@ifinfo
-reverse @key{<ENTER>}
-random @key{<ENTER>}
-tandem @key{<ENTER>}
-swing thru @key{<ENTER>}
-@end ifinfo
-@end example
-or all together, as in
-@example
-@iftex
-reverse random tandem swing thru @keycap{ENTER}
-@end iftex
-@ifinfo
-reverse random tandem swing thru @key{<ENTER>}
-@end ifinfo
-@end example
+These are followed by the concept to which they apply.
 @item shifty
 @item shift <N>
-@item interlace
+@item interlace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item reverse order
 These are straightforward.
 @item finish
@@ -3028,15 +3242,17 @@ calls for which the first part is recognizable.  Sd also recognizes the concept
 @code{like a}, meaning ``do the last part.''  You need to be aware, however,
 that there are calls for which, while it is technically legal to say such things,
 they are not accepted as common usage.  For example, @code{finish shazam} as a way of
-saying @dfn{U turn back}, or @code{finish mix} or @code{like a mix} as ways
+saying @dfn{U-turn back}, or @code{finish mix} or @code{like a mix} as ways
 of saying @dfn{centers trade}, would have to be considered rather peculiar.
 You must exercise your judgement when using these concepts.
 
 We believe that this is consistent with common usage when that common usage
 is correctly applied.  For example,
 @example
+@group
    cast off 3/4
    LIKE A shazam
+@end group
 @end example
 is a commonly accepted and completely correct usage.
 
@@ -3045,47 +3261,61 @@ finish like a wheel the ocean}, in which the final cast off 3/4 of the
 chain reaction was ``pushy.''  While the plain English language meaning
 of that is clear, the way you must enter that to Sd is
 @example
+@group
    CROSS chain reaction
    CENTERS LIKE A wheel the ocean
+@end group
 @end example
 You must, of course, verify that the casting direction is correct for
 smooth dancing of this figure.
 @item <ANYONE> start
 @item skip the <Nth> part
 @item do the <Nth> part <concept>
-@item replace the <Nth> part
-@item interrupt after the <Nth> part
+@item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These concepts cause the call to be interrupted or replaced as indicated.
 
 The @code{<ANYONE> start} concept has the indicated people do their own
 part of the first part of the call, after which the others join them.
 You should type this in as, for example
 @example
+@group
 @iftex
-boys start @keycap{ENTER}
-quarter thru @keycap{ENTER}
+boys start quarter thru @keycap{ENTER}
 @end iftex
 @ifinfo
-boys start @key{<ENTER>}
-quarter thru @key{<ENTER>}
+boys start quarter thru@key{<ENTER>}
 @end ifinfo
+@end group
 @end example
 The @code{do the <Nth> part <concept>} concept applies the given concept
 to the indicated part of the call, but not to the rest.  You literally type the
 ``<concept>'', including the angle brackets.  (Of course, type-in completion
 makes it unnecessary to type the whole thing.)  For example, you might type
 @example
+@group
 @iftex
 do the 2nd part <concept> @keycap{ENTER}
-tandem @keycap{ENTER}
-remake @keycap{ENTER}
+tandem remake @keycap{ENTER}
 @end iftex
 @ifinfo
 do the 2nd part <concept> @key{<ENTER>}
-tandem @key{<ENTER>}
-remake @key{<ENTER>}
+tandem remake @key{<ENTER>}
 @end ifinfo
+@end group
 @end example
+or
+@example
+@group
+@iftex
+do the 2nd part <concept> tandem remake @keycap{ENTER}
+@end iftex
+@ifinfo
+do the 2nd part <concept> tandem remake @key{<ENTER>}
+@end ifinfo
+@end group
+@end example
+
 The @code{replace} and @code{interrupt} concepts require two calls.  After
 typing the concept, type the call that is to have a part interrupted or replaced.
 The program will then ask you for the call that comprises the interruption or
@@ -3167,6 +3397,7 @@ These are straightforward.
 @item common spot columns
 @item common point diamonds
 @item common end lines
+@item common end waves
 The program assumes that the ``common spot'' concepts treat people as though
 they had collided and taken @i{right} hands.  Left-hand miniwaves are not
 accepted.  If you want to use these concepts with people in left-hand
@@ -3176,7 +3407,7 @@ The @code{common point galaxy} concept is used from a ``rigger'' setup in
 which the ``wings'' are collided points.  The @code{common spot columns}
 concept is used from offset right-hand columns.  The @code{common point
 diamonds} concept is used from the kind of setup one obtains after a
-@samp{6x2 acey deucey} from facing diamonds.   The @code{common end lines}
+@samp{6x2 acey deucey} from facing diamonds.   The @code{common end lines/waves}
 concept is used from a parallelogram in which the ``wings'' are collided
 ends of the lines.
 @item 1x2/2x1/2x2/1x3/3x1/3x34x4
@@ -3397,7 +3628,7 @@ It is extremely dangerous in terms of what it may require the dancers to do.
 Many dancers find it difficult enough to do the live people's parts of calls
 without having to do the phantoms' parts also.
 
-You can put @code{sd} into a mode in which there is an implicit
+You can put @code{Sd} into a mode in which there is an implicit
 @code{with active phantoms} whenever any assumption is made.
 The @code{toggle active phantoms} command toggles (turns on or off)
 this mode.  @xref{Changing Modes}.
@@ -3415,7 +3646,7 @@ are the as-couples center wave of a quarter-tag.  The way to specify this
 when calling is typically something like @samp{as couples in a quarter-tag,
 scoot and little}.
 
-The proper way to specify this in @code{sd} or @code{sdtty} is with the
+The proper way to specify this in @code{Sd} or @code{Sdtty} is with the
 @code{as couples} (or @code{tandem} or @code{couples twosome} or whatever)
 concept, followed by a suitable @code{assume} concept, such as @code{assume
 general 1/4 tags} or @code{assume right 1/4 tags}.  Which of these assumptions
@@ -3447,12 +3678,12 @@ ideas, the program may seem idiosyncratic and ignorant in its handling of them.
 The six concepts are
 
 @example
-   so-and-so
-   so-and-so disconnected
-   so-and-so in your distorted setup
-   so-and-so do your part
-   ignore the so-and-so
-   own the so-and-so
+   <ANYONE>
+   <ANYONE> disconnected
+   <ANYONE> in your distorted setup
+   <ANYONE> do your part
+   ignore the <ANYONE>
+   own the <ANYONE>
 @end example
 
 In general, be aware that the choice of words and punctuation that the program
@@ -3501,14 +3732,14 @@ accept @code{centers} or @code{center 6} for this, since those terms are not
 well-defined in this situation.
 @end table
 
-@subsection So-And-So
+@subsection <ANYONE>
 
 The concepts are:
 
 @example
-   @code{<so-and-so> <call>}
+   @code{<ANYONE> <call>}
          or
-   @code{<so-and-so> <call> while the others <other call>}
+   @code{<ANYONE> <call> while the others <other call>}
 @end example
 
 If the designated people are centers or ends, the program will do
@@ -3547,40 +3778,40 @@ Incidentally, this is why concepts are capitalized.  Otherwise, the line
 The Sd program is designed to make it possible to determine unambiguously, by looking at
 the printout, how an action arose.
 
-@subsection So-And-So Disconnected
+@subsection <ANYONE> Disconnected
 
 The concepts are:
 
 @example
-   @code{<so-and-so> disconnected <call>}
+   @code{<ANYONE> disconnected <call>}
          or
-   @code{<so-and-so> disconnected <call> while the others <other call>}
+   @code{<ANYONE> disconnected <call> while the others <other call>}
 @end example
 
-This is like @code{<so-and-so>}, but finds the maximal undistorted subsets,
+This is like @code{<ANYONE>}, but finds the maximal undistorted subsets,
 whether they are connected or not.  This is a recognized C2 concept.  It is
 generally intended to be used from grand (1x8) setups, in which the designated
 people leave the room and compress themselves into a 1x4 setup.  After doing
 the call they come back and place themselves in the same four spaces that
-they had vacated.  A few shape-changing calls are permitted.  In this case,
-whichever set of people occupied the center spots prior to the call will
+they had vacated.  Shape-changing calls are permitted.  In this case,
+whichever set of people occupied the centermost spots prior to the call will
 occupy the center of the result, in accordance with accepted usage for
 this concept.
 
-@subsection So-And-So in your Distorted Setup
+@subsection <ANYONE> in your Distorted Setup
 
 The concepts are:
 
 @example
-   @code{<so-and-so> in your distorted line <call>}
+   @code{<ANYONE> in your distorted line <call>}
          or
-   @code{<so-and-so> in your distorted wave <call>}
+   @code{<ANYONE> in your distorted wave <call>}
          or
-   @code{<so-and-so> in your distorted column <call>}
+   @code{<ANYONE> in your distorted column <call>}
          or
-   @code{<so-and-so> in your distorted diamond <call>}
+   @code{<ANYONE> in your distorted diamond <call>}
          or
-   @code{<so-and-so> in your distorted box <call>}
+   @code{<ANYONE> in your distorted box <call>}
 @end example
 
 The designated people are identified in a geometrically distorted setup.
@@ -3598,14 +3829,14 @@ geometrically distorted in shape, not just disconnected.  Do not say
 This concept has been set at C2.  You can use it at lower levels if
 you issue the @code{toggle concept levels} command.
 
-@subsection So-And-So Do Your Part
+@subsection <ANYONE> Do Your Part
 
 The concepts are:
 
 @example
-   @code{<so-and-so> do your part <call>}
+   @code{<ANYONE> do your part <call>}
          or
-   @code{<so-and-so> do your part <call> while the others <other call>}
+   @code{<ANYONE> do your part <call> while the others <other call>}
 @end example
 
 This means that the non-designated dancers leave the room and re-form their own
@@ -3613,7 +3844,7 @@ setup in another room.  The setups are not shrink-wrapped---they stay
 the same size in each room, with phantoms where the other people are.
 The appropriate call is done in each room.  The non-designees come back,
 and the two setups are merged.  This merging operation is similar to that
-used for @code{<so-and-so>}.  It may result in things like C1-phantom
+used for @code{<ANYONE>}.  It may result in things like C1-phantom
 setups.  From boy-boy-girl-girl waves, @code{boys do your part, hinge}
 will leave C1 phantom setups, just as @code{boys, hinge} will.
 In fact, the difference
@@ -3627,16 +3858,16 @@ From boy-girl-boy-girl waves, @code{boys do your part, hinge} creates a mess.
 No sensible dancer would consider it acceptable.  Do not use such things.
 
 The second form of this concept will be printed in the final transcript
-as @code{do your part, <so-and-so> <call> while the others <other call>}.
+as @code{do your part, <ANYONE> <call> while the others <other call>}.
 You must still enter it as shown above, with the designator first and
 the phrase @samp{do your part} second.
 
-@subsection Ignore the So-And-So
+@subsection Ignore the <ANYONE>
 
 The concept is:
 
 @example
-   @code{ignore the <so-and-so>, <call>}
+   @code{ignore the <ANYONE>, <call>}
 @end example
 
 This means that the designated people do nothing, while the others do
@@ -3647,15 +3878,15 @@ people do not exist.
 This concept has been set at C1.  You can use it at lower levels if
 you issue the @code{toggle concept levels} command.
 
-@subsection Own the So-And-So
+@subsection Own the <ANYONE>
 
 The concept is:
 
 @example
-   @code{own the <so-and-so>, <call> by <other call>}
+   @code{own the <ANYONE>, <call> by <other call>}
 @end example
 
-This is similar to the @code{<so-and-so> do your part} concept, except that the
+This is similar to the @code{<ANYONE> do your part} concept, except that the
 result setups are reassembled according to strict matrix positions.  That
 is, instead of a C1 phantom setup, a 4x4 matrix may result.
 This is a recognized C3A concept.
@@ -3754,7 +3985,7 @@ might simply be inappropriate, or it might be wise to say something along
 the lines of ``be careful; everyone do your part.''
 The significance of a warning may also depend on the level.  Some things
 that are extremely peculiar but barely legal at high challenge levels are
-simply not done at lower levels.  You should use your judgement.  
+simply not done at lower levels.  You should use your judgement.
 
 Warning:  The database is not without errors or misunderstandings in
 nonstandard uses of calls.  The program generally tries to be extremely

@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -1364,6 +1358,12 @@ Private void divide_diamonds(setup *ss, setup *result)
 /* The fraction stuff is encoded into 6 hexadecimal digits, which we will call
    digits 3 through 8:
 
+      Late-breaking news:  digit 2 is now used.  The bit 0x01000000 means
+      "this is 'initially' or 'finally', and I promise to invoke all parts
+      of the call, even though I appear at present to be invoking just a
+      subset."  It is used to allow 'initially' and 'finally' to be stacked
+      with themselves.
+
       digit 3 - the code (3 bits) and the reversal bit (1 bit)
                   Because of this perhaps unfortunate packing,
                   we will consider codes to be even numbers 0, 2, 4, .... 14.
@@ -1626,7 +1626,7 @@ Private void do_sequential_call(
    long_boolean reverse_order = FALSE;
    int subcall_incr = 1;   /* Will be -1 if doing call in reverse order. */
    long_boolean do_half_of_last_part = FALSE;
-   long_boolean first_call;
+   long_boolean first_call = TRUE;
    int realtotal = callspec->stuff.def.howmanyparts;
    int total = realtotal;
    int start_point = 0;    /* Where we start, in the absence of special stuff. */
@@ -1685,6 +1685,7 @@ Private void do_sequential_call(
       }
       start_point = zzz.subcall_index;
       if (zzz.instant_stop) instant_stop = start_point*subcall_incr+1;
+      if (reverse_order && !zzz.instant_stop) first_call = FALSE;
    }
 
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
@@ -1697,8 +1698,6 @@ Private void do_sequential_call(
    }
 
    qtf = qtfudged;
-
-   first_call = reverse_order ? FALSE : TRUE;
 
    if (ss->kind != s2x2 && ss->kind != s_short6) ss->cmd.prior_elongation_bits = 0;
 

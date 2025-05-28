@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -482,6 +476,8 @@ char *qualtab[] = {
    "ctr_pts_lh",
    "said_triangle",
    "didnt_say_triangle",
+   "occupied_as_h",
+   "occupied_as_qtag",
    "all_sel",
    "none_sel",
    ""};
@@ -721,6 +717,8 @@ char *predtab[] = {
    "unselect_near_unselect",
    "select_once_rem_from_select",
    "conc_from_select",
+   "grand_conc_from_select",
+   "other_diamond_point_select",
    "select_once_rem_from_unselect",
    "unselect_once_rem_from_select",
    "select_and_roll_is_cw",
@@ -735,6 +733,16 @@ char *predtab[] = {
    "x14_once_rem_couple",
    "lines_miniwave",
    "lines_couple",
+   "miniwave_side_of_in_3n1_line",
+   "couple_side_of_in_3n1_line",
+   "miniwave_side_of_out_3n1_line",
+   "couple_side_of_out_3n1_line",
+   "antitandem_side_of_in_3n1_col",
+   "tandem_side_of_in_3n1_col",
+   "antitandem_side_of_out_3n1_col",
+   "tandem_side_of_out_3n1_col",
+   "miniwave_side_of_2n1_line",
+   "couple_side_of_2n1_line",
    "cast_normal",
    "cast_pushy",
    "cast_normal_or_warn",
@@ -784,6 +792,10 @@ char *predtab[] = {
    "outroller_is_cw_2x8",
    "outposter_is_cw",
    "outposter_is_ccw",
+   "zero_cw_people",
+   "one_cw_person",
+   "two_cw_people",
+   "three_cw_people",
    "nexttrnglspot_is_tboned",
    "nextinttrnglspot_is_tboned",
    "next62spot_is_tboned",

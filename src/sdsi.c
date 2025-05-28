@@ -864,6 +864,8 @@ extern long_boolean open_session(int argc, char **argv)
       }
    }
 
+   free(args);
+
    /* Initialize outfile_string to calling-level-specific default outfile, that is,
       "sequence.A2" or whatever.  It already contains "sequence".  If no level was given
       on the command line, it will be the null suffix, and we will query for it later. */
@@ -898,10 +900,17 @@ extern long_boolean open_session(int argc, char **argv)
    printf("%3d     (create a new session)\n\n", session_linenum+1);
 
    printf("Enter the number of the desired session:  ");
-   if (!gets(line))
+
+   if (!gets(line) || !line[0])
       goto no_session;
 
-   if (!sscanf(line, "%d", &session_index) || session_index == 0)
+   if (!sscanf(line, "%d", &session_index)) {
+      session_index = 0;         /* User typed garbage -- exit the program immediately. */
+      (void) fclose(session);
+      return TRUE;
+   }
+
+   if (session_index == 0)
       goto no_session;
 
    if (session_index < 0) {

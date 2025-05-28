@@ -77,8 +77,10 @@ Sd is not suitable for this.
 
 Quality, correctness, and reliability are fundamental and extremely important
 design objectives of Sd and Sdtty.  Before any version is released, it passes
-very rigorous diagnostic tests.  The goal is to make a program that never
-makes mistakes.
+very rigorous diagnostic tests.  These tests include verification of large amounts
+of C4 material from recent National Advanced and Challenge Conventions, and
+other C4 weekends, with particular emphasis on material written by competing programs.
+The goal is to make a program that never makes mistakes.
 
 @unnumberedsec Authenticity of Calls and Concepts
 
@@ -103,8 +105,8 @@ sources that have shown the greatest care in their editing.
 The ``-ignoreblanks'' command line switch, or the line ``ignoreblanks''
 in the ``options'' section of the initialization file, will make Sdtty
 accept words that are run together or the use of blanks instead of
-hyphens.  Hence, misspelled calls and concepts such as @code{inroll
-circulate} and @code{tandem based triangles} will be accepted.
+hyphens.  Hence, misspelled concepts and calls such as @code{tandem based triangles}
+(the Callerlab spelling is with a hyphen) and @code{inroll circulate} will be accepted.
 
 @unnumberedsec Variations of the Program
 @end ifset
@@ -120,7 +122,9 @@ Apollo systems.  It is not yet available for PC compatibles.
 
 Sdtty is the name of the program that uses a character-oriented keyboard
 interface.  Calls are selected by typing their names.  Sdtty runs on
-Unix-like systems and under DOS on PC compatibles.
+Unix-like systems and under DOS, Windows 3.1, and Windows 95 on PC
+compatibles.  PC users may take comfort from the fact that most serious
+callers prefer Sdtty rather than Sd.
 
 @menu
 * Documentation::               Documentation
@@ -257,8 +261,7 @@ If you are upgrading to a new version, it will ask whether it is OK to
 overwrite existing files.  Type ``Y'' in each case.
 
 Once the installation is complete, you can run Sdtty under DOS or Windows.
-You can run DOS under Windows either with the ``MS-DOS prompt'' command
-or by exiting from Windows.  Once in DOS, type
+To run it from DOS, type
 
 @example
 CD C:\SD

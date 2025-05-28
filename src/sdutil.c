@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -48,6 +42,8 @@
    swap_people
    install_person
    install_rot
+   scatter
+   gather
    process_final_concepts
    skip_one_concept
    fix_n_results
@@ -327,10 +323,11 @@ Private restriction_thing two_faced_4x4_2x8 = {8, {0, 1, 2, 3, 12, 13, 14, 15}, 
 Private restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
 Private restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
 Private restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
-Private restriction_thing s4x4_wave     = {0,   {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},
-                                                {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
-Private restriction_thing s4x4_2fl     = {0,   {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},
-                                                {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+Private restriction_thing s4x4_wave     = {0,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
+                                                {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+
+Private restriction_thing s4x4_2fl     = {0,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},  
+                                                {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 Private restriction_thing cwave_qtg     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 Private restriction_thing wave_qtag     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
@@ -1790,11 +1787,12 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 {
    int centersp, w, i;
    parse_block *thing;
+   configuration *this_item = &history[history_index];
 
    if (write_to_file == file_write_double && !singlespace_mode)
       doublespace_file();
 
-   centersp = history[history_index].centersp;
+   centersp = this_item->centersp;
 
    /* Do not put index numbers into output file -- user may edit it later. */
 
@@ -1813,7 +1811,7 @@ extern void write_history_line(int history_index, Const char *header, long_boole
       goto final;
    }
 
-   thing = history[history_index].command_root;
+   thing = this_item->command_root;
    
    /* Need to check for the special case of starting a sequence with heads or sides.
       If this is the first line of the history, and we started with heads of sides,
@@ -1839,20 +1837,30 @@ extern void write_history_line(int history_index, Const char *header, long_boole
    /* Check for warnings to print. */
    /* Do not double space them, even if writing final output. */
 
+   /* First, don't print both "bad concept level" and "bad modifier level". */
+
+   if ((1 << (warn__bad_concept_level & 0x1F)) & this_item->warnings.bits[warn__bad_concept_level>>5])
+      this_item->warnings.bits[warn__bad_modifier_level>>5] &= ~(1 << (warn__bad_modifier_level & 0x1F));
+
+   /* Or "opt for parallelogram" and "each 1x4". */
+
+   if ((1 << (warn__check_pgram & 0x1F)) & this_item->warnings.bits[warn__check_pgram>>5])
+      this_item->warnings.bits[warn__each1x4>>5] &= ~(1 << (warn__each1x4 & 0x1F));
+
    for (w=0 ; w<NUM_WARNINGS ; w++) {
-      if (((1 << (w & 0x1f)) & history[history_index].warnings.bits[w>>5]) != 0) {
+      if ((1 << (w & 0x1F)) & this_item->warnings.bits[w>>5]) {
          writestuff("  Warning:  ");
          writestuff(&warning_strings[w][1]);
          newline();
       }
    }
 
-   if (picture || history[history_index].draw_pic) {
-      printsetup(&history[history_index].state);
+   if (picture || this_item->draw_pic) {
+      printsetup(&this_item->state);
    }
 
    /* Record that this history item has been written to the UI. */
-   history[history_index].text_line = text_line_count;
+   this_item->text_line = text_line_count;
 }
 
 
@@ -2165,7 +2173,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
                   goto bad;
                default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
+                  goto good;           /* We don't understand the setup -- we'd better accept it. */
             }
          case sq_1fl_only:       /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
             switch (ss->cmd.cmd_assume.assumption) {
@@ -2180,7 +2188,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             rr = get_restriction_thing(ss->kind, tt);
             if (rr) goto check_stuff;
             goto good;                 /* We don't understand the setup -- we'd better accept it. */
-         case sq_2fl_only:                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
+         case sq_2fl_only:             /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
                case cr_wave_only:
@@ -2192,7 +2200,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             rr = get_restriction_thing(ss->kind, tt);
             if (rr) goto check_stuff;
             goto good;                 /* We don't understand the setup -- we'd better accept it. */
-         case sq_couples_only:     /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
+         case sq_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
                   goto good;
@@ -2205,7 +2213,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             rr = get_restriction_thing(ss->kind, tt);
             if (rr) goto check_stuff;
             goto good;                 /* We don't understand the setup -- we'd better accept it. */
-         case sq_3x3couples_only:     /* 1x3/1x6/2x6/1x12 - each group of 3 people are facing the same way */
+         case sq_3x3couples_only:      /* 1x3/1x6/2x3/2x6/1x12 - each group of 3 people are facing the same way */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
                   goto good;
@@ -2218,7 +2226,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             rr = get_restriction_thing(ss->kind, tt);
             if (rr) goto check_stuff;
             goto good;                 /* We don't understand the setup -- we'd better accept it. */
-         case sq_4x4couples_only:     /* 1x4/1x8/2x4/2x8/1x16 - each group of 4 people are facing the same way */
+         case sq_4x4couples_only:      /* 1x4/1x8/2x4/2x8/1x16 - each group of 4 people are facing the same way */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
                   goto good;
@@ -2645,6 +2653,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_didnt_say_tgl:
             if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto bad;
             goto good;
+         case sq_occupied_as_h:
+            if (ss->kind != s3x4 || (ss->people[1].id1 | ss->people[2].id1 | ss->people[7].id1 | ss->people[8].id1)) goto bad;
+            goto good;
+         case sq_occupied_as_qtag:
+            if (ss->kind != s3x4 || (ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto bad;
+            goto good;
          case sq_dmd_ctrs_rh:
          case sq_dmd_ctrs_lh:
          case sq_dmd_ctrs_1f:
@@ -2935,6 +2949,23 @@ extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeopl
       }
    }
 }
+
+
+extern void scatter(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount)
+{
+   int k;
+   for (k=0; k<=countminus1; k++)
+      (void) copy_rot(resultpeople, resultplace[k], sourcepeople, k, rotamount);
+}
+
+
+extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount)
+{
+   int k;
+   for (k=0; k<=countminus1; k++)
+      (void) copy_rot(resultpeople, k, sourcepeople, resultplace[k], rotamount);
+}
+
 
 
 #define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | INHERITFLAG_3X3 | INHERITFLAG_4X4)

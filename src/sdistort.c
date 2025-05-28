@@ -594,12 +594,12 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
 }
 
-static int list_10_6_5_4[4] = {8, 6, 5, 4};
-static int list_11_13_7_2[4] = {9, 11, 7, 2};
-static int list_12_17_3_1[4] = {10, 15, 3, 1};
-static int list_14_15_16_0[4] = {12, 13, 14, 0};
+static Const veryshort list_10_6_5_4[4] = {8, 6, 5, 4};
+static Const veryshort list_11_13_7_2[4] = {9, 11, 7, 2};
+static Const veryshort list_12_17_3_1[4] = {10, 15, 3, 1};
+static Const veryshort list_14_15_16_0[4] = {12, 13, 14, 0};
 
-static short indices_for_2x6_4x6[12]  = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
+static Const veryshort indices_for_2x6_4x6[12]  = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
 
 
 
@@ -684,7 +684,6 @@ extern void do_phantom_2x4_concept(
 
          if (maps->map_kind == MPKIND__SPLIT) {
             setup stemp;
-            int i;
 
             if (rot) {
                if (global_tbonetest & 1) fail("There are no split phantom lines here.");
@@ -702,7 +701,7 @@ extern void do_phantom_2x4_concept(
             stemp = *ss;
             ss->kind = s4x6;
             clear_people(ss);
-            for (i=0; i<12; i++) copy_person(ss, indices_for_2x6_4x6[i], &stemp, i);
+            scatter(ss, &stemp, indices_for_2x6_4x6, 11, 0);
             break;              /* Note that rot is zero. */
          }
          /* Otherwise fall through to error message!!! */
@@ -726,9 +725,9 @@ extern void do_phantom_2x4_concept(
 /* This returns true if the two live people were consecutive, meaning this is a true Z line/column. */
 Private long_boolean search_row(
    int n,
-   int *x1,
-   int *x2,
-   Const int row[8],
+   veryshort *x1,
+   veryshort *x2,
+   Const veryshort row[8],
    Const setup *s)
 {
    int i, z, fill_count;
@@ -773,77 +772,76 @@ extern void distorted_2x2s_move(
    setup *result)
 {
    /* maps for 4x4 Z's */
-   static Const int map1[16] = {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
-   static Const int map2[16] = {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
-   static Const int map3[16] = {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
-   static Const int map4[16] = {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
-   static Const int map5[16] = {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
-   static Const int map6[16] = {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
-   static Const int map7[16] = {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
-   static Const int map8[16] = {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
+   static Const veryshort map1[16] = {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
+   static Const veryshort map2[16] = {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
+   static Const veryshort map3[16] = {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
+   static Const veryshort map4[16] = {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
+   static Const veryshort map5[16] = {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
+   static Const veryshort map6[16] = {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
+   static Const veryshort map7[16] = {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
+   static Const veryshort map8[16] = {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
 
    /* maps for 3x4 Z's */
-   static Const int mapa[16] = {10, 1, 11, 9, 5, 3, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const int mapb[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
-   static Const int mapc[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
-   static Const int mapd[16] = {0, 11, 8, 10, 2, 4, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const veryshort mapa[16] = {10, 1, 11, 9, 5, 3, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const veryshort mapb[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
+   static Const veryshort mapc[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
+   static Const veryshort mapd[16] = {0, 11, 8, 10, 2, 4, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1};
 
    /* maps for 2x6 Z's */
-   static Const int mape[16] = {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const int mapf[16] = {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const veryshort mape[16] = {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const veryshort mapf[16] = {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
 
    /* maps for twin parallelograms */
-   static Const int map_p1[16] = {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const int map_p2[16] = {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const veryshort map_p1[16] = {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const veryshort map_p2[16] = {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
 
    /* maps for interlocked boxes/interlocked parallelograms */
-   static Const int map_b1[16] = {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
-   static Const int map_b2[16] = {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
+   static Const veryshort map_b1[16] = {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
+   static Const veryshort map_b2[16] = {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
 
    /* maps for jays */
 
-   static Const int mapj1[24] = {
+   static Const veryshort mapj1[24] = {
                7, 2, 4, 5, 0, 1, 3, 6,
                6, 3, 4, 5, 0, 1, 2, 7,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const int mapj2[24] = {
+   static Const veryshort mapj2[24] = {
                6, 3, 4, 5, 0, 1, 2, 7,
                7, 2, 4, 5, 0, 1, 3, 6,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const int mapj3[24] = {
+   static Const veryshort mapj3[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                7, 2, 4, 5, 0, 1, 3, 6,
                6, 3, 4, 5, 0, 1, 2, 7};
-   static Const int mapj4[24] = {
+   static Const veryshort mapj4[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 3, 4, 5, 0, 1, 2, 7,
                7, 2, 4, 5, 0, 1, 3, 6};
 
    /* maps for facing/back-to-front/back-to-back parallelograms */
 
-   static Const int mapk1[24] = {
+   static Const veryshort mapk1[24] = {
                3, 2, 4, 5, 0, 1, 7, 6,
                6, 7, 4, 5, 0, 1, 2, 3,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const int mapk2[24] = {
+   static Const veryshort mapk2[24] = {
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const int mapk3[24] = {
+   static Const veryshort mapk3[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                3, 2, 4, 5, 0, 1, 7, 6,
                6, 7, 4, 5, 0, 1, 2, 3};
-   static Const int mapk4[24] = {
+   static Const veryshort mapk4[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6};
 
-   int i;
    int table_offset;
    int misc_indicator;
    setup a1, a2;
    setup res1, res2;
-   Const int *map_ptr;
+   Const veryshort *map_ptr;
 
    concept_descriptor *this_concept = parseptr->concept;
 
@@ -1037,13 +1035,13 @@ extern void distorted_2x2s_move(
 
          {
             setup rotss = *ss;
-            int the_map[16];
+            veryshort the_map[16];
             int rot, rotz;
          
-            int *map_ptr = the_map;
             int rows = 1;
             int columns = 1;
          
+            map_ptr = the_map;
             rotss.rotation++;
             canonicalize_rotation(&rotss);
       
@@ -1074,8 +1072,7 @@ extern void distorted_2x2s_move(
             rot = 011;
             rotz = 033;
             result->kind = s4x4;
-         
-            for (i=0; i<4; i++) (void) copy_rot(&a1, i, ss, map_ptr[i], rot);
+            gather(&a1, ss, map_ptr, 3, rot);
             a1.kind = s2x2;
             a1.rotation = 0;
             a1.cmd = ss->cmd;
@@ -1083,8 +1080,7 @@ extern void distorted_2x2s_move(
             update_id_bits(&a1);
             move(&a1, FALSE, &res1);
             if (res1.kind != s2x2 || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
-         
-            for (i=0; i<4; i++) (void) copy_rot(&a2, i, ss, map_ptr[i+4], rot);
+            gather(&a2, ss, &map_ptr[4], 3, rot);
             a2.kind = s2x2;
             a2.rotation = 0;
             a2.cmd = ss->cmd;
@@ -1094,8 +1090,8 @@ extern void distorted_2x2s_move(
             if (res2.kind != s2x2 || (res2.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
          
             result->rotation = res1.rotation;
-            for (i=0; i<4; i++) (void) copy_rot(result, map_ptr[i], &res1, i, rotz);
-            for (i=0; i<4; i++) (void) copy_rot(result, map_ptr[i+4], &res2, i, rotz);
+            scatter(result, &res1, map_ptr, 3, rotz);
+            scatter(result, &res2, &map_ptr[4], 3, rotz);
             result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_MASK;
             reinstate_rotation(ss, result);
          
@@ -1113,35 +1109,26 @@ extern void distorted_2x2s_move(
 
    result->kind = ss->kind;
    result->rotation = 0;
-
    ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a1 = *ss;
    a2 = *ss;
-
-   for (i=0; i<4; i++) {
-      (void) copy_person(&a1, i, ss, map_ptr[i+table_offset]);
-      (void) copy_person(&a2, i, ss, map_ptr[i+table_offset+4]);
-   }
-
+   gather(&a1, ss, &map_ptr[table_offset], 3, 0);
+   gather(&a2, ss, &map_ptr[table_offset+4], 3, 0);
    a1.kind = s2x2;
-   a1.rotation = 0;
    a2.kind = s2x2;
+   a1.rotation = 0;
    a2.rotation = 0;
-
    a1.cmd.cmd_assume.assumption = cr_none;
-   update_id_bits(&a1);
-   move(&a1, FALSE, &res1);
    a2.cmd.cmd_assume.assumption = cr_none;
+   update_id_bits(&a1);
    update_id_bits(&a2);
+   move(&a1, FALSE, &res1);
    move(&a2, FALSE, &res2);
 
    if (res1.kind != s2x2 || res2.kind != s2x2) fail("Can't do shape-changer with this concept.");
 
-   for (i=0; i<4; i++) {
-      (void) copy_person(result, map_ptr[i+table_offset], &res1, i);
-      (void) copy_person(result, map_ptr[i+table_offset+4], &res2, i);
-   }
-
+   scatter(result, &res1, &map_ptr[table_offset], 3, 0);
+   scatter(result, &res2, &map_ptr[table_offset+4], 3, 0);
    result->result_flags = res1.result_flags | res2.result_flags;
    reinstate_rotation(ss, result);
    return;
@@ -1176,14 +1163,14 @@ extern void distorted_move(
       lines vs. columns nature of the concept.
 */
 
-   static int list_0_12_11[3] = {0, 10, 9};
-   static int list_1_13_10[3] = {1, 11, 8};
-   static int list_2_5_7[3] = {2, 5, 7};
-   static int list_3_4_6[3] = {3, 4, 6};
-   static int list_2x8[16] = {0, 15, 1, 14, 3, 12, 2, 13, 7, 8, 6, 9, 4, 11, 5, 10};
+   static Const veryshort list_0_12_11[3] = {0, 10, 9};
+   static Const veryshort list_1_13_10[3] = {1, 11, 8};
+   static Const veryshort list_2_5_7[3] = {2, 5, 7};
+   static Const veryshort list_3_4_6[3] = {3, 4, 6};
+   static Const veryshort list_2x8[16] = {0, 15, 1, 14, 3, 12, 2, 13, 7, 8, 6, 9, 4, 11, 5, 10};
 
-   int the_map[8];
-   int i, rot, rotz;
+   veryshort the_map[8];
+   int rot, rotz;
    setup_kind k;
    setup a1;
    setup res1;
@@ -1198,6 +1185,8 @@ extern void distorted_move(
       k = s1x8;
 
       if (ss->kind == s2x8) {
+         int i;
+
          if (linesp & 1) {
             if (global_tbonetest & 1) fail("There is no tidal line here.");
          }
@@ -1317,8 +1306,7 @@ extern void distorted_move(
       }
    }
 
-   for (i=0; i<8; i++) (void) copy_rot(&a1, i, ss, the_map[i], rot);
-
+   gather(&a1, ss, the_map, 7, rot);
    a1.kind = k;
    a1.rotation = 0;
    a1.cmd = ss->cmd;
@@ -1332,7 +1320,7 @@ extern void distorted_move(
 
    if (res1.kind != k || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
    result->rotation = res1.rotation;
-   for (i=0; i<8; i++) (void) copy_rot(result, the_map[i], &res1, i, rotz);
+   scatter(result, &res1, the_map, 7, rotz);
    result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_MASK;
    reinstate_rotation(ss, result);
    goto getout;
@@ -1364,8 +1352,7 @@ extern void triple_twin_move(
    setup *result)
 {
    uint32 tbonetest;
-   int i;
-   static short source_indices[16]  = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
+   static Const veryshort source_indices[20] = {1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
 
    /* Arg1 = 0 for triple twin columns, 1 for triple twin lines, 3 for triple twin waves. */
 
@@ -1405,13 +1392,12 @@ extern void triple_twin_move(
       clear_people(ss);
 
       if (tbonetest & 1) {
-         for (i=0; i<16; i++) (void) copy_rot(ss, source_indices[i], &stemp, (i+4) & 0xF, 033);
          ss->rotation++;
          tbonetest ^= 1;    /* Fix it. */
+         scatter(ss, &stemp, source_indices, 15, 033);
       }
-      else {
-         for (i=0; i<16; i++) copy_person(ss, source_indices[i], &stemp, i);
-      }
+      else
+         scatter(ss, &stemp, &source_indices[4], 15, 0);
    
       ss->kind = s4x6;
 
@@ -1439,24 +1425,21 @@ extern void do_concept_rigger(
 {
    /* First 8 are for rigger; second 8 are for 1/4-tag, final 16 are for crosswave. */
    /* A huge coincidence is at work here -- the first two parts of the maps are the same. */
-   static int map1[32] = {
-         0, 1, 3, 2, 4, 5, 7, 6,
-         0, 1, 3, 2, 4, 5, 7, 6,
-         13, 15, 1, 3, 5, 7, 9, 11,
-         14, 0, 2, 4, 6, 8, 10, 12};
-   static int map2[32] = {
-         2, 3, 4, 5, 6, 7, 0, 1,
-         2, 3, 4, 5, 6, 7, 0, 1,
-         0, 2, 4, 6, 8, 10, 12, 14,
-         1, 7, 5, 11, 9, 15, 13, 3};
+   static Const veryshort map1[32] = {
+         0, 1, 3, 2, 4, 5, 7, 6, 0, 1, 3, 2, 4, 5, 7, 6,
+         13, 15, 1, 3, 5, 7, 9, 11, 14, 0, 2, 4, 6, 8, 10, 12};
+   static Const veryshort map2[32] = {
+         2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1,
+         0, 2, 4, 6, 8, 10, 12, 14, 1, 7, 5, 11, 9, 15, 13, 3};
 
-   int rstuff, i, indicator, base;
+   int rstuff, indicator, base;
    setup a1;
    setup res1;
-   int *map_ptr;
+   Const veryshort *map_ptr;
    setup_kind startkind;
 
    rstuff = parseptr->concept->value.arg1;
+
    /* rstuff =
       outrigger   : 0
       leftrigger  : 1
@@ -1511,13 +1494,8 @@ extern void do_concept_rigger(
    if (indicator & 1)
       fail("'Rigger' direction is inappropriate.");
 
-   if (indicator)
-      map_ptr = map1;
-   else
-      map_ptr = map2;
-
-   for (i=0; i<8; i++) (void) copy_person(&a1, map_ptr[i+base], ss, i);
-
+   map_ptr = indicator ? map1 : map2;
+   scatter(&a1, ss, &map_ptr[base], 7, 0);
    a1.kind = startkind;
    a1.rotation = 0;
    a1.cmd = ss->cmd;
@@ -1528,6 +1506,7 @@ extern void do_concept_rigger(
    if ((res1.rotation) & 1) base ^= 8;    /* Won't happen in C1 phantom. */
 
    if (startkind == s_c1phan) {
+      int i;
       uint32 evens = 0;
       uint32 odds = 0;
 
@@ -1567,8 +1546,7 @@ extern void do_concept_rigger(
       result->kind = base ? s_qtag : s_rigger;
    }
 
-   for (i=0; i<8; i++) (void) copy_person(result, i, &res1, map_ptr[i+base]);
-
+   gather(result, &res1, &map_ptr[base], 7, 0);
    result->rotation = res1.rotation;
    result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
@@ -1608,6 +1586,11 @@ common_spot_map cmaps[] = {
          {       0, d_north,       0,       0,       0, d_south,       0,       0}, sbigdmd, s_qtag, 1},
    /* common end lines */
    /* We currently have no defense against unchecked spots being occupied! */
+   {3,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {       0,      -1,      -1,       5,       6,      -1,      -1,      11},
+         { d_north,       0,       0, d_south, d_south,       0,       0, d_north},
+         {       1,      -1,      -1,       4,       7,      -1,      -1,      10},
+         { d_south,       0,       0, d_north, d_north,       0,       0, d_south}, s2x6, s2x4, 0},
    {3,   {      -1,       2,       3,      -1,      -1,       8,       9,      -1},
          {      -1,      -1,      -1,       5,      -1,      -1,      -1,      11},
          {       0,       0,       0, d_south,       0,       0,       0, d_north},
@@ -1677,12 +1660,12 @@ extern void common_spot_move(
    setup the_results[2];
    common_spot_map *map_ptr;
 
-   rstuff = parseptr->concept->value.arg1;
+   rstuff = parseptr->concept->value.arg1 & 15;   /* The "16" bit says to assume waves. */
    /* rstuff =
-      common point galaxy  : 0
-      common spot columns  : 1
-      common spot diamonds : 2
-      common end lines     : 3 */
+      common point galaxy    : 0
+      common spot columns    : 1
+      common spot diamonds   : 2
+      common end lines/waves : 3 */
 
    for (map_ptr = cmaps ; map_ptr->orig_kind != nothing ; map_ptr++) {
       if (ss->kind != map_ptr->orig_kind || rstuff != map_ptr->indicator) goto not_this_map;
@@ -1731,8 +1714,13 @@ extern void common_spot_move(
       if (t >= 0) (void) copy_rot(&a1, i, ss, t, r);
    }
 
-   move(&a0, FALSE, &the_results[0]);
-   move(&a1, FALSE, &the_results[1]);
+   if (parseptr->concept->value.arg1 & 16) {
+      a0.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+      a1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+   }
+
+   impose_assumption_and_move(&a0, &the_results[0]);
+   impose_assumption_and_move(&a1, &the_results[1]);
 
    if (uncommon) {
       if (the_results[0].kind != the_results[1].kind || the_results[0].rotation != the_results[1].rotation)

@@ -29,12 +29,12 @@
  * version.
  */
 
-#define UI_VERSION_STRING "1.8"
+#define UI_VERSION_STRING "1.9"
 
 /* See comments in sdmain.c regarding this string. */
 static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    UI_VERSION_STRING
-   "  wba@apollo.hp.com  22 May 96 $";
+   "  wba@apollo.hp.com  16 Jun 96 $";
 
 /* This file defines the following functions:
    uims_version_string
@@ -649,11 +649,11 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = -1-command_level_call;
             return;
          }
-         else if (nc == 140 && which == match_resolve_commands) {    /* F12 = accept current choice */
-            put_line("accept current choice\n");
+         else if (nc == 140 && which == match_resolve_commands) {    /* F12 = find another */
+            put_line("find another\n");
             current_text_line++;
             user_match.kind = ui_resolve_select;
-            user_match.index = -1-resolve_command_accept;
+            user_match.index = -1-resolve_command_find_another;
             return;
          }
          else if (nc == 161 && which == match_startup_commands) {    /* sF1 = sides start */
@@ -717,11 +717,11 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = -1-command_8person_level_call;
             return;
          }
-         else if (nc == 172 && which == match_resolve_commands) {    /* sF12 = find another */
-            put_line("find another\n");
+         else if (nc == 172 && which == match_resolve_commands) {    /* sF12 = accept current choice */
+            put_line("accept current choice\n");
             current_text_line++;
             user_match.kind = ui_resolve_select;
-            user_match.index = -1-resolve_command_find_another;
+            user_match.index = -1-resolve_command_accept;
             return;
          }
          else if (nc == 193 && which == match_startup_commands) {    /* cF1 = just as they are */
@@ -750,6 +750,13 @@ Private void get_user_input(char *prompt, int which)
             current_text_line++;
             user_match.kind = ui_command_select;
             user_match.index = -1-command_create_comment;
+            return;
+         }
+         else if (nc == 204 && which == match_resolve_commands) {    /* cF12 = previous */
+            put_line("previous\n");
+            current_text_line++;
+            user_match.kind = ui_resolve_select;
+            user_match.index = -1-resolve_command_goto_previous;
             return;
          }
          else continue;      /* Ignore the function key. */
@@ -816,7 +823,7 @@ Private void get_user_input(char *prompt, int which)
 
          if (  (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact)
                               &&
-              (!user_match.newmodifiers || user_match.kind == ui_call_select)) {
+              (!user_match.newmodifiers || user_match.kind == ui_call_select || user_match.kind == ui_concept_select)) {
             p = extended_input;
             while (*p)
                pack_and_echo_character(*p++);
@@ -1009,8 +1016,18 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
       if (deposit_call(save_call)) return TRUE;
    }
    else if (user_match.kind == ui_concept_select) {
-      concept_descriptor *cp = &concept_descriptor_table[uims_menu_index];
-      if (deposit_concept(cp)) return TRUE;
+      modifier_block *mods;
+      concept_descriptor *save_concept = &concept_descriptor_table[uims_menu_index];
+      call_conc_option_state save_stuff = user_match.call_conc_options;
+
+      for (mods = user_match.newmodifiers ; mods ; mods = mods->next) {
+         user_match.call_conc_options = mods->call_conc_options;
+         if (deposit_concept(mods->this_modifier)) return TRUE;
+      }
+
+      user_match.call_conc_options = save_stuff;
+
+      if (deposit_concept(save_concept)) return TRUE;
    }
 
    return FALSE;

@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -143,8 +137,7 @@ Private void do_c1_phantom_move(
       return;
    }
 
-   /* We didn't do this before. */
-   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;   /* We didn't do this before. */
 
    if (ss->kind == s4x4 && global_livemask == 0x6666) {
       /* First, check for everyone on "O" spots.  If so, treat them as though
@@ -1376,8 +1369,10 @@ Private long_boolean fill_active_phantoms_and_move(
 {
    int phantom_count = 0;
    int i;
+   int idx;
    uint32 pdir, qdir, pdirodd, qdirodd;
    uint32 bothp;
+   uint32 t;
    uint32 dirtest1 = 0;
    uint32 dirtest2 = 0;
 
@@ -1387,12 +1382,9 @@ Private long_boolean fill_active_phantoms_and_move(
 
             /* Figure out handedness of live people. */
          
-            for (i=0; i<restr_thing_ptr->size; i++) {
-               int p = restr_thing_ptr->map1[i];
-               int q = restr_thing_ptr->map2[i];
-         
-               if (ss->people[p].id1) { dirtest1 |= ss->people[p].id1;       dirtest2 |= (ss->people[p].id1 ^ 2); }
-               if (ss->people[q].id1) { dirtest1 |= (ss->people[q].id1 ^ 2); dirtest2 |= ss->people[q].id1; }
+            for (idx=0; idx<restr_thing_ptr->size; idx++) {
+               if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { dirtest1 |= t;       dirtest2 |= (t ^ 2); }
+               if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { dirtest1 |= (t ^ 2); dirtest2 |= t; }
             }
          
             if (dirtest1 == 0)
@@ -1491,7 +1483,7 @@ Private long_boolean fill_active_phantoms_and_move(
       
                j = 0; k = 0; m = 0; z = 0;
       
-               for (i=0 ; i<4 ; i++) {
+               for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
                   if ((t = ss->people[i].id1) != 0) {
                      j |= (t^restr_thing_ptr->map1[i]);
                      k |= (t^restr_thing_ptr->map1[i]^2);
@@ -1506,7 +1498,7 @@ Private long_boolean fill_active_phantoms_and_move(
                if ((k&3) && (j&3) && (m&3) && (z&3))
                   fail("Live people are not consistent.");
       
-               for (i=0 ; i<4 ; i++) {
+               for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
                   if (!ss->people[i].id1) {
                      if (phantom_count >= 16)
                         fail("Too many phantoms.");
@@ -2527,151 +2519,128 @@ Private void do_concept_trace(
    parse_block *parseptr,
    setup *result)
 {
-   int r1, r2, r3, r4, rot1, rot2, rot3, rot4;
+   int i, r[4], rot[4];
    uint32 finalresultflags;
-   setup a1, a2, a3, a4, res1, res2, res3, res4;
+   setup a[4], res[4];
    setup outer_inners[2];
 
    if (ss->kind != s_qtag) fail("Must have a 1/4-tag-like setup for trace.");
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   a1 = *ss;
-   a2 = *ss;
-   a3 = *ss;
-   a4 = *ss;
 
-   clear_people(&a1);
-   clear_people(&a2);
-   clear_people(&a3);
-   clear_people(&a4);
-   clear_people(&outer_inners[1]);
-   clear_people(&outer_inners[0]);
-
-   a1.kind = s2x2;
-   a1.rotation = 0;
-   a2.kind = s2x2;
-   a2.rotation = 0;
-   a3.kind = s2x2;
-   a3.rotation = 0;
-   a4.kind = s2x2;
-   a4.rotation = 0;
+   for (i=0 ; i<4 ; i++) {
+      a[i] = *ss;
+      clear_people(&a[i]);
+      a[i].kind = s2x2;
+      a[i].rotation = 0;
+   }
 
    if ((ss->people[6].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_south) {
-      a2.cmd.parseptr = parseptr->subsidiary_root;
-      a4.cmd.parseptr = parseptr->subsidiary_root;
+      a[1].cmd.parseptr = parseptr->subsidiary_root;
+      a[3].cmd.parseptr = parseptr->subsidiary_root;
 
-      (void) copy_person(&a1, 2, ss, 7);
-      (void) copy_person(&a1, 3, ss, 6);
-      (void) copy_person(&a2, 2, ss, 4);
-      (void) copy_person(&a2, 3, ss, 5);
-      (void) copy_person(&a3, 0, ss, 3);
-      (void) copy_person(&a3, 1, ss, 2);
-      (void) copy_person(&a4, 0, ss, 0);
-      (void) copy_person(&a4, 1, ss, 1);
+      (void) copy_person(&a[0], 2, ss, 7);
+      (void) copy_person(&a[0], 3, ss, 6);
+      (void) copy_person(&a[1], 2, ss, 4);
+      (void) copy_person(&a[1], 3, ss, 5);
+      (void) copy_person(&a[2], 0, ss, 3);
+      (void) copy_person(&a[2], 1, ss, 2);
+      (void) copy_person(&a[3], 0, ss, 0);
+      (void) copy_person(&a[3], 1, ss, 1);
    }
    else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_north) {
-      a1.cmd.parseptr = parseptr->subsidiary_root;
-      a3.cmd.parseptr = parseptr->subsidiary_root;
+      a[0].cmd.parseptr = parseptr->subsidiary_root;
+      a[2].cmd.parseptr = parseptr->subsidiary_root;
 
-      (void) copy_person(&a1, 0, ss, 0);
-      (void) copy_person(&a1, 1, ss, 1);
-      (void) copy_person(&a2, 0, ss, 6);
-      (void) copy_person(&a2, 1, ss, 7);
-      (void) copy_person(&a3, 2, ss, 4);
-      (void) copy_person(&a3, 3, ss, 5);
-      (void) copy_person(&a4, 2, ss, 2);
-      (void) copy_person(&a4, 3, ss, 3);
+      (void) copy_person(&a[0], 0, ss, 0);
+      (void) copy_person(&a[0], 1, ss, 1);
+      (void) copy_person(&a[1], 0, ss, 6);
+      (void) copy_person(&a[1], 1, ss, 7);
+      (void) copy_person(&a[2], 2, ss, 4);
+      (void) copy_person(&a[2], 3, ss, 5);
+      (void) copy_person(&a[3], 2, ss, 2);
+      (void) copy_person(&a[3], 3, ss, 3);
    }
    else
       fail("Can't determine which box people should work in.");
 
-   a1.cmd.cmd_assume.assumption = cr_none;
-   update_id_bits(&a1);
-   move(&a1, FALSE, &res1);
-   a2.cmd.cmd_assume.assumption = cr_none;
-   update_id_bits(&a2);
-   move(&a2, FALSE, &res2);
-   a3.cmd.cmd_assume.assumption = cr_none;
-   update_id_bits(&a3);
-   move(&a3, FALSE, &res3);
-   a4.cmd.cmd_assume.assumption = cr_none;
-   update_id_bits(&a4);
-   move(&a4, FALSE, &res4);
+   for (i=0 ; i<4 ; i++) {
+      a[i].cmd.cmd_assume.assumption = cr_none;
+      update_id_bits(&a[i]);
+      move(&a[i], FALSE, &res[i]);
+   }
 
-   finalresultflags = res1.result_flags | res2.result_flags | res3.result_flags | res4.result_flags;
+   finalresultflags = get_multiple_parallel_resultflags(res, 4);
+   clear_people(&outer_inners[1]);
+   clear_people(&outer_inners[0]);
 
    /* Check that everyone is in a 2x2 or vertically oriented 1x4. */
 
-   if      ((res1.kind != s2x2 && res1.kind != nothing && (res1.kind != s1x4 || (!(res1.rotation&1)))) ||
-            (res2.kind != s2x2 && res2.kind != nothing && (res2.kind != s1x4 || (!(res2.rotation&1)))) ||
-            (res3.kind != s2x2 && res3.kind != nothing && (res3.kind != s1x4 || (!(res3.rotation&1)))) ||
-            (res4.kind != s2x2 && res4.kind != nothing && (res4.kind != s1x4 || (!(res4.rotation&1)))))
-      fail("You can't do this.");
+   for (i=0 ; i<4 ; i++) {
+      if ((res[i].kind != s2x2 && res[i].kind != nothing && (res[i].kind != s1x4 || (!(res[i].rotation&1)))))
+         fail("You can't do this.");
+   }
 
    /* Process people going into the center. */
 
    outer_inners[1].rotation = 0;
    outer_inners[1].result_flags = 0;
 
-   if   ((res1.kind == s2x2 && (res1.people[2].id1 | res1.people[3].id1)) ||
-         (res2.kind == s2x2 && (res2.people[0].id1 | res2.people[1].id1)) ||
-         (res3.kind == s2x2 && (res3.people[0].id1 | res3.people[1].id1)) ||
-         (res4.kind == s2x2 && (res4.people[2].id1 | res4.people[3].id1)))
+   if   ((res[0].kind == s2x2 && (res[0].people[2].id1 | res[0].people[3].id1)) ||
+         (res[1].kind == s2x2 && (res[1].people[0].id1 | res[1].people[1].id1)) ||
+         (res[2].kind == s2x2 && (res[2].people[0].id1 | res[2].people[1].id1)) ||
+         (res[3].kind == s2x2 && (res[3].people[2].id1 | res[3].people[3].id1)))
       outer_inners[1].kind = s1x4;
    else
       outer_inners[1].kind = nothing;
 
-   r1 = res1.rotation & 2;
-   rot1 = (res1.rotation & 3) * 011;
-   r2 = res2.rotation & 2;
-   rot2 = (res2.rotation & 3) * 011;
-   r3 = res3.rotation & 2;
-   rot3 = (res3.rotation & 3) * 011;
-   r4 = res4.rotation & 2;
-   rot4 = (res4.rotation & 3) * 011;
+   for (i=0 ; i<4 ; i++) {
+      r[i] = res[i].rotation & 2;
+      rot[i] = (res[i].rotation & 3) * 011;
+   }
 
-   if   ((res1.kind == s1x4 && (res1.people[2 ^ r1].id1 | res1.people[3 ^ r1].id1)) ||
-         (res2.kind == s1x4 && (res2.people[0 ^ r2].id1 | res2.people[1 ^ r2].id1)) ||
-         (res3.kind == s1x4 && (res3.people[0 ^ r3].id1 | res3.people[1 ^ r3].id1)) ||
-         (res4.kind == s1x4 && (res4.people[2 ^ r4].id1 | res4.people[3 ^ r4].id1))) {
+   if   ((res[0].kind == s1x4 && (res[0].people[2 ^ r[0]].id1 | res[0].people[3 ^ r[0]].id1)) ||
+         (res[1].kind == s1x4 && (res[1].people[0 ^ r[1]].id1 | res[1].people[1 ^ r[1]].id1)) ||
+         (res[2].kind == s1x4 && (res[2].people[0 ^ r[2]].id1 | res[2].people[1 ^ r[2]].id1)) ||
+         (res[3].kind == s1x4 && (res[3].people[2 ^ r[3]].id1 | res[3].people[3 ^ r[3]].id1))) {
       if (outer_inners[1].kind != nothing) fail("You can't do this.");
       outer_inners[1].kind = s2x2;
    }
 
-   if (res1.kind == s2x2) {
-      install_person(&outer_inners[1], 1, &res1, 2);
-      install_person(&outer_inners[1], 0, &res1, 3);
+   if (res[0].kind == s2x2) {
+      install_person(&outer_inners[1], 1, &res[0], 2);
+      install_person(&outer_inners[1], 0, &res[0], 3);
    }
    else {
-      install_rot(&outer_inners[1], 3, &res1, 2^r1, rot1);
-      install_rot(&outer_inners[1], 0, &res1, 3^r1, rot1);
+      install_rot(&outer_inners[1], 3, &res[0], 2^r[0], rot[0]);
+      install_rot(&outer_inners[1], 0, &res[0], 3^r[0], rot[0]);
    }
 
-   if (res2.kind == s2x2) {
-      install_person(&outer_inners[1], 0, &res2, 0);
-      install_person(&outer_inners[1], 1, &res2, 1);
+   if (res[1].kind == s2x2) {
+      install_person(&outer_inners[1], 0, &res[1], 0);
+      install_person(&outer_inners[1], 1, &res[1], 1);
    }
    else {
-      install_rot(&outer_inners[1], 0, &res2, 0^r2, rot2);
-      install_rot(&outer_inners[1], 3, &res2, 1^r2, rot2);
+      install_rot(&outer_inners[1], 0, &res[1], 0^r[1], rot[1]);
+      install_rot(&outer_inners[1], 3, &res[1], 1^r[1], rot[1]);
    }
 
-   if (res3.kind == s2x2) {
-      install_person(&outer_inners[1], 3, &res3, 0);
-      install_person(&outer_inners[1], 2, &res3, 1);
+   if (res[2].kind == s2x2) {
+      install_person(&outer_inners[1], 3, &res[2], 0);
+      install_person(&outer_inners[1], 2, &res[2], 1);
    }
    else {
-      install_rot(&outer_inners[1], 1, &res3, 0^r3, rot3);
-      install_rot(&outer_inners[1], 2, &res3, 1^r3, rot3);
+      install_rot(&outer_inners[1], 1, &res[2], 0^r[2], rot[2]);
+      install_rot(&outer_inners[1], 2, &res[2], 1^r[2], rot[2]);
    }
 
-   if (res4.kind == s2x2) {
-      install_person(&outer_inners[1], 2, &res4, 2);
-      install_person(&outer_inners[1], 3, &res4, 3);
+   if (res[3].kind == s2x2) {
+      install_person(&outer_inners[1], 2, &res[3], 2);
+      install_person(&outer_inners[1], 3, &res[3], 3);
    }
    else {
-      install_rot(&outer_inners[1], 2, &res4, 2^r4, rot4);
-      install_rot(&outer_inners[1], 1, &res4, 3^r4, rot4);
+      install_rot(&outer_inners[1], 2, &res[3], 2^r[3], rot[3]);
+      install_rot(&outer_inners[1], 1, &res[3], 3^r[3], rot[3]);
    }
 
    /* Process people going to the outside. */
@@ -2679,62 +2648,38 @@ Private void do_concept_trace(
    outer_inners[0].rotation = 0;
    outer_inners[0].result_flags = 0;
 
-   if   ((res1.kind == s2x2 && (res1.people[0].id1 | res1.people[1].id1)) ||
-         (res2.kind == s2x2 && (res2.people[2].id1 | res2.people[3].id1)) ||
-         (res3.kind == s2x2 && (res3.people[2].id1 | res3.people[3].id1)) ||
-         (res4.kind == s2x2 && (res4.people[0].id1 | res4.people[1].id1)))
+   for (i=0 ; i<4 ; i++) {
+      r[i] = res[i].rotation & 2;
+   }
+
+   if   ((res[0].kind == s2x2 && (res[0].people[0].id1 | res[0].people[1].id1)) ||
+         (res[1].kind == s2x2 && (res[1].people[2].id1 | res[1].people[3].id1)) ||
+         (res[2].kind == s2x2 && (res[2].people[2].id1 | res[2].people[3].id1)) ||
+         (res[3].kind == s2x2 && (res[3].people[0].id1 | res[3].people[1].id1)))
       outer_inners[0].kind = s2x2;
    else
       outer_inners[0].kind = nothing;
 
-   r1 = res1.rotation & 2;
-   r2 = res2.rotation & 2;
-   r3 = res3.rotation & 2;
-   r4 = res4.rotation & 2;
-
-   if   ((res1.kind == s1x4 && (res1.people[0 ^ r1].id1 | res1.people[1 ^ r1].id1)) ||
-         (res2.kind == s1x4 && (res2.people[2 ^ r2].id1 | res2.people[3 ^ r2].id1)) ||
-         (res3.kind == s1x4 && (res3.people[2 ^ r3].id1 | res3.people[3 ^ r3].id1)) ||
-         (res4.kind == s1x4 && (res4.people[0 ^ r4].id1 | res4.people[1 ^ r4].id1))) {
+   if   ((res[0].kind == s1x4 && (res[0].people[0 ^ r[0]].id1 | res[0].people[1 ^ r[0]].id1)) ||
+         (res[1].kind == s1x4 && (res[1].people[2 ^ r[1]].id1 | res[1].people[3 ^ r[1]].id1)) ||
+         (res[2].kind == s1x4 && (res[2].people[2 ^ r[2]].id1 | res[2].people[3 ^ r[2]].id1)) ||
+         (res[3].kind == s1x4 && (res[3].people[0 ^ r[3]].id1 | res[3].people[1 ^ r[3]].id1))) {
       if (outer_inners[0].kind != nothing) fail("You can't do this.");
       outer_inners[0].kind = s1x4;
       outer_inners[0].rotation = 1;
    }
 
-   if (res1.kind == s2x2) {
-      install_person(&outer_inners[0], 0, &res1, 0);
-      install_person(&outer_inners[0], 1, &res1, 1);
-   }
-   else {
-      install_rot(&outer_inners[0], 0, &res1, 0 ^ (res1.rotation&2), ((res1.rotation-1)&3)*011);
-      install_rot(&outer_inners[0], 1, &res1, 1 ^ (res1.rotation&2), ((res1.rotation-1)&3)*011);
-   }
+   for (i=0 ; i<4 ; i++) {
+      int ind = (i+1) & 2;
 
-   if (res2.kind == s2x2) {
-      install_person(&outer_inners[0], 2, &res2, 2);
-      install_person(&outer_inners[0], 3, &res2, 3);
-   }
-   else {
-      install_rot(&outer_inners[0], 2, &res2, 2 ^ (res2.rotation&2), ((res2.rotation-1)&3)*011);
-      install_rot(&outer_inners[0], 3, &res2, 3 ^ (res2.rotation&2), ((res2.rotation-1)&3)*011);
-   }
-
-   if (res3.kind == s2x2) {
-      install_person(&outer_inners[0], 2, &res3, 2);
-      install_person(&outer_inners[0], 3, &res3, 3);
-   }
-   else {
-      install_rot(&outer_inners[0], 2, &res3, 2 ^ (res3.rotation&2), ((res3.rotation-1)&3)*011);
-      install_rot(&outer_inners[0], 3, &res3, 3 ^ (res3.rotation&2), ((res3.rotation-1)&3)*011);
-   }
-
-   if (res4.kind == s2x2) {
-      install_person(&outer_inners[0], 0, &res4, 0);
-      install_person(&outer_inners[0], 1, &res4, 1);
-   }
-   else {
-      install_rot(&outer_inners[0], 0, &res4, 0 ^ (res4.rotation&2), ((res4.rotation-1)&3)*011);
-      install_rot(&outer_inners[0], 1, &res4, 1 ^ (res4.rotation&2), ((res4.rotation-1)&3)*011);
+      if (res[i].kind == s2x2) {
+         install_person(&outer_inners[0], ind,     &res[i], ind);
+         install_person(&outer_inners[0], ind ^ 1, &res[i], ind ^ 1);
+      }
+      else {
+         install_rot(&outer_inners[0], ind,     &res[i], ind ^ (res[i].rotation&2),     ((res[i].rotation-1)&3)*011);
+         install_rot(&outer_inners[0], ind ^ 1, &res[i], ind ^ (res[i].rotation&2) ^ 1, ((res[i].rotation-1)&3)*011);
+      }
    }
 
    normalize_concentric(schema_concentric, 1, outer_inners, outer_inners[0].rotation ^ 1, result);
@@ -3411,6 +3356,9 @@ Private void do_concept_meta(
    if (ss->cmd.cmd_final_flags)   /* Now demand that no flags remain. */
       fail("Illegal modifier for this concept.");
 
+   if (key != 3 && key != 7 && key != 2 && key != 8)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;   /* We didn't do this before. */
+
    if (key == 4) {
       /* This is "finish".  Do the call after the first part, with the special indicator
          saying that this was invoked with "finish", so that the flag will be checked. */
@@ -3574,33 +3522,64 @@ Private void do_concept_meta(
       }
    }
    else if (key == 3) {
-      /* Key = 3 is special: we select the first part with the concept,
+      /* This is "initially": we select the first part with the concept,
          and then the rest of the call without the concept. */
 
       setup tttt = *result;
 
-      if (ss->cmd.cmd_frac_flags)
+      if (ss->cmd.cmd_frac_flags == 0x01010111) {
+         /* We are being asked to do just the first part, because of another
+            "initially".  Just pass it through. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags = 0x01010111;
+         tttt.cmd.cmd_misc_flags |= craziness_restraint;
+         tttt.cmd.parseptr = parseptrcopy;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+      else if (ss->cmd.cmd_frac_flags == 0x01810111) {
+         /* We are being asked to do all but the first part, because of another
+            "initially".  Just pass it through. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags = 0x01810111;
+         tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+      else if (ss->cmd.cmd_frac_flags == 0) {
+         /* Do the call with the concept. */
+         /* Set the fractionalize field to execute the first part of the call. */
+         tttt.cmd = ss->cmd;
+
+         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
+            done as part of "initially". */
+
+         tttt.cmd.cmd_frac_flags = 0x01010111;
+         tttt.cmd.cmd_misc_flags |= craziness_restraint;
+         tttt.cmd.parseptr = parseptrcopy;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+         tttt = *result;
+
+         /* Do the call without the concept. */
+         /* Set the fractionalize field to execute the rest of the call. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
+
+         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
+            done as part of "initially". */
+
+         tttt.cmd.cmd_frac_flags = 0x01810111;
+         tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+      else
          fail("Can't stack meta or fractional concepts.");
-
-      /* Do the call with the concept. */
-      /* Set the fractionalize field to execute the first part of the call. */
-      tttt.cmd = ss->cmd;
-
-      tttt.cmd.cmd_frac_flags = 0x010111;
-      tttt.cmd.cmd_misc_flags |= craziness_restraint;
-      tttt.cmd.parseptr = parseptrcopy;
-      move(&tttt, FALSE, result);
-      finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
-      tttt = *result;
-      /* Do the call without the concept. */
-      /* Set the fractionalize field to execute the rest of the call. */
-      tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = 0x810111;
-      tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
-      move(&tttt, FALSE, result);
-      finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
    }
    else if (key == 7) {
       /* This is "finally": we select all but the last part without the concept,
@@ -3608,28 +3587,59 @@ Private void do_concept_meta(
 
       setup tttt = *result;
 
-      if (ss->cmd.cmd_frac_flags)
+      if (ss->cmd.cmd_frac_flags == 0x01B10111) {
+         /* We are being asked to do all but the last part, because of another
+            "finally".  Just pass it through. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags = 0x01B10111;
+         tttt.cmd.parseptr = parseptr_skip;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+      else if (ss->cmd.cmd_frac_flags == 0x01110111) {
+         /* We are being asked to do just the last part, because of another
+            "finally".  Just pass it through. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags = 0x01110111;
+         tttt.cmd.cmd_misc_flags |= craziness_restraint;
+         tttt.cmd.parseptr = parseptrcopy;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+      else if (ss->cmd.cmd_frac_flags == 0) {
+         /* Do the call without the concept. */
+         /* Set the fractionalize field to execute all but the last part of the call. */
+         tttt.cmd = ss->cmd;
+
+         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
+            done as part of "finally". */
+
+         tttt.cmd.cmd_frac_flags = 0x01B10111;
+         tttt.cmd.parseptr = parseptr_skip;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+         tttt = *result;
+
+         /* Do the call with the concept. */
+         /* Set the fractionalize field to execute the last part of the call. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
+
+         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
+            done as part of "finally". */
+
+         tttt.cmd.cmd_frac_flags = 0x01110111;
+         tttt.cmd.cmd_misc_flags |= craziness_restraint;
+         tttt.cmd.parseptr = parseptrcopy;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+      else
          fail("Can't stack meta or fractional concepts.");
-
-      /* Do the call without the concept. */
-      /* Set the fractionalize field to execute all but the last part of the call. */
-      tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = 0xB10111;
-      tttt.cmd.parseptr = parseptr_skip;
-      move(&tttt, FALSE, result);
-      finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
-      tttt = *result;
-
-      /* Do the call with the concept. */
-      /* Set the fractionalize field to execute the last part of the call. */
-      tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = 0x110111;
-      tttt.cmd.cmd_misc_flags |= craziness_restraint;
-      tttt.cmd.parseptr = parseptrcopy;
-      move(&tttt, FALSE, result);
-      finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
    }
    else {
       /* Otherwise, this is the "random", "reverse random", or "piecewise" concept.
@@ -4316,8 +4326,7 @@ extern long_boolean do_big_concept(
       concepts can be effectively oblivious to matrix expansion.  The tests for these are (from lines out)
       "stable 2x8 matrix roll em" and "1/4 (fractional) split phantom boxes split the difference". */
 
-   if (this_kind != concept_c1_phantom &&
-            !(this_table_item->concept_prop & CONCPROP__MATRIX_OBLIVIOUS))
+   if (!(this_table_item->concept_prop & CONCPROP__MATRIX_OBLIVIOUS))
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
    /* See if this concept can be invoked with "standard".  If so, it wants
@@ -4465,7 +4474,7 @@ concept_table_item concept_table[] = {
    /* concept_crazy */                    {CONCPROP__PERMIT_REVERSE,                                                               do_concept_crazy},
    /* concept_frac_crazy */               {CONCPROP__USE_NUMBER | CONCPROP__PERMIT_REVERSE,                                        do_concept_crazy},
    /* concept_fan */                      {0,                                                                                      do_concept_fan},
-   /* concept_c1_phantom */               {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_c1_phantom_move},
+   /* concept_c1_phantom */               {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__NO_STEP | CONCPROP__GET_MASK,                    do_c1_phantom_move},
    /* concept_grand_working */            {CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                                       do_concept_grand_working},
    /* concept_centers_or_ends */          {0,                                                                                      do_concept_centers_or_ends},
    /* concept_so_and_so_only */           {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_SELECTOR,                                    so_and_so_only_move},
@@ -4488,7 +4497,7 @@ concept_table_item concept_table[] = {
    /* concept_n_times */                  {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_twice},
    /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_sequential},
    /* concept_special_sequential */       {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_special_sequential},
-   /* concept_meta */                     {CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,                                        do_concept_meta},
+   /* concept_meta */                     {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,           do_concept_meta},
    /* concept_so_and_so_begin */          {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                                          do_concept_so_and_so_begin},
    /* concept_nth_part */                 {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,                 do_concept_meta},
    /* concept_replace_nth_part */         {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                    do_concept_replace_nth_part},

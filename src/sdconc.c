@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -638,16 +632,14 @@ Private void concentrify(
       switch (analyzer_index) {
          case analyzer_DIAMOND_LINE:
             if (ss->inner.skind == sdmd && ss->inner.srotation == ss->outer.srotation) {
+               static Const veryshort map321[4] = {13, 0, 15, 2};
+               static Const veryshort map123[4] = {12, 1, 14, 3};
+
                inners[0].kind = s1x4;
                outers->kind = sdmd;
-               (void) copy_person(&inners[0], 0, ss, 13);
-               (void) copy_person(&inners[0], 1, ss, 0);
-               (void) copy_person(&inners[0], 2, ss, 15);
-               (void) copy_person(&inners[0], 3, ss, 2);
-               (void) copy_person(outers, 0, ss, 12);
-               (void) copy_person(outers, 1, ss, 1);
-               (void) copy_person(outers, 2, ss, 14);
-               (void) copy_person(outers, 3, ss, 3);
+               gather(&inners[0], ss, map321, 3, 0);
+               gather(outers, ss, map123, 3, 0);
+
                if (ss->outer.skind == s1x4) {
                   *outer_elongation = ss->outer.srotation & 1;
                   goto finish;
@@ -682,6 +674,8 @@ Private void concentrify(
                }
             }
             else if (ss->inner.skind == s1x2 && ss->outer.skind == s1x6 && ss->inner.srotation != ss->outer.srotation) {
+               static Const veryshort map44[4] = {12, 13, 15, 16};
+
                inners[0].kind = sdmd;
                outers->kind = s1x4;
 
@@ -696,11 +690,7 @@ Private void concentrify(
 
                (void) copy_person(&inners[0], 0, ss, 14);
                (void) copy_person(&inners[0], 2, ss, 17);
-               (void) copy_person(outers, 0, ss, 12);
-               (void) copy_person(outers, 1, ss, 13);
-               (void) copy_person(outers, 2, ss, 15);
-               (void) copy_person(outers, 3, ss, 16);
-
+               gather(outers, ss, map44, 3, 0);
                goto finish;
             }
             break;
@@ -764,9 +754,7 @@ Private void concentrify(
    outers->kind = lmap_ptr->outsetup;
    outers->rotation = (-lmap_ptr->outer_rot) & 3;
 
-   rot = lmap_ptr->outer_rot * 011;
-
-   for (i=0; i<lmap_ptr->outlimit; i++) (void) copy_rot(outers, i, ss, lmap_ptr->maps[i+lmap_ptr->inlimit*lmap_ptr->center_arity], rot);
+   gather(outers, ss, &lmap_ptr->maps[lmap_ptr->inlimit*lmap_ptr->center_arity], lmap_ptr->outlimit-1, lmap_ptr->outer_rot * 011);
 
    for (k=0; k<lmap_ptr->center_arity; k++) {
       uint32 rr = lmap_ptr->inner_rot;
@@ -778,7 +766,7 @@ Private void concentrify(
       inners[k].kind = lmap_ptr->insetup;
       inners[k].rotation = (-rr) & 3;
 
-      for (i=0; i<lmap_ptr->inlimit; i++) (void) copy_rot(&inners[k], i, ss, lmap_ptr->maps[i+k*lmap_ptr->inlimit], rr * 011);
+      gather(&inners[k], ss, &lmap_ptr->maps[k*lmap_ptr->inlimit], lmap_ptr->inlimit-1, rr * 011);
    }
 
    /* Set the outer elongation to whatever elongation the outsides really had, as indicated
@@ -1716,12 +1704,12 @@ extern void concentric_move(
 
 
 typedef struct {
-   calldef_schema conc_type;
-   setup_kind innerk;
-   setup_kind outerk;
-   int rot;
-   veryshort innermap[8];
-   veryshort outermap[8];
+   Const calldef_schema conc_type;
+   Const setup_kind innerk;
+   Const setup_kind outerk;
+   Const int rot;
+   Const veryshort innermap[8];
+   Const veryshort outermap[8];
 } concmerge_thing;
 
 static concmerge_thing map_1618   = {schema_concentric_2_6, s1x6,        s1x2,    0, {0, 1, 3, 4, 5, 7}, {0, 1}};
@@ -1729,6 +1717,9 @@ static concmerge_thing map_1418   = {schema_concentric,     s1x4,        s1x4,  
 static concmerge_thing map_123d   = {schema_concentric,     s2x3,        s1x2,    0, {0, 1, 2, 6, 7, 8}, {0, 1}};
 static concmerge_thing map_2218   = {schema_concentric,     s1x4,        s2x2,    0, {1, 3, 5, 7}, {0, 1, 2, 3}};
 static concmerge_thing map_2218p  = {schema_concentric,     s1x4,        s2x2,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
+static concmerge_thing map_18_d8  = {schema_concentric,     s1x2,        s1x6,    0, {0, 2}, {0, 1, 2, 4, 5, 6}};
+static concmerge_thing map_18_d2  = {schema_concentric,     s1x2,        s1x6,    0, {0, 2}, {0, 3, 2, 4, 7, 6}};
+static concmerge_thing map_18_d1  = {schema_concentric,     s1x2,        s1x6,    0, {0, 2}, {1, 3, 2, 5, 7, 6}};
 static concmerge_thing map_2218q  = {schema_concentric,     s1x4,        s2x2,    0, {0, 1, 4, 5}, {0, 1, 2, 3}};
 static concmerge_thing map_223x1  = {schema_concentric,     sdmd,        s2x2,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
 static concmerge_thing map_1424   = {schema_concentric,     s2x2,        s1x4,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
@@ -1738,6 +1729,7 @@ static concmerge_thing map_s612   = {schema_concentric_2_6, s_short6,    s1x2,  
 static concmerge_thing map_13dspn = {schema_rev_checkpoint, s2x2,        sdmd,    0, {0, 2, 4, 6}, {0, 3, 4, 7}};
 static concmerge_thing map_13dptp = {schema_rev_checkpoint, s2x2,        sdmd,    0, {1, 7, 5, 3}, {0, 3, 4, 7}};
 static concmerge_thing map_14spn  = {schema_rev_checkpoint, s2x2,        s1x4,    0, {0, 2, 4, 6}, {0, 2, 4, 6}};
+static concmerge_thing map_1418a  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
 static concmerge_thing map_dm3dm  = {schema_nothing,        s3dmd,       nothing, 0, {0}, {5, 1, 11, 7}};
 static concmerge_thing map_2234b  = {schema_nothing,        s4x4,        nothing, 0, {0}, {15, 3, 7, 11}};
 static concmerge_thing map_3d1x4  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 3, 0, 7}};
@@ -1774,7 +1766,7 @@ static concmerge_thing map_14qt   = {schema_nothing,        s_qtag,      nothing
 static concmerge_thing map_1434   = {schema_nothing,        s3x4,        nothing, 0, {0}, {10, 11, 4, 5}};
 
 
-
+static Const veryshort matrixmap[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 
 
 /* This overwrites its first argument setup. */
@@ -1883,23 +1875,8 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
                (res1->people[1].id1 | res1->people[2].id1 | res1->people[5].id1 | res1->people[6].id1 |
                res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1) == 0) {
          result->kind = s4x4;
-         clear_person(result, 12);
-         clear_person(result, 13);
-         clear_person(result, 14);
-         clear_person(result, 0);
-         clear_person(result, 4);
-         clear_person(result, 5);
-         clear_person(result, 6);
-         clear_person(result, 8);
-         (void) copy_person(result, 10, res2, 0);
-         (void) copy_person(result, 15, res2, 1);
-         (void) copy_person(result, 3, res2, 2);
-         (void) copy_person(result, 1, res2, 3);
-         (void) copy_person(result, 2, res2, 4);
-         (void) copy_person(result, 7, res2, 5);
-         (void) copy_person(result, 11, res2, 6);
-         (void) copy_person(result, 9, res2, 7);
-
+         clear_people(result);
+         scatter(result, res2, matrixmap, 7, 0);
          install_rot(result, 7, res1, 0^offs, rot);
          install_rot(result, 5, res1, 1^offs, rot);
          install_rot(result, 14, res1, 2^offs, rot);
@@ -2115,9 +2092,37 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_2218p;
       goto merge_concentric;
    }
+   else if (res2->kind == s1x8 && res1->kind == sdmd && (r&1) && action == merge_without_gaps &&
+            (!(res2->people[3].id1 | res2->people[7].id1 | res1->people[1].id1 | res1->people[3].id1))) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      the_map = &map_18_d8;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s1x8 && res1->kind == sdmd && (r&1) && action == merge_without_gaps &&
+            (!(res2->people[1].id1 | res2->people[5].id1 | res1->people[1].id1 | res1->people[3].id1))) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      the_map = &map_18_d2;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s1x8 && res1->kind == sdmd && (r&1) && action == merge_without_gaps &&
+            (!(res2->people[0].id1 | res2->people[4].id1 | res1->people[1].id1 | res1->people[3].id1))) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      the_map = &map_18_d1;
+      goto merge_concentric;
+   }
    else if (res2->kind == s1x8 && res1->kind == s1x4 &&
             (!(res2->people[2].id1 | res2->people[3].id1 | res2->people[6].id1 | res2->people[7].id1))) {
       the_map = &map_1418;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s1x8 && res1->kind == s1x4 && r == 0) {
+      the_map = &map_1418a;
       goto merge_concentric;
    }
    else if (res2->kind == s3dmd && res1->kind == s1x2 &&
@@ -2474,16 +2479,10 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    }
    outer_inners[0] = *res2;
    outer_inners[1] = *res1;
-
-   for (i=0; i<=setup_attrs[res2->kind].setup_limits; i++)
-      (void) copy_rot(&outer_inners[0], i, res2, the_map->innermap[i], rot);
-
-   for (i=0; i<=setup_attrs[res1->kind].setup_limits; i++)
-      (void) copy_person(&outer_inners[1], i, res1, the_map->outermap[i]);
-
+   gather(&outer_inners[0], res2, the_map->innermap, setup_attrs[res2->kind].setup_limits, rot);
+   gather(&outer_inners[1], res1, the_map->outermap, setup_attrs[res1->kind].setup_limits, 0);
    canonicalize_rotation(&outer_inners[0]);
    canonicalize_rotation(&outer_inners[1]);
-
    normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, result);
    return;
 
@@ -2614,8 +2613,8 @@ typedef struct fixerjunk {
    Const struct fixerjunk *nextdmd;
    Const struct fixerjunk *nextdmdrot;
    Const struct fixerjunk *next2x2;
-   int nonrot[4][6];
-   int yesrot[4][4];
+   veryshort nonrot[4][6];
+   veryshort yesrot[4][4];
 } fixer;
 
 
@@ -2624,7 +2623,6 @@ static Const fixer f1x8aa;
 static Const fixer f1x8ctr;
 static Const fixer foozz;
 static Const fixer f1x8aad;
-static Const fixer foo99d;
 static Const fixer foo66d;
 static Const fixer f2x4endd;
 static Const fixer fspindld;
@@ -2661,7 +2659,7 @@ static Const fixer d4x4d4;
 
 
 
-/*                              ink   outk       rot  numsetup 1x2       1x2rot       1x4     1x4rot dmd       dmdrot   2x2         nonrot            yesrot  */
+/*                              ink   outk       rot  numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2         nonrot            yesrot  */
 
 static Const fixer foo33     = {s1x2, s2x4,        0, 2,       &foo33,     0,          0,          0, 0,          0,    0,          {{0, 1}, {5, 4}},   {{7, 6}, {2, 3}}};
 static Const fixer foocc     = {s1x2, s2x4,        0, 2,       &foocc,     0,          0,          0, 0,          0,    0,          {{2, 3}, {7, 6}},   {{0, 1}, {5, 4}}};
@@ -2745,6 +2743,12 @@ static Const fixer d4x4d4    = {sdmd, s4x4,        0, 1,       0,          0,   
 static Const fixer foo55d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,   0,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
 static Const fixer fgalctb   = {s2x2, s_galaxy,    0, 1,       0,          0,          0,          0, 0,          0,    &fgalctb,   {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f3x1ctl   = {s1x4, s3x1dmd,     0, 1,       0,          0,          &f3x1ctl,   0, 0,          0,    &fgalctb,   {{1, 2, 5, 6}},     {{-1}}};
+
+static Const fixer f3x1d_2   = {s1x2, s3x1dmd,     1, 1,       0,          0,          0,          0, 0,          0,    0,          {{3, 7}},           {{-1}}};
+static Const fixer f1x8_88   = {s1x2, s1x8,        0, 1,       &f1x8_88,   &f3x1d_2,   0,          0, 0,          0,    0,          {{3, 7}},           {{-1}}};
+static Const fixer f1x8_22   = {s1x2, s1x8,        0, 1,       &f1x8_22,   &f3x1d_2,   0,          0, 0,          0,    0,          {{1, 5}},           {{-1}}};
+static Const fixer f1x8_11   = {s1x2, s1x8,        0, 1,       &f1x8_11,   &f3x1d_2,   0,          0, 0,          0,    0,          {{0, 4}},           {{-1}}};
+
 static Const fixer foo99d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo99d,    0, 0,          0,    &f2x4endd,  {{0, 3, 4, 7}},     {{-1}}};
 static Const fixer foo66d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo66d,    0, 0,          0,    &bar55d,    {{1, 2, 5, 6}},     {{-1}}};
 static Const fixer f1x8ctr   = {s1x4, s1x8,        0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &bar55d,    {{3, 2, 7, 6}},     {{-1}}};
@@ -2838,6 +2842,9 @@ sel_item sel_table[] = {
    {LOOKUP_DISC,     s1x8,        0x99,   &foo99d,     (fixer *) 0, -1},
    {LOOKUP_DISC,     s1x8,        0x66,   &foo66d,     (fixer *) 0, -1},
    {LOOKUP_DISC,     s1x8,        0x33,   &f1x8endd,   (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0x88,   &f1x8_88,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0x22,   &f1x8_22,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0x11,   &f1x8_11,    (fixer *) 0, -1},
    {LOOKUP_DISC,     s_bone,      0x33,   &fboneendd,  (fixer *) 0, -1},
    {LOOKUP_DISC,     s_bone,      0xBB,   &fbonetgl,   (fixer *) 0, -1},
    {LOOKUP_DISC,     s_rigger,    0x77,   &frigtgl,    (fixer *) 0, -1},
@@ -2860,6 +2867,23 @@ sel_item sel_table[] = {
    {LOOKUP_DISC,     s2x4,        0xA5,   &f2x4dleft,  (fixer *) 0, -1},
    {LOOKUP_DISC,     s2x4,        0x5A,   &f2x4dright, (fixer *) 0, -1},
    {LOOKUP_DISC,     s2x4,        0x99,   &f2x4endd,   (fixer *) 0, -1},
+   {LOOKUP_NONE,     s2x4,        0x33,   &foo33,      (fixer *) 0, -1},
+   {LOOKUP_NONE,     s2x4,        0xCC,   &foocc,      (fixer *) 0, -1},
+   {LOOKUP_NONE,     s2x4,        0x99,   &f2x4endo,   (fixer *) 0, -1},
+   {LOOKUP_NONE,     s1x8,        0xAA,   &f1x8aa,     (fixer *) 0, -1},
+   {LOOKUP_NONE,     s3x4,        0x0C3,  &f3x4left,   (fixer *) 0, -1},
+   {LOOKUP_NONE,     s3x4,        0x30C,  &f3x4right,  (fixer *) 0, -1},
+   {LOOKUP_NONE,     s2x6,        0x0C3,  &f3x4lzz,    (fixer *) 0, -1},
+   {LOOKUP_NONE,     s2x6,        0xC30,  &f3x4rzz,    (fixer *) 0, -1},
+   {LOOKUP_NONE,     s1x8,        0x33,   &f1x8endo,   (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_bone,      0x33,   &fboneendo,  (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_ptpd,      0xAA,   &foozz,      (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_spindle,   0x55,   &fspindlc,   (fixer *) 0, -1},
+   {LOOKUP_NONE,     s1x3dmd,     0x66,   &f1x3aad,    (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_1x2dmd,    033,    &f1x2aad,    (fixer *) 0, -1},
+   {LOOKUP_NONE,     s2x3,        055,    &f2x3c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_qtag,      0xAA,   &fqtgj1,     (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_qtag,      0x99,   &fqtgj2,     (fixer *) 0, -1},
    {LOOKUP_NONE,     nothing}};
 
 
@@ -2964,6 +2988,11 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
       /* This is "so-and-so lead for a cast a shadow". */
 
       uint32 dirmask;
+      Const veryshort *map_prom;
+      static Const veryshort map_prom_1[16] = {6, 7, 1, 0, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
+      static Const veryshort map_prom_2[16] = {4, 5, 7, 6, 0, 1, 3, 2, 022, 022, 033, 033, 022, 022, 033, 033};
+      static Const veryshort map_prom_3[16] = {0, 1, 3, 2, 4, 5, 7, 6, 000, 000, 011, 011, 000, 000, 011, 011};
+      static Const veryshort map_prom_4[16] = {6, 7, 0, 1, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
 
       the_setups[0] = *ss;        /* Use this all over again. */
       clear_people(&the_setups[0]);
@@ -2974,50 +3003,33 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
          dirmask |= ss->people[i].id1 & 3;
       }
 
-      if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0xCC &&dirmask == 0xAF05) {
-         (void) copy_rot(&the_setups[0], 0, ss, 6, 011);
-         (void) copy_rot(&the_setups[0], 1, ss, 7, 011);
-         (void) copy_rot(&the_setups[0], 2, ss, 1, 022);
-         (void) copy_rot(&the_setups[0], 3, ss, 0, 022);
-         (void) copy_rot(&the_setups[0], 4, ss, 2, 011);
-         (void) copy_rot(&the_setups[0], 5, ss, 3, 011);
-         (void) copy_rot(&the_setups[0], 6, ss, 5, 022);
-         (void) copy_rot(&the_setups[0], 7, ss, 4, 022);
+      if (ss->kind == s_crosswave || ss->kind == s_thar) {
+         if (ssmask == 0xCC && dirmask == 0xAF05) {
+            map_prom = map_prom_1;
+            goto got_map;
+         }
+         else if (ssmask == 0xCC && dirmask == 0x05AF) {
+            map_prom = map_prom_2;
+            goto got_map;
+         }
+         else if (ssmask == 0x33 && dirmask == 0xAF05) {
+            map_prom = map_prom_3;
+            the_setups[0].rotation++;
+            goto got_map;
+         }
+         else if (ssmask == 0x33 && dirmask == 0x05AF) {
+            map_prom = map_prom_4;
+            the_setups[0].rotation++;
+            goto got_map;
+         }
       }
-      else if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0xCC &&dirmask == 0x05AF) {
-         (void) copy_rot(&the_setups[0], 0, ss, 4, 022);
-         (void) copy_rot(&the_setups[0], 1, ss, 5, 022);
-         (void) copy_rot(&the_setups[0], 2, ss, 7, 033);
-         (void) copy_rot(&the_setups[0], 3, ss, 6, 033);
-         (void) copy_rot(&the_setups[0], 4, ss, 0, 022);
-         (void) copy_rot(&the_setups[0], 5, ss, 1, 022);
-         (void) copy_rot(&the_setups[0], 6, ss, 3, 033);
-         (void) copy_rot(&the_setups[0], 7, ss, 2, 033);
-      }
-      else if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0x33 &&dirmask == 0xAF05) {
-         (void) copy_rot(&the_setups[0], 0, ss, 0, 0);
-         (void) copy_rot(&the_setups[0], 1, ss, 1, 0);
-         (void) copy_rot(&the_setups[0], 2, ss, 3, 011);
-         (void) copy_rot(&the_setups[0], 3, ss, 2, 011);
-         (void) copy_rot(&the_setups[0], 4, ss, 4, 0);
-         (void) copy_rot(&the_setups[0], 5, ss, 5, 0);
-         (void) copy_rot(&the_setups[0], 6, ss, 7, 011);
-         (void) copy_rot(&the_setups[0], 7, ss, 6, 011);
-         the_setups[0].rotation++;
-      }
-      else if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0x33 &&dirmask == 0x05AF) {
-         (void) copy_rot(&the_setups[0], 0, ss, 6, 011);
-         (void) copy_rot(&the_setups[0], 1, ss, 7, 011);
-         (void) copy_rot(&the_setups[0], 2, ss, 0, 022);
-         (void) copy_rot(&the_setups[0], 3, ss, 1, 022);
-         (void) copy_rot(&the_setups[0], 4, ss, 2, 011);
-         (void) copy_rot(&the_setups[0], 5, ss, 3, 011);
-         (void) copy_rot(&the_setups[0], 6, ss, 5, 022);
-         (void) copy_rot(&the_setups[0], 7, ss, 4, 022);
-         the_setups[0].rotation++;
-      }
-      else
-         fail("Can't do this in this setup or with these people designated.");
+
+      fail("Can't do this in this setup or with these people designated.");
+
+      got_map:
+
+      for (i=0 ; i<8 ; i++)
+         (void) copy_rot(&the_setups[0], i, ss, map_prom[i], map_prom[i+8]);
 
       move(&the_setups[0], FALSE, result);
       result->result_flags |= RESULTFLAG__IMPRECISE_ROT;
@@ -3149,6 +3161,7 @@ back_here:
          int numsetups;
          lookup_key key;
          setup lilsetup[4], lilresult[4];
+         sel_item *p;
          long_boolean feet_warning = FALSE;
 
          /* Check for special cases of no one or everyone. */
@@ -3178,21 +3191,17 @@ back_here:
          else
             key = LOOKUP_NONE;
 
-         if (key != LOOKUP_NONE) {
-            sel_item *p;
+         for (p = sel_table ; p->kk != nothing ; p++) {
+            if (p->key == key && p->kk == kk && p->thislivemask == thislivemask) {
+               fixp = p->fixp;
 
-            for (p = sel_table ; p->kk != nothing ; p++) {
-               if (p->key == key && p->kk == kk && p->thislivemask == thislivemask) {
-                  fixp = p->fixp;
+               /* We make an extremely trivial test here to see which way the distortion goes.
+                  It will be checked thoroughly later. */
 
-                  /* We make an extremely trivial test here to see which way the distortion goes.
-                     It will be checked thoroughly later. */
+               if (p->use_fixp2 >= 0 && ((this_one->people[p->use_fixp2].id1 ^ arg2) & 1))
+                  fixp = p->fixp2;
 
-                  if (p->use_fixp2 >= 0 && ((this_one->people[p->use_fixp2].id1 ^ arg2) & 1))
-                     fixp = p->fixp2;
-
-                  goto blah;
-               }
+               goto blah;
             }
          }
 
@@ -3224,45 +3233,6 @@ back_here:
                fixp = &f2x4left;
             else if (kk == s2x4 && thislivemask == 0x3C)
                fixp = &f2x4right;
-            else if (indicator >= 6) {
-               /* Do nothing. */
-            }
-            else {
-                    if (kk == s2x4 && thislivemask == 0x33)
-                  fixp = &foo33;
-               else if (kk == s2x4 && thislivemask == 0xCC)
-                  fixp = &foocc;
-               else if (kk == s2x4 && thislivemask == 0x99)
-                  fixp = &f2x4endo;
-               else if (kk == s1x8 && thislivemask == 0xAA)
-                  fixp = &f1x8aa;
-               else if (kk == s3x4 && thislivemask == 0x0C3)
-                  fixp = &f3x4left;
-               else if (kk == s3x4 && thislivemask == 0x30C)
-                  fixp = &f3x4right;
-               else if (kk == s2x6 && thislivemask == 0x0C3)
-                  fixp = &f3x4lzz;
-               else if (kk == s2x6 && thislivemask == 0xC30)
-                  fixp = &f3x4rzz;
-               else if (kk == s1x8 && thislivemask == 0x33)
-                  fixp = &f1x8endo;
-               else if (kk == s_bone && thislivemask == 0x33)
-                  fixp = &fboneendo;
-               else if (kk == s_ptpd && thislivemask == 0xAA)
-                  fixp = &foozz;
-               else if (kk == s_spindle && thislivemask == 0x55)
-                  fixp = &fspindlc;
-               else if (kk == s1x3dmd && thislivemask == 0x66)
-                  fixp = &f1x3aad;
-               else if (kk == s_1x2dmd && thislivemask == 033)
-                  fixp = &f1x2aad;
-               else if (kk == s2x3 && thislivemask == 055)
-                  fixp = &f2x3c;
-               else if (kk == s_qtag && thislivemask == 0xAA)
-                  fixp = &fqtgj1;
-               else if (kk == s_qtag && thislivemask == 0x99)
-                  fixp = &fqtgj2;
-            }
          }
 
          if (!fixp)
@@ -3329,10 +3299,6 @@ back_here:
 
             the_results[setupcount].rotation = 0;
 
-/* ****** What on earth was this for?????????
-            if (lilresult[0].kind != fixp->ink) goto lose;
-*/
-
             if (lilresult[0].kind == s1x2)
                nextfixp = fixp->next1x2rot;
             else if (lilresult[0].kind == s1x4)
@@ -3363,18 +3329,15 @@ back_here:
                      lilresult[lilcount].rotation += 2;
                      canonicalize_rotation(&lilresult[lilcount]);
                   }
-                  for (k=0; k<=setup_attrs[lilresult[0].kind].setup_limits; k++)
-                     (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][k], &lilresult[lilcount], k, 011*fixp->rot);
+                  scatter(&the_results[setupcount], &lilresult[lilcount], fixp->nonrot[lilcount], setup_attrs[lilresult[0].kind].setup_limits, 011*fixp->rot);
                }
             }
             else {
                if (fixp->yesrot[0][0] < 0) goto lose;
                the_results[setupcount].kind = fixp->outk;
                the_results[setupcount].rotation++;
-               for (lilcount=0; lilcount<numsetups; lilcount++) {
-                  for (k=0; k<=setup_attrs[lilresult[0].kind].setup_limits; k++)
-                     (void) copy_rot(&the_results[setupcount], fixp->yesrot[lilcount][k], &lilresult[lilcount], k, 011*fixp->rot);
-               }
+               for (lilcount=0; lilcount<numsetups; lilcount++)
+                  scatter(&the_results[setupcount], &lilresult[lilcount], fixp->yesrot[lilcount], setup_attrs[lilresult[0].kind].setup_limits, 011*fixp->rot);
             }
          }
          else {
@@ -3394,10 +3357,8 @@ back_here:
             the_results[setupcount].kind = fixp->outk;
             the_results[setupcount].rotation = 0;
 
-            for (lilcount=0; lilcount<numsetups; lilcount++) {
-               for (k=0; k<=setup_attrs[lilresult[0].kind].setup_limits; k++)
-                  (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][k], &lilresult[lilcount], k, 011*fixp->rot);
-            }
+            for (lilcount=0; lilcount<numsetups; lilcount++)
+               scatter(&the_results[setupcount], &lilresult[lilcount], fixp->nonrot[lilcount], setup_attrs[lilresult[0].kind].setup_limits, 011*fixp->rot);
          }
 
          /* We only give the warning if they in fact went to spots.  Some of the maps

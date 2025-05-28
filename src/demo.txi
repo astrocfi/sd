@@ -27,8 +27,8 @@ Here is a demonstration of the use of @code{sdtty}, illustrating
 various concepts and other capabilities.  You should follow along on
 your computer.  You must use sdtty version 31.67 or later.
 
-We will write a very long and horrible sequence that demonstrates a number
-of things that the program can do, and how you can get it to do them.
+We will write a very long and horrible sequence that illustrates a number
+of things that the program can do, and shows how you can get it to do them.
 
 
 First, we start the program.  We will run it at C2.
@@ -665,6 +665,8 @@ and try it.
               3B>
 
  7:
+@end group
+@group
 @iftex
 --> @kbd{center diamond diamond circulate} @keycap{ENTER}
 @end iftex
@@ -805,7 +807,7 @@ heads, sides, leads, trailers, and so on.
 Yes, the concept actually looks like that when we type it in.
 It even has to have the parentheses.  The program will print
 it out on the card looking much better than that, but, while
-we type it in, that's the name of the concept.
+we type it in, the name of the concept is ``@code{centers (while the others)}''.
 
 A very important thing you need to know is that one-line entry is not allowed
 for those concepts that take two calls.  Therefore, you must type the name
@@ -825,8 +827,8 @@ and type each of the two calls, pressing
 @end ifinfo
 after each one.
 
-Now, because of the @dfn{completion} property of sdtty, we don't
-have to type the whole name @code{centers (while the others)}.
+Now, because of the @dfn{completion} property of Sdtty, we don't
+have to type the whole name ``@code{centers (while the others)}''.
 As soon as we have typed the
 left parenthesis, the program knows what concept it has to be.
 
@@ -967,7 +969,7 @@ than it did when we typed it in.  The program knows that
 the @code{others} are actually the ends, and it has put the whole
 thing into a reasonable word order.  The program's exact
 wording may not always be ideal---you are responsible for
-using the right words.
+using the right words when you call the card.
 
 The program has put a warning into the sequence, in case someone
 mistakenly thinks that the @dfn{opposite elongation} rule for the
@@ -1242,7 +1244,7 @@ how we type it, it gets printed out with the correct word order.
 Let's have the column circulate one and a half times.  There is
 a @code{1-1/2} concept (in fact, there is a @code{1-M/N} concept for any
 reasonable value of M and N).  There is actually a hyphen (minus sign)
-in the call name, to avoid confusion.
+in the concept name, to avoid confusion.
 
 @example
 @group

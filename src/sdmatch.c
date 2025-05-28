@@ -1,7 +1,19 @@
 /*
- * sdmatch.c - command matching support
- *
- * Copyright (C) 1994-1996 William B. Ackerman
+   sdmatch.c - command matching support
+
+    Copyright (C) 1990-1996  William B. Ackerman.
+
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+    This is for version 31. */
+
+/*
  * Copyright (C) 1993 Alan Snyder
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -458,6 +470,9 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
 {
    concept_descriptor *pat2_concept = (concept_descriptor *) 0;
 
+   if (pat2->special_concept && !(pat2->special_concept->concparseflags & CONCPARSE_PARSE_DIRECT))
+      pat2->special_concept = (concept_descriptor *) 0;
+
    for (;;) {
       if (*pat1 == 0) {
          /* PAT1 has run out, get a string from PAT2 */
@@ -888,14 +903,11 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, int pat
    for (i = 0; i < menu_length; i++) {
       concept_descriptor *this_concept = &concept_descriptor_table[*item];
 
-      if (this_concept->concparseflags & CONCPARSE_PARSE_DIRECT) {
-         new_result.index = *item;
-         new_result.yield_depth = result->yield_depth + 1;
-         p2b.car = this_concept->name;
-         p2b.special_concept = this_concept;
-         match_suffix_2(user, " ", &p2b, patxi, &new_result);
-      }
-
+      new_result.index = *item;
+      new_result.yield_depth = result->yield_depth + 1;
+      p2b.car = this_concept->name;
+      p2b.special_concept = this_concept;
+      match_suffix_2(user, " ", &p2b, patxi, &new_result);
       item++;
    }
 
@@ -1015,15 +1027,10 @@ static void search_menu(uims_reply kind)
    
       for (i = 0; i < menu_length; i++) {
          concept_descriptor *this_concept = &concept_descriptor_table[*item];
-         concept_descriptor *grand_concept = (concept_descriptor *) 0;
          parse_state.call_list_to_use = static_call_menu;
          result.index = *item;
          result.yield_depth = (this_concept->concparseflags & CONCPARSE_YIELD_IF_AMB) ? 1 : 0;
-
-         if (this_concept->concparseflags & CONCPARSE_PARSE_DIRECT)
-            grand_concept = this_concept;
-
-         match_pattern(this_concept->name, &result, grand_concept);
+         match_pattern(this_concept->name, &result, this_concept);
          item++;
       }
    }

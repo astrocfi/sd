@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -753,18 +747,18 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
          limit = 8;
          goto check_groups;
       case chk_box:
-         k = 0; j = 0; i = 3; z = 3;
+         k = 0; j = 0; i = 0; z = 0;
 
          for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
             if ((t = ss->people[idx].id1) != 0) {
                j |= (t^restr_thing_ptr->map1[idx]);
                k |= (t^restr_thing_ptr->map1[idx]^2);
-               i &= (t^restr_thing_ptr->map2[idx]);
-               z &= (t^restr_thing_ptr->map2[idx]^2);
+               i |= (t^restr_thing_ptr->map2[idx]^3);
+               z |= (t^restr_thing_ptr->map2[idx]^1);
             }
          }
 
-         if ((k&3) == 0 || ((~i)&3) == 0 || (j&3) == 0 || ((~z)&3) == 0)
+         if (!(k&3) || !(i&3) || !(j&3) || !(z&3))
             goto getout;
 
          break;
@@ -1540,6 +1534,7 @@ Private int divide_the_setup(
          break;
       case s3x4:
          {
+            static Const veryshort map_3x4_fudge[8] = {1, 2, 4, 5, 7, 8, 10, 11};
             long_boolean forbid_little_stuff;
             setup sss;
             long_boolean really_fudged;
@@ -1644,15 +1639,7 @@ Private int divide_the_setup(
                since some calls do not tolerate it. */
 
             really_fudged = FALSE;
-
-            (void) copy_person(&sss, 0, ss, 1);
-            (void) copy_person(&sss, 1, ss, 2);
-            (void) copy_person(&sss, 2, ss, 4);
-            (void) copy_person(&sss, 3, ss, 5);
-            (void) copy_person(&sss, 4, ss, 7);
-            (void) copy_person(&sss, 5, ss, 8);
-            (void) copy_person(&sss, 6, ss, 10);
-            (void) copy_person(&sss, 7, ss, 11);
+            gather(&sss, ss, map_3x4_fudge, 7, 0);
 
             if (ss->people[0].id1) {
                if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
@@ -2307,73 +2294,48 @@ Private int divide_the_setup(
       been squashed anyway due to the top level normalization, but we want this to occur
       immediately, not just at the top level, though we can't think of a concrete example
       in which it makes a difference. */
-   if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && (result->kind == s2x6)) {
+   if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && result->kind == s2x6) {
       if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1)) {
          /* Inner spots are empty. */
+         setup temp = *result;
+         static Const veryshort inner_2x6[8] = {
+            0, 1, 4, 5, 6, 7, 10, 11};
+
+         gather(result, &temp, inner_2x6, 7, 0);
          result->kind = s2x4;
-         (void) copy_person(result, 2, result, 4);            /* careful -- order is important */
-         (void) copy_person(result, 3, result, 5);
-         (void) copy_person(result, 4, result, 6);
-         (void) copy_person(result, 5, result, 7);
-         (void) copy_person(result, 6, result, 10);
-         (void) copy_person(result, 7, result, 11);
       }
       else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1)) {
          /* Outer spots are empty. */
+         setup temp = *result;
+         static Const veryshort outer_2x6[8] = {
+            1, 2, 3, 4, 7, 8, 9, 10};
+
+         gather(result, &temp, outer_2x6, 7, 0);
          result->kind = s2x4;
-         (void) copy_person(result, 0, result, 1);            /* careful -- order is important */
-         (void) copy_person(result, 1, result, 2);
-         (void) copy_person(result, 2, result, 3);
-         (void) copy_person(result, 3, result, 4);
-         (void) copy_person(result, 4, result, 7);
-         (void) copy_person(result, 5, result, 8);
-         (void) copy_person(result, 6, result, 9);
-         (void) copy_person(result, 7, result, 10);
       }
    }
-   else if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && (result->kind == s4x6)) {
+   else if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && result->kind == s4x6) {
       /* We do the same for two concatenated 3x4's.  This could happen if the people folding were not the ends. */
       if (!(      result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1 |
                   result->people[20].id1 | result->people[21].id1 | result->people[14].id1 | result->people[15].id1)) {
          /* Inner spots are empty. */
+         setup temp = *result;
+         static Const veryshort outer_4x6[16] = {
+            5, 6, 23, 7, 12, 13, 16, 22, 17, 18, 11, 19, 0, 1, 4, 10};
+
+         gather(result, &temp, outer_4x6, 15, 0);
          result->kind = s4x4;
-         (void) copy_person(result,  2, result, 23);            /* careful -- order is important */
-         (void) copy_person(result,  3, result, 7);
-         (void) copy_person(result,  8, result, 17);
-         (void) copy_person(result,  9, result, 18);
-         (void) copy_person(result, 14, result, 4);
-         (void) copy_person(result, 15, result, 10);
-         (void) copy_person(result,  7, result, 22);
-         (void) copy_person(result,  4, result, 12);
-         (void) copy_person(result, 10, result, 11);
-         (void) copy_person(result, 12, result, 0);
-         (void) copy_person(result, 11, result, 19);
-         (void) copy_person(result,  0, result, 5);
-         (void) copy_person(result,  5, result, 13);
-         (void) copy_person(result, 13, result, 1);
-         (void) copy_person(result,  1, result, 6);
-         (void) copy_person(result,  6, result, 16);
          canonicalize_rotation(result);
       }
       else if (!( result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1 |
                   result->people[18].id1 | result->people[23].id1 | result->people[12].id1 | result->people[17].id1)) {
          /* Outer spots are empty. */
+         setup temp = *result;
+         static Const veryshort inner_4x6[16] = {
+            4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
+
+         gather(result, &temp, inner_4x6, 15, 0);
          result->kind = s4x4;
-         (void) copy_person(result,  0, result, 4);            /* careful -- order is important */
-         (void) copy_person(result,  5, result, 14);
-         (void) copy_person(result,  6, result, 15);
-         (void) copy_person(result, 11, result, 20);
-         (void) copy_person(result, 12, result, 1);
-         (void) copy_person(result,  4, result, 13);
-         (void) copy_person(result, 14, result, 3);
-         (void) copy_person(result, 15, result, 9);
-         (void) copy_person(result,  1, result, 7);
-         (void) copy_person(result, 13, result, 2);
-         (void) copy_person(result,  3, result, 8);
-         (void) copy_person(result,  9, result, 19);
-         (void) copy_person(result,  7, result, 21);
-         (void) copy_person(result,  2, result, 22);
-         (void) copy_person(result,  8, result, 16);
          canonicalize_rotation(result);
       }
    }
@@ -2518,8 +2480,8 @@ extern void basic_move(
 
    if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) desired_elongation ^= 3;
    /* If the flags were zero and we complemented them so that both are set, that's not good. */
-   if (desired_elongation == 3)
-      desired_elongation = 0;
+   if ((desired_elongation&3) == 3)
+      desired_elongation ^= 3;
 
    if (!(tbonetest & 011)) {
       result->kind = nothing;

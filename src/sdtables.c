@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-1996  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 31. */
 
@@ -886,18 +880,18 @@ Private id_bit_table id_bit_table_dhrglass[] = {
    {ID2_CENTER|ID2_CTR2|ID2_TRAILER,ID2_CENTER|ID2_CTR2|ID2_BELLE,ID2_CENTER|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR2|ID2_BEAU}};
 
 Private id_bit_table id_bit_table_bigdmd[] = {
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS}};
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4}};
 
 /* This is the "standard" bit table for a 3x4.  It is used when the population
    is offset lines.  It recognizes "outer pairs". */
