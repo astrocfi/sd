@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2004  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -89,7 +89,6 @@ int begin_sizes[] = {
    8,          /* b_pbone */
    8,          /* b_rigger */
    8,          /* b_prigger */
-   9,          /* b_3x3 */
    8,          /* b_2stars */
    8,          /* b_p2stars */
    8,          /* b_spindle */
@@ -409,8 +408,9 @@ is meaningful only in a "seq" definition, not in a "conc" definition.
 Full documentation of these doesn't exist (and, when it does, it will belong elsewhere),
 but the following notes need to be written down.
 
-When "seq_alternate" is used to start of a "seq" definition, there MUST be two parts.
-The only meaningful flags are those on the first part.
+When "repeat_n_alternate" is used on a part of a "seq" definition, there MUST be
+another part following.  No flags in that part are meaningful -- it gets its flags
+from the first part.
 
 When "roll_transparent" is used on a part of a "seq" definition, that call must
 have the property that anyone who is marked roll-neutral (that is, with an "M" roll
@@ -477,7 +477,6 @@ char *sstab[] = {
    "pbone",
    "rigger",
    "prigger",
-   "3x3",
    "2stars",
    "p2stars",
    "spindle",
@@ -633,7 +632,7 @@ char *sstab[] = {
    "pdblrig",
    ""};
 
-// This table is keyed to "setup_kind".
+/* This table is keyed to "setup_kind". */
 char *estab[] = {
    "nothing",
    "1x1",
@@ -676,13 +675,10 @@ char *estab[] = {
    "???",
    "???",
    "???",
-   "???",
-   "???",
    "wqtag",
    "deep2x1dmd",
    "whrglass",
    "rigger",
-   "3x3",
    "3x4",
    "2x6",
    "2x7",
@@ -705,7 +701,6 @@ char *estab[] = {
    "3ptpd",
    "4ptpd",
    "hsqtag",
-   "dmdlndmd",
    "hqtag",
    "wingedstar",
    "wingedstar12",
@@ -729,11 +724,6 @@ char *estab[] = {
    "3oqtg",
    "thar",
    "alamo",
-   "???",
-   "???",
-   "???",
-   "???",
-   "???",
    "???",
    "???",
    "???",
@@ -770,14 +760,10 @@ char *estab[] = {
    "normal_concentric",
    ""};
 
-// This table is keyed to "calldef_schema".
+/* This table is keyed to "calldef_schema". */
 char *schematab[] = {
    "conc",
    "crossconc",
-   "3x3kconc",
-   "3x3kcrossconc",
-   "4x4kconc",
-   "4x4kcrossconc",
    "singleconc",
    "singlecrossconc",
    "grandsingleconc",
@@ -803,7 +789,6 @@ char *schematab[] = {
    "???",
    "1221_conc",
    "conc_diamond_line",
-   "conc_lines_z",
    "conc_diamonds",
    "crossconc_diamonds",
    "conc_zs",
@@ -819,7 +804,6 @@ char *schematab[] = {
    "crossconc2_4",
    "conc2_4_or_normal",
    "conc4_2",
-   "conc4_2_prefer_1x4",
    "crossconc4_2",
    "conc4_2_or_normal",
    "???",
@@ -837,7 +821,6 @@ char *schematab[] = {
    "conc_others",
    "conc6_2_tgl",
    "conc_to_outer_dmd",
-   "conc_no31dwarn",
    "conc_12",
    "conc_16",
    "conc_star",
@@ -885,7 +868,6 @@ char *schematab[] = {
    "???",
    "setup",
    "nulldefine",
-   "nulldefine_noroll",
    "matrix",
    "partnermatrix",
    "rolldefine",
@@ -894,9 +876,6 @@ char *schematab[] = {
    "splitseq",
    "seq_with_fraction",
    "seq_with_split_1x8_id",
-   "seq_alternate",
-   "seq_remainder",
-   "alias",
    ""};
 
 // This table is keyed to "call_restriction".
@@ -955,8 +934,6 @@ char *qualtab[] = {
    "qtag_mwv",
    "qtag_mag_mwv",
    "dmd_ctrs_1f",
-   "dmd_pts_mwv",
-   "dmd_pts_1f",
    "dmd_intlk",
    "dmd_not_intlk",
    "tall_6",
@@ -976,7 +953,6 @@ char *qualtab[] = {
    "col_ends_looking_in",
    "ripple_one_end",
    "ripple_both_ends",
-   "ripple_both_ends_1x4_only",
    "ripple_both_centers",
    "ripple_any_centers",
    "people_1_and_5_real",
@@ -1025,8 +1001,8 @@ char *qualtab[] = {
    "???",
    ""};
 
-// This table is keyed to the constants "DFM1_***".  These are the general
-// definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
+/* This table is keyed to the constants "DFM1_***".  These are the general
+   definition-modifier flags.  They go in the "modifiers1" word of a by_def_item. */
 char *defmodtab1[] = {
    "conc_demand_lines",
    "conc_demand_columns",
@@ -1054,19 +1030,20 @@ char *defmodtab1[] = {
    "no_check_mod_level",
    ""};
 
-// This table is keyed to the constants "DFM1_SEQ***".  These are the general
-// definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
+/* This table is keyed to the constants "DFM1_SEQ***".  These are the general
+   definition-modifier flags.  They go in the "modifiers1" word of a by_def_item. */
 char *seqmodtab1[] = {
    "seq_re_evaluate",
    "do_half_more",
    "seq_never_re_evaluate",
    "seq_re_enable_elongation_check",
    "repeat_n",
+   "repeat_n_alternate",
    "repeat_nm1",
    "normalize",
    ""};
 
-/* This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 12).
+/* This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 8).
    These are the general top-level call flags.  They go into the "callflags1" word and
    part of the "callflagsh" word. */
 
@@ -1103,21 +1080,18 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-   "can_be_one_side_lateral",  // The overflow (into CFLAG2_) items start here.
-   "no_elongation_allowed",    //    There is space for 12 of them.
-   "imprecise_rotation",
+   "no_elongation_allowed",    // The overflow (into CFLAG2_) items start here.
+   "imprecise_rotation",       //    There is space for 8 of them.  So there is 1 left.
    "can_be_fan",
    "equalize",
    "one_person_call",
    "yield_if_ambiguous",
    "do_exchange_compress",
-   "anyone_who_moves_cant_roll",
-   "fractional_numbers",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
 
-/* This table is keyed to the constants "INHERITFLAG_???".  The bits indicated by it
+/* This table is keyed to the constants "cflag__???".  The bits indicated by it
    are encoded into the "callflags" word of the top-level call descriptor. */
 char *flagtabh[] = {
    "diamond_is_legal",
@@ -1139,10 +1113,9 @@ char *flagtabh[] = {
    "lasthalf_is_inherited",
    "fractal_is_inherited",
    "fast_is_inherited",
-   "rewind_is_inherited",
    ""};
 
-/* This table is keyed to the constants "INHERITFLAG_???".
+/* This table is keyed to the constants "cflag__???".
    Notice that it looks like flagtabh. */
 char *altdeftabh[] = {
    "diamond",
@@ -1164,7 +1137,6 @@ char *altdeftabh[] = {
    "lasthalf",
    "fractal",
    "fast",
-   "rewind",
    ""};
 
 char *mxntabplain[] = {
@@ -1244,7 +1216,6 @@ char *defmodtabh[] = {
    "inherit_lasthalf",
    "inherit_fractal",
    "inherit_fast",
-   "inherit_rewind",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -1273,7 +1244,6 @@ char *forcetabh[] = {
    "force_lasthalf",
    "force_fractal",
    "force_fast",
-   "force_rewind",
    ""};
 
 
@@ -1290,7 +1260,6 @@ char *matrixcallflagtab[] = {
    "find_spreaders",
    "use_veer_data",
    "use_number",
-   "lateral_mirror_if_right_of_center",
    ""};
 
 // BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .
@@ -1421,8 +1390,6 @@ char *predtab[] = {
    "three_cw_people",
    "quad_person_cw",
    "quad_person_ccw",
-   "next_dmd_spot_is_facing",
-   "next_dmd_spot_is_normal",
    "nexttrnglspot_is_tboned",
    "nextinttrnglspot_is_tboned",
    "next62spot_is_tboned",
@@ -1488,24 +1455,21 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "base_tag_call_flip"},  // "flip"
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
-      {0, "chreact_1"},      // This is used for propagating the hinge info
-                             // for part 2 of chain reaction.
-      {0, "makepass_1"},     // This is used for propagating the cast off 3/4 info
-                             // for part 2 of make a pass.
-      {0, "nuclear_1"},      // Same, for part 2 of nuclear reaction.
+      {0, "chreact_1"},      /* This is used for propagating the hinge info
+                                for part 2 of chain reaction. */
+      {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info
+                                for part 2 of make a pass. */
       {0, "scootback"},
       {0, "scootbacktowave"},
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "trade"},
-      {0, "any_hand_remake_start_with_n"},
       {0, "passthru"},       /* To tell how to do "12_16_matrix_means_split". */
       {0, "check_cross_counter"},
       {0, "lockit"},
       {0, "disband1"},
       {0, "slither"},
       {0, "maybegrandslither"},
-      {0, "plan_ctrtoend"},
       {0, "prepare_to_drop"},
       {0, "hinge_then_trade"},
       {0, "hinge_then_trade_for_breaker"},
@@ -2043,48 +2007,46 @@ static void write_callarray(int num, int doing_matrix)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
          int p;
-         uint32 stab = STB_NONE;
+         stability stab = stb_none;
          int repetition = 0;
 
          for (p=0; letcount-p >= 2; p++) {
             switch (tok_str[p]) {
             case 'Z': case 'z':
-               // "Z" is "none" with reversal on.
-               if (stab == STB_NONE) stab = STB_NONE+STB_REVERSE;
+               if (stab == stb_none) stab = stb_z;
                else errexit("Improper callarray specifier");
                break;
             case 'A': case 'a':
                switch (stab) {
-               case STB_NONE: stab = STB_A; break;
-               case STB_A: stab = STB_AA; break;
-               case STB_AA: repetition++; break;
-               case STB_A+STB_REVERSE: stab = STB_AC+STB_REVERSE; break;
-               case STB_AA+STB_REVERSE:
+               case stb_none: stab = stb_a; break;
+               case stb_c: stab = stb_ca; break;
+               case stb_a: stab = stb_aa; break;
+               case stb_aa: repetition++; break;
+               case stb_cc:
                   if (repetition == 0)
-                     stab = STB_AAC+STB_REVERSE;
+                     stab = stb_cca;
                   else if (repetition == 1)
-                     { stab = STB_AAAC+STB_REVERSE; repetition = 0; }
+                     { stab = stb_ccca; repetition = 0; }
                   else if (repetition == 2)
-                     { stab = STB_AAAAC+STB_REVERSE; repetition = 0; }
+                     { stab = stb_cccca; repetition = 0; }
                   break;
                default: errexit("Improper callarray specifier");
                }
                break;
             case 'C': case 'c':
                switch (stab) {
-               case STB_NONE: stab = STB_A+STB_REVERSE; break;
-               case STB_A: stab = STB_AC; break;
-               case STB_AA:
+               case stb_none: stab = stb_c; break;
+               case stb_a: stab = stb_ac; break;
+               case stb_c: stab = stb_cc; break;
+               case stb_cc: repetition++; break;
+               case stb_aa:
                   if (repetition == 0)
-                     stab = STB_AAC;
+                     stab = stb_aac;
                   else if (repetition == 1)
-                     { stab = STB_AAAC; repetition = 0; }
+                     { stab = stb_aaac; repetition = 0; }
                   else if (repetition == 2)
-                     { stab = STB_AAAAC; repetition = 0; }
+                     { stab = stb_aaaac; repetition = 0; }
                   break;
-
-                  case STB_A+STB_REVERSE: stab = STB_AA+STB_REVERSE; break;
-                  case STB_AA+STB_REVERSE: repetition++; break;
                default: errexit("Improper callarray specifier");
                }
                break;
@@ -2111,7 +2073,7 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (stab * DBSTAB_BIT);
+         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
 
          // We now have roll indicator and position, need to get direction.
          switch (tok_str[char_ct-1]) {
@@ -2147,11 +2109,11 @@ static void write_call_header(calldef_schema schema)
 
    if (!call_namelen) {
       write_halfword(0x3FFF);
-      write_halfword((call_flags2 << 4));
+      write_halfword((call_flags2 << 8));
    }
    else {
       write_halfword(0x2000 | call_tag );
-      write_halfword(call_level | (call_flags2 << 4));
+      write_halfword(call_level | (call_flags2 << 8));
    }
 
    write_fullword(call_flags1);
@@ -2264,9 +2226,8 @@ static void process_alt_def_header()
 
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper alternate_definition level");
-   int alt_level = search(leveltab);
-   if (alt_level < 0) errexit("Unknown alternate_definition level");
-   if (alt_level >= 16) errexit("Too many levels");
+   int alt_level;
+   if ((alt_level = search(leveltab)) < 0) errexit("Unknown alternate_definition level");
 
    write_halfword(0x4000 | alt_level);
    write_fullword(rrr);
@@ -2422,11 +2383,6 @@ def2:
          }
          else if (!strcmp(tok_str, "controversial")) {
             callarray_flags2 |= CAF__RESTR_CONTROVERSIAL;
-            get_tok();
-            if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
-         }
-         else if (!strcmp(tok_str, "assume_dpt")) {
-            callarray_flags2 |= CAF__RESTR_ASSUME_DPT;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }
@@ -2596,9 +2552,7 @@ int main(int argc, char *argv[])
 
       get_tok();
       if (tok_kind != tok_symbol) errexit("Improper level");
-      call_level = search(leveltab);
-      if (call_level < 0) errexit("Unknown level");
-      if (call_level >= 16) errexit("Too many levels");
+      if ((call_level = search(leveltab)) < 0) errexit("Unknown level");
 
       call_tag = 0;
 
@@ -2627,8 +2581,7 @@ int main(int argc, char *argv[])
          if ((iii = search(flagtab1)) >= 0) {
             if (iii >= 32) {
                call_flags2 |= (1 << (iii-32));
-               // We only have room for 12 overflow call flags.
-               if (call_flags2 & ~0xFFF)
+               if (call_flags2 & ~0xFF)
                   errexit("Too many secondary flags");
             }
             else {
@@ -2653,11 +2606,6 @@ int main(int argc, char *argv[])
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_REAR_BACK_FROM_EITHER;
-         }
-         else if (!strcmp(tok_str, "step_to_qtag")) {
-            if (call_flags1 & CFLAG1_STEP_REAR_MASK)
-               errexit("Too many touch/rear flags");
-            call_flags1 |= CFLAG1_STEP_TO_QTAG;
          }
          else if (!strcmp(tok_str, "visible_fractions"))
             call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
@@ -2704,7 +2652,6 @@ int main(int argc, char *argv[])
          write_array_def(funnyflag);
          break;
       case schema_nothing:
-      case schema_nothing_noroll:
       case schema_roll:
       case schema_recenter:
          get_tok_or_eof();
@@ -2735,11 +2682,9 @@ int main(int argc, char *argv[])
 
          break;
       case schema_sequential:
-      case schema_split_sequential:
       case schema_sequential_with_fraction:
       case schema_sequential_with_split_1x8_id:
-      case schema_sequential_alternate:
-      case schema_sequential_remainder:
+      case schema_split_sequential:
          write_seq_stuff();
 
          for (;;) {               /* Write a level 2 seqdefine group. */
@@ -2753,33 +2698,24 @@ int main(int argc, char *argv[])
          }
 
          break;
-      case schema_alias:
-         if (call_flagsh|call_flags1|call_flags2|call_tag)
-            errexit("Flags not allowed with alias");
-         get_tok();
-         if (tok_kind != tok_symbol) errexit("Improper alias symbol");
-         write_halfword(0x4000 | tagsearch(0));
-         get_tok();
-         break;
       default:
          write_conc_stuff(ccc);
          get_tok_or_eof();
          break;
       }
 
-      // End of call definition.  See if there is another definition for this call.
+      /* End of call definition.  See if there is another definition for this call. */
 
       if ((tok_kind == tok_symbol) && (strcmp(tok_str, "call"))) {
-         // Yes.  Process the next definition.
-         if (ccc == schema_alias) errexit("Compound definitions not allowed on alias");
+         /* Yes.  Process the next definition. */
          call_namelen = 0;
          goto restart_compound_call;
       }
       else
-         goto startagain;       // Must have seen next 'call' indicator.
+         goto startagain;       /* Must have seen next 'call' indicator. */
    }
 
-   write_halfword(0);           // Final end mark.
+   write_halfword(0);         /* final end mark */
 
    dumbflag = 0;
 
@@ -2813,6 +2749,8 @@ int main(int argc, char *argv[])
       db_output_error();
 
    free(tagtab);
+
+
 
    return 0;
 }

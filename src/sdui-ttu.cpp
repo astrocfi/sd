@@ -31,18 +31,16 @@
 #include <stdlib.h>
 #include <termios.h>   // We use this stuff if "-no_cursor" was specified.
 #include <unistd.h>    //    This too.
-
-#if !defined(NO_IOCTL) && (defined(__linux__) || defined(__CYGWIN__) || defined(__APPLE__))
+#if defined (__linux__) || defined (__CYGWIN__) || defined (__APPLE__)
 #include <sys/ioctl.h>
 #endif
-
 #include <signal.h>
 #include <string.h>
 #include "sd.h"
 
 
 #ifndef NO_CURSES
-static bool curses_initialized = false;
+static int curses_initialized = 0;
 #endif
 
 static int current_tty_mode = 0;
@@ -124,19 +122,18 @@ extern void ttu_initialize()
    // Set the default value if the user hasn't explicitly set something.
    if (sdtty_screen_height <= 0) sdtty_screen_height = 25;
 
-#ifdef NO_IOCTL
-   sdtty_no_console = true;
-#endif
+   /* This code uses "no_cursor" rather than "no_console"
+      to direct what it does.  So, if "no_console" is on,
+      we take appropriate action. */
 
-   // If user doesn't want any console stuff at all, turn off "curses".
    sdtty_no_cursor |= sdtty_no_console;
 
 #ifdef NO_CURSES
-   sdtty_no_cursor = true;
+   sdtty_no_cursor = 1;
 #else
    if (!sdtty_no_cursor) {
       initscr();    /* Initialize "curses". */
-      curses_initialized = true;
+      curses_initialized = 1;
       noecho();     /* Don't echo; we will do it ourselves. */
       cbreak();     /* Give us each keystroke; don't wait for entire line. */
       scrollok(stdscr, 1);    /* Permit screen to scroll when we write beyond the bottom.
@@ -215,33 +212,30 @@ void ttu_terminate()
       }
 #endif
    }
-   else
+   else {
       csetmode(0);   // Restore normal input mode.
+   }
 }
 
 // If not using curses, query the terminal driver for the
 //	window size.  The file descriptor for stdout is 1.
 //	If the window size cannot be determined, return 24,
-//	(or whatever the user specified) as a reasonable guess.
+//	as a reasonable guess.
 //
-static int get_nocurses_term_lines()
+int get_term_lines()
 {
-   if (!sdtty_no_console) {
-#ifndef NO_IOCTL
-      // If NO_IOCTL is on, we can't compile these lines.
-      // But we'll never get here in that case.
-      struct winsize w;
-
-      if (ioctl(1, TIOCGWINSZ, &w) >= 0)
-         return w.ws_row;
-      else
-         return sdtty_screen_height-1;
+#ifdef NO_IOCTL
+   return sdtty_screen_height-1;
 #else
-      return sdtty_screen_height-1;
-#endif
+   struct winsize w;
+
+   if (ioctl(1, TIOCGWINSZ, &w) >= 0) {
+      return w.ws_row;
    }
-   else
+   else {
       return sdtty_screen_height-1;
+   }
+#endif
 }
 
 extern int get_lines_for_more()
@@ -254,11 +248,12 @@ extern int get_lines_for_more()
       getmaxyx(stdscr, y, x);		// returns 1 more than desired values
       return y-1;
 #else
-      return get_nocurses_term_lines();
+      return get_term_lines();
 #endif
    }
-   else
-      return get_nocurses_term_lines();
+   else {
+      return get_term_lines();
+   }
 }
 
 
@@ -490,7 +485,7 @@ extern void put_line(const char the_line[])
          // No funny stuff at all.
          // By leaving "use_escapes_for_drawing_people" at zero, we know
          // that the line will be nothing but ASCII text.
-         fputs(the_line, stdout);
+         (void) fputs(the_line, stdout);
       }
       else {
          // We need to watch for escape characters
@@ -505,13 +500,13 @@ extern void put_line(const char the_line[])
                put_char(' ');
 
                if (ui_options.color_scheme != no_color) {
-                  fputs("\033[1;", stdout);
-                  fputs(color_translations[color_index_list[personidx]].vt100_string, stdout);
+                  (void) fputs("\033[1;", stdout);
+                  (void) fputs(color_translations[color_index_list[personidx]].vt100_string, stdout);
 
                   if (ui_options.reverse_video)
-                     fputs(";40m", stdout);
+                     (void) fputs(";40m", stdout);
                   else
-                     fputs(";47m", stdout);
+                     (void) fputs(";47m", stdout);
                }
 
                put_char(ui_options.pn1[personidx]);
@@ -543,7 +538,7 @@ extern void put_char(int c)
 #endif
    }
    else {
-      putchar(c);
+      (void) putchar(c);
    }
 }
 

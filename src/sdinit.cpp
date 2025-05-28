@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2004  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -71,83 +71,41 @@ static int global_callcount;     /* Index into the above. */
 #define NORT (d_north|PERSON_MOVED|ROLL_IS_L)
 #define SOUT (d_south|PERSON_MOVED|ROLL_IS_L)
 
+// The following 8 definitions are taken verbatim from sdtables.c
+enum {
+   B1A = 0000|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
+   G1A = 0100|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
+   B2A = 0200|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
+   G2A = 0300|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL,
+   B3A = 0400|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
+   G3A = 0500|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
+   B4A = 0600|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
+   G4A = 0700|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL
+};
+
 // In all of these setups in which people are facing, they are normal couples.
 // In general, we use the "Callerlab #0" arrangement for things like lines and waves.
 // This makes initialization work for things like star thru, ladies chain, curlique,
 // and half breed thru from waves.
 //
 // But the setup for starting DPT has the appropriate sex for triple star thru.
+static setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0}, {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
+static setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST|G4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {EAST|B4A, 0}, {EAST|G2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {WEST|B2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_rcol = {s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {EAST|B3A, 0}, {EAST|G4A, 0}, {WEST|B2A, 0}, {WEST|G1A, 0}, {WEST|B1A, 0}, {WEST|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lcol = {s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0}, {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
+static setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0}, {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0}, {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {NORT|B3A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {SOUT|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
 
-static setup test_setup_1x8 = {
-   s1x8, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|SOUT,0,ID3_G3},
-                  {0400|SOUT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
-                  {0200|SOUT,0,ID3_B2}, {0100|NORT,0,ID3_G1},
-                  {0000|NORT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_l1x8 = {
-   s1x8, 0, {0}, {{0600|SOUT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0400|NORT,0,ID3_B3}, {0700|SOUT,0,ID3_G4},
-                  {0200|NORT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0000|SOUT,0,ID3_B1}, {0300|NORT,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_dpt = {
-   s2x4, 0, {0}, {{0300|EAST,0,ID3_G2}, {0400|EAST,0,ID3_B3},
-                  {0500|WEST,0,ID3_G3}, {0200|WEST,0,ID3_B2},
-                  {0700|WEST,0,ID3_G4}, {0000|WEST,0,ID3_B1},
-                  {0100|EAST,0,ID3_G1}, {0600|EAST,0,ID3_B4}}, {{0, 0}, 0}};
-static setup test_setup_cdpt = {
-   s2x4, 0, {0}, {{0700|WEST,0,ID3_G4}, {0500|WEST,0,ID3_G3},
-                  {0400|EAST,0,ID3_B3}, {0600|EAST,0,ID3_B4},
-                  {0300|EAST,0,ID3_G2}, {0100|EAST,0,ID3_G1},
-                  {0000|WEST,0,ID3_B1}, {0200|WEST,0,ID3_B2}}, {{0, 0}, 0}};
-static setup test_setup_rcol = {
-   s2x4, 0, {0}, {{0600|EAST,0,ID3_B4}, {0500|EAST,0,ID3_G3},
-                  {0400|EAST,0,ID3_B3}, {0700|EAST,0,ID3_G4},
-                  {0200|WEST,0,ID3_B2}, {0100|WEST,0,ID3_G1},
-                  {0000|WEST,0,ID3_B1}, {0300|WEST,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_lcol = {
-   s2x4, 0, {0}, {{0300|WEST,0,ID3_G2}, {0000|WEST,0,ID3_B1},
-                  {0100|WEST,0,ID3_G1}, {0200|WEST,0,ID3_B2},
-                  {0700|EAST,0,ID3_G4}, {0400|EAST,0,ID3_B3},
-                  {0500|EAST,0,ID3_G3}, {0600|EAST,0,ID3_B4}}, {{0, 0}, 0}};
-static setup test_setup_8ch = {
-   s2x4, 0, {0}, {{0600|EAST,0,ID3_B4}, {0500|WEST,0,ID3_G3},
-                  {0400|EAST,0,ID3_B3}, {0700|WEST,0,ID3_G4},
-                  {0200|WEST,0,ID3_B2}, {0100|EAST,0,ID3_G1},
-                  {0000|WEST,0,ID3_B1}, {0300|EAST,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_tby = {
-   s2x4, 0, {0}, {{0500|WEST,0,ID3_G3}, {0600|EAST,0,ID3_B4},
-                  {0700|WEST,0,ID3_G4}, {0400|EAST,0,ID3_B3},
-                  {0100|EAST,0,ID3_G1}, {0200|WEST,0,ID3_B2},
-                  {0300|EAST,0,ID3_G2}, {0000|WEST,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_lin = {
-   s2x4, 0, {0}, {{0300|SOUT,0,ID3_G2}, {0000|SOUT,0,ID3_B1},
-                  {0100|SOUT,0,ID3_G1}, {0200|SOUT,0,ID3_B2},
-                  {0700|NORT,0,ID3_G4}, {0400|NORT,0,ID3_B3},
-                  {0500|NORT,0,ID3_G3}, {0600|NORT,0,ID3_B4}}, {{0, 0}, 0}};
-static setup test_setup_lout = {
-   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0400|NORT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
-                  {0200|SOUT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0000|SOUT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_rwv = {
-   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|SOUT,0,ID3_G3},
-                  {0700|NORT,0,ID3_G4}, {0400|SOUT,0,ID3_B3},
-                  {0200|SOUT,0,ID3_B2}, {0100|NORT,0,ID3_G1},
-                  {0300|SOUT,0,ID3_G2}, {0000|NORT,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_lwv = {
-   s2x4, 0, {0}, {{0600|SOUT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0700|SOUT,0,ID3_G4}, {0400|NORT,0,ID3_B3},
-                  {0200|NORT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0300|NORT,0,ID3_G2}, {0000|SOUT,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_r2fl = {
-   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0700|SOUT,0,ID3_G4}, {0400|SOUT,0,ID3_B3},
-                  {0200|SOUT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0300|NORT,0,ID3_G2}, {0000|NORT,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_l2fl = {
-   s2x4, 0, {0}, {{0500|SOUT,0,ID3_G3}, {0600|SOUT,0,ID3_B4},
-                  {0400|NORT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
-                  {0100|NORT,0,ID3_G1}, {0200|NORT,0,ID3_B2},
-                  {0000|SOUT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
+
+
 
 
 /* These variables are actually local to test_starting_setup, but they are
@@ -365,21 +323,15 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
 
    try {
       if (crossiness)
-         deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_cross]]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_cross]]);
 
       if (magicness)
-         deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_magic]]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_magic]]);
 
       if (intlkness)
-         deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_intlk]]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_intlk]]);
 
-      if (deposit_call(test_call, &null_options)) {
-         // The problem may be just that the current number is
-         // inconsistent with the call's "odd number only" requirement.
-         number_used = true;
-         if (iterate_over_sel_dir_num(true, true, true)) goto try_another_selector;
-         goto try_again;
-      }
+      if (deposit_call(test_call, &null_options)) goto try_again;
       toplevelmove();
    }
    catch(error_flag_type) {
@@ -459,7 +411,7 @@ static int canonicalize(char * & cp)
             return 500;   // <ATC>
          case 'h':
             return 501;   // <DIRECTION>
-         case '6': case 'k': case 'K':
+         case '6': case 'k':
             return 502;   // <ANYONE>
          case 'N':
             return 503;   // <ANYCIRC>
@@ -872,7 +824,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       while ((c = *np++)) {
          if (c == '@') {
             switch ((c = *np++)) {
-            case '6': case 'k': case 'K':
+            case '6': case 'k':
                root_to_use->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
                break;
             case 'h':
@@ -899,9 +851,6 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             case '0':
                root_to_use->callflagsf |= CFLAGH__HAS_AT_ZERO;
                break;
-            case 'm':
-               root_to_use->callflagsf |= CFLAGH__HAS_AT_M;
-               break;
             }
          }
          else if (c == '[' || c == ']')
@@ -916,13 +865,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    read_halfword();
 
    switch (root_to_use->schema) {
-   case schema_alias:
-      check_tag(last_12);
-      root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
-      read_halfword();
-      break;
    case schema_nothing:
-   case schema_nothing_noroll:
    case schema_roll:
    case schema_recenter:
       break;
@@ -1013,8 +956,6 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    case schema_split_sequential:
    case schema_sequential_with_fraction:
    case schema_sequential_with_split_1x8_id:
-   case schema_sequential_alternate:
-   case schema_sequential_remainder:
       {
          by_def_item templist[100];
          int next_definition_index = 0;
@@ -1069,27 +1010,28 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    root_to_use->compound_part = (calldefn *) 0;
 
    if (last_datum == 0x3FFF) {
+      uint32 saveflags1, saveflags2, saveflagsh;
       calldef_schema call_schema;
 
       calldefn *recursed_call_root = (calldefn *)
          get_mem(sizeof(calldefn));
 
-      read_halfword();       // Get level (not really) and 12 bits of "callflags2" stuff.
-      uint32 saveflags2 = last_datum >> 4;
-      read_fullword();       // Get top level flags, first word.
-                             // This is the "callflags1" stuff.
-      uint32 saveflags1 = last_datum;
-      read_fullword();       // Get top level flags, second word.
-                             // This is the "heritflags" stuff.
-      uint32 saveflagsh = last_datum;
-      read_halfword();       // Get char count (ignore same) and schema.
+      read_halfword();       /* Get level and 8 bits of "callflags2" stuff. */
+      saveflags2 = last_datum >> 8;
+      read_fullword();       /* Get top level flags, first word.
+                                This is the "callflags1" stuff. */
+      saveflags1 = last_datum;
+      read_fullword();       /* Get top level flags, second word.
+                                This is the "heritflags" stuff. */
+      saveflagsh = last_datum;
+      read_halfword();       /* Get char count (ignore same) and schema. */
       call_schema = (calldef_schema) (last_datum & 0xFF);
       recursed_call_root->age = 0;
       recursed_call_root->level = 0;
       recursed_call_root->schema = call_schema;
       recursed_call_root->callflags1 = saveflags1;
-      // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
-      recursed_call_root->callflagsf = saveflags2 << 20;
+      recursed_call_root->callflagsf = saveflags2 << 24;    /* Will get "CFLAGH" and "ESCAPE_WORD"
+                                                               bits later. */
       recursed_call_root->callflagsh = saveflagsh;
       read_in_call_definition(recursed_call_root, 0);    // Recurse.
       root_to_use->compound_part = recursed_call_root;
@@ -1099,20 +1041,22 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
 
 
-// This makes sure that outfile_string is a legal filename.
-// Returns FALSE if error occurs.  No action taken in that case.
-// We do not allow blanks in the file name.  To do so would make
-// the parsing of session lines ambiguous.
-extern bool install_outfile_string(const char newstring[])
+/* This makes sure that outfile string is a legal filename, and sets up
+   "outfile_special" to tell if it is a printing device.
+   Returns FALSE if error occurs.  No action taken in that case. */
+
+
+extern bool install_outfile_string(char newstring[])
 {
    char test_string[MAX_FILENAME_LENGTH];
+   bool file_is_ok;
+   int j;
 
    rewrite_filename_as_star[0] = '\0';
 
    // Clean off leading blanks, and stop after any internal blank.
 
-   sscanf(newstring, "%s", test_string);
-   if (!test_string[0]) return false;   // Null file name is not allowed.
+   (void) sscanf(newstring, "%s", test_string);
 
    // Look for special file string of "*" or "+".
    // If so, generate a new file name.
@@ -1128,41 +1072,63 @@ extern bool install_outfile_string(const char newstring[])
       letter[0] = 'a';
       letter[1] = '\0';
       time(&clocktime);
-      sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
+      (void) sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
 
       // Now t2 = "Jan", t3 = "16", and t5 = "1996".
 
-      strncpy(junk, t3, 3);
-      strncat(junk, t2, 3);
-      strncat(junk, &t5[strlen(t5)-2], 2);
+      (void) strncpy(junk, t3, 3);
+      (void) strncat(junk, t2, 3);
+      (void) strncat(junk, &t5[strlen(t5)-2], 2);
       for (p=junk ; *p ; p++) *p = tolower(*p);  // Month in lower case.
-      strncpy(junk2, junk, 10);           // This should be "16jan96".
+      (void) strncpy(junk2, junk, 10);           // This should be "16jan96".
 
       for (;;) {
-         strcat(junk2, filename_strings[calling_level]);
+         (void) strcat(junk2, filename_strings[calling_level]);
 
          // If the given filename is "+", accept it immediately.
          // Otherwise, fuss with the generated name until we get a
          // nonexistent file.
 
          if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
-         fclose(filetest);
+         (void) fclose(filetest);
          if (letter[0] == 'z'+1) letter[0] = 'A';
          else if (letter[0] == 'Z'+1) return false;
-         strncpy(junk2, junk, 10);
-         strncat(junk2, letter, 4);     /* Try appending a letter. */
+         (void) strncpy(junk2, junk, 10);
+         (void) strncat(junk2, letter, 4);     /* Try appending a letter. */
          letter[0]++;
       }
 
-      strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
+      (void) strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
+      outfile_special = false;
       last_file_position = -1;
       rewrite_filename_as_star[0] = test_string[0];
       return true;
    }
 
-   strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
-   last_file_position = -1;
-   return true;
+   // Now see if we can write to it.
+
+#ifdef POSIX_STYLE
+   /* If the file does not exist, we allow it, even though creation may
+      not be possible because of directory permissions.  It is unfortunate
+      that there is no feasible way to determine whether a given pathname
+      could be opened for writing. */
+   if (access(test_string, F_OK) || !access(test_string, W_OK))
+      file_is_ok =  true;
+   else
+      file_is_ok =  false;
+#else
+   file_is_ok =  true;
+#endif
+
+   if (file_is_ok) {
+      (void) strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
+      j = strlen(outfile_string);
+      outfile_special = (j>0 && outfile_string[j-1] == ':');
+      last_file_position = -1;
+      return true;
+   }
+   else
+      return false;
 }
 
 
@@ -1254,14 +1220,8 @@ extern void prepare_to_read_menus()
    else if ((508205 << 12) != arithtest)
       gg->fatal_error_exit(1, "Arithmetic is less than 32 bits",
                            "program has been compiled incorrectly.");
-   else if (l_nonexistent_concept > 15)
-      gg->fatal_error_exit(1, "Too many levels",
-                           "program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 125)
       gg->fatal_error_exit(1, "Insufficient qualifier space",
-                           "program has been compiled incorrectly.");
-   else if (NUM_PLAINMAP_KINDS > 252)
-      gg->fatal_error_exit(1, "Insufficient mapkind space",
                            "program has been compiled incorrectly.");
 
    // We need to take away the "zig-zag" directions if the level is below A2.
@@ -1334,7 +1294,7 @@ extern int process_session_info(Cstring *error_msg)
       int num_fields_parsed;
       char junk_name[MAX_FILENAME_LENGTH];
       char filename_string[MAX_FILENAME_LENGTH];
-      char session_levelstring[MAX_FILENAME_LENGTH+10];
+      char session_levelstring[50];
 
       // Find the "[Sessions]" indicator again.
 
@@ -1462,9 +1422,8 @@ static int write_back_session_line(FILE *wfile)
 
 static void rewrite_init_file()
 {
-   if (session_index != 0 || rewrite_with_new_style_filename) {
+   if (session_index != 0) {
       char line[MAX_FILENAME_LENGTH];
-      char errmsg[MAX_TEXT_LINE_LENGTH];
       FILE *rfile;
       FILE *wfile;
       int i;
@@ -1472,78 +1431,27 @@ static void rewrite_init_file()
       remove(SESSION2_FILENAME);
 
       if (rename(SESSION_FILENAME, SESSION2_FILENAME)) {
-         strncpy(errmsg, "Failed to save file '" SESSION_FILENAME
-                 "' in '" SESSION2_FILENAME "':\n",
-                 MAX_TEXT_LINE_LENGTH);
-         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH);
-         strncat(errmsg, ".", MAX_FILENAME_LENGTH);
-         gg->serious_error_print(errmsg);
+         printf("Failed to save file '" SESSION_FILENAME "' in '" SESSION2_FILENAME "'\n");
+         printf("%s\n", get_errstring());
       }
       else {
          if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
-            strncpy(errmsg, "Failed to open '" SESSION2_FILENAME "'.",
-                    MAX_TEXT_LINE_LENGTH);
-            gg->serious_error_print(errmsg);
+            printf("Failed to open '" SESSION2_FILENAME "'\n");
          }
          else {
             if (!(wfile = fopen(SESSION_FILENAME, "w"))) {
-               strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
-                       MAX_TEXT_LINE_LENGTH);
-               gg->serious_error_print(errmsg);
+               printf("Failed to open '" SESSION_FILENAME "'\n");
             }
             else {
                bool more_stuff = false;
 
-               if (rewrite_with_new_style_filename) {
-                  // Search for the "[Options]" indicator, copying stuff that we skip.
-
-                  for (;;) {
-                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
-                     if (fputs(line, wfile) == EOF) goto copy_failed;
-                     if (!strncmp(line, "[Options]", 9)) break;
-                     else if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
-                  }
-
-                  bool got_the_command = false;
-
-                  for (;;) {
-                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
-
-                     if (!strncmp(line, "new_style_filename", 18))
-                        got_the_command = true;
-
-                     if (line[0] == '\n' || !strncmp(line, "[Sessions]", 10)) {
-                        // At the end of the section.
-                        if (!got_the_command) {
-                           if (fputs("new_style_filename\n", wfile) == EOF) goto copy_failed;
-                        }
-
-                        if (fputs("\n", wfile) == EOF) goto copy_failed;
-
-                        if (line[0] == '\n')
-                           goto search_for_sessions;
-                        else
-                           goto got_sessions;
-                     }
-
-                     // Don't copy this line is it is "old_style".
-                     if (strncmp(line, "old_style_filename", 18)) {
-                        if (fputs(line, wfile) == EOF) goto copy_failed;
-                     }
-                  }
-               }
-
-               // Search for the "[Sessions]" indicator, copying stuff that we skip.
-
-            search_for_sessions:
+               // Search for the "[Sessions]" indicator.
 
                for (;;) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
                   if (fputs(line, wfile) == EOF) goto copy_failed;
-                  if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
+                  if (!strncmp(line, "[Sessions]", 10)) break;
                }
-
-            got_sessions:
 
                for (i=0 ; ; i++) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
@@ -1561,8 +1469,7 @@ static void rewrite_init_file()
                }
 
                if (i < session_index) {
-                  // User has requested a line number larger than the file.
-                  // Append a new line.
+                  /* User has requested a line number larger than the file.  Append a new line. */
                   if (write_back_session_line(wfile) < 0)
                      goto copy_failed;
                }
@@ -1577,17 +1484,15 @@ static void rewrite_init_file()
 
                goto copy_done;
 
-            copy_failed:
+               copy_failed:
 
-               strncpy(errmsg, "Failed to write to '" SESSION_FILENAME "'.",
-                       MAX_TEXT_LINE_LENGTH);
-               gg->serious_error_print(errmsg);
+               printf("Failed to write to '" SESSION_FILENAME "'\n");
 
-            copy_done:
+               copy_done:
 
-               fclose(wfile);
+               (void) fclose(wfile);
             }
-            fclose(rfile);
+            (void) fclose(rfile);
          }
       }
    }
@@ -1596,21 +1501,8 @@ static void rewrite_init_file()
 
 extern void general_final_exit(int code)
 {
-   // If this is Sd, of course "ttu_initialize" won't have been called.
-   // (It doesn't even exist.)
-   //
-   // But if this is Sdtty, "ttu_initialize" will have been called
-   // unless we are just doing "command-line help".  That is, the user typed
-   // "sdtty -help".  In that case, "rewrite_init_file", will do nothing,
-   // so it won't matter that "ttu_initialize" wasn't called.
-
    if (glob_abridge_mode < abridge_mode_writing)
       rewrite_init_file();
-
-   // If this is Sdtty, this next procedure will call "ttu_terminate".
-   // If we had just been printing command-line help, "ttu_initialize"
-   // will not have happened.
-
    gg->terminate(code);
 }
 
@@ -1632,6 +1524,7 @@ static void build_database(abridge_mode_t abridge_mode)
    int i, char_count;
    int local_callcount;
    dance_level this_level;
+   call_with_name **local_call_list;
    dance_level acceptable_level = calling_level;
 
    if (abridge_mode <= abridge_mode_deleting_abridge)
@@ -1651,8 +1544,7 @@ static void build_database(abridge_mode_t abridge_mode)
    // These two will be temporary.  The first lasts through the entire initialization
    // process.  The second one only in this procedure.
    global_temp_call_indices = (int *) get_mem(abs_max_calls * sizeof(call_with_name *));
-   call_with_name **local_call_list =
-      (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
+   local_call_list = (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
 
    // Clear the tag list.  Calls will fill this in as they announce themselves.
    for (i=0; i < max_base_calls; i++) base_calls[i] = (call_with_name *) 0;
@@ -1665,6 +1557,7 @@ static void build_database(abridge_mode_t abridge_mode)
 
    for (;;) {
       int savetag;
+      uint32 saveflags1, saveflags2, saveflagsh;
       calldef_schema call_schema;
 
       if ((last_datum & 0xE000) == 0) break;
@@ -1675,19 +1568,19 @@ static void build_database(abridge_mode_t abridge_mode)
 
       savetag = last_12;     /* Get tag, if any. */
 
-      read_halfword();       // Get level and 12 bits of "callflags2" stuff.
-      this_level = (dance_level) (last_datum & 0xF);
-      uint32 saveflags2 = last_datum >> 4;
+      read_halfword();       /* Get level and 8 bits of "callflags2" stuff. */
+      this_level = (dance_level) (last_datum & 0xFF);
+      saveflags2 = last_datum >> 8;
 
-      read_fullword();       // Get top level flags, first word.
-                             // This is the "callflags1" stuff.
-      uint32 saveflags1 = last_datum;
+      read_fullword();       /* Get top level flags, first word.
+                                This is the "callflags1" stuff. */
+      saveflags1 = last_datum;
 
-      read_fullword();       // Get top level flags, second word.
-                             // This is the "heritflags" stuff.
-      uint32 saveflagsh = last_datum;
+      read_fullword();       /* Get top level flags, second word.
+                                This is the "heritflags" stuff. */
+      saveflagsh = last_datum;
 
-      read_halfword();       // Get char count and schema.
+      read_halfword();       /* Get char count and schema. */
       call_schema = (calldef_schema) (last_datum & 0xFF);
       char_count = (last_datum >> 8) & 0xFF;
 
@@ -1709,7 +1602,7 @@ static void build_database(abridge_mode_t abridge_mode)
       call_root->the_defn.level = (int) this_level;
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
-      call_root->the_defn.callflagsf = saveflags2 << 20;
+      call_root->the_defn.callflagsf = saveflags2 << 24;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
       call_root->the_defn.callflagsh = saveflagsh;
       read_in_call_definition(&call_root->the_defn, char_count);
@@ -1768,6 +1661,13 @@ static void build_database(abridge_mode_t abridge_mode)
             }
          }
          else {
+            /* But circ calls are treated normally, as well as being put on the special list. */
+            if (call_root->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
+               number_of_circcers++;
+               circcer_calls = (call_with_name **)
+                  get_more_mem(circcer_calls, number_of_circcers*sizeof(call_with_name *));
+               circcer_calls[number_of_circcers-1] = call_root;
+            }
             if (local_callcount >= abs_max_calls)
                database_error_exit("Too many base calls -- mkcalls made an error");
             local_call_list[local_callcount++] = call_root;
@@ -1775,7 +1675,14 @@ static void build_database(abridge_mode_t abridge_mode)
       }
    }
 
-   // Check that all tagged calls have been filled in.
+   number_of_calls[call_list_any] = local_callcount;
+   main_call_lists[call_list_any] = (call_with_name **) get_mem(local_callcount * sizeof(call_with_name *));
+
+   memcpy(main_call_lists[call_list_any],
+          local_call_list,
+          local_callcount*sizeof(call_with_name *));
+
+   free(local_call_list);
 
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]) {
@@ -1784,37 +1691,6 @@ static void build_database(abridge_mode_t abridge_mode)
          gg->fatal_error_exit(1, "Call didn't identify self", msg);
       }
    }
-
-   // Translate the aliases.
-
-   for (i=0 ; i<local_callcount ; i++) {
-      while (local_call_list[i]->the_defn.schema == schema_alias) {
-         local_call_list[i]->the_defn =
-            base_calls[local_call_list[i]->the_defn.stuff.conc.innerdef.call_id]->the_defn;
-      }
-   }
-
-   // Process the circulate calls.
-
-   for (i=0 ; i<local_callcount ; i++) {
-      call_with_name *t = local_call_list[i];
-      if (t->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
-         number_of_circcers++;
-         circcer_calls = (call_with_name **)
-            get_more_mem(circcer_calls, number_of_circcers*sizeof(call_with_name *));
-         circcer_calls[number_of_circcers-1] = t;
-      }
-   }
-
-   number_of_calls[call_list_any] = local_callcount;
-   main_call_lists[call_list_any] =
-      (call_with_name **) get_mem(local_callcount * sizeof(call_with_name *));
-
-   memcpy(main_call_lists[call_list_any],
-          local_call_list,
-          local_callcount*sizeof(call_with_name *));
-
-   free(local_call_list);
 
    fclose(database_file);
 }
@@ -1938,14 +1814,26 @@ void conzept::translate_concept_names()
 // Alternating blue and red.
 static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
 
+// Alternating bletcherous blue and putrid pink.
+static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
+
 // Red, green, blue, yellow, red for wraparound if coloring by corner.
 static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
+
+// Red, green, blue, substitute yellow, red for wraparound if coloring by corner.
+static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
 
 // Red, green, yellow, blue.
 static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
 
+// Red, green, substitute yellow, blue.
+static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
+
 // Yellow, green, red, blue.
 static int couple_colors_ygrb[8] = {4, 4, 3, 3, 2, 2, 5, 5};
+
+// Substitute yellow, green, red, blue.
+static int couple_colors_kgrb[8] = {1, 1, 3, 3, 2, 2, 5, 5};
 
 
 int useful_concept_indices[UC_extent];
@@ -2079,10 +1967,6 @@ extern bool open_session(int argc, char **argv)
             { ui_options.pastel_color = false; continue; }
          else if (strcmp(&args[argno][1], "no_color") == 0)
             { ui_options.color_scheme = no_color; continue; }
-         else if (strcmp(&args[argno][1], "use_magenta") == 0)
-            { ui_options.use_magenta = true; continue; }
-         else if (strcmp(&args[argno][1], "use_cyan") == 0)
-            { ui_options.use_cyan = true; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple") == 0)
             { ui_options.color_scheme = color_by_couple; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple_rgyb") == 0)
@@ -2146,7 +2030,7 @@ extern bool open_session(int argc, char **argv)
       the user.  In the latter case, we will do this step again. */
 
    if (calling_level != l_nonexistent_concept)
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
 
    /* At this point, the command-line arguments, and the preferences in the "[Options]"
       section of the initialization file, have been processed.  Some of those things
@@ -2170,53 +2054,37 @@ extern bool open_session(int argc, char **argv)
 
    // Set up the color translations based on the user's options.
 
-   color_index_list = couple_colors_rgby;   // Default = color_by_couple.
-
-   switch (ui_options.color_scheme) {
-   case color_by_gender: case no_color:
+   if (ui_options.color_scheme == color_by_gender ||
+       ui_options.color_scheme == no_color) {
       // It doesn't really matter if "no_color" is selected,
       // as long as we put in something.  The Windows interface
       // code simply sets the palette so that all colors are
       // monochrome, and then uses color_index_list.
-      color_index_list = bold_person_colors;
-      break;
-   case color_by_corner:
-      color_index_list = couple_colors_rgby+1;
-      break;
-   case color_by_couple_rgyb:
-      color_index_list = couple_colors_rgyb;
-      break;
-   case color_by_couple_ygrb:
-      color_index_list = couple_colors_ygrb;
-      break;
+      if (ui_options.pastel_color)
+         color_index_list = pastel_person_colors;
+      else
+         color_index_list = bold_person_colors;
    }
-
-   // Make necessary changes.  This is something of a kludge, since we are
-   // writing over what should have been a constant array.
-
-   // If the background is white, bright yellow won't be visible.  Change it to
-   // dark yellow.  (If reverse_video or no_intensify, the background is black
-   // or grey, and bright yellow is OK.)
-   if (!ui_options.reverse_video && !ui_options.no_intensify) {
-      for (i=0 ; i<8 ; i++) {
-         if (color_index_list[i] == 4) color_index_list[i] = 1;
+   else {
+      if (ui_options.reverse_video || ui_options.no_intensify) {
+         if (ui_options.color_scheme == color_by_corner)
+            color_index_list = couple_colors_rgby+1;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            color_index_list = couple_colors_rgyb;
+         else if (ui_options.color_scheme == color_by_couple_ygrb)
+            color_index_list = couple_colors_ygrb;
+         else                      // color_by_couple
+            color_index_list = couple_colors_rgby;
       }
-   }
-
-   // If color_by_gender, pastel applies to both red and blue.
-   // Otherwise, we need the flags "use_cyan" or "use_magenta".
-
-   if (ui_options.use_cyan ||
-       (ui_options.pastel_color && ui_options.color_scheme == color_by_gender)) {
-      for (i=0 ; i<8 ; i++) {
-         if (color_index_list[i] == 5) color_index_list[i] = 7;
-      }
-   }
-
-   if (ui_options.use_magenta ||
-       (ui_options.pastel_color && ui_options.color_scheme == color_by_gender)) {
-      for (i=0 ; i<8 ; i++) {
-         if (color_index_list[i] == 2) color_index_list[i] = 6;
+      else {
+         if (ui_options.color_scheme == color_by_corner)
+            color_index_list = couple_colors_rgbk+1;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            color_index_list = couple_colors_rgkb;
+         else if (ui_options.color_scheme == color_by_couple_ygrb)
+            color_index_list = couple_colors_kgrb;
+         else                      // color_by_couple
+            color_index_list = couple_colors_rgbk;
       }
    }
 
@@ -2227,7 +2095,7 @@ extern bool open_session(int argc, char **argv)
       gg->init_step(final_level_query, 0);
 
    if (new_outfile_string)
-      install_outfile_string(new_outfile_string);
+      (void) install_outfile_string(new_outfile_string);
 
    // Translate the concept menu names, and then export the sealed
    // concept list for ordinary folks to see in a constant array.
@@ -2236,7 +2104,7 @@ extern bool open_session(int argc, char **argv)
    // Scan for "useful" concepts, that is, concepts that will help with
    // functions like "normalize".
 
-   for (i=0 ; i<UC_extent ; i++)
+   for (i = 0 ; i < UC_extent ; i++)
       useful_concept_indices[i] = -1;
 
    for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++) {
@@ -2283,7 +2151,7 @@ extern bool open_session(int argc, char **argv)
 
       MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
                                     sourcenames, database_input_files,
-                                    cachename, 7, binaryfileflags);
+                                    cachename, 6, binaryfileflags);
 
       int *mapped_cache = cache_stuff.map_address();
 
@@ -2312,46 +2180,6 @@ extern bool open_session(int argc, char **argv)
       gg->init_step(calibrate_tick, TICK_TOTAL);
       gg->init_step(do_tick, 2);
 
-      // Make the cardinal/ordinal tables.
-
-      for (i=0 ; i<NUM_CARDINALS ; i++) {
-         int tens_digit = i/10;
-         int units_digit = i - tens_digit*10;
-         char *cardptr = new char [3]; 
-         char *ordptr = new char [5]; 
-         cardinals[i] = cardptr;
-         ordinals[i] = ordptr;
-         if (tens_digit > 0) {
-            *cardptr++ = (char) ('0'+tens_digit);
-            *ordptr++ = (char) ('0'+tens_digit);
-         }
-         *cardptr++ = (char) ('0'+units_digit);
-         *ordptr++ = (char) ('0'+units_digit);
-
-         if (units_digit == 1 && tens_digit != 1) {
-            *ordptr++ = 's';
-            *ordptr++ = 't';
-         }
-         else if (units_digit == 2 && tens_digit != 1) {
-            *ordptr++ = 'n';
-            *ordptr++ = 'd';
-         }
-         else if (units_digit == 3 && tens_digit != 1) {
-            *ordptr++ = 'r';
-            *ordptr++ = 'd';
-         }
-         else {
-            *ordptr++ = 't';
-            *ordptr++ = 'h';
-         }
-
-         *cardptr++ = (char) 0;
-         *ordptr++ = (char) 0;
-      }
-
-      cardinals[NUM_CARDINALS] = (Cstring) 0;
-      ordinals[NUM_CARDINALS] = (Cstring) 0;
-
       // Make the translated names for all calls and concepts.  These have the "<...>"
       // phrases, suitable for external display on menus, instead of "@" escapes.
 
@@ -2371,16 +2199,15 @@ extern bool open_session(int argc, char **argv)
          circcer_calls[uj]->menu_name =
             translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->the_defn.callflagsf);
 
-      // Do the base calls (calls that are used in definitions of other calls).
-      // These may have already been done, if they were on the level.
+      // Do the base calls (calls that are used in definitions of other calls).  These may have
+      // already been done, if they were on the level.
       for (i=1; i <= highest_base_call; i++) {
          if (!base_calls[i]->menu_name)
             base_calls[i]->menu_name =
                translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
       }
 
-      SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any],
-                                                  number_of_calls[call_list_any]);
+      SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any], number_of_calls[call_list_any]);
 
       // Now the permanent array "main_call_lists[call_list_any]" has all the legal calls,
       //    including name pointer fields containing the original text with "@" escapes,
@@ -2483,40 +2310,19 @@ extern bool open_session(int argc, char **argv)
 
       call_list_kind cl;
 
-      // What we wanted from the cache.
-      int cache_keys[6];
-
-      cache_keys[0] = number_of_calls[call_list_any];
-      cache_keys[1] = (int) calling_level;
-      cache_keys[2] = (int) l_dontshow;
-      cache_keys[3] = (int) call_list_extent;
-      cache_keys[4] = callchecksum;
-      cache_keys[5] = DATABASE_FORMAT_VERSION;
-
-      global_cache_miss_reason[0] = 0;
-
-      if (!mapped_cache) {
-         global_cache_miss_reason[0] = 9;
-         global_cache_miss_reason[1] = (int) cache_stuff.get_miss_reason();
-      }
-      else {
-         for (int jj=0 ; jj<6 ; jj++) {
-            if (mapped_cache[jj] != cache_keys[jj]) {
-               global_cache_miss_reason[0] = jj+1;
-               global_cache_miss_reason[1] = mapped_cache[jj];
-               global_cache_miss_reason[2] = cache_keys[jj];
-            }
-         }
-      }
-
-      if (global_cache_miss_reason[0] == 0) {
+      if (mapped_cache &&
+          mapped_cache[0] == number_of_calls[call_list_any] &&
+          mapped_cache[1] == (int) calling_level &&
+          mapped_cache[2] == (int) l_dontshow &&
+          mapped_cache[3] == (int) call_list_extent &&
+          mapped_cache[4] == callchecksum &&
+          mapped_cache[5] == DATABASE_FORMAT_VERSION) {
          int cache_menu_words = 6;
 
          for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
             // Read the menu length.
             number_of_calls[cl] = mapped_cache[cache_menu_words++];
-            main_call_lists[cl] =
-               (call_with_name **) get_mem(number_of_calls[cl] * sizeof(call_with_name *));
+            main_call_lists[cl] = (call_with_name **) get_mem(number_of_calls[cl] * sizeof(call_with_name *));
             // Read the menu itself.
             memcpy(main_call_lists[cl],
                    mapped_cache+cache_menu_words,
@@ -2618,7 +2424,7 @@ extern bool open_session(int argc, char **argv)
             do_accelerator_spec(q, true);
       }
       else {
-         const Cstring *q;
+         Cstring *q;
          for (q = concept_key_table ; *q ; q++)
             do_accelerator_spec(*q, true);
       }

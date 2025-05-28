@@ -50,7 +50,6 @@ struct MAPPED_CACHE_INNARDS {
    int filewords;
    int sversion;
    int header_size_in_words;
-   MAPPED_CACHE_FILE::miss_reason the_miss_reason;
    bool properly_opened;
 };
 
@@ -112,7 +111,6 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
          // will find.  The client will conclude that we can't proceed
          // with the operation, since we can't open the source files.
          innards->properly_opened = false;
-         innards->the_miss_reason = MISS_CANT_OPEN_SOURCE;
       }
       else if (fstat(fileno(srcfiles[i]), &innards->source_stats[i])) {
          // If we can open the source files but can't get their
@@ -128,17 +126,12 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
          // been repaired, we will see a mismatch and recompute things
          // one more time, but after that it may be OK.
          innards->properly_opened = false;
-         innards->the_miss_reason = MISS_CANT_GET_SOURCE_STATUS;
          innards->source_stats[i].st_size = ~0;
          innards->source_stats[i].st_mtime = ~0;
       }
    }
 
-   // We have already filled in the reason.
    if (!innards->properly_opened) return;
-
-   // If we fail at this point, the reason will be that we can't open or map the cache file.
-   innards->the_miss_reason = MISS_CANT_OPEN_CACHE;
 
 #if defined(WIN32)
    innards->maphandle = (HANDLE) 0;
@@ -155,8 +148,7 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
 
    innards->map_address = (int *) MapViewOfFile(innards->maphandle,
                                                 FILE_MAP_READ, 0, 0, 0);
-   if (!innards->map_address)
-      return;
+   if (!innards->map_address) return;
 #elif defined(__linux__)
    innards->mapfd = open(innards->mapfilename, O_RDONLY);
    if (innards->mapfd < 0) return;
@@ -166,7 +158,7 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
    innards->map_address = (int *) mmap(0, innards->filewords<<2, PROT_READ,
                                        MAP_SHARED, innards->mapfd, 0);
 
-   if (innards->map_address == MAP_FAILED) innards->map_address = (int *) 0;
+   if (((int) innards->map_address) < 0) innards->map_address = (int *) 0;
    if (!innards->map_address) return;
 #else
    innards->mapfiledesc = fopen(innards->mapfilename, "rb");
@@ -176,37 +168,28 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
    innards->filewords >>= 2;
 
    innards->map_address = new int [innards->filewords];
-   if (innards->map_address == 0) return;
+   if (!innards->map_address) return;
    if ((int) fread(innards->map_address+1, 4, innards->filewords-1, innards->mapfiledesc) !=
        innards->filewords-1)
       return;
 #endif
-
-   innards->the_miss_reason = NO_MISS;
 
    // Check the particulars of the source file against what the map file claims.
 
    int endiantest = 0;
    ((char *) &endiantest)[1] = sizeof(int);  // Also tests int size.
 
-   if (innards->map_address[1] != innards->sversion)
-      innards->the_miss_reason = MISS_WRONG_CLIENT_VERSION;
-   else if (innards->map_address[2] != endiantest)
-      innards->the_miss_reason = MISS_WRONG_ENDIAN;
-
-   // The st_mtime test has been observed to fail on Windows
-   // NT 4.0, leading to a cache miss, when daylight saving
-   // time changes.
+   bool bad_match = innards->map_address[1] != innards->sversion ||
+      innards->map_address[2] != endiantest;
 
    for (i=0 ; i<innards->numsourcefiles ; i++) {
-      if (innards->map_address[3+2*i] != innards->source_stats[i].st_size)
-         innards->the_miss_reason = MISS_WRONG_SOURCE_FILE_SIZE;
-      else if (innards->map_address[4+2*i] != innards->source_stats[i].st_mtime)
-         innards->the_miss_reason = MISS_WRONG_SOURCE_FILE_TIME;
+      if (innards->map_address[3+2*i] != innards->source_stats[i].st_size ||
+          innards->map_address[4+2*i] != innards->source_stats[i].st_mtime)
+         bad_match = true;
    }
 
-   if (innards->the_miss_reason == NO_MISS)
-      client_address = innards->map_address + innards->header_size_in_words;
+   if (!bad_match) client_address = innards->map_address + innards->header_size_in_words;
+   return;
 }
 
 
@@ -305,13 +288,6 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
    client_address = innards->map_address + innards->header_size_in_words;
    return;
 }
-
-
-MAPPED_CACHE_FILE::miss_reason MAPPED_CACHE_FILE::get_miss_reason()
-{
-   return innards->the_miss_reason;
-}
-
 
 MAPPED_CACHE_FILE::~MAPPED_CACHE_FILE()
 {

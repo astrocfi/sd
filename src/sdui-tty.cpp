@@ -5,7 +5,7 @@
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
- * Copyright (c) 1994-2006 William B. Ackerman
+ * Copyright (c) 1994-2003 William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -30,8 +30,8 @@
  * version.
  */
 
-#define UI_VERSION_STRING "1.13"
-#define UI_TIME_STAMP "wba@alum.mit.edu  5 Jul 2005 $"
+#define UI_VERSION_STRING "1.12"
+#define UI_TIME_STAMP "wba@alum.mit.edu  14 Mar 2000 $"
 
 /* This file defines all the functions in class iofull
    except for
@@ -79,9 +79,9 @@ int sdtty_screen_height = 0;  // The "lines" option may set this to something.
                               // Otherwise, any subsystem that sees the value zero
                               // will initialize it to whatever value it thinks best,
                               // perhaps by interrogating the OS.
-bool sdtty_no_cursor = false;
-bool sdtty_no_console = false;
-bool sdtty_no_line_delete = false;
+int sdtty_no_cursor = 0;
+int sdtty_no_console = 0;
+int sdtty_no_line_delete = 0;
 
 char *iofull::version_string()
 {
@@ -179,11 +179,11 @@ void iofull::process_command_line(int *argcp, char ***argvp)
       int i;
 
       if (strcmp(argv[argno], "-no_line_delete") == 0)
-         sdtty_no_line_delete = true;
+         sdtty_no_line_delete = 1;
       else if (strcmp(argv[argno], "-no_cursor") == 0)
-         sdtty_no_cursor = true;
+         sdtty_no_cursor = 1;
       else if (strcmp(argv[argno], "-no_console") == 0)
-         sdtty_no_console = true;
+         sdtty_no_console = 1;
       else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
          ui_options.pn1 = alt1_names1;
          ui_options.pn2 = alt1_names2;
@@ -206,15 +206,8 @@ void iofull::process_command_line(int *argcp, char ***argvp)
       }
       else if (strcmp(argv[argno], "-maximize") == 0)
          {}
-      else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp))
+      else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp)) {
          goto remove_two;
-      else if (strcmp(argv[argno], "-session") == 0 && argno+1 < (*argcp)) {
-         argno += 2;
-         continue;
-      }
-      else if (strcmp(argv[argno], "-resolve_test") == 0 && argno+1 < (*argcp)) {
-         argno += 2;
-         continue;
       }
       else {
          argno++;
@@ -251,18 +244,16 @@ static bool really_open_session()
    if (ui_options.force_session == -1000000) {
       char line[MAX_FILENAME_LENGTH];
 
-      put_line("Do you want to use one of the following sessions?\n\n");
+      printf("Do you want to use one of the following sessions?\n\n");
 
-      while (get_next_session_line(line)) {
-         put_line(line);
-         put_line("\n");
-      }
+      while (get_next_session_line(line))
+         printf("%s\n", line);
 
-      put_line("Enter the number of the desired session\n");
-      put_line("   (or a negative number to delete that session):  ");
+      printf("Enter the number of the desired session\n");
+      printf("   (or a negative number to delete that session):  ");
 
-      get_string(line, MAX_FILENAME_LENGTH);
-      if (!line[0] || line[0] == '\r' || line[0] == '\n')
+      if (!fgets(line, MAX_FILENAME_LENGTH, stdin) ||
+          !line[0] || line[0] == '\r' || line[0] == '\n')
          goto no_session;
 
       if (!sscanf(line, "%d", &session_index)) {
@@ -281,10 +272,8 @@ static bool really_open_session()
    {
       int session_info = process_session_info(&session_error_msg);
 
-      if (session_info & 2) {
-         put_line(session_error_msg);
-         put_line("\n");
-      }
+      if (session_info & 2)
+         printf("%s\n", session_error_msg);
 
       if (session_info & 1) {
          // We are not using a session, either because the user selected
@@ -313,7 +302,6 @@ static int db_tick_cur;   /* goes from 0 to db_tick_max */
 #define TICK_STEPS 52
 static int tick_displayed;   /* goes from 0 to TICK_STEPS */
 
-static bool ttu_is_initialized = false;
 
 bool iofull::init_step(init_callback_state s, int n)
 {
@@ -321,14 +309,10 @@ bool iofull::init_step(init_callback_state s, int n)
    // in the boolean return value.  The others don't care.
 
    char line[MAX_FILENAME_LENGTH];
-   int size;
 
    switch (s) {
 
    case get_session_info:
-      current_text_line = 0;
-      if (!ttu_is_initialized) ttu_initialize();
-      ttu_is_initialized = true;
       return really_open_session();
 
    case final_level_query:
@@ -339,22 +323,28 @@ bool iofull::init_step(init_callback_state s, int n)
       // level.
 
       calling_level = l_mainstream;   // Default in case we fail.
-      put_line("Enter the level: ");
+      printf("Enter the level: ");
 
-      get_string(line, MAX_FILENAME_LENGTH);
+      if (fgets(line, MAX_FILENAME_LENGTH, stdin)) {
+         int size = strlen(line);
 
-      size = strlen(line);
+         while (size > 0 && (line[size-1] == '\n' || line[size-1] == '\r'))
+            line[--size] = '\000';
 
-      while (size > 0 && (line[size-1] == '\n' || line[size-1] == '\r'))
-         line[--size] = '\000';
-
-      parse_level(line);
+         parse_level(line);
+      }
 
       strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
       break;
 
    case init_database1:
       // The level has been chosen.  We are about to open the database.
+
+      if (glob_abridge_mode < abridge_mode_writing) {
+         current_text_line = 0;
+         ttu_initialize();
+      }
+
       call_menu_prompts[call_list_empty] = "--> ";   // This prompt should never be used.
       break;
 
@@ -364,7 +354,8 @@ bool iofull::init_step(init_callback_state s, int n)
    case calibrate_tick:
       db_tick_max = n;
       db_tick_cur = 0;
-      put_line("Sd: reading database...");
+      printf("Sd: reading database...");
+      fflush(stdout);
       tick_displayed = 0;
       break;
 
@@ -373,14 +364,14 @@ bool iofull::init_step(init_callback_state s, int n)
       {
          int tick_new = (TICK_STEPS*db_tick_cur)/db_tick_max;
          while (tick_displayed < tick_new) {
-            put_line(".");
+            printf(".");
             tick_displayed++;
          }
       }
-
+      fflush(stdout);
       break;
    case tick_end:
-      put_line("done\n");
+      printf("done\n");
       break;
 
    case do_accelerator:
@@ -461,33 +452,23 @@ static void pack_and_echo_character(char c)
    }
 }
 
-// This tells how many more lines of matches (the stuff we print in response
-// to a question mark) we can print before we have to say "--More--" to
-// get permission from the user to continue.  If showing_has_stopped goes on, the
-// user has given a negative reply to one of our queries, and so we don't
-// print any more stuff.
-
-// Specifically, this number, minus "text_line_count" is how many lines
-// we have left on the current screenful.  When text_line_count reaches
-// match_counter, we have run out of space and need to query the user.
+/* This tells how many more lines of matches (the stuff we print in response
+   to a question mark) we can print before we have to say "--More--" to
+   get permission from the user to continue.  If showing_has_stopped goes on, the
+   user has given a negative reply to one of our queries, and so we don't
+   print any more stuff. */
 static int match_counter;
 
-// This is what we reset the counter to whenever the user confirms.  That is,
-// it is the number of lines we print per "screenful".  On a VT-100-like
-// ("dumb") terminal, we will actually make it a screenful.  On a printing
-// device or a workstation, we don't need to do the hold-screen stuff,
-// because the device can handle output intelligently (on a printing device,
-// it does this by letting us look at the paper that is spewing out on the
-// floor; on a workstation we know that the window system provides real
-// (infinite, of course) scrolling).  But on printing devices or workstations
-// we still do the output in screenful-like blocks, because the user may not
-// want to see an enormous amount of output all at once.  This way, a
-// workstation user sees things presented one screenful at a time, and only
-// needs to scroll back if she wants to look at earlier screenfuls.
-// This also caters to those people unfortunate enough to have to use those
-// pathetic excuses for workstations (HP-UX and SunOS come to mind) that don't
-// allow infinite scrolling.
-
+/* This is what we reset the counter to whenever the user confirms.  That
+   is, it is the number of lines we print per "screenful".  On a VT-100-like
+   ("dumb") terminal, we will actually make it a screenful.  On a printing
+   device or a workstation, we don't need to do the hold-screen stuff, because
+   the device can handle output intelligently (on a printing device, it does
+   this by letting us look at the paper that is spewing out on the floor;
+   on a workstation we know that the window system provides real (infinite,
+   of course) scrolling).  But on printing devices or workstations we still
+   do the output in screenful-like blocks, because the user may not want
+   to see an enormous amount of output. */
 static int match_lines;
 
 
@@ -502,7 +483,7 @@ static bool prompt_for_more_output()
       switch (c) {
       case '\r':
       case '\n':
-         match_counter = text_line_count+1; // Show one more line,
+         match_counter = 1; // Show one more line,
          return true;       // but otherwise keep going.
       case '\b':
       case DEL:
@@ -522,19 +503,21 @@ void iofull::show_match()
 {
    if (showing_has_stopped) return;  // Showing has been turned off.
 
-   if (match_counter <= text_line_count) {
-      match_counter = text_line_count+match_lines-2;
+   if (match_counter <= 0) {
+      match_counter = match_lines - 1;
       if (!prompt_for_more_output()) {
-         match_counter = text_line_count-1;   // Turn it off.
+         match_counter = -1;   // Turn it off.
          showing_has_stopped = true;
          return;
       }
    }
+   match_counter--;
 
-   if (GLOB_match.indent) writestuff("   ");
-   writestuff(GLOB_user_input);
-   writestuff(GLOB_full_extension);
-   newline();
+   if (GLOB_match.indent) put_line("   ");
+   put_line(GLOB_user_input);
+   put_line(GLOB_full_extension);
+   put_line("\n");
+   current_text_line++;
 }
 
 
@@ -576,19 +559,11 @@ static bool get_user_input(char *prompt, int which)
          if (nc < FCN_KEY_TAB_LOW || nc > FCN_KEY_TAB_LAST)
             continue;      /* Ignore this key. */
 
-         if (nc == CLOSEPROGRAMKEY) {
-            // User clicked the "X" in the upper-right corner, or used the system menu
-            // to close the program, or perhaps used the task manager.  In any case,
-            // don't close without querying the user.
-            if (which_target == match_startup_commands || gg->do_abort_popup() == POPUP_ACCEPT)
-               general_final_exit(0);
-         }
-
          keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
 
-         // Check for special bindings.
-         // These always come from the main binding table, even if
-         // we are doing something else, like a resolve.
+         /* Check for special bindings.
+            These always come from the main binding table, even if
+            we are doing something else, like a resolve. */
 
          if (keyptr && keyptr->index < 0) {
             switch (keyptr->index) {
@@ -596,8 +571,8 @@ static bool get_user_input(char *prompt, int which)
                erase_matcher_input();
                strcpy(user_input, GLOB_user_input);
                function_key_expansion = (char *) 0;
-               clear_line();                   // Clear the current line.
-               put_line(user_input_prompt);    // Redisplay the prompt.
+               clear_line();           /* Clear the current line */
+               put_line(user_input_prompt);    /* Redisplay the prompt. */
                continue;
             case special_index_deleteword:
                chars_deleted = delete_matcher_word();
@@ -609,7 +584,7 @@ static bool get_user_input(char *prompt, int which)
                function_key_expansion = "<anything>";
                goto do_character;
             default:
-               continue;    // Ignore all others.
+               continue;    /* Ignore all others. */
             }
          }
 
@@ -623,11 +598,12 @@ static bool get_user_input(char *prompt, int which)
             continue;
 
          if (!keyptr) {
-            // If user hits alt-F4 and there is no binding for it, we handle it in
-            // the usual way anyway.  This makes the behavior similar to Sd, where
-            // the system automatically provides that action.
+            /* If user hits alt-F4 and there is no binding for it, we handle it in
+               the usual way anyway.  This makes the behavior similar to Sd, where
+               the system automatically provides that action. */
             if (nc == AFKEY+4) {
-               if (which_target == match_startup_commands || gg->do_abort_popup() == POPUP_ACCEPT)
+               if (which_target == match_startup_commands ||
+                   gg->do_abort_popup() == POPUP_ACCEPT)
                   general_final_exit(0);
             }
 
@@ -668,7 +644,7 @@ static bool get_user_input(char *prompt, int which)
             user_input[GLOB_user_input_size] = '\0';
             GLOB_user_input[GLOB_user_input_size] = '\0';
             function_key_expansion = (char *) 0;
-            rubout();    // Update the display with the character erased.
+            rubout(); /* Update the display. */
          }
          continue;
       }
@@ -676,10 +652,8 @@ static bool get_user_input(char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         match_lines = get_lines_for_more();
-         if (match_lines < 2) match_lines = 25;  // The system is screwed up.
-         if (ui_options.diagnostic_mode) match_lines = 1000000;
-         match_counter = text_line_count+match_lines-2;   // Count for for "--More--" prompt.
+         match_lines = ui_options.diagnostic_mode ? 1000000 : get_lines_for_more();
+         match_counter = match_lines-1; /* last line used for "--More--" prompt */
          showing_has_stopped = false;
          (void) match_user_input(which, true, c == '?', false);
          put_line("\n");     // Write a blank line.
@@ -1038,21 +1012,20 @@ popup_return iofull::do_comment_popup(char dest[])
 
 popup_return iofull::do_outfile_popup(char dest[])
 {
-   writestuff("Current sequence output file is \"");
-   writestuff(outfile_string);
-   writestuff("\".");
-   newline();
-
+   char buffer[MAX_TEXT_LINE_LENGTH];
+   sprintf(buffer, "Current sequence output file is \"%s\".\n", outfile_string);
+   put_line(buffer);
+   current_text_line++;
    return get_popup_string("Enter new file name (or '+' to base it on today's date)", dest);
 }
 
 popup_return iofull::do_header_popup(char dest[])
 {
    if (header_comment[0]) {
-      writestuff("Current title is \"");
-      writestuff(header_comment);
-      writestuff("\".");
-      newline();
+      char buffer[MAX_TEXT_LINE_LENGTH];
+      sprintf(buffer, "Current title is \"%s\".\n", header_comment);
+      put_line(buffer);
+      current_text_line++;
    }
    return get_popup_string("Enter new title", dest);
 }
@@ -1060,16 +1033,16 @@ popup_return iofull::do_header_popup(char dest[])
 popup_return iofull::do_getout_popup(char dest[])
 {
    if (header_comment[0]) {
-      writestuff("Session title is \"");
-      writestuff(header_comment);
-      writestuff("\".");
-      newline();
-      writestuff("You can give an additional comment for just this sequence.");
-      newline();
+      char buffer[MAX_TEXT_LINE_LENGTH];
+      sprintf(buffer, "Session title is \"%s\".\n", header_comment);
+      put_line(buffer);
+      current_text_line++;
+      put_line("You can give an additional comment for just this sequence.\n");
+      current_text_line++;
    }
    else {
-      writestuff("Type comment for this sequence, if desired.");
-      newline();
+      put_line("Type comment for this sequence, if desired.\n");
+      current_text_line++;
    }
 
    return get_popup_string("Enter comment", dest);
@@ -1109,12 +1082,12 @@ static int confirm(char *question)
    }
 }
 
-int iofull::yesnoconfirm(char * /*title*/, char *line1, char *line2,
-                         bool /*excl*/, bool /*info*/)
+int iofull::yesnoconfirm(char * /*title*/, char *line1, char *line2, bool /*excl*/, bool /*info*/)
 {
    if (line1) {
-      writestuff(line1);
-      newline();
+      put_line(line1);
+      put_line("\n");
+      current_text_line++;
    }
 
    return confirm(line2);
@@ -1134,8 +1107,7 @@ void iofull::update_resolve_menu(command_kind goal, int cur, int max,
    resolver_happiness = state;
 
    create_resolve_menu_title(goal, cur, max, state, title);
-   writestuff(title);
-   newline();
+   gg->add_new_line(title, 0);
 }
 
 int iofull::do_selector_popup()
@@ -1231,7 +1203,7 @@ int iofull::do_circcer_popup()
 }
 
 
-uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
+uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;
@@ -1246,10 +1218,10 @@ uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid
             char buffer[200];
             get_string_input("How many? ", buffer, 200);
             if (buffer[0] == '!' || buffer[0] == '?') {
-               writestuff("Type a number between 0 and 36");
-               newline();
+               put_line("Type a number between 0 and 15\n");
+               current_text_line++;
             }
-            else if (!buffer[0]) return ~0UL;
+            else if (!buffer[0]) return ~0;
             else {
                this_num = atoi(buffer);
                break;
@@ -1257,15 +1229,14 @@ uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid
          }
       }
       else {
-         this_num = number_fields & NUMBER_FIELD_MASK;
-         number_fields >>= BITS_PER_NUMBER_FIELD;
+         this_num = number_fields & 0xF;
+         number_fields >>= 4;
          howmanynumbers--;
       }
 
-      if (odd_number_only && !(this_num & 1)) return ~0UL;
-      if (forbid_zero && this_num == 0) return ~0UL;
-      if (this_num >= NUM_CARDINALS) return ~0UL;    // User gave bad answer.
-      number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
+      if (forbid_zero && this_num == 0) return ~0;
+      if (this_num > 15) return ~0;    /* User gave bad answer. */
+      number_list |= (this_num << (i*4));
    }
 
    return number_list;
@@ -1278,23 +1249,16 @@ uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
+void iofull::add_new_line(char the_line[], uint32 drawing_picture)
 {
     put_line(the_line);
     put_line("\n");
     current_text_line++;
 }
 
-// Make everything before the most recent n lines
-// not subject to erasure.  Used to protect the
-// display of the transcript of preceding sequences.
-void iofull::no_erase_before_n(int n)
-{
-   current_text_line = n;
-}
+/* Throw away all but the first n lines of the text output.
+   n = 0 means to erase the entire buffer. */
 
-// Throw away all but the first n lines of the text output.
-// N = 0 means to erase the entire buffer.
 void iofull::reduce_line_count(int n)
 {
    if (current_text_line > n)
@@ -1348,6 +1312,6 @@ void iofull::serious_error_print(Cstring s1)
 void iofull::terminate(int code)
 {
    if (journal_file) (void) fclose(journal_file);
-   if (ttu_is_initialized) ttu_terminate();
+   ttu_terminate();
    exit(code);
 }

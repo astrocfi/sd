@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2004  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -51,14 +51,14 @@ enum {
    // (result = 0), the opposite direction (result == 2), or whatever.
    DIR_MASK = (BIT_PERSON | 3),
    // These are the bits that never change.
-   ID3_PERM_ALL_ID = ID3_PERM_HEAD|ID3_PERM_SIDE|ID3_PERM_BOY|ID3_PERM_GIRL
+   ID1_PERM_ALL_ID = ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL
 };
 
 
 
-extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
+extern bool selectp(setup *ss, int place) THROW_DECL
 {
-   uint32 p1, p2, p3;
+   uint32 permpid1, pid2, p1, p2;
    selector_kind s;
    int thing_to_test;
 
@@ -74,14 +74,13 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
          return false;
    }
 
-   uint32 pid1 = ss->people[place].id1;
-   uint32 pid2 = ss->people[place].id2;
-   uint32 pid3 = ss->people[place].id3;
+   permpid1 = ss->people[place].id1;
+   pid2 = ss->people[place].id2;
 
    // Demand that the subject be real, or that
    // we can evaluate based on position alone.
 
-   if (!(pid1 & BIT_PERSON)) {
+   if (!(permpid1 & BIT_PERSON)) {
       // We can still do it for some selectors.  However, this violates
       // the rules about using the *original* centers in calls like
       // "rims trade back".  But, if the person isn't real, this is the best
@@ -113,9 +112,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
             case selector_center_wave:
             case selector_center_line:
             case selector_center_col:
-            case selector_center_wave_of_6:
-            case selector_center_line_of_6:
-            case selector_center_col_of_6:
             case selector_center_box:
             case selector_outerpairs:
                pid2 = ptr[place][0] &
@@ -132,55 +128,52 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
  do_switch:
 
    switch (current_options.who) {
-      uint32 directions;
-      uint32 livemask;
-
    case selector_boys:
-      if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return true;
-      else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return false;
+      if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return true;
+      else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return false;
       break;
    case selector_girls:
-      if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return true;
-      else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return false;
+      if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return true;
+      else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return false;
       break;
    case selector_heads:
-      if      ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_HEAD) return true;
-      else if ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_SIDE) return false;
+      if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return true;
+      else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return false;
       break;
    case selector_sides:
-      if      ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_SIDE) return true;
-      else if ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_HEAD) return false;
+      if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return true;
+      else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return false;
       break;
    case selector_headcorners:
-      if      ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_HCOR) return true;
-      else if ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_SCOR) return false;
+      if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return true;
+      else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return false;
       break;
    case selector_sidecorners:
-      if      ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_SCOR) return true;
-      else if ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_HCOR) return false;
+      if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return true;
+      else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return false;
       break;
    case selector_headboys:
-      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NHB)) == (ID3_PERM_HEAD|ID3_PERM_BOY))
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY))
          return true;
-      else if ((pid3 & ID3_PERM_NHB) == ID3_PERM_NHB)
+      else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB)
          return false;
       break;
    case selector_headgirls:
-      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NHG)) == (ID3_PERM_HEAD|ID3_PERM_GIRL))
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL))
          return true;
-      else if ((pid3 & ID3_PERM_NHG) == ID3_PERM_NHG)
+      else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG)
          return false;
       break;
    case selector_sideboys:
-      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NSB)) == (ID3_PERM_SIDE|ID3_PERM_BOY))
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY))
          return true;
-      else if ((pid3 & ID3_PERM_NSB) == ID3_PERM_NSB)
+      else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB)
          return false;
       break;
    case selector_sidegirls:
-      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NSG)) == (ID3_PERM_SIDE|ID3_PERM_GIRL))
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL))
          return true;
-      else if ((pid3 & ID3_PERM_NSG) == ID3_PERM_NSG)
+      else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG)
          return false;
       break;
    case selector_centers:
@@ -212,12 +205,12 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_end_girls:
    case selector_center_boys:
    case selector_center_girls:
-      p3 = pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL);
+      p1 = permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL);
       p2 = pid2 & (ID2_CENTER|ID2_END);
-      if      (p2 == ID2_END && p3 == ID3_PERM_BOY)     s = selector_end_boys;
-      else if (p2 == ID2_END && p3 == ID3_PERM_GIRL)    s = selector_end_girls;
-      else if (p2 == ID2_CENTER && p3 == ID3_PERM_BOY)  s = selector_center_boys;
-      else if (p2 == ID2_CENTER && p3 == ID3_PERM_GIRL) s = selector_center_girls;
+      if      (p2 == ID2_END && p1 == ID1_PERM_BOY)     s = selector_end_boys;
+      else if (p2 == ID2_END && p1 == ID1_PERM_GIRL)    s = selector_end_girls;
+      else if (p2 == ID2_CENTER && p1 == ID1_PERM_BOY)  s = selector_center_boys;
+      else if (p2 == ID2_CENTER && p1 == ID1_PERM_GIRL) s = selector_center_girls;
       else break;
       goto eq_return;
    case selector_beaus:
@@ -324,10 +317,11 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       else if (p2 == ID2_NCTRDMD) s = selector_notctrdmd;
       else break;
       goto eq_return;
+   case selector_ctr_1x4:
+      if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
+      else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
+      break;
    case selector_ctr_1x6:
-   case selector_center_wave_of_6:
-   case selector_center_line_of_6:
-   case selector_center_col_of_6:
       if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return true;
       else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return false;
       break;
@@ -335,14 +329,10 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return true;
       else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return false;
       break;
-   case selector_ctr_1x4:
+   case selector_center4:
    case selector_center_wave:
    case selector_center_line:
    case selector_center_col:
-      if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
-      else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
-      break;
-   case selector_center4:
    case selector_center_box:
       if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return true;
       else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return false;
@@ -414,56 +404,56 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       // us to lose a few extremely rare cases, but it isn't worth using up zillions of bits.
 
    case selector_boy1:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0000;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0000;
       break;
    case selector_girl1:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0100;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0100;
       break;
    case selector_cpl1:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0000;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0000;
       break;
    case selector_boy2:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0200;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0200;
       break;
    case selector_girl2:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0300;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0300;
       break;
    case selector_cpl2:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0200;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0200;
       break;
    case selector_boy3:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0400;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0400;
       break;
    case selector_girl3:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0500;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0500;
       break;
    case selector_cpl3:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0400;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0400;
       break;
    case selector_boy4:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0600;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0600;
       break;
    case selector_girl4:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0700;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0700;
       break;
    case selector_cpl4:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0600;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0600;
       break;
    case selector_cpls1_2:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
-         return (pid1 & PID_MASK & ~0300) == 0000;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return (permpid1 & PID_MASK & ~0300) == 0000;
       break;
    case selector_cpls2_3:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
-         return ((pid1+0200) & PID_MASK & ~0300) == 0400;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return ((permpid1+0200) & PID_MASK & ~0300) == 0400;
       break;
    case selector_cpls3_4:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
-         return (pid1 & PID_MASK & ~0300) == 0400;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return (permpid1 & PID_MASK & ~0300) == 0400;
       break;
    case selector_cpls4_1:
-      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
-         return ((pid1+0200) & PID_MASK & ~0300) == 0000;
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return ((permpid1+0200) & PID_MASK & ~0300) == 0000;
       break;
 
    case selector_firstone:
@@ -473,7 +463,9 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_firstthree:
    case selector_lastthree:
       if (ss->kind == s2x4) {
-         big_endian_get_directions(ss, directions, livemask);
+         uint32 directions;
+         uint32 livemask;
+         get_directions(ss, directions, livemask);
 
          if (directions == (livemask & 0x55FF))
             thing_to_test = place & 3;        // Right column.
@@ -493,7 +485,9 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_leftmostthree:
    case selector_rightmostthree:
       if (ss->kind == s2x4) {
-         big_endian_get_directions(ss, directions, livemask);
+         uint32 directions;
+         uint32 livemask;
+         get_directions(ss, directions, livemask);
 
          if (directions == (livemask & 0x00AA))
             thing_to_test = place & 3;        // Lines out.
@@ -504,107 +498,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
 
          goto first_last_test;
       }
-      break;
-
-   case selector_some:
-      // We have to figure out how to group the people, based on unambiguous information from facing directions.
-      thing_to_test = -1;
-      big_endian_get_directions(ss, directions, livemask);
-
-      switch (attr::slimit(ss)) {
-         uint32 A, B, C, D, E, F;
-      case 5:
-         A = (directions >> 4) & 00303;
-         B = (directions >> 2) & 00303;
-         C = (directions >> 0) & 00303;
-
-         if (allow_some == 2) {
-            switch (ss->kind) {
-            case s_1x2dmd:
-               if (A == B) thing_to_test = 0x3;
-               break;
-            case s_short6:
-               if (A == C) thing_to_test = 0x5;
-               break;
-            case s1x6:
-               if (A == B && B != C) thing_to_test = 0x3;
-               else if (B == C && A != B) thing_to_test = 0x6;
-               break;
-            case s2x3:
-               if (A == B && B != C) thing_to_test = 0x3;
-               else if (B == C && A != B) thing_to_test = 0x6;
-               break;
-            }
-         }
-
-         if (thing_to_test != -1) return ((thing_to_test >> (place % 3)) & 1) != 0;
-         break;
-      case 7:
-         A = (directions >> 6) & 0x0303;
-         B = (directions >> 4) & 0x0303;
-         C = (directions >> 2) & 0x0303;
-         D = (directions >> 0) & 0x0303;
-
-         if (allow_some == 2) {
-            switch (ss->kind) {
-            case s1x3dmd:
-               if (A == B && B != C) thing_to_test = 0x3;
-               else if (B == C && A != B) thing_to_test = 0x6;
-               break;
-            case s1x8:
-               if (A == B && B != D && C != D) thing_to_test = 0x3;
-               else if (B == D && C != D && A != B) thing_to_test = 0xA;
-               else if (C == D && B != D && A != B) thing_to_test = 0xC;
-               break;
-            case s2x4:
-               if (A == B && B != C && C != D) thing_to_test = 0x3;
-               else if (B == C && C != D && A != B) thing_to_test = 0x6;
-               else if (C == D && B != C && A != B) thing_to_test = 0xC;
-               break;
-            }
-         }
-         else if (allow_some == 3) {
-            switch (ss->kind) {
-            case s1x3dmd:
-               if (A == B && B == C) thing_to_test = 0x7;
-               break;
-            case s_qtag:
-               if ((A ^ 0x0202) == B && B == D) thing_to_test = 0xB;
-               break;
-            case s1x8:
-               if (A == B && B == D && C != D) thing_to_test = 0xB;
-               else if (B == C && C == D && A != B) thing_to_test = 0xE;
-               break;
-            case s2x4:
-               if (A == B && B == C && C != D) thing_to_test = 0x7;
-               else if (B == C && C == D && A != B) thing_to_test = 0xE;
-               break;
-            }
-         }
-
-         if (thing_to_test != -1) return ((thing_to_test >> (place & 3)) & 1) != 0;
-         break;
-      case 11:
-         A = (directions >> 10) & 0x003003;
-         B = (directions >> 8) & 0x003003;
-         C = (directions >> 6) & 0x003003;
-         D = (directions >> 4) & 0x003003;
-         E = (directions >> 2) & 0x003003;
-         F = (directions >> 0) & 0x003003;
-
-         if (allow_some == 3) {
-            switch (ss->kind) {
-            case s3x4:
-               if (livemask == 0xC3FC3F && (A ^ 0x002002) == D && D == E) thing_to_test = 0x19;
-               else if (livemask == 0x3CF3CF && (B ^ 0x002002) == C && C == F) thing_to_test = 0x26;
-               break;
-            }
-         }
-
-         if (thing_to_test != -1) return ((thing_to_test >> (place % 6)) & 1) != 0;
-         break;
-      }
-
       break;
 
    default:
@@ -646,10 +539,10 @@ static const long int x24tabtandem[4]     = {7, 0, 1, 0};
 static const long int x24tabantitandem[4] = {7, 2, 1, 0};
 static const long int x24tabfacing[4]     = {7, 2, 1, 0x1B1B};
 
-static const long int boystuff_no_rh[3]  = {ID3_PERM_BOY,  ID3_PERM_GIRL, 0};
-static const long int girlstuff_no_rh[3] = {ID3_PERM_GIRL, ID3_PERM_BOY,  0};
-static const long int boystuff_rh[3]     = {ID3_PERM_BOY,  ID3_PERM_GIRL, 1};
-static const long int girlstuff_rh[3]    = {ID3_PERM_GIRL, ID3_PERM_BOY,  1};
+static const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
+static const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
+static const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
+static const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
 static const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
 
 
@@ -1739,121 +1632,102 @@ static const long int sr1x8[4]  = {0, 0, 2, 0};
 static bool judge_check_1x4(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   // Some assumptions make this easy.  Sort of.
+   uint32 this_person = real_people->people[real_index].id1;
+   uint32 f;
+
    switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_2fl_only: return false;      // This can't work.
+      // This is an error -- socker/judge can't be unambiguous.
+   case cr_wave_only: case cr_2fl_only: return false;
    case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return extra_stuff[0] != 0;
    case cr_magic_only: return (real_index & 1) != extra_stuff[0];
    }
 
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f = (this_person & 2) ^ extra_stuff[1];
+   f = (this_person & 2) ^ extra_stuff[1];
 
-   // If judge/socker exists in the correct place, and
-   // we do not have another judge/socker in the wrong place, OK.
-   if (((real_people->people[2-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
-      return true;
-
-   // If correct place is empty, but the person on the other side
-   // can't be a judge or socker, OK.
-   if (real_people->people[2-f].id1 == 0 &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]) {
-      warn(warn__phantom_judge);
-      return true;
-   }
-
-   return false;
+   return
+      // Judge/socker exists in the correct place.
+      (((real_people->people[2-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
+      &&
+      // We do not have another judge/socker in the wrong place.
+      (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
 }
 
 /* ARGSUSED */
 static bool judge_check_1x6(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   // Some assumptions make this easy.  Sort of.
+   uint32 this_person = real_people->people[real_index].id1;
+   uint32 f;
+
    switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_3x3_2fl_only: return false;      // This can't work.
+      // This is an error -- socker/judge can't be unambiguous.
+   case cr_wave_only: case cr_3x3_2fl_only: return false;
    case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
    }
 
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f = (this_person & 2) ^ extra_stuff[1];
+   f = (this_person & 2) ^ extra_stuff[1];
    f += f>>1;
 
-   // If judge/socker exists in the correct place, and
-   // we do not have another judge/socker in the wrong place, OK.
-   if (((real_people->people[3-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
-      return true;
-
-   // If correct place is empty, but the person on the other side
-   // can't be a judge or socker, OK.
-   if (real_people->people[3-f].id1 == 0 &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]) {
-      warn(warn__phantom_judge);
-      return true;
-   }
-
-   return false;
+   return
+      // Judge/socker exists in the correct place.
+      (((real_people->people[3-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
+      &&
+      // We do not have another judge/socker in the wrong place.
+      (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
 }
 
 /* ARGSUSED */
 static bool judge_check_1x8(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   // Some assumptions make this easy.  Sort of.
+   uint32 this_person = real_people->people[real_index].id1;
+   uint32 f;
+
    switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_4x4_2fl_only: return false;      // This can't work.
+      // This is an error -- socker/judge can't be unambiguous.
+   case cr_wave_only: case cr_4x4_2fl_only: return false;
    case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
    }
 
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f = ((this_person & 2) ^ extra_stuff[1]) << 1;
+   f = ((this_person & 2) ^ extra_stuff[1]) << 1;
 
-   // If judge/socker exists in the correct place, and
-   // we do not have another judge/socker in the wrong place, OK.
-   if (((real_people->people[4-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
-      return true;
-
-   // If correct place is empty, but the person on the other side
-   // can't be a judge or socker, OK.
-   if (real_people->people[4-f].id1 == 0 &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]){
-      warn(warn__phantom_judge);
-      return true;
-   }
-
-   return false;
+   return
+      // Judge/socker exists in the correct place.
+      (((real_people->people[4-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
+      &&
+      // We do not have another judge/socker in the wrong place.
+      (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
 }
 
+// A remnant.
+#define C_const
 
-static veryshort inroll_directions[24] = {
+static C_const veryshort inroll_directions[24] = {
    012, 012, 012, 012, 010, 010, 010, 010,
       3,  3,  3,  3,  7,  7,  7,  7,
       0,  0,  0,  0,  4,  4,  4,  4};
 
-static veryshort magic_inroll_directions[24] = {
+static C_const veryshort magic_inroll_directions[24] = {
    012, 010, 010, 012, 010, 012, 012, 010,
       3,  7,  7,  3,  7,  3,  3,  7,
       0,  4,  4,  0,  4,  0,  0,  4};
 
-static veryshort inroll_directions_2x3[18] = {
+static C_const veryshort inroll_directions_2x3[18] = {
    012, 012, 012, 010, 010, 010,
       2,  2,  2,  5,  5,  5,
       0,  0,  0,  3,  3,  3};
 
-static veryshort magic_inroll_directions_2x3[18] = {
+static C_const veryshort magic_inroll_directions_2x3[18] = {
    012, 010, 012, 010, 012, 010,
       2,  5,  2,  5,  2,  5,
       0,  3,  0,  3,  0,  3};
 
-static veryshort inroll_directions_2x6[36] = {
+static C_const veryshort inroll_directions_2x6[36] = {
    012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010,
       5,  5,  5,  5,  5,  5, 11, 11, 11, 11, 11, 11,
       0,  0,  0,  0,  0,  0,  6,  6,  6,  6,  6,  6};
 
-static veryshort inroll_directions_2x8[48] = {
+static C_const veryshort inroll_directions_2x8[48] = {
    012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010,
       7,  7,  7,  7,  7,  7,  7,  7, 15, 15, 15, 15, 15, 15, 15, 15,
       0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8};
@@ -1867,24 +1741,24 @@ enum inroll_assume_test {
 
 
 typedef struct {
-   veryshort *directions;
-   long int code;
-   inroll_assume_test ira;
+   C_const veryshort *directions;
+   C_const long int code;
+   C_const inroll_assume_test ira;
 } inroll_action;
 
 
-static inroll_action inroller_cw            = {inroll_directions,           0, ira__gen};
-static inroll_action outroller_cw           = {inroll_directions,           1, ira__gen};
-static inroll_action magic_inroller_cw      = {magic_inroll_directions,     2, ira__gen};
-static inroll_action magic_outroller_cw     = {magic_inroll_directions,     3, ira__gen};
-static inroll_action inroller_cw_2x3        = {inroll_directions_2x3,       0, ira__no_wave};
-static inroll_action outroller_cw_2x3       = {inroll_directions_2x3,       1, ira__no_wave};
-static inroll_action magic_inroller_cw_2x3  = {magic_inroll_directions_2x3, 2, ira__no_wave};
-static inroll_action magic_outroller_cw_2x3 = {magic_inroll_directions_2x3, 3, ira__no_wave};
-static inroll_action inroller_2x6           = {inroll_directions_2x6,       0, ira__sixes};
-static inroll_action outroller_2x6          = {inroll_directions_2x6,       1, ira__sixes};
-static inroll_action inroller_2x8           = {inroll_directions_2x8,       0, ira__eights};
-static inroll_action outroller_2x8          = {inroll_directions_2x8,       1, ira__eights};
+static C_const inroll_action inroller_cw            = {inroll_directions,           0, ira__gen};
+static C_const inroll_action outroller_cw           = {inroll_directions,           1, ira__gen};
+static C_const inroll_action magic_inroller_cw      = {magic_inroll_directions,     2, ira__gen};
+static C_const inroll_action magic_outroller_cw     = {magic_inroll_directions,     3, ira__gen};
+static C_const inroll_action inroller_cw_2x3        = {inroll_directions_2x3,       0, ira__no_wave};
+static C_const inroll_action outroller_cw_2x3       = {inroll_directions_2x3,       1, ira__no_wave};
+static C_const inroll_action magic_inroller_cw_2x3  = {magic_inroll_directions_2x3, 2, ira__no_wave};
+static C_const inroll_action magic_outroller_cw_2x3 = {magic_inroll_directions_2x3, 3, ira__no_wave};
+static C_const inroll_action inroller_2x6           = {inroll_directions_2x6,       0, ira__sixes};
+static C_const inroll_action outroller_2x6          = {inroll_directions_2x6,       1, ira__sixes};
+static C_const inroll_action inroller_2x8           = {inroll_directions_2x8,       0, ira__eights};
+static C_const inroll_action outroller_2x8          = {inroll_directions_2x8,       1, ira__eights};
 
 
 
@@ -2037,17 +1911,6 @@ static bool check_4x4_quad(setup *real_people, int real_index,
    return real_people->people[(real_index+extra_stuff[0]) & 0xF].id1 != 0;
 }
 
-/* ARGSUSED */
-static bool check_facing_dmd_spot(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
-{
-   int my_handedness = real_people->people[real_index].id1 ^ real_index;
-   int next_index = (real_index + 1 - (my_handedness & 2)) & 3;
-   int next_handedness = real_people->people[next_index].id1 ^ next_index;
-   // We demand that the next person be real.
-   return ((my_handedness ^ next_handedness) & (BIT_PERSON|3)) == extra_stuff[0];
-}
-
 
 // -3 means error, -2 means return false, -1 does not occur, and >= 0 means test that person.
 
@@ -2179,7 +2042,7 @@ static bool boygirlp(setup *real_people, int real_index,
    if (extra_stuff[2] && northified_index != 0)
       warn(warn__tasteless_slide_thru);
 
-   return (real_people->people[real_index].id3 & extra_stuff[0]) != 0;
+   return (real_people->people[real_index].id1 & extra_stuff[0]) != 0;
 }
 
 /* ARGSUSED */
@@ -2200,18 +2063,18 @@ static bool roll_is_ccw(setup *real_people, int real_index,
 static bool x12_with_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   int this_person3 = real_people->people[real_index].id3;
-   int other_person3 = real_people->people[real_index ^ 1].id3;
-   return (this_person3 & extra_stuff[0]) && (other_person3 & extra_stuff[1]);
+   int this_person = real_people->people[real_index].id1;
+   int other_person = real_people->people[real_index ^ 1].id1;
+   return (this_person & extra_stuff[0]) && (other_person & extra_stuff[1]);
 }
 
 /* ARGSUSED */
 static bool x22_facing_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   int this_person3 = real_people->people[real_index].id3;
-   int other_person3 = real_people->people[real_index ^ (((real_direction<<1) & 2) ^ 3)].id3;
-   return (this_person3 & extra_stuff[0]) && (other_person3 & extra_stuff[1]);
+   int this_person = real_people->people[real_index].id1;
+   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
+   return (this_person & extra_stuff[0]) && (other_person & extra_stuff[1]);
 }
 
 
@@ -2288,19 +2151,19 @@ static bool trngl_pt_rh(setup *real_people, int real_index,
 
 
 typedef struct {
-   long int ctr_action;    /* -1 for true, -2 for false, else required direction xor. */
-   long int end_action;
-   long int bbbbb;
+   C_const long int ctr_action;    /* -1 for true, -2 for false, else required direction xor. */
+   C_const long int end_action;
+   C_const long int bbbbb;
 } simple_qtag_action;
 
 typedef struct {
-   simple_qtag_action if_jleft;
-   simple_qtag_action if_jright;
-   simple_qtag_action if_ijleft;
-   simple_qtag_action if_ijright;
-   simple_qtag_action if_tag;
-   simple_qtag_action if_line;
-   simple_qtag_action none;
+   C_const simple_qtag_action if_jleft;
+   C_const simple_qtag_action if_jright;
+   C_const simple_qtag_action if_ijleft;
+   C_const simple_qtag_action if_ijright;
+   C_const simple_qtag_action if_tag;
+   C_const simple_qtag_action if_line;
+   C_const simple_qtag_action none;
 } full_qtag_action;
 
 static full_qtag_action q_tag_front_action = {
@@ -2582,8 +2445,6 @@ predicate_descriptor pred_table[] = {
       {count_cw_people,                &iden_tab[3]},            // "three_cw_people"
       {check_4x4_quad,                 &iden_tab[14]},           // "quad_person_cw"
       {check_4x4_quad,                 &iden_tab[11]},           // "quad_person_ccw"
-      {check_facing_dmd_spot,          &iden_tab[2]},            // "next_dmd_spot_is_facing"
-      {check_facing_dmd_spot,          &iden_tab[0]},            // "next_dmd_spot_is_normal"
       {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
       {nextinttrnglspot_is_tboned,   (const long int *) 0},      // "nextinttrnglspot_is_tboned"
       {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"

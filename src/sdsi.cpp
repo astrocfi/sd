@@ -35,7 +35,6 @@
 and the following external variables:
 
    session_index
-   rewrite_with_new_style_filename
    random_number
    database_filename
    new_outfile_string
@@ -94,8 +93,7 @@ and the following external variables:
    the session file is in use, and the final state should be written back
    to it at that line. */
 
-int session_index = 0;        // If this is nonzero, we have opened a session.
-bool rewrite_with_new_style_filename = false;   // User gave "change to new file format".
+int session_index = 0;        /* If this is nonzero, we have opened a session. */
 
 /* e1 = page up
    e2 = page down
@@ -113,6 +111,7 @@ int random_number;
 char *database_filename = DATABASE_FILENAME;
 char *new_outfile_string = (char *) 0;
 char abridge_filename[MAX_TEXT_LINE_LENGTH];
+bool outfile_special = false;
 
 static bool file_error;
 static FILE *fildes;
@@ -148,11 +147,7 @@ extern void hash_nonrandom_number(int number)
 
 extern void *get_mem(uint32 siz)
 {
-   // Using "calloc" instead of "malloc" clears the memory.
-   // We claim this isn't necessary; our code, being correctly written,
-   // is insensitive to the initial contents of allocated memory.
-   // But someone is a wuss, and thinks we need this.
-   void *buf = calloc(siz, 1);
+   void *buf = malloc(siz);
 
    if (!buf && siz != 0) {
       char msg [50];
@@ -228,6 +223,23 @@ void open_file()
    int i;
 
    file_error = false;
+
+   // If this is a "special" file (indicated by ending with a colon),
+   // we simply open it and write.
+
+   if (outfile_special) {
+      if (!(fildes = fopen(outfile_string, "w"))) {
+         (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+         (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+         file_error = true;
+         return;
+      }
+
+      writestuff("Writing to special device.");
+      newline();
+      newline();
+      return;
+   }
 
    // We need to find out whether there are garbage characters (e.g. ^Z)
    // near the end of the existing file, and remove same.  Such things
@@ -589,10 +601,12 @@ extern void close_file()
 
    if (fclose(fildes)) goto error;
 
-   if (stat(outfile_string, &statbuf))
-      goto error;
+   if (!outfile_special) {
+      if (stat(outfile_string, &statbuf))
+         goto error;
 
-   last_file_position = statbuf.st_size;
+      last_file_position = statbuf.st_size;
+   }
 
    return;
 

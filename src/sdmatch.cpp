@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2004  William B. Ackerman.
 //    Copyright (C) 1993 Alan Snyder
 //
 //    This file is part of "Sd".
@@ -148,6 +148,8 @@ static bool GLOB_verify;                /* true => verify calls before showing *
 static int GLOB_lowest_yield_depth;
 
 
+
+/* The following array must be coordinated with the Sd program */
 
 static Cstring n_4_patterns[] = {
    "0/4",
@@ -425,12 +427,12 @@ void do_accelerator_spec(Cstring inputline, bool is_accelerator)
 
 
 
-// This returns zero if the name was clearly not able to be hashed
-// (contains NUL, comma, atsign, or single quote).  It returns 1
-// if it could clearly be hashed (no blanks).  It returns 2 if it
-// had blanks, and might be questionable.  Patterns to match
-// (call or concept names, etc. can have blanks in them and still
-// be hashed.  Strings the user types can't be hashed if they have blanks.
+/* This returns zero if the name was clearly not able to be hashed
+   (contains NUL, comma, atsign, or single quote).  It returns 1
+   if it could clearly be hashed (no blanks).  It returns 2 if it
+   had blanks, and might be questionable.  Patterns to match
+   (call or concept names, etc. can have blanks in them and still
+   be hashed.  Strings the user types can't be hashed if they have blanks. */
 static int get_hash(Cstring string, int *bucket_p)
 {
    char c1 = string[0];
@@ -442,10 +444,11 @@ static int get_hash(Cstring string, int *bucket_p)
       *bucket_p = BRACKET_HASH;
       return 1;
    }
-   else if ((c1 && c1 != ',' && c1 != '@' && c1 != '\'') &&
-            (c2 && c2 != ',' && c2 != '@' && c2 != '\'') &&
-            (c3 && c3 != ',' && c3 != '@' && c3 != '\'')) {
-      // We use a hash function that ignores the "32" bit, so it is insensitive to case.
+   else if (
+               (c1 && c1 != ',' && c1 != '@' && c1 != '\'') &&
+               (c2 && c2 != ',' && c2 != '@' && c2 != '\'') &&
+               (c3 && c3 != ',' && c3 != '@' && c3 != '\'')) {
+      /* We use a hash function that ignores the "32" bit, so it is insensitive to case. */
       bucket = (((((int) c1 & ~32) << 3) + ((int) c2 & ~32)) << 3) + ((int) c3 & ~32);
       bucket += bucket * 20;
       bucket += bucket >> 7;
@@ -558,16 +561,16 @@ void matcher_initialize()
    short int *item, *level_item;
    concept_kind end_marker = concept_diagnose;
 
-   // Decide whether we allow the "diagnose" concept, by deciding
-   // when we will stop the concept list scan.
+   /* Decide whether we allow the "diagnose" concept, by deciding
+      when we will stop the concept list scan. */
    if (ui_options.diagnostic_mode) end_marker = marker_end_of_list;
 
-   memset(fcn_key_table_normal, 0,
-          sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   memset(fcn_key_table_start, 0,
-          sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   memset(fcn_key_table_resolve, 0,
-          sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   (void) memset(fcn_key_table_normal, 0,
+                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   (void) memset(fcn_key_table_start, 0,
+                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   (void) memset(fcn_key_table_resolve, 0,
+                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
 
    // Count the number of concepts to put in the lists.
 
@@ -669,14 +672,10 @@ void matcher_initialize()
 
       for (i=0; i<NUM_TAGGER_CLASSES; i++) {
          for (ku=0; ku<number_of_taggers[i]; ku++) {
-            // Some taggers ("@6 start vertical tag") can't be hashed because
-            // of the at sign.  That's OK.
-            if (tagger_calls[i][ku]->name[0] != '@') {
-               if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
-                  char errbuf[255];
-                  sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-                  gg->fatal_error_exit(2, errbuf);
-               }
+            if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
+               char errbuf[255];
+               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
+               gg->fatal_error_exit(2, errbuf);
             }
 
             for (j=0; j<tagger_hash_list_size; j++) {
@@ -711,7 +710,7 @@ void matcher_initialize()
 
          if (name[0] == '@') {
             switch (name[1]) {
-            case '6': case 'k': case 'K':
+            case '6': case 'k':
                // This is a call like "<anyone> run".  Put it into every bucket
                // that could match a selector.
 
@@ -766,7 +765,7 @@ void matcher_initialize()
       for (i=0; i<concept_list_length; i++,item++) {
          Cstring name = concept_descriptor_table[*item].name;
 
-         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
+         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k')) {
             // This is a call like "<anyone> run".  Put it into every bucket
             // that could match a selector.
 
@@ -807,7 +806,7 @@ void matcher_initialize()
       for (i=0; i<level_concept_list_length; i++,item++) {
          Cstring name = concept_descriptor_table[*item].name;
 
-         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
+         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k')) {
             // This is a call like "<anyone> run".  Put it into every bucket
             // that could match a selector.
 
@@ -907,8 +906,8 @@ static bool verify_call()
       while (anythings) {
          call_conc_option_state save_stuff = GLOB_match.match.call_conc_options;
 
-         // First, if we have already deposited a call, and we see more stuff, it must be
-         // concepts or calls for an "anything" subcall.
+            /* First, if we have already deposited a call, and we see more stuff, it must be
+               concepts or calls for an "anything" subcall. */
 
          if (save1) {
             parse_block *tt = get_parse_block();
@@ -926,17 +925,7 @@ static bool verify_call()
 
          if (anythings->kind == ui_call_select) {
             verify_options = anythings->call_conc_options;
-            if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) {
-               // The problem may be just that the current number is
-               // inconsistent with the call's "odd number only" requirement.
-               number_used = true;
-               if (iterate_over_sel_dir_num(verify_used_selector,
-                                            verify_used_direction,
-                                            verify_used_number))
-                  goto try_another_selector;
-
-               goto failed;
-            }
+            if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) goto failed;
             save1 = *parse_state.concept_write_ptr;
             theres_a_call_in_here = true;
          }
@@ -1729,21 +1718,21 @@ static void match_wildcard(
    pat2_block p2b(pat, pat2);
    p2b.special_concept = special;
 
-   // If we are just listing the matching commands, there is no point in expanding
-   // wildcards that are past the part that matches the user input.  That is why we test
-   // that "user" is not null.
+   /* if we are just listing the matching commands, there
+      is no point in expanding wildcards that are past the
+      part that matches the user input.  That is why we test
+      "(user == 0)". */
 
    if (user) {
       switch (key) {
-      case '6': case 'k': case 'K':
+      case '6': case 'k':
          if (current_result->match.call_conc_options.who == selector_uninitialized) {
             selector_kind save_who = current_result->match.call_conc_options.who;
 
             for (i=1; i<selector_INVISIBLE_START; i++) {
-               if (((selector_kind) i) == selector_some && key != 'K') continue;
                current_result->match.call_conc_options.who = (selector_kind) i;
                match_suffix_2(user,
-                              (key == 'k') ? selector_list[i].sing_name : selector_list[i].name,
+                              (key == '6') ? selector_list[i].name : selector_list[i].sing_name,
                               &p2b, patxi);
             }
 
@@ -1841,7 +1830,7 @@ static void match_wildcard(
          number_table = ordinals;
          goto do_number_stuff;
       case 'a': case 'b': case 'B': case 'D':
-         if ((*user >= '0' && *user <= '9') ||
+         if ((*user >= '0' && *user <= '8') ||
              *user == 'q' || *user == 'h' ||
              *user == 't' || *user == 'f') {
             save_howmanynumbers = current_result->match.call_conc_options.howmanynumbers;
@@ -1853,31 +1842,31 @@ static void match_wildcard(
                if (key != 'D' || (i&1) != 0)
                   match_suffix_2(user, prefix, &p2b, patxi);
                current_result->match.call_conc_options.number_fields +=
-                  1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
+                  1 << (save_howmanynumbers*4);
             }
 
             /* special case: allow "quarter" for 1/4 */
             current_result->match.call_conc_options.number_fields =
-               save_number_fields + (1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
+               save_number_fields + (1 << (save_howmanynumbers*4));
             match_suffix_2(user, "quarter", &p2b, patxi);
 
             /* special case: allow "half" or "1/2" for 2/4 */
             if (key != 'D') {
                current_result->match.call_conc_options.number_fields =
-                  save_number_fields + (2 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
+                  save_number_fields + (2 << (save_howmanynumbers*4));
                match_suffix_2(user, "half", &p2b, patxi);
                match_suffix_2(user, "1/2", &p2b, patxi);
             }
 
             /* special case: allow "three quarter" for 3/4 */
             current_result->match.call_conc_options.number_fields =
-               save_number_fields + (3 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
+               save_number_fields + (3 << (save_howmanynumbers*4));
             match_suffix_2(user, "three quarter", &p2b, patxi);
 
             /* special case: allow "full" for 4/4 */
             if (key != 'D') {
                current_result->match.call_conc_options.number_fields =
-                  save_number_fields + (4 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
+                  save_number_fields + (4 << (save_howmanynumbers*4));
                match_suffix_2(user, "full", &p2b, patxi);
             }
 
@@ -2001,8 +1990,7 @@ static void match_wildcard(
 
    for (i=0 ; (prefix = number_table[i]) ; i++) {
       match_suffix_2(user, prefix, &p2b, patxi);
-      current_result->match.call_conc_options.number_fields +=
-         1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
+      current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
    }
 
    current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
@@ -2367,6 +2355,7 @@ int match_user_input(
    GLOB_exact_count = 0;
    GLOB_lowest_yield_depth = 999;
    GLOB_showing = show;
+   GLOB_verify = show_verify;
    GLOB_echo_stuff[0] = 0;   // Needed if no matches or user input is empty.
    GLOB_yielding_matches = 0;
    GLOB_match.valid = false;
@@ -2381,13 +2370,9 @@ int match_user_input(
       else if (*p == ']') GLOB_user_bracket_depth--;
    }
 
-   GLOB_verify = false;
-
    if (static_call_menu >= 0) {
-      GLOB_verify = show_verify;
       search_menu(ui_call_select);
       search_menu(ui_concept_select);
-      GLOB_verify = false;
       search_menu(ui_command_select);
    }
    else

@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2004  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -146,24 +146,21 @@ enum { MAX_PEOPLE = 24 };
 
 
 enum error_flag_type {
-   error_flag_none = 0,      // Must be zero because setjmp returns this.
-                             // (Of course, we haven't used setjmp since March, 2000.)
-   error_flag_1_line,        // 1-line error message, text is in error_message1.
-   error_flag_2_line,        // 2-line error message, text is in error_message1 and
-                             // error_message2.
-   error_flag_collision,     // collision error, message is that people collided, they are in
-                             // collision_person1 and collision_person2.
-   error_flag_cant_execute,  // unable-to-execute error, person is in collision_person1,
-                             // text is in error_message1.
+   error_flag_none = 0,          // Must be zero because setjmp returns this.
+                                 // (Of course, we haven't used setjmp since March, 2000.)
+   error_flag_1_line,            // 1-line error message, text is in error_message1.
+   error_flag_2_line,            // 2-line error message, text is in error_message1 and
+                                 // error_message2.
+   error_flag_collision,         // collision error, message is that people collided, they are in
+                                 // collision_person1 and collision_person2.
+   error_flag_cant_execute,      // unable-to-execute error, person is in collision_person1,
+                                 // text is in error_message1.
 
    // Errors after this can't be restarted by the mechanism that goes on to the
    // call's next definition when a call execution fails.
    // "Error_flag_no_retry" is the indicator for this.
 
-   error_flag_no_retry,      // Like error_flag_1_line, but it is instantly fatal.
-
-   error_flag_user_wants_to_resolve, // User typed "pick random call" while querying
-                                     // for a subcall -- do a resolve.
+   error_flag_no_retry,          // Like error_flag_1_line, but it is instantly fatal.
 
    // Errors after this did not arise from call execution, so we don't
    // show the ending formation.  "Error_flag_wrong_command" is the indicator for this.
@@ -240,8 +237,6 @@ class ui_option_type {
    bool pastel_color;     // T = use pastel red/blue for color by gender.
                           // F = bold colors.  Color by couple or color by corner
                           // are always done with bold colors.
-   bool use_magenta;      // These two override the above on a case-by-case basis.
-   bool use_cyan;
    bool singlespace_mode;
    bool nowarn_mode;
    bool keep_all_pictures;
@@ -258,20 +253,7 @@ class ui_option_type {
    // This is 59 by default.
    int max_print_length;
 
-   // This is for the hidden command-line switch "resolve_test <N>".  Any
-   // nonzero argument will seed the random number generator with that value,
-   // thereby making all search operations deterministic.  (The random number
-   // generator is normally seeded with the clock, of course.)
-   //
-   // Also, if the number is positive, it makes all search operations fail, and
-   // sets the timeout to that many minutes.  This can be used for testing for
-   // crashes in the resolve searcher.  Give an argument of 60, for example, and
-   // any search command ("resolve", "pick random call", etc.) will generate
-   // random solutions for an hour, rejecting them all.  Doing this on multiple
-   // processors, with slightly different arguments, will run separate
-   // deterministic tests on each processor.
    int resolve_test_minutes;
-
    int singing_call_mode;
 
    // This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
@@ -345,7 +327,6 @@ enum concept_kind {
    concept_fast,
    concept_straight,
    concept_twisted,
-   concept_rewind,
    concept_12_matrix,
    concept_16_matrix,
    concept_revert,
@@ -390,9 +371,10 @@ enum concept_kind {
    concept_multiple_boxes,
    concept_quad_boxes_together,
    concept_triple_boxes_together,
-   concept_multiple_diamonds,
-   concept_multiple_formations,
+   concept_triple_diamonds,
+   concept_triple_formations,
    concept_triple_diamonds_together,
+   concept_quad_diamonds,
    concept_quad_diamonds_together,
    concept_triangular_boxes,
    concept_in_out_std,
@@ -412,7 +394,6 @@ enum concept_kind {
    concept_snag_mystic,
    concept_crazy,
    concept_frac_crazy,
-   concept_dbl_frac_crazy,
    concept_phan_crazy,
    concept_frac_phan_crazy,
    concept_fan,
@@ -433,7 +414,6 @@ enum concept_kind {
    concept_checkpoint,
    concept_on_your_own,
    concept_trace,
-   concept_move_in_and,
    concept_outeracting,
    concept_ferris,
    concept_overlapped_diamond,
@@ -445,7 +425,6 @@ enum concept_kind {
    concept_sequential,
    concept_special_sequential,
    concept_special_sequential_num,
-   concept_special_sequential_4num,
    concept_meta,
    concept_meta_one_arg,
    concept_meta_two_args,
@@ -659,9 +638,6 @@ enum selector_kind {
    selector_center_line,
    selector_center_col,
    selector_center_box,
-   selector_center_wave_of_6,
-   selector_center_line_of_6,
-   selector_center_col_of_6,
    selector_outerpairs,
    selector_firstone,
    selector_lastone,
@@ -690,9 +666,8 @@ enum selector_kind {
    selector_everyone,
    selector_all,
    selector_none,
-   // Selectors below this point will not be used in random generation.
-   // They are mostly unsymmetrical ones.
-   noresolve_SELECTOR_START,    selector_nearline = noresolve_SELECTOR_START,
+   // Start of unsymmetrical selectors.
+   unsymm_SELECTOR_START,    selector_nearline = unsymm_SELECTOR_START,
    selector_farline,
    selector_nearcolumn,
    selector_farcolumn,
@@ -716,7 +691,6 @@ enum selector_kind {
    selector_cpls2_3,
    selector_cpls3_4,
    selector_cpls4_1,
-   selector_some,   // Used only in "some are tandem" operations.
    // Start of invisible selectors.
    selector_INVISIBLE_START,   selector_mysticbeaus = selector_INVISIBLE_START,
    selector_mysticbelles,
@@ -741,50 +715,6 @@ enum direction_kind {
    direction_zagzag
 };
 
-// There are two different contexts in which we deal with collections of
-// numbers.  In each case the numbers are packed into 6 bit fields, so they can
-// theoretically go up to 63.  We could therefore handle up to 5 numbers, though
-// we never do more than 4.
-// Helpful hint:  when debugging, display the word in octal.
-//
-//  (1) The "number_fields" part of a call_conc_option_state.
-//         This has the numbers (up to four of them) that the user entered
-//         with a call or concept, as in "3/4 crazy" or "cast off 1/2".  Those
-//         numbers are packed in right-to-left order.  So, for example, "circle
-//         by 1/2 by 3/4" will have 0/0/3/2 in those fields (this call takes its
-//         numeric arguments in quarters).  The "do the last 3/5" concept will
-//         have 0/0/5/3 in those fields.  The parser will never put a number
-//         larger than 36 (NUM_CARDINALS-1) in the "number_fields" word.
-//
-//  (2) The "fraction" field of a "fraction_command".  This also takes four
-
-//         numbers, though there is no direct correspondence with the other
-//         usage described above.  The four numbers are the numerators and
-//         denominators of the starting and ending points of the desired part of
-//         the call.  The layout is
-//         <start den> / <start num> / <end den> / <end num>.  To do the whole
-//         call, we use 1/0/1/1, which is the constant NUMBER_FIELDS_1_0_1_1 or
-//         CMD_FRAC_NULL_VALUE.
-
-enum {
-   BITS_PER_NUMBER_FIELD = 6,
-   NUMBER_FIELD_MASK = (1<<BITS_PER_NUMBER_FIELD)-1,
-   NUMBER_FIELD_MASK_SECOND_ONE = NUMBER_FIELD_MASK << (BITS_PER_NUMBER_FIELD*2),
-   NUMBER_FIELD_MASK_RIGHT_TWO = (1<<(BITS_PER_NUMBER_FIELD*2))-1,
-   NUMBER_FIELD_MASK_LEFT_TWO = NUMBER_FIELD_MASK_RIGHT_TWO << (BITS_PER_NUMBER_FIELD*2),
-   NUMBER_FIELDS_1_0 = 00100UL,          // A few useful canned values.
-   NUMBER_FIELDS_2_1 = 00201UL,
-   NUMBER_FIELDS_1_1 = 00101UL,
-   NUMBER_FIELDS_0_0_1_1 = 000000101UL,
-   NUMBER_FIELDS_1_0_0_0 = 001000000UL,
-   NUMBER_FIELDS_1_0_1_1 = 001000101UL,
-   NUMBER_FIELDS_1_0_2_1 = 001000201UL,
-   NUMBER_FIELDS_1_0_4_0 = 001000400UL,
-   NUMBER_FIELDS_2_1_1_1 = 002010101UL,
-   NUMBER_FIELDS_2_1_2_1 = 002010201UL,
-   NUMBER_FIELDS_4_0_1_1 = 004000101UL
-};
-
 /* BEWARE!!  There is a static initializer for this, "null_options", in sdtop.cpp
    that must be kept up to date. */
 struct call_conc_option_state {
@@ -799,7 +729,7 @@ struct call_conc_option_state {
    int star_turn_option;     /* For calls with "@S" star turn stuff. */
 };
 
-// We need a forward reference; it's defined later in this file.
+// We need a forward reference.
 struct predptr_pair;
 
 struct callarray {
@@ -943,7 +873,7 @@ enum command_kind {
    command_abort,
    command_create_comment,
    command_change_outfile,
-   command_change_title,
+   command_change_header,
    command_getout,
    command_cut_to_clipboard,
    command_delete_entire_clipboard,
@@ -963,13 +893,11 @@ enum command_kind {
    command_toggle_nowarn_mode,
    command_toggle_keepallpic_mode,
    command_toggle_singleclick_mode,
-   command_toggle_singer,
-   command_toggle_singer_backward,
    command_select_print_font,
    command_print_current,
    command_print_any,
    command_refresh,
-   command_resolve,            // Search commands start here.
+   command_resolve,            /* Search commands start here */
    command_normalize,
    command_standardize,
    command_reconcile,
@@ -978,7 +906,7 @@ enum command_kind {
    command_concept_call,
    command_level_call,
    command_8person_level_call,
-   command_create_any_lines,   // Create setup commands start here.
+   command_create_any_lines,   /* Create setup commands start here */
    command_create_waves,
    command_create_2fl,
    command_create_li,
@@ -1004,11 +932,10 @@ enum command_kind {
 };
 
 
-// In each case, an integer or enum is deposited into the global variable
-// uims_menu_index.  Its interpretation depends on which of the replies above
-// was given.  For some of the replies, it gives the index into a menu.  For
-// "ui_start_select" it is a start_select_kind.  For other replies, it is one of
-// the following constants:
+/* In each case, an integer or enum is deposited into the global variable uims_menu_index.  Its interpretation
+   depends on which of the replies above was given.  For some of the replies, it gives the index
+   into a menu.  For "ui_start_select" it is a start_select_kind.
+   For other replies, it is one of the following constants: */
 
 /* BEWARE!!  This list must track the array "startup_resources" in sdui-x11.c . */
 /* BEWARE!!!!!!!!  Lots of implications for "centersp" and all that! */
@@ -1039,9 +966,8 @@ enum start_select_kind {
    start_select_print_current,
    start_select_print_any,
    start_select_init_session_file,
-   start_select_change_to_new_style_filename,
    start_select_change_outfile,
-   start_select_change_title,
+   start_select_change_header_comment,
    start_select_kind_enum_extent    // Not a start_select kind; indicates extent of the enum.
 };
 
@@ -1079,87 +1005,89 @@ struct resolve_list_menu_item {
 };
 
 
-// This defines a person in a setup.
+/* This defines a person in a setup.  Unfortunately, there is too much data
+   to fit into 32 bits. */
 struct personrec {
-   uint32 id1;       // Frequently used bits go here.
-   uint32 id2;       // Bits used for evaluating predicates.
-   uint32 id3;       // The "permanent ID" bits.
+   uint32 id1;       /* Frequently used bits go here. */
+   uint32 id2;       /* Bits used for evaluating predicates. */
 };
 
-// Bits that go into the "id1" field.
-//
-// This field comprises the important part of the state of this person.
-// It changes frequently as the person moves around.
+/* Person bits for "id1" field are:
+     0x80000000 -
+     0x40000000 - not side girl    **** these 10 bits are "permanent" -- they never change in a person
+     0x20000000 - not side boy
+     0x10000000 - not head girl
+     0x08000000 - not head boy
+     0x04000000 - head corner
+     0x02000000 - side corner
+     0x01000000 - head
+     0x00800000 - side
+     0x00400000 - boy
+     0x00200000 - girl             **** end of permanent bits
+*/
 
 enum {
-   // These comprise a 3 bit field for roll info.
+   ID1_PERM_NSG         = 0x40000000UL,
+   ID1_PERM_NSB         = 0x20000000UL,
+   ID1_PERM_NHG         = 0x10000000UL,
+   ID1_PERM_NHB         = 0x08000000UL,
+   ID1_PERM_HCOR        = 0x04000000UL,
+   ID1_PERM_SCOR        = 0x02000000UL,
+   ID1_PERM_HEAD        = 0x01000000UL,
+   ID1_PERM_SIDE        = 0x00800000UL,
+   ID1_PERM_BOY         = 0x00400000UL,
+   ID1_PERM_GIRL        = 0x00200000UL,
+
+   ID1_PERM_ALLBITS     = 0x7FE00000UL
+};
+
+enum {
+   // These are a 3 bit field for roll info.
    // High bit says person moved.
    // Low 2 bits are: 1=R; 2=L; 3=M; 0=roll unknown/unsupported.
-   NROLL_MASK       = 0x00700000UL,  // mask of the field
-   PERSON_MOVED     = 0x00400000UL,
-   ROLL_DIRMASK     = 0x00300000UL,  // the low 2 bits, that control roll direction
-   NROLL_BIT        = 0x00100000UL,  // low bit of the field
-   ROLL_IS_R        = 0x00100000UL,
-   ROLL_IS_L        = 0x00200000UL,
-   ROLL_IS_M        = 0x00300000UL,
+   NROLL_MASK    = 0x001C0000UL,  // mask of the field
+   PERSON_MOVED  = 0x00100000UL,
+   NROLL_BIT     = 0x00040000UL,  // low bit of the field
+   ROLL_DIRMASK  = 0x000C0000UL,  // the low 2 bits, that control roll direction
+   ROLL_IS_L     = 0x00080000UL,
+   ROLL_IS_R     = 0x00040000UL,
+   ROLL_IS_M     = 0x000C0000UL,
 
-   // These comprise an 8 bit field for fractional stability info.  STABLE_ENAB
-   // means some fractional stable (or fractional twosome) is in effect.  The
-   // "R" field has the amount of fraction left to go.  It is initialized to the
-   // number given (in eighths) in the fractional stable command, and counts
-   // down to zero.  The "V" field is zero while the "R" field still has some
-   // turning left.  Once the turning exceeds the specified amount, and the "R"
-   // field is zero, the "V" field tells how this person is turned relative the
-   // limit.  For example, V=6 says this person is now 2 positions (one
-   // quadrant) counter-clockwise from where she was when the limit was reached,
-   // and therefore needs to be turned 1 quadrant clockwise at the end of the
-   // fractional stable call to compensate.
-   //
-   // As of version 36.63, all counting is done in eighths, not quarters.
-   STABLE_MASK      = 0x000FF000UL,  // mask of the field
-   STABLE_ENAB      = 0x00080000UL,  // fractional stability enabled
-   STABLE_VBIT      = 0x00010000UL,  // stability "v" field, 3 bits, this is low bit
-   STABLE_RBIT      = 0x00001000UL,  // stability "r" field, 4 bits, this is low bit
+   // These are a 6 bit field.
+   STABLE_MASK  = 0x0003F000UL,  // mask of the field
+   STABLE_ENAB  = 0x00020000UL,  // fractional stability enabled
+   STABLE_VBIT  = 0x00008000UL,  // stability "v" field, 2 bits, this is low bit
+   STABLE_RBIT  = 0x00001000UL,  // stability "r" field, 3 bits, this is low bit
 
-   BIT_PERSON       = 0x00000800UL,  // live person (just so at least one bit is always set)
-   BIT_ACT_PHAN     = 0x00000400UL,  // active phantom (see below, under XPID_MASK)
-   BIT_TANDVIRT     = 0x00000200UL,  // virtual person (see below, under XPID_MASK)
+   BIT_PERSON   = 0x00000800UL,  // live person (just so at least one bit is always set)
+   BIT_ACT_PHAN = 0x00000400UL,  // active phantom (see below, under XPID_MASK)
+   BIT_TANDVIRT = 0x00000200UL,  // virtual person (see below, under XPID_MASK)
+
 
    // Person ID.  These bit positions are extremely hard wired into, among other
    // things, the resolver and the printer.
-   PID_MASK         = 0x000001C0UL,  // these 3 bits identify actual person
+   PID_MASK     = 0x000001C0UL,  // these 3 bits identify actual person
 
    // Extended person ID.  These 5 bits identify who the person is for the purpose
    // of most manipulations.  0 to 7 are normal live people (the ones who squared up).
    // 8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
    // active (but nevertheless identifiable) phantoms.  This means that, when
    // BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT.
-   XPID_MASK        = 0x000007C0UL,
+   XPID_MASK    = 0x000007C0UL,
 
-   // Remaining bits:
-   // For various historical reasons, we count these in octal.
-   //     0x00000030 (060) - these 2 bits must be clear for rotation
-   //     0x00000008 (010) - part of rotation (facing north/south)
-   //     0x00000004 (004) - bit must be clear for rotation
-   //     0x00000002 (002) - part of rotation
-   //     0x00000001 (001) - part of rotation (facing east/west)
-   d_mask  = BIT_PERSON | 013UL,
-   d_north = BIT_PERSON | 010UL,
-   d_south = BIT_PERSON | 012UL,
-   d_east  = BIT_PERSON | 001UL,
-   d_west  = BIT_PERSON | 003UL
+   // remaining bits:
+   //     0x00000030 - these 2 bits must be clear for rotation
+   //     0x00000008 - part of rotation (facing north/south)
+   //     0x00000004 - bit must be clear for rotation
+   //     0x00000002 - part of rotation
+   //     0x00000001 - part of rotation (facing east/west)
+
+   d_mask  = 04013UL,
+   d_north = 04010UL,
+   d_south = 04012UL,
+   d_east  = 04001UL,
+   d_west  = 04003UL
 };
-
-// Bits that go into the "id2" field.
-//
-// This field contains information to respond to queries like
-// "Is this person a center?" that are used in doing various operations
-// like "centers run".  Such operations are usually based on this field,
-// rather than on the actual geometry.  This is what makes it possible
-// to do things like "bounce the centers".  This field is updated, from
-// the geometry, by "update_id_bits", at strategic times, such as at
-// the beginning of a call.  It is not updated between the parts of
-// "bounce".
 
 enum {
    ID2_HEADLINE   = 0x80000000UL,
@@ -1193,74 +1121,24 @@ enum {
    ID2_CTR4       = 0x00000008UL,
    ID2_OUTRPAIRS  = 0x00000004UL,
    ID2_FACEFRONT  = 0x00000002UL,
-   ID2_FACEBACK   = 0x00000001UL,
-
-   // Various useful combinations.
-
-   BITS_TO_CLEAR =
-   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
-   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
-   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
-   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
-   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
-
-   ID2_GLOB_BITS_TO_CLEAR =
-   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
-   ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE,
-
-   ID2_LESS_BITS_TO_CLEAR =
-   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX
+   ID2_FACEBACK   = 0x00000001UL
 };
 
 
-// Bits that go into the "id3" field.
-//
-// This field contains "permanent" information related to the identity
-// of this person.  For real people, this never changes.  The reason
-// this field is needed is that the bits get cobbled together (by ANDing)
-// when combining people for tandem, etc.  For active phantoms, these
-// bits are all zero.
-
-enum {
-   ID3_PERM_NSG     = 0x00040000UL,  // Not side girl
-   ID3_PERM_NSB     = 0x00020000UL,  // Not side boy
-   ID3_PERM_NHG     = 0x00010000UL,  // Not head girl
-   ID3_PERM_NHB     = 0x00008000UL,  // Not head boy
-   ID3_PERM_HCOR    = 0x00004000UL,  // Head corner
-   ID3_PERM_SCOR    = 0x00002000UL,  // Side corner
-   ID3_PERM_HEAD    = 0x00001000UL,  // Head
-   ID3_PERM_SIDE    = 0x00000800UL,  // Side
-   ID3_PERM_BOY     = 0x00000400UL,  // Boy
-   ID3_PERM_GIRL    = 0x00000200UL,  // Girl
-   ID3_PERM_ALLBITS = 0x0007FE00UL,  // We no longer need this, since we own the whole word.
-
-   // These are the standard definitions for the 8 people in the square.
-
-   ID3_B1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
-   ID3_G1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
-   ID3_B2 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
-   ID3_G2 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL,
-   ID3_B3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
-   ID3_G3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
-   ID3_B4 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
-   ID3_G4 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL
-};
-
-// The following items are not actually part of the setup description,
-// but are placed here for the convenience of "move" and similar procedures.
-// They contain information about the call to be executed in this setup.
-// Once the call is complete, that is, when printing the setup or storing it
-// in a history array, this stuff is meaningless.
+/* The following items are not actually part of the setup description,
+   but are placed here for the convenience of "move" and similar procedures.
+   They contain information about the call to be executed in this setup.
+   Once the call is complete, that is, when printing the setup or storing it
+   in a history array, this stuff is meaningless. */
 
 struct assumption_thing {
-   unsigned int assump_col:  16;  // Stuff to go with assumption -- col vs. line.
-   unsigned int assump_both:  8;  // Stuff to go with assumption -- "handedness" enforcement
-                                  // 0/1/2 = either/1st/2nd.
-   unsigned int assump_cast:  6;  // Nonzero means there is an "assume normal casts"
-                                  // assumption.
-   unsigned int assump_live:  1;  // One means to accept only if everyone is live.
-   unsigned int assump_negate:1;  // One means to invert the sense of everything.
-   call_restriction assumption;   // Any "assume waves" type command.
+   unsigned int assump_col:  16;  /* Stuff to go with assumption -- col vs. line. */
+   unsigned int assump_both:  8;  /* Stuff to go with assumption -- "handedness" enforcement --
+                                                0/1/2 = either/1st/2nd. */
+   unsigned int assump_cast:  6;  /* Nonzero means there is an "assume normal casts" assumption. */
+   unsigned int assump_live:  1;  /* One means to accept only if everyone is live. */
+   unsigned int assump_negate:1;  /* One means to invert the sense of everything. */
+   call_restriction assumption;   /* Any "assume waves" type command. */
 };
 
 struct small_setup {
@@ -1283,14 +1161,13 @@ enum {
    CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020UL,
    CFLAGH__ODD_NUMBER_ONLY         = 0x00000040UL,
    CFLAGH__HAS_AT_ZERO             = 0x00000080UL,
-   CFLAGH__HAS_AT_M                = 0x00000100UL,
-   CFLAGHSPARE_1                   = 0x00000200UL,
-   CFLAGHSPARE_2                   = 0x00000400UL,
-   CFLAGHSPARE_3                   = 0x00000800UL,
-   CFLAGHSPARE_4                   = 0x00001000UL,
-   CFLAGHSPARE_5                   = 0x00002000UL,
-   CFLAGHSPARE_6                   = 0x00004000UL
-   // We need to leave the top 12 bits free in order to accomodate the "CFLAG2" bits.
+   CFLAGHSPARE_1                   = 0x00000100UL,
+   CFLAGHSPARE_2                   = 0x00000200UL,
+   CFLAGHSPARE_3                   = 0x00000400UL,
+   CFLAGHSPARE_4                   = 0x00000800UL,
+   CFLAGHSPARE_5                   = 0x00001000UL,
+   CFLAGHSPARE_6                   = 0x00002000UL
+   // We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits.
 };
 
 /* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
@@ -1378,109 +1255,24 @@ class final_and_herit_flags {
 };
 
 
-// The following enumeration and struct encode the fraction/parts information
-// about a call to be executed.
-
-enum {
-   // These refer to the "fraction" field.
-   CMD_FRAC_NULL_VALUE      = NUMBER_FIELDS_1_0_1_1,
-   CMD_FRAC_HALF_VALUE      = NUMBER_FIELDS_1_0_2_1,
-   CMD_FRAC_LASTHALF_VALUE  = NUMBER_FIELDS_2_1_1_1,
-
-   // These refer to the "flags" field.  First, there are two numeric fields,
-   // called "n" and "k", that are associated with the codes.  We encode those
-   // fields in 6 bits, as usual.
-   CMD_FRAC_PART_BIT        = 00001UL,  // This is "n".
-   CMD_FRAC_PART_MASK       = 00077UL,
-   CMD_FRAC_PART2_BIT       = 00100UL,  // This is "k".
-   CMD_FRAC_PART2_MASK      = 07700UL,
-
-   CMD_FRAC_IMPROPER_BIT    = 0x00200000UL,
-   CMD_FRAC_THISISLAST      = 0x00400000UL,
-   CMD_FRAC_REVERSE         = 0x00800000UL,
-   CMD_FRAC_CODE_MASK       = 0x07000000UL,    // This is a 3 bit field.
-
-   // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
-   // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
-   // when these are in use.  If the PART_MASK field is zero, the code must be zero
-   // (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
-
-   CMD_FRAC_CODE_ONLY           = 0x00000000UL,
-   CMD_FRAC_CODE_ONLYREV        = 0x01000000UL,
-   CMD_FRAC_CODE_FROMTO         = 0x02000000UL,
-   CMD_FRAC_CODE_FROMTOREV      = 0x03000000UL,
-   CMD_FRAC_CODE_FROMTOREVREV   = 0x04000000UL,
-   CMD_FRAC_CODE_FROMTOMOST     = 0x05000000UL,
-   CMD_FRAC_CODE_LATEFROMTOREV  = 0x06000000UL,
-
-   CMD_FRAC_BREAKING_UP     = 0x10000000UL,
-   CMD_FRAC_FORCE_VIS       = 0x20000000UL,
-   CMD_FRAC_LASTHALF_ALL    = 0x40000000UL,
-   CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL
-};
-
-// The "flags" word has special information, like "do parts 5 through 2 in
-// reverse order".  The "fraction" word has 4 numbers, encoding information like
-// "do from 1/3 to 7/8".  The interaction of these things is quite complicated.
-// See the comments in front of "get_fraction_info" in sdmoves.cpp for details
-// about this.
-//
-// The default value ("do the whole call") is zero in the flags word and
-// CMD_FRAC_NULL_VALUE in the fraction word.  Note that CMD_FRAC_NULL_VALUE is
-// not zero.  Under normal circumstances, the fraction word is never zero,
-// because it has fraction denominators.  There are a few special situations in
-// which zero is stored in the fractions word.  For example, the
-// "restrained_fraction" field of a command may have its fraction word zero.
-// That means that the restrained fraction mechanism is turned off.
-
-// Helpful macro for assembling the code and its two numeric arguments.
-#define FRACS(code,n,k) (code|((n)*CMD_FRAC_PART_BIT)|((k)*CMD_FRAC_PART2_BIT))
-
-struct fraction_command {
-   uint32 flags;
-   uint32 fraction;  // The fraction info, packed into 4 fields.
-
-   inline void set_to_null()     { flags = 0; fraction = CMD_FRAC_NULL_VALUE; }
-   inline void set_to_firsthalf(){ flags = 0; fraction = CMD_FRAC_HALF_VALUE; }
-   inline void set_to_lasthalf() { flags = 0; fraction = CMD_FRAC_LASTHALF_VALUE; }
-   inline void set_to_null_with_flags(uint32 newflags)
-   { flags = newflags; fraction = CMD_FRAC_NULL_VALUE; }
-   inline void set_to_firsthalf_with_flags(uint32 newflags)
-   { flags = newflags; fraction = CMD_FRAC_HALF_VALUE; }
-   inline void set_to_lasthalf_with_flags(uint32 newflags)
-   { flags = newflags; fraction = CMD_FRAC_LASTHALF_VALUE; }
-
-   inline bool is_null() { return flags == 0 && fraction == CMD_FRAC_NULL_VALUE; }
-   inline bool is_firsthalf() { return flags == 0 && fraction == CMD_FRAC_HALF_VALUE; }
-   inline bool is_lasthalf() { return flags == 0 && fraction == CMD_FRAC_LASTHALF_VALUE; }
-
-   inline bool is_null_with_exact_flags(uint32 testflags)
-   { return flags == testflags && fraction == CMD_FRAC_NULL_VALUE; }
-
-   inline bool is_null_with_masked_flags(uint32 testmask, uint32 testflags)
-   { return (flags & testmask) == testflags && fraction == CMD_FRAC_NULL_VALUE; }
-};
-
 struct setup_command {
    parse_block *parseptr;
    call_with_name *callspec;
    final_and_herit_flags cmd_final_flags;
-   fraction_command cmd_fraction;
+   uint32 cmd_frac_flags;
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
-   uint32 cmd_misc3_flags;
    uint32 do_couples_her8itflags;
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
    uint32 prior_expire_bits;
    parse_block *restrained_concept;
    parse_block **restrained_final;
-   fraction_command restrained_fraction;
+   uint32 restrained_fraction;
    uint32 restrained_super8flags;
    bool restrained_do_as_couples;
    uint32 restrained_super9flags;
    parse_block *skippable_concept;
-   uint32 skippable_heritflags;
 };
 
 
@@ -1507,7 +1299,7 @@ struct resultflag_rec {
    inline void copy_split_info(const resultflag_rec & rhs)
    { split_info[0] = rhs.split_info[0]; split_info[1] = rhs.split_info[1]; }
 
-   inline void swap_split_info_fields()
+   inline void swap_fields()
    {
       uint16 temp = split_info[0];
       split_info[0] = split_info[1];
@@ -1515,9 +1307,9 @@ struct resultflag_rec {
    }
 };
 
-// Warning!  Do not rearrange these fields without good reason.  There are data
-// initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.cpp
-// (startinfolist) that would need to be rewritten.
+/* Warning!  Do not rearrange these fields without good reason.  There are data
+   initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.cpp
+   (startinfolist) that will need to be rewritten. */
 struct setup {
    setup_kind kind;
    int rotation;
@@ -1527,7 +1319,7 @@ struct setup {
    // The following item is not actually part of the setup description, but contains
    // miscellaneous information left by "move" and similar procedures, for the
    // convenience of whatever called same.
-   resultflag_rec result_flags;     // Miscellaneous info, with names like RESULTFLAG__???.
+   resultflag_rec result_flags;           // Miscellaneous info, with names like RESULTFLAG__???.
 
    // The following three items are only used if the setup kind is "s_normal_concentric".
    // Note in particular that "outer_elongation" is thus underutilized, and that a lot
@@ -1536,12 +1328,6 @@ struct setup {
    small_setup inner;
    small_setup outer;
    int concsetup_outer_elongation;
-
-   void clear_people();
-   inline void clear_person(int resultplace);
-   inline void suppress_roll(int place);
-   inline void suppress_all_rolls();
-   inline void swap_people(int oneplace, int otherplace);
 };
 
 
@@ -1633,16 +1419,15 @@ enum {
    LOOKUP_DIST_BOX = 0x40UL,
    LOOKUP_DIAG_BOX = 0x80UL,
    LOOKUP_STAG_BOX = 0x100UL,
-   LOOKUP_TRAPEZOID= 0x200UL,
-   LOOKUP_DIAG_CLW = 0x400UL,
-   LOOKUP_OFFS_CLW = 0x800UL,
-   LOOKUP_STAG_CLW = 0x1000UL,
-   LOOKUP_DBL_BENT = 0x2000UL,
-   LOOKUP_MINI_B   = 0x4000UL,
-   LOOKUP_MINI_O   = 0x8000UL,
+   LOOKUP_DIAG_CLW = 0x200UL,
+   LOOKUP_OFFS_CLW = 0x400UL,
+   LOOKUP_STAG_CLW = 0x800UL,
+   LOOKUP_DBL_BENT = 0x1000UL,
+   LOOKUP_MINI_B   = 0x2000UL,
+   LOOKUP_MINI_O   = 0x4000UL,
 
-   LOOKUP_GEN_MASK = (LOOKUP_DIST_DMD|LOOKUP_Z|LOOKUP_DIST_BOX|LOOKUP_DIAG_BOX|
-                      LOOKUP_STAG_BOX|LOOKUP_TRAPEZOID|LOOKUP_DIAG_CLW|
+   LOOKUP_GEN_MASK = (LOOKUP_DIST_DMD|LOOKUP_Z|LOOKUP_DIST_BOX|
+                      LOOKUP_DIAG_BOX|LOOKUP_STAG_BOX|LOOKUP_DIAG_CLW|
                       LOOKUP_OFFS_CLW|LOOKUP_STAG_CLW|LOOKUP_DBL_BENT|
                       LOOKUP_MINI_B|LOOKUP_MINI_O)
 };
@@ -1694,27 +1479,9 @@ class select {
       fx_f4x4rzz,
       fx_f4x4lzza,
       fx_f4x4rzza,
-      fx_f2x4tt0,
-      fx_f2x4tt1,
-      fx_f2x8qq0,
-      fx_f2x8qq1,
-      fx_f2x8tt0,
-      fx_f2x8tt1,
-      fx_f2x8tt2,
-      fx_f2x8tt3,
-      fx_f2x6qq0,
-      fx_f2x6qq1,
-      fx_f2x6tt0,
-      fx_f2x6tt1,
-      fx_f2x6tt2,
-      fx_f2x6tt3,
       fx_f3x4outer,
       fx_f3dmouter,
       fx_f3ptpdin,
-      fx_fpgdmdcw,
-      fx_fpgdmdccw,
-      fx_f2x6cw,
-      fx_f2x6ccw,
       fx_fdhrgl,
       fx_specspindle,
       fx_specfix3x40,
@@ -2180,7 +1947,6 @@ struct ctr_end_mask_rec {
 // BEWARE!!  This list must track the array "warning_strings" in sdtables.cpp
 enum warning_index {
    warn__none,
-   warn__really_no_collision,
    warn__do_your_part,
    warn__tbonephantom,
    warn__awkward_centers,
@@ -2204,6 +1970,7 @@ enum warning_index {
    warn__each1x2,
    warn__eachdmd,
    warn__take_right_hands,
+   warn__ctrs_are_dmd,
    warn__1_4_pgram,
    warn__full_pgram,
    warn__3_4_pgram,
@@ -2230,7 +1997,6 @@ enum warning_index {
    warn__check_centered_qtag,
    warn__check_pgram,
    warn__ctrs_stay_in_ctr,
-   warn__meta_on_xconc,
    warn__check_c1_stars,
    warn__check_gen_c1_stars,
    warn__bigblock_feet,
@@ -2250,7 +2016,6 @@ enum warning_index {
    warn__bad_interlace_match,
    warn__not_on_block_spots,
    warn__stupid_phantom_clw,
-   warn__should_say_Z,
    warn__bad_modifier_level,
    warn__bad_call_level,
    warn__did_not_interact,
@@ -2268,7 +2033,6 @@ enum warning_index {
    warn_interlocked_to_6,
    warn__offset_hard_to_see,
    warn__pg_hard_to_see,
-   warn__phantom_judge,
    warn__colocated_once_rem,
    warn_big_outer_triangles,
    warn_hairy_fraction,
@@ -2278,9 +2042,7 @@ enum warning_index {
    warn__unusual,
    warn_controversial,
    warn_serious_violation,
-   warn__assume_dpt,
    warn_bogus_yoyo_rims_hubs,
-   warn__centers_are_diamond,
    warn_pg_in_2x6,
    warn_real_people_spots,
    warn__tasteless_com_spot,
@@ -2290,6 +2052,36 @@ enum warning_index {
    warn__diagnostic,
    warn__NUM_WARNINGS       // Not a real warning; just used for counting.
 };
+
+struct matrix_rec {
+   int x;              // This person's coordinates, calibrated so that a matrix
+   int y;              //   position cooresponds to an increase by 4.
+   int nicex;          // This person's "nice" coordinates, used for
+   int nicey;          //   calculating jay walk legality.
+   uint32 id1;         // The actual person, for error printing.
+   bool sel;           // True if this person is selected.  (False if selectors not in use.)
+   bool done;          // Used for loop control on each pass.
+   bool realdone;      // Used for loop control on each pass.
+   uint32 jbits;       // Bit mask for all possible jaywalkees.
+   int boybit;         // 1 if boy, 0 if not (might be neither).
+   int girlbit;        // 1 if girl, 0 if not (might be neither).
+   int dir;            // This person's initial facing direction, 0 to 3.
+   int deltax;         // How this person will move, relative to his own facing
+   int deltay;         //   direction, when call is finally executed.
+   int nearest;        // Smallest forward distance to a jaywalkee.
+   int nearestlat;     // Smallest lateral distance to a jaywalkee.
+   int leftidx;        // X-increment of leftmost valid jaywalkee.
+   int rightidx;       // X-increment of rightmost valid jaywalkee.
+   int deltarot;       // How this person will turn.
+   uint32 roll_stability_info; // This person's roll & stability info, from call def'n.
+   int orig_source_idx;
+   matrix_rec *nextse; // Points to next person south (dir even) or east (dir odd.)
+   matrix_rec *nextnw; // Points to next person north (dir even) or west (dir odd.)
+   bool far_squeezer;  // This person's pairing is due to being far from someone.
+   bool tbstopse;      // True if nextse/nextnw is zero because the next spot
+   bool tbstopnw;      //   is occupied by a T-boned person (as opposed to being empty.)
+};
+
 
 struct coordrec {
    setup_kind result_kind;
@@ -2314,9 +2106,31 @@ class merge_table {
       setup_kind k2;
       uint32 m1;
       uint32 m2;
-      // See comments in sdtables.cpp at definition of merge_table::merge_init_table
-      // for explanation of these next two fields.
+      /* This is the mask of things that we will reject.  The low 4 bits are rotations
+         that we will reject.  It is ANDed with "1 << r".  R is the rotation of res1,
+         after localizing so that res2 has rotation zero.  Hence r=0 if the two setups
+         have the same orientation, and, except in the case of things like triangles,
+         r=1 if they are orthogonal.  Common values of the low hex digit of "rotmask"
+         are therefore:
+         E demand same orientation
+         D demand orthogonal
+         C either way.
+
+         Additionally:
+         The "10" bit means that action must be merge_without_gaps.
+         The "20" bit means that action must NOT be merge_strict_matrix.
+         The "40" bit means only accept it if the setups, prior to cutting down,
+         were a 2x4 and a 1x8 that were perpendicular to each other.
+         The "80" bit means that action must NOT be merge_c1_phantom_real.
+         The "100" bit means that original action must NOT be merge_after_dyp.
+         The "200" bit means only accept it if the setups, prior to cutting down,
+         were a 2x4 and a ptpd that were perpendicular to each other. */
+
       unsigned short rotmask;
+      // 1 bit - swap setups;
+      // 2 bit - change elongation;
+      // 4 bit - no take right hands
+      // 8 bit - force outer_elong to 3, so people will go to corners of 4x4
       unsigned short swap_setups;
       calldef_schema conc_type;
       setup_kind innerk;
@@ -2332,7 +2146,7 @@ class merge_table {
  private:
 
    // Must be a power of 2.
-   enum { NUM_MERGE_HASH_BUCKETS = 64 };
+   enum { NUM_MERGE_HASH_BUCKETS = 32 };
 
    // The big initialization table, in sdtables.
    static concmerge_thing merge_init_table[];
@@ -2402,7 +2216,7 @@ struct setup_attr {
    // canonicalized so that their rotation field will be zero.
    bool four_way_symmetry;
 
-   // This is the bit table for filling in the "ID2" bits.
+      // This is the bit table for filling in the "ID2" bits.
    const id_bit_table *id_bit_table_ptr;
 
    // These are the tables that show how to print out the setup.
@@ -2503,63 +2317,56 @@ struct writechar_block_type {
 #define MAX_TEXT_LINE_LENGTH 200
 
 
-// Codes for special accelerator keystrokes.
+/* Codes for special accelerator keystrokes. */
 
-// Function keys can be plain, shifted, control, alt, or control-alt.
+/* Function keys can be plain, shifted, control, alt, or control-alt. */
 
-enum {
-   FKEY = 128,
-   SFKEY = 144,
-   CFKEY = 160,
-   AFKEY = 176,
-   CAFKEY = 192,
+#define FKEY 128
+#define SFKEY 144
+#define CFKEY 160
+#define AFKEY 176
+#define CAFKEY 192
 
-   // "Enhanced" keys can be plain, shifted, control, alt, or control-alt.
-   // e1 = page up
-   // e2 = page down
-   // e3 = end
-   // e4 = home
-   // e5 = left arrow
-   // e6 = up arrow
-   // e7 = right arrow
-   // e8 = down arrow
-   // e13 = insert
-   // e14 = delete
+/* "Enhanced" keys can be plain, shifted, control, alt, or control-alt. */
+/* e1 = page up
+   e2 = page down
+   e3 = end
+   e4 = home
+   e5 = left arrow
+   e6 = up arrow
+   e7 = right arrow
+   e8 = down arrow
+   e13 = insert
+   e14 = delete */
 
-   EKEY = 208,
-   SEKEY = 224,
-   CEKEY = 240,
-   AEKEY = 256,
-   CAEKEY = 272,
+#define EKEY 208
+#define SEKEY 224
+#define CEKEY 240
+#define AEKEY 256
+#define CAEKEY 272
 
-   // Digits can be control, alt, or control-alt.
+/* Digits can be control, alt, or control-alt. */
 
-   CTLDIG = 288,
-   ALTDIG = 298,
-   CTLALTDIG = 308,
+#define CTLDIG 288
+#define ALTDIG 298
+#define CTLALTDIG 308
 
-   // Numeric keypad can be control, alt, or control-alt.
+/* Numeric keypad can be control, alt, or control-alt. */
 
-   CTLNKP = 318,
-   ALTNKP = 328,
-   CTLALTNKP = 338,
+#define CTLNKP 318
+#define ALTNKP 328
+#define CTLALTNKP 338
 
-   // Letters can be control, alt, or control-alt.
+/* Letters can be control, alt, or control-alt. */
 
-   CTLLET = (348-'A'),
-   ALTLET = (374-'A'),
-   CTLALTLET = (400-'A'),
+#define CTLLET (348-'A')
+#define ALTLET (374-'A')
+#define CTLALTLET (400-'A')
 
-   CLOSEPROGRAMKEY = 426,
+#define FCN_KEY_TAB_LOW (FKEY+1)
+#define FCN_KEY_TAB_LAST (CTLALTLET+'Z')
 
-   FCN_KEY_TAB_LOW = (FKEY+1),
-   FCN_KEY_TAB_LAST = CLOSEPROGRAMKEY
-};
-
-// This allows numbers from 0 to 36, inclusive.
-enum {
-   NUM_CARDINALS = 37
-};
+#define NUM_CARDINALS 16
 
 
 /* This is the number of tagger classes.  It must not be greater than 7,
@@ -2788,6 +2595,21 @@ enum popup_return {
 };
 
 
+enum {
+   // These are the bits that get filled in by "update_id_bits".
+   BITS_TO_CLEAR =
+   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
+   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
+   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
+   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
+   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
+
+   // These are the really global position bits.  They get filled in only at the top level.
+   GLOB_BITS_TO_CLEAR =
+   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
+   ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE
+};
+
 
 
 
@@ -2932,8 +2754,45 @@ struct comment_block {
 #define CONCPARSE_PARSE_G_TYPE 0x20
 
 
-// We need a forward reference; it's actually defined in sdgetout.
-struct resolve_tester;
+// BEWARE!!  This list must track the array "resolve_table" in sdgetout.cpp
+enum resolve_kind {
+   resolve_none,
+   resolve_rlg,
+   resolve_la,
+   resolve_ext_rlg,
+   resolve_ext_la,
+   resolve_slipclutch_rlg,
+   resolve_slipclutch_la,
+   resolve_circ_rlg,
+   resolve_circ_la,
+   resolve_pth_rlg,
+   resolve_pth_la,
+   resolve_tby_rlg,
+   resolve_tby_la,
+   resolve_xby_rlg,
+   resolve_xby_la,
+   resolve_dixie_grand,
+   resolve_minigrand,
+   resolve_prom,
+   resolve_revprom,
+   resolve_sglfileprom,
+   resolve_revsglfileprom,
+   resolve_circle
+};
+
+struct resolve_tester {
+   resolve_kind k;
+   dance_level level_needed;
+   // Add 0x10 bit for singer-only; these must be last.
+   // Also, last item in each table has 0x10 only.
+   // Add 0x20 bit to indicate that we demand only nonzero distances.
+   // Add 0x40 bit to make the resolver never find this, though
+   //    we will display it if user gets here.
+   uint32 distance;
+   veryshort locations[8];
+   uint32 directions;
+};
+
 
 struct resolve_indicator {
 
@@ -2989,9 +2848,8 @@ struct resolve_indicator {
 
    CONCPROP__STANDARD means that the concept can be "standard".
 
-   CONCPROP__USE_NUMBER         Concept takes one number.
-   CONCPROP__USE_TWO_NUMBERS    Concept takes two numbers.
-   CONCPROP__USE_FOUR_NUMBERS   Etc.
+   CONCPROP__USE_NUMBER         If a concept takes one number, only CONCPROP__USE_NUMBER is set.
+   CONCPROP__USE_TWO_NUMBERS    If it takes two numbers both bits are set.
 
    CONCPROP__SHOW_SPLIT means that the concept prepares the "split_axis" bits properly
       for transmission back to the client.  Normally this is off, and the split axis bits
@@ -3055,12 +2913,12 @@ enum {
    /* spare:                   0x00010000UL, */
    /* spare:                   0x00020000UL, */
    /* spare:                   0x00040000UL, */
-   CONCPROP__IS_META         = 0x00080000UL,
-   CONCPROP__GET_MASK        = 0x00100000UL,
-   CONCPROP__STANDARD        = 0x00200000UL,
-   CONCPROP__USE_NUMBER      = 0x00400000UL,
-   CONCPROP__USE_TWO_NUMBERS = 0x00800000UL,
-   CONCPROP__USE_FOUR_NUMBERS= 0x01000000UL,
+   /* spare:                   0x00080000UL, */
+   /* spare:                   0x00100000UL, */
+   CONCPROP__GET_MASK        = 0x00200000UL,
+   CONCPROP__STANDARD        = 0x00400000UL,
+   CONCPROP__USE_NUMBER      = 0x00800000UL,
+   CONCPROP__USE_TWO_NUMBERS = 0x01000000UL,
    CONCPROP__MATRIX_OBLIVIOUS= 0x02000000UL,
    CONCPROP__PERMIT_MATRIX   = 0x04000000UL,
    CONCPROP__SHOW_SPLIT      = 0x08000000UL,
@@ -3124,12 +2982,11 @@ class configuration {
  public:
    parse_block *command_root;
    setup state;
-   bool state_is_valid;
    bool draw_pic;
    int text_line;          // How many lines of text existed after this item was written,
                            // only meaningful if "written_history_items" is >= this index.
 
-   static const resolve_tester *configuration::null_resolve_ptr;    /* in SDTOP */
+   static const resolve_tester null_resolve;                 /* in SDTOP */
 
  private:
    resolve_indicator resolve_flag;
@@ -3178,16 +3035,16 @@ class configuration {
       history_ptr = 1;
       history[1].startinfoindex = c;
       history[1].draw_pic = false;
-      history[1].state_is_valid = false;
-      whole_sequence_low_lim = (startinfolist[c].into_the_middle) ? 2 : 1;
+      whole_sequence_low_lim =
+         (startinfolist[c].into_the_middle) ? 2 : 1;
    }
    inline bool nontrivial_startinfo_specific() { return startinfoindex != 0; }
    inline startinfo *get_startinfo_specific() { return &startinfolist[startinfoindex]; }
-   inline void init_resolve() { resolve_flag.the_item = null_resolve_ptr; }
-   void calculate_resolve();                          // in SDGETOUT
+   inline void init_resolve() { resolve_flag.the_item = &null_resolve; }
+   void calculate_resolve();                          // in SDTOP
    inline static resolve_indicator & current_resolve() { return current_config().resolve_flag; }
    inline static resolve_indicator & next_resolve() { return next_config().resolve_flag; }
-   static bool sequence_is_resolved();                // in SDGETOUT
+   inline static bool sequence_is_resolved() { return current_resolve().the_item->k != resolve_none; }
 
    inline void restore_warnings_specific(const warning_info & rhs)
       { warnings = rhs; }
@@ -3224,6 +3081,16 @@ struct concept_table_item{
    // We wish we could put a "throw" clause on this function, but we can't.
    void (*concept_action)(setup *, parse_block *, setup *);
 };
+
+
+static const dance_level dixie_grand_level = l_plus;
+static const dance_level extend_34_level = l_plus;
+static const dance_level zig_zag_level = l_a2;
+static const dance_level beau_belle_level = l_a2;
+static const dance_level cross_by_level = l_c1;
+static const dance_level intlk_triangle_level = l_c2;
+static const dance_level general_magic_level = l_c3;
+static const dance_level phantom_tandem_level = l_c4a;
 
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
@@ -3279,9 +3146,6 @@ struct concept_table_item{
    skippable_concept
       For "<so-and-so> work <concept>", this is the concept to be skipped by some people.
 
-   skippable_heritflags
-      As above, when it's a simple modifier.
-
    prior_elongation_bits;
       This tells, for a 2x2 setup prior to having a call executed, how that
       2x2 is elongated (due to these people being the outsides) in the east-west
@@ -3289,6 +3153,39 @@ struct concept_table_item{
       interpretation of the elongation direction is always absolute.  A 1 means
       the elongation is east-west.  A 2 means the elongation is north-south.
       A zero means there was no elongation. */
+
+enum {
+   // See the comments in front of "get_fraction_info" in sdmoves.cpp for details.
+   CMD_FRAC_NULL_VALUE      = 0x00000111UL,
+   CMD_FRAC_HALF_VALUE      = 0x00000112UL,
+   CMD_FRAC_LASTHALF_VALUE  = 0x00001211UL,
+   CMD_FRAC_PART_BIT        = 0x00010000UL,
+   CMD_FRAC_PART_MASK       = 0x00070000UL,
+   CMD_FRAC_THISISLAST      = 0x00080000UL,
+   CMD_FRAC_REVERSE         = 0x00100000UL,
+   CMD_FRAC_CODE_MASK       = 0x00E00000UL,    // This is a 3 bit field.
+
+   // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
+   // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
+   // when these are in use.  If the PART_MASK field is zero, the code must be zero
+   // (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
+
+   CMD_FRAC_CODE_ONLY           = 0x00000000UL,
+   CMD_FRAC_CODE_ONLYREV        = 0x00200000UL,
+   CMD_FRAC_CODE_FROMTO         = 0x00400000UL,
+   CMD_FRAC_CODE_FROMTOREV      = 0x00600000UL,
+   CMD_FRAC_CODE_FROMTOREVREV   = 0x00800000UL,
+   CMD_FRAC_CODE_FROMTOMOST     = 0x00A00000UL,
+   CMD_FRAC_CODE_LATEFROMTOREV  = 0x00C00000UL,
+
+   CMD_FRAC_PART2_BIT       = 0x01000000UL,
+   CMD_FRAC_PART2_MASK      = 0x07000000UL,
+   CMD_FRAC_IMPROPER_BIT    = 0x08000000UL,
+   CMD_FRAC_BREAKING_UP     = 0x10000000UL,
+   CMD_FRAC_FORCE_VIS       = 0x20000000UL,
+   CMD_FRAC_LASTHALF_ALL    = 0x40000000UL,
+   CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL
+};
 
 
 /* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
@@ -3391,14 +3288,11 @@ struct concept_table_item{
    makes "ends detour" work.
 */
 
-// Beware!  These flags must be disjoint from DFM1_CONCENTRICITY_FLAG_MASK, in database.h .
-// If that changes, these flags need to be chacked.
 // Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100 hex.
 
 enum {
    CMD_MISC__EXPLICIT_MIRROR      = 0x00000100UL,
    CMD_MISC__MATRIX_CONCEPT       = 0x00000200UL,
-
    // This is a 4 bit field.
    CMD_MISC__VERIFY_MASK          = 0x00003C00UL,
    // Here are the encodings that can go into same.
@@ -3417,18 +3311,15 @@ enum {
    CMD_MISC__VERIFY_TALL6         = 0x00003400UL,
 
    CMD_MISC__EXPLICIT_MATRIX      = 0x00004000UL,
-
-   CMD_MISC__NO_EXPAND_1          = 0x00008000UL,  // Allow only one triple box expansion.
-   CMD_MISC__NO_EXPAND_2          = 0x00010000UL,  // Allow only one split phantom C/L/W expansion.
-   CMD_MISC__NO_EXPAND_AT_ALL     = 0x00020000UL,  // Positively no expansion.
-   CMD_MISC__NO_EXPAND_MATRIX = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2 | CMD_MISC__NO_EXPAND_AT_ALL,
-
-   CMD_MISC__DISTORTED            = 0x00040000UL,
-   CMD_MISC__OFFSET_Z             = 0x00080000UL,
-   CMD_MISC__SAID_SPLIT           = 0x00100000UL,
-   CMD_MISC__SAID_TRIANGLE        = 0x00200000UL,
-   CMD_MISC__DO_AS_COUPLES        = 0x00400000UL,
-   // spare:                      = 0x00800000UL,
+   CMD_MISC__NO_EXPAND_MATRIX     = 0x00008000UL,
+   CMD_MISC__DISTORTED            = 0x00010000UL,
+   CMD_MISC__OFFSET_Z             = 0x00020000UL,
+   CMD_MISC__SAID_SPLIT           = 0x00040000UL,
+   CMD_MISC__SAID_TRIANGLE        = 0x00080000UL,
+   CMD_MISC__PUT_FRAC_ON_FIRST    = 0x00100000UL,
+   CMD_MISC__DO_AS_COUPLES        = 0x00200000UL,
+   CMD_MISC__RESTRAIN_CRAZINESS   = 0x00400000UL,
+   CMD_MISC__RESTRAIN_MODIFIERS   = 0x00800000UL,
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000UL,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000UL,
    CMD_MISC__MUST_SPLIT_VERT      = 0x04000000UL,
@@ -3439,16 +3330,6 @@ enum {
    CMD_MISC__DOING_ENDS           = 0x80000000UL,
 
    CMD_MISC__MUST_SPLIT_MASK      = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
-};
-
-
-// Flags that reside in the "cmd_misc3_flags" word of a setup BEFORE a call is executed.
-enum {
-   CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002UL,
-   CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
-   CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
-   CMD_MISC3__META_NOCMD           = 0x00000010UL,
-   CMD_MISC3__NO_CHECK_LEVEL       = 0x00000020UL
 };
 
 
@@ -3553,12 +3434,12 @@ enum normalize_action {
    normalize_before_merge,
    normalize_strict_matrix,
    normalize_compress_bigdmd,
-   normalize_recenter,
-   normalize_never
+   normalize_recenter
 };
 
 // Beware!  There are >= tests lying around, so order is important.
-// In particular, sdconc (search for "brute_force_merge" has such tests.
+// In particular, sdconc (search for "brute_force_merge" has a test
+// "action >= merge_strict_matrix_but_colliding_merge".
 enum merge_action {
    merge_strict_matrix,
    merge_strict_matrix_but_colliding_merge,
@@ -3638,13 +3519,6 @@ class full_expand {
       // Also, the "16" bit means allow only step to a box, not step to a full wave.
       // Also, the "32" bit means to give "some people touch" warning if this is
       //     a "step_to_wave_4_people" call.
-      // Also, the "64" bit means this is an item relating to having just the centers
-      // touch to a miniwave, and we may need to give the "warn__some_touch_evil"
-      // warning.
-      // Also, the "128" bit means this is an item that lets you do a swing thru
-      // from the partially occupied 2x4 that would result from everyone doing a
-      // 1/2 press back from a right-hand wave.  We don't allow the touch to a wave
-      // if the user gave a phantom concept.
       int forbidden_elongation;
       expand::thing *expand_lists;
       setup_kind kind;
@@ -3774,16 +3648,6 @@ enum meta_key_kind {
    meta_key_shift_half
 };
 
-
-// These are the "meta_key_props" bits.
-enum mkprop {
-   MKP_RESTRAIN_1    = 0x00000001UL,
-   MKP_RESTRAIN_2    = 0x00000002UL,
-   MKP_COMMA_NEXT    = 0x00000004UL
-};
-
-extern const uint32 meta_key_props[];    // In sdtables.
-
 enum revert_weirdness_type {
    weirdness_off,
    weirdness_flatten_from_3,
@@ -3801,11 +3665,11 @@ enum split_command_kind {
 
 
 extern SDLIB_API int session_index;                           // in SDSI
-extern SDLIB_API bool rewrite_with_new_style_filename;        // in SDSI
 extern int random_number;                                     // in SDSI
 extern SDLIB_API char *database_filename;                     // in SDSI
 extern SDLIB_API char *new_outfile_string;                    // in SDSI
 extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
+extern bool outfile_special;                                  // in SDSI
 
 extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
@@ -3842,9 +3706,9 @@ extern SDLIB_API char *sd_version_string();                         /* In SDMAIN
 extern SDLIB_API bool query_for_call();                             /* In SDMAIN */
 
 extern int sdtty_screen_height;                                     /* in SDUI-TTY */
-extern bool sdtty_no_cursor;                                        /* in SDUI-TTY */
-extern bool sdtty_no_console;                                       /* in SDUI-TTY */
-extern bool sdtty_no_line_delete;                                   /* in SDUI-TTY */
+extern int sdtty_no_cursor;                                         /* in SDUI-TTY */
+extern int sdtty_no_console;                                        /* in SDUI-TTY */
+extern int sdtty_no_line_delete;                                    /* in SDUI-TTY */
 
 
 // During initialization, the main program makes a number of callbacks
@@ -3872,8 +3736,7 @@ class iobase {
    virtual int do_abort_popup() = 0;
    virtual uims_reply get_startup_command() = 0;
    virtual void set_window_title(char s[]) = 0;
-   virtual void add_new_line(const char the_line[], uint32 drawing_picture) = 0;
-   virtual void no_erase_before_n(int n) = 0;
+   virtual void add_new_line(char the_line[], uint32 drawing_picture) = 0;
    virtual void reduce_line_count(int n) = 0;
    virtual void update_resolve_menu(command_kind goal, int cur, int max,
                                     resolver_display_state state) = 0;
@@ -3897,7 +3760,7 @@ class iobase {
    virtual int do_tagger_popup(int tagger_class) = 0;
    virtual int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info) = 0;
    virtual popup_return do_comment_popup(char dest[]) = 0;
-   virtual uint32 get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero) = 0;
+   virtual uint32 get_number_fields(int nnumbers, bool forbid_zero) = 0;
    virtual bool get_call_command(uims_reply *reply_p) = 0;
    virtual void set_pick_string(const char *string) = 0;
    virtual void display_help() = 0;
@@ -3913,8 +3776,7 @@ class iofull : public iobase {
    int do_abort_popup();
    uims_reply get_startup_command();
    void set_window_title(char s[]);
-   void add_new_line(const char the_line[], uint32 drawing_picture);
-   void no_erase_before_n(int n);
+   void add_new_line(char the_line[], uint32 drawing_picture);
    void reduce_line_count(int n);
    void update_resolve_menu(command_kind goal, int cur, int max,
                             resolver_display_state state);
@@ -3939,7 +3801,7 @@ class iofull : public iobase {
    int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info);
    void set_pick_string(const char *string);
    popup_return do_comment_popup(char dest[]);
-   uint32 get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero);
+   uint32 get_number_fields(int nnumbers, bool forbid_zero);
    bool get_call_command(uims_reply *reply_p);
    void display_help();
    void terminate(int code);
@@ -3960,7 +3822,6 @@ extern SDLIB_API uint32 collision_person1;                          /* in SDTOP 
 extern SDLIB_API uint32 collision_person2;                          /* in SDTOP */
 extern SDLIB_API int history_allocation;                            /* in SDTOP */
 extern SDLIB_API int written_history_items;                         /* in SDTOP */
-extern SDLIB_API int no_erase_before_this;                          /* in SDTOP */
 extern SDLIB_API int written_history_nopic;                         /* in SDTOP */
 extern SDLIB_API dance_level higher_acceptable_level[];             /* in SDTOP */
 extern SDLIB_API uint32 the_topcallflags;                           /* in SDTOP */
@@ -3969,8 +3830,8 @@ extern SDLIB_API bool there_is_a_call;                              /* in SDTOP 
 extern SDLIB_API call_with_name **base_calls;                       /* in SDTOP */
 extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
 extern SDLIB_API bool enable_file_writing;                          /* in SDTOP */
-extern SDLIB_API Cstring cardinals[NUM_CARDINALS+1];                /* in SDTOP */
-extern SDLIB_API Cstring ordinals[NUM_CARDINALS+1];                 /* in SDTOP */
+extern SDLIB_API Cstring cardinals[];                               /* in SDTOP */
+extern SDLIB_API Cstring ordinals[];                                /* in SDTOP */
 extern SDLIB_API Cstring direction_names[];                         /* in SDTOP */
 extern SDLIB_API Cstring getout_strings[];                          /* in SDTOP */
 extern SDLIB_API writechar_block_type writechar_block;              /* in SDTOP */
@@ -4022,9 +3883,9 @@ extern SDLIB_API int *color_index_list;                             /* in SDINIT
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL */
-extern SDLIB_API int global_cache_miss_reason[3];                   /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
 extern SDLIB_API int global_age;                                    /* in SDUTIL */
+extern bool global_leave_missing_calls_blank;                       /* in SDUTIL */
 extern configuration *clipboard;                                    /* in SDUTIL */
 extern int clipboard_size;                                          /* in SDUTIL */
 extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL */
@@ -4034,12 +3895,12 @@ extern SDLIB_API char header_comment[MAX_TEXT_LINE_LENGTH];         /* in SDUTIL
 extern SDLIB_API bool creating_new_session;                         /* in SDUTIL */
 extern SDLIB_API int sequence_number;                               /* in SDUTIL */
 extern SDLIB_API int starting_sequence_number;                      /* in SDUTIL */
-extern SDLIB_API const Cstring old_filename_strings[];              /* in SDUTIL */
-extern SDLIB_API const Cstring new_filename_strings[];              /* in SDUTIL */
-extern SDLIB_API const Cstring *filename_strings;                   /* in SDUTIL */
-extern SDLIB_API const Cstring concept_key_table[];                 /* in SDUTIL */
+extern SDLIB_API Cstring old_filename_strings[];                    /* in SDUTIL */
+extern SDLIB_API Cstring new_filename_strings[];                    /* in SDUTIL */
+extern SDLIB_API Cstring *filename_strings;                         /* in SDUTIL */
+extern SDLIB_API Cstring concept_key_table[];                       /* in SDUTIL */
 
-extern SDLIB_API const concept_table_item concept_table[];          /* in SDCONCPT */
+extern SDLIB_API concept_table_item concept_table[];                /* in SDCONCPT */
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
 extern uint32 global_livemask;                                      /* in SDCONCPT */
 extern uint32 global_selectmask;                                    /* in SDCONCPT */
@@ -4100,7 +3961,6 @@ extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABL
 extern id_bit_table id_bit_table_3x4_ctr6[];                        /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_offset[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_corners[];                     /* in SDTABLES */
-extern id_bit_table id_bit_table_3x4_zs[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_butterfly[];                       /* in SDTABLES */
 extern id_bit_table id_bit_table_4x4_outer_pairs[];                 /* in SDTABLES */
 extern id_bit_table id_bit_table_525_nw[];                          /* in SDTABLES */
@@ -4128,7 +3988,8 @@ extern const expand::thing s_qtg_3x4;
 extern const expand::thing s_short6_2x3;
 extern const expand::thing s_bigrig_dblbone;
 extern const expand::thing s_bigbone_dblrig;
-extern const veryshort identity24[24];
+
+
 extern full_expand::thing rear_1x2_pair;
 extern full_expand::thing rear_2x2_pair;
 extern full_expand::thing rear_bone_pair;
@@ -4147,28 +4008,18 @@ extern full_expand::thing touch_init_table2[];
 extern full_expand::thing touch_init_table3[];
 
 
-inline uint32 get_meta_key_props(const conzept::concept_descriptor *this_concept)
-{
-   if (concept_table[this_concept->kind].concept_prop & CONCPROP__IS_META)
-      return meta_key_props[this_concept->arg1];
-   else
-      return 0;
-}
-
 
 #define NEEDMASK(K) (1<<(((uint32) (K))/((uint32) CONCPROP__NEED_LOBIT)))
 
 enum mpkind {
    MPKIND__NONE,
    MPKIND__SPLIT,
-   MPKIND__SPLIT_OTHERWAY_TOO,
    MPKIND__REMOVED,
    MPKIND__TWICE_REMOVED,
    MPKIND__THRICE_REMOVED,
    MPKIND__OVERLAP,
    MPKIND__OVERLAP14,
    MPKIND__OVERLAP34,
-   MPKIND__SPEC_MATRIX_OVERLAP,
    MPKIND__INTLK,
    MPKIND__CONCPHAN,
    MPKIND__INTLKDMD,
@@ -4176,14 +4027,10 @@ enum mpkind {
    MPKIND__MAGICINTLKDMD,
    MPKIND__NONISOTROPIC,
    MPKIND__NONISOTROP1,
-   MPKIND__NONISOTROP2,
-   MPKIND__NONISOTROPREM,
    MPKIND__OFFS_L_ONEQ,
    MPKIND__OFFS_R_ONEQ,
    MPKIND__OFFS_L_HALF,
    MPKIND__OFFS_R_HALF,
-   MPKIND__OFFS_L_HALF_NONISO,
-   MPKIND__OFFS_R_HALF_NONISO,
    MPKIND__OFFS_L_THRQ,
    MPKIND__OFFS_R_THRQ,
    MPKIND__OFFS_L_FULL,
@@ -4230,8 +4077,7 @@ enum mpkind {
    MPKIND__BENT7CW,
    MPKIND__BENT7CCW,
    MPKIND__SPEC_ONCEREM,
-   MPKIND__SPEC_TWICEREM,
-   NUM_PLAINMAP_KINDS   // End mark; not really in the enumeration.
+   MPKIND__SPEC_TWICEREM
 };
 
 // See sdtables.cpp (search for "map_thing") for extensive discussion
@@ -4293,12 +4139,12 @@ enum specmapkind {
    spcmap_lh_ox,
    spcmap_rh_ox,
    spcmap_lh_c1phana,
-   spcmap_rh_c1phana,
    spcmap_lh_c1phanb,
+   spcmap_rh_c1phana,
    spcmap_rh_c1phanb,
    spcmap_lh_s2x3_3,
-   spcmap_rh_s2x3_3,
    spcmap_lh_s2x3_2,
+   spcmap_rh_s2x3_3,
    spcmap_rh_s2x3_2,
    spcmap_lh_s2x3_7,
    spcmap_rh_s2x3_7,
@@ -4319,15 +4165,17 @@ enum specmapkind {
    spcmap_diag23c,
    spcmap_diag23d,
    spcmap_f2x8_4x4,
-   spcmap_f2x8_4x4h,
    spcmap_w4x4_4x4,
-   spcmap_w4x4_4x4h,
    spcmap_f2x8_2x8,
-   spcmap_f2x8_2x8h,
    spcmap_w4x4_2x8,
    spcmap_emergency1,
    spcmap_emergency2,
    spcmap_fix_triple_turnstyle,
+   spcmap_p8_tgl4,
+   spcmap_spndle_once_rem,
+   spcmap_1x3dmd_once_rem,
+   spcmap_lh_zzztgl,
+   spcmap_rh_zzztgl,
    spcmap_2x2v,
    spcmap_2x4_magic,
    spcmap_ptp_magic,
@@ -4354,7 +4202,14 @@ enum specmapkind {
    spcmap_2x3_0145,
    spcmap_1x8_1x6,
    spcmap_rig_1x6,
+   spcmap_ov_hrg_1,
+   spcmap_ov_gal_1,
+   spcmap_3o_qtag_1,
+   spcmap_tgl4_1,
+   spcmap_tgl4_2,
    spcmap_qtag_2x3,
+   spcmap_2x3_rmvr,
+   spcmap_2x3_rmvs,
    spcmap_dbloff1,
    spcmap_dbloff2,
    spcmap_dhrgl1,
@@ -4430,7 +4285,7 @@ extern const clw3_thing clw3_table[];                               /* in SDTABL
 
 /* In SDPREDS */
 
-extern bool selectp(setup *ss, int place, int allow_some = 0) THROW_DECL;
+extern bool selectp(setup *ss, int place) THROW_DECL;
 
 /* In SDGETOUT */
 
@@ -4462,7 +4317,7 @@ public:
       m_force_mirror_warn(false),
       m_doing_half_override(false),
       cmd_misc_flags(0),
-      m_collision_appears_illegal(1),  // Halfway between "appears_illegal"
+      collision_appears_illegal(1),    // Halfway between "appears_illegal"
                                        // and not -- use table item.
       result_mask(0)
    {}
@@ -4476,7 +4331,7 @@ public:
       m_force_mirror_warn(mirror),
       m_doing_half_override(false),
       cmd_misc_flags(cmd->cmd_misc_flags),
-      m_collision_appears_illegal(0),  // May change to 2 as call progresses.
+      collision_appears_illegal(0),    // May change to 2 as call progresses.
       result_mask(0)
       {
          // If doing half of a call, and doing it left,
@@ -4509,16 +4364,13 @@ private:
    bool m_force_mirror_warn;
    bool m_doing_half_override;
    uint32 cmd_misc_flags;
-   int m_collision_appears_illegal;
+   int collision_appears_illegal;
    uint32 result_mask;
 };
 
 extern void mirror_this(setup *s) THROW_DECL;
 
-extern void do_stability(uint32 *personp,
-                         int field,
-                         int turning,
-                         bool mirror) THROW_DECL;
+extern void do_stability(uint32 *personp, stability stab, int turning) THROW_DECL;
 
 extern bool check_restriction(
    setup *ss,
@@ -4550,7 +4402,7 @@ extern bool do_simple_split(
    split_command_kind split_command,
    setup *result) THROW_DECL;
 
-extern uint32 do_call_in_series(
+extern void do_call_in_series(
    setup *sss,
    bool dont_enforce_consistent_split,
    bool roll_transparent,
@@ -4558,7 +4410,7 @@ extern uint32 do_call_in_series(
    bool qtfudged) THROW_DECL;
 
 extern void brute_force_merge(const setup *res1, const setup *res2,
-                              merge_action action, setup *result) THROW_DECL;
+                              bool allow_collisions, setup *result) THROW_DECL;
 
 extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *result) THROW_DECL;
 
@@ -4575,21 +4427,10 @@ extern bool get_real_subcall(
    uint32 extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL;
 
-extern int gcd(int a, int b);
-
-// These control inversion of the start and end args.  That is, the position
-// fraction F is turned into 1-F.
-enum fraction_invert_flags {
-   FRAC_INVERT_NONE = 0,
-   FRAC_INVERT_START = 1,
-   FRAC_INVERT_END = 2
-};
-
-extern uint32 process_stupendously_new_fractions(int start, int end,
-                                                 fraction_invert_flags invert_flags,
-                                                 const fraction_command & incoming_fracs,
-                                                 bool make_improper = false,
-                                                 bool *improper_p = 0) THROW_DECL;
+extern uint32 process_spectacularly_new_fractions(int cn, int cd, int dn, int dd,
+                                                  uint32 incoming_fracs,
+                                                  bool make_improper = false,
+                                                  bool *improper_p = 0) THROW_DECL;
 
 extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 
@@ -4617,15 +4458,12 @@ extern void divided_setup_move(
    uint32 map_encoding,
    phantest_kind phancontrol,
    bool recompute_id,
-   setup *result,
-   unsigned int noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2) THROW_DECL;
+   setup *result) THROW_DECL;
 
 extern void overlapped_setup_move(
    setup *ss,
    uint32 map_encoding,
-   uint32 *masks,
-   setup *result,
-   unsigned int noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2) THROW_DECL;
+   uint32 *masks, setup *result) THROW_DECL;
 
 extern void do_phantom_2x4_concept(
    setup *ss,
@@ -4690,8 +4528,6 @@ extern void triangle_move(
 
 extern bool do_big_concept(
    setup *ss,
-   parse_block *the_concept_parse_block,
-   bool handle_concept_details,
    setup *result) THROW_DECL;
 
 void stable_move(
@@ -4708,7 +4544,7 @@ extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
    int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
-   int fraction_fields,   // number fields, if doing fractional twosome/solid
+   int fraction,          // number, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
    uint32 mxn_bits,
@@ -4727,7 +4563,6 @@ extern void concentric_move(
    uint32 modifiersin1,
    uint32 modifiersout1,
    bool recompute_id,
-   bool enable_3x1_warn,
    uint32 specialoffsetmapcode,
    setup *result) THROW_DECL;
 
@@ -4788,7 +4623,7 @@ extern void update_id_bits(setup *ss);
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
-extern void big_endian_get_directions(
+extern void get_directions(
    setup *ss,
    uint32 & directions,
    uint32 & livemask);
@@ -4807,20 +4642,12 @@ void initialize_sdlib();
 
 extern void crash_print(const char *filename, int linenum) THROW_DECL;
 
-struct skipped_concept_info {
-   parse_block *old_retval;
-   parse_block *skipped_concept;
-   uint32 need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
-   uint32 heritflag;
-   parse_block *concept_with_root;
-   parse_block *result_of_skip;
-   parse_block **root_of_result_of_skip;
-};
-
+// This writes over its 2nd and 3rd arguments.
 extern bool check_for_concept_group(
    parse_block *parseptrcopy,
-   skipped_concept_info & retstuff,
-   bool want_result_root) THROW_DECL;
+   parse_block * & kkk,
+   uint32 & need_to_restrain,   // 1=(if not doing echo), 2=(yes, always)
+   parse_block ***parseptr_skip_p = (parse_block ***) 0) THROW_DECL;
 
 NORETURN1 void fail(const char s[]) THROW_DECL NORETURN2;
 
@@ -4849,6 +4676,8 @@ extern uint32 find_calldef(
    int real_direction,
    int northified_index) THROW_DECL;
 
+extern void clear_people(setup *z);
+
 extern void clear_result_flags(setup *z);
 
 inline uint32 rotperson(uint32 n, int amount)
@@ -4859,6 +4688,12 @@ inline uint32 rotcw(uint32 n)
 
 inline uint32 rotccw(uint32 n)
 { if (n == 0) return 0; else return (n + 033) & ~064; }
+
+inline void clear_person(setup *resultpeople, int resultplace)
+{
+   resultpeople->people[resultplace].id1 = 0;
+   resultpeople->people[resultplace].id2 = 0;
+}
 
 
 inline uint32 little_endian_live_mask(const setup *ss)
@@ -4883,38 +4718,12 @@ inline uint32 or_all_people(const setup *ss)
 }
 
 
-inline void setup::clear_person(int place)
-{
-   people[place].id1 = 0;
-   people[place].id2 = 0;
-   people[place].id3 = 0;
-}
-
-inline void setup::suppress_roll(int place)
-{
-   if (people[place].id1)
-      people[place].id1 = (people[place].id1 & (~NROLL_MASK)) | ROLL_IS_M;
-}
-
-inline void setup::suppress_all_rolls()
-{
-   // If we can't determine the setup size, it will be -1,
-   // and the loop below will take no action.
-   for (int k=0; k<=attr::klimit(kind); k++)
-      suppress_roll(k);
-}
-
-
-inline void setup::swap_people(int oneplace, int otherplace)
-{
-   personrec temp = people[otherplace];
-   people[otherplace] = people[oneplace];
-   people[oneplace] = temp;
-}
 
 extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
 
 extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount);
+
+extern void swap_people(setup *ss, int oneplace, int otherplace);
 
 extern void install_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
 
@@ -4929,37 +4738,29 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL;
 
-extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout);
-
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    bool check_errors,
    final_and_herit_flags *final_concepts,
    bool forbid_unfinished_parse,
-   bool only_one) THROW_DECL;
+   const char *filename,
+   int linenum) THROW_DECL;
 
-extern void really_skip_one_concept(
+// This writes over its 2nd and 3rd arguments.
+extern parse_block *really_skip_one_concept(
    parse_block *incoming,
-   skipped_concept_info & retstuff) THROW_DECL;
+   parse_block * & kkk,
+   uint32 & need_to_restrain,   // 1=(if not doing echo), 2=(yes, always)
+   parse_block ***parseptr_skip_p) THROW_DECL;
 
-extern bool fix_n_results(int arity,
-                          int goal,
-                          bool reorder_setups_2_and_3,
-                          setup z[],
+extern bool fix_n_results(int arity, int goal, setup z[],
                           uint32 & rotstates,
-                          uint32 & pointclip,
-                          uint32 fudgystupidrot) THROW_DECL;
+                          uint32 & pointclip) THROW_DECL;
 
 extern bool warnings_are_unacceptable(bool strict);
 
 extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
      THROW_DECL;
-
-void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
-
-bool check_for_centers_concept(uint32 callflags1_to_examine,
-                               parse_block *parse_scan,
-                               setup_command *the_cmd) THROW_DECL;
 
 void toplevelmove() THROW_DECL;
 
@@ -4997,7 +4798,7 @@ class fraction_info {
       {}
 
    // This one is in sdmoves.cpp
-   void get_fraction_info(fraction_command frac_stuff,
+   void get_fraction_info(uint32 frac_flags,
                           uint32 callflags1,
                           revert_weirdness_type doing_weird_revert) THROW_DECL;
 
@@ -5005,9 +4806,9 @@ class fraction_info {
    uint32 get_fracs_for_this_part();
 
    // This one is in sdmoves.cpp
-   bool query_instant_stop(uint32 & result_flag_wordmisc) const;
+   bool query_instant_stop(uint32 & result_flag_wordmisc);
 
-   void demand_this_part_exists()  const THROW_DECL
+   void demand_this_part_exists() THROW_DECL
       {
          if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
             fail("The indicated part number doesn't exist.");
@@ -5083,6 +4884,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg);
 void clear_screen();
 extern void writechar(char src);
 SDLIB_API void newline();
+extern void open_text_line();
 void doublespace_file();
 SDLIB_API void writestuff(const char *s);
 extern parse_block *mark_parse_blocks();
@@ -5106,7 +4908,7 @@ bool iterate_over_sel_dir_num(
    bool enable_selector_iteration,
    bool enable_direction_iteration,
    bool enable_number_iteration);
-bool install_outfile_string(const char newstring[]);
+bool install_outfile_string(char newstring[]);
 SDLIB_API bool get_first_session_line();
 SDLIB_API bool get_next_session_line(char *dest);
 void prepare_to_read_menus();
@@ -5164,31 +4966,27 @@ extern void ttu_initialize();
 // The opposite.
 extern void ttu_terminate();
 
-// Get number of lines to use for "more" processing.  This number is
-// not used for any other purpose -- the rest of the program is not concerned
-// with the "screen" size.
+/* Get number of lines to use for "more" processing.  This number is
+   not used for any other purpose -- the rest of the program is not concerned
+   with the "screen" size. */
 
 extern int get_lines_for_more();
 
-// Return true for 'tty-like' devices which don't require 'more' processing;
-// i.e. they have an unlimited scrollback buffer.
-extern bool ttu_unlimited_scrollback();
-
-// Clear the current line, leave cursor at left edge.
+/* Clear the current line, leave cursor at left edge. */
 extern void clear_line();
 
-// Backspace the cursor and clear the rest of the line, presumably
-// erasing the last character.
+/* Backspace the cursor and clear the rest of the line, presumably
+   erasing the last character. */
 extern void rubout();
 
-// Move cursor up "n" lines and then clear rest of screen.
+/* Move cursor up "n" lines and then clear rest of screen. */
 extern void erase_last_n(int n);
 
-// Write a line.  The text may or may not have a newline at the end.
-// This may or may not be after a prompt and/or echoed user input.
+/* Write a line.  The text may or may not have a newline at the end. */
+/* This may or may not be after a prompt and/or echoed user input. */
 extern void put_line(const char the_line[]);
 
-// Write a single character on the current output line.
+/* Write a single character on the current output line. */
 extern void put_char(int c);
 
 /* Get one character from input, no echo, no waiting for <newline>.

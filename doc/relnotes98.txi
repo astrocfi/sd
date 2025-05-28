@@ -48,6 +48,8 @@ Changes as of the following versions:
 * 31.75::
 * 31.73::
 * 31.72::
+
+The file @file{oldnotes} has notes relating to even older versions.
 @end menu
 
 @node Intro, 32.5, Top, (dir)

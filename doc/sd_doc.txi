@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.8
-@set Time-stamp: July 15, 2006
+@set sd-version 36.52
+@set Time-stamp: December 23, 2004
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -42,7 +42,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-@noindent Copyright @copyright{} 1992-2005 William B. Ackerman and Stephen Gildea
+@noindent Copyright @copyright{} 1992-2004 William B. Ackerman and Stephen Gildea
 
 @noindent Permission is granted to make and distribute verbatim copies of this manual.
 
@@ -179,7 +179,6 @@ Miscellaneous Commands
 * Save Sequence::               Saving the Sequence
 * Change Output File::          Changing the Output File
 * Change Title::                Changing the Title
-* Change File Name Style::      Changing to the New File Name Style
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
@@ -191,7 +190,7 @@ The Initialization File
 * Session Control::             Session Control
 * Option Control::              Option Control
 * Accelerator Key Control::     Accelerator Key Control
-* Creating an Intialization File:: Creating an Intialization File
+* Sample Initialization Files:: Sample Initialization Files
 
 Invoking Sd via Command Line
 
@@ -2340,7 +2339,6 @@ sequences.
 * Save Sequence::               Saving the Sequence
 * Change Output File::          Changing the Output File
 * Change Title::                Changing the Title
-* Change File Name Style::      Changing to the New File Name Style
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
@@ -2370,7 +2368,7 @@ Just resolving isn't enough.
 @section Changing the Output File
 
 You can change the name of the file to which the program writes its
-output by selecting the @code{change output file} command.  A popup
+output by selecting the @code{Change output file} command.  A popup
 will appear, prompting you for a new file name, or @code{Sdtty} will
 ask you to type in the new name.  This action will become
 effective the next time a sequence is written out.  Sequences previously
@@ -2380,7 +2378,7 @@ When the initialization file is used (@pxref{The Initialization File}),
 any change in the output file name will
 be written back to the init file at the end of the session.
 
-@node Change Title, Change File Name Style, Change Output File, Miscellaneous Commands
+@node Change Title, Abort/Exit/Undo, Change Output File, Miscellaneous Commands
 @section Changing the Title
 
 You can change the title that will appear at the top of each sequence
@@ -2397,42 +2395,7 @@ file was used.  @xref{The Initialization File}.
 When the initialization file is used, any change in the title will
 be written back to the init file at the end of the session.
 
-@node Change File Name Style, Abort/Exit/Undo, Change Title, Miscellaneous Commands
-@section Changing to the New File Name Style
-
-Prior to version 34.6, when support for DOS and Windows 3.1 were
-withdrawn, the program used names for the transcript (output) files in
-an ``old'' style, which looked like ``13aug05.c1'' or ``sequence.c1''.
-It now supports a ``new'' style, which looks like ``13aug05_c1.txt'' or
-``sequence_c1.txt''.  (The names with dates in them are what you get if
-you use the ``+'' file name.  @xref{Session Control}.)
-
-The part after the period is called the "extension".  When using
-modern operating systems, it is very helpful for files to
-have a correct extension, and ".txt" is the right extension for these
-files.  For example, attaching files in email messages is sometimes
-facilitated by having the ".txt" extension.
-
-Whether you use old or new style file names is controlled by your
-initialization (session) file, in the options @code{new_style_filename}
-or @code{old_style_filename}.  @xref{Option Control}.
-
-There is a command to change the style specified in your initialization
-file from old to new.  The command is ``change to new style
-filename''.  It must be given when the program starts, not when it is in
-the middle of a sequence.  After giving the command, you must exit the
-program and restart it.
-
-When you change to new style file names, no previously written files
-will be renamed.  Only newly created files will have the new names.
-Also, no pre-existing sessions that use explicit old style names (e.g.
-``sequence.c1'') will have those names changed.  (You may change the
-explicit names used by existing sessions with the ``change output
-file'' command.)  Pre-existing sessions that use the ``+'' or ``*'' file
-name will be changed to the new style for all future sequences, based on
-the date.
-
-@node Abort/Exit/Undo, Inserting Comments, Change File Name Style, Miscellaneous Commands
+@node Abort/Exit/Undo, Inserting Comments, Change Title, Miscellaneous Commands
 @section @code{Abort}, @code{Exit}, and @code{Undo}
 
 If you select the @code{exit} command, the program will exit.  If a
@@ -2617,7 +2580,7 @@ separated from each other by blank lines.
 * Session Control::             Session Control
 * Option Control::              Option Control
 * Accelerator Key Control::     Accelerator Key Control
-* Creating an Intialization File:: Creating an Intialization File
+* Sample Initialization Files:: Sample Initialization Files
 @end menu
 
 @node Session Control, Option Control,  , The Initialization File
@@ -2852,10 +2815,10 @@ This suppresses the use of special PC graphics characters
 are not standard on all PC's.  Pictures drawn in the output file will
 never use the special graphics characters.  This overrides @code{no_checkers}.
 @item no_color
-@code{Sdtty} and @code{Sd} normally color-code the dancers shown on the
-screen, according to various color schemes that are controlled by
-options listed below.  This option disables the use of color.  These
-options affect only the display on the screen.  Pictures drawn in the
+@code{Sdtty} and @code{Sd} normally color-code
+the dancers shown on the screen, according to various color schemes that
+are controlled by options listed below.  This option disables the use of color.
+Pictures drawn in the
 output file will never be in color, and will never use ``checkers'' or
 triangles.
 @item color_by_couple
@@ -2889,20 +2852,13 @@ This causes the colors for the usual girls-are-red and boys-are-blue
 scheme to use lighter shades.  This may be preferable if
 @code{reverse_video} is used.  It has no effect when using the
 @code{color_by_couple}, @code{color_by_couple_rgyb},
-@code{color_by_couple_ygrb}, or @code{color_by_corner} schemes (but see
-@code{use_magenta} and @code{use_cyan}, below.)  This is the default for
-@code{Sdtty}, so you only need this option for @code{Sd}.
+@code{color_by_couple_ygrb}, or @code{color_by_corner} schemes.  This is
+the default for @code{Sdtty}, so you only need this option for
+@code{Sd}.
 @item bold_color
 This is the opposite of @code{pastel_color}---it uses darker shades.
 This is the default for @code{Sd},
 so you only need this option for @code{Sdtty}.
-@item use_magenta
-This lightens the shade of red in all color schemes.  (@code{Pastel_color}
-does not apply in any of the @code{colr_by_couple} schemes.)  It substitutes
-magenta for red.
-@item use_cyan
-This lightens the shade of blue in all color schemes.  It substitutes
-cyan for blue.
 @item no_sound
 Do not ring the bell or make any other sound when reporting errors.
 @item new_style_filename
@@ -2947,7 +2903,7 @@ if these commands are not working satisfactorily on your terminal.
 This is only legal in @code{Sdtty}, and is meaningless when running Windows.
 @end table
 
-@node Accelerator Key Control, Creating an Intialization File, Option Control, The Initialization File
+@node Accelerator Key Control, Sample Initialization Files, Option Control, The Initialization File
 @section Accelerator Key Control
 
 The text of the @file{sd.ini} initialization file, from the line
@@ -3070,23 +3026,20 @@ Therefore, whenever you change your initialization file, it is a good
 idea to test it by starting the program at C4X to find out if any warning
 messages are printed.
 
-@node Creating an Intialization File, , Accelerator Key Control, The Initialization File
-@section Creating an Intialization File
+@node Sample Initialization Files, , Accelerator Key Control, The Initialization File
+@section Sample Initialization Files
 
-When @code{Sd} or @code{Sdtty} is first installed, no initialization
-file @file{sd.ini} exists.  When you run the program, it will print
-
-@example
-@group
-   You do not have a session control file.  If you want to
-   create one, give the command "initialize session file".
-@end group
-@end example
-
-After doing that, exit from the program and start it again.  The file
-will have been created, with some sample sessions.  It will also contain
-all of the standard accelerator key bindings and abbreviations.  You may
-edit those.
+When @code{Sd} or @code{Sdtty} is first installed, no initialization file exists,
+but the files @file{sample1.ini}, @file{sample2.ini} and @file{sample3.ini}
+are provided for you
+in the working directory.  The @file{sample1.ini} file shows an example of
+the ``session'' mechanism only, and @file{sample2.ini} show both the
+''session'' and ``option'' mechanisms.
+The @file{sample2.ini} file is the same as the example shown previously.
+The @file{sample3.ini} file is the same as @file{sample1.ini}, but it
+has an @code{[Accelerators]} section containing all of the standard key
+bindings, plus a number of other helpful suggested bindings.
+You can copy any of these files to @file{sd.ini} and edit it if you wish.
 
 @node Invoking Sd, Terminal Interface, The Initialization File, Top
 @chapter Invoking Sd via Command Line (DOS or UNIX only)
@@ -4340,8 +4293,6 @@ These are done from a variety of setups, in which the designated people
 form a recognizable ``double bent'' setup.
 @item bent C/L/W/B @r{(plural)}
 These are done from suitable setups.
-@item <ANYONE> in your trapezoid
-This is typically used in unsymmetrical setups.
 @item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
 @item <ANYONE> in your diagonal box
 @item <ANYONE> in your offset C/L/W @r{(singular)}
@@ -4564,11 +4515,6 @@ wheel around}, it will have @emph{everyone} wheel around, resulting in 2-faced l
 To get the effect that
 is usually indicated by the words ``promenade, do not stop @dots{}, heads wheel around'',
 you must enter enter @code{heads lead for a heads wheel around}.
-@item <ANYONE> move in and
-This is used when the dancers are on squared-set spots, as would be the case after
-things like @samp{all 4 ladies chain} or @samp{all 4 couples star thru}.  The designated
-people move in to the center and do (or start) the next call as though they are starting
-a sequence.
 @item ends concentric
 @item outer 2 concentric
 @item outer 6 concentric
@@ -4615,7 +4561,7 @@ Something like ``consider the following two calls to be one unit, and do a stabl
 swing thru and turn thru'' might be appropriate.
 @item precede it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item follow it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item add@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item add@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 The concepts @code{precede it by} and @code{follow it by} take two subject
 calls.  They perform the first call (first in textual order, that is)
 @i{before} or @i{after}, respectively, the second.
@@ -4718,11 +4664,6 @@ These are followed by the concept to which they apply.
 @item echo
 @item reverse echo
 These are straightforward.
-@item double/triple/quadruple echo
-The @code{double echo} meta-concept is followed by two concepts.  It applies both
-concepts first, then skips the first concept and applies the second only, and finally
-skips both concepts and just does the call.  @code{triple echo} and @code{quadruple echo} are
-similar.
 @item finish
 @item like a
 @item like an
@@ -4783,14 +4724,6 @@ parts.  For example, @samp{first 1/4 tandem spin the top},
 @samp{middle 1/3 tandem remake}, or @samp{last 1/4 stable swing thru}.
 Whether these are precisely the words you should use is up to you.
 The @kbd{halfway} concept is the same as @kbd{first 1/2}.
-
-@item half and half @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-This does the first half of the first call, followed by the second half of the second call.
-
-@item <N>/<N> and <N>/<N> @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-This does the first <first fraction> of the first call, followed by the
-last <second fraction> of the second call.  It is a generalization of
-half and half.
 
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -4879,10 +4812,6 @@ and/or @samp{magic}.
 @item grand single cross concentric
 @item concentric diamonds
 @item cross concentric diamonds
-@item 3x3 concentric
-@item 3x3 cross concentric
-@item 4x4 concentric
-@item 4x4 cross concentric
 See @ref{Concentric}.
 @item grand working forward/backward
 @item grand working right/left
@@ -5716,15 +5645,12 @@ more specific.  The program often checks that the more specific designator
 is being used properly, but it doesn't always check.  Use them with care.
 @sp 1
 @item center 1x6
-@item center column of 6
-@item center line of 6
-@item center wave of 6
-These are similar, but refer to a line or column of 6.  It is intended
+This is similar, but refers to a line or column of 6.  It is intended
 for use in things like 3x1 diamonds, when you want the center wave of 6
 to do, for example, a @code{grand swing thru}.  Another situation in which
 this is necessary arises after a @code{sets in motion but hold the column}.
 If you get a column of 6 and you want them to do something, you must identify
-them as the @code{center column of 6}.  The designation @code{center 6} is not
+them as the @code{center 1x6}.  The designation @code{center 6} is not
 correct for this---it would include the person not in the column, and
 exclude the ends of the column.
 @sp 1

@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2004  William B. Ackerman.
 //    Copyright (C) 1995  Robert E. Cays
 //    Copyright (C) 1996  Charles Petzold
 //
@@ -315,10 +315,13 @@ static void erase_questionable_stuff()
 
 void iofull::show_match()
 {
-   if (GLOB_match.indent) writestuff("   ");
-   writestuff(GLOB_user_input);
-   writestuff(GLOB_full_extension);
-   newline();
+   char szLocalString[MAX_TEXT_LINE_LENGTH];
+   szLocalString[0] = '\0';
+   if (GLOB_match.indent) lstrcat(szLocalString, "   ");
+   lstrcat(szLocalString, GLOB_user_input);
+   lstrcat(szLocalString, GLOB_full_extension);
+   szLocalString[85] = '\0';  // Just to be sure.
+   gg->add_new_line(szLocalString, 0);
 }
 
 
@@ -2155,13 +2158,13 @@ struct { int id; const char *message; } dialog_help_list[] = {
     "need to do anything here.  You can, in any case, use the \"change output file\"\n"
     "command to change the file name later."},
    {IDC_SEQ_NUM_OVERRIDE, 
-    "Sessions generally keep track of sequence (card) numbers, so you\n"
-    "usually don't need this.  If you specify a number here and then choose\n"
-    "a session, that session's numbering will be permanently changed."},
+    "Sessions generally keep track of sequence (card) numbers,\n"
+    "so you usually don't need this.  If you specify a number here\n"
+    "and then choose a session, that session's numbering will be premanently changed."},
    {IDC_SEQ_NUM_OVERRIDE_SPIN, 
-    "Sessions generally keep track of sequence (card) numbers, so you\n"
-    "usually don't need this.  If you specify a number here and then choose\n"
-    "a session, that session's numbering will be permanently changed."},
+    "Sessions generally keep track of sequence (card) numbers,\n"
+    "so you usually don't need this.  If you specify a number here\n"
+    "and then choose a session, that session's numbering will be premanently changed."},
    {IDC_DEFAULT,
     "Leave this checked, unless you want an alternative database, for experts only."},
    {IDC_USERDEFINED,
@@ -3042,7 +3045,7 @@ int iofull::do_tagger_popup(int tagger_class)
 }
 
 
-uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
+uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;
@@ -3059,22 +3062,21 @@ uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid
          user_match = saved_match;
       }
       else {
-         this_num = number_fields & NUMBER_FIELD_MASK;
-         number_fields >>= BITS_PER_NUMBER_FIELD;
+         this_num = number_fields & 0xF;
+         number_fields >>= 4;
          howmanynumbers--;
       }
 
-      if (odd_number_only && !(this_num & 1)) return ~0UL;
       if (forbid_zero && this_num == 0) return ~0UL;
-      if (this_num >= NUM_CARDINALS) return ~0UL;    // User gave bad answer.
-      number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
+      if (this_num > 15) return ~0UL;    /* User gave bad answer. */
+      number_list |= (this_num << (i*4));
    }
 
    return number_list;
 }
 
 
-void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
+void iofull::add_new_line(char the_line[], uint32 drawing_picture)
 {
    erase_questionable_stuff();
    lstrcpyn(CurDisplay->Line, the_line, DISPLAY_LINE_LENGTH-1);
@@ -3115,10 +3117,6 @@ void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
 }
 
 
-// We don't do anything here.
-void iofull::no_erase_before_n(int n)
-{}
-
 
 void iofull::reduce_line_count(int n)
 {
@@ -3138,11 +3136,8 @@ void iofull::update_resolve_menu(command_kind goal, int cur, int max,
 {
    create_resolve_menu_title(goal, cur, max, state, szResolveWndTitle);
    UpdateStatusBar(szResolveWndTitle);
-
    // Put it in the transcript area also, where it's easy to see.
-
-   writestuff(szResolveWndTitle);
-   newline();
+   gg->add_new_line(szResolveWndTitle, 0);
 }
 
 

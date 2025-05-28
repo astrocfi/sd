@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2004  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -19,6 +19,8 @@
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
 //    This is for version 36.
+
+//    sdui-win.c - SD -- Microsoft Windows User Interface
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
@@ -69,6 +71,9 @@ char *file_list[] = {
    "appnote3.html",
    "appnote4.html",
    "faq.html",
+   "sample1.ini",
+   "sample2.ini",
+   "sample3.ini",
    "COPYING.txt",
    (char *) 0};
 
@@ -96,8 +101,10 @@ char *shortcut_list[] = {
 
 void do_install(HWND hwnd)
 {
-   // This holds random file paths.
-   char szStringBuf[500];
+   char szStringBuf[1000];
+   char szSysDirBuf[1000];
+   char szSecondBuf[1000];
+   char szShortcutBuf[1000];
 
    // Copy the required files.
 
@@ -107,10 +114,10 @@ void do_install(HWND hwnd)
       lstrcat(szStringBuf, *file_ptr);
 
       if (!CopyFile(*file_ptr, szStringBuf, false)) {
-         lstrcpy(szStringBuf, "ERROR!!  Can't copy file  ");
+         lstrcpy(szStringBuf, "ERROR!!  Can't copy file   ");
          lstrcat(szStringBuf, *file_ptr);
          lstrcat(szStringBuf, "\nThe installation has failed.");
-         SetDlgItemText(hwnd, IDC_MAINCAPTION, szStringBuf);
+         SetDlgItemText(hwnd, IDC_MAINCAPTION, szStringBuf );
          ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
          SetDlgItemText(hwnd, IDOK, "Exit");
          state = FAILED;
@@ -118,20 +125,10 @@ void do_install(HWND hwnd)
       }
    }
 
-   // This holds the Windows directory, e.g. "C:\WINNT"
-   char szSysDirBuf[501];
-
-   // This has to hold the full path of the start menu group.
-   char szStartMenuBuf[1000];
-
-   // This one has to be able to hold the full pathname of the Explorer
-   // and its argument, which is the full path of the start menu group.
-   char szSecondBuf[1500];
-
-   unsigned int yyy = GetWindowsDirectory(szSysDirBuf, 500);
-   if (yyy > 500 || yyy == 0) {
+   UINT yyy = GetWindowsDirectory(szSysDirBuf, 999);
+   if (yyy > 999 || yyy == 0) {
       SetDlgItemText(hwnd, IDC_MAINCAPTION,
-                     "ERROR!!  Can't determine system directory.\n"
+                     "ERROR!!  Can't determine system directory.\n" \
                      "The installation has failed.");
       ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
       SetDlgItemText(hwnd, IDOK, "Exit");
@@ -139,82 +136,50 @@ void do_install(HWND hwnd)
       return;
    }
 
-   // Create Sd directory in the "programs" subdirectory of the start menu.
-   // First, find the user's Start Menu and Programs subdirectory.  Use
-   // the registry.  We used to do this directly from the "USERPROFILE"
-   // environment variable, appending "Start Menu\Programs" to it.  That
-   // doesn't always work on Windows XP Home.
+   // Create Sd folder in start menu.
 
-   HKEY hKey;
-
-   int xxx = RegOpenKeyEx(HKEY_CURRENT_USER,
-                          "Software\\Microsoft\\Windows\\CurrentVersion"
-                          "\\Explorer\\User Shell Folders",
-                          0, KEY_QUERY_VALUE, &hKey);
-
-   if (xxx == ERROR_SUCCESS) {
-      unsigned long int buffersize = 999;
-      xxx = RegQueryValueEx(hKey, "Programs", 0, 0,
-                             (unsigned char *) szSecondBuf, &buffersize);
-      RegCloseKey( hKey );
+   DWORD zzz = GetEnvironmentVariable("USERPROFILE", szShortcutBuf, 999);
+   if (zzz == 0) {
+      // This isn't workstation NT.  Use the system directory.
+      lstrcpy(szShortcutBuf, szSysDirBuf);
+   }
+   else if (zzz > 999) {
+      SetDlgItemText(hwnd, IDC_MAINCAPTION,
+                     "ERROR!!  Environment string too large.\n" \
+                     "The installation has failed.");
+      ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
+      SetDlgItemText(hwnd, IDOK, "Exit");
+      state = FAILED;
+      return;
    }
 
-   yyy = 0;
+   lstrcat(szShortcutBuf, "\\Start Menu\\Programs\\Sd");
 
-   if (xxx == ERROR_SUCCESS)
-      yyy = ExpandEnvironmentStrings(szSecondBuf, szStartMenuBuf, 900);
-
-   if (yyy == 0) {
-      // Somehow, it didn't work.  So we fall back on to the old method.
-      int zzz = GetEnvironmentVariable("USERPROFILE", szStartMenuBuf, 500);
-      if (zzz == 0) {
-         // This isn't workstation NT.  Use the system directory.
-         lstrcpy(szStartMenuBuf, szSysDirBuf);
-      }
-      else if (zzz > 500) {
+   // See if the start folder exists.
+   DWORD sd_att = GetFileAttributes(szShortcutBuf);
+   if (sd_att == ~0UL || !(sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
+      // It doesn't exist -- create it.
+      if (!CreateDirectory(szShortcutBuf, 0)) {
          SetDlgItemText(hwnd, IDC_MAINCAPTION,
-                        "ERROR!!  Environment string too large.\n" \
+                        "ERROR!!  Can't create Start Menu folder.\n" \
                         "The installation has failed.");
          ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
          SetDlgItemText(hwnd, IDOK, "Exit");
          state = FAILED;
          return;
       }
-
-      lstrcat(szStartMenuBuf, "\\Start Menu\\Programs");
    }
-
-   // We now have the Programs subdirectory.
-   lstrcat(szStartMenuBuf, "\\Sd");
-
-   // See if the start folder exists.
-   DWORD sd_att = GetFileAttributes(szStartMenuBuf);
-   if (sd_att == ~0UL || !(sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
-      // It doesn't exist -- create it.
-      if (!CreateDirectory(szStartMenuBuf, 0)) {
-         lstrcpy(szSecondBuf, "ERROR!!  Can't create Start Menu folder\n\n");
-         lstrcat(szSecondBuf, szStartMenuBuf);
-         lstrcat(szSecondBuf, "\n\nThe installation has failed.");
-         SetDlgItemText(hwnd, IDC_MAINCAPTION, szSecondBuf);
-         ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
-         SetDlgItemText(hwnd, IDOK, "Exit");
-         state = FAILED;
-         return;
-      }
-   }
-
-   // Copy the icons to the start menu.
 
    for (file_ptr = shortcut_list ; *file_ptr ; file_ptr++) {
-      lstrcpy(szSecondBuf, szStartMenuBuf);
+      lstrcpy(szSecondBuf, szShortcutBuf);
       lstrcat(szSecondBuf, "\\");
       lstrcat(szSecondBuf, *file_ptr);
 
       if (!CopyFile(*file_ptr, szSecondBuf, false)) {
-         lstrcpy(szStringBuf, "ERROR!!  Can't copy file  ");
+         lstrcpy(szStringBuf, "ERROR!!  Can't copy file   ");
          lstrcat(szStringBuf, *file_ptr);
          lstrcat(szStringBuf, "\nThe installation has failed.");
-         SetDlgItemText(hwnd, IDC_MAINCAPTION, szStringBuf);
+         SetDlgItemText(hwnd, IDC_MAINCAPTION, szStringBuf );
          ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
          SetDlgItemText(hwnd, IDOK, "Exit");
          state = FAILED;
@@ -227,14 +192,14 @@ void do_install(HWND hwnd)
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
 
-   memset(&si, 0, sizeof(STARTUPINFO));
-   memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+   (void) memset(&si, 0, sizeof(STARTUPINFO));
+   (void) memset(&pi, 0, sizeof(PROCESS_INFORMATION));
    GetStartupInfo(&si);
 
    lstrcpy(szSecondBuf, szSysDirBuf);
    lstrcat(szSecondBuf, "\\explorer.exe ");
-   lstrcat(szSecondBuf, szStartMenuBuf);
-   CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
+   lstrcat(szSecondBuf, szShortcutBuf);
+   (void) CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
    // Now pi has pi.hProcess, pi.hThread, dwProcessId, dwThreadId
 
    SetDlgItemText(hwnd, IDC_MAINCAPTION, "Installation complete.");
@@ -258,7 +223,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             break;
          case CREATING_DIR:
             if (!CreateDirectory("C:\\Sd", 0)) {
-               SetDlgItemText(hwnd, IDC_MAINCAPTION, "ERROR!!  Can't create C:\\Sd.\n"
+               SetDlgItemText(hwnd, IDC_MAINCAPTION, "ERROR!!  Can't create C:\\Sd.\n" \
                               "The installation has failed.");
                ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
                SetDlgItemText(hwnd, IDOK, "Exit");
@@ -280,14 +245,14 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       else if (wParam == IDC_BUTTON1) {
          if (state == SAVE_QUERYING) {
             char szCurDir[1000];
-            GetCurrentDirectory(999, szCurDir);
+            (void) GetCurrentDirectory(999, szCurDir);
 
             // Put up the dialog box to get the save directory.
 
             char szSaveDir[1000];
             OPENFILENAME ofn;
             szSaveDir[0] = 0;
-            memset(&ofn, 0, sizeof(OPENFILENAME));
+            (void) memset(&ofn, 0, sizeof(OPENFILENAME));
             ofn.lStructSize = sizeof(OPENFILENAME);
             ofn.lpstrInitialDir = "C:";
             ofn.hwndOwner = hwnd;
@@ -300,7 +265,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             ofn.lpstrDefExt = "";
 
             if (!GetSaveFileName(&ofn)) {
-               SetDlgItemText(hwnd, IDC_MAINCAPTION, "ERROR!!  Can't get save location.\n"
+               SetDlgItemText(hwnd, IDC_MAINCAPTION, "ERROR!!  Can't get save location.\n" \
                               "The installation has failed.");
                ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
                SetDlgItemText(hwnd, IDOK, "Exit");
@@ -309,11 +274,11 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
 
             // GetSaveFileName set the working directory.  We don't want that.  Set it back.
-            SetCurrentDirectory(szCurDir);
+            (void) SetCurrentDirectory(szCurDir);
 
             if (!CreateDirectory(szSaveDir, 0)) {
                SetDlgItemText(hwnd, IDC_MAINCAPTION,
-                              "ERROR!!  Can't create save folder.\n"
+                              "ERROR!!  Can't create save folder.\n" \
                               "The installation has failed.");
                ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
                SetDlgItemText(hwnd, IDOK, "Exit");
@@ -331,7 +296,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                lstrcpy(szToName, szSaveDir);
                lstrcat(szToName, "\\");
                lstrcat(szToName, *file_ptr);
-               CopyFile(szFromName, szToName, false);
+               (void) CopyFile(szFromName, szToName, false);
             }
 
             do_install(hwnd);
@@ -401,8 +366,12 @@ int WINAPI WinMain(
 
             HANDLE hFile = CreateFile(
                "C:\\Sd\\sd_calls.dat",
-               GENERIC_READ, FILE_SHARE_READ, 0,
-               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+               GENERIC_READ,
+               FILE_SHARE_READ,
+               0,
+               OPEN_EXISTING,
+               FILE_ATTRIBUTE_NORMAL,
+               0);
 
             if (hFile != INVALID_HANDLE_VALUE &&
                 ReadFile(hFile, Buffer, 100, &dwNumRead, 0)) {
@@ -414,11 +383,10 @@ int WINAPI WinMain(
                lstrcat(szFilenameBuf, ".\n\n");
             }
 
-            CloseHandle(hFile);
+            (void) CloseHandle(hFile);
 
-            lstrcat(szFilenameBuf,
-                    "Press \"Save old version\" to save the existing "
-                    "software before loading the new.\n\n");
+            lstrcat(szFilenameBuf, "Press \"Save old version\" to save the existing software ");
+            lstrcat(szFilenameBuf, "before loading the new.\n\n");
             lstrcat(szFilenameBuf, "Press \"Overwrite\" to overwrite the existing software.");
 
             SetDlgItemText(hwnd, IDC_MAINCAPTION, szFilenameBuf);
@@ -431,14 +399,14 @@ int WINAPI WinMain(
       }
 
       SetDlgItemText(hwnd, IDC_MAINCAPTION,
-                     "The directory C:\\Sd exists, but has no Sd program.\n\n"
+                     "The directory C:\\Sd exists, but has no Sd program.\n\n" \
                      "Press OK to install Sd and Sdtty there.");
       state = JUST_WRITING;
    getout: ;
    }
    else {
       SetDlgItemText(hwnd, IDC_MAINCAPTION,
-                     "The directory C:\\Sd does not exist.\n\n"
+                     "The directory C:\\Sd does not exist.\n\n" \
                      "Press OK to create the directory and install Sd and Sdtty there.");
       state = CREATING_DIR;
    }
