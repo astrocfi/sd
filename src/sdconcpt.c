@@ -25,6 +25,7 @@ and the following external variables:
    global_tbonetest
    global_livemask
    global_selectmask
+   global_tboneselect
    concept_table
 */
 
@@ -33,7 +34,7 @@ and the following external variables:
 int global_tbonetest;
 int global_livemask;
 int global_selectmask;
-
+int global_tboneselect;
 
 
 
@@ -334,9 +335,9 @@ Private void do_concept_single_diagonal(
    setup a1;
    setup res1;
 
-   tbonetest = global_tbonetest;
+   tbonetest = global_tboneselect;
 
-   if (!tbonetest) {
+   if (!global_tbonetest) {
       result->kind = nothing;
       return;
    }
@@ -3151,6 +3152,7 @@ extern long_boolean do_big_concept(
       global_tbonetest = 0;
       global_livemask = 0;
       global_selectmask = 0;
+      global_tboneselect = 0;
       doing_select = concept_table[parseptr->concept->kind].concept_prop & CONCPROP__USE_SELECTOR;
 
       if (doing_select) {
@@ -3162,7 +3164,9 @@ extern long_boolean do_big_concept(
          global_tbonetest |= p;
          if (p) {
             global_livemask |= j;
-            if (doing_select && selectp(ss, i)) global_selectmask |= j;
+            if (doing_select && selectp(ss, i)) {
+               global_selectmask |= j; global_tboneselect |= p;
+            }
          }
       }
 

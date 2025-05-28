@@ -2,26 +2,41 @@
 # Time-stamp: <93/07/02 16:47:00 wba>
 
 srcdir = @srcdir@
-VPATH = @srcdir@
+TEXDIR = /TeX/bin
 
+# This gives the compiler name and any switches that it needs to make it operate
+# the way we want (ANSI language, standards conformance, target hardware, etc.)
 CC = @CC@
-DEFS = @DEFS@
-CFLAGS = $(DEFS) $(CDEBUGFLAGS)
 
-# CDEBUGFLAGS is used by both cc and ld.
-# The compiler options shown here have been chosen to optimize the program for
+# This gives any "-D" switches that we always need to send to the compiler.
+FLAGS = @DEFS@
+
+# This gives the optimization and/or debug info.  These flags presumably
+# don't affect the semantics of the language and run-time environment, so you
+# might reasonably want to change them to suit your taste.
+# The options shown here have been chosen to optimize the program for
 # production use.  Depending on your operating system, compiler, and debugger,
 # this may compromise the ability to debug the program.  In this case, you may
 # need to choose different options, typically "-g", for debugging.  Consult your
 # system, compiler, and debugger vendor for further information.
 CDEBUGFLAGS = @CDEBUGFLAGS@
 
-X11_INCLUDES = @X11_INCLUDES@
+CFLAGS = $(FLAGS) $(CDEBUGFLAGS)
 
-TTY_DEFS = @TTY_DEFS@
+# These are the "-I"  and "-D" flags that we must use for the compilation
+# of the X11 user interface (sdui-x11.c).
+X11_FLAGS = @X11_FLAGS@
 
+# These are the "-I"  and "-D" flags that we must use for the compilation
+# of the system-dependent part of the TTY user interface (sdui-ttu.c).
+TTY_FLAGS = @TTY_FLAGS@
+
+# These are the library flags that we must use for the final bind of
+# the X11 version of "sd".
 X11_LIBS = @X11_LIBS@
 
+# These are the library flags that we must use for the final bind of
+# "sdtty".
 TTY_LIBS = @TTY_LIBS@
 
 SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
@@ -37,13 +52,18 @@ SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
 
-SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
+TTY_DIST_SRCS = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
 SDTTY_OBJ = @SDTTY_OBJ@
 
 SDTTY_OBJS = @SDTTY_OBJS@
 
 MKCALLS_SRCS = mkcalls.c dbcomp.c
 MKCALLS_OBJS = mkcalls.o dbcomp.o
+
+.SUFFIXES: .o .c .dvi .info .txinfo
+
+.c.o:
+	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
 
 all: @DEFAULT_TARGET@
 allx11: sd sd_calls.dat
@@ -53,17 +73,15 @@ everything: allx11 sdtty
 sd: $(SD_OBJS) $(SDX11_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(X11_LIBS)
 
-# The aout2exe program is for djgpp on DOS
-
 sdtty: $(SD_OBJS) $(SDTTY_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
-	@STRIP@
-	@AOUT2EXE@
+@STRIP@
+@AOUT2EXE@
 
 mkcalls: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
-	@STRIP@
-	@AOUT2EXE@
+@STRIP@
+@AOUT2EXE@
 
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls
@@ -73,13 +91,10 @@ sd_calls.dat: sd_calls.txt mkcalls
 # sdui-x11.c may need -D_POSIX_SOURCE with gcc 1.40 on Ultrix 4.2
 
 sdui-x11.o: sdui-x11.c
-	$(CC) $(CFLAGS) $(X11_INCLUDES) -c $(srcdir)/$*.c
+	$(CC) $(CFLAGS) $(X11_FLAGS) -c $(srcdir)/$*.c
 
 sdui-ttu.o: sdui-ttu.c
-	$(CC) $(CFLAGS) $(TTY_DEFS) -c $(srcdir)/$*.c
-
-sdmatch.o: sdmatch.c
-	$(CC) $(CFLAGS) $(TTY_DEFS) -c $(srcdir)/$*.c
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
 
 dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
@@ -99,17 +114,19 @@ PS: sd_doc.PS
 
 sd_doc.info sd_doc.dvi: sd_doc.txinfo readme.txinfo install.txinfo
 
-.SUFFIXES: .dvi .info .txinfo
-
 RM = rm -f
 
-MAKEINFO = makeinfo --no-split
-TXI2DVI = tex
-DVISELECT = dviselect
-DVICONCAT = dviconcat
-DVIPS = dvips
+MAKEINFO = $(TEXDIR)/makeinfo --no-split
+MAKE_ASCII = $(TEXDIR)/makeinfo --no-split --no-headers
+TXI2DVI = $(TEXDIR)/tex
+DVISELECT = $(TEXDIR)/dviselect
+DVICONCAT = $(TEXDIR)/dviconcat
+DVIPS = $(TEXDIR)/dvips
+
+# We do it twice, so cross references will be reconciled.
 
 .txinfo.dvi:
+	$(TXI2DVI) $<
 	$(TXI2DVI) $<
 
 .txinfo.info:
@@ -125,11 +142,7 @@ sd_doc-sorted.dvi: sd_doc.dvi
 	$(RM) tempa.dvi tempb.dvi tempc.dvi
 
 sd_doc.PS: sd_doc-sorted.dvi
-	$(DVIPS) -U -o sd_doc.ps1 sd_doc-sorted.dvi
-	$(srcdir)/pspretty.sh sd_doc.ps1 > sd_doc.PS
-	$(RM) sd_doc.ps1
-
-MAKE_ASCII = $(MAKEINFO) --no-headers
+	$(DVIPS) -U -o sd_doc.PS sd_doc-sorted.dvi
 
 INSTALL: install.txinfo
 	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txinfo
@@ -138,7 +151,7 @@ README: readme.txinfo
 	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/readme.txinfo
 
 clean::
-	$(RM) *~ core *.o sd sdtty mkcalls sd_calls.dat sd.tar sd.tar.Z
+	$(RM) $(MKCALLS_OBJS) $(SDX11_OBJ) $(SD_OBJS) $(SDTTY_OBJ) sd sdtty mkcalls sd_calls.dat sd.tar sd.tar.Z
 
 LINT = /usr/lang/alint
 
@@ -150,7 +163,7 @@ DISTTXT = README INSTALL Relnotes oldnotes COPYING \
             db_doc.txt sd_doc.txinfo readme.txinfo install.txinfo
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h \
             sdmatch.c sdmatch.h
-DISTFILES = $(DISTTXT) $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) \
+DISTFILES = $(DISTTXT) $(SD_SRCS) $(SDX11_SRC) $(TTY_DIST_SRCS) \
             $(MKCALLS_SRCS) $(DISTSRCS)
 
 TAR = tar cvf sd.tar

@@ -1,0 +1,245 @@
+AC_INIT(sdmain.c)
+dnl
+TIME_STAMP="configure.in Time-stamp: <93/08/03 18:05:56 gildea>"
+#
+# options:
+#    --with-warnings: of interest to developers only
+#		(not implemented for all compilers)
+#    --with-pc: generate makefile for use on IBM-PC running DOS
+#		with dmake and djgpp C compiler
+#
+
+[#] See if this is a build with djgpp for a PC.
+
+AC_WITH(pc,[
+echo "making makefile for djgpp on a PC"
+[#] ****** Beginning of PC section ******
+SDTTY_OBJ="sdui-tty.o sdmatch.o sdui-tpc.o"
+[#] DOS can't handle long command lines
+SDTTY_OBJS="@pcfiles.lnk"
+CC=gcc
+CDEBUGFLAGS=-O
+DEFS=
+TTY_FLAGS=
+TTY_LIBS=-lpc
+X11_LIBS=
+[#] In case you're wondering, those are tabs in the next two definitions.
+STRIP="	strip \$@"
+AOUT2EXE="	aout2exe \$@"
+AC_SUBST(STRIP)
+AC_SUBST(AOUT2EXE)
+dnl This rule is for dmake on DOS, in case not installed for djgpp
+DMAKE_IMPLICIT="\%.o: \%.c; $(CC) $(CFLAGS) -c \$*.c"
+[#] ****** End of PC section ******
+],
+[
+[#] ****** Beginning of Unix section ******
+echo "making makefile for unix"
+echo "checking for compiler type"
+
+AC_GCC_TRADITIONAL
+
+[#] If we didn't get gcc, look for other compilers.  Set CDEBUGFLAGS appropriately.
+[#] In any case, deal with the "with-warnings" switch.
+
+if test -n "$GCC"; then
+  echo "using gcc"
+  CDEBUGFLAGS=-O
+  [#] Deal with the "with-warnings" switch.
+  AC_WITH(warnings, CC="$CC -Wall -Wno-switch -Wno-implicit -Wno-parentheses -Wshadow -Wpointer-arith")
+else
+  echo "not using gcc, looking for other compilers"
+  CDEBUGFLAGS=-O
+  CC_save="$CC"
+  CC="$CC -Aa -z +DA1.1 -D_AES_SOURCE"
+  DEFS="+O3 +Obb750"
+  AC_COMPILE_CHECK([HP compiler],[#include <stdio.h>],
+				 [printf("hello world\n");] ,
+    [AC_WITH(warnings, CC="$CC +w1")
+     CDEBUGFLAGS="$DEFS"
+     DEFS=],
+    CC="$CC_save"
+    DEFS=)
+fi
+
+[#] Now CC should contain compiler invocation string, with switches.
+[#] CDEBUGFLAGS should contain optimization/debug switches.
+
+echo "got compiler type"
+
+echo "checking whether -I. is needed"
+AC_TEST_CPP([#include "sd.h"], , DEFS="$DEFS -I$srcdir")
+
+dnl
+dnl usage: AC_FIND_INCLUDE(include-file,shell-define,directory ...)
+dnl
+define(AC_FIND_INCLUDE,
+echo "searching for include directory to use in [$2]"
+if test -z "$found_[$2]"; then
+  [echo "looking for [$1]..."
+  [#] first try without any -I flag
+  AC_TEST_CPP([#include $1], found_[$2]=1, found_[$2]="")
+  [$2]=""
+fi
+CPP_fi_save="$CPP"
+for dir in [$3]
+do
+  if test -n "$found_[$2]"; then
+    break
+  else
+    echo "looking for [$1] in $dir"
+    [$2]="-I$dir"
+    CPP="$CPP_fi_save $[$2]"
+    AC_TEST_CPP([#include $1], found_[$2]=1, [$2]="")
+  fi
+done
+if test -z "$found_[$2]"; then
+  echo "note: cannot find [$1] header file"
+fi
+CPP="$CPP_fi_save"
+])dnl end AC_FIND_INCLUDE
+dnl
+
+[#] Begin X11 investigation.
+
+AC_FIND_INCLUDE(<X11/Xaw/Paned.h>,X11_FLAGS,
+	/usr/include/X11R5	dnl for HP-UX
+	/usr/local/include	dnl for SunOS
+	/usr/athena/include	dnl for Athena
+)
+
+[#] Clean this up for further tests.
+LIBS=""
+CFLAGS=""
+
+dnl for SVR4, check for existence of these libraries, add them to X11FLAGS if found
+AC_HAVE_LIBRARY(socket, LIBS="$LIBS -lsocket")
+AC_HAVE_LIBRARY(nsl, LIBS="$LIBS -lnsl")
+
+echo "checking for X11 libraries ..."
+LIBS="-lXaw -lXmu -lXt -lXext -lX11 $LIBS"
+AC_COMPILE_CHECK([libraries in normal location], , [XawListChange();],
+  x_libs=1)
+if test -z "$x_libs"; then
+  LIBS_save="$LIBS"
+  LIBS="-L/usr/lib/X11R5 $LIBS"
+  AC_COMPILE_CHECK([libraries in /usr/lib/X11R5], , [XawListChange();],
+    x_libs=1, LIBS="$LIBS_save")
+fi
+if test -z "$x_libs"; then
+  LIBS_save="$LIBS"
+  LIBS="-L/usr/athena/lib $LIBS"
+  AC_COMPILE_CHECK([libraries in /usr/athena/lib], , [XawListChange();],
+    x_libs=1, LIBS="$LIBS_save")
+fi
+dnl can add tests for additional library directories here
+if test -z "$x_libs"; then
+  echo "note: cannot link X11/Xaw programs"
+fi
+
+X11_LIBS="$LIBS"
+
+[#] End of X11 investigation, begin curses investigation.
+
+echo "checking for curses include files and libraries ..."
+
+[#] We do NOT simply search for the existence of directories /usr/5include
+[#] or /usr/5lib.  The standards (OSF and SysV) simply say that the curses
+[#] service is supposed to work.  Naturally.  With the obvious include files,
+[#] in the obvious places.  They don't say anything about requiring that the
+[#] files /usr/5include/curses.h or /usr/5lib/libcurses.a *NOT* exist.  If we
+[#] searched for the existence of those files, then a totally compliant system
+[#] in which /usr/5include/curses.h was a link to /etc/passwd would fail.
+[#] So we first test for conformance to the SysV or OSF standards.
+[#] Only if that fails do we assume we are on a non-standards-compliant
+[#] system (e.g. SunOS) and look for the other directories.  If that fails,
+[#] we shut off curses completely.
+[#]
+[#] It happens that SunOS appears superficially to comply with the curses
+[#] standard when the natural directories are used.  It has all the necessary
+[#] files.  The problem is that, when sdtty is compiled for SunOS, we get
+[#] these undefined globals:  __tty, __tty_ch, __echoit, and __rawmode.
+[#] We assume they are requested by some functions that sdtty uses, but we
+[#] don't know which ones.  So we apply a very rigorous and thorough test
+[#] of the curses service, in which we check that every function that sdtty
+[#] is known to use can be compiled and linked without error, including that
+[#] insidious and revolting macro "getyx".
+[#] That is why the test below is such a mess.
+
+CFLAGS=""
+LIBS="-lcurses"
+AC_COMPILE_CHECK([library in normal location], , [
+#include <curses.h>
+#include <unistd.h>
+int ly, lx;
+initscr();            noecho();   cbreak();         scrollok(stdscr, LINES);
+idlok(stdscr, TRUE);  endwin();   (void) getch();   clrtoeol();
+clrtobot();           refresh();  move(1, 2);       addstr((char *) 0);
+getstr((char *) 0);   addch(3);   beep();           getyx(stdscr, ly, lx);
+],
+    got_curses_libs=1)
+
+if test -z "$got_curses_libs"; then
+  CFLAGS="-I/usr/5include"
+  LIBS="-L/usr/5lib -lcurses"
+  AC_COMPILE_CHECK([library in /usr/5lib], , [
+#include <curses.h>
+#include <unistd.h>
+int ly, lx;
+initscr();            noecho();   cbreak();         scrollok(stdscr, LINES);
+idlok(stdscr, TRUE);  endwin();   (void) getch();   clrtoeol();
+clrtobot();           refresh();  move(1, 2);       addstr((char *) 0);
+getstr((char *) 0);   addch(3);   beep();           getyx(stdscr, ly, lx);
+],
+    got_curses_libs=1)
+fi
+
+if test -z "$got_curses_libs"; then
+  echo "note: cannot link curses programs, disabling curses service"
+  CFLAGS="-DNO_CURSES"
+  LIBS=""
+fi
+
+dnl can add tests for additional library directories here
+dnl OSF/1 might put it in /usr/ccs/lib
+
+TTY_FLAGS="$CFLAGS"
+TTY_LIBS="$LIBS"
+SDTTY_OBJ="sdui-tty.o sdmatch.o sdui-ttu.o"
+SDTTY_OBJS="$(SD_OBJS) $(SDTTY_OBJ)"
+DMAKE_IMPLICIT=
+
+[#] ****** End of Unix section ******
+])
+
+dnl since user chose configure over xmkmf, lean towards non-X
+if test -n "$x_libs" -a -n "$found_X11_FLAGS" -a -n "$DISPLAY"; then
+  DEFAULT_TARGET=allx11
+else
+  DEFAULT_TARGET=alltty
+fi
+
+echo "compilation settings are as follows:"
+echo "  compiler invocation (CC) =$CC"
+echo "  general compilation flags (FLAGS) =$DEFS"
+echo "  extra flags for optimization/debug (CDEBUGFLAGS) =$CDEBUGFLAGS"
+echo "  extra flags for compiling sdui-x11.c (X11_FLAGS) =$X11_FLAGS"
+echo "  extra flags for compiling sdui-ttu.c (TTY_FLAGS) =$TTY_FLAGS"
+echo "  flags for linking sd with X11 (X11_LIBS) =$X11_LIBS"
+echo "  flags for linking sdtty (TTY_LIBS) =$TTY_LIBS"
+
+AC_SUBST(CC)
+AC_SUBST(CDEBUGFLAGS)
+AC_SUBST(DEFS)
+AC_SUBST(X11_LIBS)
+AC_SUBST(X11_FLAGS)
+AC_SUBST(TTY_FLAGS)
+AC_SUBST(TTY_LIBS)
+
+AC_SUBST(SDTTY_OBJ)
+AC_SUBST(SDTTY_OBJS)
+AC_SUBST(TIME_STAMP)
+AC_SUBST(DEFAULT_TARGET)
+AC_SUBST(DMAKE_IMPLICIT)
+
+AC_OUTPUT(Makefile)

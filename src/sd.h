@@ -1124,6 +1124,7 @@ extern char *direction_names[];                                     /* in SDUTIL
 extern int global_tbonetest;                                        /* in SDCONCPT */
 extern int global_livemask;                                         /* in SDCONCPT */
 extern int global_selectmask;                                       /* in SDCONCPT */
+extern int global_tboneselect;                                      /* in SDCONCPT */
 extern concept_table_item concept_table[];                          /* in SDCONCPT */
 
 extern concept_descriptor special_magic;                            /* in SDCTABLE */

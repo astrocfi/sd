@@ -1,5 +1,5 @@
-		    RELEASE NOTES FOR SD VERSION 29.5
-       Database version = 29.5, format = 42, X11 UI version 1.15.
+		    RELEASE NOTES FOR SD VERSION 29.6
+       Database version = 29.6, format = 42, X11 UI version 1.15.
 
 
 The good news is that there are a lot of new features.  The bad news is
@@ -138,7 +138,8 @@ Perk up now works correctly (finally!) from inverted lines.
 New calls: [magic] in/out/zoom roll circulate from 2x3 setups.
 Grand follow your neighbor.  Barge the action.  The action and barge
 the action take all the usual star turn and finishing modifications.
-Scamper.  Lead the way.  Courtesy turn.  California twirl.
+Scamper.  Lead the way.  Courtesy turn.  California twirl.  Trim the web.
+Wrap to a whatever.
 
 The call "reset" no longer takes a numeric argument saying how many
 quarters to go.  Instead, use the "fractional" concept with it.

@@ -1723,6 +1723,11 @@ static int divide_the_setup(
             division_maps = &map_qtag_f2;
             goto divide_us_no_recompute;
          }
+
+/* ******** Regression test OK to here.  The next thing doesn't work, because the
+   "do your part" junk doesn't work right!  This has been a known problem for some
+   time, of course.  It's about time it got fixed.  It appears to have been broken as far back as 27.8. */
+
          else if ((livemask & 0x77) == 0) {    /* Check for stuff like "center two slide thru". */
             division_maps = &map_qtag_f0;
             goto divide_us_no_recompute;
