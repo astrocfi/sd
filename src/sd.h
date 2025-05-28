@@ -384,8 +384,8 @@ typedef struct {
 #define CMD_MISC__PUT_FRAC_ON_FIRST  0x00100000UL
 #define CMD_MISC__DO_AS_COUPLES      0x00200000UL
 #define CMD_MISC__RESTRAIN_CRAZINESS 0x00400000UL
-#define CMD_MISC__NO_CHECK_MOD_LEVEL 0x00800000UL
-/* available:                        0x01000000UL */
+/* available:                        0x00800000UL */
+#define CMD_MISC__NO_CHECK_MOD_LEVEL 0x01000000UL
 #define CMD_MISC__MUST_SPLIT         0x02000000UL
 /* available:                        0x04000000UL */
 #define CMD_MISC__NO_CHK_ELONG       0x08000000UL
@@ -547,16 +547,20 @@ typedef struct {
 */
 
 /* The two low bits are used for result elongation, so we start with 0x00000004. */
-#define RESULTFLAG__DID_LAST_PART       0x00000004UL
-#define RESULTFLAG__PARTS_ARE_KNOWN     0x00000008UL
-#define RESULTFLAG__EXPAND_TO_2X3       0x00000010UL
-#define RESULTFLAG__NEED_DIAMOND        0x00000020UL
-#define RESULTFLAG__IMPRECISE_ROT       0x00000040UL
-/* This is a two-bit field. */
-#define RESULTFLAG__SPLIT_AXIS_MASK     0x00000180UL
-#define RESULTFLAG__SPLIT_AXIS_BIT      0x00000080UL
-#define RESULTFLAG__ACTIVE_PHANTOMS_ON  0x00000200UL
-#define RESULTFLAG__ACTIVE_PHANTOMS_OFF 0x00000400UL
+#define RESULTFLAG__DID_LAST_PART        0x00000004UL
+#define RESULTFLAG__PARTS_ARE_KNOWN      0x00000008UL
+#define RESULTFLAG__EXPAND_TO_2X3        0x00000010UL
+#define RESULTFLAG__NEED_DIAMOND         0x00000020UL
+#define RESULTFLAG__IMPRECISE_ROT        0x00000040UL
+/* This is a six bit field. */
+#define RESULTFLAG__SPLIT_AXIS_FIELDMASK 0x00001F80UL
+#define RESULTFLAG__SPLIT_AXIS_MASK      0x00000180UL
+#define RESULTFLAG__SPLIT_AXIS_BIT       0x00000080UL
+#define RESULTFLAG__SPLIT_AXIS_SEPARATION  1
+
+#define RESULTFLAG__ACTIVE_PHANTOMS_ON   0x00002000UL
+#define RESULTFLAG__ACTIVE_PHANTOMS_OFF  0x00004000UL
+#define RESULTFLAG__SECONDARY_DONE       0x00008000UL
 
 
 
@@ -717,6 +721,7 @@ typedef enum {
    concept_gruesome_frac_tandem,
    concept_checkerboard,
    concept_sel_checkerboard,
+   concept_anchor,
    concept_reverse,
    concept_left,
    concept_grand,
@@ -943,7 +948,8 @@ typedef struct {
 
 /* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
    It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
-/* Note also that the "zig-zag" items will get disabled below A2. */
+/* Note also that the "zig-zag" items will get disabled below A2.
+   The key for this is "direction_zigzag". */
 typedef enum {
    direction_uninitialized,
    direction_no_direction,
@@ -951,6 +957,7 @@ typedef enum {
    direction_right,
    direction_in,
    direction_out,
+   direction_back,
    direction_zigzag,
    direction_zagzig,
    direction_zigzig,
@@ -1047,15 +1054,23 @@ typedef struct {
       A zero means there was no elongation. */
 
 
-#define CMD_FRAC_NULL_VALUE  0x00000111
-#define CMD_FRAC_HALF_VALUE  0x00000112
-#define CMD_FRAC_PART_BIT    0x00010000
-#define CMD_FRAC_PART_MASK   0x000F0000
-#define CMD_FRAC_REVERSE     0x00100000
-#define CMD_FRAC_CODE_BIT    0x00200000
-#define CMD_FRAC_CODE_MASK   0x00E00000
-#define CMD_FRAC_BREAKING_UP 0x01000000
-#define CMD_FRAC_FORCE_VIS   0x02000000
+#define CMD_FRAC_NULL_VALUE     0x00000111
+#define CMD_FRAC_HALF_VALUE     0x00000112
+#define CMD_FRAC_PART_BIT       0x00010000
+#define CMD_FRAC_PART_MASK      0x000F0000
+#define CMD_FRAC_REVERSE        0x00100000
+/* This is a 3 bit field.  For codes inside same, see "CMD_FRAC_CODE_ONLY" below. */
+#define CMD_FRAC_CODE_MASK      0x00E00000
+#define CMD_FRAC_BREAKING_UP    0x01000000
+#define CMD_FRAC_FORCE_VIS      0x02000000
+#define CMD_FRAC_IMPROPER_BIT   0x10000000
+
+#define CMD_FRAC_CODE_ONLY       0x00000000
+#define CMD_FRAC_CODE_ONLYREV    0x00200000
+#define CMD_FRAC_CODE_UPTO       0x00400000
+#define CMD_FRAC_CODE_UPTOREV    0x00600000
+#define CMD_FRAC_CODE_FINUPTOREV 0x00800000
+#define CMD_FRAC_CODE_BEYOND     0x00A00000
 
 
 typedef struct {
@@ -1065,6 +1080,7 @@ typedef struct {
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
    uint32 cmd_frac_flags;
+   parse_block *restrained_concept;
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
    parse_block *skippable_concept;
@@ -1428,6 +1444,7 @@ typedef enum {
    analyzer_6X2,
    analyzer_4X2,
    analyzer_6X2_TGL,
+   analyzer_O,
    analyzer_BAR,
    analyzer_BAR12,
    analyzer_BAR16,
@@ -1519,15 +1536,22 @@ typedef Const struct {
 #define CONCPROP__NEEDK_4X4_1X16   0x000000C0UL
 #define CONCPROP__NEEDK_TWINDMD    0x000000D0UL
 #define CONCPROP__NEEDK_TWINQTAG   0x000000E0UL
-
-#define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL
-#define CONCPROP__NEED_CTR_DMD     0x00000400UL
-#define CONCPROP__NEED_END_DMD     0x00000800UL
-#define CONCPROP__NEED_TRIPLE_1X4  0x00010000UL
-#define CONCPROP__NEED_CTR_1X4     0x00020000UL
-#define CONCPROP__NEED_END_1X4     0x00040000UL
-#define CONCPROP__NEED_CTR_2X2     0x00080000UL
-#define CONCPROP__NEED_END_2X2     0x00100000UL
+#define CONCPROP__NEEDK_CTR_DMD    0x000000F0UL
+#define CONCPROP__NEEDK_END_DMD    0x00000100UL
+#define CONCPROP__NEEDK_TRIPLE_1X4 0x00000110UL
+#define CONCPROP__NEEDK_CTR_1X4    0x00000120UL
+#define CONCPROP__NEEDK_END_1X4    0x00000130UL
+#define CONCPROP__NEEDK_CTR_2X2    0x00000140UL
+#define CONCPROP__NEEDK_END_2X2    0x00000150UL
+                                   
+#define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL                                   
+/* spare:                          0x00000400UL */
+/* spare:                          0x00000800UL */
+/* spare:                          0x00010000UL */
+/* spare:                          0x00020000UL */
+/* spare:                          0x00040000UL */
+/* spare:                          0x00080000UL */
+/* spare:                          0x00100000UL */
 #define CONCPROP__GET_MASK         0x00200000UL
 #define CONCPROP__STANDARD         0x00400000UL
 #define CONCPROP__USE_NUMBER       0x00800000UL
@@ -1552,6 +1576,7 @@ typedef enum {    /* These control error messages that arise when we divide a se
    phantest_only_first_one,   /* Require only first setup occupied, second empty */
    phantest_only_second_one,  /* Require only second setup occupied, first empty */
    phantest_first_or_both,    /* Require first setup only, or a mixture */
+   phantest_ctr_phantom_line, /* Special, created when outside phantom setup is empty. */
    phantest_2x2_both,
    phantest_2x2_only_two,
    phantest_not_just_centers
@@ -1912,6 +1937,7 @@ extern map_thing map_hv_qtg_2;                                      /* in SDTABL
 extern map_thing map_vv_qtg_2;                                      /* in SDTABLES */
 extern map_thing map_ov_hrg_1;                                      /* in SDTABLES */
 extern map_thing map_ov_gal_1;                                      /* in SDTABLES */
+extern map_thing map_3o_qtag_1;                                     /* in SDTABLES */
 extern map_thing map_tgl4_1;                                        /* in SDTABLES */
 extern map_thing map_tgl4_2;                                        /* in SDTABLES */
 extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
@@ -2212,6 +2238,7 @@ extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *r
 
 extern void do_call_in_series(
    setup *sss,
+   uint32 special_fraction,
    long_boolean roll_transparent,
    long_boolean normalize,
    long_boolean qtfudged);

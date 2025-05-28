@@ -1,7 +1,7 @@
 /*
    sdmatch.c - command matching support
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -60,6 +60,7 @@ typedef struct pat2_blockstruct {
    concept_descriptor *special_concept;
    match_result *folks_to_restore;
    struct pat2_blockstruct *next;
+   long_boolean demand_a_call;
 } pat2_block;
 
 static modifier_block *modifier_active_list = (modifier_block *) 0;
@@ -518,6 +519,8 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             pat2_concept = (concept_descriptor *) 0;
          }
          else if (pat2) {
+            /* We don't allow a closing bracket after a concept.  That is, stuff in brackets must be zero or more concepts PLUS A CALL. */
+            if (current_result->match.kind != ui_call_select && pat2->demand_a_call) return;
             if (pat2->folks_to_restore) {
                /* Be sure maximum yield depth gets propagated back. */
                pat2->folks_to_restore->yield_depth = current_result->yield_depth;
@@ -687,6 +690,7 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
 
    current_result->next = saved_result_p;
    p2b.folks_to_restore = (match_result *) 0;
+   p2b.demand_a_call = FALSE;
    p2b.next = pat2;
 
    /* We force any call invoked under a modifier to yield if it is ambiguous.  This way,
@@ -765,6 +769,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
    p2b.car = pat;
    p2b.special_concept = special;
    p2b.folks_to_restore = (match_result *) 0;
+   p2b.demand_a_call = FALSE;
    p2b.next = pat2;
 
    /* if we are just listing the matching commands, there
@@ -795,6 +800,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
                p3b.car = "]";
                p3b.special_concept = (concept_descriptor *) 0;
                p3b.folks_to_restore = current_result;
+               p3b.demand_a_call = TRUE;
                p3b.next = &p2b;
                scan_concepts_and_calls(user, "[", &p3b, &saved_result, patxi);
                return;
@@ -1087,6 +1093,7 @@ static void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
    p2b.car = pattern;
    p2b.special_concept = this_is_grand;
    p2b.folks_to_restore = (match_result *) 0;
+   p2b.demand_a_call = FALSE;
    p2b.next = (pat2_block *) 0;
 
    match_suffix_2(static_ss.full_input, "", &p2b, 0);
@@ -1281,6 +1288,7 @@ extern int match_user_input(
    static_ss.match_count = 0;
    static_ss.exact_count = 0;
    static_ss.yielding_matches = 0;
+   static_ss.lowest_yield_depth = 999;
    static_ss.exact_match = FALSE;
    static_ss.showing = show;
    static_ss.result.valid = FALSE;

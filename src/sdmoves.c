@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
+extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *result);
 
 
 static long_boolean debug_popup = FALSE;   /* Helps debug popups under Domain/OS. */
@@ -44,7 +45,10 @@ extern void canonicalize_rotation(setup *result)
    else if (result->kind == s_normal_concentric) {
       int i;
 
-      if (result->inner.skind == s_normal_concentric || result->outer.skind == s_normal_concentric)
+      if (     result->inner.skind == s_normal_concentric ||
+               result->outer.skind == s_normal_concentric ||
+               result->inner.skind == s_dead_concentric ||
+               result->outer.skind == s_dead_concentric)
          fail("Recursive concentric?????.");
 
       result->kind = result->inner.skind;
@@ -60,6 +64,20 @@ extern void canonicalize_rotation(setup *result)
       result->outer.srotation = result->rotation;
 
       result->kind = s_normal_concentric;
+      result->rotation = 0;
+   }
+   else if (result->kind == s_dead_concentric) {
+      int i;
+
+      if (result->inner.skind == s_normal_concentric || result->inner.skind == s_dead_concentric)
+         fail("Recursive concentric?????.");
+
+      result->kind = result->inner.skind;
+      result->rotation = result->inner.srotation;
+      canonicalize_rotation(result);    /* Sorry! */
+      result->inner.srotation = result->rotation;
+
+      result->kind = s_dead_concentric;
       result->rotation = 0;
    }
    else if (setup_attrs[result->kind].four_way_symmetry) {
@@ -149,6 +167,7 @@ extern void reinstate_rotation(setup *ss, setup *result)
    int globalrotation;
 
    switch (ss->kind) {
+      case s_dead_concentric:
       case s_normal_concentric:
          globalrotation = 0;
          break;
@@ -160,6 +179,9 @@ extern void reinstate_rotation(setup *ss, setup *result)
       case s_normal_concentric:
          result->inner.srotation += globalrotation;
          result->outer.srotation += globalrotation;
+         break;
+      case s_dead_concentric:
+         result->inner.srotation += globalrotation;
          break;
       case nothing:
          break;
@@ -291,6 +313,7 @@ extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *r
 
 extern void do_call_in_series(
    setup *sss,
+   uint32 special_fraction,
    long_boolean roll_transparent,
    long_boolean normalize,
    long_boolean qtfudged)
@@ -304,26 +327,28 @@ extern void do_call_in_series(
       by returning an unequivocal splitting axis, we continue to split along the same axis. */
 
    if ((sss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) && ((saved_result_flags + RESULTFLAG__SPLIT_AXIS_BIT) & (RESULTFLAG__SPLIT_AXIS_BIT << 1))) {
-      int foo;
+      int prefer_1x4;
 
       if (saved_result_flags & RESULTFLAG__SPLIT_AXIS_BIT)
-         foo = qqqq.rotation & 1;
+         prefer_1x4 = qqqq.rotation & 1;
       else
-         foo = (~qqqq.rotation) & 1;
+         prefer_1x4 = (~qqqq.rotation) & 1;
 
-      if (foo && qqqq.kind != s2x4)
+      if (prefer_1x4 && qqqq.kind != s2x4)
          fail("Can't figure out how to split multiple part call.");
 
       qqqq.cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;  /* Take it out. */
 
-      if (do_simple_split(&qqqq, foo, &tempsetup))
+      if (do_simple_split(&qqqq, prefer_1x4, &tempsetup))
          fail("Can't figure out how to split multiple part call.");
 
       qqqq.cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;  /* Put it back in. */
 
       /* This will force us to report the same axis for next time.  It throws away the split axis stuff that came
          out of divided_setup_move.  Maybe we should check same???? */
+/*    bullshit
       tempsetup.result_flags |= RESULTFLAG__SPLIT_AXIS_MASK;
+*/
    }
    else
       move(&qqqq, qtfudged, &tempsetup);
@@ -421,7 +446,7 @@ extern void do_call_in_series(
       after states, and set all other bits to the OR of the before and after states.
       But we clear the incoming RESULTFLAG__DID_LAST_PART bit, using only the bit from the call just executed. */
    sss->result_flags = ((
-                  (saved_result_flags & ~(RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN)) |
+                  (saved_result_flags & ~(RESULTFLAG__DID_LAST_PART|RESULTFLAG__SECONDARY_DONE|RESULTFLAG__PARTS_ARE_KNOWN)) |
                   tempsetup.result_flags) & ~(3|RESULTFLAG__SPLIT_AXIS_MASK)) |
          current_elongation |
          (saved_result_flags & tempsetup.result_flags & RESULTFLAG__SPLIT_AXIS_MASK);
@@ -891,6 +916,14 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s3x8].setup_coords;
       goto doit;
    }
+   else if ((ypar == 0x00840062) && ((signature & (~0x46203180)) == 0)) {
+      checkptr = setup_attrs[s4x5].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00620084) && ((signature & (~0x30888860)) == 0)) {
+      checkptr = setup_attrs[s4x5].setup_coords;
+      goto doitrot;
+   }
    else if ((ypar == 0x00A20062) && ((signature & (~0x109CC067)) == 0)) {
       checkptr = setup_attrs[s4x6].setup_coords;
       goto doit;
@@ -898,6 +931,10 @@ Private void finish_matrix_call(
    else if ((ypar == 0x006200A2) && ((signature & (~0x1918C4C6)) == 0)) {
       checkptr = setup_attrs[s4x6].setup_coords;
       goto doitrot;
+   }
+   else if ((ypar == 0x00C40062) && ((signature & (~0x6E001B80)) == 0)) {
+      checkptr = setup_attrs[s3oqtg].setup_coords;
+      goto doit;
    }
    else if ((ypar == 0x00620062) && ((signature & (~0x1018C046)) == 0)) {
       checkptr = setup_attrs[s4x4].setup_coords;
@@ -1006,6 +1043,8 @@ Private void matrixmove(
       fail("This call not allowed in distorted or virtual setup.");
    
    finish_matrix_call(matrix_info, nump, &people, result);
+   reinstate_rotation(ss, result);
+   result->result_flags = 0;
 }
 
 
@@ -1422,6 +1461,126 @@ Private void partner_matrixmove(
    }
 
    finish_matrix_call(matrix_info, nump, &people, result);
+   reinstate_rotation(ss, result);
+   result->result_flags = 0;
+}
+
+
+extern void anchor_someone_and_move(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   setup people;
+   matrix_rec before_matrix_info[9];
+   matrix_rec after_matrix_info[9];
+   int i, j, k, nump, numgroups;
+   int deltax[4], deltay[4];
+   selector_kind saved_selector = current_options.who;
+   setup saved_start_people = *ss;
+   int Bindex[4];
+   int Aindex[4];
+
+   current_options.who = parseptr->options.who;
+
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+      fail("Can't split the setup.");
+
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED)
+      fail("This call not allowed in distorted or virtual setup.");
+
+   for (i=0 ; i<4 ; i++) { Bindex[i] = -1; Aindex[i] = -1; }
+
+   ss->rotation = 0;
+
+   if (     ss->kind != s2x4 &&
+            ss->kind != s1x8 &&
+            ss->kind != s_qtag &&
+            ss->kind != s_ptpd)
+      fail("Sorry, can't do this in this setup.");
+   move(ss, FALSE, result);
+   numgroups = 2;
+   if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT*3) numgroups = 4;
+
+   nump = start_matrix_call(&saved_start_people, before_matrix_info, MTX_USE_SELECTOR, &people);
+   current_options.who = saved_selector;
+
+   for (i=0 ; i<nump ; i++) {
+      if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT) {
+         if (before_matrix_info[i].x < 0) j = 0;
+         else j = 1;
+      }
+      else if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT*2) {
+         if (before_matrix_info[i].y < 0) j = 0;
+         else j = 1;
+      }
+      else if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT*3) {
+         if (before_matrix_info[i].x < 0) j = 0;
+         else j = 2;
+         if (before_matrix_info[i].y < 0) j++;
+      }
+      else fail("Can't 'anchor' someone for an 8-person call.");
+
+      before_matrix_info[i].nearest = j;    /* The "nearest" field tells what anchored group the person is in. */
+
+      if (before_matrix_info[i].sel) {
+         if (Bindex[j] >= 0) fail("Need exactly one 'anchored' person in each group.");
+         Bindex[j] = i;
+      }
+   }
+
+   for (k=0 ; k<numgroups ; k++) {
+      if (Bindex[k] < 0) fail("Need exactly one 'anchored' person in each group.");
+   }
+
+   nump = start_matrix_call(result, after_matrix_info, 0, &people);
+
+   for (i=0 ; i<nump ; i++) {
+      if (result->rotation) {
+         int t = after_matrix_info[i].x;
+         after_matrix_info[i].x = after_matrix_info[i].y;
+         after_matrix_info[i].y = -t;
+      }
+
+      after_matrix_info[i].deltarot += result->rotation;
+
+      for (k=0 ; k<numgroups ; k++) {
+         if (((after_matrix_info[i].id1 ^ before_matrix_info[Bindex[k]].id1) & XPID_MASK) == 0) Aindex[k] = i;
+      }
+   }
+
+   for (k=0 ; k<numgroups ; k++) {
+      if (Aindex[k] < 0) fail("Sorry6.");
+   }
+
+   for (k=0 ; k<numgroups ; k++) {
+      deltax[k] = before_matrix_info[Bindex[k]].x - after_matrix_info[Aindex[k]].x;
+      deltay[k] = before_matrix_info[Bindex[k]].y - after_matrix_info[Aindex[k]].y;
+   }
+
+   for (i=0 ; i<nump ; i++) {
+      /* Find this person's group. */
+
+      for (k=0 ; k<nump ; k++) {
+         if (((after_matrix_info[i].id1 ^ before_matrix_info[k].id1) & XPID_MASK) == 0) {
+            j = before_matrix_info[k].nearest;
+            goto found_person;
+         }
+      }
+      fail("Can't find where this person went.");
+
+      found_person:
+
+      after_matrix_info[i].deltax = deltax[j];
+      after_matrix_info[i].deltay = deltay[j];
+      after_matrix_info[i].rollinfo = people.people[i].id1 & ROLL_MASK;
+      after_matrix_info[i].dir = 0;
+   }
+
+   clear_people(result);
+   finish_matrix_call(after_matrix_info, nump, &people, result);
+   reinstate_rotation(&saved_start_people, result);
+   result->result_flags = 0;
 }
 
 
@@ -1841,28 +2000,32 @@ Private void divide_diamonds(setup *ss, setup *result)
 
    Let T be the number of parts in the region.  In this example, T is 4.
 
-   The meanings of the key values are as follows:
-      (What you see in the digit is twice this,
-      because the reversal bit is at the bottom.)
+   The meanings of the key values are as follows.  These must only be used
+      when "N" (the selected part, the stuff in CMD_FRAC_PART_MASK) is nonzero!
 
+      CMD_FRAC_CODE_ONLY
       key = 0 (but N != 0) - do part N only.
 
-      key = 1 - obsolete -- use 4 instead.
+      CMD_FRAC_CODE_ONLYREV
+                  do part N from the end.  N=1 means last part.
 
-      key = 2 - do parts from the beginning of the region up through N, inclusive,
+      CMD_FRAC_CODE_UPTO
+                  do parts from the beginning of the region up through N, inclusive,
                   that is, 1, 2, 3, .... N.
 
-      key = 3 - [PLANNED, NOT IMPLEMENTED] - do parts from N down to 1, inclusive,
-                  that is, N, N-1, ..... 2, 1.
-
-      key = 4 - do parts from N+1 up to the end of the region,
-                  that is, N, N+1, ..... T-1, T.
-
-      key = 5 - do parts from the top of the region down to N+1,
+      CMD_FRAC_CODE_UPTOREV
+                  do parts from the top of the region down to N+1,
                   that is, T, T-1, ..... N+2, N+1.  This executes the region
                   in reverse order.  Of course, if the "reverse" bit is on,
                   the region represents the call in reverse order, so the parts
                   of the call will be executed in forward order.
+
+      key = 3 - [PLANNED, NOT IMPLEMENTED] - do parts from N down to 1, inclusive,
+                  that is, N, N-1, ..... 2, 1.
+
+      CMD_FRAC_CODE_BEYOND
+                  do parts from N+1 up to the end of the region,
+                  that is, N, N+1, ..... T-1, T.
 
 
    The output of this procedure, after digesting the above, is a "fraction_info"
@@ -1945,16 +2108,30 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
 
       if (retval.do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
 
-      switch ((frac_flags & CMD_FRAC_CODE_MASK) / CMD_FRAC_CODE_BIT) {
-         case 0:
+      switch (frac_flags & CMD_FRAC_CODE_MASK) {
+         case CMD_FRAC_CODE_ONLY:
             retval.instant_stop = 1;
                      subcall_index += retval.reverse_order ? (1-this_part) : (this_part-1);
                      /* Be sure that enough parts are visible. */
-                     if (subcall_index+1 > available_fractions)
+                     if (subcall_index >= available_fractions)
                         fail("This call can't be fractionalized.");
                      if (subcall_index >= total) fail("The indicated part number doesn't exist.");
             break;
-         case 2:
+         case CMD_FRAC_CODE_ONLYREV:
+            retval.instant_stop = 1;
+                     if (retval.reverse_order) {
+                        subcall_index = (highlimit-1+this_part);
+                     }
+                     else {
+                        subcall_index = (highlimit-this_part);
+                     }
+
+                     /* Be sure that enough parts are visible. */
+                     if (subcall_index >= available_fractions)
+                        fail("This call can't be fractionalized.");
+                     if (subcall_index >= total) fail("The indicated part number doesn't exist.");
+            break;
+         case CMD_FRAC_CODE_UPTO:
             /* We are not just doing part N, we are doing parts up through N. */
 
             if (retval.reverse_order) {
@@ -1971,7 +2148,7 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
             }
 
             break;
-         case 1: case 4:
+         case CMD_FRAC_CODE_BEYOND:
             /* We are not just doing part N, we are doing parts strictly after N. */
                      subcall_index += retval.reverse_order ? (-this_part) : (this_part);
                      /* Be sure that enough parts are visible. */
@@ -1979,20 +2156,27 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
                         fail("This call can't be fractionalized.");
                      if (subcall_index > total) fail("The indicated part number doesn't exist.");
             break;
-         case 5:
+         case CMD_FRAC_CODE_UPTOREV:
             if (retval.reverse_order) {
-               int t = subcall_index;
-               subcall_index = highlimit;
-               highlimit = t+1-this_part;
+               highlimit += this_part;
 /* ***** need error checks */
-               retval.reverse_order = 0;
             }
             else {
-               int t = subcall_index;
-               subcall_index = highlimit-1;
-               highlimit = t+this_part;
+               highlimit -= this_part;
 /* ***** need error checks */
-               retval.reverse_order = 1;
+            }
+
+            break;
+         case CMD_FRAC_CODE_FINUPTOREV:
+            if (retval.reverse_order) {
+               highlimit += this_part;
+               subcall_index--;
+/* ***** need error checks */
+            }
+            else {
+               highlimit -= this_part;
+               subcall_index++;
+/* ***** need error checks */
             }
 
             break;
@@ -2133,7 +2317,12 @@ Private void do_sequential_call(
    long_boolean setup_is_elongated = (ss->kind == s2x2 || ss->kind == s_short6) && ss->cmd.prior_elongation_bits != 0;
    int remembered_2x2_elongation = 0;
    int subpart_count = 0;
-   uint32 restrained_fraction = 0;
+
+   /* If a restrained concept is in place, it is waiting for the call to be pulled apart into its pieces.
+      That is about to happen.  Turn off the restraint flag.  That will be the signal to "move" that it
+      should act on the concept. */
+
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
 
    if (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) distribute = TRUE;
 
@@ -2166,18 +2355,10 @@ Private void do_sequential_call(
 
    highlimit = total;
 
-   /* If the "cmd_frac_flags" word is no null, we are being asked to do something special. */
+   /* If the "cmd_frac_flags" word is not null, we are being asked to do something special. */
 
    if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
       fraction_info zzz;
-
-      /* If we are doing something under a craziness restraint, take out the low 16 bits of the
-         fraction stuff -- they aren't meant for us -- and pass them to the subject call later. */
-
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) {
-         restrained_fraction = ss->cmd.cmd_frac_flags & 0xFFFF;
-         ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | CMD_FRAC_NULL_VALUE;
-      }
 
       zzz = get_fraction_info(ss->cmd.cmd_frac_flags, callflags1, total);
       reverse_order = zzz.reverse_order;
@@ -2191,8 +2372,6 @@ Private void do_sequential_call(
       if (zzz.instant_stop) instant_stop = start_point*subcall_incr+1;
       if (reverse_order && !zzz.instant_stop) first_call = FALSE;
    }
-
-   ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
 
    if (new_final_concepts.final & FINAL__SPLIT) {
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
@@ -2283,7 +2462,6 @@ Private void do_sequential_call(
          dist_index += subcall_incr;
          goto do_plain_call;
       }
-
 
       if (reverse_order) {
          if (fetch_index < 0) break;
@@ -2407,11 +2585,6 @@ do_plain_call:
       else
          result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
 
-      if (restrained_fraction) {
-         if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) fail("Random/piecewise is too complex.");
-         result->cmd.cmd_frac_flags = restrained_fraction;
-      }
-
       if (!first_call) {
          if (!setup_is_elongated)
             result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;  /* Stop checking unless we are really serious. */
@@ -2463,6 +2636,7 @@ do_plain_call:
 
       do_call_in_series(
          result,
+         0,
          DFM1_ROLL_TRANSPARENT & this_mod1,
          !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
             !(new_final_concepts.herit & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
@@ -2503,7 +2677,7 @@ done_with_big_cycle:
       /* If we are being asked to do just one part of a call (from cmd_frac_flags),
          exit now.  Also, see if we just did the last part. */
 
-      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE && instant_stop != 99) {
+      if (/*ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE && */instant_stop != 99) {
          /* Check whether we honored the last possible request.  That is,
             whether we did the last part of the call in forward order, or
             the first part in reverse order. */
@@ -2586,6 +2760,7 @@ Private void move_with_real_call(
    uint32 unaccepted_flags;
    calldef_schema the_schema;
    long_boolean mirror;
+   long_boolean did_4x4_expansion = FALSE;
    callspec_block *callspec = ss->cmd.callspec;
    uint32 callflags1 = callspec->callflags1;
 
@@ -2624,17 +2799,18 @@ that probably need to be put in. */
          This allows horrible "ends trade" on "invert acey deucey", for example,
          since "acey deucey" has that flag set for the trade that the centers do. */
 
-      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT) && the_schema == schema_concentric &&
-            (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
+      if (     (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT) &&
+               (the_schema == schema_concentric || the_schema == schema_conc_o) &&
+               (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
       /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the ends part of
          detour".  But if we say "ends central detour" we mean "ends do the *centers* part of detour". */
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DOING_ENDS;
-   
+
       /* Now we demand that, if a concept was given, the call had the appropriate flag set saying
          that the concept is legal and will be inherited to the children. */
-   
+
       if (ss->cmd.cmd_final_flags.herit & (~callspec->callflagsh)) fail("Can't do this call with this concept.");
 
       switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
@@ -2656,7 +2832,7 @@ that probably need to be put in. */
                else
                   defptr = &callspec->stuff.conc.innerdef;
 
-               if (the_schema != schema_concentric)
+               if (the_schema != schema_concentric && the_schema != schema_conc_o)
                   fail("Can't do \"central\" with this call.");
 
                if (ss->cmd.cmd_final_flags.final & ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
@@ -2698,6 +2874,7 @@ that probably need to be put in. */
       switch (the_schema) {
          case schema_sequential:
          case schema_concentric:
+         case schema_conc_o:
          case schema_single_concentric:
          case schema_single_concentric_together:
          case schema_cross_concentric:
@@ -2856,12 +3033,38 @@ that probably need to be put in. */
          fail("Can't do \"invert/central/snag/mystic\" with a call for the ends only.");
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      if ((the_schema == schema_concentric || the_schema == schema_rev_checkpoint) &&
+      if ((the_schema == schema_concentric || the_schema == schema_rev_checkpoint || the_schema == schema_conc_o) &&
             (DFM1_ENDSCANDO & callspec->stuff.conc.outerdef.modifiers1)) {
 
          /* Copy the concentricity flags from the call definition into the setup.  All the fuss
             in database.h about concentricity flags co-existing with setupflags refers to this moment. */
          ss->cmd.cmd_misc_flags |= (callspec->stuff.conc.outerdef.modifiers1 & DFM1_CONCENTRICITY_FLAG_MASK);
+
+         if (the_schema == schema_conc_o) {
+            did_4x4_expansion = TRUE;
+            if (ss->kind != s2x2)
+               fail("Can't find outside 'O' spots.");
+            if (ss->cmd.prior_elongation_bits == 1) {
+               setup temp = *ss;
+               ss->kind = s4x4;
+               clear_people(ss);
+               (void) copy_person(ss, 10, &temp, 0);
+               (void) copy_person(ss, 1, &temp, 1);
+               (void) copy_person(ss, 2, &temp, 2);
+               (void) copy_person(ss, 9, &temp, 3);
+            }
+            else if (ss->cmd.prior_elongation_bits == 2) {
+               setup temp = *ss;
+               ss->kind = s4x4;
+               clear_people(ss);
+               (void) copy_person(ss, 13, &temp, 0);
+               (void) copy_person(ss, 14, &temp, 1);
+               (void) copy_person(ss, 5, &temp, 2);
+               (void) copy_person(ss, 6, &temp, 3);
+            }
+            else
+               fail("Can't find outside 'O' spots.");
+         }
 
          callspec = base_calls[callspec->stuff.conc.outerdef.call_id];
          callflags1 = callspec->callflags1;
@@ -2870,6 +3073,30 @@ that probably need to be put in. */
    }
 
    ss->cmd.callspec = callspec;
+
+
+   /* ******** We did this before, but maybe that was too early!!!!  Need to do it again
+         after pulling out the "doing ends" stuff. */
+
+
+   /* Do some quick error checking for visible fractions.  For now, any flag is acceptable.  Later, we will
+      distinguish among the various flags. */
+
+   if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+      switch (the_schema) {
+         case schema_by_array:
+            /* We allow the fraction "1/2" to be given.  Basic_move will handle it. */
+            if (ss->cmd.cmd_frac_flags != CMD_FRAC_HALF_VALUE)
+               fail("This call can't be fractionalized this way.");
+            ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            ss->cmd.cmd_final_flags.herit |= INHERITFLAG_HALF;
+            break;
+      }
+   }
+
+   /* ******** */
+
+
 
    /* Enforce the restriction that only tagging calls are allowed in certain contexts. */
 
@@ -2962,7 +3189,7 @@ that probably need to be put in. */
             fail("\"Matrix\" concept must be followed by applicable concept.");
 
          move(ss, qtfudged, result);
-         result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+         result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
          return;
       }
       else
@@ -3022,14 +3249,10 @@ that probably need to be put in. */
 
          if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          matrixmove(ss, callspec, result);
-         reinstate_rotation(ss, result);
-         result->result_flags = 0;
          break;
       case schema_partner_matrix:
          if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          partner_matrixmove(ss, callspec, result);
-         reinstate_rotation(ss, result);
-         result->result_flags = 0;
          break;
       case schema_roll:
          if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
@@ -3132,7 +3355,7 @@ that probably need to be put in. */
                /* Fudge a 3x4 into a 1/4-tag if appropriate. */
    
                if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
-                     (the_schema == schema_concentric || the_schema == schema_cross_concentric)) {
+                     (the_schema == schema_concentric || the_schema == schema_cross_concentric || the_schema == schema_conc_o)) {
    
                   if (ss->people[0].id1) {
                      if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
@@ -3209,6 +3432,23 @@ that probably need to be put in. */
    /* Reflect back if necessary. */
    if (mirror) mirror_this(result);
    canonicalize_rotation(result);
+
+   if (did_4x4_expansion) {
+      setup outer_inners[2];
+      outer_inners[0] = *result;
+      outer_inners[1].kind = nothing;
+      normalize_concentric(schema_conc_o, 1, outer_inners, 0, result);
+      if (result->kind == s2x4) {
+         if (result->people[1].id1 | result->people[2].id1 | result->people[5].id1 | result->people[6].id1)
+            fail("Internal error: 'O' people wandered into middle.");
+         swap_people(result, 1, 3);
+         swap_people(result, 2, 4);
+         swap_people(result, 3, 7);
+         result->kind = s2x2;
+         result->result_flags = (result->result_flags & ~3) | (result->rotation+1);
+         canonicalize_rotation(result);
+      }
+   }
 }
 
 
@@ -3263,6 +3503,15 @@ extern void move(
 
    if (setup_attrs[ss->kind].four_way_symmetry && ss->rotation != 0)
       fail("There is a bug in 4 way canonicalization -- please report this sequence.");
+
+   /* See if there is a restrained concept that has been released. */
+
+   if (ss->cmd.restrained_concept && !(ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS)) {
+      parse_block *t = ss->cmd.restrained_concept;
+      ss->cmd.restrained_concept = (parse_block *) 0;
+      (concept_table[t->concept->kind].concept_action)(ss, t, result);
+      return;
+   }
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) {
       /* If we have a pending "centers/ends work <concept>" concept,
@@ -3326,7 +3575,8 @@ extern void move(
          them in this way, we make things like "checkpoint bounce the beaus by bounce the belles" work. */
 
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
-         if (parseptrcopy->call->schema != schema_concentric) {
+         if (      parseptrcopy->call->schema != schema_concentric &&
+                   parseptrcopy->call->schema != schema_conc_o) {
             punt_centers_use_concept(ss, result);
             return;
          }

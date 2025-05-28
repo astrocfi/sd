@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@
 
 
 typedef struct qwerty {
-   Const veryshort mapqt1[8];   /* In quarter-tag: first triangle (upright), then second triangle (inverted), then idle. */
-   Const veryshort mapcp1[8];   /* In C1 phantom: first triangle (inverted), then second triangle (upright), then idle. */
-   Const veryshort map241[3];   /* First triangle (inverted) in 2x4. */
-   Const veryshort map242[3];   /* Second triangle (upright) in 2x4. */
-   Const veryshort map24i[2];   /* Idle people in 2x4. */
    Const setup_kind kind;
    Const struct qwerty *other;
+   Const veryshort mapqt1[8];   /* In quarter-tag: first triangle (upright), then second triangle (inverted), then idle. */
+   Const veryshort mapcp1[8];   /* In C1 phantom: first triangle (inverted), then second triangle (upright), then idle. */
+   Const veryshort mapbd1[8];   /* In bigdmd. */
+   Const veryshort map241[8];   /* In 2x4. */
+   Const veryshort map261[8];   /* In 2x6. */
 } tgl_map;
 
 /* These need to be predeclared so that they can refer to each other. */
@@ -42,39 +42,58 @@ static Const tgl_map map1i;
 static Const tgl_map map2i;
 static Const tgl_map map1j;
 static Const tgl_map map2j;
+static Const tgl_map map1k;
+static Const tgl_map map2k;
 
-/*                                  mapqt1                          mapcp1                        map241     map242   map24i   kind     other */
-static Const tgl_map map1b = {{4, 3, 2,   0, 7, 6,   1, 5}, {6,  8, 10,   14,  0,  2,   4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
-static Const tgl_map map2b = {{5, 6, 7,   1, 2, 3,   0, 4}, {3, 15, 13,   11,  7,  5,   1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
-/* Interlocked triangles: */
-static Const tgl_map map1i = {{0, 0, 0,   0, 0, 0,   0, 0}, {4,  8, 10,   12,  0,  2,   6, 14}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map2i};
-static Const tgl_map map2i = {{0, 0, 0,   0, 0, 0,   0, 0}, {1, 15, 13,   9,   7,  5,   3, 11}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map1i};
-/* Interlocked triangles in quarter-tag: */
-static Const tgl_map map1j = {{4, 7, 2,   0, 3, 6,   1, 5}, {0,  0,  0,    0,  0,  0,   0, -1}, {0, 0, 0}, {0, 0, 0}, {0, 0}, s_qtag,   &map2j};
-static Const tgl_map map2j = {{5, 6, 3,   1, 2, 7,   0, 4}, {0,  0,  0,    0,  0,  0,   0, -1}, {0, 0, 0}, {0, 0, 0}, {0, 0}, s_qtag,   &map1j};
+/*                             kind     other
+               mapqt1                         mapcp1                         mapbd1                            map241                    map261 */
+
+static Const tgl_map map1b = {s_c1phan, &map2b,
+   {4, 3, 2,   0, 7, 6,   1, 5}, {6,  8, 10,   14,  0,  2,   4, 12}, {10, 9, 8,   4, 3, 2,   5, 11}, {6, 5, 4, 2, 1, 0, 3, 7},  {10, 9, 8, 4, 3, 2, 5, 11}};
+static Const tgl_map map2b = {s_qtag,   &map1b,                                                                                                         
+   {5, 6, 7,   1, 2, 3,   0, 4}, {3, 15, 13,   11,  7,  5,   1,  9}, {1, 2, 3,    7, 8, 9,   0, 6},  {7, 6, 5, 3, 2, 1, 0, 4},  {1, 2, 3, 7, 8, 9, 0, 6}};
+/* Interlocked triangles: */                                                                                                                            
+static Const tgl_map map1i = {nothing,  &map2i,                                                                                                         
+   {0, 0, 0,   0, 0, 0,   0, 0}, {4,  8, 10,   12,  0,  2,   6, 14}, {0, 0, 0,    0, 0, 0,   0, 0},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0}};
+static Const tgl_map map2i = {nothing,  &map1i,                                                                                                         
+   {0, 0, 0,   0, 0, 0,   0, 0}, {1, 15, 13,   9,   7,  5,   3, 11}, {0, 0, 0,    0, 0, 0,   0, 0},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0}};
+/* Interlocked triangles in quarter-tag: */                                                                                                             
+static Const tgl_map map1j = {s_qtag,   &map2j,                                                                                                         
+   {4, 7, 2,   0, 3, 6,   1, 5}, {0,  0,  0,    0,  0,  0,   0, -1}, {0, 0, 0,    0, 0, 0,   0, 0},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0}};
+static Const tgl_map map2j = {s_qtag,   &map1j,                                                                                                         
+   {5, 6, 3,   1, 2, 7,   0, 4}, {0,  0,  0,    0,  0,  0,   0, -1}, {0, 0, 0,    0, 0, 0,   0, 0},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0}};
+/* Interlocked triangles in bigdmd: */                                                                                                                  
+static Const tgl_map map1k = {nothing,  &map2k,                                                                                                         
+   {0, 0, 0,   0, 0, 0,   0, 0}, {0,  0,  0,    0,  0,  0,   0, -1}, {10, 3, 8,   4, 9, 2,   5, 11}, {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0}};
+static Const tgl_map map2k = {nothing,  &map1k,                                                                                                         
+   {0, 0, 0,   0, 0, 0,   0, 0}, {0,  0,  0,    0,  0,  0,   0, -1}, {1, 2, 9,    7, 8, 3,   0, 6},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0}};
 
 
 Private void do_glorious_triangles(
    setup *ss,
-   int startingrot,
    Const tgl_map *map_ptr,
    setup *result)
 {
-   int i, r;
+   int i, r, startingrot;
    setup a1, a2;
    setup idle;
    setup res[2];
    Const veryshort *mapnums;
 
-   if (startingrot == 2) {
+   if (ss->kind == s_c1phan) {
       mapnums = map_ptr->mapcp1;
-      r = 022;
+      startingrot = 2;
    }
-   else {
+   else if (ss->kind == sbigdmd) {
+      mapnums = map_ptr->mapbd1;
+      startingrot = 1;
+   }
+   else {   /* s_qtag */
       mapnums = map_ptr->mapqt1;
-      r = 0;
+      startingrot = 0;
    }
 
+   r = ((-startingrot) & 3) * 011;
    gather(&a1, ss, mapnums, 2, r);
    gather(&a2, ss, &mapnums[3], 2, r^022);
 
@@ -86,11 +105,10 @@ Private void do_glorious_triangles(
    a2.cmd = ss->cmd;
    a1.kind = s_trngl;
    a2.kind = s_trngl;
-   a1.rotation = startingrot;
-   a2.rotation = startingrot;
+   a1.rotation = 0;
+   a2.rotation = 0;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-
    move(&a1, FALSE, &res[0]);
    move(&a2, FALSE, &res[1]);
 
@@ -102,7 +120,24 @@ Private void do_glorious_triangles(
 
    result->result_flags = get_multiple_parallel_resultflags(res, 2);
 
-   res[0].rotation &= 3;     /* Just making sure. */
+   /* Check for non-shape-or-orientation-changing result. */
+
+   if (res[0].kind == s_trngl && res[0].rotation == 0) {
+      result->kind = ss->kind;
+      result->rotation = 0;
+      /* Restore the two people who don't move. */
+      (void) copy_person(result, mapnums[6], &idle, 0);   
+      (void) copy_person(result, mapnums[7], &idle, 1);
+      r = startingrot * 011;
+      scatter(result, &res[0], mapnums, 2, r);
+      scatter(result, &res[1], &mapnums[3], 2, r^022);
+      return;
+   }
+
+   res[0].rotation += startingrot;
+   res[1].rotation += startingrot;
+   canonicalize_rotation(&res[0]);
+   canonicalize_rotation(&res[1]);
 
    result->rotation = res[0].rotation;
 
@@ -114,6 +149,9 @@ Private void do_glorious_triangles(
       result->kind = map_ptr->kind;
 
    if (res[0].kind == s_trngl) {
+      /* We know that res[0].rotation != startingrot */
+      if (startingrot == 1) fail("Sorry, can't do this.");
+
       if (res[0].rotation == 0) {
          if (result->kind == nothing) fail("Can't do shape-changer in interlocked triangles.");
          result->kind = s_qtag;
@@ -167,28 +205,39 @@ Private void do_glorious_triangles(
       result->kind = s2x4;
 
       if (res[0].rotation == 0) {
-         (void) copy_person(result, map_ptr->map24i[0], &idle, 0);
-         (void) copy_person(result, map_ptr->map24i[1], &idle, 1);
-         scatter(result, &res[0], map_ptr->map241, 2, 0);
-         scatter(result, &res[1], map_ptr->map242, 2, 022);
+         if (startingrot == 1) {
+            mapnums = map_ptr->map261;
+            result->kind = s2x6;
+         }
+         else {
+            mapnums = map_ptr->map241;
+         }
+
+         (void) copy_person(result, mapnums[6], &idle, 0);
+         (void) copy_person(result, mapnums[7], &idle, 1);
+         scatter(result, &res[0], mapnums, 2, 0);
+         scatter(result, &res[1], &mapnums[3], 2, 022);
       }
       else {
+         if (startingrot == 1)
+            fail("Can't do this shape-changer.");
+
          map_ptr = map_ptr->other;
 
          if (map_ptr->kind == s_qtag) {    /* What a crock! */
-            (void) copy_rot(result, map_ptr->map24i[0], &idle, 0, r);
-            (void) copy_rot(result, map_ptr->map24i[1], &idle, 1, r);
+            (void) copy_rot(result, map_ptr->map241[6], &idle, 0, r);
+            (void) copy_rot(result, map_ptr->map241[7], &idle, 1, r);
 
             for (i=0; i<3; i++) {
-               (void) copy_person(result, map_ptr->map242[i], &res[0], 2-i);
+               (void) copy_person(result, map_ptr->map241[i+3], &res[0], 2-i);
                (void) copy_rot(result, map_ptr->map241[i], &res[1], 2-i, 022);
             }
          }
          else {
-            (void) copy_rot(result, map_ptr->map24i[1], &idle, 0, r);
-            (void) copy_rot(result, map_ptr->map24i[0], &idle, 1, r);
+            (void) copy_rot(result, map_ptr->map241[7], &idle, 0, r);
+            (void) copy_rot(result, map_ptr->map241[6], &idle, 1, r);
             scatter(result, &res[0], map_ptr->map241, 2, 0);
-            scatter(result, &res[1], map_ptr->map242, 2, 022);
+            scatter(result, &res[1], &map_ptr->map241[3], 2, 022);
          }
       }
    }
@@ -197,6 +246,8 @@ Private void do_glorious_triangles(
 
    if (result->kind == s2x4)
        warn(warn__check_2x4);
+   else if (result->kind == s2x6)
+       warn(warn__check_pgram);
    else if (res[0].rotation != startingrot) {
       if (result->kind == s_c1phan)
           warn(warn__check_c1_phan);
@@ -275,7 +326,7 @@ Private void wv_tand_base_move(
          else
             fail("Can't find the indicated triangles.");
 
-         do_glorious_triangles(s, 2, map_ptr, result);
+         do_glorious_triangles(s, map_ptr, result);
          result->rotation -= t;   /* Flip the setup back. */
          reinstate_rotation(s, result);
          return;
@@ -296,6 +347,7 @@ extern void triangle_move(
    Const tgl_map *map_ptr;
    calldef_schema schema;
    int indicator = parseptr->concept->value.arg1;
+   int indicator_base;
 
 /* indicator = 0 - tall 6
                1 - short 6
@@ -308,13 +360,15 @@ extern void triangle_move(
                20 - <anyone>-base
    Add 100 octal if interlocked triangles. */
 
-   if (indicator >= 4 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
+   if (indicator >= 2 && indicator <= 21 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
       indicator |= 0100;     /* Interlocked triangles. */
       ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_INTLK;
    }
 
    if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)   /* Now demand that no flags remain. */
       fail("Illegal modifier for this concept.");
+
+   indicator_base = indicator & 077;
 
    if ((indicator & 0100) && calling_level < intlk_triangle_level) {
       if (allowing_all_concepts)
@@ -347,16 +401,16 @@ extern void triangle_move(
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
       ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
 
-      if ((indicator & 077) >= 6) {
+      if (indicator_base >= 6) {
          /* Indicator = 6 for wave-base, 7 for tandem-base, 20 for <anyone>-base. */
          wv_tand_base_move(ss, indicator, result);
       }
-      else if (indicator >= 4) {
+      else if (indicator_base >= 4) {
          /* Indicator = 5 for in point, 4 for out point */
    
          if (ss->kind != s_qtag) fail("Must have diamonds.");
    
-         if ((indicator & 077) == 5) {
+         if (indicator_base == 5) {
             if (
                   (ss->people[0].id1 & d_mask) == d_east &&
                   (ss->people[1].id1 & d_mask) != d_west &&
@@ -389,13 +443,31 @@ extern void triangle_move(
                fail("Can't find designated point.");
          }
    
-         do_glorious_triangles(ss, 0, map_ptr, result);
+         do_glorious_triangles(ss, map_ptr, result);
          reinstate_rotation(ss, result);
       }
       else {
          /* Indicator = 2 for inside, 3 for outside */
    
-         if (indicator == 2) {
+         /* This is the only case that allows interlocked. */
+
+         if (indicator_base == 2 && ss->kind == sbigdmd) {
+            if (global_livemask == 07474)
+               map_ptr = (indicator & 0100) ? &map1k : &map1b;
+            else if (global_livemask == 01717)
+               map_ptr = (indicator & 0100) ? &map2k : &map2b;
+            else
+               fail("Can't find the indicated triangles.");
+
+            do_glorious_triangles(ss, map_ptr, result);
+            reinstate_rotation(ss, result);
+
+            return;
+         }
+         else if (indicator & 0100)
+            fail("Illegal modifier for this concept.");
+
+         if (indicator_base == 2) {
             switch (ss->kind) {
                case s_hrglass:
                   schema = schema_vertical_6;   /* This is the schema for picking out
@@ -408,6 +480,7 @@ extern void triangle_move(
                case s_qtag:
                   schema = schema_concentric_6_2_tgl;
                   break;
+               case sbigdmd:
                default:
                   fail("There are no 'inside' triangles.");
             }

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -50,15 +50,10 @@ extern void phantom_2x4_move(
    clear_people(&vpeople);
    
    for (i=0; i<16; i++) {
-      int temp = ss->people[i].id1;
-      if ((temp ^ lineflag) & 1) {
-         (void) copy_person(&hpeople, i, ss, i);
-         hflag |= temp;
-      }
-      else {
-         (void) copy_person(&vpeople, i, ss, i);
-         vflag |= temp;
-      }
+      if ((ss->people[i].id1 ^ lineflag) & 1)
+         hflag |= copy_person(&hpeople, i, ss, i);
+      else
+         vflag |= copy_person(&vpeople, i, ss, i);
    }
 
    /* For certain types of phantom tests, we turn off the testing that we pass to
@@ -71,13 +66,17 @@ extern void phantom_2x4_move(
                                        bigblock setup.  But, in this procedure, we could have
                                        headliners entirely in one and sideliners in another, so
                                        that divided_setup_move could be misled. */
+         newphantest = phantest_ok;
+         break;
       case phantest_first_or_both:  /* This occurs on "phantom lines", for example, and is
                                        intended to give the smae error as above if only the center
                                        phantom lines are occupied.  But the headliners might
                                        occupy just the center phantom lines while the sideliners
                                        make full use of the concept, so, once again, we have to
-                                       disable it. */
-         newphantest = phantest_ok;
+                                       disable it.  In fact, we do better -- we tell
+                                       divided_setup_move to do the right thing if the outer
+                                       phantom setup is empty. */
+         newphantest = phantest_ctr_phantom_line;
          break;
    }
 

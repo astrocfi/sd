@@ -539,7 +539,11 @@ extern void close_file(void)
 
    if (file_error) goto fail;
 
-   if (!outfile_special) last_file_position = ftell(fildes);
+   if (!outfile_special) {
+      (void) fflush(fildes);     /* Shouldn't need this, but PC library seems
+                     to get wrong value on the next ftell if we don't do it. */
+      last_file_position = ftell(fildes);
+   }
 
    if (!fclose(fildes)) return;
 
@@ -594,8 +598,7 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
          if (s[1] == '1' && !s[2]) *levelp = l_a1;
          else if (s[1] == '2' && !s[2]) *levelp = l_a2;
          else if (s[1] == 'l' && s[2] == 'l' && !s[3]) *levelp = l_dontshow;
-         else
-            return FALSE;
+         else return FALSE;
          return TRUE;
       case 'c':
          if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && !s[3])
@@ -604,16 +607,19 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
             *levelp = l_c3x;
          else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && !s[3])
             *levelp = l_c4a;
-         else if (s[1] == '4' && (s[2] == 'z' || s[2] == 'X') && !s[3])
+         else if (s[1] == '4' && (s[2] == 'x' || s[2] == 'X') && !s[3])
             *levelp = l_c4x;
-         else if (!s[2]) {
-            switch (s[1]) {
-               case '1': *levelp = l_c1; return TRUE;
-               case '2': *levelp = l_c2; return TRUE;
-               case '3': *levelp = l_c3; return TRUE;
-               case '4': *levelp = l_c4; return TRUE;
-               default: return FALSE;
+         else {
+            if (!s[2]) {
+               switch (s[1]) {
+                  case '1': *levelp = l_c1; return TRUE;
+                  case '2': *levelp = l_c2; return TRUE;
+                  case '3': *levelp = l_c3; return TRUE;
+                  case '4': *levelp = l_c4; return TRUE;
+                  default: return FALSE;
+               }
             }
+            else return FALSE;
          }
          return TRUE;
       default:

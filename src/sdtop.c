@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include "sd.h"
 
 typedef struct {
-   Const veryshort source_indices[18];
+   Const veryshort source_indices[24];
    Const int size;
    Const setup_kind inner_kind;
    Const setup_kind outer_kind;
@@ -56,7 +56,7 @@ Private expand_thing exp_1x2_3d_stuff      = {{11, 5}, 2, s1x2, s3dmd, 0};
 Private expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
 Private expand_thing exp_4x4_4dm_stuff_b   = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
 Private expand_thing exp_2x4_2x6_stuff     = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
-Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
+Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
 Private expand_thing exp_2x6_2x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
 Private expand_thing exp_1x8_1x12_stuff    = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
 Private expand_thing exp_3x4_3x8_stuff     = {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23}, 12, s3x4, s3x8, 0};
@@ -72,16 +72,24 @@ Private expand_thing exp_1x10_1x12_stuff   = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 
 Private expand_thing exp_1x12_1x14_stuff   = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
 Private expand_thing exp_1x14_1x16_stuff   = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
 Private expand_thing exp_1x8_1x10_stuff    = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
-Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, nothing, s4x6, 0};
-Private expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, 16, nothing, s4x6, 0};
-Private expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, nothing, s4x6, 1};
+Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s2x6, s4x6, 0};
+Private expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, 16, s4x4, s4x6, 0};
+Private expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, s4x4, s4x6, 1};
 Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
-Private expand_thing exp_2x4_4x4_stuff     = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
+Private expand_thing exp_3x4_4x5_stuff     = {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17}, 12, s3x4, s4x5, 1};
+Private expand_thing exp_2x5_4x5_stuff     = {{9, 8, 7, 6, 5, 19, 18, 17, 16, 15}, 10, s2x5, s4x5, 0};
+Private expand_thing exp_2x4_4x4_stuff1    = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
+Private expand_thing exp_2x4_4x4_stuff2    = {{6, 11, 15, 13, 14, 3, 7, 5}, 8, s2x4, s4x4, 1};
+Private expand_thing exp_2x4_c1phan_stuff1 = {{0, 2, 7, 5, 8, 10, 15, 13}, 8, s2x4, s_c1phan, 0};
+Private expand_thing exp_2x4_c1phan_stuff2 = {{12, 14, 3, 1, 4, 6, 11, 9}, 8, s2x4, s_c1phan, 1};
 Private expand_thing exp_c1phan_4x4_stuff1 = {{-1, 13, -1, 15, -1, 1, -1, 3, -1, 5, -1, 7, -1, 9, -1, 11}, 16, s_c1phan, s4x4, 0};
 Private expand_thing exp_c1phan_4x4_stuff2 = {{10, -1, 15, -1, 14, -1, 3, -1, 2, -1, 7, -1, 6, -1, 11, -1}, 16, s_c1phan, s4x4, 0};
 Private expand_thing exp_4x4_blob_stuff    = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
+Private expand_thing exp_4x6_blob_stuffa   = {{-1, 21, 22, 2, 3, -1, 6, 4, 5, 23, 20, 19, -1, 9, 10, 14, 15, -1, 18, 16, 17, 11, 8, 7}, 24, s4x6, s_bigblob, 0};
+Private expand_thing exp_4x6_blob_stuffb   = {{-1, 15, 16, 20, 21, -1, 0, 22, 23, 17, 14, 13, -1, 3, 4, 8, 9, -1, 12, 10, 11, 5, 2, 1}, 24, s4x6, s_bigblob, 0};
 Private expand_thing exp_4dmd_3x4_stuff    = {{0, 1, 2, 3, 4, 4, 4, 4, 6, 7, 8, 9}, 12, s4dmd, s3x4, 0};
 Private expand_thing exp_4dmd_4x4_stuff    = {{12, 13, 14, 0, 1, 1, 1, 1, 4, 5, 6, 8}, 12, s4dmd, s4x4, 0};
+Private expand_thing exp_4x5_3oqtg_stuff   = {{0, -1, 1, -1, 2, 4, 5, 6, 19, 18, 10, -1, 11, -1, 12, 14, 15, 16, 9, 8}, 20, s4x5, s3oqtg, 0};
 
 
 
@@ -540,7 +548,7 @@ extern void do_matrix_expansion(
                needprops == CONCPROP__NEEDK_TWINDMD ||
                needprops == CONCPROP__NEEDK_TWINQTAG) {
          if (ss->kind == s2x4) {
-            eptr = &exp_2x4_4x4_stuff; goto expand_me;
+            eptr = &exp_2x4_4x4_stuff1; goto expand_me;
          }
          else if (ss->kind == s_c1phan) {
             if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1 |
@@ -564,7 +572,7 @@ extern void do_matrix_expansion(
          }
       }
 
-      if (needprops == CONCPROP__NEEDK_3X4 || needprops == CONCPROP__NEEDK_3X8 || (concprops & CONCPROP__NEED_TRIPLE_1X4)) {
+      if (needprops == CONCPROP__NEEDK_3X4 || needprops == CONCPROP__NEEDK_3X8 || needprops == CONCPROP__NEEDK_TRIPLE_1X4) {
          if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
@@ -576,183 +584,185 @@ extern void do_matrix_expansion(
          }
       }
 
-      if (needprops == CONCPROP__NEEDK_BLOB) {
-         if (ss->kind == s4x4) {
-            eptr = &exp_4x4_blob_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_4DMD) {
+      switch (needprops) {
          uint32 livemask, j;
 
-         switch (ss->kind) {
-            case s1x8:
-               eptr = &exp_1x8_4dm_stuff; goto expand_me;
-            case s_qtag:
-               eptr = &exp_qtg_4dm_stuff; goto expand_me;
-            case s3x4:
-               if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[10].id1 | ss->people[11].id1)) {
-                  eptr = &exp_3x4_4dm_stuff; goto expand_me;
-               }
-               break;
-            case s4x4:
-               for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
-                  if (ss->people[i].id1) livemask |= j;
-               }
-
-               if (livemask == 0x1717UL) {
-                  eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
-               }
-               else if (livemask == 0x7171UL) {
-                  eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
-               }
-               break;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_3DMD) {
-         switch (ss->kind) {                /* Need to expand to real triple diamonds. */
-            case s3x1dmd:
-               eptr = &exp_3x1d_3d_stuff; goto expand_me;
-            case s1x2:
-               eptr = &exp_1x2_3d_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_2X8) {
-         switch (ss->kind) {
-            case s2x4:
-               eptr = &exp_2x4_2x8_stuff; goto expand_me;
-            case s2x6:
-               eptr = &exp_2x6_2x8_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_3X8) {
-         switch (ss->kind) {
-            case s3x4:
-               eptr = &exp_3x4_3x8_stuff; goto expand_me;
-            case s3x6:
-               eptr = &exp_3x6_3x8_stuff; goto expand_me;
-            case s1x8:
-               eptr = &exp_1x8_3x8_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_2X6) {
-         if (ss->kind == s2x4) {
-            eptr = &exp_2x4_2x6_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_4X6) {
-         if (ss->kind == s2x6) {
-            eptr = &exp_2x6_4x6_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_TWINDMD || needprops == CONCPROP__NEEDK_TWINQTAG) {
-         if (ss->kind == s2x6) {
-            eptr = &exp_2x6_4x6_stuff; goto expand_me;
-         }
-         else if (ss->kind == s4x4) {
-            uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
-
-            if (ctrs != 0 && (ctrs & 011) != 011) {
-               if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
-               eptr = (ctrs & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a; goto expand_me;
+         case CONCPROP__NEEDK_BLOB:
+            if (ss->kind == s4x4) {
+               eptr = &exp_4x4_blob_stuff; goto expand_me;
             }
-         }
-      }
-      else if (concprops & CONCPROP__NEED_CTR_2X2) {
-         switch (ss->kind) {
-            case s2x4:
+            break;
+         case CONCPROP__NEEDK_4DMD:
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_4dm_stuff; goto expand_me;
+               case s_qtag:
+                  eptr = &exp_qtg_4dm_stuff; goto expand_me;
+               case s3x4:
+                  if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[10].id1 | ss->people[11].id1)) {
+                     eptr = &exp_3x4_4dm_stuff; goto expand_me;
+                  }
+                  break;
+               case s4x4:
+                  for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
+                     if (ss->people[i].id1) livemask |= j;
+                  }
+   
+                  if (livemask == 0x1717UL) {
+                     eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
+                  }
+                  else if (livemask == 0x7171UL) {
+                     eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
+                  }
+                  break;
+            }
+            break;
+         case CONCPROP__NEEDK_3DMD:
+            switch (ss->kind) {                /* Need to expand to real triple diamonds. */
+               case s3x1dmd:
+                  eptr = &exp_3x1d_3d_stuff; goto expand_me;
+               case s1x2:
+                  eptr = &exp_1x2_3d_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_2X8:
+            switch (ss->kind) {
+               case s2x4:
+                  eptr = &exp_2x4_2x8_stuff; goto expand_me;
+               case s2x6:
+                  eptr = &exp_2x6_2x8_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_3X8:
+            switch (ss->kind) {
+               case s3x4:
+                  eptr = &exp_3x4_3x8_stuff; goto expand_me;
+               case s3x6:
+                  eptr = &exp_3x6_3x8_stuff; goto expand_me;
+               case s1x8:
+                  eptr = &exp_1x8_3x8_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_2X6:
+            if (ss->kind == s2x4) {
                eptr = &exp_2x4_2x6_stuff; goto expand_me;
-            case s_rigger:
-               eptr = &exp_rig_bigrig_stuff; goto expand_me;
-         }
-      }
-      else if (concprops & CONCPROP__NEED_END_2X2) {
-         switch (ss->kind) {
-            case s2x4:
-               eptr = &exp_2x4_2x6_stuff; goto expand_me;
-            case s_qtag:
-               eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
-            case s_bone:
-               eptr = &exp_bone_bigbone_stuff; goto expand_me;
-         }
-      }
-      else if (concprops & CONCPROP__NEED_CTR_DMD) {
-         switch (ss->kind) {
-            case s3x1dmd:
-               eptr = &exp_3x1d_3d_stuff; goto expand_me;
-         }
-      }
-      else if (concprops & CONCPROP__NEED_END_DMD) {
-         switch (ss->kind) {
-            case s3x1dmd:
-               eptr = &exp_3x1d_3d_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_1X12) {
-         switch (ss->kind) {
-            case s1x8:
-               eptr = &exp_1x8_1x12_stuff; goto expand_me;
-            case s1x10:
-               eptr = &exp_1x10_1x12_stuff; goto expand_me;
-         }
-      }
-      else if (concprops & (CONCPROP__NEED_TRIPLE_1X4)) {
-         switch (ss->kind) {
-            case s1x8:
-               eptr = &exp_1x8_1x12_stuff; goto expand_me;
-            case s1x10:
-               eptr = &exp_1x10_1x12_stuff; goto expand_me;
-            case s_bone:
-               eptr = &exp_bone_bigh_stuff; goto expand_me;
-            case s_crosswave:
-               eptr = &exp_xwv_bigx_stuff; goto expand_me;
-            case s1x3dmd:
-               eptr = &exp_1x3d_bigx_stuff; goto expand_me;
-         }
-      }
-      else if (concprops & (CONCPROP__NEED_CTR_1X4)) {
-         switch (ss->kind) {
-            case s_qtag:
-               eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
-            case s_bone:
-               eptr = &exp_bone_bigbone_stuff; goto expand_me;
-            case s1x8:
-               eptr = &exp_1x8_1x12_stuff; goto expand_me;
-            case s1x10:
-               eptr = &exp_1x10_1x12_stuff; goto expand_me;
-            case s_crosswave:
-               eptr = &exp_xwv_bigx_stuff; goto expand_me;
-            case s1x3dmd:
-               eptr = &exp_1x3d_bigx_stuff; goto expand_me;
-         }
-      }
-      else if (concprops & (CONCPROP__NEED_END_1X4)) {
-         switch (ss->kind) {
-            /* **** also create 4x4 */
-            case s_rigger:
-               eptr = &exp_rig_bigrig_stuff; goto expand_me;
-            case s1x8:
-               eptr = &exp_1x8_1x12_stuff; goto expand_me;
-            case s1x10:
-               eptr = &exp_1x10_1x12_stuff; goto expand_me;
-            case s_bone:
-               eptr = &exp_bone_bigh_stuff; goto expand_me;
-            case s_crosswave:
-               eptr = &exp_xwv_bigx_stuff; goto expand_me;
-            case s1x3dmd:
-               eptr = &exp_1x3d_bigx_stuff; goto expand_me;
-         }
-      }
-      else if (needprops == CONCPROP__NEEDK_1X16 || needprops == CONCPROP__NEEDK_4X4_1X16) {
-         switch (ss->kind) {             /* Need to expand to a 1x16. */
-            case s1x8:
-               eptr = &exp_1x8_1x12_stuff; goto expand_me;
-            case s1x10:
-               eptr = &exp_1x10_1x12_stuff; goto expand_me;
-            case s1x12:
-               eptr = &exp_1x12_1x14_stuff; goto expand_me;
-            case s1x14:
-               eptr = &exp_1x14_1x16_stuff; goto expand_me;
-         }
+            }
+            break;
+         case CONCPROP__NEEDK_4X6:
+            if (ss->kind == s2x6) {
+               eptr = &exp_2x6_4x6_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_TWINDMD: case CONCPROP__NEEDK_TWINQTAG:
+            if (ss->kind == s2x6) {
+               eptr = &exp_2x6_4x6_stuff; goto expand_me;
+            }
+            else if (ss->kind == s4x4) {
+               uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
+   
+               if (ctrs != 0 && (ctrs & 011) != 011) {
+                  if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
+                  eptr = (ctrs & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a; goto expand_me;
+               }
+            }
+            break;
+         case CONCPROP__NEEDK_CTR_2X2:
+            switch (ss->kind) {
+               case s2x4:
+                  eptr = &exp_2x4_2x6_stuff; goto expand_me;
+               case s_rigger:
+                  eptr = &exp_rig_bigrig_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_END_2X2:
+            switch (ss->kind) {
+               case s2x4:
+                  eptr = &exp_2x4_2x6_stuff; goto expand_me;
+               case s_qtag:
+                  eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigbone_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_CTR_DMD:
+            switch (ss->kind) {
+               case s3x1dmd:
+                  eptr = &exp_3x1d_3d_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_END_DMD:
+            switch (ss->kind) {
+               case s3x1dmd:
+                  eptr = &exp_3x1d_3d_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_1X12:
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_TRIPLE_1X4:
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigh_stuff; goto expand_me;
+               case s_crosswave:
+                  eptr = &exp_xwv_bigx_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_CTR_1X4:
+            switch (ss->kind) {
+               case s_qtag:
+                  eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigbone_stuff; goto expand_me;
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s_crosswave:
+                  eptr = &exp_xwv_bigx_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_END_1X4:
+            switch (ss->kind) {
+               /* **** also create 4x4 */
+               case s_rigger:
+                  eptr = &exp_rig_bigrig_stuff; goto expand_me;
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s_bone:
+                  eptr = &exp_bone_bigh_stuff; goto expand_me;
+               case s_crosswave:
+                  eptr = &exp_xwv_bigx_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_1X16: case CONCPROP__NEEDK_4X4_1X16:
+            switch (ss->kind) {             /* Need to expand to a 1x16. */
+               case s1x8:
+                  eptr = &exp_1x8_1x12_stuff; goto expand_me;
+               case s1x10:
+                  eptr = &exp_1x10_1x12_stuff; goto expand_me;
+               case s1x12:
+                  eptr = &exp_1x12_1x14_stuff; goto expand_me;
+               case s1x14:
+                  eptr = &exp_1x14_1x16_stuff; goto expand_me;
+            }
+            break;
       }
 
       /* If get here, we did NOT see any concept that requires a setup expansion. */
@@ -768,8 +778,11 @@ extern void do_matrix_expansion(
       scatter(ss, &stemp, eptr->source_indices, eptr->size-1, eptr->rot * 033);
       ss->rotation += eptr->rot;
 
-      /* Global selectors are disabled if we expanded the matrix. */
-      for (i=0; i<MAX_PEOPLE; i++) ss->people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
+      /* Most global selectors are disabled if we expanded the matrix. */
+
+      for (i=0; i<MAX_PEOPLE; i++)
+         ss->people[i].id2 &= (~GLOB_BITS_TO_CLEAR | (ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE));
+
       ss->kind = eptr->outer_kind;
 
       canonicalize_rotation(ss);
@@ -780,208 +793,9 @@ extern void do_matrix_expansion(
 }
 
 
-Private void normalize_4x4(setup *stuff)
-{
-   if (!(stuff->people[0].id1 | stuff->people[4].id1 | stuff->people[8].id1 | stuff->people[12].id1)) {
-      if (!(stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[13].id1 | stuff->people[14].id1)) {
-         compress_setup(&exp_2x4_4x4_stuff, stuff);
-      }
-      else if (!(stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[9].id1 | stuff->people[10].id1)) {
-         stuff->kind = s2x4;
-         stuff->rotation++;
-         (void) copy_rot(stuff, 1, stuff, 3, 033);     /* careful -- order is important */
-         (void) copy_rot(stuff, 2, stuff, 7, 033);
-         (void) copy_rot(stuff, 3, stuff, 5, 033);
-         (void) copy_rot(stuff, 4, stuff, 6, 033);
-         (void) copy_rot(stuff, 0, stuff, 14, 033);
-         (void) copy_rot(stuff, 5, stuff, 11, 033);
-         (void) copy_rot(stuff, 6, stuff, 15, 033);
-         (void) copy_rot(stuff, 7, stuff, 13, 033);
-      }
-   }
-}
-
-
-Private void normalize_blob(setup *stuff)
-
-{
-   if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
-      stuff->kind = s4x6;
-      (void) copy_person(stuff, 13, stuff, 9);         /* careful -- order is important */
-      (void) copy_person(stuff, 9, stuff, 23);
-      (void) copy_person(stuff, 23, stuff, 7);
-      (void) copy_person(stuff, 7, stuff, 4);
-      (void) copy_person(stuff, 4, stuff, 3);
-      (void) copy_person(stuff, 3, stuff, 2);
-      (void) copy_person(stuff, 2, stuff, 22);
-      (void) copy_person(stuff, 22, stuff, 8);
-      (void) copy_person(stuff, 8, stuff, 5);
-      (void) copy_person(stuff, 1, stuff, 21);
-      (void) copy_person(stuff, 21, stuff, 11);
-      (void) copy_person(stuff, 11, stuff, 19);
-      (void) copy_person(stuff, 19, stuff, 16);
-      (void) copy_person(stuff, 16, stuff, 15);
-      (void) copy_person(stuff, 15, stuff, 14);
-      (void) copy_person(stuff, 14, stuff, 10);
-      (void) copy_person(stuff, 10, stuff, 20);
-      (void) copy_person(stuff, 20, stuff, 17);
-
-      clear_person(stuff, 5);
-      clear_person(stuff, 17);
-   }
-   else if (!(stuff->people[6].id1 | stuff->people[7].id1 | stuff->people[18].id1 | stuff->people[19].id1)) {
-      stuff->kind = s4x6;
-      stuff->rotation++;
-      (void) copy_rot(stuff, 18, stuff, 0, 033);       /* careful -- order is important */
-      (void) copy_rot(stuff, 7, stuff, 10, 033);
-      (void) copy_rot(stuff, 10, stuff, 2, 033);
-      (void) copy_rot(stuff, 2, stuff, 4, 033);
-      (void) copy_rot(stuff, 4, stuff, 9, 033);
-      (void) copy_rot(stuff, 9, stuff, 5, 033);
-      (void) copy_rot(stuff, 6, stuff, 12, 033);
-      (void) copy_rot(stuff, 19, stuff, 22, 033);
-      (void) copy_rot(stuff, 22, stuff, 14, 033);
-      (void) copy_rot(stuff, 14, stuff, 16, 033);
-      (void) copy_rot(stuff, 16, stuff, 21, 033);
-      (void) copy_rot(stuff, 21, stuff, 17, 033);
-
-      (void) copy_rot(stuff, 0, stuff, 3, 033);
-      (void) copy_rot(stuff, 3, stuff, 8, 033);
-      (void) copy_rot(stuff, 8, stuff, 11, 033);
-      (void) copy_rot(stuff, 11, stuff, 1, 033);
-      (void) copy_person(stuff, 1, stuff, 0);
-
-      (void) copy_rot(stuff, 0, stuff, 23, 033);
-      (void) copy_rot(stuff, 23, stuff, 13, 033);
-      (void) copy_rot(stuff, 13, stuff, 15, 033);
-      (void) copy_rot(stuff, 15, stuff, 20, 033);
-      (void) copy_person(stuff, 20, stuff, 0);
-
-      clear_person(stuff, 0);
-      clear_person(stuff, 5);
-      clear_person(stuff, 12);
-      clear_person(stuff, 17);
-   }
-}
-
-
-
-
-Private void normalize_4x6(setup *stuff)
-{
-   if (!(stuff->people[0].id1 | stuff->people[11].id1 | stuff->people[18].id1 | stuff->people[17].id1 |
-            stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[23].id1 | stuff->people[12].id1)) {
-      stuff->kind = s4x4;
-      (void) copy_person(stuff, 6, stuff, 15);         /* careful -- order is important */
-      (void) copy_person(stuff, 15, stuff, 9);
-      (void) copy_person(stuff, 9, stuff, 19);
-      (void) copy_person(stuff, 11, stuff, 20);
-      (void) copy_person(stuff, 5, stuff, 14);
-      (void) copy_person(stuff, 14, stuff, 3);
-      (void) copy_person(stuff, 3, stuff, 8);
-      (void) copy_person(stuff, 8, stuff, 16);
-      (void) copy_person(stuff, 12, stuff, 1);
-      (void) copy_person(stuff, 1, stuff, 7);
-      (void) copy_person(stuff, 7, stuff, 21);
-      (void) copy_person(stuff, 0, stuff, 4);
-      (void) copy_person(stuff, 4, stuff, 13);
-      (void) copy_person(stuff, 13, stuff, 2);
-      (void) copy_person(stuff, 2, stuff, 22);
-
-      canonicalize_rotation(stuff);
-   }
-   else if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[3].id1 |
-            stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[17].id1 | stuff->people[16].id1 |
-            stuff->people[15].id1 | stuff->people[14].id1 | stuff->people[13].id1 | stuff->people[12].id1)) {
-      stuff->kind = s2x6;
-
-      (void) copy_person(stuff, 0, stuff, 11);         /* careful -- order is important */
-      (void) copy_person(stuff, 11, stuff, 18);
-      (void) copy_person(stuff, 1, stuff, 10);
-      (void) copy_person(stuff, 10, stuff, 19);
-      (void) copy_person(stuff, 2, stuff, 9);
-      (void) copy_person(stuff, 9, stuff, 20);
-      (void) copy_person(stuff, 3, stuff, 8);
-      (void) copy_person(stuff, 8, stuff, 21);
-      (void) copy_person(stuff, 4, stuff, 7);
-      (void) copy_person(stuff, 7, stuff, 22);
-      (void) copy_person(stuff, 5, stuff, 6);
-      (void) copy_person(stuff, 6, stuff, 23);
-   }
-}
-
-
-Private void normalize_4dmd(setup *stuff)
-
-{
-   if (!(stuff->people[0].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[5].id1 |
-            stuff->people[8].id1 | stuff->people[11].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
-      compress_setup(&exp_qtg_4dm_stuff, stuff);
-   }
-   else if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[3].id1 |
-            stuff->people[8].id1 | stuff->people[9].id1 | stuff->people[10].id1 | stuff->people[11].id1)) {
-      compress_setup(&exp_1x8_4dm_stuff, stuff);
-   }
-   /*   NO!!  Want to leave this as quad diamonds.  User might say "quadruple lines ....".  Cf. test t33t.
-   else if (!(stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[7].id1 |
-            stuff->people[12].id1 | stuff->people[13].id1 | stuff->people[14].id1 | stuff->people[15].id1)) {
-      compress_setup(&exp_3x4_4dm_stuff, stuff);
-   }
-   */
-}
-
-
 /* See if this 3x4 is actually occupied only in spots of a qtag. */
 
-Private void normalize_3x4(setup *stuff)
-{
-   if ((!stuff->people[0].id1) && (!stuff->people[3].id1) && (!stuff->people[6].id1) && (!stuff->people[9].id1)) {
-      stuff->kind = s_qtag;
-      (void) copy_person(stuff, 0, stuff, 1);         /* careful -- order is important */
-      (void) copy_person(stuff, 1, stuff, 2);
-      (void) copy_person(stuff, 2, stuff, 4);
-      (void) copy_person(stuff, 3, stuff, 5);
-      (void) copy_person(stuff, 4, stuff, 7);
-      (void) copy_person(stuff, 5, stuff, 8);
-      (void) copy_person(stuff, 6, stuff, 10);
-      (void) copy_person(stuff, 7, stuff, 11);
-   }
-}
-
-
 /* Check whether "C1 phantom" setup is only occupied in 2x4 spots, and fix it if so. */
-
-Private void normalize_c1_phan(setup *stuff)
-
-{
-   if (!(stuff->people[1].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[6].id1 |
-            stuff->people[9].id1 | stuff->people[11].id1 | stuff->people[12].id1 | stuff->people[14].id1)) {
-      stuff->kind = s2x4;
-      (void) copy_person(stuff, 1, stuff, 2);                /* careful -- order is important */
-      (void) copy_person(stuff, 2, stuff, 7);
-      (void) copy_person(stuff, 3, stuff, 5);
-      (void) copy_person(stuff, 4, stuff, 8);
-      (void) copy_person(stuff, 5, stuff, 10);
-      (void) copy_person(stuff, 6, stuff, 15);
-      (void) copy_person(stuff, 7, stuff, 13);
-   }
-   else if (!(stuff->people[0].id1 | stuff->people[2].id1 | stuff->people[5].id1 | stuff->people[7].id1 |
-            stuff->people[8].id1 | stuff->people[10].id1 | stuff->people[13].id1 | stuff->people[15].id1)) {
-      stuff->kind = s2x4;
-      stuff->rotation++;
-      (void) copy_rot(stuff, 7, stuff, 1, 033);        /* careful -- order is important */
-      (void) copy_rot(stuff, 0, stuff, 4, 033);
-      (void) copy_rot(stuff, 2, stuff, 11, 033);
-      (void) copy_rot(stuff, 1, stuff, 6, 033);
-      (void) copy_rot(stuff, 6, stuff, 3, 033);
-      (void) copy_rot(stuff, 3, stuff, 9, 033);
-      (void) copy_rot(stuff, 4, stuff, 12, 033);
-      (void) copy_rot(stuff, 5, stuff, 14, 033);
-   }
-}
-
-
-
 
 /* The "action" argument tells how hard we work to remove the outside phantoms.
    When merging the results of "on your own" or "own the so-and-so",
@@ -1001,80 +815,131 @@ extern void normalize_setup(setup *ss, normalize_action action)
       ss->kind = s4x4;     /* That's all it takes! */
 
    if (ss->kind == sbigh) {
-      if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) {
+      if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1))
          compress_setup(&exp_bone_bigh_stuff, ss);
-      }
    }
 
    if (ss->kind == sbigx) {
-      if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+      if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[6].id1 | ss->people[7].id1))
          compress_setup(&exp_xwv_bigx_stuff, ss);
-      }
-      else if (!(ss->people[0].id1 | ss->people[4].id1 | ss->people[6].id1 | ss->people[10].id1)) {
+      else if (!(ss->people[0].id1 | ss->people[4].id1 | ss->people[6].id1 | ss->people[10].id1))
          compress_setup(&exp_1x3d_bigx_stuff, ss);
-      }
    }
 
    if (ss->kind == sbigrig) {
-      if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+      if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[6].id1 | ss->people[7].id1))
          compress_setup(&exp_rig_bigrig_stuff, ss);
-      }
    }
 
    if (ss->kind == sbigbone) {
-      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
          compress_setup(&exp_bone_bigbone_stuff, ss);
-      }
    }
 
    if (ss->kind == sbigdmd) {         /* This might leave a qtag, which might be reduced further. */
-      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
          compress_setup(&exp_qtag_bigdmd_stuff, ss);
-      }
    }
 
    if (ss->kind == s1x16) {         /* This might leave a 1x14, which might be reduced further. */
-      if (!(ss->people[0].id1 | ss->people[8].id1)) {
+      if (!(ss->people[0].id1 | ss->people[8].id1))
          compress_setup(&exp_1x14_1x16_stuff, ss);
-      }
    }
 
    if (ss->kind == s1x14) {         /* This might leave a 1x12, which might be reduced further. */
-      if (!(ss->people[0].id1 | ss->people[7].id1)) {
+      if (!(ss->people[0].id1 | ss->people[7].id1))
          compress_setup(&exp_1x12_1x14_stuff, ss);
-      }
    }
 
    if (ss->kind == s1x12) {         /* This might leave a 1x10, which might be reduced further. */
-      if (!(ss->people[0].id1 | ss->people[6].id1)) {
+      if (!(ss->people[0].id1 | ss->people[6].id1))
          compress_setup(&exp_1x10_1x12_stuff, ss);
+   }
+
+   if (ss->kind == s_bigblob) {
+      /* This might leave a 4x6, which might be reduced further. */
+      if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[12].id1 | ss->people[13].id1)) {
+         compress_setup(&exp_4x6_blob_stuffa, ss);
+      }
+      else if (!(ss->people[6].id1 | ss->people[7].id1 | ss->people[18].id1 | ss->people[19].id1)) {
+         compress_setup(&exp_4x6_blob_stuffb, ss);
       }
    }
 
-   if (ss->kind == s_bigblob)
-      normalize_blob(ss);           /* This might leave a 4x6, which might be reduced further. */
+   if (ss->kind == s4x6) {
+      /* This might leave a 4x4 or 2x6, which might be reduced further. */
+      if (!(ss->people[0].id1 | ss->people[11].id1 | ss->people[18].id1 | ss->people[17].id1 |
+               ss->people[5].id1 | ss->people[6].id1 | ss->people[23].id1 | ss->people[12].id1)) {
+         compress_setup(&exp_4x4_4x6_stuff_a, ss);
+      }
+      else if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1 |
+               ss->people[4].id1 | ss->people[5].id1 | ss->people[17].id1 | ss->people[16].id1 |
+               ss->people[15].id1 | ss->people[14].id1 | ss->people[13].id1 | ss->people[12].id1)) {
+         compress_setup(&exp_2x6_4x6_stuff, ss);
+      }
+   }
 
-   if (ss->kind == s4x6)
-      normalize_4x6(ss);            /* This might leave a 4x4 or 2x6, which might be reduced further. */
+   if (ss->kind == s3oqtg) {
+      /* This might leave a 4x5, which might be reduced further. */
+      if (!(ss->people[17].id1 | ss->people[13].id1 | ss->people[3].id1 | ss->people[7].id1)) {
+         compress_setup(&exp_4x5_3oqtg_stuff, ss);
+      }
+   }
 
    if (ss->kind == s1x10) {
-      if (!(ss->people[0].id1 | ss->people[5].id1)) {
+      if (!(ss->people[0].id1 | ss->people[5].id1))
          compress_setup(&exp_1x8_1x10_stuff, ss);
+   }
+   else if (ss->kind == s4x4) {
+      if (!(ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1)) {
+         if (!(ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1))
+            compress_setup(&exp_2x4_4x4_stuff1, ss);
+         else if (!(ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1))
+            compress_setup(&exp_2x4_4x4_stuff2, ss);
       }
    }
-   else if (ss->kind == s4x4)
-      normalize_4x4(ss);
+   else if (ss->kind == s4x5) {
+      if (!(   ss->people[0].id1 | ss->people[9].id1 | ss->people[15].id1 | ss->people[14].id1 |
+               ss->people[4].id1 | ss->people[5].id1 | ss->people[19].id1 | ss->people[10].id1))
+         compress_setup(&exp_3x4_4x5_stuff, ss);
+      else if (!( ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1 | ss->people[4].id1 |
+                  ss->people[10].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1))
+         compress_setup(&exp_2x5_4x5_stuff, ss);
+   }
    else if (ss->kind == s3dmd) {
-      if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1)) {
+      if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1))
          compress_setup(&exp_3x1d_3d_stuff, ss);
+   }
+   else if (ss->kind == s4dmd) {
+      if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[5].id1 |
+               ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[13].id1)) {
+         compress_setup(&exp_qtg_4dm_stuff, ss);
+      }
+      else if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1 |
+               ss->people[8].id1 | ss->people[9].id1 | ss->people[10].id1 | ss->people[11].id1)) {
+         compress_setup(&exp_1x8_4dm_stuff, ss);
+      }
+      /*   NO!!  Want to leave this as quad diamonds.  User might say "quadruple lines ....".  Cf. test t33t.
+      else if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[7].id1 |
+               ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1)) {
+         compress_setup(&exp_3x4_4dm_stuff, ss);
+      }
+      */
+   }
+   else if (ss->kind == s_c1phan) {
+      if (!(ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[6].id1 |
+               ss->people[9].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[14].id1)) {
+         compress_setup(&exp_2x4_c1phan_stuff1, ss);
+      }
+      else if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[7].id1 |
+               ss->people[8].id1 | ss->people[10].id1 | ss->people[13].id1 | ss->people[15].id1)) {
+         compress_setup(&exp_2x4_c1phan_stuff2, ss);
       }
    }
-   else if (ss->kind == s4dmd)
-      normalize_4dmd(ss);
-   else if (ss->kind == s_c1phan)
-      normalize_c1_phan(ss);
-   else if (ss->kind == s3x4)
-      normalize_3x4(ss);
+   else if (ss->kind == s3x4) {
+      if ((!ss->people[0].id1) && (!ss->people[3].id1) && (!ss->people[6].id1) && (!ss->people[9].id1))
+         compress_setup(&exp_qtg_3x4_stuff, ss);
+   }
    else if (ss->kind == s2x8) {  /* This might leave a 2x6, which could then be reduced to 2x4, below. */
       if (!(ss->people[7].id1 | ss->people[8].id1 | ss->people[0].id1 | ss->people[15].id1)) {
          compress_setup(&exp_2x6_2x8_stuff, ss);
@@ -1209,8 +1074,6 @@ extern void normalize_setup(setup *ss, normalize_action action)
          (void) copy_person(ss, 5, ss, 7);
       }
    }
-
-
 
    /* If preparing for a "so-and-so only do your part", we remove outboard phantoms
       fairly aggressively.  The level "normalize_before_isolated_call" is used for
@@ -1372,6 +1235,8 @@ extern void toplevelmove(void)
    starting_setup.cmd.cmd_assume.assump_cast = 0;
    starting_setup.cmd.prior_elongation_bits = 0;
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
+   starting_setup.cmd.restrained_concept = (parse_block *)0;
+
    for (i=0 ; i<WARNING_WORDS ; i++) newhist->warnings.bits[i] = 0;
 
    /* If we are starting a sequence with the "so-and-so into the center and do whatever"
@@ -1503,10 +1368,15 @@ extern void toplevelmove(void)
    starting_setup.cmd.cmd_final_flags.final = 0;
    starting_setup.cmd.cmd_final_flags.herit = 0;
    move(&starting_setup, FALSE, &new_setup);
-   if (new_setup.kind == s1p5x8)
-      fail("Can't go into a 50% offset 1x8.");
 
    /* Remove outboard phantoms from the resulting setup. */
+
+   if (new_setup.kind == s1p5x8)
+      fail("Can't go into a 50% offset 1x8.");
+   else if (new_setup.kind == s_dead_concentric) {
+      new_setup.kind = new_setup.inner.skind;
+      new_setup.rotation = new_setup.inner.srotation;
+   }
 
    normalize_setup(&new_setup, simple_normalize);
    for (i=0; i<MAX_PEOPLE; i++) new_setup.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;

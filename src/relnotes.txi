@@ -21,16 +21,41 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.84
-         Database version = 31.84 format = 91
+          RELEASE NOTES FOR SD VERSION 31.85
+         Database version = 31.85 format = 92
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.85 ******
+
+There is a rudimentary understanding of the "anchor the <anyone>" concept.
+
+The handling of fractional, interruptible, crazy, random,
+initially, and finally has been completely revamped.  The program
+has a much simpler and more logical internal structure now.  It
+should do a much better job of handling things like
+"random finish 2/3 reverse order hot foot spin".
+
+
+The program has a much better understanding of the individual "O" circulates
+that the outsides do on a "hocus pocus".  However, you must use the special
+call "hocus pocus (fractions)" to get this.  See the discussion in the manual.
+
+
+The definition of "crossfire" has been changed to bring it up to date
+with the nuances of this call.
+
+
+It was discovered that the program had been cheating on "change the web",
+turning the star only one position instead of the five positions that
+the definition mandates.  This shocking and scandalous situation has
+been rectified.
 
 ****** Changes as of version 31.84 ******
 
 The mechanism for deciding when to step to a wave or rear back
 from one has been improved, hopefully making it better able
-to reflect the way real dancers thing about this issue.
+to reflect the way real dancers think about this issue.
 
 The level "c4x" has been added, and the interpretation of level "c3x"
 has been changed.  These levels are for calls that might not be considered

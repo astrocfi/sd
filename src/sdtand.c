@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -509,20 +509,11 @@ Private void pack_us(
                some phantom concept was used (either something like "phantom tandem" or some other
                phantom concept such as "split phantom lines"). */
 
-            if (!(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
+            /* In fact, we forbid ANY PERSON AT ALL to be a phantom, even if paired with another phantom. */
 
-/* In fact, we forbid ANY PERSON AT ALL to be a phantom, even if paired with another phantom. */
-
-               if (!(f.id1 & b.id1 & b2.id1 & b3.id1 & BIT_PERSON))
-                  fail("Use \"phantom\" concept in front of this concept.");
-
-
-/*
-               if ((((f.id1 ^ b.id1) | (f.id1 ^ b2.id1) | (f.id1 ^ b3.id1)) & BIT_PERSON))
-                  fail("Use \"phantom\" concept in front of this concept.");
-*/
-
-
+            if (     !(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
+                     !(f.id1 & b.id1 & b2.id1 & b3.id1 & BIT_PERSON)) {
+               fail("Use \"phantom\" concept in front of this concept.");
             }
          }
 
@@ -661,6 +652,7 @@ extern void tandem_couples_move(
    uint32 sglmask, sglmask2;
    uint32 livemask, livemask2;
    long_boolean fractional = FALSE;
+   long_boolean dead_conc = FALSE;
    tm_thing *our_map_table;
 
    special_mask = 0;
@@ -996,6 +988,16 @@ extern void tandem_couples_move(
 
    impose_assumption_and_move(&tandstuff.virtual_setup, &tandstuff.virtual_result);
 
+   /* If this is a concentric setup with dead outsides, we can still handle it.
+      We have to remember to put dead outsides back when we are done, in order
+      to make gluing illegal. */
+
+   if (tandstuff.virtual_result.kind == s_dead_concentric) {
+      dead_conc = TRUE;
+      tandstuff.virtual_result.kind = tandstuff.virtual_result.inner.skind;
+      tandstuff.virtual_result.rotation = tandstuff.virtual_result.inner.srotation;
+   }
+
    if (setup_attrs[tandstuff.virtual_result.kind].setup_limits < 0)
       fail("Don't recognize ending position from this tandem or as couples call.");
 
@@ -1065,6 +1067,13 @@ extern void tandem_couples_move(
             ((map_search->ilatmask & livemask) == hmask)) {
          unpack_us(map_search, orbitmask, &tandstuff, result);
          reinstate_rotation(ss, result);
+
+         if (dead_conc) {
+            result->inner.skind = result->kind;
+            result->inner.srotation = result->rotation;
+            result->kind = s_dead_concentric;
+         }
+
          return;
       }
       map_search++;

@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 91
+#define DATABASE_FORMAT_VERSION 92
 
 
 
@@ -30,12 +30,13 @@
 #define BASE_CALL_CAST_3_4    2
 #define BASE_CALL_ENDS_SHADOW 3
 #define BASE_CALL_CHREACT_1   4
-/* These 4 must be consecutive. */
-#define BASE_CALL_TAGGER0     5
-#define BASE_CALL_TAGGER1     6
-#define BASE_CALL_TAGGER2     7
-#define BASE_CALL_TAGGER3     8
-#define BASE_CALL_CIRCCER     9
+#define BASE_CALL_MKAEPASS_1  5
+/* The next 4 must be consecutive. */
+#define BASE_CALL_TAGGER0     6
+#define BASE_CALL_TAGGER1     7
+#define BASE_CALL_TAGGER2     8
+#define BASE_CALL_TAGGER3     9
+#define BASE_CALL_CIRCCER    10
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -206,7 +207,9 @@ typedef enum {
    s_galaxy,
    s3x6,
    s3x8,
+   s4x5,
    s4x6,
+   s3oqtg,
    s_thar,
    s_alamo,
    sx4dmd,   /* These are too big to actually represent -- */
@@ -219,6 +222,7 @@ typedef enum {
    sbigrig,
    sbigbone,
    sbigdmd,
+   s_dead_concentric,
    s_normal_concentric
 } setup_kind;
 
@@ -297,8 +301,12 @@ typedef enum {
    b_6x3,
    b_3x8,
    b_8x3,
+   b_4x5,
+   b_5x4,
    b_4x6,
    b_6x4,
+   b_3oqtg,
+   b_p3oqtg,
    b_thar,
    b_alamo,
    b_ptpd,
@@ -354,6 +362,8 @@ typedef enum {
 typedef enum {
    sq_none,                /* See db_doc.txt for explanation of these. */
    sq_wave_only,
+   sq_not_wave_only,
+   sq_all_facing_same,
    sq_1fl_only,
    sq_2fl_only,
    sq_couples_only,
@@ -368,6 +378,8 @@ typedef enum {
    sq_3_4_tag,
    sq_dmd_same_pt,
    sq_dmd_facing,
+   sq_diamond_like,
+   sq_qtag_like,
    sq_true_Z_cw,
    sq_true_Z_ccw,
    sq_lateral_cols_empty,
@@ -389,7 +401,8 @@ typedef enum {
    sq_occupied_as_h,
    sq_occupied_as_qtag,
    sq_occupied_as_3x1tgl,
-   sq_ends_looking_out,
+   sq_line_ends_looking_out,
+   sq_col_ends_lookin_in,
    sq_ripple_one_end,
    sq_ripple_both_ends,
    sq_ripple_centers,
@@ -474,6 +487,7 @@ typedef enum {
    schema_conc_bar,
    schema_conc_bar12,
    schema_conc_bar16,
+   schema_conc_o,
    schema_maybe_matrix_conc_star,
    schema_maybe_matrix_conc_bar,
    schema_checkpoint,

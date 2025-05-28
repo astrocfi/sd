@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -120,8 +120,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"@a REVERSE CRAZY PHANTOM LINES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE LINES",                          concept_triple_lines,              D, l_c2, {0, 1}},
-   {"CENTER TRIPLE LINE",                    concept_in_out_line_3,             D, l_c2, {0, 1, CONCPROP__NEED_CTR_1X4, 0}},
-   {"OUTSIDE TRIPLE LINES",                  concept_in_out_line_3,             D, l_c2, {0, 8+1, CONCPROP__NEED_END_1X4, 0}},
+   {"CENTER TRIPLE LINE",                    concept_in_out_line_3,             D, l_c2, {0, 1, CONCPROP__NEEDK_CTR_1X4, 0}},
+   {"OUTSIDE TRIPLE LINES",                  concept_in_out_line_3,             D, l_c2, {0, 8+1, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE LINES WORKING TOGETHER",         concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 1}},
    {"TRIPLE LINES WORKING APART",            concept_triple_lines_tog_std,      D, l_c4a, {0, 11, 1}},
    {"TRIPLE LINES WORKING FORWARD",          concept_triple_lines_tog,          D, l_c3, {0, 0, 1}},
@@ -168,8 +168,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"@a REVERSE CRAZY PHANTOM WAVES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE WAVES",                          concept_triple_lines,              D, l_c2, {0, 3}},
-   {"CENTER TRIPLE WAVE",                    concept_in_out_line_3,             D, l_c2, {0, 3, CONCPROP__NEED_CTR_1X4, 0}},
-   {"OUTSIDE TRIPLE WAVES",                  concept_in_out_line_3,             D, l_c2, {0, 8+3, CONCPROP__NEED_END_1X4, 0}},
+   {"CENTER TRIPLE WAVE",                    concept_in_out_line_3,             D, l_c2, {0, 3, CONCPROP__NEEDK_CTR_1X4, 0}},
+   {"OUTSIDE TRIPLE WAVES",                  concept_in_out_line_3,             D, l_c2, {0, 8+3, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE WAVES WORKING TOGETHER",         concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 3}},
    {"TRIPLE WAVES WORKING APART",            concept_triple_lines_tog_std,      D, l_c4a, {0, 11, 3}},
    {"TRIPLE WAVES WORKING FORWARD",          concept_triple_lines_tog,          D, l_c3, {0, 0, 3}},
@@ -228,8 +228,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"@a REVERSE CRAZY PHANTOM COLUMNS",      concept_frac_phan_crazy,           D, l_c4, {0, 16+8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE COLUMNS",                        concept_triple_lines,              D, l_c3, {0, 0}},
-   {"CENTER TRIPLE COLUMN",                  concept_in_out_line_3,             D, l_c3, {0, 0, CONCPROP__NEED_CTR_1X4, 0}},
-   {"OUTSIDE TRIPLE COLUMNS",                concept_in_out_line_3,             D, l_c3, {0, 8+0, CONCPROP__NEED_END_1X4, 0}},
+   {"CENTER TRIPLE COLUMN",                  concept_in_out_line_3,             D, l_c3, {0, 0, CONCPROP__NEEDK_CTR_1X4, 0}},
+   {"OUTSIDE TRIPLE COLUMNS",                concept_in_out_line_3,             D, l_c3, {0, 8+0, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE COLUMNS WORKING TOGETHER",       concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 0}},
    {"TRIPLE COLUMNS WORKING APART",          concept_triple_lines_tog_std,      D, l_c4a, {0, 11, 0}},
    {"TRIPLE COLUMNS WORKING RIGHT",          concept_triple_lines_tog,          D, l_c4a, {0, 2, 0}},
@@ -288,8 +288,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE BOXES",                          concept_triple_boxes,              D, l_c1, {0, MPKIND__SPLIT}},
-   {"CENTER TRIPLE BOX",                     concept_in_out_box_3,              D, l_c1, {0, 4, CONCPROP__NEED_CTR_2X2, 0}},
-   {"OUTSIDE TRIPLE BOXES",                  concept_in_out_box_3,              D, l_c1, {0, 8+4, CONCPROP__NEED_END_2X2, 0}},
+   {"CENTER TRIPLE BOX",                     concept_in_out_box_3,              D, l_c1, {0, 4, CONCPROP__NEEDK_CTR_2X2, 0}},
+   {"OUTSIDE TRIPLE BOXES",                  concept_in_out_box_3,              D, l_c1, {0, 8+4, CONCPROP__NEEDK_END_2X2, 0}},
    {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,              D, l_c4, {0, MPKIND__CONCPHAN}},
    {"TRIPLE BOXES WORKING TOGETHER",         concept_triple_boxes_together,     D, l_c4a, {0, 6, 0}},
    {"TRIPLE BOXES WORKING APART",            concept_triple_boxes_together,     D, l_c4a, {0, 7, 0}},
@@ -346,8 +346,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE DIAMONDS",                       concept_triple_diamonds,           D, l_c3a, {0, 0, CMD_MISC__VERIFY_DMD_LIKE}},
-   {"CENTER TRIPLE DIAMOND",                 concept_in_out_dmd_3,              D, l_c3a, {0, 5, CONCPROP__NEED_CTR_DMD, 0}},
-   {"OUTSIDE TRIPLE DIAMONDS",               concept_in_out_dmd_3,              D, l_c3a, {0, 8+5, CONCPROP__NEED_END_DMD, 0}},
+   {"CENTER TRIPLE DIAMOND",                 concept_in_out_dmd_3,              D, l_c3a, {0, 5, CONCPROP__NEEDK_CTR_DMD, 0}},
+   {"OUTSIDE TRIPLE DIAMONDS",               concept_in_out_dmd_3,              D, l_c3a, {0, 8+5, CONCPROP__NEEDK_END_DMD, 0}},
    {"TRIPLE DIAMOND SPOTS",                  concept_triple_diamonds,           D, l_c3a, {0, 0, 0}},
    {"TRIPLE DIAMONDS WORKING TOGETHER",      concept_triple_diamonds_together,  D, l_c4a, {0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -439,7 +439,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* tandem concepts */
 
-#define tt__1_size 59
+#define tt__1_size 67
 #define tt__1_cpl 2
 #define tt__1_tnd 3
    {"PHANTOM",                               concept_c1_phantom,            L+U+D, l_c1},
@@ -460,6 +460,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"AS COUPLES IN A 3/4 TAG",               concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x000, 1}},
    {"AS COUPLES IN A 1/4 LINE",              concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x000, 1}},
    {"AS COUPLES IN A 3/4 LINE",              concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x000, 1}},
+   {"TANDEM IN A 1/4 TAG",                   concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x000, 0}},
+   {"TANDEM IN A 3/4 TAG",                   concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x000, 0}},
+   {"TANDEM IN A 1/4 LINE",                  concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x000, 0}},
+   {"TANDEM IN A 3/4 LINE",                  concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x000, 0}},
    {"@6 ARE AS COUPLES",                     concept_some_are_tandem,         F+D, l_a1,         {0, 0, 0,                    0x100, 1}},
    {"@6 ARE TANDEM",                         concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 0}},
    {"@6 ARE COUPLES OF THREE",               concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 5}},
@@ -489,6 +493,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"COUPLES @b TWOSOME IN A 3/4 TAG",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x020, 1}},
    {"COUPLES @b TWOSOME IN A 1/4 LINE",      concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x020, 1}},
    {"COUPLES @b TWOSOME IN A 3/4 LINE",      concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x020, 1}},
+   {"TANDEM @b TWOSOME IN A 1/4 TAG",        concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x020, 0}},
+   {"TANDEM @b TWOSOME IN A 3/4 TAG",        concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x020, 0}},
+   {"TANDEM @b TWOSOME IN A 1/4 LINE",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x020, 0}},
+   {"TANDEM @b TWOSOME IN A 3/4 LINE",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x020, 0}},
    {"@6 ARE COUPLES @b TWOSOME",             concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 1}},
    {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 0}},
    {"@6 ARE COUPLES OF THREE @b THREESOME",  concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 5}},
@@ -502,7 +510,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@k-BASED TRIANGLES WORK SOLID @b THREESOME", concept_some_are_frac_tandem, F+D, l_c4,       {0, 0, 0,                    0x120, 30}},
    {"3X1 TRIANGLES WORK SOLID @b TRIANGLESOME",       concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 31}},
 /* -------- column break -------- */
-#define tt__2_size 59
+#define tt__2_size 67
 #define tt__2_cpl2s 2
 #define tt__2_tnd2s 3
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x013, 1}},
@@ -523,6 +531,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"COUPLES TWOSOME IN A 3/4 TAG",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x010, 1}},
    {"COUPLES TWOSOME IN A 1/4 LINE",         concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x010, 1}},
    {"COUPLES TWOSOME IN A 3/4 LINE",         concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x010, 1}},
+   {"TANDEM TWOSOME IN A 1/4 TAG",           concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x010, 0}},
+   {"TANDEM TWOSOME IN A 3/4 TAG",           concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x010, 0}},
+   {"TANDEM TWOSOME IN A 1/4 LINE",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x010, 0}},
+   {"TANDEM TWOSOME IN A 3/4 LINE",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x010, 0}},
    {"@6 ARE COUPLES TWOSOME",                concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 1}},
    {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 0}},
    {"@6 ARE COUPLES THREESOME",              concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 5}},
@@ -552,6 +564,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"COUPLES TWOSOME @b SOLID IN A 3/4 TAG", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x030, 1}},
    {"COUPLES TWOSOME @b SOLID IN A 1/4 LINE",concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x030, 1}},
    {"COUPLES TWOSOME @b SOLID IN A 3/4 LINE",concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x030, 1}},
+   {"TANDEM TWOSOME @b SOLID IN A 1/4 TAG",  concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x030, 0}},
+   {"TANDEM TWOSOME @b SOLID IN A 3/4 TAG",  concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x030, 0}},
+   {"TANDEM TWOSOME @b SOLID IN A 1/4 LINE", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x030, 0}},
+   {"TANDEM TWOSOME @b SOLID IN A 3/4 LINE", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x030, 0}},
    {"@6 ARE COUPLES TWOSOME @b SOLID",       concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 1}},
    {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 0}},
    {"@6 ARE COUPLES THREESOME @b SOLID",     concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 5}},
@@ -768,7 +784,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 63
+#define mm__2_size 70
    {"CENTERS",                               concept_centers_or_ends,           D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,           D, l_mainstream, {0, selector_ends,    FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
@@ -789,7 +805,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 PREFERRED FOR TRADE, CHECKERBOARD",  concept_sel_checkerboard,          D, l_c3a,        {0, s1x4, 8}},
    {"@6 PREFERRED FOR TRADE, CHECKERBOX",    concept_sel_checkerboard,          D, l_c3a,        {0, s2x2, 8}},
    {"@6 PREFERRED FOR TRADE, CHECKERDIAMOND",concept_sel_checkerboard,          D, l_c4a,        {0, sdmd, 8}},
+   {"ORBITBOARD",                            concept_checkerboard,              D, l_c4,         {0, s1x4, 2}},
+   {"ORBITBOX",                              concept_checkerboard,              D, l_c4,         {0, s2x2, 2}},
+   {"ORBITDIAMOND",                          concept_checkerboard,              D, l_c4,         {0, sdmd, 2}},
+   {"TWIN ORBITBOARD",                       concept_checkerboard,              D, l_c4,         {0, s1x4, 3}},
+   {"TWIN ORBITBOX",                         concept_checkerboard,              D, l_c4,         {0, s2x2, 3}},
+   {"TWIN ORBITDIAMOND",                     concept_checkerboard,              D, l_c4,         {0, sdmd, 3}},
    {"SHADOW BOX",                            concept_checkerboard,              D, l_c4a,        {0, s2x2, 1}},
+   {"ANCHOR THE @6",                         concept_anchor,                  F+D, l_c4},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"@6",                                    concept_so_and_so_only,          Y+D, l_mainstream, {0, 4, 0}},
    {"@6 (while the others)",                 concept_some_vs_others,            0, l_mainstream, {0, 5, 0}},
@@ -932,7 +955,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"CONCENTRIC",                            concept_concentric,              U+D, l_c1,         {0, schema_concentric}},
    {"AS COUPLES",                            concept_tandem,                  U+D, l_a1,         {0, FALSE, FALSE, 0, 1}},
    {"TANDEM",                                concept_tandem,                  U+D, l_c1,         {0, FALSE, FALSE, 0, 0}},
-   {"DIAGNOSE",                              concept_diagnose,                  0, l_mainstream},  /* Only appears if "-diagnostic" given. */
+   {"DIAGNOSE",                              concept_diagnose,                  D, l_mainstream},  /* Only appears if "-diagnostic" given. */
    {"???",                                   marker_end_of_list}};
 
 /* **** BEWARE!!!!  These things are keyed to "concept_descriptor_table"

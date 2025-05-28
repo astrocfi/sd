@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -130,8 +130,12 @@ int begin_sizes[] = {
    18,         /* b_6x3 */
    24,         /* b_3x8 */
    24,         /* b_8x3 */
+   20,         /* b_4x5 */
+   20,         /* b_5x4 */
    24,         /* b_4x6 */
    24,         /* b_6x4 */
+   20,         /* b_3oqtg */
+   20,         /* b_p3oqtg */
    8,          /* b_thar */
    8,          /* b_alamo */
    8,          /* b_ptpd */

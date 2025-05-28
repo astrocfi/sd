@@ -288,6 +288,21 @@ crosswave   |  0  |  1  |_____|  5  |  4  |
             |_____|_____|_____|_____|
 
 
+             _____ _____ _____ _____ _____ 
+            |     |     |     |     |     |
+            |  0  |  1  |  2  |  3  |  4  |
+            |_____|_____|_____|_____|_____|
+            |     |     |     |     |     |
+            |  9  |  8  |  7  |  6  |  5  |
+4x5         |_____|_____|_____|_____|_____|
+            |     |     |     |     |     |
+            | 15  | 16  | 17  | 18  | 19  |
+            |_____|_____|_____|_____|_____|
+            |     |     |     |     |     |
+            | 14  | 13  | 12  | 11  | 10  |
+            |_____|_____|_____|_____|_____|
+
+
              _____ _____ _____ _____ _____ _____
             |     |     |     |     |     |     |
             |  0  |  1  |  2  |  3  |  4  |  5  |
@@ -301,6 +316,7 @@ crosswave   |  0  |  1  |_____|  5  |  4  |
             |     |     |     |     |     |     |
             | 17  | 16  | 15  | 14  | 13  | 12  |
             |_____|_____|_____|_____|_____|_____|
+
 
                    _____             _____
                   |     |           |     |
@@ -541,6 +557,21 @@ hyperglass  |  0  |  1           7  |  6  |      (4 way symmetry)
               | 11  |   |     |   |  8  |
               |_____|   |  9  |   |_____|
                         |_____|
+
+
+                   _____       _____       _____ 
+                  |     |     |     |     |     |
+                  |  0  |     |  1  |     |  2  |
+             _____|_____|_____|_____|_____|_____|_____ 
+            |     |     |     |     |     |     |     |
+            | 17  | 18  | 19  |  6  |  5  |  4  |  3  |
+3oqtg       |_____|_____|_____|_____|_____|_____|_____|
+            |     |     |     |     |     |     |     |
+            | 13  | 14  | 15  | 16  |  9  |  8  |  7  |
+            |_____|_____|_____|_____|_____|_____|_____|
+                  |     |     |     |     |     |
+                  | 12  |     | 11  |     | 10  |
+                  |_____|     |_____|     |_____|
 
 
              _____ _____
@@ -2140,6 +2171,17 @@ q_line_back
       1/4-line, it returns TRUE only if the setup is a right-handed 1/4-line,
       and FALSE if it is left-handed or is a 1/4-tag.
 
+zero_cw_people
+one_cw_person
+two_cw_people
+three_cw_people
+      Applies to 2x3, 2x4, 2x6, or 2x8.  Returns TRUE if the number of people in the
+      1xN line/column of the person under test, who are strictly clockwise from that
+      person and are live, is exactly equal to the specified number.  Returns
+      FALSE otherwise.
+
+
+
                            APPENDIX B -- RESTRICTIONS
 
 A restriction is given only for calls defined by array, either with or without
@@ -2159,6 +2201,8 @@ restriction is violated, as follows:
                resolves.  This should be used to alert the user of the program
                that this may not be an appropriate use of the call, but that
                telling the dancers to do their own part isn't the right fix.
+   "controversial" --     the warning "This may be controversial" is given.
+   "serious_violation" -- the warning "This appears to be a serious violation of the definition" is given.
    "forbidden" -- an error is given.  The call is simply not permitted.
 
 These restrictions are "overloaded" -- their meaning depends on the starting setup.
@@ -2168,7 +2212,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
                                        2x4/3x4/2x6/2x8 - consistent waves the long way; 4x4 - consistent waves either way, but not T-boned;
                                        2x2 - real RH or LH box;
-                                       3x2/4x2/6x2/8x2 - column;
+                                       3x2/4x2/6x2/8x2 - columns;
                                        qtag/pqtag - wave in center
                                        ptpd/pptpd - miniwaves in centers of each diamond
                                        dmd, trngl - people are paired in miniwaves.
@@ -2179,8 +2223,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    all_facing_same,              /* 1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1 - all people in the setup facing the same way */
    1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
                                        thar - crossed 2FL's of opposite handedness, ready to move along
-   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center;
-                                    2x2 - "1-faced" box; 4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT */
+   2fl_only,                        1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center;
+                                    2x2 - "1-faced" box; 4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;
    3x3_2fl_only,                 /* 1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other */
    4x4_2fl_only,                 /* 1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
@@ -2195,8 +2239,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way and are line-like,
    4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way and are line-like,
    awkward_centers,              /* 1x2, 1x4, 1x6, 2x4, or 1x8 - centers must not have left hands with each other */
-   diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
-   qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
+   diamond_like,                    dmd, qtag or ptpd - points look sideways, and centers are line-like
+   qtag_like,                       dmd, qtag or ptpd - points look in or out, and centers are line-like
    nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are diamonds and not qtags */
    magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
    explodable,                   /* 1x4 - centers facing the same way */
@@ -2211,32 +2255,18 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
                            APPENDIX C -- QUALIFIERS
 
-   wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
-                                       2x4/3x4/2x6/2x8 - consistent waves the long way;
-                                       2x2 - real RH or LH box;
-                                       4x4 - consistent waves either way, but not T-boned;
-                                       3x2/4x2/6x2/8x2 - columns;
-                                       qtag/pqtag - wave in center
-                                       ptpd/pptpd - miniwaves in centers of each diamond
-                                       dmd, trngl - people are paired in miniwaves.
-                                          For diamonds, this applies just to the centers.
-                                          For triangles, it applies just to the base.
-                                       thar - same handedness waves
-   1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
-                                       thar - crossed 2FL's of opposite handedness, ready to move along
-   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 4x4 - consistent 2FL's; 1x8 - a grand 2FL;
-                                    4x1 - single DPT or single CDPT; 4x2 - DPT or CDPT; qtag - 2FL in center */
-   couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way and are line-like,
-   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way and are line-like,
-   magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
-   in_or_out,                    /* 1x2/2x2 - all facing in or all facing out */
-   miniwaves,                    /* 1x2/1x4/1x6/1x8, 2x4 (lines/cols), 2x2, dmd, qtag, ptpd, trngl - people
-                                    are paired in miniwaves of various handedness.
-                                    For diamonds and qtags, this applies just to the centers.
-                                    For triangles, it applies just to the base.
-                                    So this includes waves, inverted lines, columns,
-                                    magic columns, diamonds, wave-based triangles... */
+   wave_only,                       Same as corresponding restriction, above.
+   all_facing_same,                 Same as corresponding restriction, above.
+   1fl_only,                        Same as corresponding restriction, above.
+   2fl_only,                        Same as corresponding restriction, above.
+   couples_only,                    Same as corresponding restriction, above.
+   3x3couples_only,                 Same as corresponding restriction, above.
+   4x4couples_only,                 Same as corresponding restriction, above.
+   magic_only,                      Same as corresponding restriction, above.
+   diamond_like,                    Same as corresponding restriction, above.
+   qtag_like,                       Same as corresponding restriction, above.
+   in_or_out,                    /* 2x2/2x4 - all facing in or all facing out.  4x2/4x1/2x1 - [single] 8 chain or trade by (one or the other; we don't care which)
+   miniwaves,                       Same as corresponding restriction, above.
 
    right_wave,                      1x2 - right miniwave; 1x4-1x16 - [grand] right wave;
                                        2x4/3x4/2x6/2x8 - consistent waves the long way;
@@ -2265,10 +2295,10 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
    split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
    not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
-   8_chain,                      /* 4x1/4x2 - setup is (single) 8 chain */
-   trade_by,                     /* 4x1/4x2 - setup is (single) trade by */
-   facing_in,                    /* 2x2 - all people are trailers, and not T-boned */
-   facing_out,                   /* 2x2 - all people are leads, and not T-boned */
+   8_chain,                      /* 4x2/4x1/2x1 - [single] 8 chain */
+   trade_by,                     /* 4x2/4x1/2x1 - [single] trade by */
+   facing_in,                    /* 2x2 - all people are trailers, and not T-boned.  2x4 - lines in.  4x2/4x1/2x1 - [single] 8 chain.
+   facing_out,                   /* 2x2 - all people are leads, and not T-boned.  2x4 - lines out.  4x2/4x1/2x1 - [single] trade by.
    dmd_ctrs_rh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
                                     are consistently in right-handed miniwaves; other people not checked at all */
    dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
@@ -2281,7 +2311,12 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    dmd_ctrs_1f,                  /* dmd, 1x4 - the centers (2 of them) are in a couple */
    said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
    didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
-   ends_looking_out              /* 2x4 lines - the ends are leads */
+   occupied_as_h                 /* 3x4/4x3 - live bodies are (a subset of) an "H" */
+   occupied_as_qtag              /* 3x4/4x3 - live bodies are (a subset of) a qtag */
+   occupied_as_3x1tgl            /* 3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1 triangles of some sort.
+                                    Symmetric only. */
+   line_ends_looking_out         /* 2x4 lines - the ends are leads */
+   col_ends_looking_in           /* 2x4 columns - the ends are #4 */
    ripple stuff .......
    people_1_and_5_real           /* 1x8 (or any applicable setup) people #1 and #5 are real */
    centers_sel                   /* 2x4/qtag - the centers are selected and the ends are not. */

@@ -325,8 +325,12 @@ char *sstab[] = {
    "6x3",
    "3x8",
    "8x3",
+   "4x5",
+   "5x4",
    "4x6",
    "6x4",
+   "3oqtg",
+   "p3oqtg",
    "thar",
    "alamo",
    "ptpd",
@@ -407,7 +411,9 @@ char *estab[] = {
    "galaxy",
    "3x6",
    "3x8",
+   "4x5",
    "4x6",
+   "3oqtg",
    "thar",
    "alamo",
    "???",
@@ -420,6 +426,7 @@ char *estab[] = {
    "bigrig",
    "bigbone",
    "bigdmd",
+   "???",
    "normal_concentric",
    ""};
 
@@ -449,6 +456,7 @@ char *schematab[] = {
    "conc_bar",
    "conc_bar12",
    "conc_bar16",
+   "conc_o",
    "maybematrix_conc_star",
    "maybematrix_conc_bar",
    "checkpoint",
@@ -475,6 +483,8 @@ char *schematab[] = {
 char *qualtab[] = {
    "none",
    "wave_only",
+   "not_wave_only",
+   "all_facing_same",
    "1fl_only",
    "2fl_only",
    "couples_only",
@@ -489,6 +499,8 @@ char *qualtab[] = {
    "3_4_tag",
    "dmd_same_point",
    "dmd_facing",
+   "diamond_like",
+   "qtag_like",
    "true_Z_cw",
    "true_Z_ccw",
    "lateral_columns_empty",
@@ -510,7 +522,8 @@ char *qualtab[] = {
    "occupied_as_h",
    "occupied_as_qtag",
    "occupied_as_3x1tgl",
-   "ends_looking_out",
+   "line_ends_looking_out",
+   "col_ends_looking_in",
    "ripple_one_end",
    "ripple_both_ends",
    "ripple_centers",
@@ -880,6 +893,7 @@ char *predtab[] = {
    "rightp",
    "inp",
    "outp",
+   "backp",
    "zigzagp",
    "zagzigp",
    "zigzigp",
@@ -918,6 +932,7 @@ tagtabitem tagtabinit[] = {
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info for part 2 of chain reaction. */
+      {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info for part 2 of make a pass. */
       {0, "tagnullcall0"},   /* These 4 must be consecutive. */
       {0, "tagnullcall1"},
       {0, "tagnullcall2"},
@@ -1594,7 +1609,7 @@ def2:
          callarray_flags1 |= CAF__OTHER_ELONGATE;
       }
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
-         if (call_endsetup != (int)s_normal_concentric)
+         if (call_endsetup != (int) s_normal_concentric)
             errexit("concendsetup with wrong end_setup");
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper setup specifier");

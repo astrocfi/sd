@@ -205,6 +205,7 @@ Cstring direction_names[] = {
    "right",
    "in",
    "out",
+   "back",
    "zig-zag",
    "zag-zig",
    "zig-zig",
@@ -307,7 +308,7 @@ static restriction_thing ijright_qtag  = {8, {6, 2, 0, 4, 7, 3, 1, 5},          
 static restriction_thing two_faced_2x4 = {8, {0, 3, 1, 2, 6, 5, 7, 4},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent two-faced lines */
 static restriction_thing wave_3x4      = {12, {0, 1, 2, 3, 5, 4, 7, 6, 9, 8, 10, 11},    {0},             {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent waves */
 static restriction_thing two_faced_3x4 = {12, {0, 2, 1, 3, 8, 4, 9, 5, 10, 6, 11, 7},    {0},             {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent two-faced lines */
-static restriction_thing wave_1x2      = {2, {0, 1},                      {0},                            {0}, {0}, TRUE, chk_wave};            /* check for a miniwave -- note this is NOT OK for assume */
+static restriction_thing wave_1x2      = {2, {0, 1},                      {0},                            {0}, {0}, TRUE, chk_wave};            /* check for a miniwave */
 static restriction_thing wave_1x3      = {3, {0, 1, 2},                      {0},                         {0}, {0}, TRUE, chk_wave};            /* check for a wave */
 static restriction_thing wave_1x4      = {4, {0, 1, 3, 2},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for a wave */
 static restriction_thing wave_1x6      = {6, {0, 1, 2, 5, 4, 3},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 6 */
@@ -423,8 +424,6 @@ static restriction_thing r1qt          = {4, {6, 7, 3, 2},             {4, 4, 0,
 static restriction_thing r3qt          = {4, {6, 7, 3, 2},             {4, 0, 4, 1, 5},                   {0}, {0}, TRUE, chk_qtag};
 static restriction_thing r1ql          = {4, {6, 3, 7, 2},             {4, 4, 0, 5, 1},                   {0}, {0}, TRUE, chk_qtag};
 static restriction_thing r3ql          = {4, {6, 3, 7, 2},             {4, 0, 4, 1, 5},                   {0}, {0}, TRUE, chk_qtag};
-
-static restriction_thing check_4x1_8ch = {4, {0, 1, 3, 2},                                           {0}, {0}, {0}, FALSE, chk_wave};
 
 /* Must be a power of 2. */
 #define NUM_RESTR_HASH_BUCKETS 32
@@ -570,6 +569,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
                restr_thing_ptr = &all_same_4;
             else if (t.assumption == cr_2fl_only)
                restr_thing_ptr = &two_faced_1x4;
+            else if (t.assumption == cr_li_lo)
+               restr_thing_ptr = &wave_1x4;
             break;
          case s1x6:
             if (t.assumption == cr_all_facing_same)
@@ -600,6 +601,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          case s1x2:
             if (t.assumption == cr_all_facing_same)
                restr_thing_ptr = &all_same_2;
+            else if (t.assumption == cr_li_lo)
+               restr_thing_ptr = &wave_1x2;
             break;
          case s2x6:
             if (t.assumption == cr_wave_only)
@@ -1936,6 +1939,11 @@ Private void printsetup(setup *x)
                }
             }
             break;
+         case s_dead_concentric:
+            writestuff(" centers only:");
+            newline();
+            print_4_person_setup(0, &(x->inner), -1);
+            break;
          case s_normal_concentric:
             writestuff(" centers:");
             newline();
@@ -2682,26 +2690,29 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
          case sq_facing_in:
             tt.assump_both = 1;   /* To get facing-in only. */
-            rr = &box_in_or_out;
-            goto check_stuff;
+            tt.assumption = cr_li_lo;
+            goto fix_col_line_stuff;
          case sq_facing_out:
             tt.assump_both = 2;   /* To get facing-out only. */
-            rr = &box_in_or_out;
-            goto check_stuff;
+            tt.assumption = cr_li_lo;
+            goto fix_col_line_stuff;
          case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
-            switch (ss->kind) {
-               case s2x2:
-                  rr = &box_in_or_out;
-                  goto check_stuff;
-               case s1x2:
-                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                  if (!(k & ~i & 2)) goto good;
-
-                  goto bad;
+            switch (ss->kind) {                /* 2x4 - this means lines in/out or 8ch/tby */
+               case s1x2: case s1x4: case s2x2: case s2x4:
+                  tt.assumption = cr_li_lo;
+                  goto fix_col_line_stuff;
                default:
                   goto good;           /* We don't understand the setup -- we'd better accept it. */
             }
+         case sq_all_facing_same:
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_wave_only:
+               case cr_magic_only:
+                  goto bad;
+            }
+
+            tt.assumption = cr_all_facing_same;
+            goto fix_col_line_stuff;
          case sq_1fl_only:       /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2923,21 +2934,34 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                 (ss->people[3].id1 & d_mask) == d_west)
                goto good;
             goto bad;
-         case sq_8_chain:                   /* 4x1/4x2 - setup is (single) 8-chain */
-         case sq_trade_by:                  /* 4x1/4x2 - setup is (single) trade-by */
+         case sq_8_chain:                   /* 4x1/2x1/4x2 - setup is (single) 8-chain */
+         case sq_trade_by:                  /* 4x1/2x1/4x2 - setup is (single) trade-by */
             tt.assumption = cr_li_lo;
             tt.assump_col = 1;
             tt.assump_both = (((search_qualifier) p->qualifier) == sq_trade_by) ? 2 : 1;
 
             switch (ss->kind) {
-               case s1x4:
-                  rr = &check_4x1_8ch;
-                  goto check_stuff;
-               case s2x4:
+               case s1x2: case s1x4: case s2x4:
                   goto check_tt;
                default:
                   goto bad;
             }
+         case sq_qtag_like:
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_diamond_like:
+                  goto bad;
+            }
+
+            tt.assumption = cr_qtag_like;
+            goto check_tt;
+         case sq_diamond_like:
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_qtag_like:
+                  goto bad;
+            }
+
+            tt.assumption = cr_diamond_like;
+            goto check_tt;
          case sq_split_dixie:
             if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED) goto good;
             goto bad;
@@ -3037,20 +3061,29 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                if ((search_qualifier) p->qualifier == kkk) goto good;
             }
             goto bad;
-         case sq_ends_looking_out:
+         case sq_line_ends_looking_out:
             if (ss->kind != s2x4) goto bad;
             if ((t = ss->people[0].id1) && (t & d_mask) != d_north) goto bad;
             if ((t = ss->people[3].id1) && (t & d_mask) != d_north) goto bad;
             if ((t = ss->people[4].id1) && (t & d_mask) != d_south) goto bad;
             if ((t = ss->people[7].id1) && (t & d_mask) != d_south) goto bad;
             goto good;
+         case sq_col_ends_lookin_in:
+            if (ss->kind != s2x4) goto bad;
+            if ((t = ss->people[0].id1) && (t & d_mask) != d_east) goto bad;
+            if ((t = ss->people[3].id1) && (t & d_mask) != d_west) goto bad;
+            if ((t = ss->people[4].id1) && (t & d_mask) != d_west) goto bad;
+            if ((t = ss->people[7].id1) && (t & d_mask) != d_east) goto bad;
+            goto good;
          case sq_ripple_centers:
             k ^= (0xA82 ^ 0x144);
             /* FALL THROUGH!!!!!! */
          case sq_ripple_one_end:
+            /* FELL THROUGH!!!!!! */
             k ^= (0x144 ^ 0x555);
             /* FALL THROUGH!!!!!! */
          case sq_ripple_both_ends:
+            /* FELL THROUGH!!!!!! */
             if (ss->kind != s1x4) goto good;
             k ^= 0x555;
             mask = 0;
@@ -3068,6 +3101,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             k = 0xFF;     /* K was initialized to zero. */
             /* FALL THROUGH!!!!!! */
          case sq_ends_sel:
+            /* FELL THROUGH!!!!!! */
             /* Now k=0 for "ends_sel", and 0xFF for "ctrs_sel". */
             switch (ss->kind) {
                case s2x4: k ^= 0x99; break;
@@ -3089,6 +3123,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             k = 1;     /* K was initialized to zero. */
             /* FALL THROUGH!!!!!! */
          case sq_none_sel:
+            /* FELL THROUGH!!!!!! */
             /* Now k=0 for "none_sel", and 1 for "all_sel". */
             if (setup_attrs[ss->kind].setup_limits >= 2) goto good;
             j = 1;
@@ -3142,7 +3177,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case s1x3:
             if (tt.assump_both) goto bad;   /* We can't check a 1x3 for right-or-left-handedness. */
             /* FALL THROUGH!!! */
-         case s1x2: case s1x6: case s1x8: case s1x10:
+         case s1x6: case s1x8: case s1x10:
          case s1x12: case s1x14: case s1x16:
          case s2x2: case s4x4: case s_thar: case s_qtag: case s_trngl:
             /* FELL THROUGH!!! */
@@ -3152,6 +3187,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             goto check_tt;
          case s1x4:  /* Note that 1x6, 1x8, etc should be here also.  This will
                            make "cr_2fl_only" and such things work in 4x1. */
+         case s1x2:
          case s2x4:
          case s2x6:
          case s2x8:
@@ -3556,6 +3592,9 @@ extern long_boolean fix_n_results(int arity, setup z[])
          else
             fail("Don't recognize ending setup for this call.");
       }
+      else if (z[i].kind == s_dead_concentric) {
+         continue;      /* Defer this until later; we may be able to figure something out. */
+      }
 
       if (z[i].kind != nothing) {
          canonicalize_rotation(&z[i]);
@@ -3594,7 +3633,8 @@ extern long_boolean fix_n_results(int arity, setup z[])
    /* Now deal with any setups that we may have deferred. */
 
    for (i=0; i<arity; i++) {
-      if (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing) {
+      if (     z[i].kind == s_dead_concentric ||
+               (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing)) {
          if (z[i].inner.skind == s2x2 && kk == s2x4) {
             /* Turn the 2x2 into a 2x4.  Need to make it have same rotation as the others;
                that is, rotation = rr.  (We know that rr has something in it by now.) */

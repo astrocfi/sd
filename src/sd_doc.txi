@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: February 9, 1997
+@set Time-stamp: April 12, 1997
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.84
+@set sd-version 31.85
 @set full-manual
 @c %**end of header
 @iftex
@@ -188,11 +188,14 @@ Call Notes
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
 * Snag Circulate::              Snag Circulate
+* Bridge the Gap::              Bridge the Gap
+* Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
+* Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
 
 Concept Notes
 
@@ -2475,11 +2478,14 @@ appropriate to get the dancers through the action that you intend.
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
 * Snag Circulate::              Snag Circulate
+* Bridge the Gap::              Bridge the Gap
+* Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
+* Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
 @end menu
 
 @node Sweeping Direction, C1 Single Rotate, , Call Notes
@@ -2590,7 +2596,7 @@ star thru''.
 These calls are intended for use in sequences that begin with heads
 or sides promenading halfway around the set.  The calls are
 @example
-   promenade halfway, come in to the middle and <ANYTHING>
+   promenade halfway @r{(or @code{1/4} or @code{1/2} or @code{3/4})}, come in to the middle and <ANYTHING>
 @end example
 and
 @example
@@ -2717,7 +2723,7 @@ Use this call when you want just the centers or ends to do their part,
 or you are using some concept like @samp{central}.  In other circumstances,
 just @samp{grand chain 8} should work.
 
-@node Snag Circulate, Funny Square Thru, Grand Chain 8, Call Notes
+@node Snag Circulate, Bridge the Gap, Grand Chain 8, Call Notes
 @section Snag Circulate
 
 The @samp{snag} concept, meaning to have the centers do just half of the
@@ -2725,7 +2731,46 @@ call, does not work with the call @samp{circulate}, because that
 call is not defined in the database as having centers' and ends' parts.
 Hence, the separate call @samp{snag circulate} has been provided.
 
-@node Funny Square Thru, Rotate from Columns, Snag Circulate, Call Notes
+@node Bridge the Gap, Hocus Pocus, Snag Circulate, Call Notes
+@section Bridge the Gap
+
+The call @samp{bridge the gap} is defined as a ``space invader'' call.
+That is, the call is defined in terms of matrix operations like @samp{press}.
+As such, using it with a concept such as @code{offset columns} is
+problematical---it isn't clear how to put back an arbitrary matrix.
+
+It happens that, when called from a starting double pass
+thru formation, the call goes to a well-behaved 2x4 formation.  In fact, it
+is equivalent to @samp{tandem twosome fan thru to a wave} from that formation.
+If the call had been defined that way, it could be used with concepts
+such as @code{offset columns}.  Callers sometimes use this call with such
+concepts, when the virtual starting formation is a double pass thru.  To
+do this in Sd, you must use the call @samp{bridge the gap (dpt)}.  It is
+defined as @samp{tandem twosome fan thru to a wave}, and is only legal
+in a (virtual) starting double pass thru.  The call @samp{bridge the gap}
+is the actual space-invader call.
+
+@node Hocus Pocus, Funny Square Thru, Bridge the Gap, Call Notes
+@section Hocus Pocus
+
+There is a call @samp{hocus pocus (fractions)} in the database.
+It understands the fact that the outsides' part of this call
+has two @samp{O circulates}, and it allows fractionalization concepts
+to be applied.  For example, from diamonds, @code{1/2 hocus pocus (fractions)}
+typically creates a 4x4 matrix of some kind.
+
+Unfortunately, this call can't always be used with phantoms.
+There is a common notion that dancers ``know'' that the pair of
+@samp{O circulates} changes the shape of a 2x4.  Callers take advantage of this,
+calling @code{split phantom columns hocus pocus} from waves, knowing that the
+dancers will ``leave room for the phantoms''.  If the number of @samp{O circulates}
+isn't known to be two, this property disappears.  So the call @samp{hocus pocus}
+knows about the shape change, even in the presence of phantoms, and should
+be used with concepts like @samp{split phantom columns}, to get the correct phantom
+behavior.  In the call @samp{hocus pocus (fractions)}, all bets are off regarding
+the phantoms' action.
+
+@node Funny Square Thru, Rotate from Columns, Hocus Pocus, Call Notes
 @section Funny Square Thru
 
 Because of the peculiarity of this call, this call was not implemented
@@ -2782,7 +2827,7 @@ one position on the computer screen, so that the pairs will have the other
 handedness.  You of course do not read this line when calling---the dancers
 will be able to figure out who needs to work with whom on the next call.
 
-@node Going Through Impossible Situations,  , Adjust Alamo to Other Pairing, Call Notes
+@node Going Through Impossible Situations, Matrix Calls in 1/4 Tags, Adjust Alamo to Other Pairing, Call Notes
 @section Going Through Impossible Situations
 
 Under certain circumstances, people who collide in the same spot during
@@ -2811,6 +2856,25 @@ calls that are illegal in the existing setup.  For example, flip back
 is illegal from facing lines.  If you really want people to do it anyway,
 with everyone doing their part, you can enter @code{beaus do your part,
 flip back while the others flip back}.
+
+@node Matrix Calls in 1/4 Tags,  , Going Through Impossible Situations, Call Notes
+@section Matrix Calls in 1/4 Tags
+
+The program believes that, in 1/4 tags and diamonds, the outsides are not
+located in really precise positions.  There is a good reason for this---there
+are real problems with the positioning in 1/4 tags.
+
+Because of this, matrix (``space invader'') calls, like @samp{press} and @samp{truck},
+are not permitted.  You can override this prohibition by using the @code{3x4 matrix}
+concept.  So, for example, after @samp{heads pass the ocean}, you could enter
+@code{3x4 matrix side girls truck}, obtaining Z's.  You may or may not need to
+say anything to the dancers to persuade them to get the effect you want.
+
+You may also use concepts like @samp{triple lines} when in a 1/4 tag.  The
+program (and presumably the dancers also) will place the outsides in the center
+of the outer triple lines.
+
+For some calls, the @samp{12 matrix} concept will also be helpful.
 
 @node Concept Notes, Misc Advice, Call Notes, Top
 @chapter Concept Notes
@@ -3112,6 +3176,10 @@ The menu for these is brought up by clicking on the ``couples/tandem concepts'' 
 @item as couples in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 tag
 @item as couples in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 line
 @item as couples in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 line
+@item tandem in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 tag
+@item tandem in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 tag
+@item tandem in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 line
+@item tandem in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 line
 @item <ANYONE> are as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples twosome
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
 @item <ANYONE> are couples of three@ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
@@ -3130,8 +3198,10 @@ Any of the above twosome/threesome/whateversome may also be
 ``<N/4> whateversome'' or ``whateversome <N/4> solid''
 
 The concepts like @samp{as couples in a 1/4 tag} are intended to be used from tidal
-2-faced lines or tidal 1-faced lines.  They cause the live dancers to become the
-centers of the resulting 1/4 tag or 1/4 line.  They may also be used when the live
+2-faced lines or tidal 1-faced lines.  The concepts like @samp{tandem in a 1/4 tag}
+are intended to be used from parallel waves or parallel 2-faced lines.
+They cause the live dancers to become the centers of the resulting 1/4 tag or 1/4 line.
+They may also be used when the live
 people are partially or entirely on the outside.  If you want to instantiate outside
 phantoms with facing directions other than those provided, use the
 @samp{16 matrix of parallel diamonds} concept to create the spots, and then use
@@ -3148,7 +3218,8 @@ line, you could say:
 @end group
 @end example
 
-Any of the above may be used with the @code{phantom} concept in front
+Any of the tandem or couples concepts
+may be used with the @code{phantom} concept in front
 of it.  There are no concepts like @code{phantom tandem} listed
 separately---you must use the @code{phantom} concept followed by the
 concept that you want.  Of course, when using @code{Sdtty}, this issue doesn't make any
@@ -3448,6 +3519,7 @@ to dictate where the ends should finish.
 @item <ANYONE> preferred for trade, checkerbox
 @item <ANYONE> preferred for trade, checkerdiamond
 @item shadow box
+@item anchor the <ANYONE>
 These are straightforward.
 @item <ANYONE> work
 This seemingly nonsensical phrase is intended to be followed by another concept, as in

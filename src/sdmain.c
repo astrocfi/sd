@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.84"
-#define TIME_STAMP "wba@apollo.hp.com  09 Feb 97 $"
+#define VERSION_STRING "31.85"
+#define TIME_STAMP "wba@apollo.hp.com  31 Mar 97 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -103,7 +103,7 @@ and the following external variables:
    source control utilities to alter the text in a source file. */
 
 static Const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
-
+   
 
 extern char *sd_version_string(void)
 {
@@ -845,10 +845,10 @@ extern long_boolean query_for_call(void)
          error_flag = 0;
          goto try_again;
       }
-
+      
       /* First, update the output area to the current state, with error messages, etc.
          We draw a picture for the last two calls. */
-
+      
       display_initial_history(history_ptr, (diagnostic_mode ? 1 : 2));
 
       if (sequence_is_resolved()) {
@@ -858,9 +858,9 @@ extern long_boolean query_for_call(void)
          write_resolve_text(FALSE);
          newline();
       }
-
+      
       if (error_flag) {
-
+      
          if (error_flag != 4) {
             writestuff("Can't do this call:");
             newline();
@@ -870,7 +870,7 @@ extern long_boolean query_for_call(void)
          if (error_flag == 3) {
                   /* very special message -- no text here, two people collided
                      and they are stored in collision_person1 and collision_person2. */
-
+   
             writestuff("Some people (");
             print_error_person(collision_person1, FALSE);
             writestuff(" and ");
@@ -891,7 +891,7 @@ extern long_boolean query_for_call(void)
          else if (error_flag == 6) {
                   /* very special message -- no text here, someone can't execute the
                      call, and he is stored in collision_person1. */
-
+  
             writestuff("Some person (");
             print_error_person(collision_person1, TRUE);
             writestuff(") ");
@@ -899,7 +899,7 @@ extern long_boolean query_for_call(void)
          }
          else           /* Must be 5, special signal for aborting out of subcall reader. */
             writestuff("You can't select that here.");
-
+      
          newline();
          newline();
       }
@@ -1108,7 +1108,7 @@ extern long_boolean query_for_call(void)
          special precautions against an infinite loop.  Second, and more importantly, if we
          just called the random number generator again, it would screw up the hash numbers,
          which would make the uniquefication fail, so we could see the same thing twice. */
-
+   
       if (     (search_goal == command_level_call || search_goal == command_8person_level_call) &&
                ((dance_level) result->level) < level_threshholds[calling_level]) fail("Level reject.");
       if (result->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE) fail("This shouldn't get printed.");
@@ -1119,19 +1119,19 @@ extern long_boolean query_for_call(void)
 
    if (parse_state.parse_stack_index != 0) {
       /* Set stuff up for reading second call and its concepts. */
-
+   
       /* Create a new parse block, point concept_write_ptr at its contents. */
       /* Fill in the pointer to the second parse block. */
-
+   
       parse_state.concept_write_ptr = parse_state.parse_stack[--parse_state.parse_stack_index].concept_write_save_ptr;
 
       (*parse_state.concept_write_ptr)->subsidiary_root = (parse_block *) 0;
       parse_state.concept_write_base = &(*parse_state.concept_write_ptr)->subsidiary_root;
       parse_state.concept_write_ptr = parse_state.concept_write_base;
       *parse_state.concept_write_ptr = (parse_block *) 0;
-
+   
       parse_state.call_list_to_use = call_list_any;
-
+   
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
          case concept_centers_and_ends:
             (void) strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
@@ -1143,7 +1143,7 @@ extern long_boolean query_for_call(void)
             (void) strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
             break;
       }
-
+   
       parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
       goto recurse_entry;
    }
@@ -1438,8 +1438,8 @@ void main(int argc, char *argv[])
    /* We need to take away the "zig-zag" directions if the level is below A2. */
 
    if (calling_level < zig_zag_level) {
-      last_direction_kind = direction_out;
-      direction_names[direction_out+1] = (Cstring) 0;
+      last_direction_kind = direction_zigzag-1;
+      direction_names[direction_zigzag] = (Cstring) 0;
    }
 
    if (glob_call_list_mode == call_list_mode_none || glob_call_list_mode == call_list_mode_abridging)
@@ -1458,7 +1458,7 @@ void main(int argc, char *argv[])
    initialize_conc_tables();
    initialize_map_tables();
    initialize_touch_tables();
-
+   
    initialize_menus(glob_call_list_mode);    /* This sets up max_base_calls. */
 
    /* If we wrote a call list file, that's all we do. */
@@ -1488,7 +1488,7 @@ void main(int argc, char *argv[])
    if (error_flag) {
 
       /* The call we were trying to do has failed.  Abort it and display the error message. */
-
+   
       if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
          init_error(error_message1);
          goto normal_exit;
@@ -1498,7 +1498,7 @@ void main(int argc, char *argv[])
       history[0].command_root = copy_parse_tree(history[0].command_root);  /* But copy the parse tree, since we are going to clip it. */
       for (i=0 ; i<WARNING_WORDS ; i++)
          history[0].warnings.bits[i] = 0;         /* But without any warnings we may have collected. */
-
+   
       if (error_flag == 5) {
          /* Special signal -- user clicked on special thing while trying to get subcall. */
          if ((reply == ui_command_select) &&
@@ -1509,14 +1509,14 @@ void main(int argc, char *argv[])
             reply_pending = TRUE;
             goto start_with_pending_reply;
       }
-
+   
       /* Try to remove the call from the current parse tree, but leave everything else
          in place.  This will fail if the parse tree, or our place on it, is too
          complicated.  Also, we do not do it if in diagnostic mode, or if the user
          did not specify "retain_after_error", or if the special "heads into the middle and ..."
          operation is in place. */
 
-      if (     !diagnostic_mode &&
+      if (     !diagnostic_mode && 
                retain_after_error &&
                ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
                backup_one_item()) {
@@ -1527,11 +1527,11 @@ void main(int argc, char *argv[])
       }
       goto start_cycle;      /* Failed, reinitialize the whole line. */
    }
-
+   
    interactivity = interactivity_normal;
 
    /* HERE IS (APPROXIMATELY) WHERE THE PROGRAM STARTS. */
-
+   
    clear_screen();
 
    if (!diagnostic_mode) {
@@ -1568,17 +1568,17 @@ void main(int argc, char *argv[])
       (void) uims_do_header_popup(header_comment);
       need_new_header_comment = FALSE;
    }
-
+   
    new_sequence:
-
+   
    /* Here to start a fresh sequence.  If first time, or if we got here by clicking on "abort",
       the screen has been cleared.  Otherwise, it shows the last sequence that we wrote. */
 
    /* Replace all the parse blocks left from the last sequence. */
    release_parse_blocks_to_mark((parse_block *) 0);
-
+   
    /* Query for the starting setup. */
-
+   
    reply = uims_get_startup_command();
 
    if (reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
@@ -1623,7 +1623,7 @@ void main(int argc, char *argv[])
          need_new_header_comment = FALSE;
          goto new_sequence;
    }
-
+   
    history_ptr = 1;              /* Clear the position history. */
 
    whole_sequence_low_lim = 2;
@@ -1638,9 +1638,9 @@ void main(int argc, char *argv[])
    written_history_items = -1;
 
    error_flag = 0;
-
+   
    /* Come here to read a bunch of concepts and a call and add an item to the history. */
-
+   
    start_cycle:
 
    reply_pending = FALSE;
@@ -1680,14 +1680,14 @@ void main(int argc, char *argv[])
    initialize_parse();
 
    /* Check for first call given to heads or sides only. */
-
+   
    if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
       deposit_concept(&centers_concept);
-
+   
    /* Come here to get a concept or call or whatever from the user. */
-
+   
    /* Display the menu and make a choice!!!! */
-
+   
    simple_restart:
 
    if ((!reply_pending) && (!query_for_call())) {
@@ -1697,14 +1697,14 @@ void main(int argc, char *argv[])
          above, reset history_ptr, and go to start_cycle with the error message displayed. */
 
       toplevelmove();
-
+      
       /* Call successfully completed and has been stored in history. */
-
+      
       history_ptr++;
 
       goto start_cycle;
    }
-
+   
    /* If get here, query_for_call exitted without completing its parse, because the operator
       selected something like "quit", "undo", or "resolve", or because we have such a command
       already pending. */
@@ -1771,7 +1771,7 @@ void main(int argc, char *argv[])
          case command_change_header:
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
-
+         
                if (uims_do_header_popup(newhead_string)) {
                   (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
@@ -1796,7 +1796,7 @@ void main(int argc, char *argv[])
                char title[MAX_TEXT_LINE_LENGTH];
                int percentage, calls_to_mark, i, deficit, final_percent;
                call_list_kind dummy = call_list_any;
-
+      
                if (uims_do_neglect_popup(percentage_string)) {
                   percentage = parse_number(percentage_string);
                   if ((percentage < 1) || (percentage > 99)) goto start_cycle;
@@ -1804,33 +1804,33 @@ void main(int argc, char *argv[])
                else {
                   percentage = 25;
                }
-
+      
                calls_to_mark = number_of_calls[call_list_any] * percentage / 100;
                if (calls_to_mark > number_of_calls[call_list_any])
                   calls_to_mark = number_of_calls[call_list_any];
-
+      
                start_neglect:
-
+      
                /* Clear all the marks. */
-
+      
                for (i=0; i<number_of_calls[call_list_any]; i++) {
                   BOGUS USE OF CALLFLAGSH! main_call_lists[call_list_any][i]->callflagsh &= ~0x80000000;
                }
-
+      
                deficit = mark_aged_calls(0, calls_to_mark, 31);
-
+      
                /* Determine percentage that were actually marked. */
-
+      
                final_percent = ((calls_to_mark-deficit) * 100) / number_of_calls[call_list_any];
                if (final_percent > 100) final_percent = 100;
-
+      
                fill_in_neglect_percentage(title, final_percent);
                clear_screen();
                writestuff(title);
                newline();
-
+      
                /* Print the marked calls. */
-
+            
                for (i=0; i<number_of_calls[call_list_any]; i++) {
                   BOGUS USE OF CALLFLAGSH! if (main_call_lists[call_list_any][i]->callflagsh & 0x80000000) {
                      writestuff(main_call_lists[call_list_any][i]->name);
@@ -1838,12 +1838,12 @@ void main(int argc, char *argv[])
                   }
                }
                newline();
-
+      
                error_flag = 0;
-
+               
 /* **** this call is no longer in conformance with the procedure's behavior */
                local_reply = uims_get_call_command(&dummy);
-
+            
                if (local_reply == ui_call_select) {
                   /* Age this call. */
                   main_call_lists[call_list_any][uims_menu_index]->age = global_age;
@@ -1905,7 +1905,7 @@ void main(int argc, char *argv[])
       goto normal_exit;
 
    normal_exit:
-
+   
    exit_program(0);
 }
 

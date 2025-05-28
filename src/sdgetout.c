@@ -858,7 +858,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    }
    else if (goal == command_8person_level_call) {
       /* We demand that no splitting have taken place along either axis. */
-      if (ns->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) goto what_a_loss;
+      if (ns->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) goto what_a_loss;
    }
 
    /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be

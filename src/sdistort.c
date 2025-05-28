@@ -83,6 +83,7 @@ Private void innards(
    Const map_thing *maps,
    long_boolean recompute_id,
    assumption_thing new_assume,
+   long_boolean do_second_only,
    setup *x,
    setup *result)
 {
@@ -176,6 +177,12 @@ Private void innards(
       *result = z[0];
       goto getout;
    }
+   else if (do_second_only) {
+      /* This was a T-boned "phantom lines" in which people were
+         in the center lines only. */
+      *result = z[1];
+      goto getout;
+   }
 
    if (  (map_kind == MPKIND__OVERLAP || map_kind == MPKIND__INTLK || map_kind == MPKIND__CONCPHAN) &&
          (result->result_flags & (RESULTFLAG__SPLIT_AXIS_BIT << (vert & 1))))
@@ -245,6 +252,14 @@ Private void innards(
          else if (z[0].kind == s_galaxy && z[0].rotation == 0) {
             map_kind = MPKIND__OVERLAP;
             final_map = &map_ov_gal_1;
+            result->rotation = z[0].rotation;
+            goto got_map;
+         }
+      }
+      else if (arity == 3 && map_kind == MPKIND__OVERLAP && before_distance == 4) {
+         if (z[0].kind == s_qtag && z[0].rotation == 1) {
+            map_kind = MPKIND__OVERLAP;
+            final_map = &map_3o_qtag_1;
             result->rotation = z[0].rotation;
             goto got_map;
          }
@@ -703,10 +718,12 @@ extern void divided_setup_move(
          t.assumption = cr_1fl_only;
    }
 
-   innards(ss, maps, recompute_id, t, x, result);
+   innards(
+         ss, maps, recompute_id, t,
+         maps->map_kind == MPKIND__CONCPHAN && phancontrol == phantest_ctr_phantom_line && !v1flag,
+         x, result);
 
    /* Put in the splitting axis info, if appropriate. */
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
    if (maps->map_kind == MPKIND__SPLIT)
       result->result_flags |= RESULTFLAG__SPLIT_AXIS_BIT * (maps->vert+1);
 
@@ -781,8 +798,8 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    x[2].kind = kn;
 
    t.assumption = cr_none;
-   innards(ss, maps, TRUE, t, x, result);
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+   innards(ss, maps, TRUE, t, FALSE, x, result);
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
 static Const veryshort list_10_6_5_4[4] = {8, 6, 5, 4};
@@ -910,7 +927,7 @@ extern void do_phantom_2x4_concept(
          (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
    result->rotation -= rot;   /* Flip the setup back. */
    /* The split-axis bits are gone.  If someone needs them, we have work to do. */
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
 
@@ -1227,7 +1244,7 @@ extern void distorted_2x2s_move(
             result->rotation = res1.rotation;
             scatter(result, &res1, map_ptr, 3, rotz);
             scatter(result, &res2, &map_ptr[4], 3, rotz);
-            result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_MASK;
+            result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
             reinstate_rotation(ss, result);
          
             if (columns) {
@@ -1458,7 +1475,7 @@ extern void distorted_move(
    if (res1.kind != k || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
    result->rotation = res1.rotation;
    scatter(result, &res1, the_map, 7, rotz);
-   result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_MASK;
+   result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
    reinstate_rotation(ss, result);
    goto getout;
    
@@ -1501,7 +1518,7 @@ extern void distorted_move(
       new_divided_setup_move(ss, mapcode, phantest_ok, TRUE, result);
 
    /* The split-axis bits are gone.  If someone needs them, we have work to do. */
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
    getout:
 

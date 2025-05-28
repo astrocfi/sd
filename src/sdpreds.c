@@ -291,6 +291,10 @@ static Const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
 static Const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
 static Const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
 static Const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
+static Const long int tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
+static Const long int tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
+static Const long int tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
+static Const long int tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
 
 
 /* Here are the predicates.  They will get put into the array "pred_table". */
@@ -571,106 +575,36 @@ Private long_boolean lines_couple(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean miniwave_side_of_in_3n1_line(setup *real_people, int real_index,
+Private long_boolean check_3n1_setup(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
+   int A = extra_stuff[0];
+   int B = extra_stuff[1];
+   int C = extra_stuff[2];
+   int D = extra_stuff[3];
+   int E = extra_stuff[4];
+   int F = extra_stuff[5];
+   int G = extra_stuff[6];
+
    if (     real_people->cmd.cmd_assume.assumption == cr_wave_only ||
             real_people->cmd.cmd_assume.assumption == cr_2fl_only ||
-            ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) != 2)
+            ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) != A)
       return FALSE;
    else if (real_people->kind == s2x4) {
       int k = real_index & 2;
 
       return
-         ((real_people->people[0].id1 ^ real_people->people[3].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[4].id1 ^ real_people->people[7].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[0].id1 ^ real_people->people[4].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 2].id1 ^ real_people->people[k ^ 3].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[k ^ 6].id1 ^ real_people->people[k ^ 7].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[k ^ 4].id1 ^ real_people->people[k ^ 5].id1) & DIR_MASK) == 2;
+         ((real_people->people[C].id1 ^ real_people->people[E].id1) & DIR_MASK) == 0 &&
+         ((real_people->people[D].id1 ^ real_people->people[F].id1) & DIR_MASK) == 0 &&
+         ((real_people->people[C].id1 ^ real_people->people[D].id1) & DIR_MASK) == 2 &&
+         ((real_people->people[k ^ 2].id1 ^ real_people->people[k ^ 3].id1) & DIR_MASK) == B &&
+         ((real_people->people[k ^ 6].id1 ^ real_people->people[k ^ 7].id1) & DIR_MASK) == B &&
+         ((real_people->people[k ^ 4].id1 ^ real_people->people[k ^ 5].id1) & DIR_MASK) == A;
    }
    else {
       return
-         ((real_people->people[0].id1 ^ real_people->people[2].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[0].id1 ^ real_people->people[(real_index & 2) ^ 3].id1) & DIR_MASK) == 0;
-   }
-}
-
-/* ARGSUSED */
-Private long_boolean couple_side_of_in_3n1_line(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   if (     real_people->cmd.cmd_assume.assumption == cr_wave_only ||
-            real_people->cmd.cmd_assume.assumption == cr_2fl_only ||
-            ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) != 0)
-      return FALSE;
-   else if (real_people->kind == s2x4) {
-      int k = real_index & 2;
-
-      return
-         ((real_people->people[0].id1 ^ real_people->people[3].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[4].id1 ^ real_people->people[7].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[0].id1 ^ real_people->people[4].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 2].id1 ^ real_people->people[k ^ 3].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 6].id1 ^ real_people->people[k ^ 7].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 4].id1 ^ real_people->people[k ^ 5].id1) & DIR_MASK) == 0;
-   }
-   else {
-      return
-         ((real_people->people[0].id1 ^ real_people->people[2].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[0].id1 ^ real_people->people[(real_index & 2) ^ 3].id1) & DIR_MASK) == 2;
-   }
-}
-
-/* ARGSUSED */
-Private long_boolean miniwave_side_of_out_3n1_line(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   if (     real_people->cmd.cmd_assume.assumption == cr_wave_only ||
-            real_people->cmd.cmd_assume.assumption == cr_2fl_only ||
-            ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) != 2)
-      return FALSE;
-   else if (real_people->kind == s2x4) {
-      int k = real_index & 2;
-
-      return
-         ((real_people->people[1].id1 ^ real_people->people[2].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[5].id1 ^ real_people->people[6].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[1].id1 ^ real_people->people[5].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 2].id1 ^ real_people->people[k ^ 3].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[k ^ 6].id1 ^ real_people->people[k ^ 7].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[k ^ 4].id1 ^ real_people->people[k ^ 5].id1) & DIR_MASK) == 2;
-   }
-   else {
-      return
-         ((real_people->people[1].id1 ^ real_people->people[3].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[1].id1 ^ real_people->people[(real_index & 2) ^ 2].id1) & DIR_MASK) == 0;
-   }
-}
-
-/* ARGSUSED */
-Private long_boolean couple_side_of_out_3n1_line(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   if (     real_people->cmd.cmd_assume.assumption == cr_wave_only ||
-            real_people->cmd.cmd_assume.assumption == cr_2fl_only ||
-            ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) != 0)
-      return FALSE;
-   else if (real_people->kind == s2x4) {
-      int k = real_index & 2;
-
-      return
-         ((real_people->people[1].id1 ^ real_people->people[2].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[5].id1 ^ real_people->people[6].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[1].id1 ^ real_people->people[5].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 2].id1 ^ real_people->people[k ^ 3].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 6].id1 ^ real_people->people[k ^ 7].id1) & DIR_MASK) == 2 &&
-         ((real_people->people[k ^ 4].id1 ^ real_people->people[k ^ 5].id1) & DIR_MASK) == 0;
-   }
-   else {
-      return
-         ((real_people->people[1].id1 ^ real_people->people[3].id1) & DIR_MASK) == 0 &&
-         ((real_people->people[1].id1 ^ real_people->people[(real_index & 2) ^ 2].id1) & DIR_MASK) == 2;
+         ((real_people->people[C].id1 ^ real_people->people[G].id1) & DIR_MASK) == 0 &&
+         ((real_people->people[C].id1 ^ real_people->people[(real_index & 2) ^ E].id1) & DIR_MASK) == B;
    }
 }
 
@@ -1769,14 +1703,14 @@ predicate_descriptor pred_table[] = {
       {x14_once_rem_couple,          (Const long int *) 0},      /* "x14_once_rem_couple" */
       {lines_miniwave,               (Const long int *) 0},      /* "lines_miniwave" */
       {lines_couple,                 (Const long int *) 0},      /* "lines_couple" */
-      {miniwave_side_of_in_3n1_line, (Const long int *) 0},      /* "miniwave_side_of_in_3n1_line" */
-      {couple_side_of_in_3n1_line,   (Const long int *) 0},      /* "couple_side_of_in_3n1_line" */
-      {miniwave_side_of_out_3n1_line,(Const long int *) 0},      /* "miniwave_side_of_out_3n1_line" */
-      {couple_side_of_out_3n1_line,  (Const long int *) 0},      /* "couple_side_of_out_3n1_line" */
-      {miniwave_side_of_in_3n1_line, (Const long int *) 0},      /* "antitandem_side_of_in_3n1_col" */
-      {couple_side_of_in_3n1_line,   (Const long int *) 0},      /* "tandem_side_of_in_3n1_col" */
-      {miniwave_side_of_out_3n1_line,(Const long int *) 0},      /* "antitandem_side_of_out_3n1_col" */
-      {couple_side_of_out_3n1_line,  (Const long int *) 0},      /* "tandem_side_of_out_3n1_col" */
+      {check_3n1_setup,              tab_mwv_in_3n1},            /* "miniwave_side_of_in_3n1_line" */
+      {check_3n1_setup,              tab_cpl_in_3n1},            /* "couple_side_of_in_3n1_line" */
+      {check_3n1_setup,             tab_mwv_out_3n1},            /* "miniwave_side_of_out_3n1_line" */
+      {check_3n1_setup,             tab_cpl_out_3n1},            /* "couple_side_of_out_3n1_line" */
+      {check_3n1_setup,              tab_mwv_in_3n1},            /* "antitandem_side_of_in_3n1_col" */
+      {check_3n1_setup,              tab_cpl_in_3n1},            /* "tandem_side_of_in_3n1_col" */
+      {check_3n1_setup,             tab_mwv_out_3n1},            /* "antitandem_side_of_out_3n1_col" */
+      {check_3n1_setup,             tab_cpl_out_3n1},            /* "tandem_side_of_out_3n1_col" */
       {some_side_of_2n1_line,          &iden_tab[0]},            /* "miniwave_side_of_2n1_line" */
       {some_side_of_2n1_line,          &iden_tab[3]},            /* "couple_side_of_2n1_line" */
       {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
@@ -1853,6 +1787,7 @@ predicate_descriptor pred_table[] = {
       {directionp,   (Const long int *) direction_right},        /* "rightp" */
       {directionp,   (Const long int *) direction_in},           /* "inp" */
       {directionp,   (Const long int *) direction_out},          /* "outp" */
+      {directionp,   (Const long int *) direction_back},         /* "backp" */
       {directionp,   (Const long int *) direction_zigzag},       /* "zigzagp" */
       {directionp,   (Const long int *) direction_zagzig},       /* "zagzigp" */
       {directionp,   (Const long int *) direction_zigzig},       /* "zigzigp" */

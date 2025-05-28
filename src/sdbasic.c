@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -122,7 +122,10 @@ extern void mirror_this(setup *s)
       else if (s->kind == s_normal_concentric) {
          int i;
 
-         if (s->inner.skind == s_normal_concentric || s->outer.skind == s_normal_concentric)
+         if (     s->inner.skind == s_normal_concentric ||
+                  s->outer.skind == s_normal_concentric ||
+                  s->inner.skind == s_dead_concentric ||
+                  s->outer.skind == s_dead_concentric)
             fail("Recursive concentric?????.");
 
          s->kind = s->inner.skind;
@@ -138,6 +141,21 @@ extern void mirror_this(setup *s)
          s->outer.srotation = s->rotation;
 
          s->kind = s_normal_concentric;
+         s->rotation = 0;
+         return;
+      }
+      else if (s->kind == s_dead_concentric) {
+         int i;
+
+         if (s->inner.skind == s_normal_concentric || s->inner.skind == s_dead_concentric)
+            fail("Recursive concentric?????.");
+
+         s->kind = s->inner.skind;
+         s->rotation = s->inner.srotation;
+         mirror_this(s);    /* Sorry! */
+         s->inner.srotation = s->rotation;
+
+         s->kind = s_dead_concentric;
          s->rotation = 0;
          return;
       }
@@ -289,6 +307,18 @@ static collision_map collision_map_table[] = {
    {2, 0x003003, 0x03, 0x03, {1, 0},               {0, 7},                {1, 6},                 s2x2,        s2x4,        1, warn_bad_collision},   /* sigh */
    {2, 0x00C00C, 0x0C, 0x0C, {2, 3},               {2, 5},                {3, 4},                 s2x2,        s2x4,        1, warn_bad_collision},   /* sigh */
 
+
+
+
+
+   /* These items handle horrible lockit collisions in the middle (from inverted lines, for example). */
+   {2, 0x000000, 0x06, 0x06, {1, 2},               {3, 5},                {2, 4},                 s1x4,        s1x8,        0, warn_bad_collision},
+   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 6},                {1, 7},                 s1x4,        s1x8,        0, warn_bad_collision},
+
+
+
+
+
    /* These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey. */
    {4, 0x12, 0x1B, 0x09, {0, 1, 3, 4},             {0, 2, 7, 8},           {1, 2, 6, 8},          s_short6,    sbigdmd,     0, warn__none},
    {4, 0x12, 0x36, 0x24, {1, 2, 4, 5},             {2, 4, 8, 11},          {2, 5, 8, 10},         s_short6,    sbigdmd,     0, warn__none},
@@ -324,8 +354,10 @@ extern void fix_collision(
    for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
    for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
-      if ((result->kind == c_map_ptr->initial_kind) && ((lowbitmask == c_map_ptr->lmask)) && (result_mask == c_map_ptr->rmask) && (collision_mask == c_map_ptr->cmask))
-         goto win;
+      if ((result->kind == c_map_ptr->initial_kind) && ((lowbitmask == c_map_ptr->lmask)) && (result_mask == c_map_ptr->rmask) && (collision_mask == c_map_ptr->cmask)) {
+         if (!appears_illegal || c_map_ptr->warning == warn_bad_collision)
+            goto win;
+      }
    }
 
    /* Don't recognize the pattern, report this as normal collision. */
@@ -338,13 +370,8 @@ extern void fix_collision(
    else
       warn(warn__take_right_hands);
 
-   if (c_map_ptr->warning == warn_bad_collision) {
-      if (appears_illegal) warn(c_map_ptr->warning);
-   }
-   else {
-      if (appears_illegal) longjmp(longjmp_ptr->the_buf, 3);
+   if (c_map_ptr->warning != warn_bad_collision || appears_illegal)
       warn(c_map_ptr->warning);
-   }
 
    temprot = ((-c_map_ptr->rot) & 3) * 011;
    result->kind = c_map_ptr->final_kind;
@@ -380,8 +407,10 @@ static int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
 static int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
 static int qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static int qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
-static int galtranslateh[16] = {0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6, 0, 0, 0, 1};
-static int galtranslatev[16] = {0, 0, 0, 1, 0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6};
+static int galtranslateh[16] = {-1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6, -1, -1, -1,  1};
+static int galtranslatev[16] = {-1, -1, -1,  1, -1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6};
+static int phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
+static int phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
 static int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
 static int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
 static int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
@@ -1099,9 +1128,9 @@ Private int divide_the_setup(
          /* The call has no applicable 2x8 or 8x2 definition. */
 
          /* Check whether it has 2x4/4x2/1x8/8x1 definitions, and divide the setup if so,
-            and if the caller explicitly said "2x8 matrix". */
+            or if the caller explicitly said "2x8 matrix". */
 
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
+         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
             if (
                   (!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
@@ -1114,15 +1143,15 @@ Private int divide_the_setup(
                   12 matrix divided columns.  The correct usage should involve the
                   explicit concepts "split phantom boxes", "phantom tidal lines",
                   or "12 matrix divided columns", as appropriate. */
-               warn(warn__split_to_2x4s);
+               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x4s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
             }
             else if (
-                  (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
+                  (!(newtb & 010) || assoc(b_1x4, ss, calldeflist) || assoc(b_1x8, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_4x1, ss, calldeflist) || assoc(b_8x1, ss, calldeflist))) {
                division_code = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
                /* See comment above about abomination. */
-               warn(warn__split_to_1x8s);
+               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x8s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
             }
          }
@@ -1663,7 +1692,7 @@ Private int divide_the_setup(
             sss.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             move(&sss, really_fudged, result);
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-            result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+            result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
             return 1;
          }
       case s4x4:
@@ -2005,7 +2034,7 @@ Private int divide_the_setup(
                   fail("Bad ending setup for triangle-become-box.");
             }
 
-            result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+            result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
             return 1;
          }
          break;
@@ -2321,7 +2350,7 @@ Private int divide_the_setup(
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
       fail("Can't split the setup.");
 
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
    return 0;    /* We did nothing.  An error will presumably result. */
 
    divide_us_no_recompute:
@@ -2456,7 +2485,8 @@ extern void basic_move(
       this means the RESULTFLAG__SPLIT_AXIS_MASK stuff will be clear for the normal case.
       It will only have good stuff if splitting actually occurs. */
 
-   if (ss->kind == s_normal_concentric && ss->inner.skind == s1x4 && ss->outer.skind == nothing) {
+   if (     (ss->kind == s_dead_concentric && ss->inner.skind == s1x4) ||
+            (ss->kind == s_normal_concentric && ss->inner.skind == s1x4 && ss->outer.skind == nothing)) {
       tbonetest = 0;
       for (j=0; j<4; j++) tbonetest |= ss->people[j].id1;
       ss->kind = s1x8;
@@ -2470,7 +2500,8 @@ extern void basic_move(
       clear_person(ss, 0);
       clear_person(ss, 1);
    }
-   else if (ss->kind == s_normal_concentric && ss->inner.skind == s2x2 && ss->outer.skind == nothing) {
+   else if ((ss->kind == s_dead_concentric && ss->inner.skind == s2x2) ||
+            (ss->kind == s_normal_concentric && ss->inner.skind == s2x2 && ss->outer.skind == nothing)) {
       if (ss->concsetup_outer_elongation) {
          /* Do nothing, which will cause an error. */
       }
@@ -2862,7 +2893,7 @@ foobar:
                if (search_concepts & INHERITFLAG_12_MATRIX) {
                   do_matrix_expansion(
                      ss,
-                     (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEED_TRIPLE_1X4,
+                     (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
                      TRUE);
 
                   if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12) fail("Can't expand to a 12 matrix.");
@@ -3327,6 +3358,17 @@ foobar:
                   T-boned reverse flip?  Probably not. */
 
                if (tempkind != s4x4) fail("Galaxy call went to improperly-formed setup.");
+#ifdef BREAKS_CAST_BACK
+               /* See if people landed classical C1 phantom spots. */
+               if ((lilresult_mask[0] & 0x3333) == 0) {
+                  result->kind = s_c1phan;
+                  permuter = phan4x4xlatea;
+               }
+               else if ((lilresult_mask[0] & 0x5555) == 0) {
+                  result->kind = s_c1phan;
+                  permuter = phan4x4xlateb;
+               }
+#endif
             }
          }
          else if (result->kind == sx1x6) {
@@ -3674,13 +3716,9 @@ foobar:
                collision_index = k;        /* In case we need to report a mundane collision. */
 
                if (  (callspec->callflags1 & CFLAG1_TAKE_RIGHT_HANDS) ||
-                     (  (callspec->callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
-                        result->kind == s1x4 &&
-                        !(k&1)
-                     )
-                  ) {
+                     (  (callspec->callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) && result->kind == s1x4 && !(k&1)  )) {
                /* Collisions are legal. */
-            }
+               }
                else {
                   collision_appears_illegal = TRUE;
                }

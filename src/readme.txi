@@ -117,6 +117,22 @@ accept words that are run together or the use of blanks instead of
 hyphens.  Hence, misspelled concepts and calls such as @code{tandem based triangles}
 (the Callerlab spelling is with a hyphen) and @code{inroll circulate} will be accepted.
 
+@unnumberedsec Deviations from Official Lists
+
+It is a known fact that challenge callers routinely call various ``popular''
+calls that are not on the official or semi-official lists.  In an attempt to
+allow this, while maintaining the appearance of strict compliance with
+the lists, Sd has two special levels @code{c3x} and @code{c4x}.  These contain
+the calls that are currently believed to be called at C3 and C4 but are
+not yet on the semi-official C3 list or the various informal C4 complilations
+of ``commonly used'' calls.
+
+It is generally @emph{not necessary} to run the program at either of these
+levels.  When you run at C3, C3X calls may be used.
+When you run at C4, C4X calls may be used.  Whenever such a call is
+used, a warning is printed.  (If you explicitly run the program at
+C3X or C4X, you may use the calls without getting a warning.)
+
 @unnumberedsec Variations of the Program
 @end ifset
 
