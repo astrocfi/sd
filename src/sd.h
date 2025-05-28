@@ -502,13 +502,10 @@ typedef enum {
    into a menu.  For "ui_start_select" it is a start_select_kind.
    For other replies, it is one of the following constants: */
 
-/* BEWARE!!  This list must track the array "startup_commands" in sdmatch.c . */
 /* BEWARE!!  If change this next definition, be sure to update the definition of
    "startinfolist" in sdtables.c, and also necessary stuff in the user interfaces.
    The latter includes the definition of "start_choices" in sd.dps
-   in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
-   in the Macintosh system.  You may also need changes in create_controls() in
-   macstuff.c. */
+   in the Domain/Dialog system, and ???? in the Macintosh system. */
 typedef enum {
    start_select_exit,        /* Don't start a sequence; exit from the program. */
    start_select_h1p2p,       /* Start with Heads 1P2P. */
@@ -919,8 +916,7 @@ typedef enum {
 /* BEWARE!!  If change this next definition, be sure to update the definition of
    "selector_names" and "selector_singular" in sdutil.c, and also necessary stuff in the
    user interfaces.  The latter includes the definition of "task$selector_menu" in sd.dps
-   in the Domain/Dialog system, and the DITL "Select Dancers" in *.rsrc in
-   the Macintosh system. */
+   in the Domain/Dialog system, and ???? in the Macintosh system. */
 typedef enum {
    selector_uninitialized,
    selector_boys,
@@ -957,8 +953,7 @@ typedef enum {
 /* BEWARE!!  If change this next definition, be sure to update the definition of
    "direction_names" in sdutil.c, and also necessary stuff in the user interfaces.
    The latter includes the definition of "task$direction_menu" in sd.dps in the
-   Domain/Dialog system, and the DITL "which direction" in *.rsrc in the Macintosh
-   system. */
+   Domain/Dialog system, and ???? in the Macintosh system. */
 typedef enum {
    direction_uninitialized,
    direction_left,
@@ -1124,7 +1119,6 @@ extern char *direction_names[];                                     /* in SDUTIL
 extern int global_tbonetest;                                        /* in SDCONCPT */
 extern int global_livemask;                                         /* in SDCONCPT */
 extern int global_selectmask;                                       /* in SDCONCPT */
-extern int global_tboneselect;                                      /* in SDCONCPT */
 extern concept_table_item concept_table[];                          /* in SDCONCPT */
 
 extern concept_descriptor special_magic;                            /* in SDCTABLE */

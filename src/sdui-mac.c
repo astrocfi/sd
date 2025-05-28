@@ -11,7 +11,7 @@
  *  WARRANTY, without even the implied warranty of MERCHANTABILITY or
  *  FITNESS FOR A PARTICULAR PURPOSE.  
  *
- *  For use with version 30 of the Sd program.
+ *  For use with version 29 of the Sd program.
  *
  */
 
@@ -23,10 +23,7 @@
  *
  */
 
-/* version 1.96 by Alan Snyder.  Version 2.0 modified by Sue Curtis to
-   run with Sd29.43, requiring mac_do_direction_popup and other minor changes.*/
-
-static char *sdui_version = "2.0";
+static char *sdui_version = "1.96";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -214,25 +211,6 @@ get_call_command(call_list_kind call_menu)
     input_set_prompt("Enter concept or call", call_menu_names[call_menu]);
     get_user_command((int) call_menu);
     uims_menu_index = user_match.index;
-    
-    /* sue: added, since these commands are now in sdmatch.c and may be typed in */
-    /*      calling program doesn't want to hear about these commands */
-    if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
-        if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
-            /* Increment "allowing_modifications" up to a maximum of 2. */
-            if (allowing_modifications != 2) allowing_modifications++;
-            /* This must be called to get the little checkmark in the menus correct */
-            update_modification_state(allowing_modifications);
-        }
-        else {   /* Must be "allow all concepts". */
-            allowing_all_concepts = !allowing_all_concepts;
-            /* update checkmark in the menus */
-            SetItemMark(sequence_menu, anyConceptCommand, allowing_all_concepts ? 022 : 0);
-        }
-        /* set this to something harmless */
-        uims_menu_index = command_refresh;
-    }
-       
     if (!dirty) {
         if ((user_match.kind == ui_concept_select) ||
             (user_match.kind == ui_call_select) ||
@@ -245,9 +223,9 @@ get_call_command(call_list_kind call_menu)
     return user_match.kind;
 }
 
-/* sue: deleted parameter #3: int modifications flag, added * to call_menu (2) */
 extern uims_reply
-uims_get_command(mode_kind mode, call_list_kind *call_menu)
+uims_get_command(mode_kind mode, call_list_kind call_menu,
+    int modifications_flag)
 {
     if (mode == mode_startup) {
         return get_startup_command();
@@ -256,7 +234,7 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         return get_resolve_command();
     }
     else {
-        return get_call_command(*call_menu);
+        return get_call_command(call_menu);
     }
 }
 

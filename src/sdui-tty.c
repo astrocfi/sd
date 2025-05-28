@@ -540,7 +540,7 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         uims_menu_index = user_match.index;
 
         if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
-            if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
+            if (uims_menu_index == NUM_COMMAND_KINDS+SPECIAL_COMMAND_ALLOW_MODS) {
                 /* Increment "allowing_modifications" up to a maximum of 2. */
                 if (allowing_modifications != 2) allowing_modifications++;
             }

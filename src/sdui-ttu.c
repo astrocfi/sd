@@ -105,7 +105,7 @@ extern void ttu_initialize(void)
    
       /* Tell the "curses" system whether we desire to use the line insert/delete
          capabilities of the output device.  The documentation says that, under
-         some circumstances the use of this capability can be annoying to the user.
+         some cicumstances the use of this capability can be annoying to the user.
          We let the user decide.
    
          Note that the second argument to "idlok" is defined in the documentation

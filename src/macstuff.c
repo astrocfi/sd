@@ -21,9 +21,7 @@
 char                *level_name;
 Cursor              edit_cursor;
 Cursor              wait_cursor;
-/* sue: split into 2 variables */
-long_boolean        output_file_save_ok = FALSE;
-long_boolean        output_file_append_ok = FALSE;
+long_boolean        output_file_ok;
 long_boolean        dirty;                /* current sequence needs saving */
 OutputMode          output_mode;
 ControlHandle       output_default_control;
@@ -220,9 +218,7 @@ get_startup_command(void)
         main_window_setup();
         window_select((Window *)&outputTW);
     }
-    /* sue: use new variable name.  *Don't* reset output_file_append_ok here,
-       since we want that preserved from one sequence to the next. */
-    output_file_save_ok = FALSE;
+    output_file_ok = FALSE;
     dirty = FALSE;
     text_output_trim(0);
     typescript_flush();
@@ -500,7 +496,7 @@ flash_control(ControlHandle h, int part_code)
 
 /*
  **********************************************************************
- *  Search Commands (Resolve, Reconcile, Nice Setup, Do Anything)
+ *  Search Commands (Resolve, Reconcile, Normalize, Do Anything)
  **********************************************************************
  */
 

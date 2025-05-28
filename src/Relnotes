@@ -1,5 +1,5 @@
-		    RELEASE NOTES FOR SD VERSION 29.6
-       Database version = 29.6, format = 42, X11 UI version 1.15.
+		    RELEASE NOTES FOR SD VERSION 29.47
+       Database version = 29.47, format = 42, X11 UI version 1.15.
 
 
 The good news is that there are a lot of new features.  The bad news is
@@ -138,8 +138,7 @@ Perk up now works correctly (finally!) from inverted lines.
 New calls: [magic] in/out/zoom roll circulate from 2x3 setups.
 Grand follow your neighbor.  Barge the action.  The action and barge
 the action take all the usual star turn and finishing modifications.
-Scamper.  Lead the way.  Courtesy turn.  California twirl.  Trim the web.
-Wrap to a whatever.
+Scamper.  Lead the way.  Courtesy turn.  California twirl.
 
 The call "reset" no longer takes a numeric argument saying how many
 quarters to go.  Instead, use the "fractional" concept with it.
@@ -244,12 +243,6 @@ To deal with different types of display hardware with various screen sizes,
 the "-screensize <n>" switch can be given at program invocation, as in
      sdtty -screensize 36 a2
 The default size is 25.
-
-MAC-SPECIFIC STUFF
-
-The Macintosh interface has been extensively changed by Sue Curtis.
-See the separate file Relnotes.mac for details.  That file is temporary
-only.  On the public release, its remains will be integrated into these notes.
 
 ===============================================================================
 

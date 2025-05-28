@@ -108,7 +108,7 @@ static void strcpy_lower(char *dest, char *source);
 
 /* the following arrays must be coordinated with the sd program */
 
-/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
+/* startup_commands tracks the start_select_kind enumeration */
 static char *startup_commands[] = {
     "exit from the program",
     "heads 1p2p",
@@ -124,8 +124,7 @@ static char *startup_commands[] = {
    are NUM_SPECIAL_COMMANDS of those items. */
 
 static char *command_commands[] = {
-/* sue: changed "exit" to "quit" to match standard mac usage */
-    IFMAC("quit the program","exit the program"),
+    "exit the program",
     "undo last call",
     IFMAC("end this sequence","abort this sequence"),
     "insert a comment ...",
@@ -134,12 +133,9 @@ static char *command_commands[] = {
     "resolve ...",
     "reconcile ...",
     IFMAC("pick random call ...","do anything ..."),
-/* sue: I prefer "nice setup", even on the mac */
-    "nice setup ...",
+    IFMAC("normalize setup ...","nice setup ..."),
     NOMAC "show neglected calls ...",
-/* sue: "insert picture" isn't great because you must type 2 words to distinguish this
-   from the command "insert a comment".  Changed it to "keep picture" */
-    IFMAC("keep picture","save picture"),
+    IFMAC("insert picture","save picture"),
     "refresh display",
 /* The following items are the special ones. */
     IFMAC("modify next call","allow modifications"),
@@ -166,8 +162,6 @@ static char *n_patterns[] = {
     "5",
     "6",
     "7",
-    /* sue: added for consistency with stuff in direction popups */
-    "8",
     0
 };
 
@@ -790,20 +784,10 @@ verify_call(call_list_kind cl, int call_index, selector_kind who)
          * One could argue this is a bug!
          */
         
-        /* sue: new plan: try (beaus, ends, all), just like initialization */
-        
-        if (verify_call_with_selector(call, selector_beaux))
-           return(TRUE);
-        if (verify_call_with_selector(call, selector_ends))
-           return(TRUE);
-        if (verify_call_with_selector(call, selector_all))
-           return(TRUE);
-/* this was the old code...        
         for (sel=1; sel<last_selector_kind; ++sel) {
             if (verify_call_with_selector(call, sel))
                 return (TRUE);
         }
-*/
     }
     else {
         return verify_call_with_selector(call, who);
