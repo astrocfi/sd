@@ -259,7 +259,7 @@ extern long_boolean divide_for_magic(
 
    warning_info saved_warnings;
    int i;
-   const map_thing *division_maps;
+   uint32 division_code;
    uint32 resflags = 0;
    uint32 directions;
    uint32 livemask;
@@ -297,7 +297,7 @@ extern long_boolean divide_for_magic(
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
          // "Magic" was specified.  Split it into 1x4's
          // in the appropriate magical way.
-         division_maps = &map_2x4_magic;
+         division_code = spcmap_2x4_magic;
          goto divide_us;
       }
       break;
@@ -307,15 +307,15 @@ extern long_boolean divide_for_magic(
       resflags = RESULTFLAG__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
-         division_maps = &map_qtg_magic;
+         division_code = spcmap_qtg_magic;
          goto divide_us;
       }
       else if (heritflags_to_check == INHERITFLAG_INTLK) {
-         division_maps = &map_qtg_intlk;
+         division_code = spcmap_qtg_intlk;
          goto divide_us;
       }
       else if (heritflags_to_check == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
-         division_maps = &map_qtg_magic_intlk;
+         division_code = spcmap_qtg_magic_intlk;
          goto divide_us;
       }
       else if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
@@ -328,15 +328,15 @@ extern long_boolean divide_for_magic(
       resflags = RESULTFLAG__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
-         division_maps = &map_ptp_magic;
+         division_code = spcmap_ptp_magic;
          goto divide_us;
       }
       else if (heritflags_to_check == INHERITFLAG_INTLK) {
-         division_maps = &map_ptp_intlk;
+         division_code = spcmap_ptp_intlk;
          goto divide_us;
       }
       else if (heritflags_to_check == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
-         division_maps = &map_ptp_magic_intlk;
+         division_code = spcmap_ptp_magic_intlk;
          goto divide_us;
       }
       break;
@@ -548,7 +548,7 @@ extern long_boolean divide_for_magic(
  divide_us:
 
    ss->cmd.cmd_final_flags.her8it = heritflags_to_use & ~heritflags_to_check;
-   divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
+   divided_setup_move(ss, division_code, phantest_ok, TRUE, result);
 
    /* Since more concepts follow the magic and/or interlocked stuff, we can't
       allow the concept to be just "magic" etc.  We have to change it to
@@ -715,7 +715,7 @@ extern long_boolean do_simple_split(
       return TRUE;
    }
 
-   new_divided_setup_move(ss, mapcode, phantest_ok, recompute_id, result);
+   divided_setup_move(ss, mapcode, phantest_ok, recompute_id, result);
    return FALSE;
 }
 
@@ -2639,7 +2639,7 @@ static void divide_diamonds(setup *ss, setup *result) THROW_DECL
    else if (ss->kind == s_ptpd) ii = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
    else fail("Must have diamonds for this concept.");
 
-   new_divided_setup_move(ss, ii, phantest_ok, FALSE, result);
+   divided_setup_move(ss, ii, phantest_ok, FALSE, result);
 }
 
 
@@ -2824,25 +2824,23 @@ extern uint32 process_new_fractions(
    int numer,
    int denom,
    uint32 incoming_fracs,
-   uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
+   uint32 reverse_orderbit,   // Low bit on mean treat as if we mean "do the last M/N".
    bool allow_improper,
    bool *improper_p) THROW_DECL
 {
-   int s_numer, s_denom, e_numer, e_denom, divisor;
+   int s_numer = (incoming_fracs & 0xF000) >> 12;       // Start point.
+   int s_denom = (incoming_fracs & 0xF00) >> 8;
+   int e_numer = (incoming_fracs & 0xF0) >> 4;          // Stop point.
+   int e_denom = (incoming_fracs & 0xF);
 
-   s_numer = (incoming_fracs & 0xF000) >> 12;        /* Start point. */
-   s_denom = (incoming_fracs & 0xF00) >> 8;
-   e_numer = (incoming_fracs & 0xF0) >> 4;          /* Stop point. */
-   e_denom = (incoming_fracs & 0xF);
-
-   /* Xor the "reverse" bit with the first/last fraction indicator. */
+   // Xor the "reverse" bit with the first/last fraction indicator.
    if ((reverse_orderbit ^ (incoming_fracs / CMD_FRAC_REVERSE)) & 1) {
-      /* This is "last fraction". */
+      // This is "last fraction".
       s_numer = s_numer*numer + s_denom*(denom-numer);
       e_numer = e_numer*numer + e_denom*(denom-numer);
    }
    else {
-      /* This is "fractional". */
+      // This is "fractional".
       s_numer *= numer;
       e_numer *= numer;
    }
@@ -2858,7 +2856,7 @@ extern uint32 process_new_fractions(
    if (s_numer < 0 || s_numer >= s_denom || e_numer <= 0 || e_numer > e_denom)
       fail("Illegal fraction.");
 
-   divisor = gcd(s_numer, s_denom);
+   int divisor = gcd(s_numer, s_denom);
    s_numer /= divisor;
    s_denom /= divisor;
 
@@ -5400,12 +5398,12 @@ static void move_with_real_call(
                   tbonetest = 99;
 
                if (tbonetest) {
-                  if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+                  if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_BREAKING_UP) ==
+                      CMD_FRAC_HALF_VALUE)
                      ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
-                  }
-                  else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+                  else if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_BREAKING_UP) ==
+                           CMD_FRAC_LASTHALF_VALUE)
                      ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
-                  }
                   else
                      fail("This call can't be fractionalized this way.");
                }
@@ -5469,8 +5467,8 @@ static void move_with_real_call(
 
          if (ss->kind == sdmd) {
             ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_DIAMOND;
-            new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
-                                   phantest_ok, TRUE, result);
+            divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
+                               phantest_ok, TRUE, result);
             return;
          }
          else {
@@ -5842,7 +5840,7 @@ static void move_with_real_call(
          /* If the user said "matrix split", the "matrix" flag will be on at this point,
          and the right thing will happen. */
 
-         new_divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
+         divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
          return;
       }
 
@@ -6131,8 +6129,7 @@ extern void move(
       if (!parseptrcopy)
          fail("Incomplete parse.");
 
-      if ((parseptrcopy->concept->kind == concept_fractional ||
-           parseptrcopy->concept->kind == concept_fractional_const) &&
+      if (parseptrcopy->concept->kind == concept_fractional &&
           ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
          parseptrcopy = parseptrcopy->next;
       }
@@ -6398,7 +6395,7 @@ extern void move(
          else fail("Can't do split concept in this setup.");
 
          ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
-         new_divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
+         divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
       }
       else {
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
@@ -6413,8 +6410,8 @@ extern void move(
             ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_DIAMOND;
 
             if (ss->kind == sdmd)
-               new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
-                                      phantest_ok, TRUE, result);
+               divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
+                                  phantest_ok, TRUE, result);
             else {
                // Divide into diamonds and try again.
                // (Note that we back up the concept pointer.)

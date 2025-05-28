@@ -20,9 +20,7 @@
    remove_z_distortion
    remove_tgl_distortion
    get_map_from_code
-   new_divided_setup_move
    divided_setup_move
-   new_overlapped_setup_move
    overlapped_setup_move
    do_phantom_2x4_concept
    do_phantom_stag_qtg_concept
@@ -34,7 +32,6 @@
    do_concept_wing
    common_spot_move
    triangle_move
-   phantom_2x4_move
 */
 
 
@@ -98,10 +95,15 @@ static const uint32 NUM_MAP_HASH_BUCKETS = 128;
 
 static map_thing *map_hash_table2[NUM_MAP_HASH_BUCKETS];
 
-extern void initialize_map_tables(void)
+extern void initialize_map_tables()
 {
    for (unsigned int i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++)
       map_hash_table2[i] = (map_thing *) 0;
+
+   for (unsigned int tab1i = 0 ; tab1i < NUM_SPECMAP_KINDS ; tab1i++) {
+      if (spec_map_table[tab1i].code != tab1i)
+         gg->fatal_error_exit(1, "Special map table initialization failed");
+   }
 
    for (map_thing *tab2p = map_init_table ; tab2p->inner_kind != nothing ; tab2p++) {
       uint32 code = MAPCODE(tab2p->inner_kind,tab2p->arity,tab2p->map_kind,tab2p->vert);
@@ -290,15 +292,20 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
 
 extern const map_thing *get_map_from_code(uint32 map_encoding)
 {
-   uint32 hash_num =
-      (((map_encoding+(map_encoding>>8)) * ((unsigned int) 035761254233)) >> 13) &
-      (NUM_MAP_HASH_BUCKETS-1);
+   if (map_encoding & 0x80000000) {
+      uint32 hash_num =
+         (((map_encoding+(map_encoding>>8)) * ((unsigned int) 035761254233)) >> 13) &
+         (NUM_MAP_HASH_BUCKETS-1);
 
-   for (map_thing *q=map_hash_table2[hash_num] ; q ; q=q->next) {
-      if (q->code == map_encoding) return q;
+      for (map_thing *q=map_hash_table2[hash_num] ; q ; q=q->next) {
+         if (q->code == map_encoding) return q;
+      }
+
+      return (const map_thing *) 0;
    }
-
-   return (const map_thing *) 0;
+   else {
+      return &spec_map_table[map_encoding & 0x7FFFFFFF];
+   }
 }
 
 
@@ -643,13 +650,13 @@ static void innards(
       if (arity == 2 && map_kind == MPKIND__SPLIT && before_distance == 2) {
          if (z[0].kind == s_hrglass && z[0].rotation == 1) {
             map_kind = MPKIND__OVERLAP;
-            final_map = &map_ov_hrg_1;
+            final_map = get_map_from_code(spcmap_ov_hrg_1);
             result->rotation = z[0].rotation;
             goto got_map;
          }
          else if (z[0].kind == s_galaxy && z[0].rotation == 0) {
             map_kind = MPKIND__OVERLAP;
-            final_map = &map_ov_gal_1;
+            final_map = get_map_from_code(spcmap_ov_gal_1);
             result->rotation = z[0].rotation;
             goto got_map;
          }
@@ -657,7 +664,7 @@ static void innards(
       else if (arity == 3 && map_kind == MPKIND__OVERLAP && before_distance == 4) {
          if (z[0].kind == s_qtag && z[0].rotation == 1) {
             map_kind = MPKIND__OVERLAP;
-            final_map = &map_3o_qtag_1;
+            final_map = get_map_from_code(spcmap_3o_qtag_1);
             result->rotation = z[0].rotation;
             goto got_map;
          }
@@ -718,12 +725,12 @@ static void innards(
 
    if (nonisotropic_1x2) {
       if ((z[0].rotation) & 1) {
-         final_map = &map_tgl4_2;
+         final_map = get_map_from_code(spcmap_tgl4_2);
       }
       else {
          z[0].rotation += 2;
          canonicalize_rotation(&z[0]);
-         final_map = &map_tgl4_1;
+         final_map = get_map_from_code(spcmap_tgl4_1);
       }
 
       result->rotation = 1;
@@ -741,10 +748,10 @@ static void innards(
 
       if (z[0].rotation == 0 && z[1].rotation == 0) {
          if (z[0].kind == sdmd && z[1].kind == s2x2) {
-            final_map = &map_spndle_once_rem;
+            final_map = get_map_from_code(spcmap_spndle_once_rem);
          }
          else if (z[0].kind == s1x4 && z[1].kind == sdmd) {
-            final_map = &map_1x3dmd_once_rem;
+            final_map = get_map_from_code(spcmap_1x3dmd_once_rem);
          }
       }
 
@@ -768,8 +775,8 @@ static void innards(
       goto got_map;
    }
 
-   if (maps == &map_tgl4_1 && z[0].kind == s1x2) {
-      final_map = &map_tgl4_2;
+   if (maps == get_map_from_code(spcmap_tgl4_1) && z[0].kind == s1x2) {
+      final_map = get_map_from_code(spcmap_tgl4_2);
       result->rotation = z[0].rotation;
       goto got_map;
    }
@@ -804,7 +811,7 @@ static void innards(
       if (z[0].kind == s1x6 && z[0].rotation == 0 && arity == 2 &&
           insize == 4 &&
           !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
-         final_map = &map_1x8_1x6;
+         final_map = get_map_from_code(spcmap_1x8_1x6);
          result->rotation = z[0].rotation;
          goto got_map;
       }
@@ -812,7 +819,7 @@ static void innards(
                insize == 4 &&
                !(z[0].people[3].id1 | z[0].people[4].id1 |
                  z[1].people[0].id1 | z[1].people[1].id1)) {
-         final_map = &map_rig_1x6;
+         final_map = get_map_from_code(spcmap_rig_1x6);
          result->rotation = z[0].rotation;
          goto got_map;
       }
@@ -823,7 +830,7 @@ static void innards(
 
    if (map_kind == MPKIND__REMOVED && arity == 2 &&
        z[0].kind == s2x3 && (z[0].rotation & 1) != 0 && rot == 0) {
-      final_map = &map_2x3_rmvr;
+      final_map = get_map_from_code(spcmap_2x3_rmvr);
       result->rotation = z[0].rotation-1;
       goto got_map;
    }
@@ -834,7 +841,7 @@ static void innards(
        ((z[0].rotation ^ z[1].rotation) & 2)) {
       if ((z[0].rotation + rot) & 2) {
          if (map_kind == MPKIND__OFFS_L_HALF) {
-            final_map = &map_lh_zzztgl;
+            final_map = get_map_from_code(spcmap_lh_zzztgl);
             result->rotation = z[0].rotation-1+(rot&2);
             goto got_map;
          }
@@ -851,7 +858,7 @@ static void innards(
             goto got_map;
          }
          else if (map_kind == MPKIND__OFFS_R_HALF) {
-            final_map = &map_rh_zzztgl;
+            final_map = get_map_from_code(spcmap_rh_zzztgl);
             result->rotation = z[0].rotation+1+(rot&2);
             goto got_map;
          }
@@ -868,24 +875,24 @@ static void innards(
 
       if (map_kind == MPKIND__OFFS_L_HALF) {
          if ((livemask & ~0xAAAA) == 0) {
-            final_map = &map_lh_c1phana;
+            final_map = get_map_from_code(spcmap_lh_c1phana);
             result->rotation = z[0].rotation;
             goto got_map;
          }
          else if ((livemask & ~0x5555) == 0) {
-            final_map = &map_lh_c1phanb;
+            final_map = get_map_from_code(spcmap_lh_c1phanb);
             result->rotation = z[0].rotation;
             goto got_map;
          }
       }
       else if (map_kind == MPKIND__OFFS_R_HALF) {
          if ((livemask & ~0x5555) == 0) {
-            final_map = &map_rh_c1phana;
+            final_map = get_map_from_code(spcmap_rh_c1phana);
             result->rotation = z[0].rotation;
             goto got_map;
          }
          else if ((livemask & ~0xAAAA) == 0) {
-            final_map = &map_rh_c1phanb;
+            final_map = get_map_from_code(spcmap_rh_c1phanb);
             result->rotation = z[0].rotation;
             goto got_map;
          }
@@ -899,7 +906,7 @@ static void innards(
          goto get_coded_map;
       }
       if ((z[1].rotation & 2) && z[0].kind == s_trngl4) {
-         final_map = &map_p8_tgl4;
+         final_map = get_map_from_code(spcmap_p8_tgl4);
          goto got_map;
       }
    }
@@ -963,9 +970,9 @@ static void innards(
              z[1].people[5].id1 | z[1].people[6].id1 |
              z[1].people[8].id1 | z[1].people[12].id1 |
              z[1].people[13].id1 | z[1].people[14].id1)
-            final_map = &map_w4x4_4x4;
+            final_map = get_map_from_code(spcmap_w4x4_4x4);
          else
-            final_map = &map_f2x8_4x4;
+            final_map = get_map_from_code(spcmap_f2x8_4x4);
       }
       else if (arity == 2 &&
                z[0].kind == s2x8 &&
@@ -979,9 +986,9 @@ static void innards(
              z[0].people[2].id1 | z[0].people[3].id1 |
              z[0].people[4].id1 | z[0].people[5].id1 |
              z[0].people[6].id1 | z[0].people[7].id1)
-            final_map = &map_w4x4_2x8;
+            final_map = get_map_from_code(spcmap_w4x4_2x8);
          else
-            final_map = &map_f2x8_2x8;
+            final_map = get_map_from_code(spcmap_f2x8_2x8);
       }
 
       if (!final_map) fail("Can't do this shape-changing call with this concept.");
@@ -989,7 +996,7 @@ static void innards(
 
    insize = setup_attrs[final_map->inner_kind].setup_limits+1;
 
-   if (final_map == &map_tgl4_2)
+   if (final_map == get_map_from_code(spcmap_tgl4_2))
       result->rotation += 2;
 
    if ((z[0].rotation & 1) && (final_map->rot & 1))
@@ -1050,9 +1057,9 @@ static void innards(
 
       // Yow!
       if (final_map->code == MAPCODE(s2x4,2,MPKIND__OFFS_L_THRQ, 1))
-         final_map = &map_emergency1;
+         final_map = get_map_from_code(spcmap_emergency1);
       else
-         final_map = &map_emergency2;
+         final_map = get_map_from_code(spcmap_emergency2);
    }
    else if (final_map->code == MAPCODE(sdmd,3,MPKIND__SPLIT, 0) &&
             pointclip == 2) {
@@ -1067,7 +1074,7 @@ static void innards(
       if (z[0].people[0].id1 || z[1].people[0].id1 ||
           z[1].people[2].id1 || z[2].people[2].id1)
          fail("Can't do this shape-changing call here.");
-      final_map = &map_fix_triple_turnstyle;
+      final_map = get_map_from_code(spcmap_fix_triple_turnstyle);
    }
 
 
@@ -1094,25 +1101,9 @@ static void innards(
 }
 
 
-extern void new_divided_setup_move(
-   setup *ss,
-   uint32 map_encoding,
-   phantest_kind phancontrol,
-   long_boolean recompute_id,
-   setup *result) THROW_DECL
-{
-   divided_setup_move(
-      ss,
-      get_map_from_code(map_encoding),
-      phancontrol,
-      recompute_id,
-      result);
-}
-
-
 extern void divided_setup_move(
    setup *ss,
-   const map_thing *maps,
+   uint32 map_encoding,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result) THROW_DECL
@@ -1121,6 +1112,7 @@ extern void divided_setup_move(
    int vflags[16];
    setup x[16];
    setup_kind kn_twicerem;
+   const map_thing *maps = get_map_from_code(map_encoding);
 
    if (!maps || ss->kind != maps->outer_kind)
       fail("Can't do this concept in this setup.");
@@ -1269,25 +1261,16 @@ extern void divided_setup_move(
 
 
 
-
-extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
-   uint32 *masks, setup *result) THROW_DECL
-{
-   overlapped_setup_move(
-      ss,
-      get_map_from_code(map_encoding),
-      masks,
-      result);
-}
-
-
-extern void overlapped_setup_move(setup *ss, const map_thing *maps,
+extern void overlapped_setup_move(
+   setup *ss,
+   uint32 map_encoding,
    uint32 *masks, setup *result) THROW_DECL
 {
    int i, j, rot;
    uint32 k;
    setup x[8];
    assumption_thing t = ss->cmd.cmd_assume;
+   const map_thing *maps = get_map_from_code(map_encoding);
 
    if (!maps || ss->kind != maps->outer_kind)
       fail("Can't do this concept in this setup.");
@@ -1316,6 +1299,92 @@ extern void overlapped_setup_move(setup *ss, const map_thing *maps,
 }
 
 
+// This handles only the T-boned case.  Other cases are handled elsewhere.
+
+static void phantom_2x4_move(
+   setup *ss,
+   int lineflag,
+   phantest_kind phantest,
+   uint32 map_encoding,
+   setup *result) THROW_DECL
+{
+   setup hpeople, vpeople;
+   setup the_setups[2];
+   int i;
+   int vflag, hflag;
+   phantest_kind newphantest = phantest;
+
+   warn(warn__tbonephantom);
+
+   vflag = 0;
+   hflag = 0;
+   hpeople = *ss;
+   vpeople = *ss;
+   clear_people(&hpeople);
+   clear_people(&vpeople);
+   
+   for (i=0; i<16; i++) {
+      if ((ss->people[i].id1 ^ lineflag) & 1)
+         hflag |= copy_person(&hpeople, i, ss, i);
+      else
+         vflag |= copy_person(&vpeople, i, ss, i);
+   }
+
+   /* For certain types of phantom tests, we turn off the testing that we pass to
+      divided_setup_move.  It could give bogus errors, because it only sees the
+      headliners or sideliners at any one time. */
+   switch (phantest) {
+      case phantest_both:           /* This occurs on "phantom bigblock lines", for example,
+                                       and is intended to give error "Don't use phantom concept
+                                       if you don't mean it." if everyone is in one variety of
+                                       bigblock setup.  But, in this procedure, we could have
+                                       headliners entirely in one and sideliners in another, so
+                                       that divided_setup_move could be misled. */
+         newphantest = phantest_ok;
+         break;
+      case phantest_first_or_both:  /* This occurs on "phantom lines", for example, and is
+                                       intended to give the smae error as above if only the center
+                                       phantom lines are occupied.  But the headliners might
+                                       occupy just the center phantom lines while the sideliners
+                                       make full use of the concept, so, once again, we have to
+                                       disable it.  In fact, we do better -- we tell
+                                       divided_setup_move to do the right thing if the outer
+                                       phantom setup is empty. */
+         newphantest = phantest_ctr_phantom_line;
+         break;
+   }
+
+   // Do the E-W facing people.
+
+   if (vflag) {
+      vpeople.rotation--;
+      canonicalize_rotation(&vpeople);
+      divided_setup_move(&vpeople, map_encoding, newphantest, TRUE, &the_setups[1]);
+      the_setups[1].rotation++;
+      canonicalize_rotation(&the_setups[1]);
+   }
+   else {
+      the_setups[1].kind = nothing;
+      the_setups[1].result_flags = 0;
+   }
+
+   // Do the N-S facing people.
+
+   if (hflag) {
+      divided_setup_move(&hpeople, map_encoding, newphantest, TRUE, &the_setups[0]);
+   }
+   else {
+      the_setups[0].kind = nothing;
+      the_setups[0].result_flags = 0;
+   }
+
+   the_setups[0].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
+   merge_setups(&the_setups[1], merge_strict_matrix, &the_setups[0]);
+   reinstate_rotation(ss, &the_setups[0]);
+   *result = the_setups[0];
+}
+
+
 const expand_thing expand_big2x2_4x4 = {
    {12, 0, 4, 8}, 4, s2x2, s4x4, 0};
 
@@ -1331,7 +1400,7 @@ const expand_thing expand_2x6_4x6 = {
          arg2: "linesp" -- 1 if these setups are lines; 0 if columns
          arg3: "map_kind" for the map */
 
-/* This handles the end-to-end versions also.  We should either have a 4x4 or a 1x16. */
+// This handles the end-to-end versions also.  We should either have a 4x4 or a 1x16.
 
 extern void do_phantom_2x4_concept(
    setup *ss,
@@ -1344,7 +1413,7 @@ extern void do_phantom_2x4_concept(
 
    int linesp = parseptr->concept->value.arg2 & 1;
    int rot = (global_tbonetest ^ linesp ^ 1) & 1;
-   const map_thing *maps;
+   uint32 map_code;
 
    if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) &&
        parseptr->concept->value.arg3 != MPKIND__CONCPHAN)
@@ -1373,14 +1442,14 @@ extern void do_phantom_2x4_concept(
       }
 
       rot = 0;
-      maps = get_map_from_code(MAPCODE(s1x8,2,parseptr->concept->value.arg3,0));
+      map_code = MAPCODE(s1x8,2,parseptr->concept->value.arg3,0);
       break;
    case s4x4:
 
       if (parseptr->concept->value.arg3 != MPKIND__NONE)
-         maps = get_map_from_code(MAPCODE(s2x4,2,parseptr->concept->value.arg3,1));
+         map_code = MAPCODE(s2x4,2,parseptr->concept->value.arg3,1);
       else
-         maps = parseptr->concept->value.maps;
+         map_code = parseptr->concept->value.arg0;
 
       // Check for special case of "stagger" or "bigblock", without the word "phantom",
       // when people are not actually on block spots.
@@ -1399,7 +1468,7 @@ extern void do_phantom_2x4_concept(
          phantom_2x4_move(ss,
                           linesp,
                           (phantest_kind) parseptr->concept->value.arg1,
-                          maps,
+                          map_code,
                           result);
          return;
       }
@@ -1415,9 +1484,9 @@ extern void do_phantom_2x4_concept(
          }
 
          if      (global_livemask == 07474)
-            maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,1));
+            map_code = MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,1);
          else if (global_livemask == 01717)
-            maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,1));
+            map_code = MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,1);
          else fail("Must have a parallelogram for this.");
 
          warn(warn__split_phan_in_pgram);
@@ -1434,7 +1503,9 @@ extern void do_phantom_2x4_concept(
    ss->rotation += rot;   // Just flip the setup around and recanonicalize.
    canonicalize_rotation(ss);
 
-   divided_setup_move(ss, maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+   divided_setup_move(ss, map_code,
+                      (phantest_kind) parseptr->concept->value.arg1,
+                      TRUE, result);
    result->rotation -= rot;   // Flip the setup back.
    // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -1468,7 +1539,7 @@ extern void do_phantom_stag_qtg_concept(
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
 
-   new_divided_setup_move(
+   divided_setup_move(
       ss, 
       MAPCODE(s_qtag,2,MPKIND__STAG,1),
       (phantest_kind) parseptr->concept->value.arg1,
@@ -1522,9 +1593,9 @@ extern void do_phantom_diag_qtg_concept(
    // The thing to verify, like CMD_MISC__VERIFY_1_4_TAG.
    ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
 
-   new_divided_setup_move(ss, mapcode,
-                          (phantest_kind) parseptr->concept->value.arg1,
-                          TRUE, result);
+   divided_setup_move(ss, mapcode,
+                      (phantest_kind) parseptr->concept->value.arg1,
+                      TRUE, result);
 
    result->rotation -= rot;   // Flip the setup back.
 
@@ -2232,7 +2303,7 @@ extern void distorted_2x2s_move(
 
    ss->cmd.cmd_misc2_flags |= misc2_zflag;
    if (table_offset != 0) goto lose;
-   new_divided_setup_move(ss, MAPCODE(s2x3,arity,MPKIND__LILZCOM,1), phantest_ok, TRUE, result);
+   divided_setup_move(ss, MAPCODE(s2x3,arity,MPKIND__LILZCOM,1), phantest_ok, TRUE, result);
 }
 
 
@@ -2281,9 +2352,7 @@ extern void distorted_move(
    setup a1;
    setup res1;
    mpkind mk, mkbox;
-
-   const map_thing *map_ptr;
-   uint32 mapcode = ~0UL;
+   uint32 map_code;
    int rotate_back = 0;
    uint32 livemask = global_livemask;
    uint32 linesp = parseptr->concept->value.arg2;
@@ -2298,10 +2367,10 @@ extern void distorted_move(
       }
 
       if (disttest == disttest_offset) {
-         /* Offset tidal C/L/W. */
+         // Offset tidal C/L/W.
          if (ss->kind == s2x8) {
-            if (global_livemask == 0x0F0F) { map_ptr = &map_off1x81; }
-            else if (global_livemask == 0xF0F0) { map_ptr = &map_off1x82; }
+            if (global_livemask == 0x0F0F) { map_code = spcmap_off1x81; }
+            else if (global_livemask == 0xF0F0) { map_code = spcmap_off1x82; }
             else fail("Can't find offset 1x8.");
 
             goto do_divided_call;
@@ -2310,10 +2379,10 @@ extern void distorted_move(
             fail("Must have 2x8 setup for this concept.");
       }
       else {
-         /* Distorted tidal C/L/W. */
+         // Distorted tidal C/L/W.
          if (ss->kind == sbigbone) {
-            if (global_livemask == 01717) { map_ptr = &map_dbgbn1; }
-            else if (global_livemask == 07474) { map_ptr = &map_dbgbn2; }
+            if (global_livemask == 01717) { map_code = spcmap_dbgbn1; }
+            else if (global_livemask == 07474) { map_code = spcmap_dbgbn2; }
             else fail("Can't find distorted 1x8.");
 
             // We know what we are doing -- shut off the error message.
@@ -2339,20 +2408,20 @@ extern void distorted_move(
       ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
 
       if (ss->kind == s3dmd) {
-         if (global_livemask == 06363) { map_ptr = &map_dqtag1; }
-         else if (global_livemask == 06666) { map_ptr = &map_dqtag2; }
+         if (global_livemask == 06363) { map_code = spcmap_dqtag1; }
+         else if (global_livemask == 06666) { map_code = spcmap_dqtag2; }
          else fail("Can't find offset diamonds.");
       }
       else if (ss->kind == s4x4) {
-         if (global_livemask == 0x6C6C) { map_ptr = &map_dqtag3; }
-         else if (global_livemask == 0xE2E2) { map_ptr = &map_dqtag4; }
+         if (global_livemask == 0x6C6C) { map_code = spcmap_dqtag3; }
+         else if (global_livemask == 0xE2E2) { map_code = spcmap_dqtag4; }
          else {
             rotate_back = 1;   // It must be rotated.
             ss->rotation++;
             canonicalize_rotation(ss);
 
-            if (global_livemask == 0xC6C6) { map_ptr = &map_dqtag3; }
-            else if (global_livemask == 0x2E2E) { map_ptr = &map_dqtag4; }
+            if (global_livemask == 0xC6C6) { map_code = spcmap_dqtag3; }
+            else if (global_livemask == 0x2E2E) { map_code = spcmap_dqtag4; }
             else
                fail("Can't find offset diamonds.");
          }
@@ -2371,18 +2440,21 @@ extern void distorted_move(
       for (clw3_thing *gptr=clw3_table ; gptr->mask ; gptr++) {
          if (gptr->k == ss->kind &&
              (global_livemask & gptr->mask) == gptr->test) {
+
+            const map_thing *map_ptr = get_map_from_code(gptr->map_code);
+
             uint32 tberrtest = global_tbonetest;
             uint32 mytbone = 0;
-            for (int k=0 ; k < 3*gptr->map->arity ; k++)
-               mytbone |= ss->people[gptr->map->maps[k]].id1;
+            for (int k=0 ; k < 3*map_ptr->arity ; k++)
+               mytbone |= ss->people[map_ptr->maps[k]].id1;
 
-            if (!((linesp ^ gptr->rot ^ gptr->map->rot) & 1)) mytbone >>= 3;
+            if (!((linesp ^ gptr->rot ^ map_ptr->rot) & 1)) mytbone >>= 3;
 
             if (mytbone & 1) {
                // These 1x3's aren't facing the right way.  But if "standard"
                // was used, and the standard people are facing the right way,
                // accept it.
-               if (!((linesp ^ gptr->rot ^ gptr->map->rot) & 1)) tberrtest >>= 3;
+               if (!((linesp ^ gptr->rot ^ map_ptr->rot) & 1)) tberrtest >>= 3;
                if (tberrtest & 1) continue;    // Too bad.
             }
 
@@ -2405,7 +2477,7 @@ extern void distorted_move(
       if ((linesp & 7) == 3)
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-      divided_setup_move(ss, goodmap->map, phantest_ok, TRUE, result);
+      divided_setup_move(ss, goodmap->map_code, phantest_ok, TRUE, result);
       if (result->kind != goodmap->k) fail("Can't figure out result setup.");
 
       // Now we have to put back the inactives.  Note also that they can't roll.
@@ -2439,11 +2511,11 @@ extern void distorted_move(
          disttest = disttest_offset;
 
          if (livemask == 0xD0D0) {
-            map_ptr = &map_stw3a;
+            map_code = spcmap_stw3a;
             goto do_divided_call;
          }
          else if (livemask == 0x2929) {
-            map_ptr = &map_stw3b;
+            map_code = spcmap_stw3b;
             goto do_divided_call;
          }
       }
@@ -2469,8 +2541,8 @@ extern void distorted_move(
       if ((global_livemask & 0x00F00F) == 0) key |= 1;
       if ((global_livemask & 0x0F00F0) == 0) key |= 2;
 
-      mapcode = map_code_table[key];
-      if (mapcode == 0) fail("Can't find offset 2x4's.");
+      map_code = map_code_table[key];
+      if (map_code == 0) fail("Can't find offset 2x4's.");
       goto do_divided_call;
    }
    else if (linesp & 256) {
@@ -2513,9 +2585,9 @@ extern void distorted_move(
       // **** We probably ought to put in a check to demand a real 1/4 tag.  Or whatever.
 
       if (ss->kind == spgdmdcw)
-         mapcode = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,1);
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,1);
       else if (ss->kind == spgdmdccw)
-         mapcode = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,1);
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,1);
       else
          fail("Can't find distorted 1/4 tag.");
 
@@ -2536,9 +2608,9 @@ extern void distorted_move(
          }
 
          if (livemask == 0x33)
-            mapcode = MAPCODE(s1x4,1,MPKIND__OFFS_L_FULL,1);
+            map_code = MAPCODE(s1x4,1,MPKIND__OFFS_L_FULL,1);
          else if (livemask == 0xCC)
-            mapcode = MAPCODE(s1x4,1,MPKIND__OFFS_R_FULL,1);
+            map_code = MAPCODE(s1x4,1,MPKIND__OFFS_R_FULL,1);
          else fail("Can't find offset C/L/W.");
 
          goto do_divided_call;
@@ -2563,7 +2635,7 @@ extern void distorted_move(
                fail("Sorry, can't apply this concept when people are T-boned.");
       
             phantom_2x4_move(ss, linesp & 1, phantest_only_one,
-                             get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_BOTH_FULL, 1)),
+                             MAPCODE(s2x4,2,MPKIND__OFFS_BOTH_FULL, 1),
                              result);
             return;
          }
@@ -2576,7 +2648,7 @@ extern void distorted_move(
                ss->rotation++;
                canonicalize_rotation(ss);
             }
-            mapcode = (livemask & 1) ?
+            map_code = (livemask & 1) ?
                MAPCODE(s2x4,2,MPKIND__X_SPOTS,1) :
                MAPCODE(s2x4,2,MPKIND__O_SPOTS,1);
             // We know what we are doing -- shut off the error message.
@@ -2738,7 +2810,7 @@ extern void distorted_move(
           next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
          ss->cmd.parseptr = next_parseptr->next;
-         mapcode = MAPCODE(s2x4,2,mk,0);
+         map_code = MAPCODE(s2x4,2,mk,0);
          warn(warn__offset_hard_to_see);
       }
       else
@@ -2759,7 +2831,7 @@ extern void distorted_move(
       if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
 
       ss->cmd.parseptr = next_parseptr->next;
-      mapcode = MAPCODE(s2x4,2,mkbox,1);
+      map_code = MAPCODE(s2x4,2,mkbox,1);
    }
    else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     /* Only allow 50% offset. */
@@ -2770,10 +2842,10 @@ extern void distorted_move(
       if (ss->kind != s3x8) fail("Must have a 3x4 setup for this concept.");
 
       ss->cmd.parseptr = next_parseptr->next;
-      mapcode = MAPCODE(s2x4,2,mk,0);
+      map_code = MAPCODE(s2x4,2,mk,0);
    }
    else
-      mapcode = MAPCODE(s2x4,1,mk,1);
+      map_code = MAPCODE(s2x4,1,mk,1);
 
    do_divided_call:
 
@@ -2785,10 +2857,7 @@ extern void distorted_move(
 
    do_divided_nocheck:
 
-   if (mapcode == ~0UL)
-      divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
-   else
-      new_divided_setup_move(ss, mapcode, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
 
  getoutnosplit:
 
@@ -2944,7 +3013,7 @@ extern void triple_twin_move(
    if (parseptr->concept->value.arg3 != 8 && parseptr->concept->value.arg1 == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-   new_divided_setup_move(ss, mapcode, phan, TRUE, result);
+   divided_setup_move(ss, mapcode, phan, TRUE, result);
 }
 
 
@@ -4304,90 +4373,4 @@ extern void triangle_move(
          }
       }
    }
-}
-
-
-/* This handles only the T-boned case.  Other cases are handled elsewhere. */
-
-extern void phantom_2x4_move(
-   setup *ss,
-   int lineflag,
-   phantest_kind phantest,
-   const map_thing *maps,
-   setup *result) THROW_DECL
-{
-   setup hpeople, vpeople;
-   setup the_setups[2];
-   int i;
-   int vflag, hflag;
-   phantest_kind newphantest = phantest;
-
-   warn(warn__tbonephantom);
-
-   vflag = 0;
-   hflag = 0;
-   hpeople = *ss;
-   vpeople = *ss;
-   clear_people(&hpeople);
-   clear_people(&vpeople);
-   
-   for (i=0; i<16; i++) {
-      if ((ss->people[i].id1 ^ lineflag) & 1)
-         hflag |= copy_person(&hpeople, i, ss, i);
-      else
-         vflag |= copy_person(&vpeople, i, ss, i);
-   }
-
-   /* For certain types of phantom tests, we turn off the testing that we pass to
-      divided_setup_move.  It could give bogus errors, because it only sees the
-      headliners or sideliners at any one time. */
-   switch (phantest) {
-      case phantest_both:           /* This occurs on "phantom bigblock lines", for example,
-                                       and is intended to give error "Don't use phantom concept
-                                       if you don't mean it." if everyone is in one variety of
-                                       bigblock setup.  But, in this procedure, we could have
-                                       headliners entirely in one and sideliners in another, so
-                                       that divided_setup_move could be misled. */
-         newphantest = phantest_ok;
-         break;
-      case phantest_first_or_both:  /* This occurs on "phantom lines", for example, and is
-                                       intended to give the smae error as above if only the center
-                                       phantom lines are occupied.  But the headliners might
-                                       occupy just the center phantom lines while the sideliners
-                                       make full use of the concept, so, once again, we have to
-                                       disable it.  In fact, we do better -- we tell
-                                       divided_setup_move to do the right thing if the outer
-                                       phantom setup is empty. */
-         newphantest = phantest_ctr_phantom_line;
-         break;
-   }
-
-   /* Do the E-W facing people. */
-
-   if (vflag) {
-      vpeople.rotation--;
-      canonicalize_rotation(&vpeople);
-      divided_setup_move(&vpeople, maps, newphantest, TRUE, &the_setups[1]);
-      the_setups[1].rotation++;
-      canonicalize_rotation(&the_setups[1]);
-   }
-   else {
-      the_setups[1].kind = nothing;
-      the_setups[1].result_flags = 0;
-   }
-
-   /* Do the N-S facing people. */
-
-   if (hflag) {
-      divided_setup_move(&hpeople, maps, newphantest, TRUE, &the_setups[0]);
-   }
-   else {
-      the_setups[0].kind = nothing;
-      the_setups[0].result_flags = 0;
-   }
-
-   the_setups[0].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
-   merge_setups(&the_setups[1], merge_strict_matrix, &the_setups[0]);
-   reinstate_rotation(ss, &the_setups[0]);
-   *result = the_setups[0];
 }

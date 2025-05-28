@@ -1826,12 +1826,25 @@ static restr_initializer *get_restriction_thing(setup_kind k, assumption_thing t
 }
 
 
-static bool check_for_supercall(const parse_block *parseptrcopy)
+static bool check_for_supercall(parse_block *parseptrcopy)
 {
    concept_kind kk = parseptrcopy->concept->kind;
 
    if (kk <= marker_end_of_list) {
-      if (kk == concept_another_call_next_mod &&
+      if (kk == marker_end_of_list && !parseptrcopy->next) {
+         setup_command foo2;
+         by_def_item innerdef;
+         innerdef.call_id = base_call_null;
+         innerdef.modifiers1 = DFM1_CALL_MOD_MAND_ANYCALL;
+         innerdef.modifiersh = 0;
+         setup_command bar;
+         bar.cmd_final_flags.final = 0;
+         bar.cmd_final_flags.her8it = 0;
+         calldefn this_defn = base_calls[base_call_null]->the_defn;
+         get_real_subcall(parseptrcopy, &innerdef, &bar, &this_defn, 0, &foo2);
+      }
+
+      if (parseptrcopy->concept->kind == concept_another_call_next_mod &&
           parseptrcopy->next &&
           (parseptrcopy->next->call == base_calls[base_call_null] ||
            parseptrcopy->next->call == base_calls[base_call_null_second]) &&
@@ -1889,12 +1902,12 @@ extern bool check_for_concept_group(
 
    if (k == concept_supercall ||
        k == concept_fractional ||
-       k == concept_fractional_const ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_initially) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finally) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_piecewise) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_echo) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_rev_echo) ||
+       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_revorder) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finish))
       *need_to_restrain_p |= 1;
 
@@ -1947,6 +1960,7 @@ extern bool check_for_concept_group(
 
       if (subkey == meta_key_random || subkey == meta_key_rev_random ||
           subkey == meta_key_piecewise || subkey == meta_key_nth_part_work ||
+          subkey == meta_key_first_frac_work ||
           subkey == meta_key_initially || subkey == meta_key_finally ||
           subkey == meta_key_echo || subkey == meta_key_rev_echo) {
          next_parseptr = parseptr_skip;
@@ -4981,8 +4995,6 @@ SDLIB_API void toplevelmove() THROW_DECL
          // Also skip "stretch".
          while ((parse_scan->concept->kind == concept_fractional &&
                  parse_scan->concept->value.arg1 == 0) ||
-                (parse_scan->concept->kind == concept_fractional_const &&
-                 parse_scan->concept->value.arg1 == 4) ||
                 parse_scan->concept->kind == concept_old_stretch) {
             parse_scan = parse_scan->next;
             did_something = true;

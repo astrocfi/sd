@@ -1256,7 +1256,7 @@ static void special_triangle(
 
 static long_boolean handle_3x4_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, const map_thing **division_maps_p,
+   uint32 *division_code_p,
    callarray *calldeflist, long_boolean matrix_aware, setup *result)
 
 {
@@ -1345,7 +1345,7 @@ static long_boolean handle_3x4_division(
             (!(newtb & 010) || assoc(b_2x1, ss, calldeflist))) ||
            assoc(b_1x1, ss, calldeflist))) {
          warn(warn__each1x2);
-         *division_maps_p = (livemask == 0xEBA) ? &map_lz12 : &map_rz12;
+         *division_code_p = (livemask == 0xEBA) ? spcmap_lz12 : spcmap_rz12;
          return TRUE;
       }
    }
@@ -1461,7 +1461,6 @@ static long_boolean handle_3x4_division(
 static bool handle_4x4_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
    uint32 & division_code,            // We write over this.
-   const map_thing * & division_maps, // We write over this.
    int & finalrot,                    // We write over this.
    callarray *calldeflist, long_boolean matrix_aware)
 {
@@ -1504,49 +1503,49 @@ static bool handle_4x4_division(
       if (livemask == 0x6969 &&
           (!(newtb & 001) || (assocstuff&001)) &&
           (!(newtb & 010) || (assocstuff&010))) {
-         division_maps = &map_lh_s2x3_2;
+         division_code = spcmap_lh_s2x3_2;
          return true;
       }
       else if (livemask == 0x9696 &&
           (!(newtb & 010) || (assocstuff&001)) &&
           (!(newtb & 001) || (assocstuff&010))) {
-         division_maps = &map_lh_s2x3_3;
+         division_code = spcmap_lh_s2x3_3;
          return true;
       }
       else if (livemask == 0xF0F0 &&
           (!(newtb & 001) || (assocstuff&001)) &&
           (!(newtb & 010) || (assocstuff&010))) {
-         division_maps = &map_rh_s2x3_2;
+         division_code = spcmap_rh_s2x3_2;
          return true;
       }
       else if (livemask == 0x0F0F &&
           (!(newtb & 010) || (assocstuff&001)) &&
           (!(newtb & 001) || (assocstuff&010))) {
-         division_maps = &map_rh_s2x3_3;
+         division_code = spcmap_rh_s2x3_3;
          return true;
       }
       else if (livemask == 0xACAC &&
                (((newtb & 011) == 001 && (assocstuff==001)) ||
                 ((newtb & 011) == 010 && (assocstuff==010)))) {
-         division_maps = &map_rh_s2x3_2;
+         division_code = spcmap_rh_s2x3_2;
          return true;
       }
       else if (livemask == 0xCACA &&
                (((newtb & 011) == 001 && (assocstuff==001)) ||
                 ((newtb & 011) == 010 && (assocstuff==010)))) {
-         division_maps = &map_lh_s2x3_2;
+         division_code = spcmap_lh_s2x3_2;
          return true;
       }
       else if (livemask == 0xACAC &&
                (((newtb & 011) == 010 && (assocstuff==001)) ||
                 ((newtb & 011) == 001 && (assocstuff==010)))) {
-         division_maps = &map_lh_s2x3_3;
+         division_code = spcmap_lh_s2x3_3;
          return true;
       }
       else if (livemask == 0xCACA &&
                (((newtb & 011) == 010 && (assocstuff==001)) ||
                 ((newtb & 011) == 001 && (assocstuff==010)))) {
-         division_maps = &map_rh_s2x3_3;
+         division_code = spcmap_rh_s2x3_3;
          return true;
       }
    }
@@ -1565,52 +1564,52 @@ static bool handle_4x4_division(
          division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,0);
          return true;
       case 0xAAAA:
-         division_maps = &map_4x4_spec0;
+         division_code = spcmap_4x4_spec0;
          return true;
       case 0xCCCC:
-         division_maps = &map_4x4_spec1;
+         division_code = spcmap_4x4_spec1;
          return true;
       case 0x3333:
-         division_maps = &map_4x4_spec2;
+         division_code = spcmap_4x4_spec2;
          return true;
       case 0x5555:
-         division_maps = &map_4x4_spec3;
+         division_code = spcmap_4x4_spec3;
          return true;
       case 0x8787: finalrot++;
       case 0x7878:
-         division_maps = &map_4x4_spec4;
+         division_code = spcmap_4x4_spec4;
          return true;
       case 0x1E1E: finalrot++;
       case 0xE1E1:
-         division_maps = &map_4x4_spec5;
+         division_code = spcmap_4x4_spec5;
          return true;
       case 0xA3A3: finalrot++;
       case 0x3A3A:
-         division_maps = &map_4x4_spec6;
+         division_code = spcmap_4x4_spec6;
          return true;
       case 0x5C5C: finalrot++;
       case 0xC5C5:
-         division_maps = &map_4x4_spec7;
+         division_code = spcmap_4x4_spec7;
          return true;
       case 0x7171:
-         division_maps = &map_4x4_ns;
+         division_code = spcmap_4x4_ns;
          warn(warn__each1x4);
          return true;
       case 0x1717:
-         division_maps = &map_4x4_ew;
+         division_code = spcmap_4x4_ew;
          warn(warn__each1x4);
          return true;
       case 0x4E4E: case 0x8B8B:
-         division_maps = &map_rh_s2x3_3;
+         division_code = spcmap_rh_s2x3_3;
          goto handle_z;
       case 0xA6A6: case 0x9C9C:
-         division_maps = &map_lh_s2x3_3;
+         division_code = spcmap_lh_s2x3_3;
          goto handle_z;
       case 0xE4E4: case 0xB8B8:
-         division_maps = &map_rh_s2x3_2;
+         division_code = spcmap_rh_s2x3_2;
          goto handle_other_z;
       case 0x6A6A: case 0xC9C9:
-         division_maps = &map_lh_s2x3_2;
+         division_code = spcmap_lh_s2x3_2;
          goto handle_other_z;
       case 0x4B4B: case 0xB4B4:
          // See comment above, for 3x4.
@@ -1678,7 +1677,7 @@ static bool handle_4x4_division(
       else if ((callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
                ((!(newtb & 001) || assoc(b_1x4, ss, calldeflist)) &&
                 (!(newtb & 010) || assoc(b_4x1, ss, calldeflist)))) {
-         division_maps = &map_4x4v;
+         division_code = spcmap_4x4v;
          return true;
       }
    }
@@ -1686,7 +1685,7 @@ static bool handle_4x4_division(
    // If the call has a 1x1 definition, and we can't do anything else,
    // divide it up into all 16 people.
    if (assoc(b_1x1, ss, calldeflist)) {
-      division_maps = &map_4x4_1x1;
+      division_code = spcmap_4x4_1x1;
       return true;
    }
 
@@ -1722,7 +1721,7 @@ static bool handle_4x4_division(
 
 static long_boolean handle_4x6_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, const map_thing **division_maps_p,
+   uint32 *division_code_p,
    callarray *calldeflist, long_boolean matrix_aware)
 {
    long_boolean forbid_little_stuff;
@@ -1749,7 +1748,7 @@ static long_boolean handle_4x6_division(
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
          switch (livemask) {
          case 043204320: case 023402340:
-            *division_maps_p = &map_rh_s2x3_7;
+            *division_code_p = spcmap_rh_s2x3_7;
             if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
@@ -1757,7 +1756,7 @@ static long_boolean handle_4x6_division(
             }
             break;
          case 061026102: case 062016201:
-            *division_maps_p = &map_lh_s2x3_7;
+            *division_code_p = spcmap_lh_s2x3_7;
             if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
@@ -1828,7 +1827,7 @@ static long_boolean handle_4x6_division(
 
 static long_boolean handle_3x8_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, const map_thing **division_maps_p,
+   uint32 *division_code_p,
    callarray *calldeflist, long_boolean matrix_aware)
 {
    long_boolean forbid_little_stuff;
@@ -1889,7 +1888,7 @@ static long_boolean handle_3x8_division(
 
 static long_boolean handle_2x12_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, const map_thing **division_maps_p,
+   uint32 *division_code_p,
    callarray *calldeflist, long_boolean matrix_aware)
 {
    long_boolean forbid_little_stuff;
@@ -1960,7 +1959,6 @@ static int divide_the_setup(
    callarray *have_1x2, *have_2x1;
    uint32 division_code = ~0UL;
    mpkind map_kind;
-   const map_thing *division_maps;
    uint32 newtb = *newtb_p;
    uint32 callflags1 = ss->cmd.callspec->the_defn.callflags1;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
@@ -2238,11 +2236,11 @@ static int divide_the_setup(
             if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
                if (livemask == 0x3A0E8 || livemask == 0x1705C) {
-                  division_maps = &map_tgl451;
+                  division_code = spcmap_tgl451;
                   goto divide_us_no_recompute;
                }
                else if (livemask == 0x41D07 || livemask == 0xE0B82) {
-                  division_maps = &map_tgl452;
+                  division_code = spcmap_tgl452;
                   goto divide_us_no_recompute;
                }
             }
@@ -2469,10 +2467,10 @@ static int divide_the_setup(
 
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
          scopy = *ss;    /* "Move" can write over its input. */
-         new_divided_setup_move(ss, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0),
-                                phantest_ok, FALSE, &the_results[0]);
-         new_divided_setup_move(&scopy, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1),
-                                phantest_ok, FALSE, &the_results[1]);
+         divided_setup_move(ss, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0),
+                            phantest_ok, FALSE, &the_results[0]);
+         divided_setup_move(&scopy, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1),
+                            phantest_ok, FALSE, &the_results[1]);
          *result = the_results[1];
          result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
          merge_setups(&the_results[0], merge_c1_phantom, result);
@@ -2536,12 +2534,12 @@ static int divide_the_setup(
                   if (selmask == 0 || (selmask & 011) == 011)
                      fail("People are not working with each other in a consistent way.");
                   else if (selmask & 1)
-                     { division_code = ~0 ; division_maps = &map_2x2v; }
+                     { division_code = spcmap_2x2v; }
                }
                else {
                   if ((((ss->people[0].id1 | ss->people[3].id1) & 011) != 011) &&
                       (((ss->people[1].id1 | ss->people[2].id1) & 011) != 011))
-                     { division_code = ~0 ; division_maps = &map_2x2v; }
+                     { division_code = spcmap_2x2v; }
                   else if ((((ss->people[0].id1 | ss->people[1].id1) & 011) == 011) ||
                            (((ss->people[2].id1 | ss->people[3].id1) & 011) == 011))
                      fail("Can't figure out who should be working with whom.");
@@ -2619,7 +2617,7 @@ static int divide_the_setup(
             }
 
             if (foo == 1)
-               { division_code = ~0 ; division_maps = &map_2x2v; }
+               division_code = spcmap_2x2v;
 
             goto divide_us_no_recompute;
          }
@@ -2662,32 +2660,32 @@ static int divide_the_setup(
       break;
    case s3x4:
       if (handle_3x4_division(ss, callflags1, newtb, livemask,
-                              &division_code, &division_maps,
+                              &division_code,
                               calldeflist, matrix_aware, result))
          goto divide_us_no_recompute;
       return 1;
    case s4x4:
       if (handle_4x4_division(ss, callflags1, newtb, livemask,
-                              division_code, division_maps,
+                              division_code,
                               finalrot,
                               calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
    case s4x6:
       if (handle_4x6_division(ss, callflags1, newtb, livemask,
-                              &division_code, &division_maps,
+                              &division_code,
                               calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
    case s3x8:
       if (handle_3x8_division(ss, callflags1, newtb, livemask,
-                              &division_code, &division_maps,
+                              &division_code,
                               calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
    case s2x12:
       if (handle_2x12_division(ss, callflags1, newtb, livemask,
-                              &division_code, &division_maps,
+                              &division_code,
                               calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
@@ -2713,7 +2711,7 @@ static int divide_the_setup(
            nxnbits == INHERITFLAGNXNK_3X3) &&
           (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
-         division_maps = &map_qtag_2x3;
+         division_code = spcmap_qtag_2x3;
          goto divide_us_no_recompute;
       }
 
@@ -2729,11 +2727,11 @@ static int divide_the_setup(
       }
       else if ((livemask & 0x55) == 0) {
          /* Check for stuff like "heads pass the ocean; side corners only slide thru". */
-         division_maps = &map_qtag_f1;
+         division_code = spcmap_qtag_f1;
          goto divide_us_no_recompute;
       }
       else if ((livemask & 0x66) == 0) {
-         division_maps = &map_qtag_f2;
+         division_code = spcmap_qtag_f2;
          goto divide_us_no_recompute;
       }
 
@@ -2744,7 +2742,7 @@ static int divide_the_setup(
 
       else if ((livemask & 0x77) == 0) {
          /* Check for stuff like "center two slide thru". */
-         division_maps = &map_qtag_f0;
+         division_code = spcmap_qtag_f0;
          goto divide_us_no_recompute;
       }
 
@@ -2860,13 +2858,13 @@ static int divide_the_setup(
       else if (livemask == 036 &&
                (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-         division_maps = &map_2x3_1234;
+         division_code = spcmap_2x3_1234;
          goto divide_us_no_recompute;
       }
       else if (livemask == 063 &&
                (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-         division_maps = &map_2x3_0145;
+         division_code = spcmap_2x3_0145;
          goto divide_us_no_recompute;
       }
 
@@ -2951,11 +2949,11 @@ static int divide_the_setup(
          else if ((ss->people[0].id1 & d_mask) != d_west)
             fail("Can't figure out which way triangle point is facing.");
 
-         division_maps = (leading & FINAL__LEADTRIANGLE) ? &map_trngl_box1 : &map_trngl_box2;
+         division_code = (leading & FINAL__LEADTRIANGLE) ? spcmap_trngl_box1 : spcmap_trngl_box2;
 
          final_concepts.final &= ~(FINAL__TRIANGLE|FINAL__LEADTRIANGLE);
          ss->cmd.cmd_final_flags = final_concepts;
-         divided_setup_move(ss, division_maps, phantest_ok, FALSE, result);
+         divided_setup_move(ss, division_code, phantest_ok, FALSE, result);
          result->result_flags |= RESULTFLAG__DID_TGL_EXPANSION;
          result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
          return 1;
@@ -2997,14 +2995,14 @@ static int divide_the_setup(
    case sdmd:
       /* See if the call has a 1x1 definition, in which case split it and do each part. */
       if (assoc(b_1x1, ss, calldeflist)) {
-         division_maps = &map_dmd_1x1;
+         division_code = spcmap_dmd_1x1;
          goto divide_us_no_recompute;
       }
       break;
    case s_star:
       /* See if the call has a 1x1 definition, in which case split it and do each part. */
       if (assoc(b_1x1, ss, calldeflist)) {
-         division_maps = &map_star_1x1;
+         division_code = spcmap_star_1x1;
          goto divide_us_no_recompute;
       }
       break;
@@ -3338,7 +3336,7 @@ static int divide_the_setup(
       if ((assoc(b_1x2, ss, calldeflist) ||
            assoc(b_2x1, ss, calldeflist) ||
            assoc(b_1x1, ss, calldeflist))) {
-         division_maps = &map_tgl4_1;
+         division_code = spcmap_tgl4_1;
          goto divide_us_no_recompute;
       }
    }
@@ -3360,11 +3358,7 @@ static int divide_the_setup(
    ss->cmd.prior_expire_bits = 0;
    ss->rotation += finalrot;   // Flip the setup around and recanonicalize.
    canonicalize_rotation(ss);
-
-   if (division_code == ~0UL)
-      divided_setup_move(ss, division_maps, phantest_ok, recompute_anyway, result);
-   else
-      new_divided_setup_move(ss, division_code, phantest_ok, recompute_anyway, result);
+   divided_setup_move(ss, division_code, phantest_ok, recompute_anyway, result);
 
    // Flip the setup back if necessary.  It will get canonicalized.
    result->rotation -= finalrot;
@@ -3627,7 +3621,6 @@ extern void basic_move(
    callarray *calldeflist;
    long_boolean funny;
    uint32 division_code;
-   const map_thing *division_maps;
    callarray *linedefinition;
    callarray *coldefinition;
    uint32 matrix_check_flag = 0;
@@ -3916,9 +3909,8 @@ foobar:
             int zxy = (callspec == &base_calls[base_call_passthru]->the_defn) ? 1 : 0;
 
             if ((newtb ^ zxy) & 1) {
-               /* If the setup is empty and newtb is zero, it doesn't matter what we do. */
-               division_code = ~0;
-               division_maps = &map_4x4v;
+               // If the setup is empty and newtb is zero, it doesn't matter what we do.
+               division_code = spcmap_4x4v;
             }
             else
                division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
@@ -3936,11 +3928,7 @@ foobar:
  divide_us:
 
    ss->cmd.cmd_final_flags.her8it &= ~search_concepts_without_funny;
-
-   if (division_code == ~0UL)
-      divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
-   else
-      new_divided_setup_move(ss, division_code, phantest_ok, TRUE, result);
+   divided_setup_move(ss, division_code, phantest_ok, TRUE, result);
 
    goto un_mirror;
 

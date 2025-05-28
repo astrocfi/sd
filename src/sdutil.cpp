@@ -997,6 +997,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else {
                if ((k == concept_meta_one_arg && item->value.arg1 == meta_key_nth_part_work) ||
+                   (k == concept_meta_two_args && item->value.arg1 == meta_key_first_frac_work) ||
                    (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__SAID_INVERT) ||
                    (k == concept_meta && (item->value.arg1 == meta_key_initially ||
                                           item->value.arg1 == meta_key_finally))) {

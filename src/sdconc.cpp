@@ -2428,8 +2428,8 @@ extern void concentric_move(
          }
          else {
             if (specialoffsetmapcode != ~0UL) {
-               new_divided_setup_move(begin_ptr, specialoffsetmapcode,
-                                      phantest_only_one, TRUE, result_ptr);
+               divided_setup_move(begin_ptr, specialoffsetmapcode,
+                                  phantest_only_one, TRUE, result_ptr);
             }
             else
                impose_assumption_and_move(begin_ptr, result_ptr);
@@ -3275,10 +3275,14 @@ static concmerge_thing merge_maps[] = {
    {s2x2,          s1x8, 0,     0xAA, 0x4E, 0x1, schema_rev_checkpoint, s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},               {0, 1, 2, 3}},
    {s1x8,          s2x4, 0xAA,  0x99, 0x4D, 0x0, schema_rev_checkpoint, s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},               {1, 2, 5, 6}},
 
-   /* Special one for merging a perpendicular 2x4 that was cut down to a 2x2. */
-   /* Is this one used??? */
-
-   {s2x2,          s1x8, 0,     0xAA, 0x0E, 0x0, schema_rev_checkpoint, s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},               {0, 1, 2, 3}},
+   // Special one for merging a perpendicular 2x4 that was cut down to a 2x2.
+   // Is this one used???
+   // I hope not.  It allows "own the ends zip the top by regroup" from (2FL; ctrs ctr rot).
+   // I don't think we should allow that, because people from the zip the top are
+   // intervening between the people who traded on the regroup.  So take it out.
+   /*
+   {s2x2,          s1x8, 0,     0xAA, 0x0E, 0x1, schema_rev_checkpoint, s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},               {0, 1, 2, 3}},
+   */
 
    {s_bone6,       s1x8, 0,     0xAA, 0x0E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {1, 7, 6, 5, 3, 2},         {0, -1, 2, -1, 4, -1, 6, -1}},
 
@@ -3895,14 +3899,6 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       uint32 fraction_to_finish = ss->cmd.parseptr->options.number_fields;
       numer = fraction_to_finish & 0xF;
       denom = (fraction_to_finish >> 4) & 0xF;
-      doing_do_last_frac = TRUE;
-   }
-   else if ((cmd2word & CMD_MISC2__ANY_WORK) &&
-            ss->cmd.parseptr->concept->kind == concept_fractional_const &&
-            ss->cmd.parseptr->concept->value.arg1 == 5 &&
-            ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
-      numer = 1;
-      denom = 2;
       doing_do_last_frac = TRUE;
    }
 

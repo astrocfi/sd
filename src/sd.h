@@ -285,13 +285,13 @@ enum concept_kind {
    concept_special_sequential_num,
    concept_meta,
    concept_meta_one_arg,
+   concept_meta_two_args,
    concept_so_and_so_begin,
    concept_replace_nth_part,
    concept_replace_last_part,
    concept_interrupt_at_fraction,
    concept_sandwich,
    concept_interlace,
-   concept_fractional_const,
    concept_fractional,
    concept_rigger,
    concept_wing,
@@ -303,100 +303,13 @@ enum concept_kind {
    concept_diagnose
 };
 
-enum mpkind {
-   MPKIND__NONE,
-   MPKIND__SPLIT,
-   MPKIND__REMOVED,
-   MPKIND__TWICE_REMOVED,
-   MPKIND__THRICE_REMOVED,
-   MPKIND__OVERLAP,
-   MPKIND__INTLK,
-   MPKIND__CONCPHAN,
-   MPKIND__NONISOTROPIC,
-   MPKIND__NONISOTROP1,
-   MPKIND__OFFS_L_ONEQ,
-   MPKIND__OFFS_R_ONEQ,
-   MPKIND__OFFS_L_HALF,
-   MPKIND__OFFS_R_HALF,
-   MPKIND__OFFS_L_THRQ,
-   MPKIND__OFFS_R_THRQ,
-   MPKIND__OFFS_L_FULL,
-   MPKIND__OFFS_R_FULL,
-   MPKIND__OFFS_L_ONEQ_SPECIAL,
-   MPKIND__OFFS_R_ONEQ_SPECIAL,
-   MPKIND__OFFS_L_HALF_SPECIAL,
-   MPKIND__OFFS_R_HALF_SPECIAL,
-   MPKIND__OFFS_L_THRQ_SPECIAL,
-   MPKIND__OFFS_R_THRQ_SPECIAL,
-   MPKIND__OFFS_L_FULL_SPECIAL,
-   MPKIND__OFFS_R_FULL_SPECIAL,
-   MPKIND__OFFS_BOTH_FULL,
-   MPKIND__OFFS_BOTH_SINGLEV,
-   MPKIND__OFFS_BOTH_SINGLEH,
-   MPKIND__LILZCCW,
-   MPKIND__LILZCW,
-   MPKIND__LILAZCCW,
-   MPKIND__LILAZCW,
-   MPKIND__LILZCOM,
-   MPKIND__O_SPOTS,
-   MPKIND__X_SPOTS,
-   MPKIND__4_QUADRANTS,
-   MPKIND__4_EDGES,
-   MPKIND__ALL_8,
-   MPKIND__DMD_STUFF,
-   MPKIND__STAG,
-   MPKIND__DIAGQTAG,
-   MPKIND__DIAGQTAG4X6,
-   MPKIND__BENT0CW,
-   MPKIND__BENT0CCW,
-   MPKIND__BENT1CW,
-   MPKIND__BENT1CCW,
-   MPKIND__BENT2CW,
-   MPKIND__BENT2CCW,
-   MPKIND__BENT3CW,
-   MPKIND__BENT3CCW,
-   MPKIND__BENT4CW,
-   MPKIND__BENT4CCW,
-   MPKIND__BENT5CW,
-   MPKIND__BENT5CCW,
-   MPKIND__BENT6CW,
-   MPKIND__BENT6CCW,
-   MPKIND__BENT7CW,
-   MPKIND__BENT7CCW,
-   MPKIND__SPEC_ONCEREM,
-   MPKIND__SPEC_TWICEREM
-};
-
-struct map_thing {
-   C_const veryshort maps[48];  // Darn it!  40 would be enough for all maps but one.
-   C_const setup_kind inner_kind;
-   C_const int arity;
-   C_const mpkind map_kind;
-   C_const int vert;
-   C_const short int warncode;
-   C_const setup_kind outer_kind;
-   C_const uint32 rot;
-   C_const uint32 per_person_rot;
-   uint32 code;
-   map_thing *next;
-};
-
-struct clw3_thing {
-   C_const setup_kind k;
-   C_const uint32 mask;
-   C_const uint32 test;
-   C_const map_thing *map;
-   C_const int rot;
-   C_const veryshort inactives[9];
-};
-
 struct concept_descriptor {
    Cstring name;
    C_const concept_kind kind;
    C_const uint32 concparseflags;   // See above.
    C_const dance_level level;
    C_const struct {
-      C_const map_thing *maps;
+      C_const uint32 arg0;
       C_const uint32 arg1;
       C_const uint32 arg2;
       C_const uint32 arg3;
@@ -993,8 +906,6 @@ struct predptr_pair {
    uint16 arr[4];
 };
 
-
-#define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 12) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
 
 enum {
    LOOKUP_NONE     = 0x1UL,
@@ -2115,20 +2026,22 @@ struct resolve_indicator {
    that appear in the "callflagsf" word of a top level calldefn block
    and the "cmd_final_flags.final" of a setup with its command block. */
 
-/* A 3-bit field. */
-#define CFLAGH__TAG_CALL_RQ_MASK          0x00000007UL
-#define CFLAGH__TAG_CALL_RQ_BIT           0x00000001UL
-#define CFLAGH__REQUIRES_SELECTOR         0x00000008UL
-#define CFLAGH__REQUIRES_DIRECTION        0x00000010UL
-#define CFLAGH__CIRC_CALL_RQ_BIT          0x00000020UL
-#define CFLAGH__ODD_NUMBER_ONLY           0x00000040UL
-#define CFLAGHSPARE_1                     0x00000080UL
-#define CFLAGHSPARE_2                     0x00000100UL
-#define CFLAGHSPARE_3                     0x00000200UL
-#define CFLAGHSPARE_4                     0x00000400UL
-#define CFLAGHSPARE_5                     0x00000800UL
-#define CFLAGHSPARE_6                     0x00001000UL
-/* We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits. */
+enum {
+   // A 3-bit field.
+   CFLAGH__TAG_CALL_RQ_MASK        = 0x00000007UL,
+   CFLAGH__TAG_CALL_RQ_BIT         = 0x00000001UL,
+   CFLAGH__REQUIRES_SELECTOR       = 0x00000008UL,
+   CFLAGH__REQUIRES_DIRECTION      = 0x00000010UL,
+   CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020UL,
+   CFLAGH__ODD_NUMBER_ONLY         = 0x00000040UL,
+   CFLAGHSPARE_1                   = 0x00000080UL,
+   CFLAGHSPARE_2                   = 0x00000100UL,
+   CFLAGHSPARE_3                   = 0x00000200UL,
+   CFLAGHSPARE_4                   = 0x00000400UL,
+   CFLAGHSPARE_5                   = 0x00000800UL,
+   CFLAGHSPARE_6                   = 0x00001000UL
+   // We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits.
+};
 
 /* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
    word of a callspec.  We use symbols that have been graciously
@@ -2137,11 +2050,13 @@ struct resolve_indicator {
    These are used in the callflagsf word of a callspec.  The FINAL__?? bits are
    used elsewhere.  They don't mix. */
 
-#define ESCAPE_WORD__LEFT                 CFLAGHSPARE_1
-#define ESCAPE_WORD__CROSS                CFLAGHSPARE_2
-#define ESCAPE_WORD__MAGIC                CFLAGHSPARE_3
-#define ESCAPE_WORD__INTLK                CFLAGHSPARE_4
-#define ESCAPE_WORD__GRAND                CFLAGHSPARE_5
+enum {
+   ESCAPE_WORD__LEFT            = CFLAGHSPARE_1,
+   ESCAPE_WORD__CROSS           = CFLAGHSPARE_2,
+   ESCAPE_WORD__MAGIC           = CFLAGHSPARE_3,
+   ESCAPE_WORD__INTLK           = CFLAGHSPARE_4,
+   ESCAPE_WORD__GRAND           = CFLAGHSPARE_5
+};
 
 /* These flags go into the "concept_prop" field of a "concept_table_item".
 
@@ -2444,12 +2359,14 @@ static const uint32 CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL;
    graciously provided for us from database.h to tell us what bits may be safely
    used next to the heritable flags. */
 
-#define FINAL__SPLIT                             CFLAGHSPARE_1
-static const uint32 FINAL__SPLIT_SQUARE_APPROVED      = CFLAGHSPARE_2;
-static const uint32 FINAL__SPLIT_DIXIE_APPROVED       = CFLAGHSPARE_3;
-static const uint32 FINAL__MUST_BE_TAG                = CFLAGHSPARE_4;
-static const uint32 FINAL__TRIANGLE                   = CFLAGHSPARE_5;
-static const uint32 FINAL__LEADTRIANGLE               = CFLAGHSPARE_6;
+enum {
+   FINAL__SPLIT                      = CFLAGHSPARE_1,
+   FINAL__SPLIT_SQUARE_APPROVED      = CFLAGHSPARE_2,
+   FINAL__SPLIT_DIXIE_APPROVED       = CFLAGHSPARE_3,
+   FINAL__MUST_BE_TAG                = CFLAGHSPARE_4,
+   FINAL__TRIANGLE                   = CFLAGHSPARE_5,
+   FINAL__LEADTRIANGLE               = CFLAGHSPARE_6
+};
 
 /* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
 
@@ -2481,9 +2398,10 @@ static const uint32 FINAL__LEADTRIANGLE               = CFLAGHSPARE_6;
    a parallelogram, "2x6 matrix 1x2 checkmate" is legal -- the 2x6 gets divided naturally
    into 2x3's.
 
-   CMD_MISC__NO_EXPAND_MATRIX means that we are at a level of recursion that no longer permits us to do the
-   implicit expansion of the matrix (e.g. add outboard phantoms to turn a 2x4 into a 2x6
-   if the concept "triple box" is used) that some concepts perform at the top level.
+   CMD_MISC__NO_EXPAND_MATRIX means that we are at a level of recursion that
+   no longer permits us to do the implicit expansion of the matrix
+   (e.g. add outboard phantoms to turn a 2x4 into a 2x6 if the concept
+   "triple box" is used) that some concepts perform at the top level.
 
    CMD_MISC__DISTORTED means that we are at a level of recursion in which some
    distorted-setup concept has been used.  When this is set, "matrix" (a.k.a.
@@ -2798,13 +2716,6 @@ enum restriction_test_result {
    restriction_no_item
 };
 
-
-struct mapcoder {
-   uint32 code;
-   const map_thing *the_map;
-   mapcoder *next;
-};
-
 struct concept_fixer_thing {
    uint32 newheritmods;
    uint32 newfinalmods;
@@ -2865,6 +2776,7 @@ enum meta_key_kind {
    meta_key_like_a,
    meta_key_finally,
    meta_key_nth_part_work,
+   meta_key_first_frac_work,
    meta_key_skip_nth_part,
    meta_key_shift_n,
    meta_key_echo,
@@ -3220,18 +3132,225 @@ extern const tglmapkey bdtglmap1[];                                 /* in SDTABL
 extern const tglmapkey bdtglmap2[];                                 /* in SDTABLES */
 extern const tglmapkey rgtglmap1[];                                 /* in SDTABLES */
 extern sel_item sel_init_table[];                                   /* in SDTABLES */
-extern clw3_thing clw3_table[];                                     /* in SDTABLES */
 
-extern map_thing map_stairst;                                       /* in SDTABLES */
-extern map_thing map_ladder;                                        /* in SDTABLES */
-extern map_thing map_but_o;                                         /* in SDTABLES */
-extern map_thing map_blocks;                                        /* in SDTABLES */
-extern map_thing map_2x4_diagonal;                                  /* in SDTABLES */
-extern map_thing map_2x4_int_pgram;                                 /* in SDTABLES */
-extern map_thing map_2x4_trapezoid;                                 /* in SDTABLES */
+enum mpkind {
+   MPKIND__NONE,
+   MPKIND__SPLIT,
+   MPKIND__REMOVED,
+   MPKIND__TWICE_REMOVED,
+   MPKIND__THRICE_REMOVED,
+   MPKIND__OVERLAP,
+   MPKIND__INTLK,
+   MPKIND__CONCPHAN,
+   MPKIND__NONISOTROPIC,
+   MPKIND__NONISOTROP1,
+   MPKIND__OFFS_L_ONEQ,
+   MPKIND__OFFS_R_ONEQ,
+   MPKIND__OFFS_L_HALF,
+   MPKIND__OFFS_R_HALF,
+   MPKIND__OFFS_L_THRQ,
+   MPKIND__OFFS_R_THRQ,
+   MPKIND__OFFS_L_FULL,
+   MPKIND__OFFS_R_FULL,
+   MPKIND__OFFS_L_ONEQ_SPECIAL,
+   MPKIND__OFFS_R_ONEQ_SPECIAL,
+   MPKIND__OFFS_L_HALF_SPECIAL,
+   MPKIND__OFFS_R_HALF_SPECIAL,
+   MPKIND__OFFS_L_THRQ_SPECIAL,
+   MPKIND__OFFS_R_THRQ_SPECIAL,
+   MPKIND__OFFS_L_FULL_SPECIAL,
+   MPKIND__OFFS_R_FULL_SPECIAL,
+   MPKIND__OFFS_BOTH_FULL,
+   MPKIND__OFFS_BOTH_SINGLEV,
+   MPKIND__OFFS_BOTH_SINGLEH,
+   MPKIND__LILZCCW,
+   MPKIND__LILZCW,
+   MPKIND__LILAZCCW,
+   MPKIND__LILAZCW,
+   MPKIND__LILZCOM,
+   MPKIND__O_SPOTS,
+   MPKIND__X_SPOTS,
+   MPKIND__4_QUADRANTS,
+   MPKIND__4_EDGES,
+   MPKIND__ALL_8,
+   MPKIND__DMD_STUFF,
+   MPKIND__STAG,
+   MPKIND__DIAGQTAG,
+   MPKIND__DIAGQTAG4X6,
+   MPKIND__BENT0CW,
+   MPKIND__BENT0CCW,
+   MPKIND__BENT1CW,
+   MPKIND__BENT1CCW,
+   MPKIND__BENT2CW,
+   MPKIND__BENT2CCW,
+   MPKIND__BENT3CW,
+   MPKIND__BENT3CCW,
+   MPKIND__BENT4CW,
+   MPKIND__BENT4CCW,
+   MPKIND__BENT5CW,
+   MPKIND__BENT5CCW,
+   MPKIND__BENT6CW,
+   MPKIND__BENT6CCW,
+   MPKIND__BENT7CW,
+   MPKIND__BENT7CCW,
+   MPKIND__SPEC_ONCEREM,
+   MPKIND__SPEC_TWICEREM
+};
 
-extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
-extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
+// See sdtables.cpp (search for "map_thing") for extensive discussion
+// of how these maps, and their code numbers, are handled.
+
+struct map_thing {
+   C_const veryshort maps[48];  // Darn it!  40 would be enough for all maps but one.
+   C_const setup_kind inner_kind;
+   C_const int arity;
+   C_const mpkind map_kind;
+   C_const int vert;
+   C_const short int warncode;
+   C_const setup_kind outer_kind;
+   C_const uint32 rot;
+   C_const uint32 per_person_rot;
+   uint32 code;
+   map_thing *next;
+};
+
+enum specmapkind {
+   spcmap_stairst,
+   spcmap_ladder,
+   spcmap_but_o,
+   spcmap_blocks,
+   spcmap_2x4_diagonal,
+   spcmap_2x4_int_pgram,
+   spcmap_2x4_trapezoid,
+   spcmap_trngl_box1,
+   spcmap_trngl_box2,
+   spcmap_inner_box,
+   spcmap_lh_c1phana,
+   spcmap_lh_c1phanb,
+   spcmap_rh_c1phana,
+   spcmap_rh_c1phanb,
+   spcmap_lh_s2x3_3,
+   spcmap_lh_s2x3_2,
+   spcmap_rh_s2x3_3,
+   spcmap_rh_s2x3_2,
+   spcmap_lh_s2x3_7,
+   spcmap_rh_s2x3_7,
+   spcmap_d1x10,
+   spcmap_lz12,
+   spcmap_rz12,
+   spcmap_tgl451,
+   spcmap_tgl452,
+   spcmap_dmd_1x1,
+   spcmap_star_1x1,
+   spcmap_qtag_f0,
+   spcmap_qtag_f1,
+   spcmap_qtag_f2,
+   spcmap_diag2a,
+   spcmap_diag2b,
+   spcmap_diag23a,
+   spcmap_diag23b,
+   spcmap_diag23c,
+   spcmap_diag23d,
+   spcmap_f2x8_4x4,
+   spcmap_w4x4_4x4,
+   spcmap_f2x8_2x8,
+   spcmap_w4x4_2x8,
+   spcmap_emergency1,
+   spcmap_emergency2,
+   spcmap_fix_triple_turnstyle,
+   spcmap_p8_tgl4,
+   spcmap_spndle_once_rem,
+   spcmap_1x3dmd_once_rem,
+   spcmap_lh_zzztgl,
+   spcmap_rh_zzztgl,
+   spcmap_2x2v,
+   spcmap_2x4_magic,
+   spcmap_qtg_magic,
+   spcmap_qtg_intlk,
+   spcmap_qtg_magic_intlk,
+   spcmap_ptp_magic,
+   spcmap_ptp_intlk,
+   spcmap_ptp_magic_intlk,
+   spcmap_4x4_ns,
+   spcmap_4x4_ew,
+   spcmap_4x4_spec0,
+   spcmap_4x4_spec1,
+   spcmap_4x4_spec2,
+   spcmap_4x4_spec3,
+   spcmap_4x4_spec4,
+   spcmap_4x4_spec5,
+   spcmap_4x4_spec6,
+   spcmap_4x4_spec7,
+   spcmap_4x4v,
+   spcmap_4x4_1x1,
+   spcmap_trglbox3x4a,
+   spcmap_trglbox3x4b,
+   spcmap_trglbox4x4,
+   spcmap_trglbox4x5a,
+   spcmap_trglbox4x5b,
+   spcmap_2x3_1234,
+   spcmap_2x3_0145,
+   spcmap_1x8_1x6,
+   spcmap_rig_1x6,
+   spcmap_ov_hrg_1,
+   spcmap_ov_gal_1,
+   spcmap_3o_qtag_1,
+   spcmap_tgl4_1,
+   spcmap_tgl4_2,
+   spcmap_qtag_2x3,
+   spcmap_2x3_rmvr,
+   spcmap_2x3_rmvs,
+   spcmap_dbloff1,
+   spcmap_dbloff2,
+   spcmap_dhrgl1,
+   spcmap_dhrgl2,
+   spcmap_dbgbn1,
+   spcmap_dbgbn2,
+   spcmap_off1x81,
+   spcmap_off1x82,
+   spcmap_dqtag1,
+   spcmap_dqtag2,
+   spcmap_dqtag3,
+   spcmap_dqtag4,
+   spcmap_stw3a,
+   spcmap_stw3b,
+   spcmap_3ri,
+   spcmap_3li,
+   spcmap_3ro,
+   spcmap_3lo,
+   spcmap_328a,
+   spcmap_328b,
+   spcmap_328c,
+   spcmap_328d,
+   spcmap_328e,
+   spcmap_328f,
+   spcmap_31x3d,
+   spcmap_34x6a,
+   spcmap_34x6b,
+   spcmap_3lqtg,
+   spcmap_blob_1x4a,
+   spcmap_blob_1x4b,
+   spcmap_blob_1x4c,
+   spcmap_blob_1x4d,
+   spcmap_wblob_1x4a,
+   spcmap_wblob_1x4b,
+   spcmap_wblob_1x4c,
+   spcmap_wblob_1x4d,
+   NUM_SPECMAP_KINDS   // End mark; not really in the enumeration.
+};
+
+#define MAPCODE(setupkind,num,mapkind,vert) ((((int)(setupkind)) << 12) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (vert) | 0x80000000)
+
+
+struct clw3_thing {
+   C_const setup_kind k;
+   C_const uint32 mask;
+   C_const uint32 test;
+   C_const uint32 map_code;
+   C_const int rot;
+   C_const veryshort inactives[9];
+};
+
 
 /* in SDCTABLE */
 
@@ -3288,99 +3407,8 @@ extern const expand_thing exp_dmd_hrgl_stuff;
 extern const expand_thing exp_dmd_hrgl_disc_stuff;
 extern expand_thing expand_init_table[];
 
-extern const map_thing map_trngl_box1;                              /* in SDTABLES */
-extern const map_thing map_trngl_box2;                              /* in SDTABLES */
-extern const map_thing map_inner_box;                               /* in SDTABLES */
-extern const map_thing map_lh_c1phana;                              /* in SDTABLES */
-extern const map_thing map_lh_c1phanb;                              /* in SDTABLES */
-extern const map_thing map_rh_c1phana;                              /* in SDTABLES */
-extern const map_thing map_rh_c1phanb;                              /* in SDTABLES */
-extern const map_thing map_lh_s2x3_3;                               /* in SDTABLES */
-extern const map_thing map_lh_s2x3_2;                               /* in SDTABLES */
-extern const map_thing map_rh_s2x3_3;                               /* in SDTABLES */
-extern const map_thing map_rh_s2x3_2;                               /* in SDTABLES */
-extern const map_thing map_lh_s2x3_7;                               /* in SDTABLES */
-extern const map_thing map_rh_s2x3_7;                               /* in SDTABLES */
-extern const map_thing map_d1x10;                                   /* in SDTABLES */
-extern const map_thing map_lz12;                                    /* in SDTABLES */
-extern const map_thing map_rz12;                                    /* in SDTABLES */
-extern const map_thing map_tgl451;                                  /* in SDTABLES */
-extern const map_thing map_tgl452;                                  /* in SDTABLES */
-extern const map_thing map_dmd_1x1;                                 /* in SDTABLES */
-extern const map_thing map_star_1x1;                                /* in SDTABLES */
-extern const map_thing map_qtag_f0;                                 /* in SDTABLES */
-extern const map_thing map_qtag_f1;                                 /* in SDTABLES */
-extern const map_thing map_qtag_f2;                                 /* in SDTABLES */
-extern const map_thing map_diag2a;                                  /* in SDTABLES */
-extern const map_thing map_diag2b;                                  /* in SDTABLES */
-extern const map_thing map_diag23a;                                 /* in SDTABLES */
-extern const map_thing map_diag23b;                                 /* in SDTABLES */
-extern const map_thing map_diag23c;                                 /* in SDTABLES */
-extern const map_thing map_diag23d;                                 /* in SDTABLES */
-extern const map_thing map_f2x8_4x4;                                /* in SDTABLES */
-extern const map_thing map_w4x4_4x4;                                /* in SDTABLES */
-extern const map_thing map_f2x8_2x8;                                /* in SDTABLES */
-extern const map_thing map_w4x4_2x8;                                /* in SDTABLES */
-extern const map_thing map_emergency1;                              /* in SDTABLES */
-extern const map_thing map_emergency2;                              /* in SDTABLES */
-extern const map_thing map_fix_triple_turnstyle;                    /* in SDTABLES */
-extern const map_thing map_p8_tgl4;                                 /* in SDTABLES */
-extern const map_thing map_spndle_once_rem;                         /* in SDTABLES */
-extern const map_thing map_1x3dmd_once_rem;                         /* in SDTABLES */
-extern const map_thing map_lh_zzztgl;                               /* in SDTABLES */
-extern const map_thing map_rh_zzztgl;                               /* in SDTABLES */
-extern const map_thing map_2x2v;                                    /* in SDTABLES */
-extern const map_thing map_2x4_magic;                               /* in SDTABLES */
-extern const map_thing map_qtg_magic;                               /* in SDTABLES */
-extern const map_thing map_qtg_intlk;                               /* in SDTABLES */
-extern const map_thing map_qtg_magic_intlk;                         /* in SDTABLES */
-extern const map_thing map_ptp_magic;                               /* in SDTABLES */
-extern const map_thing map_ptp_intlk;                               /* in SDTABLES */
-extern const map_thing map_ptp_magic_intlk;                         /* in SDTABLES */
-extern const map_thing map_4x4_ns;                                  /* in SDTABLES */
-extern const map_thing map_4x4_ew;                                  /* in SDTABLES */
-extern const map_thing map_4x4_spec0;                               /* in SDTABLES */
-extern const map_thing map_4x4_spec1;                               /* in SDTABLES */
-extern const map_thing map_4x4_spec2;                               /* in SDTABLES */
-extern const map_thing map_4x4_spec3;                               /* in SDTABLES */
-extern const map_thing map_4x4_spec4;                               /* in SDTABLES */
-extern const map_thing map_4x4_spec5;                               /* in SDTABLES */
-extern const map_thing map_4x4_spec6;                               /* in SDTABLES */
-extern const map_thing map_4x4_spec7;                               /* in SDTABLES */
-extern const map_thing map_4x4v;                                    /* in SDTABLES */
-extern const map_thing map_4x4_1x1;                                 /* in SDTABLES */
-extern const map_thing map_trglbox3x4a;                             /* in SDTABLES */
-extern const map_thing map_trglbox3x4b;                             /* in SDTABLES */
-extern const map_thing map_trglbox4x4;                              /* in SDTABLES */
-extern const map_thing map_trglbox4x5a;                             /* in SDTABLES */
-extern const map_thing map_trglbox4x5b;                             /* in SDTABLES */
-extern const map_thing map_2x3_1234;                                /* in SDTABLES */
-extern const map_thing map_2x3_0145;                                /* in SDTABLES */
-extern const map_thing map_1x8_1x6;                                 /* in SDTABLES */
-extern const map_thing map_rig_1x6;                                 /* in SDTABLES */
-extern const map_thing map_3mdmd_3d;                                /* in SDTABLES */
-extern const map_thing map_ov_hrg_1;                                /* in SDTABLES */
-extern const map_thing map_ov_gal_1;                                /* in SDTABLES */
-extern const map_thing map_3o_qtag_1;                               /* in SDTABLES */
-extern const map_thing map_tgl4_1;                                  /* in SDTABLES */
-extern const map_thing map_tgl4_2;                                  /* in SDTABLES */
-extern const map_thing map_qtag_2x3;                                /* in SDTABLES */
-extern const map_thing map_2x3_rmvr;                                /* in SDTABLES */
-extern const map_thing map_2x3_rmvs;                                /* in SDTABLES */
-extern const map_thing map_dbloff1;                                 /* in SDTABLES */
-extern const map_thing map_dbloff2;                                 /* in SDTABLES */
-extern const map_thing map_dhrgl1;                                  /* in SDTABLES */
-extern const map_thing map_dhrgl2;                                  /* in SDTABLES */
-extern const map_thing map_dbgbn1;                                  /* in SDTABLES */
-extern const map_thing map_dbgbn2;                                  /* in SDTABLES */
-extern const map_thing map_off1x81;                                 /* in SDTABLES */
-extern const map_thing map_off1x82;                                 /* in SDTABLES */
-extern const map_thing map_dqtag1;                                  /* in SDTABLES */
-extern const map_thing map_dqtag2;                                  /* in SDTABLES */
-extern const map_thing map_dqtag3;                                  /* in SDTABLES */
-extern const map_thing map_dqtag4;                                  /* in SDTABLES */
-extern const map_thing map_stw3a;                                   /* in SDTABLES */
-extern const map_thing map_stw3b;                                   /* in SDTABLES */
+extern const map_thing spec_map_table[];                            /* in SDTABLES */
+extern clw3_thing clw3_table[];                                     /* in SDTABLES */
 extern map_thing map_init_table[];                                  /* in SDTABLES */
 
 
@@ -3565,24 +3593,16 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL;
 
 extern const map_thing *get_map_from_code(uint32 map_encoding);
 
-extern void new_divided_setup_move(
+extern void divided_setup_move(
    setup *ss,
    uint32 map_encoding,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result) THROW_DECL;
 
-extern void divided_setup_move(
+extern void overlapped_setup_move(
    setup *ss,
-   const map_thing *maps,
-   phantest_kind phancontrol,
-   long_boolean recompute_id,
-   setup *result) THROW_DECL;
-
-extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
-   uint32 *masks, setup *result) THROW_DECL;
-
-extern void overlapped_setup_move(setup *ss, const map_thing *maps,
+   uint32 map_encoding,
    uint32 *masks, setup *result) THROW_DECL;
 
 extern void do_phantom_2x4_concept(
@@ -3598,13 +3618,6 @@ extern void do_phantom_stag_qtg_concept(
 extern void do_phantom_diag_qtg_concept(
    setup *ss,
    parse_block *parseptr,
-   setup *result) THROW_DECL;
-
-extern void phantom_2x4_move(
-   setup *ss,
-   int lineflag,
-   phantest_kind phantest,
-   const map_thing *maps,
    setup *result) THROW_DECL;
 
 extern void distorted_2x2s_move(

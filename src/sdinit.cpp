@@ -121,6 +121,9 @@ SDLIB_API long_boolean iterate_over_sel_dir_num(
          selector_for_initialize = selector_ends;
          return TRUE;
       case selector_ends:
+         selector_for_initialize = selector_leads;
+         return TRUE;
+      case selector_leads:
          // This will select just one end of each wave in parallel waves or a tidal wave,
          // so "prefer the <anyone> out roll circulate" will work.
          selector_for_initialize = selector_sideboys;

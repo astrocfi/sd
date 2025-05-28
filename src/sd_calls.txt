@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7i"
+version "34.7j"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1836,11 +1836,11 @@ call "and circle 1/4" c2 tag andcircle
       array [CR1S CR2S 0    ZM3N ZM5N ZM6N CR0S ZM7N]
    setup qtag qtag qualifier ctr_pts_lh
       array [AL6S AL0S AL1S ZM3N ZM2N ZM4N 0    ZM7N]
+   // The Callerlab definition actually prohibits doing this from facing diamonds.
    setup pqtag qtag qualifier ctr_pts_rh
-      // We have no idea how some of these folks are supposed to turn.
-      array [CR1E CR2E 0    ZM3N 5W   6W   0    ZM7N]
+      array [CR1E CR2E 0 ZM3N 0 0 0 ZM7N]
    setup pqtag qtag qualifier ctr_pts_lh
-      array [6E   0E   0    ZM3N AL2W AL4W 0    ZM7N]
+      array [0 0 0 ZM3N AL2W AL4W 0 ZM7N]
    setup 2x1dmd 2x1dmd qualifier ctr_pts_rh
       array [CR2S ZM1N 0 0    ZM4N ZM0N]
    setup 2x1dmd 2x1dmd qualifier ctr_pts_lh
@@ -3455,6 +3455,46 @@ call "_maybe grand slip" dontshow tag maybegrandslip
    setup 1x8 spindle
       array [ZM7N CR6W CR5W AL6E ZM3N AL4E AL5E CR4W]
 
+call "_maybe grand slip in left wave" dontshow tag maybegrandslip_in_lw
+            left_means_mirror
+   setup 2x4 2x4 qualifier tbone none restriction unusual alwaysfail
+      array [ZM0N CR2S AL1S ZM3N ZM4N AL6S CR5S ZM7N]
+   setup 1x4 1x4
+      array [ZM0N CR3S ZM2N AL1S]
+   setup qtag qtag qualifier left wave_only
+      array [0 0 ZM2N 0 0 0 0 CR3S]
+   setup pqtag qtag
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
+   setup 4x2 2x4 qualifier tbone none restriction unusual alwaysfail
+      array [ZM0N CR6S CR5S ZM3N ZM4N AL2S AL1S ZM7N]
+   setup 4x1 1x4 restriction unusual alwaysfail
+      array [ZM0N 0 ZM2N 0]
+            alternate_definition [half] c1
+   setup 1x4 dmd
+      array [ZM0N CR1E ZM2N AL1W]
+   setup qtag hrglass qualifier left wave_only
+      array [0 0 ZM2N 0 0 0 0 CR3E]
+   setup pqtag hrglass
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
+            alternate_definition [lasthalf] c1
+   setup dmd 1x4
+      array [ZM0N 0 ZM2N 0]
+   setup pmd 1x4
+      array [0 CR3E 0 AL3W]
+            alternate_definition [yoyo] c4
+   setup 1x4 dmd
+      array [ZM0N CR3W ZM2N AL3E]
+            alternate_definition [grand] c3a
+   setup 1x6 1x6
+      array [ZM0N CR2S AL1S ZM3N AL5S CR4S]
+   setup 1x8 1x8
+      array [ZM0N CR3S CR6S AL1S ZM4N AL7S AL2S CR5S]
+            alternate_definition [grand yoyo] c4
+   setup 1x6 short6 rotate
+      array [ZM4W CR3S AL3N ZM1W AL2N CR2S]
+   setup 1x8 spindle
+      array [ZM7N CR6W CR5W AL6E ZM3N AL4E AL5E CR4W]
+
 call "_maybe grand slip, not c3" dontshow tag maybegrandslip_notc3
    setup 1x4 1x4
       array [ZM0N CR3S ZM2N AL1S]
@@ -3901,7 +3941,8 @@ call "cross the top" c4
    seq trade [inherit_yoyo]
    seq fanthetop_maybe_cross [force_cross inherit_fractal]
 
-call "spin the yoyo" c4
+call "spin the yoyo" c4x
+            dont_use_in_resolve
             step_to_wave left_means_touch_or_check fractal_is_inherited
    seq armturn_n4 [inherit_fractal insert_number 3]
    seq fanthetop [inherit_fractal]
@@ -9748,13 +9789,13 @@ call "any hand swing the fractions" c1
 call "@D cross" c3x
             left_means_mirror neednumber grand_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left]
-   seq ctrrun [force_cross inherit_grand]
+   seq ctrxrun_in_rw [inherit_left inherit_grand]
 
 call "@D mix" c3a
             left_means_mirror neednumber grand_is_inherited yoyo_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left]
-   seq ctrrun [force_cross inherit_grand]
-   seq maybegrandslip [inherit_grand inherit_yoyo roll_transparent]
+   seq ctrxrun_in_rw [inherit_left inherit_grand]
+   seq maybegrandslip_in_lw [inherit_left inherit_grand inherit_yoyo roll_transparent]
 
 call "any hand @D cross" c3x
             dont_use_in_nice_resolve neednumber grand_is_inherited visible_fractions
@@ -11031,6 +11072,38 @@ call "centers@C run" mainstream tag ctrrun
    setup 1x8 2x4
       array [ZM7N CR1E CR2E AL0W ZM4N AL2W AL1W CR3E]
 
+call "_centers cross run in right wave" dontshow tag ctrxrun_in_rw
+            left_means_mirror
+   setup 1x4 1x4
+      array [ZM1N CR2S ZM3N AL0S]
+   setup 4x1 1x4 restriction unusual alwaysfail
+      array [ZM1N    0 ZM3N    0]
+   setup qtag qtag qualifier right wave_only
+      array [0 0 0 AL6S 0 0 ZM7N 0]
+   setup pqtag qtag
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
+            alternate_definition [half] c1
+   setup 1x4 2x2
+      array [ZM3N CR1E ZM2N AL0W]
+   setup qtag 2x4 rotate qualifier right wave_only
+      array [0 0 0 AL6S 0 0 ZM5W 0]
+   setup pqtag 2x4 rotate
+      array [ZM7W ZM0W 0 0 ZM3W ZM4W 0 0]
+            alternate_definition [grand] c3a
+   setup 1x6 1x6
+      array [ZM1N CR5S AL0S ZM4N AL2S CR3S]
+   setup 6x1 1x6 restriction unusual alwaysfail
+      array [ZM1N    0    0 ZM4N    0    0]
+   setup 1x8 1x8
+      array [ZM1N CR2S CR7S AL0S ZM5N AL6S AL3S CR4S]
+   setup 8x1 1x8 restriction unusual alwaysfail
+      array [ZM1N    0    0    0 ZM5N    0    0    0]
+            alternate_definition [grand half] c3a
+   setup 1x6 2x3
+      array [ZM5N CR1E AL0W ZM3N AL1W CR2E]
+   setup 1x8 2x4
+      array [ZM7N CR1E CR2E AL0W ZM4N AL2W AL1W CR3E]
+
 call "_leads kickoff" dontshow tag leadkick
    setup 2x2 2x2
       array [CR1W AL0E AM3W CM2E]
@@ -11090,10 +11163,10 @@ call "ends cross kickoff" c2
    setup 1x4 1x4
       array [CR3W AM0W AL1E CM2E]
 
-call "@6@C run by @9" c3
+call "@6@C run by @9" c4x
             neednumber
-   /* It would be nice to have better selectors to catch errors if both ends
-      are selected, or neither. */
+   // It would be nice to have better selectors to catch
+   // errors if both ends are selected, or neither.
    setup 1x4 1x4 qualifier num 1 none
       preds "Can't tell who is running."
          if select_near_unselect   [CR1S 0    AL3S 0  ]
@@ -12174,7 +12247,7 @@ call "_everyone wheel" dontshow tag everyonewheel
             reverse_means_mirror
    setup 2x2 2x2 qualifier couples_only
       array [AL1S AL0S 0 0]
-   /* We allow this for pathological cases, but give a warning. */
+   // We allow this for pathological cases, but give a warning.
    setup 1x2 1x2 qualifier couples_only restriction unusual alwaysfail
       array [AL1S AL0S]
             alternate_definition [single] c4
@@ -18043,7 +18116,8 @@ call "relay the top@S but @m" c1
    seq turndmdn_endstrade [insert_number 1 inherit_fractal]
    seq finishwithplainmodbut2nd []
 
-call "relay the yoyo@S" c4    /* Leave this in until the text fudging is done. */
+call "relay the yoyo@S" c4x
+            dont_use_in_resolve
             step_to_wave left_means_touch_or_check first_part_visible bigmatrix_is_inherited
    seq armturn_n4 [inherit_bigmatrix insert_number 3]
    seq checkparlinesnmot2 [inherit_bigmatrix]
