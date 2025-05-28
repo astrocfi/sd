@@ -76,10 +76,6 @@ char db_output_filename[FILENAME_LEN];
 
 typedef unsigned long int uint32;
 
-// These things come from mkcalls.c for the standalone compiler, or from
-// sdtables.c or sdui-mac.c for the built-in compiler.
-extern int begin_sizes[];
-
 typedef enum {
    tok_string, tok_symbol, tok_lbkt, tok_rbkt, tok_number} toktype;
 
@@ -679,9 +675,11 @@ const char *schematab[] = {
    "conc2_6_or_2_4",
    "crossconc2_6_or_2_4",
    "conc_innermost",
+   "conc_touch_by_1_of_3",
    "crossconc_innermost",
-   "conc_double_innermost",
-   "crossconc_double_innermost",
+   "crossconc_touch_by_1_of_3",
+   "conc_touch_by_2_of_3",
+   "crossconc_touch_by_2_of_3",
    "conc6p",
    "conc6p_or_normal",
    "conc6p_or_singletogether",
@@ -705,6 +703,7 @@ const char *schematab[] = {
    "maybematrix_conc_star",
    "maybematrix_conc_bar",
    "checkpoint",
+   "checkpoint_spots",
    "checkpoint_mystic_ok",
    "cross_checkpoint",
    "reverse_checkpoint",

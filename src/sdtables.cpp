@@ -155,6 +155,7 @@ direction_item direction_names[] = {
    {"zag-zig",        "ZAG-ZIG"},
    {"zig-zig",        "ZIG-ZIG"},
    {"zag-zag",        "ZAG-ZAG"},
+   {"the music",      "THE MUSIC"},
    {(Cstring) 0,      (Cstring) 0}};
 
 // BEWARE!!  This list is keyed to the definition of "selector_kind" in sd.h .
@@ -234,6 +235,10 @@ selector_item selector_list[] = {
    {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
    {"near 4",       "near 4",      "NEAR 4",       "NEAR 4",      selector_uninitialized},
    {"far 4",        "far 4",       "FAR 4",        "FAR 4",       selector_uninitialized},
+   {"near 2",       "near 2",      "NEAR 2",       "NEAR 2",      selector_uninitialized},
+   {"far 2",        "far 2",       "FAR 2",        "FAR 2",       selector_uninitialized},
+   {"near 6",       "near 6",      "NEAR 6",       "NEAR 6",      selector_uninitialized},
+   {"far 6",        "far 6",       "FAR 6",        "FAR 6",       selector_uninitialized},
    {"the 2x3",      "the 2x3",     "THE 2X3",      "THE 2X3",     selector_uninitialized},
    {"the diamond",  "the diamond", "THE DIAMOND",  "THE DIAMOND", selector_uninitialized},
    {"the line",     "the line",    "THE LINE",     "THE LINE",    selector_uninitialized},
@@ -4436,6 +4441,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x6,   s_spindle,   0,     0x77, 0x0E, 0x0, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},       {7, 3}},
    {s1x6,   s_spindle,   044,   0x55, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, -1, 5, 6, -1},       {-1, 3, -1, 4, -1, 7, -1, 0}},
    {s1x4,      s_2x1dmd, 0,      066, 0x0D, 0x0, schema_matrix,         s_2x1dmd,    nothing,  warn__none, 0, 1, {0, 1, 3, 4},       {5, -1, -1, 2, -1, -1}},
+   {s1x4,      s_2x1dmd, 0xA,      0, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 1, {0, -1, 4, -1},     {6, 7, 1, 2, 3, 5}},
    {s1x4,          sdmd, 0xA,      0, 0x0D, 0x0, schema_matrix,         s_2x1dmd,    nothing,  warn__none, 0, 1, {0, -1, 3, -1},     {5, 1, 2, 4}},
    {sdmd,      s_2x1dmd, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 4, 5, 1},       {0}},
    {s1x6,      s_2x1dmd, 044,      0, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 1, {0, 1, -1, 4, 5, -1},       {6, 7, 1, 2, 3, 5}},
@@ -9221,12 +9227,16 @@ const schema_attr schema_attrs[] = {
     schema_concentric_2_6_or_2_4},       // schema_cross_concentric_2_6_or_2_4
    {0,
     schema_nothing},                     // schema_concentric_innermost
+   {0,
+    schema_nothing},                     // schema_concentric_touch_by_1_of_3
    {SCA_CROSS | SCA_COPY_LYZER,
     schema_concentric_innermost},        // schema_cross_concentric_innermost
-   {0,
-    schema_nothing},                     // schema_concentric_double_innermost
    {SCA_CROSS | SCA_COPY_LYZER,
-    schema_concentric_double_innermost}, // schema_cross_concentric_double_innermost
+    schema_concentric_touch_by_1_of_3},  // schema_cross_concentric_touch_by_1_of_3
+   {0,
+    schema_nothing},                     // schema_concentric_touch_by_2_of_3
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_concentric_touch_by_2_of_3}, // schema_cross_concentric_touch_by_2_of_3
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_6p
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
@@ -9273,6 +9283,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_maybe_matrix_conc_bar
    {0,
     schema_nothing},                     // schema_checkpoint
+   {0,
+    schema_nothing},                     // schema_checkpoint_spots
    {SCA_SNAGOK,
     schema_nothing},                     // schema_checkpoint_mystic_ok
    {SCA_CROSS | SCA_COPY_LYZER,

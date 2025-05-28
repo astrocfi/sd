@@ -491,6 +491,22 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       if      (pid3 & ID3_FARFOUR) return true;
       else if (pid3 & ID3_NEARFOUR) return false;
       break;
+   case selector_neartwo:
+      if      (pid3 & ID3_NEARTWO) return true;
+      else if (pid3 & ID3_FARSIX) return false;
+      break;
+   case selector_fartwo:
+      if      (pid3 & ID3_FARTWO) return true;
+      else if (pid3 & ID3_NEARSIX) return false;
+      break;
+   case selector_nearsix:
+      if      (pid3 & ID3_NEARSIX) return true;
+      else if (pid3 & ID3_FARTWO) return false;
+      break;
+   case selector_farsix:
+      if      (pid3 & ID3_FARSIX) return true;
+      else if (pid3 & ID3_NEARTWO) return false;
+      break;
    case selector_facingfront:
       if      (pid3 & ID3_FACEFRONT) return true;
       else if (pid3 & (ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) return false;
@@ -2439,7 +2455,21 @@ static bool directionp(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
    direction_used = true;
-   return current_options.where == (direction_kind) extra_stuff[0];
+   direction_kind d = (direction_kind) extra_stuff[0];
+
+   if (current_options.where == direction_the_music) {
+      uint32 r = 0;
+      switch (d) {
+      case direction_no_direction: r = ID3_FACEFRONT; break;
+      case direction_left: r = ID3_FACELEFT; break;
+      case direction_right: r = ID3_FACERIGHT; break;
+      case direction_back: r = ID3_FACEBACK; break;
+      }
+
+      return (real_people->people[real_index].id3 & r) != 0;
+   }
+
+   return current_options.where == d;
 }
 
 

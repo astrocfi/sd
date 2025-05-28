@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 293
+#define DATABASE_FORMAT_VERSION 295
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -300,6 +300,7 @@ enum dance_level {
    dixie_grand_level = l_plus,
    extend_34_level = l_plus,
    zig_zag_level = l_a2,
+   face_the_music_level = l_c3a,
    beau_belle_level = l_a2,
    cross_by_level = l_c1,
    intlk_triangle_level = l_c1,
@@ -921,9 +922,11 @@ enum calldef_schema {
    schema_concentric_2_6_or_2_4,
    schema_cross_concentric_2_6_or_2_4,
    schema_concentric_innermost,
+   schema_concentric_touch_by_1_of_3,
    schema_cross_concentric_innermost,
-   schema_concentric_double_innermost,
-   schema_cross_concentric_double_innermost,
+   schema_cross_concentric_touch_by_1_of_3,
+   schema_concentric_touch_by_2_of_3,
+   schema_cross_concentric_touch_by_2_of_3,
    schema_concentric_6p,
    schema_concentric_6p_or_normal,
    schema_concentric_6p_or_sgltogether,
@@ -947,6 +950,7 @@ enum calldef_schema {
    schema_maybe_matrix_conc_star,
    schema_maybe_matrix_conc_bar,
    schema_checkpoint,
+   schema_checkpoint_spots,
    schema_checkpoint_mystic_ok,
    schema_cross_checkpoint,
    schema_rev_checkpoint,

@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.3
-@set title2 Database version = 38.3 format = 293
+@set title1 RELEASE NOTES FOR VERSION 38.31
+@set title2 Database version = 38.31 format = 295
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.31::
 * 38.3::
 * 38.2::
 * 38.1::
@@ -70,7 +71,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.3, Top, (dir)
+@node Intro, 38.31, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -81,11 +82,33 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2010 William B. Ackerman
 @sp 3
 @menu
-* 38.3::               Changes in the current version
+* 38.31::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.3, 38.2, Intro, Top
+@node 38.31, 38.3, Intro, Top
+@unnumberedsec Version 38.31 changes
+
+The designator @strong{intermediate diamond} has been changed to @strong{middle (intermediate) diamond}.
+The word "intermediate" in parentheses is there to prevent any possible ambiguity on the written sequence.
+Below about C3A, you don't need to type the "(intermediate)".  Just type "middle" followed by <enter> or <tab>,
+and command completion will finish it for you.  The three designators for the diamonds formed by a @strong{1/2 acey deucey}
+are @strong{center diamond}, @strong{middle (intermediate) diamond}, and @strong{outside diamond}.
+
+New (unsymmetrical) direction:  @strong{the music}, meaning toward the caller.
+
+New (unsymmetrical) designators:  @strong{near 2}, @strong{near 6}, @strong{far 2}, @strong{far 6}.  Sd aleady
+recognizes @strong{near 4} and @strong{far 4}.
+
+The ability to do hard cases of @strong{touch by} was improved.
+
+New call:  @strong{separate, around <N>, into the middle for a <anything>}.
+
+Some calls have had their levels changed.  @strong{double cross} has been moved to C2.  @strong{double play} and
+the @strong{scoot nuclear reaction} variants have been moved to C3.
+
+@c ************
+@node 38.3, 38.2, 38.31, Top
 @unnumberedsec Version 38.3 changes
 
 In accordance with the new Callerlab lists, @strong{with the flow} has been moved from C2 to C1,

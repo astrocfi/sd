@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.3"
+version "38.31"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -614,7 +614,7 @@ call "in roll@O circulate@P" a2 tag inrollcirc
       preds "???"
          if inroller_is_cw_2x3 [CR1S CR2S    0    0 AL5S ZM0N]
          if always             [   0 AL0S AL1S ZM2N CR3S    0]
-            alternate_definition [half] c1
+            alternate_definition [half] a2
    setup 2x4 spindle
       preds "???"
          if inroller_is_cw [CR0E CR1E CR2E    0    0 AL5W AL6W ZM7N]
@@ -663,7 +663,7 @@ call "out roll@O circulate@P" a2 tag outrollcirc
       preds "???"
          if outroller_is_cw_2x3 [   0 CR2S AL0S AL4S AL5S    0]
          if always              [CR2S AL0S    0    0 CR3S CR4S]
-            alternate_definition [half] c1
+            alternate_definition [half] a2
    setup 2x4 qtag rotate
       preds "???"
          if outroller_is_cw [   0 CR7N CR0N AL6S AL1S AL3S AL4S    0]
@@ -6226,6 +6226,7 @@ call "face @h" mainstream tag face_dir
          if zigzagp  [CR0E CR1E AL2W AL3W]
          if zagzigp  [AL0W AL1W CR2E CR3E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N]
+         if backp    [CR0S AL1S AL2S CR3S]
    setup 2x4 2x4
       preds "Illegal direction."
          if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E]
@@ -6237,6 +6238,7 @@ call "face @h" mainstream tag face_dir
          if zigzagp  [CR0E CR1E CR2E CR3E AL4W AL5W AL6W AL7W]
          if zagzigp  [AL0W AL1W AL2W AL3W CR4E CR5E CR6E CR7E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+         if backp    [CR0S AL1S CR2S AL3S AL4S CR5S AL6S CR7S]
    setup 4x2 2x4
       preds "Illegal direction."
          if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E]
@@ -6248,6 +6250,7 @@ call "face @h" mainstream tag face_dir
          if zigzagp  [AL0W CR1E AL2W CR3E CR4E AL5W CR6E AL7W]
          if zagzigp  [CR0E AL1W CR2E AL3W AL4W CR5E AL6W CR7E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+         if backp    [CR0S CR1S CR2S CR3S AL4S AL5S AL6S AL7S]
    setup 1x2 1x2
       preds "Direction must be right, left, in, or out."
          if rightp   [CR0E CR1E]
@@ -6255,6 +6258,7 @@ call "face @h" mainstream tag face_dir
          if inp      [CR0E AL1W]
          if outp     [AL0W CR1E]
          if no_dir_p [ZM0N ZM1N]
+         if backp    [CR0S AL1S]
    setup 1x4 1x4
       preds "Direction must be right, left, in, or out."
          if rightp   [CR0E CR1E CR2E CR3E]
@@ -6262,6 +6266,7 @@ call "face @h" mainstream tag face_dir
          if inp      [CR0E CR1E AL2W AL3W]
          if outp     [AL0W AL1W CR2E CR3E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N]
+         if backp    [CR0S AL1S AL2S CR3S]
    setup dmd dmd
       preds "Direction must be right, left, in, or out."
          if rightp   [CR0E CR1E CR2E CR3E]
@@ -6269,6 +6274,7 @@ call "face @h" mainstream tag face_dir
          if inp      [CR0E    0 AL2W    0]
          if outp     [AL0W    0 CR2E    0]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N]
+         if backp    [CR0S   1S AL2S   3S]
    setup pmd dmd
       preds "Direction must be right, left, in, or out."
          if rightp   [CR0E CR1E CR2E CR3E]
@@ -6276,6 +6282,7 @@ call "face @h" mainstream tag face_dir
          if inp      [   0 CR1E    0 AL3W]
          if outp     [   0 AL1W    0 CR3E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N]
+         if backp    [  0S CR1S   2S AL3S]
    setup dhrglass dhrglass
       preds "Direction must be right, left, in, or out."
          if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E]
@@ -6304,6 +6311,20 @@ call "face @h" mainstream tag face_dir
          if inp      [CR0E CR1E    0 CR3E AL4W AL5W    0 AL7W]
          if outp     [AL0W AL1W    0 AL3W CR4E CR5E    0 CR7E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup ptpd ptpd
+      preds "Direction must be right, left, in, or out."
+         if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E]
+         if leftp    [AL0W AL1W AL2W AL3W AL4W AL5W AL6W AL7W]
+         if inp      [CR0E CR1E CR2E CR3E AL4W AL5W AL6W AL7W]
+         if outp     [AL0W AL1W AL2W AL3W CR4E CR5E CR6E CR7E]
+         if no_dir_p [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup pptpd ptpd
+      preds "Direction must be right, left, in, or out."
+         if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E]
+         if leftp    [AL0W AL1W AL2W AL3W AL4W AL5W AL6W AL7W]
+         if inp      [   0 CR1E    0 AL3W    0 AL5W    0 CR7E]
+         if outp     [   0 AL1W    0 CR3E    0 CR5E    0 AL7W]
+         if no_dir_p [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup 4x4 4x4
       preds "Direction must be right or left."
          if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E
@@ -6326,11 +6347,13 @@ call "face @h" mainstream tag face_dir
          if zigzagp  [AL0W CR1E]
          if zagzigp  [CR0E AL1W]
          if no_dir_p [ZM0N ZM1N]
+         if backp    [  0S   1S]
    setup 1x1 1x1
       preds "Direction must be right or left."
          if rightp   [CR0E]
          if leftp    [AL0W]
          if no_dir_p [ZM0N]
+         if backp    [  0S]
 
 call "pass @h" a1
             visible_fractions twisted_is_inherited can_be_one_side_lateral
@@ -6518,6 +6541,17 @@ call "_go around @9 to a line" dontshow tag go_around_n
       array [CR1S ZM0N ZM3N AL2S 0 ZM4N ZM7N 0]
    setup 2x4 2x4 qualifier num 2 none
       array [CR3S ZM1N ZM2N AL0S 0 ZM5N ZM6N 0]
+   setup 2x4 2x4 qualifier num 3 none
+      array [CR5N ZM0N ZM3N AL6N 0 ZM4N ZM7N 0]
+
+call "_go around @9 and into the middle" dontshow tag go_around_n_into_middle
+            neednumber
+   setup 2x4 2x4 rotate qualifier num 1 none
+      array [C6E ZM7W ZM0W A1E 0 ZM3W ZM4W 0]
+   setup 2x4 2x4 rotate qualifier num 2 none
+      array [C1S ZM7W ZM0W A6N 0 ZM3W ZM4W 0]
+   setup 2x4 2x4 rotate qualifier num 3 none
+      array [C2W ZM7W ZM0W A5W 0 ZM3W ZM4W 0]
 
 call "_hook onto ends of a line" dontshow tag hook_onto_ends
    setup 2x4 2x4 rotate
@@ -6529,6 +6563,12 @@ call "separate, around @9 to a line" mainstream
             neednumber
    seq start_separate []
    seq go_around_n []
+
+call "separate, around @9, into the middle for a @0" mainstream
+            neednumber
+   seq start_separate []
+   seq go_around_n_into_middle []
+   seq ctrsanything []
 
 call "first go left, next go right, around @9 to a line" mainstream
             neednumber
@@ -9012,51 +9052,54 @@ call "snap back" c4
    setup 1x4 2x2
       array [CM3W ACR0E ACM1E CR2W]
 
-call "touch by @b part 1" dontshow tag touch_by_first
+call "_touch by @b part 1 of 2" dontshow tag touch_by_first_of_two
             left_means_mirror neednumber
    singlecrossconc nullcall [] lftble_touch_n_4 [inherit_left]
 
-call "touch by @b part 1 spiffy" dontshow tag touch_by_first_spiffy
-            left_means_mirror neednumber
-   crossconc_innermost nullcall [] lftble_touch_n_4 [inherit_left conc_force_lines]
-
-call "touch by @b part 2" dontshow tag touch_by_second
+call "_touch by @b part 2 of 2" dontshow tag touch_by_second_of_two
             left_means_mirror neednumber
    singleconc_together lftble_touch_n_4 [inherit_left] nullcall []
 
 call "touch by @b X @b" c3a
             left_means_mirror visible_fractions need_two_numbers
-   seq touch_by_first [inherit_left]
-   seq touch_by_second [inherit_left shift_one_number]
+   seq touch_by_first_of_two [inherit_left]
+   seq touch_by_second_of_two [inherit_left shift_one_number]
 
-// How is this different from "touch_by_second"?
-call "_second third of triple touch by, @b" dontshow tag touch_by_second_6
+call "_touch by @b part 1 of 3" dontshow tag touch_by_first_of_three
             left_means_mirror neednumber
-   conc_double_innermost touch_by_first_spiffy [inherit_left] nullcall []
+   crossconc_touch_by_1_of_3 nullcall [] lftble_touch_n_4 [inherit_left conc_force_lines]
 
-call "_second third of triple touch by, @b" dontshow tag touch_by_final
+call "_touch by @b part 1 spiffy" dontshow tag touch_by_first_spiffy
+            left_means_mirror neednumber
+   crossconc_innermost nullcall [] lftble_touch_n_4 [inherit_left conc_force_lines]
+
+call "_touch by @b part 2 of 3" dontshow tag touch_by_second_of_three
+            left_means_mirror neednumber
+   conc_touch_by_2_of_3 touch_by_first_spiffy [inherit_left] nullcall []
+
+call "_touch by @b final" dontshow tag touch_by_final
             left_means_mirror neednumber
    conc_innermost lftble_touch_n_4 [inherit_left] nullcall []
 
-call "_second quarter of quadruple touch by, @b" dontshow tag touch_by_second_8
+call "touch by @b X @b X @b" c3a
+            left_means_mirror visible_fractions need_three_numbers
+   seq touch_by_first_of_three [inherit_left]
+   seq touch_by_second_of_three [inherit_left shift_one_number]
+   seq touch_by_final [inherit_left shift_two_numbers]
+
+call "_touch by @b part 2 of 4" dontshow tag touch_by_second_of_four
             left_means_mirror neednumber
    conc6_2 touch_by_first_spiffy [inherit_left] nullcall []
 
-call "_third quarter of quadruple touch by, @b" dontshow tag touch_by_third_8
+call "_touch by @b part 3 of 4" dontshow tag touch_by_third_of_four
             left_means_mirror neednumber
    conc_diamond_line touch_by_first_spiffy [inherit_left] nullcall []
-
-call "touch by @b X @b X @b" c3a
-            left_means_mirror visible_fractions need_three_numbers
-   seq touch_by_first_spiffy [inherit_left]
-   seq touch_by_second_6 [inherit_left shift_one_number]
-   seq touch_by_final [inherit_left shift_two_numbers]
 
 call "touch by @b X @b X @b X @b" c3a
             left_means_mirror visible_fractions need_four_numbers
    seq touch_by_first_spiffy [inherit_left]
-   seq touch_by_second_8 [inherit_left shift_one_number]
-   seq touch_by_third_8 [inherit_left shift_two_numbers]
+   seq touch_by_second_of_four [inherit_left shift_one_number]
+   seq touch_by_third_of_four [inherit_left shift_two_numbers]
    seq touch_by_final [inherit_left shift_three_numbers]
 
 call "touch by @b X @0" c3a
@@ -15098,7 +15141,8 @@ call "_centers bail out but @0" dontshow tag ctrs_bail_out_but
 
 call "bail out" c4
             visible_fractions singlefile_is_inherited
-   conc ctrs_bail_out [inherit_singlefile] half_circ_and_hinge [conc_force_columns endscando]   /* the "force columns" makes the hingers stay together */
+   // The "force columns" makes the hingers stay together.
+   conc ctrs_bail_out [inherit_singlefile] half_circ_and_hinge [conc_force_columns endscando]
 
 call "bail out but @0" c4
             visible_fractions singlefile_is_inherited
@@ -18442,7 +18486,7 @@ call "triple play to a wave" c3a
    seq tripleplay [inherit_magic]
    seq backemup []
 
-call "double play" c3x
+call "double play" c3
    setup 3x2 2x3 restriction forbidden wave_only
       array [CC0E C1W C5W A0E A4E AA5W]
             alternate_definition [magic] c3x
@@ -18841,7 +18885,7 @@ call "triple cross" c1 tag triplecross
    setup 6x2 2x6 qualifier true_PG_ccw
          array [ZM0N ZM9N ZM8N ZM7N 0 0 0 0 0 0 0 0]
 
-call "double cross" c3x
+call "double cross" c2
    setup 3x2 2x3
       preds "Don't know whether to cross."
          if columns_magic_tandem     [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N]
@@ -22859,7 +22903,7 @@ call "nuclear reaction but @m" c3
    seq nuclear_nucleus [inherit_fractal]
    seq ctr_rot_but []
 
-call "scoot@C nuclear reaction" c3x
+call "scoot@C nuclear reaction" c3
             first_part_visible cross_is_inherited yoyo_is_inherited gen_sting_is_inherited
    seq scootbacktowave [inherit_yoyo inherit_gensting]
    seq nuclear_1 [inherit_cross]
@@ -22874,14 +22918,14 @@ call "cloverleaf turn@C nuclear reaction" c4
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "scoot@C nuclear reaction but @m" c3x
+call "scoot@C nuclear reaction but @m" c3
             first_part_visible cross_is_inherited yoyo_is_inherited gen_sting_is_inherited
    seq scootbacktowave [inherit_yoyo inherit_gensting]
    seq nuclear_1 [inherit_cross]
    seq nuclear_nucleus []
    seq ctr_rot_but []
 
-call "scatter scoot@C nuclear reaction" c3x
+call "scatter scoot@C nuclear reaction" c3
             cross_is_inherited yoyo_is_inherited gen_sting_is_inherited
    seq fudgyscatscoot [inherit_yoyo inherit_gensting]
    seq backemup []
@@ -22889,7 +22933,7 @@ call "scatter scoot@C nuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "scoot chain thru@C nuclear reaction" c3x
+call "scoot chain thru@C nuclear reaction" c3
             cross_is_inherited yoyo_is_inherited gen_sting_is_inherited
    seq fudgyscootchainthru [inherit_yoyo inherit_gensting]
    seq backemup []
@@ -22897,7 +22941,7 @@ call "scoot chain thru@C nuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "scatter scoot chain thru@C nuclear reaction" c3x
+call "scatter scoot chain thru@C nuclear reaction" c3
             cross_is_inherited yoyo_is_inherited gen_sting_is_inherited
    seq fudgyscatscootchainthru [inherit_yoyo inherit_gensting]
    seq backemup []
@@ -23469,26 +23513,6 @@ call "_centers rear back and @0 while ends wheel and deal" dontshow tag slant_no
 call "_centers rear back and @0 while ends wheel and deal" dontshow tag slant_nothing2_wheel
    in_out_triple_dyp_squash 2facedwheelanddeal [] slant_centers []
 
-/*
-call "slant (old) touch and @2wheel@3" c3a
-            bigmatrix_is_inherited single_is_inherited nxn_is_inherited
-   seq slant_touch_nothing1 [inherit_single inherit_bigmatrix inherit_nxn]
-   seq slant_touch_wheel2_old [inherit_single inherit_bigmatrix inherit_nxn]
-
-call "slant (old) touch and @0" c3a
-            bigmatrix_is_inherited single_is_inherited nxn_is_inherited
-   seq slant_touch_nothing1 [inherit_single inherit_bigmatrix inherit_nxn]
-   seq triple_squash_outers_anything [inherit_single inherit_bigmatrix inherit_nxn]
-
-call "slant (old) @0 and wheel" c3a
-   seq slant_touch_nothing1 []
-   seq slant_nothing2_wheel_old []
-
-call "slant (old) @0 and @m" c3a
-   seq slant_touch_nothing1 []
-   seq slant_secondary_nothing2_old []
-*/
-
 call "slant touch and @2wheel@3" c3a
             bigmatrix_is_inherited single_is_inherited nxn_is_inherited
    seq slant_touch_nothing1 [inherit_single inherit_bigmatrix inherit_nxn]
@@ -23524,7 +23548,7 @@ call "_slant move in" dontshow tag slant_move_in
    setup 2x3 2x2 qualifier true_Z_ccw
       array [ 0 0 0 ZM2N ZM3N 0]
 
-call "slant @0" c3x
+call "slant @0" c3a
    seq slant_move_in []
    seq nullcall [mandatory_anycall]
 

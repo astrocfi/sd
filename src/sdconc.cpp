@@ -1181,6 +1181,9 @@ extern void normalize_concentric(
    }
 
    switch (synthesizer) {
+   case schema_checkpoint_spots:
+      table_synthesizer = schema_rev_checkpoint;  // Yes, reverse_checkpoint tells how to go back.
+      break;
    case schema_rev_checkpoint:
    case schema_rev_checkpoint_concept:
       // Fix up nonexistent centers or ends, in a rather inept way.
@@ -1620,10 +1623,27 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric_2_6;
       break;
-   case schema_concentric_double_innermost:
-      if (ss->kind == s_rigger || ss->kind == s_ptpd)
-         analyzer_result = schema_concentric_6_2;
-      else if (ss->kind == s_galaxy) {
+   case schema_concentric_touch_by_1_of_3:
+      if (ss->kind == s_short6) {
+         warn(warn__unusual);
+         analyzer_result = schema_concentric_4_2;
+      }
+      else if (attr::slimit(ss) == 5)
+         analyzer_result = schema_concentric_2_4;
+      else if (ss->kind == s_ptpd) {
+         // Check for point-to-point diamonds all facing toward other diamond.
+         uint32 dir, live;
+         big_endian_get_directions(ss, dir, live);
+         if (((dir ^ 0x55FF) & live) == 0)
+            analyzer_result = schema_concentric_2_6;
+         else
+            fail("Can't find centers and ends in this formation.");
+      }
+      else
+         fail("Can't find centers and ends in this formation.");
+      break;
+   case schema_concentric_touch_by_2_of_3:
+      if (ss->kind == s_galaxy) {
          // This code is duplicated in triangle_move.  Make schemata "tall6" and "short6"
          uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 |
             ss->people[5].id1 | ss->people[7].id1;
@@ -1634,12 +1654,14 @@ static calldef_schema concentrify(
          else
             analyzer_result = schema_vertical_6;
       }
+      else if (ss->kind == s_rigger)
+         analyzer_result = schema_concentric_6_2;
       else if (ss->kind == s_2x1dmd)
          analyzer_result = schema_concentric_4_2_prefer_1x4;
       else if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_4_2;
       else
-         analyzer_result = schema_concentric;
+         fail("Can't find centers and ends in this formation.");
       break;
    case schema_concentric:
       if (crossing) {
@@ -1735,6 +1757,7 @@ static calldef_schema concentrify(
    case schema_intlk_lateral_6:
    case schema_intlk_vertical_6:
    case schema_checkpoint:
+   case schema_checkpoint_spots:
    case schema_ckpt_star:
    case schema_intermediate_diamond:
    case schema_outside_diamond:
@@ -1993,6 +2016,8 @@ static calldef_schema concentrify(
       analyzer_result = schema_concentric_6p;
    else if (analyzer_result == schema_in_out_triple_zcom)
       analyzer_result = schema_in_out_triple;
+   else if (analyzer_result == schema_checkpoint_spots)
+      analyzer_result = schema_checkpoint;
 
    if (ss->kind == s_2x1dmd && analyzer_result == schema_concentric_4_2 && enable_3x1_warn)
       warn(warn__centers_are_diamond);
@@ -5659,6 +5684,14 @@ extern void inner_selective_move(
          schema = schema_concentric_6_2_line;
          if (bigend_ssmask == 0xEE) goto do_concentric_ctrs;
          else if (bigend_ssmask == 0x11) goto do_concentric_ends;
+      }
+      else if (ss->kind == s_ptpd) {
+         schema = schema_checkpoint_spots;
+         if (bigend_ssmask == 0x55) goto do_concentric_ends;
+      }
+      else if (ss->kind == s_spindle) {
+         schema = schema_checkpoint_spots;
+         if (bigend_ssmask == 0xAA) goto do_concentric_ends;
       }
 
       schema = schema_lateral_6;

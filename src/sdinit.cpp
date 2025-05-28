@@ -1185,12 +1185,17 @@ extern void prepare_to_read_menus()
    else if (sizeof(uint32) > sizeof(void *))    // Need this because of horrible cheating we do with main_call_lists.
       gg->fatal_error_exit(1, "Incorrect pointer size", "program has been compiled incorrectly.");
 
-   // We need to take away the "zig-zag" directions if the level is below A2.
+   // We need to take away the "zig-zag" directions if the level is below A2, and "the music" if below C3A.
 
    if (calling_level < zig_zag_level) {
       last_direction_kind = direction_zigzag-1;
       direction_names[direction_zigzag].name = (Cstring) 0;
       direction_names[direction_zigzag].name_uc = (Cstring) 0;
+   }
+   else if (calling_level < face_the_music_level) {
+      last_direction_kind = direction_the_music-1;
+      direction_names[direction_the_music].name = (Cstring) 0;
+      direction_names[direction_the_music].name_uc = (Cstring) 0;
    }
 
    if (glob_abridge_mode < abridge_mode_writing) {

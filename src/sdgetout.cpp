@@ -122,7 +122,8 @@ enum first_part_kind {
    first_part_circ,
    first_part_pthru,
    first_part_trby,
-   first_part_xby
+   first_part_xby,
+   first_part_dixie
 };
 
 // Beware!!  This table must track the definition of enum "first_part_kind".
@@ -133,7 +134,8 @@ static Cstring resolve_first_parts[] = {
    "circulate",
    "pass thru",
    "trade by",
-   "cross by"};
+   "cross by",
+   "dixie grand",};
 
 // BEWARE!!  This enum must track the table "resolve_main_parts".
 enum main_part_kind {
@@ -197,6 +199,7 @@ enum resolve_kind {
    resolve_xby_la,
    resolve_dixie_grand,
    resolve_bad_dixie_grand,
+   resolve_singing_dixie_grand,
    resolve_minigrand,
    resolve_prom,
    resolve_revprom,
@@ -226,6 +229,7 @@ static const resolve_descriptor resolve_table[] = {
    {1, 1, first_part_xby,   main_part_la},       // resolve_xby_la
    {1, 0, first_part_none,  main_part_dixgnd},   // resolve_dixie_grand
    {4, 1, first_part_none,  main_part_dixgnd},   // resolve_bad_dixie_grand
+   {0, 0, first_part_none,  main_part_dixgnd},   // resolve_singing_dixie_grand
    {2, 1, first_part_none,  main_part_minigrand},// resolve_minigrand
    {0, 0, first_part_none,  main_part_prom},     // resolve_prom
    {1, 0, first_part_none,  main_part_revprom},  // resolve_revprom
@@ -405,7 +409,9 @@ static const resolve_tester test_alamo_stuff[] = {
 
    // Facing directly.
    {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},  0x8A31A813},
+   {resolve_pth_rlg,        MS, 1,   {3, 0, 1, 6, 7, 4, 5, 2},  0x8138A31A},
    {resolve_la,             MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x38A31A81},
+   {resolve_pth_la,         MS, 6,   {2, 3, 0, 1, 6, 7, 4, 5},  0xA8138A31},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_4x6_stuff[] = {
@@ -683,6 +689,8 @@ static const resolve_tester test_2x4_stuff[] = {
    {resolve_rlg,            MS,   0x12,   {4, 3, 1, 2, 0, 7, 5, 6},     0x11133331},
    // trade-by, centers sashayed.
    {resolve_rlg,            MS,   0x14,   {6, 5, 3, 4, 2, 1, 7, 0},     0x13113133},
+   // Dixie grand/swing/prom from DPT.
+   {resolve_singing_dixie_grand,DX,011,   {4, 2, 1, 7, 0, 6, 5, 3},     0x33111133},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_hrgl_stuff[] = {
@@ -845,12 +853,17 @@ void write_resolve_text(bool doing_file)
       // In a singer, "pass thru, allemande left", "trade by, allemande left", or
       // "cross by, allemande left" can be just "swing and promenade".
 
-      if (ui_options.singing_call_mode != 0 &&
-          (index == resolve_pth_la ||
-           index == resolve_tby_la ||
-           index == resolve_xby_la)) {
-         first = first_part_none;
-         mainpart = main_part_swing;
+      if (ui_options.singing_call_mode != 0) {
+         if (index == resolve_pth_la ||
+             index == resolve_tby_la ||
+             index == resolve_xby_la) {
+            first = first_part_none;
+            mainpart = main_part_swing;
+         }
+         else if (index == resolve_singing_dixie_grand) {
+            first = first_part_dixie;
+            mainpart = main_part_swing;
+         }
       }
 
       if (first != first_part_none) {

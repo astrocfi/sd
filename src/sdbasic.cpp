@@ -2389,7 +2389,6 @@ static int divide_the_setup(
    switch (ss->kind) {
       int tbi, tbo;
       bool temp;
-      bool temp_for_2x2;
 
    case s_thar:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -3221,28 +3220,24 @@ static int divide_the_setup(
       break;
    case s_bone:
       division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,1);
-      temp_for_2x2 = assoc(b_trngl4, ss, calldeflist) ||
-         assoc(b_ptrngl4, ss, calldeflist);
 
-      if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
-          ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1))) {
-
-         if (temp_for_2x2) goto divide_us_no_recompute;
-      }
-
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+      // If being forced to split in an impossible way, it's an error.
+      if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && (ss->rotation & 1)) ||
+          ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && !(ss->rotation & 1)))
          fail("Can't split the setup.");
 
-      if (temp_for_2x2) goto divide_us_no_recompute;
+      // If being forced to split the right way, do so.  Also split it if it has a triangle definition.
+      // Facing directions will be tested in the triangles.
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) ||
+          assoc(b_trngl4, ss, calldeflist) ||
+          assoc(b_ptrngl4, ss, calldeflist))
+         goto divide_us_no_recompute;
 
       // See if this call is being done "split" as in "split square thru" or
       // "split dixie style", in which case split into triangles.
       // (Presumably there is a "twisted" somewhere.)
-
-      if ((final_concepts.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED |
-                                         FINAL__SPLIT_DIXIE_APPROVED))) {
+      if ((final_concepts.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)))
          goto divide_us_no_recompute;
-      }
 
       if (must_do_mystic)
          goto do_mystically;
@@ -3253,12 +3248,11 @@ static int divide_the_setup(
          uint32 tbo = ss->people[0].id1 | ss->people[1].id1 |
             ss->people[4].id1 | ss->people[5].id1;
 
-         /* See if this call has applicable 1x2 or 2x1 definitions,
-            and the people in the center 1x4 are facing appropriately.
-            Then do it concentrically, which will break it into 4-person
-            triangles first and 1x2/2x1's later.  If it has a 1x1 definition,
-            do it no matter how people are facing. */
-
+         // See if this call has applicable 1x2 or 2x1 definitions,
+         // and the people in the center 1x4 are facing appropriately.
+         // Then do it concentrically, which will break it into 4-person
+         // triangles first and 1x2/2x1's later.  If it has a 1x1 definition,
+         // do it no matter how people are facing.
          if ((!((tbi & 010) | (tbo & 001)) || assoc(b_1x2, ss, calldeflist)) &&
              (!((tbi & 001) | (tbo & 010)) || assoc(b_2x1, ss, calldeflist)))
             goto do_concentrically;
@@ -3267,14 +3261,14 @@ static int divide_the_setup(
             goto do_concentrically;
       }
 
-      /* Turn a bone with only the center line occupied into a 1x8. */
+      // Turn a bone with only the center line occupied into a 1x8.
       if (livemask == 0xCC &&
           (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
           (!(newtb & 1) || assoc(b_8x1, ss, calldeflist))) {
          ss->kind = s1x8;
          ss->swap_people(2, 7);
          ss->swap_people(3, 6);
-         return 2;                        /* And try again. */
+         return 2;                        // And try again.
       }
       break;
    case s_ptpd:
@@ -6404,7 +6398,7 @@ foobar:
          uint32 p = ss->people[i].id1;
          if ((((p ^ result->people[z  ].id1) & PID_MASK) != 0) &&
              (((p ^ result->people[z+1].id1) & PID_MASK) != 0))
-            fail_no_retry("Call can't be done around the outside of the set.");
+            fail_no_retry("People are too far apart to work with each other on this call.");
       }
    }
 

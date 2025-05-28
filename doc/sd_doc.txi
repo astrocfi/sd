@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.3
-@set Time-stamp: May 9, 2010
+@set sd-version 38.31
+@set Time-stamp: May 23, 2010
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -5732,7 +5732,9 @@ the tag to a diamond}.)  You will often need to use the
 @item near line / far line
 @item near column / far column
 @item near box / far box
+@item near 2 / far 2
 @item near 4 / far 4
+@item near 6 / far 6
 @item nearest person / farthest person
 @item the diamond
 Use this in an unsymmetrical setup when there is a diamond other than in the center.

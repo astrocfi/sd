@@ -731,6 +731,10 @@ enum selector_kind {
    selector_farbox,
    selector_nearfour,
    selector_farfour,
+   selector_neartwo,
+   selector_fartwo,
+   selector_nearsix,
+   selector_farsix,
    selector_the2x3,
    selector_thediamond,
    selector_theline,
@@ -766,8 +770,8 @@ enum selector_kind {
 };
 
 // BEWARE!!  This list must track the array "direction_names" in sdtables.cpp .
-// Note also that the "zig-zag" items will get disabled below A2.
-// The key for this is "direction_zigzag".
+// Note also that the "zig-zag" items will get disabled below A2, and "the music" below C3A.
+// The keys for this are "direction_zigzag" and "direction_the_music".
 enum direction_kind {
    direction_uninitialized,
    direction_no_direction,
@@ -780,6 +784,7 @@ enum direction_kind {
    direction_zagzig,
    direction_zigzig,
    direction_zagzag,
+   direction_the_music,
    direction_ENUM_EXTENT   // Not a direction; indicates extent of the enum.
 };
 
@@ -1522,25 +1527,31 @@ enum {
 
 enum {
 
-   ID3_NEARCOL    = 0x80000000UL,
-   ID3_NEARLINE   = 0x40000000UL,
-   ID3_NEARBOX    = 0x20000000UL,
-   ID3_NEARFOUR   = 0x10000000UL,
-   ID3_FARCOL     = 0x08000000UL,
-   ID3_FARLINE    = 0x04000000UL,
-   ID3_FARBOX     = 0x02000000UL,
-   ID3_FARFOUR    = 0x01000000UL,
-   ID3_FACEFRONT  = 0x00800000UL,
-   ID3_FACEBACK   = 0x00400000UL,
-   ID3_FACELEFT   = 0x00200000UL,
-   ID3_FACERIGHT  = 0x00100000UL,
+   ID3_NEARCOL      = 0x80000000UL,
+   ID3_NEARLINE     = 0x40000000UL,
+   ID3_NEARBOX      = 0x20000000UL,
+   ID3_NEARFOUR     = 0x10000000UL,
+   ID3_FARCOL       = 0x08000000UL,
+   ID3_FARLINE      = 0x04000000UL,
+   ID3_FARBOX       = 0x02000000UL,
+   ID3_FARFOUR      = 0x01000000UL,
+   ID3_FACEFRONT    = 0x00800000UL,
+   ID3_FACEBACK     = 0x00400000UL,
+   ID3_FACELEFT     = 0x00200000UL,
+   ID3_FACERIGHT    = 0x00100000UL,
    ID3_FARTHEST1    = 0x00080000UL,
    ID3_NOTFARTHEST1 = 0x00040000UL,
    ID3_NEAREST1     = 0x00020000UL,
    ID3_NOTNEAREST1  = 0x00010000UL,
+   ID3_NEARTWO      = 0x00008000UL,
+   ID3_FARTWO       = 0x00004000UL,
+   ID3_NEARSIX      = 0x00002000UL,
+   ID3_FARSIX       = 0x00001000UL,
 
    ID3_LESS_BITS_TO_CLEAR =
-   ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR,
+   ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|
+   ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR|
+   ID3_NEARTWO|ID3_FARTWO|ID3_NEARSIX|ID3_FARSIX,
 
    ID3_GLOB_BITS_TO_CLEAR =
    ID3_LESS_BITS_TO_CLEAR|ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT,
@@ -4397,7 +4408,7 @@ extern const ctr_end_mask_rec masks_for_3dmd_ctr2;        /* in SDTABLES */
 extern const ctr_end_mask_rec masks_for_3dmd_ctr4;        /* in SDTABLES */
 extern const ctr_end_mask_rec masks_for_bigh_ctr4;        /* in SDTABLES */
 extern const ctr_end_mask_rec masks_for_4x4;              /* in SDTABLES */
-extern int begin_sizes[];                                 /* in SDTABLES */
+extern int begin_sizes[];                                 /* in SDCOMMON */
 
 extern const coordrec tgl3_0;
 extern const coordrec tgl3_1;

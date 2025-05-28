@@ -81,8 +81,8 @@ SDTTY_OBJS = sdui-tty.o sdmatch.o sdui-ttu.o
 
 SDTTY_LINK_OBJS = $(SD_OBJS) $(SDTTY_OBJS)
 
-MKCALLS_SRCS = mkcalls.cpp
-MKCALLS_OBJS = mkcalls.o
+MKCALLS_SRCS = mkcalls.cpp common.cpp
+MKCALLS_OBJS = mkcalls.o common.o
 
 SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRCS) $(MKCALLS_SRCS)
 OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS) $(MKCALLS_OBJS)

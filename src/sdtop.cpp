@@ -237,8 +237,8 @@ Cstring cardinals[NUM_CARDINALS+1];
 Cstring ordinals[NUM_CARDINALS+1];
 
 
-/* The variable "last_direction_kind" below, gets manipulated
-   at startup in order to remove the "zig-zag" items below A2. */
+// The variable "last_direction_kind" below, gets manipulated
+// at startup in order to remove the "zig-zag" and "the music" at certain levels.
 
 writechar_block_type writechar_block;
 int num_command_commands;     // Size of the command menu.
@@ -274,7 +274,7 @@ bool allowing_all_concepts = false;
 bool allowing_minigrand = false;
 bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
-int last_direction_kind = direction_zagzag;
+int last_direction_kind = direction_ENUM_EXTENT-1;
 interactivity_state interactivity = interactivity_normal;
 char database_version[81];
 bool testing_fidelity = false;
@@ -5820,8 +5820,13 @@ void toplevelmove() THROW_DECL
          if (starting_setup.rotation & 1) {
             for (i=0; i<8; i++) {
                if (starting_setup.people[i].id1 & BIT_PERSON)
-                  starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ?
-                     ID3_NEARBOX|ID3_NEARFOUR : ID3_FARBOX|ID3_FARFOUR;
+                  starting_setup.people[i].id3 |=
+                     (((i + (starting_setup.rotation << 1)) & 4) ?
+                      ID3_NEARBOX|ID3_NEARFOUR : ID3_FARBOX|ID3_FARFOUR) |
+                     (((i + (starting_setup.rotation << 1) + 1) & 6) == 6 ?
+                      ID3_NEARTWO : ID3_FARSIX) |
+                     (((i + (starting_setup.rotation << 1) + 5) & 6) == 6 ?
+                      ID3_FARTWO : ID3_NEARSIX);
             }
          }
          else {
@@ -5856,6 +5861,12 @@ void toplevelmove() THROW_DECL
                      nearbit |= ID3_NEARLINE;
                      farbit |= ID3_FARLINE;
                   }
+
+                  starting_setup.people[i].id3 |=
+                     (((i + (starting_setup.rotation << 1)) & 6) == 6 ?
+                      ID3_NEARTWO : ID3_FARSIX) |
+                     (((i + (starting_setup.rotation << 1) + 4) & 6) == 6 ?
+                      ID3_FARTWO : ID3_NEARSIX);
                }
 
                starting_setup.people[i].id3 |=
