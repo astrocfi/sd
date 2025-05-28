@@ -86,7 +86,7 @@ Private void do_c1_phantom_move(
    uint64 junk_concepts;
    setup setup1, setup2;
    setup the_setups[2];
-   phan_map *map_ptr;
+   phan_map *map_ptr = (phan_map *) 0;
 
    /* See if this is a "phantom tandem" (or whatever) by searching ahead, skipping comments of course.
       This means we must skip modifiers too, so we check that there weren't any. */
@@ -185,14 +185,10 @@ Private void do_c1_phantom_move(
 
       /* Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms. */
 
-      if (global_livemask == 04747) {
+      if (global_livemask == 04747)
          map_ptr = &map_pinwheel3;
-         goto use_map;
-      }
-      else if (global_livemask == 05656) {
+      else if (global_livemask == 05656)
          map_ptr = &map_pinwheel4;
-         goto use_map;
-      }
    }
 #endif
    else if (ss->kind == s4x4) {
@@ -262,10 +258,11 @@ Private void do_c1_phantom_move(
       result->kind = s2x4;
       return;
    }
-   else
-      fail("Inappropriate setup for phantom concept.");
 
    use_map:
+
+   if (!map_ptr)
+      fail("Inappropriate setup for phantom concept.");
 
    setup1 = *ss;
    setup2 = *ss;
@@ -1377,8 +1374,8 @@ Private void do_concept_grand_working(
 {
    int cstuff;
    uint32 tbonetest;
-   uint32 m1, m2, m3;
-   uint32 masks[3];
+   uint32 m0, m1, m2, m3, m4;
+   uint32 masks[8];
    setup_kind kk;
    int arity = 2;
 
@@ -1395,34 +1392,82 @@ Private void do_concept_grand_working(
 
    if (ss->kind == s2x4) {
       if (cstuff < 4) {      /* Working forward/back/right/left. */
-         tbonetest = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
+         tbonetest =
+            ss->people[1].id1 | ss->people[2].id1 |
+            ss->people[5].id1 | ss->people[6].id1;
          if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
          if ((tbonetest & 001) && (cstuff & 1)) fail("Must indicate forward/back.");
 
          /* Look at the center 4 people and put each one in the correct group. */
 
-         m1 = 0x9; m2 = 0x9; m3 = 0xF;
+         m0 = 0x9; m1 = 0x9; m2 = 0xF;
          cstuff <<= 2;
 
-         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
-         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
-         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m2 |= 0x2 ; m3 &= ~0x1; };
-         if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x8; };
+         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m0 |= 0x2 ; m1 &= ~0x1; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m0 |= 0x4 ; m1 &= ~0x8; };
+         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
+         if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
       }
       else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
          /* Put each of the center 4 people in the correct group, no need to look. */
 
          if (cstuff & 1) {
-            m1 = 0xB; m2 = 0xA; m3 = 0xE;
+            m0 = 0xB; m1 = 0xA; m2 = 0xE;
          }
          else {
-            m1 = 0xD; m2 = 0x5; m3 = 0x7;
+            m0 = 0xD; m1 = 0x5; m2 = 0x7;
          }
       }
       else        /* Working as-ends or as-centers. */
          fail("May not specify as-ends/as-centers here.");
 
       kk = s2x2;
+   }
+   else if (ss->kind == s2x6 &&
+            ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
+             (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_12_MATRIX))) {
+
+      ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_12_MATRIX;
+
+      if (cstuff < 4) {      /* Working forward/back/right/left. */
+         tbonetest =
+            ss->people[1].id1 | ss->people[2].id1 |
+            ss->people[3].id1 | ss->people[4].id1 |
+            ss->people[7].id1 | ss->people[8].id1 |
+            ss->people[9].id1 | ss->people[10].id1;
+         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+         if ((tbonetest & 001) && (cstuff & 1)) fail("Must indicate forward/back.");
+
+         /* Look at the center 8 people and put each one in the correct group. */
+
+         m0 = m1 = m2 = m3 = 0x9; m4 = 0xF;
+         cstuff <<= 2;
+
+         if (((ss->people[1].id1  + 6) ^ cstuff) & 8) { m0 |= 0x2 ; m1 &= ~0x1; };
+         if (((ss->people[10].id1 + 6) ^ cstuff) & 8) { m0 |= 0x4 ; m1 &= ~0x8; };
+         if (((ss->people[2].id1  + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
+         if (((ss->people[9].id1  + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
+         if (((ss->people[3].id1  + 6) ^ cstuff) & 8) { m2 |= 0x2 ; m3 &= ~0x1; };
+         if (((ss->people[8].id1  + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x8; };
+         if (((ss->people[4].id1  + 6) ^ cstuff) & 8) { m3 |= 0x2 ; m4 &= ~0x1; };
+         if (((ss->people[7].id1  + 6) ^ cstuff) & 8) { m3 |= 0x4 ; m4 &= ~0x8; };
+      }
+      else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
+         /* Put each of the center 4 people in the correct group, no need to look. */
+
+         if (cstuff & 1) {
+            m0 = 0xB; m1 = m2 = m3 = 0xA; m4 = 0xE;
+         }
+         else {
+            m0 = 0xD; m1 = m2 = m3 = 0x5; m4 = 0x7;
+         }
+      }
+      else        /* Working as-ends or as-centers. */
+         fail("May not specify as-ends/as-centers here.");
+
+      masks[3] = m3; masks[4] = m4;
+      kk = s2x2;
+      arity = 4;
    }
    else if (ss->kind == s2x3) {
       if (cstuff < 4) {      /* Working forward/back/right/left. */
@@ -1432,19 +1477,19 @@ Private void do_concept_grand_working(
 
          /* Look at the center 2 people and put each one in the correct group. */
 
-         m1 = 0x9; m2 = 0xF;
+         m0 = 0x9; m1 = 0xF;
          cstuff <<= 2;
 
-         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
-         if (((ss->people[4].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
+         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m0 |= 0x2 ; m1 &= ~0x1; };
+         if (((ss->people[4].id1 + 6) ^ cstuff) & 8) { m0 |= 0x4 ; m1 &= ~0x8; };
       }
       else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
-         m3 = 0;
+         m2 = 0;
          if (cstuff & 1) {
-            m1 = 0xB; m2 = 0xE;
+            m0 = 0xB; m1 = 0xE;
          }
          else {
-            m1 = 0xD; m2 = 0x7;
+            m0 = 0xD; m1 = 0x7;
          }
       }
       else        /* Working as-ends or as-centers. */
@@ -1452,6 +1497,44 @@ Private void do_concept_grand_working(
 
       kk = s2x2;
       arity = 1;
+   }
+   else if (ss->kind == s2x5) {
+      /* **** Should actually put in test for explicit matrix or "10 matrix",
+         but don't have the latter. */
+      if (cstuff < 4) {      /* Working forward/back/right/left. */
+         tbonetest =
+            ss->people[2].id1 | ss->people[7].id1;
+         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+         if ((tbonetest & 001) && (cstuff & 1)) fail("Must indicate forward/back.");
+
+         /* Look at the center 6 people and put each one in the correct group. */
+
+         m0 = m1 = m2 = 0x9; m3 = 0xF;
+         cstuff <<= 2;
+
+         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m0 |= 0x2 ; m1 &= ~0x1; };
+         if (((ss->people[8].id1 + 6) ^ cstuff) & 8) { m0 |= 0x4 ; m1 &= ~0x8; };
+         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
+         if (((ss->people[7].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
+         if (((ss->people[3].id1 + 6) ^ cstuff) & 8) { m2 |= 0x2 ; m3 &= ~0x1; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x8; };
+      }
+      else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
+         /* Put each of the center 4 people in the correct group, no need to look. */
+
+         if (cstuff & 1) {
+            m0 = 0xB; m1 = m2 = 0xA; m3 = 0xE;
+         }
+         else {
+            m0 = 0xD; m1 = m2 = 0x5; m3 = 0x7;
+         }
+      }
+      else        /* Working as-ends or as-centers. */
+         fail("May not specify as-ends/as-centers here.");
+
+      masks[3] = m3;
+      kk = s2x2;
+      arity = 3;
    }
    else if (ss->kind == s1x8) {
       if (cstuff < 4) {      /* Working forward/back/right/left. */
@@ -1461,13 +1544,13 @@ Private void do_concept_grand_working(
 
          /* Look at the center 4 people and put each one in the correct group. */
 
-         m1 = 0x3; m2 = 0x3; m3 = 0xF;
+         m0 = 0x3; m1 = 0x3; m2 = 0xF;
          cstuff <<= 2;
 
-         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x2; };
-         if (((ss->people[3].id1 + 6) ^ cstuff) & 8) { m1 |= 0x8 ; m2 &= ~0x1; };
-         if (((ss->people[7].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x2; };
-         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m2 |= 0x8 ; m3 &= ~0x1; };
+         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m0 |= 0x4 ; m1 &= ~0x2; };
+         if (((ss->people[3].id1 + 6) ^ cstuff) & 8) { m0 |= 0x8 ; m1 &= ~0x1; };
+         if (((ss->people[7].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x2; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x8 ; m2 &= ~0x1; };
       }
       else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
          fail("Must have a 2x3 or 2x4 setup for this concept.");
@@ -1476,10 +1559,10 @@ Private void do_concept_grand_working(
          /* Put each of the center 4 people in the correct group, no need to look. */
 
          if (cstuff & 1) {
-            m1 = 0x7; m2 = 0x5; m3 = 0xD;
+            m0 = 0x7; m1 = 0x5; m2 = 0xD;
          }
          else {
-            m1 = 0xB; m2 = 0xA; m3 = 0xE;
+            m0 = 0xB; m1 = 0xA; m2 = 0xE;
          }
       }
 
@@ -1493,22 +1576,22 @@ Private void do_concept_grand_working(
 
          /* Look at the center 2 people and put each one in the correct group. */
 
-         m1 = 0x3; m2 = 0xF; m3 = 0;
+         m0 = 0x3; m1 = 0xF; m2 = 0;
          cstuff <<= 2;
 
-         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m1 |= 0x8 ; m2 &= ~0x1; };
-         if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x2; };
+         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m0 |= 0x8 ; m1 &= ~0x1; };
+         if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m0 |= 0x4 ; m1 &= ~0x2; };
       }
       else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
          fail("Must have a 2x3 or 2x4 setup for this concept.");
       }
       else {      /* Working as-ends or as-centers. */
-         m3 = 0;
+         m2 = 0;
          if (cstuff & 1) {
-            m1 = 0x7; m2 = 0xD;
+            m0 = 0x7; m1 = 0xD;
          }
          else {
-            m1 = 0xB; m2 = 0xE;
+            m0 = 0xB; m1 = 0xE;
          }
       }
 
@@ -1518,7 +1601,7 @@ Private void do_concept_grand_working(
    else
       fail("Must have a 2x3, 2x4, 1x6, or 1x8 setup for this concept.");
 
-   masks[0] = m1; masks[1] = m2; masks[2] = m3;
+   masks[0] = m0; masks[1] = m1; masks[2] = m2;
    new_overlapped_setup_move(ss, MAPCODE(kk,arity+1,MPKIND__OVERLAP,0), masks, result);
 }
 
@@ -2737,7 +2820,7 @@ Private void do_concept_fan(
 
    callspec = parseptrcopy->call;
 
-   if (!callspec || !(callspec->callflags1 & CFLAG1_CAN_BE_FAN))
+   if (!callspec || !(callspec->callflagsf & CFLAG2_CAN_BE_FAN))
       fail("Can't do \"fan\" with this call.");
 
    /* Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
@@ -3934,7 +4017,9 @@ Private void do_concept_do_each_1x4(
    parse_block *parseptr,
    setup *result)
 {
-   uint32 map_code;
+
+   map_thing *division_maps;
+   uint32 map_code = ~0UL;
    int arg1 = parseptr->concept->value.arg1;
    int arg2 = parseptr->concept->value.arg2;
 
@@ -4008,6 +4093,12 @@ Private void do_concept_do_each_1x4(
                goto split_big;
             }
             break;
+         case s1x10:
+            if (global_livemask == 0x1EF) {
+               division_maps = &map_d1x10;
+               goto split_big;
+            }
+            break;
       }
 
       fail("Need a 2x4 or 1x8 setup for this concept.");
@@ -4020,7 +4111,10 @@ Private void do_concept_do_each_1x4(
 
    split_big:
 
-   new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+   if (map_code == ~0UL)
+      divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
+   else
+      new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
 }
 
 
@@ -4628,6 +4722,8 @@ Private void do_concept_meta(
       uint32 save_elongation;
       uint32 save_expire;
       uint32 index;
+      uint32 shortenhighlim;
+      uint32 code_to_use_for_only;
       long_boolean doing_just_one;
 
    case meta_key_skip_nth_part:
@@ -4990,14 +5086,16 @@ Private void do_concept_meta(
          Repeatedly execute parts of the call, skipping the concept where required. */
 
       index = 0;
+      shortenhighlim = 0;
       doing_just_one = FALSE;
+      code_to_use_for_only = CMD_FRAC_CODE_ONLY;
 
       /* We allow picking a specific part, and we allow "finishing" from a specific
          part, but we allow nothing else. */
 
       if ((ss->cmd.cmd_frac_flags &
            (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
-            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | 0xFFFF)) ==
+            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) ==
           (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE)) {
          index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
          doing_just_one = TRUE;
@@ -5005,13 +5103,24 @@ Private void do_concept_meta(
       else if ((ss->cmd.cmd_frac_flags &
            (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
             CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) ==
+          (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLYREV | CMD_FRAC_NULL_VALUE)) {
+         index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
+         doing_just_one = TRUE;
+         code_to_use_for_only = CMD_FRAC_CODE_ONLYREV;
+         fail("Sorry, can't do this.");
+      }
+      else if ((ss->cmd.cmd_frac_flags &
+           (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
+            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | 0xFFFF)) ==
           (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_NULL_VALUE)) {
          index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
+         shortenhighlim = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART2_MASK));
       }
       else if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
          fail("Can't stack meta or fractional concepts.");
 
-      frac_flags = ss->cmd.cmd_frac_flags & ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK);
+      frac_flags = ss->cmd.cmd_frac_flags &
+         ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK);
 
       do {
          /* Here is where we make use of actual numerical assignments. */
@@ -5043,8 +5152,8 @@ Private void do_concept_meta(
             (if that is the subject concept) that fractions are allowed, and they
             are to be applied to the first call only. */
          result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
-         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
-            (index * CMD_FRAC_PART_BIT) | frac_flags;
+         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | code_to_use_for_only |
+            (index * CMD_FRAC_PART_BIT) | frac_flags | shortenhighlim;
 
          /* If the call that we are doing has the RESULTFLAG__NO_REEVALUATE flag
             on (meaning we don't re-evaluate under *any* circumstances, particularly
@@ -5176,13 +5285,15 @@ Private void do_concept_replace_nth_part(
    case 0:
       goto nolastpart;
    case 1:
-      frac_key = CMD_FRAC_REVERSE | CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
+      frac_key = CMD_FRAC_REVERSE | CMD_FRAC_CODE_ONLY | 
+         CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
       break;
    case 2: case 3:
       frac_key = (newfracs<<8) | 0x0011;
       break;
    default:
-      frac_key = CMD_FRAC_CODE_FROMTOREV | ((parseptr->options.number_fields+1) * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
+      frac_key = CMD_FRAC_CODE_FROMTOREV |
+         ((parseptr->options.number_fields+1) * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
       break;
    }
 
@@ -5236,7 +5347,8 @@ Private void do_concept_interlace(
          result->cmd = ss->cmd;
          result->cmd.prior_elongation_bits = save_elongation;
          result->cmd.prior_expire_bits = save_expire;
-         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | (indexa * CMD_FRAC_PART_BIT) | a_frac_flags;
+         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
+            (indexa * CMD_FRAC_PART_BIT) | a_frac_flags;
          if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
             update_id_bits(result);
          result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
@@ -5265,7 +5377,8 @@ Private void do_concept_interlace(
          result->cmd = ss->cmd;
          result->cmd.prior_elongation_bits = save_elongation;
          result->cmd.prior_expire_bits = save_expire;
-         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | (indexb * CMD_FRAC_PART_BIT) | b_frac_flags;
+         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
+            (indexb * CMD_FRAC_PART_BIT) | b_frac_flags;
          result->cmd.parseptr = parseptr->subsidiary_root;
          do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))

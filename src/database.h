@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1998  William B. Ackerman.
@@ -98,7 +96,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 146
+#define DATABASE_FORMAT_VERSION 147
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -226,6 +224,7 @@ static Const uint32 INHERITFLAG_FRACTAL    = 0x00020000UL;
 /* This is a 2 bit field -- VISIBLE_FRACTION_BIT tells where its low bit lies. */
 static Const uint32 CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL;
 static Const uint32 CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL;
+
 static Const uint32 CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL;
 static Const uint32 CFLAG1_IMPRECISE_ROTATION        = 0x00000008UL;
 static Const uint32 CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL;
@@ -242,25 +241,34 @@ static Const uint32 CFLAG1_STEP_TO_WAVE              = 0x00000400UL;
 static Const uint32 CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL;
 static Const uint32 CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL;
 
-static Const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00002000UL;
+static Const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00002000UL;
+
 /* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
 static Const uint32 CFLAG1_NUMBER_MASK               = 0x0001C000UL;
 static Const uint32 CFLAG1_NUMBER_BIT                = 0x00004000UL;
+
 static Const uint32 CFLAG1_SEQUENCE_STARTER          = 0x00020000UL;
 static Const uint32 CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x00040000UL;
 static Const uint32 CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL;
-static Const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00100000UL;
-static Const uint32 CFLAG1_CAN_BE_FAN                = 0x00200000UL;
+static Const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL;
+static Const uint32 CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL;
 static Const uint32 CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL;
 static Const uint32 CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL;
+
 /* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
 static Const uint32 CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL;
 static Const uint32 CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL;
+
 static Const uint32 CFLAG1_BASE_CIRC_CALL            = 0x08000000UL;
 static Const uint32 CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL;
 static Const uint32 CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL;
 static Const uint32 CFLAG1_ONE_PERSON_CALL           = 0x40000000UL;
 static Const uint32 CFLAG1_PRESERVE_Z_STUFF          = 0x80000000UL;
+
+/* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
+   They must lie in the top 8 bits for now. */
+static Const uint32 CFLAG2_YOYO_FRACTAL_NUM          = 0x01000000UL;
+static Const uint32 CFLAG2_CAN_BE_FAN                = 0x02000000UL;
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 

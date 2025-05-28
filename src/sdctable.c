@@ -1,8 +1,6 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -1352,7 +1350,6 @@ int magic_concept_index = d4_1_offset + d4__1_magic;
 int intlk_concept_index = mm_1_offset + mm__1_intlk;
 int left_concept_index = mm_1_offset + mm__1_left;
 int grand_concept_index = mm_1_offset + mm__1_grand;
-
 
 Private int phantoml_sizes[]  = {pl__1_size, pl__2_size, pl__3_size,             -1};
 Private int phantomb_sizes[]  = {pb__1_size, pb__2_size, pb__3_size,             -1};

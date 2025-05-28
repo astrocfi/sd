@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /*
  * sdui.h - header file for interface between sdui-tty.c
  * and the low level character subsystem.
@@ -15,6 +13,15 @@
  *
  * By Stephen Gildea <gildea@lcs.mit.edu> January 1993
  */
+
+#ifdef __CPLUSPLUS
+#define EXPORT extern "C" __declspec (dllexport)
+#define MAYBECALLBACK CALLBACK
+#else
+#define EXPORT extern
+#define MAYBECALLBACK
+#endif
+
 #define NULLCONCEPTPTR (concept_descriptor *) 0
 #define NULLCALLSPEC (callspec_block *) 0
 
@@ -692,6 +699,7 @@ typedef enum {
    start_select_toggle_act,
    start_select_toggle_retain,
    start_select_toggle_nowarn_mode,
+   start_select_toggle_singleclick_mode,
    start_select_toggle_singer,
    start_select_toggle_singer_backward,
    start_select_init_session_file,
@@ -702,8 +710,8 @@ typedef enum {
 
 /* For ui_command_select: */
 /* BEWARE!!  This next definition must be keyed to the array "title_string"
-   in sdgetout.c, and maybe stuff in the UI.  For example, see "command_commands"
-   in sdui-tty.c. */
+   in sdgetout.c, and maybe stuff in the UI.  For example, see "command_menu"
+   in sdtables.c. */
 /* BEWARE!!  The order is slightly significant -- all search-type commands
    are >= command_resolve, and all "create some setup" commands
    are >= command_create_any_lines.  Certain tests are made easier by this. */
@@ -732,6 +740,7 @@ typedef enum {
    command_toggle_act_phan,
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
+   command_toggle_singleclick_mode,
    command_refresh,
    command_resolve,            /* Search commands start here */
    command_normalize,
@@ -797,8 +806,6 @@ typedef enum {
    file_write_double
 } file_write_flag;
 
-/* Warning!  Do not move these around without checking carefully.  Values are changed
-   by simple incrementing, so order is important. */
 typedef enum {
    interactivity_database_init,
    interactivity_no_query_at_all,    /* Used when pasting from clipboard.  All subcalls,
@@ -806,10 +813,7 @@ typedef enum {
                                         If not, it is a bug. */
    interactivity_verify,
    interactivity_normal,
-   interactivity_starting_first_scan,
-   interactivity_in_first_scan,
-   interactivity_in_second_scan,
-   interactivity_in_random_search
+   interactivity_picking
 } interactivity_state;
 
 typedef enum {
@@ -823,15 +827,24 @@ typedef enum {
 #define POPUP_ACCEPT  1
 #define POPUP_ACCEPT_WITH_STRING 2
 
-extern Cstring concept_key_table[];                                 /* in SDTABLES */
+EXPORT Cstring concept_key_table[];                                 /* in SDTABLES */
+
+/* In SDPICK */
+
+EXPORT void initialize_concept_sublists(void);
 
 /* In SDGETOUT */
 
-extern void create_resolve_menu_title(command_kind goal, int cur, int max, resolver_display_state state, char *title);
+EXPORT void create_resolve_menu_title(
+   command_kind goal,
+   int cur,
+   int max,
+   resolver_display_state state,
+   char *title);
 
 /* In SDSI */
 
-extern void *get_mem(uint32 siz);
+EXPORT void *get_mem(uint32 siz);
 extern void *get_mem_gracefully(uint32 siz);
 extern void *get_more_mem(void *oldp, uint32 siz);
 extern void *get_more_mem_gracefully(void *oldp, uint32 siz);
@@ -839,7 +852,8 @@ extern void free_mem(void *ptr);
 
 /* In SDINIT */
 
-extern void initialize_menus(call_list_mode_t call_list_mode);
+EXPORT void build_database(call_list_mode_t call_list_mode);
+EXPORT void initialize_menus(call_list_mode_t call_list_mode);
 
 /* In SDSI */
 
@@ -847,22 +861,22 @@ extern long_boolean parse_level(Cstring s, dance_level *levelp);
 extern char *read_from_call_list_file(char name[], int n);
 extern void write_to_call_list_file(Const char name[]);
 extern long_boolean close_call_list_file(void);
-extern long_boolean install_outfile_string(char newstring[]);
-extern long_boolean get_first_session_line(void);
-extern long_boolean get_next_session_line(char *dest);
-extern void prepare_to_read_menus(void);
-extern void initialize_misc_lists(void);
-extern long_boolean open_database(char *msg1, char *msg2);
+EXPORT long_boolean install_outfile_string(char newstring[]);
+EXPORT long_boolean get_first_session_line(void);
+EXPORT long_boolean get_next_session_line(char *dest);
+EXPORT void prepare_to_read_menus(void);
+EXPORT void initialize_misc_lists(void);
+EXPORT long_boolean open_database(char *msg1, char *msg2);
 extern uint32 read_8_from_database(void);
 extern uint32 read_16_from_database(void);
 extern void close_database(void);
 
 /* In SDUTIL */
 
-extern void exit_program(int code) nonreturning;
-extern long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
-extern uint32 the_topcallflags;
-extern long_boolean there_is_a_call;
+EXPORT void exit_program(int code) nonreturning;
+EXPORT long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
+EXPORT uint32 the_topcallflags;
+EXPORT long_boolean there_is_a_call;
 
 
 /* In SDUI */
@@ -892,7 +906,7 @@ extern int uims_do_tagger_popup(int tagger_class);
 extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind);
 extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero);
 extern void uims_reduce_line_count(int n);
-extern void uims_add_new_line(char the_line[]);
+extern void uims_add_new_line(char the_line[], uint32 drawing_picture);
 extern uims_reply uims_get_startup_command(void);
 extern long_boolean uims_get_call_command(uims_reply *reply_p);
 extern uims_reply uims_get_resolve_command(void);
@@ -910,100 +924,86 @@ extern void uims_debug_print(Cstring s);		/* Alan's code only */
 extern void uims_fatal_error(Cstring pszLine1, Cstring pszLine2);
 extern void uims_final_exit(int code) nonreturning;
 
-extern Cstring menu_names[];                                        /* in SDTABLES */
+EXPORT Cstring menu_names[];                                        /* in SDTABLES */
 
-extern long_boolean use_escapes_for_drawing_people;                 /* in SDUTIL */
-extern char *pn1;                                                   /* in SDUTIL */
-extern char *pn2;                                                   /* in SDUTIL */
-extern char *direc;                                                 /* in SDUTIL */
+EXPORT int use_escapes_for_drawing_people;                          /* in SDUTIL */
+EXPORT char *pn1;                                                   /* in SDUTIL */
+EXPORT char *pn2;                                                   /* in SDUTIL */
+EXPORT char *direc;                                                 /* in SDUTIL */
 
-extern long_boolean open_session(int argc, char **argv);
-extern int process_session_info(Cstring *error_msg);
-extern long_boolean open_call_list_file(char filename[]);
-extern long_boolean open_accelerator_region(void);
-extern long_boolean get_accelerator_line(char line[]);
-extern void close_init_file(void);
-extern void final_exit(int code) nonreturning;
-
-extern interactivity_state interactivity;                           /* in SDMAIN */
+EXPORT interactivity_state interactivity;                           /* in SDMAIN */
 extern long_boolean testing_fidelity;                               /* in SDMAIN */
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
 extern int number_for_initialize;                                   /* in SDMAIN */
 extern Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
-extern Cstring *selector_menu_list;
+EXPORT Cstring *selector_menu_list;
 extern Cstring *circcer_menu_list;
-extern call_conc_option_state verify_options;                       /* in SDMAIN */
+EXPORT call_conc_option_state verify_options;                       /* in SDMAIN */
 extern long_boolean verify_used_number;                             /* in SDMAIN */
 extern long_boolean verify_used_selector;                           /* in SDMAIN */
-extern int allowing_modifications;                                  /* in SDMAIN */
-extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
-extern long_boolean using_active_phantoms;                          /* in SDMAIN */
+EXPORT int allowing_modifications;                                  /* in SDMAIN */
+EXPORT long_boolean allowing_all_concepts;                          /* in SDMAIN */
+EXPORT long_boolean using_active_phantoms;                          /* in SDMAIN */
 #ifdef OLD_ELIDE_BLANKS_JUNK
 extern long_boolean elide_blanks;                                   /* in SDMAIN */
 #endif
 extern long_boolean retain_after_error;                             /* in SDMAIN */
-extern int singing_call_mode;                                       /* in SDMAIN */
+EXPORT int singing_call_mode;                                       /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern call_conc_option_state current_options;                      /* in SDMAIN */
-extern uint32 selector_iterator;                                    /* in SDMAIN */
-extern uint32 direction_iterator;                                   /* in SDMAIN */
-extern uint32 number_iterator;                                      /* in SDMAIN */
-extern uint32 tagger_iterator;                                      /* in SDMAIN */
-extern uint32 circcer_iterator;                                     /* in SDMAIN */
 
-extern int session_index;                                           /* in SDSI */
+EXPORT int session_index;                                           /* in SDSI */
 extern int num_command_commands;                                    /* in SDSI */
 extern Cstring *command_commands;                                   /* in SDSI */
-extern command_kind *command_command_values;                        /* in SDSI */
-extern int number_of_resolve_commands;                              /* in SDSI */
-extern Cstring* resolve_command_strings;                            /* in SDSI */
-extern resolve_command_kind *resolve_command_values;                /* in SDSI */
-extern int no_graphics;                                             /* in SDSI */
-extern int no_intensify;                                            /* in SDSI */
-extern int no_color;                                                /* in SDSI */
-extern int no_sound;                                                /* in SDSI */
-extern int color_by_couple;                                         /* in SDSI */
+EXPORT command_kind *command_command_values;                        /* in SDSI */
+EXPORT int number_of_resolve_commands;                              /* in SDSI */
+EXPORT Cstring* resolve_command_strings;                            /* in SDSI */
+EXPORT resolve_command_kind *resolve_command_values;                /* in SDSI */
+EXPORT int no_graphics;                                             /* in SDSI */
+EXPORT int no_intensify;                                            /* in SDSI */
+EXPORT int reverse_video;                                           /* in SDSI */
+EXPORT int pastel_color;                                            /* in SDSI */
+EXPORT int no_color;                                                /* in SDSI */
+EXPORT int no_sound;                                                /* in SDSI */
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
-extern char *database_filename;                                     /* in SDSI */
-extern char *new_outfile_string;                                    /* in SDSI */
-extern char *call_list_string;                                      /* in SDSI */
+EXPORT char *database_filename;                                     /* in SDSI */
+EXPORT char *new_outfile_string;                                    /* in SDSI */
+EXPORT char *call_list_string;                                      /* in SDSI */
 
-extern command_list_menu_item command_menu[];                       /* in SDTABLES */
+EXPORT command_list_menu_item command_menu[];                       /* in SDTABLES */
 extern resolve_list_menu_item resolve_menu[];                       /* in SDTABLES */
-extern Cstring startup_commands[];                                  /* in SDTABLES */
-extern Cstring getout_strings[];                                    /* in SDTABLES */
-extern Cstring filename_strings[];                                  /* in SDTABLES */
+EXPORT Cstring startup_commands[];                                  /* in SDTABLES */
+EXPORT Cstring getout_strings[];                                    /* in SDTABLES */
+EXPORT Cstring filename_strings[];                                  /* in SDTABLES */
 extern dance_level level_threshholds[];                             /* in SDTABLES */
 extern dance_level higher_acceptable_level[];                       /* in SDTABLES */
 
-extern Const call_conc_option_state null_options;                   /* in SDMAIN */
-extern concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
-extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
-extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
-extern dance_level calling_level;                                   /* in SDCTABLE */
+EXPORT Const call_conc_option_state null_options;                   /* in SDMAIN */
+EXPORT concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
+EXPORT callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
+EXPORT int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
+EXPORT dance_level calling_level;                                   /* in SDCTABLE */
 
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern long_boolean singlespace_mode;                               /* in SDUTIL */
-extern long_boolean nowarn_mode;                                    /* in SDUTIL */
-extern Cstring cardinals[];                                         /* in SDUTIL */
+EXPORT long_boolean nowarn_mode;                                    /* in SDUTIL */
+EXPORT long_boolean accept_single_click;                            /* in SDUTIL */
+EXPORT Cstring cardinals[];                                         /* in SDUTIL */
 extern Cstring ordinals[];                                          /* in SDUTIL */
 extern selector_item selector_list[];                               /* in SDUTIL */
-extern Cstring direction_names[];                                   /* in SDUTIL */
-extern int last_direction_kind;                                     /* in SDUTIL */
+EXPORT Cstring direction_names[];                                   /* in SDUTIL */
+EXPORT int last_direction_kind;                                     /* in SDUTIL */
 
-extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_state *options);
-extern long_boolean deposit_concept(concept_descriptor *conc);
+EXPORT int *concept_list;        /* indices of all concepts */
+EXPORT int concept_list_length;
+EXPORT int *level_concept_list; /* indices of concepts valid at current level */
+EXPORT int level_concept_list_length;
 
-extern int *concept_list;        /* indices of all concepts */
-extern int concept_list_length;
-extern int *level_concept_list; /* indices of concepts valid at current level */
-extern int level_concept_list_length;
-
-extern modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-extern modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-extern modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-extern match_result user_match;
+EXPORT modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+EXPORT modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+EXPORT modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+EXPORT match_result user_match;
 
 extern concept_descriptor special_magic;                            /* in SDCTABLE */
 extern concept_descriptor special_interlocked;                      /* in SDCTABLE */
@@ -1015,20 +1015,20 @@ extern concept_descriptor marker_concept_supercall;                 /* in SDCTAB
 extern int abs_max_calls;                                           /* in SDMAIN */
 extern int max_base_calls;                                          /* in SDMAIN */
 extern callspec_block **base_calls;                                 /* in SDMAIN */
-extern uint32 number_of_taggers[NUM_TAGGER_CLASSES];                /* in SDMAIN */
-extern callspec_block **tagger_calls[NUM_TAGGER_CLASSES];           /* in SDMAIN */
-extern uint32 number_of_circcers;                                   /* in SDMAIN */
-extern callspec_block **circcer_calls;                              /* in SDMAIN */
-extern char outfile_string[];                                       /* in SDMAIN */
-extern char header_comment[];                                       /* in SDMAIN */
+EXPORT uint32 number_of_taggers[NUM_TAGGER_CLASSES];                /* in SDMAIN */
+EXPORT callspec_block **tagger_calls[NUM_TAGGER_CLASSES];           /* in SDMAIN */
+EXPORT uint32 number_of_circcers;                                   /* in SDMAIN */
+EXPORT callspec_block **circcer_calls;                              /* in SDMAIN */
+EXPORT char outfile_string[];                                       /* in SDMAIN */
+EXPORT char header_comment[];                                       /* in SDMAIN */
 extern long_boolean need_new_header_comment;                        /* in SDMAIN */
-extern call_list_mode_t glob_call_list_mode;                        /* in SDMAIN */
-extern int sequence_number;                                         /* in SDMAIN */
-extern int starting_sequence_number;                                /* in SDMAIN */
+EXPORT call_list_mode_t glob_call_list_mode;                        /* in SDMAIN */
+EXPORT int sequence_number;                                         /* in SDMAIN */
+EXPORT int starting_sequence_number;                                /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
-extern parse_state_type parse_state;                                /* in SDMAIN */
-extern int uims_menu_index;                                         /* in SDMAIN */
+EXPORT parse_state_type parse_state;                                /* in SDMAIN */
+EXPORT int uims_menu_index;                                         /* in SDMAIN */
 extern long_boolean uims_menu_cross;                                /* in SDMAIN */
 extern long_boolean uims_menu_magic;                                /* in SDMAIN */
 extern long_boolean uims_menu_intlk;                                /* in SDMAIN */
@@ -1037,6 +1037,25 @@ extern long_boolean uims_menu_grand;                                /* in SDMAIN
 extern char database_version[81];                                   /* in SDMAIN */
 extern int whole_sequence_low_lim;                                  /* in SDMAIN */
 
+
+/* in SDSI */
+
+extern long_boolean open_session(int argc, char **argv);
+EXPORT int process_session_info(Cstring *error_msg);
+EXPORT long_boolean open_call_list_file(char filename[]);
+EXPORT long_boolean open_accelerator_region(void);
+EXPORT long_boolean get_accelerator_line(char line[]);
+EXPORT void close_init_file(void);
+EXPORT void final_exit(int code) nonreturning;
+
+
+/* in SDMAIN */
+
+extern long_boolean deposit_call(
+   callspec_block *call,
+   Const call_conc_option_state *options);
+extern long_boolean deposit_concept(concept_descriptor *conc);
+EXPORT int MAYBECALLBACK sdmain(int argc, char *argv[]);
 extern parse_block *get_parse_block(void);
 
 extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
@@ -1065,13 +1084,6 @@ extern int screen_height;
 extern int no_cursor;
 extern int no_console;
 extern int no_line_delete;
-/* These are duplicates of declarations in sd.h .  We don't want the
-   console interface modules to need sd.h . */
-extern int no_graphics;
-extern int no_intensify;
-extern int no_color;
-extern int diagnostic_mode;
-extern int color_by_couple;
 
 
 /* Clear the current line, leave cursor at left edge. */

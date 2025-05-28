@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
@@ -77,7 +75,6 @@
 
 and the following other variables:
 
-   journal_file
    screen_height
    no_cursor
    no_console
@@ -101,8 +98,6 @@ extern void exit(int code);
 
 #include "sd.h"
 #include "paths.h"
-extern void initialize_concept_sublists(void);
-extern void build_database(call_list_mode_t call_list_mode);
 #include "sdmatch.h"
 
 /* See comments in sdmain.c regarding this string. */
@@ -117,7 +112,6 @@ static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  
  * We return the "0.6tty" part.
  */
 
-FILE *journal_file = (FILE *) 0;
 int screen_height = 25;
 int no_cursor = 0;
 int no_console = 0;
@@ -134,6 +128,14 @@ extern char *uims_version_string(void)
 static char journal_name[MAX_TEXT_LINE_LENGTH];
 
 static resolver_display_state resolver_happiness = resolver_display_failed;
+
+int main(int argc, char *argv[])
+{
+   /* In Sdtty, the defaults are reverse video (white-on-black) and pastel colors. */
+   pastel_color = 1;
+   reverse_video = 1;
+   return sdmain(argc, argv);
+}
 
 
 /*
@@ -484,7 +486,7 @@ extern void uims_set_window_title(char s[])
 
 extern void uims_bell(void)
 {
-   if (!no_sound) ttu_bell();   
+   if (!no_sound) ttu_bell();
 }
 
 
@@ -674,7 +676,18 @@ Private long_boolean get_user_input(char *prompt, int which)
          else
             continue;
 
-         if (!keyptr) continue;
+         if (!keyptr) {
+            /* If user hits alt-F4 and there is no binding for it, we handle it in
+               the usual way anyway.  This makes the behavior similar to Sd, where
+               the system automatically provides that action. */
+            if (nc == AFKEY+4) {
+               if (which_target == match_startup_commands ||
+                   uims_do_abort_popup() == POPUP_ACCEPT)
+                  exit_program(0);
+            }
+
+            continue;   /* No binding for this key; ignore it. */
+         }
 
          /* If we get here, we have a function key to process from the table. */
 
@@ -1211,16 +1224,15 @@ uims_end_reconcile_history(void)
     return FALSE;
 }
 
-extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state)
+extern void uims_update_resolve_menu(command_kind goal, int cur, int max,
+                                     resolver_display_state state)
 {
-    char title[MAX_TEXT_LINE_LENGTH];
+   char title[MAX_TEXT_LINE_LENGTH];
 
-    resolver_happiness = state;
+   resolver_happiness = state;
 
-    create_resolve_menu_title(goal, cur, max, state, title);
-    put_line(title);
-    put_line("\n");
-    current_text_line++;
+   create_resolve_menu_title(goal, cur, max, state, title);
+   uims_add_new_line(title, 0);
 }
 
 extern int uims_do_selector_popup(void)
@@ -1384,7 +1396,7 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-extern void uims_add_new_line(char the_line[])
+extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
 {
     put_line(the_line);
     put_line("\n");
@@ -1454,7 +1466,7 @@ extern void uims_database_error(Cstring message, Cstring call_name)
 {
    print_line(message);
    if (call_name) {
-      print_line("  While reading this call from the database:");
+      print_line("while reading this call from the database:");
       print_line(call_name);
    }
 }

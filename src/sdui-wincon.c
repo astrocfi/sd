@@ -45,7 +45,7 @@ extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
 
    /* Install the pointy triangles. */
 
-   if (!no_graphics)
+   if (no_graphics < 2)
       *direc_p = "?\020?\021????\036?\037?????";
 
    my_directions = *direc_p;
@@ -91,8 +91,40 @@ BOOL WINAPI control_c_handler(DWORD ControlInfo)
 }
 
 
+static WORD background_color;
+static WORD text_color;
+
+
+
+/* These will get "background_color" added in during initialization. */
+
+static WORD couple_colors[9] = {
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  /* red */
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  /* red */
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  /* green */
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  /* green */
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  /* blue */
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  /* blue */
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* yellow */
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* yellow */
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY}; /* red */
+
+static WORD person_colors[2] = {
+   FOREGROUND_BLUE | FOREGROUND_INTENSITY,  /* blue */
+   FOREGROUND_RED  | FOREGROUND_INTENSITY}; /* red */
+
+static WORD pastel_person_colors[2] = {
+   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* bletcherous blue */
+   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY}; /* putrid pink */
+
+
+
 extern void ttu_initialize(void)
 {
+   COORD coord;
+   DWORD numWrite;
+   int i;
+
    if (no_console) return;
 
    consoleStdin = GetStdHandle(STD_INPUT_HANDLE);
@@ -136,12 +168,45 @@ extern void ttu_initialize(void)
 
    (void) GetConsoleScreenBufferInfo(consoleStdout, &globalconsoleInfo);
 
+   if (reverse_video)
+      background_color = 0;
+   else {
+      /* If doing color_by_couple or color_by_corner, make the backround light
+         gray instead of white, because yellow doesn't show up well against white. */
+      if (no_color == 2 || no_color == 3)
+         background_color = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
+      else
+         background_color = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED |
+            BACKGROUND_INTENSITY;
+   }
+
+   if (!no_intensify) {
+      if (reverse_video)
+         text_color = FOREGROUND_BLUE | FOREGROUND_GREEN |
+            FOREGROUND_RED | FOREGROUND_INTENSITY;
+      else
+         text_color = background_color;
+   }
+   else
+      text_color = globalconsoleInfo.wAttributes;
+
+   for (i=0 ; i<9 ; i++) couple_colors[i] |= background_color;
+   for (i=0 ; i<2 ; i++) person_colors[i] |= background_color;
+   for (i=0 ; i<2 ; i++) pastel_person_colors[i] |= background_color;
+
    /* Set text to bright white.  Will reset it at end of program. */
 
+   coord.X = 0;
+   coord.Y = 0;
+
+   (void) FillConsoleOutputAttribute(consoleStdout,
+                                     background_color,
+                                     globalconsoleInfo.dwSize.X * globalconsoleInfo.dwSize.Y,
+                                     coord,
+                                     &numWrite);
+
    if (!no_intensify)
-      (void) SetConsoleTextAttribute(consoleStdout,
-                                     FOREGROUND_BLUE | FOREGROUND_GREEN |
-                                     FOREGROUND_RED | FOREGROUND_INTENSITY);
+      (void) SetConsoleTextAttribute(consoleStdout, text_color);
 
    (void) SetConsoleCtrlHandler(&control_c_handler, TRUE);
 }
@@ -149,8 +214,6 @@ extern void ttu_initialize(void)
 
 extern void ttu_terminate(void)
 {
-   if (journal_file) (void) fclose(journal_file);
-
    if (!no_console) {
       (void) SetConsoleTextAttribute(consoleStdout, globalconsoleInfo.wAttributes);
       (void) SetConsoleMode(consoleStdin, oldMode);
@@ -219,13 +282,6 @@ extern void erase_last_n(int n)
    }
 }
 
-
-static WORD couple_colors[4] = {
-   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY,  /* red */
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  /* green */
-   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* blue */
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY}; /* yellow */
-
 extern void put_line(const char the_line[])
 {
    if (!no_console) {
@@ -242,16 +298,14 @@ extern void put_line(const char the_line[])
 
             put_char(' ');
 
-            if (!no_color) {
-               if (color_by_couple) {
-                  color = couple_colors[(c1 >> 1) & 3];
-               }
-               else {
-                  if (c1 & 1)
-                     color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-                  else
-                     color = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-               }
+            if (no_color != 1) {
+               if (no_color == 2)
+                  color = couple_colors[c1 & 7];
+               else if (no_color == 3)
+                  color = couple_colors[(c1 & 7) + 1];
+               else
+                  color = (pastel_color ? pastel_person_colors : person_colors)[c1 & 1];
+
                (void) SetConsoleTextAttribute(consoleStdout, color);
             }
 
@@ -261,15 +315,8 @@ extern void put_line(const char the_line[])
 
             /* Set back to plain "white". */
 
-            if (!no_color) {
-               if (!no_intensify)
-                  color = FOREGROUND_BLUE | FOREGROUND_GREEN |
-                     FOREGROUND_RED | FOREGROUND_INTENSITY;
-               else
-                  color = globalconsoleInfo.wAttributes;
-
-               (void) SetConsoleTextAttribute(consoleStdout, color);
-            }
+            if (no_color != 1)
+               (void) SetConsoleTextAttribute(consoleStdout, text_color);
          }
          else
             put_char(c);

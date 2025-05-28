@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /*
    sdmatch.c - command matching support
 
@@ -136,10 +134,30 @@ static int translate_keybind_spec(char key_name[])
 {
    int key_length;
    int d1, d2, digits;
+   long_boolean shift = FALSE;
+   long_boolean ctl = FALSE;
+   long_boolean alt = FALSE;
+   long_boolean ctlalt = FALSE;
 
-   key_length = strlen(key_name);
+   /* Compress hyphens out, and canonicalize to lower case. */
+   for (d1=key_length=0 ; key_name[d1] ; d1++) {
+      if (key_name[d1] != '-') key_name[key_length++] = tolower(key_name[d1]);
+   }
 
    if (key_length < 2) return -1;
+
+   switch (key_name[0]) {
+   case 's': shift = TRUE; break;
+   case 'c':   ctl = TRUE; break;
+   case 'a':
+   case 'm':   alt = TRUE; break;
+   }
+
+   switch (key_name[1]) {
+   case 'c':   ctlalt = alt; break;
+   case 'a':
+   case 'm':   ctlalt = ctl; break;
+   }
 
    d2 = key_name[key_length-1] - '0';
    if (d2 >= 0 && d2 <= 9) {
@@ -153,20 +171,19 @@ static int translate_keybind_spec(char key_name[])
       if (key_name[key_length-2] == 'f') {
          if (digits < 1 || digits > 12)
             return -1;
-
-         if (key_length == 2) {
+         else if (key_length == 2) {
             return FKEY+digits;
          }
-         else if (key_length == 3 && key_name[0] == 's') {
+         else if (key_length == 3 && shift) {
             return SFKEY+digits;
          }
-         else if (key_length == 3 && key_name[0] == 'c') {
+         else if (key_length == 3 && ctl) {
             return CFKEY+digits;
          }
-         else if (key_length == 3 && key_name[0] == 'a') {
+         else if (key_length == 3 && alt) {
             return AFKEY+digits;
          }
-         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+         else if (key_length == 4 && ctlalt) {
             return CAFKEY+digits;
          }
          else {
@@ -176,14 +193,13 @@ static int translate_keybind_spec(char key_name[])
       if (key_name[key_length-2] == 'n') {
          if (digits > 9 || key_length < 3)
             return -1;
-
-         if (key_length == 3 && key_name[0] == 'c') {
+         else if (key_length == 3 && ctl) {
             return CTLNKP+digits;
          }
-         else if (key_length == 3 && key_name[0] == 'a') {
+         else if (key_length == 3 && alt) {
             return ALTNKP+digits;
          }
-         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+         else if (key_length == 4 && ctlalt) {
             return CTLALTNKP+digits;
          }
          else {
@@ -197,29 +213,29 @@ static int translate_keybind_spec(char key_name[])
          if (key_length == 2) {
             return EKEY+digits;
          }
-         else if (key_length == 3 && key_name[0] == 's') {
+         else if (key_length == 3 && shift) {
             return SEKEY+digits;
          }
-         else if (key_length == 3 && key_name[0] == 'c') {
+         else if (key_length == 3 && ctl) {
             return CEKEY+digits;
          }
-         else if (key_length == 3 && key_name[0] == 'a') {
+         else if (key_length == 3 && alt) {
             return AEKEY+digits;
          }
-         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+         else if (key_length == 4 && ctlalt) {
             return CAEKEY+digits;
          }
          else {
             return -1;
          }
       }
-      else if (key_length == 2 && key_name[0] == 'c') {
+      else if (key_length == 2 && ctl) {
          return CTLDIG+digits;
       }
-      else if (key_length == 2 && key_name[0] == 'a') {
+      else if (key_length == 2 && alt) {
          return ALTDIG+digits;
       }
-      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
+      else if (key_length == 3 && ctlalt) {
          return CTLALTDIG+digits;
       }
       else { 
@@ -227,13 +243,13 @@ static int translate_keybind_spec(char key_name[])
       }
    }
    else if (key_name[key_length-1] >= 'a' && key_name[key_length-1] <= 'z') {
-      if (key_length == 2 && key_name[0] == 'c') {
+      if (key_length == 2 && ctl) {
          return CTLLET+key_name[key_length-1]+'A'-'a';
       }
-      else if (key_length == 2 && key_name[0] == 'a') {
+      else if (key_length == 2 && alt) {
          return ALTLET+key_name[key_length-1]+'A'-'a';
       }
-      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
+      else if (key_length == 3 && ctlalt) {
          return CTLALTLET+key_name[key_length-1]+'A'-'a';
       }
       else {
@@ -249,6 +265,7 @@ extern void do_accelerator_spec(Cstring qq)
 {
    char key_name[MAX_FILENAME_LENGTH];
    char junk_name[MAX_FILENAME_LENGTH];
+   char errbuf[255];
    modifier_block **table_thing;
    modifier_block *newthing;
    int ccount;
@@ -272,7 +289,7 @@ extern void do_accelerator_spec(Cstring qq)
    }
 
    if (keybindcode < 0) {
-      printf("Bad format in key binding \"%s\".\n", qq);
+      uims_database_error("Bad format in key binding.", qq);
       return;
    }
 
@@ -317,15 +334,15 @@ extern void do_accelerator_spec(Cstring qq)
          /* Didn't find the target of the key binding.  Below C4X, failure to find
             something could just mean that it was a call off the list.  At C4X, we
             take it seriously.  So the initialization file should always be tested at C4X. */
-         if (calling_level >= l_c4x) {
-            uims_database_error("Didn't find target of key binding", qq);
-         }
+         if (calling_level >= l_c4x)
+            uims_database_error("Didn't find target of key binding.", qq);
+
          return;
       }
 
       if (user_match.match.packed_next_conc_or_subcall ||
           user_match.match.packed_secondary_subcall) {
-         printf("Target of key binding \"%s\" is too complicated.\n", qq);
+         uims_database_error("Target of key binding is too complicated.", qq);
          return;
       }
    }
@@ -342,7 +359,7 @@ extern void do_accelerator_spec(Cstring qq)
       table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
    }
    else {
-      printf("Anomalous key binding \"%s\".\n", qq);
+      uims_database_error("Anomalous key binding.", qq);
       return;
    }
 
@@ -350,7 +367,8 @@ extern void do_accelerator_spec(Cstring qq)
    *newthing = user_match.match;
 
    if (*table_thing) {
-      printf("Redundant key binding \"%s\".\n", qq);
+      sprintf(errbuf, "Redundant key binding.");
+      uims_database_error(errbuf, qq);
       return;
    }
 
@@ -476,7 +494,7 @@ extern void matcher_initialize(void)
       selector_hash_list_size = 1;
 
       if (!get_hash("<an", &bucket)) {
-         fprintf(stderr, "Can't hash selector base!\n");
+         uims_database_error("Can't hash selector base!", (Cstring) 0);
          exit_program(2);
       }
 
@@ -484,7 +502,9 @@ extern void matcher_initialize(void)
 
       for (i=1; i<=last_selector_kind; i++) {
          if (!get_hash(selector_list[i].name, &bucket)) {
-            fprintf(stderr, "Can't hash selector %d - 1!\n", i);
+            char errbuf[255];
+            sprintf(errbuf, "Can't hash selector %d - 1!", i);
+            uims_database_error(errbuf, (Cstring) 0);
             exit_program(2);
          }
 
@@ -495,7 +515,8 @@ extern void matcher_initialize(void)
          }
 
          selector_hash_list_size++;
-         selector_hash_list = (short *) get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
+         selector_hash_list = (short *)
+            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
          selector_hash_list[selector_hash_list_size-1] = bucket;
 
          /* Now do it again for the singular names. */
@@ -503,7 +524,9 @@ extern void matcher_initialize(void)
          already_in1:
 
          if (!get_hash(selector_list[i].sing_name, &bucket)) {
-            fprintf(stderr, "Can't hash selector %d - 2!\n", i);
+            char errbuf[255];
+            sprintf(errbuf, "Can't hash selector %d - 2!", i);
+            uims_database_error(errbuf, (Cstring) 0);
             exit_program(2);
          }
 
@@ -512,7 +535,8 @@ extern void matcher_initialize(void)
          }
 
          selector_hash_list_size++;
-         selector_hash_list = (short *) get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
+         selector_hash_list = (short *)
+            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
          selector_hash_list[selector_hash_list_size-1] = bucket;
 
          already_in2: ;
@@ -524,7 +548,7 @@ extern void matcher_initialize(void)
       tagger_hash_list_size = 1;
 
       if (!get_hash("<at", &bucket)) {
-         fprintf(stderr, "Can't hash tagger base!\n");
+         uims_database_error("Can't hash tagger base!", (Cstring) 0);
          exit_program(2);
       }
 
@@ -533,7 +557,9 @@ extern void matcher_initialize(void)
       for (i=0; i<NUM_TAGGER_CLASSES; i++) {
          for (ku=0; ku<number_of_taggers[i]; ku++) {
             if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
-               fprintf(stderr, "Can't hash tagger %d %d!\n", i, (int) ku);
+               char errbuf[255];
+               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
+               uims_database_error(errbuf, (Cstring) 0);
                exit_program(2);
             }
    
@@ -542,9 +568,9 @@ extern void matcher_initialize(void)
             }
    
             tagger_hash_list_size++;
-            tagger_hash_list =
-              (short *) get_more_mem(tagger_hash_list,
-                                     tagger_hash_list_size * sizeof(short));
+            tagger_hash_list = (short *)
+               get_more_mem(tagger_hash_list,
+                            tagger_hash_list_size * sizeof(short));
             tagger_hash_list[tagger_hash_list_size-1] = bucket;
    
             already_in3: ;
@@ -574,7 +600,9 @@ extern void matcher_initialize(void)
                for (j=0 ; j<selector_hash_list_size ; j++) {
                   bucket = selector_hash_list[j];
                   call_hash_list_sizes[bucket]++;
-                  call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+                  call_hash_lists[bucket] = (short *)
+                     get_more_mem(call_hash_lists[bucket],
+                                  call_hash_list_sizes[bucket] * sizeof(short));
                   call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
                }
                continue;
@@ -586,9 +614,9 @@ extern void matcher_initialize(void)
                for (j=0 ; j<tagger_hash_list_size ; j++) {
                   bucket = tagger_hash_list[j];
                   call_hash_list_sizes[bucket]++;
-                  call_hash_lists[bucket] =
-                    (short *) get_more_mem(call_hash_lists[bucket],
-                                           call_hash_list_sizes[bucket] * sizeof(short));
+                  call_hash_lists[bucket] = (short *)
+                     get_more_mem(call_hash_lists[bucket],
+                                  call_hash_list_sizes[bucket] * sizeof(short));
                   call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
                }
                continue;
@@ -596,7 +624,9 @@ extern void matcher_initialize(void)
             else if (name[1] == '0' || name[1] == 'm') {
                 /* We act as though any string starting with "[" hashes to BRACKET_HASH. */
                call_hash_list_sizes[BRACKET_HASH]++;
-               call_hash_lists[BRACKET_HASH] = (short *) get_more_mem(call_hash_lists[BRACKET_HASH], call_hash_list_sizes[BRACKET_HASH] * sizeof(short));
+               call_hash_lists[BRACKET_HASH] = (short *)
+                  get_more_mem(call_hash_lists[BRACKET_HASH],
+                               call_hash_list_sizes[BRACKET_HASH] * sizeof(short));
                call_hash_lists[BRACKET_HASH][call_hash_list_sizes[BRACKET_HASH]-1] = i;
                continue;
             }
@@ -609,7 +639,9 @@ extern void matcher_initialize(void)
 
          if (get_hash(name, &bucket)) {
             call_hash_list_sizes[bucket]++;
-            call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+            call_hash_lists[bucket] = (short *)
+               get_more_mem(call_hash_lists[bucket],
+                            call_hash_list_sizes[bucket] * sizeof(short));
             call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
             continue;
          }
@@ -618,7 +650,9 @@ extern void matcher_initialize(void)
             and also into EVERY OTHER BUCKET!!!! */
          for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
             call_hash_list_sizes[bucket]++;
-            call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+            call_hash_lists[bucket] = (short *)
+               get_more_mem(call_hash_lists[bucket],
+                            call_hash_list_sizes[bucket] * sizeof(short));
             call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
          }
       }
@@ -636,14 +670,18 @@ extern void matcher_initialize(void)
             for (j=0 ; j<selector_hash_list_size ; j++) {
                bucket = selector_hash_list[j];
                conc_hash_list_sizes[bucket]++;
-               conc_hash_lists[bucket] = (short *) get_more_mem(conc_hash_lists[bucket], conc_hash_list_sizes[bucket] * sizeof(short));
+               conc_hash_lists[bucket] = (short *)
+                  get_more_mem(conc_hash_lists[bucket],
+                               conc_hash_list_sizes[bucket] * sizeof(short));
                conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
             }
             continue;
          }
          else if (get_hash(name, &bucket)) {
             conc_hash_list_sizes[bucket]++;
-            conc_hash_lists[bucket] = (short *) get_more_mem(conc_hash_lists[bucket], conc_hash_list_sizes[bucket] * sizeof(short));
+            conc_hash_lists[bucket] = (short *)
+               get_more_mem(conc_hash_lists[bucket],
+                            conc_hash_list_sizes[bucket] * sizeof(short));
             conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
             continue;
          }
@@ -652,7 +690,9 @@ extern void matcher_initialize(void)
             and also into EVERY OTHER BUCKET!!!! */
          for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
             conc_hash_list_sizes[bucket]++;
-            conc_hash_lists[bucket] = (short *) get_more_mem(conc_hash_lists[bucket], conc_hash_list_sizes[bucket] * sizeof(short));
+            conc_hash_lists[bucket] = (short *)
+               get_more_mem(conc_hash_lists[bucket],
+                            conc_hash_list_sizes[bucket] * sizeof(short));
             conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
          }
       }
@@ -670,14 +710,18 @@ extern void matcher_initialize(void)
             for (j=0 ; j<selector_hash_list_size ; j++) {
                bucket = selector_hash_list[j];
                conclvl_hash_list_sizes[bucket]++;
-               conclvl_hash_lists[bucket] = (short *) get_more_mem(conclvl_hash_lists[bucket], conclvl_hash_list_sizes[bucket] * sizeof(short));
+               conclvl_hash_lists[bucket] = (short *)
+                  get_more_mem(conclvl_hash_lists[bucket],
+                               conclvl_hash_list_sizes[bucket] * sizeof(short));
                conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
             }
             continue;
          }
          else if (get_hash(name, &bucket)) {
             conclvl_hash_list_sizes[bucket]++;
-            conclvl_hash_lists[bucket] = (short *) get_more_mem(conclvl_hash_lists[bucket], conclvl_hash_list_sizes[bucket] * sizeof(short));
+            conclvl_hash_lists[bucket] = (short *)
+               get_more_mem(conclvl_hash_lists[bucket],
+                            conclvl_hash_list_sizes[bucket] * sizeof(short));
             conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
             continue;
          }
@@ -686,7 +730,9 @@ extern void matcher_initialize(void)
             and also into EVERY OTHER BUCKET!!!! */
          for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
             conclvl_hash_list_sizes[bucket]++;
-            conclvl_hash_lists[bucket] = (short *) get_more_mem(conclvl_hash_lists[bucket], conclvl_hash_list_sizes[bucket] * sizeof(short));
+            conclvl_hash_lists[bucket] = (short *)
+               get_more_mem(conclvl_hash_lists[bucket],
+                            conclvl_hash_list_sizes[bucket] * sizeof(short));
             conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
          }
       }

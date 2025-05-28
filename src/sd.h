@@ -1,8 +1,6 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -879,9 +877,7 @@ typedef struct {
 #define CFLAGHSPARE_4                     0x00000400UL
 #define CFLAGHSPARE_5                     0x00000800UL
 #define CFLAGHSPARE_6                     0x00001000UL
-/* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
-   They must lie in the top 8 bits for now. */
-#define CFLAG2_YOYO_FRACTAL_NUM           0x01000000UL
+/* We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits. */
 
 
 /* These flags go along for the ride, in some parts of the code (BUT NOT
@@ -1279,6 +1275,12 @@ typedef struct {
    int after;
 } concept_fixer_thing;
 
+typedef enum {
+   resolve_goodness_only_nice,
+   resolve_goodness_always,
+   resolve_goodness_maybe
+} resolve_goodness_test;
+
 
 #define zig_zag_level l_a2
 #define cross_by_level l_c1
@@ -1430,6 +1432,7 @@ extern map_thing map_rh_c1phana;                                    /* in SDTABL
 extern map_thing map_rh_c1phanb;                                    /* in SDTABLES */
 extern map_thing map_rh_s2x3_3;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_2;                                     /* in SDTABLES */
+extern map_thing map_d1x10;                                         /* in SDTABLES */
 extern map_thing map_lz12;                                          /* in SDTABLES */
 extern map_thing map_rz12;                                          /* in SDTABLES */
 extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
@@ -1464,6 +1467,8 @@ extern warning_info conc_elong_warnings;                            /* in SDMAIN
 extern warning_info dyp_each_warnings;                              /* in SDMAIN */
 extern warning_info useless_phan_clw_warnings;                      /* in SDMAIN */
 
+extern command_kind search_goal;                                    /* in SDPICK */
+
 extern long_boolean selector_used;                                  /* in SDPREDS */
 extern long_boolean number_used;                                    /* in SDPREDS */
 extern long_boolean mandatory_call_used;                            /* in SDPREDS */
@@ -1493,7 +1498,30 @@ extern long_boolean query_for_call(void);
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
 extern long_boolean sequence_is_resolved(void);
 
-/* In PREDS */
+/* In SDPICK */
+
+extern void reset_internal_iterators(void);
+extern selector_kind do_selector_iteration(long_boolean allow_iteration);
+extern direction_kind do_direction_iteration(void);
+extern void do_number_iteration(int howmanynumbers,
+                                uint32 odd_number_only,
+                                long_boolean allow_iteration,
+                                uint32 *number_list);
+extern void do_circcer_iteration(uint32 *circcp);
+extern long_boolean do_tagger_iteration(uint32 tagclass,
+                                        uint32 *tagg,
+                                        uint32 numtaggers,
+                                        callspec_block **tagtable);
+extern callspec_block *do_pick(void);
+extern concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
+extern resolve_goodness_test get_resolve_goodness_info(void);
+extern long_boolean pick_allow_multiple_items(void);
+extern void start_pick(void);
+extern void end_pick(void);
+extern long_boolean forbid_call_with_mandatory_subcall(void);
+extern long_boolean allow_random_subcall_pick(void);
+
+/* In SDPREDS */
 
 extern long_boolean selectp(setup *ss, int place);
 
@@ -1575,7 +1603,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
 
 extern resolve_indicator resolve_p(setup *s);
 extern void write_resolve_text(long_boolean doing_file);
-extern uims_reply full_resolve(command_kind goal);
+extern uims_reply full_resolve(void);
 extern int concepts_in_place(void);
 extern int reconcile_command_ok(void);
 extern int resolve_command_ok(void);

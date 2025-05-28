@@ -776,9 +776,13 @@ extern long_boolean check_restriction(
 
    /* Now check all the other stuff. */
 
-   /* This next restriction is independent of whether we are line-like or column-like. */
-
-   if (restr.assumption == cr_siamese_in_quad) {
+   switch (restr.assumption) {
+   case cr_real_1_4_tag: case cr_real_3_4_tag:
+   case cr_real_1_4_line: case cr_real_3_4_line:
+      /* These are not legal if they weren't handled already. */
+      goto restr_failed;
+   case cr_siamese_in_quad:
+      /* This is independent of whether we are line-like or column-like. */
       for (idx=0 ; idx<4 ; idx++) {
          int ii;
          int perquad = (setup_attrs[ss->kind].setup_limits+1) >> 2;
@@ -798,6 +802,7 @@ extern long_boolean check_restriction(
 
          if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
       }
+      break;
    }
 
    if (restr.assump_col & 1) {

@@ -723,15 +723,15 @@ char *flagtab1[] = {
    "step_to_wave",
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
-   "dont_use_in_resolve",
+   "left_means_touch_or_check",
    "neednumber",
    "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
    "need_four_numbers",
    "sequence_starter",
    "split_like_square_thru",
    "distribute_repetitions",
-   "left_means_touch_or_check",
-   "can_be_fan",
+   "dont_use_in_resolve",
+   "dont_use_in_nice_resolve",
    "yield_if_ambiguous",
    "no_elongation_allowed",
    "base_tag_call_0",
@@ -743,6 +743,7 @@ char *flagtab1[] = {
    "one_person_call",
    "preserve_z_stuff",
    "yoyo_fractal_numbers",
+   "can_be_fan",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */

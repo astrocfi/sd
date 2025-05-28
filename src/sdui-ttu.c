@@ -149,7 +149,6 @@ extern void ttu_initialize(void)
 
 extern void ttu_terminate(void)
 {
-   if (journal_file) (void) fclose(journal_file);
 #ifndef NO_CURSES
    if (!no_cursor) {
       if (curses_initialized) {

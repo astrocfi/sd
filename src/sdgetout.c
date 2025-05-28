@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1999  William B. Ackerman.
@@ -28,6 +26,9 @@
 
 #include "sd.h"
 
+/* This is the number of resolves that we try in response to each
+   "find another" command, before reporting failure.  For a long time, it was 5000. */
+#define ATTEMPTS_PER_COMMAND 15000
 
 
 typedef struct {
@@ -632,7 +633,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    testing_fidelity = FALSE;
    history_ptr = history_save;
    attempt_count++;
-   if (attempt_count > 5000) {
+   if (attempt_count > ATTEMPTS_PER_COMMAND) {
       /* Too many tries -- too bad. */
       history_ptr = huge_history_ptr;
 
@@ -646,12 +647,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
          we do this.  This could have the effect of prematurely terminating an
          iteration search, but no one will notice. */
 
-      selector_iterator = 0;
-      direction_iterator = 0;
-      number_iterator = 0;
-      tagger_iterator = 0;
-      circcer_iterator = 0;
-
+      reset_internal_iterators();
       retval = FALSE;
       goto timeout;
    }
@@ -757,18 +753,24 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
       if (r == resolve_none) goto what_a_loss;
 
-      if (interactivity == interactivity_in_first_scan) {
-         /* First scan:  only accept things with "how_bad" = 0, that is,
-            RLG, LA, and prom.  And only if one call long. */
-         if (resolve_table[r].how_bad != 0) goto what_a_loss;
-      }
-      else if (interactivity == interactivity_in_second_scan) {
-         /* Second scan:  accept any one-call resolve. */
-         ;
-      }
-      else {
-         /* Later scans:  accept resolves based on how bad they are. */
-         if (attempt_count & resolve_table[r].how_bad) goto what_a_loss;
+      switch (get_resolve_goodness_info()) {
+      case resolve_goodness_only_nice:
+         /* Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
+            Furthermore, at C2 and above, only accept if promenade distance
+            is 0 to 3/8. */
+         if (resolve_table[r].how_bad != 0 ||
+             (calling_level >= l_c2 &&
+              ((history[history_ptr+1].resolve_flag.distance & 7) > 3)))
+            goto what_a_loss;
+         break;
+      case resolve_goodness_always:
+         /* Accept any one-call resolve. */
+         break;
+      case resolve_goodness_maybe:
+         /* Accept resolves randomly.  The probability that we reject a
+            resolve increases as the resolve quality goes down. */
+         if (resolve_table[r].how_bad & attempt_count) goto what_a_loss;
+         break;
       }
    }
    else if (goal == command_normalize) {
@@ -1053,7 +1055,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
    what_a_loss:
 
-   if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) goto try_again;
+   if (!pick_allow_multiple_items()) goto try_again;
 
    if (++little_count == 60) {
       /* Revert back to beginning. */
@@ -1101,7 +1103,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 }
 
 
-extern uims_reply full_resolve(command_kind goal)
+extern uims_reply full_resolve(void)
 {
    int j, k;
    uims_reply reply;
@@ -1110,7 +1112,7 @@ extern uims_reply full_resolve(command_kind goal)
    personrec *current_people = history[history_ptr].state.people;
    int current_depth = 0;
    long_boolean find_another_resolve = TRUE;
-   resolver_display_state state; /* for display to the user */
+   resolver_display_state big_state; /* for display to the user */
 
    /* Allocate or reallocate the huge_history_save save array if needed. */
 
@@ -1143,7 +1145,7 @@ extern uims_reply full_resolve(command_kind goal)
 
    /* See if we are in a reasonable position to do the search. */
 
-   switch (goal) {
+   switch (search_goal) {
       case command_resolve:
          if (!resolve_command_ok())
             specialfail("Not in acceptable setup for resolve.");
@@ -1181,34 +1183,20 @@ extern uims_reply full_resolve(command_kind goal)
    max_resolve_index = 0;
    avoid_list_size = 0;
 
-   uims_begin_search(goal);
-   if (goal == command_reconcile) show_resolve = FALSE;
+   uims_begin_search(search_goal);
+   if (search_goal == command_reconcile) show_resolve = FALSE;
 
-   /* Following a suggestion of Eric Brosius, we initially scan the entire database once,
-      looking for one-call resolves, before we start the complex search.  This way, we
-      will never show a multiple-call resolve if a single-call one exists.  Of course,
-      it's not really that simple -- if a call takes a number, direction, or person,
-      we will only use one canned value for it, so we could miss a single call resolve
-      on this first pass if that call involves an interesting number, etc. */
-
-   if (     goal == command_resolve ||
-            goal == command_reconcile ||
-            goal == command_normalize ||
-            goal == command_standardize ||
-            goal >= command_create_any_lines)
-      interactivity = interactivity_starting_first_scan;
-   else
-      interactivity = interactivity_in_random_search;
+   start_pick();   /* This sets interactivity, among other stuff. */
 
    for (;;) {
       /* We know the history is restored at this point. */
       if (find_another_resolve) {
          /* Put up the resolve title showing that we are searching. */
-         uims_update_resolve_menu(goal, current_resolve_index, max_resolve_index, resolver_display_searching);
+         uims_update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
          (void) restore_parse_state();
 
-         if (inner_search(goal, &all_resolves[max_resolve_index], current_depth)) {
+         if (inner_search(search_goal, &all_resolves[max_resolve_index], current_depth)) {
             /* Search succeeded, save it. */
             max_resolve_index++;
             /* Make it the current one. */
@@ -1216,11 +1204,11 @@ extern uims_reply full_resolve(command_kind goal)
 
             /* Put up the resolve title showing this resolve,
                but without saying "searching". */
-            state = resolver_display_ok;
+            big_state = resolver_display_ok;
          }
          else {
             /* Put up a resolve title indicating failure. */
-            state = resolver_display_failed;
+            big_state = resolver_display_failed;
          }
 
          written_history_items = -1;
@@ -1234,7 +1222,7 @@ extern uims_reply full_resolve(command_kind goal)
       else {
          /* Just display the sequence with the current resolve inserted. */
          /* Put up a neutral resolve title. */
-         state = resolver_display_ok;
+         big_state = resolver_display_ok;
       }
 
       /* Modify the history to show the current resolve. */
@@ -1279,10 +1267,11 @@ extern uims_reply full_resolve(command_kind goal)
 
          /* Show the history up to the start of the resolve, forcing a picture on the last item (unless reconciling). */
 
-         display_initial_history(huge_history_ptr-this_resolve->insertion_point, goal != command_reconcile);
+         display_initial_history(huge_history_ptr-this_resolve->insertion_point,
+                                 search_goal != command_reconcile);
 
          /* Or a dotted line if doing a reconcile. */
-         if (goal == command_reconcile) {
+         if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
             newline();
          }
@@ -1293,10 +1282,13 @@ extern uims_reply full_resolve(command_kind goal)
             write_history_line(j, (char *) 0, FALSE, file_write_no);
 
          /* Show the last item of the resolve, with a forced picture. */
-         write_history_line(history_ptr-this_resolve->insertion_point, (char *) 0, goal != command_reconcile, file_write_no);
+         write_history_line(history_ptr-this_resolve->insertion_point,
+                            (char *) 0,
+                            search_goal != command_reconcile,
+                            file_write_no);
 
          /* Or a dotted line if doing a reconcile. */
-         if (goal == command_reconcile) {
+         if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
             newline();
          }
@@ -1324,7 +1316,7 @@ extern uims_reply full_resolve(command_kind goal)
          newline();
       }
 
-      uims_update_resolve_menu(goal, current_resolve_index, max_resolve_index, state);
+      uims_update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, big_state);
 
       show_resolve = TRUE;
 
@@ -1404,6 +1396,7 @@ extern uims_reply full_resolve(command_kind goal)
    getout:
 
    interactivity = interactivity_normal;
+   end_pick();
    return reply;
 }
 
@@ -1526,7 +1519,7 @@ extern int nice_setup_command_ok(void)
 }
 
 /*
- * Create a string representing the search state.  Goal indicates which user command
+ * Create a string representing the search state.  Search_goal indicates which user command
  * is being performed.  If there is no current solution,
  * then M and N are both 0.  If there is a current
  * solution, the M is the solution index (minimum value 1) and N is the maximum

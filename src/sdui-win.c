@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1999  William B. Ackerman.
@@ -27,7 +25,7 @@
     This is for version 32. */
 
 
-static char *sdui_version = "4.5";
+static char *sdui_version = "4.8";
 
 
 /* This file defines the following functions:
@@ -74,8 +72,6 @@ static char *sdui_version = "4.5";
 #include "database.h"
 #include "sdui.h"
 #include "sdmatch.h"
-extern void initialize_concept_sublists(void);
-extern void build_database(call_list_mode_t call_list_mode);
 #include "resource.h"
 
 #pragma comment(lib, "comctl32")
@@ -102,9 +98,16 @@ LRESULT CALLBACK MainWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK TranscriptWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK MyEditProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK MyListProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK MyAcceptProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK MyCancelProc(HWND, UINT, WPARAM, LPARAM);
 
 static WNDPROC oldEditProc;
 static WNDPROC oldListProc;
+static WNDPROC oldAcceptProc;
+static WNDPROC oldCancelProc;
+
+
+
 
 static int wherearewe;
 
@@ -113,24 +116,27 @@ static int wherearewe;
 #define LISTBOX_INDEX 98
 #define PROGRESS_INDEX 96
 #define TRANSCRIPT_INDEX 95
-#define ACCEPT_INDEX 94
+#define ACCEPT_BUTTON_INDEX 94
+#define CANCEL_BUTTON_INDEX 93
 // Concocted index for user hitting <enter>.
-#define ENTER_INDEX 93
-#define ESCAPE_INDEX 92
-#define STATUSBAR_INDEX 91
+#define ENTER_INDEX 92
+#define ESCAPE_INDEX 91
+#define STATUSBAR_INDEX 90
 
 
-typedef struct {
-   char Line [90];
-   void *Next;
+#define DISPLAY_LINE_LENGTH 90
+
+typedef struct DisplayTypetag {
+   char Line [DISPLAY_LINE_LENGTH];
+   int in_picture;
+   int Height;
+   int DeltaToNext;
+   struct DisplayTypetag *Next;
+   struct DisplayTypetag *Prev;
 } DisplayType;
 
 
 #define ui_undefined -999
-
-extern int main(int argc, char *argv[]);
-
-void ShowListBox(int WhichOne);
 
 
 static char szComment         [MAX_TEXT_LINE_LENGTH];
@@ -140,6 +146,12 @@ static char szCallListFilename[MAX_TEXT_LINE_LENGTH];
 static char szDatabaseFilename[MAX_TEXT_LINE_LENGTH];
 static char szSequenceLabel   [MAX_TEXT_LINE_LENGTH];
 static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
+static int GLOBStatusBarLength;
+static Cstring szGLOBFirstPane;
+static HPALETTE hPalette;   // The palette that the system makes for us.
+static LPBITMAPINFO lpBi;   // Address of the DBI (bitmap file) mapped in memory.
+static LPTSTR lpBits;       // Address of the pixel data in same.
+
 
 static HINSTANCE GLOBhInstance;
 static int GLOBiCmdShow;
@@ -148,14 +160,26 @@ static LOGFONT LogFont;
 static CHOOSEFONT cf;
 
 static HWND hwndMain;
-static HWND hwndButton;
+static HWND hwndAcceptButton;
+static HWND hwndCancelButton;
 static HWND hwndEdit;
 static HWND hwndList;
 static HWND hwndProgress;
 static HWND hwndTranscript;
 static HWND hwndStatusBar;
 
+/* If not in a popup, the focus table has
+   hwndEdit, hwndAcceptButton, and hwndTranscript.
+   If in a popup, it has
+   hwndEdit, hwndAcceptButton, hwndCancelButton, and hwndTranscript.
+*/
 
+static HWND ButtonFocusTable[4];
+
+
+static BOOL InPopup = FALSE;
+static int ButtonFocusIndex = 0;  // What thing (from ButtonFocusTable) has the focus.
+static int ButtonFocusHigh = 2;   // 3 if in popup, else 2
 static BOOL NewMenu = TRUE;
 static BOOL MenuEnabled = FALSE;
 static BOOL FileIsOpen = FALSE;
@@ -174,7 +198,13 @@ static int nVscrollInc;
 static int nHscrollPos;
 static int nHscrollMax;
 static int nHscrollInc;
-static int nLineCnt;
+static int nTotalImageHeight;   // Total height of the stuff that we would
+                                // like to show in the transcript window.
+static int nImageOffTop = 0;       // Amount of that stuff that is scrolled off the top.
+static int nActiveTranscriptSize = 500;   // Amount that we tell the scroll
+                                          // that we believe the screen holds
+static int pagesize;           // Amount we tell it to scroll if user clicks in dead scroll area
+static int BottomFudge;
 static int nYchar;
 static int nXchar;
 static int SpecialConceptMenu;
@@ -195,16 +225,14 @@ static DisplayType *CurDisplay = NULL;
 
 static int XVal = 10;
 static int YVal = 30;
-static int screensize = 42;   // Amount that we tell the scroll that we believe the screen holds
-static int pagesize = 40;     // Amount we tell it to scroll if user clicks in dead scroll area
-static int position = 0;
-static int BottomFudge;
+static int TranscriptTextWidth;
 static int TranscriptTextHeight;
-static int AnsiTextHeight;
-static int TextWidth;
 static int AnsiTextWidth;
+static int AnsiTextHeight;
 static int SystemTextWidth;
 static int SystemTextHeight;
+static int ButtonTopYCoord;
+static int TranscriptEdge;
 
 
 
@@ -214,25 +242,115 @@ static uims_reply my_reply;
 static long_boolean my_retval;
 
 static RECT CallsClientRect;
+static RECT TranscriptClientRect;
 
 
 
-static void YTC(HWND hwnd)
+static void UpdateStatusBar(Cstring szFirstPane)
 {
-   MessageBox(hwndMain, "Not yet available", "Under Construction", MB_OK);
+   int StatusBarDimensions[6];
+
+   if (szFirstPane)
+      szGLOBFirstPane = szFirstPane;
+
+   StatusBarDimensions[0] = 3*GLOBStatusBarLength/8;
+   StatusBarDimensions[1] = 1*GLOBStatusBarLength/2;
+   StatusBarDimensions[2] = 5*GLOBStatusBarLength/8;
+   StatusBarDimensions[3] = 3*GLOBStatusBarLength/4;
+   StatusBarDimensions[4] = 7*GLOBStatusBarLength/8;
+   StatusBarDimensions[5] = -1;
+
+   if (allowing_modifications || allowing_all_concepts ||
+       using_active_phantoms || singing_call_mode || nowarn_mode) {
+      (void) SendMessage(hwndStatusBar, SB_SETPARTS, 6, (LPARAM) StatusBarDimensions);
+
+      SendMessage(hwndStatusBar, SB_SETTEXT, 1,
+                  (LPARAM) ((allowing_modifications == 2) ? "all mods" :
+                            (allowing_modifications ? "simple mods" : "")));
+
+      SendMessage(hwndStatusBar, SB_SETTEXT, 2,
+                  (LPARAM) (allowing_all_concepts ? "all concepts" : ""));
+
+      SendMessage(hwndStatusBar, SB_SETTEXT, 3,
+                  (LPARAM) (using_active_phantoms ? "active phantoms" : ""));
+
+      SendMessage(hwndStatusBar, SB_SETTEXT, 4,
+                  (LPARAM) ((singing_call_mode == 2) ? "rev singer" :
+                            (singing_call_mode ? "singer" : "")));
+
+      SendMessage(hwndStatusBar, SB_SETTEXT, 5,
+                  (LPARAM) (nowarn_mode ? "no warn" : ""));
+   }
+   else {
+      (void) SendMessage(hwndStatusBar, SB_SETPARTS, 1, (LPARAM) StatusBarDimensions);
+   }
+
+   (void) SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szGLOBFirstPane);
+   (void) SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
+   UpdateWindow(hwndStatusBar);
 }
 
+
+static void Update_text_display(void)
+{
+   SCROLLINFO Scroll;
+   RECT ClientRect;
+   DisplayType *DisplayPtr;
+   int Ystuff;
+
+   for (Ystuff=0,DisplayPtr=DisplayRoot;
+        DisplayPtr->Line[0] != -1;
+        DisplayPtr=DisplayPtr->Next) {
+      Ystuff += DisplayPtr->DeltaToNext;
+   }
+
+   nTotalImageHeight = Ystuff;
+
+   // Round this up.
+   nImageOffTop = (nTotalImageHeight-nActiveTranscriptSize+TranscriptTextHeight-1)/
+      TranscriptTextHeight;
+
+   if (nImageOffTop < 0) nImageOffTop = 0;
+
+   Scroll.cbSize = sizeof(SCROLLINFO);
+   Scroll.fMask = SIF_RANGE | SIF_POS | SIF_PAGE;
+   Scroll.nMin = 0;
+   Scroll.nMax = (nTotalImageHeight/TranscriptTextHeight)-1;
+   Scroll.nPage = (nActiveTranscriptSize/TranscriptTextHeight);
+   Scroll.nPos = nImageOffTop;
+
+   SetScrollInfo(hwndTranscript, SB_VERT, &Scroll, TRUE);
+   GetClientRect(hwndTranscript, &ClientRect);
+   InvalidateRect(hwndTranscript, &ClientRect, TRUE);  // Be sure we erase the background.
+}
+
+
+static DisplayType *question_stuff_to_erase = (DisplayType *) 0;
+
+static void erase_questionable_stuff(void)
+{
+   if (question_stuff_to_erase) {
+      CurDisplay = DisplayRoot;
+      while (CurDisplay->Line[0] != -1 && CurDisplay != question_stuff_to_erase)
+         CurDisplay = CurDisplay->Next;
+
+      CurDisplay->Line[0] = -1;
+      question_stuff_to_erase = (DisplayType *) 0;
+      Update_text_display();
+   }
+}
 
 
 extern void show_match(void)
 {
+   char szLocalString[MAX_TEXT_LINE_LENGTH];
+   szLocalString[0] = '\0';
+   if (static_ss.result.indent) lstrcat(szLocalString, "   ");
+   lstrcat(szLocalString, static_ss.full_input);
+   lstrcat(szLocalString, static_ss.extension);
+   szLocalString[85] = '\0';  /* Just to be sure. */
+   uims_add_new_line(szLocalString, 0);
 }
-
-
-static int dialog_menu_index;
-static int dialog_menu_count;
-static Cstring dialog_prompt;
-static Cstring *dialog_menu;
 
 
 
@@ -273,40 +391,68 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
       }
    }
-   else if (nLen >= 0 && lstrcmp(szLocalString, static_ss.full_input)) {
-      char cCurChar = szLocalString[nLen];
+   else if (lstrcmp(szLocalString, static_ss.full_input)) {
+      if (nLen >= 0) {
+         char cCurChar = szLocalString[nLen];
 
-      if (cCurChar == ' ' || cCurChar == '-') {
-         lstrcpy(static_ss.full_input, szLocalString);
-         static_ss.full_input[nLen] = '\0';
-         /* extend only to one space or hyphen, inclusive */
-         matches = match_user_input(nLastOne, FALSE, FALSE);
-         user_match = static_ss.result;
-         p = static_ss.extended_input;
+         if (cCurChar == '!' || cCurChar == '?') {
+            DisplayType *my_mark;
 
-         if (*p) {
+            szLocalString[nLen] = '\0';   /* Erase the '?' itself. */
+
+            /* Before we start, erase any previous stuff. */
+            erase_questionable_stuff();
+
+            if (nLen > 0) {    /* Don't do this on a blank line. */
+               my_mark = CurDisplay;
+               lstrcpy(static_ss.full_input, szLocalString);
+               /* This will call show_match with each match. */
+               (void) match_user_input(nLastOne, TRUE, cCurChar == '?');
+               question_stuff_to_erase = my_mark;
+            }
             changed_editbox = TRUE;
+         }
+         else if (cCurChar == ' ' || cCurChar == '-') {
+            erase_questionable_stuff();
+            lstrcpy(static_ss.full_input, szLocalString);
+            static_ss.full_input[nLen] = '\0';
+            /* extend only to one space or hyphen, inclusive */
+            matches = match_user_input(nLastOne, FALSE, FALSE);
+            user_match = static_ss.result;
+            p = static_ss.extended_input;
 
-            while (*p) {
-               if (*p != ' ' && *p != '-') {
-                  szLocalString[nLen++] = *p++;
-                  szLocalString[nLen] = '\0';
-               }
-               else {
-                  szLocalString[nLen++] = cCurChar;
-                  szLocalString[nLen] = '\0';
-                  goto pack_us;
+            if (*p) {
+               changed_editbox = TRUE;
+
+               while (*p) {
+                  if (*p != ' ' && *p != '-') {
+                     szLocalString[nLen++] = *p++;
+                     szLocalString[nLen] = '\0';
+                  }
+                  else {
+                     szLocalString[nLen++] = cCurChar;
+                     szLocalString[nLen] = '\0';
+                     goto pack_us;
+                  }
                }
             }
+            else if (!static_ss.space_ok || matches <= 1) {
+               uims_bell();
+               szLocalString[nLen] = '\0';    /* Do *not* pack the character. */
+               changed_editbox = TRUE;
+            }
          }
-         else if (!static_ss.space_ok || matches <= 1) {
-            szLocalString[nLen] = '\0';    /* Do *not* pack the character. */
-            changed_editbox = TRUE;
-         }
+         else
+            erase_questionable_stuff();
+      }
+      else {
+         erase_questionable_stuff();
+         goto scroll_listbox;
       }
    }
-   else
+   else {
       goto scroll_listbox;
+   }
 
  pack_us:
 
@@ -346,24 +492,184 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 }
 
 
-/* Returns TRUE if it acted on the keystroke. */
-long_boolean ProcessSpecialKeystroke(int id)
+
+
+/* Look for special programmed keystroke.  Act on it, and return 2 if it finds one.
+   Return 1 if we did not recognize it, but we don't want to shift
+   focus autimatically to the edit window.
+   Return 0 if it is not a recognized defined keystroke, but we think the
+   edit window ought to handle it. */
+static int LookupKeystrokeBinding(
+   UINT iMsg, WPARAM wParam, LPARAM lParam, WPARAM crcode)
 {
-   /* Look for special programmed keystrokes. */
+   modifier_block *keyptr;
+   int nc;
+   uint32 ctlbits;
+   int newparm = -99;
 
-   if (id >= SPECIAL_KEY_OFFSET+128) {
-      modifier_block *keyptr;
-      int nc = id - SPECIAL_KEY_OFFSET;
-      if (nc < FCN_KEY_TAB_LOW || nc > FCN_KEY_TAB_LAST)
-         return FALSE;      /* How'd this happen?  Ignore it. */
+   switch (iMsg) {
+   case WM_KEYDOWN:
+   case WM_SYSKEYDOWN:
+      ctlbits = (GetKeyState(VK_CONTROL)>>15) & 1;
+      ctlbits |= (GetKeyState(VK_SHIFT)>>14) & 2;
+      if (HIWORD(lParam) & KF_ALTDOWN) ctlbits |= 4;
 
-      keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
+      if (wParam == VK_RETURN || wParam == VK_ESCAPE) {
+         // These were already handled as "WM_CHAR" messages.
+         // Don't let either kind of message get to the default windproc
+         // when "enter" or "escape" is typed.
+         return 2;
+      }
+      if (wParam == VK_SHIFT || wParam == VK_CONTROL) {
+         return 1;    // We are not handling these, but don't change focus.
+      }
+      else if (wParam == VK_TAB) {
+         ButtonFocusIndex += 1 - (ctlbits & 2);   // Yeah, sleazy.
+         if (ButtonFocusIndex > ButtonFocusHigh) ButtonFocusIndex = 0;
+         else if (ButtonFocusIndex < 0) ButtonFocusIndex = ButtonFocusHigh;
+         SetFocus(ButtonFocusTable[ButtonFocusIndex]);
+         return 2;    // We have handled it.
+      }
+      else if (wParam == 0x0C) {
+         if (!(HIWORD(lParam) & KF_EXTENDED)) {
+            if (wParam = 0x0C) newparm = 5-200;
+         }
+      }
+      else if (wParam >= VK_PRIOR && wParam <= VK_DELETE) {
+         if (HIWORD(lParam) & KF_EXTENDED) {
+            if (ctlbits == 0)      newparm = wParam-VK_PRIOR+1+EKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 1) newparm = wParam-VK_PRIOR+1+CEKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 2) newparm = wParam-VK_PRIOR+1+SEKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 4) newparm = wParam-VK_PRIOR+1+AEKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 5) newparm = wParam-VK_PRIOR+1+CAEKEY+SPECIAL_KEY_OFFSET;
+         }
+         else {
+            switch (wParam) {
+            case 0x2D: newparm = 0-200; break;
+            case 0x23: newparm = 1-200; break;
+            case 0x28: newparm = 2-200; break;
+            case 0x22: newparm = 3-200; break;
+            case 0x25: newparm = 4-200; break; // 5 (wParam == 0x0C) is handled above
+            case 0x27: newparm = 6-200; break;
+            case 0x24: newparm = 7-200; break;
+            case 0x26: newparm = 8-200; break;
+            case 0x21: newparm = 9-200; break;
+            }
+         }
+      }
+      else if (wParam >= VK_F1 && wParam <= VK_F12) {
+            if (ctlbits == 0)      newparm = wParam-VK_F1+1+FKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 1) newparm = wParam-VK_F1+1+CFKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 2) newparm = wParam-VK_F1+1+SFKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 4) newparm = wParam-VK_F1+1+AFKEY+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 5) newparm = wParam-VK_F1+1+CAFKEY+SPECIAL_KEY_OFFSET;
+      }
+      else if (wParam >= 'A' && wParam <= 'Z' && (ctlbits & 4)) {
+         // We take alt or ctl-alt letters as key presses.
+         if (ctlbits & 1) newparm = wParam+CTLALTLET+SPECIAL_KEY_OFFSET;
+         else             newparm = wParam+ALTLET+SPECIAL_KEY_OFFSET;
+      }
+      else if (wParam >= '0' && wParam <= '9') {
+            if (ctlbits == 1)      newparm = wParam-'0'+CTLDIG+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 4) newparm = wParam-'0'+ALTDIG+SPECIAL_KEY_OFFSET;
+            else if (ctlbits == 5) newparm = wParam-'0'+CTLALTDIG+SPECIAL_KEY_OFFSET;
+      }
+      break;
+   case WM_CHAR:
+   case WM_SYSCHAR:
+      if (wParam == VK_RETURN) {
+         // If user hit "<enter>", act roughly as though she clicked the "ACCEPT"
+         // button, or whatever.  It depends on what box had the focus.
+         // If this is the edit box, use "ENTER_INDEX", which makes the parser
+         // go through all the ambiguity resolution stuff.  If this is the list
+         // box, use "ACCEPT_BUTTON_INDEX", which causes the indicated choice to be
+         // accepted immediately, just as though the "ACCEPT" button had been clicked.
 
-      /* Check for special bindings like "delete line" or "page up".
-         These always come from the main binding table, even if
-         we are doing something else, like a resolve. */
+         // But if user tabbed to the cancel button, do that instead.
+         if (InPopup && ButtonFocusIndex == 2)
+            crcode = CANCEL_BUTTON_INDEX;
 
-      if (keyptr && keyptr->index < 0) {
+         SetFocus(hwndEdit);    // Take focus away from the button.
+         ButtonFocusIndex = 0;
+         PostMessage(hwndMain, WM_COMMAND, crcode, (LPARAM) hwndList);
+         return 2;
+      }
+      else if (wParam == VK_ESCAPE) {
+         PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndList);
+         return 2;
+      } 
+      else if (wParam == VK_TAB)
+         // This is being handled as a "WM_KEYDOWN" message.
+         return 2;
+      else if (wParam >= ('A' & 0x1F) && wParam <= ('Z' & 0x1F)) {
+         // We take ctl letters as characters.
+         newparm = wParam+0x40+CTLLET+SPECIAL_KEY_OFFSET;
+      }
+      else if (wParam >= '0' && wParam <= '9') {
+         // We deliberately throw away alt digits.
+         // The default window proc would ding them (so we have to return 2
+         // to prevent that), and we are grabbing them through the KEYDOWN message,
+         // so we don't need them here.
+         if (HIWORD(lParam) & KF_ALTDOWN)
+            return 2;
+      }
+
+      break;
+   }
+
+   /* Now see whether this keystroke was a special "accelerator" key.
+      If so, just do the command.
+      If it was "<enter>", treat it as though we had double-clicked the selected
+      menu item, or had clicked on "accept" in the menu.
+      Otherwise, it goes back to the real window.  But be sure that window
+      is the edit window, not the menu. */
+
+   // Check first for special numeric keypad hit, indicated by a number
+   // close to -200.  If no control or alt was pressed, treat it as a
+   // plain digit.
+
+   if (newparm < -150) {
+      ctlbits &= ~2;     // Take out shift bit.
+         if (ctlbits == 0) {
+            // Plain numeric keypad is same as the digit itself.
+            SendMessage(hwndEdit, WM_CHAR, newparm+200+'0', lParam);
+            return 2;
+         }
+         else if (ctlbits == 1) newparm += 200+CTLNKP+SPECIAL_KEY_OFFSET;
+         else if (ctlbits == 5) newparm += 200+CTLALTNKP+SPECIAL_KEY_OFFSET;
+         else if (ctlbits == 4) newparm += 200+ALTNKP+SPECIAL_KEY_OFFSET;
+   }
+
+   if (newparm == -99) return 0;
+   nc = newparm - SPECIAL_KEY_OFFSET;
+
+   if (nc < FCN_KEY_TAB_LOW || nc > FCN_KEY_TAB_LAST)
+      return 0;      /* How'd this happen?  Ignore it. */
+
+   keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
+
+   /* Check for special bindings like "delete line" or "page up".
+      These always come from the main binding table, even if
+      we are doing something else, like a resolve.  So, in that case,
+      we bypass the search for a menu-specific binding. */
+
+   if (!keyptr || keyptr->index >= 0) {
+
+      /* Look for menu-specific bindings like
+         "split phantom boxes" or "find another". */
+
+      if (nLastOne == match_startup_commands)
+         keyptr = fcn_key_table_start[nc-FCN_KEY_TAB_LOW];
+      else if (nLastOne == match_resolve_commands)
+         keyptr = fcn_key_table_resolve[nc-FCN_KEY_TAB_LOW];
+      else if (nLastOne < 0)
+         keyptr = (modifier_block *) 0;    /* We are scanning for
+                                              direction/selector/number/etc. */
+   }
+
+   if (keyptr) {
+      if (keyptr->index < 0) {
+         // This function key specifies a special "syntactic" action.
          long_boolean deleted_letter = FALSE;
          int nCount;
          int nLen;
@@ -389,7 +695,7 @@ long_boolean ProcessSpecialKeystroke(int id)
 
             /* Select the new item. */
             SendMessage(hwndList, LB_SETCURSEL, nIndex, 0);
-            return TRUE;
+            break;
          case special_index_deleteword:
             GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
             nLen = lstrlen(szLocalString);
@@ -408,36 +714,32 @@ long_boolean ProcessSpecialKeystroke(int id)
             lstrcpy(static_ss.full_input, szLocalString);
             SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) szLocalString);
             SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
-            return TRUE;
+            break;
          case special_index_deleteline:
             SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  /* Erase the edit box. */
             static_ss.full_input[0] = '\0';
             static_ss.full_input_size = 0;
-            return TRUE;
+            break;
          case special_index_copytext:
             SendMessage(hwndEdit, WM_COPY, 0, 0);
-            return TRUE;
+            break;
          case special_index_cuttext:
             SendMessage(hwndEdit, WM_CUT, 0, 0);
-            return TRUE;
+            break;
          case special_index_pastetext:
             SendMessage(hwndEdit, WM_PASTE, 0, 0);
-            return TRUE;
+            break;
+         case special_index_quote_anything:
+            GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
+            lstrcat(szLocalString, "<anything>");
+            lstrcpy(static_ss.full_input, szLocalString);
+            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) szLocalString);
+            SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
+            break;
          }
       }
-
-      /* No binding as "page up" or anything like that.  Look for menu-specific
-         bindings like "split phantom boxes" or "find another". */
-
-      if (nLastOne == match_startup_commands)
-         keyptr = fcn_key_table_start[nc-FCN_KEY_TAB_LOW];
-      else if (nLastOne == match_resolve_commands)
-         keyptr = fcn_key_table_resolve[nc-FCN_KEY_TAB_LOW];
-      else if (nLastOne < 0)
-         return FALSE;   /* We are scanning for direction/selector/number/etc. */
-
-      if (keyptr) {
-         /* This function key specifies a user action. */
+      else {
+         // This function key specifies a normal "dancing" action.
          user_match = static_ss.result;
          user_match.match = *keyptr;
          user_match.indent = FALSE;
@@ -447,24 +749,13 @@ long_boolean ProcessSpecialKeystroke(int id)
             Process it and exit from the command loop. */
 
          WaitingForCommand = FALSE;
-         return TRUE;
       }
+
+      return 2;
    }
 
-   return FALSE;
+   return 0;
 }
-
-
-
-static uint32 ctlbits = 0;
-
-
-/* This is the WndProc for the "menu", that is, the stuff on the left side of the
-   window.  It is actually a modeless dialog. */
-
-#define MENUSIZEH 340
-#define MENUSIZEV 514
-
 
 
 
@@ -490,8 +781,17 @@ LRESULT WINAPI AboutWndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lPara
 }
 
 
-
 uint32 peoplecolors[8] = {
+   RGB(0, 0, 255),
+   RGB(255, 0, 0),
+   RGB(0, 0, 255),
+   RGB(255, 0, 0),
+   RGB(0, 0, 255),
+   RGB(255, 0, 0),
+   RGB(0, 0, 255),
+   RGB(255, 0, 0)};
+
+uint32 pastelpeoplecolors[8] = {
    RGB(0, 255, 255),
    RGB(255, 0, 255),
    RGB(0, 255, 255),
@@ -510,6 +810,16 @@ uint32 couplecolors[8] = {
    RGB(0, 255, 255),
    RGB(255, 255, 0),
    RGB(255, 255, 0)};
+
+uint32 cornercolors[8] = {
+   RGB(255, 0, 255),
+   RGB(0, 255, 0),
+   RGB(0, 255, 0),
+   RGB(0, 255, 255),
+   RGB(0, 255, 255),
+   RGB(255, 255, 0),
+   RGB(255, 255, 0),
+   RGB(255, 0, 255)};
 
 static uint32 *colorlist;
 
@@ -550,66 +860,173 @@ static uint32 *colorlist;
 // possible when a line is very long.
 #define THOFFSET 5
 
+// Size of the square pixel array in the bitmap for one person.
+// The bitmap is exactly 8 of these wide and 4 of them high.
+#define BMP_PERSON_SIZE 36
+// This should be even.
+// was 10
+#define BMP_PERSON_SPACE 0
+
 static void Transcript_OnPaint(HWND hwnd)
 {
    PAINTSTRUCT PaintStruct;
    DisplayType *DisplayPtr;
-   int Y = TVOFFSET;
-   int i;
-   int limit = screensize+position;
+   int Y;
 
    HDC PaintDC = BeginPaint(hwnd, &PaintStruct);
 
-   if (limit > nLineCnt) limit = nLineCnt;
+   // Be sure we never paint in the margins.
+
+   if (PaintStruct.rcPaint.top < TVOFFSET)
+      PaintStruct.rcPaint.top = TVOFFSET;
+
+   if (PaintStruct.rcPaint.bottom > TranscriptClientRect.bottom-TVOFFSET)
+      PaintStruct.rcPaint.bottom = TranscriptClientRect.bottom-TVOFFSET;
 
    SelectFont(PaintDC, GetStockObject(OEM_FIXED_FONT));
-   (void) SetBkColor(PaintDC, RGB(0, 0, 0));
-   (void) SetTextColor(PaintDC, RGB(255, 255, 255));
 
-   for (i=0,DisplayPtr=DisplayRoot;
-        i<limit && DisplayPtr;    // Just being sure.
-        i++,DisplayPtr=DisplayPtr->Next) {
+   if (reverse_video) {
+      (void) SetBkColor(PaintDC, RGB(0, 0, 0));
+      (void) SetTextColor(PaintDC, RGB(255, 255, 255));
+   }
+   else {
+      (void) SetBkColor(PaintDC, RGB(255, 255, 255));
+      (void) SetTextColor(PaintDC, RGB(0, 0, 0));
+   }
 
-      if (i >= position) {
-         int x = THOFFSET;
-         const char *cp;
+   SelectPalette(PaintStruct.hdc, hPalette, FALSE);
+   RealizePalette(PaintStruct.hdc);
 
-         for (cp = DisplayPtr->Line ; *cp ; cp++) {
+   for (Y=TVOFFSET-nImageOffTop*TranscriptTextHeight,DisplayPtr=DisplayRoot;
+        DisplayPtr && DisplayPtr->Line[0] != -1;
+        Y+=DisplayPtr->DeltaToNext,DisplayPtr=DisplayPtr->Next) {
+      int x, xdelta;
+      const char *cp;
+
+      // See if we are at the part scrolled off the top of the screen.
+      if (Y+DisplayPtr->Height < TVOFFSET) continue;
+
+      // Or if we have run off the bottom.
+      if (Y > TranscriptClientRect.bottom-TVOFFSET) break;
+
+      for (cp=DisplayPtr->Line,x=THOFFSET;
+           *cp;
+           cp++,x+=xdelta) {
+         int xgoodies, ygoodies, glyph_height, glyph_offset;
+         int the_count = 1;         // Fill in some defaults.
+         const char *the_string = cp;
+
+         if (DisplayPtr->in_picture & 1) {
             if (*cp == '\013') {
                int c1 = *++cp;
                int c2 = *++cp;
-               char cc[3];
-               cc[0] = ' ';
 
-               TextOut(PaintDC, x, Y, cc, 1);
-               x += TextWidth;
+               if (no_graphics == 0) {
+                  xgoodies = (c1 & 7)*BMP_PERSON_SIZE;
+                  ygoodies = BMP_PERSON_SIZE*(c2 & 3);
+                  goto do_DIB_thing;
+               }
+               else {
+                  char cc[3];
+                  cc[0] = ' ';
 
-               if (!no_color)
-                  (void) SetTextColor(PaintDC, colorlist[c1 & 7]);
+                  ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 1, 0);
 
-               cc[0] = pn1[c1 & 7];
-               cc[1] = pn2[c1 & 7];
-               cc[2] = direc[c2 & 017];
+                  if (no_color != 1)
+                     (void) SetTextColor(PaintDC, colorlist[c1 & 7]);
 
-               TextOut(PaintDC, x, Y, cc, 3);
-               x += TextWidth*3;
+                  cc[0] = pn1[c1 & 7];
+                  cc[1] = pn2[c1 & 7];
+                  cc[2] = direc[c2 & 017];
 
-               /* Set back to plain "white". */
+                  ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 3, 0);
 
-               if (!no_color) {
-                  if (!no_intensify)
-                     (void) SetTextColor(PaintDC, RGB(255, 255, 255));
-                  else
-                     (void) SetTextColor(PaintDC, RGB(192, 192, 192));
+                  /* Set back to plain "white". */
+
+                  if (no_color != 1) {
+                     if (!no_intensify)
+                        (void) SetTextColor(PaintDC, RGB(255, 255, 255));
+                     else
+                        (void) SetTextColor(PaintDC, RGB(192, 192, 192));
+                  }
+                  xdelta = TranscriptTextWidth*4;
+                  continue;
                }
             }
-            else {
-               TextOut(PaintDC, x, Y, cp, 1);
-               x += TextWidth;
+            else if (*cp == '\014') {
+               if (no_graphics == 0) {
+                  xgoodies = 0;
+                  ygoodies = BMP_PERSON_SIZE*4;
+                  goto do_DIB_thing;
+               }
+               else {
+                  the_string = "  . ";
+                  the_count = 4;
+               }
+            }
+            else if (*cp == '6') {
+               // 6 means space equivalent to one person size.
+               xdelta = (no_graphics == 0) ? (BMP_PERSON_SIZE) : (TranscriptTextWidth*4);
+               continue;
+            }
+            else if (*cp == '5') {
+               // 5 means space equivalent to half of a person size.
+               xdelta = (no_graphics == 0) ? (BMP_PERSON_SIZE/2) : (TranscriptTextWidth*2);
+               continue;
+            }
+            else if (*cp == '9') {
+               // 9 means space equivalent to 3/4 of a person size.
+               xdelta = (no_graphics == 0) ? (3*BMP_PERSON_SIZE/4) : (TranscriptTextWidth*3);
+               continue;
+            }
+            else if (*cp == '8') {
+               // 8 means space equivalent to half of a person size
+               // if doing checkers, but only one space if in ASCII.
+               xdelta = (no_graphics == 0) ? (BMP_PERSON_SIZE/2) : (TranscriptTextWidth);
+               continue;
+            }
+            else if (*cp == ' ') {
+               // The tables generally use two blanks as the inter-person spacing.
+               xdelta = (no_graphics == 0) ? (BMP_PERSON_SPACE/2) : (TranscriptTextWidth);
+               continue;
             }
          }
 
-         Y += TranscriptTextHeight;
+         // If we get here, we need to write a plain text string.
+
+         xdelta = TranscriptTextWidth*the_count;
+         ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, the_string, the_count, 0);
+         continue;
+
+           do_DIB_thing:
+
+         // Clip this stuff -- be sure we don't go into the top or bottom margin.
+
+         glyph_height = BMP_PERSON_SIZE;
+         glyph_offset = 0;
+
+         if (Y+BMP_PERSON_SIZE > PaintStruct.rcPaint.bottom) {
+            glyph_height -= Y+BMP_PERSON_SIZE-PaintStruct.rcPaint.bottom;
+            ygoodies += Y+BMP_PERSON_SIZE-PaintStruct.rcPaint.bottom;
+         }
+         else if (Y < PaintStruct.rcPaint.top) {
+            glyph_height -= PaintStruct.rcPaint.top-Y;
+            glyph_offset = PaintStruct.rcPaint.top-Y;
+         }
+
+         SetDIBitsToDevice(PaintStruct.hdc,
+                           x, Y+glyph_offset,   // XY coords on screen where we put UL corner
+                           BMP_PERSON_SIZE,     // width of it
+                           glyph_height,        // height of it
+                           xgoodies,            // X of LL corner of DIB
+                           ygoodies,            // Y of LL corner of DIB
+                           0,                   // starting scan line of the DIB
+                           lpBi->bmiHeader.biHeight,  // It needs the rasterization info.
+                           lpBits,     // ptr to actual image in the DIB
+                           lpBi,       // ptr to header and color data
+                           DIB_RGB_COLORS);
+
+         xdelta = BMP_PERSON_SIZE;
       }
    }
 
@@ -619,45 +1036,52 @@ static void Transcript_OnPaint(HWND hwnd)
 
 static void Transcript_OnScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 {
-   int oldposition = position;
    int delta;
    SCROLLINFO Scroll;
    RECT ClientRect;
+   int oldnImageOffTop = nImageOffTop;
+   // Round this up.
+   int newmax = (nTotalImageHeight-nActiveTranscriptSize+TranscriptTextHeight-1)/
+      TranscriptTextHeight;
 
    switch (code) {
    case SB_TOP:
-      position = 0;
+      nImageOffTop = 0;
+      break;
+   case SB_BOTTOM:
+      nImageOffTop = newmax;
       break;
    case SB_LINEUP:
-      position--;
+      nImageOffTop--;;
       break;
    case SB_LINEDOWN:
-      position++;
+      nImageOffTop++;
       break;
    case SB_PAGEUP:
-      position -= pagesize;
+      nImageOffTop -= pagesize;
       break;
    case SB_PAGEDOWN:
-      position += pagesize;
+      nImageOffTop += pagesize;
       break;
    case SB_THUMBPOSITION:
    case SB_THUMBTRACK:
-      position = pos;
+      nImageOffTop = pos;
       break;
    default:
       return;
    }
 
-   if (position > nLineCnt-screensize) position = nLineCnt-screensize;
-   if (position < 0) position = 0;
+   if ((nImageOffTop) > newmax) nImageOffTop = newmax;
 
-   delta = position - oldposition;
+   if (nImageOffTop < 0) nImageOffTop = 0;
+
+   delta = nImageOffTop - oldnImageOffTop;
 
    if (delta == 0) return;
 
    Scroll.cbSize = sizeof(SCROLLINFO);
    Scroll.fMask = SIF_POS;
-   Scroll.nPos = position;
+   Scroll.nPos = nImageOffTop;
 
    SetScrollInfo(hwnd, SB_VERT, &Scroll, TRUE);
 
@@ -666,16 +1090,16 @@ static void Transcript_OnScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
    ClientRect.top += TVOFFSET;
    ClientRect.bottom -= BottomFudge;
 
-   (void) ScrollWindowEx(hwnd, 0, -TranscriptTextHeight*delta,
+   (void) ScrollWindowEx(hwnd, 0, -delta*TranscriptTextHeight,
                          &ClientRect, &ClientRect, NULL, NULL, SW_ERASE | SW_INVALIDATE);
 
    if (delta > 0) {
       // Invalidate bottom part only.
-      ClientRect.top += (screensize-delta)*TranscriptTextHeight;
+      ClientRect.top += nActiveTranscriptSize - delta*TranscriptTextHeight;
    }
    else {
       // Invalidate top part only.
-      ClientRect.bottom -= (screensize+delta)*TranscriptTextHeight;
+      ClientRect.bottom -= nActiveTranscriptSize + delta*TranscriptTextHeight;
    }
 
    InvalidateRect(hwnd, &ClientRect, TRUE);  // Be sure we erase the background.
@@ -747,85 +1171,42 @@ int WINAPI WinMain(
    PSTR szCmdLine,
    int iCmdShow)
 {
-   WNDCLASSEX wndclass;
-
    GLOBiCmdShow = iCmdShow;
    GLOBhInstance = hInstance;
 
-   // Create and register the class for the main window.
-
-   wndclass.cbSize = sizeof(wndclass);
-   wndclass.style = CS_HREDRAW | CS_VREDRAW/* | CS_NOCLOSE*/;
-   wndclass.lpfnWndProc = MainWndProc;
-   wndclass.cbClsExtra = 0;
-   wndclass.cbWndExtra = 0;
-   wndclass.hInstance = hInstance;
-   wndclass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-   wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-   wndclass.hbrBackground  = (HBRUSH) (COLOR_BTNFACE+1);
-   wndclass.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
-   wndclass.lpszClassName = szMainWindowName;
-   wndclass.hIconSm = wndclass.hIcon;
-
-   RegisterClassEx(&wndclass);
-
-   // Create and register the class for the transcript window.
-
-   wndclass.cbSize = sizeof(wndclass);
-   wndclass.style = 0;
-   wndclass.lpfnWndProc = TranscriptWndProc;
-   wndclass.cbClsExtra = 0;
-   wndclass.cbWndExtra = 0;
-   wndclass.hInstance = hInstance;
-   wndclass.hIcon = NULL;
-   wndclass.hCursor = NULL;
-   wndclass.hbrBackground  = GetStockBrush(BLACK_BRUSH);
-   wndclass.lpszMenuName = NULL;
-   wndclass.lpszClassName = szTranscriptWindowName;
-   wndclass.hIconSm = wndclass.hIcon;
-
-   RegisterClassEx(&wndclass);
-
-   InitCommonControls();
-
-   hwndMain = CreateWindow(
-      szMainWindowName, "Sd",
-      WS_OVERLAPPEDWINDOW,
-      10, 20, 780, 560,
-      NULL, NULL, GLOBhInstance, NULL);
-
-   if (!hwndMain)
-      return 1;
-
-   /* Now run the SD program.  The system-supplied variables "__argc"
+   /* Run the SD program.  The system-supplied variables "__argc"
       and "__argv" provide the predigested-as-in-traditional-C-programs
       command-line arguments. */
 
-   return main(__argc, __argv);
+   return sdmain(__argc, __argv);
 }
 
 BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
    TEXTMETRIC tm;
    HDC hdc = GetDC(hwnd);
+
    SelectFont(hdc, GetStockObject(OEM_FIXED_FONT));
    GetTextMetrics(hdc, &tm);
-   TextWidth = tm.tmAveCharWidth;
+   TranscriptTextWidth = tm.tmAveCharWidth;
    TranscriptTextHeight = tm.tmHeight+tm.tmExternalLeading;
+
    SelectFont(hdc, GetStockObject(ANSI_VAR_FONT));
    GetTextMetrics(hdc, &tm);
    AnsiTextWidth = tm.tmAveCharWidth;
    AnsiTextHeight = tm.tmHeight+tm.tmExternalLeading;
+
    SelectFont(hdc, GetStockObject(SYSTEM_FONT));
    GetTextMetrics(hdc, &tm);
    SystemTextWidth = tm.tmAveCharWidth;
    SystemTextHeight = tm.tmHeight+tm.tmExternalLeading;
+
    ReleaseDC(hwnd, hdc);
 
    hwndEdit = CreateWindow("edit", NULL,
       /* We use "autoscroll" so that it will scroll if we type in too
          much text, but we don't put up a scroll bar with HSCROLL. */
-      WS_CHILD/*|WS_VISIBLE*/|WS_BORDER|ES_LEFT|ES_AUTOHSCROLL,
+      WS_CHILD|WS_BORDER|ES_LEFT|ES_AUTOHSCROLL,
       0, 0, 0, 0,
       hwnd, (HMENU) EDIT_INDEX,
       lpCreateStruct->hInstance, NULL);
@@ -841,13 +1222,23 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
    SendMessage(hwndList, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
    oldListProc = (WNDPROC) SetWindowLong(hwndList, GWL_WNDPROC, (LONG) MyListProc);
 
-   hwndButton = CreateWindow("button", "Accept",
+   hwndAcceptButton = CreateWindow("button", "Accept",
       WS_CHILD|BS_DEFPUSHBUTTON,
       0, 0, 0, 0,
-      hwnd, (HMENU) ACCEPT_INDEX,
+      hwnd, (HMENU) ACCEPT_BUTTON_INDEX,
       lpCreateStruct->hInstance, NULL);
 
-   SendMessage(hwndButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
+   SendMessage(hwndAcceptButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
+   oldAcceptProc = (WNDPROC) SetWindowLong(hwndAcceptButton, GWL_WNDPROC, (LONG) MyAcceptProc);
+
+   hwndCancelButton = CreateWindow("button", "Cancel",
+      WS_CHILD,
+      0, 0, 0, 0,
+      hwnd, (HMENU) CANCEL_BUTTON_INDEX,
+      lpCreateStruct->hInstance, NULL);
+
+   SendMessage(hwndCancelButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
+   oldCancelProc = (WNDPROC) SetWindowLong(hwndCancelButton, GWL_WNDPROC, (LONG) MyCancelProc);
 
    hwndProgress = CreateWindow(PROGRESS_CLASS, NULL,
       WS_CHILD|WS_CLIPSIBLINGS,
@@ -864,24 +1255,50 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 
    hwndStatusBar = CreateStatusWindow(
       WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|CCS_BOTTOM|SBARS_SIZEGRIP,
-      "Ready???",
+      "",
       hwnd,
       STATUSBAR_INDEX);
 
-   if (!hwndProgress||!hwndButton||!hwndList||
+   if (!hwndProgress||!hwndAcceptButton||!hwndCancelButton||!hwndList||
        !hwndEdit||!hwndTranscript||!hwndStatusBar) {
       uims_fatal_error("Can't create windows", 0);
-      uims_final_exit(0);
+      uims_final_exit(1);
    }
 
    return TRUE;
 }
 
+
+static void PositionAcceptButtons()
+{
+   if (InPopup) {
+      ButtonFocusTable[0] = hwndEdit;
+      ButtonFocusTable[1] = hwndAcceptButton;
+      ButtonFocusTable[2] = hwndCancelButton;
+      ButtonFocusTable[3] = hwndTranscript;
+
+      MoveWindow(hwndAcceptButton,
+                 (TranscriptEdge/2)-12*AnsiTextWidth, ButtonTopYCoord,
+                 10*AnsiTextWidth, 7*AnsiTextHeight/4, TRUE);
+
+      MoveWindow(hwndCancelButton,
+                 (TranscriptEdge/2)+2*AnsiTextWidth, ButtonTopYCoord,
+                 10*AnsiTextWidth, 7*AnsiTextHeight/4, TRUE);
+   }
+   else {
+      ButtonFocusTable[0] = hwndEdit;
+      ButtonFocusTable[1] = hwndAcceptButton;
+      ButtonFocusTable[2] = hwndTranscript;
+
+      MoveWindow(hwndAcceptButton,
+                 (TranscriptEdge/2)-5*AnsiTextWidth, ButtonTopYCoord,
+                 10*AnsiTextWidth, 7*AnsiTextHeight/4, TRUE);
+   }
+}
+
+
 void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 {
-   /* We divide between the menu and the transcript at 40%. */
-   int TranscriptEdge = 4*cx/10;
-
    SCROLLINFO Scroll;
    RECT ClientRect;
    RECT rWindow;
@@ -889,14 +1306,23 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
    int TranscriptYSize;
    int cyy;
    int Listtop;
+   int newmax;
+
+   /* We divide between the menu and the transcript at 40%. */
+   TranscriptEdge = 4*cx/10;
 
    GetWindowRect(hwndStatusBar, &rWindow);
    cyy = rWindow.bottom - rWindow.top;
    cy -= cyy;    // Subtract the status bar height.
+
    MoveWindow(hwndStatusBar, 0, cy, cx, cyy, TRUE);
+   GLOBStatusBarLength = cx;
+   UpdateStatusBar((Cstring) 0);
 
    TranscriptXSize = cx-TranscriptEdge-TRANSCRIPT_RIGHTMARGIN;
    TranscriptYSize = cy-TRANSCRIPT_BOTMARGIN-TRANSCRIPT_TOPMARGIN;
+   // Y-coordinate of the top of the "accept" and "cancel" buttons.
+   ButtonTopYCoord = cy-BUTTONTOP;
 
    // Y-coordinate of the top of the list box.
    Listtop = EDITTOP+21*SystemTextHeight/16+EDITTOLIST;
@@ -907,11 +1333,11 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 
    MoveWindow(hwndList,
       LEFTJUNKEDGE, Listtop,
-      TranscriptEdge-LEFTJUNKEDGE-RIGHTJUNKEDGE, cy-LIST_TO_BUTTON-BUTTONTOP-Listtop, TRUE);
+      TranscriptEdge-LEFTJUNKEDGE-RIGHTJUNKEDGE, ButtonTopYCoord-LIST_TO_BUTTON-Listtop, TRUE);
 
-   MoveWindow(hwndButton,
-      (TranscriptEdge/2)-5*AnsiTextWidth, cy-BUTTONTOP,
-      10*AnsiTextWidth, 7*AnsiTextHeight/4, TRUE);
+   GetClientRect(hwndList, &CallsClientRect);
+
+   PositionAcceptButtons();
 
    MoveWindow(hwndProgress,
       LEFTJUNKEDGE, cy-PROGRESSHEIGHT-PROGRESSBOT,
@@ -921,23 +1347,31 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
       TranscriptEdge, TRANSCRIPT_TOPMARGIN,
       TranscriptXSize, TranscriptYSize, TRUE);
 
+   GetClientRect(hwndTranscript, &TranscriptClientRect);
+
    // Allow TVOFFSET amount of margin at both top and bottom.
-   screensize = (TranscriptYSize-TVOFFSET-TVOFFSET)/TranscriptTextHeight;
-   pagesize = screensize-2;
-   if (pagesize < 2) pagesize = 2;
-   BottomFudge = TranscriptYSize-TVOFFSET - screensize*TranscriptTextHeight;
+   nActiveTranscriptSize = TranscriptYSize-TVOFFSET-TVOFFSET;
+   // We overlap by 5 scroll units when we scroll by a whole page.
+   // That way, at least one checker will be preserved.
+   pagesize = nActiveTranscriptSize/TranscriptTextHeight-5;
+   if (pagesize < 5) pagesize = 5;
+   BottomFudge = TranscriptYSize-TVOFFSET - nActiveTranscriptSize;
 
-   if (position+screensize > nLineCnt)
-      position = nLineCnt-screensize;
+   // Round this up.
+   newmax = (nTotalImageHeight-nActiveTranscriptSize+TranscriptTextHeight-1)/
+      TranscriptTextHeight;
 
-   if (position < 0) position = 0;
+   if ((nImageOffTop) > newmax)
+      nImageOffTop = newmax;
+
+   if (nImageOffTop < 0) nImageOffTop = 0;
 
    Scroll.cbSize = sizeof(SCROLLINFO);
    Scroll.fMask = SIF_RANGE | SIF_POS | SIF_PAGE;
    Scroll.nMin = 0;
-   Scroll.nMax = nLineCnt-1;
-   Scroll.nPage = screensize;
-   Scroll.nPos = position;
+   Scroll.nMax = (nTotalImageHeight/TranscriptTextHeight)-1;
+   Scroll.nPage = (nActiveTranscriptSize/TranscriptTextHeight);
+   Scroll.nPos = nImageOffTop;
 
    (void) SetScrollInfo(hwndTranscript, SB_VERT, &Scroll, TRUE);
    GetClientRect(hwnd, &ClientRect);
@@ -946,7 +1380,7 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 }
 
 
-static long_boolean accept_single_click = FALSE;
+
  
 void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
@@ -965,15 +1399,20 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    case ESCAPE_INDEX:
       check_text_change(hwndList, hwndEdit, TRUE);
       break;
+   case CANCEL_BUTTON_INDEX:
+      user_match.match.index = -1;
+      WaitingForCommand = FALSE;
+      break;
    case LISTBOX_INDEX:
       // See whether this an appropriate single-click of double-click.
       if (codeNotify != LBN_DBLCLK && (!accept_single_click || codeNotify != LBN_SELCHANGE))
          break;
       /* Fall Through! */
    case ENTER_INDEX:
-   case ACCEPT_INDEX:
+   case ACCEPT_BUTTON_INDEX:
       /* Fell Through! */
 
+      erase_questionable_stuff();
       nMenuIndex = SendMessage(hwndList, LB_GETCURSEL, 0, 0L);
 
       /* If the user moves around in the call menu (listbox) while there is
@@ -1043,8 +1482,8 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  /* Erase the edit box. */
 
       /* We have the needed info.  Process it and exit from the command loop.
-            However, it's not a fully filled in match item from the parser.
-            So we need to concoct a low-class match item. */
+         However, it's not a fully filled in match item from the parser.
+         So we need to concoct a low-class match item. */
 
       if (nLastOne == match_number) {
       }
@@ -1070,17 +1509,9 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
       WaitingForCommand = FALSE;
       break;
-
-      /*
-this will now do command_quit
-unfortunately, it only does that if nLastOne is >= 0, that is,
-we are querying for a real call.
    case ID_FILE_EXIT:
-      if (MessageBox(hwnd, "Do you really want to quit?", "Confirmation", MB_YESNO) == IDYES)
-         final_exit (0);
+      SendMessage(hwndMain, WM_CLOSE, 0, 0L);
       break;
-      */
-
    case ID_COMMAND_COPY_TEXT:
       SendMessage(hwndEdit, WM_COPY, 0, 0);
       break;
@@ -1103,207 +1534,56 @@ we are querying for a real call.
 }
 
 
-/* Return of FALSE means this is a "normal" keystroke, and we did not act on it.
-   In that case, we have to be sure it goes to the edit box, not the list box. */
-// TRUE means we did something.
-// If we don't recognize it, return FALSE.
-long_boolean CheckKeystroke(UINT iMsg, WPARAM wParam, LPARAM lParam)
-{
-   int newparm = -99;
-
-   switch (iMsg) {
-   case WM_KEYDOWN:
-   case WM_SYSKEYDOWN:
-      if (wParam == VK_SHIFT)
-         ctlbits |= 2;
-      else if (wParam == VK_CONTROL)
-         ctlbits |= 1;
-      else { 
-         if (wParam == 0x0C) {
-            if (!(HIWORD(lParam) & KF_EXTENDED)) {
-               if (wParam = 0x0C) {
-                  newparm = 5-200;
-               }
-            }
-         }
-         else if (wParam >= VK_PRIOR && wParam <= VK_DELETE) {
-            if (HIWORD(lParam) & KF_EXTENDED) {
-               if (HIWORD(lParam) & KF_ALTDOWN) {
-                  if (ctlbits == 0)      newparm = wParam-VK_PRIOR+1+AEKEY+SPECIAL_KEY_OFFSET;
-                  else if (ctlbits == 1) newparm = wParam-VK_PRIOR+1+CAEKEY+SPECIAL_KEY_OFFSET;
-               }
-               else {
-                  if (ctlbits == 0)      newparm = wParam-VK_PRIOR+1+EKEY+SPECIAL_KEY_OFFSET;
-                  else if (ctlbits == 1) newparm = wParam-VK_PRIOR+1+CEKEY+SPECIAL_KEY_OFFSET;
-                  else if (ctlbits == 2) newparm = wParam-VK_PRIOR+1+SEKEY+SPECIAL_KEY_OFFSET;
-               }
-            }
-            else {
-               switch (wParam) {
-               case 0x2D: newparm = 0-200; break;
-               case 0x23: newparm = 1-200; break;
-               case 0x28: newparm = 2-200; break;
-               case 0x22: newparm = 3-200; break;
-               case 0x25: newparm = 4-200; break; // 5 is handled above
-               case 0x27: newparm = 6-200; break;
-               case 0x24: newparm = 7-200; break;
-               case 0x26: newparm = 8-200; break;
-               case 0x21: newparm = 9-200; break;
-               }
-            }
-         }
-         else if (wParam >= VK_F1 && wParam <= VK_F12) {
-            if (HIWORD(lParam) & KF_ALTDOWN) {
-               if (ctlbits == 0)      newparm = wParam-VK_F1+1+AFKEY+SPECIAL_KEY_OFFSET;
-               else if (ctlbits == 1) newparm = wParam-VK_F1+1+CAFKEY+SPECIAL_KEY_OFFSET;
-            }
-            else {
-               if (ctlbits == 0)      newparm = wParam-VK_F1+1+FKEY+SPECIAL_KEY_OFFSET;
-               else if (ctlbits == 1) newparm = wParam-VK_F1+1+CFKEY+SPECIAL_KEY_OFFSET;
-               else if (ctlbits == 2) newparm = wParam-VK_F1+1+SFKEY+SPECIAL_KEY_OFFSET;
-            }
-         }
-         else if (wParam >= 'A' && wParam <= 'Z' && (HIWORD(lParam) & KF_ALTDOWN)) {
-            // We take alt or ctl-alt letters as key presses.
-            if (ctlbits & 1) newparm = wParam+CTLALTLET+SPECIAL_KEY_OFFSET;
-            else             newparm = wParam+ALTLET+SPECIAL_KEY_OFFSET;
-         }
-         else if (wParam >= '0' && wParam <= '9') {
-            if (HIWORD(lParam) & KF_ALTDOWN) {
-               if (ctlbits == 0)      newparm = wParam-'0'+ALTDIG+SPECIAL_KEY_OFFSET;
-               else if (ctlbits == 1) newparm = wParam-'0'+CTLALTDIG+SPECIAL_KEY_OFFSET;
-            }
-            else {
-               if (ctlbits == 1) newparm = wParam-'0'+CTLDIG+SPECIAL_KEY_OFFSET;
-            }
-         }
-      }
-      break;
-   case WM_KEYUP:
-   case WM_SYSKEYUP:
-      if (wParam == VK_SHIFT)
-         ctlbits &= ~2;
-      else if (wParam == VK_CONTROL)
-         ctlbits &= ~1;
-      break;
-   case WM_CHAR:
-   case WM_SYSCHAR:
-      if (wParam >= ('A' & 0x1F) && wParam <= ('Z' & 0x1F)) {
-         // We take ctl letters as characters.
-         newparm = wParam+0x40+CTLLET+SPECIAL_KEY_OFFSET;
-      }
-      else if (wParam >= '0' && wParam <= '9') {
-         // We deliberately throw away alt digits.
-         // The default window proc will ding them, and we are grabbing
-         // them through the KEYDOWN message, so we don't need them here.
-         if (HIWORD(lParam) & KF_ALTDOWN)
-            return TRUE;
-      }
-
-      break;
-   }
-
-   /* Now see whether this keystroke was a special "accelerator" key.
-         If so, just do the command.
-         If it was "<enter>", treat it as though we had double-clicked the selected
-         menu item, or had clicked on "accept" in the menu.
-         Otherwise, it goes back to the real window.  But be sure that window
-         is the edit window, not the menu. */
-
-   if (newparm != -99) {
-      // Check first for special numeric keypad hit, indicated by a number
-      // close to -200.  If no control or alt was pressed, treat it as a
-      // plain digit.
-
-      if (newparm < -150) {
-         if (HIWORD(lParam) & KF_ALTDOWN) {
-            if (ctlbits & 1) newparm += 200+CTLALTNKP+SPECIAL_KEY_OFFSET;
-            else             newparm += 200+ALTNKP+SPECIAL_KEY_OFFSET;
-         }
-         else {
-            if (ctlbits & 1) newparm += 200+CTLNKP+SPECIAL_KEY_OFFSET;
-            else {
-               SendMessage(hwndEdit, WM_CHAR, newparm+200+'0', lParam);
-               return 1;
-            }
-         }
-      }
-
-      // If user hit an accelerator key, act on it.  This may fill in the
-      // final parse stuff and set WaitingForCommand = FALSE.
-      if (ProcessSpecialKeystroke(newparm))
-         return TRUE;
-      else
-         return FALSE;
-   }
-   else if (wParam == '\r') {
-      // If user hit "<enter>", act roughly as though she clicked the "ACCEPT" button.
-      MainWindow_OnCommand(hwndMain, ENTER_INDEX, hwndList, 0);
-      return TRUE;
-   }
-
-   return FALSE;
-}
 
 LRESULT CALLBACK MyEditProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-   switch (iMsg) {
-   case WM_CHAR:
-      if (wParam == '\r') {
-         PostMessage(hwndMain, WM_COMMAND, ENTER_INDEX, (LPARAM) hwndList);
-         return 1;
-      }
-      else if (wParam == '\033') {
-         PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndList);
-         return 1;
-      } 
-      break;
-   case WM_KEYDOWN:
-      // These were already handled as "WM_CHAR" messages.
-      // Don't let either kind of message get to the default windproc
-      // when "enter" or "escape" is typed.
-      if (wParam == '\r' || wParam == '\033') return 1;
-      break;
-   }
+   // If a bound key is sent to the edit box, just act on it.
+   // Don't change the focus.  Just do it.  If it's bound to some
+   // up/down function, the right thing will be done with the list box,
+   // independently of the focus.
 
-   if (CheckKeystroke(iMsg, wParam, lParam)) {
+   if (LookupKeystrokeBinding(iMsg, wParam, lParam, ENTER_INDEX) == 2)
       return 1;
-   }
-   else if (iMsg == WM_KEYDOWN && (HIWORD(lParam) & KF_EXTENDED) &&
-            (wParam == VK_PRIOR || wParam == VK_NEXT ||
-             wParam == VK_UP || wParam == VK_DOWN)) {
-      /* If user presses up/down/etc key while in the edit box,
-            and there is no accelerator definition for it,
-            she probably really wants to scroll, so we send the keystroke
-            to the list box.  But we only do it for up/down stuff, not
-            left/right/home/end.  The latter are meaningful in the edit box. */
+
+   // If it is unbound but is a real up/down arrow key, the user
+   // presumably wants to scroll the edit box anyway.  Send the keystroke
+   // to the list box.
+
+   if (iMsg == WM_KEYDOWN && (HIWORD(lParam) & KF_EXTENDED) &&
+       (wParam == VK_PRIOR || wParam == VK_NEXT ||
+        wParam == VK_UP || wParam == VK_DOWN)) {
       PostMessage(hwndList, iMsg, wParam, lParam);
       return 1;
    }
-   else
-      return CallWindowProc(oldEditProc, hwnd, iMsg, wParam, lParam);
+
+   // Otherwise, it belongs here.  This includes unbound left/right/home/end.
+
+   return CallWindowProc(oldEditProc, hwnd, iMsg, wParam, lParam);
 }
 
 
 LRESULT CALLBACK MyListProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-   switch (iMsg) {
-   case WM_KEYDOWN:
-      /* If user presses up/down/etc key while in the list box,
-         she probably really wants to scroll, so we leave the keystroke here. */
-      if (wParam >= VK_PRIOR && wParam <= VK_DELETE && (HIWORD(lParam) & KF_EXTENDED))
-         break;
-      /* Fall Through! */
-   case WM_CHAR:
-   case WM_SYSCHAR:
-   case WM_SYSKEYDOWN:
-      /* Fell Through! */
-      /* If a key is typed while the list box has the focus, it is
-         obviously intended as input to the edit box.  Change the focus
-         to the edit box and send the character to same. */
-      SetFocus(hwndEdit);
-      PostMessage(hwndEdit, iMsg, wParam, lParam);
+   // If a bound key is sent to the list box, just act on it.
+   // Don't change the focus.  Just do it.  If it's bound to some
+   // up/down function, the right thing will be done with the list box,
+   // independently of the focus.
+
+   switch (LookupKeystrokeBinding(iMsg, wParam, lParam, ACCEPT_BUTTON_INDEX)) {
+   case 2:
       return 1;
+   case 0:
+      switch (iMsg) {
+      case WM_CHAR:
+      case WM_SYSCHAR:
+         /* If a character is sent while the list box has the focus, it is
+            obviously intended as input to the edit box.  Change the focus
+            to the edit box and send the character to same. */
+         SetFocus(hwndEdit);
+         ButtonFocusIndex = 0;
+         PostMessage(hwndEdit, iMsg, wParam, lParam);
+         return 1;
+      }
    }
 
    return CallWindowProc(oldListProc, hwnd, iMsg, wParam, lParam);
@@ -1322,6 +1602,7 @@ LRESULT CALLBACK TranscriptWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM l
          is because she wishes to use the up/down arrow keys for scrolling.
          Take the focus, so that we can do that. */
       SetFocus(hwndTranscript);
+      ButtonFocusIndex = ButtonFocusHigh;
       break;
    case WM_KEYDOWN:
       /* User typed a key while the focus was in the transcript area.
@@ -1340,13 +1621,29 @@ LRESULT CALLBACK TranscriptWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM l
       case VK_DOWN:
          Transcript_OnScroll(hwnd, hwnd, SB_LINEDOWN, 0);
          return 0;
-      default:
-         /* Some other character.  It must be a mistake that we have the focus.
-            The edit window is a much more plausible recipient.  Set the focus
-            there and post the message. */
-         SetFocus(hwndEdit);
-         PostMessage(hwndEdit, iMsg, wParam, lParam);
+      case VK_HOME:
+         Transcript_OnScroll(hwnd, hwnd, SB_TOP, 0);
          return 0;
+      case VK_END:
+         Transcript_OnScroll(hwnd, hwnd, SB_BOTTOM, 0);
+         return 0;
+      default:
+         /* Some other character.  Check for special stuff.  This will also
+            handle tabs, tabbing to the next item for focus. */
+
+         switch (LookupKeystrokeBinding(iMsg, wParam, lParam, ENTER_INDEX)) {
+         case 2:
+            return 1;
+         case 0:
+            /* A normal character.  It must be a mistake that we have the focus.
+               The edit window is a much more plausible recipient.  Set the focus
+               there and post the message. */
+
+            SetFocus(hwndEdit);
+            ButtonFocusIndex = 0;
+            PostMessage(hwndEdit, iMsg, wParam, lParam);
+            return 0;
+         }
       }
 
       break;
@@ -1359,6 +1656,37 @@ LRESULT CALLBACK TranscriptWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM l
 }
 
 
+LRESULT CALLBACK MyAcceptProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+   if (LookupKeystrokeBinding(iMsg, wParam, lParam, ACCEPT_BUTTON_INDEX) == 2)
+      return 1;
+
+   return CallWindowProc(oldAcceptProc, hwnd, iMsg, wParam, lParam);
+}
+
+
+LRESULT CALLBACK MyCancelProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+   if (LookupKeystrokeBinding(iMsg, wParam, lParam, CANCEL_BUTTON_INDEX) == 2)
+      return 1;
+
+   return CallWindowProc(oldCancelProc, hwnd, iMsg, wParam, lParam);
+}
+
+
+
+
+void MainWindow_OnMenuSelect(HWND hwnd, HMENU hmenu, int item, HMENU hmenuPopup, UINT flags)
+{
+   UINT UIStringbase = 0;
+
+   if (item != 0)
+      MenuHelp(WM_MENUSELECT, item, (LPARAM) hmenu, NULL,
+               GLOBhInstance, hwndStatusBar, &UIStringbase);
+   else
+      (void) SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
+}
+
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1367,9 +1695,27 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       HANDLE_MSG(hwnd, WM_CREATE, MainWindow_OnCreate);
       HANDLE_MSG(hwnd, WM_SIZE, MainWindow_OnSize);
       HANDLE_MSG(hwnd, WM_COMMAND, MainWindow_OnCommand);
+      HANDLE_MSG(hwnd, WM_MENUSELECT, MainWindow_OnMenuSelect);
    case WM_SETFOCUS:
       SetFocus(hwndList);    // Is this right?
       return 0;
+   case WM_CLOSE:
+
+      // We get here if the user presses alt-F4 and we haven't bound it to anything,
+      // or if the user selects "exit" from the "file" menu.
+
+      if (MenuKind != ui_start_select && uims_do_abort_popup() != POPUP_ACCEPT)
+         return 0;  // Queried user; user said no; so we don't shut down.
+
+      // Close journal and session files; call uims_final_exit,
+      // which sends WM_USER+2 and shuts us down for real.
+
+      exit_program(0);
+      break;
+   case WM_USER+2:
+      // Real shutdown -- change to WM_CLOSE and go to default wndproc.
+      iMsg = WM_CLOSE;
+      break;
    }
 
    return DefWindowProc(hwnd, iMsg, wParam, lParam);
@@ -1402,25 +1748,8 @@ static char szMainTitle[MAX_TEXT_LINE_LENGTH];
 
 void SetTitle(void)
 {
-   char szTitle[MAX_TEXT_LINE_LENGTH];
-
-   lstrcpy(szTitle, szMainTitle);
-
-   if (using_active_phantoms || allowing_all_concepts) {
-      lstrcat(szTitle, "    [");
-
-      if (using_active_phantoms)
-         lstrcat(szTitle, "Active Phantoms Enabled");
-
-      if (allowing_all_concepts) {
-         if (using_active_phantoms) lstrcat(szTitle, ", ");
-         lstrcat(szTitle, "All Concepts Enabled");
-      }
-
-      lstrcat(szTitle, "]");
-   }
-
-   SetWindowText(hwndMain, (LPSTR) szTitle);
+   UpdateStatusBar((Cstring) 0);
+   SetWindowText(hwndMain, (LPSTR) szMainTitle);
 }
 
 
@@ -1435,9 +1764,6 @@ extern void uims_set_window_title(char s[])
 
 extern char *new_outfile_string;
 extern char *call_list_string;
-extern long_boolean get_first_session_line(void);
-extern long_boolean get_next_session_line(char *dest);
-extern int process_session_info(Cstring *error_msg);
 static long_boolean doing_level_dialog;
 
 
@@ -1656,6 +1982,53 @@ LRESULT WINAPI Startup_Dialog_WndProc(HWND hwnd, UINT message, WPARAM wParam, LP
 
 extern long_boolean uims_open_session(int argc, char **argv)
 {
+   WNDCLASSEX wndclass;
+
+   // Create and register the class for the main window.
+
+   wndclass.cbSize = sizeof(wndclass);
+   wndclass.style = CS_HREDRAW | CS_VREDRAW/* | CS_NOCLOSE*/;
+   wndclass.lpfnWndProc = MainWndProc;
+   wndclass.cbClsExtra = 0;
+   wndclass.cbWndExtra = 0;
+   wndclass.hInstance = GLOBhInstance;
+   wndclass.hIcon = LoadIcon(GLOBhInstance, MAKEINTRESOURCE(IDI_ICON1));
+   wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+   wndclass.hbrBackground  = (HBRUSH) (COLOR_BTNFACE+1);
+   wndclass.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
+   wndclass.lpszClassName = szMainWindowName;
+   wndclass.hIconSm = wndclass.hIcon;
+   RegisterClassEx(&wndclass);
+
+   // Create and register the class for the transcript window.
+
+   wndclass.cbSize = sizeof(wndclass);
+   wndclass.style = 0;
+   wndclass.lpfnWndProc = TranscriptWndProc;
+   wndclass.cbClsExtra = 0;
+   wndclass.cbWndExtra = 0;
+   wndclass.hInstance = GLOBhInstance;
+   wndclass.hIcon = NULL;
+   wndclass.hCursor = NULL;
+   wndclass.hbrBackground  = GetStockBrush(reverse_video ? BLACK_BRUSH : WHITE_BRUSH);
+   wndclass.lpszMenuName = NULL;
+   wndclass.lpszClassName = szTranscriptWindowName;
+   wndclass.hIconSm = wndclass.hIcon;
+   RegisterClassEx(&wndclass);
+
+   InitCommonControls();
+
+   hwndMain = CreateWindow(
+      szMainWindowName, "Sd",
+      WS_OVERLAPPEDWINDOW,
+      10, 20, 780, 560,
+      NULL, NULL, GLOBhInstance, NULL);
+
+   if (!hwndMain) {
+      uims_fatal_error("Can't create main window", 0);
+      uims_final_exit(1);
+   }
+
    /* At this point the following may have been filled in from the
       command-line switches or the "[Options]" stuff in the initialization file:
 
@@ -1691,24 +2064,14 @@ extern long_boolean uims_open_session(int argc, char **argv)
    ShowWindow(hwndMain, GLOBiCmdShow);
    UpdateWindow(hwndMain);
 
-   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Reading database");
-
-/*
-   {    int a = 3; int b = 5;
-      int foo = SendMessage(hwndStatusBar, SB_GETPARTS, 0, 0);
-      int bar = SendMessage(hwndStatusBar, SB_SETPARTS, (WPARAM) 0, (LPARAM) &b);
-      int bletch = SendMessage(hwndStatusBar, SB_GETPARTS, 0, 0);
-   }
-*/
-
-   UpdateWindow(hwndStatusBar);
+   UpdateStatusBar("Reading database");
 
    prepare_to_read_menus();
 
    /* Opening the database sets up the values of
-         abs_max_calls and max_base_calls.
-         Must do before telling the uims so any open failure messages
-         come out first. */
+      abs_max_calls and max_base_calls.
+      Must do before telling the uims so any open failure messages
+      come out first. */
 
    if (open_database(session_error_msg1, session_error_msg2)) {
       uims_fatal_error(session_error_msg1, session_error_msg2);
@@ -1720,8 +2083,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    ShowWindow(hwndProgress, SW_SHOWNORMAL);
 
-   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Creating Menus");
-   UpdateWindow(hwndStatusBar);
+   UpdateStatusBar("Creating Menus");
 
    /* This is the thing that takes all the time! */
    initialize_menus(glob_call_list_mode);
@@ -1746,8 +2108,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
    matcher_initialize();
 
    ShowWindow(hwndProgress, SW_HIDE);
-   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Processing Accelerator Keys");
-   UpdateWindow(hwndStatusBar);
+   UpdateStatusBar("Processing Accelerator Keys");
 
    {
       long_boolean save_allow = allowing_all_concepts;
@@ -1771,23 +2132,168 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    close_init_file();
 
-   use_escapes_for_drawing_people = TRUE;
+   use_escapes_for_drawing_people = 2;
 
    /* Install the pointy triangles. */
 
-   if (!no_graphics)
+   if (no_graphics < 2)
       direc = "?\020?\021????\036?\037?????";
 
-   if (color_by_couple)
+   {
+      HANDLE hRes, hPal;
+      LPBITMAPINFO lpBitsTemp;
+      LPLOGPALETTE lpPal;
+      int i;
+
+      hRes = LoadResource(GLOBhInstance,
+                          FindResource(GLOBhInstance,
+                                       MAKEINTRESOURCE(IDB_BITMAP1), RT_BITMAP));
+
+      /* Map the bitmap file into memory. */
+      lpBitsTemp = (LPBITMAPINFO) LockResource(hRes);
+
+      lpBi = (LPBITMAPINFO) GlobalAlloc(GMEM_FIXED,
+                                        lpBitsTemp->bmiHeader.biSize +
+                                        16*sizeof(RGBQUAD) +
+                                        BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
+
+      (void) memcpy(lpBi, lpBitsTemp,
+                    lpBitsTemp->bmiHeader.biSize +
+                    16*sizeof(RGBQUAD) +
+                    BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
+
+      lpBits = (LPTSTR) lpBi;
+      lpBits += lpBi->bmiHeader.biSize + 16*sizeof(RGBQUAD);
+
+      hPal = GlobalAlloc(GHND, sizeof(LOGPALETTE) + (16*sizeof(PALETTEENTRY)));
+      lpPal = (LPLOGPALETTE) GlobalLock(hPal);
+      lpPal->palVersion = 0x300;
+      lpPal->palNumEntries = 16;
+      // Need to fudge entry #11 for bright yellow!
+      for (i=0 ; i<16 ; i++) {
+         lpPal->palPalEntry[i].peRed   = lpBi->bmiColors[i].rgbRed;
+         lpPal->palPalEntry[i].peGreen = lpBi->bmiColors[i].rgbGreen;
+         lpPal->palPalEntry[i].peBlue  = lpBi->bmiColors[i].rgbBlue;
+      }
+
+      hPalette = CreatePalette(lpPal);
+      GlobalUnlock(hPal);
+      GlobalFree(hPal);
+   }
+
+   // Now that we know the coloring options,
+   // fudge the color table in the mapped DIB.
+
+   /* The standard 4-plane color scheme is:
+      0  black
+      1  dark red
+      2  dark green
+      3  dark yellow
+      4  dark blue
+      5  dark magenta
+      6  dark cyan
+      7  dark gray
+      8  light gray
+      9  light red
+      10 light green
+      11 light yellow
+      12 light blue
+      13 light magenta
+      14 light cyan
+      15 white
+      The people are "colored in the DIB file as:
+
+      1B - 9
+      1G - 1
+      2B - 10
+      2G - 2
+      3B - 11
+      3G - 3
+      4B - 12
+      4G - 4
+   */
+
+   if (no_color == 3) {
+      // corner colors
+      colorlist = cornercolors;
+      lpBi->bmiColors[1]  = lpBi->bmiColors[10];    // 1G = GRN
+      lpBi->bmiColors[2]  = lpBi->bmiColors[12];    // 2G = BLU
+      lpBi->bmiColors[3]  = lpBi->bmiColors[11];    // 3G = YEL
+      lpBi->bmiColors[4]  = lpBi->bmiColors[9];     // 4G = RED
+      lpBi->bmiColors[9]  = lpBi->bmiColors[4];     // 1B = RED
+      lpBi->bmiColors[10]  = lpBi->bmiColors[10];   // 2B = GRN
+      lpBi->bmiColors[11]  = lpBi->bmiColors[2];    // 3B = BLU
+      lpBi->bmiColors[12]  = lpBi->bmiColors[3];    // 4B = YEL
+   }
+   else if (no_color == 2) {
+      // couple colors
       colorlist = couplecolors;
-   else
-      colorlist = peoplecolors;
+      lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
+      lpBi->bmiColors[2]  = lpBi->bmiColors[10];    // 2G = GRN
+      lpBi->bmiColors[3]  = lpBi->bmiColors[12];    // 3G = BLU
+      lpBi->bmiColors[4]  = lpBi->bmiColors[11];    // 4G = YEL
+      lpBi->bmiColors[9]  = lpBi->bmiColors[1];     // 1B = RED
+      lpBi->bmiColors[10]  = lpBi->bmiColors[2];    // 2B = GRN
+      lpBi->bmiColors[11]  = lpBi->bmiColors[3];    // 3B = BLU
+      lpBi->bmiColors[12]  = lpBi->bmiColors[4];    // 4B = YEL
+   }
+   else if (no_color == 1) {
+      // monochrome colors (colorlist won't be used in this case)
+      if (no_intensify) {
+         // dull monochrome colors
+         lpBi->bmiColors[1]  = lpBi->bmiColors[7];
+         lpBi->bmiColors[2]  = lpBi->bmiColors[7];
+         lpBi->bmiColors[3]  = lpBi->bmiColors[7];
+         lpBi->bmiColors[4]  = lpBi->bmiColors[7];
+         lpBi->bmiColors[9]  = lpBi->bmiColors[7];
+         lpBi->bmiColors[10] = lpBi->bmiColors[7];
+         lpBi->bmiColors[11] = lpBi->bmiColors[7];
+         lpBi->bmiColors[12] = lpBi->bmiColors[7];
+      }
+      else {
+         // intense monochrome colors
+         lpBi->bmiColors[1]  = lpBi->bmiColors[15];
+         lpBi->bmiColors[2]  = lpBi->bmiColors[15];
+         lpBi->bmiColors[3]  = lpBi->bmiColors[15];
+         lpBi->bmiColors[4]  = lpBi->bmiColors[15];
+         lpBi->bmiColors[9]  = lpBi->bmiColors[15];
+         lpBi->bmiColors[10] = lpBi->bmiColors[15];
+         lpBi->bmiColors[11] = lpBi->bmiColors[15];
+         lpBi->bmiColors[12] = lpBi->bmiColors[15];
+      }
+   }
+   else {
+      // gender colors
+      if (pastel_color) {
+         colorlist = pastelpeoplecolors;
+         lpBi->bmiColors[1]  = lpBi->bmiColors[13];
+         lpBi->bmiColors[9]  = lpBi->bmiColors[14];
+      }
+      else {
+         colorlist = peoplecolors;
+         lpBi->bmiColors[1]  = lpBi->bmiColors[9];
+         lpBi->bmiColors[9]  = lpBi->bmiColors[12];
+      }
+
+      lpBi->bmiColors[2]  = lpBi->bmiColors[1];
+      lpBi->bmiColors[3]  = lpBi->bmiColors[1];
+      lpBi->bmiColors[4]  = lpBi->bmiColors[1];
+      lpBi->bmiColors[10] = lpBi->bmiColors[9];
+      lpBi->bmiColors[11] = lpBi->bmiColors[9];
+      lpBi->bmiColors[12] = lpBi->bmiColors[9];
+   }
+
+   if (reverse_video == 0) {
+      RGBQUAD t = lpBi->bmiColors[0];
+      lpBi->bmiColors[0]  = lpBi->bmiColors[15];
+      lpBi->bmiColors[15] = t;
+   }
 
    SetTitle();
 
    ShowWindow(hwndList, SW_SHOWNORMAL);
    ShowWindow(hwndEdit, SW_SHOWNORMAL);
-   ShowWindow(hwndButton, SW_SHOWNORMAL);
+   ShowWindow(hwndAcceptButton, SW_SHOWNORMAL);
 
    UpdateWindow(hwndMain);
 
@@ -1796,19 +2302,12 @@ extern long_boolean uims_open_session(int argc, char **argv)
    DisplayRoot = get_mem(sizeof(DisplayType));
    DisplayRoot->Line[0] = -1;
    DisplayRoot->Next = NULL;
+   DisplayRoot->Prev = NULL;
    CurDisplay = DisplayRoot;
-   nLineCnt = 0;
+   nTotalImageHeight = 0;
    return FALSE;
 }
 
-
-
-/* Handle WM_DESTROY message */
-
-void DoDestroy(HWND hWnd)
-{
-   PostQuitMessage(0);
-}
 
 
 /* Process Windows Messages */
@@ -1845,8 +2344,7 @@ extern void uims_display_help(void)
 
 Private char version_mem[12];
 
-extern char *
-uims_version_string (void)
+extern char *uims_version_string (void)
 {
    sprintf (version_mem, "%swin", sdui_version);
    return version_mem;
@@ -1873,7 +2371,6 @@ void ShowListBox(int nWhichOne)
       wherearewe = 0;
 
       SendMessage(hwndList, LB_RESETCONTENT, 0, 0L);
-      GetClientRect(hwndList, &CallsClientRect);
       hDC = GetDC(hwndList);
       SendMessage(hwndList, WM_SETREDRAW, FALSE, 0L);
       nLongest = 0;
@@ -1882,8 +2379,7 @@ void ShowListBox(int nWhichOne)
          int iu;
          uims_reply kind;
 
-         SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "<number>");
-         UpdateWindow(hwndStatusBar);
+         UpdateStatusBar("<number>");
 
          kind = 0;
 
@@ -1906,8 +2402,7 @@ void ShowListBox(int nWhichOne)
          unsigned int iu;
          uims_reply kind;
 
-         SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "<circulate replacement>");
-         UpdateWindow(hwndStatusBar);
+         UpdateStatusBar("<circulate replacement>");
 
          kind = 0;
 
@@ -1933,8 +2428,7 @@ void ShowListBox(int nWhichOne)
          unsigned int iu;
          uims_reply kind;
 
-         SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "<tagging call>");
-         UpdateWindow(hwndStatusBar);
+         UpdateStatusBar("<tagging call>");
 
          kind = 0;
 
@@ -1957,8 +2451,7 @@ void ShowListBox(int nWhichOne)
          Cstring *menu;
          uims_reply kind;
 
-         SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "<startup>");
-         UpdateWindow(hwndStatusBar);
+         UpdateStatusBar("<startup>");
 
          kind = ui_start_select;
          menu = startup_commands;
@@ -2006,8 +2499,7 @@ void ShowListBox(int nWhichOne)
          Cstring *menu;
          uims_reply kind;
 
-         SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "<direction>");
-         UpdateWindow(hwndStatusBar);
+         UpdateStatusBar("<direction>");
 
          kind = ui_special_concept;
          menu = &direction_names[1];
@@ -2032,8 +2524,7 @@ void ShowListBox(int nWhichOne)
          Cstring *menu;
          uims_reply kind;
 
-         SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "<selector>");
-         UpdateWindow(hwndStatusBar);
+         UpdateStatusBar("<selector>");
 
          kind = ui_special_concept;
          menu = selector_menu_list;
@@ -2057,8 +2548,7 @@ void ShowListBox(int nWhichOne)
       else {
          uims_reply kind;
 
-         SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) menu_names[nLastOne]);
-         UpdateWindow(hwndStatusBar);
+         UpdateStatusBar(menu_names[nLastOne]);
 
          kind = ui_call_select;
 
@@ -2066,7 +2556,7 @@ void ShowListBox(int nWhichOne)
             Cstring name = main_call_lists[nLastOne][i]->menu_name;
             int nMenuIndex;
 
-            GetTextExtentPoint (hDC, name, lstrlen(name), &Size);
+            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
             if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
                SendMessage (hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
                nLongest = Size.cx;
@@ -2125,6 +2615,7 @@ void ShowListBox(int nWhichOne)
       SendMessage (hwndList, LB_SETCURSEL, 0, (LPARAM) 0);
    }
 
+   ButtonFocusIndex = 0;
    SetFocus(hwndEdit);
 }
 
@@ -2203,8 +2694,8 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
 extern uims_reply uims_get_resolve_command (void)
 {
-   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szResolveWndTitle);
-   UpdateWindow(hwndStatusBar);
+   UpdateStatusBar(szResolveWndTitle);
+
    nLastOne = ui_undefined;
    MenuKind = ui_resolve_select;
    ShowListBox(match_resolve_commands);
@@ -2303,9 +2794,9 @@ extern int uims_do_abort_popup(void)
 {
    if (MessageBox(hwndMain, "Do you really want to abort this sequence?",
                   "Confirmation", MB_YESNO) == IDYES)
-      return 1;
+      return POPUP_ACCEPT;
    else
-      return 0;
+      return POPUP_DECLINE;
 }
 
 
@@ -2315,46 +2806,63 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
 
    switch (kind) {
    case modify_popup_any:
-      sprintf (modifier_question,
+      wsprintf(modifier_question,
                "The \"%s\" can be replaced.", callname);
       break;
    case modify_popup_only_tag:
-      sprintf (modifier_question,
+      wsprintf(modifier_question,
                "The \"%s\" can be replaced with a tagging call.", callname);
       break;
    case modify_popup_only_circ:
-      sprintf (modifier_question,
+      wsprintf(modifier_question,
                "The \"%s\" can be replaced with a modified circulate-like call.", callname);
       break;
    default:
-      lstrcpy (modifier_question, "Internal error: unknown modifier kind.");
+      lstrcpy(modifier_question, "Internal error: unknown modifier kind.");
    }
 
-   if (MessageBox (hwndMain, modifier_question, "Do you want to replace it?", MB_YESNO) == IDYES)
+   lstrcat(modifier_question, "\nDo you want to replace it?");
+
+   if (MessageBox(hwndMain, modifier_question, "Replacement", MB_YESNO) == IDYES)
       return 1;
    else
       return 0;
 }
 
+static BOOL do_popup(int nWhichOne)
+{
+   uims_reply SavedMenuKind = MenuKind;
+   uims_reply SavedMy_reply = my_reply;
+   nLastOne = ui_undefined;
+   MenuKind = ui_call_select;
+   InPopup = TRUE;
+   ButtonFocusHigh = 3;
+   ButtonFocusIndex = 0;
+   PositionAcceptButtons();
+   ShowWindow(hwndCancelButton, SW_SHOWNORMAL);
+   ShowListBox(nWhichOne);
+   EnterMessageLoop();
+   InPopup = FALSE;
+   ButtonFocusHigh = 2;
+   ButtonFocusIndex = 0;
+   PositionAcceptButtons();
+   ShowWindow(hwndCancelButton, SW_HIDE);
+   MenuKind = SavedMenuKind;
+   my_reply = SavedMy_reply;
+   // A value of -1 means that the user hit the "cancel" button.
+   return (user_match.match.index >= 0);
+}
+
+
 extern int uims_do_selector_popup(void)
 {
-   int retval;
+   int retval = 0;
 
    if (!user_match.valid || (user_match.match.call_conc_options.who == selector_uninitialized)) {
       match_result saved_match = user_match;
-      uims_reply SavedMenuKind = MenuKind;
-      uims_reply SavedMy_reply = my_reply;
-
-      nLastOne = ui_undefined;
-      MenuKind = ui_call_select;
-      ShowListBox((int) match_selectors);
-      EnterMessageLoop();
-
-      MenuKind = SavedMenuKind;
-      my_reply = SavedMy_reply;
-
       /* We skip the zeroth selector, which is selector_uninitialized. */
-      retval = user_match.match.index+1;
+      if (do_popup((int) match_selectors))
+         retval = user_match.match.index+1;
       user_match = saved_match;
    }
    else {
@@ -2367,24 +2875,16 @@ extern int uims_do_selector_popup(void)
 
 extern int uims_do_direction_popup(void)
 {
-   int retval;
+   int retval = 0;
 
    if (!user_match.valid ||
        (user_match.match.call_conc_options.where == direction_uninitialized)) {
       match_result saved_match = user_match;
-      uims_reply SavedMenuKind = MenuKind;
-      uims_reply SavedMy_reply = my_reply;
-
-      nLastOne = ui_undefined;
-      MenuKind = ui_call_select;
-      ShowListBox((int) match_directions);
-      EnterMessageLoop();
-
-      MenuKind = SavedMenuKind;
-      my_reply = SavedMy_reply;
 
       /* We skip the zeroth direction, which is direction_uninitialized. */
-      retval = user_match.match.index+1;
+      if (do_popup((int) match_directions))
+         retval = user_match.match.index+1;
+
       user_match = saved_match;
    }
    else {
@@ -2398,7 +2898,7 @@ extern int uims_do_direction_popup(void)
 
 extern int uims_do_circcer_popup(void)
 {
-   uint32 retval;
+   uint32 retval = 0;
 
    if (interactivity == interactivity_verify) {
       retval = verify_options.circcer;
@@ -2406,17 +2906,8 @@ extern int uims_do_circcer_popup(void)
    }
    else if (!user_match.valid || (user_match.match.call_conc_options.circcer == 0)) {
       match_result saved_match = user_match;
-      uims_reply SavedMenuKind = MenuKind;
-      uims_reply SavedMy_reply = my_reply;
-
-      nLastOne = ui_undefined;
-      MenuKind = ui_call_select;
-      ShowListBox((int) match_circcer);
-      EnterMessageLoop();
-
-      MenuKind = SavedMenuKind;
-      my_reply = SavedMy_reply;
-      retval = user_match.match.call_conc_options.circcer;
+      if (do_popup((int) match_circcer))
+         retval = user_match.match.call_conc_options.circcer;
       user_match = saved_match;
    }
    else {
@@ -2436,17 +2927,9 @@ extern int uims_do_tagger_popup(int tagger_class)
    if (!user_match.valid ||
        (user_match.match.call_conc_options.tagger == 0)) {
       match_result saved_match = user_match;
-      uims_reply SavedMenuKind = MenuKind;
-      uims_reply SavedMy_reply = my_reply;
-
-      nLastOne = ui_undefined;
-      MenuKind = ui_call_select;
-      ShowListBox(((int) match_taggers) + tagger_class);
-      EnterMessageLoop();
-
-      MenuKind = SavedMenuKind;
-      my_reply = SavedMy_reply;
-      saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
+      saved_match.match.call_conc_options.tagger = 0;
+      if (do_popup(((int) match_taggers) + tagger_class))
+         saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
       user_match = saved_match;
    }
 
@@ -2464,20 +2947,12 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
    uint32 number_list = 0;
 
    for (i=0 ; i<nnumbers ; i++) {
-      uint32 this_num;
+      uint32 this_num = 99;
 
       if (!user_match.valid || (howmanynumbers <= 0)) {
          match_result saved_match = user_match;
-         uims_reply SavedMenuKind = MenuKind;
-         uims_reply SavedMy_reply = my_reply;
-         nLastOne = ui_undefined;
-         MenuKind = ui_call_select;
-         ShowListBox((int) match_number);
-         EnterMessageLoop();
-
-         MenuKind = SavedMenuKind;
-         my_reply = SavedMy_reply;
-         this_num = user_match.match.index;
+         if (do_popup((int) match_number))
+            this_num = user_match.match.index;
          user_match = saved_match;
       }
       else {
@@ -2486,8 +2961,8 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
          howmanynumbers--;
       }
 
-      if (forbid_zero && this_num == 0) return ~0;
-      if (this_num > 15) return ~0;    /* User gave bad answer. */
+      if (forbid_zero && this_num == 0) return ~0UL;
+      if (this_num > 15) return ~0UL;    /* User gave bad answer. */
       number_list |= (this_num << (i*4));
    }
 
@@ -2495,33 +2970,35 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
 }
 
 
-static void Update_text_display(void)
+extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
 {
-   SCROLLINFO Scroll;
-   RECT ClientRect;
+   erase_questionable_stuff();
+   lstrcpyn(CurDisplay->Line, the_line, DISPLAY_LINE_LENGTH-1);
+   CurDisplay->Line[DISPLAY_LINE_LENGTH-1] = 0;
+   CurDisplay->in_picture = drawing_picture;
 
-   position = nLineCnt-screensize;
-   if (position < 0) position = 0;
+   if ((CurDisplay->in_picture & 1) && no_graphics == 0) {
+      if ((CurDisplay->in_picture & 2)) {
+         CurDisplay->Height = BMP_PERSON_SIZE+BMP_PERSON_SPACE;
+         CurDisplay->DeltaToNext = (BMP_PERSON_SIZE+BMP_PERSON_SPACE)/2;
+      }
+      else {
+         if (!CurDisplay->Line[0])
+            CurDisplay->Height = 0;
+         else
+            CurDisplay->Height = BMP_PERSON_SIZE+BMP_PERSON_SPACE;
 
-   Scroll.cbSize = sizeof(SCROLLINFO);
-   Scroll.fMask = SIF_RANGE | SIF_POS | SIF_PAGE;
-   Scroll.nMin = 0;
-   Scroll.nMax = nLineCnt-1;
-   Scroll.nPage = screensize;
-   Scroll.nPos = position;
-
-   SetScrollInfo(hwndTranscript, SB_VERT, &Scroll, TRUE);
-   GetClientRect(hwndTranscript, &ClientRect);
-   InvalidateRect(hwndTranscript, &ClientRect, TRUE);  // Be sure we erase the background.
-}
-
-
-extern void uims_add_new_line(char the_line[])
-{
-   lstrcpy(CurDisplay->Line, the_line);
+         CurDisplay->DeltaToNext = CurDisplay->Height;
+      }
+   }
+   else {
+      CurDisplay->Height = TranscriptTextHeight;
+      CurDisplay->DeltaToNext = TranscriptTextHeight;
+   }
 
    if (!CurDisplay->Next) {
-      CurDisplay->Next = get_mem(sizeof (DisplayType));
+      CurDisplay->Next = get_mem(sizeof(DisplayType));
+      CurDisplay->Next->Prev = CurDisplay;
       CurDisplay = CurDisplay->Next;
       CurDisplay->Next = NULL;
    }
@@ -2529,16 +3006,20 @@ extern void uims_add_new_line(char the_line[])
       CurDisplay = CurDisplay->Next;
 
    CurDisplay->Line[0] = -1;
-   nLineCnt++;
 
    Update_text_display();
+}
+
+
+extern void uims_bell(void)
+{
+   if (!no_sound) MessageBeep(MB_ICONEXCLAMATION);
 }
 
 
 extern void uims_reduce_line_count(int n)
 {
    CurDisplay = DisplayRoot;
-   nLineCnt = n;
    while (CurDisplay->Line[0] != -1 && n--) {
       CurDisplay = CurDisplay->Next;
    }
@@ -2575,8 +3056,9 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max,
                                      resolver_display_state state)
 {
    create_resolve_menu_title(goal, cur, max, state, szResolveWndTitle);
-   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szResolveWndTitle);
-   UpdateWindow(hwndStatusBar);
+   UpdateStatusBar(szResolveWndTitle);
+   // Put it in the transcript area also, where it's easy to see.
+   uims_add_new_line(szResolveWndTitle, 0);
 }
 
 
@@ -2602,15 +3084,18 @@ extern void uims_database_tick_end(void)
 extern void uims_database_error(Cstring message, Cstring call_name)
 {
    MessageBox(hwndMain, call_name, message, MB_OK);
-   uims_final_exit (0);
+   //   uims_final_exit(0);
 }
 
 
 extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3)
 {
-   /* We don't seem to look at the args.  What a shame. */
-   uims_fatal_error("Bad Command Line Argument", 0);
-   uims_final_exit (0);
+   if (s1)
+      uims_fatal_error(s1, s2);
+   else
+      uims_fatal_error("Bad Command Line Argument", 0);
+
+   uims_final_exit(1);
 }
 
 
@@ -2624,14 +3109,15 @@ extern void uims_fatal_error(Cstring pszLine1, Cstring pszLine2)
       pszLine1 = msg;   /* Yeah, we can do that.  Yeah, it's sleazy. */
    }
 
-   MessageBox(hwndMain, pszLine1, "Internal Error", MB_OK);
+   MessageBox(hwndMain, pszLine1, "Error", MB_OK);
 }
 
 
 extern void uims_final_exit(int code)
 {
    if (hwndMain)
-      SendMessage(hwndMain, WM_CLOSE, 0, 0L);
+      SendMessage(hwndMain, WM_USER+2, 0, 0L);
 
+   (void) GlobalFree(lpBi);
    ExitProcess(code);
 }

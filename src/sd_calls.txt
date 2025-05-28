@@ -32,7 +32,7 @@
     General Public License if you distribute the file.
 */
 
-version "32.65"
+version "32.81"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -3471,6 +3471,7 @@ call "partner tag" a1 tag partnertag
       array [CM1E AM0W]
 
 call "funny partner tag" c2
+            dont_use_in_resolve
    setup 2x2 2x2
       preds "???"
          if x22_miniwave [CM1E AM0W AM3W CM2E]
@@ -3652,6 +3653,7 @@ call "@6 1/2 tow truck" c3x
       [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 ZM15N 16 0 0 ZM17N 16]
 
 call "@6 run the wheel (matrix)" c3x
+            dont_use_in_nice_resolve
    partnermatrix use_selector stop_and_warn_on_tbone
       [CR18W 16 CR18W 16 AL14E 16 AL14E 16 CR16W 14 CR16W 14 AL16E 14 AL16E 14]
 
@@ -3954,9 +3956,11 @@ call "@6 plus @9" c4
    matrix use_selector use_veer_data use_number [ZM15N 16 ZM17N 16]
 
 call "@6 roll" plus tag anyoneroll
+            dont_use_in_nice_resolve
    rolldefine
 
 call "roll" plus tag roll
+            dont_use_in_nice_resolve
    rolldefine
 
 call "roll @b times" dontshow tag roll_n
@@ -4391,6 +4395,7 @@ call "@6 trade" mainstream
          if unselect               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
 
 call "trade and roll" plus tag trade_and_roll
+            dont_use_in_nice_resolve
             visible_fractions yoyo_is_inherited
    seq trade [inherit_yoyo]
    seq roll []
@@ -4401,7 +4406,7 @@ call "_trade and roll, allow t-bone" dontshow tag trade_and_roll_w_tbone
    seq roll []
 
 call "U-turn back" mainstream tag uturnback
-            one_person_call
+            dont_use_in_nice_resolve one_person_call
 /* new one: */
    /* This allows the ends to do it, no matter how they are facing,
       and no matter how they are elongated.  If we didn't have this,
@@ -4468,7 +4473,7 @@ call "quarter @eright@f" dontshow tag quarter_right
 
 /* This one doesn't allow "no direction". */
 call "quarter @h" mainstream
-            one_person_call
+            dont_use_in_nice_resolve one_person_call
    setup 2x2 2x2
       preds "Illegal direction."
          if rightp [CR0E CR1E CR2E CR3E]
@@ -4487,7 +4492,7 @@ call "quarter @h" mainstream
          if leftp [AL0W]
 
 call "1/4 @h" mainstream
-            one_person_call
+            dont_use_in_nice_resolve one_person_call
    setup 2x2 2x2
       preds "Illegal direction."
          if rightp [CR0E CR1E CR2E CR3E]
@@ -4540,7 +4545,7 @@ call "_maybe quarter @h" dontshow tag quarter_maybe
 /* This one allows "no direction".  In many cases that's unesthetic, but it is needed
    for "tunnel thru". */
 call "face @h" mainstream tag face_dir
-            one_person_call
+            dont_use_in_nice_resolve one_person_call
    setup 2x2 2x2
       preds "Illegal direction."
          if rightp   [CR0E CR1E CR2E CR3E]
@@ -5847,6 +5852,7 @@ call "invert the column @a" c2 tag invert_n_4
              AM0S AM1S AM2S AM3S AM4S AM5S AM6S AL7S]
 
 call "invert the column (parts)" c2
+            dont_use_in_nice_resolve
             visible_fractions cross_is_inherited magic_is_inherited
    seq invert_n_4      [inherit_cross inherit_magic normalize insert_number 1]
    seq continue_invert [inherit_cross inherit_magic normalize]
@@ -6431,7 +6437,7 @@ call "centers fold" dontshow tag ctrsfold
       array [ZM0N CR1S ZM1N AL0S]
 
 call "recycle (parts)" c1
-            visible_fractions cross_is_inherited
+            dont_use_in_nice_resolve visible_fractions cross_is_inherited
    seq ctrsfold [inherit_cross]
    seq splitctrrot []
    seq quarterin []   /* Yes, it's quarter in, not roll.  Callerlab C1 definitions, page 5. */
@@ -6452,7 +6458,7 @@ call "all 8 cycle and turn and deal" c2
              turnanddeal [suppress_elongation_warnings]
 
 call "1/3 recycle" c1
-            cross_is_inherited
+            dont_use_in_resolve cross_is_inherited
    seq ctrsfold [inherit_cross]
 
 call "2/3 recycle" c1 tag 23recycle
@@ -6478,19 +6484,29 @@ call "_natural vertical 1/2 tag" dontshow tag natural_vertical_half_tag
          if x22_tandem_with_someone [CR1S AL0S ZM1N ZM0N]
          if always                  [CR1S    0    0 ZM0N]
 
+call "_linear cycle 1" dontshow tag linear_cycle_1
+            cross_is_inherited
+   seq slither_if_cross [inherit_cross]
+   seq hinge_with_warn []
+
 call "_finish linear cycle" dontshow tag fin_linear_cycle
    setup 2x2 2x2 qualifier right wave_only
       array [CR2N 0 0 CR1S]
    setup 2x2 2x2 qualifier left wave_only
       array [0 AL3N AL0S 0]
-   /* Maybe this next item should be marked "controversial". */
+   /* Maybe this next item should be marked "controversial".
+      I consider it really disgusting that dancers have to remember their
+      original miniwave handedness (for the final peel) after they have
+      done a right-shoulder double pass thru.  Even at C4, call definitions
+      usually take great pains not to require dancers to remember past
+      "state" after it has disappeared.  But this lowly Plus call
+      violates that. */
    setup 2x2 2x2 restriction not_tboned
       array [CR2N AL3N AL0S CR1S]
 
 call "linear cycle" plus
-            cross_is_inherited
-   seq slither_if_cross [inherit_cross]
-   seq hinge_with_warn []
+            first_part_visible cross_is_inherited
+   seq linear_cycle_1 [inherit_cross]
    seq fin_linear_cycle []
 
 call "cycle and wheel" a1 tag cyclewheel
@@ -6537,7 +6553,7 @@ call "cross cycle" c3
          if always       [CR2S 0    0    CR3S]
 
 call "cross cycle (parts)" c3
-            visible_fractions
+            dont_use_in_nice_resolve visible_fractions
    seq ctrsfold [force_cross]
    seq splitctrrot []
    seq quarterin []
@@ -6896,6 +6912,9 @@ call "switch to a@M@I diamond" a2 tag switch_to_diamond
             alternate_definition [magic] c2
    setup 2x4 qtag rotate
       array [CR3N AL4E CR1E AL3S AL6S CR0E AL5E CR6N]
+            alternate_definition [interlocked magic] c2
+   setup 2x4 qtag rotate
+      array [CR7N AL4E CR1E AL7S AL6S CR0E AL5E CR6N]
 
 call "run away" c4
             left_means_mirror
@@ -7248,7 +7267,7 @@ call "_fudge 2 after fold" dontshow tag fold_fudge2
    a "Z".  This is what dancers below C1 or so will typically do. */
 
 call "@6@C fold (and adjust)" mainstream
-            cross_is_inherited
+            dont_use_in_nice_resolve cross_is_inherited
    seq full_fold [inherit_cross]
    seq fold_fudge1 [roll_transparent normalize]
    seq fold_fudge2 [roll_transparent normalize]
@@ -7908,7 +7927,7 @@ call "more or less trail off" c4
       array [CR2W AL0E AL1W CR1E]
 
 call "reset" c3
-            visible_fractions fractal_is_inherited
+            dont_use_in_nice_resolve visible_fractions fractal_is_inherited
    seq zoom [force_half]
    seq armturn_n4 [inherit_fractal insert_number 1]
    seq zoom [force_half]
@@ -8224,6 +8243,7 @@ call "swing thru" mainstream
    seq 1_2_by_left  [inherit_left inherit_grand inherit_bigmatrix inherit_diamond inherit_yoyo roll_transparent]
 
 call "any hand swing thru" mainstream
+            dont_use_in_nice_resolve
             grand_is_inherited yoyo_is_inherited visible_fractions
    seq swing [inherit_yoyo]
    seq slip [inherit_grand inherit_yoyo]
@@ -8237,11 +8257,13 @@ call "@D thru" a1
    seq 1_2_by_left [inherit_left inherit_grand inherit_diamond inherit_yoyo roll_transparent]
 
 call "any hand @D thru" a1
+            dont_use_in_nice_resolve
             neednumber grand_is_inherited yoyo_is_inherited visible_fractions
    seq cast_off_n4_odd []
    seq maybegrandslip_notc3 [inherit_grand inherit_yoyo]
 
 call "any hand grand @D thru" a1
+            dont_use_in_nice_resolve
             neednumber yoyo_is_inherited visible_fractions
    seq cast_off_n4_odd []
    seq maybegrandslip_notc3 [force_grand inherit_yoyo]
@@ -8293,6 +8315,7 @@ call "remake" a2
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_fractal insert_number 3]
 
 call "any hand remake" a2
+            dont_use_in_nice_resolve
             grand_is_inherited yoyo_is_inherited visible_fractions
    seq cast_off_14 []
    seq maybegrandslip_notc3 [inherit_grand inherit_yoyo]
@@ -8323,7 +8346,7 @@ call "swing the fractions 4/5" c1
    seq 1_2_by_left [inherit_left inherit_yoyo inherit_diamond]
 
 call "any hand swing the fractions" c1
-            visible_fractions
+            dont_use_in_nice_resolve visible_fractions
    seq cast_off_14 []
    seq maybegrandslip_notc3 []
    seq cast_off_34 []
@@ -8345,23 +8368,24 @@ call "@D mix" c3a
    seq maybegrandslip [inherit_grand inherit_yoyo roll_transparent]
 
 call "any hand @D cross" c3x
-            neednumber grand_is_inherited visible_fractions
+            dont_use_in_nice_resolve neednumber grand_is_inherited visible_fractions
    seq cast_off_n4_odd []
    seq ctrrun [force_cross inherit_grand]
 
 call "any hand @D mix" c3a
+            dont_use_in_nice_resolve
             neednumber grand_is_inherited yoyo_is_inherited visible_fractions
    seq cast_off_n4_odd []
    seq ctrrun [force_cross inherit_grand]
    seq maybegrandslip [inherit_grand inherit_yoyo roll_transparent]
 
 call "any hand grand @D cross" c3a
-            neednumber visible_fractions
+            dont_use_in_nice_resolve neednumber visible_fractions
    seq cast_off_n4_odd []
    seq ctrrun [force_cross force_grand]
 
 call "any hand grand @D mix" c3a
-            neednumber yoyo_is_inherited visible_fractions
+            dont_use_in_nice_resolve neednumber yoyo_is_inherited visible_fractions
    seq cast_off_n4_odd []
    seq ctrrun [force_cross force_grand]
    seq maybegrandslip [force_grand inherit_yoyo roll_transparent]
@@ -8824,12 +8848,14 @@ call "_funny_right_on finish" dontshow tag funnyrightonfinish
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "funny @eright@f on @9" c4a
+            dont_use_in_nice_resolve
             split_like_square_thru left_means_mirror neednumber twisted_is_inherited
    seq funnysquaremain [inherit_left repeat_nm1]
    seq funnyrightonfinish [insert_number 3]
 
 call "funny @eright@f on @9 and @b" c4a
-            split_like_square_thru dont_use_in_resolve left_means_mirror need_two_numbers twisted_is_inherited
+            dont_use_in_resolve
+            split_like_square_thru left_means_mirror need_two_numbers twisted_is_inherited
    seq funnysquaremain [inherit_left repeat_nm1]
    seq funnyrightonfinish [shift_one_number]
 
@@ -8894,7 +8920,7 @@ call "_funny square thru finish" dontshow tag funnysquarefinish
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "funny square thru @9" c2
-            neednumber left_means_mirror
+            dont_use_in_nice_resolve neednumber left_means_mirror
    seq funnysquarerear [inherit_left]
    seq funnysquaremain [inherit_left repeat_nm1]
    seq funnysquarefinish []
@@ -9149,6 +9175,7 @@ call "courtesy turn" mainstream
       array [AL0N AL1N]
 
 call "courtesy turn and roll" dontshow tag courtesy_and_roll
+            dont_use_in_nice_resolve
             left_means_mirror yoyo_is_inherited single_is_inherited
             nxn_is_inherited
    seq courtesy [inherit_left inherit_yoyo inherit_single inherit_nxn]
@@ -10178,12 +10205,12 @@ call "couple up" c3a
       array [CR0E CR1E CR2E CR3E AL0E AL1E AL2E AL3E]
 
 call "couple up (parts)" c3a tag coupleup
-        visible_fractions funny_is_inherited
+            dont_use_in_nice_resolve visible_fractions funny_is_inherited
    seq box_circ [inherit_funny or_anycall]
    seq like_coupleup [roll_transparent]
 
 call "@N couple up" c3a
-        visible_fractions funny_is_inherited
+            visible_fractions funny_is_inherited
    seq circnullcall [inherit_funny or_anycall]
    seq like_coupleup [roll_transparent]
 
@@ -10737,7 +10764,7 @@ call "@1@7 like a @8recoil" c3a tag recoil
    seq stepnfold [inherit_cross]
 
 call "recoil (matrix)" c3a
-            reverse_means_mirror cross_is_inherited
+            dont_use_in_nice_resolve reverse_means_mirror cross_is_inherited
    setup 2x2 2x2 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
          if x22_miniwave [CR2N AL3N AM2S CM3S]
@@ -11779,6 +11806,7 @@ call "easy does it" c4a
    conc zing [] zing [conc_demand_lines conc_force_otherway endscando]
 
 call "easy does it (matrix)" c4a
+            dont_use_in_nice_resolve
    setup 2x4 2x4 rotate
       array [AL4N AL5N CR2S CR3S AL0S AL1S CR6N CR7N]
             alternate_definition [single] c4
@@ -13571,12 +13599,9 @@ call "push off" c4a
 
 
 
-
-
-
 /* This allows some of the uses that violate the definition of the call's parts. */
 call "countershake (matrix)" c4
-            left_means_mirror
+            dont_use_in_nice_resolve left_means_mirror
    setup 4x2 2x4
       array [0 0 C1W C6W C7W C0W 0 0]
             alternate_definition [single] c4
@@ -13740,6 +13765,7 @@ call "_@k tie part 3" dontshow tag anyone_tie_3
          if always   [0 0 0 0]
 
 call "@k tie (parts)" c4a
+            dont_use_in_nice_resolve
             yield_if_ambiguous visible_fractions
             cross_is_inherited
    seq crossable_peeloff [seq_never_re_evaluate inherit_cross]
@@ -14093,6 +14119,7 @@ call "slim down" c4a tag slimdown
       array [ZM12W ZM13W ZM14W ZM15W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W ZM6W ZM7W ZM8W ZM9W ZM10W ZM11W]
 
 call "lateral substitute" c2
+            dont_use_in_nice_resolve
    setup 2x4 2x4
       array [ZM1N ZM0N ZM3N ZM2N ZM5N ZM4N ZM7N ZM6N]
    setup 4x2 2x4
@@ -14103,6 +14130,7 @@ call "lateral substitute" c2
       array [   0 ZM5N ZM4N    0 ZM2N ZM1N]
 
 call "triangle substitute" c2
+            dont_use_in_nice_resolve
    setup ptrngl trngl    /* Same as lateral substitute, above. */
       array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
    setup trngl trngl
@@ -14674,7 +14702,8 @@ call "split mixed up, new ctrs @0" c3x
    seq mixedup []
    seq centers_mandatory_call []
 
-call "hocus pocus (fractions)" c2
+call "hocus pocus (parts)" c2
+            dont_use_in_nice_resolve
             visible_fractions magic_is_inherited yoyo_is_inherited
    conc_o trade_w_tbone [inherit_yoyo] two_o_circs_for_frac [inherit_magic endscando]
 
@@ -14996,7 +15025,8 @@ call "@6 rip n snort" c4x
 
 call "acey deucey" plus tag aceydeucey
             half_is_inherited yoyo_is_inherited
-   conc trade_w_tbone [inherit_half inherit_yoyo suppress_elongation_warnings] circulate [inherit_half endscando]
+   conc6p_or_normal trade_w_tbone [inherit_half inherit_yoyo suppress_elongation_warnings]
+                    circulate [inherit_half endscando]
 
 call "mix the deucey" c4a
    seq mix []
@@ -16064,6 +16094,7 @@ call "centers thru and close the gate" c4
    seq twist2 []
 
 call "mini busy (matrix)" c3
+            dont_use_in_nice_resolve
    setup 2x4 qtag restriction 2fl_only
       array [CR0S CR1S AL0S AL1S AL3S AL6S CR2S CR7S]
             alternate_definition [single] c4
@@ -16920,7 +16951,7 @@ call "fan the gat@pe@q@ning@o@t" c4a
    seq fanthegate1 []
    seq fanthegate2 []
 
-call "fan the gating @0" c2
+call "fan the gating @0" c4a
    seq fanthegate1 []
    seq fanthegating2 []
 
@@ -17232,7 +17263,7 @@ call "scoot and weave" a2
       array [CR0W 0 0 CCAL1E]
 
 call "scoot and weave (parts)" a2
-            visible_fractions
+            dont_use_in_nice_resolve visible_fractions
    seq scootback []
    seq weave []
 
@@ -17387,7 +17418,7 @@ call "_finish plenty" dontshow tag finishplenty
    conc cfinplenty [] ctr_rot_roll [conc_force_otherway endscando]
 
 call "_finish little more" dontshow tag finlilmore
-   conc box_circulate_maybe_diamond [] ctr_rot [conc_force_otherway]
+   conc box_circulate_maybe_diamond [] nullcall []
 
 call "little" c1 tag little
             fudge_to_q_tag left_means_mirror intlk_is_inherited
@@ -17401,31 +17432,19 @@ call "little, ends face @h" c1 tag little_ends_face_dir
             fudge_to_q_tag intlk_is_inherited
    conc stepnfold [inherit_intlk] endslittledir [conc_force_otherway endscando]
 
-call "_start little more" dontshow tag startlilmore
-            fudge_to_q_tag left_means_mirror intlk_is_inherited
-   conc stepnfold [inherit_intlk] quarter_right [conc_force_spots inherit_left endscando]
-
-call "_start little more, ends face @h" dontshow tag startlilmoredir
-            fudge_to_q_tag intlk_is_inherited
-   conc stepnfold [inherit_intlk] quarter_maybe [endscando]
-
-call "_start little more, ends go as you are" dontshow tag startlilmoreasare
-            fudge_to_q_tag intlk_is_inherited
-   conc stepnfold [inherit_intlk] nullcall []
-
 call "little more" c2 tag lilmore
             fudge_to_q_tag left_means_mirror intlk_is_inherited visible_fractions
-   seq startlilmore [inherit_intlk inherit_left]
+   seq little [inherit_intlk inherit_left]
    seq finlilmore []
 
 call "little more, ends go as you are" c2 tag lilmore_ends_as_are
             fudge_to_q_tag intlk_is_inherited      /* No visible fractions. */
-   seq startlilmoreasare [inherit_intlk]
+   seq little_ends_as_are [inherit_intlk]
    seq finlilmore []
 
 call "little more, ends face @h" c2 tag lilmore_ends_face_dir
             fudge_to_q_tag intlk_is_inherited visible_fractions
-   seq startlilmoredir [inherit_intlk inherit_left]
+   seq little_ends_face_dir [inherit_intlk inherit_left]
    seq finlilmore []
 
 call "plenty@S" c1 tag plenty

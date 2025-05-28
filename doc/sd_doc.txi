@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: May 22, 1999
-@set sd-version 32.65
+@set Time-stamp: July 31, 1999
+@set sd-version 32.81
 @set full-manual
 @c %**end of header
 @iftex
@@ -79,13 +79,13 @@ This is the summary table of contents:
 
 * Intro::                       Introduction
 * Getting Started::             Getting started quickly with Sd
-* The Completing Reader for Sdtty:: The Completing Reader for Sdtty
-* Invoking Sd::                 Invoking Sd via Command Line
-* The Initialization File::     The Initialization File
 * Calling::                     Calling
+* The Completing Reader::       The Completing Reader
 * Resolving and Searching::     Resolving and Searching
 * Editing::                     Editing
-* Misc Commands::               Miscellaneous Commands
+* Miscellaneous Commands::      Miscellaneous Commands
+* The Initialization File::     The Initialization File
+* Invoking Sd::                 Invoking Sd via Command Line
 * Terminal Interface::          Terminal Interface
 * Linguistic Idiosyncrasies::   Linguistic Idiosyncrasies
 * Using Off-Level Concepts::    Using Off-Level Concepts
@@ -106,39 +106,27 @@ Introduction
 * Author Contact::              How to Contact the Authors
 * Acknowledgements::            Acknowledgements
 
-The Completing Reader for Sdtty
-
-* Question Mark::               Question Mark and Exclamation Point
-* Minimizing Typing::           Minimizing the Amount of Typing You Must Do
-* Ignoring Hyphens::            Ignoring Hyphens and Apostrophes when Typing
-
-Invoking Sd via Command Line
-
-* Command-Line Options::        Command-Line Options
-* Abridgement::                   Abridgement
-
-The Initialization File
-
-* Session Control::             Session Control
-* Option Control::              Option Control
-* Accelerator Key Control::     Accelerator Key Control
-* Sample Initialization Files:: Sample Initialization Files
-
 Calling
 
-* Startup Menu::                The Startup Menu
+* Entering Your Choice::        Entering Your Choice
+* Starting a Sequence::         Starting a Sequence
 * Heads/Sides Start::             starting with the heads or sides
 * 1P2P Lines::                    starting with 1P2P lines
 * Just As They Are::              starting with a squared set
 * Entering Calls::              Entering Calls
 * Call Variations::               how to write Call Variations
 * Call Menus::                    call menus
-* Scrolling::                     the call menu scroll bar
 * Entering Concepts::           Entering Concepts
 * Supercalls::                  Supercalls
 * Call Modifications::          Call Modifications
 * Retaining Concepts After an Error:: Retaining Concepts After an Error
 * Asymmetric Selectors::        Asymmetric Selectors
+
+The Completing Reader
+
+* Question Mark::               Question Mark and Exclamation Point
+* Minimizing Typing::           Minimizing the Amount of Typing You Must Do
+* Ignoring Hyphens::            Ignoring Hyphens and Apostrophes when Typing
 
 Resolving and Searching
 
@@ -167,10 +155,22 @@ Miscellaneous Commands
 * Singing Call Progressions::   Singing Call Progressions
 * Changing Modes::              Changing Modes
 
+The Initialization File
+
+* Session Control::             Session Control
+* Option Control::              Option Control
+* Accelerator Key Control::     Accelerator Key Control
+* Sample Initialization Files:: Sample Initialization Files
+
+Invoking Sd via Command Line
+
+* Command-Line Options::        Command-Line Options
+* Abridgement::                 Abridgement
+
 Terminal Interface
 
 * Sdtty::                       The @code{Sdtty} program
-* Function Keys in Sdtty::      Function Keys
+* Function Keys::               Function Keys
 * Sdtty on Unix::               The Unix version
 
 Call Notes
@@ -211,7 +211,6 @@ Concept Notes
 * Distorted Setup Concepts::    Distorted Setup Concepts
 * 4-person distorted concepts:: 4-person distorted concepts
 * Miscellaneous Concepts::      Miscellaneous Concepts
-* Main Menu Concepts::          Miscellaneous Concepts Appearing Only in the Main Menu
 * Concentric::                  Concentric
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
@@ -224,8 +223,12 @@ Concept Notes
 
 @include readme.txi
 
-@node Getting Started, The Completing Reader for Sdtty, Intro, Top
+@node Getting Started, Calling, Intro, Top
 @chapter Getting Started
+
+Throughout this manual, the name @code{Sd} will generally be used to denote
+both @code{Sd} and @code{Sdtty}, except in those areas in which the programs
+are different.
 
 If you are using a PC and have installed @code{Sdtty} to run under Windows 3.1
 or Windows 95, start the program in the usual way by clicking its icon.
@@ -256,762 +259,17 @@ In @code{Sd}, they are found in the menu in the upper
 left corner.
 In @code{Sdtty}, just type the name of the command.
 
-The following chapters cover the operation of @code{Sd} and
-@code{Sdtty} in detail.
+The following chapters cover the operation of @code{Sd} in detail.
 
-@node The Completing Reader for Sdtty, Invoking Sd, Getting Started, Top
-@chapter The Completing Reader for Sdtty
-
-@code{Sdtty} uses a @dfn{completing reader} for interpreting the
-characters that you type.
-This means that you only need to type as much of the word or command as is
-required to be unambiguous.  Whenever you type a space, @code{Sdtty} completes
-the word you just typed, if necessary and possible.  Whenever you type
-@key{ENTER} (or @key{RETURN} on some keyboards),
-@code{Sdtty} completes the entire line
-if necessary and possible.
-
-For example, at Mainstream, you can enter a swing thru by typing
-@samp{swing thru @key{ENTER}}.
-When the space after @samp{swing} is typed,
-no completion is required.  When the
-@key{ENTER}
-after @samp{thru} is typed, no completion is required either.  If you type
-@samp{sw thru @key{ENTER}}
-instead, @code{Sdtty} completes the word @samp{swing}.
-It does this by displaying
-@samp{ing} on the screen as soon as you type the space after
-@samp{sw}.  If you type
-@samp{sw th @key{ENTER}},
-@code{Sdtty} will complete both words.  It displays @samp{ing} as soon as you type the
-space, and it displays @samp{ru} as soon as you type
-@key{ENTER}.
-In fact, you could just type
-@samp{sw @key{ENTER}}.
-@code{Sdtty} completes the entire line, if necessary
-and possible, when @key{ENTER} is pressed.
-So it will display @samp{ing thru} after
-your @samp{sw}.  In each case, the full phrase @samp{swing thru} will appear
-on the screen, and will be printed in the final sequence.
-
-Because of this completion, you can get into the habit of just typing
-@samp{sw @key{ENTER}}
-at Mainstream.  However, it will only work if what you type is unambiguous.
-At higher levels, @samp{sw} could also mean @samp{swap around}.  When there is an
-ambiguity, @code{Sdtty} will complete as much as it can and beep at you.
-You can
-type @samp{?} or @samp{!} (discussed below) to see what the problem is.
-
-With practice, you can get a reasonable feel for how much abbreviation you can
-get away with in a given context.
-
-Typing
-@key{ESC}
-(or
-@key{ALT MODE}
-on some keyboards) or
-@key{TAB}
-will complete the entire line, just like
-@key{ENTER},
-but will not actually process the line.  If you like what you see, you can
-then press
-@key{ENTER}
-to execute the call.  If the line is ambiguous,
-the program will display as much of the line as it can.
-When used effectively,
-this can save you a lot of typing.
-
-@code{Sdtty}'s completing reader is completely indifferent to the capitalization of
-what you type.  It capitalizes its output according to its own notions of
-aesthetics and ambiguity avoidance.
-
-@menu
-* Question Mark::               Question Mark and Exclamation Point
-* Minimizing Typing::           Minimizing the Amount of Typing You Must Do
-* Ignoring Hyphens::            Ignoring Hyphens and Apostrophes when Typing
-@end menu
-
-@node Question Mark, Minimizing Typing,  , The Completing Reader for Sdtty
-@section Question Mark and Exclamation Point
-
-At any time, you can type a question mark or exclamation point.  Either of
-these will make @code{Sdtty} display all legal completions of the line
-that has been typed so far.  If what you
-have typed is unambiguous, that will consist of just one thing.  If you
-have typed nothing, it will consist of every legal thing you could type---typically
-that is every call, every concept, and every special command.
-
-The difference between question mark and exclamation point is that the
-question mark actually attempts to execute every call in the current
-call menu (that is, every call whose name matches the text you have
-typed so far), and shows only those that can be legally performed.
-Exclamation point simply displays every call on the menu that matches
-the text that you have typed so far.  Remember that the call menus
-are only approximate---they often have many calls listed that are
-in fact not legal in the present setup.  This is particularly true
-when concepts are in place.  The program simply has no idea what calls
-are legal without trying them.  Question mark tells it to do so.
-
-The difference between question mark and exclamation point only applies
-to calls.  All concepts and special commands (@code{resolve}, for example)
-are always listed whenever either character is typed.
-
-The output from typing a question mark or exclamation point may be quite lengthy.
-If it fills more than one screenful, @code{Sdtty} will stop and display
-@samp{--More--} at the
-bottom of the screen.  Type
-@key{SPACE}
-to go on to the next screenful.  Type
-@key{ENTER}
-to see just one more line.  Type a backspace (or
-@key{DEL})
-to stop.  When the output ends, either because @code{Sdtty} displayed everything or
-because you typed a backspace, the partially entered line will be redisplayed, just
-as it was before you typed the question mark.
-
-When you are typing calls or concepts and you type
-@key{ENTER}
-while the line that you have typed is ambiguous, @code{Sdtty} will display something
-like @samp{(10 matches, type ! or ? for list)}.  The number that it displays is the
-number of syntactically legal choices among which it can't decide.  This is the number
-of choices that would have been listed if you had typed @samp{!}.  It may be more than
-the number of things that would be listed if you had typed @samp{?}.  The reason
-is that the @samp{?} operation has to test every call before listing it.  It can
-easily do this faster than you can read the list of choices.  When you type
-@key{ENTER}
-while there are multiple syntactic choices available, the computer can't count
-them fast enough to respond instantaneously.  It therefore displays an approximate
-number, computed by looking at its database without testing each call.
-
-@node Minimizing Typing, Ignoring Hyphens, Question Mark, The Completing Reader for Sdtty
-@section Minimizing the Amount of Typing You Must Do
-
-The @code{Sdtty} completion mechanism, especially the
-@key{ESC}
-(or
-@key{ALT MODE}
-or
-@key{TAB})
-key, can save you a lot of typing.
-For example, typing
-@example
-      @kbd{heads do your part @key{ENTER}}
-@end example
-@noindent is probably more than you want to do.  If you type just
-@example
-      @kbd{heads do}
-@end example
-the line will be almost unambiguous---there are only two possible commands
-that start this way.  By typing a question mark, @code{Sdtty} will show them
-to you.  They are
-@example
-      heads do your part
-@end example
-and
-@example
-      heads do your part (while the others)
-@end example
-What these concepts actually mean will be discussed at length in
-@ref{Designating Certain People}.  For now, we are just discussing how to
-type them.
-
-These commands don't differ until the @samp{t} in @samp{part}.  If you type
-@key{ENTER}
-after @samp{part}, @code{Sdtty} will know that you want the
-first of these commands.  If you type a space and then
-@key{ENTER},
-@code{Sdtty} will know that you want the second.  Does this mean that you
-must type the whole command up to @samp{part}, followed by a space or
-@key{ENTER}?
-No.  Just type @samp{heads do}, and then press
-@key{ESC}.
-@code{Sdtty} will display @samp{heads do your part}, since that is the text
-that is common to both commands.  At that point, you may press
-@key{ENTER}
-to get the @samp{heads do your part} concept.  Or you could type space
-and then
-@key{ENTER}
-to get the @samp{heads do your part (while the others)}
-concept.  You could, of course, type the complete phrase @samp{(while the others)}
-after the space, but there is no need to.  Once you type the space, @code{Sdtty}
-knows exactly which command you want.
-
-What would happen if you tried to shorten the command still further by typing
-just @samp{heads d} instead of @samp{heads do}?  Below C2 this would work
-just fine.  At C2 and above, an ambiguity would exist because of the
-@samp{heads disconnected} concept.  Typing a question mark after @samp{heads d}
-will show you the ambiguity.  In general, typing a question mark will help guide
-you in minimizing the amount of typing you must do.  With practice, you will
-be able to enter your favorite calls and concepts with minimal typing.
-
-Here is another example.  To enter @samp{criss cross the shadow} or
-@samp{criss cross your neighbor}, it is not necessary to type
-@samp{criss cross t} or @samp{criss cross y}.  You can just type @samp{cri}
-followed by
-@key{ESC}.
-The program will display everything up to the
-point of ambiguity, which, at C2, is @samp{criss cross }.  At that point,
-you just need to type @samp{t} or @samp{y}, followed by
-@key{ENTER}.
-Above C2, there are more possible calls, but typing @samp{cri}
-followed by
-@key{ESC}
-is still a good way to start.
-
-@node Ignoring Hyphens, , Minimizing Typing, The Completing Reader for Sdtty
-@section Ignoring Hyphens and Apostrophes when Typing
-
-You can type a space instead of a hyphen in call and concept names.
-For example, you can type @code{ping pong circulate} or @code{tandem based triangles}
-instead of @code{ping-pong circulate} or @code{tandem-based triangles}.
-The calls will always be printed out with the hyphen.
-
-You can omit apostrophes when typing in call and concept names.  For example,
-you can type @code{lockers choice} instead of @code{locker's choice}.
-The calls will always be printed out with the apostrophe.
-
-@node Invoking Sd, The Initialization File, The Completing Reader for Sdtty, Top
-@chapter Invoking Sd via Command Line (DOS or UNIX only)
-
-@display
-@t{sd} level [ Xt options @dots{} ] [ Sd options @dots{} ]
-@t{sd} level @t{-write_list} filename
-@t{sd} level @t{-write_full_list} filename
-@end display
-
-The program is normally invoked with a single argument---the level.
-This is one of the following: @code{m} (mainstream), @code{p} (plus),
-@code{a1}, @code{a2}, @code{c1}, @code{c2}, @code{c3a},
-@code{c3}, @code{c3x}, @code{c4a}, @code{c4}, or @code{c4x}.
-The level can also be determined by the selection made when using the
-``session'' feature.
-If the level is not given, or the program was started by a mouse
-click from Windows, the program will ask you for it.
-However it is specified,
-the level determines the calls and concepts that will be made
-available, according to our best guess of what the levels mean.  Various
-optional arguments are permitted to control the window system,
-customize the list of calls used, and set other options.
-These will be described later.
-
-The call definitions will be read in from the encoded database file
-@file{sd_calls.dat}.  The program will then ponder the database for a few
-seconds while it determines what calls to put on what menus.  Depending
-on the speed of your computer and the level you selected, this could take
-from a few seconds to over a minute.
-
-@menu
-* Command-Line Options::        Command-Line Options
-* Abridgement::                 Abridgement
-@end menu
-
-@node Command-Line Options, Abridgement,  , Invoking Sd
-@section Command-Line Options (DOS or UNIX only)
-
-There are a number of option keywords that can be given to @code{Sd} or @code{Sdtty}
-when the program is started.  These control various aspects of the program's
-operation.  These keywords are placed on the command line with which the
-program was invoked from the Unix shell or the DOS prompt.  Each keyword
-has a hyphen in front of it.
-
-Examples:
-
-@display
-@t{sd -singlespace plus}
-@t{sdtty -retain_after_error -active_phantoms c3}
-@end display
-
-These option keywords can also be placed, without the leading hyphens,
-in the ``options'' section of the initialization file.  @xref{Option Control}.
-When this is done, the options will always be in force and do not need to
-be specified each time the program is run.
-
-The following options are used by both @code{Sd} and @code{Sdtty}.
-Note that some of them use the underscore character, whereas the corresponding
-``toggle'' commands use blanks between words.
-
-@table @code
-@item -db @var{filename}
-location of the calls database.  The default is @file{sd_calls.dat} in
-the current directory.
-@item -sequence @var{filename}
-base name of the file to write sequences to.  The calling level will be
-used as the extension of the file name.
-The default base name is @file{sequence}, so a complete
-file name might be @file{sequence.C1}.
-@item -singlespace
-This makes the program write out the output file with single spacing.
-This may be useful for those who use special fonts or special printer
-arrangements.
-@item -concept_levels
-This turns on the ``concept levels'' behavior,
-allowing
-all concepts, even those that are not actually legal at the specified level.
-It is the same as giving the
-@code{toggle concept levels} command to the program.
-@item -active_phantoms
-This turns on the ``active phantoms'' behavior,
-which makes phantoms persist
-throughout calls.
-It is the same as giving the
-@code{toggle active phantoms} command to the program.
-@item -no_warnings
-This suppresses the display and printing of the
-warning messages that are sometimes given to help less-experienced callers.
-@item -no_color
-On Windows and other systems that support it, the program color-codes
-the dancers shown on the screen.  Boys are shown in blue and girls in
-red.  This option disables the use of color.  Pictures drawn in the
-output file will never be in color.
-@item -color_by_couple
-If colors are being used for on-screen display of dancers, this option
-uses an alternative color scheme.  Each couple is shown in a different
-color.
-@item -no_intensify
-On Windows, @code{Sdtty} displays text at
-full brightness, rather than the 3/4 brightness that is the default for command
-prompt windows.  This option leaves the brightness at its default value.
-@item -no_graphics
-Suppress the use of special PC graphics characters when drawing pictures
-on the screen.  These characters are not standard on all PC's.  Pictures
-drawn in the output file will never use the special graphics characters.
-@item -no_sound
-Do not ring the bell or make any other sound when reporting errors.
-@item -retain_after_error
-This makes the program automatically retain all concepts that had
-been typed prior to the current call whenever an error occurs.
-The usual behavior is to discard all typed concepts when an error occurs.
-In particular, it makes the program behave as though you had given
-the @code{toggle retain after error} command.
-@xref{Retaining Concepts After an Error}.
-@item -discard_after_error
-This makes the program discard all concepts that had
-been typed prior to the current call, whenever an error occurs.
-Since this is the usual behavior, you rarely need this option.
-@end table
-
-There are X resources associated with some options:
-@code{Sd.sequenceFile} is equivalent to the @w{@code{-sequence}} switch, and
-@code{Sd.databaseFile} is equivalent to @code{-db}.
-
-If you almost always will be passing the the same value for a
-command-line switch, you may find it more convenient to set the
-corresponding resource.
-
-With the X Window System interface, Sd accepts all Xt command-line
-options.  The following are some of the more useful options for use with
-Sd.
-
-@table @code
-@item -rv
-reverse video
-@item -bg @i{color}
-background color
-@item -fg @i{color}
-foreground color
-@item -bd @i{color}
-border color
-@item -font @i{font}
-font used everywhere
-@item -geometry @i{geom-spec}
-geometry in pixels
-@item -title @i{string}
-title for window manager and icon use
-@item -name @i{string}
-name to look up resources under.  default: program name.
-@item -xrm @i{resource-line}
-an X resource manager string.
-@end table
-
-The following options are specific to the terminal-based version,
-@code{Sdtty}.
-
-@table @code
-@item -no_cursor
-Dumb terminal mode: do not use cursor motion commands to keep the screen
-up-to-date efficiently.  Use this if the cursor motion and screen manipulation
-operations of your terminal or operating system are not available or are not
-working satisfactorily.  @xref{Sdtty}.
-@item -no_console
-Extremely dumb terminal mode: turn off all special input/output processing completely.
-This allows input or output to be redirected from files.
-@item -lines @var{nlines}
-The number of lines on the screen.  Default is 25.
-@item -no_line_delete
-Do not use the insert line or delete line cursor control commands.  Use this
-if these commands are not working satisfactorily on your terminal.
-@end table
-
-@node Abridgement,  , Command-Line Options, Invoking Sd
-@subsection Abridgement
-
-The program recognizes three flags which allow use of an abridged
-list of calls:
-
-@table @code
-@item -write_list @var{filename}
-write out the call list for the indicated level and exit
-@item -write_full_list @var{filename}
-write out the call list for the indicated level and all lower levels
-and then exit the program.
-@item -abridge @var{filename}
-read in the file, strike all the calls contained therein off the menus,
-and proceed.
-@end table
-
-The first two are used to prepare a call list.  The call list for the
-indicated level, exactly as the calls appear in the menu, will be written
-to the named file.  If @code{-write_list} is used, only the calls exactly on
-that level will be written.  If @code{-write_full_list} is used, the lower level
-calls will be written as well, so the file will look exactly like the
-main call menu.  After performing either of these operations, the program
-exits.
-
-The third special flag is used to read in a list of calls to be avoided.
-Any call listed in the file, in precisely the same format as it was written
-out, will be removed from the internal database prior to running the program.
-Every sequence written under control of such a file will say @samp{(abridged)}
-on its header line.
-
-To write sequences for a group that is learning C2, for example, run the
-program with
-@example
-        sd -write_list my_group c2
-@end example
-
-Then delete from the file @file{my_group} those calls that the group has
-learned, i.e., those calls not to be avoided.
-When writing sequences, use the command
-@example
-        sd -abridge my_group c2
-@end example
-
-As the group learns new C2 calls, delete the corresponding lines from
-the file @file{my_group}.  That file always contains the calls that they don't
-yet know.  When the file goes to zero, they know the whole list.
-
-Be aware that the abridgement mechanism works only for calls, not for concepts.
-You must keep track of what concepts not to use.
-
-The lines in the abridgement file must always be in exactly the same format
-as the strings that are written out by the @code{-write_list} or @code{-write_full_list}
-flags.  The program has no tolerance for creative capitalization, stray
-blanks, or other variations.  Any line in the file that does not match a
-call in the menu is simply ignored.  The order of the lines is not important.
-
-@node The Initialization File, Calling, Invoking Sd, Top
-@chapter The Initialization File
-
-When @code{Sd} or @code{Sdtty} starts, it looks for a file @file{sd.ini}.
-This file, if present, contains information about dances
-you might be working on, and about possible individual preferences
-you might have for the way the program runs.
-Such a file might look like this:
-
-@example
-[Options]
-discard_after_error
-singlespace
-
-[Sessions]
-sequence.C3       C3           12     NACC
-sequence.C4       C4           31     NACC
-workshop          C1           75     My Wednesday group
-+                 A2           9      NESRDC
-*                 A1           2      Lake Shore Farm
-@end example
-
-@menu
-* Session Control::             Session Control
-* Option Control::              Option Control
-* Accelerator Key Control::     Accelerator Key Control
-* Sample Initialization Files:: Sample Initialization Files
-@end menu
-
-@node Session Control, Option Control,  , The Initialization File
-@section Session Control
-
-Each line after the line @code{[Sessions]}, up until a blank line
-or the end of the file, describes a possible session
-of using the program, showing the output filename, level, next sequence
-number, and title.
-
-This example file shows 5 possible things you could work on.  You can select
-any one of them during a session.  When the program is started, it will
-display the 5 lines and ask you which one you want to use, like this:
-
-@example
-Do you want to use one of the following sessions?
-
-  0     (no session)
-  1  sequence.C3       C3           12      NACC
-  2  sequence.C4       C4           31      NACC
-  3  workshop          C1           75      My Wednesday group
-  4  +                 A2           9       NESRDC
-  5  *                 A1           2       Lake Shore Farm
-  6     (create a new session)
-
-Enter the number of the desired session:
-@end example
-
-If you enter ``0'', or just press
-@key{ENTER},
-the program will ignore
-the sessions and proceed normally.  If you enter the
-number of one of the lines of the file, the program will operate
-at that level,
-and use the named output file and title.  It will also
-print a sequence number on each card, starting with the number shown.
-For example, if you entered ``3'' after the file above is displayed,
-the program will operate at C1.  The output file will be ``workshop''
-instead of the default ``sequence.C1''.  Cards will be serialized
-starting at 75.  Each card will have a title saying
-``My Wednesday group''.
-
-If the given file name is ``+'', the program will generate a file name
-for you, based on today's date.  This may be useful for managing files,
-so that you know when it is safe to delete a file that you have printed.
-The program will of course tell you what the name of that file is.
-All runs of the program using that session on the same day will append
-their sequences to the same file.  The file name will be something like
-like@file{9mar96.C3}.
-
-If the given file name is ``*'', the program will generate a file name
-in the same way, except that it will always generate a new file for each
-run of the program.  If the program is started several times in one day,
-the files will be different.  The generated file names will be something
-like @file{9mar96a.C3}.  Note the @file{a} after the year.
-
-At the end of the session, the file will be updated with the
-next index number.  For example, if you wrote 12 sequences, they would
-be numbered 75 through 86, and the file would be rewritten as
-
-@example
-workshop          C1           87     My Wednesday group
-@end example
-
-so that the next session for that group would start with sequence number 87.
-
-On the PC and other systems that support it, the title bar displays the
-sequence number at which this run of the program started, and the current
-sequence number.
-
-If, at any time during the session, you changed the output file
-(with the @code{Change Output File} operation) or the
-title (with the @code{Change Title} operation),
-the initialization file will be updated at the end of the session to
-show the effect of the change.
-
-When the program starts, you can tell it to create a new entry in
-the file by entering the number corresponding to @code{(create a new session)}.
-In the above example, type ``6''.  The program will ask you for the
-level and title, and will set the output file to the standard ``sequence.C1''
-or whatever.  You may
-use the @code{Change Output File} command and the
-@code{Change Title} command to change these later if you wish.
-At the end of the session, item number 6, containing the appropriate data,
-will be written to the updated initialization file.
-
-If you no longer want some entry in the initialization file,
-you can delete it.  Type the negative of its line number.  In the
-above example, if you entered ``-4'', the line
-
-@example
-   +                 A2           9      NESRDC
-@end example
-
-would be deleted.  After doing this, the program terminates
-immediately.  Run it again to use the new initialization file.
-
-Whenever the program updates the initialization file @file{sd.ini}
-at the end of a session, it saves the old contents in @file{sd2.ini}.
-By copying that back to @file{sd.ini}, you can restore it.
-
-You can also edit the file with an editor.  Simple editors, such as
-@samp{notepad} are preferable to sophisticated word processors when editing
-this file, since word processors often insert specialized control information
-into the file.
-
-@node Option Control, Accelerator Key Control, Session Control, The Initialization File
-@section Option Control
-
-Each line after the line @code{[Options]}, up until a blank line
-or the end of the file, contains a command line switch.  When the program
-is started, it will behave as though those switches had been given on
-the command line.  This makes it possible to encode your personal
-preferences so that the program will always use them.  Do @emph{not}
-place a hyphen in front of an option in the initialization file.
-
-@noindent For example, the line
-@example
-   singlespace
-@end example
-@noindent would be used if you like your output single-spaced.
-
-@noindent The line
-@example
-   no_graphics
-@end example
-@noindent would be used if your computer does not have the special graphics
-characters.
-
-@noindent The line
-@example
-   concept_levels
-@end example
-@noindent would be used if you wish to have the program allow all concepts,
-even those that are not actually legal at the specified level.
-@xref{Entering Concepts} and @ref{Using Off-Level Concepts}.
-
-@noindent The line
-@example
-   active_phantoms
-@end example
-@noindent would be used if you wish to write material that assumes that
-phantoms persist throughout calls.  @xref{Assume Waves}.
-
-@noindent The line
-@example
-   no_warnings
-@end example
-@noindent would be used if you wish to suppress the display and printing of the
-warning messages that are sometimes given to help less-experienced callers.
-
-@noindent The line
-@example
-   retain_after_error
-@end example
-@noindent would be used if you wish to have the program retain the concepts that
-you had typed when an error occurs.  @xref{Retaining Concepts After an Error}.
-
-@noindent You can edit the file with an editor such as @samp{notepad}.
-
-@node Accelerator Key Control, Sample Initialization Files, Option Control, The Initialization File
-@section Accelerator Key Control
-
-The text of the @file{sd.ini} initialization file, from the line
-@code{[Accelerators]} up to the next blank line or the end of the
-file, consists of key definitions, one per line, or comments.
-A comment is any line starting with a ``pound sign'' (@code{#}).
-The first item on a non-comment line is a description of the key,
-and the remaining items are the meaning, exactly as you would type
-it to @code{Sdtty}.  The meaning may be any single call, concept,
-or special command.  (To see what special commands are available,
-type a question mark during a resolve, during program startup, or
-during normal program operation.)
-
-Keys may have different definitions during program startup, during
-resolves, and during normal operation.
-
-If the first character of
-the key description is a plus sign (@code{+}), that key definition
-line is meaningful during program startup.  For example, the standard
-definition contains the line
-@example
-@group
-   +f1    heads start
-@end group
-@end example
-@noindent to indicate that function key @key{F1} means @code{heads start}
-during program startup.
-
-If the first character of
-the key description is an asterisk (@code{*}), that key definition
-line is meaningful during resolve searches.  For example, the standard
-definition contains the line
-@example
-@group
-   *f12   find another
-@end group
-@end example
-@noindent to indicate that function key @key{F12} means @code{find another}
-during resolves.
-
-It is perfectly legal to have the same keystroke mean three different
-things during startup, during resolves, and during normal operation.
-
-After the optional plus sign or asterisk, there may be an optional
-@code{s} to mean shift, @code{c} to mean control, @code{a} to mean alt,
-or @code{ca} to mean control-alt (hold both the control and alt keys
-while pressing the indicated key).
-
-@noindent What follows must be
-@table @code
-@item @r{a letter}
-Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain and
-capital letters always have their normal meaning.)
-@item @r{a digit}
-Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain digits
-always have their normal meaning, and shift digits are punctuation.)
-@item @r{a function key: f1 through f12}
-These may be plain, shifted, control, alt, or control-alt.
-@item @r{a numeric keypad key: n0 through n9}
-Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain numeric
-key presses are always equivalent to that digit.)
-@item @r{an ``enhanced'' key: e1 through e14}
-These may be plain, shifted, control, alt, or control-alt.
-@end table
-
-@noindent The ``enhanced'' keys are encoded as follows:
-@example
-@group
-   e1     page up
-   e2     page down
-   e3     end
-   e4     home
-   e5     left arrow
-   e6     up arrow
-   e7     right arrow
-   e8     down arrow
-   e13    insert
-   e14    delete
-@end group
-@end example
-@noindent So, for example, the line:
-@example
-@group
-   cae8  u-turn back
-@end group
-@end example
-@noindent would define @code{control-alt-<down-arrow>} to do a
-@samp{U-turn back}.
-
-If a key is defined to mean a concept, and that concept is not legal at
-the level at which the program is invoked, the key will still mean that
-concept.  If the key is pressed, the concept will be used, but it will be
-considered an off-level concept, and a warning will be printed.
-@xref{Using Off-Level Concepts}.
-
-If a key is defined to mean a call, and that call is not legal at the
-level at which the program is invoked, that key definition in the
-initialization file will simply be ignored, unless the level is C4X.
-Therefore, whenever you change your initialization file, it is a good
-idea to test it by starting the program at C4X to find out if any warning
-messages are printed.
-
-@node Sample Initialization Files, , Accelerator Key Control, The Initialization File
-@section Sample Initialization Files
-
-When @code{Sd} or @code{Sdtty} is installed, no initialization file exists,
-but the files @file{sample1.ini}, @file{sample2.ini} and @file{sample3.ini}
-are provided for you
-in the working directory.  The @file{sample1.ini} file shows an example of
-the ``session'' mechanism only, and @file{sample2.ini} show both the
-''session'' and ``option'' mechanisms.
-The @file{sample2.ini} file is the same as the example shown previously.
-The @file{sample3.ini} file is the same as @file{sample1.ini}, but it
-has an @code{[Accelerators]} section containing all of the standard key
-bindings, plus a number of other helpful suggested bindings.
-You can copy any of these files to @file{sd.ini} and edit it if you wish.
-
-@node Calling, Resolving and Searching, The Initialization File, Top
+@node Calling, The Completing Reader, Getting Started, Top
 @chapter Calling
 
 This chapter describes how to use the program in its normal mode to
 generate a sequence of calls of your choosing.
 
 @menu
-* Startup Menu::                The Startup Menu
+* Entering Your Choice::        Entering Your Choice
+* Starting a Sequence::         Starting a Sequence
 * Entering Calls::              Entering Calls
 * Entering Concepts::           Entering Concepts
 * Supercalls::                  Supercalls
@@ -1020,29 +278,43 @@ generate a sequence of calls of your choosing.
 * Asymmetric Selectors::        Asymmetric Selectors
 @end menu
 
-@node Startup Menu, Entering Calls,  , Calling
-@section The Startup Menu
+@node Entering Your Choice, Starting a Sequence,  , Calling
+@section Entering Your Choice
 
-The startup menu is displayed when the program starts and after each
+Selections are made in the same way almost everywhere
+in the program.  In either @code{Sd} or @code{Sdtty}, you may type in the
+selection.  The program has a sophisticated @dfn{completing reader}
+that lets you abbreviate what you type.  It is discussed in detail
+in @ref{The Completing Reader}.
+
+In @code{Sd}, you may additionally select an item from the menu in
+the usual ways.  You may double-click it, or highlight it (by using the
+cursor keys, for example) and click the @samp{Accept} button.  (You may
+activate things with a single mouse click, if you prefer that style of operation,
+by issuing the @code{toggle singleclick mode} command or by placing the
+@code{single_click} option in your initialization file.)
+
+You can see the choices that are available by
+typing a question mark or exclamation point.  This is discussed in detail
+in @ref{Question Mark}.
+
+In normal operation, the menu lists calls first, concepts next, and miscellaneous
+commands last.  This menu is typically extremely large and needs to be
+manipulated with cursor keys or the scroll bar.
+
+@node Starting a Sequence, Entering Calls, Entering Your Choice, Calling
+@section Starting a Sequence
+
+A special ``startup'' menu is displayed when the program starts, and after each
 sequence has been completed and written to a file.
 It provides a number of miscellaneous commands, including
 commands to change various modes such as the @code{active phantoms}
-mode or the @code{singing call} mode.  @xref{Misc Commands} for further
+mode or the @code{singing call} mode.  @xref{Miscellaneous Commands} for further
 discussion of these.  The startup menu also allows you
 to @code{exit from the program} and return to your computer's operating
 system.
 
-In addition to the miscellaneous choices, this menu permits you to
-select the starting operation.
-
-The selections here, and almost everywhere else
-in the program, are made in @code{Sdtty} by typing them.
-To see the ``menu'', that is, the list of things you could type,
-type a question mark or exclamation point.
-
-In @code{Sd}, selections are made by moving the mouse until the
-cursor is over the chosen item, and pressing Mouse Button 1
-(typically the left button).
+@noindent The main use of this menu is to select the starting operation.
 
 @menu
 * Heads/Sides Start::           starting with the heads or sides
@@ -1050,66 +322,60 @@ cursor is over the chosen item, and pressing Mouse Button 1
 * Just As They Are::            starting with a squared set
 @end menu
 
-@node Heads/Sides Start, 1P2P Lines,  , Startup Menu
+@node Heads/Sides Start, 1P2P Lines,  , Starting a Sequence
 @subsection Heads/Sides Start
 
-If you click or type @code{heads start} or @code{sides start}, the sequence will begin
+If you select @code{heads start} or @code{sides start}, the sequence will begin
 with @samp{heads} or @samp{sides} and the first call.  Normally this means that the
 designated people will move into the center and do the first call while
 the others wait.  Subsequent calls will be directed to everyone.  For
 example, one might select @code{heads start}, and then @code{star thru}, and
 then @code{double pass thru}, and so on.  You can also select @code{heads start}
 or @code{sides start} followed by a call such as @i{split square thru} or @i{split
-dixie style to a wave}.  Use the @code{split} concept to get these.
-
-When using @code{Sdtty}, you must press
-@key{ENTER}
-after typing @code{heads start} or @code{sides start}.
+dixie style to a wave}.
 
 If you want to have the heads go into the middle and do several calls
-before the sides join in, as in @i{head ladies chain ; heads square thru 4},
-or @i{heads touch 1/4 ; walk and dodge}, you must select @code{centers}
+before the sides join in, as in @i{head ladies chain and then heads square thru 4},
+or @i{heads touch 1/4 and then walk and dodge}, you must select @code{centers}
 before all calls after the initial one.  Typically, you won't need to read
 the card that way, but can rely on precise phrasing and inflection of your
 voice to express what you want.
 
-@node 1P2P Lines, Just As They Are, Heads/Sides Start, Startup Menu
+@node 1P2P Lines, Just As They Are, Heads/Sides Start, Starting a Sequence
 @subsection 1P2P Lines
 
 The @code{heads 1P2P} and @code{sides 1P2P} starting actions refer to caller jargon
 for a common starting maneuver, typified by @i{<ANYONE> lead right and
-circle up 4}.  You can read the card that way, or as @i{wheel thru and
-circle up 4}, or as @i{step right}, or as @i{bring us together}, or whatever
+circle to a line}.  You can read the card that way, or as @i{wheel thru and
+circle to a line}, or as @i{step right}, or as @i{bring us together}, or whatever
 improvisation you like.  The promenade distance shown at the end of the
 sequence will assume that you said @i{step right} or @i{lead right @r{(or @i{wheel
-thru})} and circle up 4}.
+thru})} and circle to a line}.
 
-Whether you consider 1P2P openings to be overused is up to you.
+@noindent Whether you consider 1P2P openings to be overused is up to you.
 
-@node Just As They Are,  , 1P2P Lines, Startup Menu
+@node Just As They Are,  , 1P2P Lines, Starting a Sequence
 @subsection Just As They Are
 
 The @code{just as they are} selection starts the sequence on squared set spots,
 without having the heads or sides begin.  This is generally useful only if
-the @i{all 4 couples} concept is to be used.
+the @i{all 4 couples} concept is to be used.  After using this, you typically
+need to have the heads or sides (or headliners or sideliners, in some
+cases) press ahead.
 
-@node Entering Calls, Entering Concepts, Startup Menu, Calling
+@node Entering Calls, Entering Concepts, Starting a Sequence, Calling
 @section Entering Calls
 
-The usual thing you do when writing a sequence is to select calls from
-the call menu, perhaps preceded by one or more concepts.  (Concepts are
-discussed in the next section.)  In @code{Sd}, a call is selected by clicking
-on the desired menu item.  In @code{Sdtty}, a call is selected by typing
-its name, followed by
-@key{ENTER}.
-The completing reader
-(@ref{The Completing Reader for Sdtty}) lets you abbreviate calls.
+The usual thing you do when writing a sequence is to select calls,
+perhaps preceded by one or more concepts.  You can select concepts
+and calls separately, or, if using the completing reader, type
+concepts and calls together.  That is, you can type the entire ``line''.
 
 You should be aware that a number of @dfn{modifier} words like @code{cross},
 @code{left}, and @code{grand} are treated as @i{concepts} by @code{Sd}
 and @code{Sdtty}.  While concepts don't officially exist below the
 Advanced program, @code{Sd} and @code{Sdtty} consider words such as these
-to be concepts.  When using @code{Sdtty}, this generally makes no difference.
+to be concepts.  When typing things in, this generally makes no difference.
 Because of the way the program operates, you can just type the call, with
 whatever concepts or modifier words it has, in the natural way.  For example,
 you could type:
@@ -1131,20 +397,19 @@ it is necessary to type concepts by themselves, pressing
 @key{ENTER}
 after each one.  This will be discussed further in @ref{Entering Concepts}.
 
-When using @code{Sd}, all concepts, modifier words, and calls are listed
-separately in the menus.  For example, to get
-a @i{grand swing thru}, click on @code{grand} in the concept menu, and
-then @code{swing thru} in the call menu.  There is no item @code{grand
-swing thru} in the call menu.  The menus would be too unwieldy if such
-things were listed separately.  To do 1/2 of a @i{stable swing thru},
-click on the @code{1/2} concept (actually the @code{<N>/<N>} concept),
-followed by the @code{stable} concept.  To do a @i{1/2 stable swing thru},
-click on the @code{1/2 stable} (that is, @code{<N>/4 stable}) concept.
+When using @code{Sd} and selecting things with the mouse,
+you will usually not see full combinations listed in the menu.
+For example, there is no item @code{grand
+swing thru}.  The menu would be too unwieldy if such
+things were listed separately.
+Instead, all concepts, modifier words, and calls are listed
+separately in the menus.  To get
+a @i{grand swing thru} with mouse clicks, click on @code{grand} and
+then @code{swing thru}.
 
 @menu
 * Call Variations::             How to write variations on calls
 * Call Menus::                  call menus
-* Scrolling::                   The call menu scroll bar
 @end menu
 
 @node Call Variations, Call Menus,  , Entering Calls
@@ -1158,16 +423,16 @@ and [quarter thru]} or @code{vertical tag your neighbor} or @code{shuttle [rally
 @code{in roll motivate}), and modifiers (as in @code{strut left} or @code{trans cross
 chain reaction}).
 
-To list all possible variations in the menus would be unwieldy for a variety
-of reasons.  Because of this, various methods are used to shorten the menus
+To list all possible variations in the menu would be unwieldy for a variety
+of reasons.  Because of this, various methods are used to shorten the menu
 and to allow the user to specify the desired variation.  These methods will
 be discussed in detail presently, but in most cases what happens is the following:
 
-In @code{Sd}, the menus list only the base calls with special keywords
+In @code{Sd}, the menu lists only the base calls with special keywords
 as in @code{face <DIRECTION>} or @code{square thru <N>}.  When you
-click on such a menu item, a popup menu appears listing the possible choices.
+click on such a menu item, a new menu appears listing the possible choices.
 
-In @code{Sdtty}, the @dfn{menu} (that is, what you see if you type a question
+In @code{Sdtty}, the ``menu'' (that is, what you see if you type a question
 mark) also has keywords.  You can type the item just as shown, e.g.,
 @code{quarter <DIRECTION>} or @code{square thru <N>} (you would actually type the
 angle brackets) and then answer the question that @code{Sdtty} asks.  But there is
@@ -1177,15 +442,16 @@ type @code{quarter <DIRECTION>} or whatever, and then type a question mark.
 
 @subsubheading Directions
 Calls that take a direction have the keyword @code{<DIRECTION>} in them in the
-menus, like @code{pass <DIRECTION>} or @code{spin a windmill, outsides <DIRECTION>}.
+menu, like @code{pass <DIRECTION>} or @code{spin a windmill, outsides <DIRECTION>}.
 
 You can just type the call naturally, for example, @code{pass in} or @code{shuttle left}.
 You can also type such things in a piecemeal fashion, typing the keyword ``@code{<DIRECTION>}''
-literally, and then answering the question that the program will ask.
+literally, and then typing the direction.
 
-When using @code{Sd}, the second way is the only way---click on the call, and then select the
-direction from the popup that will will appear.  If you decide you don't
-want that call, just move the mouse away from the popup.
+When using the mouse with @code{Sd}, the second way is the
+only way---click on the call, and then select the
+direction from the new menu that will appear.
+If you decide you don't want that call, click the @samp{Cancel} button.
 
 The menu lists all possible directions, including some that may not be possible
 in the given context.
@@ -1202,12 +468,13 @@ You can just type the call naturally, for example, @code{invert the column 3/4} 
 @code{square thru 2} or @code{1/4 thru} or @code{square thru but on the 3rd hand}.
 You can also type such things in a piecemeal fashion, typing the keyword ``@code{<N>}''
 or ``@code{<N/4>}'' or ``@code{<Nth>}''
-literally, and then answering the question that the program will ask.
-If the keyword was @code{<N/4>}, click on the value of @code{N}.
+literally, and then typing the number(s).
+If the keyword was @code{<N/4>}, enter just the value of @code{N}.
 
-When using @code{Sd}, the second way is the only way---click on the call, and then select the
-number from the popup that will will appear.  If you decide you don't
-want that call, just move the mouse away from the popup.
+When using the mouse with @code{Sd}, the second way is the
+only way---click on the call, and then select the
+number from the new menu that will appear.
+If you decide you don't want that call, click the @samp{Cancel} button.
 
 Not all values of @code{N} will be meaningful for all calls.  For example, you
 can @code{eight chain 5}, but you can't @code{invert the column 5/4}.
@@ -1218,8 +485,9 @@ in their names.  Examples are @code{quarter thru}, @code{quarter the deucey},
 These are listed in the Callerlab lists with the words spelled out, though
 individual preferences vary.  Some people prefer to write @code{1/4 thru} and
 @code{3/4 thru}.  @code{Sd} and @code{Sdtty} list the call as @code{<N/4> thru}
-in the menu.  In @code{Sd}, you click on that and then click on a number (only 1 and 3
-are legal, of course).  In @code{Sdtty}, you can type @code{<N/4> thru} and then type
+in the menu.  When using mouse input in @code{Sd}, you click on that and then
+click on a number (only 1 and 3
+are legal, of course).  You can also type @code{<N/4> thru} and then type
 1 or 3, or you can type the call directly, either in numbers or in words.  That is,
 you can type either @code{1/4 thru} or @code{quarter thru}.  No matter how you
 enter one of these calls, it will always be printed out in words, as in
@@ -1231,11 +499,12 @@ with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.
 
 You can just type the call naturally, for example, @code{patch the sides}.
 You can also type such things in a piecemeal fashion, typing the keyword ``@code{<ANYONE>}''
-literally, and then answering the question that the program will ask.
+literally, and then typing the designator.
 
-When using @code{Sd}, the second way is the only way---click on the call, and then select the
-designator from the popup that will will appear.  If you decide you don't
-want that call, just move the mouse away from the popup.
+When using the mouse with @code{Sd}, the second way is the
+only way---click on the call, and then select the
+designator from the new menu that will appear.
+If you decide you don't want that call, click the @samp{Cancel} button.
 
 The gender designators are @code{boys} and @code{girls}.  This is the way they
 appear in the Callerlab Mainstream list.  The author does not take a position
@@ -1243,10 +512,10 @@ on whether the adult terms would be more reasonable words to use in any given co
 You must use your own judgement in deciding what to say.
 
 Not all designators are legal in all cases; for example, you can't call
-@code{leads run} from a grand wave.
+@code{leads run} from a tidal wave.
 
 The program specifically refuses to recognize the meaning of the designators @code{centers}
-and @code{ends} while in a 1x8 setup (e.g., a grand wave).  This is because these terms
+and @code{ends} while in a 1x8 setup (e.g., a tidal wave).  This is because these terms
 can be ambiguous in such a setup.  If you want the centers of each 1x4, you must use
 the @code{EACH 1X4}, @code{EACH LINE}, @code{EACH COLUMN}, or @code{EACH WAVE} concept in order to make the
 @code{centers} or @code{ends} designators work.  Of course, in many cases, other designators,
@@ -1262,8 +531,8 @@ or you can enter the complete call.
 
 At C3 and above, the tagging calls include the calls @code{revert <ATC>} and
 @code{reflected <ATC>}, which make use of another tagging call.
-In @code{Sd}, you
-will be presented with another popup.  In @code{Sdtty}, you can type in the
+When using mouse input in @code{Sd}, you
+will be presented with another menu.  In @code{Sdtty}, you can type in the
 entire call directly, as in @code{revert cross flip chain thru reactivate}.
 
 @subsubheading Subcalls
@@ -1306,7 +575,7 @@ and
    [clover and [swap around]] and roll
 @end example
 
-You can also type such things in a piecemeal fashion, typing the keyword ``@code{<ANYTHING>}''
+You can also enter such things in a piecemeal fashion, typing the keyword ``@code{<ANYTHING>}''
 literally, and then typing the subcall when the program asks for it.  For example, you
 could type
 @example
@@ -1317,13 +586,13 @@ could type
 @kbd{square thru 2} @key{ENTER}.
 @end example
 
-When using @code{Sd} with the menu-and-mouse interface, the second way is the
+When using the mouse with @code{Sd}, the second way is the
 only way---click on the call, and then select the subcall.
 
 @strong{Important note:} Nesting these subcalls too deeply can make the program
 run very slowly.  You should not type more than two consecutive left brackets.
 If you need to nest things more deeply than that, use the word ``@code{<ANYTHING>}'',
-and type the subcall when the program asks for it.  For example, suppose we wanted
+and enter the subcall when the program asks for it.  For example, suppose we wanted
 to enter:
 @example
 @group
@@ -1378,14 +647,15 @@ circulate should be modified.  Examples are
    counter cover up             @r{(not actually a type of circulate)}
 @end example
 These variations are in the menu as ``@code{<ANYCIRC> motivate}''.
-They are entered in @code{Sdtty} just as shown above.
-You can also type them in a piecemeal fashion, typing the keyword ``@code{<ANYCIRC>}''
+They can be typed in just as shown above.
+You can also enter them in a piecemeal fashion, typing the keyword ``@code{<ANYCIRC>}''
 literally, and then typing the circulate replacement as a complete call,
 for example, ``@code{out roll circulate}''.
 
-When using @code{Sd}, the second way is the only way---click on the call, and then select the
-circulate replacement from the popup that will will appear.  If you decide you don't
-want that call, just move the mouse away from the popup.
+When using the mouse with @code{Sd}, the second way is the
+only way---click on the call, and then select the
+circulate replacement from the new menu that will appear.
+If you decide you don't want that call, click the @samp{Cancel} button.
 
 Only bona-fide circulate-type calls, and other well-recognized similar
 things such as @code{split counter percolate} can be obtained by this method.
@@ -1449,13 +719,13 @@ their names.  Examples are:  @code{cross and wheel}, @code{cross and turn},
 @code{cross your neighbor}, and @code{crossfire}.  Such calls appear in the
 menu just as they are spelled.
 
-@node Call Menus, Scrolling, Call Variations, Entering Calls
+@node Call Menus,  , Call Variations, Entering Calls
 @subsection Call Menus
 
-In @code{Sd}, the call menu is the long menu near the center of the screen.  There are
-actually 17 menus that can appear here, each tailored to the current
-setup.  For example, if the current setup is right-hand waves, a menu
-will appear that contains only those calls that the program believes
+The menu in @code{Sd}, or the list of available calls in @code{Sdtty}, changes
+according to the current setup.
+For example, if the current setup is right-hand waves, the menu
+will contain only those calls that the program believes
 might be legal from right-hand waves.  This determination is approximate
 but conservative---appearance on the menu does not necessarily mean it
 is legal, though absence from the menu means that the program is fairly
@@ -1464,24 +734,11 @@ appears when the setup is not one of the common ones, or when anything
 complex is going on.  This contains every call that is in the database
 for the chosen level.
 
-The call menus are alphabetized in a way that ignores blanks and hyphens.
+The call menu is alphabetized in a way that ignores blanks and hyphens.
 Special keywords such as @code{<N>}, @code{<ANYONE>}, @code{<DIRECTION>},
-or @code{<ANYTHING>} are listed before letters.
+or @code{<ANYTHING>} are listed after letters.
 Hence, @code{<ANYONE> run} and @code{<ATC> your neighbor}
-will be found near the beginning of the menu.
-
-@node Scrolling,  , Call Menus, Entering Calls
-@subsection Scrolling (Sd only)
-
-The call menu can be scrolled with the scroll bar to its left.  Move the
-mouse into the scroll bar area.  Clicking the left mouse button will scroll
-the window down over the menu by a percentage of the window's size that is
-equal to the percentage that the cursor is down from the top of the scroll
-bar.  Clicking the right mouse button will scroll the window up by the
-same amount.  Clicking the middle mouse button will move the window to a
-percentage down the menu that is equal to the percentage that the cursor
-is down from the top of the scroll bar.  If the mouse is moved while the
-middle mouse button is held down, the menu will scroll in real time.
+will be found near the end of the menu.
 
 @node Entering Concepts, Supercalls, Entering Calls, Calling
 @section Entering Concepts
@@ -1489,7 +746,7 @@ middle mouse button is held down, the menu will scroll in real time.
 A call may be preceded by concepts, which modify the action of the call.
 These may be nested (@dfn{stacked}) to any reasonable depth.
 
-In @code{Sdtty}, just type the concept you want.  The completing reader will
+When using the completing reader, just type the concept you want.  The completing reader will
 operate in the usual way.  Nearly all concepts may be entered in a natural way,
 on the same line as the call that they affect.  As discussed previously,
 this means that you can type things like
@@ -1524,11 +781,11 @@ For example, the following are all legal and equivalent.
    @kbd{swing thru} @key{ENTER}
 @end group
 @end example
-In the output file, they will all be shown as @code{reverse random tandem swing thru}.
+@noindent In the output file, they will all be shown as @code{reverse random tandem swing thru}.
 
 Occasionally some ambiguous situations can arise.  What if you wanted
 the boys to do 1/2 of a @i{stable split the difference}?  The phrase
-@code{boys 1/2 stable split the difference} is ambiguous.  Whenever @code{Sdtty}
+@code{boys 1/2 stable split the difference} is ambiguous.  Whenever @code{Sd}
 is confronted with an ambiguity, it chooses the option that nests concepts least deeply.
 A single application of the @i{1/2 stable} concept is less deep (simpler) than
 an application of the @i{1/2} concept followed by an application of the
@@ -1546,7 +803,13 @@ after each one.  That is, type
 @end group
 @end example
 
-When @code{Sdtty} resolves an ambiguity, it shows how it did so through
+When using the mouse with @code{Sd}, you must click on exactly the
+concepts that you want.  To get the @code{boys} concept, you must click on
+@code{<ANYONE>} and then make the appropriate selection.
+To get the @code{1/2} concept, you must click on
+@code{<N>/<N>} and then make the appropriate selections.
+
+When @code{Sd} resolves an ambiguity, it shows how it did so through
 the judicious use of commas.  For example, the preceding operation will
 be printed as
 @code{boys, 1/2, stable, split the difference}, as opposed to
@@ -1606,20 +869,6 @@ The program recognizes the level at which concepts are legal, but lets you
 override this if you wish.  The @code{toggle concept levels} command toggles
 (turns on or off) the state of off-level concept permission.
 @xref{Changing Modes} and @ref{Using Off-Level Concepts}.
-
-@subsubheading Entering concepts from Sd menus
-
-In @code{Sd}, click on the concept from a menu.  In a
-perhaps hopeless attempt to keep the concept menus from becoming too
-unwieldy, concepts have been organized into a general concept menu and
-several submenus organized by topics.  The main concept menu is in the
-lower left corner.  It supposedly contains all the extremely common
-concepts.  Buttons for the other concepts submenus appear above this
-menu.  Clicking on one of these buttons brings up the submenu.  If you
-don't see what you want on a concept submenu, move the mouse away.  Some
-concepts appear in more than one submenu---it doesn't matter which one
-you use.  With practice, you will know which submenu to use.  All available
-concepts, organized by submenu, are listed in @ref{Concept Notes}.
 
 When you select any concept, the universal call menu replaces whatever
 special call menu may have been presented, since the set of legal calls
@@ -1686,10 +935,10 @@ unnatural ways, such as @samp{trade
 the diamond but replace the diamond circulate with explode the diamond}.
 The usual way to perform natural modifications is simply to type the call
 as decribed in @ref{Call Variations}.
-To form either type of modified call, you must first enable call modifications
+
+To form an unnatural type of modified call, you must first enable call modifications
 by selecting @code{simple modifications} or @code{allow modifications}
 before choosing the call.
-
 There are two levels of this feature.  With @code{simple
 modifications}, you get the simple version, which only prompts
 you for @dfn{natural} modifications.  Natural modifications have been somewhat
@@ -1778,7 +1027,215 @@ The resolver checks all eight people, so it should work.
 If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
-@node Resolving and Searching, Editing, Calling, Top
+@node The Completing Reader, Resolving and Searching, Calling, Top
+@chapter The Completing Reader
+
+@code{Sd} and @code{Sdtty} use a @dfn{completing reader} for interpreting the
+characters that you type.
+
+In @code{Sdtty}, this is the only means of entering calls and commands.
+In @code{Sd} you can use the mouse and menus, but you can also type.
+When you type characters into @code{Sd}, it uses the same completing reader
+as @code{Sdtty}.  In fact, the two programs are completely compatible with
+each other if only keyboard input is used.
+
+The completing reader requires you to type only as much of the word or command as is
+required to be unambiguous.  Whenever you type a space, the program completes
+the word you just typed, if necessary and possible.  Whenever you type
+@key{ENTER} (or @key{RETURN} on some keyboards),
+the program completes the entire line if necessary and possible.
+
+For example, at Mainstream, you can enter a swing thru by typing
+@samp{swing thru @key{ENTER}}.
+When the space after @samp{swing} is typed,
+no completion is required.  When the
+@key{ENTER}
+after @samp{thru} is typed, no completion is required either.  If you type
+@samp{sw thru @key{ENTER}}
+instead, @code{Sd} completes the word @samp{swing}.
+It does this by displaying
+@samp{ing} on the screen as soon as you type the space after
+@samp{sw}.  If you type
+@samp{sw th @key{ENTER}},
+@code{Sd} will complete both words.  It displays @samp{ing} as soon as you type the
+space, and it displays @samp{ru} as soon as you type
+@key{ENTER}.
+In fact, you could just type
+@samp{sw @key{ENTER}}.
+@code{Sd} completes the entire line, if necessary
+and possible, when @key{ENTER} is pressed.
+So it will display @samp{ing thru} after
+your @samp{sw}.  In each case, the full phrase @samp{swing thru} will appear
+on the screen, and will be printed in the final sequence.
+
+Because of this completion, you can get into the habit of just typing
+@samp{sw @key{ENTER}}
+at Mainstream.  However, it will only work if what you type is unambiguous.
+At higher levels, @samp{sw} could also mean @samp{swap around}.  When there is an
+ambiguity, @code{Sd} will complete as much as it can and beep at you.
+You can
+type @samp{?} or @samp{!} (discussed below) to see what the problem is.
+
+With practice, you can get a reasonable feel for how much abbreviation you can
+get away with in a given context.
+
+Typing @key{ESC} will complete the entire line, just like @key{ENTER},
+but will not actually process the line.  If you like what you see, you can
+then press @key{ENTER}
+to execute the call.  If the line is ambiguous,
+the program will display as much of the line as it can.
+When used effectively, this can save you a lot of typing.
+
+@code{Sd}'s completing reader is completely indifferent to the capitalization of
+what you type.  It capitalizes its output according to its own notions of
+aesthetics and ambiguity avoidance.
+
+@menu
+* Question Mark::               Question Mark and Exclamation Point
+* Minimizing Typing::           Minimizing the Amount of Typing You Must Do
+* Ignoring Hyphens::            Ignoring Hyphens and Apostrophes when Typing
+@end menu
+
+@node Question Mark, Minimizing Typing,  , The Completing Reader
+@section Question Mark and Exclamation Point
+
+At any time, you can type a question mark or exclamation point.  Either of
+these will make @code{Sdtty} display all legal completions of the line
+that has been typed so far.  If what you
+have typed is unambiguous, that will consist of just one thing.  If you
+have typed nothing, it will consist of every legal thing you could type---typically
+that is every call, every concept, and every special command.
+
+The difference between question mark and exclamation point is that the
+question mark actually attempts to execute every call in the current
+call menu (that is, every call whose name matches the text you have
+typed so far), and shows only those that can be legally performed.
+Exclamation point simply displays every call on the menu that matches
+the text that you have typed so far.  Remember that the call menus
+are only approximate---they often have many calls listed that are
+in fact not legal in the present setup.  This is particularly true
+when concepts are in place.  The program simply has no idea what calls
+are legal without trying them.  Question mark tells it to do so.
+
+The difference between question mark and exclamation point only applies
+to calls.  All concepts and special commands (@code{resolve}, for example)
+are always listed whenever either character is typed.
+
+The output from typing a question mark or exclamation point may be quite lengthy.
+If it fills more than one screenful, @code{Sdtty} will stop and display
+@samp{--More--} at the
+bottom of the screen.  Type
+@key{SPACE}
+to go on to the next screenful.  Type
+@key{ENTER}
+to see just one more line.  Type a backspace (or
+@key{DEL})
+to stop.  When the output ends, either because @code{Sdtty} displayed everything or
+because you typed a backspace, the partially entered line will be redisplayed, just
+as it was before you typed the question mark.
+
+When you are typing calls or concepts and you type
+@key{ENTER}
+while the line that you have typed is ambiguous, @code{Sdtty} will display something
+like @samp{(10 matches, type ! or ? for list)}.  The number that it displays is the
+number of syntactically legal choices among which it can't decide.  This is the number
+of choices that would have been listed if you had typed @samp{!}.  It may be more than
+the number of things that would be listed if you had typed @samp{?}.  The reason
+is that the @samp{?} operation has to test every call before listing it.  It can
+easily do this faster than you can read the list of choices.  When you type
+@key{ENTER}
+while there are multiple syntactic choices available, the computer can't count
+them fast enough to respond instantaneously.  It therefore displays an approximate
+number, computed by looking at its database without testing each call.
+
+@node Minimizing Typing, Ignoring Hyphens, Question Mark, The Completing Reader
+@section Minimizing the Amount of Typing You Must Do
+
+The @code{Sdtty} completion mechanism, especially the
+@key{ESC}
+(or
+@key{ALT MODE}
+or
+@key{TAB})
+key, can save you a lot of typing.
+For example, typing
+@example
+      @kbd{heads do your part @key{ENTER}}
+@end example
+@noindent is probably more than you want to do.  If you type just
+@example
+      @kbd{heads do}
+@end example
+the line will be almost unambiguous---there are only two possible commands
+that start this way.  By typing a question mark, @code{Sdtty} will show them
+to you.  They are
+@example
+      heads do your part
+@end example
+and
+@example
+      heads do your part (while the others)
+@end example
+What these concepts actually mean will be discussed at length in
+@ref{Designating Certain People}.  For now, we are just discussing how to
+type them.
+
+These commands don't differ until the @samp{t} in @samp{part}.  If you type
+@key{ENTER}
+after @samp{part}, @code{Sdtty} will know that you want the
+first of these commands.  If you type a space and then
+@key{ENTER},
+@code{Sdtty} will know that you want the second.  Does this mean that you
+must type the whole command up to @samp{part}, followed by a space or
+@key{ENTER}?
+No.  Just type @samp{heads do}, and then press
+@key{ESC}.
+@code{Sdtty} will display @samp{heads do your part}, since that is the text
+that is common to both commands.  At that point, you may press
+@key{ENTER}
+to get the @samp{heads do your part} concept.  Or you could type space
+and then
+@key{ENTER}
+to get the @samp{heads do your part (while the others)}
+concept.  You could, of course, type the complete phrase @samp{(while the others)}
+after the space, but there is no need to.  Once you type the space, @code{Sdtty}
+knows exactly which command you want.
+
+What would happen if you tried to shorten the command still further by typing
+just @samp{heads d} instead of @samp{heads do}?  Below C2 this would work
+just fine.  At C2 and above, an ambiguity would exist because of the
+@samp{heads disconnected} concept.  Typing a question mark after @samp{heads d}
+will show you the ambiguity.  In general, typing a question mark will help guide
+you in minimizing the amount of typing you must do.  With practice, you will
+be able to enter your favorite calls and concepts with minimal typing.
+
+Here is another example.  To enter @samp{criss cross the shadow} or
+@samp{criss cross your neighbor}, it is not necessary to type
+@samp{criss cross t} or @samp{criss cross y}.  You can just type @samp{cri}
+followed by
+@key{ESC}.
+The program will display everything up to the
+point of ambiguity, which, at C2, is @samp{criss cross }.  At that point,
+you just need to type @samp{t} or @samp{y}, followed by
+@key{ENTER}.
+Above C2, there are more possible calls, but typing @samp{cri}
+followed by
+@key{ESC}
+is still a good way to start.
+
+@node Ignoring Hyphens, , Minimizing Typing, The Completing Reader
+@section Ignoring Hyphens and Apostrophes when Typing
+
+You can type a space instead of a hyphen in call and concept names.
+For example, you can type @code{ping pong circulate} or @code{tandem based triangles}
+instead of @code{ping-pong circulate} or @code{tandem-based triangles}.
+The calls will always be printed out with the hyphen.
+
+You can omit apostrophes when typing in call and concept names.  For example,
+you can type @code{lockers choice} instead of @code{locker's choice}.
+The calls will always be printed out with the apostrophe.
+
+@node Resolving and Searching, Editing, The Completing Reader, Top
 @chapter Resolving and Searching
 
 This chapter describes how to have the program find calls for you to
@@ -1854,7 +1311,7 @@ is equivalent to @code{accept} followed by whatever that action
 is.  So, for example, you can select @code{write this sequence} as soon as
 you see a resolution that you like.
 
-When using @code{Sdtty}, these special commands are typed into the completing reader
+These special commands may be typed into the completing reader
 in the usual way.  To make it more convenient to enter them, the command names
 have been chosen to be unambiguous from just one or two letters.  So, for example,
 @code{p} means @code{previous}, @code{n} means @code{next}, and @code{f}
@@ -1872,14 +1329,14 @@ concepts.  So, for example, selecting @code{once removed} and then
 @end example
 
 The program searches for resolutions by using a random number generator to
-generate up to 5000 random sequences, occasionally inserting concepts.
+generate up to 15000 random sequences, occasionally inserting concepts.
 It biases the search in favor of short sequences (one call) rather than
 long ones (three calls) and against resolutions that require @i{all 8
 circulate}, @i{pass thru}, or @i{trade by} at the end.
-If, after 5000 attempts, no resolution is found, the @code{find another}
+If, after 15000 attempts, no resolution is found, the @code{find another}
 operation fails.  (This tends to happen if you try to resolve out of an
 hourglass at Mainstream.)  You can select @code{find another} again to make
-another 5000 attempts if you wish.
+another 15000 attempts if you wish.
 
 @i{Remember that the @code{resolve} operation by itself does not write
 the sequence to a file.}  You will not be able to print a sequence until
@@ -2026,7 +1483,18 @@ before doing the reconcile, you know that any inserted sequence will
 have to be gender-preserving anyway, so calls like @samp{star thru} and
 @samp{boys kickoff} will be okay.
 
-@node Editing, Misc Commands, Resolving and Searching, Top
+@subheading At-home Reconciling
+
+If you have a nice getout that finishes on squared-set spots (or a 2x4
+approximation to same), you can use the reconcile operation to make
+it work.  First, move the headliners into the middle if necessary
+to make a 2x4.  Then have the centers face out, and have everyone do a
+@code{left touch}.  Start the reconciler, set the insertion point,
+and search.  Discard any solution that doesn't say ``at home''.
+When you find one that you like, accept it, and then delete the
+calls that you had to put in at the end.
+
+@node Editing, Miscellaneous Commands, Resolving and Searching, Top
 @chapter Editing
 
 @noindent This section describes the ``editor''.
@@ -2049,7 +1517,13 @@ them for you.  It does this with a ``clipboard''.  You move the calls,
 one at a time, from the sequence that you have written, onto the clipboard.
 Then you can ``edit'' the sequence at the chosen point, adding calls,
 undoing calls, or whatever.  When you are done, you can restore the
-later calls by moving them from the clipbaord back to the sequence.
+later calls by moving them from the clipboard back to the sequence.
+
+The @code{Sd}/@code{Sdtty} clipboard has nothing to do with the Windows
+clipboard.  The former stores calls, and the latter stores text.  You can
+cut, copy, and paste text between the @code{Sd} text entry window and the
+Windows clipboard, using the ``Edit text'' menu, though there is rarely any
+reason to.
 
 @noindent The commands to manipulate the clipboard are:
 
@@ -2148,10 +1622,10 @@ the diamond.  You can now paste them.
 Sometimes you decide that everything you cut to the clipboard was stupid, and
 you just want it to go away.  Issue the @code{delete entire clipboard} command.
 
-@node Misc Commands, Terminal Interface, Editing, Top
+@node Miscellaneous Commands, The Initialization File, Editing, Top
 @chapter Miscellaneous Commands
 
-This section describes commands that are not concerned with generating
+@noindent This section describes commands that are not concerned with generating
 sequences.
 
 @menu
@@ -2165,7 +1639,7 @@ sequences.
 * Changing Modes::              Changing Modes
 @end menu
 
-@node Save Sequence, Change Output File,  , Misc Commands
+@node Save Sequence, Change Output File,  , Miscellaneous Commands
 @section Saving the Sequence
 
 At any time when the sequence is resolved (for example, after a successful
@@ -2176,14 +1650,14 @@ This will append the current sequence to the current output file, and then
 go back to the startup menu.  You will be given an opportunity to enter
 a line of text to be used as a subtitle, for example ``very hard interlace''
 or ``stupid biggie.''  The written sequence will also be annotated with the
-level, the current date and time, and the version numbers of the program and
-database.
+level, the session title, the current date and time, and the version numbers
+of the program and database.
 
 Until you have done the @code{write this sequence} operation or pressed @key{F10},
 the sequence is not written to disk and you cannot start writing a new sequence.
 Just resolving isn't enough.
 
-@node Change Output File, Change Title, Save Sequence, Misc Commands
+@node Change Output File, Change Title, Save Sequence, Miscellaneous Commands
 @section Changing the Output File
 
 You can change the name of the file to which the program writes its
@@ -2197,7 +1671,7 @@ When the initialization file is used (@pxref{The Initialization File}),
 any change in the output file name will
 be written back to the init file at the end of the session.
 
-@node Change Title, Abort/Exit/Undo, Change Output File, Misc Commands
+@node Change Title, Abort/Exit/Undo, Change Output File, Miscellaneous Commands
 @section Changing the Title
 
 You can change the title that will appear at the top of each sequence
@@ -2214,7 +1688,7 @@ file was used.  @xref{The Initialization File}.
 When the initialization file is used, any change in the title will
 be written back to the init file at the end of the session.
 
-@node Abort/Exit/Undo, Inserting Comments, Change Title, Misc Commands
+@node Abort/Exit/Undo, Inserting Comments, Change Title, Miscellaneous Commands
 @section @code{Abort}, @code{Exit}, and @code{Undo}
 
 If you select the @code{exit} command, the program will exit.  If a
@@ -2237,7 +1711,7 @@ that is, while no concepts have been entered, the program will erase
 the last complete call, with all of its concepts.  If one or more
 concepts have been entered, only the last concept will be erased.
 
-@node Inserting Comments, Keeping Pictures, Abort/Exit/Undo, Misc Commands
+@node Inserting Comments, Keeping Pictures, Abort/Exit/Undo, Miscellaneous Commands
 @section Inserting Comments
 
 You can insert arbitrary text strings into the sequence transcript in the
@@ -2258,7 +1732,7 @@ the transcript exactly where it was entered.  Because of the way the program
 assembles mouse-clicks into transcript lines, it is not possible to enter
 a comment at the end of a line.
 
-@node Keeping Pictures, Singing Call Progressions, Inserting Comments, Misc Commands
+@node Keeping Pictures, Singing Call Progressions, Inserting Comments, Miscellaneous Commands
 @section Keeping Pictures
 
 The program shows pictures on the screen for the current position
@@ -2269,7 +1743,7 @@ sequence is very difficult and you believe it may be necessary to say
 something helpful then like ``check a parallelogram with boys in the center
 box'') select the command @code{keep picture}.
 
-@node Singing Call Progressions, Changing Modes, Keeping Pictures, Misc Commands
+@node Singing Call Progressions, Changing Modes, Keeping Pictures, Miscellaneous Commands
 @section Singing Call Progressions
 
 You can write singing call sequences with the usual ``progressions'' in them.
@@ -2289,11 +1763,11 @@ it will show other types of getouts when they appear.
 
 Note that, for the ``usual'' type of singing call figure (equivalent to
 @samp{square thru 4, swing corner, and promenade}) the promenade distance
-will be shown as 1/8.  The dancers will of course promenade @w{1 1/8}.  You
+will be shown as 1/8.  The dancers will of course promenade @w{1-1/8}.  You
 should consider @samp{at home} or @samp{1/8 promenade} to be the ``usual''
 timing for singing call figures.
 
-@node Changing Modes, , Singing Call Progressions, Misc Commands
+@node Changing Modes, , Singing Call Progressions, Miscellaneous Commands
 @section Changing Modes
 
 There are several commands that change some aspect of the way @code{Sd}
@@ -2303,6 +1777,7 @@ or @code{Sdtty} runs.  They are:
    toggle active phantoms
    toggle retain after error
    toggle nowarn mode
+   toggle singleclick mode
    toggle singing call
    toggle reverse singing call
 @end example
@@ -2310,10 +1785,10 @@ Normally, all of these are off.
 You may want to turn one or more of them on for your own personal
 preference, or for some special reason.  These commands @dfn{toggle} their
 respective modes.  That is, they turn the mode on if it was off, and
-off if it was on.  The current state of the @code{concept levels},
-@code{active phantoms}, and @code{singing call} modes is always displayed
-in the input prompt in @code{Sdtty}, or the mode line in the upper
-right corner in @code{Sd}.
+off if it was on.  The current status of some of these
+modes is always displayed
+in the input prompt in @code{Sdtty}, or the status bar at the bottom
+in @code{Sd}.
 
 The @code{toggle concept levels} command changes the legality of concepts
 that are not on the specified calling level.  @xref{Entering Concepts}
@@ -2321,6 +1796,10 @@ and @ref{Using Off-Level Concepts}.
 
 The @code{toggle active phantoms} command changes the persistence of
 phantoms during certain calls.  @xref{Assume Waves}.
+We do not recommend using this.  It may make the program refuse
+to do things that real dancers consider completely legal, due to
+phantoms colliding with or otherwise interfering with live dancers.
+Instances in which this option is needed are nearly unheard-of.
 
 The @code{toggle retain after error} command changes the option whereby
 program retains the concepts that
@@ -2329,6 +1808,9 @@ you had typed when an error occurs.
 
 The @code{toggle nowarn mode} command changes the suppression
 of warning messages.
+
+The @code{toggle singleclick mode} changes the acceptance of single
+mouse clicks on menu items.
 
 The @code{toggle singing call} commands change the singing call mode,
 which affects resolves.
@@ -2339,7 +1821,575 @@ automatically when the program begins,
 either by giving a command-line option (@pxref{Command-Line Options}) or
 through the use of the initialization file (@pxref{Option Control}).
 
-@node Terminal Interface, Linguistic Idiosyncrasies, Misc Commands, Top
+@node The Initialization File, Invoking Sd, Miscellaneous Commands, Top
+@chapter The Initialization File
+
+When @code{Sd} or @code{Sdtty} starts, it looks for a file @file{sd.ini}
+in the working directory.
+This file, if present, contains information about dances
+you might be working on, and about possible individual preferences
+you might have for the way the program runs.
+Such a file might look like this:
+
+@example
+[Options]
+reverse_video
+no_warnings
+singlespace
+
+[Sessions]
+sequence.C3       C3          12      NACC, June 1995
+sequence.C4       C4          31      NACC, June 1995
+workshop          C1          75      My Wednesday group
++                 A2           9      NESRDC
+*                 A1           2      Lake Shore Farm
+@end example
+
+There are up to three sections in this file, called the ``sessions''
+section, the ``options'' section, and the ``accelerators'' section.
+Each section starts with a header word in brackets.  The sections are
+separated from each other by blank lines.
+
+@menu
+* Session Control::             Session Control
+* Option Control::              Option Control
+* Accelerator Key Control::     Accelerator Key Control
+* Sample Initialization Files:: Sample Initialization Files
+@end menu
+
+@node Session Control, Option Control,  , The Initialization File
+@section Session Control
+
+Each line after the line @code{[Sessions]}, up until a blank line
+or the end of the file, describes a possible session
+of using the program, showing the output filename, level, next sequence
+number, and title.
+
+Th example file above shows 5 possible things you could work on.  You can select
+any one of them during a session.  When the program is started, it will
+display the 5 lines and ask you which one you want to use, like this:
+
+@example
+Do you want to use one of the following sessions?
+
+  0     (no session)
+  1  sequence.C3       C3          12      NACC, June 1995
+  2  sequence.C4       C4          31      NACC, June 1995
+  3  workshop          C1          75      My Wednesday group
+  4  +                 A2           9      NESRDC
+  5  *                 A1           2      Lake Shore Farm
+  6     (create a new session)
+
+Enter the number of the desired session:
+@end example
+
+In @code{Sdtty}, type the number of the selection that you want.
+In @code{Sd}, either select the desired line with a double mouse click,
+or use the cursor keys to highlight the line and then press
+@key{ENTER}.
+
+If you select ``0'', or just press @key{ENTER}, the program will ignore
+the sessions and proceed normally.  If you enter the
+number of one of the lines that are displayed, the program will operate
+at that level,
+and use the named output file and title.  It will also
+print a sequence number on each card, starting with the number shown.
+For example, if you entered ``3'' after the file above is displayed,
+the program will operate at C1.  The output file will be ``workshop''
+instead of the default ``sequence.C1''.  Cards will be serialized
+starting at 75.  Each card will have a title saying
+``My Wednesday group''.
+
+If the given file name is ``+'', the program will generate a file name
+for you, based on today's date.  This may be useful for managing files,
+so that you know when it is safe to delete a file that you have printed.
+The program will of course tell you what the name of that file is.
+All runs of the program using that session on the same day will append
+their sequences to the same file.  The file name will be something like
+like@file{9mar96.C3}.
+
+If the given file name is ``*'', the program will generate a file name
+in the same way, except that it will always generate a new file for each
+run of the program.  If the program is started several times in one day,
+the files will be different.  The generated file names will be something
+like @file{9mar96a.C3}.  Note the @file{a} after the year.
+
+At the end of the session, the initialization file will be updated with the
+next index number.  For example, if you wrote 12 sequences, they would
+be numbered 75 through 86, and the file would be rewritten as
+
+@example
+workshop          C1           87     My Wednesday group
+@end example
+
+@noindent so that the next session for that group would start with sequence number 87.
+
+The title bar displays the level, session title, current sequence number,
+and starting sequence number.
+
+If, at any time during the session, you change the output file
+(with the @code{Change Output File} operation) or the
+title (with the @code{Change Title} operation),
+the initialization file will be updated at the end of that session to
+show the effect of the change.
+
+When the program starts, you can tell it to create a new entry in
+the file by entering the number corresponding to @code{(create a new session)}.
+In the above example, select ``6''.  The program will ask you for the
+level and title, and will set the output file to the standard ``sequence.C1''
+or whatever.  You may
+use the @code{Change Output File} command and the
+@code{Change Title} command to change these later if you wish.
+At the end of the session, item number 6, containing the appropriate data,
+will be written to the updated initialization file.
+
+If you no longer want some entry in the initialization file,
+you can delete it.  In @code{Sdtty}, type the negative of its line number.
+In the above example, if you entered ``-4'', the line
+
+@example
+   +                 A2           9      NESRDC
+@end example
+
+@noindent would be deleted.  In @code{Sdtty}, check the box labeled
+``Delete this session'' and select the line to be deleted.
+Either way, the program will terminate
+immediately after doing this.  Run it again to use the new initialization file.
+
+Whenever the program updates the initialization file @file{sd.ini}
+at the end of a session, it saves the old contents in @file{sd2.ini}.
+By copying that back to @file{sd.ini}, you can restore it.
+
+You can also edit the file with an editor.  Simple editors, such as
+@samp{Emacs} and @samp{Notepad} are preferable to sophisticated word processors when
+editing this file, since word processors often insert specialized control information
+into the file.  The simplest way to edit the file is to double-click the icon
+@file{Edit sd.ini} in the @file{C:\sd} folder.  This is a shortcut to the
+@samp{Notepad} editor.
+
+@node Option Control, Accelerator Key Control, Session Control, The Initialization File
+@section Option Control
+
+Each line after the line @code{[Options]}, up until a blank line
+or the end of the file, contains an option specifier.  When the program
+is started, it will use those specifiers to determine a number of aspects
+of the program's behavior.
+This makes it possible to encode your personal
+preferences so that the program will always use them.  Do @emph{not}
+place a hyphen in front of an option in the initialization file.
+
+A few of these options can also be changed while the program is running,
+by giving suitable commands.  @xref{Changing Modes}.
+
+@noindent Here are the available options:
+
+@table @code
+@item singlespace
+This makes the program write out the output file with single spacing
+instead of the usual double spacing.
+This may be useful for those who use special fonts or special printer
+arrangements.
+@item concept_levels
+This allows all concepts, even those that are not
+actually legal at the specified level, to be used.
+It is the same as giving the @code{toggle concept levels}
+command while the program is running.
+@item active_phantoms
+This turns on the ``active phantoms'' behavior,
+which makes phantoms persist throughout calls.
+This option is the same as giving the @code{toggle active phantoms}
+command while the program is running.
+@item no_warnings
+This suppresses the display and printing of the
+warning messages that are sometimes given to help less-experienced callers.
+It is the same as giving the @code{toggle nowarn mode}
+command while the program is running.
+@item retain_after_error
+This makes the program automatically retain all concepts that had
+been typed prior to the current call whenever an error occurs.
+The usual behavior is to discard all typed concepts when an error occurs.
+It is the same as giving the @code{toggle retain after error}
+command while the program is running.
+@xref{Retaining Concepts After an Error}.
+@item discard_after_error
+This is the opposite of @code{retain_after_error}.
+Since this is the usual behavior, you don't need this option.
+It is present only for compatibility with older versions.
+If it is in your @file{sd.ini} file, take it out.
+@item single_click
+This makes @code{Sd} respond immediately to a single mouse click
+in a menu.  Normally, a double click, or pressing the @samp{Accept} button,
+is required.  This option is meaningless in @code{Sdtty}.
+It is the same as giving the @code{toggle singleclick mode}
+command while the program is running.
+@item no_checkers
+@code{Sd} normally draws the formation on the screen with icons that are
+intended to look like callers' ``checkers''.  This option disables that,
+and displays dancers by more normal means.  Pictures drawn in the output
+file never use these icons.  This option is meaningless in @code{Sdtty}.
+@item no_graphics
+This suppresses the use of special PC graphics characters (``triangles'') when drawing pictures
+on the screen.  These characters are not standard on all PC's.  Pictures
+drawn in the output file will never use the special graphics characters.
+This is not meaningful in @code{Sd} unless @code{no_icons} is also given.
+@item no_color
+@code{Sdtty} and @code{Sd} normally color-code
+the dancers shown on the screen, according to various color schemes that
+are controlled by options listed below.  This option disables the use of color.
+Pictures drawn in the
+output file will never be in color, and will never use ``checkers'' or
+triangles.
+@item no_intensify
+@code{Sdtty} normally displays text at full brightness, rather than the
+3/4 brightness that is customary for Command Prompt windows.
+This option leaves the brightness at the lower level.
+It is meaningless in @code{Sd}.
+@item color_by_couple
+This draws dancers on the screen in four colors, one for each couple.
+In the absence of this option, girls are drawn in red and boys in blue.
+Pictures drawn in the output file never use color.
+@item color_by_corner
+Like color_by_couple, but dancers have the same color as their respective corners.
+@item reverse_video
+This displays the transcript area (or the whole window in @code{Sdtty})
+with a black background and white text.  This is the default for @code{Sdtty},
+so you only need this option for @code{Sd}.
+If you are using @code{color_by_couple} or @code{color_by_corner},
+you may want to use this also, to make yellow easier to see.
+@item normal_video
+This displays the transcript area (or the whole window in @code{Sdtty})
+with a white background and black text.  This is the default for @code{Sd},
+so you only need this option for @code{Sdtty}.
+@item pastel_color
+This causes the colors for the usual girls-are-red and boys-are-blue
+scheme to use lighter shades.  This may be preferable if
+@code{reverse_video} is used.  It has no effect when using the
+@code{color_by_couple} or @code{color_by_corner} schemes.
+This is the default for @code{Sdtty},
+so you only need this option for @code{Sd}.
+@item bold_color
+This is the opposite of @code{pastel_color}---it uses darker shades.
+This is the default for @code{Sd},
+so you only need this option for @code{Sdtty}.
+@item no_sound
+Do not ring the bell or make any other sound when reporting errors.
+@item db @var{filename}
+location of the calls database.  The default is @file{sd_calls.dat} in
+the current directory.
+@item sequence @var{filename}
+base name of the file to write sequences to.  The calling level will be
+used as the extension of the file name.
+The default base name is @file{sequence}, so a complete
+file name might be @file{sequence.C1}.
+@item no_cursor
+Dumb terminal mode: do not use cursor motion commands to keep the screen
+up-to-date efficiently.  Use this if the cursor motion and screen manipulation
+operations of your terminal or operating system are not available or are not
+working satisfactorily.
+This is only legal in @code{Sdtty}, and is meaningless on Windows 95
+or similar systems.  @xref{Sdtty}.
+@item no_console
+Extremely dumb terminal mode: turn off all special input/output processing completely.
+This allows input or output to be redirected from files.
+@item lines @var{nlines}
+The number of lines on the screen.  Default is 25.
+This is only legal in @code{Sdtty}, and is meaningless on Windows 95
+or similar systems.
+@item no_line_delete
+Do not use the insert line or delete line cursor control commands.  Use this
+if these commands are not working satisfactorily on your terminal.
+This is only legal in @code{Sdtty}, and is meaningless when running Windows.
+@end table
+
+@node Accelerator Key Control, Sample Initialization Files, Option Control, The Initialization File
+@section Accelerator Key Control
+
+The text of the @file{sd.ini} initialization file, from the line
+@code{[Accelerators]} up to the next blank line or the end of the
+file, consists of key definitions, one per line, or comments.
+A comment is any line starting with a ``pound sign'' (@code{#}).
+The first item on a non-comment line is a description of the key,
+and the remaining items are the meaning, exactly as you would type
+it to @code{Sd}.  The meaning may be any single call, concept,
+or special command.  (To see what special commands are available,
+type a question mark during a resolve, during program startup, or
+during normal program operation, or look at the @code{Sd} menu.)
+
+Keys may have different definitions during program startup, during
+resolves, and during normal operation.
+
+If the first character of
+the key description is a plus sign (@code{+}), that key definition
+line is meaningful during program startup.  For example, the standard
+definition contains the line
+@example
+@group
+   +f1    heads start
+@end group
+@end example
+@noindent to indicate that function key @key{F1} means @code{heads start}
+during program startup.
+
+If the first character of
+the key description is an asterisk (@code{*}), that key definition
+line is meaningful during resolve searches.  For example, the standard
+definition contains the line
+@example
+@group
+   *f12   find another
+@end group
+@end example
+@noindent to indicate that function key @key{F12} means @code{find another}
+during resolves.
+
+It is perfectly legal to have the same keystroke mean three different
+things during startup, during resolves, and during normal operation.
+
+After the optional plus sign or asterisk, there may be an optional
+@code{s} to mean shift, @code{c} to mean control, @code{a} (or @code{m})
+to mean alt (meta),
+or @code{ca} to mean control-alt (hold both the control and alt keys
+while pressing the indicated key).
+
+@noindent What follows must be
+@table @code
+@item @r{a letter}
+Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain and
+capital letters always have their normal meaning.)
+@item @r{a digit}
+Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain digits
+always have their normal meaning, and shift digits are punctuation.)
+@item @r{a function key: f1 through f12}
+These may be plain, shifted, control, alt, or control-alt.
+@item @r{a numeric keypad key: n0 through n9}
+Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain numeric
+key presses are always equivalent to that digit.)
+@item @r{an ``enhanced'' key: e1 through e14}
+These may be plain, shifted, control, alt, or control-alt.
+@end table
+
+@noindent The ``enhanced'' keys are encoded as follows:
+@example
+@group
+   e1     page up
+   e2     page down
+   e3     end
+   e4     home
+   e5     left arrow
+   e6     up arrow
+   e7     right arrow
+   e8     down arrow
+   e13    insert
+   e14    delete
+@end group
+@end example
+@noindent So, for example, the line:
+@example
+@group
+   cae8  u-turn back
+@end group
+@end example
+@noindent would define @code{control-alt-<down-arrow>} to do a
+@samp{U-turn back}.
+
+In specifying a key name, you can use either ``m'' (for meta) or ``a''
+(for alt) to mean the same thing.  (Some people refer to it as the meta
+key.)  Also, if a
+key is both meta/alt and control, you may list them in either order.
+Also, you may
+put hyphens into the key name, and put it in upper or lower case.  The
+command value (the rest of the line) must be in lower case.
+
+@noindent Hence
+@example
+@group
+   c-m-e8  u-turn back
+   c-a-e8  u-turn back
+   m-c-e8  u-turn back
+   a-c-e8  u-turn back
+@end group
+@end example
+@noindent mean the same thing as the above example.
+
+If a key is defined to mean a concept, and that concept is not legal at
+the level at which the program is invoked, the key will still mean that
+concept.  If the key is pressed, the concept will be used, but it will be
+considered an off-level concept, and a warning will be printed.
+@xref{Using Off-Level Concepts}.
+
+If a key is defined to mean a call, and that call is not legal at the
+level at which the program is invoked, that key definition in the
+initialization file will simply be ignored, unless the level is C4X.
+Therefore, whenever you change your initialization file, it is a good
+idea to test it by starting the program at C4X to find out if any warning
+messages are printed.
+
+@node Sample Initialization Files, , Accelerator Key Control, The Initialization File
+@section Sample Initialization Files
+
+When @code{Sd} or @code{Sdtty} is first installed, no initialization file exists,
+but the files @file{sample1.ini}, @file{sample2.ini} and @file{sample3.ini}
+are provided for you
+in the working directory.  The @file{sample1.ini} file shows an example of
+the ``session'' mechanism only, and @file{sample2.ini} show both the
+''session'' and ``option'' mechanisms.
+The @file{sample2.ini} file is the same as the example shown previously.
+The @file{sample3.ini} file is the same as @file{sample1.ini}, but it
+has an @code{[Accelerators]} section containing all of the standard key
+bindings, plus a number of other helpful suggested bindings.
+You can copy any of these files to @file{sd.ini} and edit it if you wish.
+
+@node Invoking Sd, Terminal Interface, The Initialization File, Top
+@chapter Invoking Sd via Command Line (DOS or UNIX only)
+
+@display
+@t{sd} level [ Xt options @dots{} ] [ Sd options @dots{} ]
+@t{sd} level @t{-write_list} filename
+@t{sd} level @t{-write_full_list} filename
+@end display
+
+The program is normally invoked with a single argument---the level.
+This is one of the following: @code{m} (mainstream), @code{p} (plus),
+@code{a1}, @code{a2}, @code{c1}, @code{c2}, @code{c3a},
+@code{c3}, @code{c3x}, @code{c4a}, @code{c4}, or @code{c4x}.
+The level can also be determined by the selection made when using the
+``session'' feature.
+If the level is not given, or the program was started by a mouse
+click from Windows, the program will ask you for it.
+However it is specified,
+the level determines the calls and concepts that will be made
+available, according to our best guess of what the levels mean.  Various
+optional arguments are permitted to control the window system,
+customize the list of calls used, and set other options.
+These will be described later.
+
+The call definitions will be read in from the encoded database file
+@file{sd_calls.dat}.  The program will then ponder the database for a few
+seconds while it determines what calls to put on what menus.  Depending
+on the speed of your computer and the level you selected, this could take
+from a few seconds to over a minute.
+
+@menu
+* Command-Line Options::        Command-Line Options
+* Abridgement::                 Abridgement
+@end menu
+
+@node Command-Line Options, Abridgement,  , Invoking Sd
+@section Command-Line Options
+
+Any of the option keywords that can be placed
+in the ``options'' section of the initialization file may be given on
+the command line instead.  @xref{Option Control}.
+
+Each keyword has a hyphen in front of it when used on the command line.
+
+Examples:
+
+@display
+@t{sd -singlespace plus}
+@t{sdtty -no_warnings -active_phantoms}
+@end display
+
+In addition to giving these options if you invoke the program from the
+command line, you can place them (and the level also, if you wish)
+in a Windows shortcut.  For example, you can place an icon on your desktop
+that runs @code{Sd} at A2, with the @code{color_by_corners} scheme.
+Make a copy of the standard shortcut (or make a new shortcut with the
+``Taskbar'' option or the ``Settings'' operation in the Start Menu),
+and then use the ``Properties'' command to add the desired switches
+at the end of the ``Target'' line.
+
+There are X resources associated with some options:
+@code{Sd.sequenceFile} is equivalent to the @w{@code{-sequence}} switch, and
+@code{Sd.databaseFile} is equivalent to @code{-db}.
+
+If you almost always will be passing the the same value for a
+command-line switch, you may find it more convenient to set the
+corresponding resource.
+
+With the X Window System interface, Sd accepts all Xt command-line
+options.  The following are some of the more useful options for use with
+Sd.
+
+@table @code
+@item -rv
+reverse video
+@item -bg @i{color}
+background color
+@item -fg @i{color}
+foreground color
+@item -bd @i{color}
+border color
+@item -font @i{font}
+font used everywhere
+@item -geometry @i{geom-spec}
+geometry in pixels
+@item -title @i{string}
+title for window manager and icon use
+@item -name @i{string}
+name to look up resources under.  default: program name.
+@item -xrm @i{resource-line}
+an X resource manager string.
+@end table
+
+@node Abridgement,  , Command-Line Options, Invoking Sd
+@subsection Abridgement
+
+The program recognizes three flags which allow use of an abridged
+list of calls:
+
+@table @code
+@item -write_list @var{filename}
+write out the call list for the indicated level and exit
+@item -write_full_list @var{filename}
+write out the call list for the indicated level and all lower levels
+and then exit the program.
+@item -abridge @var{filename}
+read in the file, strike all the calls contained therein off the menus,
+and proceed.
+@end table
+
+The first two are used to prepare a call list.  The call list for the
+indicated level, exactly as the calls appear in the menu, will be written
+to the named file.  If @code{-write_list} is used, only the calls exactly on
+that level will be written.  If @code{-write_full_list} is used, the lower level
+calls will be written as well, so the file will look exactly like the
+main call menu.  After performing either of these operations, the program
+exits.
+
+The third special flag is used to read in a list of calls to be avoided.
+Any call listed in the file, in precisely the same format as it was written
+out, will be removed from the internal database prior to running the program.
+Every sequence written under control of such a file will say @samp{(abridged)}
+on its header line.
+
+To write sequences for a group that is learning C2, for example, run the
+program with
+@example
+        sd -write_list my_group c2
+@end example
+
+Then delete from the file @file{my_group} those calls that the group has
+learned, i.e., those calls not to be avoided.
+When writing sequences, use the command
+@example
+        sd -abridge my_group c2
+@end example
+
+As the group learns new C2 calls, delete the corresponding lines from
+the file @file{my_group}.  That file always contains the calls that they don't
+yet know.  When the file goes to zero, they know the whole list.
+
+Be aware that the abridgement mechanism works only for calls, not for concepts.
+You must keep track of what concepts not to use.
+
+The lines in the abridgement file must always be in exactly the same format
+as the strings that are written out by the @code{-write_list} or @code{-write_full_list}
+flags.  The program has no tolerance for creative capitalization, stray
+blanks, or other variations.  Any line in the file that does not match a
+call in the menu is simply ignored.  The order of the lines is not important.
+
+@node Terminal Interface, Linguistic Idiosyncrasies, Invoking Sd, Top
 @chapter Terminal Interface
 
 One version of the program, called @code{sdtty},
@@ -2347,11 +2397,11 @@ uses a character-oriented terminal interface.
 
 @menu
 * Sdtty::                       The @code{Sdtty} program
-* Function Keys in Sdtty::      Function Keys
+* Function Keys::               Function Keys
 * Sdtty on Unix::               The Unix version
 @end menu
 
-@node Sdtty, Function Keys in Sdtty,  , Terminal Interface
+@node Sdtty, Function Keys,  , Terminal Interface
 @section Sdtty
 
 The program @code{Sdtty} uses the completing reader for call,
@@ -2390,11 +2440,10 @@ To deal with different types of display hardware with various screen sizes,
 the @code{-lines @var{n}} switch can be given at program startup, as in
 @code{sdtty -lines 36 a2}.  The default size is 25.
 
-@node Function Keys in Sdtty, Sdtty on Unix, Sdtty, Terminal Interface
+@node Function Keys, Sdtty on Unix, Sdtty, Terminal Interface
 @section Function Keys
 
-On Windows and other systems that allow it,
-@code{Sdtty} recognizes a number of function keys and other
+@code{Sd} recognizes a number of function keys and other
 special keystrokes.  They can be programmed to your personal preferences
 through the initialization file.  If you do not program your personal
 preferences, you get the following ``standard'' definitions:
@@ -2468,7 +2517,7 @@ section will be used instead.   @xref{Accelerator Key Control} for information
 about setting up an @code{[Accelerators]} section in your initialization
 file.
 
-@node Sdtty on Unix,  , Function Keys in Sdtty, Terminal Interface
+@node Sdtty on Unix,  , Function Keys, Terminal Interface
 @section Sdtty on Unix
 
 The Unix version normally uses the @i{curses} display access mechanism.  It
@@ -3010,10 +3059,10 @@ is the actual space-invader call.
 @node Hocus Pocus, Funny Square Thru, Bridge the Gap, Call Notes
 @section Hocus Pocus
 
-There is a call @samp{hocus pocus (fractions)} in the database.
+There is a call @samp{hocus pocus (parts)} in the database.
 It understands the fact that the outsides' part of this call
 has two @samp{O circulates}, and it allows fractionalization concepts
-to be applied.  For example, from diamonds, @code{1/2 hocus pocus (fractions)}
+to be applied.  For example, from diamonds, @code{1/2 hocus pocus (parts)}
 typically creates a 4x4 matrix of some kind.
 
 Unfortunately, this call can't always be used with phantoms.
@@ -3024,7 +3073,7 @@ dancers will ``leave room for the phantoms.''  If the number of @samp{O circulat
 isn't known to be two, this property disappears.  So the call @samp{hocus pocus}
 knows about the shape change, even in the presence of phantoms, and should
 be used with concepts like @samp{split phantom columns}, to get the correct phantom
-behavior.  In the call @samp{hocus pocus (fractions)}, all bets are off regarding
+behavior.  In the call @samp{hocus pocus (parts)}, all bets are off regarding
 the phantoms' action.
 
 @node Funny Square Thru, Rotate from Columns, Hocus Pocus, Call Notes
@@ -3165,7 +3214,6 @@ For some calls, the @samp{12 matrix} concept will also be helpful.
 * Distorted Setup Concepts::    Distorted Setup Concepts
 * 4-person distorted concepts:: 4-person distorted concepts
 * Miscellaneous Concepts::      Miscellaneous Concepts
-* Main Menu Concepts::          Miscellaneous Concepts Appearing Only in the Main Menu
 * Concentric::                  Concentric
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
@@ -3194,13 +3242,6 @@ dancers to do the equivalent thing.  You must always use your
 own judgement.  No claim is made that the program's notion
 of what the words literally mean is the universally accepted
 definition of the concept.
-
-In the menu-based program (Sd), most of these concepts are on
-special menus that are brought up by clicking on one of the
-concept icons on the left side of the screen.  There are far too
-many concepts to make them all visible on the screen at the same time.
-In @code{Sdtty}, just type the name of the concept without worrying about what
-menu it would be on.
 
 Be aware that those concepts that take two calls, such as @code{checkpoint},
 @code{<ANYONE> do your part (while the others)}, or
@@ -3242,7 +3283,7 @@ below only those things that the program considers to be ``concepts.''
 There are many other variations of calls, such as @i{square chain thru
 to a wave} that are not listed here.  In general, variations of this sort
 can be obtained simply by clicking on them or typing them.  They should
-be visible on the call menu, and, if you type a question mark to @code{Sdtty}
+be visible on the call menu, and, if you type a question mark
 while typing the call name, these variations should be displayed.
 
 In the concept names, ``C/L/W'' has the usual meaning of ``columns,
@@ -3269,8 +3310,8 @@ the assumption of waves in order to decide how to start the call.  For example,
 in normal columns, @code{split phantom waves in roll circulate}---which
 is equivalent to @code{split phantom lines, assume waves, in roll
 circulate}---is legal, because the phantom in-roller's location can be
-deduced from the
-wave assumption.
+deduced from the wave assumption.  Whether the dancers will be appreciative
+of your calling that is another matter.
 
 The call @code{split phantom lines in roll circulate} is illegal from columns
 because the facing direction of the phantom in-roller is unknown.
@@ -3320,10 +3361,6 @@ Precisely what an assumption means is determined by whether the
 
 These concepts involve picking out virtual setups, which may include
 phantoms, from a real formation that is larger than eight people.
-
-In @code{Sd}, the menu for these concepts is brought up by clicking on
-the ``phantom
-line/col concepts'' or ``phantom box/dmd/qtag concepts'' icon.
 
 In all cases outboard phantoms are added as required at the start of the call
 and removed where possible at the conclusion of the call.
@@ -3456,25 +3493,22 @@ pairs work independently.
 @node Tandem or Couples Concepts, Distorted Setup Concepts, Phantom Concepts, Concept Notes
 @section Tandem or Couples Concepts
 
-The menu for these concepts is brought up by clicking on the
-``couples/tandem concepts'' icon.
-
 @table @code
-@item as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome
-@item tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome
-@item siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese twosome
+@item as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome
+@item tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome
+@item siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese twosome
 @item couples of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples threesome
 @item tandems of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem threesome
 @item siamese of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese threesome
 @item couples of 4@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples foursome
 @item tandems of 4@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem foursome
 @item siamese of 4@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese foursome
-@item boxes are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ boxsome
-@item diamonds are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ diamondsome
-@item skew@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ skewsome
-@item @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome twosome
-@item gruesome as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome couples twosome
-@item gruesome tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome tandem twosome
+@item boxes are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ boxsome
+@item diamonds are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ diamondsome
+@item skew@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ skewsome
+@item @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome twosome
+@item gruesome as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome couples twosome
+@item gruesome tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome tandem twosome
 @item as couples in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 tag
 @item as couples in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 tag
 @item as couples in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 line
@@ -3485,8 +3519,8 @@ The menu for these concepts is brought up by clicking on the
 @item tandem in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 line
 @item <ANYONE> are as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples twosome
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
-@item <ANYONE> are couples of 3@ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
-@item <ANYONE> are tandems of 3@ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem threesome
+@item <ANYONE> are couples of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
+@item <ANYONE> are tandems of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem threesome
 @item inside triangles are solid@ @ @ @ @ @ @ @ @ @ @ @ inside triangles are threesome
 @item outside triangles are solid@ @ @ @ @ @ @ @ @ @ @ outside triangles are threesome
 @item in point triangles are solid@ @ @ @ @ @ @ @ @ @ in point triangles are threesome
@@ -3576,8 +3610,6 @@ in that family that is widely accepted.
 @node Distorted Setup Concepts, 4-person distorted concepts, Tandem or Couples Concepts, Concept Notes
 @section Distorted Setup Concepts
 
-The menu for these is brought up by clicking on the ``distorted setup concepts'' icon.
-
 @table @code
 @item stagger
 @item big block          (any kind of lines)
@@ -3664,9 +3696,6 @@ or phantoms as required.
 @node 4-person distorted concepts, Miscellaneous Concepts, Distorted Setup Concepts, Concept Notes
 @section 4-person distorted concepts
 
-The menu for these concepts is brought up by clicking on the ``4-person distorted
-setup concepts'' icon.
-
 @table @code
 @item split
 This divides a 2x4 into two 2x2's.  It also has all the other meanings
@@ -3741,12 +3770,8 @@ blocks with some people out of their usual place
 in an unambiguous way.  People work to the same spots.
 @end table
 
-@node Miscellaneous Concepts, Main Menu Concepts, 4-person distorted concepts, Concept Notes
+@node Miscellaneous Concepts, Concentric, 4-person distorted concepts, Concept Notes
 @section Miscellaneous Concepts
-
-The menu for these concepts is brought up by clicking on the
-``miscellaneous concepts'' icon.
-Many also appear in the special concept menu that is always visible.
 
 @table @code
 @item left
@@ -3853,7 +3878,8 @@ This concept is somewhat cantankerous.  It puts the dancers into 2-faced lines
 and then has everyone do whatever you say next.
 
 @strong{NOTE:}  If you enter @code{heads lead for a
-wheel around}, it will have @emph{everyone} wheel around.  To get the effect that
+wheel around}, it will have @emph{everyone} wheel around, resulting in 2-faced lines.
+To get the effect that
 is usually indicated by the words ``promenade, do not stop @dots{}, heads wheel around'',
 you must enter enter @code{heads lead for a heads wheel around}.
 @item ends concentric
@@ -4024,7 +4050,7 @@ smooth dancing of this figure.
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after <M>/<N>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item interrupt before the last part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item interrupt before the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item start with@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item sandwich@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These concepts cause the call to be interrupted or replaced as indicated.
@@ -4149,15 +4175,6 @@ is used from a thar, in which the call is intended to be performed in
 each of two interleaved diamonds.  In real life, one can generally call this
 as just @code{all 8}, and the dancers will know what is required.  The
 program is not that smart, and requires the ``(diamonds)'' hint.
-@end table
-
-@node Main Menu Concepts, Concentric, Miscellaneous Concepts, Concept Notes
-@section Miscellaneous Concepts Appearing Only in the Main Menu
-
-These concepts appear only in the concept menu that is always visible on
-the left side of the screen.
-
-@table @code
 @item each C/L/W/B/D
 @item each 1x4
 These can be used in troublesome situations to force a setup to be split
@@ -4203,7 +4220,7 @@ tidal line.  The @code{16 matrix of parallel diamonds} concept expands to
 quadruple diamond spots.
 @end table
 
-@node Concentric, Assume Waves, Main Menu Concepts, Concept Notes
+@node Concentric, Assume Waves, Miscellaneous Concepts, Concept Notes
 @section Concentric
 
 The @samp{concentric} and @samp{cross concentric} concepts are formulated

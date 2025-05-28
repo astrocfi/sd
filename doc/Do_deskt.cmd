@@ -1,3 +1,3 @@
 pushd %userprofile%\Desktop
-copy C:\sd\sdtty.lnk SDTTY.lnk
+copy C:\sd\SDTTY.lnk SDTTY.lnk
 popd

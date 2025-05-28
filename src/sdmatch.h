@@ -26,20 +26,20 @@ typedef struct {
 } match_state;
 
 /* These are provided by sdmatch.c */
-extern match_state static_ss;
+EXPORT match_state static_ss;
 
 /* This is provided by sdui-XXX.c */
 extern long_boolean verify_has_stopped;
 
 extern void show_match(void);
 
-extern void do_accelerator_spec(Cstring qq);
+EXPORT void do_accelerator_spec(Cstring qq);
 
-extern void matcher_initialize(void);
+EXPORT void matcher_initialize(void);
 
 extern void matcher_setup_call_menu(call_list_kind cl);
     
-extern int match_user_input(
+EXPORT int match_user_input(
    int which_commands,
    long_boolean show,
    long_boolean show_verify);

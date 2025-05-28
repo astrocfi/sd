@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1998  William B. Ackerman.
@@ -216,11 +214,13 @@ extern long_boolean divide_for_magic(
 {
    static expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0};
    static expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0};
-   static expand_thing exp13  = {{1, 3, 5, 7, 9, 11}, 6, s2x3, s2x6, 0};
-   static expand_thing exp31  = {{0, 2, 4, 6, 8, 10},  6, s2x3, s2x6, 0};
+   static expand_thing exp13  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0};
+   static expand_thing exp31  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0};
    static expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0};
+   static expand_thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0};
    static expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0};
-   static expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10},  8, s1x8, s1x12, 0};
+   static expand_thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0};
+   static expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0};
    static expand_thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
    static expand_thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
    static expand_thing expg56 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0};
@@ -459,8 +459,14 @@ extern long_boolean divide_for_magic(
       else if (livemask == 03535) {
          compress_setup(&exp35, result);
       }
+      else if (livemask == 05353) {
+         compress_setup(&exp53, result);
+      }
       else if (livemask == 05656) {
          compress_setup(&exp56, result);
+      }
+      else if (livemask == 06565) {
+         compress_setup(&exp65, result);
       }
    }
    else if (result->kind == s1x12) {
@@ -2499,13 +2505,13 @@ Private long_boolean get_real_subcall(
    }
 
    /* Note whether we are using any mandatory substitutions, so that the menu
-      initialization will always accept this call.  Also, if we are in one of the
-      special scans in the resolver, any call that takes a mandatory subcall
-      (e.g. "wheel and <anything>") is rejected. */
+      initialization will always accept this call. */
 
    if (snumber == 2 || snumber == 6) {
-      if (interactivity == interactivity_in_first_scan ||
-          interactivity == interactivity_in_second_scan)
+      /* In some types of pick operations, the picker simply doesn't know how
+         to choose a mandatory subcall.  In that case, the call requiring the
+         mandatory subcall (e.g. "wheel and <anything>") is simply rejected. */
+      if (forbid_call_with_mandatory_subcall())
          fail("Mandatory subcall fail.");
       mandatory_call_used = TRUE;
    }
@@ -2518,9 +2524,9 @@ Private long_boolean get_real_subcall(
       "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
       that appears in the database. */
 
-   /* The same is true when we are doing the special scans in the resolver -- we don't get
-      subcalls -- we just leave the default call in place.  Only when in the random search
-      do we generate random subcalls. */
+   /* Also, when doing pick operations, the picker might not want to do a random pick.
+      It might just want to leave the default call ("clover and [nothing]") in place.
+      So we ask the picker. */
 
    /* Of course, if we are testing the fidelity of later calls during a reconcile
       operation, we DO NOT EVER add any modifiers to the list, even if the user
@@ -2531,7 +2537,7 @@ Private long_boolean get_real_subcall(
       that we test for fidelity. */
 
    if (!(interactivity == interactivity_normal ||
-         interactivity == interactivity_in_random_search) ||
+         allow_random_subcall_pick()) ||
        testing_fidelity)
       goto ret_false;
 
@@ -2986,7 +2992,8 @@ extern void get_fraction_info(
       highlimit = total-highlimit;
 
       if (zzz->do_half_of_last_part) {
-         zzz->do_last_half_of_first_part = ((e_denom - first_half_stuff) << 12) | (e_denom << 8) | 0x11;
+         zzz->do_last_half_of_first_part =
+            ((e_denom - first_half_stuff) << 12) | (e_denom << 8) | 0x11;
          zzz->do_half_of_last_part = 0;
          dont_clobber = TRUE;
       }
@@ -3014,17 +3021,26 @@ extern void get_fraction_info(
          /* Be sure that enough parts are visible. */
          if (subcall_index >= available_fractions)
             fail("This call can't be fractionalized.");
-         if (subcall_index >= total) fail("The indicated part number doesn't exist.");
+         if (subcall_index >= total)
+            fail("The indicated part number doesn't exist.");
+
+         /* If "K" (the secondary part number) is nonzero,
+            shorten highlimit by that amount. */
+         if (zzz->reverse_order) {
+            highlimit += kvalue;
+            if (highlimit > subcall_index)
+               fail("The indicated part number doesn't exist.");
+         }
+         else {
+            highlimit -= kvalue;
+            if (highlimit <= subcall_index)
+               fail("The indicated part number doesn't exist.");
+         }
+
          break;
       case CMD_FRAC_CODE_ONLYREV:
          zzz->instant_stop = 1;
-         if (zzz->reverse_order) {
-            subcall_index = (highlimit-1+this_part);
-         }
-         else {
-            subcall_index = (highlimit-this_part);
-         }
-
+         subcall_index = zzz->reverse_order ? (highlimit-1+this_part) : (highlimit-this_part);
          /* Be sure that enough parts are visible. */
          if (subcall_index >= available_fractions)
             fail("This call can't be fractionalized.");
@@ -5526,7 +5542,9 @@ extern void move(
             call, after saving its old contents. */
          callspec_block *saved_new_call;
          callspec_block *saved_old_call = ss->cmd.callspec;
+         call_conc_option_state saved_options = ss->cmd.parseptr->options;
          parse_block *z1 = t;
+         if (saved_old_call) ss->cmd.parseptr->options = current_options;
          ss->cmd.callspec = (callspec_block *) 0;
          while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
 
@@ -5540,7 +5558,10 @@ extern void move(
          if (saved_old_call) z1->call = saved_old_call;
          z1->no_check_call_level = 1;
          (concept_table[t->concept->kind].concept_action)(ss, t, result);
-         if (saved_old_call) z1->call = saved_new_call;
+         if (saved_old_call) {
+            z1->call = saved_new_call;
+            ss->cmd.parseptr->options = saved_options;
+         }
          ss->cmd.callspec = saved_old_call;
       }
 

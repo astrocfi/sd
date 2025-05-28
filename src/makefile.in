@@ -45,12 +45,12 @@ TTY_LIBS = @TTY_LIBS@
 SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
           sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c \
           sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
-          sdsi.c
+          sdpick.c sdsi.c
 
 SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-          sdsi.o
+          sdpick.o sdsi.o
 
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o

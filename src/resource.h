@@ -9,6 +9,7 @@
 #define IDD_START_DIALOG                105
 #define IDD_TEXT_ENTRY_DIALOG           107
 #define IDI_ICON2                       108
+#define IDB_BITMAP1                     109
 #define IDC_FILE_ACCEPT                 1003
 #define IDC_FILE_EDIT                   1004
 #define IDC_FILE_TEXT                   1005
@@ -38,7 +39,7 @@
 #define ID_COMMAND_ABORTTHISSEQUENCE    40008
 #define ID_COMMAND_ENDTHISSEQUENCE      40009
 #define ID_COMMAND_RESOLVE              40010
-#define ID_COMMAND_COMMAND              40011
+#define ID_COMMAND_COMMENT              40011
 #define ID_COMMAND_CH_OUTFILE           40012
 #define ID_COMMAND_TOGGLE_CONC          40013
 #define ID_COMMAND_TOGGLE_PHAN          40014
@@ -49,7 +50,7 @@
 #define ID_COMMAND_CLIPBOARD_DEL_ONE    40019
 #define ID_COMMAND_CLIPBOARD_PASTE_ONE  40020
 #define ID_COMMAND_CLIPBOARD_PASTE_ALL  40021
-#define ID_COMMAND_CLIPBOARD_KEEP_PIC   40022
+#define ID_COMMAND_KEEP_PICTURE         40022
 #define ID_COMMAND_NORMALIZE            40023
 #define ID_COMMAND_STANDARDIZE          40024
 #define ID_COMMAND_RECONCILE            40025
@@ -88,7 +89,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        109
+#define _APS_NEXT_RESOURCE_VALUE        110
 #define _APS_NEXT_COMMAND_VALUE         40056
 #define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101

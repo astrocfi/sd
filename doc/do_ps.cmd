@@ -34,7 +34,8 @@ call make_text demo.ps ps.msg
 call make_text sessions.ps ps.msg
 call make_text relnotes.ps ps.msg
 pgp -sta +clearsig=on +armor=on ps.msg -u wba -o ps.txt
-zip ps ps.txt
+del ps.msg
+REM zip ps ps.txt
 REM
 REM         The file "ps.zip" may now be unzipped to "ps.txt",
 REM            which can then be mailed.

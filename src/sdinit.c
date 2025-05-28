@@ -13,6 +13,7 @@
     This is for version 32. */
 
 /* This defines the following functions:
+   build_database
    initialize_menus
 */
 
@@ -787,7 +788,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
 Private void check_tag(int tag)
 {
    if (tag >= max_base_calls)
-      database_error("Too many tagged calls -- mkcalls made an error.");
+      database_error("Too many tagged calls -- mkcalls made an error");
    if (tag > highest_base_call) highest_base_call = tag;
 }
 
@@ -1110,7 +1111,7 @@ extern void build_database(call_list_mode_t call_list_mode)
                circcer_calls[number_of_circcers-1] = call_root;
             }
             if (local_callcount >= abs_max_calls)
-               database_error("Too many base calls -- mkcalls made an error.");
+               database_error("Too many base calls -- mkcalls made an error");
             local_call_list[local_callcount++] = call_root;
          }
       }
