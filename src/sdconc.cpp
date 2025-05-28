@@ -1713,6 +1713,18 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric;
       break;
+   case schema_concentric_or_2_6:
+      if (ss->kind == s_323)
+         analyzer_result = schema_concentric_2_6;
+      else
+         analyzer_result = schema_concentric;
+      break;
+   case schema_concentric_or_6_2:
+      if (ss->kind == s_spindle || ss->kind == s_qtag)
+         analyzer_result = schema_concentric_6_2;
+      else
+         analyzer_result = schema_concentric;
+      break;
    case schema_concentric_6p_or_normal:
       if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_6p;
@@ -1728,6 +1740,7 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric;
       break;
+
    case schema_1331_concentric:
       if (ss->kind == s3x4 && (livemask & 01111) == 0) {
          // Compress to a 1/4 tag.
@@ -1794,6 +1807,9 @@ static calldef_schema concentrify(
    case schema_concentric_zs:
    case schema_conc_o:
       break;
+   case schema_concentric_specialpromenade:
+   case schema_cross_concentric_specialpromenade:
+      fail("You must specify who is to do it.");
    default:
       fail("Internal error: Don't understand this concentricity type.");
    }
@@ -3261,7 +3277,7 @@ extern void concentric_move(
                       analyzer == schema_checkpoint)
                      begin_ptr->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
                }
-               else if (begin_ptr->kind == s1x4 || begin_ptr->kind == s1x6) {
+               else if (begin_ptr->kind == s1x2 || begin_ptr->kind == s1x4 || begin_ptr->kind == s1x6) {
                   // Indicate that these people are working around the outside.
                   begin_ptr->cmd.prior_elongation_bits |= 0x40;
 
@@ -3488,7 +3504,7 @@ extern void concentric_move(
             if (doing_ends || suppress_overcasts)
                begin_ptr->clear_all_overcasts();
 
-            if (specialoffsetmapcode != ~0UL) {
+            if (specialoffsetmapcode < ~1UL) {
                divided_setup_move(begin_ptr, specialoffsetmapcode,
                                   phantest_only_one, true, result_ptr);
             }
@@ -4417,6 +4433,14 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
             scatter(result, res1, matrixmap1, 7, 011);
             install_scatter(result, 8, matrixmap2, res2, 0);
          }
+         else if (mask1 == 0x66 && mask2 == 0x66) {
+            static const veryshort alamomap1[8] = {-1, 2, 3, -1, -1, 6, 7, -1};
+            static const veryshort alamomap2[8] = {-1, 0, 1, -1, -1, 4, 5, -1};
+            result->kind = s_alamo;
+            result->clear_people();
+            scatter(result, res1, alamomap1, 7, 011);
+            install_scatter(result, 8, alamomap2, res2, 0);
+         }
          else {
             static const veryshort phanmap1[8] = {4, 6, 11, 9, 12, 14, 3, 1};
             static const veryshort phanmap2[8] = {0, 2, 7, 5, 8, 10, 15, 13};
@@ -5121,6 +5145,7 @@ extern void inner_selective_move(
    normalize_action action = normalize_before_isolated_call;
    bool force_matrix_merge = false;
    bool inner_shape_change = false;
+   bool doing_special_promenade_thing = false;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       clear_result_flags(result);
@@ -5462,6 +5487,170 @@ extern void inner_selective_move(
    uint32 mask = ~(~0 << (sizem1+1));
    const ctr_end_mask_rec *ctr_end_masks_to_use = &dead_masks;
 
+   // Look for special case of user saying something like "heads bring us together" from squared-set spots.
+   // Just do it, as though sequence had started that way.
+
+   if (orig_indicator == selective_key_plain || orig_indicator == selective_key_plain_no_live_subsets) {
+      static const expand::thing compress_heads4x4 = {{10, 13, 14, 1, 2, 5, 6, 9}, s2x4, s4x4, 0};
+      static const expand::thing compress_sides4x4 = {{6, 9, 10, 13, 14, 1, 2, 5}, s2x4, s4x4, 1};
+      static const expand::thing compress_headsalamo = {{7, 0, 1, 2, 3, 4, 5, 6}, s2x4, s_alamo, 0};
+      static const expand::thing compress_sidesalamo = {{5, 6, 7, 0, 1, 2, 3, 4}, s2x4, s_alamo, 1};
+
+      struct promenader_thing {
+         const expand::thing *compressor;
+         const expand::thing *compressor_backout;
+         calldef_schema schema1;
+         calldef_schema xschema;
+         int rotation_forbid;
+      };
+
+      promenader_thing const *whattodo = (promenader_thing const *) 0;
+
+      static const promenader_thing thing4x4_0606 = {
+         &compress_heads4x4,
+         &compress_sides4x4,
+         schema_concentric,
+         schema_cross_concentric,
+         2};
+
+      static const promenader_thing thing4x4_6060 = {
+         &compress_sides4x4,
+         &compress_heads4x4,
+         schema_concentric,
+         schema_cross_concentric,
+         2};
+
+      static const promenader_thing thingalamocc = {
+         &compress_headsalamo,
+         &compress_sidesalamo,
+         schema_concentric,
+         schema_cross_concentric,
+         0};
+
+      static const promenader_thing thingalamo33 = {
+         &compress_sidesalamo,
+         &compress_headsalamo,
+         schema_concentric,
+         schema_cross_concentric,
+         0};
+
+      static const promenader_thing thingspindle = {
+         (const expand::thing *) 0,
+         (const expand::thing *) 0,
+         schema_concentric_6_2,
+         schema_cross_concentric_6_2,
+         2};
+
+      static const promenader_thing thingqtag22 = {
+         (const expand::thing *) 0,
+         (const expand::thing *) 0,
+         schema_concentric_6_2,
+         schema_cross_concentric_6_2,
+         1};
+
+      static const promenader_thing thingqtag11 = {
+         (const expand::thing *) 0,
+         (const expand::thing *) 0,
+         schema_concentric,
+         schema_cross_concentric,
+         2};
+
+      static const promenader_thing thingbone = {
+         (const expand::thing *) 0,
+         (const expand::thing *) 0,
+         schema_concentric,
+         schema_cross_concentric,
+         1};
+
+      static const promenader_thing thinghrglass = {
+         (const expand::thing *) 0,
+         (const expand::thing *) 0,
+         schema_concentric,
+         schema_cross_concentric,
+         3};
+
+      static const promenader_thing thing2x4 = {
+         (const expand::thing *) 0,
+         (const expand::thing *) 0,
+         schema_concentric,
+         schema_cross_concentric,
+         0};
+
+      if (ss->kind == s4x4 && bigend_llmask == 0x6666) {
+         if (bigend_ssmask == 0x0606)
+            whattodo = &thing4x4_0606;
+         else if (bigend_ssmask == 0x6060)
+            whattodo = &thing4x4_6060;
+      }
+      else if (ss->kind == s_alamo && bigend_llmask == 0xFF) {
+         if (bigend_ssmask == 0xCC)
+            whattodo = &thingalamocc;
+         else if (bigend_ssmask == 0x33)
+            whattodo = &thingalamo33;
+      }
+      else if (ss->kind == s_spindle && bigend_llmask == 0xFF && bigend_ssmask == 0x11)
+         whattodo = &thingspindle;
+      else if (ss->kind == s_qtag && bigend_llmask == 0xFF && bigend_ssmask == 0x22)
+         whattodo = &thingqtag22;
+      else if (ss->kind == s_qtag && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
+         whattodo = &thingqtag11;
+      else if (ss->kind == s_bone && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
+         whattodo = &thingbone;
+      else if (ss->kind == s_hrglass && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
+         whattodo = &thinghrglass;
+      else if (ss->kind == s_dhrglass && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
+         whattodo = &thinghrglass;
+      else if (ss->kind == s2x4 && bigend_llmask == 0xFF && bigend_ssmask == 0x99)
+         whattodo = &thing2x4;
+
+      final_and_herit_flags local_flags;
+      local_flags.clear_all_herit_and_final_bits();
+      parse_block *parseptrcopy = process_final_concepts(ss->cmd.parseptr, false, &local_flags, false, false);
+
+      if (parseptrcopy->call) {
+         calldefn *callspec = &parseptrcopy->call->the_defn;
+
+         if (callspec->callflags1 & CFLAG1_SEQUENCE_STARTER) {
+            if (whattodo && whattodo->compressor) {
+               expand::compress_setup(*whattodo->compressor, ss);
+               move(ss, false, result);
+               return;
+            }
+         }
+         else if (callspec->schema == schema_concentric_specialpromenade) {
+            if (whattodo) {
+               setup local_setup = *ss;
+               local_setup.cmd.parseptr = parseptrcopy;
+               local_setup.cmd.cmd_final_flags = local_flags;
+
+               if (whattodo->compressor_backout) expand::compress_setup(*whattodo->compressor_backout, &local_setup);
+               call_conc_option_state saved_options = current_options;
+               current_options = parseptrcopy->options;
+               really_inner_move(&local_setup, false, callspec, whattodo->schema1,
+                                 callspec->callflags1, callspec->callflagsf,
+                                 0, false, 0, false, result);
+               current_options = saved_options;
+               return;
+            }
+         }
+         else if (callspec->schema == schema_cross_concentric_specialpromenade) {
+            if (whattodo) {
+               if (whattodo->compressor_backout) expand::compress_setup(*whattodo->compressor_backout, ss);
+               call_conc_option_state saved_options = current_options;
+               current_options = parseptrcopy->options;
+               // Be sure people don't come in to the middle while others are in the way.
+               if ((1 << (current_options.number_fields & 1)) & whattodo->rotation_forbid)
+                  fail("These people can't come into the middle gracefully.");
+
+               really_inner_move(ss, false, callspec, whattodo->xschema, callspec->callflags1, callspec->callflagsf,
+                                 DFM1_CONC_FORCE_OTHERWAY, false, 0, false, result);
+               current_options = saved_options;
+               return;
+            }
+         }
+      }
+   }
+
    switch (ss->kind) {
    case s3x4:
       if (bigend_llmask == 04747) {
@@ -5719,7 +5908,10 @@ extern void inner_selective_move(
       action = normalize_to_4;
    }
 
-back_here:
+ back_here:
+
+   if (doing_special_promenade_thing)
+      fail("Can't do this with these people designated.");
 
    // Check for special case of "<anyone> work tandem", and fix the normalization action if so.
    if (orig_indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept &&
@@ -6372,10 +6564,17 @@ back_here:
    // is something like "centers truck while the ends reverse truck".
    saved_warnings = configuration::save_warnings();
 
-   concentric_move(ss,
-                   crossconc ? cmd2 : cmd1,
-                   crossconc ? cmd1 : cmd2,
-                   schema, modsa1, modsb1, true, enable_3x1_warn, ~0UL, result);
+   // We abuse the "specialoffsetmapcode" argument in order to communicate that we are doing
+   // a "promenade" type of call.  It's OK; no map code comes anywhere near -1.
+
+   {
+      uint32 specialoffsetmapcode = doing_special_promenade_thing ? ~1UL : ~0UL;
+
+      concentric_move(ss,
+                      crossconc ? cmd2 : cmd1,
+                      crossconc ? cmd1 : cmd2,
+                      schema, modsa1, modsb1, true, enable_3x1_warn, specialoffsetmapcode, result);
+   }
 
    if (result->result_flags.misc & RESULTFLAG__INVADED_SPACE) {
       configuration::restore_warnings(saved_warnings);
@@ -6385,6 +6584,9 @@ back_here:
    return;
 
    use_punt_stuff:
+
+   if (doing_special_promenade_thing)
+      fail("Can't do this with these people designated.");
 
    switch (schema) {
       case schema_concentric_2_6:

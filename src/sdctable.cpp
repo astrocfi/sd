@@ -24,6 +24,8 @@
 
 /* This defines the following external variables:
    centers_concept
+   heads_concept
+   sides_concept
    special_magic
    special_interlocked
    mark_end_of_list
@@ -73,6 +75,10 @@
 
 const conzept::concept_descriptor conzept::centers_concept = {
    "centers????", concept_centers_or_ends, 1, l_mainstream, UC_none, selector_centers, false};
+const conzept::concept_descriptor conzept::heads_concept = {
+   "HEADS", concept_so_and_so_only, 1, l_mainstream, UC_none, selector_heads, false};
+const conzept::concept_descriptor conzept::sides_concept = {
+   "SIDES", concept_so_and_so_only, 1, l_mainstream, UC_none, selector_sides, false};
 const conzept::concept_descriptor conzept::special_magic = {
    "MAGIC DIAMOND,",       concept_magic,             L+D, l_c1, UC_none, 1};
 const conzept::concept_descriptor conzept::special_interlocked = {

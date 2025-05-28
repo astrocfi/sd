@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 295
+#define DATABASE_FORMAT_VERSION 299
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -204,7 +204,7 @@ enum {
    CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000UL,
    CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000UL,
    CFLAG1_SEQUENCE_STARTER          = 0x00080000UL,
-   CFLAG1_SEQUENCE_STARTER_ONLY     = 0x00100000UL,
+   CFLAG1_SEQUENCE_STARTER_PROM     = 0x00100000UL,
    CFLAG1_DONT_USE_IN_RESOLVE       = 0x00200000UL,
    CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00400000UL,
    CFLAG1_SPLIT_LARGE_SETUPS        = 0x00800000UL,
@@ -917,6 +917,8 @@ enum calldef_schema {
    schema_concentric_4_2_prefer_1x4,
    schema_cross_concentric_4_2,
    schema_concentric_4_2_or_normal,
+   schema_concentric_or_2_6,
+   schema_concentric_or_6_2,
    schema_concentric_8_4,        // Not for public use!
    schema_concentric_big2_6,     // Not for public use!
    schema_concentric_2_6_or_2_4,
@@ -935,6 +937,8 @@ enum calldef_schema {
    schema_concentric_6_2_tgl,
    schema_concentric_to_outer_diamond,
    schema_concentric_no31dwarn,
+   schema_concentric_specialpromenade,
+   schema_cross_concentric_specialpromenade,
    schema_conc_12,
    schema_conc_16,
    schema_conc_star,

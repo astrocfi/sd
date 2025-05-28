@@ -4202,6 +4202,8 @@ void tglmap::do_glorious_triangles(
    // Save the two people who don't move.
    if (mapnums[6] >= 0) copy_person(&idle, 0, ss, mapnums[6]);
    if (mapnums[7] >= 0) copy_person(&idle, 1, ss, mapnums[7]);
+   idle.suppress_roll(0);
+   idle.suppress_roll(1);
 
    a1.cmd = ss->cmd;
    a2.cmd = ss->cmd;

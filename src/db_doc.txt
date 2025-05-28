@@ -3233,6 +3233,12 @@ x12_girl_with_boy
       is an unambiguous girl, and the other person in the column is alive and an
       unambiguous boy.  Facing directions are not checked.
 
+lateral_to_same_sex
+lateral_to_opposite_sex
+      applies to 1x2 couple/miniwave or 2x3 box only.  Returns TRUE if this person
+      and this person's lateral partner are of unambiguous gender, and thse genders
+      are the same or opposite , respectively.
+
 x22_boy_facing_girl
       applies to 2x2 boxes only.  Returns TRUE if this person is an
       unambiguous boy, and the person in the box that this person faces

@@ -769,10 +769,11 @@ static const long int x24tabtandem[4]     = {7, 0, 1, 0};
 static const long int x24tabantitandem[4] = {7, 2, 1, 0};
 static const long int x24tabfacing[4]     = {7, 2, 1, 0x1B1B};
 
-static const long int boystuff_no_rh[3]  = {ID3_PERM_BOY,  ID3_PERM_GIRL, 0};
-static const long int girlstuff_no_rh[3] = {ID3_PERM_GIRL, ID3_PERM_BOY,  0};
-static const long int boystuff_rh[3]     = {ID3_PERM_BOY,  ID3_PERM_GIRL, 1};
-static const long int girlstuff_rh[3]    = {ID3_PERM_GIRL, ID3_PERM_BOY,  1};
+static const long int boystuff_no_rh[3]   = {ID3_PERM_BOY,  ID3_PERM_GIRL, 0};
+static const long int girlstuff_no_rh[3]  = {ID3_PERM_GIRL, ID3_PERM_BOY,  0};
+static const long int boystuff_rh[3]      = {ID3_PERM_BOY,  ID3_PERM_GIRL, 1};
+static const long int girlstuff_rh[3]     = {ID3_PERM_GIRL, ID3_PERM_BOY,  1};
+static const long int samesex[2]          = {0, ID3_PERM_BOY|ID3_PERM_GIRL};
 static const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
 
 
@@ -2448,7 +2449,15 @@ static bool x22_facing_other_sex(setup *real_people, int real_index,
    return (this_person3 & extra_stuff[0]) && (other_person3 & extra_stuff[1]);
 }
 
-
+/* ARGSUSED */
+static bool lateral_to_sex(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff)
+{
+   int this_person3 = real_people->people[real_index].id3 & (ID3_PERM_BOY|ID3_PERM_GIRL);
+   int t = (real_people->kind == s1x2) ? 0 : (real_direction<<1) & 2;
+   int other_person3 = real_people->people[real_index ^ t ^ 1].id3 & (ID3_PERM_BOY|ID3_PERM_GIRL);
+   return this_person3 && other_person3 && ((this_person3 ^ other_person3) == *extra_stuff);
+}
 
 /* ARGSUSED */
 static bool directionp(setup *real_people, int real_index,
@@ -2868,6 +2877,8 @@ predicate_descriptor pred_table[] = {
       {x12_with_other_sex,           girlstuff_no_rh},           // "x12_girl_with_boy"
       {x22_facing_other_sex,          boystuff_no_rh},           // "x22_boy_facing_girl"
       {x22_facing_other_sex,         girlstuff_no_rh},           // "x22_girl_facing_boy"
+      {lateral_to_sex,                 &samesex[0]},             // "lateral_to_same_sex"
+      {lateral_to_sex,                 &samesex[1]},             // "lateral_to_opposite_sex"
       {directionp,           &iden_tab[direction_left]},         // "leftp"
       {directionp,           &iden_tab[direction_right]},        // "rightp"
       {directionp,           &iden_tab[direction_in]},           // "inp"

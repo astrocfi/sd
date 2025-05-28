@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.31
-@set title2 Database version = 38.31 format = 295
+@set title1 RELEASE NOTES FOR VERSION 38.32
+@set title2 Database version = 38.32 format = 299
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.32::
 * 38.31::
 * 38.3::
 * 38.2::
@@ -71,7 +72,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.31, Top, (dir)
+@node Intro, 38.32, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -82,11 +83,37 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2010 William B. Ackerman
 @sp 3
 @menu
-* 38.31::               Changes in the current version
+* 38.32::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.31, 38.3, Intro, Top
+@node 38.32, 38.31, Intro, Top
+@unnumberedsec Version 38.32 changes
+
+It is now possible to say, from any squared-set or alamo spots (not just at the start of a sequence), things like:
+
+<anyone> promenade halfway, come in to the middle and <anything>
+
+<anyone> promenade halfway, while the others <anything>
+
+<anyone> promenade <N/4>, come in to the middle and <anything>
+
+<anyone> promenade <N/4>, while the others <anything>
+
+<anyone> [reverse] [single] rotate <N/4> while the others <anything>
+
+<anyone> bring us together
+
+However the people were designated, they must be at head or side positions.  It may be necessary to issue the @strong{adjust alamo to other pairing} call to set this up.
+
+It is now possible to modify (with "allow modifications") the first
+@strong{cast off 3/4} of @strong{motivate} and @strong{relay the top}.  You can also use the "but" convention
+to modify the last @strong{cast off 3/4}.
+
+A number of bugs were fixed and minor improvements made.
+
+@c ************
+@node 38.31, 38.3, 38.32, Top
 @unnumberedsec Version 38.31 changes
 
 The designator @strong{intermediate diamond} has been changed to @strong{middle (intermediate) diamond}.

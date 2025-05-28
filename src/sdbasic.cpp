@@ -844,8 +844,8 @@ static const veryshort ft2x42x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
 static const veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
 static const veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
 
-static const veryshort foobar[8] = {1, 8, 10, -1, 9, 0, 2, -1};
-static const veryshort foobletch[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
+static const veryshort qhypergall[8] = {1, 8, 10, -1, 9, 0, 2, -1};
+static const veryshort qhypergalc[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
 
 static const veryshort ftequalize[8] = {6, 0, 8, 13, 22, 16, 24, 29};
 static const veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
@@ -853,6 +853,7 @@ static const veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 1
 static const veryshort ftlbigqtg[12] = {28, 7, 10, 11, 12, 23, 26, 27, 28, 7, 10, 11};
 static const veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static const veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
+static const veryshort qtlbone2[12] = {0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1, 1};
 static const veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
 static const veryshort qtl1x8[12] = {-1, -1, 5, 7, -1, -1, 1, 3, -1, -1, 5, 7};
 static const veryshort qtlrig[12] = {6, 7, -1, -1, 2, 3, -1, -1, 6, 7, -1, -1};
@@ -4678,12 +4679,15 @@ static uint32 do_actual_array_call(
                   if ((callspec->callflagsf & CFLAG2_EQUALIZE)) {
                      result->kind = shypergal;
                      tempkind = shypergal;
-                     final_translatec = foobletch;
-                     final_translatel = foobar;
+                     final_translatec = qhypergalc;
+                     final_translatel = qhypergall;
                   }
                   else {
                      final_translatel = qtlbone;
                   }
+               }
+               else if (result->kind == s_bone && other_kind == s2x4) {
+                  final_translatel = qtlbone2;
                }
                else if (result->kind == s1x8 && other_kind == s_crosswave) {
                   final_translatel = qtlxwv;

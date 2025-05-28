@@ -953,9 +953,9 @@ extern void touch_or_rear_back(
       // we honor an "assume facing lines" command.
       // Or if columns, we honor "assume dpt".
 
-      if (scopy->cmd.cmd_assume.assump_col == 0 &&
-          scopy->cmd.cmd_assume.assump_both == 1 &&
-          scopy->cmd.cmd_assume.assumption == cr_li_lo) {
+      if (scopy->cmd.cmd_assume.assumption == cr_li_lo &&
+          scopy->cmd.cmd_assume.assump_col == 0 &&
+          scopy->cmd.cmd_assume.assump_both == 1) {
          if (scopy->kind == s2x4 && directions == (livemask & 0xAA00)) {
             new_assume = cr_wave_only;  // Turn into "assume right-handed waves" --
             livemask = 0xFFFF;          // assump_col and assump_both are still OK.
@@ -966,9 +966,9 @@ extern void touch_or_rear_back(
             directions = 0xA80;
          }
       }
-      else if (scopy->cmd.cmd_assume.assump_col == 1 &&
-          scopy->cmd.cmd_assume.assump_both == 1 &&
-          scopy->cmd.cmd_assume.assumption == cr_2fl_only) {
+      else if (scopy->cmd.cmd_assume.assumption == cr_2fl_only &&
+               scopy->cmd.cmd_assume.assump_col == 1 &&
+               scopy->cmd.cmd_assume.assump_both == 1) {
          if (scopy->kind == s2x4 && directions == (livemask & 0x5FF5)) {
             livemask = 0xFFFF;
             directions = 0x5FF5;
@@ -2217,7 +2217,6 @@ restriction_test_result verify_restriction(
    uint32 qa0, qa1, qa2, qa3;
    uint32 qaa[4];
    uint32 pdir, qdir, pdirodd, qdirodd;
-   uint32 dirtest1[2];
    uint32 dirtest3[2];
    const veryshort *p, *q;
    int phantom_count = 0;
@@ -2357,8 +2356,6 @@ restriction_test_result verify_restriction(
    rr = restriction_tester::get_restriction_thing(ss->kind, tt);
    if (!rr) return restriction_no_item;
 
-   dirtest1[0] = 0;
-   dirtest1[1] = 0;
    dirtest3[0] = 0;
    dirtest3[1] = 0;
 
@@ -2857,7 +2854,6 @@ restriction_test_result verify_restriction(
          if ((t = ss->people[i].id1)) {
             uint32 t3 = ss->people[i].id3;
             uint32 northified = (i ^ (t>>1)) & 1;
-            dirtest1[i] = t;
             dirtest3[i] = t3;
             if (t3 & ID3_PERM_BOY) qaa[northified] |= 2;
             else if (t3 & ID3_PERM_GIRL) qaa[northified^1] |= 2;
@@ -3143,6 +3139,7 @@ void initialize_sdlib()
 {
    configuration::initialize();
    initialize_tandem_tables();
+   initialize_matrix_position_tables();
    restriction_tester::initialize_tables();
    select::initialize();
    conc_tables::initialize();
@@ -5595,9 +5592,9 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
    }
 }
 
-bool check_for_centers_concept(uint32 callflags1_to_examine,
-                               parse_block *parse_scan,
-                               setup_command *the_cmd) THROW_DECL
+bool check_for_centers_concept(uint32 & callflags1_to_examine,     // We rewrite this.
+                               parse_block * & parse_scan,         // This too.
+                               const setup_command *the_cmd) THROW_DECL
 {
    // If the call is a special sequence starter (e.g. spin a pulley) remove the implicit
    // "centers" concept and just do it.  The setup in this case will be a squared set
@@ -5628,8 +5625,8 @@ bool check_for_centers_concept(uint32 callflags1_to_examine,
       if (parse_scan->call)
          callflags1_to_examine = parse_scan->call->the_defn.callflags1;
 
-      if (callflags1_to_examine & (CFLAG1_SEQUENCE_STARTER|CFLAG1_SEQUENCE_STARTER_ONLY)) {
-         // The subject call is always a sequence starter.
+      if (callflags1_to_examine & (CFLAG1_SEQUENCE_STARTER|CFLAG1_SEQUENCE_STARTER_PROM)) {
+         // The subject call is a sequence starter, or some kind of "outsides promenade" thing.
          return false;
       }
       else if ((callflags1_to_examine &
@@ -5651,6 +5648,9 @@ bool check_for_centers_concept(uint32 callflags1_to_examine,
              parse_scan->concept->kind == concept_stable ||
              parse_scan->concept->kind == concept_frac_stable ||
              parse_scan->concept->kind == concept_mirror ||
+             parse_scan->concept->kind == concept_concentric ||
+             parse_scan->concept->kind == concept_tandem ||
+             parse_scan->concept->kind == concept_frac_tandem ||
              parse_scan->concept->kind == concept_new_stretch ||
              parse_scan->concept->kind == concept_old_stretch) {
             parse_scan = parse_scan->next;
@@ -5768,16 +5768,31 @@ void toplevelmove() THROW_DECL
    // flag on, and this call is a "sequence starter", take special action.
 
    if (configuration::current_config().get_startinfo_specific()->into_the_middle) {
-      // There's this weird stuff about using "parse_state.topcallflags1"
-      // instead of the obvious call flags.  I no longer remember what that
-      // is for.  But we do it.  For the first round.
-      if (!check_for_centers_concept(parse_state.topcallflags1,
-                                     conceptptr->next,
-                                     &starting_setup.cmd))
-         conceptptr = conceptptr->next;
+
+      // claim that configuration::history_ptr == 1
+
+      parse_state.topcallflags1 = 0;
+      parse_block *cnext = conceptptr->next;
+
+      if (!check_for_centers_concept(parse_state.topcallflags1, cnext, &starting_setup.cmd)) {
+         if (cnext->call &&
+             (cnext->call->the_defn.schema == schema_concentric_specialpromenade ||
+              cnext->call->the_defn.schema == schema_cross_concentric_specialpromenade)) {
+            conceptptr->concept = (configuration::current_config().startinfoindex == start_select_sides_start) ?
+               &conzept::sides_concept : &conzept::heads_concept;
+            conceptptr->options.who = (selector_kind) conceptptr->concept->arg1;
+
+            starting_setup.kind = configuration::startinfolist[start_select_as_they_are].the_setup.kind;
+            starting_setup.rotation = configuration::startinfolist[start_select_as_they_are].the_setup.rotation;
+            memcpy(starting_setup.people,
+                   configuration::startinfolist[start_select_as_they_are].the_setup.people,
+                   sizeof(personrec)*MAX_PEOPLE);
+         }
+         else {
+            conceptptr = conceptptr->next;
+         }
+      }
    }
-   else if (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER_ONLY)
-      fail("This call may only be used at the beginning of a sequence.");
 
    // Clear a few things.  We do NOT clear the warnings, because some (namely the
    // "concept not allowed at this level" warning) may have already been logged.

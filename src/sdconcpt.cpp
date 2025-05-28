@@ -4937,6 +4937,7 @@ static void do_concept_move_in_and(
 {
    int rotfix = 0;
    bool eighthrot = false;
+   calldef_schema the_schema = schema_concentric;
 
    if (ss->kind == s_alamo && global_livemask == 0xFF) {
       switch (global_selectmask) {
@@ -4977,6 +4978,7 @@ static void do_concept_move_in_and(
       ss->swap_people(2, 3);
       ss->swap_people(1, 2);
       ss->swap_people(0, 1);
+      ss->kind = s2x4;
    }
    else if (ss->kind == s4x4 && global_livemask == 0x6666) {
       switch (global_selectmask) {
@@ -5016,17 +5018,22 @@ static void do_concept_move_in_and(
       ss->swap_people(0, 10);
       ss->swap_people(1, 13);
       ss->swap_people(2, 14);
+      ss->kind = s2x4;
+   }
+   else if (ss->kind == s_spindle && global_livemask == 0xFF && global_selectmask == 0x88) {
+      ss->kind = s_323;   // That's all!
+      the_schema = schema_concentric_2_6;
    }
    else
       fail("Must be on squared-set spots.");
 
-   ss->kind = s2x4;
-
    // We need to find out whether the subject call has an implicit "centers" concept.
 
-   if (check_for_centers_concept(0, ss->cmd.parseptr, &ss->cmd)) {
+   uint32 bogus_topcallflags1 = 0;
+   parse_block *bogus_parse_block = ss->cmd.parseptr;
+   if (check_for_centers_concept(bogus_topcallflags1, bogus_parse_block, &ss->cmd)) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema_concentric, 0, 0, true, false, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, the_schema, 0, 0, true, false, ~0UL, result);
    }
    else {
       move(ss, false, result);

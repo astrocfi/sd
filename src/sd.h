@@ -624,6 +624,8 @@ class SDLIB_API conzept {
    };
 
    static const concept_descriptor centers_concept;
+   static const concept_descriptor heads_concept;
+   static const concept_descriptor sides_concept;
    static const concept_descriptor special_magic;
    static const concept_descriptor special_interlocked;
    static const concept_descriptor mark_end_of_list;
@@ -3443,6 +3445,10 @@ class configuration {
    resolve_indicator resolve_flag;
    warning_info warnings;
 
+ public:
+
+   // These next two things used to be private.  Now used in sdtop near line 5780.
+
    // This is the index into the "startinfolist".  It is only nonzero for history[1].
    // It shows how the sequence starts.
    int startinfoindex;
@@ -3450,8 +3456,6 @@ class configuration {
    // This constant table tells how to set up the configuration at the start of a sequence.
    // values that might be in "startinfoindex", e.g. sides start or heads 1P2P.
    static startinfo startinfolist[start_select_as_they_are+1];    // In sdinit.cpp
-
- public:
 
    static void initialize();             // In sdinit.
 
@@ -4402,31 +4406,31 @@ extern predicate_descriptor pred_table[];                           /* in SDPRED
 extern int selector_preds;                                          /* in SDPREDS */
 
 
-extern const ctr_end_mask_rec dead_masks;                 /* in SDTABLES */
-extern const ctr_end_mask_rec masks_for_3x4;              /* in SDTABLES */
-extern const ctr_end_mask_rec masks_for_3dmd_ctr2;        /* in SDTABLES */
-extern const ctr_end_mask_rec masks_for_3dmd_ctr4;        /* in SDTABLES */
-extern const ctr_end_mask_rec masks_for_bigh_ctr4;        /* in SDTABLES */
-extern const ctr_end_mask_rec masks_for_4x4;              /* in SDTABLES */
-extern int begin_sizes[];                                 /* in SDCOMMON */
+extern const ctr_end_mask_rec dead_masks;                           /* in SDTABLES */
+extern const ctr_end_mask_rec masks_for_3x4;                        /* in SDTABLES */
+extern const ctr_end_mask_rec masks_for_3dmd_ctr2;                  /* in SDTABLES */
+extern const ctr_end_mask_rec masks_for_3dmd_ctr4;                  /* in SDTABLES */
+extern const ctr_end_mask_rec masks_for_bigh_ctr4;                  /* in SDTABLES */
+extern const ctr_end_mask_rec masks_for_4x4;                        /* in SDTABLES */
+extern int begin_sizes[];                                           /* in SDCOMMON */
 
-extern const coordrec tgl3_0;
-extern const coordrec tgl3_1;
-extern const coordrec tgl4_0;
-extern const coordrec tgl4_1;
-extern const coordrec squeezethingglass;
-extern const coordrec squeezethinggal;
-extern const coordrec squeezethingqtag;
-extern const coordrec squeezething4dmd;
-extern const coordrec squeezefinalglass;
-extern const coordrec truck_to_ptpd;
-extern const coordrec truck_to_deepxwv;
-extern const coordrec press_4dmd_4x4;
-extern const coordrec press_4dmd_qtag1;
-extern const coordrec press_4dmd_qtag2;
-extern const coordrec press_qtag_4dmd1;
-extern const coordrec press_qtag_4dmd2;
-extern const coordrec acc_crosswave;
+extern const coordrec tgl3_0;                                       /* in SDTABLES */
+extern const coordrec tgl3_1;                                       /* in SDTABLES */
+extern const coordrec tgl4_0;                                       /* in SDTABLES */
+extern const coordrec tgl4_1;                                       /* in SDTABLES */
+extern const coordrec squeezethingglass;                            /* in SDTABLES */
+extern const coordrec squeezethinggal;                              /* in SDTABLES */
+extern const coordrec squeezethingqtag;                             /* in SDTABLES */
+extern const coordrec squeezething4dmd;                             /* in SDTABLES */
+extern const coordrec squeezefinalglass;                            /* in SDTABLES */
+extern const coordrec truck_to_ptpd;                                /* in SDTABLES */
+extern const coordrec truck_to_deepxwv;                             /* in SDTABLES */
+extern const coordrec press_4dmd_4x4;                               /* in SDTABLES */
+extern const coordrec press_4dmd_qtag1;                             /* in SDTABLES */
+extern const coordrec press_4dmd_qtag2;                             /* in SDTABLES */
+extern const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
+extern const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
+extern const coordrec acc_crosswave;                                /* in SDTABLES */
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_2x5_ctr6[];                        /* in SDTABLES */
@@ -4998,9 +5002,9 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
 
 void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
 
-bool check_for_centers_concept(uint32 callflags1_to_examine,
-                               parse_block *parse_scan,
-                               setup_command *the_cmd) THROW_DECL;
+bool check_for_centers_concept(uint32 & callflags1_to_examine,     // We rewrite this.
+                               parse_block * & parse_scan,         // This too.
+                               const setup_command *the_cmd) THROW_DECL;
 
 void toplevelmove() THROW_DECL;
 
@@ -5194,6 +5198,8 @@ extern void basic_move(
 
 /* In SDMOVES */
 
+extern void initialize_matrix_position_tables();
+
 extern void canonicalize_rotation(setup *result) THROW_DECL;
 
 extern void reinstate_rotation(const setup *ss, setup *result) THROW_DECL;
@@ -5259,6 +5265,19 @@ extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DECL;
 
 extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL;
+
+extern void really_inner_move(
+   setup *ss,
+   bool qtfudged,
+   calldefn *callspec,
+   calldef_schema the_schema,
+   uint32 callflags1,
+   uint32 callflagsf,
+   uint32 override_concentric_rules,
+   bool did_4x4_expansion,
+   uint32 imprecise_rotation_result_flagmisc,
+   bool mirror,
+   setup *result) THROW_DECL;
 
 extern void move(
    setup *ss,

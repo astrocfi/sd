@@ -3031,6 +3031,8 @@ full_expand::thing touch_init_table3[] = {
    // Same, with missing people.
    {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},
    {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},
+   {warn__none,      16, &step_li_stuff,      s2x4,         0x0FF0UL,     0x0A00UL, ~0UL},
+   {warn__none,      16, &step_li_stuff,      s2x4,         0xF00FUL,     0xA000UL, ~0UL},
 
    // Check for stepping to a wave from partially occupied lines facing, only beaus present.
    {warn__none,     128, &step_liphan_stuff,  s2x4,         0x3333UL,     0x2200UL, ~0UL},
@@ -9218,6 +9220,10 @@ const schema_attr schema_attrs[] = {
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_4_2_or_normal
    {0,
+    schema_nothing},                     // schema_concentric_or_2_6
+   {0,
+    schema_nothing},                     // schema_concentric_or_6_2
+   {0,
     schema_nothing},                     // schema_concentric_8_4
    {0,
     schema_nothing},                     // schema_concentric_big2_6
@@ -9253,6 +9259,10 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_to_outer_diamond
    {0,
     schema_nothing},                     // schema_concentric_no31dwarn
+   {0,
+    schema_nothing},                     // schema_concentric_specialpromenade
+   {0,
+    schema_nothing},                     // schema_cross_concentric_specialpromenade
    {0,
     schema_nothing},                     // schema_conc_12
    {0,
