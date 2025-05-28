@@ -480,9 +480,10 @@ typedef enum {
    command_anything,
    command_nice_setup,
    command_neglect,
-   command_save_pic
+   command_save_pic,
+   command_refresh
 } command_kind;
-#define NUM_COMMAND_KINDS (((int) command_save_pic)+1)
+#define NUM_COMMAND_KINDS (((int) command_refresh)+1)
 
 /* For ui_resolve_select: */
 typedef enum {

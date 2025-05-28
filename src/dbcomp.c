@@ -20,8 +20,6 @@
 
 /* dbcomp.c */
 
-#include <stdio.h>
-
 #ifdef _POSIX_SOURCE
 #include <unistd.h>
 #endif
@@ -33,12 +31,7 @@
 #include <stdlib.h>
 #endif
 
-#ifndef SEEK_SET		/* stdlib.h may not define it */
-#define SEEK_SET 0
-#endif
-
 #include <string.h>
-#include <errno.h>
 
 #include "database.h"
 #include "paths.h"
@@ -47,9 +40,13 @@
    sdtables.c or sdui-mac.c for the built-in compiler. */
 extern int begin_sizes[];
 extern void do_exit(void);
-extern void do_perror(char *s);
 extern void dbcompile_signoff(int bytes, int calls);
 extern int do_printf(char *fmt, ...);
+extern char *db_gets(char *s, int n);
+extern void db_putc(char ch);
+extern void db_rewind_output(int pos);
+extern void db_close_input(void);
+extern void db_close_output(void);
 
 extern void dbcompile(void);
 
@@ -650,7 +647,6 @@ int chars_left;
 char *lineptr;
 int linelen;
 int lineno;
-char *filename_in_error;
 int error_is_fatal;
 int tok_value;
 int letcount;
@@ -658,8 +654,6 @@ toktype tok_kind;
 char tok_str[80];
 int char_ct;
 
-FILE *infile;
-FILE *outfile;
 char line[200];
 char ch;
 char *return_ptr;
@@ -714,12 +708,8 @@ static void errexit(char s[])
       }
    }
 
-   if (filename_in_error) do_perror(filename_in_error);
-
    if (error_is_fatal) {
       free(tagtab);
-      fclose(infile);
-      fclose(outfile);
       do_exit();
    }
 }
@@ -729,18 +719,12 @@ static int get_char(void)
 {
    if (!chars_left) {
       lineno++;
-      return_ptr = fgets(line, 199, infile);
+      return_ptr = db_gets(line, 199);
       lineptr = return_ptr;
       linelen = strlen(line);
       if (!return_ptr) {
-         if (feof(infile)) {
-            eof = 1;
-            return 1;
-         }
-         else {
-            filename_in_error = CALLS_FILENAME;
-            errexit("Can't read input file");
-         }
+         eof = 1;
+         return 1;
       }
       chars_left = linelen;
    }
@@ -910,8 +894,8 @@ static int get_num(char s[])
 
 static void write_halfword(unsigned int n)
 {
-   fputc((n>>8) & 0xFF, outfile);
-   fputc((n) & 0xFF, outfile);
+   db_putc((n>>8) & 0xFF);
+   db_putc((n) & 0xFF);
    filecount += 2;
 }
 
@@ -919,10 +903,10 @@ static void write_halfword(unsigned int n)
 
 static void write_fullword(unsigned int n)
 {
-   fputc((n>>24) & 0xFF, outfile);
-   fputc((n>>16) & 0xFF, outfile);
-   fputc((n>>8) & 0xFF, outfile);
-   fputc((n) & 0xFF, outfile);
+   db_putc((n>>24) & 0xFF);
+   db_putc((n>>16) & 0xFF);
+   db_putc((n>>8) & 0xFF);
+   db_putc((n) & 0xFF);
    filecount += 4;
 }
 
@@ -1037,7 +1021,7 @@ static void write_call_header(calldef_schema schema)
    write_halfword((call_namelen << 8) | (unsigned int) schema);
 
    for (j=0; j<call_namelen; j++)
-      fputc(((unsigned int) call_name[j]) & 0xFF, outfile);
+      db_putc(((unsigned int) call_name[j]) & 0xFF);
 
    filecount += call_namelen;
    callcount++;
@@ -1283,38 +1267,9 @@ extern void dbcompile(void)
    eof = 0;
    lineno = 0;
    chars_left = 0;
-   filename_in_error = (char *) 0;
    error_is_fatal = 1;
    ch = ' ';
    call_namelen = 0;   /* So won't print error first time around. */
-
-   infile = fopen(CALLS_FILENAME, "r");
-   if (!infile) {
-      filename_in_error = DATABASE_FILENAME;
-      errexit("Can't open input file");
-   }
-
-   error_is_fatal = 0;
-
-   if (remove(DATABASE_FILENAME)) {
-      if (errno != ENOENT) {
-         filename_in_error = DATABASE_FILENAME;
-         errexit("trouble deleting old output file");  /* This one does NOT abort. */
-      }
-   }
-
-   error_is_fatal = 1;
-
-
-
-   /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
-      however, require it for correct handling of binary data. */
-   outfile = fopen(DATABASE_FILENAME, "wb");
-   if (!outfile) {
-      filename_in_error = DATABASE_FILENAME;
-      errexit("Can't open output file");
-   }
-
    tagtab = (tagtabitem *) malloc(tagtabmax * sizeof(tagtabitem));
    if (!tagtab)
       errexit("Out of memory!!!!!!");
@@ -1338,7 +1293,7 @@ extern void dbcompile(void)
    if (tok_kind != tok_string) errexit("Improper version string -- must be in quotes");
    write_halfword(char_ct);
    for (i=0; i<char_ct; i++)
-      fputc(((unsigned int) tok_str[i]) & 0xFF, outfile);
+      db_putc(((unsigned int) tok_str[i]) & 0xFF);
    filecount += char_ct;
 
    callcount = 0;
@@ -1500,25 +1455,16 @@ extern void dbcompile(void)
       }
    }
 
-   if (fclose(infile)) {
-      filename_in_error = CALLS_FILENAME;
-      errexit("Can't close input file");
-   }
+   db_close_input();
 
    dbcompile_signoff(filecount, callcount);
 
-   if (fseek(outfile, 4, SEEK_SET)) {
-      filename_in_error = DATABASE_FILENAME;
-      errexit("Can't seek output file back to beginning");
-   }
+   db_rewind_output(4);
 
    write_halfword(callcount);
    write_halfword(tagtabsize);
 
-   if (fclose(outfile)) {
-      filename_in_error = DATABASE_FILENAME;
-      errexit("Can't close output file");
-   }
+   db_close_output();
 
    free(tagtab);
 }

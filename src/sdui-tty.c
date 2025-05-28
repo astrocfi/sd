@@ -355,7 +355,8 @@ Private String command_commands[] = {
     "Do anything ...",
     "Nice setup ...",
     "Show neglected calls ...",
-    "Save picture"
+    "Save picture",
+    "Refresh display"
 };
 
 /* resolve_commands tracks the resolve_command_kind enumeration */

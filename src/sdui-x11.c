@@ -388,7 +388,8 @@ Private XtResource command_resources[] = {
     MENU("resolve", cmd_list[command_resolve], "Resolve ..."),
     MENU("reconcile", cmd_list[command_reconcile], "Reconcile ..."),
     MENU("anything", cmd_list[command_anything], "Do anything ..."),
-    MENU("nice", cmd_list[command_nice_setup], "Nice setup ...")
+    MENU("nice", cmd_list[command_nice_setup], "Nice setup ..."),
+    MENU("refresh", cmd_list[command_refresh], "Refresh display")
 };
 
 Private XtResource resolve_resources[] = {

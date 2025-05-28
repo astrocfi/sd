@@ -849,6 +849,10 @@ extern uims_reply full_resolve(search_kind goal)
                return(reply);
          }
       }
+      else if ((reply == ui_command_select) && (uims_menu_index == command_refresh)) {
+         /* fall through to redisplay */
+         ;
+      }
       else {
          /* Clicked on "accept choice", or something not on this submenu. */
          return(reply);

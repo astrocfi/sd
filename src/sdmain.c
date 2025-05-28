@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "29.0"
+#define VERSION_STRING "29.01"
 
 /* This defines the following functions:
    sd_version_string
@@ -532,6 +532,7 @@ extern long_boolean query_for_call(void)
 {
    uims_reply local_reply;
    callspec_block *result;
+   int old_error_flag;
 
    recurse_entry:
 
@@ -540,6 +541,8 @@ extern long_boolean query_for_call(void)
    if (allowing_modifications)
       parse_state.call_list_to_use = call_list_any;
    
+   redisplay:
+
    if (!not_interactive) {
       /* We are operating in interactive mode.  Update the
          display and query the user. */
@@ -646,6 +649,7 @@ extern long_boolean query_for_call(void)
          newline();
       }
 
+      old_error_flag = error_flag; /* save for refresh command */
       error_flag = 0;
 
       /* Display the call index number, and the partially entered call and/or prompt, as appropriate. */
@@ -711,7 +715,12 @@ extern long_boolean query_for_call(void)
    /* Now see what kind of command we have. */
 
    if (local_reply == ui_command_select) {
-      if (uims_menu_index == command_allow_modification) {
+      if (uims_menu_index == command_refresh) {
+          written_history_items = -1; /* suppress optimized display update */
+          error_flag = old_error_flag; /* want to see error messages, too */
+          goto redisplay;
+      }
+      else if (uims_menu_index == command_allow_modification) {
          /* Increment "allowing_modifications" up to a maximum of 2. */
          if (allowing_modifications != 2) allowing_modifications++;
          goto recurse_entry;

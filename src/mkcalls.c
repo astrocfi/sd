@@ -20,7 +20,10 @@
 
 /* mkcalls.c */
 
+#include "paths.h"
+
 #include <stdio.h>
+#include <errno.h>
 
 #ifdef _POSIX_SOURCE
 #include <unistd.h>
@@ -36,6 +39,10 @@ extern void exit(int code);
 #endif
 
 #include <stdarg.h>
+
+#ifndef SEEK_SET		/* stdlib.h may not define it */
+#define SEEK_SET 0
+#endif
 
 /* This table is a copy of the one in sdtables.c .
 
@@ -111,13 +118,8 @@ int begin_sizes[] = {
 
 extern void do_exit(void)
 {
+   /* close files here if desired */
    exit(1);
-}
-
-
-extern void do_perror(char *s)
-{
-   perror(s);
 }
 
 
@@ -141,8 +143,153 @@ extern int do_printf(char *fmt, ...)
 
 extern void dbcompile(void);
 
+static void db_input_error(void);
+static void db_output_error(void);
+
+static FILE *db_input = NULL;
+static FILE *db_output = NULL;
+static char db_input_filename[200];
+static char db_output_filename[200];
+
+
 void main(int argc, char *argv[])
 {
+   strcpy(db_input_filename, CALLS_FILENAME);
+   strcpy(db_output_filename, DATABASE_FILENAME);
+
+   db_input = fopen(db_input_filename, "r");
+   if (!db_input) {
+      printf("Can't open input file ");
+      perror(db_input_filename);
+      exit(1);
+   }
+
+   if (remove(db_output_filename)) {
+      if (errno != ENOENT) {
+	 printf("trouble deleting old output file ");
+	 perror(db_output_filename);
+         /* This one does NOT abort. */
+      }
+   }
+
+   /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
+      however, require it for correct handling of binary data. */
+   db_output = fopen(db_output_filename, "wb");
+   if (!db_output) {
+      printf("Can't open output file ");
+      perror(db_output_filename);
+      exit(1);
+   }
+
    dbcompile();
    exit(0);
+}
+
+
+/*
+ * db_gets
+ *
+ *  Read one line (including a terminating newline) into S, stopping
+ *  at a maximum of N-1 characters.  Return NULL on end of file.
+ *
+ */
+
+char *
+db_gets(char *s, int n)
+{
+    s = fgets(s, n, db_input);
+    if ((s == NULL) && (!feof(db_input))) {
+        db_input_error();
+    }
+    return s;
+}
+
+
+/*
+ *  db_putc
+ *
+ *  Write one character to the new database file.
+ *
+ */
+
+void
+db_putc(char ch)
+{
+    if (fputc(ch, db_output) == EOF) {
+        db_output_error();
+    }
+}
+
+
+/*
+ *  db_rewind_output
+ *
+ */
+
+void
+db_rewind_output(int pos)
+{
+    if (fseek(db_output, pos, SEEK_SET)) {
+        db_output_error();
+    }
+}
+
+
+/*
+ *  db_close_input
+ *
+ */
+
+void
+db_close_input(void)
+{
+    int result = fclose(db_input);
+    db_input = NULL;
+    if (result != 0) {
+        db_input_error();
+    }
+}
+
+
+/*
+ *  db_close_output
+ *
+ */
+
+void
+db_close_output(void)
+{
+    int result = fclose(db_output);
+    db_output = NULL;
+    if (result != 0) {
+        db_output_error();
+    }
+}
+
+
+/*
+ *  db_input_error
+ *
+ */
+
+static void
+db_input_error(void)
+{
+    printf("Error reading input file ");
+    perror(db_input_filename);
+    exit(1);
+}
+
+
+/*
+ *  db_output_error
+ *
+ */
+
+static void
+db_output_error(void)
+{
+    printf("Error writing output file ");
+    perror(db_output_filename);
+    exit(1);
 }
