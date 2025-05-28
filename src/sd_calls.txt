@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.60"
+version "39.61"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -2796,19 +2796,20 @@ call "triple trade" a1 tag tripletrade
       array [   0    0    0 ZM6W    0    0    0 ZM2W]
 
 call "triple trade for coordinate" dontshow tag tripletrade_for_coord
-//            yoyo_is_inherited gen_sting_is_inherited
    // The center 2 can't roll, so they won't be able to roll at the end.
    // The invocation of the last part is marked "roll_transparent".
    setup pspindle spindle
       array [CR6S CM5S CR4S ZM3N AL2S AM1S AL0S ZM7N]
    setup spindle spindle
       array [0 0 0 ZM3N 0 0 0 ZM7N]
+   setup 1x8 1x8
+      array [ZM0N CR3S CM6S AL1S ZM4N AL7S AM2S CR5S]
+   setup 8x1 1x8
+      array [ZM0N 0 0 0 ZM4N 0 0 0]
    setup ptpd ptpd
       array [ZM0N 0 CM6S 0 ZM4N 0 AM2S 0]
    setup pptpd ptpd
       array [ZM0N CR3S 0 AL1S ZM4N AL7S 0 CR5S]
-   setup 1x8 1x8
-      array [ZM0N CR3S CM6S AL1S ZM4N AL7S AM2S CR5S]
    setup 1x3dmd 1x3dmd
       array [ZM0N CR2S AL1S 0 ZM4N AL6S CR5S 0]
    setup p1x3dmd 1x3dmd
@@ -2817,6 +2818,23 @@ call "triple trade for coordinate" dontshow tag tripletrade_for_coord
       array [ZM0N CR2S AL1S 0 ZM4N AL6S CR5S 0]
    setup pwingedstar wingedstar
       array [ 0 0 0 CM7S 0 0 0 AM3S]
+            alternate_definition [half] plus
+   setup pspindle 1x8
+      array [CR3E CR6E CR5E ZM4N AL5W AL6W AL3W ZM0N]
+   setup spindle 1x8
+      array [0 0 0 ZM4N 0 0 0 ZM0N]
+   setup 1x8 spindle
+      array [ZM7N CR0E CR1E AL0W ZM3N AL2W AL1W CR2E]
+   setup 8x1 spindle
+      array [ZM7N 0 0 0 ZM3N 0 0 0]
+   setup ptpd 1x3dmd
+      array [ZM0N 0 CR3E 0 ZM4N 0 AL3W 0]
+   setup pptpd 1x3dmd
+      array [ZM0N CR2E 0 AL2W ZM4N AL5W 0 CR5E]
+   setup 1x3dmd ptpd
+      array [ZM0N CR1E AL1W 0 ZM4N AL7W CR7E 0]
+   setup p1x3dmd ptpd
+      array [ZM0N 0 0 CR6E ZM4N 0 0 AL6W]
             alternate_definition [yoyo] c4
    setup 1x8 spindle
       array [ZM7N CR6W CM5W AL6E ZM3N AL4E AM5E CR4W]

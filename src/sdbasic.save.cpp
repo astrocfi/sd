@@ -516,20 +516,20 @@ static collision_map collision_map_table[] = {
 
    // These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey.
 
-   {6, 0x0000000000000012,  077,  055,  {0, 1, 2, 3, 4, 5},       {0, 2, 3, 6, 7, 9},    {1, 2, 4, 5, 7, 8},
+   {6, 0x0000000000000000,  077,  055,  {0, 1, 2, 3, 4, 5},       {0, 2, 3, 6, 7, 9},    {1, 2, 4, 5, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0x40000000},
    {4, 0x0000000000000000,  055,  044,  {0, 2, 3, 5},       {1, 2, 5, 7},    {1, 3, 5, 6},
     s_short6,    s2x4,        0, warn__none, 0x40000000},
    {4, 0x0000000000000000,  055,  011,  {0, 2, 3, 5},       {0, 2, 5, 6},    {1, 2, 4, 6},
     s_short6,    s2x4,        0, warn__none, 0x40000000},
 
-   {5, 0x0000000000000012,  073,  001,  {0, 1, 3, 4, 5},          {0, 2, 6, 7, 8},       {1, 2, 6, 7, 8},
+   {5, 0x0000000000000000,  073,  001,  {0, 1, 3, 4, 5},          {0, 2, 6, 7, 8},       {1, 2, 6, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 0x0000000000000012,  067,  040,  {0, 1, 2, 4, 5},          {1, 2, 3, 7, 9},       {1, 2, 3, 7, 8},
+   {5, 0x0000000000000000,  067,  040,  {0, 1, 2, 4, 5},          {1, 2, 3, 7, 9},       {1, 2, 3, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 0x0000000000000012,  076,  004,  {1, 2, 3, 4, 5},          {2, 3, 6, 7, 8},       {2, 4, 6, 7, 8},
+   {5, 0x0000000000000000,  076,  004,  {1, 2, 3, 4, 5},          {2, 3, 6, 7, 8},       {2, 4, 6, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 0x0000000000000012,  037,  010,  {0, 1, 2, 3, 4},          {1, 2, 3, 6, 7},       {1, 2, 3, 5, 7},
+   {5, 0x0000000000000000,  037,  010,  {0, 1, 2, 3, 4},          {1, 2, 3, 6, 7},       {1, 2, 3, 5, 7},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
    {6, 0x0000001200000012, 0x3F, 022, {0, 1, 2, 3, 4, 5},    {5, 6, 0, 1, 3, 4},    {5, 7, 0, 1, 2, 4},
     s_short6,    s_rigger,    1, warn__none, 0},
@@ -737,7 +737,7 @@ void collision_collector::fix_possible_collision(merge_action action /*= merge_s
       if (!masksmatch &&
           (c_map_ptr->assume_key & 0x40000000) != 0 &&
           (m_result_mask & ~c_map_ptr->rmask) == 0 &&
-          ((((uint64_t) m_result_mask) | (((uint64_t) m_result_mask) << 32)) & c_map_ptr->lmask) == lowbitmask &&
+          ((m_result_mask | (m_result_mask << 16)) & c_map_ptr->lmask) == lowbitmask &&
           (m_result_mask & c_map_ptr->cmask) == m_collision_mask) {
          masksmatch = true;
       }

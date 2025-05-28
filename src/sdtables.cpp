@@ -3429,6 +3429,7 @@ static expand::thing rear_bone_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, s_bone, s_rig
 static expand::thing rear_bone_stuffd = {{0, 3, 5, 2, 4, 7, 1, 6}, s_bone, s2x4, 0};
 static expand::thing rear_qtag_stuffa = {{7, 6, 0, 1, 3, 2, 4, 5}, s_qtag, s_rigger, 1};
 static expand::thing rear_qtag_stuffb = {{1, 0, 2, 3, 5, 4, 6, 7}, s_qtag, s_crosswave, 1};
+static expand::thing rear_2x1d_stuffa = {{0, 1, 2, 3, 4, 5}, s_1x2dmd, s1x6, 0};
 static expand::thing rear_rig_stuffa = {{1, 2, 3, 4, 5, 6, 7, 0}, s_rigger, s2x4, 0};
 static expand::thing rear_rig_stuffb = {{3, 6, 4, 5, 7, 2, 0, 1}, s_rigger, s1x8, 0};
 static expand::thing rear_rig_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, s_rigger, s_bone, 0};
@@ -3664,6 +3665,9 @@ full_expand::thing touch_init_table1[] = {
    {warn__some_rear_back,  0, &rear_funnydmd,  s_qtag,    0xFFFFU,     0x78D2U, ~0U},
    // Centers rear back 3&1 lines, ends facing, centers have right hands.
    {warn__centers_rear_back_staying_in_center, 0, &rear_funny3x1,  s2x4,      0xFFFFU,     0x8A20U, ~0U},
+
+   // Center 2 rear back from 2x1dmd to 1x6
+   {warn__some_rear_back,  0, &rear_2x1d_stuffa,s_1x2dmd,    0xFFFU,      0x557U, 0x5D7U},
 
    // Ends rear back from a "rigger" to lines facing or "split square thru" setup.
    {warn__some_rear_back,  0, &rear_rig_stuffa,s_rigger,    0xFFFFU,     0x0802U, 0x0F0FU},

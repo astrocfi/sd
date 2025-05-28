@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <12 Jan 2024 wba>
+@c Time-stamp: <1 Feb 2024 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.60
-@set title2 Database version = 39.60 format = 408
+@set title1 RELEASE NOTES FOR VERSION 39.61
+@set title2 Database version = 39.61 format = 408
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.61::
 * 39.60::
 * 39.59::
 * 39.58::
@@ -160,7 +161,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.60, Top, (dir)
+@node Intro, 39.61, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -171,17 +172,26 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2024 William B. Ackerman
 @sp 3
 @menu
-* 39.60::               Changes in the current version
+* 39.61::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.60, 39.59, Intro, Top
+@node 39.61, 39.60, Intro, Top
+@unnumberedsec Version 39.61 changes
+
+An improper use of the C++ language in the source code was fixed.  This did
+not affect the Windows release.
+@sp 1
+A few minor improvements.
+
+@c ************
+@node 39.60, 39.59, 39.61, Top
 @unnumberedsec Version 39.60 changes
 
 The ability to do fractional star turns was improved.
-
+@sp 1
 The obsolete @strong{divided C/L/W} concepts weere removed.
-
+@sp 1
 Miscellaneous improvements and bug fixes.
 
 @c ************

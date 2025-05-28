@@ -7,7 +7,7 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 39.60</strong>, released on January 12, 2024.
+<strong>The current version of Sd/Sdtty is 39.61</strong>, released on February 1, 2024.
 <p align="center">
 <strong>The mechanism for preparing new releases has changed.  This
 has a consequence for you, the person downloading the program.</strong>
@@ -16,11 +16,6 @@ has a consequence for you, the person downloading the program.</strong>
 you are doing something extremely unusual, type ``C:\sd''.</strong>
 <p align="center">
 That's the location where it has traditionally been stored.
-<br>
-<p align="center">
-<strong>Sd and Sdtty are now compiled for 64-bit systems.  We believe that all reasonably modern computers
-can handle this.
-Version 39.29, the last one for 32-bit systems, will continue to be made available.</strong>
 <br>
 <p align="center">
 <strong>The program has support for writing two-couple material.  See the release notes</strong>

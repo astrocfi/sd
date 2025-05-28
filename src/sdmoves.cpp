@@ -3461,6 +3461,16 @@ static void process_jaywalk_chains(
          else {
             mi->roll_stability_info &= ~(DBSTAB_BIT * STB_MASK);
             mi->roll_stability_info |= DBSTAB_BIT * STB_A;
+
+            if ((deltarot & 3) == 1) {
+               mi->roll_stability_info &= ~(ROLL_DIRMASK / (NROLL_BIT/DBSLIDEROLL_BIT));
+               mi->roll_stability_info |= ((ROLL_IS_R|PERSON_MOVED) / (NROLL_BIT/DBSLIDEROLL_BIT));
+            }
+            else if ((deltarot & 3) == 3) {
+               mi->roll_stability_info &= ~(ROLL_DIRMASK / (NROLL_BIT/DBSLIDEROLL_BIT));
+               mi->roll_stability_info |= ((ROLL_IS_L|PERSON_MOVED) / (NROLL_BIT/DBSLIDEROLL_BIT));
+            }
+
             if ((deltarot & 3) == 1)
                mi->roll_stability_info |= DBSTAB_BIT * STB_REVERSE;
          }
