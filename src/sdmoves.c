@@ -129,7 +129,7 @@ extern void canonicalize_rotation(setup *result)
       if (result->rotation & 2) {
 
          /* Must turn this setup upside-down. */
-   
+
          swap_people(result, 0, 2);
          (void) copy_rot(result, 0, result, 0, 022);
          (void) copy_rot(result, 1, result, 1, 022);
@@ -144,11 +144,11 @@ extern void canonicalize_rotation(setup *result)
       if (result->rotation & 2) {
 
          /* Must turn this setup upside-down. */
-   
+
          int i, offs;
-   
+
          offs = (setup_attrs[result->kind].setup_limits+1) >> 1;     /* Half the setup size. */
-   
+
          for (i=0; i<offs; i++) {
             swap_people(result, i, i+offs);
             (void) copy_rot(result, i, result, i, 022);
@@ -172,7 +172,7 @@ extern void reinstate_rotation(setup *ss, setup *result)
       default:
          globalrotation = ss->rotation;
    }
-   
+
    switch (result->kind) {
       case s_normal_concentric:
          result->inner.srotation += globalrotation;
@@ -191,9 +191,14 @@ extern void reinstate_rotation(setup *ss, setup *result)
    /* If we turned by 90 degress, and the "split axis" bits are 01 or 10,
       we have to to swap those bits. */
 
-   if ((globalrotation & 1) &&
-         ((result->result_flags + RESULTFLAG__SPLIT_AXIS_BIT) & (RESULTFLAG__SPLIT_AXIS_BIT << 1)))
-      result->result_flags ^= RESULTFLAG__SPLIT_AXIS_MASK;
+   if (globalrotation & 1) {
+      uint32 xbits = result->result_flags & (RESULTFLAG__SPLIT_AXIS_BIT*7);
+      uint32 ybits = result->result_flags & ((RESULTFLAG__SPLIT_AXIS_BIT*7) << RESULTFLAG__SPLIT_AXIS_SEPARATION);
+
+      result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+      result->result_flags |= xbits << RESULTFLAG__SPLIT_AXIS_SEPARATION;
+      result->result_flags |= ybits >> RESULTFLAG__SPLIT_AXIS_SEPARATION;
+   }
 
    canonicalize_rotation(result);
 }
@@ -311,7 +316,7 @@ extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *r
 
 extern void do_call_in_series(
    setup *sss,
-   uint32 special_fraction,
+   long_boolean dont_enforce_consistent_split,
    long_boolean roll_transparent,
    long_boolean normalize,
    long_boolean qtfudged)
@@ -322,12 +327,19 @@ extern void do_call_in_series(
    uint32 saved_result_flags = sss->result_flags;
 
    /* If we are forcing a split, and an earlier call in the series has responded to that split
-      by returning an unequivocal splitting axis, we continue to split along the same axis. */
+      by returning an unequivocal splitting axis (indicated by one field being zero and the other
+      nonzero), we continue to split along the same axis. */
 
-   if ((sss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) && ((saved_result_flags + RESULTFLAG__SPLIT_AXIS_BIT) & (RESULTFLAG__SPLIT_AXIS_BIT << 1))) {
+   if (     (sss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
+            !dont_enforce_consistent_split &&
+            (saved_result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) &&    /* at least on field is nonzero */
+            (
+               !(saved_result_flags & (RESULTFLAG__SPLIT_AXIS_BIT * 7)) ||   /* but one field or the other is zero */
+               !(saved_result_flags & ((RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION) * 7))
+            )) {
       int prefer_1x4;
 
-      if (saved_result_flags & RESULTFLAG__SPLIT_AXIS_BIT)
+      if (saved_result_flags & (RESULTFLAG__SPLIT_AXIS_BIT * 7))
          prefer_1x4 = qqqq.rotation & 1;
       else
          prefer_1x4 = (~qqqq.rotation) & 1;
@@ -338,15 +350,9 @@ extern void do_call_in_series(
       qqqq.cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;  /* Take it out. */
 
       if (do_simple_split(&qqqq, prefer_1x4, &tempsetup))
-         fail("Can't figure out how to split multiple part call.");
+         fail("Can't figure out how to split this multiple part call.");
 
       qqqq.cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;  /* Put it back in. */
-
-      /* This will force us to report the same axis for next time.  It throws away the split axis stuff that came
-         out of divided_setup_move.  Maybe we should check same???? */
-/*    bullshit
-      tempsetup.result_flags |= RESULTFLAG__SPLIT_AXIS_MASK;
-*/
    }
    else
       move(&qqqq, qtfudged, &tempsetup);
@@ -406,7 +412,7 @@ extern void do_call_in_series(
    *sss = tempsetup;
    sss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   /* But pick these up from the call. */
 
-   /* Remove outboard phantoms. 
+   /* Remove outboard phantoms.
       It used to be that normalize_setup was not called
       here.  It was found that we couldn't do things like, from a suitable offset wave,
       [triple line 1/2 flip] back to a wave, that is, start offset and finish normally.
@@ -436,18 +442,56 @@ extern void do_call_in_series(
 
    canonicalize_rotation(sss);
 
-   /* To be safe, we should take away the "did last part" bit for the second call, but we are fairly sure
-      it won't be on. */
+   /* To be safe, we should take away the "did last part" bit for the second call,
+      but we are fairly sure it won't be on. */
 
    sss->cmd.prior_elongation_bits = current_elongation;
-   /* Set the low bits to the current elongation, set the split bits to the AND of the before and
-      after states, and set all other bits to the OR of the before and after states.
-      But we clear the incoming RESULTFLAG__DID_LAST_PART bit, using only the bit from the call just executed. */
+
+   /* The computation of the new result flags is complex, since we are trying to accumulate results
+      over a series of calls.  To that end, the incoming contents of the "result_flags" word are used.
+
+      (Normally, this word is undefined on input to "move", but "do_call_in_series" takes it is the
+      accumulated stuff so far.  It follows that it must be "seeded" at the start of the series.)
+
+      The manipulations that produce the final value differ among the various bits and fields:
+
+         *  The RESULTFLAG__DID_LAST_PART, RESULTFLAG__SECONDARY_DONE, and RESULTFLAG__PARTS_ARE_KNOWN bits:
+            set to the result of the part we just did -- discard incoming values
+
+         *  The RESULTFLAG__SPLIT_AXIS_MASK bits: set to the AND of the incoming values and what we
+            just got -- this has the effect of correctly keeping track of the splitting through all
+            parts of the call.
+
+         *  The low 2 bits, which have the elongation: set to "current_elongation", which typically has
+            the incoming stuff, but it actually a little bit subtle.  Put this in the
+            "cmd.prior_elongation_bits" field also.
+
+         *  The other bits: set to the OR of the incoming values and what we just got -- this is believed
+            to be the correct way to accumulate these bits.
+
+      It follows from this that the correct way to "seed" the result_flags word at the start of a series
+      is by initializing it to RESULTFLAG__SPLIT_AXIS_FIELDMASK. */
+
    sss->result_flags = ((
                   (saved_result_flags & ~(RESULTFLAG__DID_LAST_PART|RESULTFLAG__SECONDARY_DONE|RESULTFLAG__PARTS_ARE_KNOWN)) |
-                  tempsetup.result_flags) & ~(3|RESULTFLAG__SPLIT_AXIS_MASK)) |
-         current_elongation |
-         (saved_result_flags & tempsetup.result_flags & RESULTFLAG__SPLIT_AXIS_MASK);
+                  tempsetup.result_flags) & ~(3|RESULTFLAG__SPLIT_AXIS_FIELDMASK)) |
+         current_elongation;
+
+   /* We now have all but the SPLIT_AXIS stuff. */
+
+   sss->result_flags |= tempsetup.result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+
+   /* Now have tempsetup, need to minimize with saved_result_flags. */
+
+   if ((sss->result_flags & RESULTFLAG__SPLIT_AXIS_BIT*7) > (saved_result_flags & RESULTFLAG__SPLIT_AXIS_BIT*7)) {
+      sss->result_flags &= ~(RESULTFLAG__SPLIT_AXIS_BIT*7);
+      sss->result_flags |= (saved_result_flags & RESULTFLAG__SPLIT_AXIS_BIT*7);
+   }
+
+   if ((sss->result_flags & (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION)*7) > (saved_result_flags & (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION)*7)) {
+      sss->result_flags &= ~((RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION)*7);
+      sss->result_flags |= (saved_result_flags & (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION)*7);
+   }
 }
 
 
@@ -465,7 +509,7 @@ typedef struct gloop {
    long_boolean realdone;  /* Used for loop control on each pass */
    uint32 jbits;           /* Bit mask for all possible jaywalkees. */
    int boybit;             /* 1 if boy, 0 if not (might be neither). */
-   int girlbit;            /* 1 if girl, 0 if not (might be neither). */ 
+   int girlbit;            /* 1 if girl, 0 if not (might be neither). */
    int dir;                /* This person's initial facing direction, 0 to 3. */
    int deltax;             /* How this person will move, relative to his own facing */
    int deltay;             /*   direction, when call is finally executed. */
@@ -986,7 +1030,7 @@ doit:
 
 doitrot:
       result->kind = checkptr->result_kind;
-      result->rotation = 1;   
+      result->rotation = 1;
       for (i=0; i<nump; i++) {
          place = checkptr->diagram[28 - ((matrix_info[i].x >> 2) << checkptr->xfactor) + ((-matrix_info[i].y) >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
@@ -1039,7 +1083,7 @@ Private void matrixmove(
 
    if ((alldelta != 0) && (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED))
       fail("This call not allowed in distorted or virtual setup.");
-   
+
    finish_matrix_call(matrix_info, nump, &people, result);
    reinstate_rotation(ss, result);
    result->result_flags = 0;
@@ -1185,7 +1229,7 @@ Private void make_matrix_chains(
 
             /* Now, if filter = 1, person j is just east of person i.
                If filter = 0, person j is just south of person i. */
-   
+
             if (flags & MTX_TBONE_IS_OK) {
                /* Make the chain independently of facing direction. */
             }
@@ -1234,17 +1278,17 @@ Private void process_matrix_chains(
 
       if (flags & MTX_FIND_JAYWALKERS) {
          /* Clear out any bits that aren't bidirectional. */
-   
+
          for (i=0; i<nump; i++) {
             matrix_rec *mi = &matrix_info[i];
             if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
-   
+
             for (j=0; j<nump; j++) {
                if (      ((1<<j) & mi->jbits) &&
                         !((1<<i) & matrix_info[j].jbits))
                   mi->jbits &= ~(1<<j);
             }
-   
+
             /* If selected person has no jaywalkee, it is an error. */
             if (!mi->jbits) failp(mi->id1, "can't find person to jaywalk with.");
          }
@@ -1277,11 +1321,11 @@ Private void process_matrix_chains(
                         int jdist;
 
                         /* Fill in jaywalkee indices with record-holding lateral distance. */
-   
+
                         if ((1<<j) & mi->jbits) {
                            jdist = (mi->dir & 1) ? mj->nicey : mj->nicex;
                            if ((mi->dir+1) & 2) jdist = -jdist;
-      
+
                            if (mi->leftidx >= 0) {
                               int temp = (mi->dir & 1) ? matrix_info[mi->leftidx].nicey : matrix_info[mi->leftidx].nicex;
                               if ((mi->dir+1) & 2) temp = -temp;
@@ -1289,7 +1333,7 @@ Private void process_matrix_chains(
                            }
                            else
                               mi->leftidx = j;
-      
+
                            if (mi->rightidx >= 0) {
                               int temp = (mi->dir & 1) ? matrix_info[mi->rightidx].nicey : matrix_info[mi->rightidx].nicex;
                               if ((mi->dir+1) & 2) temp = -temp;
@@ -1298,7 +1342,7 @@ Private void process_matrix_chains(
                            else
                               mi->rightidx = j;
                         }
-   
+
                         /* Look for special case of two people uniquely selecting each other. */
                         if (      (1<<j) == mi->jbits &&
                                   (1<<i) == mj->jbits) {
@@ -1309,7 +1353,7 @@ Private void process_matrix_chains(
                            if (datum == 0) failp(mi->id1, "can't do this call.");
 
                            another_round = TRUE;
-   
+
                            if (mi->dir & 2) delx = -delx;
                            if ((mi->dir+1) & 2) dely = -dely;
 
@@ -1497,25 +1541,35 @@ extern void anchor_someone_and_move(
             ss->kind != s_ptpd)
       fail("Sorry, can't do this in this setup.");
    move(ss, FALSE, result);
-   numgroups = 2;
-   if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT*3) numgroups = 4;
+   numgroups = 0;
 
    nump = start_matrix_call(&saved_start_people, before_matrix_info, MTX_USE_SELECTOR, &people);
    current_options.who = saved_selector;
 
    for (i=0 ; i<nump ; i++) {
-      if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT) {
+      if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) == RESULTFLAG__SPLIT_AXIS_BIT) {
+         numgroups = 2;
          if (before_matrix_info[i].x < 0) j = 0;
          else j = 1;
       }
-      else if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT*2) {
+      else if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) == (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION)) {
+         numgroups = 2;
          if (before_matrix_info[i].y < 0) j = 0;
          else j = 1;
       }
-      else if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) == RESULTFLAG__SPLIT_AXIS_BIT*3) {
+      else if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) == (RESULTFLAG__SPLIT_AXIS_BIT + (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION))) {
+         numgroups = 4;
          if (before_matrix_info[i].x < 0) j = 0;
          else j = 2;
          if (before_matrix_info[i].y < 0) j++;
+      }
+      else if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) == (RESULTFLAG__SPLIT_AXIS_BIT * 2)) {
+         /* This is split into four groups in a row from left to right. */
+         numgroups = 4;
+         if      (before_matrix_info[i].x < -setup_attrs[ss->kind].bounding_box[0]) j = 0;
+         else if (before_matrix_info[i].x < 0) j = 1;
+         else if (before_matrix_info[i].x < setup_attrs[ss->kind].bounding_box[0]) j = 2;
+         else j = 3;
       }
       else fail("Can't 'anchor' someone for an 8-person call.");
 
@@ -1588,24 +1642,23 @@ Private void rollmove(
    setup *result)
 {
    int i;
-   int rot;
-   uint32 st;
 
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't roll in this setup.");
-   
+
    result->kind = ss->kind;
    result->rotation = ss->rotation;
-   
+
    for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
       if (ss->people[i].id1) {
-         rot = 0;
-         st = ((uint32) stb_z)*DBSTAB_BIT; 
+         int rot = 0;
+         uint32 st = ((uint32) stb_z)*DBSTAB_BIT;
+
          if (!(callspec->callflagsf & CFLAGH__REQUIRES_SELECTOR) || selectp(ss, i)) {
             switch (ss->people[i].id1 & ROLL_MASK) {
                case ROLLBITL: rot = 033, st = ((uint32) stb_a)*DBSTAB_BIT; break;
                case ROLLBITM: break;
                case ROLLBITR: rot = 011; st = ((uint32) stb_c)*DBSTAB_BIT; break;
-               default: fail("Roll not supported after previous call.");
+               default: fail("Roll not permitted after previous call.");
             }
          }
          install_rot(result, i, ss, i, rot);
@@ -1684,7 +1737,7 @@ Private long_boolean get_real_subcall(
       is off, we will force the bit immediately below. */
 
    cmd_out->cmd_final_flags.herit &= (~new_final_concepts.herit | this_modh);
-   
+
    /* Now turn on any "force" flags.  These are indicated by "this_modh" on and "callflagsh" off. */
 
    if (((INHERITFLAG_REVERSE | INHERITFLAG_LEFT) & callflagsh) == 0)
@@ -1706,7 +1759,7 @@ Private long_boolean get_real_subcall(
       recycle, we wouldn't want the cast off's in the difference getting
       modified.  Actually, that is not the real reason.  The casts are in
       different sublists.  The real reason is that the final part of mixed-up
-      square thru is defined as 
+      square thru is defined as
          conc nullcall [mandatory_anycall] nullcall []
       and we don't want the unmodifiable nullcall that the ends are supposed to
       do getting modified, do we? */
@@ -1772,7 +1825,7 @@ Private long_boolean get_real_subcall(
       "clover and anything".  This means that, for the purposes of database initialization,
       "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
       that appears in the database. */
-      
+
    /* Of course, if we are testing the fidelity of later calls during a reconcile
       operation, we DO NOT EVER add any modifiers to the list, even if the user
       clicked on "allow modification" before clicking on "reconcile".  It is perfectly
@@ -1805,7 +1858,7 @@ Private long_boolean get_real_subcall(
    }
 
    /* At this point, we know we should query the user about this call. */
-      
+
    /* Set ourselves up for modification by making the null modification list
       if necessary.  ***** Someday this null list will always be present. */
 
@@ -1851,7 +1904,7 @@ Private long_boolean get_real_subcall(
       if (debug_popup || uims_do_modifier_popup(pretty_call_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
-      
+
          (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
@@ -2303,7 +2356,7 @@ Private void do_sequential_call(
    int subcall_incr = 1;   /* Will be -1 if doing call in reverse order. */
    long_boolean do_half_of_last_part = FALSE;
    long_boolean first_call = TRUE;
-   long_boolean fix_next_assumption = FALSE;
+   call_restriction fix_next_assumption = cr_none;
    int realtotal = callspec->stuff.def.howmanyparts;
    int total = realtotal;
    int start_point = 0;    /* Where we start, in the absence of special stuff. */
@@ -2412,7 +2465,7 @@ Private void do_sequential_call(
    *mirror_p = FALSE;
    *result = *ss;
 
-   result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result for the calls to "do_call_in_series". */
+   result->result_flags = RESULTFLAG__SPLIT_AXIS_FIELDMASK;   /* Seed the result for the calls to "do_call_in_series". */
 
    /* Iterate over the parts of the call.
       We will let "fetch_index" scan the actual call definition:
@@ -2587,17 +2640,16 @@ do_plain_call:
          if (!setup_is_elongated)
             result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;  /* Stop checking unless we are really serious. */
 
-         if (fix_next_assumption) {
-            result->cmd.cmd_assume.assumption = cr_magic_only;
-            result->cmd.cmd_assume.assump_col = 1;
+         result->cmd.cmd_assume.assumption = fix_next_assumption;
+
+         if (fix_next_assumption != cr_none) {
+            result->cmd.cmd_assume.assump_col = 0;
             result->cmd.cmd_assume.assump_both = 0;
             result->cmd.cmd_assume.assump_cast = 0;
          }
-         else
-            result->cmd.cmd_assume.assumption = cr_none;
       }
 
-      fix_next_assumption = FALSE;
+      fix_next_assumption = cr_none;
 
       if ((DFM1_REPEAT_N_ALTERNATE & this_mod1) && use_alternate) {
          result->cmd.parseptr = foo2.parseptr;
@@ -2617,8 +2669,15 @@ do_plain_call:
       oldk = result->kind;
       if (oldk == s2x2 && result->cmd.prior_elongation_bits != 0) remembered_2x2_elongation = result->cmd.prior_elongation_bits & 3;
 
-      if (result->cmd.callspec == base_calls[BASE_CALL_CHREACT_1] &&
-               (  ((    result->cmd.cmd_assume.assumption == cr_jleft ||
+      if (result->cmd.callspec == base_calls[BASE_CALL_CHREACT_1]) {
+
+         /* If we are starting a chain reaction, and the assumption was some form
+            of 1/4 tag or 1/4 line (all of the above indicate such a thing --
+            the outsides are a couple looking in), then, whether it was a plain
+            chain reaction or a cross chain reaction, the result will have the
+            checkpointers in miniwaves.  Pass that assumption on, so that they can hinge. */
+
+         if (     ((    result->cmd.cmd_assume.assumption == cr_jleft ||
                         result->cmd.cmd_assume.assumption == cr_ijleft ||
                         result->cmd.cmd_assume.assumption == cr_jright ||
                         result->cmd.cmd_assume.assumption == cr_ijright) &&
@@ -2629,12 +2688,31 @@ do_plain_call:
                            ||
                   result->cmd.cmd_assume.assumption == cr_real_1_4_tag
                            ||
-                  result->cmd.cmd_assume.assumption == cr_real_1_4_line))
-         fix_next_assumption = TRUE;
+                  result->cmd.cmd_assume.assumption == cr_real_1_4_line)
+            fix_next_assumption = cr_ckpt_miniwaves;
+      }
+      else if (result->cmd.callspec == base_calls[BASE_CALL_MAKEPASS_1]) {
+         /* If we are starting a "make a pass", and the assumption was some form
+            of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
+            assumption on, so that they can cast off 3/4.  If it was a 1/4 line,
+            the result will be a wave in the center. */
+         if (     ((    result->cmd.cmd_assume.assumption == cr_jleft ||
+                        result->cmd.cmd_assume.assumption == cr_jright) &&
+                  result->cmd.cmd_assume.assump_both == 2)
+                           ||
+                  result->cmd.cmd_assume.assumption == cr_real_1_4_tag)
+            fix_next_assumption = cr_ctr_couples;
+         else if (((    result->cmd.cmd_assume.assumption == cr_ijleft ||
+                        result->cmd.cmd_assume.assumption == cr_ijright) &&
+                  result->cmd.cmd_assume.assump_both == 2)
+                           ||
+                  result->cmd.cmd_assume.assumption == cr_real_1_4_line)
+            fix_next_assumption = cr_ctr_miniwaves;
+      }
 
       do_call_in_series(
          result,
-         0,
+         reverse_order,
          DFM1_ROLL_TRANSPARENT & this_mod1,
          !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
             !(new_final_concepts.herit & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
@@ -2974,7 +3052,7 @@ that probably need to be put in. */
    if (  ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE &&
          !(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED | CMD_MISC__MUST_SPLIT)) &&
          ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) != CMD_MISC2__CENTRAL_MYSTIC || the_schema != schema_by_array) &&
-         (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
+         (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
 
       if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_LEFT) {
          mirror_this(ss);
@@ -3233,8 +3311,8 @@ that probably need to be put in. */
       case schema_nothing:
          if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          *result = *ss;
-         /* This call is a 1-person call, so it can be presumed to have split both ways. */
-         result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_BIT*3;
+         /* This call is a 1-person call, so it can be presumed to have split maximally both ways. */
+         result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_FIELDMASK;
          break;
       case schema_matrix:
          /* The "reverse" concept might mean mirror, as in "reverse truck". */
@@ -3255,8 +3333,8 @@ that probably need to be put in. */
       case schema_roll:
          if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          rollmove(ss, callspec, result);
-         /* This call is a 1-person call, so it can be presumed to have split both ways. */
-         result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_BIT*3;
+         /* This call is a 1-person call, so it can be presumed to have split maximally both ways. */
+         result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_FIELDMASK;
          break;
       case schema_by_array:
 
@@ -3346,44 +3424,46 @@ that probably need to be put in. */
             }
             else {
                int i;
+               int rot = 0;
+               long_boolean normalize_strongly = FALSE;
 
                ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the right thing to do. */
                saved_warnings = history[history_ptr+1].warnings;
-   
+
                /* Fudge a 3x4 into a 1/4-tag if appropriate. */
-   
+
                if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
                      (the_schema == schema_concentric || the_schema == schema_cross_concentric || the_schema == schema_conc_o)) {
-   
+
                   if (ss->people[0].id1) {
                      if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
                   }
                   else (void) copy_person(ss, 0, ss, 1);
-   
+
                   if (ss->people[3].id1) {
                      if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
                      else (void) copy_person(ss, 1, ss, 3);
                   }
                   else (void) copy_person(ss, 1, ss, 2);
-   
+
                   (void) copy_person(ss, 2, ss, 4);
                   (void) copy_person(ss, 3, ss, 5);
-   
+
                   if (ss->people[6].id1) {
                      if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
                      else (void) copy_person(ss, 4, ss, 6);
                   }
                   else (void) copy_person(ss, 4, ss, 7);
-   
+
                   if (ss->people[9].id1) {
                      if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
                      else (void) copy_person(ss, 5, ss, 9);
                   }
                   else (void) copy_person(ss, 5, ss, 8);
-   
+
                   (void) copy_person(ss, 6, ss, 10);
                   (void) copy_person(ss, 7, ss, 11);
-   
+
                   ss->kind = s_qtag;
                   ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
                }
@@ -3403,10 +3483,45 @@ that probably need to be put in. */
                   clear_person(ss, 3);
                   clear_person(ss, 6);
                   clear_person(ss, 9);
-   
+
                   ss->kind = s3x4;
                }
+
+               if (     the_schema == schema_in_out_triple_squash ||
+                        the_schema == schema_in_out_triple ||
+                        the_schema == schema_in_out_quad) {
+
+                  normalize_strongly = TRUE;
+
+                  if (ss->kind == s2x4)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
+
+                  if (ss->kind == s4x4) {
+
+                     /* We need to orient the setup so that it is vertical with respect
+                        to the way we want to pick out the outer 1x4's. */
    
+                     uint32 t1 = ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
+                     uint32 t2 = ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1;
+   
+                     if (t1 && !t2)      rot = 1;              /* It has to be left-to-right. */
+                     else if (t2 && !t1) ;                     /* It has to be top-to-bottom. */
+                     else if (t2 && t1) fail("Can't pick out outside lines.");
+                     else {
+                        /* This "O" spots are unoccupied.  Try to figure it out from the orientation of the
+                           people in the corners, so that we have lines. */
+                        uint32 t3 = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
+                        if ((t3 & 011) == 011) fail("Can't pick out outside lines.");
+                        else if (t3 & 1)        rot = 1;
+                        /* Otherwise, it either needs a vertical orientaion, or only the center 2x2 is occupied,
+                           in which case it doesn't matter. */
+                     }
+   
+                     ss->rotation += rot;
+                     canonicalize_rotation(ss);
+                  }
+               }
+
                concentric_move(
                   ss, &foo1, &foo2,
                   the_schema,
@@ -3414,7 +3529,16 @@ that probably need to be put in. */
                   outerdef->modifiers1,
                   TRUE,
                   result);
-   
+
+               result->rotation -= rot;   /* Flip the setup back. */
+
+               /* If we expanded a 2x2 to a 4x4 and then chose an orientation at random,
+                  that orientation may have gotten frozen into a 2x4.  Cut it back to
+                  just the center 4, so that the illegal information won't affect anything. */
+
+               if (normalize_strongly)
+                  normalize_setup(result, normalize_before_merge);
+
                if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
                   for (i=0 ; i<WARNING_WORDS ; i++)
                      history[history_ptr+1].warnings.bits[i] &= ~conc_elong_warnings.bits[i];
@@ -3453,7 +3577,7 @@ that probably need to be put in. */
 
 /* The current interpretation of the elongation flags, on input and output, is now
    as follows:
-   
+
    Note first that, on input and output, the elongation bits are only meaningful in
       a 2x2 or short6 setup.
    On input, nonzero bits in "prior_elongation_bits" field with a 2x2 setup mean that
@@ -3614,11 +3738,28 @@ extern void move(
       /* ***** We used to have FINAL__SPLIT in the list below, but it caused "matrix split, tandem step thru" to fail.
          This needs to be reworked. */
 
-      if (             (check_concepts.herit & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_MAGIC|INHERITFLAG_SINGLE|INHERITFLAG_INTLK)) == 0 &&
+      if (             (check_concepts.herit & ~(
+                              INHERITFLAG_REVERSE |
+                              INHERITFLAG_LEFT |
+                              INHERITFLAG_INTLK |
+                              INHERITFLAG_MAGIC |
+                              INHERITFLAG_GRAND |
+                              INHERITFLAG_CROSS |
+                              INHERITFLAG_SINGLE |
+                              INHERITFLAG_1X2 |
+                              INHERITFLAG_2X1 |
+                              INHERITFLAG_2X2 |
+                              INHERITFLAG_1X3 |
+                              INHERITFLAG_3X1 |
+                              INHERITFLAG_3X3 |
+                              INHERITFLAG_4X4 |
+                              INHERITFLAG_SINGLEFILE |
+                              INHERITFLAG_YOYO |
+                              INHERITFLAG_STRAIGHT)) == 0 &&
                         check_concepts.final == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */
-   
+
          ss->cmd.parseptr = parseptrcopy;
 
          /* We know that ss->callspec is null. */
@@ -3658,7 +3799,7 @@ extern void move(
 
       if (check_concepts.final == FINAL__SPLIT && check_concepts.herit == 0) {
          uint32 split_map;
-   
+
          ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_SPLIT;
 
          if      (ss->kind == s2x4)   split_map = MAPCODE(s2x2,2,MPKIND__SPLIT,0);

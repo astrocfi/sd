@@ -294,6 +294,14 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    if (test_call->schema == schema_roll) goto accept;
 
+   /* If the call has the "matrix" schema, and it is sex-dependent, we accept it,
+      since the test setups that we use might have people placed in such a way
+      that something like "1/2 truck" is illegal. */
+
+   if (  test_call->schema == schema_matrix &&
+         test_call->stuff.matrix.stuff[0] != test_call->stuff.matrix.stuff[1])
+      goto accept;
+
    /* We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
       since we don't know what the tagging call will be. */
    if (test_call->callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;

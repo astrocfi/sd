@@ -389,27 +389,27 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERLOCKED PHANTOM GENERAL 1/4 TAGS",  concept_do_phantom_diamonds,       D, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"PHANTOM GENERAL 1/4 TAGS",              concept_do_phantom_diamonds,       D, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"SPLIT PHANTOM 1/4 LINES",               concept_do_phantom_diamonds,       D, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
-   {"INTERLOCKED PHANTOM 1/4 LINES",         concept_do_phantom_diamonds,       D, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
-   {"PHANTOM 1/4 LINES",                     concept_do_phantom_diamonds,       D, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
+   {"SPLIT PHANTOM 1/4 LINES",               concept_do_phantom_diamonds,       D, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_REAL_1_4_LINE}},
+   {"INTERLOCKED PHANTOM 1/4 LINES",         concept_do_phantom_diamonds,       D, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_REAL_1_4_LINE}},
+   {"PHANTOM 1/4 LINES",                     concept_do_phantom_diamonds,       D, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_REAL_1_4_LINE}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"SPLIT PHANTOM 3/4 LINES",               concept_do_phantom_diamonds,       D, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
-   {"INTERLOCKED PHANTOM 3/4 LINES",         concept_do_phantom_diamonds,       D, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
-   {"PHANTOM 3/4 LINES",                     concept_do_phantom_diamonds,       D, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
+   {"SPLIT PHANTOM 3/4 LINES",               concept_do_phantom_diamonds,       D, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_REAL_3_4_LINE}},
+   {"INTERLOCKED PHANTOM 3/4 LINES",         concept_do_phantom_diamonds,       D, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_REAL_3_4_LINE}},
+   {"PHANTOM 3/4 LINES",                     concept_do_phantom_diamonds,       D, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_REAL_3_4_LINE}},
    {"CRAZY PHANTOM GENERAL 1/4 TAGS",        concept_phan_crazy,                D, l_c4, {0, 5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"REVERSE CRAZY PHANTOM GENERAL 1/4 TAGS",concept_phan_crazy,                D, l_c4, {0, 8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"@a CRAZY PHANTOM GENERAL 1/4 TAGS",     concept_frac_phan_crazy,           D, l_c4, {0, 16+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"@a REVERSE CRAZY PHANTOM GENERAL 1/4 TAGS",concept_frac_phan_crazy,        D, l_c4, {0, 16+8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"TWIN PHANTOM 1/4 TAGS",                 concept_do_divided_diamonds,       D, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_1_4_TAG}},
    {"TWIN PHANTOM 3/4 TAGS",                 concept_do_divided_diamonds,       D, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_3_4_TAG}},
-   {"TWIN PHANTOM 1/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
-   {"TWIN PHANTOM 3/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
+   {"TWIN PHANTOM 1/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_REAL_1_4_LINE}},
+   {"TWIN PHANTOM 3/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_REAL_3_4_LINE}},
    {"TWIN PHANTOM GENERAL 1/4 TAGS",         concept_do_divided_diamonds,       D, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE 1/4 TAGS",                       concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
    {"TRIPLE 3/4 TAGS",                       concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
-   {"TRIPLE 1/4 LINES",                      concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
-   {"TRIPLE 3/4 LINES",                      concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
+   {"TRIPLE 1/4 LINES",                      concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_REAL_1_4_LINE}},
+   {"TRIPLE 3/4 LINES",                      concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_REAL_3_4_LINE}},
    {"TRIPLE GENERAL 1/4 TAGS",               concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE 1/4 TAGS WORKING TOGETHER",      concept_triple_diamonds_together,  D, l_c4a, {0, 0}},
@@ -423,8 +423,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE 1/4 TAGS",                    concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
    {"QUADRUPLE 3/4 TAGS",                    concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
-   {"QUADRUPLE 1/4 LINES",                   concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
-   {"QUADRUPLE 3/4 LINES",                   concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
+   {"QUADRUPLE 1/4 LINES",                   concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_REAL_1_4_LINE}},
+   {"QUADRUPLE 3/4 LINES",                   concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_REAL_3_4_LINE}},
    {"QUADRUPLE GENERAL 1/4 TAGS",            concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"CENTER PHANTOM GENERAL 1/4 TAGS",       concept_in_out_dmd_4,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"OUTSIDE PHANTOM GENERAL 1/4 TAGS",      concept_in_out_dmd_4,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
@@ -439,7 +439,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* tandem concepts */
 
-#define tt__1_size 67
+#define tt__1_size 71
 #define tt__1_cpl 2
 #define tt__1_tnd 3
    {"PHANTOM",                               concept_c1_phantom,            L+U+D, l_c1},
@@ -449,11 +449,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE",                               concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 2}},
    {"COUPLES OF THREE",                      concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 5}},
    {"TANDEMS OF THREE",                      concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 4}},
-   {"COUPLES OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 7}},
-   {"TANDEMS OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 6}},
-   {"BOXES WORK SOLID",                      concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 10}},
-   {"DIAMONDS WORK SOLID",                   concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 11}},
-   {"SKEW",                                  concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x000, 3}},
+   {"SIAMESE OF THREE",                      concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 6}},
+   {"COUPLES OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 9}},
+   {"TANDEMS OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 8}},
+   {"SIAMESE OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 10}},
+   {"BOXES WORK SOLID",                      concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 16}},
+   {"DIAMONDS WORK SOLID",                   concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 17}},
+   {"SKEW",                                  concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x000, 18}},
    {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, 1}},
    {"GRUESOME TANDEM",                       concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, 0}},
    {"AS COUPLES IN A 1/4 TAG",               concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x000, 1}},
@@ -482,11 +484,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE @b TWOSOME",                    concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 2}},
    {"COUPLES OF THREE @b THREESOME",         concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 5}},
    {"TANDEMS OF THREE @b THREESOME",         concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 4}},
-   {"COUPLES OF FOUR @b FOURSOME",           concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 7}},
-   {"TANDEMS OF FOUR @b FOURSOME",           concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 6}},
-   {"BOXES ARE SOLID @b BOXSOME",            concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x020, 10}},
-   {"DIAMONDS ARE SOLID @b DIAMONDSOME",     concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x020, 11}},
-   {"SKEW @b TWOSOME",                       concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 3}},
+   {"SIAMESE OF THREE @b THREESOME",         concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 6}},
+   {"COUPLES OF FOUR @b FOURSOME",           concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 9}},
+   {"TANDEMS OF FOUR @b FOURSOME",           concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 8}},
+   {"SIAMESE OF FOUR @b FOURSOME",           concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 10}},
+   {"BOXES ARE SOLID @b BOXSOME",            concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x020, 16}},
+   {"DIAMONDS ARE SOLID @b DIAMONDSOME",     concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x020, 17}},
+   {"SKEW @b TWOSOME",                       concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 18}},
    {"GRUESOME AS COUPLES @b TWOSOME",        concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x022, 1}},
    {"GRUESOME TANDEM @b TWOSOME",            concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x022, 0}},
    {"COUPLES @b TWOSOME IN A 1/4 TAG",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x020, 1}},
@@ -510,7 +514,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@k-BASED TRIANGLES WORK SOLID @b THREESOME", concept_some_are_frac_tandem, F+D, l_c4,       {0, 0, 0,                    0x120, 30}},
    {"3X1 TRIANGLES WORK SOLID @b TRIANGLESOME",       concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 31}},
 /* -------- column break -------- */
-#define tt__2_size 67
+#define tt__2_size 71
 #define tt__2_cpl2s 2
 #define tt__2_tnd2s 3
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x013, 1}},
@@ -520,11 +524,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE TWOSOME",                       concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 2}},
    {"COUPLES THREESOME",                     concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 5}},
    {"TANDEM THREESOME",                      concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 4}},
-   {"COUPLES FOURSOME",                      concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 7}},
-   {"TANDEM FOURSOME",                       concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 6}},
-   {"BOXSOME",                               concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 10}},
-   {"DIAMONDSOME",                           concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 11}},
-   {"SKEWSOME",                              concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x010, 3}},
+   {"SIAMESE THREESOME",                     concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 6}},
+   {"COUPLES FOURSOME",                      concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 9}},
+   {"TANDEM FOURSOME",                       concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 8}},
+   {"SIAMESE FOURSOME",                      concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 10}},
+   {"BOXSOME",                               concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 16}},
+   {"DIAMONDSOME",                           concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 17}},
+   {"SKEWSOME",                              concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x010, 18}},
    {"GRUESOME COUPLES TWOSOME",              concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x012, 1}},
    {"GRUESOME TANDEM TWOSOME",               concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x012, 0}},
    {"COUPLES TWOSOME IN A 1/4 TAG",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x010, 1}},
@@ -553,11 +559,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE TWOSOME @b SOLID",              concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 2}},
    {"COUPLES THREESOME @b SOLID",            concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 5}},
    {"TANDEM THREESOME @b SOLID",             concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 4}},
-   {"COUPLES FOURSOME @b SOLID",             concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 7}},
-   {"TANDEM FOURSOME @b SOLID",              concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 6}},
-   {"BOXSOME @b SOLID",                      concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x030, 10}},
-   {"DIAMONDSOME @b SOLID",                  concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x030, 11}},
-   {"SKEWSOME @b SOLID",                     concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 3}},
+   {"SIAMESE THREESOME @b SOLID",            concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 6}},
+   {"COUPLES FOURSOME @b SOLID",             concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 9}},
+   {"TANDEM FOURSOME @b SOLID",              concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 8}},
+   {"SIAMESE FOURSOME @b SOLID",             concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 10}},
+   {"BOXSOME @b SOLID",                      concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x030, 16}},
+   {"DIAMONDSOME @b SOLID",                  concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x030, 17}},
+   {"SKEWSOME @b SOLID",                     concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 18}},
    {"GRUESOME TWOSOME @b SOLID",             concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x032, 1}},
    {"GRUESOME TANDEM TWOSOME @b SOLID",      concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x032, 0}},
    {"COUPLES TWOSOME @b SOLID IN A 1/4 TAG", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x030, 1}},
@@ -672,12 +680,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"OVERLAPPED LINES",                      concept_overlapped_diamond,        D, l_c4,         {0, 1}},
    {"OVERLAPPED WAVES",                      concept_overlapped_diamond,        D, l_c4,         {0, 3}},
 /* -------- column break -------- */
-#define d4__2_size 5
+#define d4__2_size 6
    {"INTERLOCKED PARALLELOGRAM",             concept_do_both_boxes,             D, l_c3x,        {&map_2x4_int_pgram, 97, TRUE}},
    {"INTERLOCKED BOXES",                     concept_misc_distort,              D, l_c3x,        {0, 3, 0}},
    {"TWIN PARALLELOGRAMS",                   concept_misc_distort,              D, l_c3x,        {0, 2, 0}},
-   {"EACH Z",                                concept_misc_distort,              D, l_c3,         {0, 0, 0}},
-   {"INTERLOCKED Z's",                       concept_misc_distort,              D, l_c4a,        {0, 0, 8}},
+   {"Z",                                     concept_misc_distort,              D, l_c3,         {0, 0, 0, 1}},
+   {"EACH Z",                                concept_misc_distort,              D, l_c3,         {0, 0, 0, 2}},
+   {"INTERLOCKED Z's",                       concept_misc_distort,              D, l_c4a,        {0, 0, 8, 2}},
 /* -------- column break -------- */
 #define d4__3_size 10
    {"JAY",                                   concept_misc_distort,              D, l_c3a,        {0, 1, 0,  0x0000}},
@@ -703,7 +712,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 74
+#define mm__1_size 78
 #define mm__1_left 0
 #define mm__1_cross 2
 #define mm__1_grand 5
@@ -742,12 +751,16 @@ concept_descriptor concept_descriptor_table[] = {
    {"ASSUME BACK-TO-BACK LINES",             concept_assume_waves,              D, l_c3,         {0, cr_li_lo,      0, 2}},
    {"ASSUME GENERAL DIAMONDS",               concept_assume_waves,              D, l_c3,         {0, cr_diamond_like,0, 0}},
    {"ASSUME GENERAL 1/4 TAGS",               concept_assume_waves,              D, l_c3,         {0, cr_qtag_like,  0, 0}},
+   {"ASSUME 1/4 TAGS",                       concept_assume_waves,              D, l_c3,         {0, cr_real_1_4_tag, 0, 0}},
    {"ASSUME RIGHT 1/4 TAGS",                 concept_assume_waves,              D, l_c3,         {0, cr_jleft,      0, 2}},
    {"ASSUME LEFT 1/4 TAGS",                  concept_assume_waves,              D, l_c3,         {0, cr_jright,     0, 2}},
+   {"ASSUME 3/4 TAGS",                       concept_assume_waves,              D, l_c3,         {0, cr_real_3_4_tag, 0, 0}},
    {"ASSUME LEFT 3/4 TAGS",                  concept_assume_waves,              D, l_c3,         {0, cr_jleft,      0, 1}},
    {"ASSUME RIGHT 3/4 TAGS",                 concept_assume_waves,              D, l_c3,         {0, cr_jright,     0, 1}},
+   {"ASSUME 1/4 LINES",                      concept_assume_waves,              D, l_c3,         {0, cr_real_1_4_line, 0, 0}},
    {"ASSUME RIGHT 1/4 LINES",                concept_assume_waves,              D, l_c3,         {0, cr_ijleft,     0, 2}},
    {"ASSUME LEFT 1/4 LINES",                 concept_assume_waves,              D, l_c3,         {0, cr_ijright,    0, 2}},
+   {"ASSUME 3/4 LINES",                      concept_assume_waves,              D, l_c3,         {0, cr_real_3_4_line, 0, 0}},
    {"ASSUME LEFT 3/4 LINES",                 concept_assume_waves,              D, l_c3,         {0, cr_ijleft,     0, 1}},
    {"ASSUME RIGHT 3/4 LINES",                concept_assume_waves,              D, l_c3,         {0, cr_ijright,    0, 1}},
    {"ASSUME NORMAL DIAMONDS",                concept_assume_waves,              D, l_c3,         {0, cr_jright,     4, 0}},

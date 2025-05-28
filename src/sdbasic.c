@@ -234,6 +234,7 @@ static collision_map collision_map_table[] = {
    /* This was put in so that "1/2 circulate" would work from lines in with centers counter rotated. */
    {4, 0x088088, 0xAA, 0xAA, {1, 3, 5, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr}, /* from lines in and centers face */
    {6, 0x000082, 0xAAA, 0x820, {1, 3, 5, 7, 9, 11},{3, 4, 6, 7, 0, 1},    {3, 4, 5, 7, 0, 2},     s3dmd,       s3x1dmd,     0, warn__none},   /* from trade by with some outside quartered out */
+   {6, 0x000088, 0x0DD, 0x044, {3, 4, 6, 7, 0, 2}, {3, 4, 6, 7, 0, 1},    {3, 4, 5, 7, 0, 2},     s3x1dmd,     s3x1dmd,     0, warn__none},   /* Same. */
    {6, 0x088088, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 2, 4, 5, 7},    {0, 1, 3, 4, 5, 6},     s_crosswave, s_crosswave, 0, warn__none},
    {6, 0x0000CC, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},     s_crosswave, s_crosswave, 0, warn__none},
    {6, 0x000000,  077, 011,  {0, 1, 2, 3, 4, 5},   {0, 3, 2, 5, 7, 6},    {1, 3, 2, 4, 7, 6},     s1x6,        s1x8,        0, warn__none},
@@ -292,9 +293,9 @@ static collision_map collision_map_table[] = {
    {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none},   /* from couples in if it went to line */
    {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none},   /* from "head pass thru, all split circulate" */
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none},   /* from "head pass thru, all split circulate" */
-   /* These items handle "1/2 split trade circulate" from 2x2's. */
-   {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn__none},
-   {3, 0x002002, 0x07, 0x02, {0, 2, 1},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn__none},
+   /* These items handle "1/2 split trade circulate" from 2x2's.  They also do "switch to a diamond" when the ends come to the same spot in the center. */
+   {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn_bad_collision},
+   {3, 0x002002, 0x07, 0x02, {0, 2, 1},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn_bad_collision},
    /* These items handle various types of "circulate" calls from 2x2's. */
    {2, 0x009009, 0x09, 0x09, {0, 3},               {7, 5},                {6, 4},                 s2x2,        s2x4,        1, warn_bad_collision},   /* from box facing all one way */
    {2, 0x006006, 0x06, 0x06, {1, 2},               {0, 2},                {1, 3},                 s2x2,        s2x4,        1, warn_bad_collision},   /* we need all four cases */
@@ -312,8 +313,9 @@ static collision_map collision_map_table[] = {
    /* These items handle horrible lockit collisions in the middle (from inverted lines, for example). */
    {2, 0x000000, 0x06, 0x06, {1, 2},               {3, 5},                {2, 4},                 s1x4,        s1x8,        0, warn_bad_collision},
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 6},                {1, 7},                 s1x4,        s1x8,        0, warn_bad_collision},
-
-
+/* Some new ones. */
+   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 3},                {1, 2},                 s1x4,        s1x8,        0, warn_bad_collision},
+   {2, 0x000000, 0x0C, 0x0C, {3, 2},               {6, 5},                {7, 4},                 s1x4,        s1x8,        0, warn_bad_collision},
 
 
 
@@ -396,96 +398,109 @@ extern void fix_collision(
 }
 
 
-static int identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
-static int ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
-static int ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9, 10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
-static int ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13, 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
-static int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
-static int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
-static int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
-static int qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
-static int qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
-static int galtranslateh[16] = {-1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6, -1, -1, -1,  1};
-static int galtranslatev[16] = {-1, -1, -1,  1, -1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6};
+static veryshort identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+static veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+static veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9, 10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
+static veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13, 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
+static veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
+static veryshort ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
+static veryshort ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
+static veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
+static veryshort btlqtg[12] = {5, 0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1};
+static veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
+static veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
+static veryshort galtranslateh[16] = {-1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6, -1, -1, -1,  1};
+static veryshort galtranslatev[16] = {-1, -1, -1,  1, -1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6};
 #ifdef BREAKS_CAST_BACK
-static int phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
-static int phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
+static veryshort phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
+static veryshort phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
 #endif
-static int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
-static int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
-static int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
-static int sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
-static int sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
-static int sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
-static int s3dmftranslateh[12] = {9, 10, 11, 1, 0, 0, 3, 4, 5, 7, 0, 0};
-static int s3dmftranslatev[12] = {7, 0, 0, 9, 10, 11, 1, 0, 0, 3, 4, 5};
-static int s3dmntranslateh[12] = {9, 10, 11, 0, 1, 0, 3, 4, 5, 0, 7, 0};
-static int s3dmntranslatev[12] = {0, 7, 0, 9, 10, 11, 0, 1, 0, 3, 4, 5};
-static int s_vacate_star[12]   = {0, 1, 2, 0, 0, 3, 4, 5, 6, 0, 0, 7};
+static veryshort s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
+static veryshort s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
+static veryshort sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
+static veryshort sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
+static veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
+static veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
+static veryshort s3dmftranslateh[12] = {0, 1, 2, 3, 0, 0, 4, 5, 6, 7, 0, 0};
+static veryshort s3dmntranslateh[12] = {0, 1, 2, 0, 3, 0, 4, 5, 6, 0, 7, 0};
+static veryshort s3dmftranslatev[12] = {7, 0, 0, 0, 1, 2, 3, 0, 0, 4, 5, 6};
+static veryshort s3dmntranslatev[12] = {0, 7, 0, 0, 1, 2, 0, 3, 0, 4, 5, 6};
+static veryshort s_vacate_star[12]   = {0, 1, 2, 0, 0, 3, 4, 5, 6, 0, 0, 7};
 
 
 
-static int octtranslateh[64] = {
+static veryshort octtranslateh[64] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11,
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12};
 
-static int octtranslatev[64] = {
+static veryshort octtranslatev[64] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11};
 
-static int hextranslateh[32] = {
+static veryshort octt4x6lateh[64] = {
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  0, 11, 10,  9,
+   0,  0,  0,  0,  0,  0,  5,  6,  0,  0,  4,  7,  0,  0,  3,  8,
+   0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 13, 14,  0, 23, 22, 21,
+   0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20};
+
+static veryshort octt4x6latev[64] = {
+   0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20,
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  0, 11, 10,  9,
+   0,  0,  0,  0,  0,  0,  5,  6,  0,  0,  4,  7,  0,  0,  3,  8,
+   0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 13, 14,  0, 23, 22, 21};
+
+static veryshort hextranslateh[32] = {
    0,  1,  2,  3,  4,  5,  6,  7,  0,  0,  0,  0,  0,  0,  0,  0,
    8,  9, 10, 11, 12, 13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0};
 
-static int hextranslatev[32] = {
+static veryshort hextranslatev[32] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,
    0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11, 12, 13, 14, 15};
 
-static int qdmtranslateh[32] = {
+static veryshort qdmtranslateh[32] = {
    12, 13, 14, 15,  0,  1,  0,  0,  0,   0,  0,  0,  3,  0,  2,  0,
    4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
 
-static int qdmtranslatev[32] = {
+static veryshort qdmtranslatev[32] = {
    0,  0,  0,  0,  11, 0,  10, 0,  12, 13, 14, 15, 0,  1,  0,  0,
    0,  0,  0,  0,  3,  0,  2,  0,  4,  5,  6,  7,  0,  9,  0,  8};
 
-
-static int j23translateh[32] = {
+static veryshort j23translateh[32] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  2,  0,  0,
    0,  0,  0,  0,  0,  0,  3,  0,  0,  0,  0,  4,  0,  5,  0,  0};
 
-static int j23translatev[32] = {
+static veryshort j23translatev[32] = {
    0,  0,  0,  4,  0,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  0,  1,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0,  3,  0};
 
 
 
-static int dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
-static int linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
-static int galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
-static int dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
-static int linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
-static int galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
-static int starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
-static int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
-static int lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
-static int lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
-static int lilstar3[8] = {0, 1, 0, 0, 2, 3, 0, 0};
-static int lilstar4[8] = {0, 0, 2, 3, 0, 0, 0, 1};
+static veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
+static veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
+static veryshort galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
+static veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
+static veryshort linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
+static veryshort galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
+static veryshort starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
+static veryshort fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
+static veryshort lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
+static veryshort lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
+static veryshort lilstar3[8] = {0, 1, 0, 0, 2, 3, 0, 0};
+static veryshort lilstar4[8] = {0, 0, 2, 3, 0, 0, 0, 1};
 
 
-static int qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
-static int qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
-static int qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
-static int qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
-static int q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
-static int q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
-static int q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
-static int q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
+static veryshort qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
+static veryshort qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
+static veryshort qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
+static veryshort qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
+static veryshort q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
+static veryshort q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
+static veryshort q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
+static veryshort q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
 
 
 
@@ -641,7 +656,7 @@ extern long_boolean check_restriction(
          case s2x4:
             switch (restr.assumption) {
                case cr_quarterbox_or_col:
-                  k = 0;         /* check for a reasonable "triple cross" setup */
+                  k = 0;         /* check for a reasonable "quick step" or "triple cross" setup */
                   i = 2;
                   if (ss->people[0].id1) { k |=  ss->people[0].id1;                          }
                   if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
@@ -655,7 +670,7 @@ extern long_boolean check_restriction(
                      goto restr_failed;
                   break;
                case cr_quarterbox_or_magic_col:
-                  k = 0;         /* check for a reasonable "make magic" setup */
+                  k = 0;         /* check for a reasonable "magic quick step" or "make magic" setup */
                   i = 2;
                   if (ss->people[0].id1) {                          i &= ~ss->people[0].id1; }
                   if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
@@ -665,6 +680,34 @@ extern long_boolean check_restriction(
                   if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
                   if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
                   if (ss->people[7].id1) { k |=  ss->people[7].id1;                          }
+                  if (k & ~i & 2)
+                     goto restr_failed;
+                  break;
+            }
+            break;
+         case s2x3:
+            switch (restr.assumption) {
+               case cr_quarterbox_or_col:
+                  k = 0;         /* check for a reasonable columns-of-3 "quick step" setup */
+                  i = 2;
+                  if (ss->people[0].id1) { k |=  ss->people[0].id1;                          }
+                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+                  if (ss->people[2].id1) {                          i &=  ss->people[2].id1; }
+                  if (ss->people[3].id1) { k |= ~ss->people[3].id1;                          }
+                  if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
+                  if (ss->people[5].id1) {                          i &= ~ss->people[5].id1; }
+                  if (k & ~i & 2)
+                     goto restr_failed;
+                  break;
+               case cr_quarterbox_or_magic_col:
+                  k = 0;         /* check for a reasonable columns-of-3 "magic quick step" setup */
+                  i = 2;
+                  if (ss->people[0].id1) {                          i &= ~ss->people[0].id1; }
+                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+                  if (ss->people[2].id1) { k |= ~ss->people[2].id1;                          }
+                  if (ss->people[3].id1) {                          i &=  ss->people[3].id1; }
+                  if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
+                  if (ss->people[5].id1) { k |=  ss->people[5].id1;                          }
                   if (k & ~i & 2)
                      goto restr_failed;
                   break;
@@ -892,6 +935,15 @@ Private void special_4_way_symm(
       12, 13, 14, 15, 31, 27, 23, 19,
       44, 45, 46, 47, 63, 59, 55, 51};
 
+   static int table_3x1d[8] = {
+      0, 1, 2, 3, 6, 7, 8, 9};
+
+   static int table_4x6[24] = {
+       9, 10, 11, 30, 26, 22,
+      23, 27, 31, 15, 14, 13,
+      41, 42, 43, 62, 58, 54,
+      55, 59, 63, 47, 46, 45};
+
    static int table_1x16[16] = {
        0,  1,  2,  3,  4,  5,  6,  7,
       16, 17, 18, 19, 20, 21, 22, 23};
@@ -933,6 +985,14 @@ Private void special_4_way_symm(
       case s2x8:
          result->kind = s8x8;
          the_table = table_2x8;
+         break;
+      case s3x1dmd:
+         result->kind = sx1x6;
+         the_table = table_3x1d;
+         break;
+      case s4x6:
+         result->kind = s8x8;
+         the_table = table_4x6;
          break;
       case s1x16:
          result->kind = sx1x16;
@@ -1086,7 +1146,6 @@ Private int divide_the_setup(
    uint32 newtb = *newtb_p;
    uint32 callflags1 = ss->cmd.callspec->callflags1;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
-   uint32 force_result_split_axis = 0;
    setup_command conc_cmd;
    uint32 must_do_concentric = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
    long_boolean matrix_aware =
@@ -1351,6 +1410,46 @@ Private int divide_the_setup(
             }
          }
          break;
+      case s3x6:
+         /* Check whether it has 2x3/3x2/1x6/6x1 definitions, and divide the setup if so,
+            or if the caller explicitly said "3x6 matrix" (not that "3x6 matrix" exists at present.) */
+
+         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+            if (
+                  (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
+               division_code = MAPCODE(s2x3,3,MPKIND__SPLIT,1);
+               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x3s);  /* If database said to split, don't give warning. */
+               goto divide_us_no_recompute;
+            }
+            else if (
+                  (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
+               division_code = MAPCODE(s1x6,3,MPKIND__SPLIT,1);
+               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x6s);  /* If database said to split, don't give warning. */
+               goto divide_us_no_recompute;
+               /* YOW!!  1x3's are hard!  We need a 3x3 formation. */
+            }
+         }
+
+         /* Otherwise, the only way this can be legal is if we can identify
+            smaller setups of all real people and can do the call on them.  For
+            example, we will look for 1x2 setups, so we could trade in individual couples scattered around. */
+
+         switch (livemask) {
+            case 0505505:
+               division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_HALF,0);
+               warn(warn__each1x2);
+               break;
+            case 0550550:
+               division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_HALF,0);
+               warn(warn__each1x2);
+               break;
+            default:
+               fail("You must specify a concept.");
+         }
+
+         goto divide_us_no_recompute;
       case s_c1phan:
 
          /* The only way this can be legal is if people are in genuine
@@ -2239,10 +2338,8 @@ Private int divide_the_setup(
             If so, split into boxes.  Furthermore, if the split could have been along either axis, we set
             both RESULTFLAG__SPLIT_AXIS_MASK bits. */
 
-         if (((newtb & 1) == 0 && have_1x2 != 0) || ((newtb & 010) == 0 && have_2x1 != 0)) {
-            force_result_split_axis = RESULTFLAG__SPLIT_AXIS_MASK;
+         if (((newtb & 1) == 0 && have_1x2 != 0) || ((newtb & 010) == 0 && have_2x1 != 0))
             goto divide_us_no_recompute;
-         }
 
          /* If the splitting is into 4 side-by-side 1x2 setups, just split into 2x2's --
             that will get the correct RESULTFLAG__SPLIT_AXIS_MASK bits. */
@@ -2278,10 +2375,8 @@ Private int divide_the_setup(
                }
 
                /* Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose. */
-               else if (assoc(b_1x1, ss, calldeflist)) {
-                  force_result_split_axis = RESULTFLAG__SPLIT_AXIS_MASK;
+               else if (assoc(b_1x1, ss, calldeflist))
                   goto divide_us_no_recompute;
-               }
             }
 
             /* If the centers and ends are not separately consistent, we should just split it into 2x2's.
@@ -2295,10 +2390,8 @@ Private int divide_the_setup(
          /* We are not T-boned, and there is no 1x2 or 2x1 definition.  The only possibility is that there
             is a 1x1 definition, in which case splitting into boxes will work. */
 
-         else if (assoc(b_1x1, ss, calldeflist)) {
-            force_result_split_axis = RESULTFLAG__SPLIT_AXIS_MASK;
+         else if (assoc(b_1x1, ss, calldeflist))
             goto divide_us_no_recompute;
-         }
 
          break;
       case s1x4:
@@ -2366,9 +2459,6 @@ Private int divide_the_setup(
       divided_setup_move(ss, division_maps, phantest_ok, recompute_anyway, result);
    else
       new_divided_setup_move(ss, division_code, phantest_ok, recompute_anyway, result);
-
-   /* This left the RESULTFLAG__SPLIT_AXIS_MASK stuff correct, but we may still need to turn it off. */
-   result->result_flags |= force_result_split_axis;
 
    /* If expansion to a 2x3 occurred (because the call was, for example, a "pair the line"),
       and the two 2x3's are end-to-end in a 2x6, see if we can squash phantoms.  We squash both
@@ -3173,8 +3263,8 @@ foobar:
       else {
          int numout;
          int halfnumout;
-         int *final_translatec = identity;
-         int *final_translatel = identity;
+         veryshort *final_translatec = identity;
+         veryshort *final_translatel = identity;
          int rotfudge_line = 0;
          int rotfudge_col = 0;
 
@@ -3222,34 +3312,35 @@ foobar:
                      rotfudge_col = 3;
                   }
                }
+               else if (result->kind == s_bone && (setup_kind) linedefinition->end_setup == s_qtag) {
+                  result->rotation = linedefinition->callarray_flags & CAF__ROT;
+                  result->kind = s_qtag;
+                  tempkind = s_qtag;
+
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatec = &btlqtg[4];
+                     rotfudge_col = 1;
+                  }
+                  else {
+                     final_translatec = &btlqtg[0];
+                     rotfudge_col = 3;
+                  }
+               }
                else
                   fail("T-bone call went to a weird setup.");
             }
             else {
                if (result->kind == s4x4 && (setup_kind) linedefinition->end_setup == s2x4) {
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &ftc4x4[8];   /* Shouldn't really happen -- can't specify rotation if end=4x4. */
-                     rotfudge_line = 2;
-                  }
-                  else
-                     final_translatel = &ftc4x4[0];
+                  final_translatel = &ftc4x4[0];
                }
                else if (result->kind == s_c1phan && (setup_kind) linedefinition->end_setup == s2x4) {
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &ftcphan[8];   /* Shouldn't really happen -- can't specify rotation if end=4x4. */
-                     rotfudge_line = 2;
-                  }
-                  else
-                     final_translatel = &ftcphan[0];
+                  final_translatel = &ftcphan[0];
                }
                else if (result->kind == s2x4 && (setup_kind) linedefinition->end_setup == s_bone) {
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &qtlbone[4];
-                     rotfudge_line = 2;
-                  }
-                  else {
-                     final_translatel = &qtlbone[0];
-                  }
+                  final_translatel = &qtlbone[0];
+               }
+               else if (result->kind == s1x8 && (setup_kind) linedefinition->end_setup == s_crosswave) {
+                  final_translatel = &qtlxwv[0];
                }
                else
                   fail("T-bone call went to a weird setup.");
@@ -3275,7 +3366,7 @@ foobar:
          }
 
          for (real_index=0; real_index<num; real_index++) {
-            int *final_translate;
+            veryshort *final_translate;
             int kt;
             callarray *the_definition;
             uint32 z;
@@ -3335,7 +3426,7 @@ foobar:
          the 4x4 to a 2x4!!!!!  This is why we compare the beginning and ending setup sizes. */
 
       if (setup_attrs[ss->kind].setup_limits < setup_attrs[result->kind].setup_limits) {
-         int *permuter = (int *) 0;
+         veryshort *permuter = (veryshort *) 0;
          int rotator = 0;
 
          if (result->kind == s4x4) {
@@ -3390,21 +3481,21 @@ foobar:
                permuter = sxwvtranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 06060) == 0) {    /* Check horiz 3dmd spots w/points out far. */
-               result->kind = s3dmd;
+            else if ((lilresult_mask[0] & 06060) == 0) {    /* Check horiz 3x1dmd spots w/points out far. */
+               result->kind = s3x1dmd;
                permuter = s3dmftranslateh;
             }
-            else if ((lilresult_mask[0] & 00606) == 0) {    /* Check vert 3dmd spots w/points out far. */
-               result->kind = s3dmd;
+            else if ((lilresult_mask[0] & 00606) == 0) {    /* Check vert 3x1dmd spots w/points out far. */
+               result->kind = s3x1dmd;
                permuter = s3dmftranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 05050) == 0) {    /* Check horiz 3dmd spots w/points in close. */
-               result->kind = s3dmd;
+            else if ((lilresult_mask[0] & 05050) == 0) {    /* Check horiz 3x1dmd spots w/points in close. */
+               result->kind = s3x1dmd;
                permuter = s3dmntranslateh;
             }
-            else if ((lilresult_mask[0] & 00505) == 0) {    /* Check vert 3dmd spots w/points in close. */
-               result->kind = s3dmd;
+            else if ((lilresult_mask[0] & 00505) == 0) {    /* Check vert 3x1dmd spots w/points in close. */
+               result->kind = s3x1dmd;
                permuter = s3dmntranslatev;
                rotator = 1;
             }
@@ -3433,11 +3524,20 @@ foobar:
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == s8x8) {
-            /* See if people landed on 2x8 spots. */
+            /* See if people landed on 2x8 or 4x6 spots. */
             result->kind = s2x8;
             permuter = octtranslateh;
 
-            if ((lilresult_mask[0] & 0x0FFF7777UL) == 0 && (lilresult_mask[1] & 0x0FFF7777UL) == 0) {
+            if ((lilresult_mask[0] & 0x333F11FFUL) == 0 && (lilresult_mask[1] & 0x333F11FFUL) == 0) {
+               result->kind = s4x6;
+               permuter = octt4x6lateh;
+            }
+            else if ((lilresult_mask[0] & 0x11FF333FUL) == 0 && (lilresult_mask[1] & 0x11FF333FUL) == 0) {
+               result->kind = s4x6;
+               permuter = octt4x6latev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0x0FFF7777UL) == 0 && (lilresult_mask[1] & 0x0FFF7777UL) == 0) {
                permuter = octtranslatev;
                rotator = 1;
             }

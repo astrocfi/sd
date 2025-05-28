@@ -638,11 +638,12 @@ Private long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
          real_people->cmd.cmd_assume.assump_cast)
       return extra_stuff[0] & 1;
-   else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
+   else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
+         real_people->cmd.cmd_assume.assumption == cr_2fl_only)
       return (extra_stuff[0] & 1) ^ 1;
    else {
-      int this_person = real_people->people[real_index].id1;
-      int other_person = real_people->people[real_index ^ 1].id1;
+      uint32 this_person = real_people->people[real_index].id1;
+      uint32 other_person = real_people->people[real_index ^ 1].id1;
       if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
 
@@ -669,38 +670,33 @@ Private long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
 Private long_boolean columns_tandem(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   int this_person;
-   int other_person;
+   uint32 this_person;
+   int other_index;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_wave_only: case cr_2fl_only: return TRUE;
-      case cr_magic_only: case cr_li_lo: return FALSE;
+      case cr_wave_only: case cr_2fl_only: return extra_stuff[0] ^ 1;
+      case cr_magic_only: case cr_li_lo: return extra_stuff[0];
    }
 
    this_person = real_people->people[real_index].id1;
-   other_person = real_people->people[real_index ^ 1].id1;
+   other_index = real_index ^ 1;
+
    if (real_people->kind == s1x6 && real_index >= 2)
-      other_person = real_people->people[7 - real_index].id1;
-   return ((this_person ^ other_person) & DIR_MASK) == 0;
-}
-
-/* ARGSUSED */
-Private long_boolean columns_antitandem(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   int this_person;
-   int other_person;
-
-   switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_magic_only: case cr_li_lo: return TRUE;
-      case cr_wave_only: case cr_2fl_only: return FALSE;
+      other_index = 7 - real_index;
+   else if (real_people->kind == s1x3) {
+      if (real_index == 2 || !(real_direction & 2))
+         other_index = 3 - real_index;
+   }
+   else if (real_people->kind == s2x3) {
+      if (real_index == 2)
+         other_index = 1;
+      else if (real_index == 3)
+         other_index = 4;
+      else if ((real_index == 1 || real_index == 4) && !(real_direction & 2))
+         other_index = 3 - real_index;
    }
 
-   this_person = real_people->people[real_index].id1;
-   other_person = real_people->people[real_index ^ 1].id1;
-   if (real_people->kind == s1x6 && real_index >= 2)
-      other_person = real_people->people[7 - real_index].id1;
-   return ((this_person ^ other_person) & DIR_MASK) == 2;
+   return ((this_person ^ real_people->people[other_index].id1) & DIR_MASK) == (extra_stuff[0] << 1);
 }
 
 /* ARGSUSED */
@@ -1585,6 +1581,8 @@ typedef struct {
    Const simple_qtag_action if_jright;
    Const simple_qtag_action if_ijleft;
    Const simple_qtag_action if_ijright;
+   Const simple_qtag_action if_tag;
+   Const simple_qtag_action if_line;
    Const simple_qtag_action none;
 } full_qtag_action;
 
@@ -1593,6 +1591,8 @@ static full_qtag_action q_tag_front_action = {
    {-1,   0,  1},            /* if_jright   */
    {-2,  -1, 99},            /* if_ijleft   */
    {-2,  -1, 99},            /* if_ijright  */
+   {-1,   0, 98},            /* if_tag    */
+   {-2,  -1, 99},            /* if_line   */
    { 2, 010,  2}};           /* none        */
 
 static full_qtag_action q_tag_back_action = {
@@ -1600,6 +1600,8 @@ static full_qtag_action q_tag_back_action = {
    {-1,   1,  0},            /* if_jright   */
    {-2,  -1, 99},            /* if_ijleft   */
    {-2,  -1, 99},            /* if_ijright  */
+   {-1,   2, 98},            /* if_tag    */
+   {-2,  -1, 99},            /* if_line   */
    { 2, 012,  2}};           /* none        */
 
 static full_qtag_action q_line_front_action = {
@@ -1607,6 +1609,8 @@ static full_qtag_action q_line_front_action = {
    {-2,  -1, 99},            /* if_jright   */
    {-1,   1,  0},            /* if_ijleft   */
    {-1,   0,  1},            /* if_ijright  */
+   {-2,  -1, 99},            /* if_tag    */
+   {-1,   0, 97},            /* if_line   */
    { 0, 010,  0}};           /* none        */
 
 static full_qtag_action q_line_back_action = {
@@ -1614,6 +1618,8 @@ static full_qtag_action q_line_back_action = {
    {-2,  -1, 99},            /* if_jright   */
    {-1,   0,  1},            /* if_ijleft   */
    {-1,   1,  0},            /* if_ijright  */
+   {-2,  -1, 99},            /* if_tag    */
+   {-1,   2, 97},            /* if_line   */
    { 0, 012,  0}};           /* none        */
 
 /* ARGSUSED */
@@ -1622,38 +1628,82 @@ Private long_boolean q_tag_check(setup *real_people, int real_index,
 {
    full_qtag_action *bigactionp = (full_qtag_action *) extra_stuff;
    simple_qtag_action *actionp;
+   int both = real_people->cmd.cmd_assume.assump_both;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_jleft:     actionp = (simple_qtag_action *) &(bigactionp->if_jleft);   break;
-      case cr_jright:    actionp = (simple_qtag_action *) &(bigactionp->if_jright);  break;
-      case cr_ijleft:    actionp = (simple_qtag_action *) &(bigactionp->if_ijleft);  break;
-      case cr_ijright:   actionp = (simple_qtag_action *) &(bigactionp->if_ijright); break;
-      default:           actionp = (simple_qtag_action *) &(bigactionp->none);       break;
+      case cr_jleft:         actionp = (simple_qtag_action *) &(bigactionp->if_jleft);          break;
+      case cr_jright:        actionp = (simple_qtag_action *) &(bigactionp->if_jright);         break;
+      case cr_ijleft:        actionp = (simple_qtag_action *) &(bigactionp->if_ijleft);         break;
+      case cr_ijright:       actionp = (simple_qtag_action *) &(bigactionp->if_ijright);        break;
+      case cr_real_1_4_tag:  actionp = (simple_qtag_action *) &(bigactionp->if_tag);  both = 2; break;
+      case cr_real_3_4_tag:  actionp = (simple_qtag_action *) &(bigactionp->if_tag);  both = 1; break;
+      case cr_real_1_4_line: actionp = (simple_qtag_action *) &(bigactionp->if_line); both = 2; break;
+      case cr_real_3_4_line: actionp = (simple_qtag_action *) &(bigactionp->if_line); both = 1; break;
+      default:               actionp = (simple_qtag_action *) &(bigactionp->none);              break;
    }
 
    if (real_index & 2) {
       /* I am in the center line. */
       if (actionp->ctr_action == -1) return TRUE;
       else if (actionp->ctr_action == -2) return FALSE;
+      /* This line is executed if there is no assumption.  It attempts to determine whether the physical setup
+         is a wave or a 2FL by checking just the subject and his partner.  Of course, a more thorough check
+         would be a nice idea. */
       else return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == actionp->ctr_action;
    }
    else {
       /* I am on the outside; find the end of the center line nearest me. */
 
       if (actionp->end_action < 0) return FALSE;
-      else if (actionp->end_action <= 1) {
-         if (real_people->cmd.cmd_assume.assump_col == 4) {
-            if (actionp->end_action == 0)
-               return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) == 0;
-            else
-               return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) != 0;
+      else if (actionp->end_action <= 2) {
+         if (real_people->cmd.cmd_assume.assump_col == 4)
+            return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) == ((actionp->end_action == 0) ? 0 : 2);
+
+         if (actionp->bbbbb == 98) {
+            uint32 t;
+
+            both = 0;
+
+            if ((t = real_people->people[2].id1))
+               both |= actionp->end_action ^ t;
+
+            if ((t = real_people->people[3].id1))
+               both |= actionp->end_action ^ t ^ 2;
+
+            if ((t = real_people->people[6].id1))
+               both |= actionp->end_action ^ t ^ 2;
+
+            if ((t = real_people->people[7].id1))
+               both |= actionp->end_action ^ t;
+
+            if (!both) return FALSE;
+            both >>= 1;
+         }
+         else if (actionp->bbbbb == 97) {
+            uint32 t;
+
+            both = 0;
+
+            if ((t = real_people->people[2].id1))
+               both |= actionp->end_action ^ t;
+
+            if ((t = real_people->people[3].id1))
+               both |= actionp->end_action ^ t;
+
+            if ((t = real_people->people[6].id1))
+               both |= actionp->end_action ^ t ^ 2;
+
+            if ((t = real_people->people[7].id1))
+               both |= actionp->end_action ^ t ^ 2;
+
+            if (!both) return FALSE;
+            both >>= 1;
          }
          else {
-            if (actionp->bbbbb == 0)
-               return ((real_index ^ real_people->cmd.cmd_assume.assump_both) & 1) == 0;
-            else
-               return ((real_index ^ real_people->cmd.cmd_assume.assump_both) & 1) != 0;
+            if (actionp->bbbbb == 0) both ^= 1;
          }
+
+         return ((real_index ^ both) & 1) != 0;
       }
       else {
          int z;
@@ -1723,8 +1773,8 @@ predicate_descriptor pred_table[] = {
       {lines_once_rem_couple,        (Const long int *) 0},      /* "lines_once_rem_couple" */
       {same_in_pair,                 (Const long int *) 0},      /* "lines_tandem" */
       {opp_in_pair,                  (Const long int *) 0},      /* "lines_antitandem" */
-      {columns_tandem,               (Const long int *) 0},      /* "columns_tandem" */
-      {columns_antitandem,           (Const long int *) 0},      /* "columns_antitandem" */
+      {columns_tandem,                 &iden_tab[0]},            /* "columns_tandem" */
+      {columns_tandem,                 &iden_tab[1]},            /* "columns_antitandem" */
       {same_in_magic,                (Const long int *) 0},      /* "columns_magic_tandem" */
       {opp_in_magic,                 (Const long int *) 0},      /* "columns_magic_antitandem" */
       {lines_once_rem_couple,        (Const long int *) 0},      /* "columns_once_rem_tandem" */

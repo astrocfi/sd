@@ -112,7 +112,8 @@ sources that have shown the greatest care in their editing.
 
 The @code{toggle ignoreblanks} command, or
 the ``-ignoreblanks'' command line switch, or the line ``ignoreblanks''
-in the ``options'' section of the initialization file, will make Sdtty
+in the ``options'' section of the @file{sd.ini} initialization file,
+will make @code{Sdtty}
 accept words that are run together or the use of blanks instead of
 hyphens.  Hence, misspelled concepts and calls such as @code{tandem based triangles}
 (the Callerlab spelling is with a hyphen) and @code{inroll circulate} will be accepted.
@@ -132,6 +133,25 @@ levels.  When you run at C3, C3X calls may be used.
 When you run at C4, C4X calls may be used.  Whenever such a call is
 used, a warning is printed.  (If you explicitly run the program at
 C3X or C4X, you may use the calls without getting a warning.)
+
+@unnumberedsec Judgement, Controversy, and Warning Messages
+
+Not all callers exercise good judgement in their calling, and occasionally
+some controversial, or even illegal, things are called.  It is not possible
+for a computer program to enforce good judgement or good taste.  @code{Sd}
+nevertheless sometimes prints warning messages of various types to alert
+less-experienced callers that something might be unusually difficult or
+controversial, or might violate some definition or some commonly accepted notion.
+
+These warning messages are intended for callers less competent than you.
+Ignore them.
+
+You can prevent the program from displaying or printing warning messages
+by giving the @code{toggle nowarn mode} command.  This turns on (or turns
+off if it was already on) the ``no warnings'' mode.  You can also start the
+program with a command-line switch ``-no_warnings'', or place a line
+with just the word ``no_warnings'' (with no hyphen) in the ``options''
+section of the @file{sd.ini} initialization file.
 
 @unnumberedsec Variations of the Program
 @end ifset

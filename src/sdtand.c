@@ -178,6 +178,7 @@ Private tm_thing maps_isearch_threesome[] = {
    {{3, 6, 7, 0},         {-1, 5, -1, 1},       {-1, 4, -1, 2},        {0},      0,     0x77,         4, 1,  0,  0, 0,  sdmd,  s3x1dmd},
    {{7, 0, 3, 6},         {-1, 1, -1, 5},       {-1, 2, -1, 4},        {0},   0x44,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_spindle},
    {{0, 5, 8, 11},        {1, -1, 7, -1},       {2, -1, 6, -1},        {0},      0,     0707,         4, 1,  0,  0, 0,  sdmd,  s3dmd},
+   {{0, 5, 8, 9},         {1, 4, 7, 10},        {2, 3, 6, 11},         {0},      0,    07777,         4, 1,  0,  0, 0,  sdmd,  s3dmd},
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s1x4,  s1x12},
    {{0, 2, 7, 6},         {1, -1, 5, -1},       {3, -1, 4, -1},        {0},   0x11,     0xBB,         4, 0,  0,  0, 0,  s1x4,  s1x8},
    {{0, 1, 4, 6},         {-1, 3, -1, 7},       {-1, 2, -1, 5},        {0},   0x44,     0xEE,         4, 0,  0,  0, 0,  s1x4,  s1x8},
@@ -197,6 +198,7 @@ Private tm_thing maps_isearch_foursome[] = {
    {{0, 7},           {1, 6},           {2, 5},           {3, 4},                0,    0x0FF,         2, 1,  0,  0, 0,  s1x2,  s2x4},
    {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s2x8},
    {{4, 11, 15, 0},   {5, 10, 14, 1},   {6, 9, 13, 2},    {7, 8, 12, 3},         0,  0x0FFFF,         4, 1,  0,  0, 0,  s2x2,  s2x8},
+   {{0, 7, 11, 12},   {1, 6, 10, 13},   {2, 5, 9, 14},    {3, 4, 8, 15},         0,  0x0FFFF,         4, 1,  0,  0, 0,  sdmd,  s4dmd},
    {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4,  s1x16},
    {{17, 16, 15, 12, 13, 14},       {18, 19, 20, 23, 22, 21},
         {11, 10, 9, 6, 7, 8},               {0, 1, 2, 5, 4, 3},                  0,     0000,         6, 0,  0,  0, 0,  s1x6,  s4x6},
@@ -497,27 +499,27 @@ Private void pack_us(
          if (tandstuff->np >= 3) b2 = s[map_ptr->map3[i]];
          if (tandstuff->np >= 4) b3 = s[map_ptr->map4[i]];
 
-         if (key == 3) {
+         u1 = f.id1 | b.id1 | b2.id1 | b3.id1;
+
+         if (key == 18) {
             /* If this is skew/skewsome, we require people paired in the appropriate way.
                This means [f, b3] must match, [b, b2] must match, and [f, b] must not match. */
 
             if ((((f.id1 ^ b3.id1) | (b.id1 ^ b2.id1) | (~(f.id1 ^ b.id1))) & BIT_PERSON))
                fail("Can't find skew people.");
          }
-         else {
-            /* If this is not skew/skewsome, we forbid a live person grouped with a phantom unless
-               some phantom concept was used (either something like "phantom tandem" or some other
-               phantom concept such as "split phantom lines"). */
+         else if (!(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
 
-            /* In fact, we forbid ANY PERSON AT ALL to be a phantom, even if paired with another phantom. */
+            /* Otherwise, we usually forbid phantoms unless some phantom concept was used
+               (either something like "phantom tandem" or some other phantom concept such
+               as "split phantom lines").  If we get here, such a concept was not used.
+               We forbid a live person paired with a phantom.  Additionally, we forbid
+               ANY PERSON AT ALL to be a phantom, even if paired with another phantom,
+               except in the special case of a virtual 2x3. */
 
-            if (     !(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
-                     !(f.id1 & b.id1 & b2.id1 & b3.id1 & BIT_PERSON)) {
+            if (!(f.id1 & b.id1 & b2.id1 & b3.id1 & BIT_PERSON) && (u1 || tandstuff->virtual_setup.kind != s2x3))
                fail("Use \"phantom\" concept in front of this concept.");
-            }
          }
-
-         u1 = f.id1 | b.id1 | b2.id1 | b3.id1;
 
          if (u1) {
             if (twosome >= 2 && (u1 & STABLE_MASK))
@@ -632,10 +634,12 @@ extern void tandem_couples_move(
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
    int phantom,               /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
-   int key,                   /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
-                                 tandem of 3 = 4 / couples of 3 = 5 / tandem of 4 = 6 / couples of 4 = 7
-                                 box = 10 / diamond = 11 / out point triangles = 20
-                                 in point triangles = 21 / inside triangles = 22 / outside triangles = 23
+   int key,                   /* tandem of 2 = 0 / couples of 2 = 1 / siamese of 2 = 2
+                                 tandem of 3 = 4 / couples of 3 = 5 / siamese of 3 = 6
+                                 tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
+                                 box = 10 / diamond = 11 / skew = 18
+                                 out point triangles = 20 / in point triangles = 21
+                                 inside triangles = 22 / outside triangles = 23
                                  wave-based triangles triangles = 26 / tandem-based triangles = 27
                                  <anyone>-based triangles = 30 / 3x1 triangles = 31 */
    setup *result)
@@ -743,15 +747,15 @@ extern void tandem_couples_move(
          /* For <anyone>-based triangles in C1-phantom, we just use whatever selector was given. */
          fail("Can't find these triangles.");
    }
-   else if (key == 11) {
+   else if (key == 17) {
       np = 4;
       our_map_table = maps_isearch_dmdsome;
    }
-   else if (key == 10 || key == 3) {
+   else if (key == 16 || key == 18) {
       np = 4;
       our_map_table = maps_isearch_boxsome;
    }
-   else if (key >= 6) {
+   else if (key >= 8) {
       np = 4;
       our_map_table = maps_isearch_foursome;
    }
@@ -813,31 +817,11 @@ extern void tandem_couples_move(
    if (fractional && fraction > 4)
       fail("Can't do fractional twosome more than 4/4.");
 
-   if (key == 2) {
-      /* Siamese. */
-      uint32 j;
-
-      siamese_item *ptr;
-
-      for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
-         if (ptr->testkind == ss->kind && ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
-            warn(ptr->warning);
-            j = ptr->fixup;
-            goto foox;
-         }
-      }
-
-      fail("Can't do Siamese in this setup.");
-
-      foox:
-      ewmask ^= (j & allmask);
-      nsmask ^= (j & allmask);
-   }
-   else if (key == 10 || key == 3) {
+   if (key == 16 || key == 18) {
       ewmask = allmask;
       nsmask = 0;
    }
-   else if (key == 11) {
+   else if (key == 17) {
       if (ss->kind == s_ptpd || ss->kind == sdmd) {
          ewmask = allmask;
          nsmask = 0;
@@ -920,6 +904,26 @@ extern void tandem_couples_move(
          nsmask = 0;
       }
    }
+   else if (key & 2) {
+      /* Siamese. */
+      uint32 j;
+
+      siamese_item *ptr;
+
+      for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
+         if (ptr->testkind == ss->kind && ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
+            warn(ptr->warning);
+            j = ptr->fixup;
+            goto foox;
+         }
+      }
+
+      fail("Can't do Siamese in this setup.");
+
+      foox:
+      ewmask ^= (j & allmask);
+      nsmask ^= (j & allmask);
+   }
    else if (key & 1) {
       /* Couples -- swap masks.  Tandem -- do nothing. */
       uint32 j = ewmask;
@@ -963,12 +967,6 @@ extern void tandem_couples_move(
 
    tandstuff.np = np;
    tandstuff.virtual_setup.cmd = ss->cmd;
-
-   if (ss->cmd.cmd_assume.assumption == cr_wave_only && key == 1)
-      fail("Couples or tandem concept is inconsistent with phantom facing direction.");
-   else if (ss->cmd.cmd_assume.assumption == cr_jright || ss->cmd.cmd_assume.assumption == cr_jleft)
-      fail("Couples or tandem concept is inconsistent with phantom facing direction.");
-
    tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_none;
 
    /* There are a small number of assumptions that we can transform. */
@@ -978,6 +976,22 @@ extern void tandem_couples_move(
          tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_jright;
       else if (ss->cmd.cmd_assume.assumption == cr_ijleft)
          tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_jleft;
+   }
+
+   if (ss->cmd.cmd_assume.assumption == cr_jright || ss->cmd.cmd_assume.assumption == cr_jleft)
+      fail("Couples or tandem concept is inconsistent with phantom facing direction.");
+
+   if (key == 1) {
+      if (ss->cmd.cmd_assume.assumption == cr_wave_only)
+         fail("Couples or tandem concept is inconsistent with phantom facing direction.");
+      else if (ss->cmd.cmd_assume.assumption == cr_li_lo) {
+         if (ss->kind == s2x2 || ss->kind == s2x4)
+            tandstuff.virtual_setup.cmd.cmd_assume.assumption = ss->cmd.cmd_assume.assumption;
+      }
+      else if (ss->cmd.cmd_assume.assumption == cr_1fl_only) {
+         if (ss->kind == s1x4 || ss->kind == s2x4)
+            tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_couples_only;
+      }
    }
 
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;

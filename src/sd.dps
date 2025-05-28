@@ -181,7 +181,19 @@ APPLICATION_INTERFACE sd_dialog
    start_choices := ENUM:
       COMP => <RETURN> ;
       CHANGES_ONLY = false ;
-      CHOICES = (start$h1p2p start$s1p2p start$hstart start$sstart start$as_they_are start$toggle_conc start$toggle_act start$toggle_ignore start$toggle_retain start$change_outfile start$change_header_comment)
+      CHOICES = (
+         start$h1p2p
+         start$s1p2p
+         start$hstart
+         start$sstart
+         start$as_they_are
+         start$toggle_conc
+         start$toggle_act
+         start$toggle_ignore
+         start$toggle_retain
+         start$toggle_nowarn
+         start$change_outfile
+         start$change_header_comment)
       END
 
    task$selector_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
@@ -824,6 +836,7 @@ USER_INTERFACE sd_dialog
                 "Toggle active phantoms"    => start$toggle_act
                 "Toggle ignoreblanks"       => start$toggle_ignore
                 "Toggle retain after error" => start$toggle_retain
+                "Toggle nowarn mode" => start$toggle_nowarn
                 "Change output file"        => start$change_outfile
                 "Change title"              => start$change_header_comment) ;
             HELP_TEXT = "You are about to start a sequence."

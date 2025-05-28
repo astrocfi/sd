@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 92
+#define DATABASE_FORMAT_VERSION 94
 
 
 
@@ -185,6 +185,7 @@ typedef enum {
    s_rigger,
    s3x4,
    s2x6,
+   s_d3x4,
    s1p5x8,   /* internal use only */
    s2x8,
    s4x4,
@@ -284,6 +285,8 @@ typedef enum {
    b_4x3,
    b_2x6,
    b_6x2,
+   b_d3x4,
+   b_d4x3,
    b_2x8,
    b_8x2,
    b_4x4,
@@ -431,6 +434,9 @@ typedef enum {
    cr_couples_only,
    cr_3x3couples_only,
    cr_4x4couples_only,
+   cr_ckpt_miniwaves,
+   cr_ctr_miniwaves,
+   cr_ctr_couples,
    cr_awkward_centers,
    cr_diamond_like,
    cr_qtag_like,

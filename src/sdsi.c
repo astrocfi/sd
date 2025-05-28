@@ -857,6 +857,8 @@ extern long_boolean open_session(int argc, char **argv)
             { diagnostic_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "singlespace") == 0)
             { singlespace_mode = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "no_warnings") == 0)
+            { nowarn_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "concept_levels") == 0)
             { allowing_all_concepts = TRUE; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)

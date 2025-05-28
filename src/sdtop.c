@@ -40,6 +40,7 @@ typedef struct {
 typedef struct grilch {
    Const warning_index warning;
    Const int forbidden_elongation;   /* Low 2 bits = elongation bits to forbid; "4" bit = must set elongation. */
+                           /* Also, the "8" bit means to use "gather" and do this the other way. */
    Const expand_thing *expand_lists;
    Const setup_kind kind;
    Const uint32 live;
@@ -48,15 +49,27 @@ typedef struct grilch {
    struct grilch *next;
 } full_expand_thing;
 
-Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
+Private expand_thing exp_1x8_rig_stuff     = {{6, 7, -1, -1, 2, 3, -1, -1}, 8, s1x8, s_rigger, 0};
+Private expand_thing exp_2x4_rig_stuff     = {{-1, 0, 1, -1, -1, 4, 5, -1}, 8, s2x4, s_rigger, 0};
+Private expand_thing exp_1x8_bone_stuff    = {{-1, -1, 7, 6, -1, -1, 3, 2}, 8, s1x8, s_bone, 0};
+Private expand_thing exp_2x4_bone_stuff    = {{0, -1, -1, 1, 4, -1, -1, 5}, 8, s2x4, s_bone, 0};
+Private expand_thing exp_3x4_bigd_stuff    = {{-1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 8, 9}, 12, s3x4, sbigdmd, 1};
+Private expand_thing exp_dmd_3x1d_stuff    = {{7, 2, 3, 6}, 4, sdmd, s3x1dmd, 1};
+Private expand_thing exp_1x2_3x1d_stuff    = {{2, 6}, 2, s1x2, s3x1dmd, 0};
 Private expand_thing exp_3x4_4dm_stuff     = {{0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, 12, s3x4, s4dmd, 0};
+Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
 Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, s_qtag, s4dmd, 0};
 Private expand_thing exp_3x1d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
 Private expand_thing exp_1x2_3d_stuff      = {{11, 5}, 2, s1x2, s3dmd, 0};
 Private expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
 Private expand_thing exp_4x4_4dm_stuff_b   = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
 Private expand_thing exp_2x4_2x6_stuff     = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
+Private expand_thing exp_2x2_2x4_stuff     = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
+Private expand_thing exp_1x4_1x8_stuff     = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
+Private expand_thing exp_1x4_bone_stuff    = {{6, 7, 2, 3}, 4, s1x4, s_bone, 0};
+Private expand_thing exp_1x2_1x8_stuff     = {{2, 6}, 2, s1x2, s1x8, 0};
 Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
+Private expand_thing exp_2x3_qtg_stuff     = {{5, 7, 0, 1, 3, 4}, 6, s2x3, s_qtag, 1};
 Private expand_thing exp_2x6_2x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
 Private expand_thing exp_1x8_1x12_stuff    = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
 Private expand_thing exp_3x4_3x8_stuff     = {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23}, 12, s3x4, s3x8, 0};
@@ -75,7 +88,7 @@ Private expand_thing exp_1x8_1x10_stuff    = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8,
 Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s2x6, s4x6, 0};
 Private expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, 16, s4x4, s4x6, 0};
 Private expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, s4x4, s4x6, 1};
-Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
+Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, s2x4, s2x8, 0};
 Private expand_thing exp_3x4_4x5_stuff     = {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17}, 12, s3x4, s4x5, 1};
 Private expand_thing exp_2x5_4x5_stuff     = {{9, 8, 7, 6, 5, 19, 18, 17, 16, 15}, 10, s2x5, s4x5, 0};
 Private expand_thing exp_2x4_4x4_stuff1    = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
@@ -194,13 +207,16 @@ extern void update_id_bits(setup *ss)
 }
 
 
-Private expand_thing rear_wave_stuff = {{3, 0, 1, 2}, 4, nothing, s2x2, 0};
 Private expand_thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, nothing, s4x4, 0};
 Private expand_thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, 16, nothing, s_thar, 0};
-Private expand_thing rear_bone_stuff = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, nothing, s2x4, 0};
 Private expand_thing rear_bigd_stuff1 = {{-1, -1, 10, 11, 1, 0, -1, -1, 4, 5, 7, 6}, 12, nothing, s3x4, 1};
 Private expand_thing rear_bigd_stuff2 = {{8, 9, 10, 11, -1, -1, 2, 3, 4, 5, -1, -1}, 12, nothing, s3x4, 1};
-Private expand_thing rear_wing_stuff = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, nothing, s2x4, 0};
+Private expand_thing rear_bone_stuffa = {{0, 5, 7, 6, 4, 1, 3, 2}, 8, s1x8, s_bone, 0};
+Private expand_thing rear_bone_stuffb = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, s_bone, s2x4, 0};
+Private expand_thing rear_bone_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, 8, s_bone, s_rigger, 0};
+Private expand_thing rear_rig_stuffa = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, s_rigger, s2x4, 0};
+Private expand_thing rear_rig_stuffb = {{3, 6, 4, 5, 7, 2, 0, 1}, 8, s_rigger, s1x8, 0};
+Private expand_thing rear_rig_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, 8, s_rigger, s_bone, 0};
 Private expand_thing rear_tgl4a_stuff = {{2, 3, 0, 1}, 4, nothing, s2x2, 0};
 Private expand_thing rear_tgl4b_stuff = {{2, 3, 1, 0}, 4, nothing, s1x4, 1};
 Private expand_thing rear_c1a_stuff = {{0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1, 6, -1, 7, -1}, 16, nothing, s2x4, 0};
@@ -209,29 +225,25 @@ Private expand_thing rear_c1c_stuff = {{6, -1, 7, -1, 0, -1, 1, -1, 2, -1, 3, -1
 Private expand_thing rear_c1d_stuff = {{-1, 7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5}, 16, nothing, s2x4, 1};
 Private expand_thing rear_c1e_stuff = {{3, -1, 1, -1, 7, -1, 5, -1, 11, -1, 9, -1, 15, -1, 13, -1}, 16, nothing, s_c1phan, 0};
 Private expand_thing rear_c1f_stuff = {{-1, 0, -1, 2, -1, 4, -1, 6, -1, 8, -1, 10, -1, 12, -1, 14}, 16, nothing, s_c1phan, 0};
-Private expand_thing rear_miniwave_stuff = {{1, 0}, 2, nothing, s1x2, 1};
-Private expand_thing rear_2x4_stuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, nothing, s2x4, 1};
-Private expand_thing rear_col_stuff = {{0, 3, 6, 5, 4, 7, 2, 1}, 8, nothing, s1x8, 0};
 Private expand_thing rear_vrbox_stuff = {{1, 0, 3, 2}, 4, nothing, s1x4, 1};
 Private expand_thing rear_hrbox_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
-Private expand_thing rear_gwave_stuff = {{7, 0, 1, 6, 3, 4, 5, 2}, 8, nothing, s2x4, 0};
 Private expand_thing rear_qtag_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s2x4, 1};
 Private expand_thing rear_ptpd_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, nothing, s1x8, 0};
 Private expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
 
-Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, nothing, s2x4, 0};
+Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 0};
 Private expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
 Private expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
-Private expand_thing step_1x2_stuff = {{0, 1}, 2, nothing, s1x2, 1};
-Private expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, nothing, s1x4, 0};
+Private expand_thing step_1x2_stuff = {{0, 1}, 2, s1x2, s1x2, 1};
+Private expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, s2x2, s1x4, 0};
 Private expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
-Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
-Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8, 0};
+Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, s2x4, s2x4, 1};
+Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, s2x4, s1x8, 0};
 Private expand_thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, 8, nothing, s_bone, 0};
 Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
 Private expand_thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s_rigger, 0};
-Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
-Private expand_thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, nothing, s_rigger, 0};
+Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, s_bone, s1x8, 0};
+Private expand_thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, s_bone, s_rigger, 0};
 Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
 
 Private expand_thing step_phan1_stuff = {{-1, 7, -1, 6, -1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4}, 16, nothing, s2x4, 1};
@@ -254,18 +266,23 @@ Private full_expand_thing step_qtag_pair     = {warn__none,       0, &step_tby_s
 
 
 static full_expand_thing touch_init_table1[] = {
-   {warn__rear_back,       0, &rear_miniwave_stuff, s1x2,      0xFUL,        0x2UL, ~0UL},      /* Rear back from a miniwave to facing people. */
+   {warn__rear_back,       8, &step_1x2_stuff,   s1x2,         0xFUL,        0x2UL, ~0UL},      /* Rear back from a miniwave to facing people. */
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xDAUL, ~0UL},      /* Rear back from a 4-person triangle to a "split square thru" setup. */
-   {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xDAUL, ~0UL},      /* Rear back from a 4-person triangle to a "split square thru" setup. */
+   {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD2UL, ~0UL},      /* Two similar ones with miniwave base for funny square thru. */
+   {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD8UL, ~0UL},         /* (The base couldn't want to rear back -- result would be stupid.) */
    {warn__awful_rear_back, 0, &rear_tgl4b_stuff, s_trngl4,    0xFFUL,       0x22UL, ~0UL},      /* Rear back from a 4-person triangle to a single 8 chain. */
-   {warn__rear_back,       0, &rear_gwave_stuff, s1x8,      0xFFFFUL,     0x2882UL, ~0UL},      /* Rear back from a grand wave to facing lines. */
-   {warn__some_rear_back,  0, &rear_bone_stuff, s_bone,     0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Centers rear back from a "bone" to lines facing or "split square thru" setup. */
+   {warn__rear_back,       8, &step_li_stuff,    s1x8,      0xFFFFUL,     0x2882UL, ~0UL},      /* Rear back from a grand wave to facing lines. */
+   {warn__some_rear_back,  8, &rear_bone_stuffa, s_bone,    0xFFFFUL,     0x55F5UL, 0xF5F5UL},  /* Ends rear back from a "bone" to grand 8-chain or whatever. */
+   {warn__some_rear_back,  0, &rear_bone_stuffb, s_bone,    0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Centers rear back from a "bone" to lines facing or "split square thru" setup. */
+   {warn__rear_back,       0, &rear_bone_stuffc, s_bone,    0xFFFFUL,     0x58F2UL, 0xFFFFUL},  /* All rear back from a "bone" to a "rigger". */
    {warn__rear_back,       0, &rear_ohh_stuff, s4x4,    0x3C3C3C3CUL, 0x1C203408UL, ~0UL},      /* Rear back from an alamo wave to crossed single 8-chains. */
-   {warn__rear_back,       0, &rear_2x4_stuff, s2x4,        0xFFFFUL,     0x2288UL, ~0UL},      /* Rear back from parallel waves to an 8 chain. */
-   {warn__awful_rear_back, 0, &rear_col_stuff,s2x4,         0xFFFFUL,     0x55FFUL, ~0UL},      /* Rear back from columns to end-to-end single 8-chains. */
-   {warn__awful_rear_back, 0, &rear_vrbox_stuff,s2x2,         0xFFUL,       0x28UL, ~0UL},      /* Rear back from a right-hand box to a single 8 chain. */
-   {warn__awful_rear_back, 0, &rear_hrbox_stuff,s2x2,         0xFFUL,       0x5FUL, ~0UL},
-   {warn__some_rear_back,  0, &rear_wing_stuff,s_rigger,    0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
+   {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFFFFUL,     0x2288UL, ~0UL},      /* Rear back from parallel waves to an 8 chain. */
+   {warn__awful_rear_back, 8, &step_1x8_stuff, s2x4,        0xFFFFUL,     0x55FFUL, ~0UL},      /* Rear back from columns to end-to-end single 8-chains. */
+   {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFUL,       0x28UL, ~0UL},      /* Rear back from a right-hand box to a single 8 chain. */
+   {warn__awful_rear_back, 0, &rear_hrbox_stuff, s2x2,        0xFFUL,       0x5FUL, ~0UL},
+   {warn__some_rear_back,  0, &rear_rig_stuffa,s_rigger,    0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
+   {warn__some_rear_back,  0, &rear_rig_stuffb,s_rigger,    0xFFFFUL,     0x55F5UL, 0xF5F5UL},  /* Centers rear back from a "rigger" to grand 8-chain or whatever. */
+   {warn__rear_back,       0, &rear_rig_stuffc,s_rigger,    0xFFFFUL,     0x58F2UL, 0xFFFFUL},  /* All rear back from a "rigger" to a "bone". */
    {warn__some_rear_back,  0, &rear_bigd_stuff1,sbigdmd,  0x0FF0FFUL,   0x0520F8UL, ~0UL},      /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
    {warn__some_rear_back,  0, &rear_bigd_stuff1,sbigdmd,  0x0FF0FFUL,   0x082028UL, ~0UL},
    {warn__some_rear_back,  0, &rear_bigd_stuff2,sbigdmd,  0xFF0FF0UL,   0x2F0850UL, ~0UL},      /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
@@ -281,7 +298,7 @@ static full_expand_thing touch_init_table1[] = {
    {warn__some_rear_back,  0, &rear_c1d_stuff,s_c1phan, 0x33333333UL, 0x20200202UL, ~0UL},
    {warn__rear_back,       0, &rear_c1e_stuff,s_c1phan, 0xCCCCCCCCUL, 0x084C80C4UL, ~0UL},
    {warn__rear_back,       0, &rear_c1f_stuff,s_c1phan, 0x33333333UL, 0x13203102UL, ~0UL},
-   {warn__rear_back,       4, &rear_wave_stuff, s1x4,         0xFFUL,       0x28UL, ~0UL},      /* Rear back from a wave to facing couples. */
+   {warn__rear_back,     4+8, &step_2x2v_stuff, s1x4,         0xFFUL,       0x28UL, ~0UL},      /* Rear back from a wave to facing couples. */
    {warn__none,            0, (expand_thing *) 0, nothing}
 };
 
@@ -303,10 +320,10 @@ static full_expand_thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_bigd_stuff1,   sbigdmd,    0xFF0FF0UL,   0x280820UL, ~0UL},      /* Some people touch from horrible "T"'s. */
    {warn__some_touch, 0, &step_bigd_stuff2,   sbigdmd,    0x0FF0FFUL,   0x082028UL, ~0UL},
    {warn__none,       0, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},      /* Check for stepping to a grand wave from lines facing. */
+   {warn__none,       0, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},         /* Same, with missing people. */
+   {warn__none,       0, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},         /* Same, with missing people. */
    {warn__none,       0, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},  /* Check for stepping to a bone from a squared set or whatever. */
    {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0xFFFFUL,     0x963CUL, ~0UL},      /* Check for stepping to rigger from suitable T-bone. */
-   {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0xC3C3UL,     0x8200UL, ~0UL},      /* Same, with missing people. */
-   {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0x3C3CUL,     0x143CUL, ~0UL},      /* Same, with missing people. */
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0xFFUL,       0xD7UL, ~0UL},      /* Triangle base, who are facing, touch. */
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0xF0UL,       0xD0UL, ~0UL},      /* Same, with missing people. */
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0x0FUL,       0x07UL, ~0UL},      /* Same, with missing people. */
@@ -318,8 +335,8 @@ static full_expand_thing touch_init_table3[] = {
    {warn__none,       0, &step_bone_rigstuff, s_bone,       0xF0F0UL,     0xAD07UL, 0xF0F0UL},  /* Same, with missing people. */
    {warn__none,       0, &step_bone_rigstuff, s_bone,       0x0F0FUL,     0xAD07UL, 0x0F0FUL},  /* Same, with missing people. */
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,     0xFFFFUL,     0xA802UL, 0xFFFFUL},  /* Centers touch from a "rigger" to a grand wave. */
-   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,     0xF0F0UL,     0xA802UL, 0xF0F0UL},  /* Same, with missing people. */
-   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,     0x0F0FUL,     0xA802UL, 0x0F0FUL},  /* Same, with missing people. */
+   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,     0xF0F0UL,     0xA802UL, 0xF0F0UL},     /* Same, with missing people. */
+   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,     0x0F0FUL,     0xA802UL, 0x0F0FUL},     /* Same, with missing people. */
    {warn__none,       0, &step_1x2_stuff,     s1x2,            0xFUL,        0x7UL, 0xFUL},     /* Check for stepping to a miniwave from people facing. */
    {warn__none,       0, &step_1x4_stuff,     s1x4,           0xFFUL,       0x7DUL, 0xFFUL},    /* Check for stepping to a box from a 1x4 single 8 chain -- */
    {warn__none,       0, &step_1x4_stuff,     s1x4,           0xF0UL,       0x7DUL, 0xF0UL},    /*    we allow some phantoms.  This is what makes */
@@ -328,8 +345,8 @@ static full_expand_thing touch_init_table3[] = {
    {warn__none,       0, &step_1x4_side_stuff, s1x4,          0xFFUL,       0x5FUL, 0xFFUL},    /*    from a single-file DPT or trade-by -- */
    {warn__none,       0, &step_1x4_side_stuff, s1x4,          0x33UL,       0x13UL, 0x33UL},    /*    we allow some phantoms, as above. */
    {warn__none,       0, &step_1x8_stuff,      s1x8,        0xFFFFUL,     0x7DD7UL, 0xFFFFUL},  /* Check for stepping to a column from a 1x8 single 8 chain. */
-   {warn__none,       0, &step_1x8_stuff,      s1x8,        0xF0F0UL,     0x7DD7UL, 0xF0F0UL},
-   {warn__none,       0, &step_1x8_stuff,      s1x8,        0x0F0FUL,     0x7DD7UL, 0x0F0FUL},
+   {warn__none,       0, &step_1x8_stuff,      s1x8,        0xF0F0UL,     0x7DD7UL, 0xF0F0UL},     /* Same, with missing people. */
+   {warn__none,       0, &step_1x8_stuff,      s1x8,        0x0F0FUL,     0x7DD7UL, 0x0F0FUL},     /* Same, with missing people. */
    {warn__none,       0, &step_8ch_stuff,      s2x4,        0xFFFFUL,     0x77DDUL, 0xFFFFUL},  /* Check for stepping to parallel waves from an 8 chain. */
    {warn__none,       0, &step_8ch_stuff,      s2x4,        0xF0F0UL,     0x77DDUL, 0xF0F0UL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,        0x0F0FUL,     0x77DDUL, 0x0F0FUL},
@@ -475,34 +492,34 @@ extern void touch_or_rear_back(
             }
             break;
       }
+   }
 
-      /* We didn't find anything at all.  But we still need to raise an error
-         if the caller said "left spin the top" when we were in a right-hand wave. */
+   /* We didn't find anything at all.  But we still need to raise an error
+      if the caller said "left spin the top" when we were in a right-hand wave. */
 
-      if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-         uint32 aa;
-         uint32 bb = ~0UL;
-         long_boolean other_test = TRUE;
+   if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+      uint32 aa;
+      uint32 bb = ~0UL;
+      long_boolean other_test = TRUE;
 
-         switch (scopy->kind) {
-            case s2x2:
-               other_test = (directions & livemask) != (0x5FUL & livemask);
-               aa = 0x28UL;
-               break;
-            case s2x4:
-               other_test = (directions & livemask) != (0x55FFUL & livemask);
-               aa = 0x2288UL;
-               break;
-            case s_bone:   aa = 0x58F2UL; break;
-            case s_rigger: aa = 0x58F2UL; break;
-            case s1x2:     aa = 0x2UL; break;
-            case s1x4:     aa = 0x28UL; break;
-            case s1x8:     aa = 0x2882UL; break;
-            case s_qtag:   aa = 0x0802UL; bb = 0x0F0F; break;
-         }
-         if ((directions & livemask & bb) != (aa & livemask) && other_test)
-            fail("Setup is not left-handed.");
+      switch (scopy->kind) {
+         case s2x2:
+            other_test = (directions & livemask) != (0x5FUL & livemask);
+            aa = 0x28UL;
+            break;
+         case s2x4:
+            other_test = (directions & livemask) != (0x55FFUL & livemask);
+            aa = 0x2288UL;
+            break;
+         case s_bone:   aa = 0x58F2UL; break;
+         case s_rigger: aa = 0x58F2UL; break;
+         case s1x2:     aa = 0x2UL; break;
+         case s1x4:     aa = 0x28UL; break;
+         case s1x8:     aa = 0x2882UL; break;
+         case s_qtag:   aa = 0x0802UL; bb = 0x0F0F; break;
       }
+      if ((directions & livemask & bb) != (aa & livemask) && other_test)
+         fail("Setup is not left-handed.");
    }
 
    return;
@@ -521,9 +538,18 @@ extern void touch_or_rear_back(
    scopy->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    stemp = *scopy;
    clear_people(scopy);
-   scatter(scopy, &stemp, zptr->source_indices, zptr->size-1, zptr->rot * 033);
-   scopy->rotation += zptr->rot;
-   scopy->kind = zptr->outer_kind;
+
+   if (tptr->forbidden_elongation & 8) {
+      gather(scopy, &stemp, zptr->source_indices, zptr->size-1, zptr->rot * 011);
+      scopy->rotation -= zptr->rot;
+      scopy->kind = zptr->inner_kind;
+   }
+   else {
+      scatter(scopy, &stemp, zptr->source_indices, zptr->size-1, zptr->rot * 033);
+      scopy->rotation += zptr->rot;
+      scopy->kind = zptr->outer_kind;
+   }
+
    canonicalize_rotation(scopy);
 }
 
@@ -936,10 +962,8 @@ extern void normalize_setup(setup *ss, normalize_action action)
          compress_setup(&exp_2x4_c1phan_stuff2, ss);
       }
    }
-   else if (ss->kind == s3x4) {
-      if ((!ss->people[0].id1) && (!ss->people[3].id1) && (!ss->people[6].id1) && (!ss->people[9].id1))
-         compress_setup(&exp_qtg_3x4_stuff, ss);
-   }
+   else if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1))
+      compress_setup(&exp_qtg_3x4_stuff, ss);
    else if (ss->kind == s2x8) {  /* This might leave a 2x6, which could then be reduced to 2x4, below. */
       if (!(ss->people[7].id1 | ss->people[8].id1 | ss->people[0].id1 | ss->people[15].id1)) {
          compress_setup(&exp_2x6_2x8_stuff, ss);
@@ -964,46 +988,29 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
    }
 
-   if (ss->kind == s2x6) {
-      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
-         compress_setup(&exp_2x4_2x6_stuff, ss);
-      }
-   }
+   if (ss->kind == s2x6 && !(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
+      compress_setup(&exp_2x4_2x6_stuff, ss);
 
    /* Before a merge, we remove phantoms very aggressively.  This is the highest level. */
 
    if (action >= normalize_before_merge) {
-      if ((ss->kind == s2x4) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
+      if (ss->kind == s2x4 && !(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))
          /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
-         ss->kind = s2x2;
-         (void) copy_person(ss, 0, ss, 1);
-         (void) copy_person(ss, 1, ss, 2);
-         (void) copy_person(ss, 2, ss, 5);
-         (void) copy_person(ss, 3, ss, 6);
+         compress_setup(&exp_2x2_2x4_stuff, ss);
+      else if (ss->kind == s1x8 && !(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
+         if (!(ss->people[3].id1 | ss->people[7].id1))
+            compress_setup(&exp_1x2_1x8_stuff, ss);
+         else
+            compress_setup(&exp_1x4_1x8_stuff, ss);
       }
-      else if ((ss->kind == s1x8) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
-         ss->kind = s1x4;
-         (void) copy_person(ss, 0, ss, 3);
-         (void) copy_person(ss, 1, ss, 2);
-         (void) copy_person(ss, 2, ss, 7);
-         (void) copy_person(ss, 3, ss, 6);
-         if (!(ss->people[0].id1 | ss->people[2].id1)) {   /* See if we can compress further. */
-            ss->kind = s1x2;
-            (void) copy_person(ss, 0, ss, 1);
-            (void) copy_person(ss, 1, ss, 3);
-         }
-      }
-      else if ((ss->kind == s_rigger) && (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1))) {
+      else if (ss->kind == s_rigger && !(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
          ss->kind = s2x2;
          (void) copy_person(ss, 2, ss, 4);
          (void) copy_person(ss, 3, ss, 5);
       }
-      else if ((ss->kind == s_bone) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
-         ss->kind = s1x4;
-         (void) copy_person(ss, 0, ss, 6);
-         (void) copy_person(ss, 1, ss, 7);
-      }
-      else if ((ss->kind == s_crosswave) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1))) {
+      else if (ss->kind == s_bone && !(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))
+         compress_setup(&exp_1x4_bone_stuff, ss);
+      else if (ss->kind == s_crosswave && !(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1)) {
          ss->kind = s1x2;
          ss->rotation++;
          (void) copy_rot(ss, 0, ss, 3, 033);
@@ -1031,6 +1038,8 @@ extern void normalize_setup(setup *ss, normalize_action action)
             (void) copy_person(ss, 1, ss, 7);
          }
       }
+      else if ((ss->kind == s_qtag) && (!(ss->people[2].id1 | ss->people[6].id1)))
+         compress_setup(&exp_2x3_qtg_stuff, ss);
       else if (ss->kind == s_hrglass && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
          if (!(ss->people[2].id1 | ss->people[6].id1)) {
             ss->kind = s1x2;
@@ -1142,61 +1151,37 @@ In any case, let's try it without this.
       else if (ss->kind == sdmd) {
          /* This makes it possible to do "own the <points>, trade by flip the diamond" from
             a single diamond. */
-         if (!(ss->people[1].id1 | ss->people[3].id1)) {
+         if (!(ss->people[1].id1 | ss->people[3].id1))
             /* We do NOT compress to a 1x2 -- see comment above. */
             ss->kind = s1x4;   /* That's all it takes! */
-         }
       }
       else if (ss->kind == s_rigger) {
          /* This makes it possible to do "ends explode" from a rigger. */
-         if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
-            ss->kind = s1x8;
-            (void) copy_person(ss, 0, ss, 6);
-            (void) copy_person(ss, 1, ss, 7);
-            (void) copy_person(ss, 4, ss, 2);
-            (void) copy_person(ss, 5, ss, 3);
-            clear_person(ss, 2);
-            clear_person(ss, 3);
-            clear_person(ss, 6);
-            clear_person(ss, 7);
-         }
+         if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))
+            compress_setup(&exp_1x8_rig_stuff, ss);
+         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1))
+            compress_setup(&exp_2x4_rig_stuff, ss);
+      }
+      else if (ss->kind == s_bone) {
+         if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))
+            compress_setup(&exp_1x8_bone_stuff, ss);
+         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1))
+            compress_setup(&exp_2x4_bone_stuff, ss);
       }
       else if (ss->kind == sbigdmd) {
          /* If only the center 1x4 is present, turn it into a 3x4.  If only the "wings" are
             present, turn it into a 2x6. */
          if (!(   ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1 |
-                  ss->people[6].id1 | ss->people[7].id1 | ss->people[10].id1 | ss->people[11].id1)) {
-            ss->kind = s3x4;
-            ss->rotation++;
-            (void) copy_rot(ss, 10, ss, 2, 033);
-            (void) copy_rot(ss, 11, ss, 3, 033);
-            (void) copy_rot(ss, 4, ss, 8, 033);
-            (void) copy_rot(ss, 5, ss, 9, 033);
-            clear_person(ss, 2);
-            clear_person(ss, 3);
-            clear_person(ss, 8);
-            clear_person(ss, 9);
-            canonicalize_rotation(ss);
-         }
-         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1)) {
+                  ss->people[6].id1 | ss->people[7].id1 | ss->people[10].id1 | ss->people[11].id1))
+            compress_setup(&exp_3x4_bigd_stuff, ss);
+         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1))
             ss->kind = s2x6;     /* That's all! */
-         }
       }
-      else if ((ss->kind == s3x1dmd) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
-         if (!(ss->people[3].id1 | ss->people[7].id1)) {
-            ss->kind = s1x2;
-            (void) copy_person(ss, 0, ss, 2);
-            (void) copy_person(ss, 1, ss, 6);
-         }
-         else {
-            ss->kind = sdmd;
-            ss->rotation++;
-            (void) copy_rot(ss, 0, ss, 3, 033);
-            (void) copy_rot(ss, 1, ss, 6, 033);
-            (void) copy_rot(ss, 3, ss, 2, 033);
-            (void) copy_rot(ss, 2, ss, 7, 033);
-            canonicalize_rotation(ss);
-         }
+      else if (ss->kind == s3x1dmd && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         if (!(ss->people[3].id1 | ss->people[7].id1))
+            compress_setup(&exp_1x2_3x1d_stuff, ss);
+         else
+            compress_setup(&exp_dmd_3x1d_stuff, ss);
       }
       else if (ss->kind == s_ptpd) {
          /* This makes it possible to do "own the <points>, trade by flip the diamond" from

@@ -65,6 +65,7 @@ and the following external variables:
    collision_person2
    enable_file_writing
    singlespace_mode
+   nowarn_mode
    cardinals
    ordinals
    selector_list
@@ -119,6 +120,7 @@ uint32 collision_person1;
 uint32 collision_person2;
 long_boolean enable_file_writing;
 long_boolean singlespace_mode;
+long_boolean nowarn_mode;
 
 Cstring cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (Cstring) 0};
 Cstring ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (Cstring) 0};
@@ -335,6 +337,9 @@ static restriction_thing cwave_2x8     = {16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 
 static restriction_thing cmagic_2x3    = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns of 3 */
 static restriction_thing cmagic_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
 
+static restriction_thing cwave_sh6     = {6, {1, 0, 3, 2, 5, 4},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for centers tandem in wave */
+static restriction_thing bone6_1x4     = {6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for ends tandem in wave */
+
 static restriction_thing lio_2x4       = {8, {4, 0, 5, 1, 6, 2, 7, 3},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for lines in or lines out */
 static restriction_thing invert_1x4    = {4, {0, 1, 2, 3},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for single inverted line */
 
@@ -491,6 +496,7 @@ static restr_initializer restr_init_table[] = {
    {s_qtag, cr_wave_only, &wave_qtag},
    {s_qtag, cr_miniwaves, &miniwave_qtg},
    {s_qtag, cr_2fl_only, &two_faced_qtag},
+   {s_bone6, cr_wave_only, &bone6_1x4},
    {s2x8, cr_wave_only, &wave_2x8},
    {s2x8, cr_4x4_2fl_only, &two_faced_4x4_2x8},
    {s1x16, cr_4x4couples_only, &cplsof4_2x8},
@@ -623,6 +629,10 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          case s_qtag:
             if (t.assumption == cr_wave_only)
                restr_thing_ptr = &cwave_qtg;
+            break;
+         case s_short6:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &cwave_sh6;
             break;
          case s_trngl:
             if (t.assumption == cr_wave_only)
@@ -1087,17 +1097,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
    long_boolean use_cross_name = FALSE;
    long_boolean use_magic_name = FALSE;
    long_boolean use_intlk_name = FALSE;
-   long_boolean comma_after_next_concept = FALSE;
-
-
+   int comma_after_next_concept = 0;    /* 1 for comma, 2 for the word "all". */
+   int did_comma = 0;                   /* Same as comma_after_next_concept. */
    long_boolean did_concept = FALSE;
    long_boolean last_was_t_type = FALSE;
    long_boolean last_was_l_type = FALSE;
-   long_boolean did_comma = FALSE;
    long_boolean request_final_space = FALSE;
-
-
-
 
    local_cptr = thing;
 
@@ -1121,19 +1126,19 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          request_final_space = FALSE;
          last_was_t_type = FALSE;
          last_was_l_type = FALSE;
-         comma_after_next_concept = FALSE;
+         comma_after_next_concept = 0;
       }
       else if (k > marker_end_of_list) {
          /* This is a concept. */
 
          long_boolean force = FALSE;
-         long_boolean request_comma_after_next_concept = FALSE;
+         int request_comma_after_next_concept = 0;           /* Same as comma_after_next_concept. */
 
          /* Some concepts look better with a comma after them. */
 
          if (item->concparseflags & CONCPARSE_PARSE_F_TYPE) {
             /* This is an "F" type concept. */
-            comma_after_next_concept = TRUE;
+            comma_after_next_concept = 1;
             last_was_t_type = FALSE;
             force = did_concept && !last_was_l_type;
             last_was_l_type = FALSE;
@@ -1152,14 +1157,14 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          }
          else {
             /* This is a "T" type concept. */
-            comma_after_next_concept |= did_concept;
+            if (did_concept) comma_after_next_concept = 1;
             force = last_was_t_type && !last_was_l_type;
             last_was_t_type = TRUE;
             last_was_l_type = FALSE;
             did_concept = TRUE;
          }
 
-         if (force && !did_comma) writestuff(", ");
+         if (force && did_comma == 0) writestuff(", ");
          else if (request_final_space) writestuff(" ");
 
          next_cptr = local_cptr->next;    /* Now it points to the thing after this concept. */
@@ -1214,7 +1219,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             did_concept = FALSE;                /* We're starting over. */
             last_was_t_type = FALSE;
             last_was_l_type = FALSE;
-            comma_after_next_concept = FALSE;
+            comma_after_next_concept = 0;
             request_final_space = TRUE;
 
             if (k == concept_centers_and_ends) {
@@ -1321,19 +1326,25 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             }
          }
          else {
-            if (     (k == concept_nth_part && local_cptr->concept->value.arg1 == 8) ||      /* "DO THE <Nth> PART" */
-                     (k == concept_so_and_so_only && local_cptr->concept->value.arg1 == 11) ||    /* "<ANYONE> WORK" */
-                     (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||        /* If INVERT
-                                                               is followed by another concept, it must be SNAG or MYSTIC. */
-                     (k == concept_meta && (local_cptr->concept->value.arg1 == 3 || local_cptr->concept->value.arg1 == 7))) {   /* Initially/finally. */
-               request_comma_after_next_concept = TRUE;     /* These concepts require a comma after the following concept. */
+            if (     (k == concept_nth_part && local_cptr->concept->value.arg1 == 8) ||                /* "DO THE <Nth> PART" */
+                     (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||    /* If INVERT is followed by another concept,
+                                                                                                             it must be SNAG or MYSTIC. */
+                     (k == concept_meta && (local_cptr->concept->value.arg1 == 3 || local_cptr->concept->value.arg1 == 7))) {   /* INITIALLY/FINALLY. */
+               request_comma_after_next_concept = 1;     /* These concepts require a comma after the following concept. */
+            }
+            else if (k == concept_so_and_so_only && local_cptr->concept->value.arg1 == 11) {         /* "<ANYONE> WORK" */
+               request_comma_after_next_concept = 2;     /* This concept requires the word "all" after the following concept. */
             }
 
             writestuff_with_decorations(local_cptr, (Const char *) 0);
             request_final_space = TRUE;
          }
 
-         if (comma_after_next_concept) {
+         if (comma_after_next_concept == 2) {
+            writestuff(", ALL");
+            request_final_space = TRUE;
+         }
+         else if (comma_after_next_concept) {
             writestuff(",");
             request_final_space = TRUE;
          }
@@ -2094,11 +2105,13 @@ extern void write_history_line(int history_index, Const char *header, long_boole
    if ((1 << (warn__split_1x6 & 0x1F)) & this_item->warnings.bits[warn__split_1x6>>5])
       this_item->warnings.bits[warn__split_to_1x6s>>5] &= ~(1 << (warn__split_to_1x6s & 0x1F));
 
-   for (w=0 ; w<NUM_WARNINGS ; w++) {
-      if ((1 << (w & 0x1F)) & this_item->warnings.bits[w>>5]) {
-         writestuff("  Warning:  ");
-         writestuff(&warning_strings[w][1]);
-         newline();
+   if (!nowarn_mode) {
+      for (w=0 ; w<NUM_WARNINGS ; w++) {
+         if ((1 << (w & 0x1F)) & this_item->warnings.bits[w>>5]) {
+            writestuff("  Warning:  ");
+            writestuff(&warning_strings[w][1]);
+            newline();
+         }
       }
    }
 
@@ -2320,7 +2333,7 @@ extern long_boolean verify_restriction(
    int idx, limit, i, j, k;
    uint32 t;
    uint32 qa0, qa1, qa2, qa3;
-   uint32 qaa[4], qab[4];
+   uint32 qaa[4];
    uint32 pdir, qdir, pdirodd, qdirodd;
    uint32 dirtest[2];
    int phantom_count = 0;
@@ -2334,8 +2347,6 @@ extern long_boolean verify_restriction(
       case chk_wave:
          qaa[0] = tt.assump_both;
          qaa[1] = tt.assump_both << 1;
-         qab[0] = 0;
-         qab[2] = 0;
 
          for (idx=0; idx<rr->size; idx++) {
             if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
@@ -2345,6 +2356,10 @@ extern long_boolean verify_restriction(
             goto bad;
 
          if (rr->ok_for_assume) {
+            uint32 qab[4];
+            qab[0] = 0;
+            qab[2] = 0;
+
             for (idx=0; idx<rr->size; idx++)
                qab[idx&2] |= ss->people[rr->map1[idx]].id1;
 
@@ -2582,11 +2597,6 @@ extern long_boolean verify_restriction(
          qaa[0] = tt.assump_both;
          qaa[1] = tt.assump_both << 1;
 
-         for (idx=0; idx<rr->map2[0]; idx++) {
-            if ((t = ss->people[rr->map2[idx+1]].id1) != 0 && ((t ^ (idx << 1)) & 2) != 0)
-               goto bad;
-         }
-
          for (idx=0; idx<rr->size; idx++) {
             if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
          }
@@ -2594,7 +2604,65 @@ extern long_boolean verify_restriction(
          if ((qaa[0] & qaa[1] & 2) != 0)
             goto bad;
 
+         for (idx=0; idx<rr->map2[0]; idx++) {
+            if ((t = ss->people[rr->map2[idx+1]].id1) != 0 && ((t ^ (idx << 1)) & 2) != 0)
+               goto bad;
+         }
+
          for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto bad; }
+
+         if (rr->ok_for_assume) {
+            uint32 qab[4];
+            qab[0] = 0;
+            qab[2] = 0;
+
+            for (idx=0; idx<rr->size; idx++)
+               qab[idx&2] |= ss->people[rr->map1[idx]].id1;
+
+            if ((qab[0]|qab[2]) & 1) goto bad;
+
+            if (instantiate_phantoms) {
+               *failed_to_instantiate = FALSE;
+
+               if (qaa[0] == 0) fail("Need live person to determine handedness.");
+
+               else {
+                  if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
+                  else                   { pdir = d_south; qdir = d_north; }
+                  pdirodd = pdir; qdirodd = qdir;
+               }
+
+               for (i=0; i<rr->size; i++) {
+                  int p = rr->map1[i];
+   
+                  if (!ss->people[p].id1) {
+                     if (phantom_count >= 16) fail("Too many phantoms.");
+   
+                     ss->people[p].id1 =           (i&1) ?
+                                          ((i&2) ? qdirodd : qdir) :
+                                          ((i&2) ? pdirodd : pdir);
+   
+                     ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
+                     ss->people[p].id2 = 0;
+                  }
+                  else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                     fail("Active phantoms may only be used once.");
+               }
+
+               for (i=0; i<rr->map2[0]; i++) {
+                  int p = rr->map2[i+1];
+   
+                  if (!ss->people[p].id1) {
+                     if (phantom_count >= 16) fail("Too many phantoms.");
+                     ss->people[p].id1 = (i&1) ? d_south : d_north;
+                     ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
+                     ss->people[p].id2 = 0;
+                  }
+                  else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                     fail("Active phantoms may only be used once.");
+               }
+            }
+         }
 
          goto good;
       default:
@@ -3162,11 +3230,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       switch (ss->kind) {
          case s3x4:         /* This only handles lines; not columns -- we couldn't have "wavy" columns that were symmetric. */
+         case s_bone6:
          case s_trngl:
          case s_qtag:
             goto check_tt;
          case sdmd:
          case s_ptpd:
+         case s_short6:
             tt.assump_col = 1;
             goto check_tt;
       }

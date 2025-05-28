@@ -79,7 +79,7 @@ Private Const map_thing *get_map_from_code(uint32 map_encoding)
 
 
 Private void innards(
-   setup *ss,
+   setup_command *sscmd,
    Const map_thing *maps,
    long_boolean recompute_id,
    assumption_thing new_assume,
@@ -96,11 +96,11 @@ Private void innards(
    int arity = maps->arity;
    int insize = setup_attrs[maps->inner_kind].setup_limits+1;
    long_boolean nonisotropic_1x2 = FALSE;
-   uint32 mysticflag = ss->cmd.cmd_misc2_flags;
+   uint32 mysticflag = sscmd->cmd_misc2_flags;
    mpkind map_kind = maps->map_kind;
 
    clear_people(result);
-   ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__MYSTIFY_SPLIT | CMD_MISC2__MYSTIFY_INVERT);
+   sscmd->cmd_misc2_flags &= ~(CMD_MISC2__MYSTIFY_SPLIT | CMD_MISC2__MYSTIFY_INVERT);
 
    for (i=0; i<arity; i++) {
       if (x[i].kind != nothing) {
@@ -112,7 +112,7 @@ Private void innards(
                mirror = !mirror;
          }
 
-         x[i].cmd = ss->cmd;
+         x[i].cmd = *sscmd;
          x[i].rotation = 0;
          /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
          x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags & ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) | CMD_MISC__NO_EXPAND_MATRIX;
@@ -141,7 +141,7 @@ Private void innards(
             z[1].kind == s1x2 &&
             map_kind == MPKIND__SPLIT &&
             ((z[0].rotation ^ z[1].rotation) & 1) &&
-            !(ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)) {
+            !(sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)) {
       canonicalize_rotation(&z[0]);
       canonicalize_rotation(&z[1]);
       result->result_flags = get_multiple_parallel_resultflags(z, arity);
@@ -184,14 +184,21 @@ Private void innards(
       goto getout;
    }
 
-   if (  (map_kind == MPKIND__OVERLAP || map_kind == MPKIND__INTLK || map_kind == MPKIND__CONCPHAN) &&
-         (result->result_flags & (RESULTFLAG__SPLIT_AXIS_BIT << (vert & 1))))
-      warn(warn__did_not_interact);
+   if (map_kind == MPKIND__OVERLAP || map_kind == MPKIND__INTLK || map_kind == MPKIND__CONCPHAN) {
+      if (vert & 1) {
+         if (result->result_flags & ((RESULTFLAG__SPLIT_AXIS_BIT * 7) << RESULTFLAG__SPLIT_AXIS_SEPARATION))
+            warn(warn__did_not_interact);
+      }
+      else {
+         if (result->result_flags & (RESULTFLAG__SPLIT_AXIS_BIT * 7))
+            warn(warn__did_not_interact);
+      }
+   }
 
    /* See if we can put things back with the same map we used before. */
 
    if (z[0].kind == maps->inner_kind && (z[0].rotation&3) == 0) {
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
+      if (sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
          fail("Unnecessary use of matrix concept.");
       final_map = maps;
       result->rotation = 0;
@@ -230,7 +237,7 @@ Private void innards(
       canonicalize_rotation(&z[i]);
    }
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) {
+   if (sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) {
       int before_distance = setup_attrs[maps->inner_kind].bounding_box[(rot ^ vert) & 1];
       int after_distance = setup_attrs[z[0].kind].bounding_box[(z[0].rotation) & 1];
 
@@ -474,7 +481,7 @@ Private void innards(
 
    got_map:
 
-   if ((ss->cmd.cmd_misc_flags & CMD_MISC__OFFSET_Z) && final_map && (map_kind == MPKIND__OFFS_L_HALF || map_kind == MPKIND__OFFS_R_HALF)) {
+   if ((sscmd->cmd_misc_flags & CMD_MISC__OFFSET_Z) && final_map && (map_kind == MPKIND__OFFS_L_HALF || map_kind == MPKIND__OFFS_R_HALF)) {
       if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
       else final_map = 0;        /* Raise an error. */
    }
@@ -559,7 +566,6 @@ Private void innards(
    getout:
 
    canonicalize_rotation(result);
-   reinstate_rotation(ss, result);
 }
 
 
@@ -719,29 +725,31 @@ extern void divided_setup_move(
    }
 
    innards(
-         ss, maps, recompute_id, t,
+         &ss->cmd, maps, recompute_id, t,
          maps->map_kind == MPKIND__CONCPHAN && phancontrol == phantest_ctr_phantom_line && !v1flag,
          x, result);
 
-   /* Put in the splitting axis info, if appropriate. */
-   if (maps->map_kind == MPKIND__SPLIT)
-      result->result_flags |= RESULTFLAG__SPLIT_AXIS_BIT * (maps->vert+1);
+   /* "Innards" has returned with the splitting info correct for the subcalls, but
+      not taking into account the incoming rotation in "ss->rotation".  We need to
+      add onto that the splitting that we have just done, which also does not take
+      the incoming rotation into account. */
 
-   /* Here is where we turn the splitting axis bits into absolute orientation.  Recall that the stuff above
-      left those bits in a form that describes the splitting relative to the incoming setup.  For example, if the incoming setup
-      was a 2x4, bits 01 meant that it was split into boxes and 10 meant that it was split into 1x4's.  The only way to find out
-      the true splitting axis is to look at the rotation field of the incoming setup.  It is extremely inconvenient for clients
-      to do that, so we will do it now.
+   if (maps->map_kind == MPKIND__SPLIT) {
+      if (maps->vert & 1)
+         result->result_flags += RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION;
+      else
+         result->result_flags += RESULTFLAG__SPLIT_AXIS_BIT;
+   }
 
-      Note also that we may have altered the orientation of the incoming setup if we stepped to a wave (turning an 8 chain into
-      waves, for example.)  So a client couldn't even look at the incoming setup that it remembered giving us.  It would have
-      to look at what we wrote over the client's incoming setup.  So we make life easy by picking out the information from what
-      we wrote over the incoming setup. */
+   /* Now we reinstate the incoming rotation, which we have completely ignored up until
+      now.  This will give the result "absolute" orientation.  (That is, absolute
+      relative to the incoming "ss->rotation".  Some procedure (like a recursive call
+      from ourselves) could have stripped that out.)
 
-   /* Test for mask bits = 01 or 10, by adding 1 and testing "2" bit. */
+      This call will swap the SPLIT_AXIS fields if necessary, so that those fields
+      will show the splitting in "absolute space". */
 
-   if ((ss->rotation & 1) && ((result->result_flags + RESULTFLAG__SPLIT_AXIS_BIT) & (RESULTFLAG__SPLIT_AXIS_BIT << 1)))
-      result->result_flags ^= RESULTFLAG__SPLIT_AXIS_MASK;
+   reinstate_rotation(ss, result);
 }
 
 
@@ -798,7 +806,8 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    x[2].kind = kn;
 
    t.assumption = cr_none;
-   innards(ss, maps, TRUE, t, FALSE, x, result);
+   innards(&ss->cmd, maps, TRUE, t, FALSE, x, result);
+   reinstate_rotation(ss, result);
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
@@ -1000,6 +1009,10 @@ extern void distorted_2x2s_move(
    static Const veryshort mape[16] = {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
    static Const veryshort mapf[16] = {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
 
+   /* maps for 2x3 Z */
+   static Const veryshort mape1[8] = {0, 1, 3, 4, -1, -1, -1, -1};
+   static Const veryshort mapf1[8] = {1, 2, 4, 5, -1, -1, -1, -1};
+
    /* maps for twin parallelograms */
    static Const veryshort map_p1[16] = {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
    static Const veryshort map_p2[16] = {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
@@ -1046,9 +1059,9 @@ extern void distorted_2x2s_move(
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6};
 
-   int table_offset, misc_indicator, i;
+   int table_offset, arity, misc_indicator, i;
    setup a1, a2;
-   setup res1, res2;
+   setup results[2];
    uint32 directions, livemask;
    Const veryshort *map_ptr;
 
@@ -1080,6 +1093,7 @@ extern void distorted_2x2s_move(
 
    directions = 0;
    livemask = 0;
+   arity = 2;
 
    for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
       uint32 p = ss->people[i].id1;
@@ -1090,8 +1104,10 @@ extern void distorted_2x2s_move(
 
    switch (misc_indicator) {
       case 0:
+         arity = this_concept->value.arg3;
          switch (ss->kind) {   /* The concept is some variety of "Z" */
             case s4x4:
+               arity = 2;
                if (     (livemask & 0xF03CF03C) == 0) map_ptr = map1;
                else if ((livemask & 0xFC0CFC0C) == 0) map_ptr = map2;
                else if ((livemask & 0xC0F3C0F3) == 0) map_ptr = map3;
@@ -1103,6 +1119,7 @@ extern void distorted_2x2s_move(
                else goto lose;
                break;
             case s3x4:
+               arity = 2;
                if (     (livemask & 0xCC0CC0) == 0) map_ptr = mapa;
                else if ((livemask & 0xF00F00) == 0) map_ptr = mapb;
                else if ((livemask & 0x0F00F0) == 0) map_ptr = mapc;
@@ -1110,12 +1127,19 @@ extern void distorted_2x2s_move(
                else goto lose;
                break;
             case s2x6:
+               arity = 2;
                if (     (livemask & 0x0C30C3) == 0) map_ptr = mape;
                else if ((livemask & 0xC30C30) == 0) map_ptr = mapf;
                else goto lose;
                break;
+            case s2x3:
+               if (arity != 1) fail("Use the 'Z' concept here.");
+               if (     (livemask & 0x0C3) == 0) map_ptr = mape1;
+               else if ((livemask & 0xC30) == 0) map_ptr = mapf1;
+               else goto lose;
+               break;
             default:
-               fail("Must have 3x4, 2x6, or 4x4 setup for this concept.");
+               fail("Must have 3x4, 2x6, 2x3, or 4x4 setup for this concept.");
          }
          break;
       case 1:
@@ -1230,21 +1254,21 @@ extern void distorted_2x2s_move(
             a1.cmd = ss->cmd;
             a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             update_id_bits(&a1);
-            move(&a1, FALSE, &res1);
-            if (res1.kind != s2x2 || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
+            move(&a1, FALSE, &results[0]);
+            if (results[0].kind != s2x2 || (results[0].rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
             gather(&a2, ss, &map_ptr[4], 3, rot);
             a2.kind = s2x2;
             a2.rotation = 0;
             a2.cmd = ss->cmd;
             a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             update_id_bits(&a2);
-            move(&a2, FALSE, &res2);
-            if (res2.kind != s2x2 || (res2.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
+            move(&a2, FALSE, &results[1]);
+            if (results[1].kind != s2x2 || (results[1].rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
          
-            result->rotation = res1.rotation;
-            scatter(result, &res1, map_ptr, 3, rotz);
-            scatter(result, &res2, &map_ptr[4], 3, rotz);
-            result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+            result->rotation = results[0].rotation;
+            scatter(result, &results[0], map_ptr, 3, rotz);
+            scatter(result, &results[1], &map_ptr[4], 3, rotz);
+            result->result_flags = results[0].result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
             reinstate_rotation(ss, result);
          
             if (columns) {
@@ -1261,26 +1285,35 @@ extern void distorted_2x2s_move(
    result->kind = ss->kind;
    result->rotation = 0;
    ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+
    a1 = *ss;
-   a2 = *ss;
    gather(&a1, ss, &map_ptr[table_offset], 3, 0);
-   gather(&a2, ss, &map_ptr[table_offset+4], 3, 0);
-   a1.kind = s2x2;
-   a2.kind = s2x2;
    a1.rotation = 0;
-   a2.rotation = 0;
+   a1.kind = s2x2;
    a1.cmd.cmd_assume.assumption = cr_none;
-   a2.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a1);
-   update_id_bits(&a2);
-   move(&a1, FALSE, &res1);
-   move(&a2, FALSE, &res2);
+   move(&a1, FALSE, &results[0]);
+   if (results[0].kind != s2x2) fail("Can't do shape-changer with this concept.");
+   scatter(result, &results[0], &map_ptr[table_offset], 3, 0);
 
-   if (res1.kind != s2x2 || res2.kind != s2x2) fail("Can't do shape-changer with this concept.");
+   if (arity == 2) {
+      a2 = *ss;
+      gather(&a2, ss, &map_ptr[table_offset+4], 3, 0);
+      a2.kind = s2x2;
+      a2.rotation = 0;
+      a2.cmd.cmd_assume.assumption = cr_none;
+      update_id_bits(&a2);
+      move(&a2, FALSE, &results[1]);
+      if (results[1].kind != s2x2) fail("Can't do shape-changer with this concept.");
+      scatter(result, &results[1], &map_ptr[table_offset+4], 3, 0);
+   }
 
-   scatter(result, &res1, &map_ptr[table_offset], 3, 0);
-   scatter(result, &res2, &map_ptr[table_offset+4], 3, 0);
-   result->result_flags = res1.result_flags | res2.result_flags;
+   result->result_flags = results[0].result_flags;
+
+   if (arity == 2) {
+      result->result_flags |= results[1].result_flags;
+   }
+
    reinstate_rotation(ss, result);
    return;
 

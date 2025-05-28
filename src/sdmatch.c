@@ -96,6 +96,7 @@ static Cstring startup_commands[] = {
    "toggle active phantoms",
    "toggle ignoreblanks",
    "toggle retain after error",
+   "toggle nowarn mode",
    "change output file",
    "change title",
    (Cstring) 0

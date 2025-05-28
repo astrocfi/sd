@@ -21,10 +21,40 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.86
-         Database version = 31.86 format = 92
+          RELEASE NOTES FOR SD VERSION 31.87
+         Database version = 31.87 format = 94
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.87 ******
+
+When the @samp{<anyone> work} concept is used, as in @samp{boys work
+tandem swing thru}, the program will put in the word @samp{all}, along
+with a comma.  It will come out like @samp{boys work tandem, all swing thru}.
+You do not type in the comma or the word @samp{all}.
+
+Some of the obscure nuances of @samp{countershake}, like
+@samp{3x3 countershake} from a 2x6 matrix, have been dealt with
+by creating a call @samp{countershake (matrix)}.  The default
+call (without the word @samp{matrix}) is completely fractionalizable.
+See the manual for details.
+
+@samp{Cover up} and @samp{percolate} can be used with the @samp{central}
+concept from some formations.  The calls @samp{cover up (centers and ends} and
+@samp{percolate (centers and ends} have been created for this purpose.
+See the manual for details.
+
+The call "scoot and counter", if done from a left-handed 1/4 tag, will
+have the outsides use a right hand at the end.  This appears to be
+somewhat more in keeping with common usage than using a left hand,
+though the situation is not really clear.  The Callerlab definition
+still prohibits this, and Sd did prior to this release.  You were
+always permitted to say "left scoot and counter", and this is still
+permitted.
+
+The "anchor the <anyone>" concept has been improved to handle 2-person calls
+in a more general way.  It should now handle all 2 and 4 person calls.
+
 
 ****** Changes as of version 31.85 ******
 

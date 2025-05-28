@@ -34,6 +34,7 @@
 *startup.toggleActivePhantoms: Toggle active phantoms
 *startup.toggleIgnoreBlanks: Toggle ignoreblanks
 *startup.toggleRetain_after_error: Toggle retain after error
+*startup.toggleNowarnMode: Toggle nowarn mode
 *startup.changeOutputFile: Change output file
 *startup.changeTitle: Change title
 *command.exit: Exit the program
@@ -45,6 +46,7 @@
 *command.activephantoms: Toggle active phantoms
 *command.ignoreblanks: Toggle ignoreblanks
 *command.retainaftererror: Toggle retain after error
+*command.nowarnmode: Toggle nowarn mode
 *command.comment: Insert a comment
 *command.outfile: Change output file
 *command.title: Change title

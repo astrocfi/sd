@@ -686,6 +686,17 @@ bigbone     |_____|_____|  2  |  3  |  9  |  8  |_____|_____|
 
 
 
+             _____                   _____
+            |     |_____ _____ _____|     |
+            |  0  |     |     |     |  4  |
+            |_____|  1  |  2  |  3  |_____|
+            |     |_____|_____|_____|     |
+d3x4        | 11  |     |     |     |  5  |
+            |_____|  9  |  8  |  7  |_____|
+            |     |_____|_____|_____|     |
+            | 10  |                 |  6  |
+            |_____|                 |_____|
+
 
                          _____
              _____ _____|     |_____ _____
@@ -1757,16 +1768,18 @@ lines_antitandem
       same way or is T-boned.
 
 columns_tandem
-      applies to 2x1, 4x1, 6x1, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
+      applies to 2x1, 3x1, 4x1, 6x1, 3x2, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
       if the tandem partner of the person under test is alive and facing the
       same direction.  Returns FALSE if that person is a phantom or faces the
-      opposite way or is T-boned.
+      opposite way or is T-boned.  When interrogating the center of a 3x1 or
+      3x2 column, uses the person in front.
 
 columns_antitandem
-      applies to 2x1, 4x1, 6x1, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
+      applies to 2x1, 3x1, 4x1, 6x1, 3x2, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
       if the tandem partner of the person under test is alive and facing the
       opposite direction.  Returns FALSE if that person is a phantom or faces
-      the same way or is T-boned.
+      the same way or is T-boned.  When interrogating the center of a 3x1 or
+      3x2 column, uses the person in front.
 
 columns_magic_tandem
       applies to 4x2 columns only.  Returns TRUE if the magic tandem
@@ -2211,10 +2224,11 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
    wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
                                        2x4/3x4/2x6/2x8 - consistent waves the long way; 4x4 - consistent waves either way, but not T-boned;
-                                       2x2 - real RH or LH box;
-                                       3x2/4x2/6x2/8x2 - columns;
+                                       2x2 - real RH or LH box
+                                       3x2/4x2/6x2/8x2 - columns
                                        qtag/pqtag - wave in center
                                        ptpd/pptpd - miniwaves in centers of each diamond
+                                       pshort6 (note that this means the short6 is laterally oriented) - centers tandem in wave
                                        dmd, trngl - people are paired in miniwaves.
                                           For diamonds, this applies just to the centers.
                                           For triangles, it applies just to the base.
@@ -2242,6 +2256,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    diamond_like,                    dmd, qtag or ptpd - points look sideways, and centers are line-like
    qtag_like,                       dmd, qtag or ptpd - points look in or out, and centers are line-like
    nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are diamonds and not qtags */
+   in_or_out,                    /* 2x2/2x4 - all facing in or all facing out.  4x2/4x1/2x1 - [single] 8 chain or trade by (one or the other; we don't care which)
    magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
    explodable,                   /* 1x4 - centers facing the same way */
    reverse_explodable,           /* 1x4 - ends facing the same way */
@@ -2250,8 +2265,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    siamese_in_quad               /* Any 2x4 or 4x2 - the people in each quadrant, if they exist, face the same way */
    not_tboned,                   /* 2x2 - people must not be T-boned */
    opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
-   quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
-   quarterbox_or_magic_col,      /* 4x2 - acceptable setup for "make magic" */
+   quarterbox_or_col,            /* 4x2/3x2 - acceptable setup for "quick step" or "triple cross" */
+   quarterbox_or_magic_col,      /* 4x2/3x2 - acceptable setup for "magic quick step" or "make magic" */
 
                            APPENDIX C -- QUALIFIERS
 
@@ -2265,7 +2280,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    magic_only,                      Same as corresponding restriction, above.
    diamond_like,                    Same as corresponding restriction, above.
    qtag_like,                       Same as corresponding restriction, above.
-   in_or_out,                    /* 2x2/2x4 - all facing in or all facing out.  4x2/4x1/2x1 - [single] 8 chain or trade by (one or the other; we don't care which)
+   in_or_out,                       Same as corresponding restriction, above.
    miniwaves,                       Same as corresponding restriction, above.
 
    right_wave,                      1x2 - right miniwave; 1x4-1x16 - [grand] right wave;

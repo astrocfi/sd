@@ -396,9 +396,9 @@ concept_descriptor *two_calls_concept_ptr = (concept_descriptor *) 0;
 /* BEWARE!!  These two lists must stay in step. */
 
 #ifdef SINGERS
-int num_command_commands = 51;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+int num_command_commands = 52;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 #else
-int num_command_commands = 49;
+int num_command_commands = 50;
 #endif
 
 
@@ -411,6 +411,7 @@ Cstring command_commands[] = {
    "toggle active phantoms",
    "toggle ignoreblanks",
    "toggle retain after error",
+   "toggle nowarn mode",
 #ifdef SINGERS
    "toggle singing call",
    "toggle singing call with backward progression",
@@ -467,6 +468,7 @@ static command_kind command_command_values[] = {
    command_toggle_act_phan,
    command_toggle_ignoreblanks,
    command_toggle_retain_after_error,
+   command_toggle_nowarn_mode,
 #ifdef SINGERS
    command_toggle_singer,
    command_toggle_singer_backward,

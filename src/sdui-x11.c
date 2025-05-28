@@ -109,6 +109,7 @@ typedef enum {
    cmd_button_active_phantoms,
    cmd_button_ignoreblanks,
    cmd_button_retain_after_error,
+   cmd_button_nowarn_mode,
    cmd_button_create_comment,
    cmd_button_change_outfile,
    cmd_button_change_title,
@@ -309,6 +310,7 @@ Private Cstring *concept_popup_list = NULL;
 #define SPECIAL_TOGGLE_ACT_PHANTOMS -5
 #define SPECIAL_TOGGLE_IGNOREBLANKS -6
 #define SPECIAL_TOGGLE_RETAIN_AFTER_ERROR -7
+#define SPECIAL_TOGGLE_NOWARN_MODE -8
 
 
 /* Beware:  This table must track the enumeration "cmd_button_kind". */
@@ -322,6 +324,7 @@ static int button_translations[] = {
    SPECIAL_TOGGLE_ACT_PHANTOMS,           /* cmd_button_active_phantoms */
    SPECIAL_TOGGLE_IGNOREBLANKS,           /* cmd_button_ignoreblanks */
    SPECIAL_TOGGLE_RETAIN_AFTER_ERROR,     /* cmd_button_retain_after_error */
+   SPECIAL_TOGGLE_NOWARN_MODE,            /* cmd_button_nowarn_mode */
    command_create_comment,                /* cmd_button_create_comment */
    command_change_outfile,                /* cmd_button_change_outfile */
    command_change_header,                 /* cmd_button_change_title */
@@ -605,6 +608,7 @@ Private XtResource startup_resources[] = {
     MENU("toggleActivePhantoms", start_list[start_select_toggle_act], "Toggle active phantoms"),
     MENU("toggleIgnoreBlanks", start_list[start_select_toggle_ignoreblank], "Toggle ignoreblanks"),
     MENU("toggleRetain_after_error", start_list[start_select_toggle_retain], "Toggle retain after error"),
+    MENU("toggleNowarnMode", start_list[start_select_toggle_nowarn_mode], "Toggle nowarn mode"),
     MENU("changeOutputFile", start_list[start_select_change_outfile], "Change output file"),
     MENU("changeTitle", start_list[start_select_change_header_comment], "Change title")
 };
@@ -620,6 +624,7 @@ Private XtResource command_resources[] = {
     MENU("activephantoms", cmd_list[cmd_button_active_phantoms], "Toggle active phantoms"),
     MENU("ignoreblanks", cmd_list[cmd_button_ignoreblanks], "Toggle ignoreblanks"),
     MENU("retainaftererror", cmd_list[cmd_button_retain_after_error], "Toggle retain after error"),
+    MENU("nowarnmode", cmd_list[cmd_button_nowarn_mode], "Toggle nowarn mode"),
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
     MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file"),
     MENU("title", cmd_list[cmd_button_change_title], "Change title"),
@@ -1367,6 +1372,10 @@ extern uims_reply uims_get_startup_command(void)
             retain_after_error = !retain_after_error;
             goto try_again;
          }
+         else if (uims_menu_index == SPECIAL_TOGGLE_NOWARN_MODE) {
+            nowarn_mode = !nowarn_mode;
+            goto try_again;
+         }
       }
 
       return local_reply;
@@ -1446,6 +1455,10 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
          retain_after_error = !retain_after_error;
          goto try_again;
       }
+      else if (uims_menu_index == SPECIAL_TOGGLE_NOWARN_MODE) {
+         nowarn_mode = !nowarn_mode;
+         goto try_again;
+      }
    }
 
    *reply_p = local_reply;
@@ -1522,6 +1535,10 @@ extern uims_reply uims_get_resolve_command(void)
          }
          else if (uims_menu_index == SPECIAL_TOGGLE_RETAIN_AFTER_ERROR) {
             retain_after_error = !retain_after_error;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_TOGGLE_NOWARN_MODE) {
+            nowarn_mode = !nowarn_mode;
             goto try_again;
          }
       }

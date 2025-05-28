@@ -554,9 +554,9 @@ typedef struct {
 #define RESULTFLAG__IMPRECISE_ROT        0x00000040UL
 /* This is a six bit field. */
 #define RESULTFLAG__SPLIT_AXIS_FIELDMASK 0x00001F80UL
-#define RESULTFLAG__SPLIT_AXIS_MASK      0x00000180UL
+/* #define RESULTFLAG__SPLIT_AXIS_MASK      0x00000180UL */
 #define RESULTFLAG__SPLIT_AXIS_BIT       0x00000080UL
-#define RESULTFLAG__SPLIT_AXIS_SEPARATION  1
+#define RESULTFLAG__SPLIT_AXIS_SEPARATION  3
 
 #define RESULTFLAG__ACTIVE_PHANTOMS_ON   0x00002000UL
 #define RESULTFLAG__ACTIVE_PHANTOMS_OFF  0x00004000UL
@@ -1275,6 +1275,7 @@ typedef enum {
    start_select_toggle_act,
    start_select_toggle_ignoreblank,
    start_select_toggle_retain,
+   start_select_toggle_nowarn_mode,
    start_select_change_outfile,
    start_select_change_header_comment
 } start_select_kind;
@@ -1305,6 +1306,7 @@ typedef enum {
    command_toggle_act_phan,
    command_toggle_ignoreblanks,
    command_toggle_retain_after_error,
+   command_toggle_nowarn_mode,
    command_toggle_singer,
    command_toggle_singer_backward,
    command_refresh,
@@ -1824,6 +1826,7 @@ extern uint32 collision_person1;                                    /* in SDUTIL
 extern uint32 collision_person2;                                    /* in SDUTIL */
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern long_boolean singlespace_mode;                               /* in SDUTIL */
+extern long_boolean nowarn_mode;                                    /* in SDUTIL */
 extern Cstring cardinals[];                                         /* in SDUTIL */
 extern Cstring ordinals[];                                          /* in SDUTIL */
 extern selector_item selector_list[];                               /* in SDUTIL */
@@ -2238,7 +2241,7 @@ extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *r
 
 extern void do_call_in_series(
    setup *sss,
-   uint32 special_fraction,
+   long_boolean dont_enforce_consistent_split,
    long_boolean roll_transparent,
    long_boolean normalize,
    long_boolean qtfudged);

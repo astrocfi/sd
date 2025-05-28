@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.86"
-#define TIME_STAMP "wba@apollo.hp.com  22 Apr 97 $"
+#define VERSION_STRING "31.87"
+#define TIME_STAMP "wba@apollo.hp.com  03 Jun 97 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -120,6 +120,7 @@ Private void display_help(void)
    printf("-write_full_list filename   write this list and all lower\n");
    printf("-abridge filename           do not use calls in this file\n");
    printf("-singlespace                single space the output file\n");
+   printf("-no_warnings                do not display or print any warning messages\n");
    printf("-retain_after_error         retain pending concepts after error\n");
    printf("-ignoreblanks               allow user to omit spaces when typing in\n");
    printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
@@ -971,6 +972,10 @@ extern long_boolean query_for_call(void)
             retain_after_error = !retain_after_error;
             goto check_menu;
          }
+         else if (uims_menu_index == (int) command_toggle_nowarn_mode) {
+            nowarn_mode = !nowarn_mode;
+            goto check_menu;
+         }
          else if (uims_menu_index == (int) command_toggle_singer) {
             if (singing_call_mode != 0)
                singing_call_mode = 0;    /* Turn it off. */
@@ -1414,6 +1419,7 @@ void main(int argc, char *argv[])
 
    enable_file_writing = FALSE;
    singlespace_mode = FALSE;
+   nowarn_mode = FALSE;
    interactivity = interactivity_database_init;
    testing_fidelity = FALSE;
    parse_active_list = (parse_block *) 0;
@@ -1596,6 +1602,9 @@ void main(int argc, char *argv[])
          goto new_sequence;
       case start_select_toggle_retain:
          retain_after_error = !retain_after_error;
+         goto new_sequence;
+      case start_select_toggle_nowarn_mode:
+         nowarn_mode = !nowarn_mode;
          goto new_sequence;
       case start_select_change_outfile:
          {

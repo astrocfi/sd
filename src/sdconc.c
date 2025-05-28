@@ -1241,6 +1241,28 @@ extern void concentric_move(
                      begin_ptr->cmd.cmd_assume.assump_both ^= 3;            /* 3/4 tag or line [whatever/0/1] go to facing out [lilo/0/2]. */
                      goto got_new_assumption;
                   }
+                  else if (begin_ptr->cmd.cmd_assume.assumption == cr_ctr_miniwaves ||
+                           begin_ptr->cmd.cmd_assume.assumption == cr_ctr_couples) {
+                     /* Either of those speciall assumptions means that the outsides are in a normal box. */
+                     begin_ptr->cmd.cmd_assume.assumption = cr_wave_only;
+                     begin_ptr->cmd.cmd_assume.assump_col = 0;
+                     begin_ptr->cmd.cmd_assume.assump_both = 0;
+                     goto got_new_assumption;
+                  }
+               }
+               else if (ss->kind == s_qtag && begin_ptr->kind == s1x4) {
+                  if (begin_ptr->cmd.cmd_assume.assumption == cr_ctr_miniwaves) {
+                     begin_ptr->cmd.cmd_assume.assumption = cr_wave_only;
+                     begin_ptr->cmd.cmd_assume.assump_col = 0;
+                     begin_ptr->cmd.cmd_assume.assump_both = 0;
+                     goto got_new_assumption;
+                  }
+                  else if (begin_ptr->cmd.cmd_assume.assumption == cr_ctr_couples) {
+                     begin_ptr->cmd.cmd_assume.assumption = cr_2fl_only;
+                     begin_ptr->cmd.cmd_assume.assump_col = 0;
+                     begin_ptr->cmd.cmd_assume.assump_both = 0;
+                     goto got_new_assumption;
+                  }
                }
             }
             else if (analyzer == schema_concentric_2_6) {
@@ -1251,7 +1273,7 @@ extern void concentric_move(
             else if (      analyzer == schema_ckpt_star &&
                            doing_ends == 1 &&
                            ss->kind == s_spindle &&
-                           begin_ptr->cmd.cmd_assume.assumption == cr_magic_only) {
+                           begin_ptr->cmd.cmd_assume.assumption == cr_ckpt_miniwaves) {
                begin_ptr->cmd.cmd_assume.assumption = cr_wave_only;       /* The box is a real box.  This makes the hinge win on chain reaction. */
                goto got_new_assumption;
             }
@@ -1886,102 +1908,156 @@ extern void concentric_move(
 
 
 typedef struct {
+   Const setup_kind k1;
+   Const setup_kind k2;
+   Const uint32 m1;
+   Const uint32 m2;
+   /* This is the mask of things that we will reject.  The low 4 bits are rotations
+      that we will reject.  It is ANDed with "1 << r".  Ris the rotation of res1,
+      after localizing so that res2 has roation zero.  Hence r=0 if the two setups
+      have the same orientation, and, excpet in the case of things like triangles,
+      r=1 if they are orthogonal.  Common values of the low hex digit of "rotmask"
+      are therefore:
+         E demand same orientation
+         D demand orthogonal
+         C either way.
+      Additionally, the "10" bit means that action must be merge_without_gaps,
+      and the "20" bit means that action must NOT be merge_strict_matrix. */
+   Const unsigned short rotmask;
+   Const unsigned short swap_setups;
    Const calldef_schema conc_type;
    Const setup_kind innerk;
    Const setup_kind outerk;
+   Const warning_index warning;
    Const int irot;
    Const int orot;
-   Const veryshort innermap[8];
-   Const veryshort outermap[8];
+   Const veryshort innermap[16];
+   Const veryshort outermap[16];
 } concmerge_thing;
 
-static concmerge_thing map_1618   = {schema_concentric_2_6, s1x2,        s1x6,     0, 0, {0, 1},                     {0, 1, 3, 4, 5, 7}};
-static concmerge_thing map_1418   = {schema_concentric,     s1x4,        s1x4,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
-static concmerge_thing map_123d   = {schema_concentric,     s1x2,        s2x3,     0, 0, {0, 1},                     {0, 1, 2, 6, 7, 8}};
-static concmerge_thing map_2218   = {schema_concentric,     s2x2,        s1x4,     0, 0, {0, 1, 2, 3},               {1, 3, 5, 7}};
-static concmerge_thing map_2218p  = {schema_concentric,     s2x2,        s1x4,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
-static concmerge_thing map_18_d8  = {schema_concentric,     s1x6,        s1x2,     0, 0, {0, 1, 2, 4, 5, 6},         {0, 2}};
-static concmerge_thing map_18_d2  = {schema_concentric,     s1x6,        s1x2,     0, 0, {0, 3, 2, 4, 7, 6},         {0, 2}};
-static concmerge_thing map_18_d1  = {schema_concentric,     s1x6,        s1x2,     0, 0, {1, 3, 2, 5, 7, 6},         {0, 2}};
-static concmerge_thing map_2218q  = {schema_concentric,     s2x2,        s1x4,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
-static concmerge_thing map_223x1  = {schema_concentric,     s2x2,        sdmd,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
-static concmerge_thing map_1424   = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
-static concmerge_thing map_qt24   = {schema_concentric,     s1x4,        s2x2,     0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}};
-static concmerge_thing map_th124  = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 1, 4, 5},               {0, 3, 4, 7}};
-static concmerge_thing map_th224  = {schema_concentric,     s1x4,        s2x2,     1, 0, {2, 3, 6, 7},               {0, 3, 4, 7}};
-static concmerge_thing map_hr24   = {schema_concentric,     sdmd,        s2x2,     0, 0, {6, 3, 2, 7},               {0, 3, 4, 7}};
-static concmerge_thing map_dm24   = {schema_concentric,     sdmd,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
-static concmerge_thing map_ptp22  = {schema_concentric,     s2x2,        s2x2,     0, 0, {0, 1, 2, 3},               {1, 7, 5, 3}};
-static concmerge_thing map_bn22   = {schema_concentric,     s2x2,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
-static concmerge_thing map_qtqhgl = {schema_concentric,     s_short6,    s1x2,     1, 0, {1, 2, 4, 5, 6, 0},         {6, 2}};
-static concmerge_thing map_qtqx1x4= {schema_concentric,     s_short6,    s1x2,     1, 0, {1, 2, 4, 5, 6, 0},         {0, 2}};
-static concmerge_thing map_hglgalh= {schema_concentric,     s_bone6,     s1x2,     1, 0, {1, 4, 7, 5, 0, 3},         {0, 4}};
-static concmerge_thing map_hglgalv= {schema_concentric,     s_bone6,     s1x2,     1, 1, {1, 4, 7, 5, 0, 3},         {2, 6}};
-static concmerge_thing map_s612   = {schema_concentric_2_6, s1x2,        s_short6, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}};
-static concmerge_thing map_13dspn = {schema_rev_checkpoint, sdmd,        s2x2,     0, 0, {0, 3, 4, 7},               {0, 2, 4, 6}};
-static concmerge_thing map_13dptp = {schema_rev_checkpoint, sdmd,        s2x2,     0, 0, {0, 3, 4, 7},               {1, 7, 5, 3}};
-static concmerge_thing map_14spn  = {schema_rev_checkpoint, s1x4,        s2x2,     0, 0, {0, 2, 4, 6},               {0, 2, 4, 6}};
-static concmerge_thing map_24spn  = {schema_concentric,     sdmd,        s2x2,     0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}};
-static concmerge_thing map_spnspn = {schema_concentric,     sdmd,        s2x2,     0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}};
-static concmerge_thing map_24qtv  = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 2, 4, 6},               {0, 3, 4, 7}};
-static concmerge_thing map_1x6t1x4= {schema_concentric,     s1x6,        s1x2,     0, 0, {0, 1, 2, 3, 4, 5},         {0, 2}};
-static concmerge_thing map_3d23   = {schema_concentric,     s2x3,        s2x3,     0, 0, {0, 1, 2, 3, 4, 5},         {0, 1, 2, 6, 7, 8}};
-static concmerge_thing map_14xwv  = {schema_concentric,     s1x4,        s1x4,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
-static concmerge_thing map_22_4dm = {schema_nothing,        s4x4,        nothing,  0, 0, {15, 3, 7, 11},             {0}};
-static concmerge_thing map_tgl4l  = {schema_nothing,        s1x4,        nothing,  0, 0, {2, 3, 0, 1},               {0}};
-static concmerge_thing map_tgl4b  = {schema_nothing,        s2x2,        nothing,  0, 0, {0, 1, 2, 3},               {0}};
-static concmerge_thing map_1418a  = {schema_nothing,        s1x8,        nothing,  0, 0, {3, 2, 7, 6},               {0}};
-static concmerge_thing map_dm3dm  = {schema_nothing,        s3dmd,       nothing,  0, 0, {5, 1, 11, 7},              {0}};
-static concmerge_thing map_2234b  = {schema_nothing,        s4x4,        nothing,  0, 0, {15, 3, 7, 11},             {0}};
-static concmerge_thing map_3d1x4  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {0, 3, 0, 7},               {0}};
-static concmerge_thing map_2614   = {schema_nothing,        sbigdmd,     nothing,  0, 0, {3, 2, 9, 8},               {0}};
-static concmerge_thing map_2624   = {schema_nothing,        s2x6,        nothing,  0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}};
-static concmerge_thing map_2824   = {schema_nothing,        s2x8,        nothing,  0, 0, {2, 3, 4, 5, 10, 11, 12, 13},{0}};
-static concmerge_thing map_26qt   = {schema_nothing,        sbigdmd,     nothing,  0, 0, {8, 9, 0, 0, 2, 3, 0, 0},   {0}};
-static concmerge_thing map_13d_23 = {schema_nothing,        s_spindle,   nothing,  0, 0, {0, 1, 2, 4, 5, 6},         {0}};
-static concmerge_thing map_gal22  = {schema_nothing,        s_galaxy,    nothing,  0, 0, {1, 3, 5, 7},               {0}};
-static concmerge_thing map_18bn   = {schema_nothing,        s1x8,        nothing,  0, 0, {0, 0, 7, 6, 0, 0, 3, 2},   {0}};
-static concmerge_thing map_34qt   = {schema_nothing,        s3x4,        nothing,  0, 0, {1, 2, 4, 5, 7, 8, 10, 11}, {0}};
-static concmerge_thing map_bn14   = {schema_nothing,        s_bone,      nothing,  0, 0, {6, 7, 2, 3},               {0}};
-static concmerge_thing map_31d12  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {2, 6},                     {0}};
-static concmerge_thing map_31d12r = {schema_nothing,        s_crosswave, nothing,  0, 0, {3, 7},                     {0}};
-static concmerge_thing map_31d14  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {1, 2, 5, 6},               {0}};
-static concmerge_thing map_31d16  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {0, 1, 2, 4, 5, 6},         {0}};
-static concmerge_thing map_3d12   = {schema_nothing,        s3dmd,       nothing,  0, 0, {11, 5},                    {0}};
-static concmerge_thing map_3d14   = {schema_nothing,        s3dmd,       nothing,  0, 0, {10, 11, 4, 5},             {0}};
-static concmerge_thing map_3d16   = {schema_nothing,        s3dmd,       nothing,  0, 0, {9, 10, 11, 3, 4, 5},       {0}};
-static concmerge_thing map_xw12h  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {2, 6},                     {0}};
-static concmerge_thing map_xw12v  = {schema_nothing,        s_crosswave, nothing,  0, 0, {3, 7},                     {0}};
-static concmerge_thing map_2418   = {schema_nothing,        s_ptpd,      nothing,  0, 0, {0, 0, 2, 0, 0, 4, 6, 0},   {0}};
-static concmerge_thing map_13d14  = {schema_nothing,        s1x8,        nothing,  0, 0, {3, 2, 7, 6},               {0}};
-static concmerge_thing map_12d14  = {schema_nothing,        s1x8,        nothing,  0, 0, {3, 2, 7, 6},               {0}};
-static concmerge_thing map_31d18  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {0, 0, 2, 0, 4, 0, 6, 0},   {0}};
-static concmerge_thing map_18_16  = {schema_nothing,        s1x8,        nothing,  0, 0, {0, 0, 2, 4, 0, 6},         {0}};
-static concmerge_thing map_13d18  = {schema_nothing,        s1x3dmd,     nothing,  0, 0, {0, 1, 0, 2, 0, 5, 0, 6},   {0}};
-static concmerge_thing map_pp18   = {schema_nothing,        s_ptpd,      nothing,  0, 0, {0, 0, 2, 0, 4, 0, 6, 0},   {0}};
-static concmerge_thing map_13d12d = {schema_nothing,        s1x3dmd,     nothing,  0, 0, {1, 2, 3, 5, 6, 7},         {0}};
-static concmerge_thing map_rig1x8 = {schema_nothing,        s_rigger,    nothing,  0, 0, {6, 7, 0, 0, 2, 3, 0, 0},   {0}};
-static concmerge_thing map_14xw   = {schema_nothing,        s_crosswave, nothing,  0, 0, {3, 2, 7, 6},               {0}};
-static concmerge_thing map_14qt   = {schema_nothing,        s_qtag,      nothing,  0, 0, {6, 7, 2, 3},               {0}};
-static concmerge_thing map_1434   = {schema_nothing,        s3x4,        nothing,  0, 0, {10, 11, 4, 5},             {0}};
+
+static concmerge_thing map_tgl4l  = {nothing, nothing, 0, 0, 0, 0x80, schema_by_array,       s1x4,        nothing,  warn__none, 0, 0, {0, 1, -1, -1},             {0}}; 
+static concmerge_thing map_tgl4b  = {nothing, nothing, 0, 0, 0, 0x80, schema_by_array,       s2x2,        nothing,  warn__none, 0, 0, {-1, -1, 2, 3},             {0}};
+static concmerge_thing map_2234b  = {nothing, nothing, 0, 0, 0, 0x80, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {12, 13, 14, 0, -1, -1, 4, 5, 6, 8, -1, -1}};
+
+static concmerge_thing merge_maps[] = {
+   {s1x4,        s_qtag, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, 2, 3},               {0}},
+   {s1x4,        s_qtag, 0xA,   0x88, 0x0D, 0x81, schema_concentric,     s_short6,    s1x2,     warn__check_galaxy, 1, 0, {1, 2, 4, 5, 6, 0},      {0, 2}},
+   {s2x3,        s_qtag, 0,        0, 0x0D, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 3, 4, 5, 7, 0},         {0}},
+   {s2x3,          s1x8, 022,   0x99, 0x1E, 0x80, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {1, -1, 7, 5, -1, 3},       {-1, 0, 2, -1, -1, 4, 6, -1}},
+   {s2x3,          s1x8, 022,   0xAA, 0x1D, 0x81, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},            {0, 2, 3, 5}},
+   {s2x3,     s_hrglass, 022,   0x33, 0x0C, 0x81, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 2, 3, 5}},
+   {s2x3,    s_dhrglass, 022,   0x33, 0x0C, 0x81, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 2, 3, 5}},
+   {s2x3,       s1x3dmd, 0,     0x66, 0x2E, 0x80, schema_matrix,         s_spindle,   nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {7, -1, -1, 1, 3, -1, -1, 5}},
+   {s1x4,          s3x4, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
+   {s2x4,      s_c1phan, 0,        0, 0x0D, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {4, 6, 11, 9, 12, 14, 3, 1},{0}},
+   {s2x4,      s_c1phan, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 2, 7, 5, 8, 10, 15, 13},{0}},
+   {s2x4,          s4x4, 0,        0, 0x0D, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {14, 3, 7, 5, 6, 11, 15, 13},{0}},
+   {s2x4,          s4x4, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 15, 3, 1, 2, 7, 11, 9},{0}},
+   {s2x2,          s2x4, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 5, 6},               {0}},
+   {s2x2,        s_bone, 0,     0xCC, 0x2C, 0x80, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},            {0, 1, 4, 5}},
+   {s2x2,         s3dmd, 0,    07272, 0x0C, 0x80, schema_matrix,         s4x4,        nothing,  warn__check_butterfly, 0, 0, {15, 3, 7, 11},             {12, -1, 0, -1, -1, -1, 4, -1, 8, -1, -1, -1}},
+   {s1x8,          s2x4, 0xAA,  0x66, 0x1D, 0x80, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},            {0, 3, 4, 7}},
+   {s1x8,          s2x4, 0x99,  0x66, 0x1E, 0x80, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {-1, 0, 2, -1, -1, 4, 6, -1},{1, -1, -1, 7, 5, -1, -1, 3}},
+   {s2x2,          s2x6, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0}},
+   {s2x2,          s4x4, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {0}},
+   {s1x4,       s3x1dmd, 0xA,      0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, -1, 7, -1},             {0}},
+   {s1x4,       s1x3dmd, 0,     0xAA, 0x1E, 0x80, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, -1, 1, -1, 4, -1, 5, -1}},
+   {s2x2,          s1x8, 0,     0xCC, 0x0E, 0x80, schema_concentric,     s2x2,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
+   {s1x4,          s1x8, 0,     0xCC, 0x0C, 0x80, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
+   {s1x4,   s_crosswave, 0,     0xCC, 0x0E, 0x80, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
+   {s1x4,   s_crosswave, 0,        0, 0x0D, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 6, 7},               {0}},
+   {s1x4,          s1x8, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0}},
+   {sdmd,          s1x8, 0xA,   0x88, 0x1D, 0x81, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 4, 5, 6},      {0, 2}},
+   {sdmd,          s1x8, 0xA,   0x11, 0x1D, 0x81, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {1, 3, 2, 5, 7, 6},      {0, 2}},
+   {sdmd,          s1x8, 0xA,   0x22, 0x1D, 0x81, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 3, 2, 4, 7, 6},      {0, 2}},
+   {s1x6,          s1x8, 022,      0, 0x1E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 0, 2, 4, 0, 6},         {0}},
+   {s1x2,         s3dmd, 0,    07070, 0x0C, 0x80, schema_concentric,     s1x2,        s2x3,     warn__none, 0, 0, {0, 1},                     {0, 1, 2, 6, 7, 8}},
+   {sdmd,         s3dmd, 0,        0, 0x0D, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 5, 7, 11},              {0}},
+   {s1x2,          s1x8, 0,     0x44, 0x0C, 0x80, schema_concentric_2_6, s1x2,        s1x6,     warn__none, 0, 0, {0, 1},                     {0, 1, 3, 4, 5, 7}},
+   {s_hrglass, s_galaxy, 0x44,  0xEE, 0x0E, 0x80, schema_concentric,     s_bone6,     s1x2,     warn__none, 1, 0, {1, 4, 7, 5, 0, 3},         {0, 4}},
+   {s_hrglass, s_galaxy, 0x44,  0xBB, 0x0D, 0x80, schema_concentric,     s_bone6,     s1x2,     warn__none, 1, 1, {1, 4, 7, 5, 0, 3},         {2, 6}},
+   {s_hrglass,     s2x4, 0x33,  0x66, 0x0C, 0x80, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 3, 4, 7}},
+   {s_dhrglass,    s2x4, 0x33,  0x66, 0x0C, 0x80, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 3, 4, 7}},
+   {s1x2,       s3x1dmd, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 6},                     {0}},
+   {s1x2,       s3x1dmd, 0,     0x44, 0x0D, 0x80, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {3, 7},                     {0, 1, -1, 2, 4, 5, -1, 6}},
+   {s1x2,   s_crosswave, 0,     0x88, 0x0E, 0x80, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {2, 6},                     {0, 1, 3, -1, 4, 5, 7, -1}},
+   {s1x4,       s3x1dmd, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 5, 6},               {0}},
+   {s1x4,      s_1x2dmd, 0,      044, 0x0E, 0x80, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, -1, 4, 5, -1}},
+   {s1x6,       s3x1dmd, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
+   {s1x2,         s3dmd, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5},                    {0}},
+   {s1x4,         s3dmd, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
+   {s1x6,         s3dmd, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {9, 10, 11, 3, 4, 5},       {0}},
+   {s2x3,         s3dmd, 0,    07070, 0x0E, 0x80, schema_concentric,     s2x3,        s2x3,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 1, 2, 6, 7, 8}},
+   {s1x4,        s_bone, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, 2, 3},               {0}},
+   {s_qtag,   s_hrglass, 0x88,  0xBB, 0x0D, 0x80, schema_concentric,     s_short6,    s1x2,     warn__check_galaxy, 1, 0, {1, 2, 4, 5, 6, 0},      {6, 2}},
+   {s_qtag,        s3x4, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 4, 5, 7, 8, 10, 11}, {0}},
+   {s_bone,        s1x8, 0x33,     0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, 7, 6, -1, -1, 3, 2},{0}},
+   {s2x2,        s_ptpd, 0,     0x55, 0x0E, 0x80, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {1, 7, 5, 3}},
+   {s2x2,      s_galaxy, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 3, 5, 7},               {0}},
+   {s2x2,       s3x1dmd, 0,     0x66, 0x0E, 0x80, schema_concentric,     s2x2,        sdmd,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
+   {s2x2,          s1x8, 0,     0x55, 0x0E, 0x80, schema_concentric,     s2x2,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {1, 3, 5, 7}},
+   {s2x2,          s1x8, 0,     0x66, 0x1E, 0x80, schema_concentric,     s2x2,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},            {0, 3, 4, 7}},
+   {s1x8,        s_ptpd, 0xAA,     0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1},{0}},
+   {s_1x2dmd,   s1x3dmd, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7},         {0}},
+   {s_1x2dmd, s_spindle, 0,     0x55, 0x2E, 0x80, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7}, {-1, 3, -1, 4, -1, 7, -1, 0}},
+   {s1x3dmd,     s_ptpd, 0x66,  0x55, 0x0E, 0x80, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {1, 7, 5, 3}},
+   {s1x3dmd,  s_spindle, 0x66,  0xAA, 0x0E, 0x80, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {0, 2, 4, 6}},
+   {s1x8,       s1x3dmd, 0x55,  0x66, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 1, -1, 2, -1, 5, -1, 6},{0}},
+   {s1x8,       s3x1dmd, 0xAA,  0x66, 0x1E, 0x80, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1},{1, -1, -1, 3, 5, -1, -1, 7}},
+   {s1x8,     s_spindle, 0xAA,  0xAA, 0x0E, 0x80, schema_rev_checkpoint, s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},               {0, 2, 4, 6}},
+   {s1x8,      s_rigger, 0xCC,     0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, -1, -1, 2, 3, -1, -1},{0}},
+   {s1x2,   s_crosswave, 0,        0, 0x0D, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 7},                     {0}},
+   {s_crosswave,s_crosswave, 0, 0x99, 0x0D, 0x81, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 6, 1, -1, -1, 2, 5, -1}, {0}},
+   {s_crosswave,s_crosswave, 0x99, 0, 0x0D, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 2, 5, -1, -1, 6, 1, -1}, {0}},
+   {s2x2,         s4dmd, 0,   0xF0F0, 0x0E, 0x80, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {12, 13, 14, 0, -1, -1, -1, -1, 4, 5, 6, 8, -1, -1, -1, -1}},
+   {s_qtag,        s2x6, 0x33, 0x30C, 0x0D, 0x80, schema_matrix,         sbigdmd,     nothing,  warn__none, 0, 0, {-1, -1, 8, 9, -1, -1, 2, 3}, {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
+   {s1x4,          s2x6, 0,    0x30C, 0x0D, 0x80, schema_matrix,         sbigdmd,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
+   {s2x4,          s2x6, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
+   {s2x4,          s2x8, 0,        0, 0x0E, 0x80, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 4, 5, 10, 11, 12, 13},{0}},
+   {s1x4,          s1x6, 0xA,      0, 0x0D, 0x81, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 2}},
+   {s1x4,          s2x3, 0xA,      0, 0x0D, 0x81, schema_concentric,     s2x3,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 2}},
+   {s_qtag,        s2x3, 0,      022, 0x0D, 0x81, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {5, -1, 0, 1, -1, 4},       {0}},
+   {s_qtag,        s2x4, 0,     0x66, 0x0D, 0x81, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {5, -1, -1, 0, 1, -1, -1, 4}, {0}},
+   {s_bone,        s2x4, 0,     0x66, 0x0E, 0x81, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, -1, 1, 4, -1, -1, 5}, {0}},
+   {s1x8,        s_ptpd, 0,     0xAA, 0x0E, 0x81, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1}, {0}},
+   {s1x4,          s2x4, 0,     0x66, 0x0C, 0x80, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
+   {s1x4,          s2x3, 0,      022, 0x0C, 0x80, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
+   {s_qtag,        s2x4, 0x33,  0x66, 0x0C, 0x80, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}},
+   {s1x2,        s_qtag, 0,     0x88, 0x0C, 0xC0, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
+   {s2x3,        s_thar, 022,   0xCC, 0x0D, 0x81, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 2, 3, 5}},
+   {s2x3,        s_thar, 022,   0x33, 0x0E, 0x81, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 2, 3, 5}},
+   {s2x4,        s_thar, 0x66,  0xCC, 0x0D, 0x81, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 3, 4, 7}},
+   {s2x4,        s_thar, 0x66,  0x33, 0x0E, 0x81, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 3, 4, 7}},
+   {s1x4,      s_galaxy, 0,     0xAA, 0x0C, 0x80, schema_concentric,     s1x4,        sdmd,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
+   {sdmd,          s2x3, 0,      022, 0x0C, 0x80, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
+   {sdmd,          s2x4, 0,     0x66, 0x0C, 0x80, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
+   {s_spindle,     s2x4, 0x55,  0x66, 0x0D, 0x80, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}},
+   {s_spindle, s_spindle, 0x55, 0xAA, 0x0D, 0x80, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
+   {s_spindle, s_spindle, 0xAA, 0x55, 0x0D, 0x81, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
+   {nothing, nothing}};
 
 
-static Const veryshort matrixmap[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+static Const veryshort matrixmap1[8] = {14, 3, 7, 5, 6, 11, 15, 13};
+static Const veryshort matrixmap2[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+static Const veryshort phanmap2[8]  = {0, 2, 7, 5, 8, 10, 15, 13};
+static Const veryshort phanmap1[8]  = {4, 6, 11, 9, 12, 14, 3, 1};
 
 
 /* This overwrites its first argument setup. */
 extern void merge_setups(setup *ss, merge_action action, setup *result)
 {
-   int i, j, r, rot, offs, lim1, limhalf;
+   int i, j, r, rot, lim1, limhalf;
    setup res2copy;
    setup outer_inners[2];
    setup *res1, *res2;
    uint32 collision_mask;
    int collision_index;
+   uint32 rotmaskreject;
    uint32 mask1, mask2, result_mask;
    concmerge_thing *the_map;
-   int outer_elongation = 0;
-   int reinstatement_rotation = 0;
+   int outer_elongation;
+   int reinstatement_rotation;
 
    res2copy = *result;
    res1 = ss;
@@ -2028,6 +2104,13 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       goto tryagain;    /* Need to recanonicalize setup order. */
    }
 
+   reinstatement_rotation = res2->rotation;
+   res1->rotation -= res2->rotation;
+   res2->rotation = 0;
+   result->rotation = 0;
+   canonicalize_rotation(res1);
+   canonicalize_rotation(res2);
+
    for (i=0, j=1, mask1 = 0; i<=setup_attrs[res1->kind].setup_limits; i++, j<<=1) {
       if (res1->people[i].id1) mask1 |= j;
    }
@@ -2036,69 +2119,43 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       if (res2->people[i].id1) mask2 |= j;
    }
 
-   result->rotation = res2->rotation;
-
-   r = (res1->rotation - res2->rotation) & 3;
+   r = res1->rotation & 3;
    rot = r * 011;
 
    if (res1->kind == nothing) {
       *result = *res2;
       goto final_getout;
    }
-   else if (res1->kind == s2x4 && res2->kind == s2x4 && (r&1)) {
+
+   rotmaskreject = (1<<r);
+   if (action != merge_without_gaps) rotmaskreject |= 0x10;
+   if (action == merge_strict_matrix) rotmaskreject |= 0x20;
+
+   for (the_map=merge_maps ; the_map->k1 != nothing ; the_map++) {
+      if (  res1->kind == the_map->k1 &&
+            res2->kind == the_map->k2 &&
+            (!(rotmaskreject & the_map->rotmask)) &&
+            (mask1 & the_map->m1) == 0 &&
+            (mask2 & the_map->m2) == 0)
+         goto merge_concentric;
+   }
+
+   if (res1->kind == s2x4 && res2->kind == s2x4 && (r&1)) {
       long_boolean going_to_stars;
       long_boolean going_to_o;
       long_boolean conflict_at_4x4;
       uint32 t1, t2, t3, t4;
 
-      /* It used to be that we used an algorithm, shown below, to decide whether to opt for C1 pahntoms
-         or a 4x4 matrix.  That algorithm said that one opted for C1 phantoms if each incoming 2x4
-         had, in each quadrant, either both dancers or neither.  That is, we would opt for C1 phantoms
-         if the result would have, in each quadrant, either a star, no one, or two people in a miniwave
-         or equivalent sort of thing.  That is, the result would be either stars or "classic" C1
-         phantoms.  It would never produce star-like things populated in a peculiar arrangement.
-         This was presumably a consequence of our aversion to such peculiarly populated stars.
-         It has since come to light that "perk up", done from classic C1 phantom miniwaves of
-         consistent handedness, really ought to go to C1 phantoms, even though the stars that
-         result are peculiarly populated.  It has further come to light that having "phantom columns
-         wheel thru" from a squared set go to C1 phantoms is not right -- they should go to a 4x4
-         matrix even though the C1 phantoms would be "classically" populated.  So we now ignore
-         the issue of how the stars would be populated, and make the determination based on the
-         sizes, prior to stripping, of the incoming setups.  If either was larger than 8 people,
-         they are presumed to be doing some kind of phantom call in a matrix, and want to maintain
-         spots.  The old code was:
-
-         if ((((res1->people[0].id1 & res1->people[1].id1 & res1->people[4].id1 & res1->people[5].id1) |
-                  (res1->people[2].id1 & res1->people[3].id1 & res1->people[6].id1 & res1->people[7].id1)) & BIT_PERSON) &&
-            (((res2->people[0].id1 & res2->people[1].id1 & res2->people[4].id1 & res2->people[5].id1) |
-                  (res2->people[2].id1 & res2->people[3].id1 & res2->people[6].id1 & res2->people[7].id1)) & BIT_PERSON)) {
-            result->kind = s_c1phan;
-            .....
-         }
-
-         The test cases for this stuff are the aforesaid phantom perk up and the aforesaid phantom
-         columns wheel thru. */
-
-      /* Late-breaking news:  We now do this even more carefully.  The argument "action" tells us what to do. */
-
-      /* Even later-breaking news:  We now go to a 16 matrix anyway, if the actual spots that people
-         occupy are "O" spots. */
-
-      /* Even later-breaking news:  If the poeple would go to stars, do so, even if "strict_matrix"
-         was specified.  To go to a 4x4 would be impossible. */
-
-      offs = r * 2;
-
       t1 = res2->people[0].id1 | res2->people[1].id1 | res2->people[4].id1 | res2->people[5].id1;
       t2 = res2->people[2].id1 | res2->people[3].id1 | res2->people[6].id1 | res2->people[7].id1;
-      t3 = res1->people[2^offs].id1 | res1->people[3^offs].id1 | res1->people[6^offs].id1 | res1->people[7^offs].id1;
-      t4 = res1->people[0^offs].id1 | res1->people[1^offs].id1 | res1->people[4^offs].id1 | res1->people[5^offs].id1;
+      t3 = res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1;
+      t4 = res1->people[2].id1 | res1->people[3].id1 | res1->people[6].id1 | res1->people[7].id1;
 
       conflict_at_4x4 = (
-         (res2->people[1].id1 & res1->people[4^offs].id1) |
-         (res2->people[2].id1 & res1->people[3^offs].id1) |
-         (res2->people[5].id1 & res1->people[0^offs].id1) |
-         (res2->people[6].id1 & res1->people[7^offs].id1)) != 0;
+         (res2->people[1].id1 & res1->people[6].id1) |
+         (res2->people[2].id1 & res1->people[1].id1) |
+         (res2->people[5].id1 & res1->people[2].id1) |
+         (res2->people[6].id1 & res1->people[5].id1)) != 0;
 
       going_to_stars = ((mask1 == 0x33) && (mask2 == 0xCC)) || ((mask1 == 0xCC) && (mask2 == 0x33));
       going_to_o = ((mask1 | mask2) & 0x66) == 0;
@@ -2106,38 +2163,14 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       if (   (action == merge_strict_matrix && !going_to_stars && !conflict_at_4x4) || going_to_o) {
          result->kind = s4x4;
          clear_people(result);
-         scatter(result, res2, matrixmap, 7, 0);
-         install_rot(result, 7, res1, 0^offs, rot);
-         install_rot(result, 5, res1, 1^offs, rot);
-         install_rot(result, 14, res1, 2^offs, rot);
-         install_rot(result, 3, res1, 3^offs, rot);
-         install_rot(result, 15, res1, 4^offs, rot);
-         install_rot(result, 13, res1, 5^offs, rot);
-         install_rot(result, 6, res1, 6^offs, rot);
-         install_rot(result, 11, res1, 7^offs, rot);
+         scatter(result, res1, matrixmap1, 7, 011);
+         /* We need to use "install" for these, lest we overwrite a live person with zero. */
+         for (i=0 ; i<8 ; i++) install_person(result, matrixmap2[i], res2, i);
       }
       else {
          result->kind = s_c1phan;
-
-         (void) copy_rot(result, 0,  res2, 0, 0);
-         (void) copy_rot(result, 2,  res2, 1, 0);
-         (void) copy_rot(result, 8,  res2, 4, 0);
-         (void) copy_rot(result, 10, res2, 5, 0);
-
-         (void) copy_rot(result, 4,  res1, 2^offs, rot);
-         (void) copy_rot(result, 6,  res1, 3^offs, rot);
-         (void) copy_rot(result, 12, res1, 6^offs, rot);
-         (void) copy_rot(result, 14, res1, 7^offs, rot);
-
-         (void) copy_rot(result, 7,  res2, 2, 0);
-         (void) copy_rot(result, 5,  res2, 3, 0);
-         (void) copy_rot(result, 15, res2, 6, 0);
-         (void) copy_rot(result, 13, res2, 7, 0);
-
-         (void) copy_rot(result, 11, res1, 0^offs, rot);
-         (void) copy_rot(result, 9,  res1, 1^offs, rot);
-         (void) copy_rot(result, 3,  res1, 4^offs, rot);
-         (void) copy_rot(result, 1,  res1, 5^offs, rot);
+         scatter(result, res1, phanmap1, 7, 011);
+         scatter(result, res2, phanmap2, 7, 0);
 
          /* See if we have a "classical" C1 phantom setup, and give the appropriate warning. */
          if (action != merge_c1_phantom_nowarn) {
@@ -2151,144 +2184,12 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       }
       goto final_getout;
    }
-   else if (res1->kind == s_crosswave && res2->kind == s_crosswave && (r&1)) {
-      result->kind = s_crosswave;
-
-      if ((res2->people[0].id1 | res2->people[4].id1) == 0) {
-         /* Exchange the setups and try again. */
-         setup *temp = res2;
-         res2 = res1;
-         res1 = temp;
-         result->rotation = res2->rotation;
-         r = (res1->rotation - res2->rotation) & 3;
-         rot = r * 011;
-      }
-
-      offs = r * 2;
-
-      if ((res1->people[0].id1 | res1->people[3].id1 | res1->people[4].id1 | res1->people[7].id1) == 0) {
-         *result = *res2;
-         install_rot(result, 5, res1, 0^offs, rot);
-         install_rot(result, 2, res1, 3^offs, rot);
-         install_rot(result, 1, res1, 4^offs, rot);
-         install_rot(result, 6, res1, 7^offs, rot);
-         goto final_getout;
-      }
-   }
-   else if (res2->kind == s_crosswave && res1->kind == s1x4 && (r&1)) {
-      outer_elongation = res2->rotation & 1;  /* Not really needed. */
-      the_map = &map_14xw;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_crosswave && res1->kind == s1x4 && r==0) {
-      the_map = &map_14xwv;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_qtag && res1->kind == s1x4 && !(r&1)) {
-      the_map = &map_14qt;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x4 && res1->kind == s1x4 && !(r&1)) {
-      the_map = &map_1434;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_c1phan && res1->kind == s2x4) {
-      result->kind = s_c1phan;
-      for (i=0; i<16; i++)
-         (void) copy_person(result, i, res2, i);
-
-      result->rotation -= r;
-      canonicalize_rotation(result);
-
-      install_person(result, 0, res1, 0);
-      install_person(result, 2, res1, 1);
-      install_person(result, 7, res1, 2);
-      install_person(result, 5, res1, 3);
-      install_person(result, 8, res1, 4);
-      install_person(result, 10, res1, 5);
-      install_person(result, 15, res1, 6);
-      install_person(result, 13, res1, 7);
-
-      result->rotation += r;
-      canonicalize_rotation(result);
-      goto final_getout;
-   }
-   else if (res2->kind == s2x4 && res1->kind == s2x2) {
-      result->kind = s2x4;
-      for (i=0; i<8; i++)
-         (void) copy_person(result, i, res2, i);
-
-      res1->rotation += r;
-      canonicalize_rotation(res1);
-
-      install_person(result, 1, res1, 0);
-      install_person(result, 2, res1, 1);
-      install_person(result, 5, res1, 2);
-      install_person(result, 6, res1, 3);
-
-      canonicalize_rotation(result);
-      goto final_getout;
-   }
-   else if (res2->kind == s4x4 && res1->kind == s2x4) {
-      *result = *res2;
-      result->rotation -= r;
-      canonicalize_rotation(result);
-
-      install_person(result, 10, res1, 0);
-      install_person(result, 15, res1, 1);
-      install_person(result, 3,  res1, 2);
-      install_person(result, 1,  res1, 3);
-      install_person(result, 2,  res1, 4);
-      install_person(result, 7,  res1, 5);
-      install_person(result, 11, res1, 6);
-      install_person(result, 9,  res1, 7);
-
-      result->rotation += r;
-      canonicalize_rotation(result);
-      goto final_getout;
-   }
-   else if (res2->kind == s2x6 && res1->kind == s2x2) {
-      *result = *res2;
-
-      res1->rotation += r;
-      canonicalize_rotation(res1);
-
-      install_person(result, 2, res1, 0);
-      install_person(result, 3, res1, 1);
-      install_person(result, 8, res1, 2);
-      install_person(result, 9, res1, 3);
-      goto final_getout;
-   }
-   else if (res2->kind == s4x4 && res1->kind == s2x2) {
-      *result = *res2;
-
-      res1->rotation += r;
-      canonicalize_rotation(res1);
-
-      install_person(result, 15, res1, 0);
-      install_person(result, 3, res1, 1);
-      install_person(result, 7, res1, 2);
-      install_person(result, 11, res1, 3);
-      goto final_getout;
-   }
-   else if (res2->kind == s3x1dmd && res1->kind == s1x4 && (r&1) && ((mask1 & 0xA) == 0)) {
-      the_map = &map_3d1x4;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x6 && res1->kind == s1x4 && (r&1) && ((mask1 & 0xA) == 0)) {
-      setup temp = *res1;
-      *res1 = *res2;
-      *res2 = temp;
-      the_map = &map_1x6t1x4;
-      goto merge_concentric;
-   }
    else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 && (mask1 & 0xC) == 0 && (mask2 & 0xC) == 0) {
       (void) copy_rot(res2, 0, res2, 0, 011);
       (void) copy_rot(res2, 1, res2, 1, 011);
-      res2->rotation +=3;
+      res2->rotation = 3;
       the_map = &map_tgl4l;
-      r = res2->rotation & 2;
-      rot = ((r+3)&3) * 011;
+      rot = 011;
       goto merge_concentric;
    }
    else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 && (mask1 & 0x3) == 0 && (mask2 & 0x3) == 0) {
@@ -2299,423 +2200,12 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       (void) swap_people(res2, 0, 2);
       (void) swap_people(res2, 1, 3);
       the_map = &map_tgl4b;
-      r = 0;
-      rot = 0;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_qtag && res1->kind == s1x2 && ((mask2 & 0x88) == 0)) {
-      outer_elongation = (~res2->rotation) & 1;
-      the_map = &map_s612;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s2x2 && ((mask2 & 0xCC) == 0)) {
-      the_map = &map_2218q;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s4dmd && res1->kind == s2x2 && ((mask2 & 0xF0F0) == 0)) {
-      swap_people(res2, 0, 12);   /* Put them in the corners of a butterfly. */
-      swap_people(res2, 1, 13);
-      swap_people(res2, 2, 14);
-      swap_people(res2, 0, 3);
-      swap_people(res2, 8, 4);
-      swap_people(res2, 9, 5);
-      swap_people(res2, 10, 6);
-      swap_people(res2, 8, 11);
-      the_map = &map_22_4dm;
-      r = 0;       /* It will get canonicalized. */
       rot = 0;
       goto merge_concentric;
    }
    else if (res2->kind == s3x4 && res1->kind == s2x2 && ((mask2 & 06060) == 0)) {
-      clear_person(res2, 12);
-      clear_person(res2, 13);
-      clear_person(res2, 14);
-      clear_person(res2, 15);
-      swap_people(res2, 0, 3);
-      swap_people(res2, 3, 12);
-      swap_people(res2, 1, 13);
-      swap_people(res2, 2, 14);
-      swap_people(res2, 4, 6);
-      swap_people(res2, 8, 9);
-      swap_people(res2, 5, 7);
-      swap_people(res2, 6, 9);
       the_map = &map_2234b;
       warn((mask2 & 06666) ? warn__check_4x4 : warn__check_butterfly);
-      r = 0;       /* It will get canonicalized. */
-      rot = 0;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3dmd && res1->kind == s2x2 && ((mask2 & 07272) == 0)) {
-      clear_person(res2, 12);     /* Put them in the corners of a butterfly. */
-      clear_person(res2, 13);
-      clear_person(res2, 14);
-      clear_person(res2, 15);
-      swap_people(res2, 0, 2);
-      swap_people(res2, 2, 12);
-      swap_people(res2, 4, 6);
-      the_map = &map_2234b;
-      warn(warn__check_butterfly);
-      r = 0;       /* It will get canonicalized. */
-      rot = 0;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x1dmd && res1->kind == s2x2 && ((mask2 & 0x66) == 0)) {
-      the_map = &map_223x1;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s2x2 && ((mask2 & 0x55) == 0)) {
-      the_map = &map_2218;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s2x2 && action == merge_without_gaps && ((mask2 & 0x66) == 0)) {
-      the_map = &map_2218p;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == sdmd && (r&1) && action == merge_without_gaps && ((mask1 & 0xA) == 0) && ((mask2 & 0x88) == 0)) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      the_map = &map_18_d8;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == sdmd && (r&1) && action == merge_without_gaps && ((mask1 & 0xA) == 0) && ((mask2 & 0x22) == 0)) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      the_map = &map_18_d2;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == sdmd && (r&1) && action == merge_without_gaps && ((mask1 & 0xA) == 0) && ((mask2 & 0x11) == 0)) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      the_map = &map_18_d1;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s1x4 && ((mask2 & 0xCC) == 0)) {
-      the_map = &map_1418;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s1x4 && r == 0) {
-      the_map = &map_1418a;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3dmd && res1->kind == s1x2 && ((mask2 & 07070) == 0)) {
-      the_map = &map_123d;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3dmd && res1->kind == sdmd && (r&1)) {
-      the_map = &map_dm3dm;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s1x2 && ((mask2 & 0x44) == 0)) {
-      the_map = &map_1618;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s2x4 && res1->kind == s1x4 && ((mask2 & 0x66) == 0)) {
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_1424;
-      goto merge_concentric;
-   }
-   else if (res1->kind == s_qtag && res2->kind == s2x4 && ((mask1 & 0x33) == 0) && ((mask2 & 0x66) == 0)) {
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_qt24;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_thar && res1->kind == s2x4 && (r&1) && ((mask1 & 0x66) == 0) && ((mask2 & 0xCC) == 0)) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_th124;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_thar && res1->kind == s2x4 && r == 0 && ((mask1 & 0x66) == 0) && ((mask2 & 0x33) == 0)) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_th224;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_hrglass && res1->kind == s_qtag && (r&1) && ((mask1 & 0x88) == 0) && ((mask2 & 0xBB) == 0)) {
-      warn(warn__check_galaxy);
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_qtqhgl;
-      goto merge_concentric;
-   }
-   else if (res1->kind == s1x4 && res2->kind == s_qtag && (r&1) && ((mask2 & 0x88) == 0) && ((mask1 & 0xA) == 0)) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      warn(warn__check_galaxy);
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_qtqx1x4;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_galaxy && res1->kind == s_hrglass && r == 0 && ((mask1 & 0x44) == 0) && ((mask2 & 0xEE) == 0)) {
-      the_map = &map_hglgalh;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_galaxy && res1->kind == s_hrglass && (r&1) && ((mask1 & 0x44) == 0) && ((mask2 & 0xBB) == 0)) {
-      the_map = &map_hglgalv;
-      goto merge_concentric;
-   }
-   else if (res1->kind == sdmd && res2->kind == s2x4 && (mask2 & 0x66) == 0) {
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_dm24;
-      goto merge_concentric;
-   }
-   else if ((res1->kind == s_hrglass || res1->kind == s_dhrglass) && res2->kind == s2x4 && ((mask1 & 0x33) == 0) && ((mask2 & 0x66) == 0)) {
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_hr24;
-      goto merge_concentric;
-   }
-   else if (res1->kind == s_qtag && res2->kind == s2x4 && (r&1) && ((mask2 & 0x66) == 0)) {
-      *result = *res1;
-      r = (res2->rotation - res1->rotation) & 3;
-      rot = r * 011;
-
-      offs = r * 2;
-
-      install_rot(result, 0, res2, 5^offs, rot);
-      install_rot(result, 1, res2, 2^offs, rot);
-      install_rot(result, 4, res2, 1^offs, rot);
-      install_rot(result, 5, res2, 6^offs, rot);
-      goto final_getout;
-   }
-   else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 && ((mask1 & 0xAA) == 0)) {
-      the_map = &map_pp18;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x3dmd && res1->kind == s_1x2dmd && r == 0) {
-      the_map = &map_13d12d;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_ptpd && res1->kind == s1x3dmd && r == 0 && ((mask1 & 0x66) == 0) && ((mask2 & 0x55) == 0)) {
-      the_map = &map_13dptp;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_spindle && res1->kind == s1x3dmd && r == 0 && ((mask1 & 0x66) == 0) && ((mask2 & 0xAA) == 0)) {
-      the_map = &map_13dspn;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x3dmd && res1->kind == s1x8 && r == 0 && ((mask1 & 0x55) == 0) && ((mask2 & 0x66) == 0)) {
-      the_map = &map_13d18;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_spindle && res1->kind == s1x8 && r == 0 && ((mask1 & 0xAA) == 0) && ((mask2 & 0xAA) == 0)) {
-      the_map = &map_14spn;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s2x4 && res1->kind == s_spindle && (r&1) && ((mask1 & 0x55) == 0) && ((mask2 & 0x66) == 0)) {
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_24spn;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_spindle && res1->kind == s_spindle && (r&1) && ((mask1 & 0x55) == 0) && ((mask2 & 0xAA) == 0)) {
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_spnspn;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_spindle && res1->kind == s_spindle && (r&1) && ((mask1 & 0xAA) == 0) && ((mask2 & 0x55) == 0)) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_spnspn;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_rigger && res1->kind == s1x8 && r == 0 && ((mask1 & 0xCC) == 0)) {
-      the_map = &map_rig1x8;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_crosswave && res1->kind == s1x2 && !(r&1)) {
-      install_person(res2, 3, res2, 2);
-      install_person(res2, 7, res2, 6);
-      clear_person(res2, 2);
-      clear_person(res2, 6);
-
-      the_map = &map_xw12h;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_crosswave && res1->kind == s1x2 && (r&1)) {
-      the_map = &map_xw12v;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s2x4 && res1->kind == s1x8 && r == 0 && action == merge_without_gaps && ((mask1 & 0x99) == 0) && ((mask2 & 0x66) == 0)) {
-      setup temp = *res2;
-
-      clear_people(res2);
-      (void) copy_person(res2, 1, &temp, 0);
-      (void) copy_person(res2, 5, &temp, 4);
-      (void) copy_person(res2, 3, &temp, 7);
-      (void) copy_person(res2, 7, &temp, 3);
-
-      the_map = &map_2418;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s2x4 && res1->kind == s1x8 && (r&1) && action == merge_without_gaps && ((mask1 & 0xAA) == 0) && ((mask2 & 0x66) == 0)) {
-      outer_elongation = res2->rotation & 1;
-      the_map = &map_24qtv;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x3dmd && res1->kind == s1x4 && r == 0 && action == merge_without_gaps && ((mask2 & 0xAA) == 0)) {
-      swap_people(res2, 1, 2);
-      swap_people(res2, 5, 6);
-      the_map = &map_13d14;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_1x2dmd && res1->kind == s1x4 && r == 0 && ((mask2 & 044) == 0)) {
-      setup temp = *res2;
-
-      clear_people(res2);
-      (void) copy_person(res2, 0, &temp, 0);
-      (void) copy_person(res2, 1, &temp, 1);
-      (void) copy_person(res2, 4, &temp, 3);
-      (void) copy_person(res2, 5, &temp, 4);
-      the_map = &map_12d14;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x1dmd && res1->kind == s1x8 && r == 0 && action == merge_without_gaps && ((mask1 & 0xAA) == 0)) {
-      swap_people(res2, 0, 1);
-      swap_people(res2, 4, 5);
-      the_map = &map_31d18;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s1x6 && r == 0 && action == merge_without_gaps && ((mask1 & 022) == 0)) {
-      the_map = &map_18_16;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x1dmd && res1->kind == s1x2 && (r&1)) {
-      install_person(res2, 2, res2, 3);
-      install_person(res2, 6, res2, 7);
-      the_map = &map_31d12r;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x1dmd && res1->kind == s1x2 && r == 0) {
-      the_map = &map_31d12;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x1dmd && res1->kind == s1x4 && r == 0) {
-      the_map = &map_31d14;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x1dmd && res1->kind == s1x6 && r == 0) {
-      the_map = &map_31d16;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3dmd && res1->kind == s1x2 && r == 0) {
-      the_map = &map_3d12;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3dmd && res1->kind == s1x4 && r == 0) {
-      the_map = &map_3d14;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3dmd && res1->kind == s1x6 && r == 0) {
-      the_map = &map_3d16;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3dmd && res1->kind == s2x3 && r == 0 && ((mask2 & 07070) == 0)) {
-      the_map = &map_3d23;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_bone && res1->kind == s1x4 && r == 0) {
-      the_map = &map_bn14;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x4 && res1->kind == s_qtag && r == 0) {
-      the_map = &map_34qt;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s_bone && r == 0 && (mask1 & 0x33) == 0) {
-      the_map = &map_18bn;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_ptpd && res1->kind == s2x2 && (mask2 & 0x55) == 0) {
-      the_map = &map_ptp22;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_galaxy && res1->kind == s2x2) {
-      the_map = &map_gal22;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_galaxy && res1->kind == s1x4 && (mask2 & 0xAA) == 0) {
-      res2->rotation -= r;
-      canonicalize_rotation(res2);
-      result->kind = s3x1dmd;
-      (void) copy_person(result, 0, res2, 0);
-      (void) copy_person(result, 3, res2, 2);
-      (void) copy_person(result, 4, res2, 4);
-      (void) copy_person(result, 7, res2, 6);
-      (void) copy_person(result, 1, res1, 0);
-      (void) copy_person(result, 2, res1, 1);
-      (void) copy_person(result, 5, res1, 2);
-      (void) copy_person(result, 6, res1, 3);
-      result->rotation += r;
-      canonicalize_rotation(result);
-      goto final_getout;
-   }
-   else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix && (mask2 & 0xCC) == 0) {
-      the_map = &map_bn22;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_spindle && res1->kind == s_1x2dmd && action != merge_strict_matrix && r==0 && (mask2 & 0x55) == 0) {
-      result->kind = s1x3dmd;
-      (void) copy_person(result, 0, res2, 7);
-      (void) copy_person(result, 3, res2, 1);
-      (void) copy_person(result, 4, res2, 3);
-      (void) copy_person(result, 7, res2, 5);
-      (void) copy_person(result, 1, res1, 0);
-      (void) copy_person(result, 2, res1, 1);
-      (void) copy_person(result, 5, res1, 3);
-      (void) copy_person(result, 6, res1, 4);
-      install_person(result, 3, res1, 2);
-      install_person(result, 7, res1, 5);
-      canonicalize_rotation(result);
-      goto final_getout;
-   }
-   else if (res2->kind == s1x3dmd && res1->kind == s2x3 && action != merge_strict_matrix && r==0 && (mask2 & 0x66) == 0) {
-      swap_people(res2, 0, 7);
-      swap_people(res2, 1, 3);
-      swap_people(res2, 3, 4);
-      swap_people(res2, 0, 5);
-      the_map = &map_13d_23;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 && (mask2 & 0xAA) == 0) {
-      *result = *res1;
-
-      install_person(result, 0, res2, 0);
-      install_person(result, 2, res2, 2);
-      install_person(result, 4, res2, 4);
-      install_person(result, 6, res2, 6);
-      goto final_getout;
-   }
-   else if (res2->kind == s2x4 && res1->kind == s_bone && r == 0 && (mask2 & 0x66) == 0) {
-      *result = *res1;
-
-      install_person(result, 0, res2, 0);
-      install_person(result, 1, res2, 3);
-      install_person(result, 4, res2, 4);
-      install_person(result, 5, res2, 7);
-      goto final_getout;
-   }
-   else if (res2->kind == s2x6 && res1->kind == s_qtag && (r&1) && (mask1 & 0x33) == 0 && (mask2 & 0x30C) == 0) {
-      the_map = &map_26qt;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s2x6 && res1->kind == s1x4 && (r&1) && (mask2 & 0x30C) == 0) {
-      the_map = &map_2614;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s2x6 && res1->kind == s2x4 && r == 0) {
-      the_map = &map_2624;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s2x8 && res1->kind == s2x4 && r == 0) {
-      the_map = &map_2824;
       goto merge_concentric;
    }
 
@@ -2776,7 +2266,19 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 
    merge_concentric:
 
-   if (the_map->conc_type == schema_nothing) goto merge_otherwise;
+   if (the_map->swap_setups & 1) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      rot = ((-r) & 3) * 011;
+   }
+
+   outer_elongation = (res2->rotation ^ (the_map->swap_setups >> 6)) & 1;
+   warn(the_map->warning);
+
+   if (the_map->conc_type == schema_by_array) goto merge_special;
+   if (the_map->conc_type == schema_matrix) goto merge_general;
+   if (the_map->conc_type == schema_nothing) goto merge_plain_res1;
 
    rot = 0;
    res2->kind = the_map->outerk;
@@ -2800,14 +2302,30 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, result);
    goto final_getout;
 
-   merge_otherwise:
+   merge_general:
 
-   res2->kind = the_map->innerk;
    *result = *res2;
-   canonicalize_rotation(result);
-   offs = ((setup_attrs[res1->kind].setup_limits+1) * r) >> 2;
+   result->kind = the_map->innerk;
+   clear_people(result);
+   scatter(result, res2, the_map->outermap, setup_attrs[res2->kind].setup_limits, 0);
    for (i=0; i<=setup_attrs[res1->kind].setup_limits; i++)
-      install_rot(result, the_map->innermap[i], res1, i^offs, rot);
+      install_rot(result, the_map->innermap[i], res1, i, rot);
+   goto final_getout;
+
+   merge_plain_res1:
+
+   *result = *res2;
+   for (i=0; i<=setup_attrs[res1->kind].setup_limits; i++)
+      install_rot(result, the_map->innermap[i], res1, i, rot);
+   goto final_getout;
+
+   merge_special:
+
+   *result = *res2;
+   result->kind = the_map->innerk;
+   canonicalize_rotation(result);
+   for (i=0; i<=setup_attrs[res1->kind].setup_limits; i++)
+      install_rot(result, the_map->innermap[i], res1, i, rot);
 
    final_getout:
 
@@ -3035,6 +2553,8 @@ static Const fixer ftharew   = {s1x2, s_thar,      0, 0, 2,       &ftharew,   &f
 
 static Const fixer fqtgj1    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj1,    0,          0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
 static Const fixer fqtgj2    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj2,    0,          0,          0, 0,          0,    0,          0,          {0, 7, 3, 4}};
+static Const fixer f2x3j1    = {s1x2, s2x3,        0, 0, 2,       &f2x3j1,    0,          0,          0, 0,          0,    0,          0,          {0, 1, 4, 3}};
+static Const fixer f2x3j2    = {s1x2, s2x3,        0, 0, 2,       &f2x3j2,    0,          0,          0, 0,          0,    0,          0,          {1, 2, 5, 4}};
 static Const fixer fqtgjj1   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj1,   &fqtgjj1,   {7, 1, 3, 5}};
 static Const fixer fqtgjj2   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj2,   &fqtgjj2,   {0, 3, 4, 7}};
 static Const fixer fgalcv    = {s1x2, s_galaxy,    1, 0, 1,       &fgalcv,    &fgalch,    0,          0, 0,          0,    0,          0,          {2, 6}};
@@ -3304,6 +2824,8 @@ static Const sel_item sel_table[] = {
    {LOOKUP_NONE,               s2x2,        0xC,    &boxcc,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s_qtag,      0xAA,   &fqtgj1,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s_qtag,      0x99,   &fqtgj2,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x3,         033,   &f2x3j1,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x3,         066,   &f2x3j2,     (fixer *) 0, -1},
    {LOOKUP_NONE,               nothing}};
 
 

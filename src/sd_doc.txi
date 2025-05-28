@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: April 22, 1997
+@set Time-stamp: June 7, 1997
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.86
+@set sd-version 31.87
 @set full-manual
 @c %**end of header
 @iftex
@@ -187,6 +187,8 @@ Call Notes
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
+* Percolate and Cover Up::      Percolate and Cover Up
+* Countershake::                Countershake
 * Snag Circulate::              Snag Circulate
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
@@ -1019,6 +1021,13 @@ The line
 @end example
 would be used if you wish to type calls and concepts without the normal
 blanks separating them, or without hyphens.  @xref{Ignoring Blanks}.
+
+The line
+@example
+   no_warnings
+@end example
+would be used if you wish to suppress the printing of the warning messages
+that are sometimes printed to help less-experienced callers.
 
 The line
 @example
@@ -2477,6 +2486,8 @@ appropriate to get the dancers through the action that you intend.
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
+* Percolate and Cover Up::      Percolate and Cover Up
+* Countershake::                Countershake
 * Snag Circulate::              Snag Circulate
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
@@ -2714,7 +2725,7 @@ that is commonly expressed as @samp{tag the line, in}.  Note that
 the A2 designators @samp{zig-zag}, etc., are among the permissible
 directions.
 
-@node Grand Chain 8, Snag Circulate, Face <DIRECTION>, Call Notes
+@node Grand Chain 8, Percolate and Cover Up, Face <DIRECTION>, Call Notes
 @section Grand Chain 8
 
 In order to handle all of the nuances of @samp{grand chain 8}, it
@@ -2723,7 +2734,35 @@ Use this call when you want just the centers or ends to do their part,
 or you are using some concept like @samp{central}.  In other circumstances,
 just @samp{grand chain 8} should work.
 
-@node Snag Circulate, Bridge the Gap, Grand Chain 8, Call Notes
+@node Percolate and Cover Up, Countershake, Grand Chain 8, Call Notes
+@section Percolate and Cover Up
+
+When performed from some formations (but not waves), these calls have the
+property that the centers stay centers and the ends stay ends.
+One can make use of that property, by using concepts like @samp{central}
+when the formation is appropriate.  Unfortunately, @code{Sd}, can't figure
+out whether to allow the @samp{central} concept, based on the starting
+formation, without help.  Use the calls @samp{percolate (centers and ends)}
+and @samp{cover up (centers and ends)} when using the @samp{central} concept.
+@code{Sd} will, of course, check that the facing directions are such that
+the dancers would have stayed in the center had all 8 people done the call.
+
+@node Countershake, Snag Circulate, Percolate and Cover Up, Call Notes
+@section Countershake
+
+The centers and ends each have 3 parts on this call, but they are
+not synchronized with each other.  Therefore, some variants of
+@samp{countershake} have the property that the fractionalization
+is not well defined.  If you want to call @samp{3x3 countershake} from
+a 2x6 matrix, some of the dancers won't be able to fractionalize it, though
+they will be able to do the entire call.
+
+The plain call @samp{countershake} is defined by parts.  @code{Sd} recognizes
+another call, @samp{countershake (matrix)} that is defined as one action.
+Use the latter when you want to apply concepts like @samp{3x3} in a 2x6 matrix.
+It is not fractionalizable.
+
+@node Snag Circulate, Bridge the Gap, Countershake, Call Notes
 @section Snag Circulate
 
 The @samp{snag} concept, meaning to have the centers do just half of the
@@ -2745,7 +2784,7 @@ is equivalent to @samp{tandem twosome fan thru to a wave} from that formation.
 If the call had been defined that way, it could be used with concepts
 such as @code{offset columns}.  Callers sometimes use this call with such
 concepts, when the virtual starting formation is a double pass thru.  To
-do this in Sd, you must use the call @samp{bridge the gap (dpt)}.  It is
+do this in @code{Sd}, you must use the call @samp{bridge the gap (dpt)}.  It is
 defined as @samp{tandem twosome fan thru to a wave}, and is only legal
 in a (virtual) starting double pass thru.  The call @samp{bridge the gap}
 is the actual space-invader call.
@@ -2997,11 +3036,20 @@ while typing the call name, these variations should be displayed.
 
 In the concept names, ``C/L/W'' has the usual meaning of ``columns,
 lines, or waves.''  Extending that terminology, ``B'' means boxes,
-``D'' means diamonds, ``1'' means 1/4 tags, and ``3'' means 3/4 tags.
+and ``D'' means diamonds.
+
+``1T'' means 1/4 tags, ``3T'' means 3/4 tags,
+``1L'' means 1/4 lines, and ``3L'' means 3/4 lines.
+A 1/4 line or 3/4 line requires that the centers
+form a 2-faced line, and the ends be looking in or out, respectively.
+A 1/4 tag or 3/4 tag requires that the centers
+form some kind of line (not necessarily a wave), and the ends be looking in or out, respectively.
+
+``GT'' means ``general 1/4 tags'', in which the ends could individually
+be facing either in or out, and the centers form some kind of line.
+
 ``DS'' means ``diamond spots'', that is, diamonds or general 1/4 tags
 in which no assumption is made about anyone's facing direction.
-``GT'' means ``general 1/4 tags'', in which the ends could individually
-be facing either in or out.
 
 In all concepts that can specify either lines or waves,
 the ``waves'' version has an implicit ``assume waves'' operation
@@ -3032,7 +3080,13 @@ of line in the middle, and the ends as a couple facing in or out, respectively.
 Hence, for example, the @code{split phantom 1/4 tags} concept includes 1/4 tags,
 1/4 lines, or any kind of line in the center, as long as the ends are facing in.
 You may give an explicit @code{assume} concept to make the setup more specific if
-you wish, as in @code{split phantom 1/4 tags} followed by @code{assume right 1/4 lines}.
+you wish, as in @code{split phantom 1/4 tags} followed by @code{assume 1/4 tags}
+(to require a wave of either handedness in the center)
+or @code{assume right 1/4 tags} (to require a right-handed wave).
+
+The concepts with the words @code{1/4 lines} or @code{3/4 lines} are similar, but
+require that the centers form a 2-faced line.  An explicit @code{assume} concept,
+such as @code{assume left 1/4 lines}, may be used.
 
 The concepts with the words @code{general 1/4 tags} have an implicit @code{assume
 general 1/4 tags} operation.  This means that the centers must think that they are
@@ -3062,9 +3116,9 @@ In all cases outboard phantoms are added as required at the start of the call,
 and removed where possible at the conclusion of the call.
 
 @table @code
-@item split phantom C/L/W/B/D/1/3/DS/GT
-@item interlocked phantom C/L/W/B/D/1/3/DS/GT
-@item phantom C/L/W/B/D/1/3/DS/GT
+@item split phantom C/L/W/B/D/1T/3T/1L/3L/DS/GT
+@item interlocked phantom C/L/W/B/D/1T/3T/1L/3L/DS/GT
+@item phantom C/L/W/B/D/1T/3T/1L/3L/DS/GT
 These are straightforward.
 @item 12 matrix split phantom C/L
 @item 12 matrix interlocked phantom C/L
@@ -3090,8 +3144,8 @@ use the word @code{grand}.
 @item twin phantom C/L/W of 6
 These are done from a 2x6, and form two parallel 1x6's with phantoms,
 in each of which the call is done independently.
-@item triple C/L/W/B/D/1/3/DS/GT
-@item quadruple C/L/W/B/D/1/3/DS/GT
+@item triple C/L/W/B/D/1T/3T/1L/3L/DS/GT
+@item quadruple C/L/W/B/D/1T/3T/1L/3L/DS/GT
 These are straightforward.
 @item center triple C/L/W/B/D (singular)
 @item outside triple C/L/W/B/D
@@ -3117,17 +3171,17 @@ independent 4-person calls.
 @item <N/4> crazy phantom C/L/W/B/D/DS/GT
 @item <N/4> reverse crazy phantom C/L/W/B/D/DS/GT
 These are straightforward.
-@item triple C/L/W/B/D/1 working together
+@item triple C/L/W/B/D/1T/1L working together
 @item triple C/L/W/B working apart
 @item triple L/W/B working forward/backward
-@item triple C/B/1 working right/left
+@item triple C/B/1T/1L working right/left
 @item triple C/L/W/B working clockwise/counterclockwise
-@item quadruple C/L/W/B/D/1 working together
+@item quadruple C/L/W/B/D/1T/1L working together
 @item quadruple C/L/W/B working apart
 @item quadruple L/W/B working forward/backward
-@item quadruple C/B/1 working right/left
+@item quadruple C/B/1T/1L working right/left
 @item quadruple C/L/W/B working clockwise/counterclockwise
-@item quadruple C/L/W/B/D/1 working toward the center
+@item quadruple C/L/W/B/D/1T/1L working toward the center
 These are straightforward.
 @item triple diagonal C/L/W
 @item triple diagonal L/W working forward/backward
@@ -3143,7 +3197,7 @@ formed, and the call is done independently in each of them.
 @item concentric quadruple boxes
 These are done from a 2x6 or 2x8 respectively.  The concentric boxes
 work independently.
-@item twin phantom D/1/3/DS/GT
+@item twin phantom D/1T/3T/1L/3L/DS/GT
 These are two sets of parallel diamonds or 1/4 tags (that is,
 setups in which you could call @code{6x2 acey deucey} or
 @code{scoot and plenty}) that are next to each other along the
@@ -3164,8 +3218,10 @@ The menu for these is brought up by clicking on the ``couples/tandem concepts'' 
 @item siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese twosome
 @item couples of three@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples threesome
 @item tandems of three@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem threesome
+@item siamese of three@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese threesome
 @item couples of four@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples foursome
 @item tandems of four@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem foursome
+@item siamese of four@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese foursome
 @item boxes work solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ boxsome
 @item diamonds work solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ diamondsome
 @item skew@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ skewsome
@@ -3286,7 +3342,7 @@ parallelogram.
 This is a pair of lines or columns that have been distorted by having the
 centers or the ends move one full matrix spot, to make a 4x4 matrix, or
 by having centers and adjacent ends move 1/2 matrix spot in opposite
-directions, to make a 3x4 matrix.  The people move together in pairs.
+directions, to make a 3x4 matrix.
 The 4x4 matrix version can be formed by having either the centers or the
 ends press ahead from waves. The 3x4 matrix version can be formed by
 having everyone 1/2 press ahead from waves.
@@ -3344,10 +3400,9 @@ as a word appearing in a call name is extremely hazy.
 The @code{once removed} concept encompasses diamonds. so you can
 say either @code{once removed} or @code{once removed diamonds}.
 @item magic
-@item diagonal
 @item diagonal box
 @item trapezoid
-These are straightforward.  @code{diagonal box} is the same as @code{diagonal}.
+These are straightforward.
 @item overlapped diamonds
 This is done from a 1x4.
 @item overlapped lines
@@ -3366,17 +3421,25 @@ It is equivalent to @code{Z C/L/W once removed}.
 This is done from 3x4 matrix offset lines or columns.  The people
 that would form each distorted line or column instead form a distorted
 box.
+@item Z
+This can be done from a single ``Z'', or from two ``Z'''s.
+A 4-person call must be used.
 @item each Z
 @item interlocked Z's
-These are done from 3x4 or 4x4 ``Z'' lines or columns, and are equivalent
-to @code{Z C/L/W split} and @code{Z C/L/W once removed}, respectively.
+These two are done from a setup in which there are two identifiable ``Z'''s.
+A 4-person call must be used.
 @item jay
 @item back-to-front jay
 @item back-to-back jay
+@item front jay
+@item back jay
 These include the cases of a 2-faced line in the center.
 In that case the shapes of the resultant 4-person boxes are
 different, and the concepts are equivalent to the ``parallelogram''
 concepts below.
+@item left jay
+@item right jay
+These are similar to front jay and back jay.
 @item facing parallelogram
 @item back-to-front parallelogram
 @item back-to-back parallelogram
@@ -3468,13 +3531,13 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item <ANYONE> are stable
 @item <N/4> stable
 @item <ANYONE> are <N/4> stable
+@item emulate
 @item trace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item ferris
 @item release
 @item stretch
 @item stretched setup
-@item stretched box
-@item stretched line
+@item stretched C/L/W/B/D
 These are straightforward.
 @item centers
 @item ends
@@ -3515,6 +3578,12 @@ to dictate where the ends should finish.
 @item checkerboard
 @item checkerbox
 @item checkerdiamond
+@item orbitboard
+@item orbitbox
+@item orbitdiamond
+@item twin orbitboard
+@item twin orbitbox
+@item twin orbitdiamond
 @item <ANYONE> preferred for trade, checkerboard
 @item <ANYONE> preferred for trade, checkerbox
 @item <ANYONE> preferred for trade, checkerdiamond
@@ -3810,9 +3879,10 @@ See @ref{Concentric}.
 @item grand working right/left
 @item grand working as centers
 @item grand working as ends
+@item grand working clockwise/counterclockwise
 @item <ANYONE> are centers of a double-offset 1/4 tag
 @item <ANYONE> are centers of a double-offset 3/4 tag
-@item <ANYONE> are centers of a double-offset thing
+@item <ANYONE> are centers of double-offset diamonds
 @item <ANYONE> are centers of double-offset diamond spots
 @item inrigger
 @item outrigger
@@ -3822,10 +3892,11 @@ See @ref{Concentric}.
 @item frontrigger
 These are straightforward.
 @item common point galaxy
-@item common spot columns
 @item common point diamonds
-@item common end lines
-@item common end waves
+@item common end L/W
+@item common center L/W
+@item common spot C/L/W/D
+@item common two-faced lines
 The program assumes that the ``common spot'' concepts treat people as though
 they had collided and taken @i{right} hands.  Left-hand miniwaves are not
 accepted.  If you want to use these concepts with people in left-hand
@@ -3967,6 +4038,7 @@ are facing.  They are
    assume two-faced lines
    assume one-faced lines
    assume inverted lines
+   assume normal boxes
    assume inverted boxes
    assume normal columns
    assume magic columns
@@ -3978,12 +4050,16 @@ are facing.  They are
    assume back-to-back lines
    assume general diamonds
    assume general 1/4 tags
+   assume 1/4 tags
    assume right 1/4 tags
    assume left 1/4 tags
+   assume 3/4 tags
    assume right 3/4 tags
    assume left 3/4 tags
+   assume 1/4 lines
    assume right 1/4 lines
    assume left 1/4 lines
+   assume 3/4 lines
    assume right 3/4 lines
    assume left 3/4 lines
    assume normal diamonds
@@ -4006,7 +4082,16 @@ Use these concepts with care.  Many dancers don't like to be held responsible
 for the facing direction of phantoms.
 
 These concepts will be implicitly applied whenever something like @code{split
-phantom waves} or @code{triple diamonds} is used.
+phantom waves} or @code{triple diamonds} is used, except for 1/4 tags and 3/4 tags.
+Concepts like @code{split phantom 1/4 tags} and @code{split phantom 3/4 tags}
+assume that the ends are facing in or out, respectively, and that the centers
+form any kind of line at all.  The concepts
+@code{assume 1/4 tags} and @code{assume 3/4 tags}
+create the additional assumption that the centers are in a wave (of either handedness.)
+The concepts @code{split phantom 1/4 lines} and @code{split phantom 3/4 lines}
+require a 2-faced line, and so an additional
+@code{assume 1/4 lines} and @code{assume 3/4 lines}
+concept would have no effect.
 
 It is of course illegal to use one of these concepts, either explicitly
 with @code{assume} or implicitly with something like @code{split phantom
@@ -4082,7 +4167,7 @@ You can do this in either of two ways.  You can use the concepts with names like
 
 Alternatively, you can use the @code{as couples} (or whatever) concept,
 followed by a suitable @code{assume} concept, such as @code{assume
-general 1/4 tags} or @code{assume right 1/4 tags}.
+general 1/4 tags} or @code{assume 1/4 tags}.
 
 For example, from an as-couples wave, you could select:
 @example
@@ -4090,7 +4175,7 @@ For example, from an as-couples wave, you could select:
 @end example
 or
 @example
-   as couples assume right 1/4 tags scoot and little
+   as couples assume 1/4 tags scoot and little
 @end example
 Or, from parallel waves, you could select:
 @example

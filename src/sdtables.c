@@ -1007,14 +1007,14 @@ Private id_bit_table id_bit_table_crosswave[] = {
       ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_CTR2|ID2_CTRDMD| ID2_CTR1X4}};
 
 Private id_bit_table id_bit_table_gal[] = {
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER},
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER},
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER},
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER}};
+   {ID2_END,                      ID2_END,                      ID2_END,                      ID2_END},
+   {ID2_BOX0|ID2_CENTER|ID2_CTR4, ID2_BOX3|ID2_CENTER|ID2_CTR4, ID2_BOX2|ID2_CENTER|ID2_CTR4, ID2_BOX1|ID2_CENTER|ID2_CTR4},
+   {ID2_END,                      ID2_END,                      ID2_END,                      ID2_END},
+   {ID2_BOX1|ID2_CENTER|ID2_CTR4, ID2_BOX0|ID2_CENTER|ID2_CTR4, ID2_BOX3|ID2_CENTER|ID2_CTR4, ID2_BOX2|ID2_CENTER|ID2_CTR4},
+   {ID2_END,                      ID2_END,                      ID2_END,                      ID2_END},
+   {ID2_BOX2|ID2_CENTER|ID2_CTR4, ID2_BOX1|ID2_CENTER|ID2_CTR4, ID2_BOX0|ID2_CENTER|ID2_CTR4, ID2_BOX3|ID2_CENTER|ID2_CTR4},
+   {ID2_END,                      ID2_END,                      ID2_END,                      ID2_END},
+   {ID2_BOX3|ID2_CENTER|ID2_CTR4, ID2_BOX2|ID2_CENTER|ID2_CTR4, ID2_BOX1|ID2_CENTER|ID2_CTR4, ID2_BOX0|ID2_CENTER|ID2_CTR4}};
 
 Private id_bit_table id_bit_table_hrglass[] = {
    {ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6},
@@ -2198,6 +2198,17 @@ setup_attr setup_attrs[] = {
       id_bit_table_2x6p,
       {  "a  b  c  d  e  f@@l  k  j  i  h  g",
          "l  a@@k  b@@j  c@@i  d@@h  e@@g  f"}},
+   /* d3x4 */
+      {11,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_d3x4,   b_d4x3},
+      { 5, 3},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a              e@   b  c  d@l              f@   j  i  h@k              g",
+         "k  l  a@@   j  b@@   i  c@@   h  d@@g  f  e"}},
    /* s1p5x8 */
       {15,
       (coordrec *) 0,
@@ -2684,6 +2695,8 @@ int begin_sizes[] = {
    12,         /* b_4x3 */
    12,         /* b_2x6 */
    12,         /* b_6x2 */
+   12,         /* b_d3x4 */
+   12,         /* b_d4x3 */
    16,         /* b_2x8 */
    16,         /* b_8x2 */
    16,         /* b_4x4 */
@@ -2892,6 +2905,8 @@ Private map_thing map_2x8_2x2  = {{0, 1, 14, 15,         2, 3, 12, 13,         4
 Private map_thing map_conc_qb  = {{0, 7, 8, 15,          1, 6, 9, 14,          2, 5, 10, 13,     3, 4, 11, 12},      MPKIND__CONCPHAN,    0, 4,  s2x8,   s2x2,      0x000, 0};
 Private map_thing map_4dmd_dmd = {{0, 13, 11, 12,        1, 15, 10, 14,        2, 6, 9, 7,       3, 4, 8, 5},        MPKIND__SPLIT,       0, 4,  s4dmd,  sdmd,      0x055, 0};
 Private map_thing map_2x6_1x6           = {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},                     MPKIND__SPLIT,       0, 2,  s2x6,   s1x6,      0x000, 1};
+Private map_thing map_3x6_1x6           = {{14, 13, 12, 9, 10, 11,            15, 16, 17, 6, 7, 8,
+                                                                              0, 1, 2, 5, 4, 3},                     MPKIND__SPLIT,       0, 3,  s3x6,   s1x6,      0x000, 1};
 Private map_thing map_2x8_1x8           = {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},               MPKIND__SPLIT,       0, 2,  s2x8,   s1x8,      0x000, 1};
 Private map_thing map_1x12_1x6          = {{0, 1, 2, 5, 4, 3,                 11, 10, 9, 6, 7, 8},                   MPKIND__SPLIT,       0, 2,  s1x12,  s1x6,      0x000, 0};
 /* Special maps for putting back end-to-end 1x6's, or 1x2 diamonds, resulting from collisions at one end. */
@@ -2972,6 +2987,7 @@ Private map_thing map_dmd_rmv           = {{6, 0, 3, 5,                       7,
 Private map_thing map_dmd_rmvr          = {{0, 3, 5, 6,                       1, 2, 4, 7},                           MPKIND__REMOVED,     0, 2,  s_qtag, sdmd,      0x005, 0};
         map_thing map_dbloff1           = {{0, 1, 3, 2, 4, 5, 7, 6},                                                 MPKIND__NONE,        0, 1,  s2x4,   s_qtag,    0x000, 0};
         map_thing map_dbloff2           = {{2, 3, 4, 5, 6, 7, 0, 1},                                                 MPKIND__NONE,        0, 1,  s2x4,   s_qtag,    0x000, 0};
+Private map_thing map_ov_1x4_1          = {{0, 1, 5, 2,                     2, 5, 3, 4},                             MPKIND__OVERLAP,     0, 2,  s1x6,   s1x4,      0x000, 0};
 Private map_thing map_ov_1x4_2          = {{0, 1, 2, 3,            3, 2, 7, 6,            6, 7, 4, 5},               MPKIND__OVERLAP,     0, 3,  s1x8,   s1x4,      0x000, 0};
 Private map_thing map_ov_1x4_3          = {{9, 8, 6, 7,            10, 11, 4, 5,          0, 1, 3, 2},               MPKIND__OVERLAP,     3, 3,  s3x4,   s1x4,      0x000, 0};
 Private map_thing map_ov_s2x2_1         = {{0, 1, 4, 5,                     1, 2, 3, 4},                             MPKIND__OVERLAP,     0, 2,  s2x3,   s2x2,      0x000, 0};
@@ -2999,6 +3015,7 @@ Private map_thing map_ov_qtag_2         = {{0, 1, 15, 14, 10, 11, 12, 13,     1,
 
         map_thing map_inner_box         = {{2, 3, 4, 5, 10, 11, 12, 13},                                             MPKIND__NONE,        0, 1,  s2x8,   s2x4,      0x000, 0};
 
+Private map_thing map_lh_s2x3_a         = {{15, 16, 17, 12, 13, 14,          3, 4, 5, 6, 7, 8},                      MPKIND__OFFS_L_HALF, 0, 2,  s3x6,   s2x3,      0x000, 0};
 Private map_thing map_lh_s2x4_2         = {{20, 21, 22, 23, 16, 17, 18, 19,   4, 5, 6, 7, 8, 9, 10, 11},             MPKIND__OFFS_L_HALF, 0, 2,  s3x8,   s2x4,      0x000, 0};
 Private map_thing map_lh_s2x4_3         = {{20, 21, 22, 23, 12, 13, 14, 15,   0, 1, 2, 3, 8, 9, 10, 11},             MPKIND__OFFS_L_HALF, 0, 2,  s4x6,   s2x4,      0x000, 1};
 Private map_thing map_lh_s1x4_2         = {{15, 14, 12, 13,                   4, 5, 7, 6},                           MPKIND__OFFS_L_HALF, 0, 2,  s1p5x8, s1x4,      0x000, 0};
@@ -3015,7 +3032,7 @@ Private map_thing map_lh_s2x4_1         = {{10, 11, 2, 3, 4, 5, 8, 9},          
 Private map_thing map_lh_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7},                                                 MPKIND__OFFS_L_HALF, 2, 1,  s1x8,   s1x8,      0x000, 0};
         map_thing map_lh_s2x3_3         = {{1, 2, 4, 5, 7, 3,                 13, 15, 11, 9, 10, 12},                MPKIND__OFFS_L_HALF, 0, 2,  s4x4,   s2x3,      0x005, 1};
         map_thing map_lh_s2x3_2         = {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},                  MPKIND__OFFS_L_HALF, 0, 2,  s4x4,   s2x3,      0x000, 0};
-
+Private map_thing map_rh_s2x3_a         = {{0, 1, 2, 17, 16, 15,              8, 7, 6, 9, 10, 11},                   MPKIND__OFFS_R_HALF, 0, 2,  s3x6,   s2x3,      0x000, 0};
 Private map_thing map_rh_s2x4_2         = {{0, 1, 2, 3, 23, 22, 21, 20,       11, 10, 9, 8, 12, 13, 14, 15},         MPKIND__OFFS_R_HALF, 0, 2,  s3x8,   s2x4,      0x000, 0};
 Private map_thing map_rh_s2x4_3         = {{18, 19, 20, 21, 14, 15, 16, 17,   2, 3, 4, 5, 6, 7, 8, 9},               MPKIND__OFFS_R_HALF, 0, 2,  s4x6,   s2x4,      0x000, 1};
 Private map_thing map_rh_s1x4_2         = {{0, 1, 3, 2,                       11, 10, 8, 9},                         MPKIND__OFFS_R_HALF, 0, 2,  s1p5x8, s1x4,      0x000, 0};
@@ -3170,8 +3187,10 @@ mapcoder map_init_table[] = {
    {MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF, 0), &map_rh_s1x4_2},
    {MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF, 1), &map_rh_s1x4_3},
    {MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF, 1), &map_lh_bigd},
+   {MAPCODE(s2x3,2,MPKIND__OFFS_R_HALF, 0), &map_rh_s2x3_a},
    {MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF, 0), &map_rh_s2x4_2},
    {MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF, 1), &map_rh_s2x4_3},
+
    {MAPCODE(s1x8,1,MPKIND__OFFS_L_HALF, 0), &map_lh_s1x8_0},
    {MAPCODE(s2x4,1,MPKIND__OFFS_L_HALF, 0), &map_lh_s2x4_0},
    {MAPCODE(s2x4,1,MPKIND__OFFS_L_HALF, 1), &map_lh_s2x4_1},
@@ -3180,6 +3199,7 @@ mapcoder map_init_table[] = {
    {MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF, 0), &map_lh_s1x4_2},
    {MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF, 1), &map_lh_s1x4_3},
    {MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF, 1), &map_rh_bigd},
+   {MAPCODE(s2x3,2,MPKIND__OFFS_L_HALF, 0), &map_lh_s2x3_a},
    {MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF, 0), &map_lh_s2x4_2},
    {MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF, 1), &map_lh_s2x4_3},
 
@@ -3207,6 +3227,7 @@ mapcoder map_init_table[] = {
    {MAPCODE(s2x3,3,MPKIND__OVERLAP,     1), &map_ov_2x3_3},
    {MAPCODE(s2x2,3,MPKIND__OVERLAP,     0), &map_ov_s2x2_2},
    {MAPCODE(s_qtag,3,MPKIND__OVERLAP,   0), &map_ov_qtag_2},
+   {MAPCODE(s1x4,2,MPKIND__OVERLAP,     0), &map_ov_1x4_1},
    {MAPCODE(s1x4,3,MPKIND__OVERLAP,     0), &map_ov_1x4_2},
    {MAPCODE(s1x4,3,MPKIND__OVERLAP,     1), &map_ov_1x4_3},
    {MAPCODE(s2x4,3,MPKIND__OVERLAP,     0), &map_ov_2x4_2},
@@ -3246,7 +3267,7 @@ map_thing *split_lists[][6] = {
    {&map_phan_trngl4a, &map_rig_trngl4, 0,       0,             0,             0},          /* s_trngl4 */
    {0,             0,             0,             0,             0,             0},          /* s_bone6 */
    {0,             0,             0,             0,             0,             0},          /* s_short6 */
-   {&map_1x12_1x6, &map_2x6_1x6,  0,             0,             0,             0},          /* s1x6 */
+   {&map_1x12_1x6, &map_2x6_1x6,  0,  &map_3x6_1x6,             0,             0},          /* s1x6 */
    {&map_2x6_2x3,  &map_3x4_2x3,  0,  &map_3x6_2x3,             0,             0},          /* s2x3 */
    {&map_bone_12d, &map_bigd_12d, 0,             0,             0,             0},          /* s_1x2dmd */
    {0,             0,             0,             0,             0,             0},          /* s_2x1dmd */

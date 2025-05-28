@@ -308,6 +308,8 @@ char *sstab[] = {
    "4x3",
    "2x6",
    "6x2",
+   "d3x4",
+   "d4x3",
    "2x8",
    "8x2",
    "4x4",
@@ -389,6 +391,7 @@ char *estab[] = {
    "rigger",
    "3x4",
    "2x6",
+   "d3x4",
    "???",
    "2x8",
    "4x4",
@@ -550,6 +553,9 @@ char *crtab[] = {
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",
+   "ckpt_miniwaves",
+   "ctr_miniwaves",
+   "ctr_couples",
    "awkward_centers",
    "diamond_like",
    "qtag_like",
@@ -577,7 +583,7 @@ char *crtab[] = {
    "???",
    "???",
    "???",
-   "???",
+   "in_or_out",
    ""};
 
 /* This table is keyed to the constants "DFM1_***".  These are the general
