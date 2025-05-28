@@ -1,6 +1,6 @@
 /*
  * sdui-ttu.h - header file for sdui-ttu.c
- * Time-stamp: <93/03/17 16:05:30 gildea>
+ * Time-stamp: <93/06/03 10:04:24 gildea>
  * Copyright 1993 Stephen Gildea
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -14,6 +14,8 @@
  */
 
 #include <stdio.h>
+/* #include <curses.h> */
+/* #include <term.h> */
 
 #define C_ECHO 0		/* normal input mode: echo, line editing */
 #define C_RAW 1			/* raw input mode: no echo, does not block */

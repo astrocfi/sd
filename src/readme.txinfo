@@ -1,4 +1,4 @@
-@c readme.txinfo Time-stamp: <93/05/12 12:22:26 gildea>
+@c readme.txinfo Time-stamp: <93/05/24 17:59:13 gildea>
 @c Included by sd_doc, also used to produce README.
 @node Intro, Getting Started, Top, Top
 @unnumbered Introduction
@@ -96,6 +96,7 @@ run through @TeX{}.  Use this to make hardcopy.
 
 In future releases we may also distribute pre-formatted versions of
 the documentation.
+Printed copies of the manual are available from the authors.
 
 @node Getting Sd, Contact Info, Documentation, Intro
 @heading Getting Sd
@@ -125,16 +126,14 @@ wba@@apollo.hp.com
 Stephen Gildea
 gildea@@lcs.mit.edu
 @end display
-@iftex
 
 If you do not have access to electronic mail, write to
 
 @display
 Bill Ackerman
 5 Parlmont Park Apt 100
-North Billerica MA 01862--2722
+North Billerica MA 01862-2722
 @end display
-@end iftex
 
 @ifset full-manual
 @node Acknowledgements, , Contact Info,Intro

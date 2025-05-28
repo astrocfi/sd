@@ -16,14 +16,16 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This defines the following functions:
    general_initialize
    generate_random_number
    generate_random_concept_p
    get_mem
+   get_mem_gracefully
    get_more_mem
+   get_more_mem_gracefully
    free_mem
    get_date
    open_file
@@ -36,7 +38,8 @@
    add_resolve_indices
    final_exit
    open_database
-   read_from_database
+   read_8_from_database
+   read_16_from_database
    close_database
    fill_in_neglect_percentage
    parse_number
@@ -218,12 +221,20 @@ extern void *get_mem(unsigned int siz)
 {
    void *buf;
 
-   buf = malloc(siz);
+   buf = get_mem_gracefully(siz);
    if (!buf && siz != 0) {
       fprintf(stderr, "Can't allocate %d bytes of memory.\n", siz);
       exit_program(2);
    }
    return buf;
+}
+
+
+/* This will not fail catastrophically, but may return nil pointer
+   on nonzero request.  Client must check and react accordingly. */
+extern void *get_mem_gracefully(unsigned int siz)
+{
+   return malloc(siz);
 }
 
 
@@ -233,13 +244,22 @@ extern void *get_more_mem(void *oldp, unsigned int siz)
 
    if (!oldp)
       return get_mem(siz);	/* SunOS 4 realloc doesn't handle NULL */
-   buf = realloc(oldp, siz);
+   buf = get_more_mem_gracefully(oldp, siz);
    if (!buf && siz != 0) {
       fprintf(stderr, "Can't allocate %d bytes of memory.\n", siz);
-      perror("realloc");
       exit_program(2);
    }
    return buf;
+}
+
+
+/* This will not fail catastrophically, but may return nil pointer
+   on nonzero request.  Client must check and react accordingly. */
+extern void *get_more_mem_gracefully(void *oldp, unsigned int siz)
+{
+   if (!oldp)
+      return malloc(siz);	/* SunOS 4 realloc doesn't handle NULL */
+   return realloc(oldp, siz);
 }
 
 
@@ -407,7 +427,7 @@ char *database_filename = DATABASE_FILENAME;
 
 extern void open_database(void)
 {
-   int format_version, n;
+   int format_version, n, j;
 
    /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
       however, require it for correct handling of binary data. */
@@ -415,17 +435,17 @@ extern void open_database(void)
       fprintf(stderr, "sd: Can't open database file.\n");
       perror(database_filename);
       if (errno == ENOENT)
-	  fprintf(stderr, "Use the mkcalls program to create the database file.\n");
+         fprintf(stderr, "Use the mkcalls program to create the database file.\n");
       exit_program(1);
    }
 
-   if (read_from_database() != DATABASE_MAGIC_NUM) {
+   if (read_16_from_database() != DATABASE_MAGIC_NUM) {
       fprintf(stderr,
          "Database file \"%s\" has improper format.\n", database_filename);
       exit_program(1);
    }
 
-   format_version = read_from_database();
+   format_version = read_16_from_database();
    if (format_version != DATABASE_FORMAT_VERSION) {
       fprintf(stderr,
          "Database format version (%d) is not the required one (%d) -- you must recompile the database.\n",
@@ -433,23 +453,36 @@ extern void open_database(void)
       exit_program(1);
    }
 
-   abs_max_calls = read_from_database();
-   max_base_calls = read_from_database();
+   abs_max_calls = read_16_from_database();
+   max_base_calls = read_16_from_database();
 
-   n = read_from_database();
-   sprintf(major_database_version, "%d", n);
-   n = read_from_database();
-   sprintf(minor_database_version, "%d", n);
+   n = read_16_from_database();
+
+   if (n > 80) {
+      fprintf(stderr, "Database version string is too long.\n");
+      exit_program(1);
+   }
+
+   for (j=0; j<n; j++)
+      database_version[j] = read_8_from_database();
+
+   database_version[j] = '\0';
 }
 
 
-extern int read_from_database(void)
+extern unsigned int read_8_from_database(void)
 {
-   int bar;
+   return fgetc(fp) & 0xFF;
+}
 
-   bar = (fgetc(fp)&0xFF) << 8;
-   bar |= fgetc(fp)&0xFF;
-   return(bar);
+
+extern unsigned int read_16_from_database(void)
+{
+   unsigned int bar;
+
+   bar = (read_8_from_database() & 0xFF) << 8;
+   bar |= read_8_from_database() & 0xFF;
+   return bar;
 }
 
 

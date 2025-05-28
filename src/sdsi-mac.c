@@ -16,14 +16,16 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This defines the following functions:
    general_initialize
    generate_random_number
    generate_random_concept_p
    get_mem
+   get_mem_gracefully
    get_more_mem
+   get_more_mem_gracefully
    free_mem
    get_date
    open_file
@@ -36,7 +38,8 @@
    add_resolve_indices
    final_exit
    open_database
-   read_from_database
+   read_8_from_database
+   read_16_from_database
    close_database
    fill_in_neglect_percentage
    parse_number
@@ -203,22 +206,36 @@ extern void *get_mem(unsigned int siz)
 {
    void *buf;
 
-   buf = malloc(siz);
+   buf = get_mem_gracefully(siz);
    if (!buf && siz != 0) {
       memory_allocation_failure(siz);
    }
    return buf;
 }
 
+/* This will not fail catastrophically, but may return nil pointer
+   on nonzero request.  Client must check and react accordingly. */
+extern void *get_mem_gracefully(unsigned int siz)
+{
+   return malloc(siz);
+}
+
 extern void *get_more_mem(void *oldp, unsigned int siz)
 {
    void *buf;
 
-   buf = realloc(oldp, siz);
+   buf = get_more_mem_gracefully(oldp, siz);
    if (!buf && siz != 0) {
       memory_allocation_failure(siz);
    }
    return buf;
+}
+
+/* This will not fail catastrophically, but may return nil pointer
+   on nonzero request.  Client must check and react accordingly. */
+extern void *get_more_mem_gracefully(void *oldp, unsigned int siz)
+{
+   return realloc(oldp, siz);
 }
 
 extern void free_mem(void *ptr)
@@ -420,12 +437,16 @@ static int database_bytes;
 static unsigned char *database_next;
 #define DATABASE_BUFSIZE 512
 static unsigned char database_buffer[DATABASE_BUFSIZE];
+static int abs_max_calls_temp;
+static int max_base_calls_temp;
+static char database_version_temp[200];
+
 
 extern int set_database_file(char *fn, short f) /* called directly by UI */
 {
     /* return 0 if OK, otherwise avoid side effect */
 
-    int format_version;
+    int format_version, n, j;
     short old_file;
 
     old_file = database_file;
@@ -434,18 +455,34 @@ extern int set_database_file(char *fn, short f) /* called directly by UI */
     SetFPos(database_file, fsFromStart, 0);
     database_bytes = 0;
 
-    if (read_from_database() != DATABASE_MAGIC_NUM) {
+    if (read_16_from_database() != DATABASE_MAGIC_NUM) {
         FSClose(database_file);
         database_file = old_file;
         return database_bad_format(fn);
     }
 
-    format_version = read_from_database();
+    format_version = read_16_from_database();
     if (format_version != DATABASE_FORMAT_VERSION) {
         FSClose(database_file);
         database_file = old_file;
         return database_wrong_version(fn, format_version, DATABASE_FORMAT_VERSION);
     }
+
+    abs_max_calls_temp = read_16_from_database();
+    max_base_calls_temp = read_16_from_database();
+
+    n = read_16_from_database();
+
+    if (n > 80) {
+        FSClose(database_file);
+        database_file = old_file;
+        return database_bad_format(fn);
+    }
+
+    for (j=0; j<n; j++)
+        database_version_temp[j] = read_8_from_database();
+
+    database_version_temp[j] = '\0';
 
     if (old_file != 0)
         FSClose(old_file);
@@ -465,22 +502,16 @@ extern void open_database(void)
     GetEOF(database_file, &len);
     database_begin(database_filename);
 
-    abs_max_calls = read_from_database();
-    max_base_calls = read_from_database();
-
-    n = read_from_database();
-    sprintf(major_database_version, "%d", n);
-    n = read_from_database();
-    sprintf(minor_database_version, "%d", n);
+    abs_max_calls = abs_max_calls_temp;
+    max_base_calls = max_base_calls_temp;
+    strcpy(database_version, database_version_temp);
 }
 
-extern int read_from_database(void)
+extern unsigned int read_8_from_database(void)
 {
-    int bar;
-    int result;
-    long n;
-
     if (database_bytes <= 0) {
+        int result;
+        long n;
         n = DATABASE_BUFSIZE;
         database_next = database_buffer;
         result = FSRead(database_file, &n, database_next);
@@ -488,9 +519,16 @@ extern int read_from_database(void)
             io_error(result, "reading database");
         database_bytes = n;
     }
-    bar = (*database_next++) << 8;
-    bar |= (*database_next++);
-    database_bytes -= 2;
+    database_bytes--;
+    return *database_next++;
+}
+
+extern unsigned int read_16_from_database(void)
+{
+    unsigned int bar;
+
+    bar = (read_8_from_database() & 0xFF) << 8;
+    bar |= read_8_from_database() & 0xFF;
     return bar;
 }
 

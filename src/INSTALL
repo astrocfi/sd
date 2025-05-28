@@ -11,7 +11,7 @@ Building and Installing
 database, into `sd_calls.dat', the binary file used by Sd.
 
    This release has been tested with the following configurations:
-        SunOS 4.1.2, gcc 2.3.3, X11 Release 5 with public patches 1-23,
+        SunOS 4.1.3, gcc 2.3.3, X11 Release 5 with public patches 1-25,
            the twm window manager, on both Sun3 and Sun4 (Sparc)
         Domain/OS 10.4, C compiler 6.9, Dialog 2.0, on Apollo M68K
         OSF/1.0.A, C compiler 1.0, X11 Release 4, on HP series 700
@@ -27,25 +27,30 @@ and the Athena Widgets from X11 Release 4 or 5.
 
    If your X system was compiled with an ANSI C compiler, you can run
 `xmkmf', which will use `Imakefile' and your local X configuration
-information to generate a `Makefile'.
+information to generate a `Makefile':
 
-   If your X system was *not* compiled with an ANSI C compiler, run
-`./configure', which will use `Makefile.in' to create a `Makefile' by
-examining your system and trying to figure out what options to use.
+     xmkmf
+     make
+
+   If that doesn't work, typically because your X system was *not*
+compiled with an ANSI C compiler, run `./configure', which will use
+`Makefile.in' to create a `Makefile' by examining your system and
+trying to figure out what options to use:
+
+     ./configure
+     make
 
    Using `configure' is not as reliable as using `xmkmf' because
 `configure' has to guess the local preferences, whereas `xmkmf' reads a
 local configuration file.
 
-   Once you have a `Makefile', type `make' to build Sd.
+   Once you have a `Makefile', type `make' to build sd.  If you are not
+running X, `make' will build sdtty, the character-oriented version of
+the program.
 
    `mkcalls' must be run once to compile `sd_calls.txt', the calls
 database, into `sd_calls.dat', the binary file used by Sd.  This step
 is done automatically by `make'.
-
-   If you do not have X, type `make sdtty' to build the
-character-oriented version of the program.  This command builds the
-database as well.
 
    Sun's OpenWindows 3 has a buggy `xmkmf', so you cannot use it.
 Instead, set the environment variable `OPENWINHOME' appropriately
@@ -171,5 +176,35 @@ to exit the program.
 Building on DOS with gcc
 ========================
 
-   (DOS support is not released yet.)
+Compiling with DJGPP
+--------------------
+
+   `sdtty' and `mkcalls' run on MS-DOS using the QEMM memory manager.
+`sdtty' is about 2Mb.  The file `sdui-tpc.c' provides an interface to
+the console I/O package distributed with `djgpp', a port of `gcc' to
+DOS which runs under Desqview and Desqview/X.
+
+   `djgpp' is available via anonymous FTP in the directory
+`pub/msdos/djgpp/' on host omnigate.clarkson.edu.  FTP is the Internet
+file transfer protocol.
+
+   The `configure' script (*note Building on Unix::.) can be used to
+create a `Makefile' for `dmake', a make program for DOS.  Run
+`configure --with-pc'.  Unfortunately, this step must be done on a
+Unix-like system and the resulting Makefile transferred to your DOS
+system.
+
+Running on DOS
+--------------
+
+   Our DOS compiler, DJGPP, says it supports 80386, 80387, 80486, XMS,
+himem.sys, VCPI, DPMI, QEMM, 386MAX, and DesqView.  We have also heard
+it works with Microsoft's EMM386 and Qualitas's 386 MAX.  (You need
+EMS; for EMM386, this means that you can't use the `NOEMS' option.)
+The authors have not tested Sd with all of these.
+
+   You will need a system with at least 2 megabytes of memory.  There
+should be at least 175 kilobytes of memory free in the first 640Kb.
+The authors have not actually tried it on a system this small, and we
+would be interested in your experiences.
 

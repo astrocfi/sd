@@ -1,5 +1,5 @@
 static char *id="@(#)$Sd: sdui-x11.c  1.13    gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/05/12 21:33:20 gildea>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/03 15:12:30 gildea>";
 /* 
  * sdui-x11.c - SD User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -14,7 +14,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/05/12 21:33:20 gildea>";
  * By Stephen Gildea, March 1990.
  * Uses the Athena Widget Set from X11 Release 4 or 5.
  *
- * For use with version 28 of the Sd program.
+ * For use with version 28.7 of the Sd program.
  *
  *  The version of this file is as shown in the third field of the id
  *  string in the first line.  This string gets displayed at program
@@ -47,6 +47,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/05/12 21:33:20 gildea>";
    uims_terminate
    uims_database_tick_max
    uims_database_tick
+   uims_database_tick_end
    uims_database_error
    uims_bad_argument
 */
@@ -488,9 +489,7 @@ uims_process_command_line(int *argcp, char **argvp[])
     char **argv = *argvp;
 
     program_name = argv[0];
-    toplevel = XtAppInitialize(&xtcontext, "Sd",
-			       cmd_line_options, XtNumber(cmd_line_options),
-			       argcp, argv,
+    toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
 			       fallback_resources, NULL, 0);
     XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
 			      top_level_resources, XtNumber(top_level_resources),
@@ -1485,6 +1484,12 @@ uims_database_tick_max(int n)
 
 extern void
 uims_database_tick(int n)
+{
+    /* not implemented yet */
+}
+
+extern void
+uims_database_tick_end(void)
 {
     /* not implemented yet */
 }

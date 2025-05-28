@@ -559,7 +559,7 @@ verify_call(call_list_kind cl, int call_index, selector_kind who)
         who = selector_uninitialized;
     
     call = main_call_lists[cl][call_index];
-    if ((call->callflags & cflag__requires_selector) &&
+    if ((call->callflags1 & CFLAG1_REQUIRES_SELECTOR) &&
             (who == selector_uninitialized)) {
 
         /*
@@ -583,23 +583,24 @@ verify_call(call_list_kind cl, int call_index, selector_kind who)
         return verify_call_with_selector(call, who);
     }
 }
-    
+
 static long_boolean
 verify_call_with_selector(callspec_block *call, selector_kind sel)
 {
     int bits0, bits1;
     int old_history_ptr;
     long_boolean result;
+    parse_block *marker;
 
     bits0 = history[history_ptr+1].warnings.bits[0];
     bits1 = history[history_ptr+1].warnings.bits[1];
     old_history_ptr = history_ptr;
-    save_parse_state();
-
+    marker = mark_parse_blocks();
+    
     result = try_call_with_selector(call, sel);
     
     history_ptr = old_history_ptr;
-    restore_parse_state();
+    release_parse_blocks_to_mark(marker);
     history[history_ptr+1].warnings.bits[0] = bits0;
     history[history_ptr+1].warnings.bits[1] = bits1;
     longjmp_ptr = &longjmp_buffer;    /* restore the global error handler */

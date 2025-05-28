@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -792,7 +792,7 @@ Private void rollmove(
       if (ss->people[i].id1) {
          rot = 0;
          st = ((unsigned int) stb_z)*DBSTAB_BIT; 
-         if (!(callspec->callflags & cflag__requires_selector) || selectp(ss, i)) {
+         if (!(callspec->callflags1 & CFLAG1_REQUIRES_SELECTOR) || selectp(ss, i)) {
             switch (ss->people[i].id1 & ROLL_MASK) {
                case ROLLBITL: rot = 033, st = ((unsigned int) stb_a)*DBSTAB_BIT; break;
                case ROLLBITM: break;
@@ -813,11 +813,11 @@ Private void rollmove(
 
 
 /* Strip out those concepts that do not have the "dfm__xxx" flag set saying that they are to be
-   inherited to this part of the call.  BUT: the "dfm_inherit_left" (a.k.a. "FINAL__LEFT") flag controls
-   both "FINAL__REVERSE" and "FINAL__LEFT", turning the former into the latter.  This makes reverse
+   inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT" flag controls
+   both "INHERITFLAG_REVERSE" and "INHERITFLAG_LEFT", turning the former into the latter.  This makes reverse
    circle by, touch by, and clean sweep work. */
 
-Private final_set get_mods_for_subcall(final_set new_final_concepts, defmodset this_mod, int callflags)
+Private final_set get_mods_for_subcall(final_set new_final_concepts, defmodset this_modh, int callflagsh)
 {
    final_set retval;
 
@@ -829,12 +829,12 @@ Private final_set get_mods_for_subcall(final_set new_final_concepts, defmodset t
       This is what turns, for example, part 3 of "*REVERSE* clean sweep" into a "*LEFT* 1/2 tag". */
 
 
-   if (this_mod & ~callflags & (FINAL__REVERSE | FINAL__LEFT)) {
-      if (new_final_concepts & (FINAL__REVERSE | FINAL__LEFT))
-         retval |= (FINAL__REVERSE | FINAL__LEFT);
+   if (this_modh & ~callflagsh & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
+      if (new_final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+         retval |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
    }
 
-   retval &= ~(new_final_concepts & HERITABLE_FLAG_MASK & ~this_mod);
+   retval &= ~(new_final_concepts & HERITABLE_FLAG_MASK & ~this_modh);
    
    return (retval);
 }
@@ -871,11 +871,11 @@ Private void move_with_real_call(
 
    the_schema = callspec->schema;
    if (the_schema == schema_maybe_single_concentric)
-      the_schema = (final_concepts & FINAL__SINGLE) ? schema_single_concentric : schema_concentric;
+      the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_concentric : schema_concentric;
    else if (the_schema == schema_maybe_matrix_conc_star)
-      if (final_concepts & FINAL__12_MATRIX)
+      if (final_concepts & INHERITFLAG_12_MATRIX)
          the_schema = schema_conc_star12;
-      else if (final_concepts & FINAL__16_MATRIX)
+      else if (final_concepts & INHERITFLAG_16_MATRIX)
          the_schema = schema_conc_star16;
       else
          the_schema = schema_conc_star;
@@ -883,7 +883,7 @@ Private void move_with_real_call(
    /* Do some quick error checking for visible fractions.  For now, either flag is acceptable.  Later, we will
       distinguish between the "visible_fractions" and "first_part_visible" flags. */
    if ((ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK) &&
-            (((the_schema != schema_sequential) && (the_schema != schema_split_sequential)) || (!(callspec->callflags & (cflag__visible_fractions | cflag__first_part_visible)))))
+            (((the_schema != schema_sequential) && (the_schema != schema_split_sequential)) || (!(callspec->callflags1 & (CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE)))))
       fail("This call can't be fractionalized.");
 
    switch (the_schema) {
@@ -908,7 +908,7 @@ Private void move_with_real_call(
    /* If the "diamond" concept has been given and the call doesn't want it, we do
       the "diamond single wheel" variety. */
 
-   if (FINAL__DIAMOND & final_concepts & (~callspec->callflags))  {
+   if (INHERITFLAG_DIAMOND & final_concepts & (~callspec->callflagsh))  {
       /* If the call is sequentially or concentrically defined, the top level flag is required
          before the diamond concept can be inherited.  Since that flag is off, it is an error. */
       if (the_schema != schema_by_array)
@@ -918,7 +918,7 @@ Private void move_with_real_call(
 
       switch (ss->kind) {
          case sdmd:
-            divided_setup_move(ss, parseptr, callspec, final_concepts & ~FINAL__DIAMOND,
+            divided_setup_move(ss, parseptr, callspec, final_concepts & ~INHERITFLAG_DIAMOND,
                   (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
             return;
          case s_qtag:
@@ -926,7 +926,7 @@ Private void move_with_real_call(
                BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
                it.  It will come back here after it has done what it needs to. */
    
-            if ((final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED)) == 0) {
+            if ((final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) == 0) {
                /* Divide into diamonds and try again.  Note that we do not clear the concept. */
                divided_setup_move(ss, parseptr, callspec, final_concepts,
                      (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
@@ -938,7 +938,7 @@ Private void move_with_real_call(
                BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
                it.  It will come back here after it has done what it needs to. */
    
-            if ((final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED)) == 0) {
+            if ((final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) == 0) {
                /* Divide into diamonds and try again.  Note that we do not clear the concept. */
                divided_setup_move(ss, parseptr, callspec, final_concepts,
                      (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
@@ -955,7 +955,7 @@ Private void move_with_real_call(
       This is only legal if the flag forbidding same is off.
       Furthermore, if certain modifiers have been given, we don't allow it. */
 
-   if (final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED | FINAL__12_MATRIX | FINAL__16_MATRIX | FINAL__FUNNY))
+   if (final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX | INHERITFLAG_FUNNY))
       ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
 
    /* But, alas, if fractionalization is on, we can't do it yet, because we don't
@@ -963,17 +963,17 @@ Private void move_with_real_call(
       we will do it later.  We already know that the call is sequentially defined. */
 
    if ((!(ss->setupflags & (SETUPFLAG__NO_STEP_TO_WAVE | SETUPFLAG__FRACTIONALIZE_MASK))) &&
-         (callspec->callflags & (cflag__rear_back_from_r_wave | cflag__rear_back_from_qtag | cflag__step_to_wave))) {
+         (callspec->callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
 
       ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
-      if (final_concepts & FINAL__LEFT) {
+      if (final_concepts & INHERITFLAG_LEFT) {
          mirror = TRUE;
          mirror_this(ss);
       }
 
       if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
-         touch_or_rear_back(ss, callspec->callflags);
+         touch_or_rear_back(ss, callspec->callflags1);
    }
 
    if (ss->setupflags & SETUPFLAG__DOING_ENDS) {
@@ -981,21 +981,21 @@ Private void move_with_real_call(
          allows just the ends part to be done. */
       ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
       if ((the_schema == schema_concentric || the_schema == schema_rev_checkpoint) &&
-            (dfm_endscando & callspec->stuff.conc.outerdef.modifiers)) {
+            (DFM1_ENDSCANDO & callspec->stuff.conc.outerdef.modifiers1)) {
 
          /* Copy the concentricity flags from the call definition into the setup.  All the fuss
             in database.h about concentricity flags co-existing with setupflags refers
             to this moment. */
-         ss->setupflags |= (callspec->stuff.conc.outerdef.modifiers & DFM_CONCENTRICITY_FLAG_MASK);
+         ss->setupflags |= (callspec->stuff.conc.outerdef.modifiers1 & DFM1_CONCENTRICITY_FLAG_MASK);
 
          callspec = base_calls[callspec->stuff.conc.outerdef.call_id];
          the_schema = callspec->schema;
          if (the_schema == schema_maybe_single_concentric)
-            the_schema = (final_concepts & FINAL__SINGLE) ? schema_single_concentric : schema_concentric;
+            the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_concentric : schema_concentric;
          else if (the_schema == schema_maybe_matrix_conc_star)
-            if (final_concepts & FINAL__12_MATRIX)
+            if (final_concepts & INHERITFLAG_12_MATRIX)
                the_schema = schema_conc_star12;
-            else if (final_concepts & FINAL__16_MATRIX)
+            else if (final_concepts & INHERITFLAG_16_MATRIX)
                the_schema = schema_conc_star16;
             else
                the_schema = schema_conc_star;
@@ -1004,9 +1004,9 @@ Private void move_with_real_call(
 
    /* Enforce the restriction that only tagging or scooting calls are allowed in certain contexts. */
 
-   if ((final_concepts & FINAL__MUST_BE_TAG) && (!(cflag__is_tag_call & callspec->callflags)))
+   if ((final_concepts & FINAL__MUST_BE_TAG) && (!(callspec->callflags1 & CFLAG1_IS_TAG_CALL)))
       fail("Only a tagging call is allowed here.");
-   else if ((final_concepts & FINAL__MUST_BE_SCOOT) && (!(cflag__is_scoot_call & callspec->callflags)))
+   else if ((final_concepts & FINAL__MUST_BE_SCOOT) && (!(callspec->callflags1 & CFLAG1_IS_SCOOT_CALL)))
       fail("Only a scoot/tag (chain thru) (and scatter) call is allowed here.");
 
    final_concepts &= ~(FINAL__MUST_BE_TAG | FINAL__MUST_BE_SCOOT);
@@ -1019,9 +1019,9 @@ Private void move_with_real_call(
 
    if (final_concepts & FINAL__SPLIT) {
       ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
-      if (callspec->callflags & cflag__split_like_square_thru)
+      if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
          final_concepts = (final_concepts | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
-      else if (callspec->callflags & cflag__split_like_dixie_style)
+      else if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
          final_concepts = (final_concepts | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
    }
 
@@ -1110,21 +1110,21 @@ Private void move_with_real_call(
          /* Dispose of the "left" concept first -- it can only mean mirror.  If it is on,
             mirroring may already have taken place. */
 
-         if (final_concepts & FINAL__LEFT) {
-            if (!(callspec->callflags & cflag__left_means_mirror)) fail("Can't do this call 'left'.");
+         if (final_concepts & INHERITFLAG_LEFT) {
+            if (!(callspec->callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
             if (!mirror) mirror_this(ss);
             mirror = TRUE;
-            final_concepts &= ~FINAL__LEFT;
+            final_concepts &= ~INHERITFLAG_LEFT;
          }
 
          /* The "reverse" concept might mean mirror, or it might be genuine. */
 
-         if ((final_concepts & FINAL__REVERSE) && (callspec->callflags & cflag__reverse_means_mirror)) {
+         if ((final_concepts & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
             /* This "reverse" just means mirror. */
             if (mirror) fail("Can't do this call 'left' and 'reverse'.");
             if (!mirror) mirror_this(ss);
             mirror = TRUE;
-            final_concepts &= ~FINAL__REVERSE;
+            final_concepts &= ~INHERITFLAG_REVERSE;
          }
 
          /* If the "reverse" flag is still set in final_concepts, it means a genuine
@@ -1149,10 +1149,9 @@ Private void move_with_real_call(
             fail("This concept not allowed here.");
 
          /* Now we demand that, if the concept was given, the call had the appropriate flag set saying
-            that the concept is legal and will be inherited to the children.  We make heavy use here
-            of the fact that the "FINAL__XXX" bits and the "cflag__xxx" bits match. */
+            that the concept is legal and will be inherited to the children. */
 
-         if (HERITABLE_FLAG_MASK & new_final_concepts & (~callspec->callflags)) fail("Can't do this call with this concept.");
+         if (HERITABLE_FLAG_MASK & new_final_concepts & (~callspec->callflagsh)) fail("Can't do this call with this concept.");
 
          if (the_schema == schema_sequential || the_schema == schema_split_sequential) {
             int current_elongation;
@@ -1164,9 +1163,9 @@ Private void move_with_real_call(
             qtf = qtfudged;
 
             if (new_final_concepts & FINAL__SPLIT) {
-               if (callspec->callflags & cflag__split_like_square_thru)
+               if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
                   new_final_concepts |= FINAL__SPLIT_SQUARE_APPROVED;
-               else if (callspec->callflags & cflag__split_like_dixie_style)
+               else if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
                   new_final_concepts |= FINAL__SPLIT_DIXIE_APPROVED;
             }
 
@@ -1198,7 +1197,7 @@ Private void move_with_real_call(
                   if (subcall_index >= t) fail("The indicated part number doesn't exist.");
                   instant_stop = TRUE;
                   /* If only first part is visible, this is illegal unless we are doing first part. */
-                  if (!(callspec->callflags & cflag__visible_fractions) && (subcall_index != 0))
+                  if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS) && (subcall_index != 0))
                      fail("This call can't be fractionalized.");
                }
                else {
@@ -1214,13 +1213,13 @@ Private void move_with_real_call(
                      if ((indicated_part % denom) != 0) fail("This call can't be fractionalized with this fraction.");
                      indicated_part = indicated_part / denom;
                      /* If only first part is visible, this is illegal. */
-                     if (!(callspec->callflags & cflag__visible_fractions))
+                     if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS))
                         fail("This call can't be fractionalized.");
                   }
                   else {
                      indicated_part = numer;
                      /* If only first part is visible, this is illegal unless we are breaking just after the first part. */
-                     if (!(callspec->callflags & cflag__visible_fractions) && (indicated_part != 1))
+                     if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS) && (indicated_part != 1))
                         fail("This call can't be fractionalized.");
                   }
 
@@ -1244,17 +1243,17 @@ Private void move_with_real_call(
                If so, now is the time to correct that.  We only do it for the first part. */
 
             if ((!(ss->setupflags & SETUPFLAG__NO_STEP_TO_WAVE)) && (subcall_index == 0) &&
-                  (callspec->callflags & (cflag__rear_back_from_r_wave | cflag__rear_back_from_qtag | cflag__step_to_wave))) {
+                  (callspec->callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
 
                ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
-               if (final_concepts & FINAL__LEFT) {
+               if (final_concepts & INHERITFLAG_LEFT) {
                   mirror = TRUE;
                   mirror_this(ss);
                }
 
                if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
-                  touch_or_rear_back(ss, callspec->callflags);
+                  touch_or_rear_back(ss, callspec->callflags1);
             }
 
             *result = *ss;
@@ -1263,7 +1262,7 @@ Private void move_with_real_call(
                int j;
                setup tttt;
                by_def_item *this_item;
-               defmodset this_mod;
+               defmodset this_mod1, this_modh;
 
                if (subcall_index >= highlimit) break;
 
@@ -1271,18 +1270,19 @@ Private void move_with_real_call(
 
                if (!this_item->call_id) break;
 
-               this_mod = this_item->modifiers;
+               this_mod1 = this_item->modifiers1;
+               this_modh = this_item->modifiersh;
 
-               temp_concepts = get_mods_for_subcall(new_final_concepts, this_mod, callspec->callflags);
+               temp_concepts = get_mods_for_subcall(new_final_concepts, this_modh, callspec->callflagsh);
                get_real_subcall(parseptr, this_item, temp_concepts, &cp1, &call1, &conc1);
 
                /* If this context requires a tagging or scoot call, pass that fact on. */
-               if (dfm_must_be_tag_call & this_mod) conc1 |= FINAL__MUST_BE_TAG;
-               else if (dfm_must_be_scoot_call & this_mod) conc1 |= FINAL__MUST_BE_SCOOT;
+               if (DFM1_MUST_BE_TAG_CALL & this_mod1) conc1 |= FINAL__MUST_BE_TAG;
+               else if (DFM1_MUST_BE_SCOOT_CALL & this_mod1) conc1 |= FINAL__MUST_BE_SCOOT;
 
-               if (dfm_repeat_n & this_mod) {
+               if (DFM1_REPEAT_N & this_mod1) {
                   tempsetup = *result;
-                  for (j=1; j<=parseptr->number; j++) {
+                  for (j = 1; j <= (parseptr->number & 0xF); j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
                      if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
@@ -1291,9 +1291,9 @@ Private void move_with_real_call(
                      finalsetupflags |= tempsetup.setupflags;
                   }
                }
-               else if (dfm_repeat_nm1 & this_mod) {
+               else if (DFM1_REPEAT_NM1 & this_mod1) {
                   tempsetup = *result;
-                  for (j=1; j<=parseptr->number-1; j++) {
+                  for (j = 1; j <= (parseptr->number & 0xF) - 1; j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
                      if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
@@ -1302,13 +1302,13 @@ Private void move_with_real_call(
                      finalsetupflags |= tempsetup.setupflags;
                   }
                }
-               else if (dfm_repeat_n_alternate & this_mod) {
+               else if (DFM1_REPEAT_N_ALTERNATE & this_mod1) {
                   tempsetup = *result;
 
                   /* Read the call after this one -- we will alternate between the two. */
                   get_real_subcall(parseptr, &callspec->stuff.def.defarray[subcall_index+1], temp_concepts, &cp2, &call2, &conc2);
 
-                  for (j=1; j<=parseptr->number; j++) {
+                  for (j = 1; j <= (parseptr->number & 0xF); j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
                      if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
@@ -1326,7 +1326,7 @@ Private void move_with_real_call(
                   tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
                   if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
 
-                  if ((dfm_cpls_unless_single & this_mod) && !(new_final_concepts & FINAL__SINGLE)) {
+                  if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts & INHERITFLAG_SINGLE)) {
                      tandem_couples_move(&tttt, cp1, call1, conc1,
                            selector_uninitialized, 0, 0, 0, 1, &tempsetup);
                   }
@@ -1339,7 +1339,7 @@ Private void move_with_real_call(
                /* If this call is "roll transparent", restore roll info from before the call for those people
                   that are marked as roll-neutral. */
 
-               if (dfm_roll_transparent & this_mod) {
+               if (DFM1_ROLL_TRANSPARENT & this_mod1) {
                   /* Can only do this if we understand the setups. */
                   if ((setup_limits[tempsetup.kind] >= 0) && (setup_limits[result->kind] >= 0)) {
                      int u, v;
@@ -1453,17 +1453,17 @@ Private void move_with_real_call(
    
             saved_warnings = history[history_ptr+1].warnings;
 
-            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.innerdef.modifiers, callspec->callflags);
+            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.innerdef.modifiersh, callspec->callflagsh);
             get_real_subcall(parseptr, &callspec->stuff.conc.innerdef, temp_concepts, &cp1, &call1, &conc1);
 
             /* Do it again. */
 
-            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.outerdef.modifiers, callspec->callflags);
+            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.outerdef.modifiersh, callspec->callflagsh);
             get_real_subcall(parseptr, &callspec->stuff.conc.outerdef, temp_concepts, &cp2, &call2, &conc2);
 
             /* Fudge a 3x4 into a 1/4-tag if appropriate. */
 
-            if (ss->kind == s3x4 && (callspec->callflags & cflag__fudge_to_q_tag) &&
+            if (ss->kind == s3x4 && (callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
                   (the_schema == schema_concentric || the_schema == schema_cross_concentric)) {
 
                if (ss->people[0].id1) {
@@ -1503,11 +1503,11 @@ Private void move_with_real_call(
                ss,
                cp1, cp2, call1, call2, conc1, conc2,
                the_schema,
-               callspec->stuff.conc.innerdef.modifiers,
-               callspec->stuff.conc.outerdef.modifiers,
+               callspec->stuff.conc.innerdef.modifiers1,
+               callspec->stuff.conc.outerdef.modifiers1,
                result);
 
-            if (dfm_suppress_elongation_warnings & callspec->stuff.conc.outerdef.modifiers) {
+            if (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.outerdef.modifiers1) {
                history[history_ptr+1].warnings.bits[0] &= ~(Warnings_About_Conc_elongation);
             }
             history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
@@ -1651,13 +1651,13 @@ extern void move(
          divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__SPLIT,
             split_map, phantest_ok, TRUE, result);
       }
-      else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__MAGIC) {
+      else if ((check_concepts & ~INHERITFLAG_DIAMOND) == INHERITFLAG_MAGIC) {
          if (ss->kind == s2x4) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~INHERITFLAG_MAGIC,
                &map_2x4_magic, phantest_ok, TRUE, result);
          }
          else if (ss->kind == s_qtag) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~INHERITFLAG_MAGIC,
                &map_qtg_magic, phantest_ok, TRUE, result);
 
             /* Since more concepts follow the magic and/or interlocked stuff, we can't
@@ -1672,44 +1672,44 @@ extern void move(
             result->setupflags |= RESULTFLAG__NEED_DIAMOND;
          }
          else if (ss->kind == s_ptpd) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~INHERITFLAG_MAGIC,
                &map_ptp_magic, phantest_ok, TRUE, result);
             result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
          }
          else
             fail("Can't do magic concept in this context.");
       }
-      else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__INTERLOCKED) {
+      else if ((check_concepts & ~INHERITFLAG_DIAMOND) == INHERITFLAG_INTLK) {
          if (ss->kind == s_qtag) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~INHERITFLAG_INTLK,
                &map_qtg_intlk, phantest_ok, TRUE, result);
             result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
          }
          if (ss->kind == s_ptpd) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~INHERITFLAG_INTLK,
                &map_ptp_intlk, phantest_ok, TRUE, result);
             result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
          }
          else
             fail("Can't do interlocked concept in this context.");
       }
-      else if ((check_concepts & ~FINAL__DIAMOND) == (FINAL__INTERLOCKED | FINAL__MAGIC)) {
+      else if ((check_concepts & ~INHERITFLAG_DIAMOND) == (INHERITFLAG_INTLK | INHERITFLAG_MAGIC)) {
          if (ss->kind == s_qtag) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(INHERITFLAG_INTLK | INHERITFLAG_MAGIC),
                   &map_qtg_magic_intlk, phantest_ok, TRUE, result);
             result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
          }
          if (ss->kind == s_ptpd) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(INHERITFLAG_INTLK | INHERITFLAG_MAGIC),
                   &map_ptp_magic_intlk, phantest_ok, TRUE, result);
             result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
          }
          else
             fail("Can't do magic interlocked concept in this context.");
       }
-      else if (check_concepts == FINAL__DIAMOND) {
+      else if (check_concepts == INHERITFLAG_DIAMOND) {
          if (ss->kind == sdmd) {
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__DIAMOND,
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~INHERITFLAG_DIAMOND,
                   (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
          }
          else if (ss->kind == s_qtag) {

@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <93/05/12 21:39:14 gildea>
+# Time-stamp: <93/06/03 17:05:35 gildea>
 
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -53,6 +53,8 @@ everything: allx11 sdtty
 sd: $(SD_OBJS) $(SDX11_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(X11_LIBS)
 
+# The aout2exe program is for djgpp on DOS
+
 sdtty: $(SD_OBJS) $(SDTTY_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
 	@STRIP@
@@ -66,10 +68,7 @@ mkcalls: $(MKCALLS_OBJS)
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls
 
-# This rule and the aout2exe program are for qmake on MS-DOS.
-# Most versions of make execute this implicitly, but not PC's.
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+@DMAKE_IMPLICIT@
 
 # sdui-x11.c may need -D_POSIX_SOURCE with gcc 1.40 on Ultrix 4.2
 

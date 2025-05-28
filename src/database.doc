@@ -1254,6 +1254,72 @@ restriction is violated, as follows:
 always
       applies to any setup.  Returns TRUE in all cases.
 
+select
+      applies to any setup, though the meaning of a given selector may
+      depend on the setup.  Returns TRUE if the person under test is
+      "selected", that is, is one of the people indicated in the "so-and-so"
+      selector for this call.
+
+      Any call that uses this or a similar predicate will cause the program
+      to query the user for a selector.  Such calls must have "@6" in their
+      name in order to have the selector appear in the final text.
+
+      Use of this or similar predicates may raise an error if the application
+      of the selector to the person under test is not well defined.  This
+      can happen, for example, if the "trailers" selector is given but the
+      setup is a grand line or is parallel lines but the "magic" concept
+      is in use, or if the "boys" or "girls" selector has been given
+      and the "tandem" concept is in use, but the person under test is a
+      tandem of a boy and a girl.
+
+unselect
+      applies to any setup.  Returns TRUE if the person under test is not
+      "selected".  See the description of "select" above.
+
+select_near_select
+      applies to 1x2, 1x4, 1x8, and 2x4 setups only.  Returns TRUE if the
+      person under test and the "near" person are both selected.  The "near"
+      person is the partner of the person under test, assuming they are in
+      lines.  If in columns, it is the "tandem partner".  Note that this
+      person's position is found without reference to anyone's facing
+      direction.  For this predicate and others that test the selectedness
+      of another person, if that other person is a phantom, an error is raised
+      unless the selector is "everyone" or "no one".  See the description
+      of "select" above.
+
+select_near_unselect
+unselect_near_select
+unselect_near_unselect
+      apply to 1x2, 1x4, 1x8, and 2x4 setups only.  These return TRUE if the
+      person under test and the "near" person have the indicated combination
+      of selectness and non-selectness.  See the descriptions of "select"
+      and "select_near_select" above.
+
+once_rem_from_select
+      applies to 1x4 or 1x8 only.  Returns TRUE if the person once-removed
+      from the person under test is selected.  It does not examine the
+      selectedness of the person under test.  Returns FALSE otherwise.
+      See the descriptions of "select" and "select_near_select" above.
+
+conc_from_select
+      applies to 1x4 or 1x8 only.  Returns TRUE if the single-concentric
+      other person from the person under test (other center or other end,
+      as appropriate) is selected.  It does not examine the selectedness
+      of the person under test.  Returns FALSE otherwise.  See the
+      descriptions of "select" and "select_near_select" above.
+
+select_once_rem_from_unselect
+      applies to 1x4 only.  Returns TRUE if the person under test is
+      selected and the person once-removed from that person is not
+      selected.  Returns FALSE otherwise.  See the descriptions of "select"
+      and "select_near_select" above.
+
+unselect_once_rem_from_select
+      applies to 1x4 only.  Returns TRUE if the person under test is
+      not selected and the person once-removed from that person is
+      selected.  Returns FALSE otherwise.  See the descriptions of "select"
+      and "select_near_select" above.
+
 x22_miniwave
       applies to 2x2 only.  Returns TRUE if the lateral partner of the
       person under test is alive and facing the opposite direction.
@@ -1335,16 +1401,16 @@ lines_antitandem
       same way or is T-boned.
 
 columns_tandem
-      applies to 2x1, 4x1, 6x1, 4x2, 6x2, or 8x2 columns only.  Returns TRUE if the
-      tandem partner of the person under test is alive and facing the same
-      direction.  Returns FALSE if that person is a phantom or faces the
+      applies to 2x1, 4x1, 6x1, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
+      if the tandem partner of the person under test is alive and facing the
+      same direction.  Returns FALSE if that person is a phantom or faces the
       opposite way or is T-boned.
 
 columns_antitandem
-      applies to 2x1, 4x1, 6x1, 4x2, 6x2, or 8x2 columns only.  Returns TRUE if the
-      tandem partner of the person under test is alive and facing the opposite
-      direction.  Returns FALSE if that person is a phantom or faces the
-      same way or is T-boned.
+      applies to 2x1, 4x1, 6x1, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
+      if the tandem partner of the person under test is alive and facing the
+      opposite direction.  Returns FALSE if that person is a phantom or faces
+      the same way or is T-boned.
 
 columns_magic_tandem
       applies to 4x2 columns only.  Returns TRUE if the magic tandem
@@ -1429,16 +1495,33 @@ columns_miniwave
       is two-faced, and FALSE if it is one-faced.  It raises an error if there
       are no people on the other side and hence it can't tell.
 
-
-
-Still to do:
-
 vert1
+      applies to 2x2 only.  Returns TRUE if this person is a lead beau or
+      trailing belle.  Otherwise returns TRUE if this person's lateral partner
+      is alive and facing in the same direction as this person, and FALSE
+      if this person's lateral partner is a phantom or is facing in some
+      other direction.  This is intended to be used in the implementation
+      of vertical tag.
+
 vert2
+      applies to 2x2 only.  Returns FALSE if this person is a lead beau or
+      trailing belle.  Otherwise returns TRUE if this person's lateral partner
+      is alive and facing in the opposite direction as this person, and FALSE
+      if this person's lateral partner is a phantom or is facing in any
+      other direction than opposite to this person.  This is intended to be
+      used in the implementation of vertical tag.
+
 inner_active_lines
+      applies to 2x4 lines only.  Returns TRUE if this person is a trailing
+      end and FALSE if a leading end.  If this person is a center, returns
+      TRUE if this person's partner is a trailer, and FALSE if a leader or
+      phantom.
+
 outer_active_lines
-
-
+      applies to 2x4 lines only.  Returns TRUE if this person is a leading
+      end and FALSE if a trailing end.  If this person is a center, returns
+      TRUE if this person's partner is a leader, and FALSE if a trailer or
+      phantom.
 
 judge_is_right
       applies to 1x4 lines only.  Returns TRUE if the person on the end
@@ -1527,11 +1610,23 @@ next_magic62spot_is_tboned
       but it uses the "magic 6x2 acey deucey" circulate path in calculating
       the target spot.
 
-
 next_galaxyspot_is_tboned
+      applies to galaxy only.  This returns TRUE if this person is on the
+      center box.  If this person is a point, and can galaxy circulate, and
+      the spot to which this person would go on a galaxy circulate is occupied,
+      returns TRUE if the person on that spot is T-boned to this person and
+      FALSE if not.  If this person is a point but can't galaxy circulate
+      (faces diectly toward or away from the center of the galaxy), or if
+      the spot to which this person would go is unoccupied, and error is
+      raised.
+
 column_double_down
-
-
+      applies to 4x2 columns only.  Returns TRUE if this person is number
+      2, 3, or 4 in the column.  If this person is number 1 in the column,
+      it returns TRUE if this person's lateral partner is facing in (is
+      number 4 in the column) and FALSE if this person's lateral partner
+      is a phantom or is facing any other direction.  This is intended to
+      be used in the implementation of double down from columns.
 
 boyp
       applies to any setup.  Returns TRUE if this person is an unambiguous boy.
@@ -1595,8 +1690,6 @@ trngl_pt_rh
       away from the base.  This predicate is unusual in that it does not
       look specifically at the person under test.  It evaluates the setup
       as a whole.
-
-Still to do:
 
 q_tag_front
       Applies only to a qtag in which the center people are in some kind of

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 29. */
 
 /* This defines the following functions:
    initialize_menus
@@ -202,6 +202,9 @@ Private void test_starting_setup(call_list_kind cl, setup test_setup)
             a different selector, until we run out of ideas. */
          switch (selector_for_initialize) {
             case selector_beaux:
+               selector_for_initialize = selector_ends;
+               goto try_another_selector;
+            case selector_ends:
                selector_for_initialize = selector_all;
                goto try_another_selector;
             case selector_all:
@@ -221,8 +224,8 @@ Private void test_starting_setup(call_list_kind cl, setup test_setup)
 
    /* Set the selector (for "so-and-so advance to a column", etc) to "beaux".
       This seems to make most calls work -- note that "everyone run" and
-      "no one advance to a column" are illegal.  If this doesn't work, we will
-      try a few others before giving up. */
+      "no one advance to a column" are illegal.  If "beaux" doesn't work, we will
+      try "ends" (for the call "fold") and then "all" before giving up. */
    selector_for_initialize = selector_beaux;
 
    try_another_selector:
@@ -397,7 +400,7 @@ Private void create_misc_call_lists(void)
    for (j=0; j<number_of_calls[call_list_any]; j++) {
       accept_it = FALSE;
       if (main_call_lists[call_list_any][j]->schema != schema_by_array) accept_it = TRUE;
-      else if (main_call_lists[call_list_any][j]->callflags & cflag__step_to_wave) {
+      else if (main_call_lists[call_list_any][j]->callflags1 & CFLAG1_STEP_TO_WAVE) {
          if (  assoc(b_4x2, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
                assoc(b_4x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
                assoc(b_2x2, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
@@ -437,7 +440,7 @@ Private void create_misc_call_lists(void)
    for (j=0; j<number_of_calls[call_list_any]; j++) {
       accept_it = FALSE;
       if (main_call_lists[call_list_any][j]->schema != schema_by_array) accept_it = TRUE;
-      else if (main_call_lists[call_list_any][j]->callflags & cflag__rear_back_from_qtag) {
+      else if (main_call_lists[call_list_any][j]->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
          if (  assoc(b_4x2, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
                assoc(b_4x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list))
             accept_it = TRUE;
@@ -475,7 +478,7 @@ Private void create_misc_call_lists(void)
 
 /* These are used by the database reading stuff. */
 
-Private int last_datum, last_12;
+Private unsigned int last_datum, last_12;
 Private callspec_block *call_root;
 Private callarray *tp;
 /* This shows the highest index we have seen so far.  It must never exceed max_base_calls-1. */
@@ -484,15 +487,15 @@ Private int highest_base_call;
 
 Private void read_halfword(void)
 {
-   last_datum = read_from_database();
+   last_datum = read_16_from_database();
    last_12 = last_datum & 0xFFF;
 }
 
 
 Private void read_fullword(void)
 {
-   int t = read_from_database();
-   last_datum = t << 16 | read_from_database();
+   int t = read_16_from_database();
+   last_datum = t << 16 | read_16_from_database();
 }
 
 
@@ -615,7 +618,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
             /* If this call uses a predicate that takes a selector, flag the call so that
                we will query the user for that selector. */
             if (last_datum < SELECTOR_PREDS)
-               call_root->callflags |= cflag__requires_selector;
+               call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
             for (j=0; j < this_start_size; j++) {
                read_halfword();
                temp_predlist->arr[j] = last_datum;
@@ -672,8 +675,8 @@ Private void build_database(call_list_mode_t call_list_mode)
    calldef_schema call_schema;
    int local_callcount;
    char *np, c;
-   int savetag, saveflags;
-   level savelevel;
+   int savetag, saveflags1, saveflags;
+   dance_level savelevel;
    callspec_block **local_call_list;
 
    /* This list will be permanent. */
@@ -704,9 +707,12 @@ Private void build_database(call_list_mode_t call_list_mode)
       savetag = last_12;     /* Get tag, if any. */
 
       read_halfword();       /* Get level. */
-      savelevel = (level) last_datum;
+      savelevel = (dance_level) last_datum;
 
-      read_fullword();       /* Get boolean flags. */
+      read_fullword();       /* Get top level flags, first word. */
+      saveflags1 = last_datum;
+
+      read_fullword();       /* Get top level flags, second word. */
       saveflags = last_datum;
 
       read_halfword();       /* Get char count and schema. */
@@ -734,19 +740,15 @@ Private void build_database(call_list_mode_t call_list_mode)
       }
 
       call_root->age = 0;
-      call_root->callflags = saveflags;
+      call_root->callflags1 = saveflags1;
+      call_root->callflagsh = saveflags;
       /* If we are operating at the "all" level, make fractions visible everywhere, to aid in debugging. */
-      if (calling_level == l_dontshow) call_root->callflags |= cflag__visible_fractions | cflag__first_part_visible;
+      if (calling_level == l_dontshow) call_root->callflags1 |= CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE;
 
       /* Now read in the name itself. */
 
-      for (j=2; j <= char_count+1; j += 2) {
-         read_halfword();
-
-         *np++ = (last_datum >> 8) & 0xFF;
-         if (j != char_count+1)
-            *np++ = last_datum & 0xFF;
-      }
+      for (j=0; j<char_count; j++)
+         *np++ = read_8_from_database();
 
       *np = '\0';
 
@@ -757,7 +759,7 @@ Private void build_database(call_list_mode_t call_list_mode)
 
       while (c = *np++) {
          if (c == '@') {
-            if ((c = *np++) == '6' || c == 'k') call_root->callflags |= cflag__requires_selector;
+            if ((c = *np++) == '6' || c == 'k') call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
          }
       }
 
@@ -780,7 +782,7 @@ Private void build_database(call_list_mode_t call_list_mode)
                   read_halfword();
                }
 
-               call_root->callflags |= cflag__requires_selector;
+               call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
                continue;
             }
          case schema_partner_matrix:
@@ -813,7 +815,7 @@ Private void build_database(call_list_mode_t call_list_mode)
    
                zz = (calldef_block *) get_mem(sizeof(calldef_block));
                zz->next = 0;
-               zz->modifier_set = 0;
+               zz->modifier_seth = 0;
                zz->modifier_level = l_mainstream;
                call_root->stuff.arr.def_list = zz;
    
@@ -825,13 +827,10 @@ Private void build_database(call_list_mode_t call_list_mode)
                   yy = (calldef_block *) get_mem(sizeof(calldef_block));
                   zz->next = yy;
                   zz = yy;
-                  zz->modifier_level = (level) (last_datum & 0xFF);
+                  zz->modifier_level = (dance_level) (last_datum & 0xFF);
                   zz->next = 0;
-                  /* We make use of the fact that HERITABLE_FLAG_MASK, which has all the
-                     bits we could read in, lies only in the left half.  This was tested
-                     by some compile-time code near the start of this file. */
-                  read_halfword();
-                  zz->modifier_set = last_datum << 16;
+                  read_fullword();
+                  zz->modifier_seth = last_datum;
    
                   read_level_3_groups(zz);
                }
@@ -840,6 +839,7 @@ Private void build_database(call_list_mode_t call_list_mode)
          case schema_sequential:
          case schema_split_sequential:
             {
+               by_def_item templist[100];
                int next_definition_index = 0;
 
                /* Demand a level 2 group. */
@@ -848,16 +848,20 @@ Private void build_database(call_list_mode_t call_list_mode)
                }
 
                while ((last_datum & 0xE000) == 0x4000) {
-                  if (next_definition_index >= SEQDEF_MAX) {
-                     database_error("database error: too many sequential parts");
-                  }
                   check_tag(last_12);
-                  call_root->stuff.def.defarray[next_definition_index].call_id = last_12;
+                  templist[next_definition_index].call_id = last_12;
                   read_fullword();
-                  call_root->stuff.def.defarray[next_definition_index++].modifiers = (defmodset) last_datum;
-                  call_root->stuff.def.defarray[next_definition_index].call_id = 0;
+                  templist[next_definition_index].modifiers1 = (defmodset) last_datum;
+                  read_fullword();
+                  templist[next_definition_index++].modifiersh = (defmodset) last_datum;
                   read_halfword();
                }
+
+               call_root->stuff.def.defarray = (by_def_item *) get_mem((next_definition_index+1) * sizeof(by_def_item));
+               call_root->stuff.def.defarray[next_definition_index].call_id = 0;  /* Zero mark at end. */
+
+               while (--next_definition_index >= 0)
+                  call_root->stuff.def.defarray[next_definition_index] = templist[next_definition_index];
             }
             break;
          default:          /* These are all the variations of concentric. */
@@ -869,12 +873,16 @@ Private void build_database(call_list_mode_t call_list_mode)
             check_tag(last_12);
             call_root->stuff.conc.innerdef.call_id = last_12;
             read_fullword();
-            call_root->stuff.conc.innerdef.modifiers = (defmodset) last_datum;
+            call_root->stuff.conc.innerdef.modifiers1 = (defmodset) last_datum;
+            read_fullword();
+            call_root->stuff.conc.innerdef.modifiersh = (defmodset) last_datum;
             read_halfword();
             check_tag(last_12);
             call_root->stuff.conc.outerdef.call_id = last_12;
             read_fullword();
-            call_root->stuff.conc.outerdef.modifiers = (defmodset) last_datum;
+            call_root->stuff.conc.outerdef.modifiers1 = (defmodset) last_datum;
+            read_fullword();
+            call_root->stuff.conc.outerdef.modifiersh = (defmodset) last_datum;
             read_halfword();
             break;
       }
@@ -903,46 +911,16 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
 {
    int arithtest = 2081607680;
 
-   /* Test that the necessary constants are in step with each other.
-      This "if" should never get executed.  We expect compilers to optimize
+   /* This "if" should never get executed.  We expect compilers to optimize
       it away, and perhaps print a warning about it. */
-   
-   if (cflag__diamond_is_inherited        != dfm_inherit_diamond ||
-         cflag__reverse_means_mirror      != dfm_inherit_reverse ||
-         cflag__left_means_mirror         != dfm_inherit_left ||
-         cflag__funny_is_inherited        != dfm_inherit_funny ||
-         cflag__intlk_is_inherited        != dfm_inherit_intlk ||
-         cflag__magic_is_inherited        != dfm_inherit_magic ||
-         cflag__grand_is_inherited        != dfm_inherit_grand ||
-         cflag__12_matrix_is_inherited    != dfm_inherit_12_matrix ||
-         cflag__16_matrix_is_inherited    != dfm_inherit_16_matrix ||
-         cflag__cross_is_inherited        != dfm_inherit_cross ||
-         cflag__single_is_inherited       != dfm_inherit_single ||
-         cflag__diamond_is_inherited      != FINAL__DIAMOND ||
-         cflag__reverse_means_mirror      != FINAL__REVERSE ||
-         cflag__left_means_mirror         != FINAL__LEFT ||
-         cflag__funny_is_inherited        != FINAL__FUNNY ||
-         cflag__intlk_is_inherited        != FINAL__INTERLOCKED ||
-         cflag__magic_is_inherited        != FINAL__MAGIC ||
-         cflag__grand_is_inherited        != FINAL__GRAND ||
-         cflag__12_matrix_is_inherited    != FINAL__12_MATRIX ||
-         cflag__16_matrix_is_inherited    != FINAL__16_MATRIX ||
-         cflag__cross_is_inherited        != FINAL__CROSS ||
-         cflag__single_is_inherited       != FINAL__SINGLE ||
-   
-   /* Also test that the constants ROLL_BIT and DBROLL_BIT are in the right
+
+   /* Test that the constants ROLL_BIT and DBROLL_BIT are in the right
       relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
       in a person record are to the left of the roll bits in the binary database.
       This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.c to
       align stuff from the binary database into the person record. */
 
-         ROLL_BIT < DBROLL_BIT ||
-
-   /* Also test that HERITABLE_FLAG_MASK lies only in the left half.
-      This will be necessary in the code below which reads in the
-      "modifier_set" field from the database. */
-   
-         (HERITABLE_FLAG_MASK & 0x0000FFFF)) {
+   if (ROLL_BIT < DBROLL_BIT) {
       init_error("constants not consistent -- program has been compiled incorrectly.");
       final_exit(1);
    }

@@ -1,7 +1,7 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <93/05/12 22:11:16 gildea>
+ * Time-stamp: <93/06/03 10:06:02 gildea>
  * Copyright (c) 1990,1991,1992,1993 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
@@ -72,6 +72,7 @@ static char *sdui_version = "1.3";
    uims_terminate
    uims_database_tick_max
    uims_database_tick
+   uims_database_tick_end
    uims_database_error
    uims_bad_argument
 */
@@ -110,7 +111,12 @@ uims_version_string(void)
     return version_mem;
 }
 
-Private int input_window_height = 32; /* number of lines */
+/*
+ * number of lines on the screen.
+ * XXX - should calculate and update dynamically.
+ * Original Mac tty intrf had 32 here.
+ */
+Private int input_window_height = 24;
 
 /*
  * User Input functions
@@ -857,10 +863,10 @@ get_user_input(String prompt, input_matcher *f)
                 printf("\n");
                 return;
             }
-            printf("  %d matches", matches);
+            printf("  (%d matches", matches);
 	    if (matches > 0)
 		printf(", type ? for list");
-	    printf("\n");
+	    printf(")\n");
         }
         else if (c == '\t' || c == '\033') {
             n = strlen(user_input);
@@ -1219,9 +1225,13 @@ uims_database_tick(int n)
 	printf(".");
 	tick_displayed++;
     }
-    if (db_tick_cur >= db_tick_max)
-	printf("done\n");
     fflush(stdout);
+}
+
+extern void
+uims_database_tick_end(void)
+{
+    printf("done\n");
 }
 
 extern void

@@ -1,6 +1,6 @@
-@c install.txinfo Time-stamp: <93/05/08 18:10:39 gildea>
+@c install.txinfo Time-stamp: <93/06/03 18:04:00 gildea>
 @c Included by sd_doc, also used to produce INSTALL.
-@node Installation, , Versions, Top
+@node Installation, Copying, Versions, Top
 @chapter Building and Installing
 
 To compile Sd, you need C compiler that
@@ -15,7 +15,7 @@ calls database, into @file{sd_calls.dat}, the binary file used by Sd.
 
 This release has been tested with the following configurations:
 @display
-   SunOS 4.1.2, gcc 2.3.3, X11 Release 5 with public patches 1-23,
+   SunOS 4.1.3, gcc 2.3.3, X11 Release 5 with public patches 1-25,
       the twm window manager, on both Sun3 and Sun4 (Sparc)
    Domain/OS 10.4, C compiler 6.9, Dialog 2.0, on Apollo M68K
    OSF/1.0.A, C compiler 1.0, X11 Release 4, on HP series 700
@@ -38,27 +38,37 @@ and the Athena Widgets from X11 Release 4 or 5.
 
 If your X system was compiled with an ANSI C compiler, you can run
 @code{xmkmf}, which will use @file{Imakefile} and your local X configuration
-information to generate a @file{Makefile}.
+information to generate a @file{Makefile}:
 
-If your X system was @emph{not} compiled with an ANSI C compiler, run
+@example
+xmkmf
+make
+@end example
+
+If that doesn't work, typically because
+your X system was @emph{not} compiled with an ANSI C compiler, run
 @code{./configure}, which will use @file{Makefile.in} to create a
 @file{Makefile} by
-examining your system and trying to figure out what options to use.
+examining your system and trying to figure out what options to use:
+
+@example
+./configure
+make
+@end example
 
 Using @code{configure} is not as reliable as using @code{xmkmf}
 because @code{configure}
 has to guess the local preferences, whereas @code{xmkmf} reads a local
 configuration file.
 
-Once you have a @file{Makefile}, type @code{make} to build Sd.
+Once you have a @file{Makefile}, type @code{make} to build sd.
+If you are not running X, @code{make} will build sdtty, the
+character-oriented version of the program.
 
 @code{mkcalls} must be run once to compile @file{sd_calls.txt},
 the calls database,
 into @file{sd_calls.dat}, the binary file used by Sd.  This step is done
 automatically by @code{make}.
-
-If you do not have X, type @code{make sdtty} to build the character-oriented
-version of the program.  This command builds the database as well.
 
 Sun's OpenWindows 3 has a buggy @code{xmkmf}, so you cannot use it.  Instead,
 set the environment variable @code{OPENWINHOME} appropriately
@@ -198,37 +208,42 @@ do so to exit the program.
 @node Building on DOS,  , Building on the Mac, Installation
 @section Building on DOS with gcc
 
-(DOS support is not released yet.)
-@ignore
 @menu
 * Compiling with DJGPP::	Compiling with GCC on DOS
 * Running on DOS::		Requirements for running on DOS
 @end menu
 
+@node Compiling with DJGPP, Running on DOS,  , Building on DOS
 @subsection Compiling with DJGPP
 
 @code{sdtty} and @code{mkcalls} run on MS-DOS using the QEMM memory
 manager.  @code{sdtty} is about 2Mb.  The file @file{sdui-tpc.c}
 provides an interface to the console I/O package distributed with
-@code{djgpp}, a port of @code{gcc} to DOS which runs under Desqview/X.
+@code{djgpp}, a port of @code{gcc} to DOS which runs under Desqview
+and Desqview/X.
+
+@code{djgpp} is available via anonymous FTP in the directory
+@file{pub/msdos/djgpp/} on host omnigate.clarkson.edu.
+FTP is the Internet file transfer protocol.
 
 The @code{configure} script (@pxref{Building on Unix}) can be used to
-create a @code{Makefile} for @code{qmake}, a make-like program
-distributed with Desqview/X.  Run @code{configure --with-pc}.
+create a @code{Makefile} for @code{dmake}, a make program
+for DOS.  Run @code{configure --with-pc}.
 Unfortunately, this step must be done on a Unix-like system and the
 resulting Makefile transferred to your DOS system.
 
+@node Running on DOS,  , Compiling with DJGPP, Building on DOS
 @subsection Running on DOS
 
-DJGPP says it supports 80386, 80387, 80486, XMS, himem.sys, VCPI,
-QEMM, 386MAX, and DesqView.
-We have also heard it works with Microsoft's EMM386 and Qualitas's 386~MAX.
-The authors have not tested Sd with all
-of these.
+Our DOS compiler, DJGPP, says it supports 80386, 80387, 80486, XMS,
+himem.sys, VCPI, DPMI, QEMM, 386MAX, and DesqView.
+We have also heard it works with Microsoft's EMM386 and Qualitas's
+@w{386 MAX}.
+(You need EMS; for EMM386, this means that you can't use the
+@code{NOEMS} option.)  The authors have not tested Sd with all of
+these.
 
 You will need a system with at least 2 megabytes of memory.  There
 should be at least 175 kilobytes of memory free in the first 640Kb.
 The authors have not actually tried it on a system this small, and we
 would be interested in your experiences.
-
-@end ignore
