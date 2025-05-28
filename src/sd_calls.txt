@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.15C"
+version "39.16"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -20689,6 +20689,14 @@ call "change-O" c4a
 
 call "quick step part 1" dontshow tag quickstep1
             fudge_to_q_tag    // Which means fudge to a 2x3 in this case.
+   setup 4x2 4x4 qualifier right quarterbox
+      array [ZM15N ZM3N ZM0N    0    0    0    0  ZM9N]
+   setup 4x2 4x4 qualifier left quarterbox
+      array [ZM10N    0    0    0    0 ZM4N ZM7N ZM11N]
+   setup 4x2 4x4 qualifier right threequarterbox
+      array [    0 ZM3N ZM0N ZM1N ZM2N    0    0     0]
+   setup 4x2 4x4 qualifier left threequarterbox
+      array [    0    0    0 ZM1N ZM2N ZM4N ZM7N     0]
    setup 4x2 4x4 restriction forbidden quarterbox_or_col
       preds "Must be in quarter box setup."
          if columns_tandem     [ZM15N ZM3N ZM0N ZM1N ZM2N ZM4N ZM7N ZM11N]
@@ -21623,6 +21631,10 @@ call "triple scoot" a1 tag triple_scoot
 call "triple cross" a1 tag triplecross
    // Check for the cases in which we can definitively
    // deduce the handedness of the center box.
+   setup 4x2 2x4 qualifier right quarterbox
+         array [ZM6N ZM5N ZM4N ZM3N ZM4N    0    0 ZM7N]
+   setup 4x2 2x4 qualifier left quarterbox
+         array [ZM0N    0    0 ZM3N ZM4N ZM3N ZM2N ZM1N]
    setup 4x2 2x4 restriction quarterbox_or_col qualifier live right gen_qbox
          array [ZM6N ZM5N ZM4N ZM3N ZM4N    0    0 ZM7N]
    setup 4x2 2x4 restriction quarterbox_or_col qualifier live left gen_qbox
@@ -21777,6 +21789,15 @@ call "everyone tie" c4a
    seq crossable_peeloff [inherit_cross inherit_single inherit_nxn]
    seq circulate         [inherit_single inherit_nxn]
    seq bendtheline       [inherit_single inherit_nxn]
+
+call "circle 4 right 1/4" dontshow tag circle4right
+            reverse_means_mirror
+   setup 2x2 2x2
+      array [0 0 AL1W AL2W]
+
+call "circle 4 @eright@f @b" mainstream
+            neednumber left_means_mirror
+   seq circle4right [inherit_reverse repeat_n]
 
 call "circle to a line" mainstream
             reverse_means_mirror
@@ -23467,17 +23488,17 @@ call "_prepare @6 to cloverleaf" dontshow tag prepare_to_clover
 
 call "@6@C cloverleaf" mainstream
             dont_use_in_resolve cross_is_inherited
-   seq prepare_to_clover []
+   seq prepare_to_clover [assumption_transparent]
    seq final_clover_and_nothing [inherit_cross]
 
 call "@6@C cloverleaf while the others @0" mainstream
             dont_use_in_resolve cross_is_inherited
-   seq prepare_to_clover []
+   seq prepare_to_clover [assumption_transparent]
    seq final_clover_and_anything [inherit_cross]
 
 call "clover and @0" a1
             dont_use_in_resolve cross_is_inherited
-   seq prepare_to_clover_no_sel [normalize]
+   seq prepare_to_clover_no_sel [assumption_transparent normalize]
    seq final_clover_and_anything [inherit_cross]
 
 call "eight by @0" c3a

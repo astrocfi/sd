@@ -7,11 +7,11 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 39.15C</strong>, released on July 17, 2020.
+<strong>The current version of Sd/Sdtty is 39.16</strong>, released on July 20, 2020.
 <br>
 <p align="center">
-<strong>The program has rudimentery support for writing two-couple material.  See the release notes</strong>
-and the <dt><font size="+1"><a href="faq.html">FAQ</a></font></dt> file.
+<strong>The program has rudimentary support for writing two-couple material.  See the release notes</strong>
+and the <font size="+1"><a href="faq.html">FAQ</a></font> file.
 <br>
 <p align="center">
 Sdtty will now be released, reasonably regularly, for Linux.  If this doesn't work for your particular system,

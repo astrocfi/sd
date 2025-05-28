@@ -3024,6 +3024,10 @@ restriction_test_result verify_restriction(
 
       goto good;
    case restriction_tester::chk_qtag:
+      // If what we are searching for has handedness contrary to an incoming assumption, fail.
+      if (((tt.assump_both | ss->cmd.cmd_assume.assump_both) & 3) == 3)
+         goto bad;
+
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 

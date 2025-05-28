@@ -220,20 +220,11 @@ cd ~/sd/regress
 chmod 775 *.sh
 ./doit.sh
 
-
-Now, in directory ~/sd, do this to upload the Linux version:
-
-sftp USERNAME@www.challengedance.org
-  challengedance.org> (P=PASSWORD)
-  challengedance.org> cd public_html/sd
-  challengedance.org> put linux.tgz
-  challengedance.org> quit
-
 -----------------------------------------------------------------
 
              UPLOADING TO LYNETTE'S WEB SITE
              THIS NO LONGER WORKS ON WINDOZE.
-    BRING THE FILE (and sd_source too) OVER TO UBUNTU.
+    BRING THE FILE (and sd_source too) OVER TO UBUNTU, as shown above.
 -----------------------------------------------------------------
 Now, in directory ~/vNNNN, do:
 
@@ -242,7 +233,11 @@ sftp USERNAME@www.challengedance.org
   challengedance.org> cd public_html/sd
   challengedance.org> put pack.zip
   challengedance.org> (Check size)
+(upload linux program:)
+  challengedance.org> lcd ~/sd
+  challengedance.org> put linux.tgz
   challengedance.org> quit
+
 
 rsh USERNAME@www.challengedance.org
   challengedance.org> (P=PASSWORD)

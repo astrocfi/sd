@@ -991,7 +991,9 @@ const char *defmodtab1[] = {
    "???",
    "suppress_roll",
    "only_force_elong_if_empty",
+   "assumption_transparent",
    ""};
+
 // This table is keyed to the constants "DFM1_SEQ***".  These are the general
 // definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
 const char *seqmodtab1[] = {

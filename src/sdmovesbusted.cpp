@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2020  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -5427,7 +5427,6 @@ static void do_sequential_call(
       this_schema == schema_sequential_alternate;
    bool first_call = true;    // First call in logical definition.
    bool first_time = true;    // First thing we are doing, in temporal sequence.
-   bool use_incoming_assumption = true;  // Normally turned off after first round; only 1st call get the assumption.
    call_restriction fix_next_assumption = cr_none;
    int fix_next_assump_col = 0;
    int fix_next_assump_both = 0;
@@ -5965,7 +5964,7 @@ static void do_sequential_call(
          result->cmd.cmd_misc2_flags &= ~CMD_MISC2__REQUEST_Z;
       }
 
-      if (!use_incoming_assumption) {
+      if (!first_time) {
          result->cmd.cmd_assume.assumption = fix_next_assumption;
 
          if (fix_next_assumption != cr_none) {
@@ -5975,15 +5974,15 @@ static void do_sequential_call(
             result->cmd.cmd_assume.assump_live = 0;
             result->cmd.cmd_assume.assump_negate = 0;
 
-            // If we just put in an "assume 1/4 tag" type of thing, we presumably
-            // did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
-            // there were phantoms in the center after the call, the result could
-            // have gotten changed (by the normalization stuff deep within
-            // "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
-            // scoot reaction, we really want the 1/4 tag.  So change it back.
-            // It happens that code in "divide_the_setup" would do this anyway,
-            // but we don't like assumptions in place on setups for which they
-            // are meaningless.
+            /* If we just put in an "assume 1/4 tag" type of thing, we presumably
+               did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
+               there were phantoms in the center after the call, the result could
+               have gotten changed (by the normalization stuff deep within
+               "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
+               scoot reaction, we really want the 1/4 tag.  So change it back.
+               It happens that code in "divide_the_setup" would do this anyway,
+               but we don't like assumptions in place on setups for which they
+               are meaningless. */
 
             if (fix_next_assump_both == 2 &&
                 (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright) &&
@@ -6042,8 +6041,6 @@ static void do_sequential_call(
 
       first_call = false;
       first_time = false;
-      if ((this_mod1 & DFM1_ASSUMPTION_TRANSPARENT) == 0)
-         use_incoming_assumption = false;
 
       // If we are being asked to do just one part of a call,
       // exit now.  Also, fill in bits in result->result_flags.

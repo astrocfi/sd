@@ -33,7 +33,7 @@ couples, @strong{assume eight chain rotary spin}.
 
 You very well may need to say things about working with phantoms when actually
 calling.  The exact words are something you need to figure out.  You might say
-somethng like @strong{with the phantoms in front of you, rotary spin}.  But the
+something like @strong{with the phantoms in front of you, rotary spin}.  But the
 @strong{assume} commands are generally the preferred way to break out of a 4-person
 setup.  You would type that to the computer; you would presumably not say it
 to the dancers.

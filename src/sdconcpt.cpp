@@ -3445,7 +3445,7 @@ static void do_concept_assume_waves(
       case cr_tidal_wave:
       case cr_tidal_line:
          switch (ss->kind) {     // "assume tidal wave/line", 2-couple only
-         case s1x4: goto check_for_1x4;
+         case s1x4: case s1x6: goto check_for_1x4_1x6;
          }
          break;
       case cr_wave_only:
@@ -3508,17 +3508,14 @@ static void do_concept_assume_waves(
 
    goto check_it;
 
- check_for_1x4:
+ check_for_1x4_1x6:
+   // expand to 1x8
 
-   if (ss->kind == s1x4) {
-      if (two_couple_calling) {
-         no_phan_error = false;
-         // expand to 1x8
-         expand::expand_setup(s_1x4_1x8_ctrs, ss);
-      }
-      else
-         goto bad_assume;
-   }
+   if (!two_couple_calling)
+      goto bad_assume;
+
+   no_phan_error = false;
+   expand::expand_setup((ss->kind == s1x4) ? s_1x4_1x8_ctrs : s_1x6_1x8_ctrs, ss);
 
    goto check_it;
 

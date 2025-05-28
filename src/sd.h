@@ -4486,12 +4486,12 @@ class expand {
 
    static void fix_3x4_to_qtag(setup *stuff) THROW_DECL;                       // In sdtop.
 
-   static bool compress_from_hash_table(setup *ss,
+   static bool compress_from_hash_table(setup *ss,                             // In sdtop.
                                         normalize_action action,
                                         uint32_t livemask,
                                         bool noqtagcompress) THROW_DECL;
 
-   static bool expand_from_hash_table(setup *ss,
+   static bool expand_from_hash_table(setup *ss,                               // In sdtop.
                                       uint32_t needpropbits,
                                       uint32_t livemask) THROW_DECL;
 
@@ -4794,6 +4794,7 @@ extern const expand::thing s_2x2_2x4_ends;
 extern const expand::thing s_2x2_2x4_endsb;
 extern const expand::thing s_1x4_1x8_ctrs;
 extern const expand::thing s_1x4_1x8_ends;
+extern const expand::thing s_1x6_1x8_ctrs;
 extern const expand::thing s_qtg_2x4;
 extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;

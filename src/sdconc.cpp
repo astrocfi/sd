@@ -2968,9 +2968,23 @@ static void inherit_conc_assumptions(
             goto got_new_assumption;
          case cr_1fl_only:
             if (this_assumption->assump_col == 0) {
-               /* 1-faced lines [1fl/0/0] go to couples_only [cpl/0/0]. */
+               // 1-faced lines [1fl/0/0] go to couples_only [cpl/0/0].
                this_assumption->assumption = cr_couples_only;
                goto got_new_assumption;
+            }
+            break;
+         case cr_quarterbox:
+         case cr_threequarterbox:
+            if (really_doing_ends) {
+               // Ends go to back-to-back couples [lilo/0/2]
+               this_assumption->assumption = cr_li_lo;
+               this_assumption->assump_col = 0;
+               this_assumption->assump_both = 2;
+            }
+            else {
+               // Centers go to normal box [wv/0/x]
+               this_assumption->assumption = cr_wave_only;
+               this_assumption->assump_col = 0;
             }
             break;
          }

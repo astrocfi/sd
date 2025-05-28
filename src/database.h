@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 367
+#define DATABASE_FORMAT_VERSION 368
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1491,7 +1491,8 @@ enum mods1_word {
    DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000U,
    DFM1_FRACTAL_INSERT               = 0x01000000U,
    DFM1_SUPPRESS_ROLL                = 0x02000000U,
-   DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x04000000U
+   DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x04000000U,
+   DFM1_ASSUMPTION_TRANSPARENT       = 0x08000000U
 };
 
 enum  {
