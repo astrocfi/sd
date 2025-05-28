@@ -395,17 +395,8 @@ extern int get_char(void)
                   WriteFile(consoleStdout, s, strlen(s), &numWrite, 0);
                }
             }
-            else {
-               (void) sprintf(s, "Key is (ctl) %0X : (key) %0X : (ascii) %0X : %c\n",
-                              p->dwControlKeyState,
-                              key,
-                              c,
-                              c);
-               WriteFile(consoleStdout, s, strlen(s), &numWrite, 0);
-
-               if (isprint(c)) {
-                  return c;
-               }
+            else if (isprint(c)) {
+               return c;
             }
 
             /* Codes are:
@@ -426,33 +417,32 @@ extern int get_char(void)
 
 extern void get_string(char *dest)
 {
-   int size;
+   int size = 0;
 
-   if (!no_console) {
-      if (!SetConsoleMode(consoleStdin, oldMode)) {
-         int err = GetLastError();
-         fprintf(stderr, "SetConsoleMode failed: %d.\n", err);
-         ExitProcess(err);
+   for ( ;; ) {
+      int key = get_char();
+
+      if (key == (CTLLET + 'U')) {
+         size = 0;
+         clear_line();
+         continue;
       }
-   }
-
-   (void) gets(dest);
-
-   if (!no_console) {
-      if (!SetConsoleMode(consoleStdin, newMode)) {
-         int err = GetLastError();
-         fprintf(stderr, "SetConsoleMode failed: %d.\n", err);
-         ExitProcess(err);
+      else if (key > 0x7F) continue;    /* Ignore special function keys and such. */
+      else if (key == '\r' || key == '\n') break;
+      else if ((key == '\b') || (key == 0x7F)) {
+         if (size > 0) {
+            size--;
+            rubout();
+         }
+         continue;
       }
+
+      put_char(key);
+      dest[size++] = key;
    }
 
-   /* It is an observed fact that the string doesn't have a newline,
-      but we do this anyway. */
-   size = strlen(dest);
-   if (size > 0 && dest[size-1] == '\n') {
-      size--;
-      dest[size] = '\000';
-   }
+   dest[size] = '\0';
+   put_line("\n");
 }
 
 extern void ttu_bell(void)

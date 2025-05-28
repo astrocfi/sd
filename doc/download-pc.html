@@ -31,9 +31,9 @@ convenient form, that you can browse or download from the
 <a href="readings.html">Documentation</a> page.
 <ol>
 <li>
-First, be sure that the directory into which you want to download the
-file(s) exists.&nbsp;  This directory is typically "<code>C:\SD</code>".&nbsp;
-If you haven't already created it, create it with these DOS commands:
+First, be sure that the folder into which you want to download the
+file(s) exists.&nbsp;  This folder is typically "<code>C:\SD</code>".&nbsp;
+If you haven't already created it, create it with these commands at the Command (MSDOS) Prompt:
 <p>
 <samp>
  &gt; C:<br>
@@ -42,8 +42,8 @@ If you haven't already created it, create it with these DOS commands:
 </samp>
 <p>
 <li>
-Then download the file(s) from your Web browser.&nbsp;
-The current version is 32.2, released on October 31, 1998.
+Then download the file(s) from your Web browser into that folder.&nbsp;
+The current version is 32.3, released on November 17, 1998.
 <p>
 <strong>IMPORTANT NOTICE:</strong><br>
 This version is significantly changed from previous versions.
@@ -56,42 +56,46 @@ In case of difficulty, you can download
 the previous version (32.0)
 <a href="http://www.gildea.com/ftp/sd/oinstall.exe">here</a>.
 <p>
-Also, <strong>Do not use this version on Windows 3.1 or DOS</strong><br>
-<p>
-If you are running Windows 3.1 or DOS, you must continue to use
-Sd version 32.0.  If you want later versions of Sd for Windows 3.1 or DOS,
-<a href="mailto:wba@an.hp.com">contact me</a>.
-<p>
+If you are running Windows 3.1 or DOS, you must download a different
+file.  Choose the correct one from the list below.
+<hr>
 <ul>
-<li><a href="http://www.gildea.com/ftp/sd/install.exe">Download Sdtty
-for PC compatibles.</a>
-<li><a href="http://www.gildea.com/ftp/sd/textdoc.exe">Download all 4
-documents in plain text form.</a>
-<li><a href="http://www.gildea.com/ftp/sd/psdoc.exe">Download all 4
-documents in postscript form.</a>
-<li><a href="http://www.gildea.com/ftp/sd/pdfdoc.exe">Download all 4
-documents in Acrobat form.</a>
+<li>Download <a href="http://www.gildea.com/ftp/sd/install.exe">install.exe</a>
+which has Sdtty for PC compatibles running Windows 95, 98, or NT.
+<li>Download <a href="http://www.gildea.com/ftp/sd/installw.exe">installw.exe</a>
+which has Sdtty for PC compatibles running DOS or Windows 3.1
 </ul>
-<p>
+<hr>
+<ul>
+<li>Download <a href="http://www.gildea.com/ftp/sd/textdoc.exe">textdoc.exe</a>
+which has all 4 documents in plain text form.
+<li>Download <a href="http://www.gildea.com/ftp/sd/psdoc.exe">psdoc.exe</a>
+which has all 4 documents in postscript form.
+<li>Download <a href="http://www.gildea.com/ftp/sd/pdfdoc.exe">pdfdoc.exe</a>
+which has all 4 documents in Acrobat form.
+</ul>
+<hr>
+<li>
 After downloading, you should have a file named <code>INSTALL.EXE</code>
-(and whatever documentation files you downloaded) in the directory in
+or <code>INSTALLW.EXE</code>
+(and whatever documentation files you downloaded) in the folder in
 which you want Sdtty installed.&nbsp;
-Do the actual installation by typing this at the DOS prompt:
+Do the actual installation by typing this at the Command Prompt:
 <p>
-<samp>
- &gt; INSTALL
-</samp>
+<pre>
+ &gt; install        (or installw)
+</pre>
 <p>
 This command will unpack and install the program and database
-into that directory.
+into that folder.
 <p>
 Doing any or all of these:
 <p>
-<samp>
- &gt; TEXTDOC<br>
- &gt; PSDOC<br>
- &gt; PDFDOC
-</samp>
+<pre>
+ &gt; textdoc
+ &gt; psdoc
+ &gt; pdfdoc
+</pre>
 <p>
 will unpack the requested documentation files.
 <p>
@@ -100,14 +104,22 @@ You may now delete the <code>.EXE</code> files or move them to a
 floppy as a backup.
 <p>
 <li>
-If you are installing Sd for the first time
-and have Windows 3.1, Windows 95, or Windows NT,
+If you are installing Sd for the first time,
 you will probably want to perform
 a simple operation to make it possible to start the program by
 clicking an icon.&nbsp;
 Instructions for doing this operation are described in the
 <a href="manual/">manual</a>.
+If you have Windows 95, 98, or NT, all you need to do is
+(still at the Command Prompt) type one of
 <p>
+<pre>
+ &gt; do_desk             (to put the icon on your Desktop),       or
+ &gt; do_start            (to put the icon in the Start Menu),     or
+ &gt; do_prog             (to put the icon in the Programs Menu)
+</pre>
+<p>
+<li>
 If you are upgrading from a previous version,
 <a href="relnotes.html">read the Release Notes</a>.
 </ol>

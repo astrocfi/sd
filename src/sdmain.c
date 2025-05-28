@@ -23,8 +23,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "32.2"
-#define TIME_STAMP "wba@an.hp.com  30 October 98 $"
+#define VERSION_STRING "32.3"
+#define TIME_STAMP "wba@an.hp.com  17 November 98 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -284,58 +284,58 @@ Private void initialize_concept_sublists(void)
                If we don't know, the default value of setup_mask will make it legal. */
 
             switch (p->kind) {
-               case concept_centers_or_ends:
-               case concept_centers_and_ends:
-                  switch (p->value.arg1) {
-                     case selector_center6:
-                     case selector_outer6:
-                     case selector_center2:
-                     case selector_verycenters:
-                     case selector_outer2:
-                     case selector_veryends:
-                        setup_mask = MASK_CTR_2;    /* This is a 6 and 2 type of concept. */
-                        break;
-                     default:
-                        break;
-                  }
+            case concept_centers_or_ends:
+            case concept_centers_and_ends:
+               switch (p->value.arg1) {
+               case selector_center6:
+               case selector_outer6:
+               case selector_center2:
+               case selector_verycenters:
+               case selector_outer2:
+               case selector_veryends:
+                  setup_mask = MASK_CTR_2;    /* This is a 6 and 2 type of concept. */
+                  break;
+               default:
+                  break;
+               }
 
-                  break;
-               case concept_tandem:
-               case concept_some_are_tandem:
-               case concept_frac_tandem:
-               case concept_some_are_frac_tandem:
-                  switch (p->value.arg4) {
-                     case 0:     /* tandem */
-                        setup_mask = MASK_TAND; break;
-                     case 1:     /* couples */
-                        setup_mask = MASK_CPLS; break;
-                     case 2:     /* siamese */
-                        setup_mask = MASK_SIAM; break;
-                     default:
-                        setup_mask = 0; break;    /* Don't waste time on the others. */
-                  }
-                  break;
-               case concept_multiple_lines_tog_std:
-               case concept_multiple_lines_tog:
+               break;
+            case concept_tandem:
+            case concept_some_are_tandem:
+            case concept_frac_tandem:
+            case concept_some_are_frac_tandem:
+               switch (p->value.arg4) {
+               case tandem_key_tand:
+                  setup_mask = MASK_TAND; break;
+               case tandem_key_cpls:
+                  setup_mask = MASK_CPLS; break;
+               case tandem_key_siam:
+                  setup_mask = MASK_SIAM; break;
+               default:
+                  setup_mask = 0; break;    /* Don't waste time on the others. */
+               }
+               break;
+            case concept_multiple_lines_tog_std:
+            case concept_multiple_lines_tog:
                /* Test for quadruple C/L/W working. */
-                  if (p->value.arg4 == 4) setup_mask = MASK_2X4;
-                  break;
-               case concept_quad_diamonds:
-               case concept_quad_diamonds_together:
-               case concept_do_phantom_diamonds:
-                  setup_mask = MASK_QUAD_D;
-                  break;
-               case concept_do_phantom_2x4:
-               case concept_divided_2x4:
-               case concept_quad_lines:
-                  setup_mask = MASK_2X4;          /* Can actually improve on this. */
-                  break;
-               case concept_assume_waves:
-                  /* We never allow the "assume_waves" concept.  In the early days,
-                     it was actually dangerous.  It isn't dangerous any more,
-                     but it's a fairly stupid thing to generate in a search. */
-                  setup_mask = 0;
-                  break;
+               if (p->value.arg4 == 4) setup_mask = MASK_2X4;
+               break;
+            case concept_quad_diamonds:
+            case concept_quad_diamonds_together:
+            case concept_do_phantom_diamonds:
+               setup_mask = MASK_QUAD_D;
+               break;
+            case concept_do_phantom_2x4:
+            case concept_divided_2x4:
+            case concept_quad_lines:
+               setup_mask = MASK_2X4;          /* Can actually improve on this. */
+               break;
+            case concept_assume_waves:
+               /* We never allow the "assume_waves" concept.  In the early days,
+                  it was actually dangerous.  It isn't dangerous any more,
+                  but it's a fairly stupid thing to generate in a search. */
+               setup_mask = 0;
+               break;
             }
 
             if ((1 << (((int) test_call_list_kind) - ((int) call_list_empty))) & setup_mask)

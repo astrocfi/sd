@@ -32,7 +32,7 @@
     General Public License if you distribute the file.
 */
 
-version "32.2"
+version "32.3"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1416,11 +1416,19 @@ call "exchange the triangles 2/3" c3a
 
 call "exchange the 3x1 triangles" c3a
    setup 3x4 3x4 qualifier occupied_as_h
-      array [CCAM3N 0 0 AACM0N AACM10N AACL11N AACR9N 0 0 CCAL6N CCAM4N CCAR5N]
+      array [CCAM3N 0 0 AACM0N AACM10N AL11N AACR9N 0 0 CCAL6N CCAM4N CR5N]
    setup 3x4 3x4 qualifier occupied_as_qtag
       array [0 AM2N CM1N 0 AACR10N AM11N 0 AL8N CR7N 0 CCAL4N CM5N]
    setup qtag qtag
       array [AM1N CM0N AACR6N AM7N AL5N CR4N CCAL2N CM3N]
+
+call "exchange the 3x1 triangles 3/4" c3a
+   setup 3x4 3x4 qualifier occupied_as_h
+      array [CCAM4N 0 0 AACM10N AACM9N AM9S AL5S 0 0 CR11S CCAM6N CM6S]
+   setup 3x4 3x4 qualifier occupied_as_qtag
+      array [0 AM11N CM5N 0 AM8S AL8N 0 AL10S CR4S 0 CM7S CR7N]
+   setup qtag qtag
+      array [AM7N CM3N AM5S AL5N AL6S CR2S CM4S CR4N]
 
 call "convert the triangle" c4a
    setup trngl trngl qualifier miniwaves
@@ -4415,15 +4423,15 @@ call "pass @h" a1
    seq passthru [inherit_twisted]
    seq face_dir []
 
-call "pass in" dontshow tag pass_in
-            rear_back_from_r_wave
-   setup 2x4 2x4 qualifier in in_or_out
-      array [0 0 0 0 AL3W AL2W CR1E CR0E]
-   setup 2x2 2x2 no_cutting_through qualifier in in_or_out restriction not_tboned
-      array [0 0 AL1W CR0E]
-            alternate_definition [twisted] c4
-   setup 4x1 2x2 qualifier in in_or_out
-      array [CAL3N 0 0 CR2S]
+call "_face in" dontshow tag face_in
+   setup 1x2 1x2
+      array [CR0E AL1W]
+   setup 1x4 1x4
+      array [CR0E CR1E AL2W AL3W]
+   setup 1x8 1x8
+      array [CR0E CR1E CR2E CR3E AL4W AL5W AL6W AL7W]
+   setup 2x2 2x2
+      array [CR0E AL1W AL2W CR3E]
 
 call "_face out" dontshow tag face_out
    setup 1x2 1x2
@@ -4434,6 +4442,21 @@ call "_face out" dontshow tag face_out
       array [AL0W AL1W AL2W AL3W CR4E CR5E CR6E CR7E]
    setup 2x2 2x2
       array [AL0W CR1E CR2E AL3W]
+
+call "pass in" dontshow tag pass_in
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
+   seq face_in []
+/*
+            rear_back_from_r_wave
+   setup 2x4 2x4 qualifier in in_or_out
+      array [0 0 0 0 AL3W AL2W CR1E CR0E]
+   setup 2x2 2x2 no_cutting_through qualifier in in_or_out restriction not_tboned
+      array [0 0 AL1W CR0E]
+            alternate_definition [twisted] c4
+   setup 4x1 2x2 qualifier in in_or_out
+      array [CAL3N 0 0 CR2S]
+*/
 
 call "_pass out" dontshow tag pass_out
             visible_fractions twisted_is_inherited
@@ -4895,12 +4918,12 @@ call "triple star thru" a1
    seq star_thru []
 
 call "first couple go left, next go right" mainstream
-   setup 2x2 1x4 restriction forbidden 2fl_only
-      array [AL1S AL0S CR3S CR2S]
+   setup 4x2 2x4 rotate restriction forbidden 2fl_only
+      array [0 0 CR3E AL1E AL0E CR2E 0 0]
 
 call "first couple go right, next go left" mainstream
-   setup 2x2 1x4 restriction forbidden 2fl_only
-      array [CR2S CR3S AL0S AL1S]
+   setup 4x2 2x4 rotate restriction forbidden 2fl_only
+      array [0 0 AL1E CR3E CR2E AL0E 0 0]
 
 call "first couple go right, next go right" mainstream
    seq hangaright []
@@ -6290,6 +6313,7 @@ call "recycle" mainstream tag recycle   /* **** Actually, it's a2 for the facing
       preds "Can't do this with phantoms or T-boned people."
          if x22_miniwave [CR2S AL0S AL1S CR3S]
          if x22_couple   [0    0    ZM0N CR3S]
+         if always       [CR2S 0    0    CR3S]
             alternate_definition [single] c4
    setup 1x2 1x2 restriction forbidden wave_only
       array [CR1S AL0S]
@@ -6419,6 +6443,7 @@ call "cross cycle" c3
       preds "Can't do this with phantoms or T-boned people."
          if x22_miniwave [CR2S AL0S AL1S CR3S]
          if x22_couple   [0    0    ZM0N CR3S]
+         if always       [CR2S 0    0    CR3S]
 
 call "cross cycle (parts)" c3
             visible_fractions
@@ -7098,8 +7123,8 @@ call "_fudge 2 after fold" dontshow tag fold_fudge2
 call "@6@C fold (and adjust)" mainstream
             cross_is_inherited
    seq full_fold [inherit_cross]
-   seq fold_fudge1 [roll_transparent]
-   seq fold_fudge2 [roll_transparent]
+   seq fold_fudge1 [roll_transparent normalize]
+   seq fold_fudge2 [roll_transparent normalize]
 
 /* This is the real one.  Beware. */
 
@@ -8166,8 +8191,8 @@ call "finish a long trip" c4a tag longtrip2
 
 call "long trip" c4a
             visible_fractions single_is_inherited
-   seq longtrip1 [inherit_single]   /* The "single" is of course illegal here. */
-   seq longtrip2 [inherit_single]
+   seq longtrip1 [inherit_single normalize]   /* The "single" is of course illegal here. */
+   seq longtrip2 [inherit_single normalize]
 
 call "chase your neighbor" c1
             left_means_mirror
@@ -11592,19 +11617,19 @@ call "_finish linear flow but criss cross it" dontshow tag fin_xxlin_flow
 
 call "linear flow" c4a
             yoyo_is_inherited
-   seq hinge []
+   seq hinge_with_warn []
    seq natural_vertical_half_tag []
    seq fin_lin_flow [inherit_yoyo]
 
 call "linear flow but cross it" c4a
             yoyo_is_inherited
-   seq hinge []
+   seq hinge_with_warn []
    seq natural_vertical_half_tag []
    seq fin_xlin_flow [inherit_yoyo]
 
 call "linear flow but criss cross it" c4a
             yoyo_is_inherited
-   seq hinge []
+   seq hinge_with_warn []
    seq natural_vertical_half_tag []
    seq fin_xxlin_flow [inherit_yoyo]
 
@@ -12675,7 +12700,7 @@ call "_open up and part 1" dontshow tag opnup1
 
 call "open up and @0" c3a
             magic_is_inherited
-   seq opnup1 [inherit_magic]
+   seq opnup1 [inherit_magic normalize]
    seq transf2 []
 
 call "_replace the column 1" dontshow tag replacecol1
@@ -13025,6 +13050,9 @@ call "_transfer and part 1" dontshow tag transf1
       array [ZM6W ZM1W CR3S CR4S AL7N AL0N ZM2W ZM5W]
    setup 2x4 qtag restriction forbidden siamese_in_quad
       array [0 0 0 0 ZM2N ZM3N ZM7N ZM6N]
+   /* This one is new. */
+   setup 3x4 bone /*restriction forbidden siamese_in_quad*/
+      array [0 CR4W AL5E 0 0 AL0E ZM2N ZM3N ZM7N ZM6N 0 CR1W]
    setup c1phan bone qualifier ntbone none restriction forbidden siamese_in_quad
       array [0 CR4W 0 CR1W AL5E 0 AL0E 0 ZM2N 0 ZM3N 0 0 ZM6N 0 ZM7N]
    setup c1phan 4x4 qualifier tbone none restriction forbidden siamese_in_quad
@@ -13036,16 +13064,16 @@ call "_transfer and part 1" dontshow tag transf1
       array [0 0 0 0 ZM2N ZM3N ZM7N ZM6N]
 
 call "_transfer and @0 part 2" dontshow tag transf2
-   conc nullcall [mandatory_anycall] nullcall [conc_demand_columns conc_force_columns]
+   conc nullcall [mandatory_anycall] nullcall [conc_demand_columns conc_force_spots]
 
 call "transfer and @0" a2
             magic_is_inherited
-   seq transf1 [inherit_magic]
+   seq transf1 [inherit_magic normalize]
    seq transf2 []
 
 call "trans @0" c4a
             magic_is_inherited
-   seq transf1 [inherit_magic]
+   seq transf1 [inherit_magic normalize]
    seq ctrcast3 []
    seq nullcall [mandatory_anycall]
 
@@ -14800,7 +14828,7 @@ call "_counteract part 2" dontshow tag counteract2
 call "counteract" c4a
             visible_fractions yoyo_is_inherited
    seq counteract1 [inherit_yoyo]
-   seq counteract2 []
+   seq counteract2 [normalize]
 
 call "_centers 3/4 / ends half-circ" dontshow tag motivate2
             12_matrix_is_inherited 16_matrix_is_inherited fractal_is_inherited
@@ -15240,7 +15268,7 @@ call "_new extend" dontshow tag newextend
    setup 2x2 dmd rotate qualifier miniwaves
       array [ZM0W ZM0W ZM1W ZM3W]
 
-call "_new swing in any wave" a2 tag in_the_wave_swing
+call "_new swing in any wave" dontshow tag in_the_wave_swing
    setup 1x4 1x4 qualifier wave_only
       array [CR1S AL0S AL3S CR2S]
    setup qtag qtag qualifier right wave_only
@@ -15615,7 +15643,7 @@ call "centers thru and close the gate" c4
    seq twist1 []
    seq twist2 []
 
-call "mini busy" a2
+call "mini busy (matrix)" a2
    setup 2x4 qtag restriction 2fl_only
       array [CR0S CR1S AL0S AL1S AL3S AL6S CR2S CR7S]
             alternate_definition [single] c4
@@ -15628,9 +15656,21 @@ call "mini busy" a2
    setup 2x8 4dmd restriction 4x4_2fl_only
       array [CR0S CR1S CR2S CR3S AL0S AL1S AL2S AL3S AL5S AL7S AL14S AL12S CR4S CR6S CR15S CR13S]
 
-call "2/3 mini busy" c1
-   setup 2x4 hrglass
-      array [R0E R1E L0W L1W M2N L3W R3E M6N]
+call "_mini busy 1" dontshow tag mini_busy_1
+   setup 2x4 3x4 restriction 2fl_only
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM11N ZM10N]
+
+call "_mini busy 2" dontshow tag mini_busy_2
+   in_out_triple_squash plain_tag [] sglctrhinge_with_warn []
+
+call "_mini busy 3" dontshow tag mini_busy_3
+   conc flipdiamond [] quarterin [conc_demand_lines conc_force_spots]
+
+call "mini busy" a2
+            visible_fractions
+   seq mini_busy_1 []
+   seq mini_busy_2 []
+   seq mini_busy_3 []
 
 call "hinge/flip/stepnfold" dontshow tag hngflpstpnfld
    setup 1x4 2x2 restriction forbidden 2fl_only
@@ -15653,12 +15693,12 @@ call "_busy_anything_part_2, @0" dontshow tag busy_any_part_2
    conc nullcall [mandatory_anycall] nullcall [suppress_elongation_warnings]
 
 call "@4keep @5busy@1" c3a
-   seq busy_nothing []
-   seq busy_part_2 []
+   seq busy_nothing [normalize]
+   seq busy_part_2 [normalize]
 
 call "busy @0" c3a
-   seq busy_nothing []
-   seq busy_any_part_2 []
+   seq busy_nothing [normalize]
+   seq busy_any_part_2 [normalize]
 
 call "_make a pass part 1" dontshow tag makepass_1
    setup qtag qtag

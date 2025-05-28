@@ -1600,10 +1600,13 @@ extern void normalize_setup(setup *ss, normalize_action action)
    }
 
    if (action >= normalize_to_4) {
-      if (ss->kind == s2x4 && !(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))
-         /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
+      if (ss->kind == s2x4 && !(ss->people[0].id1 | ss->people[3].id1 |
+                                ss->people[4].id1 | ss->people[7].id1))
+         /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT,
+            yielding a rigger. */
          compress_setup(&exp_2x2_2x4_stuff, ss);
-      else if (ss->kind == s1x8 && !(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
+      else if (ss->kind == s1x8 && !(ss->people[0].id1 | ss->people[1].id1 |
+                                     ss->people[4].id1 | ss->people[5].id1)) {
          if (action >= normalize_to_2 && !(ss->people[3].id1 | ss->people[7].id1))
             compress_setup(&exp_1x2_1x8_stuff, ss);
          else
@@ -1612,14 +1615,17 @@ extern void normalize_setup(setup *ss, normalize_action action)
       else if (ss->kind == s1x6 && !(ss->people[0].id1 | ss->people[3].id1)) {
          compress_setup(&exp_1x4_1x6_stuff, ss);
       }
-      else if (ss->kind == s_rigger && !(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+      else if (ss->kind == s_rigger && !(ss->people[2].id1 | ss->people[3].id1 |
+                                         ss->people[6].id1 | ss->people[7].id1)) {
          ss->kind = s2x2;
          (void) copy_person(ss, 2, ss, 4);
          (void) copy_person(ss, 3, ss, 5);
       }
-      else if (ss->kind == s_bone && !(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))
+      else if (ss->kind == s_bone && !(ss->people[0].id1 | ss->people[1].id1 |
+                                       ss->people[4].id1 | ss->people[5].id1))
          compress_setup(&exp_1x4_bone_stuff, ss);
-      else if ((ss->kind == s_crosswave) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+      else if ((ss->kind == s_crosswave) && (!(ss->people[0].id1 | ss->people[1].id1 |
+                                               ss->people[4].id1 | ss->people[5].id1))) {
          if (action >= normalize_to_2 && !(ss->people[2].id1 | ss->people[6].id1)) {
             ss->kind = s1x2;
             ss->rotation++;
@@ -1637,7 +1643,10 @@ extern void normalize_setup(setup *ss, normalize_action action)
             canonicalize_rotation(ss);
          }
       }
-      else if ((ss->kind == s_hrglass || ss->kind == s_dhrglass) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+      else if ((ss->kind == s_hrglass || ss->kind == s_dhrglass) &&
+               action != normalize_after_triple_squash &&
+               (!(ss->people[0].id1 | ss->people[1].id1 |
+                  ss->people[4].id1 | ss->people[5].id1))) {
          if (action >= normalize_to_2 && !(ss->people[2].id1 | ss->people[6].id1)) {
             ss->kind = s1x2;
             ss->rotation++;
@@ -1652,10 +1661,12 @@ extern void normalize_setup(setup *ss, normalize_action action)
             (void) copy_person(ss, 3, ss, 7);
          }
       }
-      else if ((ss->kind == s_galaxy) && (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1))) {
+      else if ((ss->kind == s_galaxy) && (!(ss->people[0].id1 | ss->people[2].id1 |
+                                            ss->people[4].id1 | ss->people[6].id1))) {
          compress_setup(&exp_2x2_gal_stuff, ss);
       }
-      else if ((ss->kind == s3x1dmd) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
+      else if ((ss->kind == s3x1dmd) && (!(ss->people[0].id1 | ss->people[3].id1 |
+                                           ss->people[4].id1 | ss->people[7].id1))) {
          compress_setup(&exp_1x4_3x1d_stuff, ss);
       }
       else if ((ss->kind == s_1x2dmd) && (!(ss->people[0].id1 | ss->people[3].id1))) {
@@ -1664,8 +1675,10 @@ extern void normalize_setup(setup *ss, normalize_action action)
       else if ((ss->kind == s_2x1dmd) && (!(ss->people[0].id1 | ss->people[3].id1))) {
          compress_setup(&exp_dmd_2x1d_stuff, ss);
       }
-      else if ((ss->kind == s3x4) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1 |
-                                        ss->people[6].id1 | ss->people[7].id1 | ss->people[8].id1 | ss->people[9].id1))) {
+      else if ((ss->kind == s3x4) && (!(ss->people[0].id1 | ss->people[1].id1 |
+                                        ss->people[2].id1 | ss->people[3].id1 |
+                                        ss->people[6].id1 | ss->people[7].id1 |
+                                        ss->people[8].id1 | ss->people[9].id1))) {
          compress_setup(&exp_1x4_3x4_stuff, ss);
       }
    }

@@ -263,10 +263,20 @@ extern void normalize_concentric(
          center_arity = 1;
       }
       else if (inners[0].kind == nothing) {
-         inners[0] = *outers;
-         outers->kind = nothing;
-         i = (inners[0].rotation - outers->rotation) & 3;
-         center_arity = 1;
+         if (outers->kind == sdmd) {
+            clear_people(&inners[0]);
+            inners[0].kind = s2x2;
+            inners[0].rotation = 0;
+            inners[1] = inners[0];
+            center_arity = 2;
+            table_synthesizer = schema_in_out_triple;
+         }
+         else {
+            inners[0] = *outers;
+            outers->kind = nothing;
+            i = (inners[0].rotation - outers->rotation) & 3;
+            center_arity = 1;
+         }
       }
       else
          fail("Can't figure out what to do.");

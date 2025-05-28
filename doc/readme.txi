@@ -370,7 +370,7 @@ the PIF editor (in Windows 3.1 or Windows NT) to modify the Command Line or Prog
 given in @code{sdtty.pif}.
 
 @unnumberedsubsec Under Windows 95 and Similar Interfaces -- the simplest way
-@noindent This includes Windows 98 and modern versions of NT.
+@noindent This includes Windows 98 and NT 4.0 or later.
 
 Start the Windows Explorer.  (This is not the Internet Explorer.)  The Windows
 Explorer (or Windows 95 Explorer, or Windows NT Explorer) is typically in the
@@ -391,7 +391,7 @@ This will place the @code{Sdtty} icon in the main @code{Start} menu.
 This will place the @code{Sdtty} icon in the @code{Programs} submenu.
 @end table
 
-@unnumberedsubsec Under Windows 3.1 or early versions of Windows NT
+@unnumberedsubsec Under Windows 3.1 or Windows NT 3.51 or earlier
 From the Program Manager, double-click the program group you want to place it in,
 for example, @code{Accessories}.  In the Toolbar of the Program Manager, click
 @code{File}.  Then click @code{New}.  Select @code{Program Item}, and click @code{OK}@.

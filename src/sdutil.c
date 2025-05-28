@@ -514,7 +514,7 @@ typedef struct grilch {
 } restr_initializer;
 
 
-static restr_initializer restr_init_table[] = {
+static restr_initializer restr_init_table0[] = {
    {s_qtag,    cr_qtag_mwv,     &qtagmwv},
    {s_qtag,    cr_qtag_mag_mwv, &qtagmagmwv},
    {s_spindle, cr_dmd_ctrs_mwv, &spindle1},
@@ -623,11 +623,87 @@ static restr_initializer restr_init_table[] = {
    {s_qtag, cr_real_3_4_tag, &r3qt},
    {s_qtag, cr_real_1_4_line, &r1ql},
    {s_qtag, cr_real_3_4_line, &r3ql},
-   {nothing}
-};
+   {s_trngl, cr_wave_only, &wave_tgl},
+   {s_trngl, cr_miniwaves, &wave_tgl},
+   {s_trngl, cr_couples_only, &cpl_tgl},
+   {nothing}};
 
+static restr_initializer restr_init_table1[] = {
+   {s2x3, cr_wave_only, &cwave_2x3},
+   {s2x3, cr_magic_only, &cmagic_2x3},
+   {s2x3, cr_peelable_box, &peelable_3x2},
+   {s2x3, cr_all_facing_same, &all_same_6},
+   {s1x4, cr_all_facing_same, &all_same_4},
+   {s1x4, cr_2fl_only, &two_faced_1x4},
+   {s1x4, cr_li_lo, &wave_1x4},
+   {s1x6, cr_all_facing_same, &all_same_6},
+   {s1x8, cr_all_facing_same, &all_same_8},
+   {s2x4, cr_li_lo, &wave_2x4},
+   {s2x4, cr_ctrs_in_out, &ccio_2x4},
+   {s2x4, cr_2fl_only, &two_faced_2x4},
+   {s2x4, cr_wave_only, &cwave_2x4},
+   {s2x4, cr_magic_only, &cmagic_2x4},
+   {s2x4, cr_peelable_box, &peelable_4x2},
+   {s2x4, cr_couples_only, &cpls_4x2},
+   {s2x4, cr_miniwaves, &mnwv_4x2},
+   {s2x4, cr_all_facing_same, &all_same_8},
+   {s1x2, cr_all_facing_same, &all_same_2},
+   {s1x2, cr_li_lo, &wave_1x2},
+   {s2x6, cr_wave_only, &cwave_2x6},
+   {s2x6, cr_peelable_box, &peelable_6x2},
+   {s2x6, cr_couples_only, &cpls_6x2},
+   {s2x5, cr_wave_only, &cwave_2x5},
+   {s2x5, cr_peelable_box, &peelable_5x2},
+   {s2x8, cr_wave_only, &cwave_2x8},
+   {s2x8, cr_peelable_box, &peelable_8x2},
+   {s2x8, cr_couples_only, &cpls_8x2},
+   {s_qtag, cr_wave_only, &cwave_qtg},
+   {s_short6, cr_wave_only, &cwave_sh6},
+   {s_trngl, cr_wave_only, &wave_tgl},   /* isn't this bogus?  It checks for TANDEM-BASE. */
+   {sdmd, cr_wave_only, &wave_dmd},
+   {sdmd, cr_miniwaves, &wave_dmd},
+   {s_ptpd, cr_wave_only, &wavectrs_ptpd},
+   {s_ptpd, cr_miniwaves, &miniwave_ptpd},
+   {nothing}};
 
-static restr_initializer *restr_hash_table[NUM_RESTR_HASH_BUCKETS];
+static restr_initializer restr_init_table2[] = {
+   {s_qtag, cr_jleft, &jleft_qtag},
+   {s_qtag, cr_jright, &jright_qtag},
+   {s_qtag, cr_ijleft, &ijleft_qtag},
+   {s_qtag, cr_ijright, &ijright_qtag},
+   {s_qtag, cr_diamond_like, &qtag_d},
+   {s_qtag, cr_qtag_like, &all_8_ns},
+   {s_qtag, cr_gen_1_4_tag, &qtag_1},
+   {s_qtag, cr_gen_3_4_tag, &qtag_3},
+   {s4dmd, cr_jleft, &jleft_4dmd},
+   {s4dmd, cr_jright, &jright_4dmd},
+   {s4dmd, cr_diamond_like, &dmd4_d},
+   {s4dmd, cr_qtag_like, &all_16_ns},
+   {s4dmd, cr_gen_1_4_tag, &dmd4_1},
+   {s4dmd, cr_gen_3_4_tag, &dmd4_3},
+   {sdmd, cr_jright, &jright_dmd},
+   {sdmd, cr_diamond_like, &dmd_d},
+   {sdmd, cr_qtag_like, &dmd_q},
+   {sdmd, cr_gen_1_4_tag, &dmd_1},
+   {sdmd, cr_gen_3_4_tag, &dmd_3},
+   {s_ptpd, cr_jright, &jright_ptpd},
+   {s_ptpd, cr_diamond_like, &ptpd_d},
+   {s_ptpd, cr_qtag_like, &all_8_ew},
+   {s_ptpd, cr_gen_1_4_tag, &ptpd_1},
+   {s_ptpd, cr_gen_3_4_tag, &ptpd_3},
+   {s2x2, cr_wave_only, &box_wave},
+   {s2x2, cr_all_facing_same, &box_1face},
+   {s2x2, cr_2fl_only, &box_1face},
+   {s2x2, cr_trailers_only, &box_in_or_out},
+   {s2x2, cr_leads_only, &box_in_or_out},
+   {s2x2, cr_li_lo, &box_in_or_out},
+   {s2x2, cr_indep_in_out, &ind_in_out_2x2},
+   {s2x2, cr_magic_only, &box_magic},
+   {nothing}};
+
+static restr_initializer *restr_hash_table0[NUM_RESTR_HASH_BUCKETS];
+static restr_initializer *restr_hash_table1[NUM_RESTR_HASH_BUCKETS];
+static restr_initializer *restr_hash_table2[NUM_RESTR_HASH_BUCKETS];
 
 
 extern void initialize_restr_tables(void)
@@ -635,13 +711,28 @@ extern void initialize_restr_tables(void)
    restr_initializer *tabp;
    int i;
 
-   for (i=0 ; i<NUM_RESTR_HASH_BUCKETS ; i++)
-      restr_hash_table[i] = (restr_initializer *) 0;
+   for (i=0 ; i<NUM_RESTR_HASH_BUCKETS ; i++) {
+      restr_hash_table0[i] = (restr_initializer *) 0;
+      restr_hash_table1[i] = (restr_initializer *) 0;
+      restr_hash_table2[i] = (restr_initializer *) 0;
+   }
 
-   for (tabp = restr_init_table ; tabp->k != nothing ; tabp++) {
+   for (tabp = restr_init_table0 ; tabp->k != nothing ; tabp++) {
       uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
-      tabp->next = restr_hash_table[hash_num];
-      restr_hash_table[hash_num] = tabp;
+      tabp->next = restr_hash_table0[hash_num];
+      restr_hash_table0[hash_num] = tabp;
+   }
+
+   for (tabp = restr_init_table1 ; tabp->k != nothing ; tabp++) {
+      uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      tabp->next = restr_hash_table1[hash_num];
+      restr_hash_table1[hash_num] = tabp;
+   }
+
+   for (tabp = restr_init_table2 ; tabp->k != nothing ; tabp++) {
+      uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      tabp->next = restr_hash_table2[hash_num];
+      restr_hash_table2[hash_num] = tabp;
    }
 }
 
@@ -649,14 +740,13 @@ extern void initialize_restr_tables(void)
 extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t)
 {
    restriction_thing *restr_thing_ptr = (restriction_thing *) 0;
+   restr_initializer *restr_hash_bucket;
+   uint32 hash_num = ((k + (5*t.assumption)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
 
    /* First, use the hash table to search for easy cases. */
 
    if (t.assump_col == 0) {
-      restr_initializer *restr_hash_bucket;
-      uint32 hash_num = ((k + (5*t.assumption)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
-
-      for (restr_hash_bucket = restr_hash_table[hash_num] ;
+      for (restr_hash_bucket = restr_hash_table0[hash_num] ;
            restr_hash_bucket ;
            restr_hash_bucket = restr_hash_bucket->next) {
          if (restr_hash_bucket->k == k && restr_hash_bucket->restr == t.assumption)
@@ -664,130 +754,22 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
       }
    }
    else if (t.assump_col == 1) {
-      switch (k) {
-         case s2x3:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &cwave_2x3;
-            else if (t.assumption == cr_magic_only)
-               restr_thing_ptr = &cmagic_2x3;
-            else if (t.assumption == cr_peelable_box)
-               restr_thing_ptr = &peelable_3x2;
-            else if (t.assumption == cr_all_facing_same)
-               restr_thing_ptr = &all_same_6;
-            break;
-         case s1x4:
-            if (t.assumption == cr_all_facing_same)
-               restr_thing_ptr = &all_same_4;
-            else if (t.assumption == cr_2fl_only)
-               restr_thing_ptr = &two_faced_1x4;
-            else if (t.assumption == cr_li_lo)
-               restr_thing_ptr = &wave_1x4;
-            break;
-         case s1x6:
-            if (t.assumption == cr_all_facing_same)
-               restr_thing_ptr = &all_same_6;
-            break;
-         case s1x8:
-            if (t.assumption == cr_all_facing_same)
-               restr_thing_ptr = &all_same_8;
-            break;
-         case s2x4:
-            if (t.assumption == cr_li_lo)
-               restr_thing_ptr = &wave_2x4;
-            else if (t.assumption == cr_ctrs_in_out)
-               restr_thing_ptr = &ccio_2x4;
-            else if (t.assumption == cr_2fl_only)
-               restr_thing_ptr = &two_faced_2x4;
-            else if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &cwave_2x4;
-            else if (t.assumption == cr_magic_only)
-               restr_thing_ptr = &cmagic_2x4;
-            else if (t.assumption == cr_peelable_box)
-               restr_thing_ptr = &peelable_4x2;
-            else if (t.assumption == cr_couples_only)
-               restr_thing_ptr = &cpls_4x2;
-            else if (t.assumption == cr_miniwaves)
-               restr_thing_ptr = &mnwv_4x2;
-            else if (t.assumption == cr_all_facing_same)
-               restr_thing_ptr = &all_same_8;
-            break;
-         case s1x2:
-            if (t.assumption == cr_all_facing_same)
-               restr_thing_ptr = &all_same_2;
-            else if (t.assumption == cr_li_lo)
-               restr_thing_ptr = &wave_1x2;
-            break;
-         case s2x6:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &cwave_2x6;
-            else if (t.assumption == cr_peelable_box)
-               restr_thing_ptr = &peelable_6x2;
-            else if (t.assumption == cr_couples_only)
-               restr_thing_ptr = &cpls_6x2;
-            break;
-         case s2x5:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &cwave_2x5;
-            else if (t.assumption == cr_peelable_box)
-               restr_thing_ptr = &peelable_5x2;
-            break;
-         case s2x8:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &cwave_2x8;
-            else if (t.assumption == cr_peelable_box)
-               restr_thing_ptr = &peelable_8x2;
-            else if (t.assumption == cr_couples_only)
-               restr_thing_ptr = &cpls_8x2;
-            break;
-         case s_qtag:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &cwave_qtg;
-            break;
-         case s_short6:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &cwave_sh6;
-            break;
-         case s_trngl:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &wave_tgl;   /* isn't this bogus?  It checks for TANDEM-BASE. */
-            break;
-         case sdmd:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &wave_dmd;
-            else if (t.assumption == cr_miniwaves)
-               restr_thing_ptr = &wave_dmd;
-            break;
-         case s_ptpd:
-            if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &wavectrs_ptpd;
-            else if (t.assumption == cr_miniwaves)
-               restr_thing_ptr = &miniwave_ptpd;
-            break;
+      for (restr_hash_bucket = restr_hash_table1[hash_num] ;
+           restr_hash_bucket ;
+           restr_hash_bucket = restr_hash_bucket->next) {
+         if (restr_hash_bucket->k == k && restr_hash_bucket->restr == t.assumption)
+            return restr_hash_bucket->value;
       }
+   }
 
-      if (restr_thing_ptr) return restr_thing_ptr;
+   for (restr_hash_bucket = restr_hash_table2[hash_num] ;
+        restr_hash_bucket ;
+        restr_hash_bucket = restr_hash_bucket->next) {
+      if (restr_hash_bucket->k == k && restr_hash_bucket->restr == t.assumption)
+         return restr_hash_bucket->value;
    }
 
    switch (k) {
-   case s2x2:
-      switch (t.assumption) {
-      case cr_wave_only:
-         restr_thing_ptr = &box_wave;
-         break;
-      case cr_all_facing_same: case cr_2fl_only:
-         restr_thing_ptr = &box_1face;
-         break;
-      case cr_trailers_only: case cr_leads_only: case cr_li_lo:
-         restr_thing_ptr = &box_in_or_out;
-         break;
-      case cr_indep_in_out:
-         restr_thing_ptr = &ind_in_out_2x2;
-         break;
-      case cr_magic_only:
-         restr_thing_ptr = &box_magic;
-         break;
-      }
-      break;
    case s4x4:
       if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
          restr_thing_ptr = &s4x4_wave;
@@ -796,83 +778,18 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
       break;
    case s2x4:
       if (t.assumption == cr_wave_only && t.assump_col == 2)
-         restr_thing_ptr = &mnwv_2x4;  /* WRONG!!!  This is "assume normal boxes" while in gen'lized lines, but will accept any miniwaves. */
+         restr_thing_ptr = &mnwv_2x4;  /* WRONG!!!  This is "assume normal boxes"
+                                          while in gen'lized lines, but will accept
+                                          any miniwaves. */
       else if (t.assumption == cr_magic_only && (t.assump_col & 2) == 2)
          /* "assume inverted boxes", people are in general lines (col=2) or cols (col=3) */
-         restr_thing_ptr = &cmagic_2x4;   /* This is wrong, need something that allows real mag col or unsymm congruent inv boxes.
+         restr_thing_ptr = &cmagic_2x4;   /* This is wrong, need something that allows
+                                             real mag col or unsymm congruent inv boxes.
                                              This is a "check mixed groups" type of thing!!!! */
       break;
    case s1x2:
       if (t.assumption == cr_wave_only && t.assump_col == 2)
          restr_thing_ptr = &wave_1x2;
-      break;
-   case s_qtag:
-      if (t.assumption == cr_jleft)
-         restr_thing_ptr = &jleft_qtag;
-      else if (t.assumption == cr_jright)
-         restr_thing_ptr = &jright_qtag;
-      else if (t.assumption == cr_ijleft)
-         restr_thing_ptr = &ijleft_qtag;
-      else if (t.assumption == cr_ijright)
-         restr_thing_ptr = &ijright_qtag;
-      else if (t.assumption == cr_diamond_like)
-         restr_thing_ptr = &qtag_d;
-      else if (t.assumption == cr_qtag_like)
-         restr_thing_ptr = &all_8_ns;
-      else if (t.assumption == cr_gen_1_4_tag)
-         restr_thing_ptr = &qtag_1;
-      else if (t.assumption == cr_gen_3_4_tag)
-         restr_thing_ptr = &qtag_3;
-      break;
-   case s4dmd:
-      if (t.assumption == cr_jleft)
-         restr_thing_ptr = &jleft_4dmd;
-      else if (t.assumption == cr_jright)
-         restr_thing_ptr = &jright_4dmd;
-      else if (t.assumption == cr_diamond_like)
-         restr_thing_ptr = &dmd4_d;
-      else if (t.assumption == cr_qtag_like)
-         restr_thing_ptr = &all_16_ns;
-      else if (t.assumption == cr_gen_1_4_tag)
-         restr_thing_ptr = &dmd4_1;
-      else if (t.assumption == cr_gen_3_4_tag)
-         restr_thing_ptr = &dmd4_3;
-      break;
-   case s_trngl:
-      if (t.assump_col == 0) {
-         switch (t.assumption) {
-         case cr_miniwaves:
-            restr_thing_ptr = &wave_tgl; break;
-         case cr_couples_only:
-            restr_thing_ptr = &cpl_tgl; break;
-         case cr_wave_only:
-            restr_thing_ptr = &wave_tgl; break;
-         }
-      }
-      break;
-   case sdmd:
-      if (t.assumption == cr_jright)
-         restr_thing_ptr = &jright_dmd;
-      else if (t.assumption == cr_diamond_like)
-         restr_thing_ptr = &dmd_d;
-      else if (t.assumption == cr_qtag_like)
-         restr_thing_ptr = &dmd_q;
-      else if (t.assumption == cr_gen_1_4_tag)
-         restr_thing_ptr = &dmd_1;
-      else if (t.assumption == cr_gen_3_4_tag)
-         restr_thing_ptr = &dmd_3;
-      break;
-   case s_ptpd:
-      if (t.assumption == cr_jright)
-         restr_thing_ptr = &jright_ptpd;
-      else if (t.assumption == cr_diamond_like)
-         restr_thing_ptr = &ptpd_d;
-      else if (t.assumption == cr_qtag_like)
-         restr_thing_ptr = &all_8_ew;
-      else if (t.assumption == cr_gen_1_4_tag)
-         restr_thing_ptr = &ptpd_1;
-      else if (t.assumption == cr_gen_3_4_tag)
-         restr_thing_ptr = &ptpd_3;
       break;
    }
 

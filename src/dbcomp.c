@@ -707,6 +707,7 @@ char *seqmodtab1[] = {
    "repeat_n",
    "repeat_n_alternate",
    "repeat_nm1",
+   "normalize",
    ""};
 
 /* This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 8).

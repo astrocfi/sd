@@ -1,7 +1,8 @@
+===============================================================
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 27 Sept 1998.
+        Last modified 17 Nov 1998.
 
 -----------------------------------------------------------------
 
@@ -13,7 +14,7 @@ Be sure the version numbers and dates are correct in:
     sd_doc.txi         (version # and date are visible)
     relnotes.txi       (version # and date are visible)
     download-pc.html   (version # is visible)
-    download-unix.html (version number of HP-UX release is visible)
+    download-unix.html (version # of HP-UX release is visible)
 
 -----------------------------------------------------------------
 
@@ -21,15 +22,29 @@ Be sure the version numbers and dates are correct in:
 
 Build and test the optimized version from GCC:
     setopt
+    [del *.o if necessary to force build]
     make
     cd regress
     doit
 
 Build and test the optimized version from DJGPP:
     setdjgpp
+    [del *.o if necessary to force build]
     make
     cd regress
     doit
+
+Now give the command "do_binaryw" to save the DJGPP build for Windows 3.1.
+
+Build and test the optimized version from MSVC++:
+    Set project configuration to both "sdtty release" and "mkcalls release",
+    issuing "build" or "build all" in each case.
+
+BE SURE THAT THIS WAS THE LAST BUILD BEFORE MAKING NORMAL "do_binary" RELEASE!!!
+BUILD BOTH SDTTY AND MKCALLS UNDER MCVC++.
+
+Now run mkcalls (MSVC++ doesn't do that, not that it matters),
+and give the command "do_binary" to save the MSVC++ build.
 
 -----------------------------------------------------------------
 
@@ -48,7 +63,8 @@ Copy these onto archival disks.  All sources can fit onto 2 disks.
 
 Go to sddoc directory and do:
 
-    do_binary
+    do_binary    (with MSVC build)
+    do_binaryw   (with djgpp build)
     do_plain
     do_ps
     do_pdf
@@ -60,6 +76,7 @@ Go to sddoc directory and do:
 This creates these files, all in the sddoc directory:
 
     bin.zip    /  bin.txt       \
+    binw.zip   /  binw.txt      |
     plain.zip  /  plain.txt     |
     ps.zip     /  ps.txt        |
     pdf.zip    /  pdf.txt       |   These files get mailed
@@ -69,6 +86,7 @@ This creates these files, all in the sddoc directory:
     hpux.zip   /  hpux.txt      /   (HP-UX only)
 
     install.exe     \
+    installw.exe     |
     textdoc.exe      |    These files are used locally for
     pdfdoc.exe       |    installation or copying onto diskettes.
     psdoc.exe       /
@@ -128,41 +146,62 @@ To prepare a diskette, copy the entire contents of that directory.
 
                   MAKING HP-UX VERSION
 
-Delete .tmp files from regress directory -- they just waste time
+In sd, run "tarball _v320" or whatever.  This creates tr_v320.gz
+run the command "rtarball _v320" in regress directory.  This
+creates rtr_v320.gz   (However, the current procedure doesn't
+use those--maybe fix it for next time.)
+
+Delete .tmp files from sd\regress directory -- they just waste time
 sending to HP-UX.
 
 telnet to hpanee1:
-   cd sd
-   rm *
-   cd regress
-   rm *
+   cd /tmp/wba/sd
+   rm -f -R *
+   #mkdir X11
+   #mkdir X11/Xaw
+   #mkdir X11/Xmu
 
-ftp to hpanr0:
-   cd sd
+ftp to hpanee1:
+   cd /tmp/wba/sd
    lcd sd
    prompt
    mput *.c
    mput *.h
    mput makefile*
    put sd_calls.txt
-   cd regress
+   binary
+   put x11inctar
+   put x11libtar
+   ascii
    lcd regress
    mput *
 
+Also, send these files from sddoc:
+   readme
+   sample*.ini
+
+
 telnet to hpanee1:
    cd sd
+   tar xovf x11libtar
+   tar xovf x11inctar
+   #gunzip tr_v320
+   #gunzip rtr_v320
+   #tar xovf tr_v320
+   #tar xovf rtr_v320
    make -f makefile.hpux
-   cd regress
-   chmod 777 *
+   make -f makefile.hpux sd
+   chmod 777 *.cmd
    hdoit.cmd > log
 Examine log when finished.
+   tar cvf hpux sd sdtty mkcalls sd_calls* lib* sample* readme
+   gzip hpux
 
-ftp to hpanr0:
+ftp to hpanee1:
    cd sd
    lcd sd
    binary
-   get sdtty
-   get mkcalls
+   get hpux.gz
 
 on hpansdx:
    Be sure version number is updated in download-unix.html
@@ -172,7 +211,6 @@ on hpansdx:
 Then mail these:
     dnu.zip    /  dnu.txt
     hpux.zip   /  hpux.txt
-
 
 
 -----------------------------------------------------------------
@@ -216,4 +254,4 @@ sd/sd_doc.ps
    pdfdoc.tar.gz
    textdoc.exe
    textdoc.tar.gz
-   hpux10.tar.gz      (Only if doing HP-UX distribution.)
+   sd-hpux10.tar.gz      (Only if doing HP-UX distribution.)

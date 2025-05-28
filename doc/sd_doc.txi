@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: October 31, 1998
-@set sd-version 32.2
+@set Time-stamp: November 17, 1998
+@set sd-version 32.3
 @set full-manual
 @c %**end of header
 @iftex
@@ -192,6 +192,7 @@ Call Notes
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
+* Mini Busy::                   Mini Busy
 * <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
@@ -960,7 +961,7 @@ These may be plain, shifted, control, alt, or control-alt.
 @noindent So, for example, the line:
 @example
 @group
-   +cae8  u-turn back
+   cae8  u-turn back
 @end group
 @end example
 @noindent would define @code{control-alt-<down-arrow>} to do a
@@ -2604,6 +2605,7 @@ This section documents these calls.
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
+* Mini Busy::                   Mini Busy
 * <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
@@ -2915,7 +2917,7 @@ and @samp{cover up (centers and ends)} when using the @samp{central} concept.
 @code{Sd} will, of course, check that the facing directions are such that
 the dancers would have stayed in the center had all 8 people done the call.
 
-@node Countershake, <ANYONE> Run the Wheel, Percolate and Cover Up, Call Notes
+@node Countershake, Mini Busy, Percolate and Cover Up, Call Notes
 @section Countershake
 
 The centers and ends each have 3 parts on this call, but they are
@@ -2931,7 +2933,18 @@ lines of 3.  @code{Sd} has another call, @samp{countershake (matrix)} that
 can handle the occasional uses that violate the definition, such as
 @samp{3x3} in a 2x6 matrix.  It is not fractionalizable.
 
-@node <ANYONE> Run the Wheel, Bridge the Gap, Countershake, Call Notes
+@node Mini Busy, <ANYONE> Run the Wheel, Countershake, Call Notes
+@section Mini Busy
+
+This call is defined with three parts: @samp{1/2 Press Ahead}, @samp{center 2
+hinge while the outer triple lines 1/2 tag}, and @samp{centers flip the diamond
+while the ends roll}.
+
+Sometimes one wants to use this call in a way that violates this definition
+but allows modifiers such as @samp{single} or @samp{3x3}.  Use the call
+@samp{mini busy (matrix)} for this.  It is not fractionalizable.
+
+@node <ANYONE> Run the Wheel, Bridge the Gap, Mini Busy, Call Notes
 @section @code{ANYONE Run the Wheel}
 
 As originally defined, this is a rather remarkable ``space invader''

@@ -2623,9 +2623,17 @@ extern long_boolean do_big_concept(
 
 /* In SDTAND */
 
-#define tandem_key_box 10
-/* Is this right?   There is some evidence that it is 17. */
-#define tandem_key_diamond 11
+#define tandem_key_tand 0
+#define tandem_key_cpls 1
+#define tandem_key_siam 2
+#define tandem_key_tand3 4
+#define tandem_key_cpls3 5
+#define tandem_key_siam3 6
+#define tandem_key_tand4 8
+#define tandem_key_cpls4 9
+#define tandem_key_siam4 10
+#define tandem_key_box 16
+#define tandem_key_diamond 17
 #define tandem_key_skew 18
 #define tandem_key_outpoint_tgls 20
 #define tandem_key_inpoint_tgls 21

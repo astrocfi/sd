@@ -494,28 +494,32 @@ extern long_boolean do_simple_split(
    uint32 prefer_1x4,   /* 1 means prefer 1x4, 2 means this is 1x8 and do not recompute id. */
    setup *result)
 {
+   uint32 mapcode;
+   long_boolean recompute_id = TRUE;
+
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+
    switch (ss->kind) {
    case s2x4:
-      if (prefer_1x4)
-         new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
-      else
-         new_divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
-      return FALSE;
+      mapcode = prefer_1x4 ?
+         MAPCODE(s1x4,2,MPKIND__SPLIT,1) : MAPCODE(s2x2,2,MPKIND__SPLIT,0);
+      break;
    case s1x8:
-      if (prefer_1x4 == 2)
-         new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,0), phantest_ok, FALSE, result);
-      else
-         new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
-      return FALSE;
+      mapcode = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
+      if (prefer_1x4 == 2) recompute_id = FALSE;
+      break;
    case s_qtag:
-      new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
-      return FALSE;
+      mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
+      break;
    case s_ptpd:
-      new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
-      return FALSE;
+      mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+      break;
    default:
       return TRUE;
    }
+
+   new_divided_setup_move(ss, mapcode, phantest_ok, recompute_id, result);
+   return FALSE;
 }
 
 
@@ -554,17 +558,19 @@ extern void do_call_in_series(
                                                        RESULTFLAG__TWISTED_FINISHED |
                                                        RESULTFLAG__SPLIT_FINISHED);
 
-   /* If we are forcing a split, and an earlier call in the series has responded to that split
-      by returning an unequivocal splitting axis (indicated by one field being zero and the other
-      nonzero), we continue to split along the same axis. */
+   /* If we are forcing a split, and an earlier call in the series has responded
+      to that split by returning an unequivocal splitting axis (indicated by
+      one field being zero and the other nonzero), we continue to split
+      along the same axis. */
 
-   if (     (sss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
-            !dont_enforce_consistent_split &&
-            (saved_result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) &&    /* at least one field is nonzero */
-            (
-               !(saved_result_flags & RESULTFLAG__SPLIT_AXIS_XMASK) ||   /* but one field or the other is zero */
-               !(saved_result_flags & RESULTFLAG__SPLIT_AXIS_YMASK)
-            )) {
+   if ((sss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
+       !dont_enforce_consistent_split &&
+       (saved_result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) &&    /* at least one field
+                                                                        is nonzero */
+       (
+        !(saved_result_flags & RESULTFLAG__SPLIT_AXIS_XMASK) ||   /* but one field or
+                                                                     the other is zero */
+        !(saved_result_flags & RESULTFLAG__SPLIT_AXIS_YMASK))) {
       int prefer_1x4;
       uint32 save_split = qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK;
 
@@ -575,8 +581,6 @@ extern void do_call_in_series(
 
       if (prefer_1x4 && qqqq.kind != s2x4)
          fail("Can't figure out how to split multiple part call.");
-
-      qqqq.cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;  /* Take it out. */
 
       if (do_simple_split(&qqqq, prefer_1x4, &tempsetup))
          fail("Can't figure out how to split this multiple part call.");
@@ -708,30 +712,34 @@ extern void do_call_in_series(
 
    sss->cmd.prior_elongation_bits = current_elongation;
 
-   /* The computation of the new result flags is complex, since we are trying to accumulate results
-      over a series of calls.  To that end, the incoming contents of the "result_flags" word are used.
-
-      (Normally, this word is undefined on input to "move", but "do_call_in_series" takes it is the
-      accumulated stuff so far.  It follows that it must be "seeded" at the start of the series.)
+   /* The computation of the new result flags is complex, since we are trying
+      to accumulate results over a series of calls.  To that end, the incoming contents
+      of the "result_flags" word are used.   (Normally, this word is undefined
+      on input to "move", but "do_call_in_series" takes it is the accumulated
+      stuff so far.  It follows that it must be "seeded" at the start of the series.)
 
       The manipulations that produce the final value differ among the various bits and fields:
 
-         *  The RESULTFLAG__DID_LAST_PART, RESULTFLAG__SECONDARY_DONE, and RESULTFLAG__PARTS_ARE_KNOWN bits:
-            set to the result of the part we just did -- discard incoming values
+         *  The RESULTFLAG__DID_LAST_PART, RESULTFLAG__SECONDARY_DONE, and
+                  RESULTFLAG__PARTS_ARE_KNOWN bits:
+            Set to the result of the part we just did -- discard incoming values.
 
-         *  The RESULTFLAG__SPLIT_AXIS_MASK bits: set to the AND of the incoming values and what we
-            just got -- this has the effect of correctly keeping track of the splitting through all
+         *  The RESULTFLAG__SPLIT_AXIS_MASK bits:
+            Set to the AND of the incoming values and what we just got --
+            this has the effect of correctly keeping track of the splitting through all
             parts of the call.
 
-         *  The low 2 bits, which have the elongation: set to "current_elongation", which typically has
-            the incoming stuff, but it actually a little bit subtle.  Put this in the
+         *  The low 2 bits, which have the elongation:
+            Set to "current_elongation", which typically has the incoming stuff,
+            but it actually a little bit subtle.  Put this in the
             "cmd.prior_elongation_bits" field also.
 
-         *  The other bits: set to the OR of the incoming values and what we just got -- this is believed
-            to be the correct way to accumulate these bits.
+         *  The other bits:
+            Set to the OR of the incoming values and what we just got --
+            this is believed to be the correct way to accumulate these bits.
 
-      It follows from this that the correct way to "seed" the result_flags word at the start of a series
-      is by initializing it to RESULTFLAG__SPLIT_AXIS_FIELDMASK. */
+      It follows from this that the correct way to "seed" the result_flags word
+      at the start of a series is by initializing it to RESULTFLAG__SPLIT_AXIS_FIELDMASK. */
 
    sss->result_flags = ((
                   (saved_result_flags &
@@ -3358,8 +3366,9 @@ Private void do_sequential_call(
       setup_command foo1, foo2;
       by_def_item *alt_item;
       int use_alternate;
+      setup_command foobar;
       setup_kind oldk;
-      long_boolean recompute_id;
+      uint32 recompute_id;
       uint32 saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
       uint32 resultflags_to_put_in = 0;
@@ -3442,23 +3451,21 @@ Private void do_sequential_call(
          But if the user does something like "circle by 1/4 x [leads run]", we
          want to re-evaluate who the leads are. */
 
-      { 
-         setup_command foobar = ss->cmd;
+      foobar = ss->cmd;
+      foobar.cmd_final_flags = new_final_concepts;
 
-         foobar.cmd_final_flags = new_final_concepts;
+      recompute_id = get_real_subcall(parseptr, this_item, &foobar, callspec, &foo1);
 
-         recompute_id = get_real_subcall(parseptr, this_item, &foobar, callspec, &foo1);
+      /* We allow stepping (or rearing back) again. */
+      if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
+         ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
 
-         if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
-            ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;   /* We allow stepping (or rearing back) again. */
-
-         if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
-            (void) get_real_subcall(parseptr, alt_item, &foobar, callspec, &foo2);
-      }
+      if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
+         (void) get_real_subcall(parseptr, alt_item, &foobar, callspec, &foo2);
 
       /* We also re-evaluate if the invocation flag "seq_re_evaluate" is on. */
 
-      if (recompute_id || (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
+      if (recompute_id | (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
 
       /* If this subcall invocation involves inserting or shifting the numbers, do so. */
 
@@ -3709,8 +3716,9 @@ Private void do_sequential_call(
          result,
          zzz.reverse_order,
          DFM1_ROLL_TRANSPARENT & this_mod1,
-         !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-            !(new_final_concepts.herit & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
+         (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
+          !(new_final_concepts.herit & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) &&
+          (recompute_id | (this_mod1 & DFM1_SEQ_NORMALIZE))),
          qtf);
 
       result->result_flags |= resultflags_to_put_in;
@@ -4043,6 +4051,8 @@ that probably need to be put in. */
 
             switch (the_schema) {
             case schema_concentric:
+            case schema_single_concentric:
+            case schema_single_concentric_together:
             case schema_conc_o:
             case schema_concentric_6p:
             case schema_concentric_6p_or_normal:
@@ -4313,10 +4323,8 @@ that probably need to be put in. */
       }
    }
 
-   if (force_split) {
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+   if (force_split)
       if (!do_simple_split(ss, force_split, result)) return;
-   }
 
    /* At this point, we may have mirrored the setup and, of course, left the switch "mirror"
       on.  We did it only as needed for the [touch / rear back / check] stuff.  What we
@@ -5233,7 +5241,8 @@ extern void move(
       ss->cmd.do_couples_heritflags &= ~mxnflags;
 
       if (mxnflags != INHERITFLAG_SINGLE) {
-         tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, mxnflags, TRUE, result);
+         tandem_couples_move(ss, selector_uninitialized, 0, 0, 0,
+                             tandem_key_cpls, mxnflags, TRUE, result);
          return;
       }
    }

@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.2
-@set title2 Database version = 32.2 format = 138
+@set title1 RELEASE NOTES FOR SD VERSION 32.3
+@set title2 Database version = 32.3 format = 139
 @set title3 X11 UI version 1.17, SDTTY UI version 1.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 32.3::
 * 32.2::
 * 32.0::
 * 31.98::
@@ -55,7 +56,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.2, Top, (dir)
+@node Intro, 32.3, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -66,11 +67,32 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 32.2::               Changes in the current version
+* 32.3::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.2, 32.0, Intro, Top
+@node 32.3, 32.2, Intro, Top
+@unnumberedsec Version 32.3 changes
+
+An improper handling of screen erasure, scrolling, and cursor motion in the new
+Windows interface was fixed.
+
+A possible error involving typing in comments under certain circumstances under
+Windows 95 may have been fixed.
+
+The call @samp{mini busy} now uses the really correct definition.  For example,
+try @samp{split phantom waves explode and [mini busy]} from 16-matrix offset columns.
+The call @samp{mini busy (matrix)} was added, to allow the old non-canonical
+usage with concepts like @samp{single} and @samp{3x3}.
+
+A bug in the interaction of the @samp{echo} concept and certain meta-concepts was fixed.
+
+A bug causing occasional spurious ``setups did not interact'' warnings was fixed.
+
+The bug allowing @samp{stretch finally twice scoot and weave (parts)} was fixed.
+
+@c ************
+@node 32.2, 32.0, 32.3, Top
 @unnumberedsec Version 32.2 changes
 
 Sdtty's interface with the Windows operating system has been rewritten.  The program

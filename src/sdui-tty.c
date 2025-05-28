@@ -302,13 +302,6 @@ void refresh_input(void)
    put_line(user_input_prompt);
 }
 
-Private void
-get_string_input(char prompt[], char dest[])
-{
-   put_line(prompt);
-   get_string(dest);
-}
-
 
 /* This tells how many of the last lines currently on the screen contain
    the text that the main program thinks comprise the transcript.  That is,
@@ -337,6 +330,14 @@ static char *call_menu_prompts[NUM_CALL_LIST_KINDS];
 /* For the "alternate_glyphs_1" command-line switch. */
 static char alt1_names1[] = "        ";
 static char alt1_names2[] = "1P2R3O4C";
+
+
+Private void get_string_input(char prompt[], char dest[])
+{
+   put_line(prompt);
+   get_string(dest);
+   current_text_line++;
+}
 
 
 
@@ -870,7 +871,7 @@ Private long_boolean get_user_input(char *prompt, int which)
       }
 
       if (nc >= 128) {
-         char linebuff[MAX_TEXT_LINE_LENGTH];
+         char linebuff [INPUT_TEXTLINE_SIZE+1];
          fcn_key_thing *keyptr;
          int which_target = which;
 
@@ -906,38 +907,43 @@ Private long_boolean get_user_input(char *prompt, int which)
 
          switch (user_match.match.kind) {
          case ui_command_select:
-            put_line(command_commands[user_match.match.index]);
+            strcpy(linebuff, command_commands[user_match.match.index]);
             user_match.match.index = -1-command_command_values[user_match.match.index];
             break;
          case ui_resolve_select:
-            put_line(resolve_menu[user_match.match.index].command_name);
+            strcpy(linebuff, resolve_menu[user_match.match.index].command_name);
             user_match.match.index = -1-resolve_menu[user_match.match.index].action;
             break;
          case ui_start_select:
-            put_line(startup_commands[user_match.match.index]);
+            strcpy(linebuff, startup_commands[user_match.match.index]);
             break;
          case ui_concept_select:
             unparse_call_name(user_match.match.concept_ptr->name,
                               linebuff,
                               &user_match.match.call_conc_options);
-            put_line(linebuff);
             user_match.match.index = 0;
             break;
          case ui_call_select:
             unparse_call_name(user_match.match.call_ptr->name,
                               linebuff,
                               &user_match.match.call_conc_options);
-            put_line(linebuff);
             user_match.match.index = 0;
             break;
          default:
             continue;
          }
 
-         put_line("\n");
-         current_text_line++;
-
          user_match.valid = TRUE;
+
+         put_line(linebuff);
+         put_line("\n");
+
+         if (journal_file) {
+            fputs(linebuff, journal_file);
+            fputc('\n', journal_file);
+         }
+
+         current_text_line++;
          return FALSE;
       }
 
@@ -1029,8 +1035,6 @@ Private long_boolean get_user_input(char *prompt, int which)
                fputc('\n', journal_file);
             }
 
-            /* Include the input line in our count, so we will erase it
-               if we are trying to make the VT-100 screen look nice. */
             current_text_line++;
             return FALSE;
          }
@@ -1667,12 +1671,11 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-extern void
-uims_add_new_line(char the_line[])
+extern void uims_add_new_line(char the_line[])
 {
-    current_text_line++;
     put_line(the_line);
     put_line("\n");
+    current_text_line++;
 }
 
 /* Throw away all but the first n lines of the text output.

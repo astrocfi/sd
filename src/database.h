@@ -23,7 +23,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 138
+#define DATABASE_FORMAT_VERSION 139
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -762,6 +762,7 @@ static Const uint32 DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008;
 static Const uint32 DFM1_SEQ_REPEAT_N                 = 0x00000010;
 static Const uint32 DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000020;
 static Const uint32 DFM1_SEQ_REPEAT_NM1               = 0x00000040;
+static Const uint32 DFM1_SEQ_NORMALIZE                = 0x00000080;
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */

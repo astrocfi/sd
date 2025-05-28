@@ -658,12 +658,7 @@ extern void tandem_couples_move(
    int twosome,           /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,          /* number, if doing fractional twosome/solid */
    int phantom,           /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
-   int key,               /* tandem of 2 = 0 / couples of 2 = 1 / siamese of 2 = 2
-                             tandem of 3 = 4 / couples of 3 = 5 / siamese of 3 = 6
-                             tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
-                             10: box
-                             11: diamond
-                          */
+   int key,               /* See definitions of tandem_key_**** in sd.h */
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
    setup *result)

@@ -225,6 +225,7 @@ extern void put_char(int c)
 }
 
 
+#if defined(DJGPP)
 static short int altletter_translate[] = {
    ALTLET+'Q',     /* 110 */
    ALTLET+'W',
@@ -324,6 +325,7 @@ static short int altletter_translate[] = {
    AFKEY+8,
    AFKEY+9,  /* 170 */
    AFKEY+10};
+#endif
 
 
 extern int get_char(void)
