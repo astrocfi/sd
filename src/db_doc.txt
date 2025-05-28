@@ -2075,22 +2075,24 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 There are a number of internal ones not shown here.  See the file ~/sd/restrictions.txt for details.
 
    alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
-   wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x3 - two "waves" -- people not in tandem with each other;
-                                    2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave; 2x2 - real RH or LH box; 4x4 - consistent waves; */
-                                    qtag - wave in center; pqtag - wave in center (use only if center people have no legal
-                                       move from pqtag, only from qtag);
-                                    3x2/4x2/6x2/8x2 - column */
+   wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
+                                       2x4/3x4/2x6/2x8 - consistent waves the long way; 4x4 - consistent waves either way, but not T-boned;
+                                       2x2 - real RH or LH box;
+                                       3x2/4x2/6x2/8x2 - column; qtag - wave in center; pqtag - wave in center
+                                       (use only if center people have no legal move from pqtag, only from qtag);
+                                       thar - same handedness waves (undefined if anyone is in column orientation)
    wave_unless_say_2faced,
    all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
-   1fl_only,                     /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
+   1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
+                                       thar - crossed 2FL's of opposite handedness, ready to move along
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center;
                                     2x2 - "1-faced" box; 4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT */
    3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
    4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way */
-   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way */
+   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way.  UNDEFINED IF T-BONED
+   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way.  UNDEFINED IF T-BONED
    awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
    diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
    qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
@@ -2106,13 +2108,18 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
                            APPENDIX C -- QUALIFIERS
 
-   wave_only,                    /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box; 4x4 - consistent waves; */
-   1fl_only,                     /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
+   wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
+                                       2x4/3x4/2x6/2x8 - consistent waves the long way; 4x4 - consistent waves either way, but not T-boned;
+                                       2x2 - real RH or LH box;
+                                       3x2 or 4x2 - columns;
+                                       thar - same handedness waves (undefined if anyone is in column orientation)
+   1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
+                                       thar - crossed 2FL's of opposite handedness, ready to move along
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 4x4 - consistent 2FL's; 1x8 - a grand 2FL;
                                     4x1 - single DPT or single CDPT; qtag - 2FL in center */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way */
-   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way */
+   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way ; 3x1 columns - same.  UNDEFINED IF T-BONED
+   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way ; 4x1 columns - same.  UNDEFINED IF T-BONED
    magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
    in_or_out,                    /* 1x2/2x2 - all facing in or all facing out */
    miniwaves,                    /* 1x2, 1x4, 1x6, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
@@ -2139,16 +2146,16 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
    8_chain,                      /* 4x1/4x2 - setup is (single) 8 chain */
    trade_by,                     /* 4x1/4x2 - setup is (single) trade by */
-   dmd_ctrs_rh,                  /* dmd, qtag, ptpd, short6, spindle - the centers (2, 4, or 6 of them)
-                                    are consistently in right-handed miniwaves */
-   dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle - the centers (2, 4, or 6 of them)
-                                    are consistently in left-handed miniwaves */
+   dmd_ctrs_rh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
+                                    are consistently in right-handed miniwaves; other people not checked at all */
+   dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
+                                    are consistently in left-handed miniwaves; other people not checked at all */
    ctr_pts_rh,                   /* qtag, 2x1dmd, hrglass - the "points of the centers" (ends of the center
                                     line of 4 in qtag or 2x1dmd; points of the center diamond in hrglass)
                                     are in a right-handed line or diamond, from their own perspective.
                                     The direction of the center 2 people is immaterial. */
    ctr_pts_lh,                   /* qtag, 2x1dmd, hrglass - as above, but left-handed. */
-   dmd_ctrs_1f,                  /* dmd - the centers (2 of them) are in a couple */
+   dmd_ctrs_1f,                  /* dmd, 1x4 - the centers (2 of them) are in a couple */
    said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
    didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
    all_sel                       /* 1x1/1x2 - everyone in the setup is selected */
@@ -2457,7 +2464,7 @@ inherit_single
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
 @B        - put number here, expressed as N/4 written in words: "quarter", "half", "three quarter"
-@D        - like "B", but only od numbers are allowed.
+@D        - like "B", but only odd numbers are allowed.
 @c ... @d - no longer used
 @h        - put direction here.
 @e ... @f - text to change to "left" if this call has "left" modifier.

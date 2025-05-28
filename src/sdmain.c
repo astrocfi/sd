@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.72"
+#define VERSION_STRING "31.73"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -1448,6 +1448,7 @@ void main(int argc, char *argv[])
    initialize_getout_tables();
    initialize_restr_tables();
    initialize_conc_tables();
+   initialize_touch_tables();
    
    initialize_menus(glob_call_list_mode);    /* This sets up max_base_calls. */
 

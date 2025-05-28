@@ -218,7 +218,7 @@ extern void uims_display_ui_intro_text(void)
 {
    writestuff("At any time that you don't know what you can type,");
    newline();
-   writestuff("type a question mark.  The program will show you all");
+   writestuff("type a question mark (?).  The program will show you all");
    newline();
    writestuff("legal choices.");
    newline();

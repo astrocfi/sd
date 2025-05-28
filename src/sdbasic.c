@@ -491,6 +491,7 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
    uint32 qa0[16], qa1[16];
    uint32 i, j, k, z, t;
    int idx, limit;
+   Const veryshort *mp;
    restriction_thing *restr_thing_ptr = (restriction_thing *) 0;
 
    if (restr.assumption == cr_alwaysfail) goto restr_failed;
@@ -506,22 +507,12 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
    /* This next restriction is independent of whether we are line-like or column-like. */
 
    if (restr.assumption == cr_siamese_in_quad) {
-      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-      if ((t = ss->people[0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((t = ss->people[1].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
-      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-      if ((t = ss->people[7].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((t = ss->people[6].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
-      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-      if ((t = ss->people[2].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((t = ss->people[3].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
-      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-      if ((t = ss->people[5].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((t = ss->people[4].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
-      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
+      for (idx=0 ; idx<8 ; idx+=2) {
+         q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+         if ((t = ss->people[idx+0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+         if ((t = ss->people[idx+1].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+         if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
+      }
    }
 
    if (restr.assump_col & 1) {
@@ -606,70 +597,49 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
    else {
       /* Restriction is "line-like" or special. */
 
+      static Const veryshort mapndq[8] = {1, 1, 0, 2, -1, -1, 2, 0};
+      static Const veryshort mapndd[4] = {2, 1, 0, -1};
+      static Const veryshort mapndp[8] = {2, 1, 0, -1, 0, -1, 2, 1};
+
+      static Const veryshort mapwkg8[2] = {2, 6};
+      static Const veryshort mapwkg6[2] = {2, 5};
+      static Const veryshort mapwkg4[2] = {1, 3};
+      static Const veryshort mapwkg2[2] = {0, 1};
+
       switch (restr.assumption) {
-         case cr_nice_diamonds:
-            k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
-            i = 2;
+         case cr_nice_diamonds:         /* check for consistent diamonds, so can do "diamond swing thru" */
             switch (ss->kind) {
-               case s_qtag:
-                  if ((t = ss->people[0].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[4].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[2].id1) != 0) { k |=  t;   i &=  t; }
-                  if ((t = ss->people[3].id1) != 0) { k |= ~t;   i &= ~t; }
-                  if ((t = ss->people[6].id1) != 0) { k |= ~t;   i &= ~t; }
-                  if ((t = ss->people[7].id1) != 0) { k |=  t;   i &=  t; }
-                  if (k & ~i & 2)
-                     goto restr_failed;
-                  break;
-               case sdmd:
-                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[3].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[0].id1) != 0) { k |= ~t  ; i &= ~t; }
-                  if ((t = ss->people[2].id1) != 0) { k |=  t  ; i &=  t; }
-                  if (k & ~i & 2)
-                     goto restr_failed;
-                  break;
-               case s_ptpd:
-                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[7].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[3].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[4].id1) != 0) { k |=  t;   i &=  t; }
-                  if ((t = ss->people[6].id1) != 0) { k |= ~t;   i &= ~t; }
-                  if ((t = ss->people[0].id1) != 0) { k |= ~t;   i &= ~t; }
-                  if ((t = ss->people[2].id1) != 0) { k |=  t;   i &=  t; }
-                  if (k & ~i & 2)
-                     goto restr_failed;
-                  break;
+               case s_qtag: mp = mapndq; goto check_nd;
+               case sdmd:   mp = mapndd; goto check_nd;
+               case s_ptpd: mp = mapndp; goto check_nd;
+            }
+
+            break;
+         case cr_awkward_centers:       /* check for centers not having left hands */
+            switch (ss->kind) {
+               case s1x8: mp = mapwkg8; goto check_wk;
+               case s1x6: mp = mapwkg6; goto check_wk;
+               case s1x4: mp = mapwkg4; goto check_wk;
+               case s1x2: mp = mapwkg2; goto check_wk;
             }
             break;
-         case cr_awkward_centers:
-            /* check for centers not having left hands */
-            k = 2;
-            i = 2;
-            switch (ss->kind) {
-               case s1x8:
-                  if ((t = ss->people[2].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[6].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-               case s1x6:
-                  if ((t = ss->people[2].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[5].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-               case s1x4:
-                  if ((t = ss->people[1].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[3].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-               case s1x2:
-                  if ((t = ss->people[0].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[1].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
+         case cr_not_tboned:
+            /* check for a box that is not T-boned */
+            if (ss->kind == s2x2) {
+               if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
+                  goto restr_failed;
+            }
+            break;
+         case cr_ends_are_peelable:
+            /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
+            if (ss->kind == s2x4) {
+               q1 = 0; q0 = 0; q5 = 0; q4 = 0;
+               if ((t = ss->people[0].id1) != 0) { q1 |= t; q0 |= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q5 |= t; q4 |= (t^2); }
+               if ((t = ss->people[4].id1) != 0) { q5 |= t; q4 |= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q1 |= t; q0 |= (t^2); }
+               if (((q1&3) && (q0&3)) || ((q5&3) && (q4&3)))
+                  goto restr_failed;
             }
             break;
       }
@@ -711,25 +681,6 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                       ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
                      goto restr_failed;
                   break;
-               case cr_not_tboned:
-                  /* check for a box that is not T-boned */
-                  if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
-                     goto restr_failed;
-                  break;
-            }
-            break;
-         case s2x4:
-            switch (restr.assumption) {
-               case cr_ends_are_peelable:
-                  /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
-                  q1 = 0; q0 = 0; q5 = 0; q4 = 0;
-                  if ((t = ss->people[0].id1) != 0) { q1 |= t; q0 |= (t^2); }
-                  if ((t = ss->people[3].id1) != 0) { q5 |= t; q4 |= (t^2); }
-                  if ((t = ss->people[4].id1) != 0) { q5 |= t; q4 |= (t^2); }
-                  if ((t = ss->people[7].id1) != 0) { q1 |= t; q0 |= (t^2); }
-                  if (((q1&3) && (q0&3)) || ((q5&3) && (q4&3)))
-                     goto restr_failed;
-                  break;
             }
             break;
       }
@@ -737,38 +688,58 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    goto getout;
 
+   check_nd:     /* Check the "nice_diamonds" restriction. */
+
+   k = 0;
+   i = 2;
+
+   for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+      if ((t = ss->people[idx].id1) != 0) { k |= t+mp[idx]; i &= t+mp[idx]; }
+   }
+   if (k & ~i & 2)
+      goto restr_failed;
+
+   goto getout;
+
+   check_wk:   /* check the "awkward_centers" restriction. */
+
+   k = 2;
+   i = 2;
+   if ((t = ss->people[mp[0]].id1) != 0) { k &= ~t; }
+   if ((t = ss->people[mp[1]].id1) != 0) { i &=  t; }
+   if (!((k | i) & 2)) warn(warn__awkward_centers);
+
+   goto getout;
+
    check_gen_restr:
 
    switch (restr_thing_ptr->check) {
       case chk_wave:
-         q0 = 0; q1 = 0;
+         qa0[0] = 0; qa0[1] = 0;
 
          for (idx=0; idx<restr_thing_ptr->size; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |=  t; q1 |= ~t; }
-            if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { q0 |= ~t; q1 |=  t; }
+            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { qa0[idx&1] |=  t; qa0[(idx&1)^1] |= ~t; }
          }
 
-         if (((q0 | restr.assump_both) & (q1 | (restr.assump_both << 1)) & 2) != 0)
+         if (((qa0[0] | restr.assump_both) & (qa0[1] | (restr.assump_both << 1)) & 2) != 0)
             goto restr_failed;
 
          if (restr_thing_ptr->ok_for_assume) {
-            q0 = 0;
-            q1 = 0;
-      
-            for (i=0; i<restr_thing_ptr->size; i+=2) {
-               q0 |= ss->people[restr_thing_ptr->map1[i]].id1 | ss->people[restr_thing_ptr->map2[i]].id1;
-               q1 |= ss->people[restr_thing_ptr->map1[i+1]].id1 | ss->people[restr_thing_ptr->map2[i+1]].id1;
-            }
-      
+            qa0[0] = 0;
+            qa0[2] = 0;
+
+            for (idx=0; idx<restr_thing_ptr->size; idx++)
+               qa0[idx&2] |= ss->people[restr_thing_ptr->map1[idx]].id1;
+
             if (restr.assump_col & 4) {
-               q1 >>= 3;
+               qa0[2] >>= 3;
             }
             else if (restr.assump_col == 1) {
-               q0 >>= 3;
-               q1 >>= 3;
+               qa0[0] >>= 3;
+               qa0[2] >>= 3;
             }
       
-            if ((q0|q1) & 1) goto restr_failed;
+            if ((qa0[0]|qa0[2]) & 1) goto restr_failed;
          }
 
          goto getout;
@@ -1009,45 +980,7 @@ Private void special_4_way_symm(
 
 /* This function is internal. */
 
-Private void special_triangle(
-   callarray *cdef,
-   callarray *ldef,
-   setup *scopy,
-   personrec newpersonlist[],
-   int newplacelist[],
-   setup *result)
-{
-   int real_index;
-
-   for (real_index=0; real_index<3; real_index++) {
-      personrec this_person = scopy->people[real_index];
-      newpersonlist[real_index].id1 = 0;
-      newpersonlist[real_index].id2 = 0;
-      newplacelist[real_index] = -1;
-      if (this_person.id1) {
-         int real_direction = this_person.id1 & 3;
-         int d2 = ((this_person.id1 >> 1) & 1) * 3;
-         int northified_index = (real_index + d2);
-         uint32 z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         int k = (((z >> 4) & 017) - d2);
-         if (k < 0) k += 6;
-         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
-               ((z + real_direction * 011) & 013) |
-               ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
-
-         if (this_person.id1 & STABLE_ENAB)
-            do_stability(&newpersonlist[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z+result->rotation));
-
-         newpersonlist[real_index].id2 = this_person.id2;
-         newplacelist[real_index] = k;
-      }
-   }
-}
-
-
-/* This function is internal. */
-
-Private void special_1x3(
+Private void special_3person(
    callarray *cdef,
    callarray *ldef,
    setup *scopy,
@@ -1057,19 +990,44 @@ Private void special_1x3(
    setup *result)
 {
    int real_index;
-   int num = 3;
    int numout = setup_attrs[result->kind].setup_limits+1;
 
-   for (real_index=0; real_index<num; real_index++) {
+   for (real_index=0; real_index<3; real_index++) {
       personrec this_person = scopy->people[real_index];
       newpersonlist[real_index].id1 = 0;
       newpersonlist[real_index].id2 = 0;
+      newplacelist[real_index] = -1;
       if (this_person.id1) {
+         int northified_index, d2, k;
+         uint32 z;
          int real_direction = this_person.id1 & 3;
-         int northified_index = (real_direction & 2) ? num-1-real_index : real_index;
-         uint32 z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         int k = (z >> 4) & 017;
-         if (real_direction & 2) k = numout-1-k;
+
+         if (scopy->kind == s_trngl) {
+            d2 = ((this_person.id1 >> 1) & 1) * 3;
+            northified_index = (real_index + d2);
+         }
+         else {
+            northified_index = (real_direction & 2) ? 2-real_index : real_index;
+         }
+
+         z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
+         k = (z >> 4) & 017;
+
+         if (scopy->kind == s_trngl) {
+            k -= d2;
+            if (k<0) k+=6;
+         }
+         else {
+            if (real_direction & 2) {
+               if (result->kind == s_trngl) {
+                  k-=3;
+                  if (k<0) k+=6;
+               }
+               else
+                  k = numout-1-k;
+            }
+         }
+
          newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
                ((z + real_direction * 011) & 013) |
                ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
@@ -1080,6 +1038,26 @@ Private void special_1x3(
          newpersonlist[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
          lilresult_mask[0] |= (1 << k);
+      }
+   }
+
+   /* Check whether the call went into the other triangle.  If so, it
+      must have done so completely. */
+
+   if (result->kind == s_trngl) {
+      if (newplacelist[0] >=3 || newplacelist[1] >=3 || newplacelist[2] >=3) {
+         int i;
+
+         result->rotation += 2;
+
+         for (i=0; i<3; i++) {
+            if (newplacelist[i] >=0) {
+               newplacelist[i] -= 3;
+               if (newplacelist[i] < 0)
+                  fail("Call went into other triangle????.");
+               newpersonlist[i].id1 = rotperson(newpersonlist[i].id1, 022);
+            }
+         }
       }
    }
 }
@@ -2942,6 +2920,8 @@ extern void basic_move(
                fail("Can't handle people in box of 4 for this call.");
             case s1x2:
                fail("Can't handle people in line of 2 for this call.");
+            case s1x3:
+               fail("Can't handle people in line of 3 for this call.");
             case s1x4:
                fail("Can't handle people in line of 4 for this call.");
             case s1x6:
@@ -3101,28 +3081,9 @@ extern void basic_move(
       if (four_way_startsetup) {
          special_4_way_symm(linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
       }
-      else if (ss->kind == s_trngl) {
+      else if (ss->kind == s_trngl || ss->kind == s1x3) {
          if (inconsistent_rotation | inconsistent_setup) fail("This call is an inconsistent shape-changer.");
-         special_triangle(coldefinition, linedefinition, ss, newpersonlist, newplacelist, result);
-
-         /* Check whether the call went into the other triangle.  If so, it
-            must have done so completely. */
-         if (newplacelist[0] >=3 || newplacelist[1] >=3 || newplacelist[2] >=3) {
-            result->rotation += 2;
-
-            for (i=0; i<3; i++) {
-               if (newplacelist[i] >=0) {
-                  newplacelist[i] -= 3;
-                  if (newplacelist[i] < 0)
-                     fail("Call went into other triangle????.");
-                  newpersonlist[i].id1 = rotperson(newpersonlist[i].id1, 022);
-               }
-            }
-         }
-      }
-      else if (ss->kind == s1x3) {
-         if (inconsistent_rotation | inconsistent_setup) fail("This call is an inconsistent shape-changer.");
-         special_1x3(coldefinition, linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
+         special_3person(coldefinition, linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
       }
       else {
          int *final_translatec = identity;
@@ -3580,7 +3541,10 @@ extern void basic_move(
                result->people[k] = newperson;
                result_mask |= (1 << k);
             }
-            else if ((callspec->callflags1 & CFLAG1_TAKE_RIGHT_HANDS) && (final_numout <= 12) && (result->people[k+12].id1 == 0)) {
+            else if (   (final_numout <= 12) &&
+                        (result->people[k+12].id1 == 0) &&
+                        (callspec->callflags1 & (CFLAG1_TAKE_RIGHT_HANDS|CFLAG1_ENDS_TAKE_RIGHT_HANDS)) &&
+                        ((callspec->callflags1 & CFLAG1_TAKE_RIGHT_HANDS) || (result->kind == s1x4 && !(k&1)))) {
                /* Collisions are legal.  Store the person in the overflow area
                   (12 higher than the main area, which is why we only permit
                   this if the result setup size is <= 12) and record the fact

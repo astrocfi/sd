@@ -570,7 +570,7 @@ typedef struct glork {
    uint32 callarray_flags;
    call_restriction restriction;
    veryshort qualifier;     /* Must cast to search_qualifier! */
-   veryshort qual_num;      /* Zero for no qualification, else N+1 */
+   veryshort qual_num;      /* Low 4 bits: zero for no qualification, else N+1. "16" bit: must not be T-boned. */
    veryshort start_setup;   /* Must cast to begin_kind! */
    veryshort end_setup;     /* Must cast to setup_kind! */
    veryshort end_setup_in;  /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
@@ -1044,7 +1044,7 @@ typedef struct predptr_pair_struct {
 } predptr_pair;
 
 /* BEWARE!!  If change these next definitions, be sure to update the definition of
-   "warning_strings" in sdutil.c . */
+   "warn__opt_for_normal_cast" in sdutil.c . */
 typedef enum {
    warn__none,
    warn__do_your_part,
@@ -1102,9 +1102,10 @@ typedef enum {
    warn__not_on_block_spots,
    warn__bad_modifier_level,
    warn__did_not_interact,
-   warn__opt_for_normal_cast
+   warn__opt_for_normal_cast,
+   warn__tasteless_slide_thru
 } warning_index;
-#define NUM_WARNINGS (((int) warn__opt_for_normal_cast)+1)
+#define NUM_WARNINGS (((int) warn__tasteless_slide_thru)+1)
 
 /* BEWARE!!  This list must track the array "resolve_table" in sdgetout.c . */
 typedef enum {
@@ -1803,6 +1804,7 @@ extern map_thing map_offset;                                        /* in SDTABL
 extern map_thing map_4x4v;                                          /* in SDTABLES */
 extern map_thing map_blocks;                                        /* in SDTABLES */
 extern map_thing map_trglbox;                                       /* in SDTABLES */
+extern map_thing map_1x10_1x6;                                      /* in SDTABLES */
 extern map_thing map_hv_2x4_2;                                      /* in SDTABLES */
 extern map_thing map_3x4_2x3;                                       /* in SDTABLES */
 extern map_thing map_4x6_2x4;                                       /* in SDTABLES */
@@ -2018,6 +2020,7 @@ extern void display_initial_history(int upper_limit, int num_pics);
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
 extern void warn(warning_index w);
 extern call_list_kind find_proper_call_list(setup *s);
+extern Const short *get_rh_test(setup_kind kind);
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
 extern uint32 find_calldef(
    callarray *tdef,
@@ -2227,6 +2230,8 @@ extern void selective_move(
 /* In SDTOP */
 
 extern void update_id_bits(setup *ss);
+
+extern void initialize_touch_tables(void);
 
 extern void touch_or_rear_back(
    setup *scopy,

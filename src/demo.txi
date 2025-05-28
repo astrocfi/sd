@@ -27,7 +27,7 @@ Here is a demonstration of the use of @code{sdtty}, illustrating
 various concepts and other capabilities.  You should follow along on
 your computer.  You must use sdtty version 31.67 or later.
 
-We will write a very long and horrible sequence that illustrates a number
+We will write a long and horrible sequence that illustrates a number
 of things that the program can do, and shows how you can get it to do them.
 
 
@@ -88,7 +88,7 @@ This is free software, and you are
    welcome to redistribute it.
 
 At any time that you don't know what you can type,
-type a question mark.  The program will show you all
+type a question mark (?).  The program will show you all
 legal choices.
 
 Version Sd 31.67 : db31.67 : ui1.8tty     C2
@@ -97,7 +97,7 @@ Enter startup command>
 @end group
 @end example
 
-After printing all the introductory stuff, the program wants us to
+After displaying all the introductory stuff, the program wants us to
 enter a startup command.  The line
 
 @example
@@ -108,7 +108,7 @@ Enter startup command>
 
 is called a @dfn{prompt}.  If we type a question mark at this
 point, it will list the possible things we could type.
-Here is what it prints:
+Here is what it displays:
 
 @example
 @group
@@ -128,7 +128,7 @@ Enter startup command>
 @end group
 @end example
 
-It prints a number of choices, and then gives us another prompt.
+It displays a number of choices, and then gives us another prompt.
 We will type @kbd{heads start}, and press
 @iftex
 @keycap{ENTER}:
@@ -157,7 +157,7 @@ Sd 31.67 : db31.67 : ui1.8tty     C2
 @end group
 @end example
 
-It prints out some bookkeeping information, and shows us
+It displays some bookkeeping information, and shows us
 the setup with the heads in the middle, waiting for
 a call.  Below that, it shows the current line of our
 sequence.  It is line 1, and all it knows so far is that
@@ -167,7 +167,7 @@ The @code{-->} prompt is the general prompt that it
 gives when it wants us to enter a call.
 
 If we were to type question mark at this point, it
-would show over 500 possible calls, concepts, or other
+would show over 500 possible calls, concepts, and other
 commands, so we won't do it for this demo (though you
 may wish to try it).
 
@@ -1543,7 +1543,7 @@ At the prompt, we type @kbd{demo}, and then press
 <ENTER>.
 @end ifinfo
 
-The program then prints
+The program then displays
 
 @example
 @group
@@ -1554,7 +1554,7 @@ The program then prints
 to let us know that it is writing the sequence to a file, and that
 there was already a file present under the name @file{sequence.C2}, and that
 it is not destroying whatever sequences were already in that file.
-It then prints out the entire card for our perusal and delectation:
+It then displays the entire card for our perusal and delectation:
 
 @example
 Wed May 15 21:22:28 1996     Sd31.67:db31.67     C2
@@ -1628,7 +1628,7 @@ The program then reassures us that the sequence was written:
 @end example
 
 It then prompts us for instructions on starting another
-sequence.
+sequence:
 
 @example
 @group

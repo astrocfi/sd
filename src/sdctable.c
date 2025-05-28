@@ -342,7 +342,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE DIAMONDS WORKING TOGETHER",   concept_quad_diamonds_together,4, l_c4a, {0, 0, 0}},
    {"QUADRUPLE DIAMONDS WORKING TOWARD THE CENTER",concept_quad_diamonds_together,4, l_c4, {0, 12, 0}},
 /* -------- column break -------- */
-#define pb__3_size 33
+#define pb__3_size 46
 #define pb__3_sp1 0
 #define pb__3_ip1 1
 #define pb__3_p1 2
@@ -364,16 +364,27 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERLOCKED PHANTOM GENERAL 1/4 TAGS",  concept_do_phantom_diamonds,   4, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"PHANTOM GENERAL 1/4 TAGS",              concept_do_phantom_diamonds,   4, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, 0, l_nonexistent_concept},
+   {"SPLIT PHANTOM 1/4 LINES",               concept_do_phantom_diamonds,   4, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
+   {"INTERLOCKED PHANTOM 1/4 LINES",         concept_do_phantom_diamonds,   4, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
+   {"PHANTOM 1/4 LINES",                     concept_do_phantom_diamonds,   4, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"SPLIT PHANTOM 3/4 LINES",               concept_do_phantom_diamonds,   4, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
+   {"INTERLOCKED PHANTOM 3/4 LINES",         concept_do_phantom_diamonds,   4, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
+   {"PHANTOM 3/4 LINES",                     concept_do_phantom_diamonds,   4, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
    {"TWIN PHANTOM 1/4 TAGS",                 concept_do_divided_diamonds,   4, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_1_4_TAG}},
    {"TWIN PHANTOM 3/4 TAGS",                 concept_do_divided_diamonds,   4, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_3_4_TAG}},
+   {"TWIN PHANTOM 1/4 LINES",                concept_do_divided_diamonds,   4, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
+   {"TWIN PHANTOM 3/4 LINES",                concept_do_divided_diamonds,   4, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
    {"TWIN PHANTOM GENERAL 1/4 TAGS",         concept_do_divided_diamonds,   4, l_c3x, {&map_vv_qtg_2, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE 1/4 TAGS",                       concept_triple_diamonds,       4, l_c3x, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
    {"TRIPLE 3/4 TAGS",                       concept_triple_diamonds,       4, l_c3x, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
+   {"TRIPLE 1/4 LINES",                      concept_triple_diamonds,       4, l_c3x, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
+   {"TRIPLE 3/4 LINES",                      concept_triple_diamonds,       4, l_c3x, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
    {"TRIPLE GENERAL 1/4 TAGS",               concept_triple_diamonds,       4, l_c3x, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE 1/4 TAGS WORKING TOGETHER",      concept_triple_diamonds_together,4, l_c4a},
-         {"", concept_comment, 0, l_nonexistent_concept},
+   {"TRIPLE 1/4 LINES WORKING TOGETHER",     concept_triple_diamonds_together,4, l_c4a},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -383,6 +394,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE 1/4 TAGS",                    concept_quad_diamonds,         4, l_c4a, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
    {"QUADRUPLE 3/4 TAGS",                    concept_quad_diamonds,         4, l_c4a, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
+   {"QUADRUPLE 1/4 LINES",                   concept_quad_diamonds,         4, l_c4a, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},   /* ***** make assumption tighter */
+   {"QUADRUPLE 3/4 LINES",                   concept_quad_diamonds,         4, l_c4a, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
    {"QUADRUPLE GENERAL 1/4 TAGS",            concept_quad_diamonds,         4, l_c4a, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"QUADRUPLE 1/4 TAGS WORKING TOGETHER",   concept_quad_diamonds_together,4, l_c4a},
 
@@ -568,7 +581,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"ONCE REMOVED",                          concept_once_removed,          4, l_c2,         {0, 0}},
    {"ONCE REMOVED DIAMONDS",                 concept_once_removed,          4, l_c3a,        {0, 1}},
    {"MAGIC",                                 concept_magic,                 4, l_c1},
-   {"DIAGONAL",                              concept_do_both_boxes,         4, l_c3,         {&map_2x4_diagonal, 97, FALSE}},
+   {"DIAGONAL BOX",                          concept_do_both_boxes,         4, l_c3,         {&map_2x4_diagonal, 97, FALSE}},
    {"TRAPEZOID",                             concept_do_both_boxes,         4, l_c3,         {&map_2x4_trapezoid, 97, FALSE}},
    {"OVERLAPPED DIAMONDS",                   concept_overlapped_diamond,    4, l_c4,         {0, 0}},
    {"OVERLAPPED LINES",                      concept_overlapped_diamond,    4, l_c4,         {0, 1}},
@@ -581,10 +594,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"EACH Z",                                concept_misc_distort,          4, l_c3,         {0, 0, 0}},
    {"INTERLOCKED Z's",                       concept_misc_distort,          4, l_c4a,        {0, 0, 8}},
 /* -------- column break -------- */
-#define d4__3_size 6
-   {"JAY",                                   concept_misc_distort,          4, l_c3a,        {0, 1, 0}},
-   {"BACK-TO-FRONT JAY",                     concept_misc_distort,          4, l_c3a,        {0, 1, 8}},
-   {"BACK-TO-BACK JAY",                      concept_misc_distort,          4, l_c3a,        {0, 1, 16}},
+#define d4__3_size 10
+   {"JAY",                                   concept_misc_distort,          4, l_c3a,        {0, 1, 0,  0x0000}},
+   {"BACK-TO-FRONT JAY",                     concept_misc_distort,          4, l_c3a,        {0, 1, 8,  0x0000}},
+   {"BACK-TO-BACK JAY",                      concept_misc_distort,          4, l_c3a,        {0, 1, 16, 0x0000}},
+   {"FRONT JAY",                             concept_misc_distort,          4, l_c4a,        {0, 1, 0,  0x0000}},
+   {"BACK JAY",                              concept_misc_distort,          4, l_c4a,        {0, 1, 0,  0xAAAA}},
+   {"LEFT JAY",                              concept_misc_distort,          4, l_c4a,        {0, 1, 0,  0x5555}},
+   {"RIGHT JAY",                             concept_misc_distort,          4, l_c4a,        {0, 1, 0,  0xFFFF}},
    {"FACING PARALLELOGRAM",                  concept_misc_distort,          4, l_c3a,        {0, 4, 0}},
    {"BACK-TO-FRONT PARALLELOGRAM",           concept_misc_distort,          4, l_c3a,        {0, 4, 8}},
    {"BACK-TO-BACK PARALLELOGRAM",            concept_misc_distort,          4, l_c3a,        {0, 4, 16}},

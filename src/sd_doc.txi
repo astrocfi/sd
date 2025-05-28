@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: July 12, 1996
+@set Time-stamp: July 28, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.72
+@set sd-version 31.73
 @set full-manual
 @c %**end of header
 @iftex
@@ -190,6 +190,7 @@ Call Notes
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
+* Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 
 Concept Notes
@@ -701,6 +702,14 @@ file name might be @file{sequence.C1}.
 This makes the program write out the output file with single spacing.
 This may be useful for those who use special fonts or special printer
 arrangements.
+@item -concept_levels
+This turns on the ``concept levels'' behavior, as though the command
+@code{toggle concept levels} had been given.  It makes the program allow
+all concepts, even those that are not actually legal at the specified level.
+@item -active_phantoms
+This turns on the ``active phantoms'' behavior, as though the command
+@code{toggle active phantoms} had been given.  It makes phantoms persist
+throughout calls
 @item -ignoreblanks
 This makes the program recognize calls and concepts that have been typed
 in without the spaces that normally separate words.  In particular, it
@@ -717,9 +726,6 @@ the @code{toggle retain after error} command.
 This makes the program discard all concepts that had
 been typed prior to the current call, whenever an error occurs.
 Since this is the usual behavior, you never need this option.
-@item -active_phantoms
-This turns on the ``active phantoms'' behavior, as though the command
-@code{toggle active phantoms} had been given.
 @end table
 
 There are X resources associated with both options:
@@ -986,6 +992,21 @@ The line
 @end example
 would be used if your computer does not have the special graphics
 characters.
+
+The line
+@example
+   concept_levels
+@end example
+would be used if you wish to have the program allow all concepts,
+even those that are not actually legal at the specified level.
+@xref{Entering Concepts} and @ref{Using Off-Level Concepts}.
+
+The line
+@example
+   active_phantoms
+@end example
+would be used if you wish to write material that assumes that
+phantoms persist throughout calls.  @xref{Assume Waves}.
 
 The line
 @example
@@ -2099,7 +2120,8 @@ in the input prompt in @code{Sdtty}, or the mode line in the upper
 right corner in @code{Sd}.
 
 The @code{toggle concept levels} command changes the legality of concepts
-that are not on the specified calling level.  @xref{Entering Concepts}.
+that are not on the specified calling level.  @xref{Entering Concepts}
+and @ref{Using Off-Level Concepts}.
 
 The @code{toggle active phantoms} command changes the persistence of
 phantoms during certain calls.  @xref{Assume Waves}.
@@ -2111,6 +2133,10 @@ blanks separating them, or without hyphens.  @xref{Ignoring Blanks}.
 The @code{toggle retain after error} command changes the option whereby
 program retains the concepts that
 you had typed when an error occurs.  @xref{Retaining Concepts After an Error}.
+
+Any of these modes can be turned on automatically when the program begins,
+either by giving a command-line option (@xref{Command-Line Options}) or
+through the use of the initialization file (@xref{Option Control}).
 
 @node Terminal Interface, Linguistic Idiosyncrasies, Misc Commands, Top
 @chapter Terminal Interface
@@ -2315,8 +2341,13 @@ for dancers to do.  In some cases, the necessary sophistication lies
 in some concept that is legal only at high challenge levels.
 
 When such a situation arises, you can tell the program to permit the use
-of concepts that would not normally be legal.  The command to do this
-is @code{toggle concept levels}.  @xref{Changing Modes}.
+of concepts that would not normally be legal.
+
+The @code{toggle concept levels} command toggles
+(turns on or off) the state of this option.
+@xref{Changing Modes}.  It can also be turned on when the program begins,
+either by giving a command-line option (@xref{Command-Line Options}) or
+through the use of the initialization file (@xref{Option Control}).
 
 If you have a line of 6 (or 8) people, and you want them to do a @samp{1/2 tag},
 use the @code{3x3} (or @code{4x4}) concept.  Of course, if you were calling
@@ -2362,6 +2393,7 @@ appropriate to get the dancers through the action that you intend.
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
+* Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 @end menu
 
@@ -2384,14 +2416,45 @@ this call.  It is nonsensical in other contexts.
 @node Spread, <ANYTHING> and circle, C1 Single Rotate, Call Notes
 @section Spread
 
-The term @dfn{spread} can mean different things and so is three calls in
+The term @dfn{spread} can mean different things.  It is three calls in
 this program.
 
-Use the call @samp{spread} after calls such as @i{follow your neighbor}.
+Use the call @samp{spread} after calls such as @i{follow your neighbor},
+or from the starting double pass thru (or similar setup) that is obtained
+after calls like @i{wheel and deal} or a sequence started with
+@i{heads star thru}.
 
-Use the call @samp{@dots{} and spread} after @i{wheel and deal},
-or after starting a sequence with something like @samp{heads star thru}.
-You can also use the call @samp{wheel and spread}.
+There is also a call @samp{<anything> and spread}, which simply does
+the @i{<anything>} followed by a @i{spread}, to make the printout
+look nicer by having the calls appear on the same line.  Do not use
+this after somethinge like @i{heads star thru}.  That is, do not enter:
+@example
+   heads start
+   <anything> and spread
+   star thru
+@end example
+That would attempt to have only the heads do both the @i{star thru}
+and the @i{spread}.  All 8 people must do the @i{spread}.  You
+must enter:
+@example
+   heads start
+   star thru
+   spread
+@end example
+and get the calls on separate lines
+
+There is also a call @samp{<anything> and the <anyone> spread}, which
+does the @i{<anything>} followed by having the selected people @i{spread}.
+For example, you could enter
+@example
+   heads start
+   <anything> and the boys spread
+   motivate
+@end example
+This will be printed as @code{[motivate] and the boys spread}.
+
+There is also a call @samp{wheel and spread}, which is just a
+@i{wheel and deal} and @i{spread}.
 
 Use the call @samp{<ANYONE> spread} from columns, to get the designated
 people to slide away from their partner into a 4x4 matrix.
@@ -2557,7 +2620,7 @@ at C3, but from lines it is legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
-@node Recycle, Going Through Impossible Situations, Rotate from Columns, Call Notes
+@node Recycle, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
 @section Recycle
 
 There are two @i{Recycle} calls in the database: @samp{recycle} can be done
@@ -2575,7 +2638,22 @@ To permit fractional use of recycle, as with
 @samp{recycle (by parts)}, which can be done only from waves.  Use this call
 (but don't read the ``by parts'' phrase) when fractions are required.
 
-@node Going Through Impossible Situations,  , Recycle, Call Notes
+@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Recycle, Call Notes
+@section Adjust Alamo to Other Pairing
+
+The program's notion of where people are in an alamo ring is rather imprecise.
+It has them paired up on "O" spots, with the people in each pair precisely
+facing head walls or side walls, rather than uniformly spread around the circle.
+Its notion of how alamo calls work is based on this flawed notion, in that it
+can only deal with one kind of pairing.  Typically, the people must be paired
+in right-handed miniwaves.  (For the call @i{break the alamo}, the selected people
+must be together.)  If the pairing is not correct, you can issue the pseudo-call
+@i{adjust alamo to other pairing}.  This will make the program move people around
+one position on the computer screen, so that the pairs will have the other
+handedness.  You of course do not read this line when calling---the dancers
+will be able to figure out who needs to work with whom on the next call.
+
+@node Going Through Impossible Situations,  , Adjust Alamo to Other Pairing, Call Notes
 @section Going Through Impossible Situations
 
 Under certain circumstances, people who collide in the same spot during
@@ -3028,8 +3106,9 @@ The @code{once removed} concept encompasses diamonds. so you can
 say either @code{once removed} or @code{once removed diamonds}.
 @item magic
 @item diagonal
+@item diagonal box
 @item trapezoid
-These are straightforward.
+These are straightforward.  @code{diagonal box} is the same as @code{diagonal}.
 @item overlapped diamonds
 This is done from a 1x4.
 @item overlapped lines
@@ -3180,6 +3259,11 @@ This is used from a ``promenade, do not stop @dots{}'' situation.  The call
 will be done as if in 2-faced lines, with the designated people in the
 lead.  The final promenade distance will be computed as though you had allowed
 the dancers to promenade about halfway around the set before they did the call.
+This concept is somewhat cantankerous.  It puts the dancers into 2-faced lines
+and then has everyone do whatever you say next.  If you enter @code{heads lead for a
+wheel around}, it will have @emph{everyone} wheel around.  To get the effect that
+is usually indicated by the words ``promenade, do not stop @dots{}, heads wheel around'',
+you must enter enter @code{heads lead for a heads wheel around}.
 @item ends concentric
 @item centers and ends concentric@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These are like @samp{ends} and @samp{centers and ends}, except that the

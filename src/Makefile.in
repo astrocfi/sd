@@ -163,6 +163,9 @@ sd_doc.ps: sd_doc.dvi
 sessions.ps: sessions.dvi
 	$(DVIPS) -o $@ $?
 
+relnotes.ps: relnotes.dvi
+	$(DVIPS) -o $@ $?
+
 demo.ps: demo.dvi
 	$(DVIPS) -o $@ $?
 
@@ -204,7 +207,8 @@ LINT = /usr/lang/alint
 lint:
 	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
 
-DISTTXT = README INSTALL Relnotes oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
+DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
+            relnotes.ps relnotes.txt \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
             db_doc.txt sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
@@ -227,7 +231,7 @@ dist: dist-files
 	$(COMPRESS) $(DIST_TARFILE)
 
 dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS \
-            demo.ps demo.txt sessions.ps sessions.txt pc-files
+            demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes.txt pc-files
 
 ls:
 	@echo $(DISTFILES)
@@ -235,9 +239,9 @@ ls:
 pcdist: sd@PCVERSION@bn
 
 sd@PCVERSION@bn: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme relnotes oldnotes
+	lha a $@ readme oldnotes
 	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
-	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps
+	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps relnotes.txt relnotes.ps
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
 	lha a $@ sd_doc.txt sd_doc.ps
 	lha s $@
@@ -246,9 +250,10 @@ BIN_TARFILE = sd-@VERSION@-@SYSTEM@.tar
 
 @BINDIST_RULE@
 
-TARFILES1 = README Relnotes oldnotes
+TARFILES1 = README oldnotes
 TARFILES2 = sd sdtty mkcalls \
 	 sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
+          relnotes.ps relnotes.txt \
 	 sd_calls.txt sd_calls.dat db_doc.txt \
 	 Sd.res sd_doc.txt sd_doc.PS
 

@@ -33,6 +33,7 @@
 #include "sd.h"
 
 
+
 Private void innards(
    setup *ss,
    Const map_thing *maps,
@@ -69,7 +70,8 @@ Private void innards(
          x[i].cmd = ss->cmd;
          x[i].rotation = 0;
          /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
-         x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags & ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) | CMD_MISC__DISTORTED | CMD_MISC__NO_EXPAND_MATRIX;
+         x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags & ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) | CMD_MISC__NO_EXPAND_MATRIX;
+         if (map_kind != MPKIND__SPLIT) x[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
          x[i].cmd.cmd_assume = new_assume;
          if (recompute_id) update_id_bits(&x[i]);
 
@@ -270,6 +272,17 @@ Private void innards(
             break;
          case MPKIND__STAG:
             warn(warn__bigblock_feet);
+            break;
+         case MPKIND__SPLIT:
+            /* If we went from a 4-person setup to a 1x6, we are expanding due to collisions.
+               If no one is present at the potential collision spots in the inboard side, assume
+               that there was no collision there, and leave just one phantom instead of two. */
+            if (z[0].kind == s1x6 && z[0].rotation == 0 && arity == 2 &&
+                  insize == 4 &&
+                  !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
+               final_map = &map_1x10_1x6;
+               goto got_map;
+            }
             break;
          case MPKIND__NONE:
             fail("Can't do this shape-changing call here.");
@@ -837,10 +850,10 @@ extern void distorted_2x2s_move(
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6};
 
-   int table_offset;
-   int misc_indicator;
+   int table_offset, misc_indicator, i;
    setup a1, a2;
    setup res1, res2;
+   uint32 directions, livemask;
    Const veryshort *map_ptr;
 
    concept_descriptor *this_concept = parseptr->concept;
@@ -869,65 +882,40 @@ extern void distorted_2x2s_move(
    /* For "Z"      :   0 == normal, 8 == interlocked. */
    /* For Jay/Pgram:   0 == normal, 8 == back-to-front, 16 == back-to-back. */
 
+   directions = 0;
+   livemask = 0;
+
+   for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
+      uint32 p = ss->people[i].id1;
+      directions = (directions<<2) | (p&3);
+      livemask <<= 2;
+      if (p) livemask |= 3;
+   }
+
    switch (misc_indicator) {
       case 0:
          switch (ss->kind) {   /* The concept is some variety of "Z" */
             case s4x4:
-               if (!(ss->people[0].id1 | ss->people[8].id1)) {
-                  if (!(ss->people[1].id1 | ss->people[14].id1 | ss->people[6].id1 | ss->people[9].id1)) {
-                     if (!(ss->people[5].id1 | ss->people[13].id1))
-                         map_ptr = map1;
-                     else if (!(ss->people[2].id1 | ss->people[10].id1))
-                         map_ptr = map2;
-                     else goto lose;
-                  }
-                  else if (!(ss->people[4].id1 | ss->people[7].id1 | ss->people[12].id1 | ss->people[15].id1)) {
-                     if (!(ss->people[5].id1 | ss->people[13].id1))
-                         map_ptr = map3;
-                     else if (!(ss->people[2].id1 | ss->people[10].id1))
-                         map_ptr = map4;
-                     else goto lose;
-                  }
-                  else if (!(ss->people[3].id1 | ss->people[4].id1 | ss->people[11].id1 | ss->people[12].id1)) {
-                     if (!(ss->people[6].id1 | ss->people[14].id1))
-                         map_ptr = map5;
-                     else if (!(ss->people[1].id1 | ss->people[9].id1))
-                         map_ptr = map6;
-                     else goto lose;
-                  }
-                  else goto lose;
-               }
-               else if (!(ss->people[4].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[12].id1 | ss->people[10].id1 | ss->people[13].id1)) {
-                  if (!(ss->people[6].id1 | ss->people[14].id1))
-                     map_ptr = map7;
-                  else if (!(ss->people[1].id1 | ss->people[9].id1))
-                     map_ptr = map8;
-                  else goto lose;
-               }
+               if (     (livemask & 0xF03CF03C) == 0) map_ptr = map1;
+               else if ((livemask & 0xFC0CFC0C) == 0) map_ptr = map2;
+               else if ((livemask & 0xC0F3C0F3) == 0) map_ptr = map3;
+               else if ((livemask & 0xCCC3CCC3) == 0) map_ptr = map4;
+               else if ((livemask & 0xC3CCC3CC) == 0) map_ptr = map5;
+               else if ((livemask & 0xF3C0F3C0) == 0) map_ptr = map6;
+               else if ((livemask & 0x0CFC0CFC) == 0) map_ptr = map7;
+               else if ((livemask & 0x3CF03CF0) == 0) map_ptr = map8;
                else goto lose;
                break;
             case s3x4:
-               if (!(ss->people[0].id1 | ss->people[6].id1)) {
-                  if (!(ss->people[2].id1 | ss->people[8].id1))
-                     map_ptr = mapa;
-                  else if (!(ss->people[1].id1 | ss->people[7].id1))
-                     map_ptr = mapb;
-                  else goto lose;
-               }
-               else if (!(ss->people[3].id1 | ss->people[9].id1)) {
-                  if (!(ss->people[2].id1 | ss->people[8].id1))
-                     map_ptr = mapc;
-                  else if (!(ss->people[1].id1 | ss->people[7].id1))
-                     map_ptr = mapd;
-                  else goto lose;
-               }
+               if (     (livemask & 0xCC0CC0) == 0) map_ptr = mapa;
+               else if ((livemask & 0xF00F00) == 0) map_ptr = mapb;
+               else if ((livemask & 0x0F00F0) == 0) map_ptr = mapc;
+               else if ((livemask & 0x330330) == 0) map_ptr = mapd;
                else goto lose;
                break;
             case s2x6:
-               if (!(ss->people[2].id1 | ss->people[5].id1 | ss->people[8].id1 | ss->people[11].id1))
-                  map_ptr = mape;
-               else if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1))
-                  map_ptr = mapf;
+               if (     (livemask & 0x0C30C3) == 0) map_ptr = mape;
+               else if ((livemask & 0xC30C30) == 0) map_ptr = mapf;
                else goto lose;
                break;
             default:
@@ -936,41 +924,24 @@ extern void distorted_2x2s_move(
          break;
       case 1:
          /* The concept is some variety of jay */
-         if (ss->kind != s_qtag)
-            fail("Must have quarter-tag setup for this concept.");
 
-         if (    ((ss->people[0].id1&d_mask) == d_south && (ss->people[1].id1&d_mask) == d_south &&
-                  (ss->people[4].id1&d_mask) == d_north && (ss->people[5].id1&d_mask) == d_north)
-                           || table_offset == 0) {
-            if (     (ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_south &&
-                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_south)
-               map_ptr = mapj1;
-            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_north &&
-                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_north)
-               map_ptr = mapj2;
-            else if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
-                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
-               map_ptr = mapk1;
-            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
-                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
-               map_ptr = mapk2;
+         if (ss->kind != s_qtag) fail("Must have quarter-tag setup for this concept.");
+
+         if (table_offset == 0 ||
+                 (livemask == 0xFFFF && (directions & 0xF0F0) == 0xA000)) {
+            uint32 arg3 = this_concept->value.arg3 ^ directions;
+
+            if (     ((arg3 ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj1;
+            else if (((arg3 ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj2;
+            else if (((arg3 ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
+            else if (((arg3 ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
             else goto lose;
          }
-         else if ((ss->people[0].id1&d_mask) == d_north && (ss->people[1].id1&d_mask) == d_north &&
-                  (ss->people[4].id1&d_mask) == d_south && (ss->people[5].id1&d_mask) == d_south) {
-            if (     (ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_south &&
-                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_south)
-               map_ptr = mapj3;
-            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_north &&
-                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_north)
-               map_ptr = mapj4;
-            else if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
-                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
-               map_ptr = mapk3;
-            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
-                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
-               map_ptr = mapk4;
-
+         else if (livemask == 0xFFFF && (directions & 0xF0F0) == 0x00A0) {
+            if (     ((directions ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj3;
+            else if (((directions ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj4;
+            else if (((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
+            else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
             else goto lose;
          }
          else goto lose;
@@ -978,10 +949,8 @@ extern void distorted_2x2s_move(
       case 2:
          switch (ss->kind) {     /* The concept is twin parallelograms */
             case s3x4:
-               if (!(ss->people[0].id1 | ss->people[6].id1 | ss->people[1].id1 | ss->people[7].id1))
-                  map_ptr = map_p1;
-               else if (!(ss->people[3].id1 | ss->people[9].id1 | ss->people[2].id1 | ss->people[8].id1))
-                  map_ptr = map_p2;
+               if (     (livemask & 0xF00F00) == 0) map_ptr = map_p1;
+               else if ((livemask & 0x0F00F0) == 0) map_ptr = map_p2;
                else goto lose;
                break;
             default:
@@ -991,10 +960,8 @@ extern void distorted_2x2s_move(
       case 3:
          switch (ss->kind) {   /* The concept is interlocked boxes or interlocked parallelograms */
             case s3x4:
-               if (!(ss->people[0].id1 | ss->people[6].id1 | ss->people[2].id1 | ss->people[8].id1))
-                  map_ptr = map_b1;
-               else if (!(ss->people[3].id1 | ss->people[9].id1 | ss->people[1].id1 | ss->people[7].id1))
-                  map_ptr = map_b2;
+               if (     (livemask & 0xCC0CC0) == 0) map_ptr = map_b1;
+               else if ((livemask & 0x330330) == 0) map_ptr = map_b2;
                else goto lose;
                break;
             default:
@@ -1003,35 +970,24 @@ extern void distorted_2x2s_move(
          break;
       case 4:
          /* The concept is facing (or back-to-back, or front-to-back) Pgram */
-         if (ss->kind != s_qtag)
-            fail("Must have quarter-line setup for this concept.");
 
-         if (((ss->people[0].id1&d_mask) == d_south && (ss->people[1].id1&d_mask) == d_south &&
-                     (ss->people[4].id1&d_mask) == d_north && (ss->people[5].id1&d_mask) == d_north)
-                           || table_offset == 0) {
-            if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
-                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
-               map_ptr = mapk1;
-            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
-                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
-               map_ptr = mapk2;
+         if (ss->kind != s_qtag) fail("Must have quarter-line setup for this concept.");
+
+         if (table_offset == 0 ||
+                 (livemask == 0xFFFF && (directions & 0xF0F0) == 0xA000)) {
+            if (     ((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
+            else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
             else goto lose;
          }
-         else if ((ss->people[0].id1&d_mask) == d_north && (ss->people[1].id1&d_mask) == d_north &&
-                  (ss->people[4].id1&d_mask) == d_south && (ss->people[5].id1&d_mask) == d_south) {
-            if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
-                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
-               map_ptr = mapk3;
-            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
-                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
-               map_ptr = mapk4;
+         else if (livemask == 0xFFFF && (directions & 0xF0F0) == 0x00A0) {
+            if (     ((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
+            else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
             else goto lose;
          }
          else goto lose;
          break;
       case 5:
-         if (ss->kind != s4x4)
-            fail("Must have 4x4 matrix for this concept.");
+         if (ss->kind != s4x4) fail("Must have 4x4 matrix for this concept.");
 
          {
             setup rotss = *ss;
@@ -1101,7 +1057,6 @@ extern void distorted_2x2s_move(
             }
 
             return;
-
          }
    }
 

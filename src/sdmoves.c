@@ -815,6 +815,10 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s1x4].setup_coords;
       goto doit;
    }
+   else if ((ypar == 0x00550026) && ((signature & (~0x20020200)) == 0)) {
+      checkptr = setup_attrs[sdmd].setup_coords;
+      goto doit;
+   }
    else if ((ypar == 0x00220004) && ((signature & (~0x01000000)) == 0)) {
       checkptr = setup_attrs[s1x2].setup_coords;
       goto doit;

@@ -22,21 +22,6 @@
 
 
 
-
-
-
-
-
-extern int elide_blanks;
-
-
-
-
-
-
-
-
-
 static int screen_height = 25;
 static int no_cursor = 0;
 static char *text_ptr;           /* End of text buffer; where we are packing. */
@@ -54,8 +39,6 @@ extern void ttu_process_command_line(int *argcp, char **argv)
       if (strcmp(argv[argno], "-no_line_delete") == 0) ;   /* ignore this */
       else if (strcmp(argv[argno], "-no_cursor") == 0)
          no_cursor = 1;
-      else if (strcmp(argv[argno], "-ignoreblanks") == 0)
-         elide_blanks = 1;
       else if (strcmp(argv[argno], "-no_graphics") == 0)
          triangles = 0;
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {

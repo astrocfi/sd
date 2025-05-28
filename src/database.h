@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 79
+#define DATABASE_FORMAT_VERSION 80
 
 
 
@@ -122,6 +122,7 @@
 #define CFLAG1_BASE_TAG_CALL_MASK         0x07000000UL
 #define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
 #define CFLAG1_BASE_CIRC_CALL             0x08000000UL
+#define CFLAG1_ENDS_TAKE_RIGHT_HANDS      0x10000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 

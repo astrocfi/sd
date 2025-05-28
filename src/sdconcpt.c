@@ -28,6 +28,8 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
+#define CMD_FRAC_BREAKING_UP 0x01000000
+#define CMD_FRAC_REVERSE     0x00100000
 
 
 uint32 global_tbonetest;
@@ -564,6 +566,7 @@ Private void do_concept_parallelogram(
    parse_block *next_parseptr;
    final_set junk_concepts;
    map_thing *map_ptr;
+   parse_block *standard_concept = (parse_block *) 0;
 
    if (ss->kind == s2x6) {
       if (global_livemask == 07474) mk = MPKIND__OFFS_R_HALF;
@@ -583,6 +586,12 @@ Private void do_concept_parallelogram(
 
    next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
 
+   /* But skip over "standard" */
+   if (next_parseptr->concept->kind == concept_standard && junk_concepts == 0) {
+      standard_concept = next_parseptr;
+      next_parseptr = process_final_concepts(next_parseptr->next, FALSE, &junk_concepts);
+   }
+
    if (     next_parseptr->concept->kind == concept_do_phantom_2x4 &&
             ss->kind == s2x6 &&     /* Only allow 50% offset. */
             junk_concepts == 0 &&
@@ -592,6 +601,45 @@ Private void do_concept_parallelogram(
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, FALSE);
       if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
+
+      if (standard_concept) {
+         int tbonetest = 0;
+         int stdtest = 0;
+         int livemask = 0;
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
+
+         {
+            int i, j;
+            selector_kind saved_selector = current_options.who;
+      
+            current_options.who = standard_concept->options.who;
+      
+            for (i=0, j=1; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
+               int p = ss->people[i].id1;
+               tbonetest |= p;
+               if (p) {
+                  livemask |= j;
+                  if (selectp(ss, i)) stdtest |= p;
+               }
+            }
+      
+            current_options.who = saved_selector;
+         }
+   
+         if (!tbonetest) {
+            result->result_flags = 0;
+            result->kind = nothing;
+            return;
+         }
+      
+         if ((tbonetest & 011) != 011) fail("People are not T-boned -- 'standard' is meaningless.");
+      
+         if (!stdtest) fail("No one is standard.");
+         if ((stdtest & 011) == 011) fail("The standard people are not facing consistently.");
+      
+         global_tbonetest = stdtest;
+         global_livemask = livemask;
+      }
 
       if (linesp & 1) {
          if (global_tbonetest & 1) fail("There are no lines of 4 here.");
@@ -1458,8 +1506,12 @@ Private long_boolean fill_active_phantoms_and_move(
    uint32 pdir, qdir, pdirodd, qdirodd;
    uint32 bothp;
    uint32 t;
+   uint32 dirtest[2];
    uint32 dirtest1 = 0;
    uint32 dirtest2 = 0;
+
+   dirtest[0] = 0;
+   dirtest[1] = 0;
 
    if (restr_thing_ptr && restr_thing_ptr->ok_for_assume) {
       switch (restr_thing_ptr->check) {
@@ -1468,19 +1520,18 @@ Private long_boolean fill_active_phantoms_and_move(
             /* Figure out handedness of live people. */
          
             for (idx=0; idx<restr_thing_ptr->size; idx++) {
-               if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { dirtest1 |= t;       dirtest2 |= (t ^ 2); }
-               if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { dirtest1 |= (t ^ 2); dirtest2 |= t; }
+               if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { dirtest[idx&1] |= t; dirtest[(idx&1)^1] |= (t ^ 2); }
             }
          
-            if (dirtest1 == 0)
+            if (dirtest[0] == 0)
                fail("Need live person to determine handedness.");
          
             bothp = ss->cmd.cmd_assume.assump_both;
          
             if (ss->cmd.cmd_assume.assump_col & 4) {
-               if ((dirtest1 & 077) == 011)
+               if ((dirtest[0] & 077) == 011)
                   { pdir = d_north; qdir = d_south; }
-               else if ((dirtest2 & 077) == 011)
+               else if ((dirtest[1] & 077) == 011)
                   { pdir = d_south; qdir = d_north; }
                else
                   fail("Live people are not consistent.");
@@ -1488,18 +1539,18 @@ Private long_boolean fill_active_phantoms_and_move(
                pdirodd = rotcw(pdir); qdirodd = rotcw(qdir);
             }
             else if (ss->cmd.cmd_assume.assump_col == 1) {
-               if ((dirtest1 & 077) == 001 && ((bothp & 2) == 0))
+               if ((dirtest[0] & 077) == 001 && ((bothp & 2) == 0))
                   { pdir = d_east; qdir = d_west; }
-               else if ((dirtest2 & 077) == 001 && ((bothp & 1) == 0))
+               else if ((dirtest[1] & 077) == 001 && ((bothp & 1) == 0))
                   { pdir = d_west; qdir = d_east; }
                else
                   fail("Live people are not consistent.");
                pdirodd = pdir; qdirodd = qdir;
             }
             else {
-               if ((dirtest1 & 077) == 010 && ((bothp & 2) == 0))
+               if ((dirtest[0] & 077) == 010 && ((bothp & 2) == 0))
                   { pdir = d_north; qdir = d_south; }
-               else if ((dirtest2 & 077) == 010 && ((bothp & 1) == 0))
+               else if ((dirtest[1] & 077) == 010 && ((bothp & 1) == 0))
                   { pdir = d_south; qdir = d_north; }
                else
                   fail("Live people are not consistent.");
@@ -1508,24 +1559,18 @@ Private long_boolean fill_active_phantoms_and_move(
          
             for (i=0; i<restr_thing_ptr->size; i++) {
                int p = restr_thing_ptr->map1[i];
-               int q = restr_thing_ptr->map2[i];
-         
+
                if (!ss->people[p].id1) {
-                  if (phantom_count >= 16)
-                     fail("Too many phantoms.");
-                  ss->people[p].id1 = ((i&1) ? pdirodd : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  if (phantom_count >= 16) fail("Too many phantoms.");
+
+                  ss->people[p].id1 =           (i&1) ?
+                                       ((i&2) ? qdirodd : qdir) :
+                                       ((i&2) ? pdirodd : pdir);
+
+                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
                   ss->people[p].id2 = 0;
                }
                else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
-         
-               if (!ss->people[q].id1) {
-                  if (phantom_count >= 16)
-                     fail("Too many phantoms.");
-                  ss->people[q].id1 = ((i&1) ? qdirodd : qdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[q].id2 = 0;
-               }
-               else if (ss->people[q].id1 & BIT_ACT_PHAN)
                   fail("Active phantoms may only be used once.");
             }
 
@@ -3527,6 +3572,15 @@ Private void do_concept_meta(
       parseptrcopy = skip_one_concept(ss->cmd.parseptr);
       k = parseptrcopy->concept->kind;
       parseptr_skip = parseptrcopy->next;
+
+      /* If skipping "phantom", maybe it's "phantom tandem", so we need to skip both. */
+      if (k == concept_c1_phantom) {
+         uint32 junk_concepts;
+         parse_block *next_parseptr = process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+
+         if ((next_parseptr->concept->kind == concept_tandem || next_parseptr->concept->kind == concept_frac_tandem) && junk_concepts == 0)
+            parseptr_skip = next_parseptr->next;
+      }
    
       if (k == concept_crazy || k == concept_frac_crazy || k == concept_fractional || k == concept_twice || k == concept_n_times)
          craziness_restraint = CMD_MISC__RESTRAIN_CRAZINESS;
@@ -3636,22 +3690,21 @@ Private void do_concept_meta(
 
       setup tttt = *result;
 
-      if (ss->cmd.cmd_frac_flags == 0x01010111) {
-         /* We are being asked to do just the first part, because of another
-            "initially".  Just pass it through. */
+      if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | 0x00010111)) {
+         /* We are being asked to do just the first part -- just pass it through. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = 0x01010111;
          tttt.cmd.cmd_misc_flags |= craziness_restraint;
          tttt.cmd.parseptr = parseptrcopy;
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
       }
-      else if (ss->cmd.cmd_frac_flags == 0x01810111) {
-         /* We are being asked to do all but the first part, because of another
-            "initially".  Just pass it through. */
+      else if (   ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | 0x00810111) ||
+                     ((ss->cmd.cmd_frac_flags & ~0x000F0000) == (CMD_FRAC_BREAKING_UP | 0x00000111) &&
+                      (ss->cmd.cmd_frac_flags &  0x000F0000) >= 0x00020000)) {
+         /* We are being asked to do all but the first part, or to do
+            some specific part other than the first -- just pass it through. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = 0x01810111;
          tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
@@ -3661,11 +3714,7 @@ Private void do_concept_meta(
          /* Do the call with the concept. */
          /* Set the fractionalize field to execute the first part of the call. */
          tttt.cmd = ss->cmd;
-
-         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
-            done as part of "initially". */
-
-         tttt.cmd.cmd_frac_flags = 0x01010111;
+         tttt.cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | 0x00010111;
          tttt.cmd.cmd_misc_flags |= craziness_restraint;
          tttt.cmd.parseptr = parseptrcopy;
          move(&tttt, FALSE, result);
@@ -3677,11 +3726,7 @@ Private void do_concept_meta(
          /* Set the fractionalize field to execute the rest of the call. */
          tttt.cmd = ss->cmd;
          tttt.cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
-
-         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
-            done as part of "initially". */
-
-         tttt.cmd.cmd_frac_flags = 0x01810111;
+         tttt.cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | 0x00810111;
          tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
@@ -3696,21 +3741,19 @@ Private void do_concept_meta(
 
       setup tttt = *result;
 
-      if (ss->cmd.cmd_frac_flags == 0x01B10111) {
+      if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_REVERSE | 0x00A10111)) {
          /* We are being asked to do all but the last part, because of another
             "finally".  Just pass it through. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = 0x01B10111;
          tttt.cmd.parseptr = parseptr_skip;
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
       }
-      else if (ss->cmd.cmd_frac_flags == 0x01110111) {
+      else if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_REVERSE | 0x00010111)) {
          /* We are being asked to do just the last part, because of another
             "finally".  Just pass it through. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = 0x01110111;
          tttt.cmd.cmd_misc_flags |= craziness_restraint;
          tttt.cmd.parseptr = parseptrcopy;
          move(&tttt, FALSE, result);
@@ -3721,11 +3764,7 @@ Private void do_concept_meta(
          /* Do the call without the concept. */
          /* Set the fractionalize field to execute all but the last part of the call. */
          tttt.cmd = ss->cmd;
-
-         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
-            done as part of "finally". */
-
-         tttt.cmd.cmd_frac_flags = 0x01B10111;
+         tttt.cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_REVERSE | 0x00A10111;
          tttt.cmd.parseptr = parseptr_skip;
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
@@ -3736,11 +3775,7 @@ Private void do_concept_meta(
          /* Set the fractionalize field to execute the last part of the call. */
          tttt.cmd = ss->cmd;
          tttt.cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
-
-         /* *** Note that we flip on the "0x01000000" bit, that promises that this is being
-            done as part of "finally". */
-
-         tttt.cmd.cmd_frac_flags = 0x01110111;
+         tttt.cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_REVERSE | 0x00010111;
          tttt.cmd.cmd_misc_flags |= craziness_restraint;
          tttt.cmd.parseptr = parseptrcopy;
          move(&tttt, FALSE, result);
@@ -3898,7 +3933,7 @@ Private void do_concept_interlace(
          /* Do the indicated part of the first call. */
          save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
          result->cmd = ss->cmd;
-         result->cmd.cmd_frac_flags |= index << 16;
+         result->cmd.cmd_frac_flags |= (index << 16) | CMD_FRAC_BREAKING_UP;
          result->cmd.prior_elongation_bits = save_elongation;
          do_call_in_series(result, FALSE, TRUE, FALSE);
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
@@ -3912,7 +3947,7 @@ Private void do_concept_interlace(
          save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
          /* Do the indicated part of the second call. */
          result->cmd = ss->cmd;
-         result->cmd.cmd_frac_flags |= index << 16;
+         result->cmd.cmd_frac_flags |= (index << 16) | CMD_FRAC_BREAKING_UP;
          result->cmd.parseptr = parseptr->subsidiary_root;
          result->cmd.prior_elongation_bits = save_elongation;
          do_call_in_series(result, FALSE, TRUE, FALSE);
@@ -4604,8 +4639,8 @@ concept_table_item concept_table[] = {
    /* concept_centers_and_ends */         {CONCPROP__SECOND_CALL,                                                                  do_concept_centers_and_ends},
    /* concept_twice */                    {CONCPROP__SHOW_SPLIT,                                                                   do_concept_twice},
    /* concept_n_times */                  {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_twice},
-   /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_sequential},
-   /* concept_special_sequential */       {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_special_sequential},
+   /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,              do_concept_sequential},
+   /* concept_special_sequential */       {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,              do_concept_special_sequential},
    /* concept_meta */                     {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,           do_concept_meta},
    /* concept_so_and_so_begin */          {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                                          do_concept_so_and_so_begin},
    /* concept_nth_part */                 {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,                 do_concept_meta},

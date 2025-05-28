@@ -577,6 +577,7 @@ char *flagtab1[] = {
    "base_tag_call_1",      /* The constant "base_tag_call_2" is elsewhere. */
    "base_tag_call_3",
    "base_circ_call",
+   "ends_take_right_hands",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -807,6 +808,8 @@ char *predtab[] = {
    "column_double_down",
    "boyp",
    "girlp",
+   "boyp_rh_slide_thru",
+   "girlp_rh_slide_thru",
    "roll_is_cw",
    "roll_is_ccw",
    "x12_boy_facing_girl",
@@ -1451,13 +1454,29 @@ def2:
          break;
       }
       else if (!strcmp(tok_str, "qualifier")) {
+         if (call_qualifier) errexit("Only one qualifier is allowed");
          call_qual_num = 0;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
       }
+      else if (!strcmp(tok_str, "tqualifier")) {
+         if (call_qualifier) errexit("Only one qualifier is allowed");
+         call_qual_num = 16;
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Improper qualifier");
+         if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
+      }
       else if (!strcmp(tok_str, "nqualifier")) {
+         if (call_qualifier) errexit("Only one qualifier is allowed");
          call_qual_num = get_num("Need a qualifier number here")+1;
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Improper qualifier");
+         if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
+      }
+      else if (!strcmp(tok_str, "tnqualifier")) {
+         if (call_qualifier) errexit("Only one qualifier is allowed");
+         call_qual_num = get_num("Need a qualifier number here")+17;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");

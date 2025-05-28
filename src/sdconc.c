@@ -57,7 +57,7 @@ Private char *conc_error_messages[] = {
    "Can't find checkpoint people in this formation.",                  /* analyzer_CHECKPT */
    "Can't find 2 centers and 6 ends in this formation.",               /* analyzer_2X6 */
    "Can't find 6 centers and 2 ends in this formation.",               /* analyzer_6X2 */
-   "Can't find 4 centers and 2 ends in this formation.",               /* analyzer_4X2 */
+   "Can't find centers and ends in this 6-person formation.",          /* analyzer_4X2 */
    "Can't find inside triangles in this formation.",                   /* analyzer_6X2_TGL */
    "Can't find 12 matrix centers and ends in this formation.",         /* analyzer_STAR12 */
    "Can't find 16 matrix centers and ends in this formation.",         /* analyzer_STAR16 */
@@ -87,6 +87,8 @@ static conc_initializer *conc_hash_table[NUM_CONC_HASH_BUCKETS];
 extern void initialize_conc_tables(void)
 {
    conc_initializer *tabp;
+   int i;
+   for (i=0 ; i<NUM_CONC_HASH_BUCKETS ; i++) conc_hash_table[i] = (conc_initializer *) 0;
    for (tabp = conc_init_table ; tabp->outerk != nothing ; tabp++) {
       uint32 hash_num = ((tabp->outerk + (5*(tabp->innerk + 5*tabp->conc_type))) * 25) & (NUM_CONC_HASH_BUCKETS-1);
       tabp->next = conc_hash_table[hash_num];
@@ -368,8 +370,8 @@ extern void normalize_concentric(
    }
 
    hash_num = ((outers->kind + (5*(inners[0].kind + 5*table_synthesizer))) * 25) & (NUM_CONC_HASH_BUCKETS-1);
-   conc_hash_bucket = conc_hash_table[hash_num];
-   while (conc_hash_bucket) {
+
+   for (conc_hash_bucket = conc_hash_table[hash_num] ; conc_hash_bucket ; conc_hash_bucket = conc_hash_bucket->next) {
       if (     conc_hash_bucket->outerk == outers->kind &&
                conc_hash_bucket->innerk == inners[0].kind &&
                conc_hash_bucket->center_arity == center_arity &&
@@ -397,7 +399,6 @@ extern void normalize_concentric(
 
          goto gotit;
       }
-      conc_hash_bucket = conc_hash_bucket->next;
    }
 
    goto anomalize_it;
@@ -2140,8 +2141,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_dm3dm;
       goto merge_concentric;
    }
-   else if (res2->kind == s1x8 && res1->kind == s1x2 &&
-            (!(res2->people[2].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s1x8 && res1->kind == s1x2 && ((mask2 & 0x44) == 0)) {
       the_map = &map_1618;
       goto merge_concentric;
    }
@@ -2189,27 +2189,20 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_13dspn;
       goto merge_concentric;
    }
-   else if (res2->kind == s1x3dmd && res1->kind == s1x8 && r == 0 &&
-            (!(res1->people[0].id1 | res1->people[2].id1 | res1->people[4].id1 | res1->people[6].id1 |
-               res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s1x3dmd && res1->kind == s1x8 && r == 0 && ((mask1 & 0x55) == 0) && ((mask2 & 0x66) == 0)) {
       the_map = &map_13d18;
       goto merge_concentric;
    }
-   else if (res2->kind == s_spindle && res1->kind == s1x8 && r == 0 &&
-            (!(res1->people[1].id1 | res1->people[3].id1 | res1->people[5].id1 | res1->people[7].id1 |
-               res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
+   else if (res2->kind == s_spindle && res1->kind == s1x8 && r == 0 && ((mask1 & 0xAA) == 0) && ((mask2 & 0xAA) == 0)) {
       the_map = &map_14spn;
       goto merge_concentric;
    }
-   else if (res2->kind == s2x4 && res1->kind == s_spindle && (r&1) &&
-            (!(res1->people[0].id1 | res1->people[2].id1 | res1->people[4].id1 | res1->people[6].id1 |
-               res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s2x4 && res1->kind == s_spindle && (r&1) && ((mask1 & 0x55) == 0) && ((mask2 & 0x66) == 0)) {
       outer_elongation = res2->rotation & 1;
       the_map = &map_24spn;
       goto merge_concentric;
    }
-   else if (res2->kind == s_rigger && res1->kind == s1x8 && r == 0 &&
-            (!(res1->people[2].id1 | res1->people[3].id1 | res1->people[6].id1 | res1->people[7].id1))) {
+   else if (res2->kind == s_rigger && res1->kind == s1x8 && r == 0 && ((mask1 & 0xCC) == 0)) {
       the_map = &map_rig1x8;
       goto merge_concentric;
    }
@@ -2226,9 +2219,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_xw12v;
       goto merge_concentric;
    }
-   else if (res2->kind == s2x4 && res1->kind == s1x8 && r == 0 && action == merge_without_gaps &&
-            (!(res1->people[0].id1 | res1->people[3].id1 | res1->people[4].id1 | res1->people[7].id1 |
-               res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s2x4 && res1->kind == s1x8 && r == 0 && action == merge_without_gaps && ((mask1 & 0x99) == 0) && ((mask2 & 0x66) == 0)) {
       setup temp = *res2;
 
       clear_people(res2);
@@ -2240,22 +2231,18 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_2418;
       goto merge_concentric;
    }
-   else if (res2->kind == s2x4 && res1->kind == s1x8 && (r&1) && action == merge_without_gaps &&
-            (!(res1->people[1].id1 | res1->people[3].id1 | res1->people[5].id1 | res1->people[7].id1 |
-               res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s2x4 && res1->kind == s1x8 && (r&1) && action == merge_without_gaps && ((mask1 & 0xAA) == 0) && ((mask2 & 0x66) == 0)) {
       outer_elongation = res2->rotation & 1;
       the_map = &map_24qtv;
       goto merge_concentric;
    }
-   else if (res2->kind == s1x3dmd && res1->kind == s1x4 && r == 0 && action == merge_without_gaps &&
-            (!(res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
+   else if (res2->kind == s1x3dmd && res1->kind == s1x4 && r == 0 && action == merge_without_gaps && ((mask2 & 0xAA) == 0)) {
       swap_people(res2, 1, 2);
       swap_people(res2, 5, 6);
       the_map = &map_13d14;
       goto merge_concentric;
    }
-   else if (res2->kind == s_1x2dmd && res1->kind == s1x4 && r == 0 &&
-            (!(res2->people[2].id1 | res2->people[5].id1))) {
+   else if (res2->kind == s_1x2dmd && res1->kind == s1x4 && r == 0 && ((mask2 & 044) == 0)) {
       setup temp = *res2;
 
       clear_people(res2);
@@ -2266,15 +2253,13 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_12d14;
       goto merge_concentric;
    }
-   else if (res2->kind == s3x1dmd && res1->kind == s1x8 && r == 0 && action == merge_without_gaps &&
-            (!(res1->people[1].id1 | res1->people[3].id1 | res1->people[5].id1 | res1->people[7].id1))) {
+   else if (res2->kind == s3x1dmd && res1->kind == s1x8 && r == 0 && action == merge_without_gaps && ((mask1 & 0xAA) == 0)) {
       swap_people(res2, 0, 1);
       swap_people(res2, 4, 5);
       the_map = &map_31d18;
       goto merge_concentric;
    }
-   else if (res2->kind == s1x8 && res1->kind == s1x6 && r == 0 && action == merge_without_gaps &&
-            (!(res1->people[1].id1 | res1->people[4].id1))) {
+   else if (res2->kind == s1x8 && res1->kind == s1x6 && r == 0 && action == merge_without_gaps && ((mask1 & 022) == 0)) {
       the_map = &map_18_16;
       goto merge_concentric;
    }
@@ -2308,8 +2293,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_3d16;
       goto merge_concentric;
    }
-   else if (res2->kind == s3dmd && res1->kind == s2x3 && r == 0 &&
-            (!(res2->people[3].id1 | res2->people[4].id1 | res2->people[5].id1 | res2->people[9].id1 | res2->people[10].id1 | res2->people[11].id1))) {
+   else if (res2->kind == s3dmd && res1->kind == s2x3 && r == 0 && ((mask2 & 07070) == 0)) {
       the_map = &map_3d23;
       goto merge_concentric;
    }
@@ -2636,6 +2620,7 @@ static Const fixer fqtgend;
 static Const fixer f1x8aad;
 static Const fixer foo66d;
 static Const fixer f2x4endd;
+static Const fixer fgalch;
 static Const fixer fspindld;
 static Const fixer fspindlbd;
 static Const fixer f1x8endd;
@@ -2694,9 +2679,8 @@ static Const fixer fqtgj1    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj1,    0,
 static Const fixer fqtgj2    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj2,    0,          0,          0, 0,          0,    0,          0,          {{0, 7}, {3, 4}},   {{-1}}};
 static Const fixer fqtgjj1   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj1,   &fqtgjj1,   {{7, 1, 3, 5}},   {{-1}}};
 static Const fixer fqtgjj2   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj2,   &fqtgjj2,   {{0, 3, 4, 7}},   {{-1}}};
-
-/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot            yesrot  */
-
+static Const fixer fgalcv    = {s1x2, s_galaxy,    1, 0, 1,       &fgalcv,    &fgalch,    0,          0, 0,          0,    0,          0,          {{2, 6}},           {{-1}}};
+static Const fixer fgalch    = {s1x2, s_galaxy,    0, 0, 1,       &fgalch,    &fgalcv,    0,          0, 0,          0,    0,          0,          {{0, 4}},           {{-1}}};
 static Const fixer fspindlc  = {s1x2, s_spindle,   1, 0, 2,       &fspindlc,  &f1x3aad,   0,          0, 0,          0,    0,          0,          {{0, 6}, {2, 4}},   {{-1}}};
 static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          0,          {{1, 2}, {6, 5}},   {{-1}}};
 static Const fixer f2x3c     = {s1x2, s2x3,        1, 0, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          0,          {{0, 5}, {2, 3}},   {{-1}}};
@@ -2812,15 +2796,15 @@ typedef enum {
 
 
 typedef struct {
-   lookup_key key;
-   setup_kind kk;
-   uint32 thislivemask;
+   Const lookup_key key;
+   Const setup_kind kk;
+   Const uint32 thislivemask;
    Const fixer *fixp;
    Const fixer *fixp2;
-   int use_fixp2;
+   Const int use_fixp2;
 } sel_item;
 
-sel_item sel_table[] = {
+static Const sel_item sel_table[] = {
    {LOOKUP_DIST_DMD, s_rigger,    0x99,   &distrig3,   (fixer *) 0, -1},
    {LOOKUP_DIST_DMD, s_rigger,    0x66,   &distrig4,   (fixer *) 0, -1},
    {LOOKUP_DIST_DMD, s_rigger,    0x55,   &distrig7,   (fixer *) 0, -1},
@@ -2902,6 +2886,8 @@ sel_item sel_table[] = {
    {LOOKUP_NONE,     s_bone,      0x33,   &fboneendo,  (fixer *) 0, -1},
    {LOOKUP_NONE,     s_ptpd,      0xAA,   &foozz,      (fixer *) 0, -1},
    {LOOKUP_NONE,     s_spindle,   0x55,   &fspindlc,   (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_galaxy,    0x44,   &fgalcv,     (fixer *) 0, -1},
+   {LOOKUP_NONE,     s_galaxy,    0x11,   &fgalch,     (fixer *) 0, -1},
    {LOOKUP_NONE,     s1x3dmd,     0x66,   &f1x3aad,    (fixer *) 0, -1},
    {LOOKUP_NONE,     s_1x2dmd,    033,    &f1x2aad,    (fixer *) 0, -1},
    {LOOKUP_NONE,     s2x3,        055,    &f2x3c,      (fixer *) 0, -1},
@@ -3015,7 +3001,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
       static Const veryshort map_prom_1[16] = {6, 7, 1, 0, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
       static Const veryshort map_prom_2[16] = {4, 5, 7, 6, 0, 1, 3, 2, 022, 022, 033, 033, 022, 022, 033, 033};
       static Const veryshort map_prom_3[16] = {0, 1, 3, 2, 4, 5, 7, 6, 000, 000, 011, 011, 000, 000, 011, 011};
-      static Const veryshort map_prom_4[16] = {6, 7, 0, 1, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
+      static Const veryshort map_prom_4[16] = {6, 7, 1, 0, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
 
       the_setups[0] = *ss;        /* Use this all over again. */
       clear_people(&the_setups[0]);
@@ -3054,6 +3040,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
       for (i=0 ; i<8 ; i++)
          (void) copy_rot(&the_setups[0], i, ss, map_prom[i], map_prom[i+8]);
 
+      update_id_bits(&the_setups[0]);
       move(&the_setups[0], FALSE, result);
       result->result_flags |= RESULTFLAG__IMPRECISE_ROT;
       return;
@@ -3138,6 +3125,10 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
             schema = schema_concentric_diamonds;
             if (ssmask == mask-chunk->mask_ctr_dmd) goto do_concentric_ends;
          }
+         else if (ss->kind == s_galaxy && chunk->mask_normal) {
+            schema = schema_concentric;
+            if (ssmask == mask-chunk->mask_normal) goto do_concentric_ends;
+         }
       }
    }
 
@@ -3146,7 +3137,9 @@ back_here:
    /* We are now finished with special properties of "ignored". */
    if (indicator == 8) indicator = 6;
 
+/*    taken out!!!!!!
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+*/
    normalize_setup(&the_setups[0], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
    normalize_setup(&the_setups[1], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
    saved_warnings = history[history_ptr+1].warnings;
@@ -3184,7 +3177,7 @@ back_here:
          int numsetups;
          lookup_key key;
          setup lilsetup[4], lilresult[4];
-         sel_item *p;
+         Const sel_item *p;
          long_boolean feet_warning = FALSE;
 
          /* Check for special cases of no one or everyone. */

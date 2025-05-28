@@ -218,6 +218,11 @@ extern long_boolean selectp(setup *ss, int place)
 
 static Const short iden_tab[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
+static Const short boystuff_no_rh[2]  = {0, 0};
+static Const short girlstuff_no_rh[2] = {1, 0};
+static Const short boystuff_rh[2]     = {0, 1};
+static Const short girlstuff_rh[2]    = {1, 1};
+static Const uint32 sexbits[2]    = {ID1_PERM_BOY, ID1_PERM_GIRL};
 
 
 /* Here are the predicates.  They will get put into the array "pred_table". */
@@ -1531,17 +1536,14 @@ Private long_boolean column_double_down(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean boyp(setup *real_people, int real_index,
+Private long_boolean boygirlp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return((real_people->people[real_index].id1 & ID1_PERM_BOY) != 0);
-}
+   /* If this is a slide thru from a miniwave that is not right-handed, raise a warning. */
+   if (extra_stuff[1] && northified_index != 0)
+      warn(warn__tasteless_slide_thru);
 
-/* ARGSUSED */
-Private long_boolean girlp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const short *extra_stuff)
-{
-   return((real_people->people[real_index].id1 & ID1_PERM_GIRL) != 0);
+   return((real_people->people[real_index].id1 & sexbits[extra_stuff[0]]) != 0);
 }
 
 /* ARGSUSED */
@@ -1658,28 +1660,24 @@ Private long_boolean no_dir_p(setup *real_people, int real_index,
    return current_options.where == direction_no_direction;
 }
 
-
-
-
-typedef struct {
-   Const short list1[5];
-   Const short list2[5];
-} handedness_thing;
-
-
-Private long_boolean check_handedness(handedness_thing *thing, personrec ppp[])
+/* ARGSUSED */
+Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const short *extra_stuff)
 {
-   Const short *p1 = thing->list1;
-   Const short *p2 = thing->list2;
+   Const short *p1;
+   short d1;
+   short d2;
    uint32 z = 0;
    long_boolean b1 = TRUE;
    long_boolean b2 = TRUE;
-   short d1 = *(p1++);
-   short d2 = *(p2++);
+
+   p1 = get_rh_test(real_people->kind);
+   d1 = *(p1++);
+   d2 = *(p1++);
 
    while (*p1>=0) {
-      uint32 t1 = ppp[*(p1++)].id1;
-      uint32 t2 = ppp[*(p2++)].id1;
+      uint32 t1 = real_people->people[*(p1++)].id1;
+      uint32 t2 = real_people->people[*(p1++)].id1;
       z |= t1 | t2;
       if (t1 && (t1 & d_mask)!=d1) b1 = FALSE;
       if (t2 && (t2 & d_mask)!=d2) b1 = FALSE;
@@ -1688,45 +1686,12 @@ Private long_boolean check_handedness(handedness_thing *thing, personrec ppp[])
    }
 
    if (z) {
-      if (b1) return TRUE;
-      else if (b2) return FALSE;
+      if (b1)      { return !(*extra_stuff); }
+      else if (b2) { return  (*extra_stuff); }
    }
 
    fail("Can't determine handedness.");
    /* NOTREACHED */
-}
-
-
-static handedness_thing spindle_hand = {
-   {d_east, 0, 1, 2, -1},
-   {d_west, 6, 5, 4, -1}};
-
-static handedness_thing short_hand = {
-   {d_north, 0, 5, -1},
-   {d_south, 2, 3, -1}};
-
-static handedness_thing dmd_hand = {
-   {d_east, 1, -1},
-   {d_west, 3, -1}};
-
-
-/* ARGSUSED */
-Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const short *extra_stuff)
-{
-   handedness_thing *thing;
-   long_boolean check;
-
-   if (real_people->kind == s_spindle)
-      thing = &spindle_hand;
-   else if (real_people->kind == s_short6)
-      thing = &short_hand;
-   else    /* Required to be diamond or single general 1/4 tag. */
-      thing = &dmd_hand;
-
-   check = check_handedness(thing, real_people->people);
-
-   return (*extra_stuff) ? !check : check;
 }
 
 /* ARGSUSED */
@@ -1936,8 +1901,10 @@ predicate_descriptor pred_table[] = {
       {check_tbone,            mag62spot_tboned_tab},  /* "next_magic62spot_is_tboned" */
       {next_galaxyspot_is_tboned,       (short *) 0},  /* "next_galaxyspot_is_tboned" */
       {column_double_down,              (short *) 0},  /* "column_double_down" */
-      {boyp,                            (short *) 0},  /* "boyp" */
-      {girlp,                           (short *) 0},  /* "girlp" */
+      {boygirlp,                     boystuff_no_rh},  /* "boyp" */
+      {boygirlp,                    girlstuff_no_rh},  /* "girlp" */
+      {boygirlp,                        boystuff_rh},  /* "boyp_rh_slide_thru" */
+      {boygirlp,                       girlstuff_rh},  /* "girlp_rh_slide_thru" */
       {roll_is_cw,                      (short *) 0},  /* "roll_is_cw" */
       {roll_is_ccw,                     (short *) 0},  /* "roll_is_ccw" */
       {x12_boy_facing_girl,             (short *) 0},  /* "x12_boy_facing_girl" */

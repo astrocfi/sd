@@ -3,6 +3,11 @@
                 X11 UI version 1.17, SDTTY UI version 1.9.
 
 
+****** Changes as of version 31.73 ******
+
+The concept formerly called "diagonal" has been changed
+to "diagonal box" in accordance with current usage.
+
 ****** Changes as of version 31.72 ******
 
 The operation of ignoring blanks (previously set with the
