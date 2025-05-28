@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.38"
+version "38.39"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -2143,10 +2143,12 @@ call "_circ xocirc from cols" dontshow tag circ_xocirc
       array [CM0S AM1S CM0N CM1N]
 
 call "change lanes" c3
+            fractal_is_inherited gen_sting_is_inherited
    crossconc circ_n_times [conc_demand_lines insert_number 2]
-             any_hand_remake_start_with_n [conc_force_lines suppress_roll insert_number 1]
+             any_hand_remake_start_with_n [inherit_fractal inherit_gensting conc_force_lines suppress_roll insert_number 1]
+            fractal_is_inherited gen_sting_is_inherited
    crossconc circ_xocirc [conc_demand_columns]
-             any_hand_remake_start_with_n [conc_force_lines suppress_roll insert_number 1]
+             any_hand_remake_start_with_n [inherit_fractal inherit_gensting conc_force_lines suppress_roll insert_number 1]
 
 call "like a rigger" c3x
    setup 2x6 rigger
@@ -2174,8 +2176,9 @@ call "collapse the diamonds" c4a
    conc stepnfold [inherit_cross inherit_intlk] endsdetour [conc_demand_lines conc_force_columns endscando]
 
 call "strike out" c4a
-            visible_fractions fudge_to_q_tag
-   conc crossnwheel [force_single] endsdetour [conc_demand_lines conc_force_columns endscando]
+            fractal_is_inherited gen_sting_is_inherited visible_fractions fudge_to_q_tag
+   conc crossnwheel [inherit_fractal inherit_gensting force_single]
+        endsdetour [inherit_fractal inherit_gensting conc_demand_lines conc_force_columns endscando]
 
 call "_ends strip" dontshow tag endsstrip
    setup 2x2 1x4 restriction forbidden peelable_box
@@ -2272,12 +2275,12 @@ call "centers swing/slip" dontshow tag ctrsswingslip
    conc6p_or_normal waveswingslip [or_anycall inherit_yoyo inherit_gensting] nullcall []
 
 call "center 4 cast off @b" dontshow tag ctrscastoff_n
-            fractal_is_inherited neednumber yoyo_fractal_numbers
-   select_center4 cast_off_n4_with_warn [allow_forced_mod] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited neednumber yoyo_fractal_numbers
+   select_center4 cast_off_n4_with_warn [inherit_yoyo inherit_fractal inherit_gensting allow_forced_mod] nullcall []
 
 call "center 2 cast off @b" dontshow tag ctr2castoff_n
-            fractal_is_inherited neednumber yoyo_fractal_numbers
-   select_center2 cast_off_n4_with_warn [allow_forced_mod] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited neednumber yoyo_fractal_numbers
+   select_center2 cast_off_n4_with_warn [inherit_yoyo inherit_fractal inherit_gensting allow_forced_mod] nullcall []
 
 call "_something and circle 1/4" dontshow tag something_and_circle
             fudge_to_q_tag step_to_qtag left_means_touch_or_check
@@ -2353,7 +2356,8 @@ call "_ends begin peel/trail chain thru" dontshow tag epeelchainthru
 
 call "_peel/trail chain thru part 1" dontshow tag peelchain1
             fudge_to_q_tag left_means_mirror yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   conc waveswingslip [inherit_left inherit_yoyo inherit_gensting] epeelchainthru [inherit_left inherit_yoyo inherit_gensting inherit_cross conc_demand_columns]
+   conc waveswingslip [inherit_left inherit_yoyo inherit_gensting]
+        epeelchainthru [inherit_left inherit_yoyo inherit_gensting inherit_cross conc_demand_columns]
 
 call "peel chain thru" c3a
             left_means_mirror last_part_visible yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -2520,19 +2524,6 @@ call "reshape the triangle" c2 tag trngle_reshape
          if nexttrnglspot_is_tboned [AL2S CR2E CR0S CR4S AL3S AL4W]
          if always                  [AL2W CR2E CR0S CR4E AL3S AL4W]
 
-call "arm turn 1/4" dontshow tag armturn_14
-            12_16_matrix_means_split parallel_conc_end
-   setup 1x2 1x2 rotate restriction forbidden wave_only
-      array [CR0N AL0S]
-            alternate_definition [fractal] c4
-   setup 1x2 1x2 rotate restriction forbidden wave_only
-      array [CR1S AL1N]
-
-call "arm turn 3/4" dontshow tag armturn_34
-            12_16_matrix_means_split
-   setup 1x2 1x2 rotate restriction forbidden wave_only
-      array [CR1S AL1N]
-
 call "arm turn @b" dontshow tag armturn_n4
             neednumber 12_16_matrix_means_split parallel_conc_end
             fractal_is_inherited gen_sting_is_inherited yoyo_is_inherited yoyo_fractal_numbers
@@ -2583,11 +2574,11 @@ call "arm turn @b, yoyo is optional" dontshow tag armturn_n4_yoyo_optional
 
 call "_centers arm turn @b / ends turn back" dontshow tag ctrarmturn_n4_utb
             neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   singleconc armturn_n4 [inherit_yoyo inherit_gensting inherit_fractal] uturnback []
+   singleconc armturn_n4 [inherit_yoyo inherit_fractal inherit_gensting] uturnback []
 
 call "_centers arm turn @b / ends turn away" dontshow tag ctrarmturn_n4_utaway
             neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   singleconc armturn_n4 [inherit_yoyo inherit_gensting inherit_fractal] uturnaway []
+   singleconc armturn_n4 [inherit_yoyo inherit_fractal inherit_gensting] uturnaway []
 
 call "_centers arm turn 1/4 / ends turn back" dontshow tag ctrarmturn_14_utb
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -2598,7 +2589,7 @@ call "_centers do @m / ends turn away" dontshow tag ctr_but_utaway
 
 call "_centers arm turn @b while ends roll @b times" dontshow tag ctrarmturn_n_ends_roll_n
             need_two_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   singleconc armturn_n4 [inherit_yoyo inherit_gensting inherit_fractal] roll_n [shift_one_number]
+   singleconc armturn_n4 [inherit_yoyo inherit_fractal inherit_gensting] roll_n [shift_one_number]
 
 call "cast off 1/4" dontshow tag cast_off_14
             parallel_conc_end
@@ -2642,7 +2633,7 @@ call "cast off @b, opt for normal, just do it" dontshow tag hingenspread_for_rel
          if always                [AM0E AM3E CM1W CM2W]
 
 call "cast off @b, opt for normal" dontshow tag cast_off_n4_with_warn
-            neednumber fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
+            neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
             fractional_numbers diamond_is_legal parallel_conc_end
    setup 1x2 1x2 qualifier num 0 none
       preds "Need to be in miniwave or line of 4."
@@ -2843,9 +2834,9 @@ call "_check odd number" dontshow tag check_odd_number
       array [ZM1N]
 
 call "cast off @D, odd" dontshow tag cast_off_n4_odd
-            parallel_conc_end neednumber
+            parallel_conc_end fractal_is_inherited gen_sting_is_inherited neednumber
    seq check_odd_number []
-   seq cast_off_n4_with_warn [insert_number 1]
+   seq cast_off_n4_with_warn [inherit_fractal inherit_gensting insert_number 1]
    seq continue_cast [repeat_nm1]
 
 call "_cast off @b and roll" dontshow tag cast_n_4_roll
@@ -2874,8 +2865,8 @@ call "_centers cast 3/4, opt for normal" dontshow tag ctrs_cast_3_4_with_warn
                         nullcall []
 
 call "_centers cast 3/4" dontshow tag ctrs_cast_3_4_withplainmod
-            bigmatrix_is_inherited fractal_is_inherited
-   maybematrix_conc cast_off_n4_with_warn [insert_number 3 inherit_fractal allow_plain_mod]
+            bigmatrix_is_inherited fractal_is_inherited gen_sting_is_inherited
+   maybematrix_conc cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting allow_plain_mod]
                     nullcall []
 
 call "_centers mandatory @m" dontshow tag ctrs_mandatory_2ndcall
@@ -2898,16 +2889,16 @@ call "centers arm turn 3/4" dontshow tag ctrmaybearmturn3
 
 call "centers arm turn @b" dontshow tag ctrarmturn_n
             neednumber single_is_inherited grand_is_inherited bigmatrix_is_inherited
-            fractal_is_inherited gen_sting_is_inherited
-   maybegrandsingleormatrixconc armturn_n4 [inherit_gensting inherit_fractal] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   maybegrandsingleormatrixconc armturn_n4 [inherit_yoyo inherit_fractal inherit_gensting] nullcall []
 
 call "_centers hinge" dontshow tag ctrhinge
-            left_means_mirror
-   conc hinge [inherit_left] nullcall []
+            left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   conc hinge [inherit_left inherit_fractal inherit_gensting] nullcall []
 
 call "_single centers hinge" dontshow tag sglctrhinge
-            left_means_mirror intlk_is_inherited
-   singleconc hinge_with_warn [inherit_intlk inherit_left] nullcall []
+            left_means_mirror intlk_is_inherited fractal_is_inherited gen_sting_is_inherited
+   singleconc hinge_with_warn [inherit_intlk inherit_left inherit_fractal inherit_gensting] nullcall []
 
 call "_single centers together hinge" dontshow tag sglctrtogetherhinge
             left_means_mirror intlk_is_inherited
@@ -2969,7 +2960,7 @@ call "turn the star @b, qual" dontshow tag turnstar2
       array [0 CR3S 0 AL3N]
 
 call "_turn star @b and fudge@S" dontshow tag turnstarn_fudge
-            neednumber
+            neednumber yoyo_fractal_numbers
    seq turndmdn [or_secondary_call]
    seq fudge_to_parallel_diamonds []
 
@@ -3082,7 +3073,7 @@ call "turn the star 2, interrupt after first with @0 and after second with @m" c
    intermediate states. */
 call "turn the star @b, nobox" dontshow tag turndmdn
             is_star_call neednumber 12_16_matrix_means_split
-            fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited yoyo_fractal_numbers dont_raise_overcast
+            yoyo_is_inherited gen_sting_is_inherited yoyo_fractal_numbers dont_raise_overcast
    setup star star      qualifier num 0 none
       array [ZM0N 0 ZM2N 0]
    setup dmd dmd        qualifier num 0 none
@@ -3861,6 +3852,12 @@ call "any hand slip" dontshow tag any_hand_slip
             alternate_definition [yoyo] c4
    setup 1x4 dmd
       array [ZM0N CR3W ZM2N AL3E]
+            alternate_definition [generous] c3x
+   setup 1x4 dmd
+      array [ZM0N CR3W ZM2N AL3E]
+            alternate_definition [stingy] c3x
+   setup 1x4 dmd
+      array [ZM0N CR1E ZM2N AL1W]
             alternate_definition [half] a2
    setup 1x4 dmd
       array [ZM0N CR1E ZM2N AL1W]
@@ -3882,6 +3879,12 @@ call "slip" a2
             alternate_definition [yoyo] c4
    setup 1x4 dmd restriction dmd_ctrs_mwv
       array [ZM0N CR3W ZM2N AL3E]
+            alternate_definition [generous] c3x
+   setup 1x4 dmd restriction dmd_ctrs_mwv
+      array [ZM0N CR3W ZM2N AL3E]
+            alternate_definition [stingy] c3x
+   setup 1x4 dmd restriction dmd_ctrs_mwv
+      array [ZM0N CR1E ZM2N AL1W]
             alternate_definition [half] a2
    setup 1x4 dmd restriction dmd_ctrs_mwv
       array [ZM0N CR1E ZM2N AL1W]
@@ -4312,12 +4315,12 @@ call "central spin the windmill" c3 tag ctrwindmill
             yoyo_is_inherited gen_sting_is_inherited grand_is_inherited fractal_is_inherited
    seq swing [inherit_yoyo inherit_gensting]
    seq maybegrandslip [inherit_grand inherit_yoyo inherit_gensting roll_transparent]
-   seq cast_off_n4_with_warn [inherit_fractal insert_number 3]
+   seq cast_off_n4_with_warn [inherit_fractal inherit_gensting insert_number 3]
 
 call "_centers @0 the windmill" dontshow tag ctr_any_windmill
-            fractal_is_inherited
+            fractal_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
-   seq cast_off_n4_with_warn [inherit_fractal insert_number 3]
+   seq cast_off_n4_with_warn [inherit_fractal inherit_gensting insert_number 3]
 
 call "_outsides face @h" dontshow tag set_windmill_direction
    conc nullcall [] quarter_maybe [endscando]
@@ -4328,13 +4331,13 @@ call "_finish spin the windmill, circ @9" dontshow tag finish_windmill
         circ_n_times [conc_demand_lines conc_force_lines endscando]
 
 call "_finish @0 the windmill, circ @9" dontshow tag finish_any_windmill
-            neednumber fractal_is_inherited
-   conc ctr_any_windmill [inherit_fractal]
+            neednumber fractal_is_inherited gen_sting_is_inherited
+   conc ctr_any_windmill [inherit_fractal inherit_gensting]
         circ_n_times [conc_demand_lines conc_force_lines endscando]
 
 call "_finish nothing the windmill, circ @9" dontshow tag finish_nothing_windmill
-            neednumber fractal_is_inherited
-   conc cast_off_n4_with_warn [inherit_fractal insert_number 3]
+            neednumber fractal_is_inherited gen_sting_is_inherited
+   conc cast_off_n4_with_warn [inherit_fractal inherit_gensting insert_number 3]
         circ_n_times [conc_demand_lines conc_force_lines endscando]
 
 call "_finish spin the windmill, circ @9-1/2" dontshow tag finish_windmill_and_a_half
@@ -4343,13 +4346,13 @@ call "_finish spin the windmill, circ @9-1/2" dontshow tag finish_windmill_and_a
         circ_n_times_and_a_half [conc_demand_lines conc_force_lines endscando]
 
 call "_finish @0 the windmill, circ @9-1/2" dontshow tag finish_any_windmill_and_a_half
-            neednumber fractal_is_inherited
-   conc ctr_any_windmill [inherit_fractal]
+            neednumber fractal_is_inherited gen_sting_is_inherited
+   conc ctr_any_windmill [inherit_fractal inherit_gensting]
         circ_n_times_and_a_half [conc_demand_lines conc_force_lines endscando]
 
 call "_finish nothing the windmill, circ @9-1/2" dontshow tag finish_nothing_windmill_and_a_half
-            neednumber fractal_is_inherited
-   conc cast_off_n4_with_warn [inherit_fractal insert_number 3]
+            neednumber fractal_is_inherited gen_sting_is_inherited
+   conc cast_off_n4_with_warn [inherit_fractal inherit_gensting insert_number 3]
         circ_n_times_and_a_half [conc_demand_lines conc_force_lines endscando]
 
 call "spin the windmill, outsides @h" a2
@@ -4359,14 +4362,14 @@ call "spin the windmill, outsides @h" a2
 
 call "@0 the windmill, outsides @h" c1
    // This one if the <anything> is a 4-person call for the centers.
-            sequence_starter fractal_is_inherited
+            sequence_starter fractal_is_inherited gen_sting_is_inherited
    seq set_windmill_direction []
-   seq finish_any_windmill [inherit_fractal insert_number 2]
+   seq finish_any_windmill [inherit_fractal inherit_gensting insert_number 2]
    // This one if the <anything> is an 8-person call.
-            sequence_starter fractal_is_inherited
+            sequence_starter fractal_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
    seq set_windmill_direction []
-   seq finish_nothing_windmill [inherit_fractal insert_number 2]
+   seq finish_nothing_windmill [inherit_fractal inherit_gensting insert_number 2]
 
 call "spin the windmill, outsides @h and go @9 positions" a2
             sequence_starter neednumber left_means_mirror yoyo_is_inherited gen_sting_is_inherited
@@ -4375,14 +4378,14 @@ call "spin the windmill, outsides @h and go @9 positions" a2
 
 call "@0 the windmill, outsides @h and go @9 positions" c1
    // This one if the <anything> is a 4-person call for the centers.
-            sequence_starter fractal_is_inherited neednumber
+            sequence_starter fractal_is_inherited gen_sting_is_inherited neednumber
    seq set_windmill_direction []
-   seq finish_any_windmill [inherit_fractal]
+   seq finish_any_windmill [inherit_fractal inherit_gensting]
    // This one if the <anything> is an 8-person call.
-            sequence_starter fractal_is_inherited
+            sequence_starter fractal_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
    seq set_windmill_direction []
-   seq finish_nothing_windmill [inherit_fractal]
+   seq finish_nothing_windmill [inherit_fractal inherit_gensting]
 
 call "spin the windmill, outsides @h and go @9-1/2 positions" a2
             sequence_starter neednumber left_means_mirror yoyo_is_inherited gen_sting_is_inherited
@@ -4391,14 +4394,14 @@ call "spin the windmill, outsides @h and go @9-1/2 positions" a2
 
 call "@0 the windmill, outsides @h and go @9-1/2 positions" c1
    // This one if the <anything> is a 4-person call for the centers.
-            sequence_starter fractal_is_inherited neednumber
+            sequence_starter fractal_is_inherited gen_sting_is_inherited neednumber
    seq set_windmill_direction []
-   seq finish_any_windmill_and_a_half [inherit_fractal]
+   seq finish_any_windmill_and_a_half [inherit_fractal inherit_gensting]
    // This one if the <anything> is an 8-person call.
-            sequence_starter fractal_is_inherited
+            sequence_starter fractal_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
    seq set_windmill_direction []
-   seq finish_nothing_windmill_and_a_half [inherit_fractal]
+   seq finish_nothing_windmill_and_a_half [inherit_fractal inherit_gensting]
 
 call "spin the windmill, outsides @m" a2
             sequence_starter left_means_mirror yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -4406,8 +4409,8 @@ call "spin the windmill, outsides @m" a2
         nullsecond [mandatory_secondary_call]
 
 call "@0 the windmill, outsides @m" c1
-            sequence_starter
-   conc ctr_any_windmill [] nullsecond [mandatory_secondary_call]
+            sequence_starter fractal_is_inherited gen_sting_is_inherited
+   conc ctr_any_windmill [inherit_fractal inherit_gensting] nullsecond [mandatory_secondary_call]
 
 // This call is somewhat ambiguous, and has been declared "obsolete" in Ceder Chest.
 call "rotary spin the windmill" c2
@@ -4528,8 +4531,8 @@ call "fan the top" plus tag fanthetop
    setup pmd 1x4 rotate
       array [0 CR1W 0 AL3W]
    // To allow the centers to do only part of the cast off 3/4.
-            step_to_wave left_means_touch_or_check visible_fractions
-   singleconc cast_off_n4_with_warn [insert_number 3] hinge []
+            step_to_wave left_means_touch_or_check gen_sting_is_inherited visible_fractions
+   singleconc cast_off_n4_with_warn [inherit_gensting insert_number 3] hinge []
 
 call "_fan the top (maybe cross)" dontshow tag fanthetop_maybe_cross
             step_to_wave left_means_touch_or_check ends_take_right_hands
@@ -5321,6 +5324,36 @@ call "hinge" mainstream tag hinge
    setup 1x2 1x2 rotate plus_eighth_rotation qualifier left live wave_only
       array [0 AL0S]
 
+call "_hinge but ignore gensting if couple" dontshow tag hinge_ignore_gen_if_couple
+            left_means_mirror
+   setup 1x2 1x2 rotate qualifier live wave_only
+      array [CR0N AL0S]
+   setup 1x2 1x2 rotate restriction forbidden levela1
+      preds "???"
+         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if always               [0    AL1S]
+            alternate_definition [fractal] c4
+   setup 1x2 1x2 rotate qualifier live wave_only
+      array [CR1S AL1N]
+   setup 1x2 1x2 rotate restriction forbidden levela1
+      preds "???"
+         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if always               [0    AL1S]
+            alternate_definition [generous] c3x
+   setup 1x2 1x2 qualifier live wave_only
+      array [CR1S AL0S]
+   setup 1x2 1x2 rotate restriction forbidden levela1
+      preds "???"
+         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if always               [0    AL1S]
+            alternate_definition [stingy] c3x
+   setup 1x2 1x2 qualifier live wave_only
+      array [ZM0N ZM1N]
+   setup 1x2 1x2 rotate restriction forbidden levela1
+      preds "???"
+         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if always               [0    AL1S]
+
 call "_couples hinge for short cycle" dontshow tag cplshinge_should_be_armturn
             left_means_mirror
    setup 1x4 1x4 rotate qualifier couples_only restriction controversial 2fl_only
@@ -5589,15 +5622,6 @@ call "_trade for 8-person call" dontshow tag trade_for_8_person_call
             alternate_definition [generous] c3x
    setup 1x2 1x2 rotate restriction forbidden miniwaves
       array [CR1S AL1N]
-            alternate_definition [half] mainstream
-   setup 1x2 1x2 rotate
-      preds "???"
-         if 1x2_beau_or_miniwave [CR0N AL0S]
-         if always [0 AL1S]
-            alternate_definition [lasthalf] mainstream
-   // We do this as an arm turn.  If that isn't right, sorry.
-   setup 1x2 1x2 rotate restriction forbidden wave_only
-      array [CR0N AL0S]
             alternate_definition [yoyo] c4
    setup 1x4 2x2 other_elongate restriction controversial miniwaves
       // Many people consider things like "yoyo turn the key"
@@ -5613,6 +5637,15 @@ call "_trade for 8-person call" dontshow tag trade_for_8_person_call
       array [CR1S AL1N]
    setup 1x2 1x2 rotate qualifier couples_only
       array [CR1S L0S]
+            alternate_definition [half] mainstream
+   setup 1x2 1x2 rotate
+      preds "???"
+         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if always [0 AL1S]
+            alternate_definition [lasthalf] mainstream
+   // We do this as an arm turn.  If that isn't right, sorry.
+   setup 1x2 1x2 rotate restriction forbidden wave_only
+      array [CR0N AL0S]
             alternate_definition [12matrix 3x3] c4
    setup 1x3 1x3
       array [0 0 0]    // No such call.
@@ -6898,9 +6931,10 @@ call "touch 3/4" dontshow tag touch_3_4
 
 call "touch @b" mainstream tag touch_n_4
             visible_fractions rear_back_from_r_wave neednumber
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             twisted_is_inherited diamond_is_legal left_means_mirror
    seq touch [inherit_left inherit_diamond inherit_twisted]
-   seq armturn_14 [repeat_n inherit_diamond]
+   seq armturn_n4 [inherit_diamond inherit_yoyo inherit_fractal inherit_gensting]
 
 call "_leftable touch" dontshow tag lft_touch
             left_means_mirror 12_16_matrix_means_split
@@ -6917,8 +6951,9 @@ call "_righttable left touch" dontshow tag rightable_left_touch
 
 call "_leftable touch @b" dontshow tag lftble_touch_n_4
             neednumber left_means_mirror bigmatrix_is_inherited
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq lft_touch [inherit_left inherit_bigmatrix]
-   seq armturn_14 [inherit_bigmatrix repeat_n]
+   seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_fractal inherit_gensting]
 
 call "_soft touch part 1" dontshow tag soft_touch1
    singleconc hinge_with_warn [] quarterin []
@@ -8533,6 +8568,16 @@ call "chain down the line" mainstream
       array [AL0E 0 AAL2W 0]
    setup pmd 2x2
       array [0 CCCAL3N 0 0]
+            alternate_definition [stingy] c3x
+   setup dmd 2x2
+      array [AL0E 0 AAL2W 0]
+   setup pmd 2x2
+      array [0 CAL1S 0 0]
+            alternate_definition [generous] c3x
+   setup dmd 2x2
+      array [AL0E 0 AAL2W 0]
+   setup pmd 2x2
+      array [0 CCCAL3N 0 0]
 
 // Callerlab says this is a no-no, Feb 2000, so we set it to c1.
 call "3/4 chain down the line" c1
@@ -8932,11 +8977,17 @@ call "_triple cast ends1" dontshow tag triplecastends1
             take_right_hands
    setup 1x4 2x2
       array [AL3E CM3W CR2W AM2E]
+            alternate_definition [stingy] c3x
+   setup 1x4 2x2
+      array [AL3E CM2S CR2W AM3S]
+            alternate_definition [generous] c3x
+   setup 1x4 2x2
+      array [AL3E CM0N CR2W AM1N]
 
 call "triple cast" c4a
-            fractal_is_inherited
-   cross_checkpoint cast_off_n4_with_warn [insert_number 3 inherit_fractal conc_force_lines]
-                    triplecastends1 [suppress_elongation_warnings]
+            fractal_is_inherited gen_sting_is_inherited
+   cross_checkpoint cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting conc_force_lines]
+                    triplecastends1 [inherit_gensting suppress_elongation_warnings]
 
 call "split cast" c4a
             left_means_mirror yoyo_is_inherited gen_sting_is_inherited
@@ -9245,61 +9296,81 @@ call "snap back" c4
 
 call "_touch by @b part 1 of 2" dontshow tag touch_by_first_of_two
             left_means_mirror neednumber
-   singlecrossconc nullcall [] lftble_touch_n_4 [inherit_left]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   singlecrossconc nullcall [] lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
 
 call "_touch by @b part 2 of 2" dontshow tag touch_by_second_of_two
             left_means_mirror neednumber
-   singleconc_together lftble_touch_n_4 [inherit_left] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   singleconc_together lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting] nullcall []
 
 call "touch by @b X @b" c3a
             left_means_mirror visible_fractions need_two_numbers
-   seq touch_by_first_of_two [inherit_left]
-   seq touch_by_second_of_two [inherit_left shift_one_number]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq touch_by_first_of_two [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+   seq touch_by_second_of_two [inherit_left inherit_yoyo inherit_fractal inherit_gensting shift_one_number]
 
 call "_touch by @b part 1 of 3" dontshow tag touch_by_first_of_three
             left_means_mirror neednumber
-   crossconc_touch_by_1_of_3 nullcall [] lftble_touch_n_4 [inherit_left conc_force_lines]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   crossconc_touch_by_1_of_3 nullcall []
+                             lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting conc_force_lines]
 
 call "_touch by @b part 1 spiffy" dontshow tag touch_by_first_spiffy
             left_means_mirror neednumber
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    crossconc_innermost nullcall [] lftble_touch_n_4 [inherit_left conc_force_lines]
 
 call "_touch by @b part 2 of 3" dontshow tag touch_by_second_of_three
             left_means_mirror neednumber
-   conc_touch_by_2_of_3 touch_by_first_spiffy [inherit_left] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc_touch_by_2_of_3 touch_by_first_spiffy [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+                        nullcall []
 
 call "_touch by @b final" dontshow tag touch_by_final
             left_means_mirror neednumber
-   conc_innermost lftble_touch_n_4 [inherit_left] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc_innermost lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+                  nullcall []
 
 call "touch by @b X @b X @b" c3a
             left_means_mirror visible_fractions need_three_numbers
-   seq touch_by_first_of_three [inherit_left]
-   seq touch_by_second_of_three [inherit_left shift_one_number]
-   seq touch_by_final [inherit_left shift_two_numbers]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq touch_by_first_of_three [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+   seq touch_by_second_of_three [inherit_left inherit_yoyo inherit_fractal inherit_gensting shift_one_number]
+   seq touch_by_final [inherit_left shift_two_numbers inherit_yoyo inherit_fractal inherit_gensting]
 
 call "_touch by @b part 2 of 4" dontshow tag touch_by_second_of_four
             left_means_mirror neednumber
-   conc6_2 touch_by_first_spiffy [inherit_left] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc6_2 touch_by_first_spiffy [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+           nullcall []
 
 call "_touch by @b part 3 of 4" dontshow tag touch_by_third_of_four
             left_means_mirror neednumber
-   conc_diamond_line touch_by_first_spiffy [inherit_left] nullcall []
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc_diamond_line touch_by_first_spiffy [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+                     nullcall []
 
 call "touch by @b X @b X @b X @b" c3a
             left_means_mirror visible_fractions need_four_numbers
-   seq touch_by_first_spiffy [inherit_left]
-   seq touch_by_second_of_four [inherit_left shift_one_number]
-   seq touch_by_third_of_four [inherit_left shift_two_numbers]
-   seq touch_by_final [inherit_left shift_three_numbers]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq touch_by_first_spiffy [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+   seq touch_by_second_of_four [inherit_left inherit_yoyo inherit_fractal inherit_gensting shift_one_number]
+   seq touch_by_third_of_four [inherit_left inherit_yoyo inherit_fractal inherit_gensting shift_two_numbers]
+   seq touch_by_final [inherit_left inherit_yoyo inherit_fractal inherit_gensting shift_three_numbers]
 
 call "touch by @b X @0" c3a
             left_means_mirror neednumber
-   singlecrossconc_together nullcall [mandatory_anycall] lftble_touch_n_4 [inherit_left]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   singlecrossconc_together nullcall [mandatory_anycall]
+                            lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
 
 call "touch by @0 X @b" c3a
             left_means_mirror neednumber
-   singlecrossconc_together lftble_touch_n_4 [inherit_left] nullcall [mandatory_anycall]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   singlecrossconc_together lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+                            nullcall [mandatory_anycall]
 
 call "touch by @0 X @m" c3a
    singlecrossconc_together nullsecond [mandatory_secondary_call] nullcall [mandatory_anycall]
@@ -9411,15 +9482,15 @@ call "zip the top" c4a
 
 call "fan back" c4 tag fanback
             step_to_wave left_means_touch_or_check
-            diamond_is_legal bigmatrix_is_inherited fractal_is_inherited grand_is_inherited
-   maybematrix_singleconc_together cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+            diamond_is_legal bigmatrix_is_inherited fractal_is_inherited gen_sting_is_inherited grand_is_inherited
+   maybematrix_singleconc_together cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
                                    uturnback [conc_force_spots]
 
 call "spin back" c4
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan left_means_touch_or_check
-            visible_fractions diamond_is_legal fractal_is_inherited grand_is_inherited
+            step_to_wave yoyo_is_inherited can_be_fan left_means_touch_or_check
+            visible_fractions diamond_is_legal fractal_is_inherited gen_sting_is_inherited grand_is_inherited
    seq tradencheckline_unusual [inherit_yoyo inherit_gensting inherit_diamond]
-   seq fanback [inherit_grand inherit_fractal inherit_diamond]
+   seq fanback [inherit_grand inherit_fractal inherit_gensting inherit_diamond]
 
 call "short cycle" c4
             visible_fractions
@@ -9572,7 +9643,8 @@ call "_ends circulate" dontshow tag ends_circ
    conc nullcall [] circulate [conc_force_spots]
 
 call "_lines slip thru" dontshow tag lines_slip_thru
-   conc any_hand_slip [] circulate [conc_force_spots]
+            yoyo_is_inherited gen_sting_is_inherited
+   conc any_hand_slip [inherit_yoyo inherit_gensting] circulate [conc_force_spots]
 
 call "_trade your neighbor part 1" dontshow tag start_trade_neighbor
    setup 2x4 2x4 rotate restriction forbidden wave_only
@@ -10848,6 +10920,15 @@ call "weave" c1 tag weave
 call "_natural 3/4 thru" dontshow tag nat34thru
    setup 2x2 1x4 rotate restriction wave_only
       array [CCCAL3N AAACR3S AL2N CR2S]
+            alternate_definition [fractal] c4
+   setup 2x2 1x4 rotate restriction wave_only
+      array [CR0N AL0S ACR1N CAL1S]
+            alternate_definition [generous] c3x
+   setup 1x4 1x4 restriction wave_only
+      array [CR0N CR3S AL2N AL1S]
+            alternate_definition [stingy] c3x
+   setup 1x4 1x4 restriction wave_only
+      array [CCAL3N AL0S AACR1N CR2S]
 
 call "_natural 3/4 and 3/4" dontshow tag nat34_34
    setup 2x2 dmd rotate restriction wave_only
@@ -11585,14 +11666,14 @@ call "@D thru" a1
 
 call "any hand @D thru" a1
             dont_use_in_nice_resolve
-            neednumber grand_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq cast_off_n4_odd []
+            neednumber grand_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq cast_off_n4_odd [inherit_fractal inherit_gensting]
    seq maybegrandslip_notc3 [inherit_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand grand @D thru" a1
             dont_use_in_nice_resolve
-            neednumber yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq cast_off_n4_odd []
+            neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq cast_off_n4_odd [inherit_fractal inherit_gensting]
    seq maybegrandslip_notc3 [force_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "remake" a2
@@ -11648,53 +11729,77 @@ call "_any hand remake, start with turn @b" dontshow tag any_hand_remake_start_w
             // Actually, left should mean check, but "touch_or_check" isn't right.  Sigh.
             grand_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             left_means_mirror visible_fractions
-   seq armturn_n4 [inherit_gensting inherit_fractal]
+   seq armturn_n4 [inherit_fractal inherit_gensting]
    seq maybegrandslip_notc3 [inherit_grand inherit_yoyo inherit_gensting]
-   seq armturn_n4 [inherit_gensting inherit_fractal insert_number 3 roll_transparent]
+   seq armturn_n4 [inherit_fractal inherit_gensting insert_number 3 roll_transparent]
 
 call "_dmd ctrs arm turn @b" dontshow tag dmdctrsarmturn_n4
-            neednumber fractal_is_inherited yoyo_fractal_numbers
+            neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
+   setup pmd dmd qualifier num 0 dmd_ctrs_mwv
+      array [0 ZM1N 0 ZM3N]
    setup pmd 1x4 qualifier num 1 dmd_ctrs_mwv
       array [0 CR3E 0 AL3W]
+   setup pmd dmd qualifier num 2 dmd_ctrs_mwv
+      array [0 CR3S 0 AL1S]
    setup pmd 1x4 qualifier num 3 dmd_ctrs_mwv
       array [0 CR1W 0 AL1E]
+   setup pmd dmd qualifier num 4 dmd_ctrs_mwv
+      array [0 CR1N 0 AL3N]
    setup dmd 1x4
       array [ZM0N 0 ZM2N 0]
 
 call "_dmd right ctrs arm turn @b" dontshow tag dmdrightctrsarmturn_n4
-            left_means_mirror neednumber fractal_is_inherited yoyo_fractal_numbers
+            left_means_mirror neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
+   setup pmd dmd qualifier num 0 dmd_ctrs_mwv
+      array [0 ZM1N 0 0]
    setup pmd 1x4 qualifier num 1 dmd_ctrs_mwv
       array [0 CR3E 0 0]
+   setup pmd dmd qualifier num 2 dmd_ctrs_mwv
+      array [0 CR3S 0 0]
    setup pmd 1x4 qualifier num 3 dmd_ctrs_mwv
       array [0 CR1W 0 0]
+   setup pmd dmd qualifier num 4 dmd_ctrs_mwv
+      array [0 CR1N 0 0]
    setup dmd 1x4
       array [0 0 ZM2N 0]
 
 call "_waves ctrs arm turn @b" dontshow tag wavectrsarmturn_n4
-            neednumber fractal_is_inherited yoyo_fractal_numbers
+            neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
+   setup 1x4 1x4 qualifier num 0 wave_only
+      array [ZM0N ZM1N ZM2N ZM3N]
    setup 1x4 dmd qualifier num 1 wave_only
       array [ZM0N CR1E ZM2N AL1W]
+   setup 1x4 1x4 qualifier num 2 wave_only
+      array [ZM0N CR3S ZM2N AL1S]
    setup 1x4 dmd qualifier num 3 wave_only
       array [ZM0N CR3W ZM2N AL3E]
+   setup 1x4 1x4 qualifier num 4 wave_only
+      array [ZM0N CR1N ZM2N AL3N]
 
 call "_lines ctrs arm turn @b" dontshow tag linectrsarmturn_n4
-            neednumber fractal_is_inherited yoyo_fractal_numbers
+            neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
+   setup 1x4 1x4 qualifier num 0 none
+      array [ZM0N ZM1N ZM2N ZM3N]
    setup 1x4 dmd qualifier num 1 none
       array [ZM0N CR1E ZM2N AL1W]
+   setup 1x4 1x4 qualifier num 2 none
+      array [ZM0N CR3S ZM2N AL1S]
    setup 1x4 dmd qualifier num 3 none
       array [ZM0N CR3W ZM2N AL3E]
+   setup 1x4 1x4 qualifier num 4 none
+      array [ZM0N CR1N ZM2N AL3N]
 
 call "remake the diamond" a2
             left_means_mirror visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq dmdrightctrsarmturn_n4 [inherit_left inherit_gensting  inherit_fractal insert_number 1]
+   seq dmdrightctrsarmturn_n4 [inherit_left inherit_fractal inherit_gensting insert_number 1]
    seq 1_2_by_left [inherit_left inherit_yoyo inherit_gensting]
-   seq odd_frac_by_right [inherit_left inherit_gensting  inherit_fractal insert_number 3 roll_transparent]
+   seq odd_frac_by_right [inherit_left inherit_fractal inherit_gensting insert_number 3 roll_transparent]
 
 call "any hand remake the diamond" a2
-            visible_fractions fractal_is_inherited
-   seq dmdctrsarmturn_n4 [inherit_fractal insert_number 1]
+            visible_fractions fractal_is_inherited gen_sting_is_inherited
+   seq dmdctrsarmturn_n4 [inherit_fractal inherit_gensting insert_number 1]
    seq trade []
-   seq linectrsarmturn_n4 [inherit_fractal insert_number 3 roll_transparent]
+   seq linectrsarmturn_n4 [inherit_fractal inherit_gensting insert_number 3 roll_transparent]
 
 call "swing the fractions" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -11754,25 +11859,27 @@ call "@D mix" c3a
    seq maybegrandslip_in_lw [inherit_left inherit_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand @D cross" c3x
-            dont_use_in_nice_resolve neednumber grand_is_inherited visible_fractions
-   seq cast_off_n4_odd []
+            dont_use_in_nice_resolve neednumber grand_is_inherited
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq cast_off_n4_odd [inherit_fractal inherit_gensting]
    seq ctrrun [force_cross inherit_grand]
 
 call "any hand @D mix" c3a
             dont_use_in_nice_resolve
-            neednumber grand_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq cast_off_n4_odd [inherit_gensting]
+            neednumber grand_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq cast_off_n4_odd [inherit_fractal inherit_gensting]
    seq ctrrun [force_cross inherit_grand]
    seq maybegrandslip [inherit_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand grand @D cross" c3x
-            dont_use_in_nice_resolve neednumber gen_sting_is_inherited visible_fractions
-   seq cast_off_n4_odd [inherit_gensting]
+            dont_use_in_nice_resolve neednumber fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq cast_off_n4_odd [inherit_fractal inherit_gensting]
    seq ctrrun [force_cross force_grand]
 
 call "any hand grand @D mix" c3a
-            dont_use_in_nice_resolve neednumber yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq cast_off_n4_odd [inherit_gensting]
+            dont_use_in_nice_resolve neednumber yoyo_is_inherited
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq cast_off_n4_odd [inherit_fractal inherit_gensting]
    seq ctrrun [force_cross force_grand]
    seq maybegrandslip [force_grand inherit_yoyo inherit_gensting roll_transparent]
 
@@ -11998,14 +12105,14 @@ call "roll the wave" c4
       array [AL4N AL5N AL7N AL6N CR3S CR2S CR0S CR1S]
 
 call "_relay the shadow part 2" dontshow tag relay_shadow_part_2
-            step_to_wave fractal_is_inherited left_means_touch_or_check
-   checkpoint fanthetop [inherit_fractal]
-              hingenspread_for_relay_shad [insert_number 3 inherit_fractal conc_force_columns]
+            step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
+   checkpoint fanthetop [inherit_fractal inherit_gensting]
+              hingenspread_for_relay_shad [insert_number 3 inherit_fractal inherit_gensting conc_force_columns]
 
 call "_relay the shadow part 3" dontshow tag relay_shadow_part_3
-            fractal_is_inherited
-   crossconc numberbingo [inherit_fractal insert_number 1]
-             hingenspread_for_relay_shad [insert_number 1 inherit_fractal conc_force_lines]
+            fractal_is_inherited gen_sting_is_inherited
+   crossconc numberbingo [inherit_fractal inherit_gensting insert_number 1]
+             hingenspread_for_relay_shad [insert_number 1 inherit_fractal inherit_gensting conc_force_lines]
 
 call "_finish relay the shadow, but the @6 criss cross it" dontshow tag fin_relay_shadow_but_xx
             step_to_wave left_means_touch_or_check
@@ -12018,8 +12125,8 @@ call "relay the shadow" c1
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
             left_means_touch_or_check first_part_visible
    seq trade_for_8_person_call [inherit_yoyo inherit_gensting]
-   seq relay_shadow_part_2 [inherit_fractal]
-   seq relay_shadow_part_3 [inherit_fractal]
+   seq relay_shadow_part_2 [inherit_fractal inherit_gensting]
+   seq relay_shadow_part_3 [inherit_fractal inherit_gensting]
 
 call "relay the shadow but the @6 criss cross it" c2
             step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan
@@ -12231,9 +12338,9 @@ call "_relay your pleasure part 2a" dontshow tag relay_pleasure_2a
       array [CM1N CM2S AM1S AM2N]
 
 call "_relay your pleasure part 2" dontshow tag relay_pleasure_2
-            step_to_wave left_means_touch_or_check fractal_is_inherited
+            step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
    checkpoint relay_pleasure_2a []
-              cast_off_n4_with_warn [insert_number 3 inherit_fractal
+              cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting
                                      conc_force_columns suppress_elongation_warnings]
 
 call "_relay your pleasure part 3" dontshow tag relay_pleasure_3
@@ -12243,7 +12350,7 @@ call "relay your pleasure" c4a
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             can_be_fan left_means_touch_or_check first_part_visible
    seq trade [inherit_yoyo inherit_gensting]
-   seq relay_pleasure_2 [inherit_fractal]
+   seq relay_pleasure_2 [inherit_fractal inherit_gensting]
    seq relay_pleasure_3 [roll_transparent]
 
 call "shake and rattle" c3
@@ -14091,11 +14198,12 @@ call "circle 4 with bogus flow" dontshow tag circle4flow
 
 call "circle by @b X @b" c1
             reverse_means_mirror need_two_numbers
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             single_is_inherited singlefile_is_inherited twisted_is_inherited
             nxn_is_inherited bigmatrix_is_inherited
    seq circle4_n [inherit_reverse inherit_singlefile inherit_single inherit_twisted
                 inherit_nxn inherit_bigmatrix]
-   seq lftble_touch_n_4 [inherit_left inherit_bigmatrix shift_one_number]
+   seq lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting inherit_bigmatrix shift_one_number]
 
 call "circle by @b X @0" c1
             reverse_means_mirror neednumber single_is_inherited singlefile_is_inherited
@@ -14110,7 +14218,8 @@ call "_touch tone 0 X 0" dontshow tag touchtone00
 
 call "_finish touch tone @b X @b" dontshow tag fintouchtone
             need_two_numbers yoyo_is_inherited gen_sting_is_inherited
-   conc armturn_n4_yoyo_optional [inherit_yoyo inherit_gensting] armturn_n4_yoyo_optional [inherit_yoyo inherit_gensting suppress_elongation_warnings shift_one_number]
+   conc armturn_n4_yoyo_optional [inherit_yoyo inherit_gensting]
+        armturn_n4_yoyo_optional [inherit_yoyo inherit_gensting suppress_elongation_warnings shift_one_number]
 
 call "_finish touch tone @0 X @b" dontshow tag fintouchtone_any
             neednumber yoyo_is_inherited gen_sting_is_inherited
@@ -14557,8 +14666,8 @@ call "curli-cross the top" c4
             rear_back_from_r_wave grand_is_inherited fractal_is_inherited gen_sting_is_inherited
             left_means_mirror first_part_visible
    seq curlique [inherit_left allow_forced_mod]
-   seq armturn_n4 [insert_number 1 inherit_gensting inherit_fractal]
-   seq fanthetop [inherit_grand inherit_gensting inherit_fractal]
+   seq armturn_n4 [insert_number 1 inherit_fractal inherit_gensting]
+   seq fanthetop [inherit_grand inherit_fractal inherit_gensting]
 
 call "cross and turn" c1
             reverse_means_mirror
@@ -15314,20 +15423,20 @@ call "trade the diamond but @0" c3
    seq sglctrtogetheranything []
 
 call "you all" c4 tag youall
-            left_means_mirror
-   singleconc_together hinge [inherit_left] uturnback []
+            left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   singleconc_together hinge [inherit_left inherit_fractal inherit_gensting] uturnback []
 
 call "6X2 you all" c4
-            fudge_to_q_tag left_means_mirror
-   conc2_6 hinge [or_anycall inherit_left] uturnback []
+            fudge_to_q_tag left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   conc2_6 hinge [or_anycall inherit_left inherit_fractal inherit_gensting] uturnback []
 
 call "reverse the diamond" c4
    conc_or_diamond_line tradethewave [] uturnback []
 
 call "beep beep" c4
-            visible_fractions left_means_mirror diamond_is_legal
-   seq hinge [allow_forced_mod inherit_left inherit_diamond]
-   seq youall [inherit_left inherit_diamond]   /* The "diamond" is of course illegal. */
+            visible_fractions left_means_mirror diamond_is_legal fractal_is_inherited gen_sting_is_inherited
+   seq hinge [allow_forced_mod inherit_left inherit_diamond inherit_fractal inherit_gensting]
+   seq youall [inherit_left inherit_diamond inherit_fractal inherit_gensting]   // The "diamond" is of course illegal.
 
 call "ends cut in" c4
    setup 2x4 2x4
@@ -15360,20 +15469,20 @@ call "centers cut out" c4
              CR6S CR11S CR15S ZM10N CR13S CR0S AL12S ZM12N]
 
 call "relay the diamond" c4a
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan left_means_touch_or_check
-            bigmatrix_is_inherited fractal_is_inherited first_part_visible
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            can_be_fan left_means_touch_or_check bigmatrix_is_inherited first_part_visible
    seq trade [inherit_yoyo inherit_gensting inherit_bigmatrix]
-   seq startchcircin [insert_number 3 inherit_bigmatrix inherit_fractal]
+   seq startchcircin [insert_number 3 inherit_bigmatrix inherit_fractal inherit_gensting]
    seq ctrs_slip [inherit_bigmatrix]
    seq ctrstrade [inherit_bigmatrix]
    seq diamondcirc [inherit_bigmatrix]
-   seq ctrs_cast_3_4_withplainmod [inherit_bigmatrix inherit_fractal]
+   seq ctrs_cast_3_4_withplainmod [inherit_bigmatrix inherit_fractal inherit_gensting]
 
 call "relay the diamond but @m" c4a
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan left_means_touch_or_check
-            bigmatrix_is_inherited fractal_is_inherited first_part_visible
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            can_be_fan left_means_touch_or_check bigmatrix_is_inherited first_part_visible
    seq trade [inherit_yoyo inherit_gensting inherit_bigmatrix]
-   seq startchcircin [insert_number 3 inherit_bigmatrix inherit_fractal]
+   seq startchcircin [insert_number 3 inherit_bigmatrix inherit_fractal inherit_gensting]
    seq ctrs_slip [inherit_bigmatrix]
    seq ctrstrade [inherit_bigmatrix]
    seq diamondcirc [inherit_bigmatrix]
@@ -15385,7 +15494,7 @@ call "_gamut inner part 2" dontshow tag gamutinner2
 
 call "_gamut part 1" dontshow tag gamut1
             fractal_is_inherited gen_sting_is_inherited
-   conc armturn_n4 [insert_number 3 inherit_gensting inherit_fractal]
+   conc armturn_n4 [insert_number 3 inherit_fractal inherit_gensting]
         circulate [conc_demand_lines conc_force_spots]
 
 call "_gamut part 2" dontshow tag gamut2
@@ -15808,6 +15917,12 @@ call "wipe out" c4a
    setup 2x4 qtag rotate
       // Only the ends can do it yoyo, so you must say "ends work yoyo, wipe out".
       array [CCAL6S 0 0 AACR6N AACR3N 0 0 CCAL3S]
+            alternate_definition [generous] c3x
+   setup 2x4 qtag rotate
+      array [CCAL6S 0 0 AACR6N AACR3N 0 0 CCAL3S]
+            alternate_definition [stingy] c3x
+   setup 2x4 qtag rotate
+      array [CCAL7N 0 0 AACR7S AACR2S 0 0 CCAL2N]
             alternate_definition [single] c4
    setup 1x4 1x4
       array [CCAL3N CM2S AACR1N AM0S]
@@ -16000,6 +16115,15 @@ call "_hinge with interlock" dontshow tag hinge_w_intlk
       preds "???"
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always               [0    AL1S]
+            alternate_definition [fractal] c4
+   setup 1x2 1x2 rotate restriction forbidden wave_only
+      array [CR1S AL1N]
+            alternate_definition [generous] c3x
+   setup 1x2 1x2 restriction forbidden wave_only
+      array [CR1S AL0S]
+            alternate_definition [stingy] c3x
+   setup 1x2 1x2 restriction forbidden wave_only
+      array [ZM0N ZM1N]
             alternate_definition [interlocked] c4a
    setup 2x2 1x4 rotate restriction forbidden not_tboned
       preds "???"
@@ -16014,17 +16138,17 @@ call "_hinge and centers snake" dontshow tag hinge_n_snake
          if always               [   0 AL1E AL2S    0]
 
 call "_cross to dmd part 2" dontshow tag cross_to_dmd_2
-            left_means_mirror intlk_is_inherited
-   conc hinge_w_intlk [inherit_left inherit_intlk] nullcall []
+            left_means_mirror intlk_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc hinge_w_intlk [inherit_left inherit_intlk inherit_fractal inherit_gensting] nullcall []
 
 call "_cross to hrglass part 2" dontshow tag cross_to_hrg_2
             left_means_mirror
    conc hinge_n_snake [inherit_left] nullcall []
 
 call "cross to a@I diamond" c4a
-            left_means_mirror intlk_is_inherited
+            left_means_mirror intlk_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq cross_to_dmd_1 []
-   seq cross_to_dmd_2 [roll_transparent inherit_left inherit_intlk]
+   seq cross_to_dmd_2 [roll_transparent inherit_left inherit_intlk inherit_fractal inherit_gensting]
 
 call "cross to an hourglass" c4a
             left_means_mirror
@@ -16042,8 +16166,8 @@ call "_cross to wv part 2" dontshow tag cross_to_wv_2
       array [ZM7N CR5S 0 0 AL7S ZM5N 0 0]
 
 call "cross to a wave" c4
-            left_means_mirror
-   seq ctrhinge [inherit_left]
+            left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   seq ctrhinge [inherit_left inherit_fractal inherit_gensting]
    seq cross_to_wv_2 []
 
 call "presto" c4a
@@ -16429,12 +16553,12 @@ call "@0 the boat but @m" plus
 
 call "_confidence 1" dontshow tag confidence_1
             left_means_mirror yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   conc hinge_with_warn [inherit_left inherit_yoyo inherit_gensting inherit_fractal]
+   conc hinge_with_warn [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
         circulate [force_half]
 
 call "_confidence 2" dontshow tag confidence_2
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   conc2_6 hinge_with_warn [inherit_yoyo inherit_gensting inherit_fractal] nullcall []
+   conc2_6 hinge_with_warn [inherit_yoyo inherit_fractal inherit_gensting] nullcall []
 
 call "_confidence 3" dontshow tag confidence_3
    setup crosswave 2x4 qualifier ctrwv_end2fl
@@ -16506,7 +16630,9 @@ call "_lazy half circ for quarterdeucey" dontshow tag half_circ_for_qd
 
 call "_centers @b / ends half-circ" dontshow tag qd2in
             neednumber bigmatrix_is_inherited
-   maybematrix_conc_star armturn_n4 [] circulate [force_half conc_demand_lines]
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   maybematrix_conc_star armturn_n4 [inherit_yoyo inherit_gensting inherit_fractal]
+                         circulate [force_half conc_demand_lines]
 
 call "_centers @b / move into star" dontshow tag newqd2in
             neednumber bigmatrix_is_inherited
@@ -16584,7 +16710,7 @@ call "swing chain the star@S" c4
    seq trade [inherit_yoyo inherit_gensting]
    seq newquarterdeucey2 [inherit_bigmatrix insert_number 1]
    seq newturnstarn_endsnothing [inherit_bigmatrix insert_number 2]
-   seq newquarterdeucey4 [inherit_bigmatrix insert_number 1]
+   seq newquarterdeucey4 [inherit_bigmatrix inherit_gensting insert_number 1]
 
 call "_finish linear flow" dontshow tag fin_lin_flow
    setup 2x4 2x4
@@ -16668,12 +16794,12 @@ call "@v er's flow but criss cross it" c4a
    seq fin_xxlin_flow [inherit_single inherit_mxn inherit_yoyo inherit_gensting]
 
 call "eroo" c4
-            fractal_is_inherited
+            fractal_is_inherited gen_sting_is_inherited
    // This is inconsistent with similar suffixes like delight or dream --
    // the ends are considered to have already quartered to handhold direction,
    // whereas the other calls assume that they have stepped straight ahead.
    // But if you use the call "extend eroo", the right thing will happen.
-   conc cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   conc cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
         circulate [conc_demand_lines conc_force_spots]
 
 call "_eroo" dontshow tag eroo
@@ -16710,7 +16836,7 @@ call "swing back the windmill" dontshow tag swingbackwindmill
    seq swing [inherit_yoyo inherit_gensting allow_forced_mod]
    seq any_hand_slip [roll_transparent]
    seq any_hand_slip [roll_transparent]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal allow_forced_mod]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting allow_forced_mod]
 
 call "delight" c3a tag delight
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -18045,10 +18171,10 @@ call "@0 the axle but @m" c2
    seq ctrs_mandatory_2ndcall [roll_transparent]
 
 call "@0 the axle, cast off @b" c1
-            dont_use_in_resolve neednumber
+            dont_use_in_resolve neednumber gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
    seq axle1 []
-   seq cast_off_n4_with_warn []
+   seq cast_off_n4_with_warn [inherit_gensting]
    seq ctrstrade [allow_forced_mod roll_transparent]
 
 // This has a special interpretation of "grand single" -- center 6 do the call in three pairs.
@@ -18224,12 +18350,12 @@ call "pass and roll your criss cross neighbor" c2
 
 call "pass and roll the axle" c4
             rear_back_from_r_wave first_part_visible
-            left_means_mirror twisted_is_inherited magic_is_inherited
+            left_means_mirror twisted_is_inherited magic_is_inherited gen_sting_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
    seq fin_passnroll_something [inherit_left]
    seq natstepthru []
    seq axle1 []
-   seq cast_off_n4_with_warn [allow_forced_mod insert_number 2]
+   seq cast_off_n4_with_warn [allow_forced_mod insert_number 2 inherit_gensting]
    seq ctrstrade [allow_forced_mod roll_transparent]
 
 call "pass and roll your leader" c3a
@@ -19444,28 +19570,39 @@ call "walk out to a column" c4a
       array [CM6E CM1E AM5E AM2E AL7E ZM7W ZM0W CR0E]
 
 call "_flip away for disband" dontshow tag disband2_ctr_to_end
-   setup 2x2 2x2      /* This is legal in a 2x2, of course, */
+   setup 2x2 2x2      // This is legal in a 2x2, of course,
       array [AL0S CR1S CR2S AL3S]
-   setup 1x2 1x2      /* and in a 1x2, in case we do a disband from a bone6, */
+   setup 1x2 1x2      // and in a 1x2, in case we do a disband from a bone6,
       array [AL0S CR1S]
-   setup 1x4 1x4      /* but NOT in a 1x4. */
+   setup 1x4 1x4      // but NOT in a 1x4.
       array [0 0 0 0]
 
 call "_ends start disband" dontshow tag ends_disbp1
-            visible_fractions
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq zoomok [force_half]
-   seq armturn_n4 [insert_number 1]
+   seq armturn_n4 [insert_number 1 inherit_fractal inherit_gensting]
 
 call "_disband part 1" dontshow tag disband1
-   /* By not putting a "conc_demand_columns" or "conc_demand_lines"
-      on this, we allow the call to be done from either setup. */
-   conc6p_or_normal splitctrrot [] ends_disbp1 [conc_force_columns endscando]
+   // By not putting a "conc_demand_columns" or "conc_demand_lines"
+   // on this, we allow the call to be done from either setup.
+            fractal_is_inherited gen_sting_is_inherited
+   conc6p_or_normal splitctrrot [] ends_disbp1 [inherit_fractal inherit_gensting conc_force_columns endscando]
 
 call "_disband part 2" dontshow tag disband2
    crossconc6p_or_normal disband_new_centers [] disband2_ctr_to_end [conc_force_lines]
 
 call "_disperse part 2" dontshow tag disperse2
    crossconc6p_or_normal disband_new_centers [] trade [conc_force_lines]
+
+call "_new centers disband" dontshow tag disband_new_centers
+   setup 2x2 2x2 qualifier wave_only
+      array [CM1S AM0S ZM1N ZM0N]
+   setup 2x2 2x2 restriction unusual alwaysfail
+      array [C1S A0S Z1N Z0N]
+            alternate_definition [magic] c3
+   simple_funny
+   setup 2x2 2x2 restriction wave_only
+      array [C0S A1S Z0N Z1N]
 
 call "disband" c3
    setup 1x4 1x4
@@ -19479,13 +19616,14 @@ call "disband" c3
    setup 4x4 4x4 rotate    // Need to put in restrictions, if anyone cares.
       array [CM9W CM11W CM7W ACR13E CM2W ACR0E CAL12W ACR14E
              AM9E AM11E AM7E CAL13W AM2E CAL0W ACR12E CAL14W]
-            visible_fractions
-   seq disband1 []
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq disband1 [inherit_fractal inherit_gensting]  // Generous/stingy won't actually work.
    seq disband2 []
 
 call "disperse" c4x
-   seq disband1 []
-   seq disperse2 []
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
+   seq disband1 [inherit_fractal inherit_gensting]
+   seq disperse2 []   // We're just not going to deal with fractal/generous/stingy.
 
 call "_start wind the bobbin" dontshow tag startstreaking
    setup 2x2 1x4 restriction unusual wave_only
@@ -20308,16 +20446,6 @@ call "box circulate #2 with 3x3" dontshow tag box_circ_2_w_3x3
    setup 4x2 2x4 restriction forbidden wave_only
       array [ZM2N ZM3N CR4S CM5S AM2S AL3S ZM4N ZM5N]
 
-call "_new centers disband" dontshow tag disband_new_centers
-   setup 2x2 2x2 qualifier wave_only
-      array [CM1S AM0S ZM1N ZM0N]
-   setup 2x2 2x2 restriction unusual alwaysfail
-      array [C1S A0S Z1N Z0N]
-            alternate_definition [magic] c3
-   simple_funny
-   setup 2x2 2x2 restriction wave_only
-      array [C0S A1S Z0N Z1N]
-
 call "box circulate 1-1/2" mainstream tag box_circ_15
             dont_use_in_resolve take_right_hands
    setup 2x2 dmd really_want_diamond rotate
@@ -20834,20 +20962,18 @@ call "fly away, new centers @0" c3x
    crossconc flyend [conc_demand_lines] flyback [conc_demand_lines conc_force_columns]
 
 call "_ends detour" dontshow tag endsdetour
-            visible_fractions
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq zoom [force_half]
-   seq armturn_14 []
-// Old definition:
-//   setup 2x2 2x2 restriction forbidden peelable_box
-//      array [AL3E CR2W CR1E AL0W]
+   seq armturn_n4 [insert_number 1 inherit_fractal inherit_gensting]
 
 call "_ends shadow box" dontshow tag endsshadow
    setup 2x2 2x2 restriction forbidden peelable_box
       array [AL0W CR1E CR2W AL3E]
 
 call "detour" c2 tag detour
+            fractal_is_inherited gen_sting_is_inherited
    conc ctr_rot [conc_force_otherway]
-        endsdetour [conc_demand_lines conc_force_spots endscando]
+        endsdetour [inherit_fractal inherit_gensting conc_demand_lines conc_force_spots endscando]
 
 call "team up" c3a
    // The "force columns" makes the hingers stay together.
@@ -21056,10 +21182,10 @@ call "snap the lock" c3a
    seq finsnaplock [inherit_funny inherit_single inherit_mxn inherit_nxn inherit_bigmatrix]
 
 call "_ctrs fan chain thru" dontshow tag ctrs_fanchainthru
-            fractal_is_inherited
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+            fractal_is_inherited gen_sting_is_inherited
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
    seq any_hand_slip [roll_transparent]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
 call "_ends fan tag the deucey part 2" dontshow tag ends_fantag2
    seq partnertag []
@@ -21208,9 +21334,9 @@ call "trade, should be parallel waves" dontshow tag tradencheckparwaves
    seq trade_for_8_person_call [inherit_half inherit_yoyo inherit_gensting inherit_bigmatrix]
 
 call "_check par lines and fan back" dontshow tag checkparlinesnfanback
-            fractal_is_inherited
+            fractal_is_inherited gen_sting_is_inherited
    seq checkparlines [roll_transparent]
-   seq fanback [inherit_fractal]
+   seq fanback [inherit_fractal inherit_gensting]
 
 call "_rims trade part 2" dontshow tag rims_trade_2
             yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
@@ -21374,7 +21500,7 @@ call "_relay the top part 2" dontshow tag relaytop2
 // messages.  So we show it as "first cast off 3/4".
 call "first cast off 3/4" dontshow tag first_cast_off_34
             fractal_is_inherited gen_sting_is_inherited
-   seq armturn_n4 [insert_number 3 inherit_gensting inherit_fractal]
+   seq armturn_n4 [insert_number 3 inherit_fractal inherit_gensting]
 
 call "@1motivate@S" a2
             bigmatrix_is_inherited visible_fractions fractal_is_inherited gen_sting_is_inherited
@@ -21440,7 +21566,7 @@ call "relay the top@S but @m" c1
 call "@9-@9-@9-@9 relay the top" c4
             step_to_wave left_means_touch_or_check visible_fractions
             need_four_numbers bigmatrix_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_gensting inherit_fractal]
+   seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_fractal inherit_gensting]
    seq quarterdeucey2 [inherit_bigmatrix shift_one_number]
    seq turndmdn_endstrade [inherit_bigmatrix shift_two_numbers]
    seq quarterdeucey4 [inherit_bigmatrix shift_three_numbers]
@@ -21449,21 +21575,21 @@ call "@b cast and relay@S" c3
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             can_be_fan left_means_touch_or_check
             first_part_visible neednumber bigmatrix_is_inherited
-   seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_gensting inherit_fractal]
+   seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_fractal inherit_gensting]
    seq checkline [inherit_bigmatrix roll_transparent]
    seq relaytop2 [inherit_bigmatrix]
    seq turndmdn_endstrade [inherit_bigmatrix inherit_yoyo inherit_gensting]
    seq finishwithplainmod [inherit_bigmatrix inherit_fractal inherit_gensting]
 
 call "fan chain the gears@S" c3 tag fan_chain_gears
-            step_to_wave
-   seq checkparlinesnfanback []
-   seq veryctr2trade []
-   seq turnstarn_fudge [insert_number 3]
-   seq veryctr2trade []
+            step_to_wave fractal_is_inherited gen_sting_is_inherited
+   seq checkparlinesnfanback [inherit_fractal inherit_gensting]
+   seq veryctr2trade [inherit_gensting]  // Of course, anyone who tried to apply generous/stingy here would lose.
+   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq veryctr2trade [inherit_gensting]
    // The final ends U-turn away, not toward the center.
    // Callerlab plus definitions, page 6.
-   seq ctrarmturn_n4_utaway [insert_number 3]
+   seq ctrarmturn_n4_utaway [inherit_fractal inherit_gensting insert_number 3]
 
 // Is this legal from a tidal wave?  Some people think so, based on their careful reading
 // of the Callerlab definition.  The Callerlab definition says that it starts in parallel
@@ -21474,25 +21600,25 @@ call "fan chain the gears@S" c3 tag fan_chain_gears
 // trading doesn't work.  If it had been written as "center 2", it would be OK.
 // Because of this, this is marked "controversial" if called from a tidal setup.
 call "spin chain the gears@S" plus
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
             left_means_touch_or_check first_part_visible visible_fractions
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
-   seq checkparlinesnfanback []
-   seq veryctr2trade []
-   seq turnstarn_fudge [insert_number 3]
-   seq veryctr2trade []
+   seq checkparlinesnfanback [inherit_fractal inherit_gensting]
+   seq veryctr2trade [inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq veryctr2trade [inherit_gensting]
    // The final ends U-turn away, not toward the center.
    // Callerlab plus definitions, page 6
-   seq ctrarmturn_n4_utaway [insert_number 3]
+   seq ctrarmturn_n4_utaway [inherit_fractal inherit_gensting insert_number 3]
 
 call "spin chain the gears@S but @m" c1
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
             left_means_touch_or_check first_part_visible visible_fractions
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
-   seq checkparlinesnfanback []
-   seq veryctr2trade []
-   seq turnstarn_fudge [insert_number 3]
-   seq veryctr2trade []
+   seq checkparlinesnfanback [inherit_fractal inherit_gensting]
+   seq veryctr2trade [inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq veryctr2trade [inherit_gensting]
    seq ctr_but_utaway []
 
 call "@9-@9-@9-@9 spin chain the gears" c3x
@@ -21500,36 +21626,36 @@ call "@9-@9-@9-@9 spin chain the gears" c3x
             need_four_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq armturn_n4 [inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [shift_one_number]
-   seq veryctr2trade []
-   seq turnstarn_fudge [shift_two_numbers]
-   seq veryctr2trade []
-   seq ctrarmturn_n4_utaway [shift_three_numbers]
+   seq veryctr2trade [inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal shift_two_numbers]
+   seq veryctr2trade [inherit_gensting]
+   seq ctrarmturn_n4_utaway [inherit_yoyo inherit_fractal inherit_gensting shift_three_numbers]
 
 call "swing chain the gears@S" c4
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
             left_means_touch_or_check first_part_visible
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
-   seq youall []
-   seq veryctr2trade []
-   seq turnstarn_fudge [insert_number 1]
-   seq veryctr2trade []
-   seq ctrarmturn_n4_utaway [insert_number 1]
+   seq youall [inherit_fractal inherit_gensting]
+   seq veryctr2trade [inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal insert_number 1]
+   seq veryctr2trade [inherit_gensting]
+   seq ctrarmturn_n4_utaway [inherit_yoyo inherit_gensting insert_number 1]
 
 call "swing chain the gears@S but @m" c4
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
             left_means_touch_or_check first_part_visible
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
-   seq youall []
-   seq veryctr2trade []
-   seq turnstarn_fudge [insert_number 1]
-   seq veryctr2trade []
+   seq youall [inherit_fractal inherit_gensting]
+   seq veryctr2trade [inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal insert_number 1]
+   seq veryctr2trade [inherit_gensting]
    seq ctr_but_utaway []
 
 call "fan chain and exchange the gears@S" c3 tag fan_chain_exch_gears
-            step_to_wave left_means_touch_or_check
-   seq checkparlinesnfanback []
-   seq veryctr2trade []
-   seq turnstarn_fudge [insert_number 3]
+            step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
+   seq checkparlinesnfanback [inherit_fractal inherit_gensting]
+   seq veryctr2trade [inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal insert_number 3]
    seq exchdmd [insert_number 3]
    // Yeah, this gets the roll information wrong.  Tough.
    seq flipdiamond [force_intlk no_check_mod_level]
@@ -21542,23 +21668,23 @@ call "spin chain and exchange the gears@S" plus
    seq fan_chain_exch_gears []
 
 call "fan chain and circulate the gears@S" c4a
-            step_to_wave left_means_touch_or_check
-   seq checkparlinesnfanback []
-   seq lines_slip_thru []
-   seq turnstarn_fudge [insert_number 3]
-   seq veryctr2trade []
-   seq ctrarmturn_n4_utaway [insert_number 3]
+            step_to_wave left_means_touch_or_check yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq checkparlinesnfanback [inherit_fractal inherit_gensting]
+   seq lines_slip_thru [inherit_yoyo inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq veryctr2trade [inherit_gensting]
+   seq ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
    seq ends_circ []
 
 call "spin chain and circulate the gears@S" c4a
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
             left_means_touch_or_check first_part_visible
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
-   seq checkparlinesnfanback []
-   seq lines_slip_thru []
-   seq turnstarn_fudge [insert_number 3]
-   seq veryctr2trade []
-   seq ctrarmturn_n4_utaway [insert_number 3]
+   seq checkparlinesnfanback [inherit_fractal inherit_gensting]
+   seq lines_slip_thru [inherit_yoyo inherit_gensting]
+   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq veryctr2trade [inherit_gensting]
+   seq ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
    seq ends_circ []
 
 call "scoot back" mainstream tag scootback
@@ -22906,25 +23032,25 @@ call "_wave chain react part 1" dontshow tag wvchreact_1
       array [7N 0W 6W 7S 2W 5W 1W 4W]
 
 call "_chain react part 2" dontshow tag chreact_2
-            left_means_mirror fractal_is_inherited
-   ckpt_star nullcall [] hinge [inherit_left inherit_fractal]
+            left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   ckpt_star nullcall [] hinge [inherit_left inherit_fractal inherit_gensting]
 
 call "_wave chain react part 2" dontshow tag wvchreact_2
-            fractal_is_inherited
-   ckpt_star nullcall [] armturn_n4 [inherit_fractal insert_number 1]
+            fractal_is_inherited gen_sting_is_inherited
+   ckpt_star nullcall [] armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
 
 call "chain reaction@S" a1
             first_part_visible left_means_mirror cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq chreact_1 [inherit_cross]
-   seq chreact_2 [inherit_left inherit_fractal]
-   seq turndmdn_endstrade [inherit_fractal insert_number 1]
+   seq chreact_2 [inherit_left inherit_fractal inherit_gensting]
+   seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "chain reaction@S but @m" a1
-            first_part_visible left_means_mirror cross_is_inherited
+            first_part_visible left_means_mirror cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq chreact_1 [inherit_cross]
-   seq chreact_2 [inherit_left]
-   seq turndmdn_endstrade [insert_number 1]
+   seq chreact_2 [inherit_left inherit_fractal inherit_gensting]
+   seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithplainmodbut2nd []
 
 /* We don't put in "inherit_left" in the hinge of the chain reaction of these
@@ -22938,7 +23064,7 @@ call "scoot@C reaction@S" c3a
             first_part_visible cross_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq scootbacktowave [inherit_yoyo inherit_gensting]
    seq chreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
@@ -22947,7 +23073,7 @@ call "cloverleaf turn@C reaction@S" c4
    seq clovturn1 []
    seq clovturn2wv []
    seq chreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
@@ -22955,7 +23081,7 @@ call "scatter scoot@C reaction@S" c3
             cross_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq fudgyscatscoot [inherit_yoyo inherit_gensting]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
@@ -22963,7 +23089,7 @@ call "scoot chain thru@C reaction@S" c3a
             cross_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq fudgyscootchainthru [inherit_yoyo inherit_gensting]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
@@ -22971,7 +23097,7 @@ call "scatter scoot chain thru@C reaction@S" c3
             cross_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq fudgyscatscootchainthru [inherit_yoyo inherit_gensting]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
@@ -22982,18 +23108,18 @@ call "@v@C reaction@S" c3a
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq strictboxyscootback [inherit_fast]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "@v@C reaction@S but @m" c3a
             first_part_visible left_means_mirror
-            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited
+            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited gen_sting_is_inherited
             fast_is_inherited
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq strictboxyscootback [inherit_fast]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithplainmodbut2nd []
 
@@ -23003,17 +23129,17 @@ call "@v and scatter@C reaction@S" c3
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "@v and scatter@C reaction@S but @m" c3
             first_part_visible left_means_mirror
-            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited
+            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithplainmodbut2nd []
 
@@ -23025,19 +23151,19 @@ call "@v chain thru@C reaction@S" c3a
    seq strictboxyscootback [inherit_fast]
    seq fixscootchainthru [inherit_fast]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "@v chain thru@C reaction@S but @m" c3a
             first_part_visible left_means_mirror
-            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited
+            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited gen_sting_is_inherited
             fast_is_inherited
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq strictboxyscootback [inherit_fast]
    seq fixscootchainthru [inherit_fast]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithplainmodbut2nd []
 
@@ -23047,17 +23173,17 @@ call "@v chain thru and scatter@C reaction@S" c3
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq scatscootchainthru []
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "@v chain thru and scatter@C reaction@S but @m" c3
             first_part_visible left_means_mirror
-            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited
+            cross_is_inherited singlefile_is_inherited revert_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq scatscootchainthru []
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithplainmodbut2nd []
 
@@ -23070,7 +23196,7 @@ call "trans@j cross chain re@laction@S" c3x
             magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq transfer [inherit_magic inherit_fractal]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 [inherit_fractal]
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
    // This definition can't deal with everyone being #1 and #2
@@ -23081,42 +23207,42 @@ call "trans@j cross chain re@laction@S" c3x
    seq trans_nothing [inherit_magic inherit_fractal]
    seq extend_1_to_2 []
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 [inherit_fractal]
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "trans@j cross chain re@laction@S but @m" c3x
-            magic_is_inherited cross_is_inherited fractal_is_inherited
+            magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq transfer [inherit_magic inherit_fractal]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 [inherit_fractal]
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
-   seq finishwithplainmodbut2nd [inherit_fractal]
+   seq finishwithplainmodbut2nd []
    // This definition can't deal with everyone being #1 and #2
    // in the column, but has the first part visible.
    // (It makes no sense to have the cast 3/4 in the middle be
    // a recognizable part if no one is doing it.)
-            first_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited
+            first_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq trans_nothing [inherit_magic inherit_fractal]
    seq extend_1_to_2 []
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 [inherit_fractal]
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
-   seq finishwithplainmodbut2nd [inherit_fractal]
+   seq finishwithplainmodbut2nd []
 
 call "open up @jcross chain @lreaction@S" c4
             magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq openup [inherit_magic]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "open up @jcross chain @lreaction@S but @m" c4
-            magic_is_inherited cross_is_inherited
+            magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq openup [inherit_magic]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithplainmodbut2nd []
 
@@ -23124,15 +23250,15 @@ call "triple play @jcross chain @lreaction@S" c4
             magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq tripleplay [inherit_magic]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
 call "triple play @jcross chain @lreaction@S but @m" c4
-            magic_is_inherited cross_is_inherited
+            magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq tripleplay [inherit_magic]
    seq wvchreact_1 [inherit_cross]
-   seq wvchreact_2 []
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithplainmodbut2nd []
 
@@ -23525,7 +23651,7 @@ call "@0 the@C lock" c3a
    seq nullcall [mandatory_anycall]
    seq lockit [inherit_cross inherit_fractal]
 
-call "hinge the top" c3a
+call "hinge the top" c3x
             fractal_is_inherited visible_fractions
    seq hinge [inherit_fractal]
    seq fanthetop [inherit_fractal]
@@ -23570,32 +23696,32 @@ call "@0 'em up but @m" c4
    seq lockemup4but []
 
 call "@2split @3the difference" c4a
-            visible_fractions funny_is_inherited fractal_is_inherited
+            visible_fractions funny_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq box_circ [or_anycall inherit_funny]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
    seq any_hand_slip [allow_forced_mod]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
 call "split trade the difference" c4a
-            visible_fractions funny_is_inherited fractal_is_inherited
+            visible_fractions funny_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq split_trade_circ [inherit_funny]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
    seq any_hand_slip [allow_forced_mod]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
 call "@0 the difference" c4a
-            dont_use_in_resolve visible_fractions fractal_is_inherited
+            dont_use_in_resolve visible_fractions fractal_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
    seq any_hand_slip [allow_forced_mod]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
 call "the difference" c4a
-            visible_fractions yoyo_is_inherited gen_sting_is_inherited diamond_is_legal
-            fractal_is_inherited grand_is_inherited
-   seq cast_off_n4_with_warn [insert_number 3 inherit_diamond inherit_fractal]
+            visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            diamond_is_legal grand_is_inherited
+   seq cast_off_n4_with_warn [insert_number 3 inherit_diamond inherit_fractal inherit_gensting]
    seq maybegrandslip [inherit_grand inherit_yoyo inherit_gensting inherit_diamond allow_forced_mod]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_diamond inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_diamond inherit_fractal inherit_gensting]
 
 call "contour the line" c4
             left_means_mirror single_is_inherited
@@ -23751,7 +23877,8 @@ call "bits and pieces but @m" c4a
    conc c_bits_pieces_but [inherit_yoyo inherit_gensting] two_o_circs_and_trade [inherit_yoyo inherit_gensting endscando]
 
 call "_fascinate part 1" dontshow tag fascinate1
-   conc_to_outer_dmd nat34thru [] box_circ_15 [conc_demand_lines]
+            fractal_is_inherited gen_sting_is_inherited
+   conc_to_outer_dmd nat34thru [inherit_fractal inherit_gensting] box_circ_15 [conc_demand_lines]
 
 call "_finish fascinat@pe@q@ning@o@t" dontshow tag fascinate2
    conc_no31dwarn diamond_ends_isolate []
@@ -23762,15 +23889,18 @@ call "_finish fascinating @0" dontshow tag fascinating2
         nullcall [mandatory_anycall conc_concentric_rules suppress_elongation_warnings]
 
 call "fascinat@pe@q@ning@o@t" c2
-   seq fascinate1 []
+            fractal_is_inherited gen_sting_is_inherited
+   seq fascinate1 [inherit_fractal inherit_gensting]
    seq fascinate2 [roll_transparent]
 
 call "fascinating @0" c2
-   seq fascinate1 []
+            fractal_is_inherited gen_sting_is_inherited
+   seq fascinate1 [inherit_fractal inherit_gensting]
    seq fascinating2 [roll_transparent]
 
 call "_fan the gate part 1" dontshow tag fanthegate1
-   conc nat34_34 [] box_circ_15 [conc_demand_lines]
+            fractal_is_inherited gen_sting_is_inherited
+   conc nat34_34 [inherit_fractal inherit_gensting] box_circ_15 [conc_demand_lines]
 
 call "_finish fan the gat@pe@q@ning@o@t" dontshow tag fanthegate2
    // See vg05 for this schema.
@@ -23843,41 +23973,38 @@ call "snap" c4 tag snap
    seq partnertag [inherit_revert inherit_fractal]
 
 call "_touch and lockit" dontshow tag touchandlockit
-            step_to_wave left_means_touch_or_check
-   setup 1x4 1x4 rotate no_cutting_through
-      array [CR0N CR1N AL0S AL1S]
-   setup dmd dmd rotate
-      array [CR0N 0 AL0S 0]
-   setup pmd dmd rotate
-      array [0 CR1N 0 AL1S]
+            step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
+   seq lockit [inherit_fractal inherit_gensting]
 
 call "crackle" c4 tag crackle
-   conc touchandlockit [] hinge []
+            fractal_is_inherited gen_sting_is_inherited
+   conc touchandlockit [inherit_fractal inherit_gensting]
+        hinge_ignore_gen_if_couple [inherit_fractal inherit_gensting]
 
 call "pop" c4
    seq explodeline []
 
 call "snap, crackle, and pop" c4
-            visible_fractions
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq partnertag []
-   seq crackle []
+   seq crackle [inherit_fractal inherit_gensting]
    seq explodeline []
 
 call "snap and crackle" c4
-            visible_fractions
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq partnertag []
-   seq crackle []
+   seq crackle [inherit_fractal inherit_gensting]
 
 call "reflected snap, crackle, and pop" c4
-            visible_fractions
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq partnertag [force_reflect]
-   seq crackle []
+   seq crackle [inherit_fractal inherit_gensting]
    seq explodeline []
 
 call "reflected snap and crackle" c4
-            visible_fractions
+            fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq partnertag [force_reflect]
-   seq crackle []
+   seq crackle [inherit_fractal inherit_gensting]
 
 call "_single scoot and trade part 2" dontshow tag scootntrade_part2
             left_means_mirror   /* Not right; need "left_means_check" */
@@ -24089,12 +24216,14 @@ call "_circulate @9-1/2 times" dontshow tag circ_n_times_and_a_half
    seq circulate [inherit_bigmatrix force_half]
 
 call "_start @B chain and circ in" dontshow tag startchcircin
-            bigmatrix_is_inherited neednumber fractal_is_inherited yoyo_fractal_numbers
-   maybematrix_conc armturn_n4 [] circ_n_times [conc_demand_lines conc_force_spots insert_number 2]
+            bigmatrix_is_inherited neednumber fractal_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
+   maybematrix_conc armturn_n4 [inherit_fractal inherit_gensting]
+                    circ_n_times [conc_demand_lines conc_force_spots insert_number 2]
 
 call "_finish @B chain and circ in" dontshow tag finchcircin
-            bigmatrix_is_inherited neednumber
-   maybematrix_conc cast_off_n4_with_warn [allow_forced_mod] nullcall [conc_demand_lines conc_force_lines]
+            bigmatrix_is_inherited neednumber fractal_is_inherited gen_sting_is_inherited
+   maybematrix_conc cast_off_n4_with_warn [allow_forced_mod inherit_fractal inherit_gensting]
+                    nullcall [conc_demand_lines conc_force_lines]
 
 call "_spread, with 2-faced" dontshow tag spread_2f
             12_16_matrix_means_split
@@ -24106,10 +24235,10 @@ call "_spread, with 2-faced" dontshow tag spread_2f
       array [0 ZM7W ZM0W 0 0 ZM3W ZM4W 0]
 
 call "@B chain and circulate in" c4
-            step_to_wave bigmatrix_is_inherited neednumber
-   seq startchcircin [inherit_bigmatrix]
+            step_to_wave bigmatrix_is_inherited neednumber fractal_is_inherited gen_sting_is_inherited
+   seq startchcircin [inherit_bigmatrix inherit_fractal inherit_gensting]
    seq ctrs_slip_with_mod1216 [inherit_bigmatrix]
-   seq finchcircin [inherit_bigmatrix insert_number 3]
+   seq finchcircin [inherit_bigmatrix insert_number 3 inherit_fractal inherit_gensting]
    seq spread_2f [inherit_bigmatrix]
    // Alternate definitions, from change lanes.
    crossconc circ_n_times [conc_demand_lines insert_number 2]
@@ -24118,10 +24247,10 @@ call "@B chain and circulate in" c4
              any_hand_remake_start_with_n [conc_force_lines]
 
 call "fan chain and circulate in" c4
-            step_to_wave bigmatrix_is_inherited left_means_touch_or_check
-   seq startchcircin [inherit_bigmatrix insert_number 3]
+            step_to_wave bigmatrix_is_inherited left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
+   seq startchcircin [inherit_bigmatrix inherit_fractal inherit_gensting insert_number 3]
    seq ctrs_slip_with_mod1216 [inherit_bigmatrix]
-   seq finchcircin [inherit_bigmatrix insert_number 3]
+   seq finchcircin [inherit_bigmatrix inherit_fractal inherit_gensting insert_number 3]
    seq spread_2f [inherit_bigmatrix]
    // Alternate definitions, from change lanes.
    crossconc circ_n_times [conc_demand_lines insert_number 2]
@@ -24130,19 +24259,21 @@ call "fan chain and circulate in" c4
              any_hand_remake_start_with_n [conc_force_lines insert_number 3]
 
 call "spin chain and circulate in" c4
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan bigmatrix_is_inherited left_means_touch_or_check first_part_visible
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            can_be_fan bigmatrix_is_inherited left_means_touch_or_check first_part_visible
    seq trade [inherit_yoyo inherit_gensting inherit_bigmatrix]
-   seq startchcircin [inherit_bigmatrix insert_number 3]
+   seq startchcircin [inherit_bigmatrix inherit_fractal inherit_gensting insert_number 3]
    seq ctrs_slip_with_mod1216 [inherit_bigmatrix]
-   seq finchcircin [inherit_bigmatrix insert_number 3]
+   seq finchcircin [inherit_bigmatrix inherit_fractal inherit_gensting insert_number 3]
    seq spread_2f [inherit_bigmatrix]
 
 call "swing chain and circulate in" c4
-            step_to_wave yoyo_is_inherited gen_sting_is_inherited can_be_fan bigmatrix_is_inherited left_means_touch_or_check first_part_visible
+            step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            can_be_fan bigmatrix_is_inherited left_means_touch_or_check first_part_visible
    seq trade [inherit_yoyo inherit_gensting inherit_bigmatrix]
-   seq startchcircin [inherit_bigmatrix insert_number 1]
+   seq startchcircin [inherit_bigmatrix inherit_fractal inherit_gensting insert_number 1]
    seq ctrs_slip_with_mod1216 [inherit_bigmatrix]
-   seq finchcircin [inherit_bigmatrix insert_number 1]
+   seq finchcircin [inherit_bigmatrix insert_number 1 inherit_fractal inherit_gensting]
    seq spread_2f [inherit_bigmatrix]
 
 call "scoot and weave" a2
@@ -24247,9 +24378,9 @@ call "once removed cast off @b" c2
 
 /* We have to split this up this way so that the checking won't count as a visible fraction. */
 call "_ctrs counter part 1" dontshow tag ctr_counter_1
-            cross_is_inherited intlk_is_inherited nxn_is_inherited fractal_is_inherited
+            cross_is_inherited intlk_is_inherited nxn_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq check_cross_counter [inherit_cross]
-   seq cast_off_n4_with_warn [inherit_intlk inherit_nxn insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [inherit_intlk inherit_nxn insert_number 3 inherit_fractal inherit_gensting]
 
 call "_central counter" dontshow tag ctrscounter
             visible_fractions cross_is_inherited intlk_is_inherited
@@ -24940,15 +25071,15 @@ call "_cross and wheel part 3" dontshow tag crossnwheel3
       array [CR0S ZM0N ZM1N AL2S ZM2N ZM1N]
 
 call "cross and wheel" c2 tag crossnwheel
-            visible_fractions grand_is_inherited
+            visible_fractions grand_is_inherited fractal_is_inherited gen_sting_is_inherited
             single_is_inherited nxn_is_inherited mxn_is_inherited
-   seq hinge [cpls_unless_single]
+   seq hinge [inherit_fractal inherit_gensting cpls_unless_single]
    seq crossnwheel3 [cpls_unless_single inherit_grand inherit_single]
 
 call "cross trade and wheel" c2
-            visible_fractions grand_is_inherited
+            visible_fractions grand_is_inherited fractal_is_inherited gen_sting_is_inherited
             single_is_inherited nxn_is_inherited mxn_is_inherited
-   seq hinge [cpls_unless_single]
+   seq hinge [inherit_fractal inherit_gensting cpls_unless_single]
    // Inheriting 1x3 etc. here makes it illegal.  You must say "random 3x1".
    seq crosstradewheel2 [inherit_grand inherit_single inherit_nxn inherit_mxn roll_transparent]
    seq crossnwheel3 [cpls_unless_single inherit_grand inherit_single]
@@ -25507,23 +25638,23 @@ call "_ends reciprocate" dontshow tag endrecip
 
 call "reciprocate" c4
             visible_fractions left_means_mirror yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   conc ctrwindmill [inherit_left inherit_yoyo inherit_gensting inherit_fractal]
+   conc ctrwindmill [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
         endrecip [inherit_left inherit_fractal conc_demand_columns conc_force_columns endscando]
 
 call "_ctrs scamper" dontshow tag ctrs_scamper
-            step_to_wave left_means_mirror
-   seq armturn_n4 [insert_number 1]
+            step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   seq armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
    seq circulate []
 
 call "_ctrs scamper but @0" dontshow tag ctrs_scamper_but
-            step_to_wave left_means_mirror
-   seq armturn_n4 [insert_number 1]
+            step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   seq armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
    seq nullcall [mandatory_anycall]
 
 call "_ends scamper" dontshow tag ends_scamper
-            left_means_mirror
+            left_means_mirror fractal_is_inherited gen_sting_is_inherited
    seq div_move_along []
-   seq touch_1_4 [inherit_left]
+   seq touch_1_4 [inherit_left inherit_fractal inherit_gensting]
 
 call "divide" mainstream
             dont_use_in_resolve
@@ -25556,12 +25687,14 @@ call "ends divide and @0" mainstream
    conc nullsecond [] ends_div_do_something [conc_demand_columns conc_force_otherway]
 
 call "scamper" c4 tag scamper
-            fudge_to_q_tag left_means_mirror
-   conc ctrs_scamper [inherit_left] ends_scamper [inherit_left conc_demand_columns conc_force_columns endscando]
+            fudge_to_q_tag left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   conc ctrs_scamper [inherit_left inherit_fractal inherit_gensting]
+        ends_scamper [inherit_left inherit_fractal inherit_gensting conc_demand_columns conc_force_columns endscando]
 
 call "scamper but @0" c4
-            fudge_to_q_tag left_means_mirror
-   conc ctrs_scamper_but [inherit_left] ends_scamper [inherit_left conc_demand_columns conc_force_columns]
+            fudge_to_q_tag left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   conc ctrs_scamper_but [inherit_left inherit_fractal inherit_gensting]
+        ends_scamper [inherit_left inherit_fractal inherit_gensting conc_demand_columns conc_force_columns]
 
 call "divvy up" c3x
    // ***** Make sure we do a "fudge to 3/4 tag".
@@ -25699,33 +25832,35 @@ call "tally ho but @m" c1
    seq finishwithplainmodbut2nd []
 
 call "_touchngo part 2" dontshow tag touchngo2
-            neednumber
-   conc6_2 armturn_n4 [] armturn_n4 [insert_number 1]
+            neednumber fractal_is_inherited gen_sting_is_inherited
+   conc6_2 armturn_n4 [inherit_fractal inherit_gensting] armturn_n4 [insert_number 1]
 
 call "_touchngo @0 part 2" dontshow tag touchngo2c
    conc6_2 nullcall [mandatory_anycall] armturn_n4 [insert_number 1]
 
 call "_touchngo part 3 @b" dontshow tag touchngo3
-            neednumber
-   conc_diamond_line cast_off_n4_with_warn [] spec_drop_in [suppress_elongation_warnings]
+            neednumber fractal_is_inherited gen_sting_is_inherited
+   conc_diamond_line cast_off_n4_with_warn [inherit_fractal inherit_gensting]
+                     spec_drop_in [suppress_elongation_warnings]
 
 call "_touchngo @0 anything part 3" dontshow tag touchngo3cpri
-   conc_diamond_line nullcall [mandatory_anycall] spec_drop_in [suppress_elongation_warnings]
+   conc_diamond_line nullcall [mandatory_anycall]
+                     spec_drop_in [suppress_elongation_warnings]
 
 call "touch and go @b X @b" c4
-            magic_is_inherited need_two_numbers
+            magic_is_inherited need_two_numbers fractal_is_inherited gen_sting_is_inherited
    seq circulate [force_half inherit_magic]
-   seq touchngo2 []
-   seq touchngo3 [shift_one_number]
+   seq touchngo2 [inherit_fractal inherit_gensting]
+   seq touchngo3 [shift_one_number inherit_fractal inherit_gensting]
 
 call "touch and go @b X @0" c4
-            magic_is_inherited neednumber
+            magic_is_inherited neednumber fractal_is_inherited gen_sting_is_inherited
    seq circulate [force_half inherit_magic]
-   seq touchngo2 []
+   seq touchngo2 [inherit_fractal inherit_gensting]
    seq touchngo3cpri []
 
 call "touch and go @0 X @m" c4
-            magic_is_inherited
+            magic_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq circulate [force_half inherit_magic]
    seq touchngo2c []
    seq finishwithplainmodbut2nd []
@@ -25752,12 +25887,14 @@ call "_start action" dontshow tag startaction
 
 call "the action@S" c4
             left_means_mirror
+            fractal_is_inherited gen_sting_is_inherited
    seq startaction [inherit_left]
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithmod []
 
 call "barge the action@S" c4
             first_part_visible split_like_square_thru left_means_mirror twisted_is_inherited
+            fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 2]
    seq startaction [inherit_left]
    seq turndmdn_endstrade [insert_number 1]
@@ -25765,6 +25902,7 @@ call "barge the action@S" c4
 
 call "square the barge the action@S" c4
             first_part_visible split_like_square_thru left_means_mirror twisted_is_inherited
+            fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 4]
    seq startaction [inherit_left]
    seq turndmdn_endstrade [insert_number 1]
@@ -25808,8 +25946,8 @@ call "_finish it with @0" dontshow tag finish_mandatory_mod
    conc_diamond_line nullcall [mandatory_anycall] spec_drop_in [suppress_elongation_warnings]
 
 call "_finish it with cast @9, opt for normal" dontshow tag finish_with_cast_n_with_warn
-            neednumber
-   conc_diamond_line cast_off_n4_with_warn [] spec_drop_in [suppress_elongation_warnings]
+            neednumber fractal_is_inherited gen_sting_is_inherited
+   conc_diamond_line cast_off_n4_with_warn [inherit_fractal inherit_gensting] spec_drop_in [suppress_elongation_warnings]
 
 call "breaker @0" c3a
             first_part_visible
@@ -25818,10 +25956,10 @@ call "breaker @0" c3a
    seq finish_mandatory_mod []
 
 call "breaker @9" c3a
-            first_part_visible neednumber
+            first_part_visible neednumber fractal_is_inherited gen_sting_is_inherited
    seq breaker_part_1 []
    seq breaker_part_2 []
-   seq finish_with_cast_n_with_warn []
+   seq finish_with_cast_n_with_warn [inherit_fractal inherit_gensting]
 
 call "detract @0" c4
             first_part_visible
@@ -25830,10 +25968,10 @@ call "detract @0" c4
    seq finish_mandatory_mod []
 
 call "detract @9" c4
-            first_part_visible neednumber
+            first_part_visible neednumber fractal_is_inherited gen_sting_is_inherited
    seq detract_part_1 []
    seq detract_part_2 []
-   seq finish_with_cast_n_with_warn []
+   seq finish_with_cast_n_with_warn [inherit_fractal inherit_gensting]
 
 call "_start reflected linear action, ctrs" dontshow tag startreflinctr
    seq ctr_rot []
@@ -25888,8 +26026,8 @@ call "reflected linear action but cross it" c4
 
 // This one allows syntactically easy modify, for "breaker [flip back]".
 call "_finish it with modify" dontshow tag finishwithmod
-            bigmatrix_is_inherited fractal_is_inherited
-   conc_diamond_line cast_off_n4_with_warn [or_anycall inherit_fractal insert_number 3]
+            bigmatrix_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc_diamond_line cast_off_n4_with_warn [or_anycall inherit_fractal inherit_gensting insert_number 3]
                      spec_drop_in [inherit_bigmatrix conc_force_otherway
                                    suppress_elongation_warnings]
 
@@ -25998,31 +26136,31 @@ call "_maybe extend for walk the clover" dontshow tag maybe_extend
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
 
 call "central walk the clover" c4 tag cwalkclv
-            visible_fractions step_to_wave left_means_mirror
-   seq armturn_n4 [insert_number 1]
+            fractal_is_inherited gen_sting_is_inherited visible_fractions step_to_wave left_means_mirror
+   seq armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
    seq walkndodge []
 
 call "central walk the clover but @0" c4 tag cwalkclv_but
-            visible_fractions step_to_wave left_means_mirror
-   seq armturn_n4 [insert_number 1]
+            fractal_is_inherited gen_sting_is_inherited visible_fractions step_to_wave left_means_mirror
+   seq armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
    seq nullcall [mandatory_anycall]
 
 call "walk the@C clover" c4
-            left_means_mirror cross_is_inherited
+            left_means_mirror cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq maybe_extend []
-   seq walk_clover_for_central [inherit_left inherit_cross]
+   seq walk_clover_for_central [inherit_left inherit_cross inherit_fractal inherit_gensting]
 
 call "walk the@C clover but @0" c4
-            left_means_mirror cross_is_inherited
+            left_means_mirror cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq maybe_extend []
-   seq walk_clover_for_central_but [inherit_left inherit_cross]
+   seq walk_clover_for_central_but [inherit_left inherit_cross inherit_fractal inherit_gensting]
 
 call "walk the@C clover, for central" dontshow tag walk_clover_for_central
-            left_means_mirror cross_is_inherited
-   conc cwalkclv [inherit_left]
+            left_means_mirror cross_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc cwalkclv [inherit_fractal inherit_gensting inherit_left]
         clover [inherit_cross conc_demand_columns conc_force_otherway]
 
 call "walk the@C clover, for central but @0" dontshow tag walk_clover_for_central_but
-            left_means_mirror cross_is_inherited
-   conc cwalkclv_but [inherit_left]
+            left_means_mirror cross_is_inherited fractal_is_inherited gen_sting_is_inherited
+   conc cwalkclv_but [inherit_fractal inherit_gensting inherit_left]
         clover [inherit_cross conc_demand_columns conc_force_otherway]

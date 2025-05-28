@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.38
-@set title2 Database version = 38.38 format = 302
+@set title1 RELEASE NOTES FOR VERSION 38.39
+@set title2 Database version = 38.39 format = 303
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.39::
 * 38.38::
 * 38.37::
 * 38.36::
@@ -77,7 +78,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.38, Top, (dir)
+@node Intro, 38.39, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -88,11 +89,17 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2011 William B. Ackerman
 @sp 3
 @menu
-* 38.38::               Changes in the current version
+* 38.39::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.38, 38.37, Intro, Top
+@node 38.39, 38.38, Intro, Top
+@unnumberedsec Version 38.39 changes
+
+Many more improvements were made to the @strong{stingy} and @strong{generous} concepts.
+
+@c ************
+@node 38.38, 38.37, 38.39, Top
 @unnumberedsec Version 38.38 changes
 
 The ability to do the @strong{stingy} and @strong{generous} concepts has been further improved.

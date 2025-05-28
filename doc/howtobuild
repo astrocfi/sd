@@ -275,13 +275,13 @@ install                                  *
 
 -----------------------------------------------------------------
 -----------------------------------------------------------------
-New way, Dec 10, uses psftp, no email
+New way, Dec 10, 2010, uses psftp, no email
 
 Start psftp (under "putty" group.)
-open scotch ics.uci.edu
+open scotch.ics.uci.edu
 lcd \wba\sddoc
 put pack.zip
-  This is silent and not helpful.  It take a while.  Run putty,
+  This is silent and not helpful.  It takes a while.  Run putty,
   and doubleclick "scotch" (PW=x464pq) to connect in another window,
   and watch the file come in.
       scotch> unzip pack

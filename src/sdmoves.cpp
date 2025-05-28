@@ -6996,7 +6996,6 @@ static void handle_expiration(setup *ss, uint32 *bit_to_set)
 
       // Take care of generous and stingy; they are complicated.
 
-
       switch (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
       case INHERITFLAG_YOYOETCK_YOYO:
          if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_ONLY_EXPIRED)

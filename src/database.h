@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 302
+#define DATABASE_FORMAT_VERSION 303
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
