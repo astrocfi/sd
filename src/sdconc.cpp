@@ -1697,6 +1697,22 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric_2_6;
       break;
+   case schema_concentric_2_6_or_2_4_or_2_2:
+      switch (attr::slimit(ss)) {
+      case 5:
+         warn(warn__unusual);
+         analyzer_result = schema_concentric_2_4;
+         break;
+      case 3:
+         warn(warn__unusual);
+         analyzer_result = schema_single_concentric;
+         break;
+      default:
+         analyzer_result = schema_concentric_2_6;
+         break;
+      }
+
+      break;
    case schema_concentric_6_2_or_4_2:
       if (attr::slimit(ss) == 5) {
          warn(warn__unusual);
@@ -2898,6 +2914,17 @@ static bool fix_empty_inners(
 
       int j;
       *result = *result_outer;   // This gets the result_flags.
+      clear_result_flags(result);
+
+      // This should, among other things, make "run away" more palatable.
+      if (analyzer_result == schema_single_concentric &&
+          center_arity == 1 &&
+          begin_inner->kind == s1x2) {
+         return false;
+      }
+
+      // Otherwise, we have to set this to an unknown concentric formulation,
+      // which doesn't make anyone happy.
       result->kind = s_normal_concentric;
       result->rotation = 0;
       result->eighth_rotation = 0;
@@ -2911,7 +2938,6 @@ static bool fix_empty_inners(
 
       for (j=0; j<MAX_PEOPLE/2; j++)
          copy_person(result, j+MAX_PEOPLE/2, result_outer, j);
-      clear_result_flags(result);
 
       return true;
    }
@@ -4800,6 +4826,14 @@ void merge_table::merge_setups(setup *ss,
 
       setup_kind res1k = res1->kind;
       setup_kind res2k = res2->kind;
+
+      // Look for case of simple direct merge.
+      if (res1k == res2k && (mask1 & mask2) == 0 && res1->rotation == 0) {
+         *result = *res2;
+         for (i=0; i<=attr::slimit(result); i++)
+            install_person(result, i, res1, i);
+         goto final_getout;
+      }
 
       uint32_t hash_num = ((res1k + (5*res2k)) * 25) & (merge_table::NUM_MERGE_HASH_BUCKETS-1);
 

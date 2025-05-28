@@ -859,17 +859,16 @@ void mirror_this(setup *s) THROW_DECL
 
    const coordrec *optr = setup_attrs[s->kind].nice_setup_coords;
 
-   if (!cptr) {
-      if (s->kind == s_trngl4) {
-         if (s->rotation & 1) {
-            s->rotation += 2;
-            for (i=0; i<4; i++) copy_rot(&temp, i, &temp, i, 022);
-            cptr = &tgl4_1;
-         }
-         else
-            cptr = &tgl4_0;
+   if (s->kind == s_trngl4) {
+      if (s->rotation & 1) {
+         s->rotation += 2;
+         for (i=0; i<4; i++) copy_rot(&temp, i, &temp, i, 022);
+         cptr = &tgl4_upside_down;
+         optr = cptr;
       }
-      else if (s->kind == s_trngl) {
+   }
+   else if (!cptr) {
+      if (s->kind == s_trngl) {
          if (s->rotation & 1) {
             s->rotation += 2;
             for (i=0; i<3; i++) copy_rot(&temp, i, &temp, i, 022);

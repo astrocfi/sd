@@ -515,6 +515,7 @@ void ui_utils::print_4_person_setup(int ps, small_setup *s, int elong)
    offs = (((roti >> 1) & 1) * (modulus / 2)) - modulus;
 
    if (s->skind == s2x2) {
+      offs = 0;
       if (elong < 0)
          str = "ab@dc@";
       else if (elong == 1)
@@ -526,6 +527,16 @@ void ui_utils::print_4_person_setup(int ps, small_setup *s, int elong)
    }
    else if (s->skind == s1x4 && (roti & 1) && two_couple_calling) {
       str = "a@@b@@d@@c";
+   }
+   else if (s->skind == s_trngl4 && two_couple_calling) {
+      Cstring tgl4strings[4] = {
+         "cd@5b@5a@",
+         " 6 6c@7a b@7 6 6d@",
+         "5a@5b@dc@",
+         "d@76b a@7c@"};
+
+      offs = 0;
+      str = tgl4strings[roti];
    }
    else
       str = setup_attrs[s->skind].print_strings[roti & 1];

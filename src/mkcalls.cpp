@@ -724,6 +724,7 @@ const char *schematab[] = {
    "???",
    "???",
    "conc2_6_or_2_4",
+   "conc2_6_or_2_4_or_2_2",
    "conc6_2_or_4_2",
    "conc6_2_or_4_2_line",
    "crossconc2_6_or_2_4",

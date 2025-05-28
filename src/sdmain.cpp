@@ -47,7 +47,7 @@
 //    General Public License if you distribute the file.
 
 #define VERSION_STRING "39.20"
-#define TIME_STAMP "wba@alum.mit.edu Aug 17 2020 $"
+#define TIME_STAMP "wba@alum.mit.edu Aug 24 2020 $"
 
 /* This defines the following functions:
    sd_version_string

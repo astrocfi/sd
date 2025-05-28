@@ -570,7 +570,8 @@ static void do_concept_single_diagonal(
 {
    if (ss->kind != s4x4) fail("Need a 4x4 for this.");
 
-   if (global_livemask != 0x2D2D && global_livemask != 0xD2D2)
+   if ((global_livemask != 0x2D2D && global_livemask != 0xD2D2) &&
+       (!two_couple_calling || (global_livemask != 0x9090 && global_livemask != 0x0909)))
       fail("People must be in blocks -- try specifying the people who should do the call.");
 
    selective_move(ss, parseptr, selective_key_disc_dist, 0,
@@ -3553,63 +3554,67 @@ static void do_concept_assume_waves(
 
    goto check_it;
 
-   fudge_diamond_like:
+ fudge_diamond_like:
 
    switch (ss->kind) {
-      case s1x4: goto fudge_from_1x4;
-      case s3x4: goto fudge_from_3x4;
-      case sdmd: case s_qtag: case s_ptpd: case s3dmd: case s4dmd: goto check_it;
+   case s1x4: 
+      no_phan_error = false;    // There really were phantoms after all.
+      copy_person(ss, 6, ss, 0);
+      copy_person(ss, 7, ss, 1);
+      ss->clear_person(0);
+      ss->clear_person(1);
+      ss->clear_person(4);
+      ss->clear_person(5);
+      ss->kind = s_qtag;
+      goto check_it;
+   case s2x4: 
+      if (ss->people[1].id1 || ss->people[2].id1 || ss->people[5].id1 || ss->people[6].id1)
+         fail("Can't do this assumption.");
+      copy_rot(ss, 5, ss, 0, 033);
+      copy_rot(ss, 1, ss, 4, 033);
+      copy_rot(ss, 0, ss, 3, 033);
+      copy_rot(ss, 4, ss, 7, 033);
+      ss->clear_person(3);
+      ss->clear_person(7);
+      ss->rotation++;
+      ss->kind = s_qtag;
+      goto check_it;
+   case s3x4:
+      sss = *ss;
+      copy_person(ss, 0, &sss, 1);
+      copy_person(ss, 1, &sss, 2);
+      copy_person(ss, 2, &sss, 4);
+      copy_person(ss, 3, &sss, 5);
+      copy_person(ss, 4, &sss, 7);
+      copy_person(ss, 5, &sss, 8);
+      copy_person(ss, 6, &sss, 10);
+      copy_person(ss, 7, &sss, 11);
+
+      if (sss.people[0].id1) {
+         if (sss.people[1].id1) fail("Can't do this assumption.");
+         else copy_person(ss, 0, &sss, 0);
+      }
+      if (sss.people[3].id1) {
+         if (sss.people[2].id1) fail("Can't do this assumption.");
+         else copy_person(ss, 1, &sss, 3);
+      }
+      if (sss.people[6].id1) {
+         if (sss.people[7].id1) fail("Can't do this assumption.");
+         else copy_person(ss, 4, &sss, 6);
+      }
+      if (sss.people[9].id1) {
+         if (sss.people[8].id1) fail("Can't do this assumption.");
+         else copy_person(ss, 5, &sss, 9);
+      }
+
+      ss->kind = s_qtag;
+      goto check_it;
+   case sdmd: case s_qtag: case s_ptpd: case s3dmd: case s4dmd: goto check_it;
    }
 
-   bad_assume:
+ bad_assume:
 
    fail("This assumption is not legal from this formation.");
-
-   fudge_from_1x4:
-
-   no_phan_error = false;    // There really were phantoms after all.
-
-   copy_person(ss, 6, ss, 0);
-   copy_person(ss, 7, ss, 1);
-   ss->clear_person(0);
-   ss->clear_person(1);
-   ss->clear_person(4);
-   ss->clear_person(5);
-
-   ss->kind = s_qtag;
-
-   goto check_it;
-
-   fudge_from_3x4:
-
-   sss = *ss;
-   copy_person(ss, 0, &sss, 1);
-   copy_person(ss, 1, &sss, 2);
-   copy_person(ss, 2, &sss, 4);
-   copy_person(ss, 3, &sss, 5);
-   copy_person(ss, 4, &sss, 7);
-   copy_person(ss, 5, &sss, 8);
-   copy_person(ss, 6, &sss, 10);
-   copy_person(ss, 7, &sss, 11);
-
-   if (sss.people[0].id1) {
-      if (sss.people[1].id1) fail("Can't do this assumption.");
-      else copy_person(ss, 0, &sss, 0);
-   }
-   if (sss.people[3].id1) {
-      if (sss.people[2].id1) fail("Can't do this assumption.");
-      else copy_person(ss, 1, &sss, 3);
-   }
-   if (sss.people[6].id1) {
-      if (sss.people[7].id1) fail("Can't do this assumption.");
-      else copy_person(ss, 4, &sss, 6);
-   }
-   if (sss.people[9].id1) {
-      if (sss.people[8].id1) fail("Can't do this assumption.");
-      else copy_person(ss, 5, &sss, 9);
-   }
-
-   ss->kind = s_qtag;
 
    check_it:
 

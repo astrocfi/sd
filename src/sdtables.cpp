@@ -83,8 +83,7 @@
    merge_table::merge_init_table
    tgl3_0
    tgl3_1
-   tgl4_0
-   tgl4_1
+   tgl4_upside_down
    id_bit_table_2x5_z
    id_bit_table_2x5_ctr6
    id_bit_table_d2x7a
@@ -690,6 +689,22 @@ expand::thing expand::init_table[] = {
 
    {{0, 1, 3, 2, 7, 6, 4, 5},
     s1x8, s2x8, 0, 0U, 0xFF00, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{5, 2, 1, 3},
+    s_trngl4, s_bone6, 3, 0U, 021, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 5, 4, 0},
+    s_trngl4, s_bone6, 1, 0U, 012, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{1, 2, 3, 4},
+    s2x2, s2x3, 0, 0U, 041, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 4, 5},
+    s2x2, s2x3, 0, 0U, 014, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 4, 7, 8, 9},
@@ -4733,7 +4748,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 //    The "80" bit means that action must NOT be merge_c1_phantom_real.
 //    The "100" bit means that original action must NOT be merge_after_dyp.
 //    The "200" bit means only accept it if the setups, prior to cutting down,
-//       were a 2x4 and a ptpd that were perpendicular to each other. */
+//       were a 2x4 and a ptpd that were perpendicular to each other.
 //    The "400" bit means that action must NOT be merge_without_gaps.
 
 // swap_setups
@@ -5051,14 +5066,20 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x3,        s_thar,   022, 0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 2, 3, 5}},
    {s1x2,       s1x3dmd,     0, 0x88, 0x0C, 0x0, schema_concentric_2_6, s1x2,        s1x6,     warn__none, 0, 0, {0, 1}, {0, 1, 2, 4, 5, 6}},
    {s1x2,        s_hrglass,  0, 0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
-   {s1x2,        s_qtag,     0, 0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
-   {s_qtag,        s2x4,  0x33, 0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}},
-   {s1x4,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
-   {s2x2,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
-
-   {s2x4,        s2x2dmd,   0, 0,     0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 2, 6, 5, 11, 10, 14, 13},               {0}},
-
-   {s_qtag,        s2x4, 0x33,    0,  0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s1x2,        s_qtag,     0, 0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1,
+    {0, 1}, {1, 2, 4, 5, 6, 0}},
+   {s_qtag,        s2x4,  0x33, 0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0,
+    {6, 7, 2, 3}, {0, 3, 4, 7}},
+   {s1x4,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0,
+    {0, 1, 2, 3}, {0, 2, 3, 5}},
+   {s1x2,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     s1x2,        s2x2,     warn__none, 0, 0,
+    {0, 1}, {0, 2, 3, 5}},
+   {s2x2,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0,
+    {0, 1, 2, 3}, {0, 2, 3, 5}},
+   {s2x4,        s2x2dmd,   0, 0,     0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0,
+    {3, 2, 6, 5, 11, 10, 14, 13}, {0}},
+   {s_qtag,        s2x4, 0x33,    0,  0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0,
+    {6, 7, 2, 3}, {0, 1, 2, 3, 4, 5, 6, 7}},
 
    // This one is for vi16t.
    {s2x4,          s3x4,    0, 00360, 0x0E, 0x2, schema_concentric,     s2x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7},   {0, 1, 2, 3, 6, 7, 8, 9}},
@@ -5656,19 +5677,7 @@ const coordrec tgl3_1 = {s_trngl, 0x23,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-const coordrec tgl4_0 = {s_trngl4, 0x23,
-   {  0,   0,  -2,   2},
-   { -4,   0,   4,   4}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1,  2,  3, -1, -1, -1,
-      -1, -1, -1, -1,  1, -1, -1, -1,
-      -1, -1, -1, -1,  0, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec tgl4_1 = {s_trngl4, 0x23,
+const coordrec tgl4_upside_down = {s_trngl4, 0x23,
    { -4,   0,   4,   4},
    {  0,   0,   2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -7163,6 +7172,18 @@ static const coordrec thingdbltrngl4 = {sdbltrngl4, 0x24,
       -1, -1, -1, -1, -1,  0,  1,  2,  4,  5,  6, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1,  3, -1, -1,  7, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingtrngl4 = {s_trngl4, 0x23,
+   {  0,   0,  -2,   2},
+   { -4,   0,   4,   4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  2,  3, -1, -1, -1,
+      -1, -1, -1, -1,  1, -1, -1, -1,
+      -1, -1, -1, -1,  0, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
 
 static const coordrec thingboxdmd = {sboxdmd, 0x23,
    { -5,   0,   5,   0,  -2,   2,   2,  -2},
@@ -8700,7 +8721,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x2, b_2x2},
     {2, 2},
-    SPROP_4_WAY_SYMMETRY,
+    SPROP_4_WAY_SYMMETRY|SPROP_FIND_NEAR_PEOPLE,
     id_bit_table_2x2,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -8710,7 +8731,7 @@ const setup_attr setup_attrs[] = {
     {0x5, 0, 0, 0},
     {b_1x4, b_4x1},
     {4, 1},
-    0U,
+    SPROP_FIND_NEAR_PEOPLE,
     id_bit_table_1x4,
     {"a  b  d  c@",
      "a@b@d@c@"}},
@@ -8745,12 +8766,12 @@ const setup_attr setup_attrs[] = {
     {(Cstring) 0,
      (Cstring) 0}},
    {3,                      // s_trngl4
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingtrngl4,
+    &thingtrngl4,
     {0, 0, 0, 0},
     {b_trngl4, b_ptrngl4},
     {0, 0},
-    SPROP_NO_SYMMETRY,
+    SPROP_NO_SYMMETRY|SPROP_FIND_NEAR_PEOPLE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -10486,6 +10507,8 @@ const schema_attr schema_attrs[] = {
    {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_2_6_or_2_4
    {0 | SCA_REMOVE_VERIFY,
+    schema_nothing},                     // schema_concentric_2_6_or_2_4_or_2_2
+   {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_6_2_or_4_2
    {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_6_2_or_4_2_line
@@ -10952,6 +10975,9 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx_fpgdmdcw,           fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x6ccw, s1x2, s2x6,         0, 0, 2, {1, 2, 8, 7},
     fx0, fx_fpgdmdccw,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_ftgl4, s_trngl, s_trngl4,    0, 0, 1, {1, 2, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_fdhrgl, s_trngl, s_dhrglass, 0x2A03, 0, 2, {6, 5, 0, 2, 1, 4},
     fx_f323, fx0,               fx0, fx0,                   fx0, fx_specspindle,        fx0, fx0},
@@ -12293,8 +12319,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      splinepdmd,  0x0F,   fx_1x5p1e,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0xF0,   fx_1x5p1f,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0x0F,   fx_1x5p1g,     fx0, -1},
-
-
+   {LOOKUP_NONE,                      s_trngl4,    0x0E,   fx_ftgl4,      fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0x03,   fx_1x5p1g,     fx0, -1},  // Goes to "Y"
    {LOOKUP_NONE,                      slinebox,    0x60,   fx_linefbox0,  fx0, -1},  // Goes to "F"
    {LOOKUP_NONE,                      slinebox,    0x9C,   fx_1x5p1h,     fx0, -1},  // Goes to sdbltrngl4

@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.20"
+version "39.21"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -11455,6 +11455,10 @@ call "_start dixie style" dontshow tag start_dixie
             alternate_definition [twisted] c4
    setup trngl4 2x2 qualifier split_dixie
       array [CAL2N 0 0 0 0 CR1S ZM2N ZM3N]
+   setup dmd 1x4            // Whether you say "singlefile" or not.
+      array [0 0 0 CM3E]
+   setup pmd 1x4           // Whether you say "singlefile" or not.
+      array [ZM0N 0 0 0]
             alternate_definition [twisted singlefile] c4
    setup dmd 1x4
       array [0 0 0 CM3E]
@@ -21308,6 +21312,12 @@ call "transfer the column" a1 tag transfer
       array [AM7E CM2W AM3E CM6W AM1E CM4W AM5E CM0W]
    setup 4x2 2x4 restriction magic_only
       array [0 0 AM3E CM6W AM1E CM4W 0 0]
+            alternate_definition [2x1] c4
+   setup 3x2 2x3 qualifier wave_only
+      array [CM1W CM3W CM5W AM0E AM2E AM4E]
+            alternate_definition [1x2] c4
+   setup 3x2 2x3 qualifier wave_only
+      array [CM0W CM2W CM4W AM1E AM3E AM5E]
             alternate_definition [magic 1x2] c4
    setup 3x2 2x3 restriction forbidden magic_only
       array [M0W M3E M4W M1E M2W M5E]
@@ -25521,7 +25531,7 @@ call "_twist part 1" dontshow tag twist1
 call "_twist part 2" dontshow tag twist2
    select_who_did_and_didnt star_thru [] trade []
 
-call "_twist and part 2" dontshow tag twist2_and
+call "_twist and @0 part 2" dontshow tag twist2_and
    select_who_did_and_didnt nullcall [mandatory_anycall] trade []
 
 call "twist@4 the line@5@7 and @8@1" c1
@@ -28551,17 +28561,17 @@ call "reciprocate" c4
         endrecip [inherit_left inherit_fractal conc_demand_columns conc_force_columns endscando]
 
 call "_ctrs scamper" dontshow tag ctrs_scamper
-            step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
+            visible_fractions step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
    seq armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
    seq circulate []
 
 call "_ctrs scamper but @0" dontshow tag ctrs_scamper_but
-            step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
+            visible_fractions step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
    seq armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
    seq nullcall [mandatory_anycall]
 
 call "_ends scamper" dontshow tag ends_scamper
-            left_means_mirror fractal_is_inherited gen_sting_is_inherited
+            visible_fractions left_means_mirror fractal_is_inherited gen_sting_is_inherited
    seq div_move_along []
    seq touch_1_4 [inherit_left inherit_fractal inherit_gensting]
 
@@ -28738,7 +28748,7 @@ call "relocate the diamonds" c2
 
 call "relocate" c2
             funny_is_inherited fractal_is_inherited gen_sting_is_inherited
-   conc2_6_or_2_4 armturn_n4 [insert_number 3 inherit_fractal inherit_gensting] ctr_rot [inherit_funny]
+   conc2_6_or_2_4_or_2_2 armturn_n4 [insert_number 3 inherit_fractal inherit_gensting] ctr_rot [inherit_funny]
 
 call "_tally ho part 2" dontshow tag tally_ho_part_2
             left_means_mirror fractal_is_inherited gen_sting_is_inherited

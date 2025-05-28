@@ -2532,6 +2532,8 @@ extern void tandem_couples_move(
          result->rotation = 0;
          result->eighth_rotation = 0;
          result->inner.skind = nothing;
+         result->inner.srotation = 0;
+         result->inner.seighth_rotation = 0;
          result->kind = s_normal_concentric;
          for (i=0 ; i<MAX_PEOPLE/2 ; i++) result->swap_people(i, i+MAX_PEOPLE/2);
       }

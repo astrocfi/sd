@@ -1756,7 +1756,6 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 0}, {1, 2},              false, chk_star},
    {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},
     {2, 3, 6}, {2, 2, 7},         false, chk_star},
-
    {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},
@@ -2320,8 +2319,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = 
     {0}, {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
    {s2x4, cr_gen_qbox, 4, {0},
     {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 1, 2}, {2, 5, 6}, false, chk_dmd_qtag},
-   {s2x4, cr_split_square_setup, 0, {0},   // Just punt on checking this.
-    {8, 9, 9, 9, 9, 9, 9, 9, 9}, {2, 7, 7}, {2, 3, 3}, false, chk_wave},
+   {s2x4, cr_split_square_setup, 0, {2, 0, 7}, {2, 3, 4},
+    {2, 5, 6}, {2, 1, 2},         false, chk_star},
    {s2x2, cr_wave_only, 1, {2, 0, 0, 2},
     {0, 0, 2, 2},         {0}, {0}, true, chk_box},
    {s2x2, cr_all_facing_same, 1, {2, 2, 2, 2},

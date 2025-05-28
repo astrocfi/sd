@@ -2859,6 +2859,7 @@ class select {
       fx_fpgdmdccw,
       fx_f2x6cw,
       fx_f2x6ccw,
+      fx_ftgl4,
       fx_fdhrgl,
       fx_fdbtgll,
       fx_fdbtglr,
@@ -4754,8 +4755,7 @@ extern const ctr_end_mask_rec masks_for_4x4;                        /* in SDTABL
 
 extern const coordrec tgl3_0;                                       /* in SDTABLES */
 extern const coordrec tgl3_1;                                       /* in SDTABLES */
-extern const coordrec tgl4_0;                                       /* in SDTABLES */
-extern const coordrec tgl4_1;                                       /* in SDTABLES */
+extern const coordrec tgl4_upside_down;                             /* in SDTABLES */
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_2x5_ctr6[];                        /* in SDTABLES */

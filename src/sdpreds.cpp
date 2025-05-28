@@ -562,12 +562,24 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       else if (pid3 & ID3_NEARFOUR) return false;
       break;
    case selector_neartwo:
-      if      (pid3 & ID3_NEARTWO) return true;
-      else if (pid3 & ID3_FARSIX) return false;
+      if (two_couple_calling) {
+         if      (pid3 & ID3_NEARTWO) return true;
+         else if (pid3 & ID3_FARTWO) return false;
+      }
+      else {
+         if      (pid3 & ID3_NEARTWO) return true;
+         else if (pid3 & ID3_FARSIX) return false;
+      }
       break;
    case selector_fartwo:
-      if      (pid3 & ID3_FARTWO) return true;
-      else if (pid3 & ID3_NEARSIX) return false;
+      if (two_couple_calling) {
+         if      (pid3 & ID3_FARTWO) return true;
+         else if (pid3 & ID3_NEARTWO) return false;
+      }
+      else {
+         if      (pid3 & ID3_FARTWO) return true;
+         else if (pid3 & ID3_NEARSIX) return false;
+      }
       break;
    case selector_nearsix:
       if      (pid3 & ID3_NEARSIX) return true;
@@ -578,12 +590,24 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       else if (pid3 & ID3_NEARTWO) return false;
       break;
    case selector_nearthree:
-      if      (pid3 & ID3_NEARTHREE) return true;
-      else if (pid3 & ID3_FARFIVE) return false;
+      if (two_couple_calling) {
+         if      (pid3 & ID3_NEARTHREE) return true;
+         else if (pid3 & ID3_FARTHEST1) return false;
+      }
+      else {
+         if      (pid3 & ID3_NEARTHREE) return true;
+         else if (pid3 & ID3_FARFIVE) return false;
+      }
       break;
    case selector_farthree:
-      if      (pid3 & ID3_FARTHREE) return true;
-      else if (pid3 & ID3_NEARFIVE) return false;
+      if (two_couple_calling) {
+         if      (pid3 & ID3_FARTHREE) return true;
+         else if (pid3 & ID3_NEAREST1) return false;
+      }
+      else {
+         if      (pid3 & ID3_FARTHREE) return true;
+         else if (pid3 & ID3_NEARFIVE) return false;
+      }
       break;
    case selector_nearfive:
       if      (pid3 & ID3_NEARFIVE) return true;
@@ -594,16 +618,28 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       else if (pid3 & ID3_NEARTHREE) return false;
       break;
    case selector_farthest1:
-      if      (pid3 & ID3_FARTHEST1) return true;
-      else if (pid3 & ID3_NOTFARTHEST1) return false;
+      if (two_couple_calling) {
+         if      (pid3 & ID3_FARTHEST1) return true;
+         else if (pid3 & ID3_NEARTHREE) return false;
+      }
+      else {
+         if      (pid3 & ID3_FARTHEST1) return true;
+         else if (pid3 & ID3_NOTFARTHEST1) return false;
+      }
       break;
    case selector_nearseven:
       if      (pid3 & ID3_NOTFARTHEST1) return true;
       else if (pid3 & ID3_FARTHEST1) return false;
       break;
    case selector_nearest1:
-      if      (pid3 & ID3_NEAREST1) return true;
-      else if (pid3 & ID3_NOTNEAREST1) return false;
+      if (two_couple_calling) {
+         if      (pid3 & ID3_NEAREST1) return true;
+         else if (pid3 & ID3_FARTHREE) return false;
+      }
+      else {
+         if      (pid3 & ID3_NEAREST1) return true;
+         else if (pid3 & ID3_NOTNEAREST1) return false;
+      }
       break;
    case selector_farseven:
       if      (pid3 & ID3_NOTNEAREST1) return true;
