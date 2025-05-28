@@ -1,5 +1,5 @@
 ! Sd.res - sample X11 user resource file for Sd (square dance caller's helper)
-! Time-stamp: <95/04/16 00:20:55 gildea>
+! Time-stamp: <95/11/09 17:48:23 gildea>
 
 !
 ! colors - suggested color customizations for color monitors
@@ -30,10 +30,10 @@
 *startup.headsStart: Heads start
 *startup.sidesStart: Sides start
 *startup.asTheyAre: Just as they are
-*startup.toggleConcLevels: Toggle concept levels
-*startup.toggleActPhan: Toggle active phantoms
-*startup.changeOutFile: Change output file
-*startup.changeHeader: Change header comment
+*startup.toggleConceptLevels: Toggle concept levels
+*startup.toggleActivePhantoms: Toggle active phantoms
+*startup.changeOutputFile: Change output file
+*startup.changeHeaderComment: Change header comment
 *command.exit: Exit the program
 *command.undo: Undo last call
 *command.abort: Abort this sequence

@@ -1,7 +1,12 @@
-		   RELEASE NOTES FOR SD VERSION 31.51
-		 Database version = 31.50 format = 68.
+		   RELEASE NOTES FOR SD VERSION 31.53
+		 Database version = 31.53 format = 68.
                 X11 UI version 1.16, SDTTY UI version 1.6.
 
+
+****** Changes as of version 31.50 ******
+
+The database has been updated to reflect the 1995 changes in the
+Callerlab C1 and C2 lists.  However, "like a ripple" is not supported.
 
 ****** Changes as of version 31.48 ******
 

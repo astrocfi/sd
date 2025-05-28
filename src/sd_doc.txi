@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: November 8, 1995
-@set sd-version 31.51
+@set Time-stamp: November 14, 1995
+@set sd-version 31.53
 @set full-manual
 @c %**end of header
 @iftex

@@ -1057,12 +1057,12 @@ extern int uims_do_selector_popup(void)
    uint32 retval;
 
    if (interactivity == interactivity_verify) {
-      if (result_for_verify->who == selector_uninitialized) {
+      if (result_for_verify.who == selector_uninitialized) {
          verify_used_selector = 1;
          return (int) selector_for_initialize;
       }
       else
-         return result_for_verify->who;
+         return result_for_verify.who;
    }
    else if (user_match.valid && (user_match.who > selector_uninitialized)) {
       retval = (int) user_match.who;
@@ -1103,8 +1103,8 @@ extern int uims_do_tagger_popup(int tagger_class)
    int j = 0;
 
    if (interactivity == interactivity_verify) {
-      user_match.tagger = result_for_verify->tagger;
-      if (user_match.tagger == 0) user_match.tagger = 1;
+      user_match.tagger = result_for_verify.tagger;
+      if (user_match.tagger == 0) user_match.tagger = (tagger_class << 5) + 1;
    }
    else if (!user_match.valid || (user_match.tagger <= 0)) {
       match_result saved_match = user_match;
@@ -1123,7 +1123,7 @@ extern int uims_do_tagger_popup(int tagger_class)
    while (j-- != 0) user_match.tagger >>= 8;   /* Shift it back. */
 
    if (interactivity == interactivity_verify)
-      result_for_verify->tagger = user_match.tagger;
+      result_for_verify.tagger = user_match.tagger;
 
    return retval;
 }
@@ -1134,7 +1134,7 @@ extern int uims_do_circcer_popup(void)
    uint32 retval;
 
    if (interactivity == interactivity_verify) {
-      retval = result_for_verify->circcer;
+      retval = result_for_verify.circcer;
       if (retval == 0) retval = 1;
    }
    else if (user_match.valid && (user_match.circcer > 0)) {
@@ -1161,8 +1161,8 @@ extern uint32 uims_get_number_fields(int nnumbers)
    long_boolean valid = 1;
 
    if (interactivity == interactivity_verify) {
-      number_fields = result_for_verify->number_fields;
-      howmanynumbers = result_for_verify->howmanynumbers;
+      number_fields = result_for_verify.number_fields;
+      howmanynumbers = result_for_verify.howmanynumbers;
    }
    else {
       number_fields = user_match.number_fields;
@@ -1184,13 +1184,22 @@ extern uint32 uims_get_number_fields(int nnumbers)
             verify_used_number = 1;
          }
          else {
-            char buffer[200];
-            get_string_input("How many? ", buffer);
-            this_num = atoi(buffer);
+            for (;;) {
+               char buffer[200];
+               get_string_input("How many? ", buffer);
+               if (buffer[0] == '!' || buffer[0] == '?') {
+                  put_line("Type a number between 1 and 8\n");
+                  current_text_line++;
+               }
+               else {
+                  this_num = atoi(buffer);
+                  break;
+               }
+            }
          }
       }
 
-      if (this_num == 0 || this_num > 8) return 0;    /* User gave bad answer. */
+      if (this_num <= 0 || this_num > 8) return 0;    /* User gave bad answer. */
       number_list |= (this_num << (i*4));
    }
 

@@ -105,7 +105,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
 
 static match_state static_ss;
-match_result *result_for_verify;
+match_result result_for_verify;
 long_boolean verify_used_number;
 long_boolean verify_used_selector;
 
@@ -265,8 +265,6 @@ static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
 
    if (!static_ss.verify || (result->kind != ui_call_select)) return TRUE;
 
-   result_for_verify = result;
-
    interactivity = interactivity_verify;   /* so deposit_call doesn't ask user for info */
    bits0 = history[history_ptr+1].warnings.bits[0];
    bits1 = history[history_ptr+1].warnings.bits[1];
@@ -337,6 +335,8 @@ static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
    try_another_selector:
 
    /* Do the call.  An error will signal and go to try_again. */
+
+   result_for_verify = *result;
 
    selector_used = FALSE;
    number_used = FALSE;

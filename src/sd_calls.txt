@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.50"
+version "31.53"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -7519,6 +7519,10 @@ call "quick step part 2" dontshow tag quickstep2
             fudge_to_q_tag    /* Which means fudge *OUT OF* qtag in this case. */
    in_out_triple_squash ahso [or_anycall] quickfix []
 
+call "quick anything part 2" dontshow tag quickany2
+            fudge_to_q_tag    /* Which means fudge *OUT OF* qtag in this case. */
+   in_out_triple_squash nullcall [mandatory_anycall] quickfix []
+
 call "quick step fixup" dontshow tag quickfix
    setup 1x4 2x2 restriction forbidden 2fl_only
       array [ZM3N ZM0N ZM2N ZM1N]
@@ -7527,6 +7531,11 @@ call "quick @2step@3" c3a
             magic_is_inherited
    seq quickstep1 [inherit_magic]
    seq quickstep2 []
+
+call "quick @0" c3a
+            magic_is_inherited
+   seq quickstep1 [inherit_magic]
+   seq quickany2 []
 
 call "make magic" c1
    setup 4x2 2x4 restriction quarterbox_or_magic_col
@@ -9730,9 +9739,16 @@ call "_fascinate part 1" dontshow tag fascinate1
 call "_finish fascinat@pe@q@ning@o@t" dontshow tag fascinate2
    conc diamond_ends_isolate [] 2facedwheelanddeal [or_secondary_call conc_concentric_rules suppress_elongation_warnings]
 
+call "_finish fascinating @0" dontshow tag fascinating2
+   conc diamond_ends_isolate [] nullcall [mandatory_anycall conc_concentric_rules suppress_elongation_warnings]
+
 call "fascinat@pe@q@ning@o@t" c2
    seq fascinate1 []
    seq fascinate2 []
+
+call "fascinating @0" c2
+   seq fascinate1 []
+   seq fascinating2 []
 
 call "_fan the gate part 1" dontshow tag fanthegate1
    conc nat34_34 [] box_circ_15 [conc_demand_lines]

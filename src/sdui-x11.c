@@ -1,4 +1,4 @@
-static char *time_stamp = "sdui-x11.c Time-stamp: <95/03/24 16:07:52 gildea>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <95/11/09 17:48:56 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -593,10 +593,10 @@ Private XtResource startup_resources[] = {
     MENU("headsStart", start_list[start_select_heads_start], "Heads start"),
     MENU("sidesStart", start_list[start_select_sides_start], "Sides start"),
     MENU("asTheyAre", start_list[start_select_as_they_are], "Just as they are"),
-    MENU("toggleConcLevels", start_list[start_select_toggle_conc], "Toggle concept levels"),
-    MENU("toggleActPhan", start_list[start_select_toggle_act], "Toggle active phantoms"),
-    MENU("changeOutFile", start_list[start_select_change_outfile], "Change output file"),
-    MENU("changeHeader", start_list[start_select_change_header_comment], "Change header comment")
+    MENU("toggleConceptLevels", start_list[start_select_toggle_conc], "Toggle concept levels"),
+    MENU("toggleActivePhantoms", start_list[start_select_toggle_act], "Toggle active phantoms"),
+    MENU("changeOutputFile", start_list[start_select_change_outfile], "Change output file"),
+    MENU("changeHeaderComment", start_list[start_select_change_header_comment], "Change header comment")
 };
 
 /* BEWARE!!  This list is keyed to the definition of "cmd_button_kind" above. */
@@ -1011,7 +1011,7 @@ uims_preinitialize(void)
 					 /* create an empty value area */
 					 XtNvalue, "",
 					 /* to make it wide enough */
-					 XtNlabel, "Sequence output file is 'sequence.PLUS'.  Enter new name:",
+					 XtNlabel, "Current header comment is 'dummy header comment'.  Enter new comment:",
 					 NULL);
 
     XawDialogAddButton(headerbox, "abort", dialog_callback,
@@ -1540,13 +1540,11 @@ extern int uims_do_outfile_popup(char dest[])
 
 extern int uims_do_header_popup(char dest[])
 {
-   if (header_comment[0]) {
-       char header_question[MAX_TEXT_LINE_LENGTH];
+   char header_question[MAX_TEXT_LINE_LENGTH];
 
-       (void) sprintf(header_question,
-   		   sd_resources.header_format, header_comment);
-       XtVaSetValues(headerbox, XtNlabel, header_question, NULL);
-   }
+   (void) sprintf(header_question,
+         sd_resources.header_format, header_comment);
+   XtVaSetValues(headerbox, XtNlabel, header_question, NULL);
 
    return get_popup_string(headerpopup, headerbox, dest);
 }
