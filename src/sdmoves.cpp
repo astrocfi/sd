@@ -6461,7 +6461,7 @@ static bool do_misc_schema(
    ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
 
    if (the_schema == schema_select_leads) {
-      sel.who[0] = selector_leads;
+      sel.who[0] = selector_leaders;
       inner_selective_move(ss, foo1p, &foo2,
                            selective_key_plain, 1, 0, false, 0,
                            sel,

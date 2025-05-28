@@ -1413,6 +1413,7 @@ enum selector_kind {
    selector_ends,
    selector_outsides,
    selector_leads,
+   selector_leaders,
    selector_trailers,
    selector_lead_beaus,
    selector_lead_belles,

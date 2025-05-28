@@ -3308,6 +3308,7 @@ void mimic_move(
    case selector_belles:
       MI.lateral = 1;
    case selector_leads:
+   case selector_leaders:
    case selector_trailers:
    case selector_center4:
    case selector_outerpairs:
@@ -3333,6 +3334,7 @@ void mimic_move(
    switch (who) {
    case selector_belles:
    case selector_leads:
+   case selector_leaders:
    case selector_rightmosttwo:
    case selector_firsttwo:
    case selector_rightmostfour:

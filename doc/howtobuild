@@ -8,14 +8,13 @@ Doing so might cause it to be included in the "do_pack" script.
      This file is \wba\sddoc\howtobuild.
 
 -------------------------------------------------------------------------------
-       MAINTAIN ALL PROGRAM SOURCE FILES ON WINDOWS 10.
-       MAINTAIN ALL DOCUMENTATION SOURCE FILES ON WINDOWS XP.
+       MAINTAIN ALL PROGRAM AND DOCUMENTATION SOURCE FILES ON WINDOWS 10.
+       PREFERABLY OWL.
 
-       ALL DEVELOPMENT, DEBUG, AND TEST OF THE PROGRAM IS DONE ON WINDOWS 10.
-       ALL DEVELOPMENT OF THE DOCUMENTATION IS DONE ON WINDOWS XP.
+       ALL DEVELOPMENT, DEBUG, AND TEST OF EVERYTHING IS DONE ON WINDOWS 10.
 -------------------------------------------------------------------------------
 
-       UPDATING VERSION NUMBERS AND MAINTAINING THE PROGRAM ON WINDOWS 10.
+       UPDATING VERSION NUMBERS AND MAINTAINING THE PROGRAM.
 
 Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # and date are visible)
@@ -35,7 +34,7 @@ Be sure the version numbers and dates are correct in:
           sdutil.cpp, about.lst, sd_doc.txi, and relnotes.txi]
 
 -------------------------------------------------------------------------------
-       SAVING PROGRAM SOURCES ON WINDOWS 10.
+       SAVING PROGRAM AND DOCUMENTATION SOURCES.
 -------------------------------------------------------------------------------
 
 BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
@@ -43,30 +42,7 @@ BEFORE DOING THIS.
 
 In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
 In \wba\sd\regress:  save _vnnnn
-
-Create an appropriate directory in the main \wba\sdfullarchive directory, vnnnn, as in v3201
-
-Copy these 2 into it.  More will come later.
-
-   \wba\sd\sd_vnnnn.zip
-   \wba\sd\regress\r_vnnnn.zip
-
-
-Copy that directory (v3201) with its 2 subdirectories (sd_v3201.zip etc) to a thumb drive,
-take it to Windows XP, and unzip those  subdirectories into the appropriate places.
-
--------------------------------------------------------------------------------
-       BUILDING THE DOCUMENTATION ON WINDOWS XP.
--------------------------------------------------------------------------------
-
 In \wba\sddoc:   save _vnnnn
-
-Copy
-   \wba\sddoc\doc_vnnnn.zip
-to the archive subdirectory.  It will now have 3 items:
-   \wba\sd\sd_vnnnn.zip
-   \wba\sd\regress\r_vnnnn.zip
-   \wba\sddoc\doc_vnnnn.zip
 
 It is important that this be done before "new_binary" is run, because
 the manual and faq files are now wrapped into the binary distribution file.
@@ -75,7 +51,7 @@ WARNING!!!!!  These scripts require "tar".  I have put tar.exe,
 cygwin1.dll, and cygwinB19.dll into the \bin directory.
 In fact, it requires many arcane things, in the sddoc directory.
 
-Go to the sddoc directory on Windows XP and do:
+Go to the sddoc directory and do:
 
     setmingw64
     clean clean
@@ -146,7 +122,8 @@ Go to the sddoc directory on Windows XP and do:
 26 Dec 20  -   8 Apr 21  #69  // initially as couples regroup
  8 Apr 21  -  20 Jul 21  #70  // triangles
 20 Jul 21  -  28 Sep 21  #65  // middle half tandem, slide thru
-28 Sep 21                #71  // once removed hinge in linebox
+28 Sep 21  -  30 Dec 21  #71  // once removed hinge in linebox
+30 Dec 21                #67  // thirdly split 5 times grand chain 8
                          #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption
@@ -158,7 +135,7 @@ Also, do [DPT] initially touch by 1/2 x [split sidetrack]
 BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
 -------------------------------------------------------------------------------
 
-               TESTING AND PRODUCTION BUILD - MINGW 64 BITS, ON WINDOWS XP
+               TESTING AND PRODUCTION BUILD - MINGW 64 BITS, ON WINDOWS 10
                32 BIT COMPILERS MAY NO LONGER BE USED!!!!
                     Yes, the make utility for 64-bit mingw
                     is still called "mingw32-make".
@@ -194,7 +171,7 @@ Stress tests to try:
    sdtty c4 -resolve_test 240 <today's ddmm date>+10000  H start, pick random call
 
 -------------------------------------------------------------------------------
-                        FINAL PREPARATION, ON WINDOWS XP
+                        FINAL PREPARATION, ON WINDOWS 10
 -------------------------------------------------------------------------------
 
    THE DOCUMENTATION MUST HAVE BEEN PREPARED, AND THE SOURCES SAVED,
@@ -210,44 +187,41 @@ Stress tests to try:
 
 DO A VIRUS SCAN ON INSTALL.EXE and PACK.ZIP!
 
-Copy
+Create an appropriate directory in the main \Users\wba\sdfullarchive directory, vnnnn,
+   as in v3201
+
+Copy these 6 into it.
+
+   \wba\sd\sd_vnnnn.zip
+   \wba\sd\regress\r_vnnnn.zip
+   \wba\sddoc\doc_vnnnn.zip
    \wba\sddoc\sd_source.zip
    \wba\sddoc\pack.zip
    \wba\sddoc\install.exe
 
-from sddoc to the archive subdirectory.  It will now have these 6 items:
-   doc_vnnnn.zip
-   install.exe
-   pack.zip
-   r_vnnnn.zip
-   sd_source.zip
-   sd_vnnnn.zip
-
-Transport this, via a thumb drive, to the \Users\wba\sdfullarchive directory.
-
-
+from sd or sddoc to the archive subdirectory.
 
                PRODUCTION BUILD, TESTING, AND UPLOAD - Linux
 
-copy sd_vnnnn.zip, r_vnnnn.zip, doc_vnnnn.zip and this file onto a thumb drive.
-Simplest way is to copy the entire vnnnn directory from the archive into
-the home directory on Ubuntu.
+ RUBBISH copy sd_vnnnn.zip, r_vnnnn.zip, doc_vnnnn.zip and this file onto a thumb drive.
+ RUBBISH Simplest way is to copy the entire vnnnn directory from the archive into
+ RUBBISH the home directory on Ubuntu.
 
-Copy the vnnnn directory from the thumb drive into the home directory on Ubuntu.
+ RUBBISH Copy the vnnnn directory from the thumb drive into the home directory on Ubuntu.
 
-Then, on Ubuntu, in the home directory, do
-./make_linux.sh nnnn
-as in
-./make_linux.sh 3906
+ RUBBISH Then, on Ubuntu, in the home directory, do
+ RUBBISH ./make_linux.sh nnnn
+ RUBBISH as in
+ RUBBISH ./make_linux.sh 3906
 
-That will copy the files from the ~/vnnn directory down to the various things
-under ~/sd, compile everything, and make the tarball.
+ RUBBISH That will copy the files from the ~/vnnn directory down to the various things
+ RUBBISH under ~/sd, compile everything, and make the tarball.
 
-Then, to do regression tests:
+ RUBBISH Then, to do regression tests:
 
-cd ~/sd/regress
-chmod 775 *.sh
-./doit.sh
+ RUBBISH cd ~/sd/regress
+ RUBBISH chmod 775 *.sh
+ RUBBISH ./doit.sh
 
 -------------------------------------------------------------------------------
              UPLOADING TO LYNETTE'S WEB SITE, ON WINDOWS 10
@@ -268,30 +242,32 @@ Login as USERNAME  (P=PASSWORD)
   challengedance.org> rm pack.zip
   challengedance.org> exit
 
-
------------------------------------------------------------------
-             UPLOADING TO LYNETTE'S WEB SITE
-             UBUNTU -- THIS NO LONGER WORKS ON WINDOZE.
-    BRING THE FILE (and sd_source too) OVER TO UBUNTU, as shown above.
------------------------------------------------------------------
-Now, in directory ~/vNNNN, do:
-
-sftp USERNAME@www.challengedance.org
-  challengedance.org> (P=PASSWORD)
-  challengedance.org> cd public_html/sd
-  challengedance.org> put pack.zip
-  challengedance.org> (Check size)
-(upload linux program:)
-  challengedance.org> lcd ~/sd
-  challengedance.org> put linux.tgz
-  challengedance.org> quit
-
-
-rsh USERNAME@www.challengedance.org
-  challengedance.org> (P=PASSWORD)
-  challengedance.org> cd public_html/sd
-  challengedance.org> unzip pack.zip
-  challengedance.org> rm pack.zip
-  challengedance.org> exit
-
 The c4 books (book1.pdf etc.) go into the same directory.
+
+
+-----------------------------------------------------------------
+RUBBISH              UPLOADING TO LYNETTE'S WEB SITE
+RUBBISH              UBUNTU -- THIS NO LONGER WORKS ON WINDOZE.
+RUBBISH     BRING THE FILE (and sd_source too) OVER TO UBUNTU, as shown above.
+-----------------------------------------------------------------
+RUBBISH Now, in directory ~/vNNNN, do:
+
+RUBBISH sftp USERNAME@www.challengedance.org
+RUBBISH   challengedance.org> (P=PASSWORD)
+RUBBISH   challengedance.org> cd public_html/sd
+RUBBISH   challengedance.org> put pack.zip
+RUBBISH   challengedance.org> (Check size)
+RUBBISH (upload linux program:)
+RUBBISH   challengedance.org> lcd ~/sd
+RUBBISH   challengedance.org> put linux.tgz
+RUBBISH   challengedance.org> quit
+
+
+RUBBISH rsh USERNAME@www.challengedance.org
+RUBBISH   challengedance.org> (P=PASSWORD)
+RUBBISH   challengedance.org> cd public_html/sd
+RUBBISH   challengedance.org> unzip pack.zip
+RUBBISH   challengedance.org> rm pack.zip
+RUBBISH   challengedance.org> exit
+
+RUBBISH The c4 books (book1.pdf etc.) go into the same directory.

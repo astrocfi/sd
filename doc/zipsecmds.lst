@@ -1,7 +1,7 @@
 -setup
--t \wba\sddoc\title.lst
+-t \Users\wba\sddoc\title.lst
 -i ..\sd\sd.ico
--a \wba\sddoc\about.lst
+-a \Users\wba\sddoc\about.lst
 -win32
 -le
 -st "Sd Setup"

@@ -188,8 +188,12 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       else if (p2 == ID2_END)    s = selector_ends;
       else break;
       goto eq_return;
+   case selector_leaders:
+      local_selector = selector_leads;
+      // FALL THROUGH!!!
    case selector_leads:
    case selector_trailers:
+      // FELL THROUGH!!!
       p2 = pid2 & (ID2_LEAD|ID2_TRAILER);
       if      (p2 == ID2_LEAD)    s = selector_leads;
       else if (p2 == ID2_TRAILER) s = selector_trailers;
