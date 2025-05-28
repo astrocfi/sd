@@ -2,16 +2,6 @@
 @setfilename demo.info
 @settitle sdtty demo
 @c Time-stamp: <96/04/05 14:25:00 wba>
-@tex
-\global\setfont\smallrm\rmshape{8}{1000}
-\global\font\smallsy=cmsy9
-\global\def\keycap#1{{\smallrm\textfont2=\smallsy \leavevmode\hbox{%
-  \raise0.4pt\hbox{$\langle$}\kern-.08em\vtop{%
-    \vbox{\hrule\kern-0.4pt
-     \hbox{\raise0.4pt\hbox{\vphantom{$\langle$}}\uppercase{#1}}}%
-    \kern-0.4pt\hrule}%
-  \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
-@end tex
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -34,22 +24,12 @@ of things that the program can do, and shows how you can get it to do them.
 First, we start the program.  We will run it at C2.
 
 If using DOS or UNIX, type @kbd{sdtty} and press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-<ENTER>
-@end ifinfo
+@key{ENTER}
 at the prompt:
 
 @example
 @group
-@iftex
-C:\SD> @kbd{sdtty} @keycap{ENTER}
-@end iftex
-@ifinfo
-C:\SD> @kbd{sdtty} <ENTER>
-@end ifinfo
+C:\SD> @kbd{sdtty} @key{ENTER}
 @end group
 @end example
 
@@ -62,21 +42,11 @@ Enter the level:
 @end example
 
 The program wants us to type the level.  Type @kbd{c2} and press
-@iftex
-@keycap{ENTER}:
-@end iftex
-@ifinfo
-<ENTER>:
-@end ifinfo
+@key{ENTER}:
 
 @example
 @group
-@iftex
-Enter the level: @kbd{c2} @keycap{ENTER}
-@end iftex
-@ifinfo
-Enter the level: @kbd{c2} <ENTER>
-@end ifinfo
+Enter the level: @kbd{c2} @key{ENTER}
 Sd: reading database............................................done
 SD -- square dance caller's helper.
 
@@ -130,21 +100,11 @@ Enter startup command>
 
 It displays a number of choices, and then gives us another prompt.
 We will type @kbd{heads start}, and press
-@iftex
-@keycap{ENTER}:
-@end iftex
-@ifinfo
-<ENTER>:
-@end ifinfo
+@key{ENTER}:
 
 @example
 @group
-@iftex
-Enter startup command> @kbd{heads start} @keycap{ENTER}
-@end iftex
-@ifinfo
-Enter startup command> @kbd{heads start} <ENTER>
-@end ifinfo
+Enter startup command> @kbd{heads start} @key{ENTER}
 Sd 31.67 : db31.67 : ui1.8tty     C2
 
 
@@ -171,22 +131,11 @@ would show over 500 possible calls, concepts, and other
 commands, so we won't do it for this demo (though you
 may wish to try it).
 
-We type @kbd{pass the ocean}, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+We type @kbd{pass the ocean}, and press @key{ENTER}.
 
 @example
 @group
-@iftex
---> @kbd{pass the ocean} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{pass the ocean} <ENTER>
-@end ifinfo
+--> @kbd{pass the ocean} @key{ENTER}
  1:   HEADS pass the ocean
 
        1B>
@@ -207,21 +156,11 @@ prompt.  The time, the prompt reminds us that we are in
 diamonds or quarter tags.
 
 We type @kbd{extend} and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 @example
 @group
-@iftex
-(diamond/qtag)--> @kbd{extend} @keycap{ENTER}
-@end iftex
-@ifinfo
-(diamond/qtag)--> @kbd{extend} <ENTER>
-@end ifinfo
+(diamond/qtag)--> @kbd{extend} @key{ENTER}
 Sd 31.67 : db31.67 : ui1.8tty     C2
 
  1:   HEADS pass the ocean
@@ -261,37 +200,11 @@ We want to do a tandem swing thru at this point.  Tandem is a
 concept.
 
 There are two ways of dealing with concepts.  One is to type just the
-concept name, press
-@iftex
-@keycap{ENTER},
-@end iftex
-@ifinfo
-<ENTER>,
-@end ifinfo
-type the call name, and press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-<ENTER>
-@end ifinfo
-again.  This method is less convenient, but it always works.
+concept name, press @key{ENTER}, type the call name, and press
+@key{ENTER} again.  This method is less convenient, but it always works.
 
 The more convenient way is simply to type the concept(s) and call all on one
-line, followed by
-@iftex
-@keycap{ENTER},
-@end iftex
-@ifinfo
-<ENTER>,
-@end ifinfo
-as in @kbd{tandem swing thru}
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+line, followed by @key{ENTER}, as in @kbd{tandem swing thru} @key{ENTER}.
 
 It won't make any difference in the final printout which method you used.
 
@@ -299,21 +212,11 @@ The significance of this is discussed in more detail
 in the ``Entering Concepts'' chapter of the reference manual.
 For the purposes of this demo, we will use the one-line method wherever
 possible.  So we type @kbd{tandem swing thru}, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 @example
 @group
-@iftex
-(waves)--> @kbd{tandem swing thru} @keycap{ENTER}
-@end iftex
-@ifinfo
-(waves)--> @kbd{tandem swing thru} <ENTER>
-@end ifinfo
+(waves)--> @kbd{tandem swing thru} @key{ENTER}
  1:   HEADS pass the ocean
  2:   extend
 
@@ -354,33 +257,18 @@ The program has noticed that we happen to be in a setup
 from which we could say @code{extend, right and left grand}, and
 is pointing that out to us.  If we wanted to end the sequence right
 here, we could do so (by typing @kbd{write this sequence} or pressing
-@iftex
-@keycap{F10}).
-@end iftex
-@ifinfo
-<F10>).
-@end ifinfo
+@key{F10}).
 Instead, we are going to continue, and forget all about that resolve.
 
 Let's demonstrate some concepts that identify people.
 We will do a @code{1/2 acey deucey} to make a 3x1 diamond setup.
 
 Type @kbd{1/2 acey deucey}, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 @example
 @group
-@iftex
---> @kbd{1/2 acey deucey} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{1/2 acey deucey} <ENTER>
-@end ifinfo
+--> @kbd{1/2 acey deucey} @key{ENTER}
  2:   extend
  3:   TANDEM swing thru
 
@@ -435,12 +323,7 @@ but @code{girls disconnected} is legal.
 
 @example
 @group
-@iftex
---> @kbd{girls disconnected diamond circulate} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{girls disconnected diamond circulate} <ENTER>
-@end ifinfo
+--> @kbd{girls disconnected diamond circulate} @key{ENTER}
  3:   TANDEM swing thru
  4:   1/2, acey deucey
 
@@ -467,23 +350,13 @@ The program shows a few calls back, and the just-completed call
 with pictures before and after.  We can use other designators also.
 Let's do a @code{heads disconnected diamond circulate} at this point.
 As usual, we will type the concept and the call, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 The program responds by showing this:
 
 @example
 @group
-@iftex
---> @kbd{heads disconnected diamond circulate} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{heads disconnected diamond circulate} <ENTER>
-@end ifinfo
+--> @kbd{heads disconnected diamond circulate} @key{ENTER}
  4:   1/2, acey deucey
  5:   GIRLS DISCONNECTED diamond circulate
 
@@ -514,12 +387,7 @@ not describe in detail the act of entering concepts and calls.
 
 @example
 @group
-@iftex
---> @kbd{boys diamond circulate} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{boys diamond circulate} <ENTER>
-@end ifinfo
+--> @kbd{boys diamond circulate} @key{ENTER}
  5:   GIRLS DISCONNECTED diamond circulate
  6:   HEADS DISCONNECTED diamond circulate
 
@@ -544,33 +412,16 @@ centers of a 3x1 diamond is the center diamond.  Let's try it.
 But first, let's undo the @code{boys diamond circulate} that we just
 entered.  The @code{undo} command does this.  There are two ways of entering
 this command.  One way, of course, is to type @kbd{undo}, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 (The full name of the command is @code{undo last
 call}, but we just need to type @kbd{undo}.  The program will show the
-full name.)  The other way is to press function key
-@iftex
-@keycap{F9}.
-@end iftex
-@ifinfo
-<F9>.
-@end ifinfo
-Many
+full name.)  The other way is to press function key @key{F9}.  Many
 function keys are arranged to perform common operations.  The list is given
 in the ``Terminal Interface'' chapter of the reference manual.
 
 @example
 @group
-@iftex
---> @kbd{undo last call} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{undo last call} <ENTER>
-@end ifinfo
+--> @kbd{undo last call} @key{ENTER}
  5:   GIRLS DISCONNECTED diamond circulate
 
               3G>
@@ -596,21 +447,11 @@ The program has erased the @code{boys diamond circulate}, and is
 showing us the last few calls of the remaining sequence.  It
 is prompting us for the new line 7.  Have the centers diamond
 circulate, by typing @kbd{centers diamond circulate}, and pressing
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 @example
 @group
-@iftex
---> @kbd{centers diamond circulate} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{centers diamond circulate} <ENTER>
-@end ifinfo
+--> @kbd{centers diamond circulate} @key{ENTER}
  5:   GIRLS DISCONNECTED diamond circulate
  6:   HEADS DISCONNECTED diamond circulate
 
@@ -632,22 +473,11 @@ circulate, by typing @kbd{centers diamond circulate}, and pressing
 
 There is also a @code{center diamond} concept.  So let's undo the last
 call, either by typing the command name or by pressing
-@iftex
-@keycap{F9},
-@end iftex
-@ifinfo
-<F9>,
-@end ifinfo
-and try it.
+@key{F9}, and try it.
 
 @example
 @group
-@iftex
---> @keycap{F9}
-@end iftex
-@ifinfo
---> <F9>
-@end ifinfo
+--> @key{F9}
  5:   GIRLS DISCONNECTED diamond circulate
 
               3G>
@@ -667,12 +497,7 @@ and try it.
  7:
 @end group
 @group
-@iftex
---> @kbd{center diamond diamond circulate} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{center diamond diamond circulate} <ENTER>
-@end ifinfo
+--> @kbd{center diamond diamond circulate} @key{ENTER}
  5:   GIRLS DISCONNECTED diamond circulate
  6:   HEADS DISCONNECTED diamond circulate
 
@@ -769,35 +594,11 @@ swing thru.  We use the @kbd{center 1x6} concept:
 
 Incidentally, @code{grand} is a concept.  So, if we were typing concepts
 one at a time, we could have typed
-@kbd{center 1x6}, pressed
-@iftex
-@keycap{ENTER},
-@end iftex
-@ifinfo
-<ENTER>,
-@end ifinfo
-@kbd{grand}, pressed
-@iftex
-@keycap{ENTER},
-@end iftex
-@ifinfo
-<ENTER>,
-@end ifinfo
-and @kbd{swing thru}, and pressed
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-<ENTER>
-@end ifinfo
+@kbd{center 1x6}, pressed @key{ENTER}, @kbd{grand}, pressed @key{ENTER},
+and @kbd{swing thru}, and pressed @key{ENTER}
 a third time.  Of course, we don't bother with that.
 Just type @kbd{center 1x6 grand swing thru} and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 Let's have the centers flip the diamond while the ends explode.
 For this we use the @code{centers (while the others)} concept.
@@ -811,21 +612,8 @@ we type it in, the name of the concept is ``@code{centers (while the others)}''.
 
 A very important thing you need to know is that one-line entry is not allowed
 for those concepts that take two calls.  Therefore, you must type the name
-of the concept, press
-@iftex
-@keycap{ENTER},
-@end iftex
-@ifinfo
-<ENTER>,
-@end ifinfo
-and type each of the two calls, pressing
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-<ENTER>
-@end ifinfo
-after each one.
+of the concept, press @key{ENTER},
+and type each of the two calls, pressing @key{ENTER} after each one.
 
 Now, because of the @dfn{completion} property of Sdtty, we don't
 have to type the whole name ``@code{centers (while the others)}''.
@@ -833,23 +621,13 @@ As soon as we have typed the
 left parenthesis, the program knows what concept it has to be.
 
 One thing we could do is type @kbd{centers (} and then press
-@iftex
-@keycap{ESC}.
-@end iftex
-@ifinfo
-<ESC>.
-@end ifinfo
+@key{ESC}.
 The program will put the rest of the concept on the screen
 just as though we had typed it.
 
 @example
 @group
-@iftex
---> @kbd{centers (} @keycap{ESC}
-@end iftex
-@ifinfo
---> @kbd{centers (} <ESC>
-@end ifinfo
+--> @kbd{centers (} @key{ESC}
 @end group
 @end example
 
@@ -863,29 +641,14 @@ the screen now shows
 
 because the program has typed @code{while the others)} for us.
 We can now press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-<ENTER>
-@end ifinfo
+@key{ENTER}
 to tell the program that we want that concept.
 
 Another thing we could have done, if we were really sure we
 knew what we wanted without seeing it, is to just press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-<ENTER>
-@end ifinfo
+@key{ENTER}
 after typing @kbd{centers (}, without pressing
-@iftex
-@keycap{ESC}.
-@end iftex
-@ifinfo
-<ESC>.
-@end ifinfo
+@key{ESC}.
 
 Either way, the program takes the @code{centers (while the others)}
 concept, and gives us another prompt.  This is the prompt for
@@ -901,21 +664,11 @@ the call that we want the centers to do.
 
 Line 11 just says @code{CENTERS}.  It will say more very soon.
 At the prompt, we type @kbd{flip the diamond}, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 @example
 @group
-@iftex
---> @kbd{flip the diamond} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{flip the diamond} <ENTER>
-@end ifinfo
+--> @kbd{flip the diamond} @key{ENTER}
 11:   CENTERS flip the diamond
 ENTER SECOND CALL
 --> 
@@ -925,22 +678,12 @@ ENTER SECOND CALL
 Line 11 is looking more complete.  We are given another prompt,
 with special instructions.  It wants the second call.  This is,
 of course, the call for the ends.  Type @kbd{explode}, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 
 @example
 @group
 ENTER SECOND CALL
-@iftex
---> @kbd{explode} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{explode} <ENTER>
-@end ifinfo
+--> @kbd{explode} @key{ENTER}
  9:   HEADS trade the wave
 10:   CENTER 1X6 GRAND swing thru
 
@@ -1013,12 +756,7 @@ The program reminds us that we have stumbled into a resolve.
 We're not interested.
 
 Have the ends hinge, by typing @kbd{ends hinge}, and
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 (We could have said @code{heads} instead of @code{ends}, of course.)
 
 @example
@@ -1213,12 +951,7 @@ in any of three ways.  @code{Interlocked}, like @code{grand}, @code{cross},
 @code{magic}, @code{left}, @code{single}, @code{split}, and those sorts
 of things, is
 considered by the program to be a concept.  As such, we could type
-@iftex
-@code{interlocked unwrap the diamonds @keycap{ENTER}}.
-@end iftex
-@ifinfo
-@code{interlocked unwrap the diamonds <ENTER>}.
-@end ifinfo
+@code{interlocked unwrap the diamonds @key{ENTER}}.
 We could also type @kbd{unwrap the interlocked diamonds}
 directly, with the word order the way it is supposed to be.
 A number of calls that take magic, interlocked, cross, and left
@@ -1248,12 +981,7 @@ in the concept name, to avoid confusion.
 
 @example
 @group
-@iftex
---> @kbd{1-1/2 column circulate} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{1-1/2 column circulate} <ENTER>
-@end ifinfo
+--> @kbd{1-1/2 column circulate} @key{ENTER}
 29:   1-1/2, column circulate
 
    1G<
@@ -1377,12 +1105,7 @@ we will say @code{sides are tandem}.
 
 @example
 @group
-@iftex
---> @kbd{sides are tandem swing and circle 1/4} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{sides are tandem swing and circle 1/4} <ENTER>
-@end ifinfo
+--> @kbd{sides are tandem swing and circle 1/4} @key{ENTER}
 37:   SIDES ARE TANDEM, swing and circle 1/4
 
     2G>   2B>
@@ -1438,12 +1161,7 @@ ambiguous.
 
 @example
 @group
-@iftex
---> @kbd{center 1x6 girls are tandem single file dixie sashay} @keycap{ENTER}
-@end iftex
-@ifinfo
---> @kbd{center 1x6 girls are tandem single file dixie sashay} <ENTER>
-@end ifinfo
+--> @kbd{center 1x6 girls are tandem single file dixie sashay} @key{ENTER}
 41:   CENTER 1X6, GIRLS ARE TANDEM, SINGLE FILE dixie
    sashay
 
@@ -1511,19 +1229,9 @@ we have a resolve, and that the sequence is 45 calls long, don't
 mean anything to the computer.  In order to really write this
 out we have to give the @code{write this sequence} command.
 We type @kbd{write this sequence}, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+@key{ENTER}.
 (We could also have pressed function key
-@iftex
-@keycap{F10}.)
-@end iftex
-@ifinfo
-<F10>.)
-@end ifinfo
+@key{F10}.)
 
 The program prompts us for a comment.
 
@@ -1535,13 +1243,7 @@ Enter comment:
 @end group
 @end example
 
-At the prompt, we type @kbd{demo}, and then press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+At the prompt, we type @kbd{demo}, and then press @key{ENTER}.
 
 The program then displays
 

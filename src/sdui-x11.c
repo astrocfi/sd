@@ -1802,7 +1802,7 @@ extern int uims_do_tagger_popup(int tagger_class)
 }    
 
 
-extern uint32 uims_get_number_fields(int nnumbers)
+extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
 {
    int i;
    uint32 number_list = 0;
@@ -1815,9 +1815,10 @@ extern uint32 uims_get_number_fields(int nnumbers)
       }
       else {
          this_num = choose_popup(sd_resources.quantifier_title, cardinals);
-         if (this_num == 0) return 0;    /* User waved the mouse away. */
+         if (this_num == 0) return ~0;    /* User waved the mouse away. */
       }
-      number_list |= (this_num << (i*4));
+      if (forbid_zero && num == 1) return ~0;
+      number_list |= ((this_num-1) << (i*4));
    }
 
    return number_list;

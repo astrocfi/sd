@@ -73,6 +73,7 @@
 and the following data that are used by sdmatch.c :
 
    twice_concept_ptr
+   centers_concept_ptr
    two_calls_concept_ptr
    num_command_commands
    command_commands
@@ -391,6 +392,7 @@ extern void show_match(void)
 
 
 concept_descriptor *twice_concept_ptr = (concept_descriptor *) 0;
+concept_descriptor *centers_concept_ptr = (concept_descriptor *) 0;
 concept_descriptor *two_calls_concept_ptr = (concept_descriptor *) 0;
 
 
@@ -580,7 +582,7 @@ static fcn_key_thing fcn_key_table[] = {
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 143 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 144 */
    {match_startup_commands,  "sides start\n",              ui_start_select,   start_select_sides_start},        /* sF1 = 145 = sides start */
-   {0,                       "twice\n",                    ui_concept_select, (long int) &twice_concept_ptr}, /* sF2 = 146 = twice */
+   {0,                       "twice\n",                    ui_concept_select, (long int) &twice_concept_ptr},   /* sF2 = 146 = twice */
    {0,                       "pick concept call\n",        ui_command_select, -1-command_concept_call},         /* sF3 = 147 = pick concept call */
    {0,                       "reconcile\n",                ui_command_select, -1-command_reconcile},            /* sF4 = 148 = reconcile */
    {0,                       "keep picture\n",             ui_command_select, -1-command_save_pic},             /* sF5 = 149 = keep picture */
@@ -600,7 +602,7 @@ static fcn_key_thing fcn_key_table[] = {
    {0,                       "pick simple call\n",         ui_command_select, -1-command_simple_call},          /* cF3 = 163 = pick simple call */
    {0,                       "normalize\n",                ui_command_select, -1-command_normalize},            /* cF4 = 164 = normalize */
    {0,                       "insert a comment\n",         ui_command_select, -1-command_create_comment},       /* cF5 = 165 = insert a comment */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 166 */
+   {0,                       "centers\n",                  ui_concept_select, (long int) &centers_concept_ptr}, /* cF6 = 166 = centers */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 167 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 168 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 169 */
@@ -739,7 +741,8 @@ Private void get_user_input(char *prompt, int which)
             if (user_match.match.kind == ui_concept_select) {
                user_match.match.concept_ptr = *((concept_descriptor **) fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index);
                if (!user_match.match.concept_ptr) continue;
-               user_match.match.next_conc_or_subcall = (modifier_block *) 0;
+               user_match.match.packed_next_conc_or_subcall = (modifier_block *) 0;
+               user_match.match.packed_secondary_subcall = (modifier_block *) 0;
                user_match.match.call_conc_options = null_options;
                user_match.real_next_subcall = (match_result *) 0;
                user_match.real_secondary_subcall = (match_result *) 0;
@@ -817,7 +820,11 @@ Private void get_user_input(char *prompt, int which)
 
          if (  (matches == 1 || matches - static_ss.yielding_matches == 1 || user_match.exact)
                               &&
-              (!user_match.match.next_conc_or_subcall || user_match.match.kind == ui_call_select || user_match.match.kind == ui_concept_select)) {
+                 (   (!user_match.match.packed_next_conc_or_subcall && !user_match.match.packed_secondary_subcall)
+                                    ||
+                     user_match.match.kind == ui_call_select
+                                    ||
+                     user_match.match.kind == ui_concept_select)) {
 
             p = static_ss.extended_input;
             while (*p)
@@ -923,12 +930,69 @@ extern uims_reply uims_get_startup_command(void)
 }
 
 
+static uint32 the_topcallflags;
+static long_boolean there_is_a_call;
+
+
+
+/* This stuff is duplicated in verify_call in sdmatch.c . */
+static long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
+{
+   /* First, if we have already deposited a call, and we see more stuff, it must be
+      concepts or calls for an "anything" subcall. */
+
+   if (save1) {
+      parse_block *tt = get_parse_block();
+      /* Run to the end of any already-deposited things.  This could happen if the
+         call takes a tagger -- it could have a search chain before we even see it. */
+      while (save1->next) save1 = save1->next;
+      save1->next = tt;
+      save1->concept = &marker_concept_mod;
+      tt->concept = &marker_concept_mod;
+      tt->call = (key == 6) ?
+         base_calls[2]:   /* "_secondary nothing" */
+         base_calls[1];   /* "nothing" */
+      tt->replacement_key = key;
+      parse_state.concept_write_ptr = &tt->subsidiary_root;
+   }
+
+   save1 = (parse_block *) 0;
+   user_match.match.call_conc_options = anythings->call_conc_options;
+
+   if (anythings->kind == ui_call_select) {
+      if (deposit_call(anythings->call_ptr)) return TRUE;
+      save1 = *parse_state.concept_write_ptr;
+      if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
+      there_is_a_call = TRUE;
+   }
+   else if (anythings->kind == ui_concept_select) {
+      if (deposit_concept(anythings->concept_ptr)) return TRUE;
+   }
+   else return TRUE;   /* Huh? */
+
+   if (anythings->packed_next_conc_or_subcall) {
+      /* key for "mandatory_anycall" */
+      if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1, 2)) return TRUE;
+   }
+
+   if (anythings->packed_secondary_subcall) {
+      /* key for "mandatory_secondary_call" */
+      if (deposit_call_tree(anythings->packed_secondary_subcall, save1, 6)) return TRUE;
+   }
+
+   return FALSE;
+}
+
+
+
+
 /* This returns TRUE if it fails, e.g. the user waves the mouse away. */
 extern long_boolean uims_get_call_command(uims_reply *reply_p)
 {
    char prompt_buffer[200];
    char *prompt_ptr;
    int banner_mode;
+   long_boolean retval = FALSE;
 
    if (allowing_modifications)
       parse_state.call_list_to_use = call_list_any;
@@ -997,55 +1061,17 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
          uims_menu_index = (int) command_command_values[user_match.match.index];
    }
    else {
-      parse_block *save1 = (parse_block *) 0;
-      uint32 save2;
-      long_boolean save2_active = FALSE;
-      modifier_block *anythings = &user_match.match;
-
-      /* This stuff is duplicated in verify_call in sdmatch.c . */
-
-      while (anythings) {
-         call_conc_option_state save_stuff = user_match.match.call_conc_options;
-
-         /* First, if we have already deposited a call, and we see more stuff, it must be
-            concepts or calls for an "anything" subcall. */
-
-         if (save1) {
-            parse_block *tt = get_parse_block();
-            /* Run to the end of any already-deposited things.  This could happen if the
-               call takes a tagger -- it could have a search chain before we even see it. */
-            while (save1->next) save1 = save1->next;
-            save1->next = tt;
-            save1->concept = &marker_concept_mod;
-            tt->concept = &marker_concept_mod;
-            tt->call = base_calls[1];   /* "nothing" */
-            tt->replacement_key = 2;    /* "mandatory_anycall" */
-            parse_state.concept_write_ptr = &tt->subsidiary_root;
-            save1 = (parse_block *) 0;
-         }
-
-         user_match.match.call_conc_options = anythings->call_conc_options;
-
-         if (anythings->kind == ui_call_select) {
-            if (deposit_call(anythings->call_ptr)) return TRUE;
-            save1 = *parse_state.concept_write_ptr;
-            if (!save2_active) save2 = parse_state.topcallflags1;
-            save2_active = TRUE;
-            *reply_p = ui_call_select;
-         }
-         else if (anythings->kind == ui_concept_select) {
-            if (deposit_concept(anythings->concept_ptr)) return TRUE;
-         }
-         else break;   /* Huh? */
-
-         user_match.match.call_conc_options = save_stuff;
-         anythings = anythings->next_conc_or_subcall;
+      call_conc_option_state save_stuff = user_match.match.call_conc_options;
+      there_is_a_call = FALSE;
+      retval = deposit_call_tree(&user_match.match, (parse_block *) 0, 2);
+      user_match.match.call_conc_options = save_stuff;
+      if (there_is_a_call) {
+         parse_state.topcallflags1 = the_topcallflags;
+         *reply_p = ui_call_select;
       }
-
-      if (save2_active) parse_state.topcallflags1 = save2;
    }
 
-   return FALSE;
+   return retval;
 }
 
 
@@ -1326,7 +1352,7 @@ extern int uims_do_circcer_popup(void)
 }
 
 
-extern uint32 uims_get_number_fields(int nnumbers)
+extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;
@@ -1341,9 +1367,10 @@ extern uint32 uims_get_number_fields(int nnumbers)
             char buffer[200];
             get_string_input("How many? ", buffer);
             if (buffer[0] == '!' || buffer[0] == '?') {
-               put_line("Type a number between 1 and 8\n");
+               put_line("Type a number between 0 and 8\n");
                current_text_line++;
             }
+            else if (!buffer[0]) return ~0;
             else {
                this_num = atoi(buffer);
                break;
@@ -1356,7 +1383,8 @@ extern uint32 uims_get_number_fields(int nnumbers)
          howmanynumbers--;
       }
 
-      if (this_num <= 0 || this_num > 8) return 0;    /* User gave bad answer. */
+      if (forbid_zero && this_num == 0) return ~0;
+      if (this_num > 8) return ~0;    /* User gave bad answer. */
       number_list |= (this_num << (i*4));
    }
 

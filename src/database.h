@@ -21,23 +21,24 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 98
+#define DATABASE_FORMAT_VERSION 110
 
 
 
 
 /* BEWARE!!  These must track the items in tagtabinit in dbcomp.c . */
-#define BASE_CALL_CAST_3_4    2
-#define BASE_CALL_ENDS_SHADOW 3
-#define BASE_CALL_CHREACT_1   4
-#define BASE_CALL_MAKEPASS_1  5
-#define BASE_CALL_CIRCULATE   6
+#define BASE_CALL_NULL_SECOND 2
+#define BASE_CALL_CAST_3_4    3
+#define BASE_CALL_ENDS_SHADOW 4
+#define BASE_CALL_CHREACT_1   5
+#define BASE_CALL_MAKEPASS_1  6
+#define BASE_CALL_CIRCULATE   7
 /* The next 4 must be consecutive. */
-#define BASE_CALL_TAGGER0     7
-#define BASE_CALL_TAGGER1     8
-#define BASE_CALL_TAGGER2     9
-#define BASE_CALL_TAGGER3    10
-#define BASE_CALL_CIRCCER    11
+#define BASE_CALL_TAGGER0     8
+#define BASE_CALL_TAGGER1     9
+#define BASE_CALL_TAGGER2    10
+#define BASE_CALL_TAGGER3    11
+#define BASE_CALL_CIRCCER    12
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -87,9 +88,14 @@
 #define CFLAG1_IS_STAR_CALL               0x00000080UL
 #define CFLAG1_SPLIT_LARGE_SETUPS         0x00000100UL
 #define CFLAG1_FUDGE_TO_Q_TAG             0x00000200UL
+
+/* This is a 3 bit field. */
+#define CFLAG1_STEP_REAR_MASK             0x00001C00UL
+/* Here are the 3 bits. */
 #define CFLAG1_STEP_TO_WAVE               0x00000400UL
 #define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00000800UL
 #define CFLAG1_REAR_BACK_FROM_QTAG        0x00001000UL
+
 #define CFLAG1_DONT_USE_IN_RESOLVE        0x00002000UL
 /* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
 #define CFLAG1_NUMBER_MASK                0x0001C000UL
@@ -106,6 +112,7 @@
 #define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
 #define CFLAG1_BASE_CIRC_CALL             0x08000000UL
 #define CFLAG1_ENDS_TAKE_RIGHT_HANDS      0x10000000UL
+#define CFLAG1_FULL_SIZE_MYSTIC           0x20000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -375,7 +382,6 @@ typedef enum {
    sq_wave_only,
    sq_rwave_only,
    sq_lwave_only,
-   sq_not_wave_only,
    sq_all_facing_same,
    sq_1fl_only,
    sq_2fl_only,
@@ -390,6 +396,7 @@ typedef enum {
    sq_magic_only,
    sq_in_or_out,
    sq_miniwaves,
+   sq_not_miniwaves,
    sq_1_4_tag,
    sq_3_4_tag,
    sq_dmd_same_pt,
@@ -407,6 +414,8 @@ typedef enum {
    sq_trade_by,
    sq_facing_in,
    sq_facing_out,
+   sq_live_facing_in,
+   sq_live_facing_out,
    sq_all_ctrs_rh,
    sq_all_ctrs_lh,
    sq_dmd_ctrs_rh,
@@ -442,7 +451,6 @@ typedef enum {
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
-   cr_live_2fl_only,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
    cr_leads_only,
@@ -488,21 +496,36 @@ typedef enum {
    schema_concentric,
    schema_cross_concentric,
    schema_single_concentric,
-   schema_grand_single_concentric,
    schema_single_cross_concentric,
+   schema_grand_single_concentric,
+   schema_grand_single_cross_concentric,
    schema_single_concentric_together,
    schema_maybe_single_concentric,
    schema_maybe_single_cross_concentric,
    schema_maybe_grand_single_concentric,
+   schema_maybe_grand_single_cross_concentric,
+   schema_maybe_special_single_concentric,
+   schema_3x3_concentric,
+   schema_4x4_lines_concentric,
+   schema_4x4_cols_concentric,
+   schema_maybe_nxn_lines_concentric,
+   schema_maybe_nxn_cols_concentric,
+   schema_maybe_nxn_1331_lines_concentric,
+   schema_maybe_nxn_1331_cols_concentric,
+   schema_1331_concentric,
    schema_concentric_diamond_line,
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
+   schema_concentric_or_diamond_line,
    schema_concentric_6_2,
    schema_concentric_2_6,
    schema_concentric_4_2,
-   schema_maybe_4x2_concentric,
+   schema_concentric_4_2_or_normal,
+   schema_concentric_4_2_or_sgltogether,
+   schema_cross_concentric_4_2_or_normal,
    schema_concentric_others,
    schema_concentric_6_2_tgl,
+   schema_concentric_to_outer_diamond,
    schema_conc_star,
    schema_conc_star12,
    schema_conc_star16,
@@ -513,6 +536,7 @@ typedef enum {
    schema_maybe_matrix_conc_star,
    schema_maybe_matrix_conc_bar,
    schema_checkpoint,
+   schema_cross_checkpoint,
    schema_rev_checkpoint,
    schema_ckpt_star,
    schema_in_out_triple_squash,
@@ -607,6 +631,9 @@ typedef enum {
 
 /* End of concentricity flags.  This constant embraces them. */
 #define DFM1_CONCENTRICITY_FLAG_MASK      0x000000FF
+
+/* These are the "seq" flags.  They overlay the "conc" flags. */
+#define DFM1_SEQ_RE_EVALUATE              0x00000001
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */

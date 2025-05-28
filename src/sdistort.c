@@ -34,6 +34,8 @@
 
 
 #include "sd.h"
+extern map_thing map_dbgbn1;                                        /* in SDTABLES */
+extern map_thing map_dbgbn2;                                        /* in SDTABLES */
 
 
 /* Must be a power of 2. */
@@ -238,8 +240,24 @@ Private void innards(
    }
 
    if (sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) {
-      int before_distance = setup_attrs[maps->inner_kind].bounding_box[(rot ^ vert) & 1];
-      int after_distance = setup_attrs[z[0].kind].bounding_box[(z[0].rotation) & 1];
+      int before_distance, after_distance;
+      long_boolean deadconc = FALSE;
+
+      before_distance = setup_attrs[maps->inner_kind].bounding_box[(rot ^ vert) & 1];
+      if (z[0].kind == s_dead_concentric) {
+         after_distance = setup_attrs[z[0].inner.skind].bounding_box[(z[0].rotation) & 1];
+         deadconc = TRUE;
+      }
+      else
+         after_distance = setup_attrs[z[0].kind].bounding_box[(z[0].rotation) & 1];
+
+      if (deadconc) {
+         for (i=0; i<arity; i++) {
+            z[i].kind = z[i].inner.skind;
+            z[i].rotation += z[i].inner.srotation;
+            canonicalize_rotation(&z[i]);
+         }
+      }
 
       /* Now "before_distance" is the height of the starting setup in the direction in
          which the setups are adjoined, taking setup rotation into account.  "After_distance"
@@ -281,7 +299,7 @@ Private void innards(
          for something like, from normal diamonds, "work matrix in each diamond, and
          drop in".  The 2x2 and diamond setups have the same height. */
 
-      if (before_distance == after_distance) fail("Unnecessary use of matrix concept.");
+      if (before_distance == after_distance && !deadconc) fail("Unnecessary use of matrix concept.");
 
       /* If the setups are 50% overlapped, make the appropriate adjustment. */
 
@@ -738,10 +756,10 @@ extern void divided_setup_move(
       the incoming rotation into account. */
 
    if (maps->map_kind == MPKIND__SPLIT) {
-      if (maps->vert & 1)
-         result->result_flags += RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION;
-      else
-         result->result_flags += RESULTFLAG__SPLIT_AXIS_BIT;
+      result->result_flags +=
+            (maps->vert & 1) ?
+               (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION) :
+               RESULTFLAG__SPLIT_AXIS_BIT;
    }
 
    /* Now we reinstate the incoming rotation, which we have completely ignored up until
@@ -1363,10 +1381,6 @@ extern void distorted_move(
    if (linesp & 8) {
       int i;
 
-      k = s1x8;
-
-      if (ss->kind != s2x8) fail("Must have 2x8 setup for this concept.");
-
       if (linesp & 1) {
          if (global_tbonetest & 1) fail("There is no tidal line here.");
       }
@@ -1374,14 +1388,27 @@ extern void distorted_move(
          if (global_tbonetest & 010) fail("There is no tidal column here.");
       }
 
-      /* Search for the live people. */
-      
-      for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
-      
-      zlines = FALSE;
-      rot = 0;
-      rotz = 0;
-      result->kind = s2x8;      
+      if (ss->kind == sbigbone) {
+         if (global_livemask == 01717) { map_ptr = &map_dbgbn1; }
+         else if (global_livemask == 07474) { map_ptr = &map_dbgbn2; }
+         else fail("Can't find distorted 1x8.");
+
+         disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
+         goto do_divided_call;
+      }
+      else if (ss->kind == s2x8) {
+         /* Search for the live people. */
+
+         for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
+
+         k = s1x8;
+         zlines = FALSE;
+         rot = 0;
+         rotz = 0;
+         result->kind = s2x8;      
+      }
+      else
+         fail("Must have 2x8 setup for this concept.");
    }
    else if (linesp & 16) {
       if (ss->kind == sbighrgl) {

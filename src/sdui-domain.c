@@ -556,9 +556,9 @@ extern void uims_postinitialize(void)
    }
 
    {
-      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(8 * sizeof(dp_$string_desc_t));
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(9 * sizeof(dp_$string_desc_t));
 
-      for (k=0; k<8; k++) {
+      for (k=0; k<9; k++) {
          p = cardinals[k];
          j = 0;
          while (p[j]) j++;
@@ -1323,7 +1323,7 @@ extern int uims_do_tagger_popup(int tagger_class)
 
 
 
-extern uint32 uims_get_number_fields(int nnumbers)
+extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
 {
    int i;
    uint32 number_list = 0;
@@ -1338,11 +1338,12 @@ extern uint32 uims_get_number_fields(int nnumbers)
       if (task == task$quantifier_menu) {
          unsigned int num;
          dialog_get_menu_item(task$quantifier_menu, (int *) &num);
-         number_list |= (num << (i*4));
+         if (forbid_zero && num == 1) return ~0;
+         number_list |= ((num-1) << (i*4));
       }
       else {
          dialog_signal(quantifier_disabler);
-         return 0;    /* User waved the mouse away. */
+         return ~0;    /* User waved the mouse away. */
       }
    }
 

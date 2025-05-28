@@ -120,10 +120,11 @@ Private tm_thing maps_isearch_twosome[] = {
    {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0x66,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s2x3,  s2x4},
-   /* Next three are for various people in tandem in a rigger or PTP diamonds, making a virtual line of 6. */
+   /* Next three are for various people in tandem in a rigger/ptpd/bone, making a virtual line of 6. */
    {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_rigger},
    {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_ptpd},
    {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_bone},
+   {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s_bone6,s_bone},
    {{0, 2, 5, 7, 9, 11, 12, 14},    {1, 3, 4, 6, 8, 10, 13, 15},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s_qtag,s4dmd},
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0xFF,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
    {{0, 7, 2, 4, 5, 6},             {-1, 1, -1, -1, 3, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x1dmd, s_galaxy},
@@ -279,6 +280,17 @@ Private tm_thing maps_isearch_3x1tglsome[] = {
    {{0, 6},           {1, 7},           {2, 8},           {10, 4},             0x2,     0000,         2, 0,  0,  0, 0,  s1x2,  s2x6},
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
+Private tm_thing maps_isearch_ysome[] = {
+/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+   {{5, 1},           {0, 4},           {6, 2},           {7, 3},              0x7,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_bone},
+   {{0, 4},           {5, 1},           {7, 3},           {6, 2},              0xD,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_rigger},
+   {{15, 7},          {13, 5},          {3, 11},          {1, 9},              0x8,     0000,         2, 0,  0,  0, 0,  s1x2,  s_c1phan},
+   {{0, 8},           {2, 10},          {14, 6},          {12, 4},             0x2,     0000,         2, 0,  0,  0, 0,  s1x2,  s_c1phan},
+/*   Taken out -- we rotate the setup instead.
+   {{3, 11},          {1, 9},           {7, 15},          {5, 13},             0x8,   0xAAAA,         2, 1,  0,  0, 0,  s1x2,  s_c1phan},
+   {{4, 12},          {6, 14},          {2, 10},          {0, 8},              0x2,   0x5555,         2, 1,  0,  0, 0,  s1x2,  s_c1phan},
+*/
+   {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 typedef struct {
    setup_kind testkind;
@@ -292,6 +304,8 @@ siamese_item siamese_table[] = {
    {s2x4,        0x00990066UL, 0x99UL,   warn__ctrstand_endscpls},
    {s2x4,        0x000000FFUL, 0x66UL,   warn__ctrscpls_endstand},
    {s2x4,        0x00660099UL, 0x66UL,   warn__ctrscpls_endstand},
+   {s1x8,        0x00CC0033UL, 0x33UL,   warn__ctrstand_endscpls},
+   {s1x8,        0x003300CCUL, 0xCCUL,   warn__ctrscpls_endstand},
    {s2x4,        0x003300CCUL, 0xCCUL,   warn__none},
    {s2x4,        0x00CC0033UL, 0x33UL,   warn__none},
    {s_trngl4,    0x000F0000UL, 0x03UL,   warn__none},
@@ -391,6 +405,7 @@ extern void initialize_tandem_tables(void)
    initialize_one_table(maps_isearch_dmdsome, 4);
    initialize_one_table(maps_isearch_tglsome, 3);
    initialize_one_table(maps_isearch_3x1tglsome, 4);
+   initialize_one_table(maps_isearch_ysome, 4);
 }
 
 
@@ -658,7 +673,7 @@ extern void tandem_couples_move(
                                  out point triangles = 20 / in point triangles = 21
                                  inside triangles = 22 / outside triangles = 23
                                  wave-based triangles triangles = 26 / tandem-based triangles = 27
-                                 <anyone>-based triangles = 30 / 3x1 triangles = 31 */
+                                 <anyone>-based triangles = 30 / 3x1 triangles = 31 / Y's = 32 */
    setup *result)
 {
    selector_kind saved_selector;
@@ -682,7 +697,12 @@ extern void tandem_couples_move(
    clear_people(result);
 
 
-   if (key == 31) {
+   if (key == 32) {
+      np = 4;
+      our_map_table = maps_isearch_ysome;
+      tandstuff.no_unit_symmetry = TRUE;
+   }
+   else if (key == 31) {
       np = 4;
       our_map_table = maps_isearch_3x1tglsome;
       tandstuff.no_unit_symmetry = TRUE;
@@ -703,6 +723,14 @@ extern void tandem_couples_move(
                fail("Can't find the indicated triangles.");
 
             special_mask = 0x44;   /* The triangles have to be these. */
+         }
+         else if (ss->kind == s_dhrglass) {
+            uint32 tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+
+            if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
+               fail("Can't find the indicated triangles.");
+
+            special_mask = 0x88;   /* The triangles have to be these. */
          }
          else if (ss->kind == s_galaxy) {
             uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1;
@@ -894,6 +922,24 @@ extern void tandem_couples_move(
             nsmask = 0;
          }
       }
+      else if (key == 32) {
+         if (ss->kind == s_c1phan) {
+            if (!((ss->people[0].id1 ^ ss->people[1].id1 ^ ss->people[4].id1 ^ ss->people[5].id1) & 2)) {
+               ss->rotation++;
+               canonicalize_rotation(ss);
+               ss->rotation--;   /* Since we won't look at the ss->rotation again until the end,
+                                    this will have the effect of rotating it back.
+                                    Note that allmask, if it is acceptable at all, is still correct
+                                    for the new rotation. */
+            }
+            ewmask = 0;
+            nsmask = allmask;
+         }
+         else {
+            ewmask = allmask;
+            nsmask = 0;
+         }
+      }
       else if (ss->kind == s_galaxy) {
          if (special_mask == 0x44) {
             ewmask = allmask;
@@ -1030,7 +1076,7 @@ extern void tandem_couples_move(
    if (tandstuff.virtual_result.kind == s_dead_concentric) {
       dead_conc = TRUE;
       tandstuff.virtual_result.kind = tandstuff.virtual_result.inner.skind;
-      tandstuff.virtual_result.rotation = tandstuff.virtual_result.inner.srotation;
+      tandstuff.virtual_result.rotation += tandstuff.virtual_result.inner.srotation;
    }
 
    if (setup_attrs[tandstuff.virtual_result.kind].setup_limits < 0)
@@ -1106,6 +1152,7 @@ extern void tandem_couples_move(
          if (dead_conc) {
             result->inner.skind = result->kind;
             result->inner.srotation = result->rotation;
+            result->rotation = 0;
             result->kind = s_dead_concentric;
          }
 

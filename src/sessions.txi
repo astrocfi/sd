@@ -2,16 +2,6 @@
 @setfilename sessions.info
 @settitle sdtty sessions
 @c Time-stamp: <96/04/05 14:25:00 wba>
-@tex
-\global\setfont\smallrm\rmshape{8}{1000}
-\global\font\smallsy=cmsy9
-\global\def\keycap#1{{\smallrm\textfont2=\smallsy \leavevmode\hbox{%
-  \raise0.4pt\hbox{$\langle$}\kern-.08em\vtop{%
-    \vbox{\hrule\kern-0.4pt
-     \hbox{\raise0.4pt\hbox{\vphantom{$\langle$}}\uppercase{#1}}}%
-    \kern-0.4pt\hrule}%
-  \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
-@end tex
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -98,12 +88,12 @@ you can issue that command:
 @example
 @group
 Version Sd 31.62 : db31.62 : ui1.7tty     C1
-Output file is "sequence.C1"                <-- it tells us the default name
-Enter startup command> change output file   <-- we desire to change it
-Sequence output file is "sequence.C1".      <-- it tells us the old name
-Enter new file name: 21may95.C1             <-- we give the new one
-Output file changed to "21may95.C1"         <-- it tells us the new name
-Enter startup command> sides start          <-- we're off and running
+Output file is "sequence.C1"               <-- it shows the default name
+Enter startup command> change output file  <-- we desire to change it
+Sequence output file is "sequence.C1".     <-- it tells us the old name
+Enter new file name: 21may95.C1            <-- we give the new one
+Output file changed to "21may95.C1"        <-- it tells us the new name
+Enter startup command> sides start         <-- we're off and running
 @end group
 @end example
 
@@ -117,14 +107,13 @@ At the end of a sequence, sdtty always tells you what file it is
 writing to, and whether it is creating a new file or appending to
 an old one.
 
-@iftex
 @example
 @group
-(waves)--> @kbd{end this sequence}                <-- we want to write the sequence
+(waves)--> @kbd{end this sequence}           <-- we want to write the sequence
 Type comment for this sequence, if desired.
-Enter comment:                              <-- it asks for a comment;
-                                                        we press @keycap{ENTER}
-File does not exist, creating it.           <-- it tells us what it is doing
+Enter comment:                         <-- it asks for a comment;
+                                                   we press @key{ENTER}
+File does not exist, creating it.      <-- it tells us what it is doing
 
 Sat Mar  9 19:22:26 1996     Sd31.62:db31.62     C1
 
@@ -132,29 +121,9 @@ SIDES wheel thru
 swing thru
 right and left grand  (3/8 promenade)
 
-Sequence written to "21may95.C1".           <-- and what file it wrote to
+Sequence written to "21may95.C1".      <-- and what file it wrote to
 @end group
 @end example
-@end iftex
-@ifinfo
-@example
-@group
-(waves)--> @kbd{end this sequence}                <-- we want to write the sequence
-Type comment for this sequence, if desired.
-Enter comment:                              <-- it asks for a comment;
-                                                        we press <ENTER>
-File does not exist, creating it.           <-- it tells us what it is doing
-
-Sat Mar  9 19:22:26 1996     Sd31.62:db31.62     C1
-
-SIDES wheel thru
-swing thru
-right and left grand  (3/8 promenade)
-
-Sequence written to "21may95.C1".           <-- and what file it wrote to
-@end group
-@end example
-@end ifinfo
 
 
 WARNING!!!!!!  Sdtty can't always successfully append new sequences
@@ -274,29 +243,11 @@ Enter the number of the desired session:
 @end example
 
 There are five sessions shown in the demonstration, numbered 1 through 5.
-Type the number of the desired session, and press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+Type the number of the desired session, and press @key{ENTER}.
 
 Incidentally, any time you want to use sdtty without the session
-feature, you can type @kbd{0} and press
-@iftex
-@keycap{ENTER}
-@end iftex
-@ifinfo
-<ENTER>
-@end ifinfo
-at this point, or just press
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+feature, you can type @kbd{0} and press @key{ENTER} at this point,
+or just press @key{ENTER}.
 Sdtty will act as though the session file had not
 existed, and will operate the old-fashioned way.  The session
 file will still be left intact, so it can be used the next time.
@@ -306,13 +257,7 @@ the level.
 The sample session file presumes that there are 5 groups, or dances,
 or festivals, or workshops, or whatever, that we are writing material
 for.  One of them is our Wednesday C1 workshop.  Choose that one by
-typing 3 and pressing
-@iftex
-@keycap{ENTER}.
-@end iftex
-@ifinfo
-<ENTER>.
-@end ifinfo
+typing 3 and pressing @key{ENTER}.
 
 @example
 @group

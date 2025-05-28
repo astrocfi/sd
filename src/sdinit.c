@@ -565,7 +565,7 @@ but not executable are now not parsable.  So we take it out.
          }
 */
          if (callq->schema != schema_by_array) accept_it = TRUE;
-         else if (callp->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
+         else if ((callp->callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_REAR_BACK_FROM_QTAG) {
             if (  assoc(b_4x2, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
                   assoc(b_4x1, (setup *) 0, callq->stuff.arr.def_list->callarray_list))
                accept_it = TRUE;

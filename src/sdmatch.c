@@ -106,6 +106,7 @@ static Cstring startup_commands[] = {
 
 
 static Cstring n_4_patterns[] = {
+   "0/4",
    "1/4",
    "2/4",
    "3/4",
@@ -153,6 +154,7 @@ extern void matcher_initialize(void)
 
       /* Pick out concepts that will be produced when certain function keys are pressed. */
       if (p->kind == concept_twice) twice_concept_ptr = p;
+      if (p->kind == concept_centers_or_ends && p->value.arg1 == selector_ends) centers_concept_ptr = p;
       if (p->kind == concept_sequential) two_calls_concept_ptr = p;
 
       concept_list_length++;
@@ -354,7 +356,7 @@ Private long_boolean verify_call(void)
          else break;   /* Huh? */
 
          static_ss.result.match.call_conc_options = save_stuff;
-         anythings = anythings->next_conc_or_subcall;
+         anythings = anythings->packed_next_conc_or_subcall;
       }
 
       parse_state.call_list_to_use = savecl;         /* deposit_concept screwed it up */
@@ -414,6 +416,52 @@ static void strn_gcp(char *s1, char *s2)
     }
 }
 
+
+static void copy_sublist(Const match_result *outbar, modifier_block *tails)
+{
+   if (outbar->real_next_subcall) {
+      modifier_block *out;
+      Const match_result *newoutbar = outbar->real_next_subcall;
+
+      if (modifier_inactive_list) {
+         out = modifier_inactive_list;
+         modifier_inactive_list = out->gc_ptr;
+      }
+      else
+         out = (modifier_block *) get_mem(sizeof(modifier_block));
+
+      *out = newoutbar->match;
+      out->packed_next_conc_or_subcall = (modifier_block *) 0;
+      out->packed_secondary_subcall = (modifier_block *) 0;
+      out->gc_ptr = modifier_active_list;
+      modifier_active_list = out;
+      tails->packed_next_conc_or_subcall = out;
+      copy_sublist(newoutbar, out);
+   }
+
+   if (outbar->real_secondary_subcall) {
+      modifier_block *out;
+      Const match_result *newoutbar = outbar->real_secondary_subcall;
+
+      if (modifier_inactive_list) {
+         out = modifier_inactive_list;
+         modifier_inactive_list = out->gc_ptr;
+      }
+      else
+         out = (modifier_block *) get_mem(sizeof(modifier_block));
+
+      *out = newoutbar->match;
+      out->packed_next_conc_or_subcall = (modifier_block *) 0;
+      out->packed_secondary_subcall = (modifier_block *) 0;
+      out->gc_ptr = modifier_active_list;
+      modifier_active_list = out;
+      tails->packed_secondary_subcall = out;
+      copy_sublist(newoutbar, out);
+   }
+
+}
+
+
 /*
  * Record a match.  Extension is how the current input would be extended to
  * match the current pattern.  Result is the value of the
@@ -442,35 +490,12 @@ static void record_a_match(void)
             (*static_ss.extension == '\0' && (
                   static_ss.exact_count == 0 || 
                   current_result->yield_depth <= old_yield))) {
-      Const match_result *outbar;
-      modifier_block **mod_tail = &static_ss.result.match.next_conc_or_subcall;
-
       static_ss.result = everyones_real_result;
       static_ss.lowest_yield_depth = current_result->yield_depth;
 
-      outbar = &static_ss.result;
+      /* We need to copy the modifiers to reasonably stable storage. */
 
-      while (outbar->real_next_subcall) {
-         modifier_block *out;
-
-         /* We need to copy the modifiers to reasonably stable storage. */
-
-         outbar = outbar->real_next_subcall;
-
-         if (modifier_inactive_list) {
-            out = modifier_inactive_list;
-            modifier_inactive_list = out->gc_ptr;
-         }
-         else
-            out = (modifier_block *) get_mem(sizeof(modifier_block));
-
-         *out = outbar->match;
-         out->next_conc_or_subcall = (modifier_block *) 0;
-         out->gc_ptr = modifier_active_list;
-         modifier_active_list = out;
-         *mod_tail = out;
-         mod_tail = &out->next_conc_or_subcall;
-      }
+      copy_sublist(&static_ss.result, &static_ss.result.match);
    }
 
    if (*static_ss.extension == '\0') {
@@ -516,6 +541,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                /* We have processed a concept.  Scan for concepts and calls after same. */
                match_result saved_result = *current_result;
                current_result->match.concept_ptr = pat2_concept;
+               current_result->real_next_subcall = &saved_result;
                scan_concepts_and_calls(user, " ", pat2, &saved_result, patxi);
             }
             pat2 = (pat2_block *) 0;
@@ -691,7 +717,6 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
    pat2_block p2b;
    match_result *saved_folksptr = current_result;
 
-   current_result->real_next_subcall = saved_result_p;
    p2b.folks_to_restore = (match_result *) 0;
    p2b.demand_a_call = FALSE;
    p2b.cdr = pat2;
@@ -797,7 +822,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
                return;
             }
             break;
-         case '0':
+         case '0': case 'm':
             if (*user == '[') {
                pat2_block p3b;
                match_result saved_result = *current_result;
@@ -807,6 +832,10 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
                p3b.folks_to_restore = current_result;
                p3b.demand_a_call = TRUE;
                p3b.cdr = &p2b;
+               if (key == '0')
+                  current_result->real_next_subcall = &saved_result;
+               else
+                  current_result->real_secondary_subcall = &saved_result;
                scan_concepts_and_calls(user, "[", &p3b, &saved_result, patxi);
                return;
             }
@@ -904,24 +933,24 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
             }
             break;
          case '9':
-            if (*user < '1' || *user > '8') return;
+            if (*user < '0' || *user > '8') return;
             number_table = cardinals;
             goto do_number_stuff;
          case 'u':
-            if (*user < '1' || *user > '8') return;
+            if (*user < '0' || *user > '8') return;
             number_table = ordinals;
             goto do_number_stuff;
          case 'a': case 'b': case 'B': case 'D':
-            if ((*user >= '1' && *user <= '8') || *user == 'q' || *user == 'h' || *user == 't' || *user == 'f') {
+            if ((*user >= '0' && *user <= '8') || *user == 'q' || *user == 'h' || *user == 't' || *user == 'f') {
                save_howmanynumbers = current_result->match.call_conc_options.howmanynumbers;
                save_number_fields = current_result->match.call_conc_options.number_fields;
       
                current_result->match.call_conc_options.howmanynumbers++;
 
-               for (i=1 ; (prefix = n_4_patterns[i-1]) ; i++) {
-                  current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
+               for (i=0 ; (prefix = n_4_patterns[i]) ; i++) {
                   if (key != 'D' || (i&1) != 0)
                      match_suffix_2(user, prefix, &p2b, patxi);
+                  current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
                }
          
                /* special case: allow "quarter" for 1/4 */
@@ -1026,9 +1055,9 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
 
    current_result->match.call_conc_options.howmanynumbers++;
 
-   for (i=1 ; (prefix = number_table[i-1]) ; i++) {
-       current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
+   for (i=0 ; (prefix = number_table[i]) ; i++) {
        match_suffix_2(user, prefix, &p2b, patxi);
+       current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
    }
 
    current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;

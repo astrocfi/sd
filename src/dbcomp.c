@@ -444,21 +444,36 @@ char *schematab[] = {
    "conc",
    "crossconc",
    "singleconc",
-   "grandsingleconc",
    "singlecrossconc",
+   "grandsingleconc",
+   "grandsinglecrossconc",
    "singleconc_together",
    "maybesingleconc",
    "maybesinglecrossconc",
    "maybegrandsingleconc",
+   "maybegrandsinglecrossconc",
+   "maybespecialsingleconc",
+   "3x3_conc",
+   "4x4_lines_conc",
+   "4x4_cols_conc",
+   "maybe_nxn_lines_conc",
+   "maybe_nxn_cols_conc",
+   "maybe_nxn_1331_lines_conc",
+   "maybe_nxn_1331_cols_conc",
+   "1331_conc",
    "conc_diamond_line",
    "conc_diamonds",
    "crossconc_diamonds",
+   "conc_or_diamond_line",
    "conc6_2",
    "conc2_6",
    "conc4_2",
-   "maybeconc4_2",
+   "conc4_2_or_normal",
+   "conc4_2_or_singletogether",
+   "crossconc4_2_or_normal",
    "conc_others",
    "conc6_2_tgl",
+   "conc_to_outer_dmd",
    "conc_star",
    "conc_star12",
    "conc_star16",
@@ -469,6 +484,7 @@ char *schematab[] = {
    "maybematrix_conc_star",
    "maybematrix_conc_bar",
    "checkpoint",
+   "cross_checkpoint",
    "reverse_checkpoint",
    "ckpt_star",
    "in_out_triple_squash",
@@ -494,7 +510,6 @@ char *qualtab[] = {
    "wave_only",
    "right_wave",
    "left_wave",
-   "not_wave_only",
    "all_facing_same",
    "1fl_only",
    "2fl_only",
@@ -509,6 +524,7 @@ char *qualtab[] = {
    "magic_only",
    "in_or_out",
    "miniwaves",
+   "not_miniwaves",
    "1_4_tag",
    "3_4_tag",
    "dmd_same_point",
@@ -526,6 +542,8 @@ char *qualtab[] = {
    "trade_by",
    "facing_in",
    "facing_out",
+   "live_facing_in",
+   "live_facing_out",
    "all_ctrs_rh",
    "all_ctrs_lh",
    "dmd_ctrs_rh",
@@ -559,7 +577,6 @@ char *crtab[] = {
    "all_facing_same",
    "1fl_only",
    "2fl_only",
-   "live_2fl_only",
    "3x3_2fl_only",
    "4x4_2fl_only",
    "leads_only",
@@ -662,6 +679,7 @@ char *flagtab1[] = {
    "base_tag_call_3",
    "base_circ_call",
    "ends_take_right_hands",
+   "full_size_mystic",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -814,6 +832,8 @@ char *predtab[] = {
    "other_diamond_point_select",
    "other_spindle_ckpt_select",
    "pair_person_select",
+   "person_select_sum5",
+   "person_select_sum8",
    "semi_squeezer_select",
    "select_once_rem_from_unselect",
    "unselect_once_rem_from_select",
@@ -951,6 +971,7 @@ tagtabitem tagtabinit[] = {
       {0, "nullcall"},       /* Must be #1 -- the database initializer uses call #1 for any mandatory
                                     modifier, e.g. "clover and [anything]" is executed as
                                     "clover and [call #1]". */
+      {0, "nullsecond"},     /* Base call for mandatory secondary modification. */
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info for part 2 of chain reaction. */
@@ -961,7 +982,7 @@ tagtabitem tagtabinit[] = {
       {0, "tagnullcall2"},
       {0, "tagnullcall3"},
       {0, "circnullcall"}};
-#define N_INITIAL_TAGS 12
+#define N_INITIAL_TAGS 13
 
 int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
 int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
@@ -1244,7 +1265,7 @@ static void write_fullword(uint32 n)
 }
 
 
-static void write_defmod_flags(void)
+static void write_defmod_flags(int is_seq)
 {
    int i;
    uint32 rr1 = 0;
@@ -1262,6 +1283,13 @@ static void write_defmod_flags(void)
 
          if ((i = search(defmodtab1)) >= 0)
             rr1 |= (1 << i);
+
+         /* Here is where we implement the "seq_re_evaluate" flag with the same
+            bit assignment as "conc_demand_lines". */
+
+         else if (is_seq && strcmp(tok_str, "seq_re_evaluate") == 0)
+            rr1 |= DFM1_CONC_DEMAND_LINES;
+
          else if (strcmp(tok_str, "allow_plain_mod") == 0)
             rr1 |= (3*DFM1_CALL_MOD_BIT);
          else if (strcmp(tok_str, "or_secondary_call") == 0)
@@ -1454,13 +1482,13 @@ static void write_conc_stuff(calldef_schema schema)
    if (tok_kind != tok_symbol) errexit("Improper conc symbol");
 
    write_halfword(0x4000 | tagsearch(0));
-   write_defmod_flags();
+   write_defmod_flags(0);
 
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper conc symbol");
 
    write_halfword(0x4000 | tagsearch(0));
-   write_defmod_flags();
+   write_defmod_flags(0);
 }
 
 
@@ -1469,7 +1497,7 @@ static void write_seq_stuff(void)
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper seq symbol");
    write_halfword(0x4000 | tagsearch(0));
-   write_defmod_flags();
+   write_defmod_flags(1);
 }
 
 
@@ -1817,7 +1845,8 @@ extern void dbcompile(void)
             else {
                if ((iii = search(flagtab1)) >= 0)
                   call_flags1 |= (1 << iii);
-
+               else if (strcmp(tok_str, "step_to_nonphantom_box") == 0)
+                  call_flags1 |= (CFLAG1_STEP_TO_WAVE|CFLAG1_REAR_BACK_FROM_R_WAVE);
                else if (strcmp(tok_str, "visible_fractions") == 0)
                   call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
                else if (strcmp(tok_str, "need_three_numbers") == 0)

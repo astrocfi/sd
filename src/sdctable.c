@@ -234,7 +234,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@a CRAZY PHANTOM COLUMNS",              concept_frac_phan_crazy,           D, l_c4, {0, 16+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
    {"@a REVERSE CRAZY PHANTOM COLUMNS",      concept_frac_phan_crazy,           D, l_c4, {0, 16+8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"TRIPLE COLUMNS",                        concept_triple_lines,              D, l_c3, {0, 0}},
+   {"TRIPLE COLUMNS",                        concept_triple_lines,              D, l_c3, {0, 2}},
    {"CENTER TRIPLE COLUMN",                  concept_in_out_std,                D, l_c3, {0, 0, CONCPROP__NEEDK_CTR_1X4, 0}},
    {"OUTSIDE TRIPLE COLUMNS",                concept_in_out_std,                D, l_c3, {0, 8+0, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE COLUMNS WORKING TOGETHER",       concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 0}},
@@ -299,7 +299,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE BOXES",                          concept_triple_boxes,              D, l_c1, {0, MPKIND__SPLIT}},
    {"CENTER TRIPLE BOX",                     concept_in_out_nostd,              D, l_c1, {0, 4, CONCPROP__NEEDK_CTR_2X2, 0}},
    {"OUTSIDE TRIPLE BOXES",                  concept_in_out_nostd,              D, l_c1, {0, 8+4, CONCPROP__NEEDK_END_2X2, 0}},
-   {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,              D, l_c4, {0, MPKIND__CONCPHAN}},
+   {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,              D, l_c4a, {0, MPKIND__CONCPHAN}},
    {"TRIPLE BOXES WORKING TOGETHER",         concept_triple_boxes_together,     D, l_c4a, {0, 6, 0}},
    {"TRIPLE BOXES WORKING APART",            concept_triple_boxes_together,     D, l_c4a, {0, 7, 0}},
    {"TRIPLE BOXES WORKING FORWARD",          concept_triple_boxes_together,     D, l_c4a, {0, 0, 0}},
@@ -448,7 +448,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* tandem concepts */
 
-#define tt__1_size 71
+#define tt__1_size 73
 #define tt__1_cpl 2
 #define tt__1_tnd 3
    {"PHANTOM",                               concept_c1_phantom,            L+U+D, l_c1},
@@ -462,8 +462,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"COUPLES OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 9}},
    {"TANDEMS OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 8}},
    {"SIAMESE OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 10}},
-   {"BOXES WORK SOLID",                      concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 16}},
-   {"DIAMONDS WORK SOLID",                   concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 17}},
+   {"BOXES ARE SOLID",                       concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 16}},
+   {"DIAMONDS ARE SOLID",                    concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 17}},
    {"SKEW",                                  concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x000, 18}},
    {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, 1}},
    {"GRUESOME TANDEM",                       concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, 0}},
@@ -479,14 +479,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM",                         concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 0}},
    {"@6 ARE COUPLES OF THREE",               concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 5}},
    {"@6 ARE TANDEMS OF THREE",               concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 4}},
-   {"INSIDE TRIANGLES WORK SOLID",           concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 22}},
-   {"OUTSIDE TRIANGLES WORK SOLID",          concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 23}},
-   {"IN POINT TRIANGLES WORK SOLID",         concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 21}},
-   {"OUT POINT TRIANGLES WORK SOLID",        concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 20}},
-   {"WAVE-BASED TRIANGLES WORK SOLID",       concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 26}},
-   {"TANDEM-BASED TRIANGLES WORK SOLID",     concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 27}},
-   {"@k-BASED TRIANGLES WORK SOLID",         concept_some_are_tandem,         F+D, l_c2,         {0, 0, 0,                    0x100, 30}},
-   {"3X1 TRIANGLES WORK SOLID",              concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 31}},
+   {"INSIDE TRIANGLES ARE SOLID",            concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 22}},
+   {"OUTSIDE TRIANGLES ARE SOLID",           concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 23}},
+   {"IN POINT TRIANGLES ARE SOLID",          concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 21}},
+   {"OUT POINT TRIANGLES ARE SOLID",         concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 20}},
+   {"WAVE-BASED TRIANGLES ARE SOLID",        concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 26}},
+   {"TANDEM-BASED TRIANGLES ARE SOLID",      concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 27}},
+   {"@k-BASED TRIANGLES ARE SOLID",          concept_some_are_tandem,         F+D, l_c2,         {0, 0, 0,                    0x100, 30}},
+   {"3X1 TRIANGLES ARE SOLID",               concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 31}},
+   {"Y's ARE SOLID",                         concept_tandem,                  F+D, l_c4,         {0, 0, 0,                    0x000, 32}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"COUPLES @b TWOSOME",                    concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 1}},
    {"TANDEM @b TWOSOME",                     concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 0}},
@@ -514,16 +515,17 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 0}},
    {"@6 ARE COUPLES OF THREE @b THREESOME",  concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 5}},
    {"@6 ARE TANDEMS OF THREE @b THREESOME",  concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 4}},
-   {"INSIDE TRIANGLES WORK SOLID @b THREESOME",       concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 22}},
-   {"OUTSIDE TRIANGLES WORK SOLID @b THREESOME",      concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 23}},
-   {"IN POINT TRIANGLES WORK SOLID @b THREESOME",     concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 21}},
-   {"OUT POINT TRIANGLES WORK SOLID @b THREESOME",    concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 20}},
-   {"WAVE-BASED TRIANGLES WORK SOLID @b THREESOME",   concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 26}},
-   {"TANDEM-BASED TRIANGLES WORK SOLID @b THREESOME", concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 27}},
-   {"@k-BASED TRIANGLES WORK SOLID @b THREESOME", concept_some_are_frac_tandem, F+D, l_c4,       {0, 0, 0,                    0x120, 30}},
-   {"3X1 TRIANGLES WORK SOLID @b TRIANGLESOME",       concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x020, 31}},
+   {"INSIDE TRIANGLES ARE SOLID @b THREESOME",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 22}},
+   {"OUTSIDE TRIANGLES ARE SOLID @b THREESOME",      concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 23}},
+   {"IN POINT TRIANGLES ARE SOLID @b THREESOME",     concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 21}},
+   {"OUT POINT TRIANGLES ARE SOLID @b THREESOME",    concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 20}},
+   {"WAVE-BASED TRIANGLES ARE SOLID @b THREESOME",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 26}},
+   {"TANDEM-BASED TRIANGLES ARE SOLID @b THREESOME", concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 27}},
+   {"@k-BASED TRIANGLES ARE SOLID @b THREESOME", concept_some_are_frac_tandem,F+D, l_c4,         {0, 0, 0,                    0x120, 30}},
+   {"3X1 TRIANGLES ARE SOLID @b TRIANGLESOME",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 31}},
+   {"Y's ARE SOLID @b Y-SOME",                       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 32}},
 /* -------- column break -------- */
-#define tt__2_size 71
+#define tt__2_size 73
 #define tt__2_cpl2s 2
 #define tt__2_tnd2s 3
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x013, 1}},
@@ -554,14 +556,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 0}},
    {"@6 ARE COUPLES THREESOME",              concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 5}},
    {"@6 ARE TANDEM THREESOME",               concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 4}},
-   {"INSIDE TRIANGLES WORK THREESOME",       concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 22}},
-   {"OUTSIDE TRIANGLES WORK THREESOME",      concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 23}},
-   {"IN POINT TRIANGLES WORK THREESOME",     concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 21}},
-   {"OUT POINT TRIANGLES WORK THREESOME",    concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 20}},
-   {"WAVE-BASED TRIANGLES WORK THREESOME",   concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 26}},
-   {"TANDEM-BASED TRIANGLES WORK THREESOME", concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 27}},
-   {"@k-BASED TRIANGLES WORK THREESOME",     concept_some_are_tandem,         F+D, l_c4a,        {0, 0, 0,                    0x110, 30}},
-   {"3X1 TRIANGLES WORK TRIANGLESOME",       concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 31}},
+   {"INSIDE TRIANGLES ARE THREESOME",        concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 22}},
+   {"OUTSIDE TRIANGLES ARE THREESOME",       concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 23}},
+   {"IN POINT TRIANGLES ARE THREESOME",      concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 21}},
+   {"OUT POINT TRIANGLES ARE THREESOME",     concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 20}},
+   {"WAVE-BASED TRIANGLES ARE THREESOME",    concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 26}},
+   {"TANDEM-BASED TRIANGLES ARE THREESOME",  concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 27}},
+   {"@k-BASED TRIANGLES ARE THREESOME",      concept_some_are_tandem,         F+D, l_c4a,        {0, 0, 0,                    0x110, 30}},
+   {"3X1 TRIANGLES ARE TRIANGLESOME",        concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 31}},
+   {"Y-SOME",                                concept_tandem,                  F+D, l_c4,         {0, 0, 0,                    0x010, 32}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"COUPLES TWOSOME @b SOLID",              concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 1}},
    {"TANDEM TWOSOME @b SOLID",               concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 0}},
@@ -589,14 +592,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 0}},
    {"@6 ARE COUPLES THREESOME @b SOLID",     concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 5}},
    {"@6 ARE TANDEM THREESOME @b SOLID",      concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 4}},
-   {"INSIDE TRIANGLES WORK THREESOME @b SOLID",       concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x030, 22}},
-   {"OUTSIDE TRIANGLES WORK THREESOME @b SOLID",      concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x030, 23}},
-   {"IN POINT TRIANGLES WORK THREESOME @b SOLID",     concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x030, 21}},
-   {"OUT POINT TRIANGLES WORK THREESOME @b SOLID",    concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x030, 20}},
-   {"WAVE-BASED TRIANGLES WORK THREESOME @b SOLID",   concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x030, 26}},
-   {"TANDEM-BASED TRIANGLES WORK THREESOME @b SOLID", concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x030, 27}},
-   {"@k-BASED TRIANGLES WORK THREESOME @b SOLID", concept_some_are_frac_tandem, F+D, l_c4,       {0, 0, 0,                    0x130, 30}},
-   {"3X1 TRIANGLES WORK TRIANGLESOMESOME @b SOLID",   concept_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x030, 31}},
+   {"INSIDE TRIANGLES ARE THREESOME @b SOLID",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 22}},
+   {"OUTSIDE TRIANGLES ARE THREESOME @b SOLID",      concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 23}},
+   {"IN POINT TRIANGLES ARE THREESOME @b SOLID",     concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 21}},
+   {"OUT POINT TRIANGLES ARE THREESOME @b SOLID",    concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 20}},
+   {"WAVE-BASED TRIANGLES ARE THREESOME @b SOLID",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 26}},
+   {"TANDEM-BASED TRIANGLES ARE THREESOME @b SOLID", concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 27}},
+   {"@k-BASED TRIANGLES ARE THREESOME @b SOLID", concept_some_are_frac_tandem,F+D, l_c4,         {0, 0, 0,                    0x130, 30}},
+   {"3X1 TRIANGLES ARE TRIANGLESOMESOME @b SOLID",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 31}},
+   {"Y-SOME @b SOLID",                               concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 32}},
 
 /* distorted concepts */
 
@@ -809,7 +813,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 72
+#define mm__2_size 76
    {"CENTERS",                               concept_centers_or_ends,           D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,           D, l_mainstream, {0, selector_ends,    FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
@@ -838,7 +842,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"TWIN ORBITBOARD",                       concept_checkerboard,              D, l_c4,         {0, s1x4, 3}},
    {"TWIN ORBITBOX",                         concept_checkerboard,              D, l_c4,         {0, s2x2, 3}},
    {"TWIN ORBITDIAMOND",                     concept_checkerboard,              D, l_c4,         {0, sdmd, 3}},
+   {"SHADOW LINE",                           concept_checkerboard,              D, l_c4a,        {0, s1x4, 1}},
    {"SHADOW BOX",                            concept_checkerboard,              D, l_c4a,        {0, s2x2, 1}},
+   {"SHADOW DIAMOND",                        concept_checkerboard,              D, l_c4a,        {0, sdmd, 1}},
    {"ANCHOR THE @6",                         concept_anchor,                  F+D, l_c4},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"@6",                                    concept_so_and_so_only,          Y+D, l_mainstream, {0, 4, 0}},
@@ -879,13 +885,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 START",                              concept_so_and_so_begin,         F+D, l_c1,         {0, 0}},
    {"SKIP THE @u PART",                      concept_nth_part,                F+D, l_c1,         {0, 9}},
    {"DO THE @u PART",                        concept_nth_part,                L+D, l_c1,         {0, 8}},
-   {"REPLACE THE @u PART",                   concept_replace_nth_part,          0, l_c1,         {0, 0}},
+   {"REPLACE THE @u PART",                   concept_replace_nth_part,          0, l_c1,         {0, 8}},
+   {"REPLACE THE LAST PART",                 concept_replace_last_part,         0, l_c1,         {0, 0}},
    {"START WITH",                            concept_special_sequential,        0, l_c2,         {0, 2}},
-   {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,          0, l_c1,         {0, 1}},
+   {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,          0, l_c1,         {0, 9}},
+   {"INTERRUPT BEFORE THE LAST PART",        concept_replace_last_part,         0, l_c1,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 63
-#define mm__3_3x3 57
-#define mm__3_4x4 58
+#define mm__3_size 65
+#define mm__3_3x3 59
+#define mm__3_4x4 60
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,               D, l_c1,         {0, 3}},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,               D, l_c1,         {0, 5}},
@@ -900,6 +908,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"CROSS CONCENTRIC",                      concept_concentric,                D, l_c2,         {0, schema_cross_concentric}},
    {"SINGLE CONCENTRIC",                     concept_concentric,                D, l_c4,         {0, schema_single_concentric}},
    {"SINGLE CROSS CONCENTRIC",               concept_concentric,                D, l_c4,         {0, schema_single_cross_concentric}},
+   {"GRAND SINGLE CONCENTRIC",               concept_concentric,                D, l_c4,         {0, schema_grand_single_concentric}},
+   {"GRAND SINGLE CROSS CONCENTRIC",         concept_concentric,                D, l_c4,         {0, schema_grand_single_cross_concentric}},
    {"CONCENTRIC DIAMONDS",                   concept_concentric,                D, l_c1,         {0, schema_concentric_diamonds}},
    {"CROSS CONCENTRIC DIAMONDS",             concept_concentric,                D, l_c2,         {0, schema_cross_concentric_diamonds}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -952,16 +962,19 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* general concepts */
 
-#define gg_2x8_matrix 20
+#define gg_2x8_matrix 23
    {"CENTERS",                               concept_centers_or_ends,         U+D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,         U+D, l_mainstream, {0, selector_ends, FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,        U+D, l_mainstream, {0, selector_centers, FALSE}},
    {"LEFT",                                  concept_left,                  L+U+D, l_mainstream},
    {"REVERSE",                               concept_reverse,               L+U+D, l_mainstream},
    {"SPLIT",                                 concept_split,                   U+D, l_mainstream},
+   {"TRIPLE 1X4s",                           concept_triple_lines,              D, l_c3, {0, 0}},
    {"EACH 1X4",                              concept_each_1x4,                  D, l_mainstream, {0, 0, 0}},
    {"EACH LINE",                             concept_each_1x4,                  D, l_mainstream, {0, 1, 0}},
+   {"EACH COLUMN",                           concept_each_1x4,                  D, l_mainstream, {0, 2, 0}},
    {"EACH WAVE",                             concept_each_1x4,                  D, l_mainstream, {0, 3, 0}},
+   {"EACH BOX",                              concept_each_1x4,                  D, l_mainstream, {0, 0, 2}},
    {"EACH DIAMOND",                          concept_each_1x4,                  D, l_mainstream, {0, 0, 1}},
    {"CROSS",                                 concept_cross,                 L+U+D, l_mainstream},
    {"GRAND",                                 concept_grand,                 L+U+D, l_plus},

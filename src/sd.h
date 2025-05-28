@@ -386,13 +386,15 @@ typedef struct {
 #define CMD_MISC__RESTRAIN_CRAZINESS 0x00400000UL
 /* available:                        0x00800000UL */
 #define CMD_MISC__NO_CHECK_MOD_LEVEL 0x01000000UL
-#define CMD_MISC__MUST_SPLIT         0x02000000UL
-/* available:                        0x04000000UL */
+#define CMD_MISC__MUST_SPLIT_HORIZ   0x02000000UL
+#define CMD_MISC__MUST_SPLIT_VERT    0x04000000UL
 #define CMD_MISC__NO_CHK_ELONG       0x08000000UL
 #define CMD_MISC__PHANTOMS           0x10000000UL
 #define CMD_MISC__NO_STEP_TO_WAVE    0x20000000UL
 #define CMD_MISC__ALREADY_STEPPED    0x40000000UL
 #define CMD_MISC__DOING_ENDS         0x80000000UL
+
+#define CMD_MISC__MUST_SPLIT_MASK    (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
 
 /* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
    Zero means no verification. */
@@ -683,11 +685,46 @@ typedef struct {
    Const int vert;
 } map_thing;
 
-typedef struct {
+
+/* BEWARE!!  This list must track the array "conc_error_messages" in sdconc.c . */
+typedef enum {
+   analyzer_NORMAL,
+   analyzer_CHECKPT,
+   analyzer_2X6,
+   analyzer_6X2,
+   analyzer_4X2,
+   analyzer_6X2_TGL,
+   analyzer_O,
+   analyzer_BAR,
+   analyzer_BAR12,
+   analyzer_BAR16,
+   analyzer_STAR12,
+   analyzer_STAR16,
+   analyzer_3X3_CONC,
+   analyzer_4X4_LINES_CONC,
+   analyzer_4X4_COLS_CONC,
+   analyzer_3X1_CONC,
+   analyzer_1X3_CONC,
+   analyzer_SINGLE,
+   analyzer_GRANDSINGLE,
+   analyzer_TRIPLE_LINE,
+   analyzer_QUAD_LINE,
+   analyzer_VERTICAL6,
+   analyzer_LATERAL6,
+   analyzer_INTLK_VERTICAL6,
+   analyzer_INTLK_LATERAL6,
+   analyzer_OTHERS,
+   analyzer_CONC_DIAMONDS,
+   analyzer_DIAMOND_LINE,
+   analyzer_CTR_DMD
+} analyzer_kind;
+
+typedef struct gfwzqg {
+   Const setup_kind bigsetup;
+   Const analyzer_kind lyzer;
    Const veryshort maps[20];
    Const short inlimit;
    Const short outlimit;
-   Const setup_kind bigsetup;
    Const setup_kind insetup;
    Const setup_kind outsetup;
    Const int bigsize;
@@ -695,7 +732,12 @@ typedef struct {
    Const int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
    Const int mapelong;
    Const int center_arity;
+   Const int elongrotallow;
+   Const calldef_schema getout_schema;
+   struct gfwzqg *next_analyze;
+   struct gfwzqg *next_synthesize;
 } cm_thing;
+
 
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
 typedef enum {
@@ -829,6 +871,7 @@ typedef enum {
    concept_so_and_so_begin,
    concept_nth_part,
    concept_replace_nth_part,
+   concept_replace_last_part,
    concept_interlace,
    concept_fractional,
    concept_rigger,
@@ -998,11 +1041,13 @@ typedef struct glock {
    in a history array, this stuff is meaningless. */
 
 typedef struct {
-   unsigned int assump_col: 16;  /* Stuff to go with assumption -- col vs. line. */
-   unsigned int assump_both: 8;  /* Stuff to go with assumption -- "handedness" enforcement --
+   unsigned int assump_col:  16;  /* Stuff to go with assumption -- col vs. line. */
+   unsigned int assump_both:  8;  /* Stuff to go with assumption -- "handedness" enforcement --
                                                 0/1/2 = either/1st/2nd. */
-   unsigned int assump_cast: 8;  /* Nonzero means there is an "assume normal casts" assumption. */
-   call_restriction assumption;  /* Any "assume waves" type command. */
+   unsigned int assump_cast:  6;  /* Nonzero means there is an "assume normal casts" assumption. */
+   unsigned int assump_live:  1;  /* One means to accept only if everyone is live. */
+   unsigned int assump_negate:1;  /* One means to invert the sense of everything. */
+   call_restriction assumption;   /* Any "assume waves" type command. */
 } assumption_thing;
 
 
@@ -1445,46 +1490,6 @@ typedef struct flonk {
 typedef uint32 defmodset;
 
 
-/* BEWARE!!  This list must track the "concthing" arrays in sdtables.c . */
-/* BEWARE!!  This list must track the array "conc_error_messages" in sdconc.c . */
-typedef enum {
-   analyzer_NORMAL,
-   analyzer_CHECKPT,
-   analyzer_2X6,
-   analyzer_6X2,
-   analyzer_4X2,
-   analyzer_6X2_TGL,
-   analyzer_O,
-   analyzer_BAR,
-   analyzer_BAR12,
-   analyzer_BAR16,
-   analyzer_STAR12,
-   analyzer_STAR16,
-   analyzer_SINGLE,
-   analyzer_GRANDSINGLE,
-   analyzer_TRIPLE_LINE,
-   analyzer_QUAD_LINE,
-   analyzer_VERTICAL6,
-   analyzer_LATERAL6,
-   analyzer_INTLK_VERTICAL6,
-   analyzer_INTLK_LATERAL6,
-   analyzer_OTHERS,
-   analyzer_CONC_DIAMONDS,
-   analyzer_DIAMOND_LINE,
-   analyzer_CTR_DMD
-} analyzer_kind;
-#define NUM_analyzer_KINDS (((int) analyzer_CTR_DMD)+1)
-
-
-typedef Const struct {
-   Const uint32 mask_normal;
-   Const uint32 mask_6_2;
-   Const uint32 mask_2_6;
-   Const uint32 mask_ctr_dmd;
-   Const cm_thing *hunk[NUM_analyzer_KINDS];
-} cm_hunk;
-
-
 /* These flags go into the "concept_prop" field of a "concept_table_item".
 
    CONCPROP__SECOND_CALL means that the concept takes a second call, so a sublist must
@@ -1553,6 +1558,7 @@ typedef Const struct {
 #define CONCPROP__NEEDK_END_1X4    0x00000130UL
 #define CONCPROP__NEEDK_CTR_2X2    0x00000140UL
 #define CONCPROP__NEEDK_END_2X2    0x00000150UL
+#define CONCPROP__NEEDK_3X4_D3X4   0x00000160UL
                                    
 #define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL                                   
 /* spare:                          0x00000400UL */
@@ -1599,6 +1605,7 @@ typedef enum {
 typedef enum {
    simple_normalize,
    normalize_before_isolated_call,
+   normalize_after_triple_squash,
    normalize_before_merge
 } normalize_action;
 
@@ -1681,6 +1688,7 @@ typedef enum {
    interactivity_normal,
    interactivity_starting_first_scan,
    interactivity_in_first_scan,
+   interactivity_in_second_scan,
    interactivity_in_random_search
 } interactivity_state;
 
@@ -1742,9 +1750,14 @@ typedef Const struct {
       it are the same as those in the table above. */
    coordrec *nice_setup_coords;
 
-   /* This gives the table to be used for analyzing this setup under
-      concentric-type operations. */
-   cm_hunk *conctab;
+   /* These determine how designators like "side boys" get turned into
+      "center 2", so that so-and-so moves can be done with the much
+      more powerful concentric mechanism. */
+
+   Const uint32 mask_normal;
+   Const uint32 mask_6_2;
+   Const uint32 mask_2_6;
+   Const uint32 mask_ctr_dmd;
 
    /* These show the beginning setups that we look for in a by-array call
       definition in order to do a call in this setup. */
@@ -1771,15 +1784,6 @@ typedef Const struct {
    /* These are the tables that show how to print out the setup. */
    Cstring print_strings[2];
 } setup_attr;
-
-typedef struct zilch {
-   Const setup_kind outerk;
-   Const setup_kind innerk;
-   Const calldef_schema conc_type;
-   Const int center_arity;
-   Const cm_thing *value[4];
-   struct zilch *next;
-} conc_initializer;
 
 typedef struct milch {
    uint32 code;
@@ -1889,14 +1893,13 @@ extern id_bit_table id_bit_table_bigdmd_wings[];                    /* in SDTABL
 extern id_bit_table id_bit_table_bigbone_wings[];                   /* in SDTABLES */
 extern id_bit_table id_bit_table_bighrgl_wings[];                   /* in SDTABLES */
 extern id_bit_table id_bit_table_bigdhrgl_wings[];                  /* in SDTABLES */
+extern id_bit_table id_bit_table_3x4_offset[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
+extern id_bit_table id_bit_table_3x4_ctr6[];                        /* in SDTABLES */
+extern id_bit_table id_bit_table_3dmd_in_out[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_ctr1x6[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABLES */
-extern cm_thing map2x4_2x4;                                         /* in SDTABLES */
-extern cm_thing map2x4_2x4v;                                        /* in SDTABLES */
-extern cm_thing mapgnd1x2_1x2;                                      /* in SDTABLES */
-extern cm_thing mapgnd1x2_1x2r;                                     /* in SDTABLES */
-extern conc_initializer conc_init_table[];                          /* in SDTABLES */
+extern cm_thing conc_init_table[];                                  /* in SDTABLES */
 extern setup_attr setup_attrs[];                                    /* in SDTABLES */
 extern int begin_sizes[];                                           /* in SDTABLES */
 extern startinfo startinfolist[];                                   /* in SDTABLES */
@@ -2132,7 +2135,7 @@ extern int uims_do_direction_popup(void);
 extern int uims_do_circcer_popup(void);
 extern int uims_do_tagger_popup(int tagger_class);
 extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind);
-extern uint32 uims_get_number_fields(int nnumbers);
+extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
 extern uims_reply uims_get_startup_command(void);

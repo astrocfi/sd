@@ -34,8 +34,8 @@ typedef struct glozk {
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    callspec_block *call_ptr;
    concept_descriptor *concept_ptr;
-   struct glozk *next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
-   struct glozk *secondary_subcall;     /* points to substitution list for secondary subcall */
+   struct glozk *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
+   struct glozk *packed_secondary_subcall;     /* points to substitution list for secondary subcall */
    struct glozk *gc_ptr;                /* used for reclaiming dead blocks */
 } modifier_block;
 
@@ -85,6 +85,7 @@ extern long_boolean verify_has_stopped;
    interface part of it) and IMPORTED by sdmatch.c */
 
 extern concept_descriptor *twice_concept_ptr;
+extern concept_descriptor *centers_concept_ptr;
 extern concept_descriptor *two_calls_concept_ptr;
 extern int num_command_commands;
 extern Cstring command_commands[];

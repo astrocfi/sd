@@ -32,6 +32,7 @@
    warn
    find_proper_call_list
    get_rh_test
+   verify_restriction
    assoc
    find_calldef
    clear_people
@@ -122,8 +123,8 @@ long_boolean enable_file_writing;
 long_boolean singlespace_mode;
 long_boolean nowarn_mode;
 
-Cstring cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (Cstring) 0};
-Cstring ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (Cstring) 0};
+Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", (Cstring) 0};
+Cstring ordinals[] = {"0th", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (Cstring) 0};
 
 /* BEWARE!!  This list is keyed to the definition of "selector_kind" in sd.h . */
 selector_item selector_list[] = {
@@ -316,7 +317,6 @@ static restriction_thing ijleft_qtag   = {8, {2, 6, 0, 4, 3, 7, 1, 5},          
 static restriction_thing ijright_qtag  = {8, {6, 2, 0, 4, 7, 3, 1, 5},             {0},                   {0}, {0}, TRUE, chk_wave};
 
 static restriction_thing two_faced_2x4 = {8, {0, 3, 1, 2, 6, 5, 7, 4},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent two-faced lines */
-static restriction_thing live_two_faced_2x4 = {8, {0, 3, 1, 2, 6, 5, 7, 4},        {0},                   {1}, {0}, TRUE, chk_wave};            /* Same, all people must be live. */
 
 static restriction_thing wave_3x4      = {12, {0, 1, 2, 3, 5, 4, 7, 6, 9, 8, 10, 11},    {0},             {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent waves */
 static restriction_thing two_faced_3x4 = {12, {0, 2, 1, 3, 8, 4, 9, 5, 10, 6, 11, 7},    {0},             {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent two-faced lines */
@@ -384,7 +384,6 @@ static restriction_thing cpls_3x3_1x6  = {3, {0, 3, 1, 4, 2, 5},                
 static restriction_thing cpls_4x4_1x8  = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups};         /* check for each four people facing same way */
 static restriction_thing two_faced_4x4_1x8 = {8, {0, 4, 1, 5, 2, 6, 3, 7},                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for 4x4 two-faced line -- 4 up and 4 down */
 static restriction_thing two_faced_1x4 = {4, {0, 2, 1, 3},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for 2-faced lines */
-static restriction_thing live_two_faced_1x4 = {4, {0, 2, 1, 3},                                      {0}, {1}, {0}, TRUE,  chk_wave};           /* Same, all people must be live. */
 static restriction_thing two_faced_2x6 = {12, {0, 3, 1, 4, 2, 5, 9, 6, 10, 7, 11, 8},                {0}, {0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 3x3 two-faced lines */
 static restriction_thing two_faced_4x4_2x8 = {16, {0, 4, 1, 5, 2, 6, 3, 7, 12, 8, 13, 9, 14, 10, 15, 11},{0},{0},{0},FALSE,chk_wave};           /* check for parallel consistent 4x4 two-faced lines */
 static restriction_thing mnwv_2x4      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
@@ -467,7 +466,6 @@ static restr_initializer restr_init_table[] = {
    {s1x3, cr_wave_only, &wave_1x3},
    {s1x4, cr_wave_only, &wave_1x4},
    {s1x4, cr_2fl_only, &two_faced_1x4},
-   {s1x4, cr_live_2fl_only, &live_two_faced_1x4},
    {s1x4, cr_1fl_only, &all_same_4},
    {s1x4, cr_4x4couples_only, &all_same_4},
    {s1x4, cr_all_facing_same, &all_same_4},
@@ -496,7 +494,6 @@ static restr_initializer restr_init_table[] = {
    {s2x3, cr_all_facing_same, &all_same_6},
    {s2x3, cr_1fl_only, &one_faced_2x3},
    {s2x4, cr_2fl_only, &two_faced_2x4},
-   {s2x4, cr_live_2fl_only, &live_two_faced_2x4},
    {s2x4, cr_wave_only, &wave_2x4},
    {s2x3, cr_wave_only, &wave_2x3},
    {s2x3, cr_magic_only, &cmagic_2x3},
@@ -923,7 +920,7 @@ Private void write_nice_number(char indicator, uint32 num)
          }
          break;
       case 'u':     /* Need to plug in an ordinal number. */
-         writestuff(ordinals[num-1]);
+         writestuff(ordinals[num]);
          break;
    }
 }
@@ -965,7 +962,7 @@ Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
 Private void print_call_name(callspec_block *call, parse_block *pb)
 {
    if (     (call->callflags1 & CFLAG1_NUMBER_MASK) &&
-            (pb->options.number_fields & 0xF)) {
+            pb->options.howmanynumbers) {
       writestuff_with_decorations(pb, call->name);
    }
    else {
@@ -1209,14 +1206,25 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential) {
                writestuff("(");
             }
-            else if (k == concept_replace_nth_part) {
+            else if (k == concept_replace_nth_part || k == concept_replace_last_part) {
                writestuff("DELAY: ");
                if (!local_cptr->next || !subsidiary_ptr) {
-                  if (local_cptr->concept->value.arg1)
-                     writestuff("(interrupting after the ");
-                  else
-                     writestuff("(replacing the ");
-                  writestuff(ordinals[local_cptr->options.number_fields-1]);
+                  switch (local_cptr->concept->value.arg1) {
+                     case 9:
+                        writestuff("(interrupting after the ");
+                        writestuff(ordinals[local_cptr->options.number_fields]);
+                        break;
+                     case 8:
+                        writestuff("(replacing the ");
+                        writestuff(ordinals[local_cptr->options.number_fields]);
+                        break;
+                     case 0:
+                        writestuff("(replacing the last");
+                        break;
+                     case 1:
+                        writestuff("(interrupting before the last");
+                        break;
+                  }
                   writestuff(" part) ");
                }
             }
@@ -1250,7 +1258,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" AND");
             else if (k == concept_interlace)
                writestuff(" WITH");
-            else if (k == concept_replace_nth_part) {
+            else if (k == concept_replace_nth_part || k == concept_replace_last_part) {
                writestuff(" BUT ");
                writestuff_with_decorations(local_cptr, (Const char *) 0);
                writestuff(" WITH A [");
@@ -1893,10 +1901,12 @@ Private void print_4_person_setup(int ps, small_setup *s, int elong)
    if (s->skind == s2x2) {
       if (elong < 0)
          str = "ab@dc@";
-      else if (elong & 1)
+      else if (elong == 1)
+         str = "a    b@d    c@";
+      else if (elong == 2)
          str = "ab@@@dc@";
       else
-         str = "a    b@d    c@";
+         str = "a    b@@@d    c@";
    }
    else
       str = setup_attrs[s->skind].print_strings[roti & 1];
@@ -2313,6 +2323,7 @@ extern call_list_kind find_proper_call_list(setup *s)
 static Const long int spindle1[] = {d_east, d_west, 0, 6, 1, 5, 2, 4, -1};
 static Const long int short1[] = {d_north, d_south, 0, 2, 5, 3, -1};
 static Const long int dmd1[] = {d_east, d_west, 1, 3, -1};
+static Const long int lines2x3[] = {d_east, d_west, 1, 4, -1};
 static Const long int trgl1[] = {d_north, d_south, 1, 2, -1};
 static Const long int trgl41[] = {d_north, d_south, 2, 3, -1};
 static Const long int bone61[] = {d_east, d_west, 0, 4, 1, 3, -1};
@@ -2334,6 +2345,7 @@ extern Const long int *get_rh_test(setup_kind kind)
       case s_bone6:   return bone61;
       case s1x4:      return line1;
       case s2x4:      return lines1;
+      case s2x3:      return lines2x3;
       case s_qtag:    return qtag1;
       case s_ptpd:    return ptpd1;
       default:        return (Const long int *) 0;
@@ -2369,7 +2381,10 @@ extern long_boolean verify_restriction(
 
          for (idx=0; idx<rr->size; idx++) {
             if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
+            else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
+#ifdef TAKING_THIS_OUT
             else if (rr->map3[0] != 0) goto bad;    /* All live people were demanded. */
+#endif
          }
 
          if ((qaa[0] & qaa[1] & 2) != 0)
@@ -2485,6 +2500,7 @@ extern long_boolean verify_restriction(
 
             for (i=0,j=idx; i<rr->size; i++,j+=limit) {
                if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= t^2; }
+               else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
             }
 
             if ((qa0 & qa1 & 2) != 0) goto bad;
@@ -2534,7 +2550,9 @@ extern long_boolean verify_restriction(
             qa0 = 0; qa1 = 0;
 
             if ((t = ss->people[rr->map1[idx]].id1) != 0)       { qa0 |= t;   qa1 |= t^2; }
+            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
             if ((t = ss->people[rr->map1[idx+limit]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
+            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
 
             if ((qa0 & qa1 & 2) != 0) goto bad;
 
@@ -2689,9 +2707,11 @@ extern long_boolean verify_restriction(
          goto bad;    /* Shouldn't happen. */
    }
 
-   good: return TRUE;
+   good: if (tt.assump_negate) return FALSE;
+         else return TRUE;
 
-   bad: return FALSE;
+   bad: if (tt.assump_negate) return TRUE;
+        else return FALSE;
 }
 
 
@@ -2710,6 +2730,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          number was specified, it must match. */
 
       if ((begin_kind) p->start_setup != key) continue;
+
+      tt.assump_negate = 0;
 
       /* During initialization, we will be called with a null pointer for ss.
          We need to be careful, and err on the side of acceptance. */
@@ -2750,6 +2772,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       tt.assump_col = 0;
       tt.assump_both = 0;
       tt.assump_cast = 0;
+      tt.assump_live = 0;
 
       switch ((search_qualifier) p->qualifier) {
          case sq_wave_only:       /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
@@ -2769,18 +2792,20 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_magic_only;
-
-            switch (ss->kind) {
-               case s1x4: case s2x4: case s2x2:
-                  goto check_tt;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
+            goto fix_col_line_stuff;
+         case sq_live_facing_in:
+            tt.assump_live = 1;   /* To get live only. */
+            /* FALL THROUGH!!! */
          case sq_facing_in:
+            /* FELL THROUGH!!! */
             tt.assump_both = 1;   /* To get facing-in only. */
             tt.assumption = cr_li_lo;
             goto fix_col_line_stuff;
+         case sq_live_facing_out:
+            tt.assump_live = 1;   /* To get live only. */
+            /* FALL THROUGH!!! */
          case sq_facing_out:
+            /* FELL THROUGH!!! */
             tt.assump_both = 2;   /* To get facing-out only. */
             tt.assumption = cr_li_lo;
             goto fix_col_line_stuff;
@@ -2821,13 +2846,16 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             tt.assump_both = 2;   /* To get left-hand only. */
             goto do_2fl_stuff;
          case sq_live_2fl_only:   /* 1x4 or 2x4 - 2fls; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
-            goto do_live_2fl_stuff;    /*  PEOPLE MUST ALL BE LIVE!!!! */
+            tt.assump_live = 1;   /* To get live only. */
+            goto do_2fl_stuff;
          case sq_live_r2fl_only:
             tt.assump_both = 1;   /* To get right-hand only. */
-            goto do_live_2fl_stuff;
+            tt.assump_live = 1;   /* To get live only. */
+            goto do_2fl_stuff;
          case sq_live_l2fl_only:
             tt.assump_both = 2;   /* To get left-hand only. */
-            goto do_live_2fl_stuff;
+            tt.assump_live = 1;   /* To get live only. */
+            goto do_2fl_stuff;
          case sq_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2862,6 +2890,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             tt.assumption = cr_4x4couples_only;
             goto check_tt;
+         case sq_not_miniwaves:
+            tt.assump_negate = 1;
+            /* **** FALL THROUGH!!!! */
          case sq_miniwaves:                    /* miniwaves everywhere */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2900,6 +2931,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
                goto bad;
             }
+            else if (ss->kind == s1x6) {
+               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
+                   ((ss->people[3].id1 ^ ss->people[4].id1) & d_mask) == 0 &&
+                   ((ss->people[1].id1 ^ ss->people[2].id1) & d_mask) == 2 &&
+                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2)
+               goto good;
+               goto bad;
+            }
             else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_ctr2fl_endwv:
@@ -2911,6 +2950,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                    ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0 &&
                    ((ss->people[0].id1 | ss->people[1].id1) == 0 || ((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2) &&
                    ((ss->people[4].id1 | ss->people[5].id1) == 0 || ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s1x6) {
+               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2 &&
+                   ((ss->people[3].id1 ^ ss->people[4].id1) & d_mask) == 2 &&
+                   ((ss->people[1].id1 ^ ss->people[2].id1) & d_mask) == 0 &&
+                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0)
                goto good;
                goto bad;
             }
@@ -3265,15 +3312,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       tt.assumption = cr_2fl_only;
       goto fix_col_line_stuff;
 
-      do_live_2fl_stuff:
-
-      switch (ss->cmd.cmd_assume.assumption) {
-         case cr_1fl_only: case cr_wave_only: case cr_magic_only: goto bad;
-      }
-
-      tt.assumption = cr_live_2fl_only;
-      goto fix_col_line_stuff;
-
       do_wave_stuff:
 
       switch (ss->cmd.cmd_assume.assumption) {
@@ -3338,13 +3376,21 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       rr = get_restriction_thing(ss->kind, tt);
       if (!rr) goto good;                 /* We don't understand the setup -- we'd better accept it. */
-      if (verify_restriction(ss, rr, tt, FALSE, &booljunk)) goto good;
+      if (verify_restriction(ss, rr, tt, FALSE, &booljunk)) return p;
+      continue;
 
-      bad: ;
+      bad:
+
+      if (tt.assump_negate) return p;
+      else continue;
+
+      good:
+
+      if (!tt.assump_negate) return p;
+      else continue;
    }
 
-   good:
-   return p;
+   return (callarray *) 0;
 }
 
 
@@ -3680,6 +3726,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
    int i;
    long_boolean lineflag = FALSE;
    long_boolean miniflag = FALSE;
+   int deadconcindex = -1;
    setup_kind kk = nothing;
    int rr = -1;
 
@@ -3794,6 +3841,12 @@ extern long_boolean fix_n_results(int arity, setup z[])
             clear_person(&z[i], 5);
             canonicalize_rotation(&z[i]);
          }
+         else if (kk == nothing &&
+                  (  deadconcindex < 0 ||
+                     (  z[i].inner.skind == z[deadconcindex].inner.skind &&
+                        z[i].inner.srotation == z[deadconcindex].inner.srotation))) {
+            deadconcindex = i;
+         }
          else
             fail("Can't do this: don't know where the phantoms went.");
       }
@@ -3813,6 +3866,11 @@ extern long_boolean fix_n_results(int arity, setup z[])
       }
    }
   
+   if (deadconcindex >= 0) {
+      kk = z[deadconcindex].kind;
+      rr = 0;
+   }
+
    if (kk == nothing) return TRUE;
 
    /* If something wasn't sure whether it was points of a diamond or

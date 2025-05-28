@@ -29,7 +29,7 @@
 */
 
 #include "sd.h"
-extern id_bit_table id_bit_table_4x4_but[];
+
 
 typedef struct {
    Const veryshort source_indices[24];
@@ -43,6 +43,7 @@ typedef struct grilch {
    Const warning_index warning;
    Const int forbidden_elongation;   /* Low 2 bits = elongation bits to forbid; "4" bit = must set elongation. */
                            /* Also, the "8" bit means to use "gather" and do this the other way. */
+                           /* Also, the "16" bit means allow only step to a box, not step to a full wave. */
    Const expand_thing *expand_lists;
    Const setup_kind kind;
    Const uint32 live;
@@ -75,6 +76,9 @@ Private expand_thing exp_2x2_2x4_stuff     = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
 Private expand_thing exp_1x4_1x8_stuff     = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
 Private expand_thing exp_1x4_bone_stuff    = {{6, 7, 2, 3}, 4, s1x4, s_bone, 0};
 Private expand_thing exp_1x2_1x8_stuff     = {{2, 6}, 2, s1x2, s1x8, 0};
+Private expand_thing exp_2x3_3x4_stuff     = {{8, 11, 1, 2, 5, 7}, 6, s2x3, s3x4, 1};
+Private expand_thing exp_2x3_d3x4_stuff    = {{1, 2, 3, 7, 8, 9}, 6, s2x3, s_d3x4, 0};
+Private expand_thing exp_spindle_d3x4_stuff= {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
 Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
 Private expand_thing exp_2x3_qtg_stuff     = {{5, 7, 0, 1, 3, 4}, 6, s2x3, s_qtag, 1};
 Private expand_thing exp_2x6_2x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
@@ -149,23 +153,23 @@ extern void update_id_bits(setup *ss)
          /* **** This isn't really right -- it would allow "outer pairs bingo".
             We really should only allow 2-person calls, unless we say
             "outer triple boxes".  So we're not completely sure what the right thing is. */
-         if (livemask != 0x3CFUL && livemask != 0xF3CUL) ptr = (id_bit_table *) 0;
+         if (livemask != 07474UL && livemask != 0x3CFUL) ptr = (id_bit_table *) 0;
          break;
       case sbigdmd:
          /* If this is populated appropriately, we can identify "outer pairs". */
-         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bigdmd_wings;
+         if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigdmd_wings;
          break;
       case sbigbone:
          /* If this is populated appropriately, we can identify "outer pairs". */
-         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bigbone_wings;
+         if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigbone_wings;
          break;
       case sbigdhrgl:
          /* If this is populated appropriately, we can identify "outer pairs". */
-         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bigdhrgl_wings;
+         if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigdhrgl_wings;
          break;
       case sbighrgl:
          /* If this is populated appropriately, we can identify "outer pairs". */
-         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bighrgl_wings;
+         if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bighrgl_wings;
          break;
       case s3x4:
 
@@ -177,14 +181,16 @@ extern void update_id_bits(setup *ss)
             we use the table from the setup_attrs list, that knows about
             the "outer pairs". */
 
-         if (livemask == 0xE79UL) ptr = id_bit_table_3x4_h;
-         else if (livemask != 0xF3CUL && livemask != 0xCF3UL) ptr = (id_bit_table *) 0;
+         if (livemask == 07171UL) ptr = id_bit_table_3x4_h;
+         else if ((livemask & 04646UL) == 04646UL) ptr = id_bit_table_3x4_ctr6;
+         else if (livemask == 07474UL || livemask == 06363UL) ptr = id_bit_table_3x4_offset;
+         break;
+      case s_d3x4:
+         if ((livemask & 0x38EUL) != 0x38EUL) ptr = (id_bit_table *) 0;
          break;
       case s4x4:
-
          /* We recognize centers and ends if this is populated as a butterfly. */
-
-         if (livemask == 0x9999UL) ptr = id_bit_table_4x4_but;
+         if (livemask != 0x9999UL) ptr = (id_bit_table *) 0;
          break;
       case s3dmd:
          /* The standard table requires all points, and centers of center diamond only, occupied.
@@ -192,6 +198,7 @@ extern void update_id_bits(setup *ss)
 
          if ((livemask & 0xE38UL) == 0xE38UL) ptr = id_bit_table_3dmd_ctr1x6;          /* Look for center 1x6 occupied. */
          else if ((livemask & 0xC30UL) == 0xC30UL) ptr = id_bit_table_3dmd_ctr1x4;     /* Look for center 1x6 having center 1x4 occupied. */
+         else if (livemask == 06565UL) ptr = id_bit_table_3dmd_in_out;                 /* Look for center 1x4 and outer points. */
          else if (livemask != 0x9E7UL) ptr = (id_bit_table *) 0;
          break;
    }
@@ -205,7 +212,7 @@ extern void update_id_bits(setup *ss)
 }
 
 
-Private expand_thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, nothing, s4x4, 0};
+Private expand_thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, s_thar, s4x4, 0};
 Private expand_thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, 16, nothing, s_thar, 0};
 Private expand_thing rear_bigd_stuff1 = {{-1, -1, 10, 11, 1, 0, -1, -1, 4, 5, 7, 6}, 12, nothing, s3x4, 1};
 Private expand_thing rear_bigd_stuff2 = {{8, 9, 10, 11, -1, -1, 2, 3, 4, 5, -1, -1}, 12, nothing, s3x4, 1};
@@ -228,8 +235,11 @@ Private expand_thing rear_hrbox_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
 Private expand_thing rear_qtag_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s2x4, 1};
 Private expand_thing rear_ptpd_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, nothing, s1x8, 0};
 Private expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
+Private expand_thing rear_twistqtag_stuff = {{0, 3, 2, 1}, 4, nothing, sdmd, 0};
 
+Private expand_thing step_sqs_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_thar, s2x4, 0};
 Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 0};
+Private expand_thing step_qbox_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, 8, s_bone, s2x4, 0};
 Private expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
 Private expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
 Private expand_thing step_1x2_stuff = {{0, 1}, 2, s1x2, s1x2, 1};
@@ -258,8 +268,9 @@ Private expand_thing step_tgl4_stuffb = {{3, 2, 0, 1}, 4, nothing, s2x2, 0};
 Private expand_thing step_dmd_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
 Private expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s2x4, 1};
 
-Private full_expand_thing step_2x2v_pair     = {warn__none,       2, &step_2x2v_stuff};
-Private full_expand_thing step_2x2h_pair     = {warn__none,       1, &step_2x2h_stuff};
+Private full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
+Private full_expand_thing step_2x2v_pair     = {warn__none,    16+2, &step_2x2v_stuff};
+Private full_expand_thing step_2x2h_pair     = {warn__none,    16+1, &step_2x2h_stuff};
 Private full_expand_thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
 Private full_expand_thing step_qtgctr_pair   = {warn__some_touch, 0, &step_qtgctr_stuff};
 Private full_expand_thing step_qtag_pair     = {warn__none,       0, &step_tby_stuff};
@@ -278,6 +289,7 @@ static full_expand_thing touch_init_table1[] = {
    {warn__rear_back,       0, &rear_ohh_stuff, s4x4,    0x3C3C3C3CUL, 0x1C203408UL, ~0UL},      /* Rear back from an alamo wave to crossed single 8-chains. */
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFFFFUL,     0x2288UL, ~0UL},      /* Rear back from parallel waves to an 8 chain. */
    {warn__awful_rear_back, 8, &step_1x8_stuff, s2x4,        0xFFFFUL,     0x55FFUL, ~0UL},      /* Rear back from columns to end-to-end single 8-chains. */
+   {warn__some_rear_back,  8, &step_qbox_stuff, s2x4,       0xFFFFUL,     0x57FDUL, ~0UL},      /* Centers rear back from 1/4-box to triangles. */
    {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFUL,       0x28UL, ~0UL},      /* Rear back from a right-hand box to a single 8 chain. */
    {warn__awful_rear_back, 0, &rear_hrbox_stuff, s2x2,        0xFFUL,       0x5FUL, ~0UL},
    {warn__some_rear_back,  0, &rear_rig_stuffa,s_rigger,    0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
@@ -309,6 +321,7 @@ static full_expand_thing touch_init_table2[] = {
    {warn__rear_back,       0, &rear_ptpd_stuff, s_ptpd,     0xFFFFUL,     0xD77DUL, ~0UL},
    {warn__awful_rear_back, 0, &rear_sqtag_stuff, sdmd,        0xFFUL,       0x5FUL, ~0UL},      /* Have the centers rear back from a single 1/4 tag or 3/4 tag. */
    {warn__awful_rear_back, 0, &rear_sqtag_stuff, sdmd,        0xFFUL,       0xD7UL, ~0UL},
+   {warn__awful_rear_back, 0, &rear_twistqtag_stuff, s1x4,    0xFFUL,       0x4EUL, ~0UL},      /* As above, but centers are "twisted". */
    {warn__none,            0, (expand_thing *) 0, nothing}
 };
 
@@ -319,11 +332,11 @@ static full_expand_thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_phan4_stuff,   s_c1phan, 0x33333333UL, 0x20200202UL, ~0UL},
    {warn__some_touch, 0, &step_bigd_stuff1,   sbigdmd,    0xFF0FF0UL,   0x280820UL, ~0UL},      /* Some people touch from horrible "T"'s. */
    {warn__some_touch, 0, &step_bigd_stuff2,   sbigdmd,    0x0FF0FFUL,   0x082028UL, ~0UL},
-   {warn__none,       0, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},      /* Check for stepping to a grand wave from lines facing. */
-   {warn__none,       0, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},         /* Same, with missing people. */
-   {warn__none,       0, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},         /* Same, with missing people. */
-   {warn__none,       0, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},  /* Check for stepping to a bone from a squared set or whatever. */
-   {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0xFFFFUL,     0x963CUL, ~0UL},      /* Check for stepping to rigger from suitable T-bone. */
+   {warn__none,      16, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},      /* Check for stepping to a grand wave from lines facing. */
+   {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},         /* Same, with missing people. */
+   {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},         /* Same, with missing people. */
+   {warn__none,      16, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},  /* Check for stepping to a bone from a squared set or whatever. */
+   {warn__some_touch,16, &step_2x4_rig_stuff, s2x4,         0xFFFFUL,     0x963CUL, ~0UL},      /* Check for stepping to rigger from suitable T-bone. */
    {warn__none,       0, &step_offs1_stuff,   s3x4,       0x0FF0FFUL,   0x07D0D7UL, ~0UL},
    {warn__none,       0, &step_offs2_stuff,   s3x4,       0xF0FF0FUL,   0x70DD07UL, ~0UL},
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0xFFUL,       0xD7UL, ~0UL},      /* Triangle base, who are facing, touch. */
@@ -354,6 +367,8 @@ static full_expand_thing touch_init_table3[] = {
    {warn__none,       0, &step_8ch_stuff,      s2x4,        0x0F0FUL,     0x77DDUL, 0x0F0FUL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,        0x0FF0UL,     0x77DDUL, 0x0FF0UL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,        0xF00FUL,     0x77DDUL, 0xF00FUL},
+   {warn__none,       8, &rear_thar_stuff,     s4x4,    0x3C3C3C3CUL, 0x2034081CUL, ~0UL},      /* Touch from alamo 8-chain to thar. */
+   {warn__none,       8, &step_sqs_stuff,      s2x4,        0xFFFFUL,     0x9E34UL, ~0UL},      /* Touch from "squared set" 2x4 to thar. */
    {warn__none,       0, (expand_thing *) 0, nothing}
 };
 
@@ -423,7 +438,7 @@ extern void touch_or_rear_back(
 
    /* Check first for rearing back from a wave. */
 
-   if (callflags1 & CFLAG1_REAR_BACK_FROM_R_WAVE) {
+   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|CFLAG1_STEP_TO_WAVE)) == CFLAG1_REAR_BACK_FROM_R_WAVE) {
       uint32 hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
       for (tptr = touch_hash_table1[hash_num] ; tptr ; tptr = tptr->next) {
@@ -435,7 +450,7 @@ extern void touch_or_rear_back(
 
    /* If we didn't find anything, check for rearing back from a qtag. */
 
-   if (callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
+   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_QTAG|CFLAG1_STEP_TO_WAVE)) == CFLAG1_REAR_BACK_FROM_QTAG) {
       uint32 hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
       for (tptr = touch_hash_table2[hash_num] ; tptr ; tptr = tptr->next) {
@@ -453,27 +468,40 @@ extern void touch_or_rear_back(
       for (tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
          if (     tptr->kind == scopy->kind &&
                   tptr->live == livemask &&
-                  ((tptr->dir ^ directions) & tptr->dirmask) == 0) goto found_tptr;
+                  ((tptr->dir ^ directions) & tptr->dirmask) == 0) {
+               goto found_tptr;
+         }
       }
 
-      /* 2x2 setups are special -- we allow any combination at all in livemask. */
+      /* 2x2 setups are special -- we allow any combination at all in livemask,
+         though we are careful. */
+      /* 2x4's are also. */
 
       if (scopy->kind == s2x2 && livemask != 0) {
-         if (((directions ^ 0x7DUL) & livemask) == 0) {
-            tptr = &step_2x2h_pair;
-            goto found_tptr;
-         }
-         else if (((directions ^ 0xA0UL) & livemask) == 0) {
-            tptr = &step_2x2v_pair;
-            goto found_tptr;
+         if ((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE || livemask == 0xFF) {
+            if (((directions ^ 0x7DUL) & livemask) == 0) {
+               tptr = &step_2x2h_pair;
+               goto found_tptr;
+            }
+            else if (((directions ^ 0xA0UL) & livemask) == 0) {
+               tptr = &step_2x2v_pair;
+               goto found_tptr;
+            }
          }
       }
-      else if (   scopy->kind == s2x4 &&
-                  (0x3C3C & ~livemask) == 0 &&
-                  ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
-         /* Check for stepping to some kind of 1/4 tag from a DPT or trade-by or whatever. */
+      else if (scopy->kind == s2x4 && livemask != 0) {
+         if (     ((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE || livemask == 0xFFFFUL) &&
+                  ((directions ^ 0x77DDUL) & livemask) == 0) {
+            /* Check for stepping to parallel waves from an 8-chain. */
+            tptr = &step_8ch_pair;
+            goto found_tptr;
+         }
+         else if (   (0x3C3C & ~livemask) == 0 &&
+                     ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
+            /* Check for stepping to some kind of 1/4 tag from a DPT or trade-by or whatever. */
             tptr = &step_qtag_pair;
             goto found_tptr;
+         }
       }
 
       switch (scopy->kind) {    /* These ones are not allowed for calls like "spin the top" that have "left_means_touch_or_check" on. */
@@ -527,6 +555,13 @@ extern void touch_or_rear_back(
    return;
 
    found_tptr:
+
+   /* Check for things that we must not do if "step_to_box" was specified. */
+
+#ifdef NOT_THIS_WAY
+   if ((callflags1 & CFLAG1_STEP_REAR_MASK) != CFLAG1_STEP_TO_WAVE && (tptr->forbidden_elongation & 16))
+      return;
+#endif
 
    warn(tptr->warning);
 
@@ -600,7 +635,7 @@ extern void do_matrix_expansion(
          }
       }
 
-      if (needprops == CONCPROP__NEEDK_3X4 || needprops == CONCPROP__NEEDK_3X8 || needprops == CONCPROP__NEEDK_TRIPLE_1X4) {
+      if (needprops == CONCPROP__NEEDK_3X4 || needprops == CONCPROP__NEEDK_3X4_D3X4 || needprops == CONCPROP__NEEDK_3X8 || needprops == CONCPROP__NEEDK_TRIPLE_1X4) {
          if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
@@ -609,6 +644,9 @@ extern void do_matrix_expansion(
                      ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1)) {
                eptr = &exp_4dmd_3x4_stuff; goto expand_me;
             }
+         }
+         else if (ss->kind == s_spindle && needprops == CONCPROP__NEEDK_3X4_D3X4) {
+            eptr = &exp_spindle_d3x4_stuff; goto expand_me;
          }
       }
 
@@ -978,6 +1016,13 @@ extern void normalize_setup(setup *ss, normalize_action action)
          compress_setup(&exp_2x4_c1phan_stuff2, ss);
       }
    }
+
+   else if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[6].id1 | ss->people[9].id1 | ss->people[10].id1))
+      compress_setup(&exp_2x3_3x4_stuff, ss);
+   else if (ss->kind == s_d3x4 && !(ss->people[0].id1 | ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[10].id1 | ss->people[11].id1))
+      compress_setup(&exp_2x3_d3x4_stuff, ss);
+   else if (ss->kind == s_d3x4 && !(ss->people[0].id1 | ss->people[4].id1 | ss->people[6].id1 | ss->people[10].id1))
+      compress_setup(&exp_spindle_d3x4_stuff, ss);
    else if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1))
       compress_setup(&exp_qtg_3x4_stuff, ss);
    else if (ss->kind == s2x8) {  /* This might leave a 2x6, which could then be reduced to 2x4, below. */
@@ -1006,6 +1051,23 @@ extern void normalize_setup(setup *ss, normalize_action action)
 
    if (ss->kind == s2x6 && !(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
       compress_setup(&exp_2x4_2x6_stuff, ss);
+
+   if (action >= normalize_after_triple_squash) {
+      if ((ss->kind == s_qtag) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         if (!(ss->people[2].id1 | ss->people[6].id1)) {
+            ss->kind = s1x2;
+            (void) copy_person(ss, 0, ss, 7);
+            (void) copy_person(ss, 1, ss, 3);
+         }
+         else {
+            ss->kind = s1x4;
+            (void) copy_person(ss, 0, ss, 6);
+            (void) copy_person(ss, 1, ss, 7);
+         }
+      }
+      else if ((ss->kind == s_qtag) && (!(ss->people[2].id1 | ss->people[6].id1)))
+         compress_setup(&exp_2x3_qtg_stuff, ss);
+   }
 
    /* Before a merge, we remove phantoms very aggressively.  This is the highest level. */
 
@@ -1042,20 +1104,6 @@ extern void normalize_setup(setup *ss, normalize_action action)
          (void) copy_rot(ss, 3, ss, 7, 033);
          canonicalize_rotation(ss);
       }
-      else if ((ss->kind == s_qtag) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
-         if (!(ss->people[2].id1 | ss->people[6].id1)) {
-            ss->kind = s1x2;
-            (void) copy_person(ss, 0, ss, 7);
-            (void) copy_person(ss, 1, ss, 3);
-         }
-         else {
-            ss->kind = s1x4;
-            (void) copy_person(ss, 0, ss, 6);
-            (void) copy_person(ss, 1, ss, 7);
-         }
-      }
-      else if ((ss->kind == s_qtag) && (!(ss->people[2].id1 | ss->people[6].id1)))
-         compress_setup(&exp_2x3_qtg_stuff, ss);
       else if ((ss->kind == s_hrglass || ss->kind == s_dhrglass) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
          if (!(ss->people[2].id1 | ss->people[6].id1)) {
             ss->kind = s1x2;
@@ -1109,7 +1157,11 @@ extern void normalize_setup(setup *ss, normalize_action action)
          own the <anyone>, <call1> by <call2>. */
 
    if (action >= normalize_before_isolated_call) {
-      if (ss->kind == s_qtag || ss->kind == s_hrglass) {
+      if (ss->kind == s_dead_concentric) {
+         ss->kind = ss->inner.skind;
+         ss->rotation += ss->inner.srotation;
+      }
+      else if (ss->kind == s_qtag || ss->kind == s_hrglass) {
          if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
             /* This makes it possible to do "own the <points>, trade by flip the diamond" from
                normal diamonds. */
@@ -1232,13 +1284,14 @@ extern void toplevelmove(void)
          "split" concept has been given, possibly preceded by "left" we do the same.
          We leave the "split" concept in place.  Other mechanisms will do the rest. */
 
-      if (
-               (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER) ||
-               ((parse_state.topcallflags1 & (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) &&
-                     ((newhist->command_root->next->concept->kind == concept_split) ||
-                           ((newhist->command_root->next->concept->kind == concept_left) &&
-                           (newhist->command_root->next->next->concept->kind == concept_split)))))
+      if (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER)
          conceptptr = conceptptr->next;
+      else if (parse_state.topcallflags1 & (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) {
+         uint64 finaljunk;
+         (void) process_final_concepts(conceptptr->next, FALSE, &finaljunk);
+         if (finaljunk.final & FINAL__SPLIT)
+            conceptptr = conceptptr->next;
+      }
    }
 
    /* Clear a few things.  We do NOT clear the warnings, because some (namely the
@@ -1353,7 +1406,7 @@ extern void toplevelmove(void)
       fail("Can't go into a 50% offset 1x8.");
    else if (newhist->state.kind == s_dead_concentric) {
       newhist->state.kind = newhist->state.inner.skind;
-      newhist->state.rotation = newhist->state.inner.srotation;
+      newhist->state.rotation += newhist->state.inner.srotation;
    }
 
    /* Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here. */
@@ -1368,7 +1421,6 @@ extern void finish_toplevelmove(void)
 {
    int i;
 
-   setup starting_setup = history[history_ptr].state;
    configuration *newhist = &history[history_ptr+1];
 
    /* Remove outboard phantoms from the resulting setup. */

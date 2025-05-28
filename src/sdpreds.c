@@ -312,17 +312,13 @@ extern long_boolean selectp(setup *ss, int place)
 }
 
 
-static Const long int iden_tab[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+static Const long int iden_tab[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 
 static Const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
 static Const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
 static Const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
 static Const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
 static Const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
-static Const long int tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
-static Const long int tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
-static Const long int tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
-static Const long int tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
 
 
 /* Here are the predicates.  They will get put into the array "pred_table". */
@@ -332,6 +328,16 @@ Private long_boolean someone_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    return selectp(real_people, real_index ^ (*extra_stuff));
+}
+
+/* ARGSUSED */
+Private long_boolean sum_mod_selected(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
+{
+   int otherindex = (*extra_stuff) - real_index;
+   int size = setup_attrs[real_people->kind].setup_limits+1;
+   if (otherindex >= size) otherindex -= size;
+   return selectp(real_people, otherindex);
 }
 
 /* ARGSUSED */
@@ -602,6 +608,11 @@ Private long_boolean lines_couple(setup *real_people, int real_index,
    }
 }
 
+static Const long int tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
+static Const long int tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
+static Const long int tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
+static Const long int tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
+
 /* ARGSUSED */
 Private long_boolean check_3n1_setup(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
@@ -628,6 +639,18 @@ Private long_boolean check_3n1_setup(setup *real_people, int real_index,
          ((real_people->people[k ^ 2].id1 ^ real_people->people[k ^ 3].id1) & DIR_MASK) == B &&
          ((real_people->people[k ^ 6].id1 ^ real_people->people[k ^ 7].id1) & DIR_MASK) == B &&
          ((real_people->people[k ^ 4].id1 ^ real_people->people[k ^ 5].id1) & DIR_MASK) == A;
+   }
+   else if (real_people->kind == s1x8) {
+      int k = real_index & 2;
+      int j = k + k>>1;
+
+      return
+         ((real_people->people[C].id1 ^ real_people->people[G].id1) & DIR_MASK) == 0 &&
+         ((real_people->people[D].id1 ^ real_people->people[F^1].id1) & DIR_MASK) == 0 &&
+         ((real_people->people[C].id1 ^ real_people->people[D].id1) & DIR_MASK) == 2 &&
+         ((real_people->people[k ^ 2].id1 ^ real_people->people[k ^ 3].id1) & DIR_MASK) == B &&
+         ((real_people->people[j ^ 6].id1 ^ real_people->people[j ^ 7].id1) & DIR_MASK) == B &&
+         ((real_people->people[j ^ 4].id1 ^ real_people->people[j ^ 5].id1) & DIR_MASK) == A;
    }
    else {
       return
@@ -1795,6 +1818,8 @@ predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[5]},            /* "other_diamond_point_select" */
       {someone_selected,               &iden_tab[6]},            /* "other_spindle_ckpt_select" */
       {someone_selected,               &iden_tab[7]},            /* "pair_person_select" */
+      {sum_mod_selected,               &iden_tab[5]},            /* "person_select_sum5" */
+      {sum_mod_selected,               &iden_tab[8]},            /* "person_select_sum8" */
       {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
       {select_once_rem_from_unselect,(Const long int *) 0},      /* "select_once_rem_from_unselect" */
       {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */

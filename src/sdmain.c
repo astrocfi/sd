@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.89"
+#define VERSION_STRING "31.90"
 #define TIME_STAMP "wba@apollo.hp.com  2 Aug 97 $"
 
 /* This defines the following functions:
@@ -534,12 +534,12 @@ Private long_boolean find_selector(selector_kind *sel)
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-Private long_boolean find_numbers(int howmanynumbers, uint32 *number_list)
+Private long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero, uint32 *number_list)
 {
    if (interactivity == interactivity_normal) {
-      *number_list = uims_get_number_fields(howmanynumbers);
+      *number_list = uims_get_number_fields(howmanynumbers, forbid_zero);
 
-      if ((*number_list) == 0)
+      if ((*number_list) == ~0)
          return TRUE;           /* User waved the mouse away. */
    }
    else {
@@ -654,7 +654,7 @@ extern long_boolean deposit_call(callspec_block *call)
    }
 
    if (howmanynums != 0) {
-      if (find_numbers(howmanynums, &number_list)) return TRUE;
+      if (find_numbers(howmanynums, FALSE, &number_list)) return TRUE;
    }
 
    new_block = get_parse_block();
@@ -748,7 +748,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
       howmanynumbers = 2;
 
    if (howmanynumbers != 0) {
-      if (find_numbers(howmanynumbers, &number_list)) return TRUE;
+      if (find_numbers(howmanynumbers, TRUE, &number_list)) return TRUE;
    }
 
    new_block = get_parse_block();
@@ -1074,7 +1074,7 @@ extern long_boolean query_for_call(void)
    if (interactivity != interactivity_normal) {
       if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
          result = base_calls[1];     /* Get "nothing". */
-      else if (interactivity == interactivity_in_first_scan) {
+      else if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) {
          result = main_call_lists[parse_state.call_list_to_use][resolve_scan_current_point];
 
          /* Fix up the "hashed randoms" stuff as though we had generated this number through the random number generator. */
@@ -1084,7 +1084,13 @@ extern long_boolean query_for_call(void)
          resolve_scan_current_point = (resolve_scan_current_point == 0) ?
                                           number_of_calls[parse_state.call_list_to_use]-1 :
                                           resolve_scan_current_point-1;
-         if (resolve_scan_current_point == resolve_scan_start_point) interactivity = interactivity_in_random_search;
+         if (resolve_scan_current_point == resolve_scan_start_point) {
+            /* Done with this scan.  Advance to the next thing to do. */
+            if (interactivity == interactivity_in_first_scan)
+               interactivity = interactivity_in_second_scan;
+            else
+               interactivity = interactivity_in_random_search;
+         }
       }
       else {    /* In random search. */
          int i = generate_random_number(number_of_calls[parse_state.call_list_to_use]);

@@ -2,16 +2,6 @@
 @setfilename demo.info
 @settitle release notes
 @c Time-stamp: <96/04/05 14:25:00 wba>
-@tex
-\global\setfont\smallrm\rmshape{8}{1000}
-\global\font\smallsy=cmsy9
-\global\def\keycap#1{{\smallrm\textfont2=\smallsy \leavevmode\hbox{%
-  \raise0.4pt\hbox{$\langle$}\kern-.08em\vtop{%
-    \vbox{\hrule\kern-0.4pt
-     \hbox{\raise0.4pt\hbox{\vphantom{$\langle$}}\uppercase{#1}}}%
-    \kern-0.4pt\hrule}%
-  \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
-@end tex
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -21,10 +11,100 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.89
-         Database version = 31.89 format = 98
+          RELEASE NOTES FOR SD VERSION 31.90
+         Database version = 31.89 format = 110
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.90 ******
+
+An enormous number of improvements were made, far too many to
+list here.  Many are minor, many are significant.  Most of these
+were made possible by analysis of C4 material generously provided
+by Lynette Bellini.
+
+New call:
+@example
+@group
+cast a shadow, very centers cast 3/4
+@end group
+@end example
+
+New concepts:
+@example
+@group
+REPLACE THE LAST PART
+INTERRUPT BEFORE THE LAST PART
+Y'S ARE SOLID
+Y-SOME
+Y's ARE SOLID N/4 Y-SOME
+Y-SOME N/4 SOLID
+@end group
+@end example
+
+In the concepts BOXES/DIAMONDS/TRIANGLES WORK solid / N-some /
+fractional solid / fractional N-some, the word "WORK" has been
+changed to "ARE".  We realize that callers often use the word
+"work" in things like "triangles work solid 1/4 threesome",
+but this change makes the program's naming more consistent,
+and avoids any possibility of ambiguity.  There is a meta-concept
+<ANYONE> WORK <concept>, that is essentially equivalent to
+"OWN the <ANYONE> for <concept> <call> BY <call>.  We want to give
+the user complete and unambiguous control over which concept
+is used.
+
+The calls that used the phrase "(by parts)" in their name have had
+that phrase changed to just "(parts)".  Those calls are: recycle,
+cross cycle, scoot and weave, and couple up.
+
+The program's interpretation of the splitting of a 2x4 for the concepts
+CENTRAL or CRAZY has been made more regular.  The rule is that, if
+it is at all possible to divide the 2x4 int 2x2's, the program, and
+presumably the dancers, do so, even if such a division does not lead to
+the most common application of the call.  The 2x4 is split into 1x4's
+only if the call is impossible in 2x2's.  So, for example, @samp{1/2 crazy
+switch to a diamond} from parallel waves initially splits the setup into
+waves, as it has always done.  The difference is in calls like @samp{tickle}
+and the centers part of @samp{counter}.  On a @samp{1/2 crazy tickle}
+from parallel waves, the first action is done in each box, resulting in
+a tidal wave.  then the centers do it again.  On a @samp{central counter}
+from parallel waves, each box does a @samp{cast off 3/4} followed by
+a @samp{lockit}.  On @samp{central interlocked counter} or @samp{central
+cross counter}, the initial division is into each wave, since the call
+is impossible otherwise.
+
+The definition of crossfire has been changed so that the original ends
+can roll.  The definition of this call does not involve an "extend".
+It involves the original centers walking straight ahead to meet the
+original ends.  Since the latter did not move forward, they do not lose
+their roll status from the cross fold.
+
+The program can directly parse calls that take two subcalls in brackets,
+as in @samp{slant [swing thru] and [turn and deal]} or @samp{[slip] the
+windmill, outsides [ramble]}.
+
+@samp{Dixie grand} is now a call, as well as being a recognized getout.
+After doing this call, the dancers will be in an alamo ring.  You may
+need to give the pseudo-call @samp{adjust alamo to other pairing} before
+doing the next call.
+
+In @code{Sdtty} for PC's, function key control-F6 is a shortcut for
+the @samp{centers} concept.
+
+The call @samp{<anything> and the <anyone> roll} re-evaluates people's
+positions before deciding who should roll.  So, for example, if you say
+@samp{[swing thru] and the centers roll}, it will be the @emph{new} centers
+that will roll.  You may need to make that clear to the dancers by
+saying something like @samp{the new centers roll}
+
+The program now understands the number zero.  It can do things like
+@samp{take 0}, @samp{loop and tag 0/4}, @samp{0 steps at a time},
+and @samp{track 0}.
+
+The word order "reverse N/4 crazy" is no longer accepted.  It appears
+that some people believe that this word order is just a short notation
+for "reverse order N/4 crazy".  If you want "reverse order N/4 crazy",
+say so.  If you want "N/4 reverse crazy", say so.
 
 ****** Changes as of version 31.89 ******
 
@@ -32,8 +112,12 @@ The program can do singing call progressions.  There are two new
 commands, available only at the start of a sequence (that is, when
 you could say "heads start"):
 
-         toggle singing call
-         toggle reverse singing call
+@example
+@group
+toggle singing call
+toggle reverse singing call
+@end group
+@end example
 
 The "reverse" singing call option chooses a reverse ("right hand lady")
 progression.

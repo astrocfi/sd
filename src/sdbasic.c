@@ -149,7 +149,7 @@ extern void mirror_this(setup *s)
             fail("Recursive concentric?????.");
 
          s->kind = s->inner.skind;
-         s->rotation = s->inner.srotation;
+         s->rotation += s->inner.srotation;
          mirror_this(s);    /* Sorry! */
          s->inner.srotation = s->rotation;
 
@@ -219,8 +219,9 @@ typedef struct {
 
 static collision_map collision_map_table[] = {
    /* These items handle various types of "1/2 circulate" calls from 2x4's. */
-   {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, warn__none},   /* from lines in */
-   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines out */
+   {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, warn__none},   /* from lines out */
+   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines in */
+   {2, 0x044044, 0x44, 0x44, {2, 6},               {0, 5},                {1, 4},                 s_crosswave, s1x8,        1, warn__none},   /* from lines in */
    {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},           s1x4,        s1x8,        0, warn__none},   /* more of same */
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none},   /* from trade by */
    {2, 0x022022, 0x22, 0x22, {1, 5},               {2, 7},                {3, 6},                 s_spindle,   s_crosswave, 0, warn__none},   /* from DPT/trade by with no ends */
@@ -405,7 +406,9 @@ static veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9, 10, 15, 3
 static veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13, 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
 static veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
 static veryshort ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
+static veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
 static veryshort ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
+static veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
 static veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static veryshort btlqtg[12] = {5, 0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1};
 static veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
@@ -471,6 +474,22 @@ static veryshort qdmtranslateh[32] = {
 static veryshort qdmtranslatev[32] = {
    0,  0,  0,  0,  11, 0,  10, 0,  12, 13, 14, 15, 0,  1,  0,  0,
    0,  0,  0,  0,  3,  0,  2,  0,  4,  5,  6,  7,  0,  9,  0,  8};
+
+static veryshort qtgtranslateh[32] = {
+   -1, -1, 6, 7, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1,
+   -1, -1, 2, 3, -1, 4, -1, -1, -1, -1, -1, -1, -1, -1, 5, -1};
+
+static veryshort qtgtranslatev[32] = {
+   -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, 6, 7, -1, 0, -1, -1,
+   -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 2, 3, -1, 4, -1, -1};
+
+static veryshort bonetranslateh[32] = {
+   -1, -1, 6, 7, -1, -1, 0, -1, -1, -1, -1, -1, -1, 1, -1, -1,
+   -1, -1, 2, 3, -1, -1, 4, -1, -1, -1, -1, -1, -1, 5, -1, -1};
+
+static veryshort bonetranslatev[32] = {
+   -1, -1, -1, -1, -1, 5, -1, -1, -1, -1, 6, 7, -1, -1, 0, -1,
+   -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 2, 3, -1, -1, 4, -1};
 
 static veryshort j23translateh[32] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  2,  0,  0,
@@ -1050,19 +1069,22 @@ Private void special_4_way_symm(
 
 /* This function is internal. */
 
-Private void special_3person(
+Private void special_triangle(
    callarray *cdef,
    callarray *ldef,
    setup *scopy,
    personrec newpersonlist[],
    int newplacelist[],
+   int num,
    int lilresult_mask[],
    setup *result)
 {
    int real_index;
    int numout = setup_attrs[result->kind].setup_limits+1;
+   long_boolean is_triangle = (scopy->kind != s1x3);
+   long_boolean result_is_triangle = (result->kind == s_trngl || result->kind == s_trngl4);
 
-   for (real_index=0; real_index<3; real_index++) {
+   for (real_index=0; real_index<num; real_index++) {
       personrec this_person = scopy->people[real_index];
       newpersonlist[real_index].id1 = 0;
       newpersonlist[real_index].id2 = 0;
@@ -1072,9 +1094,9 @@ Private void special_3person(
          uint32 z;
          int real_direction = this_person.id1 & 3;
 
-         if (scopy->kind == s_trngl) {
-            int d2 = ((real_direction >> 1) & 1) * 3;
-            northified_index = (real_index + d2);
+         if (is_triangle) {
+            int d2 = ((real_direction >> 1) & 1) ? num : 0;
+            northified_index = real_index + d2;
          }
          else {
             northified_index = (real_direction & 2) ? 2-real_index : real_index;
@@ -1084,12 +1106,16 @@ Private void special_3person(
          k = (z >> 4) & 0x1F;
 
          if (real_direction & 2) {
-            if (result->kind == s_trngl) {
-               k-=3;
-               if (k<0) k+=6;
+            if (result_is_triangle) {
+               k-=num;
+               if (k<0) k+=(num+num);
             }
-            else
+            else if (result->kind == s1x3)
                k = numout-1-k;
+            else {
+               k -= (numout >> 1);
+               if (k<0) k+=numout;
+            }
          }
 
          newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
@@ -1108,19 +1134,23 @@ Private void special_3person(
    /* Check whether the call went into the other triangle.  If so, it
       must have done so completely. */
 
-   if (result->kind == s_trngl) {
-      if (newplacelist[0] >=3 || newplacelist[1] >=3 || newplacelist[2] >=3) {
-         int i;
+   if (result_is_triangle) {
+      int i;
 
-         result->rotation += 2;
+      for (i=0; i<num; i++) {
+         if (newplacelist[i] >= numout) {
+            result->rotation += 2;
 
-         for (i=0; i<3; i++) {
-            if (newplacelist[i] >=0) {
-               newplacelist[i] -= 3;
-               if (newplacelist[i] < 0)
-                  fail("Call went into other triangle????.");
-               newpersonlist[i].id1 = rotperson(newpersonlist[i].id1, 022);
+            for (i=0; i<num; i++) {
+               if (newplacelist[i] >=0) {
+                  newplacelist[i] -= numout;
+                  if (newplacelist[i] < 0)
+                     fail("Call went into other triangle????.");
+                  newpersonlist[i].id1 = rotperson(newpersonlist[i].id1, 022);
+               }
             }
+
+            break;
          }
       }
    }
@@ -1145,7 +1175,7 @@ Private int divide_the_setup(
    uint32 callflags1 = ss->cmd.callspec->callflags1;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
    setup_command conc_cmd;
-   uint32 must_do_concentric = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
+   uint32 must_do_mystic = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
    long_boolean matrix_aware =
          (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX);
@@ -1161,7 +1191,7 @@ Private int divide_the_setup(
       We first limit it to just the few setups for which it can possibly be legal, to make
       it easier to test later. */
 
-   if (must_do_concentric) {
+   if (must_do_mystic) {
       switch (ss->kind) {
          case s_rigger:
          case s_qtag:
@@ -1177,7 +1207,7 @@ Private int divide_the_setup(
 
    switch (ss->kind) {
       case s_thar:
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
          division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,1);
          goto divide_us_no_recompute;
@@ -1469,7 +1499,7 @@ Private int divide_the_setup(
             /* This is an unsymmetrical thing.  Do each quadrant (a 1x2) separately by
                using both maps, and then merge the result and hope for the best. */
 
-            ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
             scopy = *ss;    /* "Move" can write over its input. */
             new_divided_setup_move(ss, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0), phantest_ok, FALSE, &the_results[0]);
             new_divided_setup_move(&scopy, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1), phantest_ok, FALSE, &the_results[1]);
@@ -1622,16 +1652,18 @@ Private int divide_the_setup(
 
          break;
       case s_rigger:
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
 
-         if (assoc(b_trngl4, ss, calldeflist) || assoc(b_ptrngl4, ss, calldeflist)) {
+         if (        (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) ||
+                     assoc(b_trngl4, ss, calldeflist) ||
+                     assoc(b_ptrngl4, ss, calldeflist)) {
             division_maps = &map_rig_trngl4;
             goto divide_us_no_recompute;
          }
 
-         if (must_do_concentric)
-            goto do_concentrically;
+         if (must_do_mystic)
+            goto do_mystically;
 
          {
             int tinytb = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
@@ -1658,7 +1690,9 @@ Private int divide_the_setup(
                phantom columns.)  We also enable this if the caller explicitly said
                "3x4 matrix". */
 
-            if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
+            if ((       (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+                        (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
+                        (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_1X3|INHERITFLAG_3X1|INHERITFLAG_3X3))) &&
                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
@@ -1683,7 +1717,7 @@ Private int divide_the_setup(
                could be seen during the recursion. */
 
             forbid_little_stuff =
-               !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
+               !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
                     (assoc(b_2x4, ss, calldeflist) ||
                      assoc(b_4x2, ss, calldeflist) ||
                      assoc(b_2x3, ss, calldeflist) ||
@@ -1877,7 +1911,7 @@ Private int divide_the_setup(
                /* See comment above, for 3x4. */
                {
                   long_boolean forbid_little_stuff =
-                     !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
+                     !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
                           (assoc(b_2x4, ss, calldeflist) ||
                            assoc(b_4x2, ss, calldeflist) ||
                            assoc(b_2x3, ss, calldeflist) ||
@@ -1914,7 +1948,7 @@ Private int divide_the_setup(
                   assoc(b_pqtag, ss, calldeflist);
 
             if (  !forbid_little_stuff &&
-                  (ss->cmd.callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+                  (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
                   (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
                   !assoc(b_2x2, ss, calldeflist) &&
                   (  assoc(b_1x2, ss, calldeflist) ||
@@ -1941,18 +1975,20 @@ Private int divide_the_setup(
             phantom columns.)  We also enable this if the caller explicitly said
             "3x4 matrix". */
 
-         if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
+         if (  (  (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+                  (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
+                  (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_1X3|INHERITFLAG_3X1|INHERITFLAG_3X3))     ) &&
                (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
             division_maps = &map_qtag_2x3;
             goto divide_us_no_recompute;
          }
 
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
 
-         if (must_do_concentric)
-            goto do_concentrically;
+         if (must_do_mystic)
+            goto do_mystically;
 
          if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
                   (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
@@ -1977,16 +2013,21 @@ Private int divide_the_setup(
          }
          break;
       case s_bone:
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
 
-         if (assoc(b_trngl4, ss, calldeflist) || assoc(b_ptrngl4, ss, calldeflist)) {
+         /* See if this call is being done "split" as in "split square thru" or "split dixie style",
+            in which case split into triangles.  (Presumably there is a "twisted" somewhere.) */
+
+         if (        (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) ||
+                     assoc(b_trngl4, ss, calldeflist) ||
+                     assoc(b_ptrngl4, ss, calldeflist)) {
             division_maps = &map_bone_trngl4;
             goto divide_us_no_recompute;
          }
 
-         if (must_do_concentric)
-            goto do_concentrically;
+         if (must_do_mystic)
+            goto do_mystically;
 
          {
             int tbi = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
@@ -2011,7 +2052,7 @@ Private int divide_the_setup(
             division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
             goto divide_us_no_recompute;
          }
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
          break;
       case s2x3:
@@ -2162,6 +2203,13 @@ Private int divide_the_setup(
             goto divide_us_no_recompute;
          }
          break;
+      case s1x3:
+         /* See if the call has a 1x1 definition, in which case split it and do each part. */
+         if (assoc(b_1x1, ss, calldeflist)) {
+            division_code = MAPCODE(s1x1,3,MPKIND__SPLIT,0);
+            goto divide_us_no_recompute;
+         }
+         break;
       case sdmd:
          /* See if the call has a 1x1 definition, in which case split it and do each part. */
          if (assoc(b_1x1, ss, calldeflist)) {
@@ -2184,15 +2232,15 @@ Private int divide_the_setup(
             goto divide_us_no_recompute;
          }
 
-         if (must_do_concentric)
-            goto do_concentrically;
+         if (must_do_mystic)
+            goto do_mystically;
 
          if (     assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) ||
                   assoc(b_1x1, ss, calldeflist)) {
             goto divide_us_no_recompute;
          }
 
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
 
          /* See if this call has applicable 1x12 or 1x16 definitions and matrix expansion is permitted.
@@ -2232,7 +2280,7 @@ Private int divide_the_setup(
 
          break;
       case s_crosswave:
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
 
          /* If we do not have a 1x4 or 4x1 definition, but we have 1x2, 2x1, or 1x1 definitions,
@@ -2241,8 +2289,8 @@ Private int divide_the_setup(
             the people in the outer, disconnected, 1x4 work with each other across the set, which
             we do not want. */
 
-         if (must_do_concentric)
-            goto do_concentrically;
+         if (must_do_mystic)
+            goto do_mystically;
 
          if (!assoc(b_4x1, ss, calldeflist) && !assoc(b_1x4, ss, calldeflist) &&
                (assoc(b_2x1, ss, calldeflist) || assoc(b_1x2, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)))
@@ -2258,10 +2306,9 @@ Private int divide_the_setup(
          if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
             goto divide_us_no_recompute;
 
-         /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope.
-            Also, split it to boxes if the "split_to_box" flag was given. */
+         /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope. */
 
-         if (calldeflist->callarray_flags & (CAF__LATERAL_TO_SELECTEES | CAF__SPLIT_TO_BOX))
+         if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)
             goto divide_us_no_recompute;
 
          /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
@@ -2273,7 +2320,7 @@ Private int divide_the_setup(
                (!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist))) {
 
-            if (must_do_concentric)
+            if (must_do_mystic)
                fail("Can't do \"snag/mystic\" with this call.");
 
             do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, TRUE);
@@ -2281,13 +2328,22 @@ Private int divide_the_setup(
             return 2;                        /* And try again. */
          }
 
-         /* If we are splitting for "central", "crazy", or "splitseq", give preference to 2x2 splitting. */
+         /* If we are splitting for "central", "crazy", or "splitseq", give preference to 2x2 splitting.
+            Also give preference if the "split_to_box" flag was given. */
 
          temp_for_2x2 = TRUE;
-         if ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)) {
-            temp_for_2x2 = FALSE;    /* So we don't waste time computing it again. */
+         if (     ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
+                  ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1)) ||
+                  (calldeflist->callarray_flags & CAF__SPLIT_TO_BOX)) {
             if (assoc(b_2x2, ss, calldeflist))
                goto divide_us_no_recompute;
+            temp_for_2x2 = FALSE;    /* So we don't waste time computing it again. */
+/*
+            if (assoc(b_1x2, ss, calldeflist))
+               goto divide_us_no_recompute;
+            if (assoc(b_2x1, ss, calldeflist))
+               goto divide_us_no_recompute;
+*/
          }
 
          /* See if this call has applicable 1x4 or 4x1 definitions, in which case split it that way. */
@@ -2302,8 +2358,8 @@ Private int divide_the_setup(
 
          if (temp_for_2x2 && assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
 
-         if (must_do_concentric)
-            goto do_concentrically;
+         if (must_do_mystic)
+            goto do_mystically;
 
          /* See long comment above for s1x8.  The test cases for this are "own the <points>, trade
             by flip the diamond", and "own the <points>, flip the diamond by flip the diamond". */
@@ -2371,7 +2427,7 @@ Private int divide_the_setup(
 
             if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
                if ((!(tbo & 010) || have_2x1 != 0) && (!(tbo & 1) || have_1x2 != 0)) {
-                  if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+                  if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
                      fail("Can't split the setup.");
 
                   goto do_concentrically;
@@ -2443,7 +2499,7 @@ Private int divide_the_setup(
          }
    }
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
       fail("Can't split the setup.");
 
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -2451,11 +2507,11 @@ Private int divide_the_setup(
 
    divide_us_no_recompute:
 
-   if (must_do_concentric)
+   if (must_do_mystic)
       fail("Can't do \"snag/mystic\" with this call.");
 
-   recompute_anyway = (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) != 0;
-   ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
+   recompute_anyway = (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) != 0;
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
    ss->cmd.prior_elongation_bits = 0;
 
    if (division_code == ~0)
@@ -2519,13 +2575,21 @@ Private int divide_the_setup(
    conc_cmd = ss->cmd;
    concentric_move(ss, &conc_cmd, &conc_cmd, schema_concentric, 0, 0, FALSE, result);
    return 1;
+
+   do_mystically:
+
+   conc_cmd = ss->cmd;
+
+   update_id_bits(ss);    /* It would be nice if we didn't have to do this. */
+   inner_selective_move(ss, &conc_cmd, &conc_cmd, 0, TRUE, 0, 0, selector_centers, 0, 0, result);
+   return 1;
 }
 
 
 
 static veryshort exp_conc_1x8[] = {3, 2, 7, 6};
 static veryshort exp_conc_qtg[] = {6, 7, 2, 3};
-static veryshort exp_conc_2x2[] = {1, 2, 5, 6};
+static veryshort exp_conc_2x2[] = {6, 1, 2, 5, 6};
 
 /* For this routine, we know that callspec is a real call, with an array definition schema.
    Also, result->people have been cleared. */
@@ -2669,6 +2733,36 @@ extern void basic_move(
                }
             }
             break;
+         case s_trngl4:
+            /* The same, with twisted. */
+
+            if (     (ss->cmd.cmd_final_flags.herit & INHERITFLAG_TWISTED) &&
+                     (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
+               ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+               if (  ((ss->people[0].id1 & d_mask) != d_north) ||
+                     ((ss->people[1].id1 & d_mask) != d_south) ||
+                     ((ss->people[2].id1 & d_mask) != d_south) ||
+                     ((ss->people[3].id1 & d_mask) != d_south))
+                  fail("People are not in correct position for split call.");
+
+               /* Now do the required transformation, if it is a "split square thru" type.
+                  For "split dixie style" stuff, do nothing -- the database knows what to do. */
+
+               if (!(final_concepts.final & FINAL__SPLIT_DIXIE_APPROVED)) {
+                  copy_rot(ss, 0, ss, 0, 011);
+                  copy_rot(ss, 1, ss, 1, 011);
+                  copy_rot(ss, 2, ss, 2, 011);
+                  copy_rot(ss, 3, ss, 3, 033);
+                  ss->rotation--;
+                  ss->kind = s1x4;
+                  canonicalize_rotation(ss);
+
+                  /* Repair the damage. */
+                  newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+               }
+            }
+            break;
          case s_qtag:
             if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
                fail("Can't do this call from arbitrary 3x4 setup.");
@@ -2799,7 +2893,7 @@ foobar:
       we have "snag" or "mystic". */
 
    if (     calldeflist &&
-            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
             !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
       begin_kind key1, key2;
 
@@ -2813,7 +2907,7 @@ foobar:
          newtb = 0;
          for (j=0; j<4; j++) newtb |= ss->people[j].id1;
          stemp = *ss;
-         stemp.rotation = ss->inner.srotation;
+         stemp.rotation += ss->inner.srotation;
    
          if (ss->inner.skind == s1x4) {
             stemp.kind = s1x8;
@@ -2837,11 +2931,18 @@ foobar:
                }
             }
          }
-         else if (ss->inner.skind == s2x2 && !ss->concsetup_outer_elongation) {
-            if (ss->concsetup_outer_elongation) fail("Setup is bizarre.");
+         else if (ss->inner.skind == s2x2) {
             stemp.kind = s2x4;
             clear_people(&stemp);
-            scatter(&stemp, ss, exp_conc_2x2, 3, 0);
+
+            if (ss->concsetup_outer_elongation == 1) {
+               scatter(&stemp, ss, &exp_conc_2x2[1], 3, 0);
+            }
+            else if (ss->concsetup_outer_elongation == 2) {
+               stemp.rotation++;
+               scatter(&stemp, ss, exp_conc_2x2, 3, 033);
+            }
+            else fail("Setup is bizarre.");
             *ss = stemp;
          }
       }
@@ -3081,9 +3182,9 @@ foobar:
    if (coldefinition && (coldefinition->callarray_flags & CAF__OTHER_ELONGATE)) other_elongate = TRUE;
    if (linedefinition && (linedefinition->callarray_flags & CAF__OTHER_ELONGATE)) other_elongate = TRUE;
 
-   if (other_elongate) desired_elongation ^= 3;
-   /* If the flags were zero and we complemented them so that both are set, that's not good. */
-   if (desired_elongation == 3) desired_elongation ^= 3;
+   if (other_elongate &&
+            (desired_elongation == 1 || desired_elongation == 2))
+      desired_elongation ^= 3;
 
    if (!newtb) {
       result->kind = nothing;   /* Note that we get the benefit of the "CFLAG1_PARALLEL_CONC_END" stuff here.  */
@@ -3136,6 +3237,8 @@ foobar:
       t.assump_col = 0;
       t.assump_both = 0;
       t.assump_cast = 0;
+      t.assump_live = 0;
+      t.assump_negate = 0;
 
       if (t.assumption == cr_nice_diamonds && ss->kind == s_qtag) {
          t.assumption = cr_jright;
@@ -3182,6 +3285,8 @@ foobar:
       t.assump_col = 1;
       t.assump_both = 0;
       t.assump_cast = 0;
+      t.assump_live = 0;
+      t.assump_negate = 0;
 
       if (t.assumption != cr_none) (void) check_restriction(ss, t, FALSE, coldefinition->callarray_flags & CAF__RESTR_MASK);
 
@@ -3241,7 +3346,7 @@ foobar:
       outer_elongation = outer_inners[0].rotation;
       if (other_elongate) outer_elongation ^= 1;
 
-      normalize_concentric(schema_concentric, 1, outer_inners, outer_elongation, result);
+      normalize_concentric(schema_concentric, 1, outer_inners, (outer_elongation & 1) + 1, result);
 
       goto fixup;
    }
@@ -3285,9 +3390,9 @@ foobar:
       if (four_way_startsetup) {
          special_4_way_symm(linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
       }
-      else if (ss->kind == s_trngl || ss->kind == s1x3) {
+      else if (ss->kind == s_trngl || ss->kind == s_trngl4 || ss->kind == s1x3) {
          if (inconsistent_rotation | inconsistent_setup) fail("This call is an inconsistent shape-changer.");
-         special_3person(coldefinition, linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
+         special_triangle(coldefinition, linedefinition, ss, newpersonlist, newplacelist, num, lilresult_mask, result);
       }
       else {
          int halfnumoutl, halfnumoutc, numoutl, numoutc;
@@ -3297,7 +3402,7 @@ foobar:
          int rotfudge_col = 0;
 
          numoutl = setup_attrs[result->kind].setup_limits+1;
-         numoutc = setup_attrs[result->kind].setup_limits+1;
+         numoutc = numoutl;
 
          /* Check for a 1x4 call around the outside that sends people far away without permission. */
          if (     ss->kind == s1x4 &&
@@ -3340,6 +3445,7 @@ foobar:
                      rotfudge_col = 3;
                   }
                }
+/*
                else if (result->kind == s_bone && (setup_kind) linedefinition->end_setup == s_qtag) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
                   result->kind = s_qtag;
@@ -3352,6 +3458,21 @@ foobar:
                   else {
                      final_translatec = &btlqtg[0];
                      rotfudge_col = 3;
+                  }
+               }
+*/
+               else if (result->kind == s_bone && (setup_kind) linedefinition->end_setup == s_qtag) {
+                  result->kind = sx4dmd;
+                  tempkind = sx4dmd;
+                  final_translatec = ftcbone;
+
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatel = &ftlqtg[0];
+                     rotfudge_line = 3;
+                  }
+                  else {
+                     final_translatel = &ftlqtg[4];
+                     rotfudge_line = 1;
                   }
                }
                else
@@ -3619,6 +3740,24 @@ foobar:
             else if ((lilresult_mask[0] & 0xAF50AF50UL) == 0) {
                result->kind = s4dmd;
                permuter = qdmtranslateh;
+            }
+            else if ((lilresult_mask[0] & 0xD3BFD3BFUL) == 0) {
+               result->kind = s_qtag;
+               permuter = qtgtranslatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xBFD3BFD3UL) == 0) {
+               result->kind = s_qtag;
+               permuter = qtgtranslateh;
+            }
+            else if ((lilresult_mask[0] & 0xB3DFB3DFUL) == 0) {
+               result->kind = s_bone;
+               permuter = bonetranslatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xDFB3DFB3UL) == 0) {
+               result->kind = s_bone;
+               permuter = bonetranslateh;
             }
             else
                fail("Call went to improperly-formed setup.");

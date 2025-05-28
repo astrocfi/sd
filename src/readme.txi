@@ -1,4 +1,4 @@
-@c readme.txinfo Time-stamp: <96/05/02 17:25:16 gildea> -*-texinfo-*-
+@c readme.txi  Time-stamp: <1997-10-09 20:16:57 gildea> -*-texinfo-*-
 @c Included by sd_doc, also used to produce README.
 @node Intro, Getting Started, Top, Top
 @unnumbered Introduction
@@ -45,9 +45,10 @@ off your computer and go to a dance.
 The use of this program is not a good way to learn to call or to improve
 your calling or dancing skills.  In fact, reliance on a computer program
 to write material could easily make you a worse caller, or interfere
-with your attempts to improve your calling skills.  While a program may be
-a useful reference at times for calls or concepts that you do not understand,
-this is only a tiny part what you need to learn in order to be a good caller
+with your attempts to improve your calling skills.
+
+The knowledge of calls and concepts that this program can provide is
+only a tiny part what you need to learn in order to be a good caller
 or dancer.  To call successfully, you need to master many skills,
 such as timing, flow, judging difficulty, floor interaction, and choosing
 precisely the right words to say.  This last skill becomes increasingly
@@ -65,6 +66,17 @@ Do not rely on Sd to provide the necessary insight into challenge dancing.
 For beginning callers in particular, the best thing to do
 is to receive instruction from a qualified teacher or coach, and to practice.
 
+We recognize that people sometimes have to learn a level in a tape group without
+benefit of any human expertise at that level, and that such people may have
+no choice but to rely on a computer program as one of their sources of
+information.  This is an undesireable situation, and we believe that computer
+programs should not be used as references except in emergencies.  There is an
+enormous body of knowledge about the accepted usage of various calls and concepts.
+That body of knowledge is generally possessed by all competent dancers and callers
+at a given level.  No computer program can possibly possess that knowledge.
+In particular, computer programs should not be used for resolving controversial
+issues.
+
 This is not to say that computers have no place in the education and training
 of callers.  A number of caller training programs have been written that
 may help you develop such skills as formation management and sight resolving.
@@ -73,7 +85,7 @@ Sd is not suitable for this.
 @unnumberedsec Quality and Correctness
 
 Quality, correctness, and reliability are fundamental and extremely important
-design objectives of Sd and Sdtty.  Before any version is released, it passes
+design objectives of Sd.  Before any version is released, it passes
 very rigorous diagnostic tests.  These tests include verification of large amounts
 of C4 material from recent National Advanced and Challenge Conventions, and
 other C4 weekends, with particular emphasis on material written by competing programs.
@@ -83,8 +95,9 @@ The elusive but ever-sought-after goal is to make a program that
 @item
 never makes mistakes,
 @item
-is able to call virtually all of the non-bogus material called
-by the top challenge callers, whatever computer program they may have used,
+is able to write virtually all of the non-bogus material called
+by the top challenge callers, whatever computer program they may have
+used, and
 @item
 is developed and tested carefully, so users can be assured that this
 ability will be maintained in all future releases.
@@ -110,14 +123,6 @@ lists are careless.  In such cases, we have attempted to correct the errors
 where possible, using a variety of sources.  Priority is given to those
 sources that have shown the greatest care in their editing.
 
-The @code{toggle ignoreblanks} command, or
-the ``-ignoreblanks'' command line switch, or the line ``ignoreblanks''
-in the ``options'' section of the @file{sd.ini} initialization file,
-will make @code{Sdtty}
-accept words that are run together or the use of blanks instead of
-hyphens.  Hence, misspelled concepts and calls such as @code{tandem based triangles}
-(the Callerlab spelling is with a hyphen) and @code{inroll circulate} will be accepted.
-
 @unnumberedsec Deviations from Official Lists
 
 It is a known fact that challenge callers routinely call various ``popular''
@@ -138,7 +143,7 @@ C3X or C4X, you may use the calls without getting a warning.)
 
 Not all callers exercise good judgement in their calling, and occasionally
 some controversial, or even illegal, things are called.  It is not possible
-for a computer program to enforce good judgement or good taste.  @code{Sd}
+for a computer program to enforce good judgement or good taste.  Sd
 nevertheless sometimes prints warning messages of various types to alert
 less-experienced callers that something might be unusually difficult or
 controversial, or might violate some definition or some commonly accepted notion.
@@ -150,8 +155,8 @@ You can prevent the program from displaying or printing warning messages
 by giving the @code{toggle nowarn mode} command.  This turns on (or turns
 off if it was already on) the ``no warnings'' mode.  You can also start the
 program with a command-line switch ``-no_warnings'', or place a line
-with just the word ``no_warnings'' (with no hyphen) in the ``options''
-section of the @file{sd.ini} initialization file.
+with just the word ``no_warnings'' (with no leading hyphen) in the
+``options'' section of the @file{sd.ini} initialization file.
 
 @unnumberedsec Variations of the Program
 @end ifset
@@ -166,7 +171,8 @@ the X Window System interface.  Sd is also available for Domain/OS on
 Apollo systems.  It is not yet available for PC compatibles.
 
 Sdtty is the name of the program that uses a character-oriented keyboard
-interface.  Calls are selected by typing their names.  Sdtty runs on
+interface.  Calls are selected by typing their names.
+Sdtty runs on
 Unix-like systems and under DOS, Windows 3.1, Windows 95, and Windows NT on PC
 compatibles.  PC users may take comfort from the fact that most serious
 callers prefer Sdtty rather than Sd.
@@ -195,8 +201,8 @@ in plain text and formatted form, respectively.  The file
 @file{db_doc.txt} gives internal information on the database format,
 useful only to people editing the calls database.
 
-See the file @file{Relnotes} for information about what is new in this
-release.
+See the file @file{relnotes.txt} for information about what is new in
+this release.
 
 Printed copies of the manual are available from the authors, or may be
 printed from the file @file{sd_doc.ps}.
@@ -216,7 +222,7 @@ to your WWW browser program.
 
 You can obtain Sdtty for DOS on PC-compatible computers,
 on a 3.5-inch HD disk, with printed documentation.
-The price is $4 (price valid for 1996).
+The price is $4 (price valid for 1997).
 @ifset full-manual
 @xref{Author Contact}.
 @end ifset
@@ -235,16 +241,6 @@ The file
 @end ifset
 is the Sdtty program for installation on PC's.  It is the same file as
 @samp{INSTALL.EXE} that is furnished on a floppy disk.
-
-If you are on the Internet, you can download the program using the
-World Wide Web.  Give the locator
-@ifclear html
-@t{http://www.gildea.com/sd/}
-@end ifclear
-@ifset html
-@t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
-@end ifset
-to your WWW browser program.
 
 Pre-built versions for various Unix-style systems are available in the same
 @ifclear html
@@ -265,6 +261,16 @@ contains a description of all the files in this directory.
 
 You must transfer the files in FTP's binary mode.
 
+If you are on the Internet, you can download the program using the
+World Wide Web.  Give the locator
+@ifclear html
+@t{http://www.gildea.com/sd/}
+@end ifclear
+@ifset html
+@t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
+@end ifset
+to your WWW browser program.
+
 If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail, and
 it includes support for mailing large binary files.
@@ -273,7 +279,7 @@ it includes support for mailing large binary files.
 @unnumberedsec Installing Sdtty on a PC
 
 To install the program from a floppy disk to a PC-compatible, you must be
-running in DOS.  There are two ways to go from Windows to DOS.  The simplest
+running in DOS@.  There are two ways to go from Windows to DOS@.  The simplest
 is to click the @code{MS-DOS prompt} icon.  In Windows 3.1 or Windows NT, this is typically
 in the @code{main} program group.  In Windows 95, this is typically in the
 @code{Programs} sub-menu of the @code{Start} menu.  To return to Windows after
@@ -283,7 +289,7 @@ The other way to start DOS is to exit from Windows.  To exit from Windows
 3.1, double-click the button in the upper left corner of the Program Manager
 window.  To exit from Windows 95, select @code{Shut Down} in the @code{Start} menu
 and select @code{Restart the computer in MS-DOS mode}.  To return to Windows
-3.1, type the @code{win} command to DOS.  To return to Windows 95, just type
+3.1, type the @code{win} command to DOS@.  To return to Windows 95, just type
 @code{exit} to DOS.
 
 Once in DOS do this if you are installing Sdtty for the first time:
@@ -325,12 +331,12 @@ the program.
 @unnumberedsec Making Sdtty Start Under Windows
 
 You can arrange for Windows to start Sdtty directly,
-without explicitly going to DOS.  You only need to do the following steps once.
+without explicitly going to DOS@.  You only need to do the following steps once.
 After you have done them, upgrades to new versions of Sdtty will work
 without repeating this.
 
 This assumes that Sdtty was installed, as per the instructions above,
-in the directory @code{C:\SD}.  If you installed it elsewhere, you must
+in the directory @code{C:\SD}@.  If you installed it elsewhere, you must
 use the @code{Properties} command of the explorer (in Windows 95) or
 the PIF editor (in Windows 3.1 or Windows NT) to modify the Command Line or Program Filename
 given in @code{sdtty.pif}.
@@ -348,7 +354,7 @@ click @code{Finish}.  Sdtty will now be in the selected location.
 @unnumberedsubsec Under Windows 3.1 or Windows NT
 From the Program Manager, double-click the program group you want to place it in,
 for example, @code{Accessories}.  In the Toolbar of the Program Manager, click
-@code{File}.  Then click @code{New}.  Select @code{Program Item}, and click @code{OK}.
+@code{File}.  Then click @code{New}.  Select @code{Program Item}, and click @code{OK}@.
 Type @code{C:\SD\SDTTY.PIF} as the @code{Program Filename} or @code{Command Line}.
 Type @code{SD} (or whatever you wish) as the @code{Description}.
 Choose an icon if you wish.  Then click @code{OK}.
@@ -364,7 +370,7 @@ print your own manual from the file that is on the disk.)
 
 Sd and Sdtty are sometimes also distributed in source form.  When so
 distributed, they are licensed under the GNU General Public License,
-which is in the file @file{COPYING}.  The terms of this license,
+which is in the file @file{COPYING}@.  The terms of this license,
 for distribution of source files or programs made from modified
 source files, are very strict.  Programs constructed from modified source
 files may never be duplicated or redistributed by anyone, even in executable
@@ -407,23 +413,18 @@ Please send any praise, bug reports, or other comments on Sd
 to the authors at the addresses given below.
 Be sure to include the version number.
 
+@c don't use mailto URL's to try to cut down on spam
 @display
 William Ackerman
-@ifclear html
 wba@@apollo.hp.com
-@end ifclear
-@ifset html
-<A HREF="mailto:wba@@apollo.hp.com, stephen@@gildea.com">wba@@apollo.hp.com</A>
-@end ifset
 
 @ifclear html
 Stephen Gildea
-stephen@@gildea.com
 @end ifclear
 @ifset html
 <A HREF="http://www.gildea.com/stephen/">Stephen Gildea</A>
-<A HREF="mailto:stephen@@gildea.com, wba@@apollo.hp.com">stephen@@gildea.com</A>
 @end ifset
+stephen@@gildea.com
 @end display
 
 If you do not have access to electronic mail, write to
