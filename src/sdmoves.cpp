@@ -53,6 +53,7 @@
    fraction_info::get_fraction_info
    fraction_info::get_fracs_for_this_part
    fraction_info::query_instant_stop
+   try_to_get_parts_from_parse_pointer
    fill_active_phantoms_and_move
    move_perhaps_with_active_phantoms
    impose_assumption_and_move
@@ -1438,36 +1439,57 @@ static const checkitem checktable[] = {
     {-5, 2, -6, 2,     -2, 1, -2, 2,     2, 1, 2, 2,       5, 2, 6, 2,
      5, -2, 6, -2,     2, -1, 2, -2,     -2, -1, -2, -2,   -5, -2, -6, -2}},
 
-   // OK to here (13).
+   // OK to here (13).  This has something to do with "initialize_matrix_position_tables".
+   // Not sure what that was about.
 
    {0x00230053, 0x00220009, s2x4,  ~0, 1, warn__none, (const coordrec *) 0,
-    {2, -5, 2, -6, 1, -2, 2, -2, 1, 2, 2, 2, 2, 5, 2, 6,
-     -2, 5, -2, 6, -1, 2, -2, 2, -1, -2, -2, -2, -2, -5, -2, -6}},
+    {2, -5, 2, -6,      1, -2, 2, -2,
+     1, 2, 2, 2,        2, 5, 2, 6,
+     -2, 5, -2, 6,      -1, 2, -2, 2,
+     -1, -2, -2, -2,    -2, -5, -2, -6}},
+
+   {0x00770073, 0x0001A005, sdeep2x1dmd,  ~0, 0, warn__none, (const coordrec *) 0,
+    {7, 2, 6, 2,        7, -2, 6, -2,
+     -7, 2, -6, 2,      -7, -2, -6, -2, 127}},
+
+   {0x00730077, 0x00408304, sdeep2x1dmd,  ~0, 1, warn__none, (const coordrec *) 0,
+    {2, 7, 2, 6,        2, -7, 2, -6,
+     -2, 7, -2, 6,      -2, -7, -2, -6, 127}},
+
+   {0x00620073, 0x00088306, s4x4,  ~0, 0, warn__none, (const coordrec *) 0,
+    {2, 7, 2, 6,        2, -7, 2, -6,
+     -2, 7, -2, 6,      -2, -7, -2, -6, 127}},
+
+   {0x00730073, 0x0000A305, s4x4,  ~0, 0, warn__none, (const coordrec *) 0,
+    {2, 7, 2, 6,        2, -7, 2, -6,
+     -2, 7, -2, 6,      -2, -7, -2, -6,
+     7, 2, 6, 2,        7, -2, 6, -2,
+     -7, 2, -6, 2,      -7, -2, -6, -2}},
 
    // 1/2 press ahead from LH star promenade.
    {0x00930093, 0x41020080, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
     { -2, 9, -3, 13,    -2, 5, -3, 9,
       9, 2, 15, 4,      5, 2, 11, 4,
       2, -9, 4, -14,    2, -5, 4, -10,
-      -9, -2, -14, -7,  -5, -2, -10, -7, 127}},
+      -9, -2, -14, -7,  -5, -2, -10, -7}},
    // 1/2 press ahead from RH star promenade.  Have to list them separately, because can only have 8 specifiers.
    {0x00930093, 0x00140041, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
     { -9, 2, -6, 4,     -5, 2, -2, 4,
       2, 9, 4, 7,       2, 5, 4, 3,
       9, -2, 7, -5,     5, -2, 3, -5,
-      -2, -9, -5, -6,   -2, -5, -5, -2, 127}},
+      -2, -9, -5, -6,   -2, -5, -5, -2}},
    // Full press ahead from LH star promenade.  Goes to same setup as 1/2 press ahead.
    {0x00950095, 0x00810404, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
     { -4, 9, -3, 13,    -4, 5, -3, 9,
       9, 4, 15, 4,      5, 4, 11, 4,
       4, -9, 4, -14,    4, -5, 4, -10,
-      -9, -4, -14, -7,  -5, -4, -10, -7, 127}},
+      -9, -4, -14, -7,  -5, -4, -10, -7}},
    // As above, RH.
    {0x00950095, 0x11000800, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
     { -9, 4, -6, 4,     -5, 4, -2, 4,
       4, 9, 4, 7,       4, 5, 4, 3,
       9, -4, 7, -5,     5, -4, 3, -5,
-      -4, -9, -5, -6,   -4, -5, -5, -2, 127}},
+      -4, -9, -5, -6,   -4, -5, -5, -2}},
 
    // Next 2 items: fudge to a galaxy.  The points got here by pressing and trucking.
    // Don't need to tell them to check a galaxy -- it's pretty obvious.
@@ -3538,6 +3560,8 @@ extern int gcd(int a, int b)
                Do part N only.  Do 1 part.  For a 5-part call ABCDE:
                   ONLY(1) means do A
                   ONLY(4) means do D
+         (When N is zero, the whole word must be zero,
+         and it means that this mechanism is not being used.)
 
       CMD_FRAC_CODE_ONLYREV
                Do part N from the end.  Do 1 part.  For a 5-part call ABCDE:
@@ -3694,6 +3718,8 @@ extern uint32 process_fractions(int start, int end,
       (e_denom<<BITS_PER_NUMBER_FIELD) |
       e_numer;
 }
+
+
 
 
 void fraction_info::get_fraction_info(
@@ -4147,6 +4173,20 @@ bool fraction_info::query_instant_stop(uint32 & result_flag_wordmisc) const
 }
 
 
+int try_to_get_parts_from_parse_pointer(setup const *ss, parse_block const *pp) THROW_DECL
+{
+   if ((ss->cmd.cmd_misc3_flags &
+        (CMD_MISC3__RESTRAIN_CRAZINESS | CMD_MISC3__RESTRAIN_MODIFIERS | CMD_MISC3__DOING_ENDS)) ||
+       (ss->cmd.cmd_misc2_flags &
+        (CMD_MISC2_RESTRAINED_SUPER | CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG |
+         CMD_MISC2__ANY_WORK_INVERT | CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__INVERT_SNAG |
+         CMD_MISC2__INVERT_MYSTIC | CMD_MISC2__CTR_END_MASK)) ||
+       (!pp || pp->concept->kind != marker_end_of_list) ||
+       (pp->call->the_defn.schema != schema_sequential) ||
+       (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_HALF | INHERITFLAG_REWIND | INHERITFLAG_LASTHALF)))
+      return -1;
+   return pp->call->the_defn.stuff.seq.howmanyparts;
+}
 /* This returns true if it can't do it because the assumption isn't specific enough.
    In such a case, the call was not executed.  If the user had said "with active phantoms",
    that is an error.  But if we are only doing this because the automatic active phantoms
@@ -5496,7 +5536,7 @@ static bool do_misc_schema(
                       override_concentric_rules ? override_concentric_rules : outerdef->modifiers1,
                       the_schema != schema_rev_checkpoint, true, ~0U, result);
 
-      result->rotation -= rot;   /* Flip the setup back. */
+      result->rotation -= rot;   // Flip the setup back.
 
       /* If we expanded a 2x2 to a 4x4 and then chose an orientation at random,
          that orientation may have gotten frozen into a 2x4.  Cut it back to
@@ -6173,7 +6213,7 @@ void really_inner_move(
          else {
             // Handle "mystic" before splitting the call into its parts.
             // But not if fractions are being used.
-            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC && ss->cmd.cmd_fraction.is_null()) {
+            if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) && ss->cmd.cmd_fraction.is_null()) {
                ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
                setup_command conc_cmd = ss->cmd;
 
@@ -7059,7 +7099,7 @@ static void move_with_real_call(
       // A "sequence_starter_promenade" call is only legal if really_inner_move is invoked
       // from the other place, in inner_selective_move, or at the start of a sequence.
       // Otherwise, there seem to be too many dangling loose ends in the logic.
-      if (callflags1 & CFLAG1_SEQUENCE_STARTER_PROM && configuration::history_ptr != 1)
+      if ((callflags1 & CFLAG1_SEQUENCE_STARTER_PROM) != 0 && configuration::history_ptr != 1)
          fail("You must specify who is to do it.");
 
       really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1, callflagsf,

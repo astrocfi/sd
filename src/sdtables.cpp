@@ -907,6 +907,10 @@ expand::thing expand::init_table[] = {
     s1x6, s3x1dmd, 0, 0U, 0x88, false,
     warn__none, warn__none, normalize_to_6, 0},
 
+   {{0, 1, 2, 4, 5, 6},
+    s1x6, s_wingedstar, 0, 0U, 0x88, false,
+    warn__none, warn__none, normalize_to_6, 0},
+
    {{6, 7, 2, 3},
     s1x4, s_qtag, 0, 0U, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
@@ -1735,6 +1739,16 @@ map::map_thing map::map_init_table[] = {
     s2x4,1,MPKIND__OFFS_L_HALF,1, 0,  s2x6,      0x000, 0},
    {{2, 3, 4, 5, 8, 9, 10, 11},
     s2x4,1,MPKIND__OFFS_R_HALF,1, 0,  s2x6,      0x000, 0},
+
+   {{12, 15, 4, 7,   8, 11, 0, 3},  // need for NS swing thru
+    s1x4,2,MPKIND__NS_CROSS_IN_4X4,0,0,  s4x4,      0x000, 0},
+   {{0, 3, 8, 11,    12, 15, 4, 7}, // coming out of NS spin the top
+    s1x4,2,MPKIND__NS_CROSS_IN_4X4,1,0,  s4x4,      0x005, 0},
+   // Now switch rotation of EW maps:  1<->0
+   {{12, 15, 4, 7,   0, 3, 8, 11},  // need for EW swing thru
+    s1x4,2,MPKIND__EW_CROSS_IN_4X4,0,0,  s4x4,      0x005, 0},
+   {{8, 11, 0, 3,    12, 15, 4, 7}, // coming out of EW spin the top
+    s1x4,2,MPKIND__EW_CROSS_IN_4X4,1,0,  s4x4,      0x000, 0},
 
    {{0, 1, 2, 3, 5, 6, 7, 8},
     s2x4,1,MPKIND__OFFS_L_ONEQ,1, 0,  s2x5,      0x000, 0},
@@ -4700,6 +4714,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,      s_1x2dmd, 0,      044, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {2, 3, 6, 7},               {0, 1, -1, 4, 5, -1}},
    {s1x4,      s_1x2dmd, 0,      044, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, -1, 4, 5, -1}},
    {s1x6,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
+   {s1x6,  s_wingedstar, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
    {s1x4,       s3x1dmd, 0,     0x66, 0x2D, 0x1, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {7, -1, -1, 0, 3, -1, -1, 4}, {1, 2, 5, 6}},
    {s1x4,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 5, 6},               {0}},
 
@@ -7477,14 +7492,14 @@ static const id_bit_table id_bit_table_splinedmd[] = {
    NOBIT(ID2_NCTR1X6)};
 
 static const id_bit_table id_bit_table_swingedstar[] = {
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6)};
+   NOBIT(ID2_OUTR2| ID2_CTR1X6 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_CTR4),
+   NOBIT(ID2_CTR6 | ID2_NCTR1X6| ID2_CTR4),
+   NOBIT(ID2_OUTR2| ID2_CTR1X6 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_CTR4),
+   NOBIT(ID2_CTR6 | ID2_NCTR1X6| ID2_CTR4)};
 
 static const id_bit_table id_bit_table_spindle[] = {
    NORTHBIT(ID2_CTR6 |ID2_OUTR6),
@@ -8334,8 +8349,8 @@ const setup_attr setup_attrs[] = {
     {0, 0},
     false, false,
     (const id_bit_table *) 0,
-    {"6  5 c@@a  b  d  e@@j  i  g  f@@6  5 h",
-     "6  j a@@6  i b@7h  6 6  c@76  g d@@6  f e"}},
+    {"65c@@abde@@jigf@@65h",
+     "6ja@@6ib@7h6 6c@76gd@@6fe"}},
    {9,                      // swhrglass
     &thingwglass,
     &nicethingwglass,
@@ -10264,6 +10279,16 @@ select::fixer select::fixer_init_table[] = {
     fx0,          fx0,          fx_d3x4vl3,    fx0,      fx0,    fx0,    fx0,          fx0},
    {fx_d3x4vb4, s2x2, s3x4,        0, 0, 1,          {0, 1, 4, 5},
     fx0,          fx0,          fx_d3x4vl4,    fx0,      fx0,    fx0,    fx0,          fx0},
+
+   {fx_d4x4b1,  s2x2, s4x4,        0, 0, 1,          {10, 14, 2, 6},
+    fx0,          fx0,          fx0,           fx0,      fx0,    fx0,    fx0,          fx0},
+   {fx_d4x4b2,  s2x2, s4x4,        0, 0, 1,          {13, 1, 5, 9},
+    fx0,          fx0,          fx0,           fx0,      fx0,    fx0,    fx0,          fx0},
+   {fx_d4x4b3,  s2x2, s4x4,        0, 0, 1,          {12, 3, 4, 11},
+    fx0,          fx0,          fx0,           fx0,      fx0,    fx0,    fx0,          fx0},
+   {fx_d4x4b4,  s2x2, s4x4,        0, 0, 1,          {15, 0, 7, 8},
+    fx0,          fx0,          fx0,           fx0,      fx0,    fx0,    fx0,          fx0},
+
    {fx_d2x4x1, s1x4, s2x4,         0, 0, 1,    {7, 1, 3, 5},
     fx0,          fx0,          fx_d2x4x1,    fx0, fx_d2x4d1,    fx0,    fx_d2x4c1,    fx_d2x4c1},
    {fx_d2x4x2, s1x4, s2x4,        0, 0, 1,    {0, 6, 4, 2},
@@ -10842,6 +10867,10 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_DIST_BOX,           s3x4,       0x330,   fx_d3x4vb2,    fx0, -1},
    {LOOKUP_DIST_BOX,           s3x4,       0xC0C,   fx_d3x4vb3,    fx0, -1},
    {LOOKUP_DIST_BOX,           s3x4,       0x033,   fx_d3x4vb4,    fx0, -1},
+   {LOOKUP_DIST_BOX,           s4x4,      0x4444,   fx_d4x4b1,     fx0, -1},
+   {LOOKUP_DIST_BOX,           s4x4,      0x2222,   fx_d4x4b2,     fx0, -1},
+   {LOOKUP_DIST_BOX,           s4x4,      0x1818,   fx_d4x4b3,     fx0, -1},
+   {LOOKUP_DIST_BOX,           s4x4,      0x8181,   fx_d4x4b4,     fx0, -1},
    {LOOKUP_DIST_BOX,           s_qtag,      0xAA,   fx_fqtgjj1,    fx0, -1},
    {LOOKUP_DIST_BOX,           s_qtag,      0x99,   fx_fqtgjj2,    fx0, -1},
    {LOOKUP_DIST_BOX,           s2x3,         066,   fx_f2x3jj1,    fx0, -1},

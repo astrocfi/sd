@@ -2068,6 +2068,10 @@ class select {
       fx_d3x4vb2,
       fx_d3x4vb3,
       fx_d3x4vb4,
+      fx_d4x4b1,
+      fx_d4x4b2,
+      fx_d4x4b3,
+      fx_d4x4b4,
       fx_d2x4x1,
       fx_d2x4x2,
       fx_dgalw1,
@@ -4643,6 +4647,8 @@ enum mpkind {
    MPKIND__LILZCOM,
    MPKIND__O_SPOTS,
    MPKIND__X_SPOTS,
+   MPKIND__NS_CROSS_IN_4X4,
+   MPKIND__EW_CROSS_IN_4X4,
    MPKIND__4_QUADRANTS,
    MPKIND__4_QUADRANTS_WITH_45_ROTATION,
    MPKIND__4_EDGES_FROM_4X4,
@@ -5416,6 +5422,8 @@ extern uint32 process_fractions(int start, int end,
                                 const fraction_command & incoming_fracs,
                                 bool make_improper = false,
                                 bool *improper_p = 0) THROW_DECL;
+
+extern int try_to_get_parts_from_parse_pointer(setup const *ss, parse_block const *pp) THROW_DECL;
 
 extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 

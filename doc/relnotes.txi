@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.51
-@set title2 Database version = 38.51 format = 314
+@set title1 RELEASE NOTES FOR VERSION 38.52
+@set title2 Database version = 38.52 format = 315
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.52::
 * 38.51::
 * 38.50::
 * 38.49::
@@ -90,7 +91,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.51, Top, (dir)
+@node Intro, 38.52, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -98,14 +99,30 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2012 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2013 William B. Ackerman
 @sp 3
 @menu
-* 38.51::               Changes in the current version
+* 38.52::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.51, 38.50, Intro, Top
+@node 38.52, 38.51, Intro, Top
+@unnumberedsec Version 38.52 changes
+
+Sd does a better job with distorted boxes in butterflies and O's.
+
+Sd can handle "diagonal lines/waves/columns" in a butterfly.
+
+The call @strong{separate} is now handled much more closely to the Callerlab definition.
+
+The @strong{as couples roll} bug was fixed.
+
+The @strong{wave of 6 grand swing thru} bug, after @strong{3/4 motivate}, was fixed.
+
+@c TODO TODO TODO TODO TODO TODO TODO: melded cpl/tand/siam stuff.  See concpt\136, 208; ctable\132
+
+@c ************
+@node 38.51, 38.50, 38.52, Top
 @unnumberedsec Version 38.51 changes
 
 Fixed bugs in @strong{3x3 rotate}.

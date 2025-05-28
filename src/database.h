@@ -44,7 +44,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 314
+#define DATABASE_FORMAT_VERSION 315
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -283,7 +283,7 @@ enum {
    CFLAG1_NUMBER_MASK               = 0x0001C000U, // 3 bit field
    CFLAG1_NUMBER_BIT                = 0x00004000U, // its low bit
    CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000U,
-   CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000U,
+   CFLAG1_THIS_IS_SPARE             = 0x00040000U, // ****** SPARE!
    CFLAG1_SEQUENCE_STARTER          = 0x00080000U,
    CFLAG1_SEQUENCE_STARTER_PROM     = 0x00100000U,
    CFLAG1_DONT_USE_IN_RESOLVE       = 0x00200000U,
@@ -314,8 +314,9 @@ enum {
    CFLAG2_FRACTIONAL_NUMBERS        = 0x04000000U,
    CFLAG2_NO_RAISE_OVERCAST         = 0x08000000U,
    CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000U,
-   CFLAG2_IS_STAR_CALL              = 0x20000000U
-   // 2 spares.
+   CFLAG2_IS_STAR_CALL              = 0x20000000U,
+   CFLAG2_LEFT_ONLY_IF_HALF99       = 0x40000000U    // Not actually used.
+   // 1 spare.
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .

@@ -129,6 +129,15 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0, 0,                    0x000, tandem_key_siam},
    {"OVERLAPPED SIAMESE",                    concept_tandem,                  D, l_c4,
     UC_none, 0, 0,                    0x000, tandem_key_overlap_siam},
+
+   {"MELDED AS COUPLES",                     concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                      0x4, tandem_key_cpls},
+   {"MELDED TANDEM",                         concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                      0x4, tandem_key_tand},
+   // This one probably can't work as shown; need "overlapped siamese"?
+   {"MELDED SIAMESE",                        concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                      0x4, tandem_key_siam},
+
    {"COUPLES OF 3",                          concept_tandem,                  D, l_a1,
     UC_none, 0, 0,                    0x000, tandem_key_cpls3},
    {"TANDEMS OF 3",                          concept_tandem,                  D, l_c1,

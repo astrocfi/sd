@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.51"
+version "38.52"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1041,6 +1041,8 @@ call "counter@O rotate@P" c1 tag ctr_rot
    setup 1x8 1x3dmd rotate
       array [CR0N CR1N CR3E CR2N AL0S AL1S ZM3W AL7E]
             alternate_definition [fractal] c4
+   setup 1x2 1x2 rotate
+      array [CR1S AL1N]
    setup 1x4 1x4 rotate no_cutting_through
       array [CR0N CR3S AL0S AL3N]
    setup dmd dmd rotate
@@ -1277,6 +1279,64 @@ call "counter rotate for split sidetrack" dontshow tag ctr_rot_for_splitsidetrac
             alternate_definition [4x4] c4
    setup 4x2 2x4 rotate restriction controversial wave_only
       array [CR0N CR1N CR2N CR3N AL0S AL1S AL2S AL3S]
+
+// This one is used for detour.  Its claim to fame is that, if done stingy/generous/fractal,
+// and it is appropriate to do it (e.g. lockit in a wave), it does it.  If not appropriate,
+// it simply ignores that flag, assuming that the generous was intended only for the outsides.
+call "counter rotate for detour" dontshow tag ctrsdetour
+            dont_raise_overcast
+   simple_funny
+   setup 2x2 2x2
+      array [CR1E AL0W AL1W CR0E]
+   setup 1x2 1x2 rotate
+      array [CR0N AL0S]
+   setup 1x4 1x4 rotate
+      array [CR0N CR1N AL0S AL1S]
+   setup dmd dmd rotate
+      array [CR0N 0 AL0S 0]
+   setup pmd dmd rotate
+      array [0 CR1N 0 AL1S]
+   setup star star
+      array [CR1E 0 AL1W 0]
+            alternate_definition [stingy] c3x
+   setup 2x2 2x2  // Same as normal.  Do NOT split into 1x2's.
+      array [CR1E AL0W AL1W CR0E]
+   setup 1x2 1x2
+      array [ZM0N ZM1N]
+   setup 1x4 dmd rotate
+      array [CR0N ZM3W AL0S ZM1W]
+   setup dmd 1x4 rotate
+      array [CR0N 0 AL0S 0]
+   setup pmd 1x4 rotate
+      array [0 ZM1W 0 ZM3W]
+   setup star star
+      array [CR1E 0 AL1W 0]
+            alternate_definition [generous] c3x
+   setup 2x2 2x2
+      array [CR1E AL0W AL1W CR0E]
+   setup 1x2 1x2
+      array [CR1S AL0S]
+   setup 1x4 dmd rotate
+      array [CR0N CR1E AL0S AL3E]
+   setup dmd 1x4 rotate
+      array [CR0N 0 AL0S 0]
+   setup pmd 1x4 rotate
+      array [0 CR3E 0 AL1E]
+   setup star star
+      array [CR1E 0 AL1W 0]
+            alternate_definition [fractal] c4
+   setup 2x2 2x2
+      array [CR1E AL0W AL1W CR0E]
+   setup 1x2 1x2 rotate
+      array [CR1S AL1N]
+   setup 1x4 1x4 rotate no_cutting_through
+      array [CR0N CR3S AL0S AL3N]
+   setup dmd dmd rotate
+      array [CR0N 0 AL0S 0]
+   setup pmd dmd rotate
+      array [0 CR3S 0 AL3N]
+   setup star star
+      array [CR1E 0 AL1W 0]
 
 call "counter rotate @b" c1
             neednumber visible_fractions distribute_repetitions
@@ -1519,6 +1579,47 @@ call "promenade @b, while the others @0" mainstream
 call "rotate @b while the others @0" c1
             sequence_starter_promenade reverse_means_mirror neednumber single_is_inherited dont_use_in_resolve
    conc_specialpromenade nullcall [mandatory_anycall] rotn [inherit_reverse inherit_single conc_force_lines]
+
+call "_just separate" dontshow tag just_separate
+   setup 2x2 2x2 qualifier ntbone none
+      array [AL0S CR1S CAL2N ACR3N]
+
+call "_separate and @0" dontshow tag separate_and
+   seq just_separate []
+   seq nullcall [mandatory_anycall]
+
+call "separate and @0" mainstream
+            sequence_starter_promenade
+   conc_specialpromenade nullcall [] separate_and [conc_demand_columns conc_force_otherway]
+   // If this is invoked not as part of a "heads separate ..." operation, the preceding definition will fail,
+   // because the "[cross]conc_specialpromenade" schema is only legal in that case.  When it fails, it will
+   // go to this next definition, which will have the ends do the separate.  Of course it is also legal
+   // to say "ends separate" (or heads, or whatever), getting the call just below, which is somewhat more
+   // sophisticated.
+
+   // This is another definition clause, used when the clause above fails.
+   conc nullcall [] separate_and [conc_demand_columns conc_force_otherway]
+
+call "@6 separate and @0" mainstream
+   seq prepare_to_separate [normalize]
+   seq rest_of_separate []
+
+call "@6 _prepare to separate" dontshow tag prepare_to_separate
+   setup 2x4 2x4 rotate qualifier centers_sel
+      array [ZM6W ZM7W ZM0W ZM1W ZM2W    0    0 ZM5W]
+   setup 4x2 2x4 rotate qualifier centers_sel
+      array [ZM6W    0    0 ZM1W ZM2W    0    0 ZM5W]
+   setup 2x4 2x4 qualifier ends_sel
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup 4x2 2x4 qualifier ends_sel
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup 4x4 4x4
+      preds "?"
+         if select   [  0    0    0 0 0 ZM5N  ZM6N 0  0     0     0 0 0 AL13S CR14S 0]
+         if unselect [  0 ZM3N ZM7N 0 0 ZM7N ZM11N 0  0 ZM11N ZM15N 0 0 ZM15N ZM3N 0]
+
+call "_rest of separate and @0" dontshow tag rest_of_separate
+   conc nullcall [] separate_and [conc_demand_columns conc_force_otherway]
 
 call "flip your lid" c3
    setup qtag qtag qualifier right wave_only
@@ -6259,6 +6360,8 @@ call "U-turn back" mainstream tag uturnback
       array [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S]
    setup p3ptpd 3ptpd
       array [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S]
+   setup galaxy galaxy
+      array [CR0S CR1S 2S AL3S AL4S AL5S 6S AL7S]
             alternate_definition [half] mainstream
    setup 1x2 1x2
       array [CR0E AL1W]
@@ -6334,7 +6437,7 @@ call "U-turn away" dontshow tag uturnaway
    setup 1x2 1x2
       array [AL0W CR1E]
    setup 1x1 1x1
-      array [0]    /* so people in an elongated 1x2 will be able to do it. */
+      array [0]    // So people in an elongated 1x2 will be able to do it.
    setup star star
       array [AL0W 0 CR2E 0]
 
@@ -6924,10 +7027,33 @@ call "split the outsides, around 1 to a line" mainstream
       array [ZM6W 0 AL0E ZM1W ZM2W CR3E 0 ZM5W]
 
 call "_start a separate" dontshow tag start_separate
+   // If given without a selector, it is implicitly the centers if they
+   // are facing out of the 2x4 ("Heads pass thru, separate, around N ....")
+   // or the ends otherwise ("separate, around N ..." from a DPT.)
+   // That's the best we can do.  If you want something else, use an explicit
+   // selector, getting the call just below.
+   setup 4x2 2x4 qualifier tbone none
+      array [ZM1N    0    0 ZM2N ZM5N 0 0 ZM6N]
+   setup 2x4 2x4 qualifier tbone none
+      array [   0 AL0S CR3S    0    0 0 0    0]
    setup 4x2 2x4 rotate
-      array [ZM6W 0 0 ZM1W ZM2W 0 0 ZM5W]
+      array [ZM7W ZM6W ZM1W AL0E CR3E ZM2W ZM5W ZM4W]
    setup 2x4 2x4 rotate
-      array [0 AL7S CR0N 0 0 0 0 0]
+      array [   0 ZM6W ZM1W    0    0 ZM2W ZM5W    0]
+
+call "_ @6 start a separate" dontshow tag anyone_start_separate
+   setup 2x4 2x4 qualifier centers_sel
+      array [ZM1N AL0S CR3S ZM2N ZM5N 0 0 ZM6N]
+   setup 4x2 2x4 qualifier centers_sel
+      array [ZM1N    0    0 ZM2N ZM5N 0 0 ZM6N]
+   setup 2x4 2x4 rotate qualifier ends_sel
+      array [   0 ZM6W ZM1W    0    0 ZM2W ZM5W    0]
+   setup 4x2 2x4 rotate qualifier ends_sel
+      array [ZM7W ZM6W ZM1W AL0E CR3E ZM2W ZM5W ZM4W]
+   setup 4x4 4x4
+      preds "?"
+         if select   [  0    0    0 0 0 ZM2N  ZM9N 0  0     0     0 0 0 AL10S CR1S 0]
+         if unselect [  0 ZM3N ZM7N 0 0 ZM7N ZM11N 0  0 ZM11N ZM15N 0 0 ZM15N ZM3N 0]
 
 call "_ check a rigger" dontshow tag check_rigger
    setup prigger rigger
@@ -6936,48 +7062,68 @@ call "_ check a rigger" dontshow tag check_rigger
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
 
 call "_start left and right" dontshow tag goleftandright
-   setup pqtag 2x4
-      array [ZM1N ZM2N AL3W CR4E ZM5N ZM6N 0 0]
-   setup qtag 2x4
-      array [ZM1N ZM2N 0 0 ZM5N ZM6N 0 0]
-   setup prigger 2x4
-      array [ZM1N ZM2N AL3W CR4E ZM5N ZM6N 0 0]
-   setup rigger 2x4
-      array [ZM1N ZM2N 0 0 ZM5N ZM6N 0 0]
+   setup pqtag 2x4 rotate
+      array [ZM6W ZM1W AL0E CR3E ZM2W ZM5W 0 0]
+   setup qtag 2x4 rotate
+      array [ZM6W ZM1W    0    0 ZM2W ZM5W 0 0]
+   setup prigger 2x4 rotate
+      array [ZM6W ZM1W AL0E CR3E ZM2W ZM5W 0 0]
+   setup rigger 2x4 rotate
+      array [ZM6W ZM1W    0    0 ZM2W ZM5W 0 0]
 
 call "_start right and left" dontshow tag gorightandleft
-   setup pqtag 2x4
-      array [ZM1N ZM2N CR4E AL3W ZM5N ZM6N 0 0]
-   setup qtag 2x4
-      array [ZM1N ZM2N 0 0 ZM5N ZM6N 0 0]
-   setup prigger 2x4
-      array [ZM1N ZM2N CR4E AL3W ZM5N ZM6N 0 0]
-   setup rigger 2x4
-      array [ZM1N ZM2N 0 0 ZM5N ZM6N 0 0]
+   setup pqtag 2x4 rotate
+      array [ZM6W ZM1W CR3E AL0E ZM2W ZM5W 0 0]
+   setup qtag 2x4 rotate
+      array [ZM6W ZM1W    0    0 ZM2W ZM5W 0 0]
+   setup prigger 2x4 rotate
+      array [ZM6W ZM1W CR3E AL0E ZM2W ZM5W 0 0]
+   setup rigger 2x4 rotate
+      array [ZM6W ZM1W    0    0 ZM2W ZM5W 0 0]
 
 call "_go around @9 to a line" dontshow tag go_around_n
             neednumber
-   setup 2x4 2x4 qualifier num 1 none
-      array [CR1S ZM0N ZM3N AL2S 0 ZM4N ZM7N 0]
-   setup 2x4 2x4 qualifier num 2 none
-      array [CR3S ZM1N ZM2N AL0S 0 ZM5N ZM6N 0]
-   setup 2x4 2x4 qualifier num 3 none
-      array [CR5N ZM0N ZM3N AL6N 0 ZM4N ZM7N 0]
+
+   // For odd numbers, they go around the Nth person and turn a sharp
+   // corner, to become centers facing in, as if centers of lines,
+   // squeezing the others out lateral to themselves.
+   // (But the others' facing directions don't actually matter,
+   // so it isn't necessarily lines.)
+
+   // For even numbers, they go around the Nth person and hook onto the end,
+   // as if ends of lines.  (But the others' facing directions don't
+   // actually matter, so it isn't necessarily lines.)
+
+   setup 2x4 2x4 rotate qualifier num 1 none
+      array [   0 ZM7W ZM0W    0 AL2S ZM3W ZM4W CR5N]
+   setup 4x2 2x4 rotate qualifier num 1 none
+      array [   0 ZM7W ZM0W    0    0 ZM3W ZM4W    0]
+   setup 2x4 2x4 rotate qualifier num 2 none
+      array [   0 ZM6W ZM1W    0 AL0S ZM2W ZM5W CR7N]
+   setup 4x2 2x4 rotate qualifier num 2 none
+      array [   0 ZM6W ZM1W    0    0 ZM2W ZM5W    0]
+   setup 2x4 2x4 rotate qualifier num 3 none
+      array [   0 ZM7W ZM0W    0 AL6N ZM3W ZM4W CR1S]
+   setup 4x2 2x4 rotate qualifier num 3 none
+      array [   0 ZM7W ZM0W    0    0 ZM3W ZM4W    0]
 
 call "_go around @9 and into the middle" dontshow tag go_around_n_into_middle
             neednumber
-   setup 2x4 2x4 rotate qualifier num 1 none
-      array [C6E ZM7W ZM0W A1E 0 ZM3W ZM4W 0]
-   setup 2x4 2x4 rotate qualifier num 2 none
-      array [C1S ZM7W ZM0W A6N 0 ZM3W ZM4W 0]
-   setup 2x4 2x4 rotate qualifier num 3 none
-      array [C2W ZM7W ZM0W A5W 0 ZM3W ZM4W 0]
-
-call "_hook onto ends of a line" dontshow tag hook_onto_ends
-   setup 2x4 2x4 rotate
-      array [CR7N 0 0 AL0S 0 0 0 0]
-   setup 4x2 2x4 rotate
-      array [0 ZM6W ZM1W 0 0 ZM2W ZM5W 0]
+   // For this call, in all cases they turn the corner around the last person,
+   // make a couple in the center of the 2x4, pushing the inactives out behind them,
+   // and do the call.
+   setup 2x4 2x4 qualifier num 1 none
+      array [  0 ZM0N ZM3N   0   A5W ZM4N ZM7N C6E]
+   setup 4x2 2x4 qualifier num 1 none
+      array [  0 ZM0N ZM3N   0     0 ZM4N ZM7N   0]
+   setup 2x4 2x4 qualifier num 2 none
+      array [  0 ZM0N ZM3N   0   A2S ZM4N ZM7N C1S]
+   setup 4x2 2x4 qualifier num 2 none
+      array [  0 ZM0N ZM3N   0     0 ZM4N ZM7N   0]
+   setup 2x4 2x4 qualifier num 3 none
+      array [  0 ZM0N ZM3N   0   A1E ZM4N ZM7N C2W]
+   setup 4x2 2x4 qualifier num 3 none
+      array [  0 ZM0N ZM3N   0     0 ZM4N ZM7N   0]
 
 call "separate, around @9 to a line" mainstream
             neednumber
@@ -6987,6 +7133,17 @@ call "separate, around @9 to a line" mainstream
 call "separate, around @9, into the middle for a @0" mainstream
             neednumber
    seq start_separate []
+   seq go_around_n_into_middle []
+   seq ctrsanything []
+
+call "@6 separate, around @9 to a line" mainstream
+            neednumber
+   seq anyone_start_separate [normalize]
+   seq go_around_n []
+
+call "@6 separate, around @9, into the middle for a @0" mainstream
+            neednumber
+   seq anyone_start_separate [normalize]
    seq go_around_n_into_middle []
    seq ctrsanything []
 
@@ -7003,12 +7160,10 @@ call "first go right, next go left, around @9 to a line" mainstream
 call "first go left, next go right, to ends of a line" mainstream
    seq check_rigger []
    seq goleftandright []
-   seq hook_onto_ends []
 
 call "first go right, next go left, to ends of a line" mainstream
    seq check_rigger []
    seq gorightandleft []
-   seq hook_onto_ends []
 
 call "centers split the outsides, first go left, next go right" mainstream
    setup bone 2x4 rotate
@@ -21357,7 +21512,7 @@ call "_ends shadow box" dontshow tag endsshadow
 
 call "detour" c2 tag detour
             fractal_is_inherited gen_sting_is_inherited
-   conc ctr_rot [inherit_fractal inherit_gensting conc_force_otherway]
+   conc ctrsdetour [inherit_fractal inherit_gensting conc_force_otherway]
         endsdetour [inherit_fractal inherit_gensting conc_demand_lines conc_force_spots endscando]
 
 call "team up" c3a

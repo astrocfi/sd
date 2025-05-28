@@ -933,7 +933,7 @@ const char *seqmodtab1[] = {
    "normalize",
    ""};
 
-// This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 12).
+// This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 15).
 // These are the general top-level call flags.  They go into the "callflags1" word and
 // part of the "callflagsh" word.
 
@@ -956,7 +956,7 @@ const char *flagtab1f[] = {
    "need_two_numbers",     // The constant "need_three_numbers" is elsewhere.
    "need_four_numbers",
    "left_means_touch_or_check",
-   "left_only_if_half",
+   "zzzz_not_used_zzzz",
    "sequence_starter",
    "sequence_starter_promenade",
    "dont_use_in_resolve",
@@ -985,6 +985,7 @@ const char *flagtab1f[] = {
    "dont_raise_overcast",
    "overcast_transparent",
    "is_star_call",
+   "left_only_if_half",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.

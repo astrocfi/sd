@@ -1124,7 +1124,7 @@ bool tandrec::pack_us(
                   // just clear them -- they can't do it.
                   if ((fb[j].id1 ^ orpeople1) & STABLE_ALL_MASK) vp1 &= ~STABLE_ALL_MASK;
                   // If they have different slide or roll states, just clear them -- they can't roll.
-                  if ((fb[j].id1 ^ orpeople1) & NROLL_MASK) vp1 &= ~NROLL_MASK;
+                  if ((fb[j].id1 ^ orpeople1) & ROLL_DIRMASK) vp1 &= ~ROLL_DIRMASK;
                   if ((fb[j].id1 ^ orpeople1) & NSLIDE_MASK) vp1 &= ~NSLIDE_MASK;
                   // Check that all real people face the same way.
                   if ((fb[j].id1 ^ orpeople1) & 077)
@@ -1186,6 +1186,7 @@ extern void tandem_couples_move(
                           // also, 4 bit => dynamic, 8 bit => reverse dynamic
    int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
+                          // this is a "melded (phantom)" thing=4
    tandem_key key,
    uint32 mxn_bits,
    bool phantom_pairing_ok,
@@ -1936,7 +1937,7 @@ extern void tandem_couples_move(
       result->result_flags = get_multiple_parallel_resultflags(ttt, 8);
 
       if (ttt[0].kind != s2x2)
-         fail("Can't do this.");    // They will al be the same, because of fix_n_results.
+         fail("Can't do this.");    // They will all be the same, because of fix_n_results.
    }
    else {
       // If going to a 2x2, remember physical 2x4 elongation.  This may help in the case

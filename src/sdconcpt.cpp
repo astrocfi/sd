@@ -134,6 +134,7 @@ static void do_concept_tandem(
    //    0=normal
    //    2=plain-gruesome
    //    3=gruesome-with-wave-assumption
+   //    4=this is a "melded (phantom)" thing.
 
    if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED))
       fail("Improper concept order.");
@@ -203,6 +204,15 @@ static void do_concept_tandem(
    ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_SINGLE |
                                            INHERITFLAG_MXNMASK |
                                            INHERITFLAG_NXNMASK);
+
+   if (parseptr->concept->arg3 & 0x4) {
+      // Expand for "phantom tandem" etc.  First priority is a 4x4.
+      do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
+      if (ss->kind != s4x4) do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
+      if (ss->kind != s2x8) do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
+
+      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+   }
 
    tandem_couples_move(
      ss,
@@ -640,12 +650,24 @@ static void do_concept_double_diagonal(
    else {
       tbonetest = global_tbonetest;
 
-      if (     global_livemask == 0x2A82A8) map_code = spcmap_diag2a;
-      else if (global_livemask == 0x505505) map_code = spcmap_diag2b;
-      else
-         tbonetest = ~0U;   // Force error.
-
-      if (ss->kind != s4x6) tbonetest = ~0U;   // Force error.
+      if (ss->kind == s4x4) {
+         if (global_livemask == 0x9999) {
+            if ((parseptr->concept->arg1 ^ tbonetest) & 1) {
+               map_code = MAPCODE(s1x4,2,MPKIND__NS_CROSS_IN_4X4,0);
+               tbonetest = ~tbonetest;  // Trick the line/column test below, so it does the right thing.
+            }
+            else
+               map_code = MAPCODE(s1x4,2,MPKIND__EW_CROSS_IN_4X4,0);
+         }
+         else
+            tbonetest = ~0U;   // Force error.
+      }
+      else if (ss->kind == s4x6) {
+         if (     global_livemask == 0x2A82A8) map_code = spcmap_diag2a;
+         else if (global_livemask == 0x505505) map_code = spcmap_diag2b;
+         else
+            tbonetest = ~0U;   // Force error.
+      }
 
       if (parseptr->concept->arg1 & 1) {
          if (tbonetest & 010) fail("There are no diagonal lines here.");
@@ -6235,7 +6257,6 @@ static void do_concept_all_8(
 }
 
 
-
 static void do_concept_meta(
    setup *ss,
    parse_block *parseptr,
@@ -6401,22 +6422,94 @@ static void do_concept_meta(
       int NN = 0;
       int KK = 0;
 
+      // If we are operating under some concept that directs specific parts to do, do so.
       if (corefracs.is_null_with_masked_flags(CMD_FRAC_CODE_MASK, CMD_FRAC_CODE_FROMTOREV)) {
          NN = nfield-1;
          KK = kfield;
       }
-      else if (!corefracs.is_null())
-         fail("Can't stack meta or fractional concepts.");
+      else if (!corefracs.is_null()) {
+         if (corefracs.is_null_with_masked_flags(CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK, CMD_FRAC_CODE_ONLY)) {
+            // Being asked to do just one particular part of roundtrip XYZ.
+            // First, do just that part of XYZ.  If the part is off the end, this won't do anything.
 
+            // ****** This stuff may not be finished.  We are simply doing the indicated part of
+            // the subject call.  What if the indicated part is in the second part of the roundtrip?
+
+            result->cmd = ss->cmd;
+            result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_ONLY, nfield, 0));
+            goto finish_it;
+         }
+
+         // Otherwise, this must be a fraction concept that we can turn into specific start and end points,
+         // which requires that the call can be found without any other concepts or flags that would make
+         // the determination incorrect.
+
+         parse_block *pp = ss->cmd.parseptr;
+         // We allow nested roundtrips, of course.
+         int rountrip_nesting_count = 1;
+         /* Nested things may not work just yet.  Probably related to going off the end of the subject call.
+         while (pp && pp->concept->kind == concept_meta && pp->concept->arg1 == meta_key_roundtrip) {
+            pp = pp->next;
+            rountrip_nesting_count++;
+         }
+         */
+
+         int howmanyparts = try_to_get_parts_from_parse_pointer(ss, pp);
+
+         if (howmanyparts < 0)
+            fail("Sorry, fraction is too complicated.");
+
+         while (--rountrip_nesting_count > 0)
+            howmanyparts = howmanyparts*2-1;
+
+         int howmanyparts_in_subcall = howmanyparts;
+         howmanyparts = howmanyparts*2-1;
+
+         // We now have the number of parts for the complete roundtrip.
+
+         if ((corefracs.flags & (CMD_FRAC_LASTHALF_ALL | CMD_FRAC_FIRSTHALF_ALL)) ||
+             (corefracs.fraction & (CMD_FRAC_DEFER_HALF_OF_LAST | CMD_FRAC_DEFER_LASTHALF_OF_FIRST)))
+            fail("Sorry, fraction is too complicated.");
+
+         fraction_info zzz(howmanyparts);
+         // Setting visible fractions to 3 makes it accept anything.
+         zzz.get_fraction_info(corefracs, CFLAG1_VISIBLE_FRACTION_BIT*3, weirdness_off);
+
+         if (zzz.m_reverse_order || zzz.m_do_half_of_last_part != 0 || zzz.m_do_last_half_of_first_part)
+            fail("Sorry, fraction is too complicated.");
+
+         NN = zzz.m_fetch_index;
+         KK = howmanyparts-zzz.m_highlimit;
+
+         /*
+         // Require at least one part of the first trip.
+         if (NN >= howmanyparts_in_subcall-1)
+            fail("Sorry, fraction is too complicated.");
+
+         // Require at least one part of the second trip.
+         if (KK >= howmanyparts_in_subcall-1)
+            fail("Sorry, fraction is too complicated.");
+         */
+      }
+
+      // Now do the roundtrip, skipping the first NN parts and the last KK parts.  Of the whole roundtrip.
       // The incoming CMD_FRAC_REVERSE bit is ignored, since this is a palindrome.
 
+      // Do the first part of the trip, that is, the whole call, skipping the first NN parts.
+
       if (NN==0 && KK==0)
-         // We can do this with CMD_FRAC_CODE_ONLY, which may make other parts of the code happier.
+         // We can do this with with a completely null specifier (that is, CMD_FRAC_CODE_ONLY[0,0],
+         // which may make other parts of the code happier.
          result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_ONLY, 0, 0));
       else
          result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_FROMTOREV, NN+1, 0));
 
       do_call_in_series_simple(result);
+
+      // Do the last part of the trip, skipping the last KK parts.  That means reversing the order of the
+      // call parts, and skipping the first part (that's the last part of the subject call), and the last
+      // KK parts (that's the first KK parts of the subject call.)
+
       result->cmd = ss->cmd;
       result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_REVERSE|CMD_FRAC_CODE_FROMTOREV, 2, KK));
       goto finish_it;
