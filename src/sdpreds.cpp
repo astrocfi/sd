@@ -1756,8 +1756,23 @@ static long_boolean check_tbone(setup *real_people, int real_index,
       }
       else if (real_people->kind == s_trngl) {
          switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_jleft: case cr_jright:
+            // If "assume normal diamonds" or "assume facing diamonds" is present,
+            // the spot is t-boned for person zero.
+            if (real_people->cmd.cmd_assume.assump_col == 4)
+               return real_index==0;
+            break;
          case cr_tall6:
-            return TRUE;
+            return real_index==0;
+         default:
+            if (real_index==0) {
+               // Try looking at the other base person!
+               uint32 zz = real_people->people[z^3].id1;
+               if (zz & BIT_PERSON) {
+                  warn(warn__opt_for_not_tboned_base);
+                  return (zz ^ real_people->people[real_index].id1) & 1;
+               }
+            }
          }
       }
    }
@@ -1768,6 +1783,16 @@ static long_boolean check_tbone(setup *real_people, int real_index,
 static const long int trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
 static const long int six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
 static const long int mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,    -3, -2, -3, -2,    -3, 2, -3, 0,    -3, -2, -3, -2};
+
+/* ARGSUSED */
+/* We don't use this procedure!!!!
+static long_boolean nexttrnglspot_is_tboned(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+{
+   return check_tbone(real_people, real_index, real_direction,
+                      northified_index, trnglspot_tboned_tab);
+}
+*/
 
 /* ARGSUSED */
 static long_boolean nextinttrnglspot_is_tboned(setup *real_people, int real_index,
@@ -1860,12 +1885,12 @@ static long_boolean roll_is_ccw(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static long_boolean x12_facing_other_sex(setup *real_people, int real_index,
+static long_boolean x12_with_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 1].id1;
-   return((this_person & extra_stuff[0]) && (other_person & extra_stuff[1]));
+   return (this_person & extra_stuff[0]) && (other_person & extra_stuff[1]);
 }
 
 /* ARGSUSED */
@@ -2237,12 +2262,12 @@ predicate_descriptor pred_table[] = {
       {count_cw_people,                &iden_tab[1]},            /* "one_cw_person" */
       {count_cw_people,                &iden_tab[2]},            /* "two_cw_people" */
       {count_cw_people,                &iden_tab[3]},            /* "three_cw_people" */
-      {check_tbone,            trnglspot_tboned_tab},            /* "nexttrnglspot_is_tboned" */
-      {nextinttrnglspot_is_tboned,   (const long int *) 0},    /* "nextinttrnglspot_is_tboned" */
-      {check_tbone,             six2spot_tboned_tab},            /* "next62spot_is_tboned" */
-      {check_tbone,            mag62spot_tboned_tab},          /* "next_magic62spot_is_tboned" */
-      {next_galaxyspot_is_tboned,    (const long int *) 0},     /* "next_galaxyspot_is_tboned" */
-      {column_double_down,           (const long int *) 0},      /* "column_double_down" */
+      {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
+      {nextinttrnglspot_is_tboned,   (const long int *) 0},      // "nextinttrnglspot_is_tboned"
+      {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"
+      {check_tbone,            mag62spot_tboned_tab},            // "next_magic62spot_is_tboned"
+      {next_galaxyspot_is_tboned,    (const long int *) 0},      // "next_galaxyspot_is_tboned"
+      {column_double_down,           (const long int *) 0},      // "column_double_down"
       {apex_test,                      &iden_tab[1]},            /* "apex_test_1" */
       {apex_test,                      &iden_tab[2]},            /* "apex_test_2" */
       {apex_test,                      &iden_tab[3]},            /* "apex_test_3" */
@@ -2252,8 +2277,8 @@ predicate_descriptor pred_table[] = {
       {boygirlp,                       girlstuff_rh},            /* "girlp_rh_slide_thru" */
       {roll_is_cw,                   (const long int *) 0},      /* "roll_is_cw" */
       {roll_is_ccw,                  (const long int *) 0},      /* "roll_is_ccw" */
-      {x12_facing_other_sex,          boystuff_no_rh},           /* "x12_boy_facing_girl" */
-      {x12_facing_other_sex,         girlstuff_no_rh},           /* "x12_girl_facing_boy" */
+      {x12_with_other_sex,            boystuff_no_rh},           /* "x12_boy_with_girl" */
+      {x12_with_other_sex,           girlstuff_no_rh},           /* "x12_girl_with_boy" */
       {x22_facing_other_sex,          boystuff_no_rh},           /* "x22_boy_facing_girl" */
       {x22_facing_other_sex,         girlstuff_no_rh},           /* "x22_girl_facing_boy" */
       {directionp,                     &iden_tab[0]},            /* "leftp" */

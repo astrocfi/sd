@@ -205,6 +205,11 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 1, 3,                        -1, -1, 2},                                 0,      0xC,         3, 3,  0,  0, 0,  s1x3,  s_trngl4},
    {{0, 3, 2,                        -1, 1, -1},                                 0,     0000,         3, 0,  0,  0, 0,  s1x3,  sdmd},
 
+   {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},                 0x410,    0xC30,         6, 0,  0,  0, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},                  0x041,    0x0C3,         6, 0,  0,  0, 0,  s_ntrgl6ccw, s2x6},
+   {{1, 3, 5, 7, 10, 11,              -1, 4, -1, -1, 9, -1},                 0x104,    0x618,         6, 0,  0,  0, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 1, 4, 6, 8, 10,              -1, 2, -1, -1, 7, -1},                  0x104,    0x186,         6, 0,  0,  0, 0,  s_ntrgl6ccw, s2x6},
+
    /* This map must be very late, after the two that do 2x4->4x4
       and the one that does 2x4->2x8. */
    {{3, 5, 14, 8, 9, 12, 7, 2,      1, 4, 15, 10, 11, 13, 6, 0},            0x4141,   0xF0F0,         8, 1,  0,  0, 0,  s2x4,  sdeepbigqtg},
@@ -1408,6 +1413,11 @@ extern void tandem_couples_move(
  got_good_separation:
 
    warn(siamese_warning);
+
+   if (tandstuff.virtual_setup.kind == s_ntrgl6cw ||
+       tandstuff.virtual_setup.kind == s_ntrgl6ccw)
+      tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
+
    update_id_bits(&tandstuff.virtual_setup);
    impose_assumption_and_move(&tandstuff.virtual_setup, &tandstuff.virtual_result);
    remove_tgl_distortion(&tandstuff.virtual_result);

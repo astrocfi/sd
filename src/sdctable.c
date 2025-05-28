@@ -449,10 +449,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE CRAZY PHANTOM DIAMOND SPOTS",   concept_phan_crazy,                D, l_c4, {0, 8+5, CONCPROP__NEEDK_4D_4PTPD, 0}},
    {"@a CRAZY PHANTOM DIAMOND SPOTS",        concept_frac_phan_crazy,           D, l_c4, {0, 16+5, CONCPROP__NEEDK_4D_4PTPD, 0}},
    {"@a REVERSE CRAZY PHANTOM DIAMOND SPOTS",concept_frac_phan_crazy,           D, l_c4, {0, 16+8+5, CONCPROP__NEEDK_4D_4PTPD, 0}},
-   {"TWIN PHANTOM DIAMONDS",                 concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINDMD, CMD_MISC__VERIFY_DMD_LIKE}},
-   {"TWIN PHANTOM DIAMOND SPOTS",            concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_4X6, 0}},
-         {"", concept_comment, 0, l_nonexistent_concept},
-         {"", concept_comment, 0, l_nonexistent_concept},
+   {"TWIN PHANTOM DIAMONDS",                 concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINDMD, CMD_MISC__VERIFY_DMD_LIKE, 0}},
+   {"TWIN PHANTOM DIAMOND SPOTS",            concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_4X6, 0, 0}},
+   {"TWIN PHANTOM POINT-TO-POINT DIAMONDS",  concept_do_divided_diamonds,       D, l_c4,  {0, phantest_impossible, CONCPROP__NEEDK_TWINDMD, CMD_MISC__VERIFY_DMD_LIKE, 1}},
+   {"TWIN PHANTOM POINT-TO-POINT DIAMOND SPOTS", concept_do_divided_diamonds,   D, l_c4,  {0, phantest_impossible, CONCPROP__NEEDK_4X6, 0, 1}},
    {"TRIPLE DIAMONDS",                       concept_triple_diamonds,           D, l_c3a, {0, 0, CMD_MISC__VERIFY_DMD_LIKE}},
    {"CENTER TRIPLE DIAMOND",                 concept_in_out_nostd,              D, l_c3a, {0, 5, CONCPROP__NEEDK_CTR_DMD, 0}},
    {"OUTSIDE TRIPLE DIAMONDS",               concept_in_out_nostd,              D, l_c3a, {0, 8+5, CONCPROP__NEEDK_END_DMD, 0}},
@@ -509,11 +509,11 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE CRAZY PHANTOM GENERAL 1/4 TAGS",concept_phan_crazy,                D, l_c4, {0, 8+5, CONCPROP__NEEDK_4D_4PTPD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"@a CRAZY PHANTOM GENERAL 1/4 TAGS",     concept_frac_phan_crazy,           D, l_c4, {0, 16+5, CONCPROP__NEEDK_4D_4PTPD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"@a REVERSE CRAZY PHANTOM GENERAL 1/4 TAGS",concept_frac_phan_crazy,        D, l_c4, {0, 16+8+5, CONCPROP__NEEDK_4D_4PTPD, CMD_MISC__VERIFY_QTAG_LIKE}},
-   {"TWIN PHANTOM 1/4 TAGS",                 concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_1_4_TAG}},
-   {"TWIN PHANTOM 3/4 TAGS",                 concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_3_4_TAG}},
-   {"TWIN PHANTOM 1/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_REAL_1_4_LINE}},
-   {"TWIN PHANTOM 3/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_REAL_3_4_LINE}},
-   {"TWIN PHANTOM GENERAL 1/4 TAGS",         concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"TWIN PHANTOM 1/4 TAGS",                 concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_1_4_TAG, 0}},
+   {"TWIN PHANTOM 3/4 TAGS",                 concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_3_4_TAG, 0}},
+   {"TWIN PHANTOM 1/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_REAL_1_4_LINE, 0}},
+   {"TWIN PHANTOM 3/4 LINES",                concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_REAL_3_4_LINE, 0}},
+   {"TWIN PHANTOM GENERAL 1/4 TAGS",         concept_do_divided_diamonds,       D, l_c3x, {0, phantest_impossible, CONCPROP__NEEDK_TWINQTAG, CMD_MISC__VERIFY_QTAG_LIKE, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE 1/4 TAGS",                       concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
    {"TRIPLE 3/4 TAGS",                       concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
@@ -699,8 +699,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 IN YOUR DISTORTED LINE",             concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"PARALLELOGRAM",                         concept_parallelogram,             D, l_c2},
-         {"", concept_comment, 0, l_nonexistent_concept},
+   {"PARALLELOGRAM",                         concept_parallelogram,             D, l_c2,         {0, 0}},
+   {"PARALLELOGRAM DIAMONDS",                concept_parallelogram,             D, l_c3a,        {0, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"PHANTOM BIG BLOCK LINES",               concept_do_phantom_2x4,            D, l_c4,         {0, phantest_both, 1, MPKIND__STAG, 0}},
    {"PHANTOM STAIRSTEP LINES",               concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_both, 1, MPKIND__NONE, 0}},
@@ -1023,9 +1023,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"IN A TIDAL LINE",                       concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_LINES, CONCPROP__NEEDK_1X16}},
    {"IN A TIDAL COLUMN",                     concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_COLS, CONCPROP__NEEDK_2X8}},
 /* -------- column break -------- */
-#define mm__3_size 82
-#define mm__3_3x3 65
-#define mm__3_4x4 66
+#define mm__3_size 83
+#define mm__3_3x3 66
+#define mm__3_4x4 67
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
    {"INSIDE INTERLOCKED TRIANGLES",          concept_randomtrngl,               D, l_c2,         {0, 0102}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,               D, l_c1,         {0, 3}},
@@ -1074,6 +1074,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"COMMON SPOT COLUMNS",   concept_common_spot, D, l_c4,  {0,    2, 0}},
    {"COMMON POINT DIAMONDS", concept_common_spot, D, l_c4,  {0,    4, 0}},
    {"COMMON SPOT DIAMONDS",  concept_common_spot, D, l_c4,  {0,    4, 0}},
+   {"COMMON SPOT POINT-TO-POINT DIAMONDS",  concept_common_spot, D, l_c4,  {0, 0x400, 0}},
    {"COMMON POINT HOURGLASS",concept_common_spot, D, l_c4,  {0, 0x80, 0}},
    {"COMMON SPOT HOURGLASS", concept_common_spot, D, l_c4,  {0, 0x80, 0}},
    {"COMMON END LINES",      concept_common_spot, D, l_c4,  {0, 0x10, 0}},

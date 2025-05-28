@@ -2,19 +2,13 @@
 
     Copyright (C) 1990-2000  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     This is for version 34. */
 
@@ -267,10 +261,10 @@ int singing_call_mode = 0;
 parse_state_type parse_state;
 call_conc_option_state current_options;
 int uims_menu_index;
-warning_info no_search_warnings = {{0, 0, 0}};
-warning_info conc_elong_warnings = {{0, 0, 0}};
-warning_info dyp_each_warnings = {{0, 0, 0}};
-warning_info useless_phan_clw_warnings = {{0, 0, 0}};
+warning_info no_search_warnings = {{0, 0, 0, 0}};
+warning_info conc_elong_warnings = {{0, 0, 0, 0}};
+warning_info dyp_each_warnings = {{0, 0, 0, 0}};
+warning_info useless_phan_clw_warnings = {{0, 0, 0, 0}};
 long_boolean allowing_all_concepts = FALSE;
 long_boolean allowing_minigrand = FALSE;
 long_boolean using_active_phantoms = FALSE;
@@ -1232,6 +1226,7 @@ static restr_initializer restr_init_table0[] = {
    {s_trngl, cr_miniwaves, 2, {1, 2},                                             {0}, {0}, {0}, TRUE,  chk_wave},
    {s_trngl, cr_couples_only, 2, {1, 2},                                          {1}, {0}, {0}, TRUE,  chk_groups},
    {s_trngl, cr_2fl_only, 3, {0, 1, 2},                                           {1}, {0}, {0}, TRUE,  chk_groups},
+   {s_trngl, cr_tgl_tandbase, 0, {0}, {2, 1, 2}, {2, 1, 2}, {0},                                 TRUE,  chk_dmd_qtag},
    {nothing}};
 
 static restr_initializer restr_init_table1[] = {
@@ -2743,6 +2738,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             goto good;                 /* We don't understand the setup --
                                           we'd better accept it. */
          }
+      case cr_tgl_tandbase:
+         tt.assumption = cr_tgl_tandbase;
+         switch (ss->kind) {
+         case s_trngl:
+            goto fix_col_line_stuff;
+         default:
+            goto good;
+         }
       case cr_ctrwv_end2fl:
          /* Note that this qualifier is kind of strict.  We won't permit the call "with
             confidence" do be done unless everyone can trivially determine which
@@ -2873,6 +2876,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          goto check_tt;
       case cr_dmd_ctrs_mwv:
          switch (ss->cmd.cmd_assume.assumption) {
+         case cr_dmd_ctrs_mwv:
+            if (((tt.assump_both+1) & 2) && ss->cmd.cmd_assume.assump_both == tt.assump_both)
+               goto good;
+            break;
          case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
             if ((tt.assump_both+1) & 2) {
                if ((ss->cmd.cmd_assume.assump_both ^ tt.assump_both) == 3)
@@ -2880,6 +2887,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
                else if ((ss->cmd.cmd_assume.assump_both ^ tt.assump_both) == 0)
                   goto bad;
             }
+            break;
          }
          goto check_tt;
       case cr_qtag_like:
@@ -3798,7 +3806,9 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
                }
                else if (((kk == s2x4 && z[i].kind == s2x2) ||
                          (kk == s2x2 && z[i].kind == s2x4))) {
+                  /*
                   warn(warn__hokey_jay_shapechanger);  // For now.
+                  */
                   boxrectflag = TRUE;
                }
                else if (((kk == s1x4 && z[i].kind == sdmd) ||
@@ -4071,6 +4081,11 @@ static resolve_tester test_4x4_stuff[] = {
    {resolve_la,             l_mainstream, 7, 0,   {7, 4, 2, 13, 15, 12, 10, 5},     0x31331311},
    {resolve_none,           l_mainstream,      64}};
 
+static resolve_tester test_4x6_stuff[] = {
+   {resolve_rlg,            l_mainstream, 2, 0,   {23, 6, 3, 2, 11, 18, 15, 14},    0x8A31A813},
+   {resolve_la,             l_mainstream, 7, 0,   {14, 23, 6, 3, 2, 11, 18, 15},    0x38A31A81},
+   {resolve_none,           l_mainstream,      64}};
+
 static resolve_tester test_c1phan_stuff[] = {
    {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x138A31A8},    /* RLG from phantoms, all facing. */
    {resolve_rlg,            l_mainstream,      3, 0,   {9, 11, 5, 7, 1, 3, 13, 15},  0x8A31A813},    /* RLG from phantoms, all facing. */
@@ -4297,6 +4312,8 @@ extern resolve_indicator resolve_p(setup *s)
       testptr = test_3x6_stuff; break;
    case s4x4:
       testptr = test_4x4_stuff; break;
+   case s4x6:
+      testptr = test_4x6_stuff; break;
    case s_c1phan:
       testptr = test_c1phan_stuff; break;
    case s_galaxy:
@@ -4362,8 +4379,9 @@ extern resolve_indicator resolve_p(setup *s)
 extern long_boolean warnings_are_unacceptable(long_boolean strict)
 {
    int i;
-   uint32 w = 0;     /* Will become nonzero if any bad warning other than "warn__bad_concept_level" appears. */
-   uint32 ww = 0;    /* Will become nonzero if any bad warning appears. */
+   uint32 w = 0;     // Will become nonzero if any bad warning
+                     // other than "warn__bad_concept_level" appears.
+   uint32 ww = 0;    // Will become nonzero if any bad warning appears.
 
    for (i=0 ; i<WARNING_WORDS ; i++) {
       uint32 warn_word = history[history_ptr+1].warnings.bits[i] & no_search_warnings.bits[i];
@@ -4374,11 +4392,11 @@ extern long_boolean warnings_are_unacceptable(long_boolean strict)
          w |= warn_word;
    }
 
-   /* But if we are doing a "standardize", we let ALL warnings pass.  We particularly
-      want weird T-bone and other unusual sort of things. */
+   // But if we are doing a "standardize", we let ALL warnings pass.
+   // We particularly want weird T-bone and other unusual sort of things.
 
    if (strict && ww) {
-      /* But if "allow all concepts" was given, and that's the only bad warning, we let it pass. */
+      // But if "allow all concepts" was given, and that's the only bad warning, we let it pass.
       if (!allowing_all_concepts || w != 0) return TRUE;
    }
 
@@ -4418,7 +4436,8 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
    }
 
    if (action == normalize_compress_bigdmd) {
-      if (ss->kind == sbigdmd) {
+      if (ss->kind == sbigdmd || ss->kind == sbigptpd) {
+         // They're the same!
          if ((livemask & 00003) == 00001) swap_people(ss, 0, 1);
          if ((livemask & 00060) == 00040) swap_people(ss, 4, 5);
          if ((livemask & 00300) == 00100) swap_people(ss, 6, 7);

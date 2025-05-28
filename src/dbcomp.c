@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -441,6 +441,14 @@ char *estab[] = {
    "2x4",
    "2x5",
    "d2x5",
+   "???",
+   "???",
+   "???",
+   "???",
+   "???",
+   "???",
+   "???",
+   "???",
    "wqtag",
    "deep2x1dmd",
    "whrglass",
@@ -544,12 +552,22 @@ char *schematab[] = {
    "conc_or_diamond_line",
    "conc_or_6_2",
    "conc6_2",
+   "crossconc6_2",
    "conc2_6",
+   "crossconc2_6",
    "conc2_4",
+   "crossconc2_4",
+   "conc2_4_or_normal",
    "conc4_2",
+   "crossconc4_2",
    "conc4_2_or_normal",
    "???",
    "conc2_6_or_2_4",
+   "crossconc2_6_or_2_4",
+   "conc_innermost",
+   "crossconc_innermost",
+   "conc_double_innermost",
+   "crossconc_double_innermost",
    "conc6p",
    "conc6p_or_normal",
    "conc6p_or_singletogether",
@@ -641,6 +659,7 @@ char *qualtab[] = {
    "independent_in_or_out",
    "miniwaves",
    "not_miniwaves",
+   "tgl_tandbase",
    "as_couples_miniwaves",
    "true_Z_cw",
    "true_Z_ccw",
@@ -960,7 +979,7 @@ char *matrixcallflagtab[] = {
    "use_number",
    ""};
 
-/* BEWARE!!  This list must track the array "pred_table" in sdpreds.c . */
+// BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .
 
 char *predtab[] = {
    "select",
@@ -1094,8 +1113,8 @@ char *predtab[] = {
    "girlp_rh_slide_thru",
    "roll_is_cw",
    "roll_is_ccw",
-   "x12_boy_facing_girl",
-   "x12_girl_facing_boy",
+   "x12_boy_with_girl",
+   "x12_girl_with_boy",
    "x22_boy_facing_girl",
    "x22_girl_facing_boy",
    "leftp",
@@ -1155,6 +1174,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "lockit"},
       {0, "disband1"},
       {0, "slither"},
+      {0, "prepare_to_drop"},
       {0, "two_o_circs_for_frac"},
       /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
       {0, "tagnullcall0"},
@@ -2005,6 +2025,9 @@ def2:
       }
       else if (!strcmp(tok_str, "really_want_diamond")) {
          callarray_flags1 |= CAF__REALLY_WANT_DIAMOND;
+      }
+      else if (!strcmp(tok_str, "no_compress")) {
+         callarray_flags1 |= CAF__NO_COMPRESS;
       }
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int) s_normal_concentric)

@@ -1041,6 +1041,8 @@ struct checkitem {
 
 
 const checkitem checktable[] = {
+   {0x00630095, 0x00840050, spgdmdcw,  0, warn__none, (const coordrec *) 0, {127}},
+   {0x00630095, 0x10800A00, spgdmdccw, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A20026, 0x08008404, s_rigger, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00770077, 0x00418004, s_galaxy, 0, warn__none, (const coordrec *) 0, {127}},
    // Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle.
@@ -1114,6 +1116,8 @@ const checkitem checktable[] = {
 
    {0x00950062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00550062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910022, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
+
    {0x00950095, 0x22008080, s_thar, 0, warn__none, (const coordrec *) 0, {127}},
 
    // This is a "crosswave" on precise matrix spots.
@@ -1227,6 +1231,10 @@ const checkitem checktable[] = {
    {0x00860044, 0x41250410, s_545, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00860044, 0x41250018, sh545, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00840004, 0x00000008, sh545, 0, warn__none, (const coordrec *) 0, {127}},
+
+   {0x00860022, 0x02080300, s_ntrglccw,0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860022, 0x04001202, s_ntrglcw, 0, warn__none, (const coordrec *) 0, {127}},
+
    {0x00220022, 0x00008004, s2x2, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A20004, 0x09000400, s1x6, 0, warn__none, (const coordrec *) 0, {127}},
    // Colliding 1/2 circulate from as-couples T-bone.
@@ -1239,6 +1247,7 @@ const checkitem checktable[] = {
    {0x00040044, 0x00040001, s1x3, 1, warn__none, (const coordrec *) 0, {127}},
    {0x00220004, 0x01000000, s1x2, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00040022, 0x00000200, s1x2, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20066, 0x09084042, sbigptpd, 0, warn__none, (const coordrec *) 0, {127}},
    {0}};
 
 
@@ -3473,6 +3482,38 @@ static void do_stuff_inside_sequential_call(
             break;
          }
       }
+      else if (result->cmd.callspec == base_calls[base_base_prepare_to_drop]) {
+         if (result->kind == sdmd && old_assump_col == 4) {
+
+
+            if ((result->people[0].id1 & d_mask) == d_north ||
+                (result->people[2].id1 & d_mask) == d_south) {
+               if (old_assumption == cr_jright) {
+                  *fix_next_assumption_p = cr_dmd_ctrs_mwv;
+                  *fix_next_assump_col_p = 0;
+                  *fix_next_assump_both_p = 1;
+               }
+               else if (old_assumption == cr_jleft) {
+                  *fix_next_assumption_p = cr_dmd_ctrs_mwv;
+                  *fix_next_assump_col_p = 0;
+                  *fix_next_assump_both_p = 2;
+               }
+            }
+            else if ((result->people[0].id1 & d_mask) == d_south ||
+                     (result->people[2].id1 & d_mask) == d_north) {
+               if (old_assumption == cr_jright) {
+                  *fix_next_assumption_p = cr_dmd_ctrs_mwv;
+                  *fix_next_assump_col_p = 0;
+                  *fix_next_assump_both_p = 2;
+               }
+               else if (old_assumption == cr_jleft) {
+                  *fix_next_assumption_p = cr_dmd_ctrs_mwv;
+                  *fix_next_assump_col_p = 0;
+                  *fix_next_assump_both_p = 1;
+               }
+            }
+         }
+      }
       else if (result->cmd.callspec == base_calls[base_call_lockit] &&
                old_assump_col == 0 &&
                old_assump_both == 0) {
@@ -4683,6 +4724,16 @@ static void really_inner_move(setup *ss,
             reverse as in reverse cut/flip the diamond or reverse change-O. */
 
       basic_move(ss, callspec, tbonetest, qtfudged, mirror, result);
+
+      // If the setup expanded from an 8-person setup to a "bigdmd", and we can
+      // compress it back, do so.  This takes care of certain type of "triple diamonds
+      // working together exchange the diamonds 1/2" situations.
+      // The only known case of this for array-type calls is
+      // "continue to exchange the diamonds another 1/4".
+
+      if (result->kind == sbigdmd || result->kind == sbigptpd)
+         normalize_setup(result, normalize_compress_bigdmd);
+
       break;
    default:
       /* Must be sequential or some form of concentric. */
@@ -4692,7 +4743,8 @@ static void really_inner_move(setup *ss,
 
       if (ss->cmd.cmd_final_flags.final &
           ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED |
-            FINAL__SPLIT_DIXIE_APPROVED | FINAL__LEADTRIANGLE))
+            FINAL__SPLIT_DIXIE_APPROVED | FINAL__TRIANGLE |
+            FINAL__LEADTRIANGLE))
          fail("This concept not allowed here.");
 
       // Now we figure out how to dispose of "heritable" concepts.
@@ -4873,6 +4925,13 @@ static void really_inner_move(setup *ss,
                result->kind = s2x4;
             }
          }
+
+         // If the setup expanded from an 8-person setup to a "bigdmd", and we can
+         // compress it back, do so.  This takes care of certain type of "triple diamonds
+         // working together exchange the diamonds 1/2" situations.
+
+         if (result->kind == sbigdmd || result->kind == sbigptpd)
+            normalize_setup(result, normalize_compress_bigdmd);
       }
       else
          if (do_misc_schema(ss, the_schema, callspec, callflags1, &foo1, &special_selector,
@@ -4881,15 +4940,6 @@ static void really_inner_move(setup *ss,
 
       break;
    }
-
-   // If the setup expanded from an 8-person setup to a "bigdmd", and we can
-   // compress it back, do so.  This takes care of certain type of "triple diamonds
-   // working together exchange the diamonds 1/2" situations.
-
-   if (result->kind == sbigdmd /* && setup_attrs[ss->kind].setup_limits == 7 */)
-      normalize_setup(result, normalize_compress_bigdmd);
-
-
 
    goto foobarf;
 
@@ -5038,6 +5088,7 @@ static void move_with_real_call(
               the_schema == schema_concentric_4_2 ||
               the_schema == schema_concentric_or_6_2 ||
               the_schema == schema_concentric_4_2_or_normal ||
+              the_schema == schema_concentric_2_4_or_normal ||
               the_schema == schema_conc_o) &&
              (DFM1_SUPPRESS_ELONGATION_WARNINGS & this_defn->stuff.conc.innerdef.modifiers1))
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
@@ -5075,6 +5126,7 @@ static void move_with_real_call(
                case schema_conc_o:
                case schema_concentric_4_2:
                case schema_concentric_4_2_or_normal:
+               case schema_concentric_2_4_or_normal:
                case schema_concentric_6p:
                case schema_concentric_or_6_2:
                case schema_concentric_6p_or_normal:
@@ -5150,6 +5202,7 @@ static void move_with_real_call(
          case schema_concentric_or_diamond_line:
          case schema_concentric_4_2:
          case schema_concentric_4_2_or_normal:
+         case schema_concentric_2_4_or_normal:
          case schema_concentric_or_6_2:
          case schema_concentric_6p:
          case schema_concentric_6p_or_sgltogether:
@@ -5169,18 +5222,31 @@ static void move_with_real_call(
       if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
          switch (the_schema) {
          case schema_by_array:
-            /* We allow the fractions "1/2" and "last 1/2" to be given.
-               Basic_move will handle them. */
-            if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+            // We allow the fractions "1/2" and "last 1/2" to be given.
+            // Basic_move will handle them.
+            // But we skip the test if the incoming setup is empty.
+
+            {
+               uint32 tbonetest = 0;
+               if (setup_attrs[ss->kind].setup_limits >= 0) {
+                  for (int j=0; j<=setup_attrs[ss->kind].setup_limits; j++) tbonetest |= ss->people[j].id1;
+               }
+               else
+                  tbonetest = 99;
+
+               if (tbonetest) {
+                  if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+                     ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
+                  }
+                  else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+                     ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
+                  }
+                  else
+                     fail("This call can't be fractionalized this way.");
+               }
+
                ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
             }
-            else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
-            }
-            else
-               fail("This call can't be fractionalized this way.");
 
             break;
          case schema_nothing: case schema_matrix:
@@ -5892,6 +5958,7 @@ extern void move(
          case schema_concentric:
          case schema_concentric_4_2:
          case schema_concentric_4_2_or_normal:
+         case schema_concentric_2_4_or_normal:
          case schema_concentric_or_6_2:
          case schema_concentric_6p:
          case schema_concentric_6p_or_sgltogether:

@@ -1475,29 +1475,29 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
            user_match.match.kind == ui_call_select ||
            user_match.match.kind == ui_concept_select)) {
 
-         /* The matcher found an acceptable (and possibly quite complex)
-            utterance.  Use it directly. */
+         // The matcher found an acceptable (and possibly quite complex)
+         // utterance.  Use it directly.
 
          SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  /* Erase the edit box. */
          WaitingForCommand = FALSE;
          return;
       }
 
-      /* The matcher isn't happy.  If we got here because the user typed <enter>,
-         that's not acceptable.  Just ignore it.  Unless, of course, the type-in
-         buffer was empty and the user scrolled around, in which case the user
-         clearly meant to accept the currently highlighted item. */
+      // The matcher isn't happy.  If we got here because the user typed <enter>,
+      // that's not acceptable.  Just ignore it.  Unless, of course, the type-in
+      // buffer was empty and the user scrolled around, in which case the user
+      // clearly meant to accept the currently highlighted item.
 
       if (id == ENTER_INDEX &&
           (GLOB_full_input[0] != '\0' || wherearewe == nMenuIndex)) break;
 
-      /* Or if, for some reason, the menu isn't anywhere, we don't accept it.
+      // Or if, for some reason, the menu isn't anywhere, we don't accept it.
 
       if (nMenuIndex == LB_ERR) break;
 
-      /* But if the user clicked on "accept", or did an acceptable single- or
-         double-click of a menu item, that item is clearly what she wants, so
-         we use it. */
+      // But if the user clicked on "accept", or did an acceptable single- or
+      // double-click of a menu item, that item is clearly what she wants, so
+      // we use it.
  
       i = SendMessage(hwndList, LB_GETITEMDATA, nMenuIndex, (LPARAM) 0);
       user_match.match.index = LOWORD(i);
@@ -2486,7 +2486,7 @@ void ShowListBox(int nWhichOne)
             scan_menu(main_call_lists[nLastOne][i]->menu_name,
                       hDC, &nLongest, MAKELONG(i, (int) ui_call_select));
 
-         int *item;
+         short int *item;
          int menu_length;
 
          if (allowing_all_concepts) {
@@ -2583,7 +2583,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
    }
    else {
       // Reject off-level concept accelerator key presses.
-      if (!allowing_all_concepts &&
+      if (!allowing_all_concepts && my_reply == ui_concept_select &&
           user_match.match.concept_ptr->level > higher_acceptable_level[calling_level])
          goto startover;
 

@@ -987,6 +987,25 @@ static void do_concept_parallelogram(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   // First, deal with "parallelogram diamonds".
+
+   if (parseptr->concept->value.arg1) {
+      uint32 map_code;
+
+      if (ss->kind == spgdmdcw)
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,1);
+      else if (ss->kind == spgdmdccw)
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,1);
+      else
+         fail("Can't find parallelogram diamonds.");
+
+      new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+
+      // The split-axis bits are gone.  If someone needs them, we have work to do.
+      result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+      return;
+   }
+
    /* See if it is followed by "split phantom C/L/W" or "split phantom boxes",
       in which case we do something esoteric. */
 
@@ -1961,13 +1980,21 @@ static void do_concept_do_divided_diamonds(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* See "do_concept_do_phantom_diamonds" for meaning of arg2. */
+   // See "do_concept_do_phantom_diamonds" for meaning of arg2.
 
    if (ss->kind != s4x6 || (global_livemask & 0x02D02D) != 0)
       fail("Must have a divided diamond or 1/4 tag setup for this concept.");
 
    ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
-   new_divided_setup_move(ss, MAPCODE(s_qtag,2,MPKIND__SPLIT,1), (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+
+   // If arg4 is nonzero, this is point-to-point diamonds.
+
+
+   new_divided_setup_move(ss,
+                          parseptr->concept->value.arg4 ?
+                          MAPCODE(s_ptpd,2,MPKIND__SPLIT,1) :
+                          MAPCODE(s_qtag,2,MPKIND__SPLIT,1),
+                          (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
 
 
@@ -1998,6 +2025,9 @@ static void do_concept_dblbent(
 
    uint32 map_code = 0;
    uint32 arg1 = parseptr->concept->value.arg1;
+   setup otherfolks = *ss;
+   setup *otherfolksptr = (setup *) 0;
+
 
    if (arg1 & 16) {
       //Bent boxes.
@@ -2093,6 +2123,16 @@ static void do_concept_dblbent(
          else if (global_livemask == 0xF3C)
             map_code = MAPCODE(s1x8,1,MPKIND__BENT4CCW,0);
       }
+      else if (ss->kind == sbigptpd) {
+         // We need to save a few people.  Maybe the "selective_move"
+         // mechanism, with "override_selector", would be a better way.
+         otherfolksptr = &otherfolks;
+
+         if (global_livemask == 0xF3C)
+            map_code = MAPCODE(s1x6,1,MPKIND__BENT0CW,0);
+         else if (global_livemask == 0x3CF)
+            map_code = MAPCODE(s1x6,1,MPKIND__BENT0CCW,0);
+      }
    }
 
    if (!map_code)
@@ -2105,6 +2145,14 @@ static void do_concept_dblbent(
    }
 
    new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+
+   if (otherfolksptr) {
+      if (otherfolksptr->kind != result->kind ||
+          otherfolksptr->rotation != result->rotation)
+         fail("Can't do this concept in this formation.");
+      (void) install_person(result, 2, otherfolksptr, 2);
+      (void) install_person(result, 8, otherfolksptr, 8);
+   }
 }
 
 
@@ -2585,17 +2633,17 @@ static void do_concept_new_stretch(
    setup tempsetup = *ss;
    int linesp = parseptr->concept->value.arg1;
 
-   /* linesp =
-      16 : any setup
-      1  : line
-      3  : wave
-      4  : column
-      18 : box
-      19 : diamond */
+   // linesp =
+   //  16 : any setup
+   //  1  : line
+   //  3  : wave
+   //  4  : column
+   //  18 : box
+   //  19 : diamond
 
-   if (     (linesp == 18 && tempsetup.kind != s2x4) ||
-            (linesp == 19 && tempsetup.kind != s_qtag && tempsetup.kind != s_ptpd) ||
-            (!(linesp&16) && tempsetup.kind != s1x8))
+   if ((linesp == 18 && tempsetup.kind != s2x4) ||
+       (linesp == 19 && tempsetup.kind != s_qtag && tempsetup.kind != s_ptpd) ||
+       (!(linesp&16) && tempsetup.kind != s1x8))
       fail("Not in correct formation for this concept.");
 
    if (!(linesp & 16)) {
@@ -2629,6 +2677,10 @@ static void do_concept_new_stretch(
    else if (tempsetup.kind == s_ptpd) {
       swap_people(&tempsetup, 2, 6);
       maps = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+   }
+   else if (tempsetup.kind == s_bone6) {
+      swap_people(&tempsetup, 2, 5);
+      maps = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,1);
    }
    else if (tempsetup.kind == s_rigger) {
       swap_people(&tempsetup, 0, 1);

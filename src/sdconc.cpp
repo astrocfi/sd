@@ -691,19 +691,20 @@ extern void normalize_concentric(
 
 static calldef_schema concentrify(
    setup *ss,
-   calldef_schema *analyzer,
+   calldef_schema & analyzer,
+   int & crossing,   // This is int (0 or 1), not bool.
    setup inners[],
    setup *outers,
    int *center_arity,
    int *outer_elongation,    /* Set to elongation of original outers, except if
                                 center 6 and outer 2, in which case, if centers
                                 are a bone6, it shows their elongation. */
-   int *xconc_elongation)    /* If cross concentric, set to elongation of original ends. */
-THROW_DECL
+   int *xconc_elongation) THROW_DECL    // If cross concentric, set to
+                                        // elongation of original ends.
 {
    int i, k;
    uint32 hash_num;
-   calldef_schema analyzer_result = *analyzer;
+   calldef_schema analyzer_result = analyzer;
    uint32 livemask = 0UL;
    const cm_thing *lmap_ptr;
 
@@ -718,11 +719,77 @@ THROW_DECL
       if (ss->people[i].id1) livemask |= k;
    }
 
-   /* First, translate the analyzer into a form that encodes only what we need to know. */
+   // First, translate the analyzer into a form that encodes only what we need to know.
+
+   crossing = 0;
 
    switch (analyzer_result) {
-   case schema_concentric:     // Competely straightforward ones.
+   case schema_single_cross_concentric:
+      analyzer = schema_single_concentric;
+      analyzer_result = schema_single_concentric;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_2_4:
+      analyzer_result = schema_concentric_2_4;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_4_2:
+      analyzer_result = schema_concentric_4_2;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_2_6_or_2_4:
+      analyzer_result = schema_concentric_2_6_or_2_4;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_2_6:
+      analyzer_result = schema_concentric_2_6;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_6_2:
+      analyzer_result = schema_concentric_6_2;
+      crossing = 1;
+      break;
+   case schema_grand_single_cross_concentric:
+      analyzer = schema_grand_single_concentric;
+      analyzer_result = schema_grand_single_concentric;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_innermost:
+      analyzer = schema_concentric_innermost;
+      analyzer_result = schema_concentric_innermost;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_double_innermost:
+      analyzer = schema_concentric_double_innermost;
+      analyzer_result = schema_concentric_double_innermost;
+      crossing = 1;
+      break;
+   case schema_cross_checkpoint:
+      analyzer = schema_checkpoint;
+      analyzer_result = schema_checkpoint;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_6p_or_normal:
+      analyzer = schema_concentric_6p_or_normal;
+      analyzer_result = schema_concentric_6p_or_normal;
+      crossing = 1;
+      break;
+   case schema_cross_concentric_diamonds:
+      analyzer = schema_concentric_diamonds;
+      analyzer_result = schema_concentric_diamonds;
+      crossing = 1;
+      break;
+   case schema_cross_concentric:
+      analyzer = schema_concentric;
+      analyzer_result = schema_concentric;
+      crossing = 1;
+      break;
+   }
+
+   switch (analyzer_result) {
+      // Completely straightforward ones.
    case schema_single_concentric:
+   case schema_concentric_4_2:
    case schema_grand_single_concentric:
    case schema_lateral_6:
    case schema_vertical_6:
@@ -748,24 +815,18 @@ THROW_DECL
    case schema_concentric_others:
    case schema_concentric_6_2_tgl:
    case schema_concentric_diamonds:
+   case schema_concentric_2_4:
       break;
-   case schema_cross_checkpoint:
    case schema_ckpt_star:
       analyzer_result = schema_checkpoint; break;
-   case schema_single_cross_concentric:
-      analyzer_result = schema_single_concentric; break;
-   case schema_grand_single_cross_concentric:
-      analyzer_result = schema_grand_single_concentric; break;
    case schema_conc_o:
       if (ss->kind == s_c1phan) do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
       break;
    case schema_concentric_diamond_line:
-      if (  (ss->kind == s_crosswave && (livemask & 0x88)) ||
-            (ss->kind == s1x8 && (livemask & 0xCC)))
+      if ((ss->kind == s_crosswave && (livemask & 0x88)) ||
+          (ss->kind == s1x8 && (livemask & 0xCC)))
          fail("Can't find centers and ends in this formation.");
       break;
-   case schema_cross_concentric_diamonds:
-      analyzer_result = schema_concentric_diamonds; break;
    case schema_concentric_2_6:
       switch (ss->kind) {
       case s3x4:
@@ -774,14 +835,14 @@ THROW_DECL
          break;
       case s4dmd:
          warn(warn_big_outer_triangles);
-         *analyzer = schema_concentric_big2_6;
+         analyzer = schema_concentric_big2_6;
          analyzer_result = schema_concentric_big2_6;
          if (livemask != 0xC9C9)
             fail("Can't find centers and ends in this formation.");
          break;
       case s_3mdmd:
          warn(warn_big_outer_triangles);
-         *analyzer = schema_concentric_big2_6;
+         analyzer = schema_concentric_big2_6;
          analyzer_result = schema_concentric_big2_6;
          // Warning!  Fall through!
       case s3dmd:
@@ -796,17 +857,55 @@ THROW_DECL
       break;
    case schema_concentric_2_6_or_2_4:
       if (setup_attrs[ss->kind].setup_limits == 5) {
-         analyzer_result = schema_concentric_2_4;
          warn(warn__unusual);
+         analyzer_result = schema_concentric_2_4;
       }
       else
          analyzer_result = schema_concentric_2_6;
       break;
+   case schema_concentric_innermost:
+      if (ss->kind == s_short6) {
+         warn(warn__unusual);
+         analyzer_result = schema_concentric_4_2;
+      }
+      else if (ss->kind == s2x4 || ss->kind == s_rigger || ss->kind == s_galaxy)
+         analyzer_result = schema_concentric;
+      else if (setup_attrs[ss->kind].setup_limits == 5)
+         analyzer_result = schema_concentric_2_4;
+      else if (setup_attrs[ss->kind].setup_limits == 3)
+         analyzer_result = schema_single_concentric;
+      else
+         analyzer_result = schema_concentric_2_6;
+      break;
+   case schema_concentric_double_innermost:
+      if (ss->kind == s_rigger || ss->kind == s_ptpd)
+         analyzer_result = schema_concentric_6_2;
+      else if (ss->kind == s_galaxy) {
+         // This code is duplicated in triangle_move.  Make schemata "tall6" and "short6"
+         uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 |
+            ss->people[5].id1 | ss->people[7].id1;
+
+         if ((tbonetest & 011) == 011) fail("Can't find tall 6.");
+         else if (tbonetest & 1)
+            analyzer_result = schema_lateral_6;
+         else
+            analyzer_result = schema_vertical_6;
+      }
+      else if (setup_attrs[ss->kind].setup_limits == 5)
+         analyzer_result = schema_concentric_4_2;
+      else
+         analyzer_result = schema_concentric;
+      break;
    case schema_in_out_triple_squash:
       analyzer_result = schema_in_out_triple; break;
+   case schema_concentric:
+      if (crossing) {
+         if (ss->kind == s4x4 && livemask != 0x9999)
+            fail("Can't find centers and ends in this formation.");
+      }
+      break;
    case schema_rev_checkpoint:
    case schema_conc_star:
-   case schema_cross_concentric:
    case schema_concentric_to_outer_diamond:
       analyzer_result = schema_concentric;
       if (ss->kind == s4x4 && livemask != 0x9999)
@@ -824,6 +923,14 @@ THROW_DECL
       else
          analyzer_result = schema_concentric;
       break;
+   case schema_concentric_2_4_or_normal:
+      if (setup_attrs[ss->kind].setup_limits == 5)
+         analyzer_result = schema_concentric_2_4;
+      else if (setup_attrs[ss->kind].setup_limits == 3)
+         analyzer_result = schema_single_concentric;
+      else
+         analyzer_result = schema_concentric;
+      break;
    case schema_concentric_4_2_or_normal:
       if (setup_attrs[ss->kind].setup_limits == 5)
          analyzer_result = schema_concentric_4_2;
@@ -833,7 +940,6 @@ THROW_DECL
          analyzer_result = schema_concentric;
       break;
    case schema_concentric_6p_or_normal:
-   case schema_cross_concentric_6p_or_normal:
       if (setup_attrs[ss->kind].setup_limits == 5)
          analyzer_result = schema_concentric_6p;
       else
@@ -1018,6 +1124,7 @@ THROW_DECL
          else if (!ss->people[9].id1 && ss->people[8].id1)
             (void) copy_person(outers, 3, ss, 8);
          else fail("Can't find centers and ends in this formation.");
+
          goto finish;
       }
    }
@@ -1192,23 +1299,26 @@ THROW_DECL
       notion of what cross concentric means:
       "But if the outsides started in a 1x4, they override the centers' own axis." */
 
-   switch (*analyzer) {
-   case schema_cross_concentric:
-   case schema_cross_concentric_diamonds:
-   case schema_cross_concentric_6p_or_normal:
-      *xconc_elongation = lmap_ptr->inner_rot+1;
+   switch (analyzer) {
+   case schema_concentric:
+   case schema_concentric_diamonds:
+   case schema_concentric_6p_or_normal:
+      if (crossing) {
+         *xconc_elongation = lmap_ptr->inner_rot+1;
 
-      switch (ss->kind) {
-      case s_galaxy:
-         *xconc_elongation = -1;    /* Can't do this! */
-         break;
-      case s_rigger:
-         *xconc_elongation = -1;
-         if (lmap_ptr->outsetup == s1x4)
-            *xconc_elongation = (lmap_ptr->outer_rot+1) | CONTROVERSIAL_CONC_ELONG;
-         break;
+         switch (ss->kind) {
+         case s_galaxy:
+            *xconc_elongation = -1;    /* Can't do this! */
+            break;
+         case s_rigger:
+            *xconc_elongation = -1;
+            if (lmap_ptr->outsetup == s1x4)
+               *xconc_elongation = (lmap_ptr->outer_rot+1) | CONTROVERSIAL_CONC_ELONG;
+            break;
+         }
       }
       break;
+
    case schema_in_out_triple:
    case schema_in_out_triple_squash:
    case schema_in_out_quad:
@@ -1553,7 +1663,8 @@ static void inherit_conc_assumptions(
 {
    if (analyzer == schema_concentric ||
        analyzer == schema_concentric_6p_or_normal ||
-       analyzer == schema_concentric_4_2_or_normal) {
+       analyzer == schema_concentric_4_2_or_normal ||
+       analyzer == schema_concentric_2_4_or_normal) {
       if (sskind == s2x4 && beginkind == s2x2) {
          switch (this_assumption->assumption) {
          case cr_wave_only:
@@ -1643,9 +1754,15 @@ static void inherit_conc_assumptions(
       }
    }
    else if (analyzer == schema_concentric_2_6) {
-      if (sskind == s_qtag && beginkind == s_short6 && really_doing_ends) {
+      if ((sskind == s_qtag || sskind == s_ptpd) &&
+          beginkind == s_short6 && really_doing_ends) {
          // We want to preserve "assume diamond" stuff to the outer 6,
-         // so 6x2 acey deucey will work.
+         // so 6x2 and 3x2 acey deucey will work.
+         // Of course, it will have a different meaning.  "Assume
+         // normal diamonds" will mean "this is a wave-based triangle,
+         // with consistent direction".  "Assume facing diamonds" will
+         // mean "this is a wave-based triangle, with the base in a
+         // real mini-wave, but the apex pointing inconsistently".
          goto got_new_assumption;
       }
    }
@@ -1698,7 +1815,8 @@ extern void concentric_move(
    setup result_outer;
    setup outer_inners[4];
    int i, k, klast;
-   int crossing;       /* This is an int (0 or 1) rather than a long_boolean, because we will index with it. */
+   int crossing;       // This is an int (0 or 1) rather than a bool,
+                       // because we will index with it.
 
    setup_kind orig_inners_start_kind;    /* The original info about the people who STARTED on the inside. */
    uint32 orig_inners_start_dirs;        /* We don't need rotation, since we will only use this if 2x2. */
@@ -1788,31 +1906,10 @@ extern void concentric_move(
    begin_inner[2].cmd = ss->cmd;
    begin_outer.cmd = ss->cmd;
 
-   crossing =
-      analyzer == schema_cross_concentric ||
-      analyzer == schema_single_cross_concentric ||
-      analyzer == schema_grand_single_cross_concentric ||
-      analyzer == schema_cross_checkpoint ||
-      analyzer == schema_cross_concentric_6p_or_normal ||
-      analyzer == schema_cross_concentric_diamonds;
-
-   analyzer_result = concentrify(ss, &analyzer, begin_inner, &begin_outer, &center_arity,
+   // This reads and writes to "analyzer", and writes to "crossing".
+   analyzer_result = concentrify(ss, analyzer, crossing,
+                                 begin_inner, &begin_outer, &center_arity,
                                  &begin_outer_elongation, &begin_xconc_elongation);
-
-   // We don't need the crossing info any more.
-
-   if (analyzer == schema_cross_concentric)
-      analyzer = schema_concentric;
-   else if (analyzer == schema_single_cross_concentric)
-      analyzer = schema_single_concentric;
-   else if (analyzer == schema_grand_single_cross_concentric)
-      analyzer = schema_grand_single_concentric;
-   else if (analyzer == schema_cross_concentric_6p_or_normal)
-      analyzer = schema_concentric_6p_or_normal;
-   else if (analyzer == schema_cross_concentric_diamonds)
-      analyzer = schema_concentric_diamonds;
-   else if (analyzer == schema_cross_checkpoint)
-      analyzer = schema_checkpoint;
 
    // Get initial info for the original ends.
    orig_outers_start_dirs = 0;
@@ -2824,6 +2921,7 @@ static concmerge_thing merge_maps[] = {
    {sdmd,          s1x6, 0,      044, 0x0C, 0x0, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
    {sdmd,          s_galaxy, 0, 0xAA, 0x0C, 0x0, schema_concentric,     sdmd,        s_star,   warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
    {sdmd,       s1x3dmd, 0,     0xCC, 0x0C, 0x0, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
+   {sdmd,       s1x3dmd, 0,     0xAA, 0x1D, 0x0, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
    {sdmd,         s_323, 0,     0xAA, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 3, 5, 7},         {0}},
    {s1x4,         s_323, 0,     0xAA, 0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 1, {0, 1, 2, 3},               {2, 1, 3, 4, 6, 5, 7, 0}},
    {s2x2,         s_323, 0,     0xAA, 0x0C, 0x0, schema_matrix,         s4x4,        nothing,  warn__check_butterfly, 0, 0, {15, 3, 7, 11},             {12, -1, 0, -1, 4, -1, 8, -1}},
@@ -2895,7 +2993,7 @@ static concmerge_thing merge_maps[] = {
    {s1x4,       s3x1dmd, 0,     0x66, 0x2D, 0x1, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {7, -1, -1, 0, 3, -1, -1, 4}, {1, 2, 5, 6}},
    {s1x6,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
    {s1x4,      s_1x2dmd, 0,      044, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, -1, 4, 5, -1}},
-
+   {s1x4,      s_1x2dmd, 0,      044, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 1, 0, {2, 3, 6, 7},               {0, 1, -1, 4, 5, -1}},
    {s1x6,      s_2x1dmd, 0,        0, 0x0E, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},       {1, 2, 3, 5, 6, 7}},
    {s1x6,      s_2x1dmd, 044,      0, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 1, {0, 1, -1, 4, 5, -1},       {6, 7, 1, 2, 3, 5}},
    {sdmd,      s_2x1dmd, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 4, 5, 1},       {0}},
@@ -3104,8 +3202,7 @@ static concmerge_thing merge_maps[] = {
 
    {s_1x2dmd,  s_galaxy, 022,   0xAA, 0x1E, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {0, -1, 3, 4, -1, 7}, {1, -1, 2, -1, 5, -1, 6, -1}},
    {s_1x2dmd,      s1x8, 022,   0x66, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, -1, 3, 5, -1, 7}, {0, -1, -1, 2, 4, -1, -1, 6}},
-
-
+   {s_ptpd,     sbigptpd, 0,  0, 0x0E, 0x0, schema_nothing,             nothing,     nothing,  warn__none, 0, 0, {2, 4, 3, 1, 8, 10, 9, 7}, {0}},
    {s_spindle,     s2x4, 0x55,  0x66, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}},
    {s_spindle, s_spindle, 0x55, 0xAA, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
    {s_spindle, s_spindle, 0xAA, 0x55, 0x0D, 0x1, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
@@ -3139,6 +3236,8 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       action = merge_c1_phantom;
       na = normalize_before_isolate_not_too_strict;
    }
+   else if (action == merge_c1_phantom_real)
+      na = normalize_before_isolate_not_too_strict;
    else if (action == merge_strict_matrix)
       na = normalize_strict_matrix;
    else if (action == merge_without_gaps)
@@ -3897,7 +3996,9 @@ extern void inner_selective_move(
 
    if (sizem1 < 0) fail("Can't identify people in this setup.");
 
-   for (i=0, ssmask=0, llmask=0, j=1; i<=sizem1; i++, j<<=1) {
+   for (i=0, ssmask=0, llmask=0, livemask[0] = 0, livemask[1] = 0, j=1;
+        i<=sizem1;
+        i++, j<<=1) {
       ssmask <<= 1;
       llmask <<= 1;
       if (ss->people[i].id1) {
@@ -3934,6 +4035,7 @@ extern void inner_selective_move(
          ssmask |= q;
          llmask |= 1;
          clear_person(&the_setups[q], i);
+         livemask[q^1] |= j;
       }
    }
 
@@ -3946,6 +4048,9 @@ extern void inner_selective_move(
       selector_to_use = selector_list[selector_to_use].opposite;
       indicator = selective_key_disc_dist;
    }
+
+   if (indicator == selective_key_disc_dist)
+      action = normalize_to_2;
 
    // If the call can be recognized as a "space-invader",
    // we might do special stuff.  We simply have the designated (or non-ignored)
@@ -4240,23 +4345,6 @@ extern void inner_selective_move(
                goto do_concentric_ctrs;
          }
 
-         if ((selector_to_use == selector_center2 || selector_to_use == selector_verycenters) &&
-             !others) {
-            schema = schema_select_ctr2;
-            action = normalize_to_2;
-            goto back_here;
-         }
-         else if (selector_to_use == selector_center4 && !others) {
-            schema = schema_select_ctr4;
-            action = normalize_to_4;
-            goto back_here;
-         }
-         else if (selector_to_use == selector_center6 && !others) {
-            schema = schema_select_ctr6;
-            action = normalize_to_6;
-            goto back_here;
-         }
-
          schema = schema_concentric;
       }
 
@@ -4266,6 +4354,27 @@ extern void inner_selective_move(
       if ((ss->kind != s3x4 || llmask == 04747) &&
           (ss->kind != s3dmd || llmask == 07171) &&
           (ss->kind != s4x4 || llmask == 0x9999)) {
+
+         // This stuff is needed, with the livemask test, for rf01t and rd01t.
+
+         if (!others && livemask[1] != 0) {
+            switch (selector_to_use) {
+            case selector_center2:
+            case selector_verycenters:
+               schema = schema_select_ctr2;
+               action = normalize_to_2;
+               goto back_here;
+            case selector_center4:
+               schema = schema_select_ctr4;
+               action = normalize_to_4;
+               goto back_here;
+            case selector_center6:
+               schema = schema_select_ctr6;
+               action = normalize_to_6;
+               goto back_here;
+            }
+         }
+
          if (setup_attrs[ss->kind].mask_normal) {
             if (ssmask == setup_attrs[ss->kind].mask_normal) goto do_concentric_ctrs;
             else if (ssmask == mask-setup_attrs[ss->kind].mask_normal) goto do_concentric_ends;
@@ -4315,7 +4424,7 @@ back_here:
 
    saved_warnings = history[history_ptr+1].warnings;
 
-   /* It will be helpful to have a mask of where the live people are. */
+   // It will be helpful to have a mask of where the live people are.
 
    for (setupcount=0; setupcount<2; setupcount++) {
       for (i=0, j=1, livemask[setupcount] = 0;
@@ -4325,7 +4434,7 @@ back_here:
       }
    }
 
-   /* Iterate 1 or 2 times, depending on whether the "other" people do a call. */
+   // Iterate 1 or 2 times, depending on whether the "other" people do a call.
 
    for (setupcount=0; setupcount<=others; setupcount++) {
       /* Not clear that this is really right. */
@@ -4398,9 +4507,9 @@ back_here:
                      orig_indicator == selective_key_plain_from_id_bits ||
                      (orig_indicator == selective_key_ignore &&
                       setup_attrs[kk].setup_limits > 7) ||
-                     schema == schema_select_ctr2 ||  // We know that "others" is off here,
-                     schema == schema_select_ctr4 ||  // because we tested for it previously.
-                     schema == schema_select_ctr6) {
+                     ((schema == schema_select_ctr2 ||
+                       schema == schema_select_ctr4 ||
+                       schema == schema_select_ctr6) && !others)) {
                // Everyone.
                update_id_bits(this_one);
                move(this_one, FALSE, &the_results[setupcount]);

@@ -2539,13 +2539,13 @@ roll_is_ccw
       preceding call is ill-defined.
 
 x12_boy_facing_girl
-      applies to 2x1 columns only.  Returns TRUE if this person is an
-      unambiguous boy, and the other person in the column is alive and an
+      applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
+      is an unambiguous boy, and the other person in the column is alive and an
       unambiguous girl.  Facing directions are not checked.
 
 x12_girl_facing_boy
-      applies to 2x1 columns only.  Returns TRUE if this person is an
-      unambiguous girl, and the other person in the column is alive and an
+      applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
+      is an unambiguous girl, and the other person in the column is alive and an
       unambiguous boy.  Facing directions are not checked.
 
 x22_boy_facing_girl

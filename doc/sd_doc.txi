@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.3
-@set Time-stamp: December 13, 2000
+@set sd-version 34.4
+@set Time-stamp: February 19, 2001
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -44,7 +44,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-2000 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-2001 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX or other text
@@ -3430,6 +3430,9 @@ opposite orientation to the orientation given by @code{split phantom
 diamonds}.  That is, there is a 2x2 matrix of diamonds or 1/4 tags.
 The diamonds in each parallel pair work with each other, but the
 pairs work independently.
+@item twin phantom point-to-point D/DS
+Similar to the above, but the diamonds work with each other
+along the point-to-point axis.
 @end table
 
 @node Tandem or Couples Concepts, Distorted Setup Concepts, Phantom Concepts, Concept Notes
@@ -3651,6 +3654,8 @@ These are done from a variety of setups, in which the designated people
 form a recognizable distorted or offset setup.  Reasonable shape-changers are allowed.
 @item parallelogram
 This includes 100% offset parallelograms in 2x8 matrices.
+@item parallelogram diamonds
+This is used for any facing directions.
 @item phantom big block L/W
 @item phantom stagger columns
 @item phantom stairstep C/L/W
@@ -4125,6 +4130,7 @@ These are straightforward.
 @item common end L/W
 @item common center L/W
 @item common spot C/L/W/D
+@item common spot point-to-point diamonds
 @item common spot hourglass
 @item common spot two-faced lines
 The ``common spot'' concept directs people to do their part of the call
@@ -4139,6 +4145,12 @@ less creative ways to get into these formations.)
 The program therefore expects the ``common spot'' people to have
 @i{right} hands.  If you want to use these concepts with people in left-hand
 miniwaves, we recommend that you apply the @samp{mirror} concept to the entire operation.
+
+Common spot point-to-point diamonds can arise from
+certain fractional exchanges of point-to-point diamonds.
+Note that @code{switch to a diamond} and @code{diamond circulate}
+never produce this setup -- the Callerlab C1 definitions specifically
+state that the colliding people center themselves.
 
 The @code{common point galaxy} concept is used from a ``rigger'' setup in
 which the ``wings'' are collided points.  The @code{common spot columns}

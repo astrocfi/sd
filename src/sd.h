@@ -352,7 +352,7 @@ typedef enum {
 } mpkind;
 
 typedef struct skrilch {
-   const veryshort maps[40];
+   const veryshort maps[48];  // Darn it!  40 would be enough for all maps but one.
    const setup_kind inner_kind;
    const int arity;
    const mpkind map_kind;
@@ -1279,13 +1279,14 @@ typedef struct glozk {
 } modifier_block;
 
 typedef struct filch {
-   long_boolean valid;       /* set to TRUE if a match was found */
-   long_boolean exact;       /* set to TRUE if an exact match was found */
-   long_boolean indent;      /* This is a subordinate call; indent it in listing. */
-   modifier_block match;
-   Const struct filch *real_next_subcall;
-   Const struct filch *real_secondary_subcall;
-   int yield_depth;          /* if nonzero, this yields by that amount */
+   long_boolean valid;       // Set to TRUE if a match was found.
+   long_boolean exact;       // Set to TRUE if an exact match was found.
+   long_boolean indent;      // This is a subordinate call; indent it in listing.
+   modifier_block match;     // The little thing we actually return.
+   const struct filch *real_next_subcall;
+   const struct filch *real_secondary_subcall;
+   int recursion_depth;      // How deep in "@0" or "@m" things.
+   int yield_depth;          // If nonzero, this yields by that amount.
 } match_result;
 
 enum {
@@ -1619,6 +1620,7 @@ typedef enum {
    warn__each2x2,
    warn__each1x4,
    warn__each1x2,
+   warn__eachdmd,
    warn__take_right_hands,
    warn__ctrs_are_dmd,
    warn__1_4_pgram,
@@ -1668,6 +1670,7 @@ typedef enum {
    warn__opt_for_normal_hinge,
    warn__opt_for_2fl,
    warn__opt_for_no_collision,
+   warn__opt_for_not_tboned_base,
    warn_partial_solomon,
    warn_same_z_shear,
    warn__like_linear_action,
@@ -1862,10 +1865,10 @@ typedef struct {
 #define CONCPROP__PERMIT_REVERSE   0x20000000UL
 #define CONCPROP__PERMIT_MODIFIERS 0x40000000UL
 
-/* This allows 96 warnings. */
+/* This allows 128 warnings. */
 /* BEWARE!!  If this is changed, this initializers for things like "no_search_warnings"
-   in sdmain.cpp will need to be updated. */
-#define WARNING_WORDS 3
+   in sdtop.cpp will need to be updated. */
+#define WARNING_WORDS 4
 
 typedef struct {
    uint32 bits[WARNING_WORDS];
@@ -2475,9 +2478,9 @@ extern SDLIB_API char GLOB_extension     [];                        /* in SDMATC
 extern SDLIB_API char GLOB_extended_input[];                        /* in SDMATCH */
 extern SDLIB_API int GLOB_full_input_size;                          /* in SDMATCH */
 
-extern SDLIB_API int *concept_list;        /* indices of all concepts */
+extern SDLIB_API short int *concept_list;        /* indices of all concepts */
 extern SDLIB_API int concept_list_length;
-extern SDLIB_API int *level_concept_list; /* indices of concepts valid at current level */
+extern SDLIB_API short int *level_concept_list; /* indices of concepts valid at current level */
 extern SDLIB_API int level_concept_list_length;
 
 extern SDLIB_API modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
@@ -2894,7 +2897,7 @@ extern map_thing map_emergency1;                                    /* in SDTABL
 extern map_thing map_emergency2;                                    /* in SDTABLES */
 extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
 extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
-extern map_thing map_init_table2[];                                 /* in SDTABLES */
+extern map_thing map_init_table[];                                  /* in SDTABLES */
 
 /* in SDCTABLE */
 

@@ -78,7 +78,7 @@ extern void initialize_map_tables(void)
    for (unsigned int i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++)
       map_hash_table2[i] = (map_thing *) 0;
 
-   for (map_thing *tab2p = map_init_table2 ; tab2p->outer_kind != nothing ; tab2p++) {
+   for (map_thing *tab2p = map_init_table ; tab2p->outer_kind != nothing ; tab2p++) {
       uint32 code = MAPCODE(tab2p->inner_kind,tab2p->arity,tab2p->map_kind,tab2p->vert);
       tab2p->code = code;
       uint32 hash_num =
@@ -434,9 +434,10 @@ static void innards(
       }
    }
 
-   main_rotation = z[0].rotation & 3;
+   main_rotation = z[0].rotation;
    if (arity == 2 && (z[0].kind == s_trngl || z[0].kind == s_trngl4) && (rot & 0x200))
       main_rotation += 2;
+   main_rotation &= 3;
 
    /* Set the final result_flags to the OR of everything that happened.
       The elongation stuff doesn't matter --- if the result is a 2x2
@@ -862,7 +863,7 @@ static void innards(
    if ((sscmd->cmd_misc_flags & CMD_MISC__OFFSET_Z) && final_map) {
       if (map_kind == MPKIND__OFFS_L_HALF || map_kind == MPKIND__OFFS_R_HALF) {
          if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
-         else final_map = 0;        /* Raise an error. */
+         else final_map = 0;        // Raise an error.
       }
       else if (map_kind == MPKIND__OFFS_L_FULL || map_kind == MPKIND__OFFS_R_FULL) {
          if (final_map->outer_kind == s2x8) warn(warn__full_pgram);
@@ -2927,6 +2928,21 @@ common_spot_map cmaps[] = {
          {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
          {       0, d_north,       0,       0,       0, d_south,       0,       0}},
 
+
+   // Common spot point-to-point diamonds.
+   {0x400, sbigptpd, s_ptpd, 0, 0,
+         {       2,      -1,       3,      -1,       8,      -1,       9,      -1},
+         {      -1,       5,      -1,      -1,      -1,      11,      -1,      -1},
+         {       0,  d_east,       0,       0,       0,  d_west,       0,       0},
+         {      -1,       4,      -1,      -1,      -1,      10,      -1,      -1},
+         {       0,  d_west,       0,       0,       0,  d_east,       0,       0}},
+   {0x400, sbigptpd, s_ptpd, 0, 0,
+         {       2,      -1,       3,      -1,       8,      -1,       9,      -1},
+         {      -1,      -1,      -1,       1,      -1,      -1,      -1,       7},
+         {       0,       0,       0,  d_east,       0,       0,       0,  d_west},
+         {      -1,      -1,      -1,       0,      -1,      -1,      -1,       6},
+         {       0,       0,       0,  d_west,       0,       0,       0,  d_east}},
+
    /* Common point hourglass */
 
    {0x80, sbighrgl, s_hrglass, 0, 1,
@@ -3209,7 +3225,8 @@ extern void common_spot_move(
       common spot lines                        : 0x78
       common spot waves                        : 0x70
       common spot 1/4 lines                    : 0x100
-      common spot 1/4 tags                     : 0x200 */
+      common spot 1/4 tags                     : 0x200
+      common spot point-to-point diamonds      : 0x400 */
 
    if (ss->kind == s_c1phan) {
       do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
@@ -3888,16 +3905,20 @@ extern void triangle_move(
          }
          else {
             switch (ss->kind) {
-               case s_ptpd:
-               case s_qtag:
-               case s_spindle:
-               case s_bone:
-               case s_hrglass:
-               case s_dhrglass:
-                  schema = schema_concentric_2_6;
-                  break;
-               default:
-                  fail("There are no 'outside' triangles.");
+            case s_ptpd:
+            case s_qtag:
+            case s_spindle:
+            case s_bone:
+            case s_hrglass:
+            case s_dhrglass:
+            case s_ntrglcw:
+            case s_ntrglccw:
+            case s_nptrglcw:
+            case s_nptrglccw:
+               schema = schema_concentric_2_6;
+               break;
+            default:
+               fail("There are no 'outside' triangles.");
             }
    
             concentric_move(ss, (setup_command *) 0, &ss->cmd, schema, 0, 0, TRUE, ~0UL, result);

@@ -40,6 +40,9 @@ Then choose the poster child.  Do "do_index <number>".
 It is important that this be done before "new_binary" is run, because
 the manual is now wrapped into the binary distribution file.
 
+BE SURE THAT THE "CYGWIN" LIBRARY IS IN THE PATH!!!
+The "uufix" program requires it.
+
 Go to sddoc directory and do:
 
     do_plain
@@ -58,7 +61,8 @@ Go to sddoc directory and do:
 21 Aug 00  -  14 Sep 00   #5
 14 Sep 00  -  09 Oct 00   #8
 09 Oct 00  -  11 Dec 00   #9
-11 Dec 00                 #7
+11 Dec 00  -  19 Feb 01   #7
+19 Feb 01                 #10
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - DJGPP

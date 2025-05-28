@@ -8,10 +8,9 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 </p>
 <br>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 34.3</strong>, released on December 13, 2000.
+<strong>The current version of Sd/Sdtty is 34.4</strong>, released on February 19, 2001.
 <p>
-Sd no longer needs the special "helper" calls like "recycle (parts)"
-or "scoot and weave (parts)".  Just type the plain call name in all cases.
+The program can now handle "parallelogram diamonds".
 <p>
 <dl>
 <dt>

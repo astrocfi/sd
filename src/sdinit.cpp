@@ -81,80 +81,6 @@ static setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NO
 
 
 
-/* This cleans up the text of a call or concept name, returning the
-   menu-presentable form to be put into the "menu_name" field.  It
-   simply re-uses the stored string where it can, and allocates fresh memory
-   if a substitution took place. */
-
-static const char *translate_menu_name(Const char *orig_name, uint32 *escape_bits_p)
-{
-   int j;
-   char c;
-   int namelength;
-   long_boolean atsign = FALSE;
-
-   /* See if the name has an 'at' sign, in which case we have to modify it to
-      get the actual menu text.  Also, find out what escape flags we need to set. */
-
-   namelength = 0;
-   for (;;) {
-      c = orig_name[namelength++];
-      if (!c) break;
-      else if (c == '@') {
-         atsign = TRUE;
-         c = orig_name[namelength++];
-         if (c == 'e') *escape_bits_p |= ESCAPE_WORD__LEFT;
-         else if (c == 'j' || c == 'C') *escape_bits_p |= ESCAPE_WORD__CROSS;
-         else if (c == 'J' || c == 'M') *escape_bits_p |= ESCAPE_WORD__MAGIC;
-         else if (c == 'E' || c == 'I') *escape_bits_p |= ESCAPE_WORD__INTLK;
-         else if (c == 'G' || c == 'Q')
-            *escape_bits_p |= ESCAPE_WORD__GRAND;
-      }
-   }
-
-   if (atsign) {
-      char tempname[200];
-      char *temp_ptr;
-      char *new_ptr;
-      int templength;
-
-      temp_ptr = tempname;
-      templength = 0;
-
-      for (j = 0; j < namelength; j++) {
-         c = orig_name[j];
-
-         if (c == '@') {
-            Const char *q = get_escape_string(orig_name[++j]);
-            if (q && *q) {
-               while (*q) temp_ptr[templength++] = *q++;
-               continue;
-            }
-            else if (q) {
-               /* Skip over @7...@8, @n .. @o, @j .. @l, and @J...@L stuff. */
-               while (orig_name[j] != '@') j++;
-               j++;
-            }
-
-            /* Be sure we don't leave two consecutive blanks in the text. */
-            if (orig_name[j+1] == ' ' && templength != 0 && temp_ptr[templength-1] == ' ') j++;
-         }
-         else
-            temp_ptr[templength++] = c;
-      }
-
-      tempname[templength] = '\0';
-      /* Must copy the text into some fresh memory, being careful about overflow. */
-      new_ptr = (char *) (*the_callback_block.get_mem_fn)(templength+1);
-      for (j=0; j<=templength; j++) new_ptr[j] = tempname[j];
-      return new_ptr;
-   }
-   else
-      return orig_name;
-}
-
-
-
 /* These variables are actually local to test_starting_setup, but they are
    expected to be preserved across the longjmp, so they must be static. */
 static parse_block *parse_mark;
@@ -888,6 +814,8 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             else if (c == 'N')
                root_to_use->callflagsf |= CFLAGH__CIRC_CALL_RQ_BIT;
          }
+         else if (c == '[' || c == ']')
+            database_error("calls may not have brackets in their name");
       }
    }
 
@@ -1229,6 +1157,79 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
 
    (*the_callback_block.close_database_fn)();
    (*the_callback_block.uims_database_tick_fn)(10);
+}
+
+
+/* This cleans up the text of a call or concept name, returning the
+   menu-presentable form to be put into the "menu_name" field.  It
+   simply re-uses the stored string where it can, and allocates fresh memory
+   if a substitution took place. */
+
+static const char *translate_menu_name(const char *orig_name, uint32 *escape_bits_p)
+{
+   int j;
+   char c;
+   int namelength;
+   long_boolean atsign = FALSE;
+
+   /* See if the name has an 'at' sign, in which case we have to modify it to
+      get the actual menu text.  Also, find out what escape flags we need to set. */
+
+   namelength = 0;
+   for (;;) {
+      c = orig_name[namelength++];
+      if (!c) break;
+      else if (c == '@') {
+         atsign = TRUE;
+         c = orig_name[namelength++];
+         if (c == 'e') *escape_bits_p |= ESCAPE_WORD__LEFT;
+         else if (c == 'j' || c == 'C') *escape_bits_p |= ESCAPE_WORD__CROSS;
+         else if (c == 'J' || c == 'M') *escape_bits_p |= ESCAPE_WORD__MAGIC;
+         else if (c == 'E' || c == 'I') *escape_bits_p |= ESCAPE_WORD__INTLK;
+         else if (c == 'G' || c == 'Q')
+            *escape_bits_p |= ESCAPE_WORD__GRAND;
+      }
+   }
+
+   if (atsign) {
+      char tempname[200];
+      char *temp_ptr;
+      char *new_ptr;
+      int templength;
+
+      temp_ptr = tempname;
+      templength = 0;
+
+      for (j = 0; j < namelength; j++) {
+         c = orig_name[j];
+
+         if (c == '@') {
+            Const char *q = get_escape_string(orig_name[++j]);
+            if (q && *q) {
+               while (*q) temp_ptr[templength++] = *q++;
+               continue;
+            }
+            else if (q) {
+               /* Skip over @7...@8, @n .. @o, @j .. @l, and @J...@L stuff. */
+               while (orig_name[j] != '@') j++;
+               j++;
+            }
+
+            /* Be sure we don't leave two consecutive blanks in the text. */
+            if (orig_name[j+1] == ' ' && templength != 0 && temp_ptr[templength-1] == ' ') j++;
+         }
+         else
+            temp_ptr[templength++] = c;
+      }
+
+      tempname[templength] = '\0';
+      /* Must copy the text into some fresh memory, being careful about overflow. */
+      new_ptr = (char *) (*the_callback_block.get_mem_fn)(templength+1);
+      for (j=0; j<=templength; j++) new_ptr[j] = tempname[j];
+      return new_ptr;
+   }
+   else
+      return orig_name;
 }
 
 

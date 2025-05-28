@@ -772,7 +772,7 @@ static long_boolean get_user_input(char *prompt, int which)
             uims_bell();
       }
       else if ((c == '\n') || (c == '\r')) {
-         matches = match_user_input(which, FALSE, FALSE, FALSE);
+         matches = match_user_input(which, FALSE, FALSE, TRUE);
          user_match = GLOB_match;
 
          if (!strcmp(GLOB_full_input, "help")) {
@@ -826,7 +826,7 @@ static long_boolean get_user_input(char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         (void) match_user_input(which, FALSE, FALSE, FALSE);
+         (void) match_user_input(which, FALSE, FALSE, TRUE);
          user_match = GLOB_match;
          p = GLOB_extended_input;
 
@@ -1439,6 +1439,7 @@ extern void uims_database_tick_end(void)
 
 extern void uims_database_error(Cstring message, Cstring call_name)
 {
+   print_line("");
    print_line(message);
    if (call_name) {
       print_line("while reading this call from the database:");

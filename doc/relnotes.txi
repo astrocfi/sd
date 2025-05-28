@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 34.3
-@set title2 Database version = 34.3 format = 168
+@set title1 RELEASE NOTES FOR SD VERSION 34.4
+@set title2 Database version = 34.4 format = 176
 @set title3 X11 UI version 1.17, SDTTY UI version 1.12, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 34.4::
+* 34.31::
 * 34.3::
 * 34.21::
 * 34.2::
@@ -40,7 +42,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 34.3, Top, (dir)
+@node Intro, 34.4, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -48,14 +50,54 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2000 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2001 William B. Ackerman
 @sp 3
 @menu
-* 34.3::               Changes in the current version
+* 34.31::               Changes in the current version
 @end menu
 
 @c ************
-@node 34.3, 34.21, Intro, Top
+@node 34.4, 34.31, Intro, Top
+@unnumberedsec Version 34.4 changes
+
+New concepts: @code{twin phantom point-to-point diamonds} and
+@code{twin phantom point-to-point diamond spots}.
+
+New concept: @code{common spot point-to-point diamonds}.
+This is done from the setup that would be obtained after
+certain fractional exchanges from point-to-point diamonds.
+Note that @code{switch to a diamond} and @code{diamond circulate}
+never produce this setup -- the Callerlab C1 definitions specifically
+state that the colliding people center themselves.
+
+The program can now handle parallelogram diamonds.  That is,
+from parallelogram waves, you can do @code{switch to a diamond}.
+
+New concept: @code{parallelogram diamonds}.  This is used no matter
+what the facing directions are.
+
+The program can now handle "nonisotropic triangles".  For example,
+from columns, ignore the last person and have the other 6 1/2 press ahead.
+
+The program can now do @code{counter rotate} in triangles correctly.
+For example, from point-to-point diamonds, @code{outside triangles
+counter rotate} will do the right thing.
+
+The program can now do @code{convert the triangle} from tandem-based
+triangles.
+
+The program has an improved ability to go to arbitrarily occupied
+stars as the result of phantom calls.
+
+@c ************
+@node 34.31, 34.3, 34.4, Top
+@unnumberedsec Version 34.31 changes
+
+A serious defect in processing menu clicks in @code{Sd} version 34.3
+was fixed.  It did not affect @code{Sdtty}.
+
+@c ************
+@node 34.3, 34.21, 34.31, Top
 @unnumberedsec Version 34.3 changes
 
 Improved the ``crazy offset C/L/W'' concept.  It can handle shape-changers,

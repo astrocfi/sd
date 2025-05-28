@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -68,7 +68,7 @@ typedef unsigned long int uint32;
 typedef unsigned short int uint16;
 typedef unsigned char uint8;
 typedef int long_boolean;
-typedef Const char *Cstring;
+typedef const char *Cstring;
 
 #define TRUE 1
 #define FALSE 0
@@ -82,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 168
+#define DATABASE_FORMAT_VERSION 176
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -103,6 +103,7 @@ typedef enum {
    base_call_lockit,
    base_call_disband1,
    base_call_slither,
+   base_base_prepare_to_drop,
    base_call_two_o_circs,
    /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
    base_call_tagger0,
@@ -129,24 +130,24 @@ typedef enum {
    "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
 */
 
-static Const uint32 INHERITFLAG_DIAMOND    = 0x00000001UL;
-static Const uint32 INHERITFLAG_REVERSE    = 0x00000002UL;
-static Const uint32 INHERITFLAG_LEFT       = 0x00000004UL;
-static Const uint32 INHERITFLAG_FUNNY      = 0x00000008UL;
+static const uint32 INHERITFLAG_DIAMOND    = 0x00000001UL;
+static const uint32 INHERITFLAG_REVERSE    = 0x00000002UL;
+static const uint32 INHERITFLAG_LEFT       = 0x00000004UL;
+static const uint32 INHERITFLAG_FUNNY      = 0x00000008UL;
 #define             INHERITFLAG_INTLK        0x00000010UL
-static Const uint32 INHERITFLAG_MAGIC      = 0x00000020UL;
-static Const uint32 INHERITFLAG_GRAND      = 0x00000040UL;
-static Const uint32 INHERITFLAG_12_MATRIX  = 0x00000080UL;
-static Const uint32 INHERITFLAG_16_MATRIX  = 0x00000100UL;
-static Const uint32 INHERITFLAG_CROSS      = 0x00000200UL;
+static const uint32 INHERITFLAG_MAGIC      = 0x00000020UL;
+static const uint32 INHERITFLAG_GRAND      = 0x00000040UL;
+static const uint32 INHERITFLAG_12_MATRIX  = 0x00000080UL;
+static const uint32 INHERITFLAG_16_MATRIX  = 0x00000100UL;
+static const uint32 INHERITFLAG_CROSS      = 0x00000200UL;
 #define             INHERITFLAG_SINGLE       0x00000400UL
-static Const uint32 INHERITFLAG_SINGLEFILE = 0x00000800UL;
-static Const uint32 INHERITFLAG_HALF       = 0x00001000UL;
-static Const uint32 INHERITFLAG_YOYO       = 0x00002000UL;
-static Const uint32 INHERITFLAG_STRAIGHT   = 0x00004000UL;
-static Const uint32 INHERITFLAG_TWISTED    = 0x00008000UL;
-static Const uint32 INHERITFLAG_LASTHALF   = 0x00010000UL;
-static Const uint32 INHERITFLAG_FRACTAL    = 0x00020000UL;
+static const uint32 INHERITFLAG_SINGLEFILE = 0x00000800UL;
+static const uint32 INHERITFLAG_HALF       = 0x00001000UL;
+static const uint32 INHERITFLAG_YOYO       = 0x00002000UL;
+static const uint32 INHERITFLAG_STRAIGHT   = 0x00004000UL;
+static const uint32 INHERITFLAG_TWISTED    = 0x00008000UL;
+static const uint32 INHERITFLAG_LASTHALF   = 0x00010000UL;
+static const uint32 INHERITFLAG_FRACTAL    = 0x00020000UL;
 static const uint32 INHERITFLAG_FAST       = 0x00040000UL;
 
 /* This is a 3 bit field. */
@@ -341,6 +342,14 @@ typedef enum {
    s2x4,
    s2x5,
    sd2x5,
+   s_ntrgl6cw,
+   s_ntrgl6ccw,
+   s_ntrglcw,
+   s_ntrglccw,
+   s_nptrglcw,
+   s_nptrglccw,
+   spgdmdcw,
+   spgdmdccw,
    swqtag,
    sdeep2x1dmd,
    swhrglass,
@@ -349,7 +358,7 @@ typedef enum {
    s2x6,
    s2x7,
    s_d3x4,
-   s1p5x8,   /* internal use only */
+   s1p5x8,   // internal use only
    s2x8,
    s4x4,
    s1x10,
@@ -608,6 +617,7 @@ typedef enum {
 #define CAF__OTHER_ELONGATE      0x1000
 #define CAF__SPLIT_TO_BOX        0x2000
 #define CAF__REALLY_WANT_DIAMOND 0x4000
+#define CAF__NO_COMPRESS         0x8000
 
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
 typedef enum {
@@ -644,6 +654,7 @@ typedef enum {
    cr_indep_in_out,        /* Qualifier only. */
    cr_miniwaves,
    cr_not_miniwaves,       /* Qualifier only. */
+   cr_tgl_tandbase,        /* Qualifier only. */
    cr_as_couples_miniwaves,/* Qualifier only. */
    cr_true_Z_cw,           /* Qualifier only. */
    cr_true_Z_ccw,          /* Qualifier only. */
@@ -738,12 +749,22 @@ typedef enum {
    schema_concentric_or_diamond_line,
    schema_concentric_or_6_2,
    schema_concentric_6_2,
+   schema_cross_concentric_6_2,
    schema_concentric_2_6,
+   schema_cross_concentric_2_6,
    schema_concentric_2_4,
+   schema_cross_concentric_2_4,
+   schema_concentric_2_4_or_normal,
    schema_concentric_4_2,
+   schema_cross_concentric_4_2,
    schema_concentric_4_2_or_normal,
    schema_concentric_big2_6,     // Not for public use!
    schema_concentric_2_6_or_2_4,
+   schema_cross_concentric_2_6_or_2_4,
+   schema_concentric_innermost,
+   schema_cross_concentric_innermost,
+   schema_concentric_double_innermost,
+   schema_cross_concentric_double_innermost,
    schema_concentric_6p,
    schema_concentric_6p_or_normal,
    schema_concentric_6p_or_sgltogether,
@@ -866,39 +887,39 @@ typedef enum {
    they must be taken away from the CMD_MISC__ flags. */
 /* Start of concentricity flags.  These go in the "modifiers1" word of a by_def_item. */
 
-static Const uint32 DFM1_CONC_DEMAND_LINES            = 0x00000001;
-static Const uint32 DFM1_CONC_DEMAND_COLUMNS          = 0x00000002;
-static Const uint32 DFM1_CONC_FORCE_LINES             = 0x00000004;
-static Const uint32 DFM1_CONC_FORCE_COLUMNS           = 0x00000008;
-static Const uint32 DFM1_CONC_FORCE_OTHERWAY          = 0x00000010;
-static Const uint32 DFM1_CONC_FORCE_SPOTS             = 0x00000020;
-static Const uint32 DFM1_CONC_CONCENTRIC_RULES        = 0x00000040;
-static Const uint32 DFM1_SUPPRESS_ELONGATION_WARNINGS = 0x00000080;
+static const uint32 DFM1_CONC_DEMAND_LINES            = 0x00000001;
+static const uint32 DFM1_CONC_DEMAND_COLUMNS          = 0x00000002;
+static const uint32 DFM1_CONC_FORCE_LINES             = 0x00000004;
+static const uint32 DFM1_CONC_FORCE_COLUMNS           = 0x00000008;
+static const uint32 DFM1_CONC_FORCE_OTHERWAY          = 0x00000010;
+static const uint32 DFM1_CONC_FORCE_SPOTS             = 0x00000020;
+static const uint32 DFM1_CONC_CONCENTRIC_RULES        = 0x00000040;
+static const uint32 DFM1_SUPPRESS_ELONGATION_WARNINGS = 0x00000080;
 
 /* End of concentricity flags.  This constant embraces them. */
-static Const uint32 DFM1_CONCENTRICITY_FLAG_MASK      = 0x000000FF;
+static const uint32 DFM1_CONCENTRICITY_FLAG_MASK      = 0x000000FF;
 
 /* These are the "seq" flags.  They overlay the "conc" flags. */
 /* Under normal conditions, we do *not* re-evaluate between parts.  This
    flag overrides that and makes us re-evaluate. */
-static Const uint32 DFM1_SEQ_RE_EVALUATE              = 0x00000001;
-static Const uint32 DFM1_SEQ_DO_HALF_MORE             = 0x00000002;
+static const uint32 DFM1_SEQ_RE_EVALUATE              = 0x00000001;
+static const uint32 DFM1_SEQ_DO_HALF_MORE             = 0x00000002;
 /* But, if we break up a call with something like "random", the convention
    is to re-evaluate at the break point.  This flag, used for calls like
    "patch the <anyone>" or "rims trade back", says that we *never* re-evaluate,
    even if the call is broken up. */
-static Const uint32 DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004;
-static Const uint32 DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008;
-static Const uint32 DFM1_SEQ_REPEAT_N                 = 0x00000010;
-static Const uint32 DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000020;
-static Const uint32 DFM1_SEQ_REPEAT_NM1               = 0x00000040;
-static Const uint32 DFM1_SEQ_NORMALIZE                = 0x00000080;
+static const uint32 DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004;
+static const uint32 DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008;
+static const uint32 DFM1_SEQ_REPEAT_N                 = 0x00000010;
+static const uint32 DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000020;
+static const uint32 DFM1_SEQ_REPEAT_NM1               = 0x00000040;
+static const uint32 DFM1_SEQ_NORMALIZE                = 0x00000080;
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
 
 /* This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies. */
-static Const uint32 DFM1_CALL_MOD_MASK                = 0x00000700UL;
+static const uint32 DFM1_CALL_MOD_MASK                = 0x00000700UL;
 #define             DFM1_CALL_MOD_BIT                   0x00000100UL
 /* Here are the codes that can lie inside. */
 static const uint32 DFM1_CALL_MOD_ANYCALL             = 0x00000100UL;

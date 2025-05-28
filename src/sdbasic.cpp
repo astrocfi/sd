@@ -146,11 +146,15 @@ static collision_map collision_map_table[] = {
    {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},     s_crosswave, s3x1dmd,     0, warn__none, 0},   /* from 3&1 lines w/ centers out */
    {6, 0x0440CC, 0xEE, 0x44, {1, 2, 3, 5, 6, 7},   {7, 0, 2, 3, 5, 6},    {7, 1, 2, 3, 4, 6},     s_crosswave, s3x1dmd,     1, warn__none, 0},   /* from 3&1 lines w/ ends in */
    {6, 0x000088, 0xBB, 0x11, {0, 1, 3, 4, 5, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},     s_crosswave, s1x3dmd,     0, warn__none, 0},   /* from 3&1 lines w/ ends out */
-   {4, 0x088088, 0x99, 0x99, {0, 3, 4, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__none, 0},   /* from inverted lines w/ centers in */
-   {4, 0x044044, 0x66, 0x66, {1, 2, 5, 6},         {6, 0, 3, 5},          {7, 1, 2, 4},           s_crosswave, s_crosswave, 1, warn__ctrs_stay_in_ctr, 0}, /* from inverted lines w/ centers out */
+   {4, 0x088088, 0x99, 0x99, {0, 3, 4, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__none, 0},   // from inverted lines w/ centers in
+   {4, 0x044044, 0x66, 0x66, {1, 2, 5, 6},         {6, 0, 3, 5},          {7, 1, 2, 4},           s_crosswave, s_crosswave, 1, warn__ctrs_stay_in_ctr, 0}, // from inverted lines w/ centers out
 
-   /* New, 9 aug 98 -- this one is marked as dangerous, meaning it can't be used from
-      merge_setups, but can be used when normalizing the result of basic_move. */
+   // Collision after circulate from lines all facing same way.
+   {4, 0x000000, 0x0F, 0x0F,  {0, 1, 2, 3},         {0, 2, 4, 6},          {1, 3, 5, 7},           s2x4,        s2x8,        0, warn__none, 0},
+   {4, 0x000000, 0xF0, 0xF0,  {4, 5, 6, 7},         {9, 11, 13, 15},       {8, 10, 12, 14},        s2x4,        s2x8,        0, warn__none, 0},
+
+   // This one is marked as dangerous, meaning it can't be used from
+   // merge_setups, but can be used when normalizing the result of basic_move.
 
    {6, 0x044044, 0x77, 0x44, {0, 1, 2, 4, 5, 6},   {0, 1, 2, 4, 5, 7},   {0, 1, 3, 4, 5, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, 0x80000000}, /* from inverted lines w/ centers out */
 
@@ -283,7 +287,11 @@ static collision_map collision_map_table[] = {
    {1, 0x000000, 0x08, 0x08, {3},                  {7},                   {6},                    s2x2,        s2x4,        0, warn__none, 0},
    {1, 0x000000, 0x02, 0x02, {1},                  {2},                   {3},                    s2x2,        s2x4,        0, warn__none, 0},
 
-   /* Same spot as points of diamonds. */
+   // Same spot at ends of bone (first choice from 2FL.)
+   {6, 0x000000, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {4, 8, 9, 11, 2, 3},   {5, 8, 9, 10, 2, 3},    s_bone,      sbigbone,     0, warn__none, 0},
+   {6, 0x000000, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {0, 8, 9, 7, 2, 3},    {1, 8, 9, 6, 2, 3},     s_bone,      sbigbone,     0, warn__none, 0},
+
+   // Same spot as points of diamonds.
    {6, 0x022022, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},     s_qtag,      sbigdmd,     1, warn__none, 0},
    {6, 0x011011, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {11, 2, 3, 4, 8, 9},   {10, 2, 3, 5, 8, 9},    s_qtag,      sbigdmd,     1, warn__none, 0},
    /* Same spot as points of hourglass. */
@@ -332,8 +340,6 @@ void collision_collector::install_with_collision(
       }
       else
          collision_appears_illegal = 2;
-
-
    }
 
    (void) copy_rot(result, destination, sourcepeople, sourceplace, rot);
@@ -341,163 +347,154 @@ void collision_collector::install_with_collision(
 
 
 
-static void fix_collision(
-   uint32 explicit_mirror_flag,
-   uint32 collision_mask,
-   int collision_index,
-   uint32 result_mask,
-   int appears_illegal,
-   long_boolean mirror,
-   assumption_thing *assumption,
-   setup *result) THROW_DECL
+void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 {
-   uint32 lowbitmask, flip;
-   int i, temprot;
-   collision_map *c_map_ptr;
-   setup spare_setup = *result;
-   long_boolean kill_ends = FALSE;
-   long_boolean controversial = FALSE;
+   if (collision_mask) {
+      int i;
+      setup spare_setup = *result;
+      bool kill_ends = false;
+      bool controversial = false;
+      uint32 lowbitmask = 0;
+      collision_map *c_map_ptr;
 
-   clear_people(result);
+      clear_people(result);
 
-   lowbitmask = 0;
+      for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
-   for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
+      for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
+         if ((result->kind == c_map_ptr->initial_kind) &&
+             ((lowbitmask == c_map_ptr->lmask)) &&
+             (result_mask == c_map_ptr->rmask) &&
+             (collision_mask == c_map_ptr->cmask)) {
 
-   for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
-      if ((result->kind == c_map_ptr->initial_kind) &&
-          ((lowbitmask == c_map_ptr->lmask)) &&
-          (result_mask == c_map_ptr->rmask) &&
-          (collision_mask == c_map_ptr->cmask)) {
-
-         if (assumption) {
-            switch (c_map_ptr->assume_key & 0xFFFF) {
-            case 1:
-               if (assumption->assumption != cr_li_lo ||
-                   assumption->assump_col != 1 ||
-                   assumption->assump_both != 2)
-                  kill_ends = TRUE;
-               break;
-            case 2:
-               if (assumption->assumption != cr_li_lo ||
-                   assumption->assump_col != 0 ||
-                   assumption->assump_both != 1)
-                  kill_ends = TRUE;
-               break;
-            case 3:
-               if (assumption->assumption != cr_li_lo ||
-                   assumption->assump_col != 0 ||
-                   assumption->assump_both != 2)
-                  kill_ends = TRUE;
-               break;
+            if (assume_ptr) {
+               switch (c_map_ptr->assume_key & 0xFFFF) {
+               case 1:
+                  if (assume_ptr->assumption != cr_li_lo ||
+                      assume_ptr->assump_col != 1 ||
+                      assume_ptr->assump_both != 2)
+                     kill_ends = true;
+                  break;
+               case 2:
+                  if (assume_ptr->assumption != cr_li_lo ||
+                      assume_ptr->assump_col != 0 ||
+                      assume_ptr->assump_both != 1)
+                     kill_ends = true;
+                  break;
+               case 3:
+                  if (assume_ptr->assumption != cr_li_lo ||
+                      assume_ptr->assump_col != 0 ||
+                      assume_ptr->assump_both != 2)
+                     kill_ends = true;
+                  break;
+               }
             }
+
+            if (collision_appears_illegal == 2 ||
+                (collision_appears_illegal == 1 && (c_map_ptr->assume_key & 0x80000000)))
+               controversial = true;
+
+            if (!controversial || c_map_ptr->warning == warn_bad_collision)
+               goto win;
          }
-
-         if (appears_illegal == 2 ||
-             (appears_illegal == 1 && (c_map_ptr->assume_key & 0x80000000)))
-             controversial = TRUE;
-
-         if (!controversial || c_map_ptr->warning == warn_bad_collision)
-            goto win;
       }
-   }
 
-   // Don't recognize the pattern, report this as normal collision.
-   throw error_flag_type(error_flag_collision);
+      // Don't recognize the pattern, report this as normal collision.
+      throw error_flag_type(error_flag_collision);
 
    win:
 
-   if (explicit_mirror_flag & CMD_MISC__EXPLICIT_MIRROR)
-      warn(warn__take_left_hands);
-   else
-      warn(warn__take_right_hands);
+      if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
+         warn(warn__take_left_hands);
+      else
+         warn(warn__take_right_hands);
 
-   if (c_map_ptr->warning != warn_bad_collision || controversial)
-      warn(c_map_ptr->warning);
+      if (c_map_ptr->warning != warn_bad_collision || controversial)
+         warn(c_map_ptr->warning);
 
-   temprot = ((-c_map_ptr->rot) & 3) * 011;
-   result->kind = c_map_ptr->final_kind;
-   result->rotation += c_map_ptr->rot;
+      int temprot = ((-c_map_ptr->rot) & 3) * 011;
+      result->kind = c_map_ptr->final_kind;
+      result->rotation += c_map_ptr->rot;
 
-   // If this is under an implicit mirror image operation,
-   // make them take left hands, by swapping the maps.
+      // If this is under an implicit mirror image operation,
+      // make them take left hands, by swapping the maps.
 
-   flip = mirror ? 2 : 0;
+      uint32 flip = force_mirror_warn ? 2 : 0;
 
-   for (i=0; i<c_map_ptr->size; i++) {
-      int oldperson;
+      for (i=0; i<c_map_ptr->size; i++) {
+         int oldperson;
 
-      oldperson = spare_setup.people[c_map_ptr->source[i]].id1;
-      install_rot(result,
-                  (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
-                  &spare_setup,
-                  c_map_ptr->source[i],
-                  temprot);
+         oldperson = spare_setup.people[c_map_ptr->source[i]].id1;
+         install_rot(result,
+                     (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
+                     &spare_setup,
+                     c_map_ptr->source[i],
+                     temprot);
 
-      oldperson = spare_setup.people[c_map_ptr->source[i]+12].id1;
-      install_rot(result,
-                  (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
-                  &spare_setup,
-                  c_map_ptr->source[i]+12,
-                  temprot);
-   }
-
-   if (kill_ends) {
-      const veryshort m3276[] = {3, 2, 7, 6};
-      const veryshort m2367[] = {2, 3, 6, 7};
-
-      // The centers are colliding, but the ends are absent, and we have
-      // no assumptions to guide us about where they should go.
-      if ((result->kind != s_crosswave && result->kind != s1x8) ||
-          (result->people[0].id1 |
-           result->people[1].id1 |
-           result->people[4].id1 |
-           result->people[5].id1))
-         fail("Need an assumption in order to take right hands at collision.");
-
-      spare_setup = *result;
-
-      if (result->kind == s_crosswave) {
-         gather(result, &spare_setup, m2367, 3, 033);
-         result->rotation++;
-      }
-      else {
-         gather(result, &spare_setup, m3276, 3, 0);
+         oldperson = spare_setup.people[c_map_ptr->source[i]+12].id1;
+         install_rot(result,
+                     (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
+                     &spare_setup,
+                     c_map_ptr->source[i]+12,
+                     temprot);
       }
 
-      result->kind = s_dead_concentric;
-      result->inner.srotation = result->rotation;
-      result->inner.skind = s1x4;
-      result->rotation = 0;
-      result->concsetup_outer_elongation = 0;
+      if (kill_ends) {
+         const veryshort m3276[] = {3, 2, 7, 6};
+         const veryshort m2367[] = {2, 3, 6, 7};
+
+         // The centers are colliding, but the ends are absent, and we have
+         // no assumptions to guide us about where they should go.
+         if ((result->kind != s_crosswave && result->kind != s1x8) ||
+             (result->people[0].id1 |
+              result->people[1].id1 |
+              result->people[4].id1 |
+              result->people[5].id1))
+            fail("Need an assumption in order to take right hands at collision.");
+
+         spare_setup = *result;
+
+         if (result->kind == s_crosswave) {
+            gather(result, &spare_setup, m2367, 3, 033);
+            result->rotation++;
+         }
+         else {
+            gather(result, &spare_setup, m3276, 3, 0);
+         }
+
+         result->kind = s_dead_concentric;
+         result->inner.srotation = result->rotation;
+         result->inner.skind = s1x4;
+         result->rotation = 0;
+         result->concsetup_outer_elongation = 0;
+      }
    }
 }
 
-
-void collision_collector::fix_possible_collision(setup *result) THROW_DECL
-{
-   if (collision_mask) fix_collision(
-      cmd_misc_flags,
-      collision_mask,
-      collision_index,
-      result_mask,
-      collision_appears_illegal,
-      force_mirror_warn,
-      assume_ptr,
-      result);
-}
 
 extern void mirror_this(setup *s) THROW_DECL
 {
    uint32 l, r, z, n, t;
-   const coordrec *cptr;
    int i, x, y, place, limit, doffset;
 
    setup temp = *s;
 
    if (s->kind == nothing) return;
 
-   cptr = setup_attrs[s->kind].nice_setup_coords;
+   const coordrec *cptr = setup_attrs[s->kind].nice_setup_coords;
+
+   switch (s->kind) {
+   case s_ntrglcw:   s->kind = s_ntrglccw; break;
+   case s_ntrglccw:  s->kind = s_ntrglcw; break;
+   case s_nptrglcw:  s->kind = s_nptrglccw; break;
+   case s_nptrglccw: s->kind = s_nptrglcw; break;
+   case s_ntrgl6cw:  s->kind = s_ntrgl6ccw; break;
+   case s_ntrgl6ccw: s->kind = s_ntrgl6cw; break;
+   case spgdmdcw: s->kind = spgdmdccw; break;
+   case spgdmdccw: s->kind = spgdmdcw; break;
+   }
+
+   const coordrec *optr = setup_attrs[s->kind].nice_setup_coords;
 
    if (!cptr) {
       if (s->kind == s_trngl4) {
@@ -556,6 +553,9 @@ extern void mirror_this(setup *s) THROW_DECL
       }
       else
          fail("Don't recognize ending setup for this call; not able to do it mirror.");
+
+      optr = cptr;
+
    }
 
    limit = setup_attrs[s->kind].setup_limits;
@@ -566,9 +566,9 @@ extern void mirror_this(setup *s) THROW_DECL
       for (i=0; i<=limit; i++) {
          x = cptr->xca[i];
          y = - cptr->yca[i];
-         place = cptr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
+         place = optr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
-         if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
+         if ((place < 0) || (optr->xca[place] != x) || (optr->yca[place] != y))
             fail("Don't recognize ending setup for this call; not able to do it mirror.");
 
          n = temp.people[i].id1;
@@ -584,9 +584,9 @@ extern void mirror_this(setup *s) THROW_DECL
       for (i=0; i<=limit; i++) {
          x = - cptr->xca[i];
          y = cptr->yca[i];
-         place = cptr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
+         place = optr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
-         if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
+         if ((place < 0) || (optr->xca[place] != x) || (optr->yca[place] != y))
             fail("Don't recognize ending setup for this call; not able to do it mirror.");
 
          n = temp.people[i].id1;
@@ -1778,117 +1778,125 @@ static int divide_the_setup(
 
       fail("You must specify a concept.");
    case s2x6:
-         /* The call has no applicable 2x6 or 6x2 definition. */
+      /* The call has no applicable 2x6 or 6x2 definition. */
 
-         /* See if this call has applicable 2x8 definitions and matrix expansion is permitted.
-            If so, that is what we must do. */
+      /* See if this call has applicable 2x8 definitions and matrix expansion is permitted.
+         If so, that is what we must do. */
 
-         if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
-               (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
-               (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
-            do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, TRUE);
-            /* Should never fail, but we don't want a loop. */
-            if (ss->kind != s2x8) fail("Failed to expand to 2X8.");
-            return 2;        /* And try again. */
+      if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
+            (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
+            (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
+         do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, TRUE);
+         /* Should never fail, but we don't want a loop. */
+         if (ss->kind != s2x8) fail("Failed to expand to 2X8.");
+         return 2;        /* And try again. */
+      }
+
+      /* Next, check whether it has 1x3/3x1/2x3/3x2/1x6/6x1 definitions,
+         and divide the setup if so, and if the call permits it.  This is important
+         for permitting "Z axle" from a 2x6 but forbidding "circulate".
+         We also enable this if the caller explicitly said "2x6 matrix". */
+
+      temp =
+         (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+         (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_3X3;
+
+      /* NEW STUFF!!!! */
+
+      if (temp ||
+          (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) ||
+          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+         if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
+             (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
+            division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
+            /* See comment above about abomination. */
+            /* If database said to split, don't give warning, unless said "3x3". */
+            if (!temp) warn(warn__split_to_2x3s);
+            goto divide_us_no_recompute;
          }
-
-         /* Next, check whether it has 1x3/3x1/2x3/3x2/1x6/6x1 definitions,
-            and divide the setup if so, and if the call permits it.  This is important
-            for permitting "Z axle" from a 2x6 but forbidding "circulate".
-            We also enable this if the caller explicitly said "2x6 matrix". */
-
-         temp =
-            (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-            (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_3X3;
-
-         /* NEW STUFF!!!! */
-
-         if (temp ||
-             (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) ||
-             (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
-            if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
-                (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
-               division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
-               /* See comment above about abomination. */
-               /* If database said to split, don't give warning, unless said "3x3". */
-               if (!temp) warn(warn__split_to_2x3s);
-               goto divide_us_no_recompute;
-            }
-            else if ((!(newtb & 010) ||
-                      assoc(b_1x3, ss, calldeflist) ||
-                      assoc(b_1x6, ss, calldeflist)) &&
-                     (!(newtb & 001) ||
-                      assoc(b_3x1, ss, calldeflist) ||
-                      assoc(b_6x1, ss, calldeflist))) {
-               division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
-               /* See comment above about abomination. */
-               /* If database said to split, don't give warning, unless said "3x3". */
-               if (!temp) warn(warn__split_to_1x6s);
-               goto divide_us_no_recompute;
-            }
+         else if ((!(newtb & 010) ||
+                   assoc(b_1x3, ss, calldeflist) ||
+                   assoc(b_1x6, ss, calldeflist)) &&
+                  (!(newtb & 001) ||
+                   assoc(b_3x1, ss, calldeflist) ||
+                   assoc(b_6x1, ss, calldeflist))) {
+            division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
+            /* See comment above about abomination. */
+            /* If database said to split, don't give warning, unless said "3x3". */
+            if (!temp) warn(warn__split_to_1x6s);
+            goto divide_us_no_recompute;
          }
+      }
 
-         /* Next, check whether it has 1x2/2x1/2x2/1x1 definitions,
+      /* Next, check whether it has 1x2/2x1/2x2/1x1 definitions,
             and we are doing some phantom concept.
             Divide the setup into 3 boxes if so. */
 
-         if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) ||
-             (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) {
-            if (assoc(b_2x2, ss, calldeflist) ||
-                assoc(b_1x2, ss, calldeflist) ||
-                assoc(b_2x1, ss, calldeflist) ||
-                assoc(b_1x1, ss, calldeflist)) {
-               division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
-               goto divide_us_no_recompute;
-            }
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) ||
+          (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) {
+         if (assoc(b_2x2, ss, calldeflist) ||
+             assoc(b_1x2, ss, calldeflist) ||
+             assoc(b_2x1, ss, calldeflist) ||
+             assoc(b_1x1, ss, calldeflist)) {
+            division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+            goto divide_us_no_recompute;
          }
+      }
 
-         /* Otherwise, the only way this can be legal is if we can identify
+      /* Otherwise, the only way this can be legal is if we can identify
             smaller setups of all real people and can do the call on them.  For
             example, we will look for 1x4 setups, so we could do things like
             swing thru from a parallelogram. */
 
-         switch (livemask) {
-            case 07474:    /* a parallelogram */
-               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,1);
-               warn(warn__each1x4);
-               break;
-            case 01717:    /* a parallelogram */
-               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
-               warn(warn__each1x4);
-               break;
-            case 06060: case 00303:
-            case 06363:    /* the outer triple boxes */
-               division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
-               warn(warn__each2x2);
-               break;
-            case 05555: case 04141: case 02222:
-               /* Split into 6 stacked 1x2's. */
-               division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,1);
-               warn(warn__each1x2);
-               break;
-            default:
-               fail("You must specify a concept.");
-         }
-
-         goto divide_us_no_recompute;
-      case s2x7:
-         // The call has no applicable 2x7 or 7x2 definition.
-         // Check for a 75% offset parallelogram,
-
-         switch (livemask) {
-            case 0x3C78:
-               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_THRQ,1);
-               warn(warn__each1x4);
-               goto divide_us_no_recompute;
-            case 0x078F:
-               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_THRQ,1);
-               warn(warn__each1x4);
-               goto divide_us_no_recompute;
-         }
-
+      switch (livemask) {
+      case 07474:    /* a parallelogram */
+         division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,1);
+         warn(warn__each1x4);
          break;
-      case sdeepqtg:
+      case 01717:    /* a parallelogram */
+         division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
+         warn(warn__each1x4);
+         break;
+      case 06060: case 00303:
+      case 06363:    /* the outer triple boxes */
+         division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+         warn(warn__each2x2);
+         break;
+      case 05555: case 04141: case 02222:
+         /* Split into 6 stacked 1x2's. */
+         division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,1);
+         warn(warn__each1x2);
+         break;
+      default:
+         fail("You must specify a concept.");
+      }
+
+      goto divide_us_no_recompute;
+   case spgdmdcw:
+      division_code = MAPCODE(sdmd,2,MPKIND__OFFS_R_HALF,1);
+      warn(warn__eachdmd);
+      goto divide_us_no_recompute;
+   case spgdmdccw:
+      division_code = MAPCODE(sdmd,2,MPKIND__OFFS_L_HALF,1);
+      warn(warn__eachdmd);
+      goto divide_us_no_recompute;
+   case s2x7:
+      // The call has no applicable 2x7 or 7x2 definition.
+      // Check for a 75% offset parallelogram,
+
+      switch (livemask) {
+      case 0x3C78:
+         division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_THRQ,1);
+         warn(warn__each1x4);
+         goto divide_us_no_recompute;
+      case 0x078F:
+         division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_THRQ,1);
+         warn(warn__each1x4);
+         goto divide_us_no_recompute;
+      }
+
+      break;
+   case sdeepqtg:
          /* Check whether it has short6/pshort6 definitions, and divide the setup if so,
             and if the call permits it. */
 
@@ -2591,6 +2599,17 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       }
       break;
+   case s_ntrgl6cw:
+   case s_ntrgl6ccw:
+      if (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist) ||
+          assoc(b_1x1, ss, calldeflist) || assoc(b_2x2, ss, calldeflist)) {
+         division_code = (ss->kind == s_ntrgl6cw) ?
+            MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,0):
+            MAPCODE(s_trngl,2,MPKIND__SPLIT,0);
+         //         ss->cmd.cmd_final_flags.final |= FINAL__TRIANGLE;
+         goto divide_us_no_recompute;
+      }
+      break;
    case s_bone6:
       if (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist) ||
           assoc(b_1x1, ss, calldeflist) || assoc(b_2x2, ss, calldeflist)) {
@@ -2656,23 +2675,26 @@ static int divide_the_setup(
       }
       break;
    case s1x6:
-      /* See if this call has a 1x2, 2x1, or 1x1 definition, in which case split it 3 ways. */
-      if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
+      // See if this call has a 1x2, 2x1, or 1x1 definition, in which case split it 3 ways.
+      if (assoc(b_1x2, ss, calldeflist) ||
+          assoc(b_2x1, ss, calldeflist) ||
+          assoc(b_1x1, ss, calldeflist)) {
          division_code = MAPCODE(s1x2,3,MPKIND__SPLIT,0);
          goto divide_us_no_recompute;
       }
-      /* If it has 1x3 or 3x1 definitions, split it 2 ways. */
+      // If it has 1x3 or 3x1 definitions, split it 2 ways.
       if (assoc(b_1x3, ss, calldeflist) || assoc(b_3x1, ss, calldeflist)) {
          division_code = MAPCODE(s1x3,2,MPKIND__SPLIT,0);
-         /* We want to be sure that the operator knows what we are doing, and why, if we divide
-            a 1x6 into 1x3's.  We allow "swing thru" in a wave of 3 or 4 people.  If the operator
-            wants to do a swing thru with all 6 people, use "grand swing thru". */
+         // We want to be sure that the operator knows what we are doing, and why,
+         // if we divide a 1x6 into 1x3's.  We allow "swing thru" in a wave of
+         // 3 or 4 people.  If the operator wants to do a swing thru with
+         // all 6 people, use "grand swing thru".
          warn(warn__split_1x6);
          goto divide_us_no_recompute;
       }
       break;
    case s1x2:
-      /* See if the call has a 1x1 definition, in which case split it and do each part. */
+      // See if the call has a 1x1 definition, in which case split it and do each part.
       if (assoc(b_1x1, ss, calldeflist)) {
          division_code = MAPCODE(s1x1,2,MPKIND__SPLIT,0);
          goto divide_us_no_recompute;
@@ -3758,13 +3780,15 @@ foobar:
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Setup is extremely bizarre.");
 
    switch (ss->kind) {
-      case s_short6:
-      case s_bone6:
-      case s_trngl:
-         break;
-      default:
-         if (ss->cmd.cmd_final_flags.final & (FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
-            fail("Triangle concept not allowed here.");
+   case s_short6:
+   case s_bone6:
+   case s_trngl:
+   case s_ntrgl6cw:
+   case s_ntrgl6ccw:
+      break;
+   default:
+      if (ss->cmd.cmd_final_flags.final & (FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
+         fail("Triangle concept not allowed here.");
    }
 
    /* If we found a definition for the setup we are in, we win.
@@ -4461,10 +4485,11 @@ foobar:
       When we do a 16-matrix circulate in a 4x4 start setup, we do NOT want to compress
          the 4x4 to a 2x4!!!!!  This is why we compare the beginning and ending setup sizes. */
 
-      if (result->kind == s_hyperglass ||
-          result->kind == s_hyperbone ||
-          result->kind == shypergal ||
-          setup_attrs[ss->kind].setup_limits < setup_attrs[result->kind].setup_limits) {
+      if (!(goodies->callarray_flags & CAF__NO_COMPRESS) &&
+          (result->kind == s_hyperglass ||
+           result->kind == s_hyperbone ||
+           result->kind == shypergal ||
+           setup_attrs[ss->kind].setup_limits < setup_attrs[result->kind].setup_limits)) {
          veryshort *permuter = (veryshort *) 0;
          int rotator = 0;
 
@@ -4481,12 +4506,13 @@ foobar:
                rotator = 1;
             }
             else {
-               /* If fakery occurred and we were not able to compress it, that is an error.  It
-                  means the points got confused on a reverse flip the galaxy.  If we were not able
-                  to compress a 4x4 but no fakery occurred, we let it pass.  That simply means
-                  that the unwrappers were T-boned in an unwrap the galaxy, so they led out
-                  in strange directions.  Is this the right thing to do?  Do we want to allow
-                  T-boned reverse flip?  Probably not. */
+               // If fakery occurred and we were not able to compress it, that is an error.
+               // It means the points got confused on a reverse flip the galaxy.
+               // If we were not able to compress a 4x4 but no fakery occurred,
+               // we let it pass.  That simply means that the unwrappers were T-boned
+               // in an unwrap the galaxy, so they led out in strange directions.
+               // Is this the right thing to do?  Do we want to allow
+               // T-boned reverse flip?  Probably not.
 
                if (tempkind != s4x4) fail("Galaxy call went to improperly-formed setup.");
 #ifdef BREAKS_CAST_BACK
@@ -4691,7 +4717,6 @@ foobar:
             else
                fail("Call went to improperly-formed setup.");
             break;
-
          case shypergal:
             if ((lilresult_mask[0] & 0xFFFF7474) == 0) {
                result->kind = s2x4;
@@ -4702,9 +4727,6 @@ foobar:
                permuter = shypergalv;
                rotator = 1;
             }
-
-
-
             else if ((lilresult_mask[0] & 0xFFFF7878) == 0) {
                result->kind = s_dhrglass;
                permuter = &shypergaldhrglv[4];
@@ -4714,9 +4736,6 @@ foobar:
                permuter = shypergaldhrglv;
                rotator = 1;
             }
-
-
-
             else if ((lilresult_mask[0] & 0xFFFFF0F0) == 0) {
                result->kind = s_dhrglass;
                permuter = &shypergaldhrglv[4];
@@ -4729,7 +4748,6 @@ foobar:
             else
                fail("Call went to improperly-formed setup.");
             break;
-
          case s_hyperglass:
 
             /* Investigate possible diamonds and 1x4's.  If enough centers
