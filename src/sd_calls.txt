@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.32"
+version "39.33"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -23183,6 +23183,8 @@ call "split circulate 1-1/2" mainstream /* Same as box circ 1.5. */
 
 call "_1/2 box circulate in miniwaves" dontshow tag halfboxcirc_miniwaves
             take_right_hands
+   setup 2x4 qtag qualifier in magic_only
+      array [CR0E AL0W CR1E AL1W 0 ZM3N ZM6N 0]
    setup 2x2 dmd rotate restriction unusual miniwaves
       array [CR0N AL0S ZM1W ZM3W]
 

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <2 Mar 2021 wba>
+@c Time-stamp: <16 Mar 2021 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.32
-@set title2 Database version = 39.32 format = 391
+@set title1 RELEASE NOTES FOR VERSION 39.33
+@set title2 Database version = 39.33 format = 392
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.33::
 * 39.32::
 * 39.31::
 * 39.30::
@@ -132,7 +133,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.32, Top, (dir)
+@node Intro, 39.33, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -143,11 +144,26 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2021 William B. Ackerman
 @sp 3
 @menu
-* 39.32::               Changes in the current version
+* 39.33::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.32, 39.31, Intro, Top
+@node 39.33, 39.32, Intro, Top
+@unnumberedsec Version 39.33 changes
+
+
+The @strong{offset column/line/wave} concepts have their same meaning
+as before; they operate on a single distorted 1x4 setup within a 2x4,
+as in the trailers of 2-faced lines.  Two new concepts have been added:
+@strong{offset 1x4}, which is like the preceding ones but is indifferent to
+facing direction, and @strong{offset box}, which uses the same geometry, realized
+as a distorted 2x2 box.  All of these terms are singular.  Don't say things like
+@strong{offset line of 4}.
+
+Also, @strong{offset box} legal in a 2x3, meaning the same thing as @strong{Z}.
+
+@c ************
+@node 39.32, 39.31, 39.33, Top
 @unnumberedsec Version 39.32 changes
 
 The call @strong{counter rotate} has been revamped.  The program can
@@ -170,7 +186,7 @@ are not removed if this intermediate result has 8 people.  The final
 could have been reduced.  So, for example, from the 2x4 setup after
 @strong{1/2 press ahead} from a single wave, the first part of
 @strong{ECHO PHANTOM WAVES turn the key} leaves a 2x4 in which only
-the center 4 spot are occupied.  The outer 4 empty spots are not
+the center 4 spots are occupied.  The outer 4 empty spots are not
 removed, because the @strong{ECHO} operation isn't finished.  The
 final @strong{turn the key} will be done in that full 2x4 of waves, so
 the @strong{trade} will take those people to the outside.

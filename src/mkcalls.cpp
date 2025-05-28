@@ -1692,7 +1692,10 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "turnstarn"},
    {0, "revert_if_needed"},
    {0, "extend"},
-   {0, "extend_n"}};
+   {0, "extend_n"},
+   {0, "inrollcirc"},
+   {0, "outrollcirc"},
+};
 
 int tagtabsize;          // Number of items we currently have in tagtab.
 int tagtabmax;           // Amount of space allocated for tagtab;

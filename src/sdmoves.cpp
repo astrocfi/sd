@@ -1168,11 +1168,6 @@ extern uint32_t do_call_in_series(
 
    setup tempsetup;
 
-   // If we are forcing a split, and an earlier call in the series has responded
-   // to that split by returning an unequivocal splitting axis (indicated by
-   // one field being zero and the other nonzero), we continue to split
-   // along the same axis.
-
    // We want one field nonzero and the other zero.
 
    if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
@@ -2420,11 +2415,6 @@ static int finish_matrix_call(
       for (i=0; i<nump; i++) {
          // Yes, even phantoms participate in a counter rotate.  Otherwise, just skip this person.
          if (matrix_info[i].id1 == 0 && the_schema != schema_counter_rotate) continue;
-
-         /* If this person's position has low bit on, that means we consider his coordinates
-            not sufficiently well-defined that we will allow him to do any pressing or
-            trucking.  He is only allowed to turn.  That is, we will require deltax and
-            deltay to be zero.  An example of this situation is the points of a galaxy. */
 
          alldelta |= matrix_info[i].deltax | matrix_info[i].deltay;
 
@@ -5389,10 +5379,12 @@ void do_stuff_inside_sequential_call(
    // dancers really do track an awareness of the formation.
 
    if (result->cmd.cmd_fraction.is_null()) {
+         call_with_name *this_call = result->cmd.callspec;
+         if (!this_call) this_call = result->cmd.parseptr->call;
       if (!result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF |
                                                            INHERITFLAG_LASTHALF |
                                                            INHERITFLAG_QUARTER)) {
-         if (result->cmd.callspec == base_calls[base_call_chreact_1]) {
+         if (this_call == base_calls[base_call_chreact_1]) {
 
             /* If we are starting a chain reaction, and the assumption was some form
                of 1/4 tag or 1/4 line (all of the above indicate such a thing --
@@ -5409,7 +5401,17 @@ void do_stuff_inside_sequential_call(
                 old_assumption == cr_real_1_4_line)
                *fix_next_assumption_p = cr_ckpt_miniwaves;
          }
-         else if (result->cmd.callspec == base_calls[base_call_jaywalk] && result->kind == s_qtag) {
+         else if (this_call == base_calls[base_call_inrollcirc] ||
+                  this_call == base_calls[base_call_outrollcirc]) {
+            if (old_assumption == cr_2fl_only) {
+               *fix_next_assumption_p = cr_magic_only;
+            }
+            else if (old_assumption == cr_wave_only) {
+               *fix_next_assumption_p = cr_wave_only;
+               *fix_next_assump_both_p = old_assump_both;
+            }
+         }
+         else if (this_call == base_calls[base_call_jaywalk] && result->kind == s_qtag) {
             if (old_assumption == cr_real_1_4_tag) {
                *fix_next_assumption_p = cr_real_3_4_tag;
             }
@@ -5425,12 +5427,12 @@ void do_stuff_inside_sequential_call(
                *fix_next_assump_both_p = 1;
             }
          }
-         else if (result->cmd.callspec == base_calls[base_call_tradethewave]) {
+         else if (this_call == base_calls[base_call_tradethewave]) {
             if (old_assumption == cr_wave_only)
                *fix_next_assumption_p = cr_wave_only;
          }
-         else if (result->cmd.callspec == base_calls[base_call_scootback] ||
-                  result->cmd.callspec == base_calls[base_call_qtagscootback]) {
+         else if (this_call == base_calls[base_call_scootback] ||
+                  this_call == base_calls[base_call_qtagscootback]) {
             if (result->kind == s_qtag) {
                if (old_assumption == cr_jright && old_assump_both == 2) {
                   // Jright:2 is left 1/4 tag, change to left 3/4 tag.
@@ -5444,7 +5446,7 @@ void do_stuff_inside_sequential_call(
                }
             }
          }
-         else if (result->cmd.callspec == base_calls[base_call_scoottowave]) {
+         else if (this_call == base_calls[base_call_scoottowave]) {
             if (result->kind == s2x4 &&
                 !result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_YOYOETCMASK)) {
                if ((result->people[0].id1 & d_mask) == d_north ||
@@ -5471,8 +5473,8 @@ void do_stuff_inside_sequential_call(
                }
             }
          }
-         else if (result->cmd.callspec == base_calls[base_call_makepass_1] ||
-                  result->cmd.callspec == base_calls[base_call_nuclear_1]) {
+         else if (this_call == base_calls[base_call_makepass_1] ||
+                  this_call == base_calls[base_call_nuclear_1]) {
 
             // If we are starting a "make a pass", and the assumption was some form
             // of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
@@ -5499,7 +5501,7 @@ void do_stuff_inside_sequential_call(
                   *fix_next_assumption_p = cr_ctr_couples;
             }
          }
-         else if (result->cmd.callspec == base_calls[base_call_circulate]) {
+         else if (this_call == base_calls[base_call_circulate]) {
             // If we are doing a circulate in columns, and the assumption was
             // "8 chain" or "trade by", change it to the other assumption.
             // Similarly for facing lines and back-to-back lines.
@@ -5512,8 +5514,8 @@ void do_stuff_inside_sequential_call(
                *fix_next_assump_both_p = old_assump_both ^ 3;
             }
          }
-         else if ((result->cmd.callspec == base_calls[base_call_slither] ||
-                   (result->cmd.callspec == base_calls[base_call_maybegrandslither] &&
+         else if ((this_call == base_calls[base_call_slither] ||
+                   (this_call == base_calls[base_call_maybegrandslither] &&
                     !result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_GRAND))) &&
                   old_assump_col == 0 &&
                   old_assump_both == 0) {
@@ -5532,7 +5534,7 @@ void do_stuff_inside_sequential_call(
                break;
             }
          }
-         else if (result->cmd.callspec == base_calls[base_base_prepare_to_drop]) {
+         else if (this_call == base_calls[base_base_prepare_to_drop]) {
             if (result->kind == sdmd && old_assump_col == 4) {
                if ((result->people[0].id1 & d_mask) == d_north ||
                    (result->people[2].id1 & d_mask) == d_south) {
@@ -5562,7 +5564,7 @@ void do_stuff_inside_sequential_call(
                }
             }
          }
-         else if (result->cmd.callspec == base_calls[base_call_lockit] &&
+         else if (this_call == base_calls[base_call_lockit] &&
                   old_assump_col == 0 &&
                   old_assump_both == 0) {
             switch (old_assumption) {
@@ -5572,7 +5574,7 @@ void do_stuff_inside_sequential_call(
                break;
             }
          }
-         else if (result->cmd.callspec == base_calls[base_call_disband1] &&
+         else if (this_call == base_calls[base_call_disband1] &&
                   result->kind == s2x4 &&
                   old_assump_col == 1 &&
                   old_assump_both == 0) {
@@ -5587,14 +5589,14 @@ void do_stuff_inside_sequential_call(
                break;
             }
          }
-         else if (result->cmd.callspec == base_calls[base_call_trade] &&
+         else if (this_call == base_calls[base_call_trade] &&
                   (result->kind == s2x4 || result->kind == s1x8 || result->kind == s1x4) &&
                   old_assumption == cr_wave_only &&
                   old_assump_col == 0) {
             *fix_next_assumption_p = cr_wave_only;
             *fix_next_assump_col_p = 0;
          }
-         else if (result->cmd.callspec == base_calls[base_call_trade] &&
+         else if (this_call == base_calls[base_call_trade] &&
                   (result->kind == s_qtag) &&
                   old_assumption == cr_qtag_like &&
                   old_assump_col == 0 &&
@@ -5603,17 +5605,17 @@ void do_stuff_inside_sequential_call(
             *fix_next_assump_col_p = 0;
             *fix_next_assump_both_p = old_assump_both ^ 3;
          }
-         else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
+         else if (this_call == base_calls[base_call_check_cross_counter]) {
             // Just pass everything directly -- this call does nothing.
             *fix_next_assumption_p = old_assumption;
             *fix_next_assump_col_p = old_assump_col;
             *fix_next_assump_both_p = old_assump_both;
          }
-         else if (result->cmd.callspec == base_calls[base_call_armturn_n4] && result->kind == s2x4) {
+         else if (this_call == base_calls[base_call_armturn_n4] && result->kind == s2x4) {
             if (old_assumption == cr_wave_only)
                *fix_next_assumption_p = old_assumption;
          }
-         else if (result->cmd.callspec == base_calls[base_call_ctrarmturn_n4_utb] &&
+         else if (this_call == base_calls[base_call_ctrarmturn_n4_utb] &&
                   result->kind == s2x4 &&
                   (result->cmd.parseptr->options.number_fields & 1) != 0 &&
                   (result->people[1].id1 | result->people[2].id1 |
@@ -5623,7 +5625,7 @@ void do_stuff_inside_sequential_call(
          }
       }
       else if ((result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))) {
-         if (result->cmd.callspec == base_calls[base_call_circulate]) {
+         if (this_call == base_calls[base_call_circulate]) {
             // If we are doing a 1/2 circulate in a 2x2 that assumes lines facing in or out,
             // result is a wave.
 
@@ -7228,15 +7230,22 @@ void really_inner_move(
                   // meaningful if the setup is known to be distorted.
                   (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) &&
                   (ss->cmd.prior_elongation_bits & 3) != 0 &&
-                  the_schema != schema_partner_partial_matrix &&
                   the_schema != schema_counter_rotate) {
-            expanded = true;
-            if (ss->cmd.prior_elongation_bits == 3)
-               expand::expand_setup(exp_from_2x2_stuff, ss);
-            else if (ss->cmd.prior_elongation_bits == 1)
-               expand::expand_setup(s_2x2_2x4_ends, ss);
-            else
-               expand::expand_setup(s_2x2_2x4_endsb, ss);
+            // If we already know we are doing the ends, we don't need to
+            // explicitly expand the 2x2, unless it's a matrix call, including squeeze.
+            // Matrix calls need to know where the people really are.
+            if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS) == 0 ||
+                the_schema == schema_matrix || the_schema == schema_partner_matrix) {
+               expanded = true;
+               if (ss->cmd.prior_elongation_bits == 3)
+                  expand::expand_setup(exp_from_2x2_stuff, ss);
+               else if (ss->cmd.prior_elongation_bits == 1)
+                  expand::expand_setup(s_2x2_2x4_ends, ss);
+               else if (ss->cmd.prior_elongation_bits == 2)
+                  expand::expand_setup(s_2x2_2x4_endsb, ss);
+               else
+                  expanded = false;
+            }
 
             // Since we are reconstructing the original setup,
             // we think it is reasonable to say that the setup is

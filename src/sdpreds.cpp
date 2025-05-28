@@ -393,6 +393,14 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       }
 
       break;
+   case selector_thetriangle:
+      switch (ss->kind) {
+      case s_trngl4:
+         selected_person_mask = 0xE;
+         break;
+      }
+
+      break;
    case selector_thediamond:
       p2 = pid2 & (ID2_CTRDMD|ID2_NCTRDMD);
       if      (p2 == ID2_CTRDMD) return true;

@@ -268,6 +268,7 @@ selector_item selector_list[] = {
    {"near 5",       "near 5",      "NEAR 5",       "NEAR 5",      selector_farthree},
    {"far 5",        "far 5",       "FAR 5",        "FAR 5",       selector_nearthree},
    {"the 2x3",      "the 2x3",     "THE 2X3",      "THE 2X3",     selector_uninitialized},
+   {"the triangle", "the triangle","THE TRIANGLE", "THE TRIANGLE",selector_uninitialized},
    {"the diamond",  "the diamond", "THE DIAMOND",  "THE DIAMOND", selector_uninitialized},
    {"the line",     "the line",    "THE LINE",     "THE LINE",    selector_uninitialized},
    {"the column",   "the column",  "THE COLUMN",   "THE COLUMN",  selector_uninitialized},
@@ -3913,6 +3914,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s2x2,     0, 1, 9, 1,  0xA75, schema_rev_checkpoint},
    {s_spindle,      schema_nothing, {7, 1, 3, 5,    6, 0, 2, 4},
              sdmd,     s2x2,     0, 1, 1, 1,  0xA75, schema_rev_checkpoint},
+   {s_spindle,      schema_nothing, {7, 1, 3, 5,    0, 2, 4, 6},
+             sdmd,     s2x2,     0, 0, 9, 1,  0xAFA, schema_ckpt_star},
    {s_wingedstar,   schema_nothing, {0, 3, 4, 7,    1, 2, 5, 6},
              sdmd,     s1x4,     0, 0, 9, 1,  0xAFA, schema_ckpt_star},
    {s_wingedstar,   schema_nothing, {1, 2, 5, 6,    7, 0, 3, 4},
@@ -4331,6 +4334,10 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x8,     s2x5,     0, 0, 2, 1,  0x8FA, schema_conc_bar16},
    {s_barredstar,   schema_concentric_diamond_line, {8, 9, 3, 4,     0, 1, 2, 5, 6, 7},
              s1x4,     s2x3,     0, 0, 2, 1,  0x8FB, schema_concentric},
+   {s3x6,           schema_nothing, {16, 17, 7, 8,     14, 15, 0, 5, 6, 9},
+             s1x4,     s2x3,     0, 1, 2, 1,  0x8FD, schema_concentric},
+   {s_3223,           schema_nothing, {4, 3, 9, 8,     6, 7, 0, 1, 2, 5},
+             s2x2,     s2x3,     0, 1, 2, 1,  0x8FD, schema_concentric},
    {s_qtag,         schema_concentric_others, {6, 7, 3, 2,    0, 1, 4, 5},
              s1x2,     s2x2,     0, 0, 2, 2,  0x900, schema_nothing},
    {s1x8,           schema_concentric_others, {1, 3, 2, 6, 7, 5,    0, 4},
@@ -5488,6 +5495,8 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x2,          s1x6, 0,      044, 0x0C, 0x0, schema_concentric,     s1x2,        s1x4,     warn__none, 0, 0, {0, 1},                     {0, 1, 3, 4}},
    {s1x2,          s1x4, 0,      0xA, 0x0C, 0x0, schema_concentric,     s1x2,        s1x2,     warn__none, 0, 0, {0, 1},                     {0, 2}},
    {s1x2,          s1x2, 0,        0, 0x0D, 0x0, schema_matrix,         s_star,      nothing,  warn__none, 0, 1, {0, 2},                     {3, 1}},
+   {s1x3,          s1x4, 1,      0xC, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 3, 2},                 {0}},
+   {s1x3,          s1x4, 4,      0x3, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, -1},                 {0}},
    {sdmd,         s3dmd, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 5, 7, 11},              {0}},
    {sdmd,       s_3mdmd, 0,    04242, 0x0D, 0x0, schema_matrix,          s3dmd,      nothing,  warn__none, 0, 0, {1, 5, 7, 11},         {0, -1, 2, 3, 4, -1, 6, -1, 8, 9, 10, -1}},
    {sdmd,         s3dmd, 0,    04242, 0x0E, 0x0, schema_matrix,        s_3mdmd,      nothing,  warn__none, 0, 0, {11, 1, 5, 7},         {0, -1, 2, 3, 4, -1, 6, -1, 8, 9, 10, -1}},
@@ -5706,6 +5715,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,        s_qtag, 0xA,   0x88, 0x0D, 0x1, schema_concentric,     s_short6,    s1x2,     warn__check_galaxy, 1, 0, {1, 2, 4, 5, 6, 0},      {0, 2}},
    {s1x4,     s_hrglass, 0xA,   0x44, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, -1, 2, -1},             {0}},
    {s1x4,          sdmd, 0xA,    0x5, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1},             {0}},
+   {s1x4,       s_trngl, 0xB,      0, 0x0D, 0x0, schema_matrix,         s_trngl4,    nothing,  warn__none, 0, 0, {-1, -1, 0, -1},            {1, 2, 3}},
    {s_ntrgl6ccw, s_nxtrglccw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
    {s_ntrgl6cw,   s_nxtrglcw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
    {s1x4,      s_nftrgl6cw,  0xA,  0, 0x0D, 0x0, schema_matrix,         s_343,       nothing,  warn__none, 0, 0, {1, -1, 6, -1}, {0, 4, 3, 5, 9, 8}},
@@ -5716,7 +5726,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_ntrglccw,   s_323,  0x33, 0x99, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, 3, 4, -1, -1, 7, 0},               {0}},
 
    {s1x4,      s_short6, 0,      055, 0x2D, 0x0, schema_concentric,     s1x4,        s1x2,     warn__none, 0, 1, {0, 1, 2, 3},            {1, 4}},
-   {s1x4,      s_short6, 0xA,      0, 0x0D, 0x0,     schema_matrix,      s_rigger,   nothing,  warn__none, 0, 1, {6, -1, 2, -1},             {5, 7, 0, 1, 3, 4}},
+   {s1x4,      s_short6, 0xA,      0, 0x0D, 0x0, schema_matrix,         s_rigger,    nothing,  warn__none, 0, 1, {6, -1, 2, -1},             {5, 7, 0, 1, 3, 4}},
 
    // These 2 must be in the order shown.
    {s1x4,        s_qtag, 0,     0x88, 0x0E, 0x0, schema_matrix,         s3x6,        nothing,  warn__none, 0, 0, {16, 17, 7, 8},               {2, 3, 6, -1, 11, 12, 15, -1}},
@@ -7559,6 +7569,12 @@ static const id_bit_table id_bit_table_1x4[] = {
    EASTBIT(ID2_END),
    WESTBIT(ID2_CENTER)};
 
+static const id_bit_table id_bit_table_trngl4[] = {
+   SOUTHBIT(0),
+   NORTHBIT(0),
+   WESTBIT(0),
+   EASTBIT(0)};
+
 static const id_bit_table id_bit_table_dmd[] = {
    NOBIT(ID2_END),
    NORTHBIT(ID2_CENTER),
@@ -8866,7 +8882,7 @@ const setup_attr setup_attrs[] = {
     {b_trngl4, b_ptrngl4},
     {0, 0},
     SPROP_NO_SYMMETRY|SPROP_FIND_NEAR_PEOPLE,
-    (const id_bit_table *) 0,
+    id_bit_table_trngl4,
     {(Cstring) 0,
      (Cstring) 0}},
    {4,                      // sbeehive
@@ -11111,6 +11127,8 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_ftgl4c, s1x2, s_trngl4,      0, 0, 1, {2, 3},
     fx0, fx_n1x4c,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_ftgl36, s1x2, s_trngl,       0, 0, 1, {1, 2},
+    fx0, fx_n1x3b,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_fudmd1, s_trngl, sdmd,       3, 0, 1, {2, 3, 1},
     fx0, fx0,                   fx0, fx0,                   fx0, fx_ftgl4,              fx0, fx0},
@@ -11214,9 +11232,9 @@ select::fixer select::fixer_init_table[] = {
 
    {fx_fqtgns, s2x2, s_qtag,        1, 0, 1,          {1, 4, 5, 0},
     fx0, fx0,          fx0, fx0,             fx0, fx0,             fx0, fx0},
-   {fx_ftharns, s1x4, s_thar,       1, 0x40, 1,       {2, 3, 6, 7},
+   {fx_ftharns, s1x4, s_thar,       1, PRIOR_ELONG_IS_DISCONNECTED, 1,       {2, 3, 6, 7},
     fx0, fx0,          fx0, fx0,             fx0, fx0,             fx_fqtgns, fx_fqtgns},
-   {fx_ftharew, s1x4, s_thar,       0, 0x40, 1,       {0, 1, 4, 5},
+   {fx_ftharew, s1x4, s_thar,       0, PRIOR_ELONG_IS_DISCONNECTED, 1,       {0, 1, 4, 5},
     fx0, fx0,          fx0, fx0,             fx0, fx0,             fx_fqtgns, fx_fqtgns},
    {fx_falamons, s2x2, s_alamo,     0, 0, 1,          {0, 1, 4, 5},
     fx0, fx_ftharns,   fx0, fx_fqtgctr,      fx0, fx0,             fx0, fx0},
@@ -12456,6 +12474,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      splinepdmd,  0x0F,   fx_1x5p1e,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0xF0,   fx_1x5p1f,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0x0F,   fx_1x5p1g,     fx0, -1},
+   {LOOKUP_NONE,                      s_trngl,     0x06,   fx_ftgl36,     fx0, -1},
    {LOOKUP_NONE,                      s_trngl4,    0x0E,   fx_ftgl4,      fx0, -1},
    {LOOKUP_NONE,                      s_trngl4,    0x03,   fx_ftgl43,     fx0, -1},
    {LOOKUP_NONE,                      s_trngl4,    0x0C,   fx_ftgl4c,     fx0, -1},

@@ -3102,30 +3102,50 @@ extern void distorted_move(
 
    switch (distkey) {
    case DISTORTKEY_DIST_CLW:
-   case DISTORTKEY_OFFSCLW_SINGULAR:
+   case DISTORTKEY_OFFSCLWBI_SINGULAR:
       // Look for singular "offset C/L/W" in a 2x4.
 
       if (disttest == disttest_offset &&
-          ss->kind == s2x4 &&
-          distkey == DISTORTKEY_OFFSCLW_SINGULAR) {
-         if (linesp & 1) {
-            if (global_tbonetest & 1) fail("There is no offset line here.");
-         }
-         else {
-            if (global_tbonetest & 010) fail("There is no offset column here.");
-         }
+          distkey == DISTORTKEY_OFFSCLWBI_SINGULAR) {
+         if (ss->kind == s2x4) {
+            if (linesp & 1) {
+               if (global_tbonetest & 1) fail("There is no offset line here.");
+            }
+            else if (linesp == 0) {
+               if (global_tbonetest & 010) fail("There is no offset column here.");
+            }
 
-         if (livemask == 0x33)
-            map_code = MAPCODE(s1x4,1,MPKIND__OFFS_R_FULL,0);
-         else if (livemask == 0xCC)
-            map_code = MAPCODE(s1x4,1,MPKIND__OFFS_L_FULL,0);
-         else fail("Can't find offset C/L/W.");
+            if (livemask == 0x33) {
+               if (linesp == 4)
+                  map_code = MAPCODE(s2x2,1,MPKIND__OFFS_L_FULL,1);
+               else
+                  map_code = MAPCODE(s1x4,1,MPKIND__OFFS_R_FULL,0);
+            }
+            else if (livemask == 0xCC) {
+               if (linesp == 4)
+                  map_code = MAPCODE(s2x2,1,MPKIND__OFFS_R_FULL,1);
+               else
+                  map_code = MAPCODE(s1x4,1,MPKIND__OFFS_L_FULL,0);
+            }
+            else fail("Can't find offset C/L/W/B.");
 
-         goto do_divided_call;
+            goto do_divided_call;
+         }
+         else if (ss->kind == s2x3) {
+            parse_block foo;
+            // This should match the "Z" line in concept_descriptor_table in sdctable.cpp.
+            concept_descriptor bar = {"Z", concept_misc_distort, CONCPARSE_PARSE_DIRECT, l_c2,
+                                      UC_none, 0, 0, 0, 16+1};
+
+            foo.concept = &bar;
+
+            distorted_2x2s_move(ss, &foo, result);
+               return;
+         }
       }
 
       // Otherwise, it had better be plural.
-      if (distkey == DISTORTKEY_OFFSCLW_SINGULAR)
+      if (distkey == DISTORTKEY_OFFSCLWBI_SINGULAR)
          fail("Use plural offset C/L/W's.");
 
       k = s2x4;

@@ -3796,6 +3796,18 @@ static int divide_the_setup(
       }
       break;
    case s_trngl:
+      if ((ss->people[0].id1) == 0 &&
+          (assoc(b_2x2, ss, calldeflist) ||
+           assoc(b_1x2, ss, calldeflist) ||
+           assoc(b_2x1, ss, calldeflist) ||
+           assoc(b_1x1, ss, calldeflist))) {
+         // A trngl4 got cut down, perhaps unwisely, to a 3-person triangle.  Put it back.
+         division_code = spcmap_trngl_box1;
+         divided_setup_move(ss, division_code, phantest_ok, false, result);
+         result->result_flags.clear_split_info();
+         return 1;
+      }
+
       if (assoc(b_2x2, ss, calldeflist)) {
          if (calling_level < triangle_in_box_level)
             warn_about_concept_level();
@@ -4820,7 +4832,7 @@ static uint32_t do_actual_array_call(
       // Check for a 1x4 call around the outside that
       // sends people far away without permission.
       if ((ss->kind == s1x4 || ss->kind == s1x6) &&
-          ss->cmd.prior_elongation_bits & 0x40 &&
+          ss->cmd.prior_elongation_bits & PRIOR_ELONG_IS_DISCONNECTED &&
           !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
          if (goodies->callarray_flags & CAF__NO_CUTTING_THROUGH) {
             fail_no_retry("Call has outsides going too far around the set.");

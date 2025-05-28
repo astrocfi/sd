@@ -3965,10 +3965,8 @@ static void do_concept_crazy(
          if (attr::klimit(tempsetup.kind) < 7) {
             if (tempsetup.kind == s2x2) {
                // If we have a clue about splitting info, fill it in.
-               if ((tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*3)) != 0) {
-                  tempsetup.cmd.cmd_misc_flags |=
-                     (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*2)) ?
-                     CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
+               if (tempsetup.cmd.prior_elongation_bits & PRIOR_ELONG_BASE_FOR_TANDEM) {
+                  tempsetup.cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
                }
             }
             else {

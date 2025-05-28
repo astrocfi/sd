@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 391
+#define DATABASE_FORMAT_VERSION 392
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -245,10 +245,10 @@ enum base_call_index {
    base_call_revert_if_needed,
    base_call_extend,
    base_call_extend_n,
+   base_call_inrollcirc,
+   base_call_outrollcirc,
    num_base_call_indices    // Not an actual enumeration item.
 };
-
-
 
 // BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
 // "forcetabh", and "altdeftabh" in mkcalls.cpp .  The "K" items also track

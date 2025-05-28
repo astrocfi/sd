@@ -3629,7 +3629,7 @@ extern void concentric_move(
                }
                else if (begin_ptr->kind == s1x2 || begin_ptr->kind == s1x4 || begin_ptr->kind == s1x6) {
                   // Indicate that these people are working around the outside.
-                  begin_ptr->cmd.prior_elongation_bits |= 0x40;
+                  begin_ptr->cmd.prior_elongation_bits |= PRIOR_ELONG_IS_DISCONNECTED;
 
                   if ((DFM1_CONC_CONCENTRIC_RULES & localmodsout1) ||
                       crossing ||
@@ -4045,6 +4045,7 @@ extern void concentric_move(
    else if (analyzer == schema_concentric_ctrbox) analyzer = schema_concentric;
 
    if (analyzer == schema_concentric ||
+       analyzer == schema_concentric_6p_or_normal ||
        analyzer == schema_in_out_triple ||
        analyzer == schema_concentric_zs ||
        analyzer == schema_sgl_in_out_triple ||
@@ -4367,7 +4368,8 @@ extern void concentric_move(
                final_elongation = ((~final_outers_finish_dirs) & 1) + 1;
             }
             else if (DFM1_CONC_CONCENTRIC_RULES & localmods1) {
-               warn(concwarntable[crossing]);
+               if (outer_inners[0].kind != s2x3)
+                  warn(concwarntable[crossing]);  // Don't give warning that would obviously break Solomon.
                final_elongation ^= 3;
             }
             else if (DFM1_CONC_FORCE_OTHERWAY & localmods1) {
@@ -5777,6 +5779,7 @@ extern void inner_selective_move(
          if (calling_level < intlk_triangle_level)
             warn_about_concept_level();
          // FALL THROUGH
+      case selector_thetriangle:
       case selector_neartriangle:
       case selector_fartriangle:
       case selector_outside_tgl:
@@ -7164,6 +7167,7 @@ extern void inner_selective_move(
                 ((kk == s2x4 && (thislivemask == 0xCC || thislivemask == 0x33)) ||
                  (kk == s1x6 && (thislivemask == 033)) ||
                  (kk == s_spindle12 && ((thislivemask & 0xE7) == 0)) ||
+                 (kk == s_trngl && two_couple_calling && (thislivemask == 0x06)) ||
                  (kk == s_trngl4 && two_couple_calling && (thislivemask == 0x0C)) ||
                  (kk == s2x2 && two_couple_calling &&
                   (thislivemask == 0x3 || thislivemask == 0x6 || thislivemask == 0xC || thislivemask == 0x9)) ||
@@ -8040,15 +8044,22 @@ extern void inner_selective_move(
             }
          }
 
-         // Look for special cases like two people peeling off from the base of a trngl4.
-         if (special_unsym_dyp &&
-             (this_one->kind == s_trngl4 &&
-              ((this_one->people[0].id1 | this_one->people[1].id1) == 0))) {
+         // Look for special cases like two people peeling off from the base of a triangle.
+         if (special_unsym_dyp && this_one->kind == s_trngl4 && (thislivemask & 3) == 0) {
             setup trythis = *this_one;
             trythis.kind = s2x2;
             trythis.clear_people();
             copy_person(&trythis, 0, this_one, 2);
             copy_person(&trythis, 1, this_one, 3);
+            canonicalize_rotation(&trythis);
+            move(&trythis, false, this_result);
+         }
+         else if (special_unsym_dyp && this_one->kind == s_trngl && (thislivemask & 1) == 0) {
+            setup trythis = *this_one;
+            trythis.kind = s2x2;
+            trythis.clear_people();
+            copy_person(&trythis, 0, this_one, 1);
+            copy_person(&trythis, 1, this_one, 2);
             canonicalize_rotation(&trythis);
             move(&trythis, false, this_result);
          }

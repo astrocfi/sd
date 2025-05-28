@@ -1368,7 +1368,7 @@ class final_and_herit_flags {
 struct assumption_thing {
    unsigned int assump_col:  16;  // Stuff to go with assumption -- col vs. line.
    unsigned int assump_both:  8;  // Stuff to go with assumption -- "handedness" enforcement
-                                  // 0/1/2 = either/1st/2nd.
+                                  // 0/1/2 = either/right or in/left or out.
    unsigned int assump_cast:  6;  // Nonzero means there is an "assume normal casts"
                                   // assumption.
    unsigned int assump_live:  1;  // One means to accept only if everyone is live.
@@ -1477,6 +1477,7 @@ enum selector_kind {
    selector_nearfive,
    selector_farfive,
    selector_the2x3,
+   selector_thetriangle,
    selector_thediamond,
    selector_theline,
    selector_thecolumn,
@@ -2672,8 +2673,10 @@ enum {
 
 
 enum {
-   PRIOR_ELONG_BASE_FOR_TANDEM           = 0x00010000,
-   PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE = 0x00040000
+   // These need to be 16 bits in order to fit in the select::fixer.prior_elong field.
+   PRIOR_ELONG_BASE_FOR_TANDEM           = 0x0100,
+   PRIOR_ELONG_IS_DISCONNECTED           = 0x0200,
+   PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE = 0x0400
 };
 
 
@@ -2865,6 +2868,7 @@ class select {
       fx_fpgdmdccw,
       fx_f2x6cw,
       fx_f2x6ccw,
+      fx_ftgl36,
       fx_ftgl4,
       fx_ftgl43,
       fx_ftgl4c,
@@ -3962,7 +3966,7 @@ enum {
 // Used by distorted_move.
 enum distort_key {
    DISTORTKEY_DIST_CLW,
-   DISTORTKEY_OFFSCLW_SINGULAR,
+   DISTORTKEY_OFFSCLWBI_SINGULAR,  //"I" means "indeterminate" -- arbitrary 1x4.
    DISTORTKEY_TIDALCLW,
    DISTORTKEY_DIST_QTAG,
    DISTORTKEY_CLW_OF_3,
@@ -4164,13 +4168,13 @@ class configuration {
       the elongation is east-west.  A 2 means the elongation is north-south.
       A zero means there was no elongation.
 
-      The 0x40 bit of this is sometimes set, in sdconc.cpp, for a 1x2/1x4/1x6,
-      to indicate that these people are disconnected.  It is looked at in sdbasic.cpp.
-      Also, some stuff shifted left by 8 bits is sometimes put here by sdconc.cpp.
-      Needed by t49\3045.  Something about triple percolate.  This is indicated by
-      PRIOR_ELONG_BASE_FOR_PERCOLATE.    (Not actually implemented this way, pending investigation.)
+      The PRIOR_ELONG_IS_DISCONNECTED bit of this is sometimes set, in sdconc.cpp,
+      for a 1x2/1x4/1x6, to indicate that these people are disconnected.
+      It is looked at in sdbasic.cpp.
       Also, tandem operations may put elongation into a 2x2 to aid in semi-bogus
       "crazy" stuff.  This is indicated by PRIOR_ELONG_BASE_FOR_TANDEM.
+      Also, PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE is uaed by sdconc and sdbasic
+      to control some very messy things about concentric rules in 2x4s and qtags.
 */
 
 
