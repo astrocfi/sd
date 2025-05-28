@@ -246,8 +246,6 @@ Private void test_starting_setup(call_list_kind cl, setup test_setup)
    if (test_call->schema == schema_roll) goto accept;
 
    (void) deposit_call(test_call);
-   history[history_ptr+1].warnings.bits[0] = 0;
-   history[history_ptr+1].warnings.bits[1] = 0;
    toplevelmove();
 
    /* It seems to have worked, save it.  We don't care about warnings here. */
@@ -1002,7 +1000,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          exit_program(1);
 
       if (call_list_mode != call_list_mode_abridging)
-         return;   /* That's all! */
+         goto getout;   /* That's all! */
    }
 
    /* Now the array "main_call_lists[call_list_any]" and "global_main_call_name_list"
@@ -1042,4 +1040,9 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
    /* These were global to the initialization, but they go away also. */
    free_mem(global_temp_call_list);
    free_mem(global_temp_call_name_list);
+
+   getout:
+
+   uims_database_tick_end();
+   return;
 }

@@ -31,8 +31,6 @@
 #include <time.h>
 #endif
 
-long_boolean          match_all_concepts; /* match concepts regardless of level */
-
 static char           *empty_menu[] = {NULL};
 static char           **call_menu_lists[NUM_CALL_LIST_KINDS];
 static call_list_kind current_call_menu;
@@ -107,8 +105,9 @@ static void strcpy_lower(char *dest, char *source);
  * an asterisk.
  */
 
-/* startup_commands tracks the start_select_kind enumeration */
+/* the following arrays must be coordinated with the sd program */
 
+/* startup_commands tracks the start_select_kind enumeration */
 static char *startup_commands[] = {
     "exit from the program",
     "heads 1p2p",
@@ -118,13 +117,15 @@ static char *startup_commands[] = {
     "just as they are"
 };
 
-/* command_commands tracks the command_kind enumeration */
+/* The first part of this array tracks the "command_kind" enumeration.
+   There are NUM_COMMAND_KINDS items in that part.  The rest of it
+   corresponds to the special commands defined in sdmatch.h .  There
+   are NUM_SPECIAL_COMMANDS of those items. */
 
 static char *command_commands[] = {
     "exit the program",
     "undo last call",
     IFMAC("end this sequence","abort this sequence"),
-    IFMAC("modify next call","allow modifications"),
     "insert a comment ...",
     IFMAC("save as ...","change output file ..."),
     NOMAC "end this sequence ...",
@@ -133,7 +134,11 @@ static char *command_commands[] = {
     IFMAC("pick random call ...","do anything ..."),
     IFMAC("normalize setup ...","nice setup ..."),
     NOMAC "show neglected calls ...",
-    IFMAC("insert picture","save picture")
+    IFMAC("insert picture","save picture"),
+    "refresh display",
+/* The following items are the special ones. */
+    IFMAC("modify next call","allow modifications"),
+    "toggle concept levels"
 };
 
 /* resolve_commands tracks the resolve_command_kind enumeration */
@@ -231,7 +236,7 @@ matcher_initialize(long_boolean show_commands_last)
         if (p->kind == marker_end_of_list) {
             break;
         }
-        item->number = concept_number - general_concept_offset; /* kludge */
+        item->number = concept_number;
         item->name = strdup_lower(p->name);
         if (p->level <= calling_level) {
             level_item->number = item->number;
@@ -323,7 +328,7 @@ add_call_to_menu(char ***menu, int call_menu_index, int menu_size,
 
 extern int
 match_user_input(char *user_input, int which_commands, match_result *mr,
-                 char *extension, show_function *sf, int show_verify)
+                 char *extension, show_function sf, int show_verify)
 {
     match_state ss;
     input_matcher *f;
@@ -401,7 +406,7 @@ call_matcher(match_state *sp)
     /* search_menu(sp, concept_menu_list, concept_menu_len, ui_concept_select); */
 
     if (!commands_last_option)
-        search_menu(sp, command_commands, NUM_COMMAND_KINDS, ui_command_select);
+        search_menu(sp, command_commands, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, ui_command_select);
 
     search_menu(sp,
         call_menu_lists[current_call_menu], number_of_calls[current_call_menu],
@@ -410,7 +415,7 @@ call_matcher(match_state *sp)
     search_concept(sp);
 
     if (commands_last_option)
-        search_menu(sp, command_commands, NUM_COMMAND_KINDS, ui_command_select);
+        search_menu(sp, command_commands, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, ui_command_select);
 }
 
 static void
@@ -449,7 +454,7 @@ search_concept(match_state *sp)
     result.who = -1;
     result.n = -1;
 
-    if (match_all_concepts) {
+    if (allowing_all_concepts) {
         item = concept_list;
         count = concept_list_length;
     }

@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "29.01"
+#define VERSION_STRING "29.2"
 
 /* This defines the following functions:
    sd_version_string
@@ -62,6 +62,7 @@ and the following external variables:
    testing_fidelity
    selector_for_initialize
    allowing_modifications
+   allowing_all_concepts
 */
 
 
@@ -109,7 +110,8 @@ long_boolean not_interactive = FALSE;
 long_boolean initializing_database = FALSE;
 long_boolean testing_fidelity = FALSE;
 selector_kind selector_for_initialize;
-int allowing_modifications;
+int allowing_modifications = 0;
+long_boolean allowing_all_concepts = FALSE;
 
 /* These variables are are global to this file. */
 
@@ -297,7 +299,7 @@ extern void initialize_parse(void)
       written_history_items = history_ptr;
 
    parse_state.parse_stack_index = 0;
-   parse_state.specialprompt = (char *) 0;
+   parse_state.specialprompt = "";
    parse_state.topcallflags1 = 0;
 }
 
@@ -462,8 +464,6 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
    selector_kind sel = selector_uninitialized;
    int number = 0;
 
-   if (conc->level > calling_level) warn(warn__bad_concept_level);
-
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
       int j;
 
@@ -512,7 +512,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
       if (parse_state.parse_stack_index == 39) specialfail("Excessive number of concepts.");
       parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind = conc->kind;
       parse_state.parse_stack[parse_state.parse_stack_index++].concept_write_save_ptr = parse_state.concept_write_ptr;
-      parse_state.specialprompt = (char *) 0;
+      parse_state.specialprompt = "";
       parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
    }
 
@@ -652,51 +652,37 @@ extern long_boolean query_for_call(void)
       old_error_flag = error_flag; /* save for refresh command */
       error_flag = 0;
 
+      try_again:
+
       /* Display the call index number, and the partially entered call and/or prompt, as appropriate. */
 
       {
-         char indexbuf[10];
-         sprintf (indexbuf, "%d: ", history_ptr-whole_sequence_low_lim+2);
+         char indexbuf[200];
 
-         /* Echo the concepts entered so far.  This list is incomplete, so write_history_line has
-            to be careful. */
-         
+         /* See if there are partially entered concepts.  If so, print the index number
+            and those concepts on a separate line. */
+
          if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
+            sprintf (indexbuf, "%d: ", history_ptr-whole_sequence_low_lim+2);
+            /* This prints the concepts entered so far, with a "header" consisting of the index number.
+               This partial concept tree is incomplete, so write_history_line has to be (and is) very careful. */
             write_history_line(history_ptr+1, indexbuf, FALSE, file_write_no);
+
+            if (parse_state.specialprompt[0] != '\0') {
+               writestuff(parse_state.specialprompt);
+               newline();
+            }
          }
          else {
-            writestuff(indexbuf);   /* Just write the index. */
+            /* No partially entered concepts.  Put the sequence number in front of any "specialprompt". */
+            sprintf (indexbuf, "%d: %s", history_ptr-whole_sequence_low_lim+2, parse_state.specialprompt);
+
+            writestuff(indexbuf);
+            newline();
          }
       }
 
-      if (parse_state.specialprompt) {
-         writestuff(parse_state.specialprompt);
-      }
-
-      newline();
-      
-      try_again:
-
-      local_reply = uims_get_command(mode_normal, parse_state.call_list_to_use, allowing_modifications);
-
-      if (local_reply == ui_concept_select) {
-         /* Fudge the number to be relative to the entire concept list. */
-         uims_menu_index += general_concept_offset;
-      }
-      else if (local_reply == ui_special_concept) {
-         int column, index, menu;
-
-         menu = uims_menu_index;
-         if ((index = uims_do_concept_popup(menu)) == 0) goto try_again;
-         index--;
-         column = index >> 8;
-         index &= 0xFF;
-         index += concept_offset_tables[menu][column];
-         uims_menu_index = index;
-         /* Check for non-existent menu entry. */
-         if (concept_descriptor_table[uims_menu_index].kind == concept_comment) goto try_again;
-         local_reply = ui_concept_select;
-      }
+      local_reply = uims_get_command(mode_normal, &parse_state.call_list_to_use);
    }
    else {
 
@@ -719,11 +705,6 @@ extern long_boolean query_for_call(void)
           written_history_items = -1; /* suppress optimized display update */
           error_flag = old_error_flag; /* want to see error messages, too */
           goto redisplay;
-      }
-      else if (uims_menu_index == command_allow_modification) {
-         /* Increment "allowing_modifications" up to a maximum of 2. */
-         if (allowing_modifications != 2) allowing_modifications++;
-         goto recurse_entry;
       }
       else if (uims_menu_index == command_create_comment) {
          char comment[MAX_TEXT_LINE_LENGTH];
@@ -806,13 +787,13 @@ extern long_boolean query_for_call(void)
    
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
          case concept_centers_and_ends:
-            parse_state.specialprompt = "ENTER CALL FOR ENDS --> ";
+            parse_state.specialprompt = "ENTER CALL FOR ENDS";
             break;
          case concept_on_your_own:
-            parse_state.specialprompt = "ENTER SECOND (CENTERS) CALL --> ";
+            parse_state.specialprompt = "ENTER SECOND (CENTERS) CALL";
             break;
          default:
-            parse_state.specialprompt = "ENTER SECOND CALL --> ";
+            parse_state.specialprompt = "ENTER SECOND CALL";
             break;
       }
    
@@ -1029,7 +1010,6 @@ void main(int argc, char *argv[])
    }
    
    initialize_menus(call_list_mode);    /* This sets up max_base_calls. */
-   uims_database_tick_end();
 
    /* If we wrote a call list file, that's all we do. */
    if (call_list_mode == call_list_mode_writing || call_list_mode == call_list_mode_writing_full)
@@ -1119,9 +1099,10 @@ void main(int argc, char *argv[])
    
    /* Query for the starting setup. */
    
-   reply = uims_get_command(mode_startup, call_list_any, FALSE);
-   if (reply != ui_start_select) goto normal_exit;           /* Huh? */
-   if (uims_menu_index == 0) goto normal_exit;
+   reply = uims_get_command(mode_startup, (call_list_kind *) 0);
+
+   if (reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
+   if (reply != ui_start_select || uims_menu_index == 0) goto normal_exit;           /* Huh? */
    
    history_ptr = 1;              /* Clear the position history. */
 
@@ -1167,8 +1148,11 @@ void main(int argc, char *argv[])
       history_allocation <<= 1;
       t = (configuration *) get_more_mem_gracefully(history, history_allocation * sizeof(configuration));
       if (!t) {
+         /* Couldn't get memory; we are in serious trouble. */
          history_allocation >>= 1;
-         history_ptr--;
+         /* Bring history_ptr down to safe size.  This will have the effect of
+            throwing away the last call, or part or all of the last resolve. */
+         history_ptr = history_allocation-MAX_RESOLVE_SIZE-2;
          specialfail("Not enough memory!");
       }
       history = t;
@@ -1187,11 +1171,7 @@ void main(int argc, char *argv[])
    
    restart_after_backup:
 
-   /* Clear the warnings BEFORE we start depositing concepts.  The act of depositing
-      concepts might log a warning. */
-
-   history[history_ptr+1].warnings.bits[0] = 0;
-   history[history_ptr+1].warnings.bits[1] = 0;
+   simple_restart:
 
    if ((!reply_pending) && (!query_for_call())) {
       /* User specified a call (and perhaps concepts too). */
@@ -1215,10 +1195,10 @@ void main(int argc, char *argv[])
    if (reply == ui_command_select) {
       switch (uims_menu_index) {
          case command_quit:
-            if (uims_do_abort_popup() != POPUP_ACCEPT) goto start_cycle;
+            if (uims_do_abort_popup() != POPUP_ACCEPT) goto simple_restart;
             goto normal_exit;
          case command_abort:
-            if (uims_do_abort_popup() != POPUP_ACCEPT) goto start_cycle;
+            if (uims_do_abort_popup() != POPUP_ACCEPT) goto simple_restart;
             clear_screen();
             goto show_banner;
          case command_undo:
@@ -1259,7 +1239,7 @@ void main(int argc, char *argv[])
             /* We have to back up to BEFORE the item we just changed. */
             if (written_history_items > history_ptr-1)
                written_history_items = history_ptr-1;
-            goto start_cycle;
+            goto simple_restart;
          case command_change_outfile:
             {
                char newfile_string[MAX_FILENAME_LENGTH];
@@ -1289,6 +1269,7 @@ void main(int argc, char *argv[])
                uims_reply local_reply;
                char title[MAX_TEXT_LINE_LENGTH];
                int percentage, calls_to_mark, i, deficit, final_percent;
+               call_list_kind dummy = call_list_any;
       
                if (uims_do_neglect_popup(percentage_string)) {
                   percentage = parse_number(percentage_string);
@@ -1334,7 +1315,7 @@ void main(int argc, char *argv[])
       
                error_flag = 0;
                
-               local_reply = uims_get_command(mode_normal, call_list_any, 0);
+               local_reply = uims_get_command(mode_normal, &dummy);
             
                if (local_reply == ui_call_select) {
                   /* Age this call. */
@@ -1377,8 +1358,6 @@ void main(int argc, char *argv[])
                      case command_quit: case command_abort: case command_getout:
                      case command_resolve: case command_reconcile: case command_anything: case command_nice_setup:
                         allowing_modifications = 0;
-                        history[history_ptr+1].warnings.bits[0] = 0;
-                        history[history_ptr+1].warnings.bits[1] = 0;
                         history[history_ptr+1].draw_pic = FALSE;
                         parse_state.concept_write_base = &history[history_ptr+1].command_root;
                         parse_state.concept_write_ptr = parse_state.concept_write_base;
@@ -1625,7 +1604,7 @@ extern void get_real_subcall(
    if (not_interactive)
       ;
    else if (DFM1_MANDATORY_ANYCALL & item->modifiers1) {
-      string_copy(&tempstringptr, "SUBSIDIARY CALL --> ");
+      string_copy(&tempstringptr, "SUBSIDIARY CALL");
    }
    else {
 
@@ -1644,7 +1623,6 @@ extern void get_real_subcall(
       
          string_copy(&tempstringptr, "REPLACEMENT FOR THE ");
          string_copy(&tempstringptr, base_calls[item->call_id]->name);
-         string_copy(&tempstringptr, " --> ");
       }
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */

@@ -182,9 +182,9 @@ extern void newline(void)
 
 
 
-extern void writestuff(char s[])
+extern void writestuff(Const char s[])
 {
-   char *f = s;
+   Const char *f = s;
    while (*f) writechar(*f++);
 }
 
@@ -241,7 +241,7 @@ extern void exit_program(int code)
 }
 
 
-extern void nonreturning fail(char s[])
+extern void nonreturning fail(Const char s[])
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -250,7 +250,7 @@ extern void nonreturning fail(char s[])
 }
 
 
-extern void nonreturning fail2(char s1[], char s2[])
+extern void nonreturning fail2(Const char s1[], Const char s2[])
 {
    (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -260,7 +260,7 @@ extern void nonreturning fail2(char s1[], char s2[])
 }
 
 
-extern void specialfail(char s[])
+extern void nonreturning specialfail(Const char s[])
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -1299,7 +1299,7 @@ extern void display_initial_history(int upper_limit, int num_pics)
 
 
 
-extern void write_history_line(int history_index, char *header, long_boolean picture, file_write_flag write_to_file)
+extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file)
 {
    int index, w;
 
@@ -2115,7 +2115,7 @@ extern parse_block *process_final_concepts(
 
       switch (tptr->concept->kind) {
          case concept_comment:
-            break;               /* Need to skip these. */
+            goto get_next;               /* Need to skip these. */
          case concept_triangle:
             bit_to_set = FINAL__TRIANGLE; break;
          case concept_magic:
@@ -2165,15 +2165,20 @@ extern parse_block *process_final_concepts(
             goto exit5;
       }
 
+      if (check_errors && tptr->concept->level > calling_level) warn(warn__bad_concept_level);
+
       if (check_errors && (*final_concepts & bit_to_set))
          fail("Redundant call modifier.");
       *final_concepts |= bit_to_set;
 
+      get_next:
+
       tptr = tptr->next;
    }
+
    exit5:
 
-   return(tptr);
+   return tptr;
 }
 
 

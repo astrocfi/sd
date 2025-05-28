@@ -1181,6 +1181,8 @@ extern void concentric_move(
    }
 
    if (parseout) {
+      setup begin_outer_temp;
+
       /* If the ends' starting setup is a 2x2, and we did not say "concentric" (indicated by
          the "concentric rules" flag being off), we mark the setup as elongated.  If the call
          turns out to be a 2-person call, the elongation will be checked against the pairings
@@ -1205,8 +1207,10 @@ extern void concentric_move(
             begin_outer.setupflags |= SETUPFLAG__NO_CHK_ELONG;
       }
 
-      update_id_bits(&begin_outer);
-      move(&begin_outer, parseout, callspecout, final_conceptsout, FALSE, &result_outer);
+      begin_outer_temp = begin_outer;   /* Defend against clobbering. */
+
+      update_id_bits(&begin_outer_temp);
+      move(&begin_outer_temp, parseout, callspecout, final_conceptsout, FALSE, &result_outer);
    }
    else {
       result_outer = begin_outer;

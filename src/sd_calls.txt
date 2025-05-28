@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "29.0"
+version "29.1"
 
 /* ****************** TEMPORARY HACK FOR TESTING
 
@@ -3347,18 +3347,24 @@ call "clean sweep @b" c3x
 call "walk and dodge" mainstream tag walkndodge
    setup 2x2 2x2 restriction unusual wave_only
       array [ZM1N ZM0N ZM1N ZM0N]
+   /* Purists would say 2x1 walk and dodge. */
    setup 3x2 2x3 restriction forbidden wave_only
       array [ZM1N ZM2N ZM3N ZM2N ZM3N ZM4N]
             alternate_definition [grand] c3x
    setup 4x2 2x4 restriction unusual wave_only
       array [ZM2N ZM5N ZM3N ZM4N ZM3N ZM4N ZM2N ZM5N]
+            alternate_definition [1x2] c3
+   setup 2x3 2x3
+      preds "???"
+         if inroller_is_cw_2x3 [ZM1N ZM2N    0    0 0 ZM0N]
+         if always             [   0 ZM0N ZM1N ZM2N 0 0  ]
             alternate_definition [1x3] c3
    setup 2x4 2x4
       preds "???"
-         if inroller_is_cw [ZM1N ZM2N ZM3N  0    0   0 0 ZM0N]
-         if always         [ 0   ZM0N ZM1N ZM2N ZM3N 0 0  0  ]
+         if inroller_is_cw [ZM1N ZM2N ZM3N    0    0 0 0 ZM0N]
+         if always         [   0 ZM0N ZM1N ZM2N ZM3N 0 0    0]
             alternate_definition [2x1] mainstream
-   /* Same as walk and dodge without modifiers, for purists. */
+   /* Same as plain walk and dodge, for purists. */
    setup 3x2 2x3 restriction forbidden wave_only
       array [ZM1N ZM2N ZM3N ZM2N ZM3N ZM4N]
             alternate_definition [3x1] c3
@@ -4267,33 +4273,57 @@ call "in roll circulate" a2
       preds "???"
          if inroller_is_cw [CR1S CR2S CR3S    0    0 AL6S AL7S ZM0N]
          if always         [   0 AL0S AL1S AL2S ZM3N CR4S CR5S    0]
+   setup 2x3 2x3
+      preds "???"
+         if inroller_is_cw_2x3 [CR1S CR2S    0    0 AL5S ZM0N]
+         if always             [   0 AL0S AL1S ZM2N CR3S    0]
             alternate_definition [magic] c3
    setup 2x4 2x4
       preds "???"
-         if magic_inroller_is_cw [6S 7S 1S  0  0 3S 0S 0N]
-         if always               [ 0 2S 4S 5S 3N 6S 0S  0]
+         if magic_inroller_is_cw [CR6S AL7S AL1S    0    0 CR3S CR5S ZM0N]
+         if always               [   0 CR2S CR4S AL5S ZM3N AL6S AL0S    0]
+   setup 2x3 2x3
+      preds "???"
+         if magic_inroller_is_cw_2x3 [CR4S AL5S    0    0 CR2S ZM0N]
+         if always                   [   0 CR3S AL4S ZM2N AL0S    0]
 
 call "out roll circulate" a2
    setup 2x4 2x4
       preds "???"
          if outroller_is_cw [   0 CR2S CR3S AL0S AL5S AL6S AL7S    0]
          if always          [CR3S AL0S AL1S    0    0 CR4S CR5S CR6S]
+   setup 2x3 2x3
+      preds "???"
+         if outroller_is_cw_2x3 [   0 CR2S AL0S AL4S AL5S    0]
+         if always              [CR2S AL0S    0    0 CR3S CR4S]
             alternate_definition [magic] c3
    setup 2x4 2x4
       preds "???"
-         if outroller_is_cw [ 0 7S 1S 0S 2S 3S 5S  0]
-         if always          [3S 2S 4S  0  0 6S 0S 1S]
+         if magic_outroller_is_cw [   0 AL7S AL1S AL0S AL2S CR3S CR5S    0]
+         if always                [CR3S CR2S CR4S    0    0 AL6S AL0S CR1S]
+   setup 2x3 2x3
+      preds "???"
+         if magic_outroller_is_cw_2x3 [   0 AL5S AL0S AL1S CR2S    0]
+         if always                    [CR2S CR3S    0    0 AL0S CR1S]
 
 call "zoom roll circulate" c4
    setup 2x4 2x4
       preds "???"
          if outroller_is_cw [   0 CR2S CR3S CR4N AL5S AL6S AL7S    0]
          if always          [AL7N AL0S AL1S    0    0 CR4S CR5S CR6S]
+   setup 2x3 2x3
+      preds "???"
+         if outroller_is_cw_2x3 [   0 CR2S CR3N AL4S AL5S    0]
+         if always              [AL5N AL0S    0    0 CR3S CR4S]
             alternate_definition [magic] c4
    setup 2x4 2x4
       preds "???"
-         if outroller_is_cw [ 0 7S 1S 4N 2S 3S 5S  0]
-         if always          [7N 2S 4S  0  0 6S 0S 1S]
+         if magic_outroller_is_cw [   0 AL7S AL1S CR4N AL2S CR3S CR5S    0]
+         if always                [AL7N CR2S CR4S    0    0 AL6S AL0S CR1S]
+   setup 2x3 2x3
+      preds "???"
+         if magic_outroller_is_cw_2x3 [   0 AL5S CR3N AL1S CR2S    0]
+         if always                    [AL5N CR3S    0    0 AL0S CR1S]
 
 call "trade circulate" a2
             take_right_hands

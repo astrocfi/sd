@@ -289,6 +289,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
    long_boolean retval;
    int i, j;
    setup *ns;
+   int bad_warnings;
    real_jmp_buf my_longjmp_buffer;
 
    history_insertion_point = huge_history_ptr;
@@ -362,27 +363,31 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
 
    /* Put in a special initial concept if needed to make a nice setup. */
 
-   switch (goal) {
-      case search_nice_setup:
-         i = generate_random_number(4);
-         /* The table "nice_setup_concept" is defined in the interface file,
-            containing the 4 concept indices that we want. */
-         deposit_concept(&concept_descriptor_table[nice_setup_concept[i]]);
-         break;
+   if (goal == search_nice_setup) {
+      i = generate_random_number(4);
+      /* The table "nice_setup_concept" is defined in the interface file,
+         containing the 4 concept indices that we want. */
+      deposit_concept(&concept_descriptor_table[nice_setup_concept[i]]);
    }
    
    /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
    /* This may, of course, add more concepts. */
    
-   history[history_ptr+1].warnings.bits[0] = 0;
-   history[history_ptr+1].warnings.bits[1] = 0;
    (void) query_for_call();
    
    /* Do the call.  An error will signal and go to try_again. */
    
    toplevelmove();
 
-   if (history[history_ptr+1].warnings.bits[0] & Warnings_That_Preclude_Searching) goto try_again;      /* We don't like certain warnings either. */
+   /* We don't like certain warnings either. */
+   bad_warnings = history[history_ptr+1].warnings.bits[0] & Warnings_That_Preclude_Searching;
+
+   if (bad_warnings) {
+      /* But if "allow all concepts" was given, and that's the only bad warning,
+         we let it pass. */
+      if (!allowing_all_concepts || bad_warnings != (1<<warn__bad_concept_level))
+         goto try_again;
+   }
    
    /* See if we have already seen this sequence. */
    
@@ -517,8 +522,6 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
 
       /* Now execute the call again, from the new starting configuration. */
       /* This might signal and go to try_again. */
-      history[history_ptr+1].warnings.bits[0] = 0;
-      history[history_ptr+1].warnings.bits[1] = 0;
       toplevelmove();
 
       this_state = history[history_ptr+1];
@@ -801,7 +804,7 @@ extern uims_reply full_resolve(search_kind goal)
       show_resolve = TRUE;
 
       for (;;) {          /* We ignore any "undo" clicks. */
-         reply = uims_get_command(mode_resolve, call_list_any, FALSE);
+         reply = uims_get_command(mode_resolve, (call_list_kind *) 0);
          if ((reply != ui_command_select) || (uims_menu_index != command_undo)) break;
       }
    

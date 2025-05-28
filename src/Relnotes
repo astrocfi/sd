@@ -1,255 +1,46 @@
-		    RELEASE NOTES FOR SD VERSION 29.0
-       Database version = 29.0, format = 40, X11 UI version 1.13.
+		    RELEASE NOTES FOR SD VERSION 29.2
+       Database version = 29.1, format = 40, X11 UI version 1.14.
 
 
-BUG WARNING BUG WARNING BUG WARNING BUG WARNING BUG WARNING BUG WARNING
-=======================================================================
-There are two difficult problems that could not be fixed in time for
-this release without serious destabilization of the program:
-
-Do not use both the "left" modifier together with concepts that
-   involve fractionalizing calls, with calls that permit stepping
-   to or rearing back from a wave.  For example, from a "C1 phantom"
-   setup with left-handed miniwaves, do not say "so-and-so begin a
-   left quarter thru".  "Left quarter thru" in normal contexts is
-   OK, and, in a phantom setup with right-handed miniwaves,
-   "so-and-so begin a quarter thru" is OK.
-
-Beware of "reactivate" and other such calls that involve the "ends
-   move up" action when phantoms are present.  In its zeal for not
-   making assumptions about where phantoms go, the program sometimes
-   compresses phantoms out of a setup in cases in which live
-   dancers generally agree where the phantoms are.  This can lead
-   to inappropriate shrink-wrapping for things like "split phantom
-   lines tag reactivate" -- space will not be left for the phantoms.
-=======================================================================
-
-Changes since 28.71:
-
-Some rather bizarre cases of phantom bigblock and similar things were
-fixed.
-
-"Extend" is finally a little bit smarter.  So is percolate.
-
-"Walk and dodge" is legal from columns of 6.  It is also available under
-its more pedantic name, "2x1 walk and dodge".  "3x1 walk and dodge" (from
-columns) and "1x3 walk and dodge" (from appropriate lines of 4) were
-also added.
-
-It is possible to do 1-person calls (e.g. U-turn back) in diamonds,
-quarter-tags, and point-to-point diamonds.
-
-New calls: separate around 1 or 2 to a line, split the outsides around
-1 to a line, 3/4 tag/flip/etc and trade.
-
-Flip & cut the galaxy.  (Reverse flip and cut had been present before, they
-are now "reverse" modifiers.)  Squeeze the butterfly or "O".  <anyone> squeeze.
-Beware!  This is not really done correctly.  You must use it with care.
-
-New calls: 2x1/1x2 [magic] quick wrap.
-
-Other call and concept levels updated.  And updated again.  And again.
-Thanks, Kathy.
-
-=======================================================================
-
-Changes since 28.01 to 28.71:
-
-The sdtty version runs under DOS.  See INSTALL for system requirements.
-
-The separate "MxN" versions of calls have been taken out and replaced
-by concepts that may be found in the leftmost column of the "miscellaneous
-concepts" menu.
-
-Call levels relating to C3A and C3 were updated to reflect the recent
-voting in Callerlab.
-
-The database version is now a string instead of two numbers.  It appears
-in the database source file (sd_calls.txt) as a string in quotes, as in
-          version "28.54"
-This makes it possible for users who customize their own version of the
-database to comply with section 2(a) of the GNU General Public License,
-which requires that anyone who modifies any file to display that fact
-when the program runs.  By changing the string to something like
-          version "28.54(wba)"
-the fact that a modified database is in use will be indicated at program
-startup and will be stamped on each sequence that is written.
-
-Made scoot and little/plenty/ramble etc. calls more rational.  All of
-these calls now exist both by themselves and in their "scoot and ..." form.
-When called by themselves, little, little more, plenty, and rally will
-always have the outsides go to the right, even if the wave in the center
-is left handed.  When called as part of a "scoot and" call, the outsides
-are required by the call definition to go in the direction of the wave
-handedness.  This is implemented by requiring you to give the "left"
-modifier when the wave is left handed, which will make the outsides go
-to the left.  You are not actually required to say the word "left"
-when calling the resulting card, though it wouldn't hurt.
-
-Changed the name of the concept formerly called "<anyone> ONLY" to
-"<anyone> DO YOUR PART" to reflect more accurately the way this
-rather unpleasant concept behaves.  Unfortunately, this means that,
-in BBGG waves, for example, you must do "boys do your part, hinge"
-to go into C1 phantoms, whereas the normal thing to say when calling
-would be just "boys hinge".  The same is true when having some people
-hinge to go from C1 phantoms to a 2x4.
-
-Added the call "<anyone> trade".  This is what you should use in general
-for telling people to trade.  The "<anyone> ONLY" concept (now called
-"<anyone> DO YOUR PART") is not, has never been, and never will be the
-right thing to use for this, a fact which people who have attempted to
-use it have discovered to their dismay.  Use the call "<anyone> trade"
-instead.  It has been designed to handle this call the way it is actually
-used in practice.
-
-The call "fold" is now much more nearly faithful to the way it is actually
-done in practice.  Only the ends are allowed to fold.  Sorry.  Having
-anyone else fold is yucky anyway.  You are allowed to designate the people
-with other words, such as "girls fold", as long as the designated people
-are in fact the ends.  As usual, click on "CROSS" in front of the call to
-get this -- the program will move the word into the right place.
-
-The call "peel the top" can now be done in the "Z" setup that is common
-for this call.  The combination "girls fold and peel the top" now
-works!
-
-Added <anyone> run/cross run/kickoff/cross kickoff.  For cross run
-and cross kickoff, the designees must be centers or ends, or their
-equivalent.  As usual, click on "CROSS" in front of the call to get
-this -- the program will move the word into the right place.
-
-Fixed obscure bug in obscure call -- double down from columns.
-
-New call: N/4 the deucey.  The only legal fractions are 1/4 and 3/4.
-The ability to give different fractions, as in "2-1-3-3 quarter the deucey",
-is not implemented.  Remember that, since "<N/4>" does not enter into
-the alphabetization, this call is listed in the menu under "t".
-
-More new calls: snap the tag, and all the usual variants thereof.
-More new calls: slip the clutch, fractional tops, cross by.
-More new calls: eight chain N.
-
-New calls: [single] rotate from 6x1 and 8x1 columns.  Also, the
-concept "single" is now used to get single rotate -- single rotate is
-not separately listed in the menu.  The call "single file rotate" is
-now listed separately.  This is the 4x1 call.
-
-The calls "little, ends go as you are" and "plenty, ends go as you are" were
-added.  These are intended to be called from diamonds.  Exactly how you would
-say these calls may depend on the audience.  Many callers and dancers believe
-that one could just say "little" or "plenty" from these setups.  Some very
-fussy people believe that the definition is always quarter right, counter rotate,
-and roll, meaning that one must tell the ends to go as they are in order to get
-the intended effect.
-
-More types of resolves recognized, including "at home" from a "heads
-up to the middle" setup.  (It is NOT recognized from a genuine squared
-set -- some people must move into the middle to make a 2x4.)  The
-"reconcile" command can search (with great difficulty!) for "at home"
-getouts.
-
-The "skew" and "skewsome" concepts are now implemented.  So are phantom
-line and column shape-changers.  (These had already been implemented
-for split phantom and interlocked phantom.)  It can now do
-[split/interlocked] phantom lines/columns from a 1x16.
-
-The usual sorts of improvements were made in the program's ability to
-do various things.  For example, from a "rigger" setup (make a tidal
-wave and have the center 4 recycle, so there is a box in the center
-with miniwaves outside of it), it is now possible to tell the ends to
-explode.  Also, from interlocked diamonds, "random siamese twosome
-diamond chain thru" is now possible.  To do this, the third part of
-diamond chain thru was changed from "center 4 in the 8-person setup
-cast off 3/4" to "center 2 or 4 in the 4- or 8-person setup cast off 3/4".
-
-The limit (8) on the number of parts that a sequentially defined call
-may have has been removed.  This was formerly encoded as the constant
-SEQDEF_MAX in the file database.h .  A call can now have any reasonable
-number of parts.
-
-The program is now less likely to crash if it runs out of memory.
-If you are resolving (or reconciling, or "doing anything", etc.) and
-you click on "find another" but nothing happens, it can't allocate any
-memory for further resolves.  You would be well advised to write out
-the sequence from among the resolves you already have.  Beware:  this
-fix is not complete -- the program can still crash if run on a system
-with insufficient memory.
-
-Some of the changes that were made have had the unfortunate effect of
-increasing the database size from 65400 bytes to 71200 bytes.
-
-Slightly improved getout detection (it can see cross by, left allemande
-from thars and crossed waves, for example.)
-
-Database format:  Added new qualifier "in_or_out", and improved qualifier
-"wave_only", to make centers' part of "bits and "pieces" work authentically.
-
-Added very rudimentary awareness of "thar" setups.
-
-A bug was fixed in tandem/couples/siamese that could make it switch the paired
-people with each other if the call being executed involved stepping to a wave
-or rearing back from one.  This seems to have been introduced at about the time
-that fractional twosom/solid was added.  This bug is serious.
-
-Fixed bug that made things like "bigblock checkerbox" not work.
-
-It can now do two-person calls between people directly lined up in
-a quarter tag.  After "heads spin the top" (which leaves the boys
-facing directly), you can do things like "boys DO YOUR PART, slide thru".
-
-=======================================================================
-
-DOCUMENTATION CHANGES:
-
-COPYING updated to GPL v2 and included in manual.
-
-Installation instructions moved from README to new file INSTALL.
-
-Added "Getting Started" chapter to the manual.  It is supposed to be a
-gentle introduction for people who aren't going to read the whole
-manual.
-
-Changed address of Sd mailing lists to expo.lcs.mit.edu.
-
-Documented the terminal interface in a new chapter of sd_doc.txinfo.
+WARNING!  This is not a major release!  It is being distributed for
+the purpose of testing the user interface changes.
 
 
-BUILD CHANGES:
+Finally added the "magic_outroller_is_cw" predicate, so that magic outroll
+circulate now works as well as magic inroll circulate.
 
-The default Makefile is replaced by Makefile.in and configure.  See
-INSTALL for the new build procedures.  If you are using xmkmf, the
-procedure does not change.  If you had to use Makefile before, chances
-were you had to edit it by hand.  Now "configure" does the editing for
-you.
+New calls: [magic] in/out/zoom roll circulate from 2x3 setups.
 
+There is a new command "toggle concept levels" that affects whether
+concepts that are illegal at the current level will be presented.
+This condition is normally off, meaning that off-level concepts
+are not presented to the matcher in sdtty (i.e. they aren't recognized
+when you type them, and aren't presented when you type "?").  In the
+future, the X11 interface may also deactivate off-level concepts on
+the menus.  Also, the "resolve", "reconcile", "do_anything", and
+"nice_setup" commands will not generate off-level concepts.  When the
+"concept levels" switch is on, all concepts are presented, and made
+available to the resolver, regardless of their level, though a warning
+will be printed on the sequence whenever an off-level concept is used.
+The "toggle concept levels" command toggles the state of this switch.
+It is an icon in the X11 version, and a typed command in sdtty.
 
 USER INTERFACE CHANGES:
 
-Name of old sequence file displayed in prompt for new name.
+The program "sdtty" has been extensively rewritten for PC's and Unix
+systems.  The PC behavior has not been tested; differences from the
+previous version are difficult to characterize.  The Unix behavior
+now uses the "curses" display access mechanism.  It should make
+effective use of the screen-editing features of the terminal (VT-100
+or emulation of same, or whatever) to keep the screen updated.
 
-X11:
-Level included in icon name.
+You should be able to turn off the use of insert/delete line
+capabilities by giving the command-line switch "-no_line_delete" at
+program startup.
 
-sdtty:
-Display database reading ticks.
-
-Handle -db and -sequence command-line options.
-
-Added these commands: ^Z (stop), ESC (complete, like TAB),
-^U (kill line), and % (comment).
-
-
-FILES:
-
-Renamed "sd.c" to "sdconcpt.c".
-
-Renamed "database.doc" to "db_doc.txt".
-
-New files INSTALL, readme.txinfo, and install.txinfo.
-
-The database compiler now consists of two files:  dbcomp.c and mkcalls.c.
-
-Renamed "relnotes.archive" to "oldnotes".
+You should be able to turn the "curses" mechanism off completely by giving
+the command-line switch "-no_cursor" at program startup.  This should even
+make it possible to use the program from a printing device.
 
 ===============================================================================
 

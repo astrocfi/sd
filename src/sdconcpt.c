@@ -1262,7 +1262,7 @@ Private void do_concept_stable(
    selector_kind saved_selector, new_selector;
    long_boolean everyone, fractional;
    int directions[8];
-   int n, i, rot, howfar;
+   int n, i, rot, howfar, orig_rotation;
 
    fractional = parseptr->concept->value.arg2;
    everyone = !parseptr->concept->value.arg1;
@@ -1287,8 +1287,9 @@ Private void do_concept_stable(
       }
    }
 
+   orig_rotation = ss->rotation;
    move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
-   rot = ((ss->rotation - result->rotation) & 3) * 011;
+   rot = ((orig_rotation - result->rotation) & 3) * 011;
 
    n = setup_limits[result->kind];
    if (n < 0) fail("Sorry, can't do stable going to this setup.");
@@ -2564,6 +2565,8 @@ extern long_boolean do_big_concept(
    concept_func = concept_table[parseptr->concept->kind].concept_action;
 
    if (concept_func == 0) return(FALSE);
+
+   if (parseptr->concept->level > calling_level) warn(warn__bad_concept_level);
 
    if (concept_table[parseptr->concept->kind].concept_prop & CONCPROP__SET_PHANTOMS)
       ss->setupflags |= SETUPFLAG__PHANTOMS;

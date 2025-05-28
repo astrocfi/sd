@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <93/06/30 18:08:08 gildea>
+# Time-stamp: <93/07/02 16:47:00 wba>
 
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -37,7 +37,7 @@ SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
 
-SDTTY_SRC = sdui-tty.c sdui-ttu.c sdui-tpc.c
+SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
 SDTTY_OBJ = @SDTTY_OBJ@
 
 SDTTY_OBJS = @SDTTY_OBJS@
@@ -76,6 +76,9 @@ sdui-x11.o: sdui-x11.c
 	$(CC) $(CFLAGS) $(X11_INCLUDES) -c $(srcdir)/$*.c
 
 sdui-ttu.o: sdui-ttu.c
+	$(CC) $(CFLAGS) $(TTY_DEFS) -c $(srcdir)/$*.c
+
+sdmatch.o: sdmatch.c
 	$(CC) $(CFLAGS) $(TTY_DEFS) -c $(srcdir)/$*.c
 
 dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h

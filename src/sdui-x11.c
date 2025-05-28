@@ -1,5 +1,5 @@
-static char *id="@(#)$Sd: sdui-x11.c  1.13    gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/25 19:26:09 gildea>";
+static char *id="@(#)$Sd: sdui-x11.c  1.14    gildea@lcs.mit.edu  18 Mar 93 $";
+static char *time_stamp = "sdui-x11.c Time-stamp: <93/07/29 19:26:09 wba>";
 /* 
  * sdui-x11.c - SD User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -14,7 +14,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/25 19:26:09 gildea>";
  * By Stephen Gildea, March 1990.
  * Uses the Athena Widget Set from X11 Release 4 or 5.
  *
- * For use with version 29 of the Sd program.
+ * For use with version 30 of the Sd program.
  *
  *  The version of this file is as shown in the third field of the id
  *  string in the first line.  This string gets displayed at program
@@ -37,7 +37,6 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/25 19:26:09 gildea>";
    uims_do_selector_popup
    uims_do_quantifier_popup
    uims_do_modifier_popup
-   uims_do_concept_popup
    uims_add_new_line
    uims_reduce_line_count
    uims_begin_search
@@ -78,6 +77,30 @@ Private Widget commentpopup, commentbox, outfilepopup, outfilebox;
 Private Widget getoutpopup, getoutbox;
 Private Widget neglectpopup, neglectbox;
 
+/* This is a special value we use internally. */
+#define UI_SPECIAL_CONCEPT (uims_reply) -2
+
+/* This is the order in which command buttons will appear on the screen.
+    These will be translated into the things required by the main program by
+    the translation table "button_translations", which must track this enumeration. */
+typedef enum {
+   cmd_button_quit,
+   cmd_button_undo,
+   cmd_button_abort,
+   cmd_button_allow_mods,
+   cmd_button_allow_concepts,
+   cmd_button_create_comment,
+   cmd_button_change_outfile,
+   cmd_button_getout,
+   cmd_button_resolve,
+   cmd_button_reconcile,
+   cmd_button_anything,
+   cmd_button_nice_setup,
+   cmd_button_neglect,
+   cmd_button_save_pic
+} cmd_button_kind;
+#define NUM_CMD_BUTTON_KINDS (((int) cmd_button_save_pic)+1)
+
 /*
  * The total version string looks something like
  * "27.4:db27.5:ui1.6X11"
@@ -116,6 +139,7 @@ Private long_boolean ui_task_in_progress = FALSE;
  * Since callbacks and actions can't return values, narrow the use of
  * global variables with these two routines.
  */
+
 Private int callback_value_storage; /* used only by two routines below */
 
 Private void
@@ -185,17 +209,186 @@ unhighlight_lists(void)
  * Sets the external variable uims_menu_index.
  */
 
+Private XtAppContext xtcontext;
+
+Private void
+position_near_mouse(Widget popupshell)
+{
+    Window root, child;
+    int x, y, max_x, max_y;
+    int winx, winy;
+    Dimension width, height, border;
+    unsigned int mask;
+
+    /* much of this is copied from CenterWidgetOnPoint in Xaw/TextPop.c,
+       which should be a publicly-callable function anyway. */
+
+    XtVaGetValues(popupshell,
+		  XtNwidth, &width,
+		  XtNheight, &height,
+		  XtNborderWidth, &border,
+		  NULL);
+
+    /* be sure popup is realized before calling XtWindow on it */
+    XtRealizeWidget(popupshell);
+
+    XQueryPointer(XtDisplay(popupshell), XtWindow(popupshell),
+		  &root, &child, &x, &y, &winx, &winy, &mask);
+    max_x = WidthOfScreen(XtScreen(popupshell)) - width;
+    max_y = HeightOfScreen(XtScreen(popupshell)) - height;
+
+    width += 2 * border;
+    height += 2 * border;
+
+    x -= ( (Position) width/2 );
+    if (x < 0) x = 0;
+    if (x > max_x) x = max_x;
+
+    y -= ( (Position) height/2 );
+    if (y < 0) y = 0;
+    if ( y > max_y ) y = max_y;
+
+    XtVaSetValues(popupshell,
+		  XtNx, (Position)x,
+		  XtNy, (Position)y,
+		  NULL);
+}
+
+
+Private int
+do_popup(Widget popup_shell)
+{
+    int value;
+    Display *display = XtDisplay(popup_shell);
+    XEvent event;
+
+    position_near_mouse(popup_shell);
+    XtPopup(popup_shell, XtGrabNone);
+    inside_what = inside_popup;
+    value = read_user_gesture(xtcontext);
+    XtPopdown(popup_shell);
+    /*
+     * Make sure we know the popup is popped down,
+     * so we are free to resize it for the next popup.
+     * (This would be a problem when there are two popups in a row.)
+     */
+    do {
+	XMaskEvent(display, StructureNotifyMask, &event);
+	XtDispatchEvent(&event);
+    } while (event.type != ReparentNotify);
+    return value;
+}    
+
+Private String empty_string = "";
+Private String *concept_popup_list = NULL;
+
+#define SPECIAL_COMMAND_ALLOW_MODS 0
+#define SPECIAL_COMMAND_ALLOW_ALL_CONCEPTS 1
+
+#define USER_GESTURE_NULL -1
+#define SPECIAL_ALLOW_MODS -2
+#define SPECIAL_ALLOW_ALL_CONCEPTS -3
+
+
+/* Beware:  This table must track the enumeration "cmd_button_kind". */
+static int button_translations[] = {
+   command_quit,                          /* cmd_button_quit */
+   command_undo,                          /* cmd_button_undo */
+   command_abort,                         /* cmd_button_abort */
+   SPECIAL_ALLOW_MODS,                    /* cmd_button_allow_mods */
+   SPECIAL_ALLOW_ALL_CONCEPTS,            /* cmd_button_allow_concepts */
+   command_create_comment,                /* cmd_button_create_comment */
+   command_change_outfile,                /* cmd_button_change_outfile */
+   command_getout,                        /* cmd_button_getout */
+   command_resolve,                       /* cmd_button_resolve */
+   command_reconcile,                     /* cmd_button_reconcile */
+   command_anything,                      /* cmd_button_anything */
+   command_nice_setup,                    /* cmd_button_nice_setup */
+   command_neglect,                       /* cmd_button_neglect */
+   command_save_pic                       /* cmd_button_save_pic */
+};
+
+
 /* ARGSUSED */
 Private void
 command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XawListReturnStruct *item = (XawListReturnStruct *) call_data;
-    int menu_type = (int) client_data;
 
-    unhighlight_lists();	/* do here in case spurious event */
+    unhighlight_lists();        /* do here in case spurious event */
     if (inside_what == inside_get_command) {
+        uims_reply local_reply = (uims_reply) client_data;
+ 
 	uims_menu_index = item->list_index; /* extern var <- menu item no. */
-	callback_return(menu_type); /* return which menu */
+
+        if (local_reply == ui_command_select) {
+            /* Translate into the form the main program wants, except for a few
+                negative values that we will intercept later. */
+            uims_menu_index = button_translations[uims_menu_index];
+        }
+        else if (local_reply == ui_concept_select) {
+            /* Fudge the number to be relative to the entire concept list. */
+            uims_menu_index += general_concept_offset;
+        }
+        else if (local_reply == UI_SPECIAL_CONCEPT) {
+            int column, index, menu;
+            unsigned int i;
+            unsigned int row, col;
+            unsigned int maxrow, maxcolumn, entries;
+            int value;
+      
+            menu = uims_menu_index;
+
+            /* determine menu size */
+            for (maxcolumn=0; concept_size_tables[menu][maxcolumn]>=0; maxcolumn++)
+                ;
+            maxrow = 0;
+            for (i=0; i<maxcolumn; i++)
+                if (maxrow < concept_size_tables[menu][i])
+                    maxrow = concept_size_tables[menu][i];
+            entries = maxcolumn*maxrow;
+        
+            concept_popup_list =
+                get_more_mem(concept_popup_list, entries*sizeof(String *));
+        
+            /* fill in the entries */
+            i=0;
+            for (row=0; row<maxrow; row++) {
+                for (col=0; col<maxcolumn; col++) {
+                    if (row < concept_size_tables[menu][col])
+                        concept_popup_list[i] = concept_descriptor_table
+                            [ concept_offset_tables[menu][col]+row ].name;
+                    else
+                        concept_popup_list[i] = empty_string;
+                    i++;
+                }
+            }
+        
+            XtVaSetValues(conceptlist, XtNdefaultColumns, maxcolumn, NULL);
+            XawListChange(conceptlist, concept_popup_list, entries, 0, TRUE);
+            value = do_popup(conceptpopup);
+        
+            if (value == 0)
+                goto try_again;   /* User moved mouse away. */
+
+            value--;
+            /* row and column are 0-based */
+            row = value/maxcolumn;
+            column = value%maxcolumn;
+            if (row >= concept_size_tables[menu][column])
+                goto try_again;    /* Off end of menu; can't be a legal mouse click. */
+
+            index = row + concept_offset_tables[menu][column];
+            uims_menu_index = index;
+            /* Check for non-existent menu entry. */
+            if (concept_descriptor_table[uims_menu_index].kind == concept_comment) goto try_again;
+            local_reply = ui_concept_select;
+        }
+
+        callback_return(local_reply); /* return which menu */
+        return;
+        try_again:
+        callback_return(USER_GESTURE_NULL);
     }
 }
 
@@ -352,7 +545,7 @@ typedef struct _SdResources {
     String outfile_format;
     String modifications_allowed[3];
     String start_list[NUM_START_SELECT_KINDS];
-    String cmd_list[NUM_COMMAND_KINDS];
+    String cmd_list[NUM_CMD_BUTTON_KINDS];
     String resolve_list[NUM_RESOLVE_COMMAND_KINDS];
     String quantifier_title;
     String selector_title;
@@ -376,20 +569,20 @@ Private XtResource startup_resources[] = {
 };
 
 Private XtResource command_resources[] = {
-    MENU("exit", cmd_list[command_quit], "Exit the program"),
-    MENU("undo", cmd_list[command_undo], "Undo last call"),
-    MENU("abort", cmd_list[command_abort], "Abort this sequence"),
-    MENU("mods", cmd_list[command_allow_modification], "Allow modifications"),
-    MENU("comment", cmd_list[command_create_comment], "Insert a comment ..."),
-    MENU("outfile", cmd_list[command_change_outfile], "Change output file ..."),
-    MENU("getout", cmd_list[command_getout], "End this sequence ..."),
-    MENU("neglect", cmd_list[command_neglect], "Show neglected calls ..."),
-    MENU("savepic", cmd_list[command_save_pic], "Save picture"),
-    MENU("resolve", cmd_list[command_resolve], "Resolve ..."),
-    MENU("reconcile", cmd_list[command_reconcile], "Reconcile ..."),
-    MENU("anything", cmd_list[command_anything], "Do anything ..."),
-    MENU("nice", cmd_list[command_nice_setup], "Nice setup ..."),
-    MENU("refresh", cmd_list[command_refresh], "Refresh display")
+    MENU("exit", cmd_list[cmd_button_quit], "Exit the program"),
+    MENU("undo", cmd_list[cmd_button_undo], "Undo last call"),
+    MENU("abort", cmd_list[cmd_button_abort], "Abort this sequence"),
+    MENU("allowmods", cmd_list[cmd_button_allow_mods], "Allow modifications"),
+    MENU("allowconcepts", cmd_list[cmd_button_allow_concepts], "Toggle concept levels"),
+    MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment ..."),
+    MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file ..."),
+    MENU("getout", cmd_list[cmd_button_getout], "End this sequence ..."),
+    MENU("resolve", cmd_list[cmd_button_resolve], "Resolve ..."),
+    MENU("reconcile", cmd_list[cmd_button_reconcile], "Reconcile ..."),
+    MENU("anything", cmd_list[cmd_button_anything], "Do anything ..."),
+    MENU("nice", cmd_list[cmd_button_nice_setup], "Nice setup ..."),
+    MENU("neglect", cmd_list[cmd_button_neglect], "Show neglected calls ..."),
+    MENU("savepic", cmd_list[cmd_button_save_pic], "Save picture")
 };
 
 Private XtResource resolve_resources[] = {
@@ -469,8 +662,6 @@ CONST static char *fallback_resources[] = {
     NULL};
 
 Private char *program_name = NULL;	/* argv[0]: our name */
-
-Private XtAppContext xtcontext;
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -557,7 +748,7 @@ uims_preinitialize(void)
 	XtVaCreateManagedWidget("conceptspecial", listWidgetClass,
 				speconsbox, NULL);
     XtAddCallback(conceptspecialmenu, XtNcallback,
-		  command_or_menu_chosen, (XtPointer)ui_special_concept);
+		  command_or_menu_chosen, (XtPointer) UI_SPECIAL_CONCEPT);
     XtOverrideTranslations(conceptspecialmenu, list_trans);
 
     callbox = XtVaCreateManagedWidget("callbox", panedWidgetClass,
@@ -922,7 +1113,7 @@ uims_postinitialize(void)
      * Before realizing, fill everything up with its normal information
      * so it can be sized correctly.
      */
-    XawListChange(cmdmenu, sd_resources.cmd_list, NUM_COMMAND_KINDS, 0, TRUE);
+    XawListChange(cmdmenu, sd_resources.cmd_list, NUM_CMD_BUTTON_KINDS, 0, TRUE);
     XawListChange(conceptspecialmenu, concept_menu_strings, 0, 0, TRUE);
     XawListChange(conceptmenu, concept_menu_list, concept_menu_len, 0, TRUE);
     set_call_menu (call_list_any, longest_title);
@@ -945,7 +1136,7 @@ uims_postinitialize(void)
 Private void
 switch_from_startup_mode(void)
 {
-    XawListChange(cmdmenu, sd_resources.cmd_list, NUM_COMMAND_KINDS, 0, FALSE);
+    XawListChange(cmdmenu, sd_resources.cmd_list, NUM_CMD_BUTTON_KINDS, 0, FALSE);
     XtRemoveAllCallbacks(cmdmenu, XtNcallback);
     XtAddCallback(cmdmenu, XtNcallback,
 		  command_or_menu_chosen, (XtPointer)ui_command_select);
@@ -967,17 +1158,19 @@ switch_to_resolve_mode(void)
 Private int visible_modifications = -1;
 
 extern uims_reply
-uims_get_command(mode_kind mode, call_list_kind call_menu, int modifications_flag)
+uims_get_command(mode_kind mode, call_list_kind *call_menu)
 {
+    try_again:
+
     /* Update the text area */
     XawTextEnableRedisplay(txtwin);
 
-    if (visible_modifications != modifications_flag) {
+    if (visible_modifications != allowing_modifications) {
 	XtVaSetValues(statuswin,
 		      XtNlabel,
-		      sd_resources.modifications_allowed[modifications_flag],
+		      sd_resources.modifications_allowed[allowing_modifications],
 		      NULL);
-	visible_modifications = modifications_flag;
+	visible_modifications = allowing_modifications;
     }
 
     switch (mode) {
@@ -1003,6 +1196,9 @@ uims_get_command(mode_kind mode, call_list_kind call_menu, int modifications_fla
 	break;
 
       case mode_normal:
+        if (allowing_modifications)
+            *call_menu = call_list_any;
+
 	if (visible_mode != mode_normal) {
 	    if (visible_mode == mode_resolve) {
 		XtUnmanageChild(resolvewin);
@@ -1013,8 +1209,8 @@ uims_get_command(mode_kind mode, call_list_kind call_menu, int modifications_fla
 	    visible_mode = mode_normal;
 	    visible_call_menu = call_list_none; /* no call menu visible */
 	}
-	if (visible_call_menu != call_menu)
-	    set_call_menu (call_menu, call_menu);
+	if (visible_call_menu != *call_menu)
+	    set_call_menu (*call_menu, *call_menu);
 	break;
     case mode_none:
 	/* this should never happen */
@@ -1022,77 +1218,28 @@ uims_get_command(mode_kind mode, call_list_kind call_menu, int modifications_fla
     }
 
     inside_what = inside_get_command;
-    return (uims_reply)read_user_gesture(xtcontext);
+    {
+        int local_reply = read_user_gesture(xtcontext);
+
+        if (local_reply == USER_GESTURE_NULL)
+            goto try_again;
+        else if (local_reply == ui_command_select) {
+            if (uims_menu_index == SPECIAL_ALLOW_MODS) {
+                /* Increment "allowing_modifications" up to a maximum of 2. */
+                if (allowing_modifications != 2) allowing_modifications++;
+                goto try_again;
+            }
+            else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
+                allowing_all_concepts = !allowing_all_concepts;
+                /* ***** Maybe we should change visibility of off-level concepts at this point. */
+                goto try_again;
+            }
+        }
+
+        return local_reply;
+    }
 }
 
-
-Private void
-position_near_mouse(Widget popupshell)
-{
-    Window root, child;
-    int x, y, max_x, max_y;
-    int winx, winy;
-    Dimension width, height, border;
-    unsigned int mask;
-
-    /* much of this is copied from CenterWidgetOnPoint in Xaw/TextPop.c,
-       which should be a publicly-callable function anyway. */
-
-    XtVaGetValues(popupshell,
-		  XtNwidth, &width,
-		  XtNheight, &height,
-		  XtNborderWidth, &border,
-		  NULL);
-
-    /* be sure popup is realized before calling XtWindow on it */
-    XtRealizeWidget(popupshell);
-
-    XQueryPointer(XtDisplay(popupshell), XtWindow(popupshell),
-		  &root, &child, &x, &y, &winx, &winy, &mask);
-    max_x = WidthOfScreen(XtScreen(popupshell)) - width;
-    max_y = HeightOfScreen(XtScreen(popupshell)) - height;
-
-    width += 2 * border;
-    height += 2 * border;
-
-    x -= ( (Position) width/2 );
-    if (x < 0) x = 0;
-    if (x > max_x) x = max_x;
-
-    y -= ( (Position) height/2 );
-    if (y < 0) y = 0;
-    if ( y > max_y ) y = max_y;
-
-    XtVaSetValues(popupshell,
-		  XtNx, (Position)x,
-		  XtNy, (Position)y,
-		  NULL);
-}
-
-
-Private int
-do_popup(Widget popup_shell)
-{
-    int value;
-    Display *display = XtDisplay(popup_shell);
-    XEvent event;
-
-    position_near_mouse(popup_shell);
-    XtPopup(popup_shell, XtGrabNone);
-    inside_what = inside_popup;
-    value = read_user_gesture(xtcontext);
-    XtPopdown(popup_shell);
-    /*
-     * Make sure we know the popup is popped down,
-     * so we are free to resize it for the next popup.
-     * (This would be a problem when there are two popups in a row.)
-     */
-    do {
-	XMaskEvent(display, StructureNotifyMask, &event);
-	XtDispatchEvent(&event);
-    } while (event.type != ReparentNotify);
-    return value;
-}    
 
 Private int
 get_popup_string(Widget popup, Widget dialog, char dest[])
@@ -1318,57 +1465,6 @@ uims_do_quantifier_popup(void)
     return t;
 }
 
-
-Private String empty_string = "";
-Private String *concept_popup_list = NULL;
-
-extern int
-uims_do_concept_popup(int kind)
-{
-    unsigned int i;
-    unsigned int row, column;
-    unsigned int maxrow, maxcolumn, entries;
-    int value;
-
-    /* determine menu size */
-    for (maxcolumn=0; concept_size_tables[kind][maxcolumn]>=0; maxcolumn++)
-	;
-    maxrow = 0;
-    for (i=0; i<maxcolumn; i++)
-	if (maxrow < concept_size_tables[kind][i])
-	    maxrow = concept_size_tables[kind][i];
-    entries = maxcolumn*maxrow;
-
-    concept_popup_list =
-	get_more_mem(concept_popup_list, entries*sizeof(String *));
-
-    /* fill in the entries */
-    i=0;
-    for (row=0; row<maxrow; row++) {
-	for (column=0; column<maxcolumn; column++) {
-	    if (row < concept_size_tables[kind][column])
-		concept_popup_list[i] = concept_descriptor_table
-		    [ concept_offset_tables[kind][column]+row ].name;
-	    else
-		concept_popup_list[i] = empty_string;
-	    i++;
-	}
-    }
-
-    XtVaSetValues(conceptlist, XtNdefaultColumns, maxcolumn, NULL);
-    XawListChange(conceptlist, concept_popup_list, entries, 0, TRUE);
-    value = do_popup(conceptpopup);
-
-    if (value) {
-	value--;
-	/* row and column are 0-based */
-	row = value/maxcolumn;
-	column = value%maxcolumn;
-	if (row < concept_size_tables[kind][column]) /* not off the end? */
-	    return (column<<8) + row + 1;
-    }
-    return POPUP_DECLINE;
-}
 
 /* variables used by the next two routines */
 

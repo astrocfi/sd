@@ -973,6 +973,8 @@ extern void toplevelmove(void)
       written_history_items = history_ptr;
 
    starting_setup.setupflags = 0;
+   newhist->warnings.bits[0] = 0;
+   newhist->warnings.bits[1] = 0;
 
    /* If we are starting a sequence with the "so-and-so into the center and do whatever"
       flag on, and this call is a "sequence starter", take special action. */

@@ -1,7 +1,7 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <93/06/25 19:40:23 gildea>
+ * Time-stamp: <93/03/22 18:32:26 gildea>
  * Copyright (c) 1990,1991,1992,1993 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
@@ -34,17 +34,7 @@
  *  the complete version.
  */
 
-static char *sdui_version = "1.3";
-
-
-
-
-/* ***** We should make the file sdmatch.c (and sdmatch.h) be part of the sdtty
-   program, and use the matching functions therein.  See sdui-mac.c for an example. */
-
-
-
-
+static char *sdui_version = "1.5";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -62,7 +52,6 @@ static char *sdui_version = "1.3";
    uims_do_selector_popup
    uims_do_quantifier_popup
    uims_do_modifier_popup
-   uims_do_concept_popup
    uims_add_new_line
    uims_reduce_line_count
    uims_begin_search
@@ -81,18 +70,20 @@ static char *sdui_version = "1.3";
 #define UNIX_STYLE
 #endif
 
-#include "sd.h"
+/* For "sprintf" and some IO stuff (fflush, printf, stdout) that we use
+   during the "database tick" printing before the actual IO package is started.
+   During normal operation, we don't do any IO at all in this file. */
 #include <stdio.h>
+/* For "strlen". */
 #include <string.h>
+/* For "isprint". */
 #include <ctype.h>
+/* For "atoi". */
+#include <stdlib.h>
 
-#ifndef UNIX_STYLE
-#include <console.h>
-#else
+#include "sd.h"
+#include "sdmatch.h"
 #include "sdui-ttu.h"
-#endif
-
-typedef char *String;
 
 #define DEL 0x7F
 
@@ -112,179 +103,64 @@ uims_version_string(void)
 }
 
 /*
- * number of lines on the screen.
- * XXX - should calculate and update dynamically.
- * Original Mac tty intrf had 32 here.
- */
-Private int input_window_height = 24;
-
-/*
  * User Input functions
- *
- * These functions use the Think-C 5.0 console functions.
  */
-
-#ifdef UNIX_STYLE
-/* we don't use this struct */
-struct {
-    int ncols;
-    int nrows;
-    int left;
-    int top;
-    char *title;
-} console_options;
-#endif
-
-Private void
-input_initialize()
-{
-    /*
-     * Here we cause the default console window to be created. This console
-     * window is used for echoing input and displaying input completions.
-     */
-
-    console_options.ncols = 44;                  /* number of columns */
-    console_options.nrows = input_window_height; /* number of rows */
-    console_options.left = 0;              /* position of left edge */
-    console_options.top = 40;              /* position of top edge */
-#ifndef UNIX_STYLE
-    console_options.title = "\psd input";  /* \p creates a Pascal string */
-#endif
-    cshow(stdout);                         /* create the console window */
-}
-
-Private void
-clear_input(void)
-{
-    int x, y;
-    cgetxy (&x, &y, stdout);
-    cgotoxy (1, y, stdout);
-    ccleol(stdout); /* clear the current line */
-}
 
 /* not passed as args so refresh_input can be called from signal handler */
 Private char user_input[200];
-Private String user_input_prompt;
-
-Private void
-clear_user_input(void)
-{
-    user_input[0] = '\0';
-}
+Private char *user_input_prompt;
 
 void
 refresh_input(void)
 {
-    clear_input();
-    printf("%s%s", user_input_prompt, user_input);
+    user_input[0] = '\0';
+    clear_line(); /* clear the current line */
+    put_line(user_input_prompt);
 }
 
 Private void
 get_string_input(char prompt[], char dest[])
 {
-    csetmode(C_ECHO, stdin); /* normal input mode: echo, line editing */
-    user_input_prompt = prompt;
-    clear_user_input();
-    refresh_input();
-    gets(dest);
-    csetmode(C_RAW, stdin); /* raw input mode: no echo, does not block */
+    put_line(prompt);
+    get_string(dest);
 }
 
-#ifdef MSDOS
-#undef getchar
-Private int getchar(void)
-{
-    int n;
-
-    fflush(stdout);
-    n = getch();
-    if (n > 127) {
-	if (n == 339) /* Delete */
-	    n = '\177';
-	else
-	    n = ' ';
-    }
-    return n;
-}
-#endif /* MSDOS */
 
 Private int
 get_char_input(void)
 {
     int c;
-    csetmode(C_RAW, stdin); /* raw input mode, no echo, does not block */
 #ifdef THINK_C			/* Unix or DOS provides its own cursor */
     putchar('_'); /* a cursor */
 #endif
-    c = getchar();
-    while (c == EOF) c = getchar(); /* busy wait (EOF means no character yet) */
+    c = get_char();
 #ifdef THINK_C
     putchar('\b'); putchar(' '); putchar('\b'); /* erase the cursor */
 #endif
     return c;
 }
-
-/*
- * Restore the normal input mode, if necessary.
- */
-
-Private void
-restore_input_mode(void)
-{
-    csetmode(C_ECHO, stdin); /* normal input mode: echo, line editing */
-}
-
-/*
- * end of user input stuff
- */
-
-/*
- * Text Output Support
- */
   
-Private FILE *output = 0;
-Private String current_text[300];
+/* This tells how many of the last lines currently on the screen contain
+   the text that the main program thinks comprise the transcript.  That is,
+   if we count this far up from the bottom of the screen (well, from the
+   cursor, to be precise), we will get the line that the main program thinks
+   is the first line of the transcript.  This variable will often be greater
+   than the main program's belief of the transcript length, because we are
+   fooling around with input lines (prompts, error messages, etc.) at the
+   bottom of the screen.
+
+   The main program typically updates the transcript in a "clean" way by
+   calling "uims_reduce_line_count" to erase some number of lines at the
+   end of the transcript, followed by a rewrite of new material.  We compare
+   what "uims_reduce_line_count" tells us against the value of this variable
+   to find out how many lines to actually erase.  That way, we erase the input
+   lines and produce a truly clean transcript, on devices (like VT-100's)
+   capable of doing so.  If the display device can't erase lines, the user
+   will see the last few lines of the transcript overlapping from one
+   command to the next.  This is the appropriate behavior for a printing
+   terminal or computer emulation of same. */
+
 Private int current_text_line;
-Private char text_output_buffer[10000];
-Private String text_output_pointer;
-Private int text_output_height;
-
-/*
- * add a line to the text output area.
- * the_line does not have the trailing Newline in it and
- * is volitile, so we must copy it if we need it to stay around.
- */
-
-Private void
-text_output_add_line(char the_line[])
-{
-    int len;
-
-    if (output == 0) {
-        /* create a second console window for text output */
-        text_output_height = input_window_height;
-        console_options.ncols = 59;                  /* number of columns */
-        console_options.nrows = text_output_height;  /* number of rows */
-        console_options.left = 274;                  /* position of left edge */
-        console_options.top = 40;                    /* position of top edge */
-#ifndef UNIX_STYLE
-        console_options.title = "\psd output";  /* \p creates a Pascal string */
-#endif
-        output = fopenc();                      /* open the console window */
-        current_text_line = 0;
-        text_output_pointer = text_output_buffer;
-        current_text[current_text_line] = text_output_pointer;
-        *text_output_pointer = '\0';
-    }
-    len = strlen(the_line);
-    strncpy(text_output_pointer, the_line, len);
-    text_output_pointer += len;
-    *text_output_pointer++ = '\n';
-    ++current_text_line;
-    current_text[current_text_line] = text_output_pointer;
-    *text_output_pointer = '\0';
-    fprintf(output, "%s\n", the_line);
-}
 
 /*
  * Throw away all but the first n lines of the text output.
@@ -294,81 +170,19 @@ text_output_add_line(char the_line[])
 Private void
 text_output_trim(int n)
 {
-    if (output) {
-        current_text_line = n;
-        text_output_pointer = current_text[current_text_line];
-        *text_output_pointer = '\0';
-        cgotoxy (1, 1, output);
-        ccleos(output);
-        if (current_text_line > text_output_height) {
-            fprintf(output, "%s",
-                current_text[current_text_line - text_output_height]);
-        }
-        else {
-            fprintf(output, "%s", text_output_buffer);
-        }
-    }
-}
+    if (current_text_line > n)
+        erase_last_n(current_text_line-n);
 
-Private void
-text_output_close(void)
-{
-    if (output) {
-        fclose(output);
-        output = 0;
-    }
+    current_text_line = n;
 }
 
 /*
  * end of text output stuff
  */
 
-Private String *concept_menu_list;
-Private int concept_menu_len;
+Private char **concept_menu_list;
 
-Private String *call_menu_lists[NUM_CALL_LIST_KINDS];
-Private String call_menu_names[NUM_CALL_LIST_KINDS];
-
-/* the following arrays must be coordinated with the sd program */
-
-/* startup_commands tracks the start_select_kind enumeration */
-Private String startup_commands[] = {
-    "Exit from the program",
-    "Heads 1P2P",
-    "Sides 1P2P",
-    "Heads start",
-    "Sides start",
-    "Just as they are"
-};
-
-/* command_commands tracks the command_kind enumeration */
-Private String command_commands[] = {
-    "Exit the program",
-    "Undo last call",
-    "Abort this sequence",
-    "Allow modifications",
-    "Insert a comment ...",
-    "Change output file ...",
-    "End this sequence ...",
-    "Resolve ...",
-    "Reconcile ...",
-    "Do anything ...",
-    "Nice setup ...",
-    "Show neglected calls ...",
-    "Save picture",
-    "Refresh display"
-};
-
-/* resolve_commands tracks the resolve_command_kind enumeration */
-Private String resolve_commands[] = {
-    "abort the search",
-    "find another",
-    "go to next",
-    "go to previous",
-    "ACCEPT current choice",
-    "raise reconcile point",
-    "lower reconcile point"
-};
+Private char *call_menu_prompts[NUM_CALL_LIST_KINDS];
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -381,8 +195,9 @@ Private String resolve_commands[] = {
 extern void
 uims_process_command_line(int *argcp, char ***argvp)
 {
-   input_initialize();
-#ifndef UNIX_STYLE
+#ifdef UNIX_STYLE
+   ttu_process_command_line(argcp, argvp);
+#else
    *argcp = ccommand(argvp); /* pop up window to get command line arguments */
 #endif
 }
@@ -396,19 +211,6 @@ uims_process_command_line(int *argcp, char ***argvp)
 extern void
 uims_preinitialize(void)
 {
-    ;
-}
-
-Private void
-add_call_to_menu(String **menu, int call_menu_index, int menu_size,
-    char callname[])
-{
-    if (call_menu_index == 0) {
-        /* first item in this menu; set it up */
-        *menu = (String *)get_mem((unsigned)(menu_size+1) * sizeof(String *));
-    }
-
-    (*menu)[call_menu_index] = callname;
 }
 
 /*
@@ -421,10 +223,7 @@ add_call_to_menu(String **menu, int call_menu_index, int menu_size,
 extern void
 uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
 {
-    int menu_num = (int) cl;
-
-    add_call_to_menu(&call_menu_lists[menu_num], call_menu_index,
-             number_of_calls[menu_num], name);
+    matcher_add_call_to_menu(cl, call_menu_index, name);
 }
 
 
@@ -440,8 +239,15 @@ uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
 extern void
 uims_finish_call_menu(call_list_kind cl, char menu_name[])
 {
-   call_menu_names[cl] = menu_name;
- 
+    call_menu_prompts[cl] = (char *) get_mem(50);  /* *** Too lazy to compute it. */
+
+    if (cl == call_list_any)
+        /* The menu name here is "(any setup)".  That may be a sensible
+           name for a menu, but it isn't helpful as a prompt.  So we
+           just use a vanilla prompt. */
+        call_menu_prompts[cl] = "--> ";
+    else
+        (void) sprintf(call_menu_prompts[cl], "(%s)--> ", menu_name);
 }
 
 /* The main program calls this after all the call menus have been created,
@@ -459,116 +265,103 @@ uims_finish_call_menu(call_list_kind cl, char menu_name[])
 extern void
 uims_postinitialize(void)
 {
-    int i;
-
-    /* fill in general concept menu */
-    for (i=0; i<general_concept_size; i++)
-        add_call_to_menu(&concept_menu_list, i, general_concept_size,
-            concept_descriptor_table[i+general_concept_offset].name);
-
-    concept_menu_len = general_concept_size;
+    call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
+    matcher_initialize(TRUE); /* want commands last in menu */
 #if defined(UNIX_STYLE) && !defined(MSDOS)
     initialize_signal_handlers();
 #endif
+    ttu_initialize();
+    current_text_line = 0;
 }
 
 Private void
-add_character(char input_string[], int c)
+pack_and_echo_character(int c)
 {
-    char *p;
-    p = input_string;
+    char *p = user_input;
+
     while (*p) p++;
     *p++ = c;
     *p = 0;
+    put_char(c);
 }
 
-Private void
-strn_gcp(char *s1, char *s2)
-{
-    /* set S1 to be the greatest common prefix of S1 and S2 */
-    for (;;) {
-        if (*s1 == 0) break;
-        if (*s1 != *s2) {
-            *s1 = 0;
-            break;
-        }
-        ++s1;
-        ++s2;
-    }
-}
-
+/* This tells how many more lines of matches (the stuff we print in response
+   to a question mark) we can print before we have to say "--More--" to
+   get permission from the user to continue.  If it goes negative, the
+   user has given a negative reply to one of our queries, and so we don't
+   print any more stuff. */
 Private int match_counter;
+
+/* This is what we reset the counter to whenever the user confirms.  That
+   is, it is the number of lines we print per "screenful".  On a VT-100-like
+   ("dumb") terminal, we will actually make it a screenful.  On a printing
+   device or a workstation, we don't need to do the hold-screen stuff, because
+   the device can handle output intelligently (on a printing device, it does
+   this by letting us look at the paper that is spewing out on the floor;
+   on a workstation we know that the window system provides real (infinite,
+   of course) scrolling).  But on printing devices or workstations we still
+   do the output in screenful-like blocks, because the user may not want
+   to see an enormous amount of output. */
 Private int match_lines;
 
-typedef struct {
-    int valid;       /* set to TRUE if a match was found */
-    int exact;       /* set to TRUE if an exact match was found */
-    uims_reply kind;
-    int index;
-    int who;         /* matches <anyone> */
-    int n;           /* matches <n> */
-} match_result;
-
-typedef struct {
-    String full_input;     /* the current user input */
-    String extended_input; /* the maximal common extension to the user input */
-    int match_count;       /* the number of matches so far */
-    int exact_match;       /* true if an exact match has been found */
-    int showing;           /* we are only showing the matching patterns */
-    match_result result;   /* value of the first or exact matching pattern */
-} search_state;
-
 Private void
-start_matches()
+start_matches(void)
 {
-    match_lines = input_window_height;
+   /*
+    * Find the number of lines on the screen.
+    * Used only for grouping "screenfuls" with "--more--" stuff
+    * when showing long lists of choices after '?' is typed.
+    * In other cases, we just assume the output mechanism can intelligently
+    * handle what we send to it.
+    */
+
+    match_lines = get_lines_for_more();
     match_counter = match_lines-1; /* last line used for "--More--" prompt */
 }
 
 Private int
-prompt_for_more_output(int *pcounter)
+prompt_for_more_output(void)
 {
-    int c;
-    char *real_input_prompt = user_input_prompt;
-    char real_input_start = user_input[0];
+    put_line("--More--");
 
     for (;;) {
-	/* temporarily clobber input state */
-	user_input_prompt = "--More--";
-	clear_user_input();
-	refresh_input();
-        c = get_char_input();
-        clear_input();
-	user_input_prompt = real_input_prompt;
-	user_input[0] = real_input_start;
+        int c = get_char_input();
+        clear_line();   /* Erase the "more" line; next item goes on that line. */
+
         switch (c) {
           case '\r':
-          case '\n': *pcounter = 1; /* show one more line */
-                     return TRUE; /* keep going */
+          case '\n': match_counter = 1; /* show one more line */
+                     return TRUE;  /* keep going */
 
           case '\b':
           case DEL:
           case 'q':
           case 'Q':  return FALSE; /* stop showing */
 
-          case ' ':  return TRUE; /* keep going */
+          case ' ':  return TRUE;  /* keep going */
 
-          default:   puts("Type Space for next page, Return for next line, Delete to stop.");
+          default:   put_line("Type Space to see more, Return for next line, Delete to stop:  --More--");
         }
     }
 }
 
 Private void
-show_match(search_state *sp, String s)
+show_match(char *user_input, char *extension, match_result *mr)
 {
-    if (sp->showing) {
-        if (match_counter <= 0) {
-            match_counter = match_lines - 1;
-            sp->showing = prompt_for_more_output(&match_counter);
+    if (match_counter < 0) return;  /* Showing has been turned off. */
+
+    if (match_counter <= 0) {
+        match_counter = match_lines - 1;
+        if (!prompt_for_more_output()) {
+            match_counter = -1;   /* Turn it off. */
+            return;
         }
-        match_counter--;
-        if (sp->showing) printf("%s%s\n", sp->full_input, s);
     }
+    match_counter--;
+    put_line(user_input);
+    put_line(extension);
+    put_line("\n");
+    current_text_line++;
 }
 
 /*
@@ -579,421 +372,193 @@ show_match(search_state *sp, String s)
  * one item that matches exactly, they are all equivalent.
  */
 
-Private int save_special_index;
-    /* save concept menu index for uims_do_concept_popup */
-
-/*
- * Record a match.  Extension is how the current input would be extended to
- * match the current pattern, in lower case.  Result is the value of the
- * current pattern.
- */
-    
-Private void
-record_a_match(search_state *sp, char extension[], match_result result)
-{
-    if (sp->match_count == 0)
-        /* this is the first match */
-        strcpy(sp->extended_input, extension);
-    else
-        strn_gcp(sp->extended_input, extension);
-    if ((sp->match_count == 0) || (*extension == '\0'))
-        /* first match or an exact match */
-        sp->result = result;
-    if (*extension == '\0')
-        sp->result.exact = TRUE;
-    ++sp->match_count;
-    show_match(sp, extension);
-}
-
-Private void
-match_suffix(search_state *sp, String user, String pat,
-    String patx, String patxp, match_result result);
-
-/*
- * Match_wildcard tests for and handles pattern suffixes that being with
- * a wildcard such as "<ANYONE>".  A wildcard is handled only if there is
- * room in the Result struct to store the associated value.
- */
-
-Private int
-match_wildcard(search_state *sp, String user, String pat,
-    String patx, String patxp, match_result result)
-{
-    char temp[200];
-    String suffix;
-    int i;
-
-    if (sp->showing && (user==0)) {
-        /* if we are just listing the matching commands, there
-           is no point in expanding wildcards that are past the
-           part that matches the user input */
-        return FALSE;
-    }
-
-    if ((strncmp(pat, "<ANYONE>", 8)==0) && (result.who == -1)) {
-        suffix = pat+8;
-        for (i=1; i<=last_selector_kind; ++i) {
-            sprintf(temp, "%s%s", selector_names[i], suffix);
-            result.who = i;
-            match_suffix(sp, user, temp, patx, patxp, result);
-        }
-        return TRUE;
-    }
-    else if ((strncmp(pat, "<N>", 3)==0) && (result.n == -1)) {
-        suffix = pat+3;
-        for (i=1; i<=5; ++i) {
-            sprintf(temp, "%d%s", i, suffix);
-            result.n = i;
-            match_suffix(sp, user, temp, patx, patxp, result);
-        }
-        return TRUE;
-    }
-    else if ((strncmp(pat, "<N/4>", 5)==0) && (result.n == -1)) {
-        suffix = pat+5;
-        for (i=1; i<=5; ++i) {
-            sprintf(temp, "%d/4%s", i, suffix);
-            result.n = i;
-            match_suffix(sp, user, temp, patx, patxp, result);
-        }
-        return TRUE;
-    }
-    else return FALSE;
-}
-
-/*
- * Match_suffix continues the matching process for a suffix of the current
- * user input (User) and a suffix of the current pattern (Pat).  Patx is where
- * the extension of the user input for this pattern is being written.  Patxp is
- * where the next character of the extension is to be written.  The extension of
- * the current user input is in lower case to allow computation of the longest
- * common extension.
- */
-
-Private void
-match_suffix(search_state *sp, String user, String pat,
-    String patx, String patxp, match_result result)
-{
-    if (user && (*user == '\0')) {
-        /* we have just reached the end of the user input */
-        if (*pat == '\0') {
-            /* exact match */
-            *patxp = '\0';
-            record_a_match(sp, patx, result);
-        }
-        else {
-            /* we need to look at the rest of the pattern because
-               if it contains wildcards, then there are multiple matches */
-            match_suffix(sp, 0, pat, patx, patxp, result);
-        }
-    }
-    else if ((*pat == '<') &&
-             match_wildcard(sp, user, pat, patx, patxp, result)) {
-        ; /* everything done by match_wildcard */
-    }    
-    else if (user==0) {
-        /* user input has run out, just looking for more wildcards */
-        if (*pat) {
-            /* there is more pattern */
-            *patxp++ = tolower(*pat);
-            match_suffix(sp, user, pat+1, patx, patxp, result);
-        }
-        else {
-            /* reached the end of the pattern */
-            *patxp = '\0';
-            record_a_match(sp, patx, result);
-        }
-    }
-    else if (tolower(*user) == tolower(*pat)) {
-        match_suffix(sp, user+1, pat+1, patx, patxp, result);
-    }
-}
-
-/*
- * Match_pattern tests the current user input against a pattern (pattern)
- * that may contain wildcards (such as "<ANYONE>").  Pattern matching is
- * case-insensitive.  If the input is equivalent to a prefix of the pattern,
- * a match is recorded in the search state.
- */
- 
-Private void
-match_pattern(search_state *sp, char pattern[], match_result result)
-{
-    char extension[200];
-    match_suffix(sp, sp->full_input, pattern, extension, extension, result);
-}
-
-Private void
-search_menu(search_state *sp, String menu[], int menu_length, uims_reply kind)
-{
-    int i;
-    match_result result;
-
-    result.valid = TRUE;
-    result.exact = FALSE;
-    result.kind = kind;
-    result.who = -1;
-    result.n = -1;
-    for (i = 0; i < menu_length; i++) {
-        result.index = i;
-        match_pattern(sp, menu[i], result);
-    }
-}
-
-Private void
-search_concept(search_state *sp)
-{
-    int maxcolumn;
-    int nrows;
-    int rowoff;
-    int kind;
-    int col;
-    int row;
-    String name;
-    match_result result;
-
-    result.valid = TRUE;
-    result.exact = FALSE;
-    result.kind = ui_special_concept;
-    result.who = -1;
-    result.n = -1;
-    for (kind = 0; concept_offset_tables[kind]; kind++) {
-        /* for each "submenu" */
-        /* determine menu size */
-        for (maxcolumn=0; concept_size_tables[kind][maxcolumn]>=0; maxcolumn++)
-            ;
-        for (col = 0; col < maxcolumn; col++) {
-            /* for each "column" in the submenu */
-            nrows = concept_size_tables[kind][col];
-            rowoff = concept_offset_tables[kind][col];
-            for (row = 0; row < nrows; row++) {
-                /* for each "row" in the column */
-                name = concept_descriptor_table[rowoff+row].name;
-                if (name[0] == '\0') continue; /* empty slot in menu */
-                result.index = (((col << 8) + row + 1) << 3) + kind;
-                match_pattern(sp, name, result);
-            }
-        }
-    }
-}
-
-typedef void input_matcher(search_state *sp);
-
 Private match_result user_match;
 
-/* return number of matching commands */
-/* extend string in USER_INPUT */
-/* result is indicated in user_match */
-
-Private int
-extend_user_input(char input_string[], input_matcher *f)
-{
-    search_state ss;
-    char extended_input[200];
-
-    ss.full_input = input_string;
-    ss.extended_input = extended_input;
-    ss.match_count = 0;
-    ss.exact_match = FALSE;
-    ss.showing = FALSE;
-    ss.result.valid = FALSE;
-    ss.result.exact = FALSE;
-
-    (*f)(&ss);
-    if (ss.match_count > 0)
-        (void) strcat(input_string, extended_input);
-    user_match = ss.result;
-    return ss.match_count;
-}
-
-Private int
-extend_user_input_to_space(char input_string[], input_matcher *f)
-{
-    search_state ss;
-    char extended_input[200];
-    String p;
-
-    ss.full_input = input_string;
-    ss.extended_input = extended_input;
-    ss.match_count = 0;
-    ss.exact_match = FALSE;
-    ss.showing = FALSE;
-    ss.result.valid = FALSE;
-    ss.result.exact = FALSE;
-
-    (*f)(&ss);
-    if (ss.match_count > 0) {
-        p = input_string + strlen(input_string);
-        (void) strcat(input_string, extended_input);
-        while (*p) {
-            if (*p == ' ') {
-                p[1] = '\0';
-                break;
-            }
-            p++;
-        }
-    }
-    user_match = ss.result;
-    return ss.match_count;
-}
-
-Private void
-show_matching_commands(char input_string[], input_matcher *f)
-{
-    search_state ss;
-    char extended_input[200];
-
-    ss.full_input = input_string;
-    ss.extended_input = extended_input;
-    ss.match_count = 0;
-    ss.exact_match = FALSE;
-    ss.showing = TRUE;
-    ss.result.valid = FALSE;
-    ss.result.exact = FALSE;
-
-    (*f)(&ss);
-}
-    
 /* result is indicated in user_match */
 
 Private void
-get_user_input(String prompt, input_matcher *f)
+get_user_input(char *prompt, int which)
 {
+    char extended_input[200];
+    char *p;
     int c;
     int matches;
     int n;
     
-    clear_user_input();
-    user_input_prompt = prompt;
     user_match.valid = FALSE;
+    user_input_prompt = prompt;
+    user_input[0] = '\0';
+    put_line(user_input_prompt);
+
     for (;;) {
-        refresh_input();
+        /* At this point we always have the concatenation of "user_input_prompt"
+           and "user_input" displayed on the current line. */
+
         c = get_char_input();
+
         if ((c == '\b') || (c == DEL)) {
             n = strlen(user_input);
-            if (n > 0) user_input[n-1] = '\0';
-        }
-        else if ((c == '\n') || (c == '\r')) {
-            matches = extend_user_input(user_input, f);
-            if ((matches == 1) || user_match.exact) {
-                refresh_input();
-                printf("\n");
-                return;
+            if (n > 0) {
+                user_input[n-1] = '\0';
+                rubout(); /* Update the display. */
             }
-            printf("  (%d matches", matches);
-	    if (matches > 0)
-		printf(", type ? for list");
-	    printf(")\n");
-        }
-        else if (c == '\t' || c == '\033') {
-            n = strlen(user_input);
-            extend_user_input(user_input, f);
-            if (strlen(user_input) == n)
-                putchar(7); /* ring the bell */
-        }
-        else if (c == ' ') {
-            n = strlen(user_input);
-            extend_user_input_to_space(user_input, f);
-            if (strlen(user_input) == n) {
-                add_character(user_input, ' ');
-                if (extend_user_input(user_input, f) > 0)
-                    user_input[n+1] = '\0'; /* append the space */
-                else {
-                    user_input[n] = '\0'; /* do not append the space */
-                    putchar(7); /* ring the bell */
-                }
-            }
+            continue;
         }
         else if (c == '?') {
-            printf ("\n");
+            put_line ("\n");
+            current_text_line++;
             start_matches();
-            show_matching_commands(user_input, f);
+            match_user_input(user_input, which, 0, 0, show_match, FALSE);
+            put_line ("\n");     /* Write a blank line. */
+            current_text_line++;
+            put_line(user_input_prompt);   /* Redisplay the current line. */
+            put_line(user_input);
+            continue;
+        }
+
+        matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, 0);
+
+        if (c == ' ') {
+            /* extend only to one space, inclusive */
+            p = extended_input;
+            if (*p) {
+                while (*p) {
+                    if (*p != ' ')
+                        pack_and_echo_character(*p++);
+                    else
+                        goto foobar;
+                }
+                continue;   /* Do *not* pack the character. */
+
+                foobar: ;
+                pack_and_echo_character(c);
+            }
+            else if (user_match.space_ok && matches > 1)
+                pack_and_echo_character(c);
+            else
+                bell();
+        }
+        else if ((c == '\n') || (c == '\r')) {
+            if ((matches == 1) || user_match.exact) {
+                p = extended_input;
+                while (*p)
+                    pack_and_echo_character(*p++);
+
+                put_line("\n");
+                /* Include the input line in our count, so we will erase it
+                   if we are trying to make the VT-100 screen look nice. */
+                current_text_line++;
+                return;
+            }
+            /* Tell how bad it is, then redisplay current line. */
+	    if (matches > 0) {
+                char tempstuff[200];
+
+                (void) sprintf(tempstuff, "  (%d matches, type ? for list)\n", matches);
+                put_line(tempstuff);
+            }
+            else {
+                put_line("  (no matches)\n");
+            }
+
+            put_line(user_input_prompt);
+            put_line(user_input);
+            current_text_line++;   /* Count that line for erasure. */
+        }
+        else if (c == '\t' || c == '\033') {
+            p = extended_input;
+            if (*p) {
+                while (*p)
+                    pack_and_echo_character(*p++);
+            }
+            else
+                bell();
         }
         else if (c == ('U'&'\037')) { /* C-u: kill line */
-	    clear_user_input();
+            user_input[0] = '\0';
+            clear_line();           /* Clear the current line */
+            put_line(user_input_prompt);    /* Redisplay the prompt. */
         }
-	else if (c == '%') {	/* comment */
-	    while ((c = get_char_input()) != '\n' && c != '\r')
-		;
-	}
         else if (isprint(c)) {
-            add_character(user_input, c);
+            pack_and_echo_character(c);
         }
         else {
-            putchar(7); /* ring the bell */
+            bell();
         }
     }
-}
-
-Private void
-start_matcher(search_state *sp)
-{
-    search_menu(sp, startup_commands, NUM_START_SELECT_KINDS, ui_start_select);
-}
-
-Private void
-resolve_matcher(search_state *sp)
-{
-    search_menu(sp, resolve_commands,
-        NUM_RESOLVE_COMMAND_KINDS, ui_resolve_select);
 }
 
 Private call_list_kind current_call_menu;
 
-Private void
-call_matcher(search_state *sp)
-{
-    search_menu(sp, concept_menu_list, concept_menu_len, ui_concept_select);
-
-    search_menu(sp, command_commands, NUM_COMMAND_KINDS, ui_command_select);
-
-    search_menu(sp,
-        call_menu_lists[current_call_menu], number_of_calls[current_call_menu],
-        ui_call_select);
-
-    search_concept(sp);
-}
-
-Private void
-selector_matcher(search_state *sp)
-{
-    search_menu(sp, &selector_names[1], last_selector_kind, 0);
-}
+static char *modifications_prompts[] = {
+    (char *) 0,
+    "[simple modifications] ",
+    "[all modifications] "};
 
 extern uims_reply
-uims_get_command(mode_kind mode, call_list_kind call_menu,
-    int modifications_flag)
+uims_get_command(mode_kind mode, call_list_kind *call_menu)
 {
     if (mode == mode_startup) {
-         get_user_input("Enter command> ", &start_matcher);
+         get_user_input("Enter startup command> ", (int) match_startup_commands);
          uims_menu_index = user_match.index;
-         return user_match.kind;
     }
     else if (mode == mode_resolve) {
-         get_user_input("Enter resolve command> ", &resolve_matcher);
+         get_user_input("Enter resolve command> ", (int) match_resolve_commands);
          uims_menu_index = user_match.index;
-         return user_match.kind;
     }
     else {
-        current_call_menu = call_menu;
-        printf("%s\n", call_menu_names[current_call_menu]);
-        get_user_input("Enter call> ", &call_matcher);
-        if (user_match.kind == ui_special_concept) {
-            /* right now, just indicate which submenu */
-            /* uims_do_concept_popup will be called to get the rest */
-            save_special_index = user_match.index >> 3;
-            user_match.index &= 07;
+        char prompt_buffer[200];
+        char *prompt_ptr;
+
+        check_menu:
+
+        if (allowing_modifications)
+            *call_menu = call_list_any;
+
+        current_call_menu = *call_menu;
+        prompt_ptr = prompt_buffer;
+
+        /* Put any necessary special things into the prompt. */
+
+        if (allowing_all_concepts) {
+            if (allowing_modifications != 0)
+                (void) sprintf(prompt_ptr, "[all concepts]%s%s", modifications_prompts[allowing_modifications], call_menu_prompts[current_call_menu]);
+            else
+                (void) sprintf(prompt_ptr, "[all concepts]%s", call_menu_prompts[current_call_menu]);
         }
+        else {
+            if (allowing_modifications != 0)
+                (void) sprintf(prompt_ptr, "%s%s", modifications_prompts[allowing_modifications], call_menu_prompts[current_call_menu]);
+            else
+                prompt_ptr = call_menu_prompts[current_call_menu];
+        }
+
+        get_user_input(prompt_ptr, (int) current_call_menu);
+
         uims_menu_index = user_match.index;
-        return user_match.kind;
+
+        if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
+            if (uims_menu_index == NUM_COMMAND_KINDS+SPECIAL_COMMAND_ALLOW_MODS) {
+                /* Increment "allowing_modifications" up to a maximum of 2. */
+                if (allowing_modifications != 2) allowing_modifications++;
+            }
+            else {   /* Must be "allow all concepts". */
+                allowing_all_concepts = !allowing_all_concepts;
+            }
+            goto check_menu;
+        }
     }
+
+    return user_match.kind;
 }
+                                                              
 
 Private int
 get_popup_string(char prompt[], char dest[])
 {
     char buffer[200];
 
-    sprintf(buffer, "%s: ", prompt);
+    (void) sprintf(buffer, "%s: ", prompt);
     get_string_input(buffer, dest);
     return POPUP_ACCEPT_WITH_STRING;
 }
@@ -1007,73 +572,86 @@ uims_do_comment_popup(char dest[])
 extern int
 uims_do_outfile_popup(char dest[])
 {
-    printf("Sequence output file is \"%s\".\n", outfile_string);
+    char buffer[200];
+    (void) sprintf(buffer, "Sequence output file is \"%s\".\n", outfile_string);
+
+    put_line(buffer);
+    current_text_line++;
     return get_popup_string("Enter new file name", dest);
 }
 
 extern int
 uims_do_getout_popup(char dest[])
 {
-    puts("Specify text label for sequence.");
+    put_line("Specify text label for sequence.\n");
+    current_text_line++;
     return get_popup_string("Enter label", dest);
 }
 
 extern int
 uims_do_neglect_popup(char dest[])
 {
-    puts("Specify integer percentage of neglected calls.");
+    put_line("Specify integer percentage of neglected calls.\n");
+    current_text_line++;
     return get_popup_string("Enter percentage", dest);
 }
 
 Private int
-confirm(String question)
+confirm(char *question)
 {
     int c;
-    
+
     for (;;) {
-	user_input_prompt = question;
-	clear_user_input();
-	refresh_input();
+        put_line(question);
         c = get_char_input();
         if ((c=='n') || (c=='N')) {
-            puts("no");
+            put_line("no\n");
+            current_text_line++;
             return POPUP_DECLINE;
         }
         if ((c=='y') || (c=='Y')) {
-            puts("yes");
+            put_line("yes\n");
+            current_text_line++;
             return POPUP_ACCEPT;
         }
-        printf("%c\nAnswer y or n\n", c);
-        putchar(7); /* ring bell */
+        put_char(c);
+        put_line("\n");
+        put_line("Answer y or n\n");
+        current_text_line += 2;
+        bell();
     }
 }
 
 extern int
 uims_do_abort_popup(void)
 {
-    puts("The current sequence will be aborted.");
+    put_line("The current sequence will be aborted.\n");
+    current_text_line++;
     return confirm("Do you really want to abort it? ");
 }
 
 extern int
 uims_do_modifier_popup(char callname[], modify_popup_kind kind)
 {
-   char *line_format = "Internal error: unknown modifier kind.";
+    char *line_format = "Internal error: unknown modifier kind.\n";
+    char tempstuff[200];
+    
+    switch (kind) {
+        case modify_popup_any:
+            line_format = "The \"%s\" can be replaced.\n";
+            break;
+        case modify_popup_only_tag:
+            line_format = "The \"%s\" can be replaced with a tagging call.\n";
+            break;
+        case modify_popup_only_scoot:
+            line_format = "The \"%s\" can be replaced with a scoot/tag (chain thru) (and scatter).\n";
+            break;
+    }
 
-   switch (kind) {
-     case modify_popup_any:
-       line_format = "The \"%s\" can be replaced.";
-       break;
-     case modify_popup_only_tag:
-       line_format = "The \"%s\" can be replaced with a tagging call.";
-       break;
-     case modify_popup_only_scoot:
-       line_format = "The \"%s\" can be replaced with a scoot/tag (chain thru) (and scatter).";
-       break;
-   }
-   printf(line_format, callname);
-   putchar('\n');
-   return confirm("Do you want to replace it? ");
+    sprintf(tempstuff, line_format, callname);
+    put_line(tempstuff);
+    current_text_line++;
+    return confirm("Do you want to replace it? ");
 }
 
 static int first_reconcile_history;
@@ -1129,7 +707,9 @@ uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_st
     char title[MAX_TEXT_LINE_LENGTH];
 
     create_resolve_menu_title(goal, cur, max, state, title);
-    printf("%s\n", title);   
+    put_line(title);
+    put_line("\n");
+    current_text_line++;
 }
 
 extern int
@@ -1144,7 +724,7 @@ uims_do_selector_popup(void)
     }
     else {
         /* We skip the zeroth selector, which is selector_uninitialized. */
-        get_user_input("Enter who> ", selector_matcher);
+        get_user_input("Enter who> ", (int) match_selectors);
         return user_match.index+1;
     }
 }    
@@ -1167,23 +747,18 @@ uims_do_quantifier_popup(void)
     }
 }
 
-/* ARGSUSED */
-extern int
-uims_do_concept_popup(int kind)
-{
-    return save_special_index;
-}
-
 /*
  * add a line to the text output area.
  * the_line does not have the trailing Newline in it and
- * is volitile, so we must copy it if we need it to stay around.
+ * is volatile, so we must copy it if we need it to stay around.
  */
 
 extern void
 uims_add_new_line(char the_line[])
 {
-    text_output_add_line(the_line);
+    current_text_line++;
+    put_line(the_line);
+    put_line("\n");
 }
 
 /*
@@ -1200,8 +775,7 @@ uims_reduce_line_count(int n)
 extern void
 uims_terminate(void)
 {
-    text_output_close();
-    restore_input_mode();
+    ttu_terminate();
 }
 
 /*

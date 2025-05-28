@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 30. */
 
 /* This defines the following function:
    selectp
@@ -597,85 +597,128 @@ Private long_boolean socker_is_left(setup *real_people, int real_index,
       (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2));     /* we do not have another socker to my right */
 }
 
+
+/* Helper function for in/out roll circulate stuff.  "Yes_roll_direction" is the facing direction
+   that constitutes what we are looking for (inroller or outroller as the case may be). */
+Private long_boolean in_out_roll_select(int yes_roll_direction, int cw_end, int ccw_end, char *errmsg)
+{
+   int no_roll_direction = 022 - yes_roll_direction;
+
+   if (  /* cw_end exists and is proper, and we do not have ccw_end proper also */
+         (cw_end == yes_roll_direction && ccw_end != yes_roll_direction) ||
+         /* or if ccw_end exists and is improper, and cw_end is a phantom */
+         (ccw_end == no_roll_direction && cw_end == 0))
+      return(TRUE);
+   else if (
+         /* ccw_end exists and is proper, and we do not have cw_end proper also */
+         (ccw_end == yes_roll_direction && cw_end != yes_roll_direction) ||
+         /* or if cw_end exists and is improper, and ccw_end is a phantom */
+         (cw_end == no_roll_direction && ccw_end == 0))
+      return(FALSE);
+   else {
+      fail(errmsg);
+      /* NOTREACHED */
+   }
+}
+
+static int magic_cw_idx[8] = {3, 7, 7, 3, 7, 3, 3, 7};
+static int magic_ccw_idx[8] = {0, 4, 4, 0, 4, 0, 0, 4};
+static int magic_cw_idx_2x3[8] = {2, 5, 2, 5, 2, 5};
+static int magic_ccw_idx_2x3[8] = {0, 3, 0, 3, 0, 3};
+static int cw_idx_2x3[8] = {2, 2, 2, 5, 5, 5};
+static int ccw_idx_2x3[8] = {0, 0, 0, 3, 3, 3};
+
+static int magic_inroll_directions[8] = {012, 010, 010, 012, 010, 012, 012, 010};
+static int inroll_directions_2x3[8] = {012, 012, 012, 010, 010, 010};
+static int magic_inroll_directions_2x3[8] = {012, 010, 012, 010, 012, 010};
+
+
 /* ARGSUSED */
 Private long_boolean inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int inroll_direction;
-
-   inroll_direction = 012 - ((real_index & 4) >> 1);
-   if (  /* cw_end exists and is inrolling */
-         ((real_people->people[real_index | 3].id1 & 017) == inroll_direction)
-      &&
-         /* we do not have ccw_end inrolling also */
-         ((real_people->people[real_index & 4].id1 & 017) != inroll_direction))
-      return(TRUE);
-   else if (
-         /* ccw_end exists and is inrolling */
-         ((real_people->people[real_index & 4].id1 & 017) == inroll_direction)
-      &&
-         /* we do not have cw_end inrolling also */
-         ((real_people->people[real_index | 3].id1 & 017) != inroll_direction))
-      return(FALSE);
-   else {
-      fail("Can't find end looking in.");
-      /* NOTREACHED */
-  }
+   return in_out_roll_select(
+      012 - ((real_index & 4) >> 1),
+      real_people->people[real_index | 3].id1 & 017,
+      real_people->people[real_index & 4].id1 & 017,
+      "Can't find end looking in.");
 }
 
 /* ARGSUSED */
 Private long_boolean magic_inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   static int cw[8] = {3, 7, 7, 3, 7, 3, 3, 7};
-   static int cc[8] = {0, 4, 4, 0, 4, 0, 0, 4};
-   static int id[8] = {012, 010, 010, 012, 010, 012, 012, 010};
-   int inroll_direction;
-
-   inroll_direction = id[real_index];
-   if (  /* cw_end exists and is inrolling */
-         ((real_people->people[cw[real_index]].id1 & 017) == inroll_direction)
-      &&
-         /* we do not have ccw_end inrolling also */
-         ((real_people->people[cc[real_index]].id1 & 017) != inroll_direction))
-      return(TRUE);
-   else if (
-         /* ccw_end exists and is inrolling */
-         ((real_people->people[cc[real_index]].id1 & 017) == inroll_direction)
-      &&
-         /* we do not have cw_end inrolling also */
-         ((real_people->people[cw[real_index]].id1 & 017) != inroll_direction))
-      return(FALSE);
-   else {
-      fail("Can't find end looking in.");
-      /* NOTREACHED */
-   }
+   return in_out_roll_select(
+      magic_inroll_directions[real_index],
+      real_people->people[magic_cw_idx[real_index]].id1 & 017,
+      real_people->people[magic_ccw_idx[real_index]].id1 & 017,
+      "Can't find magic end looking in.");
 }
 
 /* ARGSUSED */
 Private long_boolean outroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int outroll_direction;
+   return in_out_roll_select(
+      010 + ((real_index & 4) >> 1),
+      real_people->people[real_index | 3].id1 & 017,
+      real_people->people[real_index & 4].id1 & 017,
+      "Can't find end looking out.");
+}
 
-   outroll_direction = 010 + ((real_index & 4) >> 1);
-   if (  /* cw_end exists and is outrolling */
-         ((real_people->people[real_index | 3].id1 & 017) == outroll_direction)
-      &&
-         /* we do not have ccw_end outrolling also */
-         ((real_people->people[real_index & 4].id1 & 017) != outroll_direction))
-      return(TRUE);
-   else if (
-         /* ccw_end exists and is outrolling */
-         ((real_people->people[real_index & 4].id1 & 017) == outroll_direction)
-      &&
-         /* we do not have cw_end outrolling also */
-         ((real_people->people[real_index | 3].id1 & 017) != outroll_direction))
-      return(FALSE);
-   else {
-      fail("Can't find end looking out.");
-      /* NOTREACHED */
-   }
+/* ARGSUSED */
+Private long_boolean magic_outroller_is_cw(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return in_out_roll_select(
+      022 - magic_inroll_directions[real_index],
+      real_people->people[magic_cw_idx[real_index]].id1 & 017,
+      real_people->people[magic_ccw_idx[real_index]].id1 & 017,
+      "Can't find magic end looking out.");
+}
+
+/* ARGSUSED */
+Private long_boolean inroller_is_cw_2x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return in_out_roll_select(
+      inroll_directions_2x3[real_index],
+      real_people->people[cw_idx_2x3[real_index]].id1 & 017,
+      real_people->people[ccw_idx_2x3[real_index]].id1 & 017,
+      "Can't find end looking in.");
+}
+
+/* ARGSUSED */
+Private long_boolean magic_inroller_is_cw_2x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return in_out_roll_select(
+      magic_inroll_directions_2x3[real_index],
+      real_people->people[magic_cw_idx_2x3[real_index]].id1 & 017,
+      real_people->people[magic_ccw_idx_2x3[real_index]].id1 & 017,
+      "Can't find magic end looking in.");
+}
+
+/* ARGSUSED */
+Private long_boolean outroller_is_cw_2x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return in_out_roll_select(
+      022 - inroll_directions_2x3[real_index],
+      real_people->people[cw_idx_2x3[real_index]].id1 & 017,
+      real_people->people[ccw_idx_2x3[real_index]].id1 & 017,
+      "Can't find end looking out.");
+}
+
+/* ARGSUSED */
+Private long_boolean magic_outroller_is_cw_2x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return in_out_roll_select(
+      022 - magic_inroll_directions_2x3[real_index],
+      real_people->people[magic_cw_idx_2x3[real_index]].id1 & 017,
+      real_people->people[magic_ccw_idx_2x3[real_index]].id1 & 017,
+      "Can't find magic end looking out.");
 }
 
 /* ARGSUSED */
@@ -967,7 +1010,7 @@ Private long_boolean q_line_back(setup *real_people, int real_index,
    }
 }
 
-/* BEWARE!!  This list must track the array "predtab" in the database maker. */
+/* BEWARE!!  This list must track the array "predtab" in dbcomp.c. */
 
 /* The first 10 of these (the constant to use is SELECTOR_PREDS) take a predicate.
    Any call that uses one of these predicates in its definition will cause a
@@ -1025,6 +1068,11 @@ long_boolean (*pred_table[])(
       inroller_is_cw,                  /* "inroller_is_cw" */
       magic_inroller_is_cw,            /* "magic_inroller_is_cw" */
       outroller_is_cw,                 /* "outroller_is_cw" */
+      magic_outroller_is_cw,           /* "magic_outroller_is_cw" */
+      inroller_is_cw_2x3,              /* "inroller_is_cw_2x3" */
+      magic_inroller_is_cw_2x3,        /* "magic_inroller_is_cw_2x3" */
+      outroller_is_cw_2x3,             /* "outroller_is_cw_2x3" */
+      magic_outroller_is_cw_2x3,       /* "magic_outroller_is_cw_2x3" */
       outposter_is_cw,                 /* "outposter_is_cw" */
       outposter_is_ccw,                /* "outposter_is_ccw" */
       nexttrnglspot_is_tboned,         /* "nexttrnglspot_is_tboned" */

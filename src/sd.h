@@ -16,7 +16,52 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
+
+/* We would like to not need to customize things for different "dialects" of
+   ANSI C, because we would like to think that there are no "dialects".  But, alas,
+   there are two issues:
+   (1) Some versions of GNU C (gcc) recognize the "volatile" keyword on a procedure
+      as indicating that its call-return behavior is anomalous, and generate
+      better code with that knowledge.  We can take advantage of that for some
+      of our functions that never return, so we define a keyword "nonreturning".
+   (2) Some compilers trying to pass for ANSI C have been observed failing
+      to handle the "const" attribute.  (Yes, an ANSI C compiler that doesn't handle
+      "const" is an oxymoron.)  We grudgingly accept such compilers if the
+      "CONST_IS_BROKEN" symbol is defined.  We allow that to be set by a Makefile,
+      and we set it ourselves for those compilers that we know about. */
+
+/* Default is that "nonreturning" is meaningless. */
+#define nonreturning
+
+#ifdef __GNUC__
+#if __GNUC__ >= 2
+/* GNU C versions 2 or greater recognize volatile procedures. */
+#undef nonreturning
+#define nonreturning volatile
+#else
+/* GNU C versions less than 2 can't do "const". */
+#define CONST_IS_BROKEN
+#endif
+#endif
+
+/* We will use "Const" with a capital "C" for our attempts at the "const" attribute. */
+#ifndef CONST_IS_BROKEN
+#define Const const
+#else
+/* Too bad.  Define it as nothing. */
+#define Const
+#endif
+
+/* We use "Private" on procedures and "static" on variables.  It makes things clearer. */
+#define Private static
+
+/* We would like this to be a signed char, but not all compilers are fully ANSI compliant. */
+/* The IBM AIX compiler, for example, considers char to be unsigned. */
+typedef short veryshort;
+
+#include <setjmp.h>
+#include "database.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -24,15 +69,6 @@
 #define NULLCALLSPEC (callspec_block *) 0
 
 typedef int long_boolean;
-
-/* We would like this to be a signed char, but not all compilers are fully ANSI compliant. */
-/* The IBM AIX compiler, for example, considers char to be unsigned. */
-typedef short veryshort;
-
-#define Private static
-
-#include <setjmp.h>
-#include "database.h"
 
 #define MAX_ERR_LENGTH 200
 #define MAX_FILENAME_LENGTH 260
@@ -444,9 +480,8 @@ typedef enum {
    ui_command_select,   /* (normal/resolve) User chose one of the special buttons like "resolve" or "quit". */
    ui_resolve_select,   /* (resolve only) User chose one of the various actions peculiar to resolving. */
    ui_start_select,     /* (startup only) User chose something. This is the only outcome in startup mode. */
-   ui_concept_select,   /* (normal only) User clicked in the miscellaneous concept menu. */
-   ui_call_select,      /* (normal only) User clicked in the current call menu. */
-   ui_special_concept   /* (normal only) User clicked in the menu of special concept popup names. */
+   ui_concept_select,   /* (normal only) User selected a concept. */
+   ui_call_select       /* (normal only) User selected a call from the current call menu. */
 } uims_reply;
 
 /* In each case, an integer or enum is deposited into the global variable uims_menu_index.  Its interpretation
@@ -471,7 +506,6 @@ typedef enum {
    command_quit,
    command_undo,
    command_abort,
-   command_allow_modification,
    command_create_comment,
    command_change_outfile,
    command_getout,
@@ -579,7 +613,7 @@ typedef struct flonk {
    struct flonk *nxt;
 } outfile_block;
 
-typedef int defmodset;
+typedef unsigned int defmodset;
 
 typedef struct {
    short call_id;
@@ -1010,10 +1044,10 @@ extern unsigned int collision_person2;                              /* in SDUTIL
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern char *selector_names[];                                      /* in SDUTIL */
 
-extern int global_tbonetest;                                        /* in SD */
-extern int global_livemask;                                         /* in SD */
-extern int global_selectmask;                                       /* in SD */
-extern concept_table_item concept_table[];                          /* in SD */
+extern int global_tbonetest;                                        /* in SDCONCPT */
+extern int global_livemask;                                         /* in SDCONCPT */
+extern int global_selectmask;                                       /* in SDCONCPT */
+extern concept_table_item concept_table[];                          /* in SDCONCPT */
 
 extern concept_descriptor special_magic;                            /* in SDCTABLE */
 extern concept_descriptor special_interlocked;                      /* in SDCTABLE */
@@ -1124,10 +1158,11 @@ extern long_boolean initializing_database;                          /* in SDMAIN
 extern long_boolean testing_fidelity;                               /* in SDMAIN */
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
 extern int allowing_modifications;                                  /* in SDMAIN */
+extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
 
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
-extern char *database_filename;					    /* in SDSI */
+extern char *database_filename;                                     /* in SDSI */
 
 extern selector_kind current_selector;                              /* in PREDS */
 extern long_boolean selector_used;                                  /* in PREDS */
@@ -1136,12 +1171,6 @@ extern long_boolean (*pred_table[])(                                /* in PREDS 
    int real_index,
    int real_direction,
    int northified_index);
-
-#if __GNUC__ >= 2
-#define nonreturning volatile
-#else
-#define nonreturning
-#endif
 
 /* In SDMAIN */
 
@@ -1221,10 +1250,9 @@ extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_quantifier_popup(void);
 extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind);
-extern int uims_do_concept_popup(int kind);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
-extern uims_reply uims_get_command(mode_kind mode, call_list_kind call_menu, int modifications_flag);
+extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu);
 extern void uims_begin_search(search_kind goal);
 extern void uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state);
 extern int uims_begin_reconcile_history(int currentpoint, int maxpoint);
@@ -1241,16 +1269,16 @@ extern void uims_debug_print(char *s);		/* Alan's code only */
 /* In SDUTIL */
 
 extern void clear_screen(void);
-extern void writestuff(char s[]);
+extern void writestuff(Const char s[]);
 extern void newline(void);
 extern void doublespace_file(void);
 extern void exit_program(int code);
-extern void nonreturning fail(char s[]);
-extern void nonreturning fail2(char s1[], char s2[]);
-extern void specialfail(char s[]);
+extern void nonreturning fail(Const char s[]);
+extern void nonreturning fail2(Const char s1[], Const char s2[]);
+extern void nonreturning specialfail(Const char s[]);
 extern void string_copy(char **dest, char src[]);
 extern void display_initial_history(int upper_limit, int num_pics);
-extern void write_history_line(int history_index, char *header, long_boolean picture, file_write_flag write_to_file);
+extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
 extern void warn(int w);
 extern call_list_kind find_proper_call_list(setup *s);
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
