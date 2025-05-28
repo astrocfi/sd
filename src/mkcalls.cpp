@@ -77,6 +77,8 @@ int begin_sizes[] = {
    6,          /* b_ptrngl */
    8,          /* b_trngl4 */
    8,          /* b_ptrngl4 */
+   16,         /* b_trngl8 */
+   16,         /* b_ptrngl8 */
    6,          /* b_bone6 */
    6,          /* b_pbone6 */
    6,          /* b_short6 */
@@ -85,6 +87,8 @@ int begin_sizes[] = {
    6,          /* b_p1x2dmd */
    6,          /* b_2x1dmd */
    6,          /* b_p2x1dmd */
+   6,          /* b_wingedstar6 */
+   6,          /* b_pwingedstar6 */
    8,          /* b_qtag */
    8,          /* b_pqtag */
    8,          /* b_bone */
@@ -128,8 +132,8 @@ int begin_sizes[] = {
    12,         /* b_6x2 */
    14,         /* b_2x7 */
    14,         /* b_7x2 */
-  14,          /* b_d2x7 */
-  14,          /* b_d7x2 */
+   14,         /* b_d2x7 */
+   14,         /* b_d7x2 */
    18,         /* b_2x9 */
    18,         /* b_9x2 */
    12,         /* b_d3x4 */
@@ -209,6 +213,8 @@ int begin_sizes[] = {
    16,         /* b_p4mdmd */
    16,         /* b_4mptpd */
    16,         /* b_p4mptpd */
+   10,         /* b_1x4dmd */
+   10,         /* b_p1x4dmd */
    12,         /* b_bigh */
    12,         /* b_pbigh */
    12,         /* b_bigx */
@@ -231,10 +237,10 @@ int begin_sizes[] = {
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
-   12,         /* b_big3x1dmd */
-   12,         /* b_pbig3x1dmd */
-   12,         /* b_big1x3dmd */
-   12,         /* b_pbig1x3dmd */
+   12,         /* b_5x1dmd */
+   12,         /* b_p5x1dmd */
+   12,         /* b_1x5dmd */
+   12,         /* b_p1x5dmd */
    18,         /* b_big3dmd */
    18,         /* b_pbig3dmd */
    24,         /* b_big4dmd */
@@ -467,6 +473,8 @@ char *sstab[] = {
    "ptrngl",
    "trngl4",
    "ptrngl4",
+   "trngl8",
+   "ptrngl8",
    "bone6",
    "pbone6",
    "short6",
@@ -475,6 +483,8 @@ char *sstab[] = {
    "p1x2dmd",
    "2x1dmd",
    "p2x1dmd",
+   "wingedstar6",
+   "pwingedstar6",
    "qtag",
    "pqtag",
    "bone",
@@ -599,6 +609,8 @@ char *sstab[] = {
    "p4mdmd",
    "4mptpd",
    "p4mptpd",
+   "1x4dmd",
+   "p1x4dmd",
    "bigh",
    "pbigh",
    "bigx",
@@ -621,10 +633,10 @@ char *sstab[] = {
    "pbigdmd",
    "bigptpd",
    "pbigptpd",
-   "big3x1dmd",
-   "pbig3x1dmd",
-   "big1x3dmd",
-   "pbig1x3dmd",
+   "5x1dmd",
+   "p5x1dmd",
+   "1x5dmd",
+   "p1x5dmd",
    "big3dmd",
    "pbig3dmd",
    "big4dmd",
@@ -657,6 +669,9 @@ char *estab[] = {
    "2x3",
    "1x2dmd",
    "2x1dmd",
+   "wingedstar6",
+   "1x3p1dmd",
+   "3p1x1dmd",
    "qtag",
    "bone",
    "1x8",
@@ -684,6 +699,7 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "1x4dmd",
    "wqtag",
    "deep2x1dmd",
    "whrglass",
@@ -704,13 +720,23 @@ char *estab[] = {
    "1x14",
    "1x16",
    "c1phan",
-   "???",
    "bigblob",
    "ptpd",
    "3dmd",
    "4dmd",
    "3ptpd",
    "4ptpd",
+   "trngl8",
+   "1x4p2dmd",
+   "4p2x1dmd",
+   "plinepdmd",
+   "plinedmd",
+   "linepdmd",
+   "linedmd",
+   "linebox",
+   "boxdmd",
+   "boxpdmd",
+   "dmdpdmd",
    "hsqtag",
    "dmdlndmd",
    "hqtag",
@@ -736,6 +762,11 @@ char *estab[] = {
    "3oqtg",
    "thar",
    "alamo",
+   "confused_dmd",
+   "???",
+   "???",
+   "???",
+   "???",
    "???",
    "???",
    "???",
@@ -765,8 +796,8 @@ char *estab[] = {
    "dblbone6",
    "bigdmd",
    "bigptpd",
-   "big3x1dmd",
-   "big1x3dmd",
+   "5x1dmd",
+   "1x5dmd",
    "big3dmd",
    "big4dmd",
    "dblxwave",
@@ -861,6 +892,7 @@ char *schematab[] = {
    "checkpoint_mystic_ok",
    "cross_checkpoint",
    "reverse_checkpoint",
+   "???",
    "ckpt_star",
    "maybe_in_out_triple_squash",
    "in_out_triple_squash",
@@ -935,6 +967,7 @@ char *qualtab[] = {
    "dmd_facing",
    "diamond_like",
    "qtag_like",
+   "qtag_like_anisotropic",
    "pu_qtag_like",
    "conc_cpls_same",
    "conc_cpls_diff",
@@ -960,6 +993,7 @@ char *qualtab[] = {
    "split_dixie",
    "not_split_dixie",
    "dmd_ctrs_mwv",
+   "dmd_ctrs_mwv_no_mirror",
    "spd_base_mwv",
    "qtag_mwv",
    "qtag_mag_mwv",
@@ -1050,7 +1084,7 @@ char *defmodtab1[] = {
    "mandatory_anycall",
    "allow_forced_mod",
    "only_force_elong_if_empty",
-   "???",
+   "roll_transparent_if_z",
    "endscando",
    "finish_this_part",
    "roll_transparent",
@@ -1062,6 +1096,8 @@ char *defmodtab1[] = {
    "???",
    "???",
    "no_check_mod_level",
+   "???",
+   "suppress_roll",
    ""};
 
 // This table is keyed to the constants "DFM1_SEQ***".  These are the general
@@ -1080,7 +1116,7 @@ char *seqmodtab1[] = {
 // These are the general top-level call flags.  They go into the "callflags1" word and
 // part of the "callflagsh" word.
 
-char *flagtab1[] = {
+char *flagtab1f[] = {
    "first_part_visible",
    "first_two_parts_visible",
    "12_16_matrix_means_split",
@@ -1113,8 +1149,10 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-   "can_be_one_side_lateral",  // The overflow (into CFLAG2_) items start here.
-   "no_elongation_allowed",    //    There is space for 12 of them.
+
+   "no_seq_if_no_frac",        // The overflow (into CFLAG2_) items start here.
+   "can_be_one_side_lateral",  //    There is space for 16 of them.
+   "no_elongation_allowed",
    "imprecise_rotation",
    "can_be_fan",
    "equalize",
@@ -1321,12 +1359,21 @@ char *predtab[] = {
    "pair_person_select",
    "person_select_sum5",
    "person_select_sum8",
+   "person_select_sum9",
    "person_select_sum11",
    "person_select_sum13",
    "person_select_sum15",
+   "person_select_plus1",
+   "person_select_plus2",
+   "person_select_plus3",
    "person_select_plus4",
+   "person_select_plus5",
    "person_select_plus6",
+   "person_select_plus7",
    "person_select_plus8",
+   "person_select_plus9",
+   "person_select_plus10",
+   "person_select_plus11",
    "person_select_plus12",
    "person_select12_sum15",
    "select_w_adj_4x4",
@@ -1338,6 +1385,10 @@ char *predtab[] = {
    "unselect_once_rem_from_select",
    "select_and_roll_is_cw",
    "select_and_roll_is_ccw",
+   "1x2_selectee_is_linelike_facing_cw",
+   "1x2_selectee_is_linelike_facing_ccw",
+   "1x4_selectee_of_far_side_is_linelike_facing_cw",
+   "1x4_selectee_of_far_side_is_linelike_facing_ccw",
    "always",
    "2x2_miniwave",
    "2x2_couple",
@@ -1347,6 +1398,14 @@ char *predtab[] = {
    "2x4_tandem_with_someone",
    "2x4_antitandem",
    "2x4_facing_someone",
+   "1x4_end_of_this_side_is_linelike_facing_cw",
+   "1x4_end_of_far_side_is_linelike_facing_cw",
+   "1x4_end_of_this_side_is_linelike_facing_ccw",
+   "1x4_end_of_far_side_is_linelike_facing_ccw",
+   "1x4_center_of_this_side_is_linelike_facing_cw",
+   "1x4_center_of_far_side_is_linelike_facing_cw",
+   "1x4_center_of_this_side_is_linelike_facing_ccw",
+   "1x4_center_of_far_side_is_linelike_facing_ccw",
    "columns_someone_in_front",
    "x14_once_rem_miniwave",
    "x14_once_rem_couple",
@@ -1367,6 +1426,7 @@ char *predtab[] = {
    "cast_normal",
    "cast_pushy",
    "cast_normal_or_warn",
+   "cast_normal_or_nowarn",
    "intlk_cast_normal_or_warn",
    "lines_magic_miniwave",
    "lines_magic_couple",
@@ -1435,6 +1495,8 @@ char *predtab[] = {
    "quad_person_ccw",
    "next_dmd_spot_is_facing",
    "next_dmd_spot_is_normal",
+   "next_qtag_spot_faces_me",
+   "next_qtag_spot_faces_away",
    "nexttrnglspot_is_tboned",
    "nextinttrnglspot_is_tboned",
    "next62spot_is_tboned",
@@ -1520,8 +1582,13 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "disband1"},
    {0, "slither"},
    {0, "maybegrandslither"},
+   {0, "dixie_half_tag"},
    {0, "plan_ctrtoend"},
    {0, "prepare_to_drop"},
+   {0, "hinge"},
+   {0, "hinge_for_nicely"},
+   {0, "hinge_with_warn"},
+   {0, "hinge_for_breaker"},
    {0, "hinge_then_trade"},
    {0, "hinge_then_trade_for_breaker"},
    {0, "two_o_circs_for_frac"},
@@ -1561,9 +1628,9 @@ char *return_ptr;
 int callcount;
 int filecount;
 int dumbflag;
-uint32 call_flagsh;
 uint32 call_flags1;
-uint32 call_flags2;
+uint32 call_flagsh;
+uint32 call_flags1overflow;
 uint32 call_tag;
 char call_name[100];
 int call_namelen;
@@ -1853,6 +1920,11 @@ void db_putc(char ch)
       db_output_error();
 }
 
+static void write_byte(uint32 n)
+{
+   db_putc((char) ((n) & 0xFF));
+   filecount += 1;
+}
 
 static void write_halfword(uint32 n)
 {
@@ -1860,8 +1932,6 @@ static void write_halfword(uint32 n)
    db_putc((char) ((n) & 0xFF));
    filecount += 2;
 }
-
-
 
 static void write_fullword(uint32 n)
 {
@@ -2126,14 +2196,14 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (stab * DBSTAB_BIT);
+         dat = (dat * NDBROLL_BIT) | (tok_value << 3) | (stab * DBSTAB_BIT);
 
          // We now have roll indicator and position, need to get direction.
          switch (tok_str[char_ct-1]) {
-         case 'N': case 'n': dat |= 010; break;
-         case 'E': case 'e': dat |= 001; break;
-         case 'S': case 's': dat |= 012; break;
-         case 'W': case 'w': dat |= 003; break;
+         case 'N': case 'n': dat |= 4; break;
+         case 'E': case 'e': dat |= 5; break;
+         case 'S': case 's': dat |= 6; break;
+         case 'W': case 'w': dat |= 7; break;
          default:
             errexit("Improper callarray direction specifier");
          }
@@ -2160,23 +2230,22 @@ static void write_call_header(calldef_schema schema)
 {
    int j;
 
-   if (!call_namelen) {
+   if (call_namelen == 0) {
       write_halfword(0x3FFF);
-      write_halfword((call_flags2 << 4));
    }
    else {
       write_halfword(0x2000 | call_tag );
-      write_halfword(call_level | (call_flags2 << 4));
+      write_byte(call_level);
    }
 
+   write_halfword(call_flags1overflow);
    write_fullword(call_flags1);
    write_fullword(call_flagsh);
    write_halfword((call_namelen << 8) | (uint32) schema);
 
    for (j=0; j<call_namelen; j++)
-      db_putc((char) (((uint32) call_name[j]) & 0xFF));
+      write_byte((uint32) call_name[j]);
 
-   filecount += call_namelen;
    callcount++;
 }
 
@@ -2459,8 +2528,6 @@ def2:
          callarray_flags1 |= CAF__NO_CUTTING_THROUGH;
       else if (!strcmp(tok_str, "no_facing_ends"))
          callarray_flags1 |= CAF__NO_FACING_ENDS;
-      else if (!strcmp(tok_str, "vacate_center"))
-         callarray_flags1 |= CAF__VACATE_CENTER;
       else if (!strcmp(tok_str, "other_elongate"))
          callarray_flags1 |= CAF__OTHER_ELONGATE;
       else if (!strcmp(tok_str, "really_want_diamond"))
@@ -2635,14 +2702,17 @@ int main(int argc, char *argv[])
 
       call_flagsh = 0;
       call_flags1 = 0;
-      call_flags2 = 0;
+      call_flags1overflow = 0;
 
       for (;;) {
-         if ((iii = search(flagtab1)) >= 0) {
+         uint32 flagh_to_set = 0;
+         uint32 flag1_to_set = 0;
+
+         if ((iii = search(flagtab1f)) >= 0) {
             if (iii >= 32) {
-               call_flags2 |= (1 << (iii-32));
-               // We only have room for 12 overflow call flags.
-               if (call_flags2 & ~0xFFF)
+               call_flags1overflow |= (1 << (iii-32));
+               // We only have room for 16 overflow call flags.
+               if (call_flags1overflow & ~0xFFFF)
                   errexit("Too many secondary flags");
             }
             else {
@@ -2657,11 +2727,6 @@ int main(int argc, char *argv[])
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_STEP_TO_NONPHAN_BOX;
-         }
-         else if (!strcmp(tok_str, "step_to_wave_4_people")) {
-            if (call_flags1 & CFLAG1_STEP_REAR_MASK)
-               errexit("Too many touch/rear flags");
-            call_flags1 |= CFLAG1_STEP_TO_WAVE_4_PEOPLE;
          }
          else if (!strcmp(tok_str, "rear_back_from_wave_or_qtag")) {
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
@@ -2680,19 +2745,30 @@ int main(int argc, char *argv[])
          else if (!strcmp(tok_str, "need_three_numbers"))
             call_flags1 |= (3*CFLAG1_NUMBER_BIT);
          else if (!strcmp(tok_str, "base_tag_call_2"))
-            call_flags1 |= (3*CFLAG1_BASE_TAG_CALL_BIT);
+            flag1_to_set = (3*CFLAG1_BASE_TAG_CALL_BIT);
          else if (!strcmp(tok_str, "mxn_is_inherited"))
-            call_flagsh |= INHERITFLAG_MXNMASK;
+            flagh_to_set = INHERITFLAG_MXNMASK;
          else if (!strcmp(tok_str, "nxn_is_inherited"))
-            call_flagsh |= INHERITFLAG_NXNMASK;
+            flagh_to_set = INHERITFLAG_NXNMASK;
          else if (!strcmp(tok_str, "bigmatrix_is_inherited"))
-            call_flagsh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
+            flagh_to_set = INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
          else if (!strcmp(tok_str, "revert_is_inherited"))
-            call_flagsh |= INHERITFLAG_REVERTMASK;
+            flagh_to_set = INHERITFLAG_REVERTMASK;
          else if ((iii = search(flagtabh)) >= 0)
-            call_flagsh |= (1 << iii);
+            flagh_to_set = (1 << iii);
          else
             break;
+
+         if ((call_flags1 & flag1_to_set) != 0)
+            errexit("Redundant indicator");
+
+         call_flags1 |= flag1_to_set;
+
+         if ((call_flagsh & flagh_to_set) != 0)
+            errexit("Redundant indicator");
+
+         call_flagsh |= flagh_to_set;
+
          get_tok();
          if (tok_kind != tok_symbol) errexit("Missing indicator");
       }
@@ -2769,7 +2845,7 @@ int main(int argc, char *argv[])
 
          break;
       case schema_alias:
-         if (call_flagsh|call_flags1|call_flags2|call_tag)
+         if (call_flagsh|call_flags1|call_flags1overflow|call_tag)
             errexit("Flags not allowed with alias");
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper alias symbol");

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "37.31"
-#define TIME_STAMP "wba@alum.mit.edu  12 Apr 2007 $"
+#define VERSION_STRING "37.81"
+#define TIME_STAMP "wba@alum.mit.edu  9 May 2009 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -71,17 +71,18 @@ and the following external variables:
 // with one or the other of them, but not both.  By choosing the contents of
 // the string carefully, we believe we comply with both.
 
-// We specifically break up the "Header" word to prevent utilities like RCS or
-// SCCS, if anyone should use them to store this source file, from attempting
-// to modify this.  Version control for this program is performed manually,
-// not by any utility.  In particular, we do not believe that it is proper for
-// source control utilities to alter the text in a source file.
+// We specifically break up the "Header" word to prevent utilities like RCS or SCCS, if
+// anyone should use them to store this source file, from attempting to modify this.
+// Version control for this program is performed manually, not by any utility.  In
+// particular, we do not believe that it is proper for source control utilities to alter
+// the text inside a source file.  We are relieved to note that modern source control
+// utilities do not engage in this harmful practice.
 
-// (Actually, we are sick and tired of totally brain-dead garbage left over from
-// that piece-of-crap operating system that was conceived 30 years ago for the
-// purpose of writing a spacewar game.  We wish Unix would come at least into
-// the 20th century, if not the 21st, and that the retro mindset that it created
-// not continue to plague the computer world 30 years later.)
+// (Actually, we are sick and tired of the totally brain-dead garbage left over from
+// that piece-of-crap operating system that was conceived 30 years ago for the purpose
+// of writing a spacewar game.  We wish Unix would come at least into the 20th century,
+// if not the 21st, and that the retro mindset that it created not continue to plague
+// the computer world 30 years later.)
 
 // Sorry.  The above paragraph was written in a fit of rage.  We recognize that
 // Unix is not entirely evil.  The development of GNU and Linux, in particular,
@@ -544,6 +545,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
+   direction_kind dir = direction_uninitialized;
    uint32 number_list = 0;
    int howmanynumbers = 0;
 
@@ -552,6 +554,10 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
       if (find_selector(&sel, false)) return true;
+   }
+
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_DIRECTION) {
+      if (find_direction(&dir)) return true;
    }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
@@ -568,7 +574,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
    new_block = get_parse_block();
    new_block->concept = conc;
    new_block->options.who = sel;
-   new_block->options.where = direction_uninitialized;
+   new_block->options.where = dir;
    new_block->options.number_fields = number_list;
    new_block->options.howmanynumbers = howmanynumbers;
 

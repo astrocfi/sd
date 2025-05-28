@@ -7,12 +7,10 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 37.31</strong>, released on April 12, 2007.
+<strong>The current version of Sd/Sdtty is 37.81</strong>, released on May 9, 2009.
+<p align="center">
+This version supports the "overlapped siamese" concept.  See the release notes.
 <br>
-<p align="center">
-<strong>This version supports the ``dynamic'' concept.  See the release notes.</strong>
-<p align="center">
-<strong>If you downloaded version37.3, you should upgrade to this version.</strong>
 <p align="center">
 There is a new "Frequently Asked Questions" (FAQ) file.
 See the link below.
@@ -35,11 +33,11 @@ turn on a chain reaction, type "chain reac?".  Then, following its hint,
 type "tion, turn the star 1/2".
 <p>
 (3) You may have heard that Sd lets you type complex calls directly, using brackets,
-as in "catch [motivate] 3".  This is true, but you may find it unwieldy,
-especially if you have been using SRC Sd and are accustomed to entering
+as in "catch [motivate] 3".  This is true, but you may find it unwieldy
+if you are accustomed to entering
 things piecemeal.  You can still do it that way.  Remember to type "&lt;anything&gt;",
 not just "&lt;any&gt;".  For example, type "catch &lt;anything&gt; 3".  (Not sure
-about that?  Type "catch?")  Then type the "motivate".
+about that?  Type "catch" and a question mark.)  Then type the "motivate".
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>

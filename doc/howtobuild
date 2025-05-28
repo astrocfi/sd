@@ -40,7 +40,7 @@ put a better (i.e. real cygwin) version in there.
 Go to sddoc directory and do:
 
     setmingw
-    settex
+    settex     # Yes!  Still need this!
     clean clean
     do_plain
     do_ps
@@ -73,8 +73,13 @@ Go to sddoc directory and do:
  8 Oct 05  -  20 Nov 05  #23
 20 Nov 05  -   7 Jul 06  #24
  7 Jul 06  -   8 Apr 07  #27
- 8 Apr 07  -             #28
-(#25 and #26 are also available.)
+ 8 Apr 07  -  23 Jun 07  #28
+23 Jun 07  -  13 Oct 07  #31
+13 Oct 07  -  30 Mar 08  #33
+30 Mar 08  -  10 Mar 09  #32
+10 Mar 09  -   9 May 09  #34
+ 9 May 09  -             #35
+(#25, #26, #29, #30 are also available.)
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++
@@ -256,6 +261,61 @@ textdoc                     *      *
 sd_source                          *
 install                                  *
 
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+New way, Oct 08, does not require any FTP/SCP from Philips, uses mail.
+
+Be sure "chpobox" is turned off at athena.
+
+Mail pack.zip as an attachment to wba@mit.edu
+Wait for it to arrive, then
+
+Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
+
+   athena> pine
+   athena> I
+   athena> arrow down to the message, then cr.
+   athena> V, then arrow down to attachment section
+   athena> S, give file name "pack.zip" if needed.
+   athena> Q
+   athena> Check that pack.zip is exactly the same size as original.
+   athena> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
+   P=x464pq.
+   athena> ssh -l ackerman scotch.ics.uci.edu
+   P=x464pq.
+      scotch> unzip pack
+      scotch> rm pack.zip
+      scotch> exit
+   athena> rm pack.zip
+(delete the mail message)
+   athena> exit
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
+Leave that connection open.
+
+Run WinSCP.  Under Session->Stored sessions, doubleclick localhost.
+P=x464pq.
+
+When explorer window comes up in WinSCP, navigate left side to the
+directory, and drag-and-drop pack.zip from there to the right side.
+Be sure to drop in the lower part of the right side, in the "file"
+region, not the higher "directory" region.  Exit WinSCP.
+
+   athena> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
+   P=x464pq.
+   athena> ssh -l ackerman scotch.ics.uci.edu
+   P=x464pq.
+      scotch> unzip pack
+      scotch> rm pack.zip
+      scotch> exit
+   athena> rm pack.zip
+   athena> exit
+-----------------------------------------------------------------
 
 windows> pscp -l wba -pw And15user pack.zip an-cs1:pack.zip
 

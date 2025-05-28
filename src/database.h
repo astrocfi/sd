@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2008  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 256
+#define DATABASE_FORMAT_VERSION 280
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -57,8 +57,13 @@ enum base_call_index {
    base_call_disband1,
    base_call_slither,
    base_call_maybegrandslither,
+   base_call_dixiehalftag,
    base_call_plan_ctrtoend,
    base_base_prepare_to_drop,
+   base_base_hinge,
+   base_base_hinge_for_nicely,
+   base_base_hinge_with_warn,
+   base_base_hinge_for_breaker,
    base_base_hinge_and_then_trade,
    base_base_hinge_and_then_trade_for_breaker,
    base_call_two_o_circs,
@@ -178,9 +183,8 @@ enum {
    CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL,
    CFLAG1_STEP_TO_NONPHAN_BOX       = 0x00000C00UL,
    CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL,
-   CFLAG1_STEP_TO_WAVE_4_PEOPLE     = 0x00001400UL,
-   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001800UL,
-   CFLAG1_STEP_TO_QTAG              = 0x00001C00UL,
+   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001400UL,
+   CFLAG1_STEP_TO_QTAG              = 0x00001800UL,
    CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00002000UL,
    CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
    CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit
@@ -200,19 +204,21 @@ enum {
    CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x80000000UL
 };
 
-// These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
-// They must lie in the top 12 bits for now.
+// These are the logical continuation of the "CFLAG1" bits, that have to overflow
+// into the "flagsf" word.  They must lie in the top 16 bits.
 enum {
-   CFLAG2_CAN_BE_ONE_SIDE_LATERAL   = 0x00100000UL,
-   CFLAG2_NO_ELONGATION_ALLOWED     = 0x00200000UL,
-   CFLAG2_IMPRECISE_ROTATION        = 0x00400000UL,
-   CFLAG2_CAN_BE_FAN                = 0x00800000UL,
-   CFLAG2_EQUALIZE                  = 0x01000000UL,
-   CFLAG2_ONE_PERSON_CALL           = 0x02000000UL,
-   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x04000000UL,
-   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x08000000UL,
-   CFLAG2_IF_MOVE_CANT_ROLL         = 0x10000000UL,
-   CFLAG2_FRACTIONAL_NUMBERS        = 0x20000000UL
+   CFLAG2_NO_SEQ_IF_NO_FRAC         = 0x00010000UL,
+   CFLAG2_CAN_BE_ONE_SIDE_LATERAL   = 0x00020000UL,
+   CFLAG2_NO_ELONGATION_ALLOWED     = 0x00040000UL,
+   CFLAG2_IMPRECISE_ROTATION        = 0x00080000UL,
+   CFLAG2_CAN_BE_FAN                = 0x00100000UL,
+   CFLAG2_EQUALIZE                  = 0x00200000UL,
+   CFLAG2_ONE_PERSON_CALL           = 0x00400000UL,
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x00800000UL,
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x01000000UL,
+   CFLAG2_IF_MOVE_CANT_ROLL         = 0x02000000UL,
+   CFLAG2_FRACTIONAL_NUMBERS        = 0x04000000UL,
+   // 5 spares.
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -281,9 +287,12 @@ enum dance_level {
    zig_zag_level = l_a2,
    beau_belle_level = l_a2,
    cross_by_level = l_c1,
-   intlk_triangle_level = l_c2,
+   intlk_triangle_level = l_c1,
+   magic_triangle_level = l_c2,
+   triangle_in_box_level = l_c2,
    general_magic_level = l_c3,
    phantom_tandem_level = l_c4a,
+   quadruple_CLW_level = l_c4a,
    Z_CLW_level = l_c4a
 };
 
@@ -313,6 +322,9 @@ enum setup_kind {
    s2x3,
    s_1x2dmd,
    s_2x1dmd,
+   s_wingedstar6,
+   s1x3p1dmd,
+   s3p1x1dmd,
    s_qtag,
    s_bone,
    s1x8,
@@ -340,6 +352,7 @@ enum setup_kind {
    s_nxtrglccw,
    spgdmdcw,
    spgdmdccw,
+   s1x4dmd,
    swqtag,
    sdeep2x1dmd,
    swhrglass,
@@ -360,13 +373,23 @@ enum setup_kind {
    s1x14,
    s1x16,
    s_c1phan,
-   s_hyperbone,   /* internal use only */
    s_bigblob,
    s_ptpd,
    s3dmd,
    s4dmd,
    s3ptpd,
    s4ptpd,
+   s_trngl8,
+   s1x4p2dmd,
+   s4p2x1dmd,
+   splinepdmd,
+   splinedmd,
+   slinepdmd,
+   slinedmd,
+   slinebox,
+   sboxdmd,
+   sboxpdmd,
+   sdmdpdmd,
    s_hsqtag,
    s_dmdlndmd,
    s_hqtag,
@@ -392,9 +415,14 @@ enum setup_kind {
    s3oqtg,
    s_thar,
    s_alamo,
+   s_confused_dmd,
    sx4dmd,    // These are too big to actually represent --
-   s8x8,      // we don't let them out of their cage.
+   sx4dmdbone,// we don't let them out of their cage.
+   s_hyperbone, // Ditto.
+   s_tinyhyperbone, // Ditto.
+   s8x8,      // Ditto.
    sxequlize, // Ditto.
+   sx1x6,     // Ditto.
    sx1x16,    // Ditto.
    shypergal, // Ditto.
    shyper4x8a,// Ditto.
@@ -421,8 +449,8 @@ enum setup_kind {
    sdblbone6,
    sbigdmd,
    sbigptpd,
-   sbig3x1dmd,
-   sbig1x3dmd,
+   s5x1dmd,
+   s1x5dmd,
    sbig3dmd,
    sbig4dmd,
    sdblxwave,
@@ -453,6 +481,8 @@ enum begin_kind {
    b_ptrngl,
    b_trngl4,
    b_ptrngl4,
+   b_trngl8,
+   b_ptrngl8,
    b_bone6,
    b_pbone6,
    b_short6,
@@ -461,6 +491,8 @@ enum begin_kind {
    b_p1x2dmd,
    b_2x1dmd,
    b_p2x1dmd,
+   b_wingedstar6,
+   b_pwingedstar6,
    b_qtag,
    b_pqtag,
    b_bone,
@@ -585,6 +617,8 @@ enum begin_kind {
    b_p4mdmd,
    b_4mptpd,
    b_p4mptpd,
+   b_1x4dmd,
+   b_p1x4dmd,
    b_bigh,
    b_pbigh,
    b_bigx,
@@ -607,10 +641,10 @@ enum begin_kind {
    b_pbigdmd,
    b_bigptpd,
    b_pbigptpd,
-   b_big3x1dmd,
-   b_pbig3x1dmd,
-   b_big1x3dmd,
-   b_pbig1x3dmd,
+   b_5x1dmd,
+   b_p5x1dmd,
+   b_1x5dmd,
+   b_p1x5dmd,
    b_big3dmd,
    b_pbig3dmd,
    b_big4dmd,
@@ -650,21 +684,22 @@ enum {
    CAF__NO_CUTTING_THROUGH    = 0x100,
    CAF__NO_FACING_ENDS        = 0x200,
    CAF__LATERAL_TO_SELECTEES  = 0x400,
-   CAF__VACATE_CENTER         = 0x800,
-   CAF__OTHER_ELONGATE       = 0x1000,
-   CAF__SPLIT_TO_BOX         = 0x2000,
-   CAF__REALLY_WANT_DIAMOND  = 0x4000,
-   CAF__NO_COMPRESS          = 0x8000,
-   CAF__PLUSEIGHTH_ROTATION = 0x10000
+   CAF__OTHER_ELONGATE        = 0x800,
+   CAF__SPLIT_TO_BOX         = 0x1000,
+   CAF__REALLY_WANT_DIAMOND  = 0x2000,
+   CAF__NO_COMPRESS          = 0x4000,
+   CAF__PLUSEIGHTH_ROTATION  = 0x8000,
 };
 
 // BEWARE!!  This list must track the array "qualtab" in mkcalls.cpp
+// There is room for 127 of them, because they have to fit into a 7 bit field
+// in the "qualifierstuff" field of a callarray.  This is checked at startup.
 enum call_restriction {
    cr_none,                // Qualifier only.
    cr_alwaysfail,          // Restriction only.
    cr_give_fudgy_warn,
    cr_wave_only,
-   cr_wave_unless_say_2faced, // Not implemented.
+   cr_wave_unless_say_2faced,
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
@@ -685,6 +720,7 @@ enum call_restriction {
    cr_dmd_facing,
    cr_diamond_like,
    cr_qtag_like,
+   cr_qtag_like_anisotropic,
    cr_pu_qtag_like,
    cr_conc_iosame,
    cr_conc_iodiff,
@@ -710,6 +746,7 @@ enum call_restriction {
    cr_split_dixie,         // Qualifier only.
    cr_not_split_dixie,     // Qualifier only.
    cr_dmd_ctrs_mwv,        // Qualifier only.
+   cr_dmd_ctrs_mwv_no_mirror,  // Qualifier only.
    cr_spd_base_mwv,        // Qualifier only.
    cr_qtag_mwv,            // Qualifier only.
    cr_qtag_mag_mwv,        // Qualifier only.
@@ -770,7 +807,7 @@ enum call_restriction {
    cr_levelc3,
    cr_levelc4,
    cr_not_tboned,          // Restriction only.
-   cr_opposite_sex,        // Restriction only.
+   cr_opposite_sex,
    cr_quarterbox_or_col,   // Restriction only.
    cr_quarterbox_or_magic_col, // Restriction only.
    cr_all_ns,              // Restriction only.
@@ -886,6 +923,7 @@ enum calldef_schema {
    schema_checkpoint_mystic_ok,
    schema_cross_checkpoint,
    schema_rev_checkpoint,
+   schema_rev_checkpoint_concept,
    schema_ckpt_star,
    schema_maybe_in_out_triple_squash,
    schema_in_out_triple_squash,
@@ -940,10 +978,13 @@ enum calldef_schema {
    the latter flags are defined at the high end of the word, and the concentricity
    flags shown here are at the low end.
    The last bunch of flags are pushed up against the high end of the word, so that
-   they can exactly match some other flags.  The constant HERITABLE_FLAG_MASK
-   embraces them.  The flags that must stay in step are in the "FINAL__XXX" group
+   they can exactly match some other flags.
+
+   The constant HERITABLE_FLAG_MASK embraces them.     **** NOT SO!!!!!  NO SUCH THING!!!!
+
+   The flags that must stay in step are in the "FINAL__XXX" group
    in sd.h, the "cflag__xxx" group in database.h, and the "dfm_xxx" group in
-   database.h . There is compile-time code in sdinit.c to check that these
+   database.h . There is compile-time code in sdinit.cpp to check that these
    constants are all in step.
 
    dfm_conc_demand_lines             --  concdefine outers: must be ends of lines at start
@@ -999,7 +1040,7 @@ enum calldef_schema {
 // of those flags start where these end.  Keep it that way.  If any flags are added here,
 // they must be taken away from the CMD_MISC__ flags.
 
-enum {
+enum mods1_word {
    // These are the "conc" flags.  They overlay the "seq" flags.
 
    DFM1_CONC_DEMAND_LINES            = 0x00000001,
@@ -1052,7 +1093,7 @@ enum {
    DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL,
 
    DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800UL,
-   // spare:                         = 0x00001000UL,
+   DFM1_ROLL_TRANSPARENT_IF_Z        = 0x00001000UL,
    DFM1_ENDSCANDO                    = 0x00002000UL,
    DFM1_FINISH_THIS                  = 0x00004000UL,
    DFM1_ROLL_TRANSPARENT             = 0x00008000UL,
@@ -1065,7 +1106,8 @@ enum {
    DFM1_NUM_INSERT_MASK              = 0x00700000UL,
    DFM1_NUM_INSERT_BIT               = 0x00100000UL,
    DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000UL,
-   DFM1_FRACTAL_INSERT               = 0x01000000UL
+   DFM1_FRACTAL_INSERT               = 0x01000000UL,
+   DFM1_SUPPRESS_ROLL                = 0x02000000UL
 };
 
 enum  {

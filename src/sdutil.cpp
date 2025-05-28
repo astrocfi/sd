@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2008  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -323,7 +323,7 @@ static void write_nice_number(char indicator, int num)
 
 
 
-static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
+static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f, bool is_concept)
 {
    uint32 index = cptr->number_fields;
    int howmany = cptr->howmanynumbers;
@@ -336,6 +336,9 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
             write_nice_number(f[1], (howmany <= 0) ? -1 : (int) (index & NUMBER_FIELD_MASK));
             index >>= BITS_PER_NUMBER_FIELD;
             howmany--;
+            break;
+         case 'h':
+            writestuff(is_concept ? direction_names[cptr->where].name_uc : direction_names[cptr->where].name);
             break;
          case '6': case 'K':
             writestuff(selector_list[cptr->who].name_uc);
@@ -504,22 +507,6 @@ static void printsetup(setup *x)
       do_write(str);
    else {
       switch (x->kind) {
-         /* For a while, we took out the table entry, and used this.
-            This was done so that the dots wouldn't be printed
-            in a squared set.  We have changed it back.
-      case s4x4:
-         // Look for squared-set formation, and, if so, don't draw
-         // the dots for the phantoms.
-         if (!(x->people[0].id1 | x->people[3].id1 |
-               x->people[4].id1 | x->people[7].id1 |
-               x->people[8].id1 | x->people[11].id1 |
-               x->people[12].id1 | x->people[15].id1))
-            do_write("6  n  o@@k  6  6  b@@j  6  6  c@@6  g  f");
-         else
-            do_write("m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e");
-
-         break;
-         */
       case s_qtag:
          if ((x->people[0].id1 & x->people[1].id1 &
               x->people[4].id1 & x->people[5].id1 & 1) &&
@@ -554,6 +541,267 @@ static void printsetup(setup *x)
             str = "868         e@7a  c@7868         g@7@8  o@786       k  i@78  m";
          else
             str = "58b66e@a88c  h88f@58d66g@@58o66l@n88p  k88i@58m66j";
+
+         do_write(str);
+         break;
+      case s_trngl8:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "e f g h@@6 5d@6 5c@6 5b@6 5a";
+            break;
+         case 1:
+            str = "6 6 6 6 e@@6 6 6 6 f@7a b c d@76 6 6 6 g@@6 6 6 6 h";
+            break;
+         case 2:
+            str = "6 5a@6 5b@6 5c@6 5d@@h g f e";
+            break;
+         default:
+            str = "h@@g@76 d c b a@7f@@e";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s1x3p1dmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 d@7a b c 6 e@76 6 6 f";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ fd@@ 5e@";
+            break;
+         case 2:
+            str = "6 f@7e 6 c b a@76 d";
+            break;
+         default:
+            str = " 5e@@ df@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s4p2x1dmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 9e@@a b c d g f@@6 6 6 9h";
+            break;
+         case 1:
+            str = "6  a@@6  b@@6  c@@6  d@7h  6  e@76  g@@6  f";
+            break;
+         case 2:
+            str = "6 9h@@f g d c b a@@6 9e";
+            break;
+         default:
+            str = "6  f@@6  g@7e  6  h@76  d@@6  c@@6  b@@6  a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s3p1x1dmd:
+         // Stolen from s4p2x1dmd
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 9d@@a b c e@@6 6 9f";
+            break;
+         case 1:
+            str = "6  a@@6  b@@6  c@7f  6  d@76  e";
+            break;
+         case 2:
+            str = "9f@@e c b a@@9d";
+            break;
+         default:
+            str = "6  e@7d  6  f@76  c@@6  b@@6  a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s1x4p2dmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 e@7a b c d 6 g f@76 6 6 6 h";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ he@@ 5g@@ 5f@";
+            break;
+         case 2:
+            str = "6 6 h@7f g 6 d c b a@76 6 e";
+            break;
+         default:
+            str = " 5f@@ 5g@@ eh@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case splinepdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 6 f@7a b c d e 6 g@76 6 6 6 6 h";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ 5e@@ hf@@ 5g@";
+            break;
+         case 2:
+            str = "6 h@7g 6 e d c b a@76 f";
+            break;
+         default:
+            str = " 5g@@ fh@@ 5e@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case splinedmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 9f@@a b c d e g@@6 6 6 6 9h";
+            break;
+         case 1:
+            str = "6  a@@6  b@@6  c@@6  d@@6  e@7h  6  f@76  g";
+            break;
+         case 2:
+            str = "9h@@g e d c b a@@9f";
+            break;
+         default:
+            str = "6  g@7f  6  h@76  e@@6  d@@6  c@@6  b@@6  a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case slinedmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "e f h g@@6  8b@78a  6  c@76  8d";
+            break;
+         case 1:
+            str = "9a9e@969f@7d b@7969h@9c9g";
+            break;
+         case 2:
+            str = "6  8d@78c  6  a@76  8b@@g h f e";
+            break;
+         default:
+            str = "g9c@h@76 b d@7f@e9a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case slinepdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "e f h g@@6 5c@@6 b d@@6 5a";
+            break;
+         case 1:
+            str = "6 6 6 e@6 b 6 f@7a 6 c@76 d 6 h@6 6 6 g";
+            break;
+         case 2:
+            str = "6 5a@@6 d b@@6 5c@@g h f e";
+            break;
+         default:
+            str = "g@h 6 d@76 c 6 a@7f 6 b@e";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case slinebox:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 e f@7a b c d@76 6 6 6 h g";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ he@@ gf@";
+            break;
+         case 2:
+            str = "g h@76 6 d c b a@7f e";
+            break;
+         default:
+            str = " fg@@ eh@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sboxdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6e f@@6h g@@6  8b@78a  6  c@76  8d";
+            break;
+         case 1:
+            str = "9a@969h e@7d b@7969g f@9c";
+            break;
+         case 2:
+            str = "6  8d@78c  6  a@76  8b@@6g h@@6f e";
+            break;
+         default:
+            str = "696 c@f g@76 6 b d@7e h@696 a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sboxpdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 e f@@6 h g@@6 5c@@6 b d@@6 5a";
+            break;
+         case 1:
+            str = "6 b 6 h e@7a 6 c@76 d 6 g f";
+            break;
+         case 2:
+            str = "6 5a@@6 d b@@6 5c@@6 g h@@6 f e";
+            break;
+         default:
+            str = "f g 6 d@76 6 c 6 a@7e h 6 b";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sdmdpdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "65f@7e  6  g@765h@@65c@@6b d@@65a";
+            break;
+         case 1:
+            str = "6 6 6 5 e@76 b@7a 6 c h f@76 d@76 6 6 5 g";
+            break;
+         case 2:
+            str = "65a@@6d b@@65c@@65h@7g  6  e@765f";
+            break;
+         default:
+            str = "5g@76 6 6 d@7f h c 6 a@76 6 6 b@75e";
+            break;
+         }
 
          do_write(str);
          break;
@@ -663,8 +911,17 @@ void write_history_line(int history_index,
 
    // Or "each 1x6" and "each 1x3".
 
-   if (this_item->test_one_warning_specific(warn__split_1x6))
+   if (this_item->test_one_warning_specific(warn__split_to_1x3s))
       this_item->clear_one_warning_specific(warn__split_to_1x6s);
+
+   // Or "really_no_eachsetup".
+   this_item->clear_one_warning_specific(warn__really_no_eachsetup);
+
+   // Or "do your part" (that is, the "warn__dyp_or_2faced" version) and "you ought to say 2-faced".
+   // And don't say "do your part" twice.
+
+   if (this_item->test_one_warning_specific(warn__two_faced))
+      this_item->clear_one_warning_specific(warn__unusual_or_2faced);
 
    if (!ui_options.nowarn_mode) {
       for (w=0 ; w<warn__NUM_WARNINGS ; w++) {
@@ -707,7 +964,7 @@ void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
    writechar_block.destcurr = s;
    writechar_block.usurping_writechar = true;
 
-   writestuff_with_decorations(options, name);
+   writestuff_with_decorations(options, name, false);
    writechar('\0');
 
    writechar_block = saved_writeblock;
@@ -827,13 +1084,13 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                selective_key sk = (selective_key) item->arg1;
 
                if (sk == selective_key_dyp)
-                  writestuff_with_decorations(&local_cptr->options, "DO YOUR PART, @6 ");
+                  writestuff_with_decorations(&local_cptr->options, "DO YOUR PART, @6 ", true);
                else if (sk == selective_key_own)
-                  writestuff_with_decorations(&local_cptr->options, "OWN THE @6, ");
+                  writestuff_with_decorations(&local_cptr->options, "OWN THE @6, ", true);
                else if (sk == selective_key_plain)
-                  writestuff_with_decorations(&local_cptr->options, "@6 ");
+                  writestuff_with_decorations(&local_cptr->options, "@6 ", true);
                else
-                  writestuff_with_decorations(&local_cptr->options, "@6 DISCONNECTED ");
+                  writestuff_with_decorations(&local_cptr->options, "@6 DISCONNECTED ", true);
             }
             else if (k == concept_sequential) {
                writestuff("(");
@@ -843,10 +1100,10 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
                // If stuff hasn't been completely entered, show the number.
                if (!local_cptr->next || !subsidiary_ptr)
-                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ");
+                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ", true);
             }
             else if (k == concept_special_sequential_4num) {
-               writestuff_with_decorations(&local_cptr->options, item->name);
+               writestuff_with_decorations(&local_cptr->options, item->name, true);
                writestuff(" ");
             }
             else if (k == concept_replace_nth_part ||
@@ -868,18 +1125,18 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   case 2:
                      if (!local_cptr->next)
                         writestuff_with_decorations(&local_cptr->options,
-                                                    "interrupt this call after @9/@9:");
+                                                    "interrupt this call after @9/@9:", true);
                      else
                         writestuff("interrrupt ");
                      break;
                   case 8:
                      writestuff_with_decorations(&local_cptr->options,
-                                                 "replace the @u part of ");
+                                                 "replace the @u part of ", true);
                      if (!local_cptr->next) writestuff("this call:");
                      break;
                   case 9:
                      writestuff_with_decorations(&local_cptr->options,
-                                                 "interrupting after the @u part of ");
+                                                 "interrupting after the @u part of ", true);
                      if (!local_cptr->next) writestuff("this call:");
                      break;
                   }
@@ -905,7 +1162,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 2:
                         writestuff_with_decorations(&local_cptr->options,
-                                                    " after @9/@9 with this call:");
+                                                    " after @9/@9 with this call:", true);
                         break;
                      }
                   }
@@ -940,14 +1197,14 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sandwich)
                writestuff(" AROUND");
             else if (k == concept_special_sequential_num) {
-               writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ");
+               writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ", true);
                request_final_space = false;
             }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
                writestuff(" BUT ");
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
                writestuff(" WITH A [");
                request_final_space = false;
             }
@@ -1072,7 +1329,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   comma_after_next_concept = 5;
                }
 
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
                request_final_space = true;
             }
 
@@ -1110,7 +1367,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
          if (comma_after_next_concept == 2 && next_cptr) {
             skipped_concept_info foo;
-            foo.root_of_result_of_skip = (parse_block **) 0;
+            foo.m_root_of_result_of_skip = (parse_block **) 0;
 
             if (check_for_concept_group(next_cptr, foo, false))
                comma_after_next_concept = 3;    // Will try again later.
@@ -1122,7 +1379,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff(")");
-            return;
+            break;
          }
          else if (k == concept_replace_nth_part ||
                   k == concept_replace_last_part ||
@@ -1130,7 +1387,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff("]");
-            return;
+            break;
          }
       }
       else {
@@ -1283,7 +1540,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      break;
                   case 'h':                   // Need to plug in a direction.
                      write_blank_if_needed();
-                     writestuff(direction_names[idirjunk]);
+                     writestuff(direction_names[idirjunk].name);
                      if (np[0] && np[0] != ' ' && np[0] != ']')
                         writestuff(" ");
                      break;
@@ -1550,7 +1807,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         writestuff_with_decorations(
                            &search->options,
                            (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
-                           "turn the star @b" : replaced_call->name);
+                           "turn the star @b" : replaced_call->name, false);
 
                         writestuff(" WITH [");
                         print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
@@ -1575,7 +1832,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          writestuff("3 TIMES");
       else
          writestuff_with_decorations(&deferred_concept->options,
-                                     deferred_concept->concept->name);
+                                     deferred_concept->concept->name, true);
       if (deferred_concept_paren & 2) writestuff(")");
    }
 
@@ -2520,7 +2777,7 @@ void run_program()
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2007 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2008 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <18 Jan 2007 wba>
+@c Time-stamp: <10 Aug 2008 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.31
-@set title2 Database version = 37.3 format = 256
+@set title1 RELEASE NOTES FOR VERSION 37.81
+@set title2 Database version = 37.81 format = 280
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,12 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.81::
+* 37.8::
+* 37.7::
+* 37.6::
+* 37.5::
+* 37.4::
 * 37.3::
 * 37.2::
 * 37.1::
@@ -55,7 +61,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.3, Top, (dir)
+@node Intro, 37.81, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -63,14 +69,200 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2007 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2009 William B. Ackerman
 @sp 3
 @menu
-* 37.3::               Changes in the current version
+* 37.81::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.3, 37.2, Intro, Top
+@node 37.81, 37.8, Intro, Top
+@unnumberedsec Version 37.81 changes
+
+There is a new concept, available at C4, @strong{overlapped siamese}.  This is done
+from a 2x4, usually one in which people are T-boned.  Each person works either as couples
+or in tandem, as if with the other person in his quadrant, regradless of that other person's
+facing direction.  Each person's resulting setup is a virtual 2x2 box, and the person
+does the call in that box.
+
+@c ************
+@node 37.8, 37.7, 37.81, Top
+@unnumberedsec Version 37.8 changes
+
+The treatment of @strong{coordinate} from T-boned formations was improved.
+
+Some tricky cases of @strong{1/2 run} were fixed.
+
+The @strong{finally matrix quadruple lines working backward the pulley} bug was fixed.
+
+The @strong{recycle ; plus 2} bug was fixed.
+
+Some bugs were fixed relating to @strong{roll} after a @strong{spread}.
+
+The @strong{initially split phantom columns exchange the boxes 1/4} bug was fixed.
+
+The @strong{finally stable cast off 3/4} bug was fixed.
+
+The @strong{quadruple lines working forward ferris turn and deal} bug was fixed.
+
+It is possible to call @strong{promenade, <anyone> lead for a <anycall>} from 2-faced lines. 
+Previously, it had been possible to call @strong{<anyone> lead} from thar-like formations. 
+It is now also legal from 2-faced lines, but you must say @strong{promenade}.
+
+@c ************
+@node 37.7, 37.6, 37.8, Top
+@unnumberedsec Version 37.7 changes
+
+Box-like calls, such as @strong{peel and trail}, are not allowed from triangles at levels below C2.
+We apologize to the C1 dancers at Tech Squares who were inconvenienced by this.
+
+The triple column/line/wave concepts, and the interlocked triangle concept, were moved from C2 to C1.
+
+The @strong{mimic} concept was improved somewhat.  It now uses a
+reassembly algorithm that is consistent with the paper at
+@uref{http://www.lynette.org/mimic.pdf}.  It still handles only belles,
+beaus, leads, and trailers.
+
+The handling of alamo vs. "O" spots is better.  It uses the alamo setup more often.
+The call @strong{adjust alamo to other pairing} is needed much less often.
+There is better handling of dixie grand -- one can go directly to fractional tops, etc.
+
+There is better handling of inhomogeneous unsymmetrical setups: box and diamond, etc.
+
+The call @strong{recycle} was fixed to make it illegal from, for example, back-to-back lines.  It was taking
+too literally the "fold/counter rotate/roll" definition.  That definition is now only used if
+an actual concept that requires it is used.
+
+The notion that @strong{the gamut} has a distinct first part and can therefore be "finished" was removed.
+That is obsolete.
+
+A bug in @strong{initially 1-1/2 rims trade back} was fixed.
+
+A bug that wrongly allowed @strong{hocus pocus} from a butterfly was fixed.
+
+@c ************
+@node 37.6, 37.5, 37.7, Top
+@unnumberedsec Version 37.6 changes
+
+New concept: @strong{mimic}.  This is less complete than the full version in Sue Curtis's paper
+at @uref{http://www.lynette.org/mimic.pdf}.
+Note also that it does not use the "merge with phantoms from your setup
+only" rule for 4-person setups.
+When it has placed the phantoms, going into a 16-person setup, and divided that into two
+8-person setups, it keeps those 8-person setups distinct when merging.  However, it does not recognize,
+within the 8-person setups, whether the call was actually a 4-person call for the purpose
+of merging.
+So, for example, from back-to-back lines,
+@strong{mimic leads wheel the ocean} goes to waves, not a starting DPT.
+This concept is under discussion.
+
+Sd has some understanding of unsymmetrical setups involving, for example, a diamond and a line.
+This is not complete.
+
+The @strong{triple boxes working together deuces wild} bug was fixed.
+
+@c ************
+@node 37.5, 37.4, 37.6, Top
+@unnumberedsec Version 37.5 changes
+
+New concept: @strong{OX} (distorted column.)
+
+New concept: @strong{nose}.  This is less complete than the full version in Masahiro Kurasawa's paper
+at @uref{http://www.lynette.org/nose.pdf}.
+
+New call family: @strong{dixie tag}.
+
+New selectors: @strong{the diamond}, @strong{near/far 4}, @strong{nearest/farthest person}.
+
+A bug was fixed in the printout of certain complex combinations.  We thank our
+current A2 group for finding this, and apologize to anyone who might have called
+something incomple.
+
+An extremely obscure bug was found in the behavior after a
+@strong{reconcile} command was completed.  We thank Justin Legakis for
+finding this.
+
+The @strong{offset tidal column/line/wave} concept, in a fully offset 2x8, can be used
+with shape-changing calls.
+
+Sd can now do a better job with 2-person calls in Z lines or columns.
+
+Sd has a (limited) ability to handle setups involving a diamond placed unsymmetrically within a tidal line.
+
+The "in roll to a wave and roll" bug was fixed.
+
+A bug was fixed in @strong{rally} and @strong{scoot and rally} with phantoms on the outside.
+
+The first and last halves of the call @strong{double pass thru} are recognized.
+
+The call @strong{fan chain the star (T-bone)} has been removed.  Just do @strong{fan chain the star},
+but be aware that this might not agree with the "official" definition.
+
+The @strong{funny} concept can be applied to the centers' trade in calls like @strong{acey deucey}
+and @strong{hocus pocus}.  This means that people trade only if in a real miniwave or couple, not if
+T-boned.  Without this concept, the centers just do their part of a trade.
+
+There is the usual better tracking of phantoms, and various other minor fixes and improvements.
+
+@c ************
+@node 37.4, 37.3, 37.5, Top
+@unnumberedsec Version 37.4 changes
+
+New concepts: @strong{two-faced}, or @strong{2-faced}.  This will make
+the warning go away if a call that normally expects a wave is called
+from a two-faced line.
+
+The meaning of "step to a [mini]-wave" was reworked.  See the FAQ file
+for details.  Briefly, people always step to right hands (or left hands
+if the @strong{left} modifier was given) even if the overall resulting
+setup is not a wave.  The various warnings related to this, and to doing
+things in a 2-faced line without the @strong{two-faced} concept, were
+made more accurate.
+
+The display colors with -no_intensify and -reverse_video were changed to be less intense.
+
+The program will be less likely to be confused by the difference between an alamo ring and "O" spots.
+
+A number of @strong{fractal} calls were improved.
+
+The ability to do things that involve 45 degree rotation was improved.
+
+The "2x5 matrix heads hinge" bug was fixed.
+
+The "echo split phantom waves rims trade back" bug was fixed.
+
+The "mirror split dixie" bug was fixed.
+
+The "unwrap the diamonds" bug was fixed.
+
+The "initially once removed all tie" bug was fixed.
+
+The "finally 1/2 sandwich" bug was fixed.
+
+Modifications to calls like @strong{motivate} now count as concepts for the purpose of @strong{echo}.
+That is, @strong{echo [cross back] er's motivate} and @strong{echo in roll motivate} work.
+
+An extremely stupid and embarrassing bug was fixed.  This bug probably
+never arose in practice.  Nevertheless, we apologize to anyone who
+called something in a T-boned butterfly and found the center 4 rotated
+improperly.
+
+Some minor bug fixes were made in calls like @strong{1/2 circulate} and @strong{split counter rotate}.
+
+A marginal/bogus use of extend (1/4 tag spots, miniwaves everywhere) is now allowed.  A warning
+is printed, of course.
+
+The call @strong{half sashay} may also be spelled @strong{1/2 sashay}.
+
+Unsymmetrical phantom bend the line, and unsymmetrical fudging of the result to a 4x4 matrix, and various
+things that can be done with the result, were improved.
+
+Various 3x3 and 4x4 rotates were fixed.
+
+Unsymmetrical bent lines and bent columns in a 4x4 (clumps) are now allowed.
+
+@c ************
+@node 37.3, 37.2, 37.4, Top
 @unnumberedsec Version 37.3 changes
 
 @b{MAJOR CHANGE}

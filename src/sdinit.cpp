@@ -275,8 +275,8 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    // since the test setups that we use might have people placed in such a way
    // that something like "1/2 truck" is illegal.
    if (test_call->the_defn.schema == schema_matrix &&
-       test_call->the_defn.stuff.matrix.matrix_def_list->items[0] !=
-       test_call->the_defn.stuff.matrix.matrix_def_list->items[1])
+       test_call->the_defn.stuff.matrix.matrix_def_list->matrix_def_items[0] !=
+       test_call->the_defn.stuff.matrix.matrix_def_list->matrix_def_items[1])
       goto accept;
 
    // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
@@ -491,7 +491,8 @@ static void create_misc_call_lists(call_list_kind cl)
              assoc(b_dmd, (setup *) 0, deflist) ||
              assoc(b_pmd, (setup *) 0, deflist) ||
              assoc(b_1x2, (setup *) 0, deflist) ||
-             assoc(b_2x1, (setup *) 0, deflist))
+             assoc(b_2x1, (setup *) 0, deflist) ||
+             assoc(b_1x1, (setup *) 0, deflist))
             goto accept;
       }
 
@@ -727,7 +728,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
 
             for (j=0; j < this_start_size; j++) {
                read_halfword();
-               temp_predlist->arr[j] = (uint16) last_datum;
+               temp_predlist->array_pred_def[j] = (uint16) last_datum;
             }
 
             temp_predlist->next = this_predlist;
@@ -749,7 +750,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
       else {
          for (j=0; j < this_start_size; j++) {
             read_halfword();
-            tp->stuff.def[j] = (uint16) last_datum;
+            tp->stuff.array_no_pred_def[j] = (uint16) last_datum;
          }
          read_halfword();
       }
@@ -885,11 +886,11 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
             if (firstpart) {
                read_halfword();
-               this_matrix_block->items[j] =
+               this_matrix_block->matrix_def_items[j] =
                   firstpart | ((last_datum & 0xFFFF) << 16);
             }
             else {
-               this_matrix_block->items[j] = 0;
+               this_matrix_block->matrix_def_items[j] = 0;
             }               
          }
 
@@ -952,7 +953,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             check_tag(last_12);
             templist[next_definition_index].call_id = (uint16) last_12;
             read_fullword();
-            templist[next_definition_index].modifiers1 = last_datum;
+            templist[next_definition_index].modifiers1 = (mods1_word) last_datum;
             read_fullword();
             templist[next_definition_index++].modifiersh = last_datum;
             read_halfword();
@@ -975,14 +976,14 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       check_tag(last_12);
       root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
       read_fullword();
-      root_to_use->stuff.conc.innerdef.modifiers1 = last_datum;
+      root_to_use->stuff.conc.innerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
       root_to_use->stuff.conc.innerdef.modifiersh = last_datum;
       read_halfword();
       check_tag(last_12);
       root_to_use->stuff.conc.outerdef.call_id = (uint16) last_12;
       read_fullword();
-      root_to_use->stuff.conc.outerdef.modifiers1 = last_datum;
+      root_to_use->stuff.conc.outerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
       root_to_use->stuff.conc.outerdef.modifiersh = last_datum;
       read_halfword();
@@ -999,8 +1000,8 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       calldefn *recursed_call_root = (calldefn *)
          get_mem(sizeof(calldefn));
 
-      read_halfword();       // Get level (not really) and 12 bits of "callflags2" stuff.
-      uint32 saveflags2 = last_datum >> 4;
+      read_halfword();       // Get level (not really) and 16 bits of "callflags2" stuff.
+      uint32 saveflags1overflow = last_datum;
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
       uint32 saveflags1 = last_datum;
@@ -1013,8 +1014,8 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       recursed_call_root->level = 0;
       recursed_call_root->schema = call_schema;
       recursed_call_root->callflags1 = saveflags1;
+      recursed_call_root->callflagsf = saveflags1overflow << 16;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
-      recursed_call_root->callflagsf = saveflags2 << 20;
       recursed_call_root->callflagsh = saveflagsh;
       read_in_call_definition(recursed_call_root, 0);    // Recurse.
       root_to_use->compound_part = recursed_call_root;
@@ -1193,7 +1194,8 @@ extern void prepare_to_read_menus()
 
    if (calling_level < zig_zag_level) {
       last_direction_kind = direction_zigzag-1;
-      direction_names[direction_zigzag] = (Cstring) 0;
+      direction_names[direction_zigzag].name = (Cstring) 0;
+      direction_names[direction_zigzag].name_uc = (Cstring) 0;
    }
 
    if (glob_abridge_mode < abridge_mode_writing) {
@@ -1642,9 +1644,10 @@ static void build_database(abridge_mode_t abridge_mode)
 
       savetag = last_12;     // Get tag, if any.
 
-      read_halfword();       // Get level and 12 bits of "callflags2" stuff.
-      dance_level this_level = (dance_level) (last_datum & 0xF);
-      uint32 saveflags2 = last_datum >> 4;
+      dance_level this_level = (dance_level) (read_8_from_database() & 0xFF);
+
+      read_halfword();       // Get 16 bits of "callflags1"  overflow stuff.
+      uint32 saveflags1overflow = last_datum;
 
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
@@ -1676,7 +1679,7 @@ static void build_database(abridge_mode_t abridge_mode)
       call_root->the_defn.level = (int) this_level;
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
-      call_root->the_defn.callflagsf = saveflags2 << 20;
+      call_root->the_defn.callflagsf = saveflags1overflow << 16;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
       call_root->the_defn.callflagsh = saveflagsh;
       read_in_call_definition(&call_root->the_defn, char_count);
