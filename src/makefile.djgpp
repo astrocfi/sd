@@ -1,6 +1,4 @@
-# Generated automatically from Makefile.in by configure.
-# Makefile for Sd (square dance caller's helper)
-# Time-stamp: <96/05/05 10:50:56 gildea>
+# Makefile for Sd/Sdtty for DJGPP / DOS
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
@@ -20,11 +18,11 @@ DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 # Consult your system, compiler, and debugger vendor for further information.
 CDEBUGFLAGS = -O2
 
-CFLAGS =$(DEFS) $(CDEBUGFLAGS)
+CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-tpc.cpp).
-TTY_FLAGS = 
+TTY_FLAGS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
@@ -73,22 +71,12 @@ dbcomp.o: database.h
 
 $(SD_OBJS) $(SDTTY_OBJS): sd.h database.h
 
-
 RM = del
 
-docclean:
-	-$(RM) *.aux *.log *.toc *.dvi
-	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
-
-clean:: docclean
 clean::
-	-$(RM) *.o sdtty.exe mkcalls.exe sd_calls.dat
-	-$(RM) lint.out
+	rm *.o *.bin sdtty.exe mkcalls.exe sd_calls.dat
 
-distclean: clean
-	-$(RM) sequence.*
-	-$(RM) *~ core
-	-$(RM) *.tar *.tar.Z
+TAG_FILES = ${SRCS} *.h
 
-realclean: distclean
-	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
+tags: ${TAG_FILES}
+	/opt/sfw/bin/ctags ${TAG_FILES}

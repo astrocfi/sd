@@ -100,7 +100,8 @@ enum color_scheme_type {
    color_by_couple_rgyb
 };
 
-struct ui_option_type {
+class ui_option_type {
+ public:
    int no_graphics;       // 1 = "no_checkers"; 2 = "no_graphics"
    int no_intensify;
    int reverse_video;     // 0 = black-on-white (default); 1 = white-on-black
@@ -116,7 +117,7 @@ struct ui_option_type {
 
    /* This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
       for drawing people, so that it can fill in funny characters, or draw in color.
-      This applies only to calls to uims_add_new_line with a nonzero second argument.
+      This applies only to calls to add_new_line with a nonzero second argument.
 
       0 means don't use any funny stuff.  The text strings transmitted when drawing
       setups are completely plain ASCII.
@@ -126,7 +127,7 @@ struct ui_option_type {
       spacing characters.  All spacing and formatting is done with spaces.
 
       2 means use escapes and other special characters.  Whenever the second arg to
-      uims_add_new_line is nonzero, then in addition to the escape sequences for the
+      add_new_line is nonzero, then in addition to the escape sequences for the
       people themselves, we have an escape sequence for a phantom, and certain
       characters have special meaning:  5 means space 1/2 of a glyph width, etc.
       See the definition of newline for details. */
@@ -137,8 +138,12 @@ struct ui_option_type {
    char *pn1;             // 1st char (1/2/3/4) of what we use to print person.
    char *pn2;             // 2nd char (B/G) of what we use to print person.
    char *direc;           // 3rd char (direction arrow) of what we use to print person.
+   char *stddirec;        // the "standard" directions, for transcript files.
+                          // Doesn't get overridden by any options.
    int squeeze_this_newline;  // randomly used by printing stuff.
    int drawing_picture;       // randomly used by printing stuff.
+
+   ui_option_type();      // Constructor is in sdmain.
 };
 
 
@@ -614,7 +619,7 @@ struct call_with_name {
 };
 
 struct parse_block {
-   concept_descriptor *concept;   /* the concept or end marker */
+   const concept_descriptor *concept; // the concept or end marker
    call_with_name *call;          /* if this is end mark, gives the call; otherwise unused */
    call_with_name *call_to_print; /* the original call, for printing (sometimes the field
                                      above gets changed temporarily) */
@@ -653,9 +658,6 @@ enum command_kind {
    command_delete_one_call_from_clipboard,
    command_paste_one_call,
    command_paste_all_calls,
-#ifdef NEGLECT
-   command_neglect,
-#endif
    command_save_pic,
    command_help,
    command_help_manual,
@@ -1641,7 +1643,7 @@ struct modifier_block {
    long int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    call_with_name *call_ptr;
-   concept_descriptor *concept_ptr;
+   const concept_descriptor *concept_ptr;
    modifier_block *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
    modifier_block *packed_secondary_subcall; // points to substitution list for secondary subcall
    modifier_block *gc_ptr;                /* used for reclaiming dead blocks */
@@ -2875,12 +2877,13 @@ enum revert_weirdness_type {
 
 
 
-extern int session_index;                                     // in SDSI
+extern SDLIB_API int session_index;                           // in SDSI
 extern int random_number;                                     // in SDSI
-extern char *database_filename;                               // in SDSI
-extern char *new_outfile_string;                              // in SDSI
-extern char *call_list_string;                                // in SDSI
+extern SDLIB_API char *database_filename;                     // in SDSI
+extern SDLIB_API char *new_outfile_string;                    // in SDSI
+extern SDLIB_API char *call_list_string;                      // in SDSI
 extern FILE *call_list_file;                                  // in SDSI
+extern long_boolean outfile_special;                          // in SDSI
 
 extern SDLIB_API long_boolean showing_has_stopped;            // in SDMATCH
 extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
@@ -2904,14 +2907,14 @@ extern SDLIB_API match_result user_match;
 
 extern SDLIB_API command_kind search_goal;                          /* in SDPICK */
 
-extern FILE *journal_file;                                          /* in SDMAIN */
-extern Cstring menu_names[];                                        /* in SDMAIN */
-extern command_list_menu_item command_menu[];                       /* in SDMAIN */
-extern resolve_list_menu_item resolve_menu[];                       /* in SDMAIN */
-extern startup_list_menu_item startup_menu[];                       /* in SDMAIN */
+extern SDLIB_API FILE *journal_file;                                /* in SDMAIN */
+extern SDLIB_API Cstring menu_names[];                              /* in SDMAIN */
+extern SDLIB_API command_list_menu_item command_menu[];             /* in SDMAIN */
+extern SDLIB_API resolve_list_menu_item resolve_menu[];             /* in SDMAIN */
+extern SDLIB_API startup_list_menu_item startup_menu[];             /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
-extern char *sd_version_string(void);                               /* In SDMAIN */
-extern long_boolean query_for_call(void);                           /* In SDMAIN */
+extern SDLIB_API char *sd_version_string();                         /* In SDMAIN */
+extern SDLIB_API long_boolean query_for_call();                     /* In SDMAIN */
 
 extern int sdtty_screen_height;                                     /* in SDUI-TTY */
 extern int sdtty_no_cursor;                                         /* in SDUI-TTY */
@@ -2919,81 +2922,113 @@ extern int sdtty_no_console;                                        /* in SDUI-T
 extern int sdtty_no_line_delete;                                    /* in SDUI-TTY */
 
 
-// This file is used by some plain C files for data initialization.
-// The plain C compiler won't like the "throw" declarations or the
-// "bool" datatype.  The files that do data initialization don't
-// need function prototypes anyway.
+// During initialization, the main program makes a number of callbacks
+// to the user interface stuff, through procedure "init_step".
+// This is done to do things like put up and take down dialog boxes,
+// change the status bar, and manipulate the progress bar.
+// The first argument is one of these keys.  They are listed in the
+// order in which they occur.  A few of them take a second argument.
 
-
-struct callbackstuff {
-   void * (*get_mem_fn)(uint32 siz);
-   void * (*get_more_mem_fn)(void *oldp, uint32 siz);
-   void * (*get_mem_gracefully_fn)(uint32 siz);
-   void * (*get_more_mem_gracefully_fn)(void *oldp, uint32 siz);
-   void (*free_mem_fn)(void *ptr);
-   void (*get_date_fn)(char dest[]);
-   void (*open_file_fn)(void);
-   void (*close_file_fn)(void);
-   void (*uims_database_error_fn)(Cstring message, Cstring call_name);
-   parse_block * (*get_parse_block_fn)(void);
-   void (*newline_fn)(void);
-   void (*write_file_fn)(char line[]);
-   long_boolean (*install_outfile_string_fn)(char newstring[]);
-   int (*uims_do_abort_popup_fn)(void);
-   int (*uims_do_session_init_popup_fn)(void);
-   uims_reply (*uims_get_startup_command_fn)(void);
-   void (*uims_set_window_title_fn)(char s[]);
-   void (*uims_add_new_line_fn)(char the_line[], uint32 drawing_picture);
-   void (*uims_reduce_line_count_fn)(int n);
-   void (*uims_update_resolve_menu_fn)(command_kind goal,
-                                       int cur, int max,
-                                       resolver_display_state state);
-   void (*show_match_fn)(void);
-   char * (*uims_version_string_fn)(void);
-   char * (*sd_version_string_fn)(void);
-   uims_reply (*uims_get_resolve_command_fn)(void);
-   long_boolean (*query_for_call_fn)(void);
-   bool (*uims_choose_font_fn)();
-   bool (*uims_print_this_fn)();
-   bool (*uims_print_any_fn)();
-   bool (*uims_help_manual_fn)();
-   int (*uims_do_outfile_popup_fn)(char dest[]);
-   int (*uims_do_header_popup_fn)(char dest[]);
-   int (*uims_do_getout_popup_fn)(char dest[]);
-   int (*uims_do_write_anyway_popup_fn)(void);
-   int (*uims_do_delete_clipboard_popup_fn)(void);
-   void (*init_error_fn)(char s[]);
-   void (*uims_fatal_error_fn)(Cstring pszLine1, Cstring pszLine2);
-   void (*uims_database_tick_fn)(int n);
-   void (*uims_database_tick_max_fn)(int n);
-   void (*uims_database_tick_end_fn)(void);
-   void (*uims_create_menu_fn)(call_list_kind cl);
-   long_boolean (*open_database_fn)(char *msg1, char *msg2);
-   uint32 (*read_8_from_database_fn)(void);
-   uint32 (*read_16_from_database_fn)(void);
-   void (*close_database_fn)(void);
-   long_boolean (*open_call_list_file_fn)(char filename[]);
-   char * (*read_from_call_list_file_fn)(char name[], int n);
-   void (*write_to_call_list_file_fn)(const char name[]);
-   long_boolean (*close_call_list_file_fn)(void);
-   long_boolean (*sequence_is_resolved_fn)(void);
-   long_boolean (*deposit_call_fn)(call_with_name *call, const call_conc_option_state *options);
-   long_boolean (*deposit_concept_fn)(concept_descriptor *conc);
-   int (*uims_do_modifier_popup_fn)(Cstring callname, modify_popup_kind kind);
-   void (*create_resolve_menu_title_fn)(
-      command_kind goal,
-      int cur, int max,
-      resolver_display_state state,
-      char *title);
-   void (*exit_program_fn)(int code);
-   int (*generate_random_number_fn)(int modulus);
-   void (*hash_nonrandom_number_fn)(int number);
-   int text_line_count;
+enum init_callback_state {
+   get_session_info,   // Query user about the session.
+   final_level_query,  // Maybe query the user for the level --
+                       // didn't get it from the command line or the session.
+   init_database1,     // Got level, about to open database.
+   init_database2,     // Starting the big database scan to create menus.
+   calibrate_tick,     // Takes arg, calibrate the progress bar.
+   do_tick,            // Takes arg, called repeatedly to advance the progress bar.
+   tick_end,           // End the progress bar.
+   do_accelerator      // Starting the processing of accelerator keys.
 };
+
+
+class iobase {
+ public:
+   virtual int do_abort_popup() = 0;
+   virtual int do_session_init_popup() = 0;
+   virtual uims_reply get_startup_command() = 0;
+   virtual void set_window_title(char s[]) = 0;
+   virtual void add_new_line(char the_line[], uint32 drawing_picture) = 0;
+   virtual void reduce_line_count(int n) = 0;
+   virtual void update_resolve_menu(command_kind goal, int cur, int max,
+                                    resolver_display_state state) = 0;
+   virtual void show_match() = 0;
+   virtual char *version_string() = 0;
+   virtual uims_reply get_resolve_command() = 0;
+   virtual bool choose_font() = 0;
+   virtual bool print_this() = 0;
+   virtual bool print_any() = 0;
+   virtual bool help_manual() = 0;
+   virtual int do_outfile_popup(char dest[]) = 0;
+   virtual int do_header_popup(char dest[]) = 0;
+   virtual int do_getout_popup(char dest[]) = 0;
+   virtual int do_write_anyway_popup() = 0;
+   virtual int do_delete_clipboard_popup() = 0;
+   virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
+   virtual void create_menu(call_list_kind cl) = 0;
+   virtual int do_selector_popup() = 0;
+   virtual int do_direction_popup() = 0;
+   virtual int do_circcer_popup() = 0;
+   virtual int do_tagger_popup(int tagger_class) = 0;
+   virtual int do_modifier_popup(Cstring callname, modify_popup_kind kind) = 0;
+   virtual int do_comment_popup(char dest[]) = 0;
+   virtual uint32 get_number_fields(int nnumbers, long_boolean forbid_zero) = 0;
+   virtual long_boolean get_call_command(uims_reply *reply_p) = 0;
+   virtual void display_help() = 0;
+   virtual void terminate() = 0;
+   virtual NORETURN1 void uims_final_exit(int code) NORETURN2 = 0;
+   virtual void process_command_line(int *argcp, char ***argvp) = 0;
+   virtual void bad_argument(Cstring s1, Cstring s2, Cstring s3) = 0;
+   virtual void final_initialize() = 0;
+   virtual bool init_step(init_callback_state s, int n) = 0;
+};
+
+class iofull : public iobase {
+ public:
+   int do_abort_popup();
+   int do_session_init_popup();
+   uims_reply get_startup_command();
+   void set_window_title(char s[]);
+   void add_new_line(char the_line[], uint32 drawing_picture);
+   void reduce_line_count(int n);
+   void update_resolve_menu(command_kind goal, int cur, int max,
+                            resolver_display_state state);
+   void show_match();
+   char *version_string();
+   uims_reply get_resolve_command();
+   bool choose_font();
+   bool print_this();
+   bool print_any();
+   bool help_manual();
+   int do_outfile_popup(char dest[]);
+   int do_header_popup(char dest[]);
+   int do_getout_popup(char dest[]);
+   int do_write_anyway_popup();
+   int do_delete_clipboard_popup();
+   void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
+   void create_menu(call_list_kind cl);
+   int do_selector_popup();
+   int do_direction_popup();
+   int do_circcer_popup();
+   int do_tagger_popup(int tagger_class);
+   int do_modifier_popup(Cstring callname, modify_popup_kind kind);
+   int do_comment_popup(char dest[]);
+   uint32 get_number_fields(int nnumbers, long_boolean forbid_zero);
+   long_boolean get_call_command(uims_reply *reply_p);
+   void display_help();
+   void terminate();
+   NORETURN1 void uims_final_exit(int code) NORETURN2;
+   void process_command_line(int *argcp, char ***argvp);
+   void bad_argument(Cstring s1, Cstring s2, Cstring s3);
+   void final_initialize();
+   bool init_step(init_callback_state s, int n);
+};
+
 
 /* VARIABLES */
 
-extern SDLIB_API callbackstuff the_callback_block;                  /* in SDTOP */
+extern SDLIB_API iobase *gg;                                        /* in SDTOP */
+extern SDLIB_API int text_line_count;                               /* in SDTOP */
 extern SDLIB_API char error_message1[MAX_ERR_LENGTH];               /* in SDTOP */
 extern SDLIB_API char error_message2[MAX_ERR_LENGTH];               /* in SDTOP */
 extern SDLIB_API uint32 collision_person1;                          /* in SDTOP */
@@ -3065,10 +3100,11 @@ extern SDLIB_API int number_for_initialize;                         /* in SDINIT
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
 extern SDLIB_API int global_age;                                    /* in SDUTIL */
-extern SDLIB_API configuration *clipboard;                          /* in SDUTIL */
-extern SDLIB_API int clipboard_size;                                /* in SDUTIL */
+extern bool global_leave_missing_calls_blank;                       /* in SDUTIL */
+extern configuration *clipboard;                                    /* in SDUTIL */
+extern int clipboard_size;                                          /* in SDUTIL */
 extern SDLIB_API long_boolean wrote_a_sequence;                     /* in SDUTIL */
-extern SDLIB_API long_boolean retain_after_error;                   /* in SDUTIL */
+extern long_boolean retain_after_error;                             /* in SDUTIL */
 extern SDLIB_API char outfile_string[];                             /* in SDUTIL */
 extern SDLIB_API char header_comment[];                             /* in SDUTIL */
 extern SDLIB_API long_boolean need_new_header_comment;              /* in SDUTIL */
@@ -3078,8 +3114,6 @@ extern SDLIB_API Cstring filename_strings[];                        /* in SDUTIL
 extern SDLIB_API Cstring concept_key_table[];                       /* in SDUTIL */
 
 extern SDLIB_API concept_table_item concept_table[];                /* in SDCONCPT */
-
-
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
 extern uint32 global_livemask;                                      /* in SDCONCPT */
 extern uint32 global_selectmask;                                    /* in SDCONCPT */
@@ -3201,7 +3235,8 @@ extern map_thing *maps_3diagwk[4];                                  /* in SDTABL
 
 /* in SDCTABLE */
 
-extern SDLIB_API concept_descriptor concept_descriptor_table[];
+extern concept_descriptor unsealed_concept_descriptor_table[];
+extern SDLIB_API const concept_descriptor *concept_descriptor_table;
 extern SDLIB_API call_with_name **main_call_lists[NUM_CALL_LIST_KINDS];
 extern SDLIB_API int number_of_calls[NUM_CALL_LIST_KINDS];
 extern SDLIB_API dance_level calling_level;
@@ -3313,6 +3348,7 @@ extern const map_thing map_4x4_spec5;                               /* in SDTABL
 extern const map_thing map_4x4_spec6;                               /* in SDTABLES */
 extern const map_thing map_4x4_spec7;                               /* in SDTABLES */
 extern const map_thing map_4x4v;                                    /* in SDTABLES */
+extern const map_thing map_4x4_1x1;                                 /* in SDTABLES */
 extern const map_thing map_trglbox3x4a;                             /* in SDTABLES */
 extern const map_thing map_trglbox3x4b;                             /* in SDTABLES */
 extern const map_thing map_trglbox4x4;                              /* in SDTABLES */
@@ -3356,18 +3392,18 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL;
 /* In SDGETOUT */
 
 SDLIB_API void write_resolve_text(long_boolean doing_file);
-SDLIB_API uims_reply full_resolve(void);
-extern int concepts_in_place(void);
-extern int reconcile_command_ok(void);
-extern int resolve_command_ok(void);
-extern int nice_setup_command_ok(void);
+SDLIB_API uims_reply full_resolve();
+extern int concepts_in_place();
+extern int reconcile_command_ok();
+extern int resolve_command_ok();
+extern int nice_setup_command_ok();
 SDLIB_API void create_resolve_menu_title(
    command_kind goal,
    int cur,
    int max,
    resolver_display_state state,
    char *title);
-SDLIB_API void initialize_getout_tables(void);
+void initialize_getout_tables();
 
 
 /* In SDBASIC */
@@ -3521,7 +3557,7 @@ extern void prepare_for_call_in_series(setup *result, setup *ss);
 
 extern void minimize_splitting_info(setup *ss, uint32 other_info);
 
-extern void initialize_map_tables(void);
+extern void initialize_map_tables();
 
 extern void remove_z_distortion(setup *ss) THROW_DECL;
 
@@ -3626,7 +3662,7 @@ extern void tandem_couples_move(
    long_boolean phantom_pairing_ok,
    setup *result) THROW_DECL;
 
-extern void initialize_tandem_tables(void);
+extern void initialize_tandem_tables();
 
 /* In SDCONC */
 
@@ -3706,7 +3742,7 @@ extern void do_matrix_expansion(
    uint32 concprops,
    long_boolean recompute_id) THROW_DECL;
 
-SDLIB_API void initialize_sdlib(void);
+SDLIB_API void initialize_sdlib();
 
 extern bool check_for_concept_group(
    parse_block *parseptrcopy,
@@ -3813,8 +3849,6 @@ extern long_boolean do_subcall_query(
    long_boolean this_is_tagger_circcer,
    call_with_name *orig_call);
 
-SDLIB_API void print_id_error(int n);
-
 extern call_list_kind find_proper_call_list(setup *s);
 
 class fraction_info {
@@ -3908,45 +3942,47 @@ class fraction_info {
 /* In SDUTIL */
 
 SDLIB_API const char *get_escape_string(char c);
-SDLIB_API void write_history_line(int history_index, const char *header,
-                                  long_boolean picture, file_write_flag write_to_file);
+SDLIB_API void write_history_line(int history_index,
+                                  bool picture,
+                                  bool leave_missing_calls_blank,
+                                  file_write_flag write_to_file,
+                                  const char *header = 0);
 SDLIB_API void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
 SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg);
-SDLIB_API void clear_screen(void);
+SDLIB_API void clear_screen();
 SDLIB_API void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
 extern void writechar(char src);
-SDLIB_API void newline(void);
-extern void open_text_line(void);
-SDLIB_API void doublespace_file(void);
+SDLIB_API void newline();
+extern void open_text_line();
+SDLIB_API void doublespace_file();
 SDLIB_API void writestuff(const char *s);
-extern parse_block *mark_parse_blocks(void);
+extern parse_block *mark_parse_blocks();
 extern void release_parse_blocks_to_mark(parse_block *mark_point);
 extern parse_block *copy_parse_tree(parse_block *original_tree);
-SDLIB_API parse_block *get_parse_block(void);
+parse_block *get_parse_block();
 extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
-extern void save_parse_state(void);
-extern long_boolean restore_parse_state(void);
+extern void save_parse_state();
+extern long_boolean restore_parse_state();
 SDLIB_API void string_copy(char **dest, Cstring src);
-SDLIB_API void display_initial_history(int upper_limit, int num_pics);
-extern void initialize_parse(void);
-SDLIB_API void run_program();
+void display_initial_history(int upper_limit, int num_pics);
+extern void initialize_parse();
+void run_program();
 
 /* In SDINIT */
 
+extern long_boolean open_session(int argc, char **argv);
 SDLIB_API void start_sel_dir_num_iterator();
 SDLIB_API long_boolean iterate_over_sel_dir_num(
    long_boolean enable_selector_iteration,
    long_boolean enable_direction_iteration,
    long_boolean enable_number_iteration);
-SDLIB_API void build_database(call_list_mode_t call_list_mode);
-SDLIB_API void initialize_menus(call_list_mode_t call_list_mode);
 
 /* In SDMATCH */
 
 SDLIB_API void do_accelerator_spec(Cstring qq);
 SDLIB_API void erase_matcher_input();
 SDLIB_API int delete_matcher_word();
-SDLIB_API void matcher_initialize();
+void matcher_initialize();
 SDLIB_API void matcher_setup_call_menu(call_list_kind cl);
 SDLIB_API int match_user_input(
    int which_commands,
@@ -3956,9 +3992,9 @@ SDLIB_API int match_user_input(
 
 /* In SDPICK */
 
-SDLIB_API void reset_internal_iterators(void);
+SDLIB_API void reset_internal_iterators();
 SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration);
-SDLIB_API direction_kind do_direction_iteration(void);
+SDLIB_API direction_kind do_direction_iteration();
 SDLIB_API void do_number_iteration(int howmanynumbers,
                                    uint32 odd_number_only,
                                    long_boolean allow_iteration,
@@ -3968,75 +4004,22 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
                                            uint32 *tagg,
                                            uint32 numtaggers,
                                            call_with_name **tagtable);
-SDLIB_API call_with_name *do_pick(void);
-SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
-SDLIB_API resolve_goodness_test get_resolve_goodness_info(void);
-SDLIB_API long_boolean pick_allow_multiple_items(void);
-SDLIB_API void start_pick(void);
-SDLIB_API void end_pick(void);
-SDLIB_API long_boolean forbid_call_with_mandatory_subcall(void);
-SDLIB_API long_boolean allow_random_subcall_pick(void);
+SDLIB_API call_with_name *do_pick();
+SDLIB_API const concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
+SDLIB_API resolve_goodness_test get_resolve_goodness_info();
+SDLIB_API long_boolean pick_allow_multiple_items();
+SDLIB_API void start_pick();
+SDLIB_API void end_pick();
+SDLIB_API long_boolean forbid_call_with_mandatory_subcall();
+SDLIB_API long_boolean allow_random_subcall_pick();
 
 /* In SDUI */
-
-extern char *uims_version_string(void);
-extern void uims_process_command_line(int *argcp, char ***argvp);
-extern void uims_display_help(void);
-extern void uims_display_ui_intro_text(void);
-extern void uims_create_menu(call_list_kind cl);
-extern void uims_postinitialize(void);
-extern long_boolean uims_open_session(int argc, char **argv);
-extern void uims_set_window_title(char s[]);
-extern void uims_bell(void);
-extern int uims_do_comment_popup(char dest[]);
-extern bool uims_choose_font();
-extern bool uims_print_this();
-extern bool uims_print_any();
-extern bool uims_help_manual();
-extern int uims_do_outfile_popup(char dest[]);
-extern int uims_do_header_popup(char dest[]);
-extern int uims_do_getout_popup(char dest[]);
-extern int uims_do_write_anyway_popup(void);
-extern int uims_do_delete_clipboard_popup(void);
-extern int uims_do_abort_popup(void);
-extern int uims_do_session_init_popup(void);
-extern int uims_do_neglect_popup(char dest[]);
-extern int uims_do_selector_popup(void);
-extern int uims_do_direction_popup(void);
-extern int uims_do_circcer_popup(void);
-extern int uims_do_tagger_popup(int tagger_class);
-extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind);
-extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero);
-extern void uims_reduce_line_count(int n);
-extern void uims_add_new_line(char the_line[], uint32 drawing_picture);
-extern void show_match(void);
-extern uims_reply uims_get_startup_command(void);
-extern long_boolean uims_get_call_command(uims_reply *reply_p);
-extern uims_reply uims_get_resolve_command(void);
-extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state);
-extern void uims_terminate(void);
-extern void uims_database_tick_max(int n);
-extern void uims_database_tick(int n);
-extern void uims_database_tick_end(void);
-extern void uims_database_error(Cstring message, Cstring call_name);
-extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3);
-extern void uims_debug_print(Cstring s);		/* Alan's code only */
-extern void uims_fatal_error(Cstring pszLine1, Cstring pszLine2);
-NORETURN1 extern void uims_final_exit(int code) NORETURN2;
-
-extern void ttu_final_option_setup();
-
-/* Print the help message appropriate for the switches that we support. */
-extern void ttu_display_help();
 
 /* Change the title bar (or whatever it's called) on the window. */
 extern void ttu_set_window_title(char s[]);
 
 /* Initialize this package. */
 extern void ttu_initialize();
-
-/* Terminate this package. */
-extern void ttu_terminate();
 
 /* Get number of lines to use for "more" processing.  This number is
    not used for any other purpose -- the rest of the program is not concerned
@@ -4071,64 +4054,54 @@ extern void put_char(int c);
       218..243 for alt letter (alt-A = 218)
       244..269 for ctl-alt letter (ctl-alt-A = 244) */
 
-extern int get_char(void);
+extern int get_char();
 
 /* Get string from input, up to <newline>, with echoing and editing.
    Return it without the final <newline>. */
 extern void get_string(char *dest, int max);
 
 /* Ring the bell, or whatever. */
-extern void ttu_bell(void);
+extern void ttu_bell();
 
-extern void initialize_signal_handlers(void);
-extern void refresh_input(void);
+extern void refresh_input();
 
 /* in SDSI */
 
-extern void general_initialize(void);
-extern int generate_random_number(int modulus);
-extern void hash_nonrandom_number(int number);
-extern void *get_mem(uint32 siz);
-extern void *get_mem_gracefully(uint32 siz);
-extern void *get_more_mem(void *oldp, uint32 siz);
-extern void *get_more_mem_gracefully(void *oldp, uint32 siz);
-extern void free_mem(void *ptr);
-extern void get_date(char dest[]);
-extern void open_file(void);
-extern void close_file(void);
-extern void print_line(Cstring s);
-// ***** This next one actually wants NORETURN stuff.
-extern void init_error(char s[]);
-extern long_boolean parse_level(Cstring s, dance_level *levelp);
-extern char *read_from_call_list_file(char name[], int n);
-extern void write_to_call_list_file(const char name[]);
-extern long_boolean close_call_list_file(void);
-extern long_boolean install_outfile_string(char newstring[]);
-extern long_boolean get_first_session_line(void);
-extern long_boolean get_next_session_line(char *dest);
-extern void prepare_to_read_menus(void);
-extern void initialize_misc_lists(void);
-extern long_boolean open_session(int argc, char **argv);
-extern int process_session_info(Cstring *error_msg);
-extern long_boolean open_call_list_file(char filename[]);
-extern long_boolean open_accelerator_region(void);
-extern long_boolean get_accelerator_line(char line[]);
-extern void close_init_file(void);
-NORETURN1 extern void final_exit(int code) NORETURN2;
-extern long_boolean open_database(char *msg1, char *msg2);
-extern uint32 read_8_from_database(void);
-extern uint32 read_16_from_database(void);
-extern void close_database(void);
-extern int parse_number(char junk[]);
-
-extern void unparse_number(int arg, char dest[]);
-extern void write_file(char line[]);
-extern void fill_in_neglect_percentage(char junk[], int n);
+extern void general_initialize();
+SDLIB_API int generate_random_number(int modulus);
+SDLIB_API void hash_nonrandom_number(int number);
+SDLIB_API void *get_mem(uint32 siz);
+SDLIB_API void *get_mem_gracefully(uint32 siz);
+SDLIB_API void *get_more_mem(void *oldp, uint32 siz);
+SDLIB_API void *get_more_mem_gracefully(void *oldp, uint32 siz);
+SDLIB_API void free_mem(void *ptr);
+SDLIB_API void get_date(char dest[]);
+extern char *get_errstring();
+SDLIB_API void open_file();
+SDLIB_API void close_file();
+SDLIB_API long_boolean parse_level(Cstring s, dance_level *levelp);
+SDLIB_API char *read_from_call_list_file(char name[], int n);
+SDLIB_API void write_to_call_list_file(const char name[]);
+SDLIB_API void close_call_list_file();
+SDLIB_API long_boolean install_outfile_string(char newstring[]);
+SDLIB_API long_boolean get_first_session_line();
+SDLIB_API long_boolean get_next_session_line(char *dest);
+SDLIB_API void prepare_to_read_menus();
+SDLIB_API int process_session_info(Cstring *error_msg);
+SDLIB_API void open_call_list_file(char filename[]);
+SDLIB_API long_boolean open_accelerator_region();
+SDLIB_API long_boolean get_accelerator_line(char line[]);
+SDLIB_API void close_init_file();
+SDLIB_API void final_exit(int code);
+SDLIB_API long_boolean open_database(char *msg1, char *msg2);
+SDLIB_API uint32 read_8_from_database();
+SDLIB_API uint32 read_16_from_database();
+SDLIB_API void close_database();
+SDLIB_API void write_file(char line[]);
 
 /* in SDMAIN */
 
-extern long_boolean sequence_is_resolved(void);
-extern long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options);
-extern long_boolean deposit_concept(concept_descriptor *conc);
-extern int sdmain(int argc, char *argv[]);
-/*NORETURN1*/ extern void exit_program(int code) /*NORETURN2*/;
+SDLIB_API long_boolean sequence_is_resolved();
+SDLIB_API long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options);
+SDLIB_API long_boolean deposit_concept(const concept_descriptor *conc);
+SDLIB_API int sdmain(int argc, char *argv[]);

@@ -39,7 +39,7 @@ static char *my_pn1;
 static char *my_pn2;
 static char *my_directions;
 
-extern void ttu_final_option_setup()
+void iofull::final_initialize()
 {
    my_pn1 = ui_options.pn1;
    my_pn2 = ui_options.pn2;
@@ -54,12 +54,13 @@ extern void ttu_final_option_setup()
    if (!sdtty_no_console) ui_options.use_escapes_for_drawing_people = 1;
 }
 
-extern void ttu_display_help()
+
+void iofull::display_help()
 {
    printf("-lines <N>                  assume this many lines on the screen\n");
    printf("-no_console                 do not do any fancy screen processing -- use this\n");
    printf("                                 when input or output is redirected\n");
-   printf("-no_cursor                  do not use screen management functions\n");
+   printf("-no_cursor                  do not use screen management functions at all\n");
    printf("-journal <filename>         echo input commands to journal file\n");
 }
 
@@ -253,7 +254,7 @@ extern void ttu_initialize()
 }
 
 
-extern void ttu_terminate()
+void iofull::terminate()
 {
    if (!sdtty_no_console) {
 
@@ -284,7 +285,7 @@ extern void ttu_terminate()
 }
 
 
-extern bool uims_help_manual()
+bool iofull::help_manual()
 {
    (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
    return true;
@@ -599,9 +600,4 @@ extern void get_string(char *dest, int max)
 extern void ttu_bell()
 {
    (void) MessageBeep(MB_ICONQUESTION);
-}
-
-
-extern void initialize_signal_handlers()
-{
 }

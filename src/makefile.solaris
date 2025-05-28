@@ -1,4 +1,4 @@
-# Makefile for Sd/Sdtty for Linux
+# Makefile for Sd/Sdtty for Solaris
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
@@ -26,7 +26,7 @@ X11_FLAGS =
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
-# "-DNO_CURSES"       - disable compilation with curses.
+# "-DNO_CURSES"	- disable compilation with curses.
 #
 TTY_FLAGS =
 
@@ -36,7 +36,10 @@ X11_LIBS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-TTY_LIBS = -lcurses
+#
+# Static curses libraries are used in the Solaris build to avoid
+#	portability issues.
+TTY_LIBS = /usr/lib/libcurses.a
 
 SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
           sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \

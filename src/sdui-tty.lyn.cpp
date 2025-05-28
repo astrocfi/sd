@@ -711,25 +711,12 @@ void iofull::final_initialize()
       else {
          if (ui_options.color_scheme == color_by_gender)
             color_base = person_colors;
-         else {
-            if (ui_options.reverse_video) {
-               // If background is black, use yellow anyway.
-               if (ui_options.color_scheme == color_by_couple)
-                  color_base = pastel_couple_colors;
-               else if (ui_options.color_scheme == color_by_couple_rgyb)
-                  color_base = pastel_couple_colors_rgyb;
-               else
-                  color_base = pastel_couple_colors+1;
-            }
-            else {
-               if (ui_options.color_scheme == color_by_couple)
-                  color_base = couple_colors;
-               else if (ui_options.color_scheme == color_by_couple_rgyb)
-                  color_base = couple_colors_rgyb;
-               else
-                  color_base = couple_colors+1;
-            }
-         }
+         else if (ui_options.color_scheme == color_by_couple)
+            color_base = couple_colors;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            color_base = couple_colors_rgyb;
+         else
+            color_base = couple_colors+1;
       }
    }
 

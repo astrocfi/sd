@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.7e"
-#define TIME_STAMP "wba@alum.mit.edu  6 April 2002 $"
+#define VERSION_STRING "34.7f"
+#define TIME_STAMP "wba@alum.mit.edu  30 April 2002 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -31,7 +31,6 @@
    query_for_call
    sdmain
    sequence_is_resolved
-   exit_program
 and the following external variables:
    journal_file
    menu_names
@@ -45,6 +44,13 @@ and the following external variables:
 
 #include <stdio.h>
 #include <string.h>
+
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
 #include "paths.h"
 #include "resource.h"
@@ -70,47 +76,9 @@ and the following external variables:
 static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
    
 
-extern char *sd_version_string(void)
+extern char *sd_version_string()
 {
    return VERSION_STRING;
-}
-
-static void display_help(void)
-{
-   printf("Sd version %s : ui%s\n",
-   sd_version_string(), uims_version_string());
-   printf("Usage: sd [flags ...] level\n");
-   printf("  legal flags:\n");
-   printf("-write_list filename        write out list for this level\n");
-   printf("-write_full_list filename   write this list and all lower\n");
-   printf("-abridge filename           do not use calls in this file\n");
-   printf("-no_checkers                do not use large \"checkers\" for setup display\n");
-   printf("-no_graphics                do not use special characters for setup display\n");
-   printf("-reverse_video              (Sd only) display transcript in white-on-black\n");
-   printf("-normal_video               (Sdtty only) display transcript in black-on-white\n");
-   printf("-no_color                   do not display people in color\n");
-   printf("-bold_color                 use bold colors when not coloring by couple or corner\n");
-   printf("-pastel_color               use pastel colors when not coloring by couple or corner\n");
-   printf("-color_by_couple            display color according to couple number, rgby\n");
-   printf("-color_by_couple_rgyb       similar to color_by_couple, but with rgyb\n");
-   printf("-color_by_corner            similar to color_by_couple, but make corners match\n");
-   printf("-no_sound                   do not make any noise when an error occurs\n");
-   printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
-   printf("-singlespace                single space the output file\n");
-   printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
-   printf("-minigrand_getouts          allow \"mini-grand\" (RLG but promenade on 3rd hand) getouts\n");
-   printf("-concept_levels             allow concepts from any level\n");
-   printf("-no_warnings                do not display or print any warning messages\n");
-   printf("-retain_after_error         retain pending concepts after error\n");
-   printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
-   printf("-sequence filename          name for sequence output file (def \"%s\")\n",
-          SEQUENCE_FILENAME);
-   printf("-db filename                calls database file (def \"%s\")\n",
-          DATABASE_FILENAME);
-   printf("-sequence_num n             use this initial sequence number\n");
-
-   uims_display_help();          /* Get any others that the UI wants to tell us about. */
-   exit_program(0);
 }
 
 
@@ -260,7 +228,13 @@ static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **
    if (numtaggers == 0) return TRUE;   /* We can't possibly do this. */
 
    if (interactivity == interactivity_normal) {
-      if ((*tagg = uims_do_tagger_popup(tagclass)) == 0) return TRUE;
+      if (user_match.valid &&
+          (user_match.match.call_conc_options.tagger != 0)) {
+         *tagg = user_match.match.call_conc_options.tagger;
+         user_match.match.call_conc_options.tagger = 0;
+      }
+      else if ((*tagg = gg->do_tagger_popup(tagclass)) == 0) return TRUE;
+
       if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
       if ((*tagg & 0x1F) > numtaggers) fail("bad tagger index???");
    }
@@ -306,7 +280,7 @@ static long_boolean find_circcer(uint32 *circcp)
    if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
 
    if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
-      if ((*circcp = uims_do_circcer_popup()) == 0)
+      if ((*circcp = gg->do_circcer_popup()) == 0)
          return TRUE;
    }
    else if (interactivity == interactivity_database_init) {
@@ -328,10 +302,15 @@ static long_boolean find_selector(selector_kind *sel_p, long_boolean is_for_call
    if (interactivity == interactivity_normal) {
       int j;
 
-      if ((j = uims_do_selector_popup()) == 0)
+      if (user_match.valid &&
+          (user_match.match.call_conc_options.who != selector_uninitialized)) {
+         j = (int) user_match.match.call_conc_options.who;
+         user_match.match.call_conc_options.who = selector_uninitialized;
+      }
+      else if ((j = gg->do_selector_popup()) == 0)
          return TRUE;
-      else
-         *sel_p = (selector_kind) j;
+
+      *sel_p = (selector_kind) j;
    }
    else
       *sel_p = do_selector_iteration(is_for_call);
@@ -346,10 +325,15 @@ static long_boolean find_direction(direction_kind *dir_p)
    if (interactivity == interactivity_normal) {
       int j;
 
-      if ((j = uims_do_direction_popup()) == 0)
+      if (user_match.valid &&
+          (user_match.match.call_conc_options.where != direction_uninitialized)) {
+         j = (int) user_match.match.call_conc_options.where;
+         user_match.match.call_conc_options.where = direction_uninitialized;
+      }
+      else if ((j = gg->do_direction_popup()) == 0)
          return TRUE;
-      else
-         *dir_p = (direction_kind) j;
+
+      *dir_p = (direction_kind) j;
    }
    else
       *dir_p = do_direction_iteration();
@@ -363,7 +347,7 @@ static long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero,
    uint32 odd_number_only, long_boolean allow_iteration, uint32 *number_list)
 {
    if (interactivity == interactivity_normal) {
-      *number_list = uims_get_number_fields(howmanynumbers, forbid_zero);
+      *number_list = gg->get_number_fields(howmanynumbers, forbid_zero);
 
       if ((*number_list) == ~0UL)
          return TRUE;           /* User waved the mouse away. */
@@ -494,7 +478,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern long_boolean deposit_concept(concept_descriptor *conc)
+extern long_boolean deposit_concept(const concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
@@ -571,7 +555,7 @@ static void print_error_person(unsigned int person, long_boolean example)
 /* False result means OK.  Otherwise, user clicked on something special,
    such as "abort" or "undo", and the reply tells what it was. */
 
-extern long_boolean query_for_call(void)
+extern long_boolean query_for_call()
 {
    uims_reply local_reply;
    error_flag_type old_error_flag;
@@ -626,7 +610,7 @@ extern long_boolean query_for_call(void)
       if (global_error_flag && global_error_flag < error_flag_wrong_command) {
          writestuff("Can't do this call:");
          newline();
-         write_history_line(0, (char *) 0, FALSE, file_write_no);
+         write_history_line(0, false, false, file_write_no);
       }
 
       if (global_error_flag) {
@@ -704,13 +688,14 @@ extern long_boolean query_for_call(void)
 
       if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
 
-         /* This prints the concepts entered so far, with a "header" consisting of the index number.
-            This partial concept tree is incomplete, so write_history_line has to be (and is) very careful. */
+         // This prints the concepts entered so far, with a "header"
+         // consisting of the index number.  This partial concept tree
+         // is incomplete, so write_history_line has to be (and is) very careful.
 
-         write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_no);
+         write_history_line(history_ptr+1, false, true, file_write_no);
       }
       else {
-         /* No partially entered concepts.  Just do the sequence number. */
+         // No partially entered concepts.  Just do the sequence number.
 
          if (!diagnostic_mode) {
             char indexbuf[200];
@@ -731,13 +716,13 @@ extern long_boolean query_for_call(void)
 
       check_menu:
 
-      if (uims_get_call_command(&local_reply)) goto recurse_entry;
+      if (gg->get_call_command(&local_reply)) goto recurse_entry;
 
       if (local_reply == ui_command_select) {
          switch ((command_kind) uims_menu_index) {
             char comment[MAX_TEXT_LINE_LENGTH];
          case command_create_comment:
-            if (uims_do_comment_popup(comment)) {
+            if (gg->do_comment_popup(comment)) {
                char *temp_text_ptr;
                comment_block *new_comment_block;     /* ****** Kludge!!!!! */
 
@@ -796,7 +781,7 @@ extern long_boolean query_for_call(void)
          We must insert a concept or a call.  Decide which.
          We only insert a concept if in random search, and then only occasionally. */
 
-      concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
+      const concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
 
       if (concept_to_use) {
          /* We give 0 for the number fields.  It gets taken care of later,
@@ -869,166 +854,67 @@ extern long_boolean query_for_call(void)
 
 
 
-#ifdef NEGLECT
-static int age_buckets[33];
-
-static int mark_aged_calls(
-   int rr,
-   int dd,
-   int kk)
-{
-   int r, d, k;
-   int i, j, l, hibit, sum, remainder;
-   unsigned int lomask, bits, lm;
-
-   r = rr;
-   d = dd;
-   k = kk;
-
-   startover:
-
-   lomask = (1<<k)-1;
-
-   for (i=0; i<33; i++) age_buckets[i] = 0;
-
-   for (i=0; i<number_of_calls[call_list_any]; i++) {
-      if ((main_call_lists[call_list_any][i]->age & (~lomask)) == r) {
-         bits = main_call_lists[call_list_any][i]->age & lomask;
-
-         hibit = -1;
-         for (l=31, lm=0x80000000; l>=0; l--, lm>>=1) {
-            if (bits & lm) { hibit = l; break; }
-         }
-         age_buckets[hibit+1]++;
-      }
-   }
-
-   /* The buckets are now filled. */
-
-   sum = 0;
-   for (j = -1; j < 32; j++) {
-      if ((sum + age_buckets[j+1]) > d) break;
-      sum += age_buckets[j+1];
-   }
-
-   /* J tells how many buckets to mark, and sum tells how many items are in them. */
-
-   remainder = d;
-
-   if (j == -1) j = 0;
-
-   for (i=0; i<number_of_calls[call_list_any]; i++) {
-      if ((main_call_lists[call_list_any][i]->age & (~lomask)) == r) {
-         bits = main_call_lists[call_list_any][i]->age & lomask;
-
-         hibit = -1;
-         for (l=31, lm=0x80000000; l>=0; l--, lm>>=1) {
-            if (bits & lm) { hibit = l; break; }
-         }
-
-         if (hibit < j) {
-            BOGUS USE OF CALLFLAGSH! main_call_lists[call_list_any][i]->callflagsh |= 0x80000000;
-            remainder--;
-         }
-      }
-   }
-
-   if (remainder > 0) {
-      if (j >= 0) {
-         r = r | (1<<j);
-         d = remainder;
-         k = j;
-         goto startover;
-      }
-   }
-
-   return remainder;
-}
-#endif
-
-
-
-static char peoplenames1[] = "11223344";
-static char peoplenames2[] = "BGBGBGBG";
-// **** This is duplicated here and in printperson in sdtop.cpp
-static char directions[] = "?>?<????^?V?????";
-
+ui_option_type::ui_option_type() :
+   no_graphics(0),
+   no_intensify(0),
+   reverse_video(0),
+   pastel_color(0),
+   color_scheme(color_by_gender),
+   no_sound(0),
+   sequence_num_override(-1),
+   singlespace_mode(FALSE),
+   nowarn_mode(FALSE),
+   accept_single_click(FALSE),
+   use_escapes_for_drawing_people(0),
+   pn1("11223344"),
+   pn2("BGBGBGBG"),
+   direc("?>?<????^?V?????"),
+   stddirec("?>?<????^?V?????"),
+   squeeze_this_newline(0),
+   drawing_picture(0)
+{}
 
 
 extern int sdmain(int argc, char *argv[])
 {
-   // Fill in more UI option stuff.  These may get changed during initialization.
-   ui_options.use_escapes_for_drawing_people = 0;
-   ui_options.pn1 = peoplenames1;
-   ui_options.pn2 = peoplenames2;
-   ui_options.direc = directions;
-   ui_options.squeeze_this_newline = 0;
-   ui_options.drawing_picture = 0;
+   if (argc >= 2 && strcmp(argv[1], "-help") == 0) {
+      printf("Sd version %s : ui%s\n",
+             sd_version_string(), gg->version_string());
+      printf("Usage: sd [flags ...] level\n");
+      printf("  legal flags:\n");
+      printf("-write_list filename        write out list for this level\n");
+      printf("-write_full_list filename   write this list and all lower\n");
+      printf("-abridge filename           do not use calls in this file\n");
+      printf("-no_checkers                do not use large \"checkers\" for setup display\n");
+      printf("-no_graphics                do not use special characters for setup display\n");
+      printf("-reverse_video              (Sd only) display transcript in white-on-black\n");
+      printf("-normal_video               (Sdtty only) display transcript in black-on-white\n");
+      printf("-no_color                   do not display people in color\n");
+      printf("-bold_color                 use bold colors when not coloring by couple or corner\n");
+      printf("-pastel_color               use pastel colors when not coloring by couple or corner\n");
+      printf("-color_by_couple            display color according to couple number, rgby\n");
+      printf("-color_by_couple_rgyb       similar to color_by_couple, but with rgyb\n");
+      printf("-color_by_corner            similar to color_by_couple, but make corners match\n");
+      printf("-no_sound                   do not make any noise when an error occurs\n");
+      printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
+      printf("-singlespace                single space the output file\n");
+      printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
+      printf("-minigrand_getouts          allow \"mini-grand\" (RLG but promenade on 3rd hand) getouts\n");
+      printf("-concept_levels             allow concepts from any level\n");
+      printf("-no_warnings                do not display or print any warning messages\n");
+      printf("-retain_after_error         retain pending concepts after error\n");
+      printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
+      printf("-sequence filename          name for sequence output file (def \"%s\")\n",
+             SEQUENCE_FILENAME);
+      printf("-db filename                calls database file (def \"%s\")\n",
+             DATABASE_FILENAME);
+      printf("-sequence_num n             use this initial sequence number\n");
 
-   // Initialize all the callbacks that sdlib will need.
-
-   the_callback_block.get_mem_fn = &get_mem;
-   the_callback_block.get_more_mem_fn = &get_more_mem;
-   the_callback_block.get_mem_gracefully_fn = &get_mem_gracefully;
-   the_callback_block.get_more_mem_gracefully_fn = &get_more_mem_gracefully;
-   the_callback_block.free_mem_fn = &free_mem;
-   the_callback_block.get_date_fn = &get_date;
-   the_callback_block.open_file_fn = &open_file;
-   the_callback_block.close_file_fn = &close_file;
-   the_callback_block.uims_database_error_fn = &uims_database_error;
-   the_callback_block.get_parse_block_fn = &get_parse_block;
-   the_callback_block.newline_fn = &newline;
-   the_callback_block.write_file_fn = &write_file;
-   the_callback_block.install_outfile_string_fn = &install_outfile_string;
-   the_callback_block.uims_do_abort_popup_fn = &uims_do_abort_popup;
-   the_callback_block.uims_do_session_init_popup_fn = &uims_do_session_init_popup;
-   the_callback_block.uims_get_startup_command_fn = &uims_get_startup_command;
-   the_callback_block.uims_set_window_title_fn = &uims_set_window_title;
-   the_callback_block.uims_add_new_line_fn = &uims_add_new_line;
-   the_callback_block.uims_reduce_line_count_fn = &uims_reduce_line_count;
-   the_callback_block.uims_update_resolve_menu_fn = &uims_update_resolve_menu;
-   the_callback_block.show_match_fn = &show_match;
-   the_callback_block.uims_version_string_fn = &uims_version_string;
-   the_callback_block.sd_version_string_fn = &sd_version_string;
-   the_callback_block.uims_get_resolve_command_fn = &uims_get_resolve_command;
-   the_callback_block.query_for_call_fn = &query_for_call;
-   the_callback_block.uims_choose_font_fn = &uims_choose_font;
-   the_callback_block.uims_print_this_fn = &uims_print_this;
-   the_callback_block.uims_print_any_fn = &uims_print_any;
-   the_callback_block.uims_help_manual_fn = &uims_help_manual;
-   the_callback_block.uims_do_outfile_popup_fn = &uims_do_outfile_popup;
-   the_callback_block.uims_do_header_popup_fn = &uims_do_header_popup;
-   the_callback_block.uims_do_getout_popup_fn = &uims_do_getout_popup;
-   the_callback_block.uims_do_write_anyway_popup_fn = &uims_do_write_anyway_popup;
-   the_callback_block.uims_do_delete_clipboard_popup_fn = &uims_do_delete_clipboard_popup;
-   the_callback_block.init_error_fn = &init_error;
-   the_callback_block.uims_fatal_error_fn = &uims_fatal_error;
-   the_callback_block.uims_database_tick_fn = &uims_database_tick;
-   the_callback_block.uims_database_tick_max_fn = &uims_database_tick_max;
-   the_callback_block.uims_database_tick_end_fn = &uims_database_tick_end;
-   the_callback_block.uims_create_menu_fn = &uims_create_menu;
-   the_callback_block.open_database_fn = &open_database;
-   the_callback_block.read_8_from_database_fn = &read_8_from_database;
-   the_callback_block.read_16_from_database_fn = &read_16_from_database;
-   the_callback_block.close_database_fn = &close_database;
-   the_callback_block.open_call_list_file_fn = &open_call_list_file;
-   the_callback_block.read_from_call_list_file_fn = &read_from_call_list_file;
-   the_callback_block.write_to_call_list_file_fn = &write_to_call_list_file;
-   the_callback_block.close_call_list_file_fn = &close_call_list_file;
-   the_callback_block.sequence_is_resolved_fn = &sequence_is_resolved;
-   the_callback_block.deposit_call_fn = &deposit_call;
-   the_callback_block.deposit_concept_fn = &deposit_concept;
-   the_callback_block.uims_do_modifier_popup_fn = &uims_do_modifier_popup;
-   the_callback_block.create_resolve_menu_title_fn = &create_resolve_menu_title;
-   the_callback_block.exit_program_fn = &exit_program;
-   the_callback_block.generate_random_number_fn = &generate_random_number;
-   the_callback_block.hash_nonrandom_number_fn = &hash_nonrandom_number;
-   the_callback_block.text_line_count = 0;
+      gg->display_help(); // Get any others that the UI wants to tell us about.
+      final_exit(0);
+   }
 
    enable_file_writing = FALSE;
-   ui_options.singlespace_mode = FALSE;
-   ui_options.nowarn_mode = FALSE;
-   ui_options.accept_single_click = FALSE;
    interactivity = interactivity_database_init;
    testing_fidelity = FALSE;
    header_comment[0] = 0;
@@ -1037,9 +923,6 @@ extern int sdmain(int argc, char *argv[])
    verify_options.howmanynumbers = 0;
    history_allocation = 15;
    history = (configuration *) get_mem(history_allocation * sizeof(configuration));
-
-   if (argc >= 2 && strcmp(argv[1], "-help") == 0)
-      display_help();		/* does not return */
 
    /* Do general initializations, which currently consist only of
       seeding the random number generator. */
@@ -1057,22 +940,17 @@ extern int sdmain(int argc, char *argv[])
    if (!open_session(argc, argv))
       run_program();
 
-   exit_program(0);
+   // This does a lot more than just exit.  It updates the init file.
+   // If deletion of an item in the init file was called for, "open_session"
+   // returned false, and "final_exit" will do the actual deletion.
+   final_exit(0);
 
    /* NOTREACHED */
    return 0;
 }
 
 
-extern long_boolean sequence_is_resolved(void)
+extern long_boolean sequence_is_resolved()
 {
    return history[history_ptr].resolve_flag.kind != resolve_none;
-}
-
-
-extern void exit_program(int code)
-{
-   if (journal_file) (void) fclose(journal_file);
-   uims_terminate();
-   final_exit(code);
 }

@@ -1,7 +1,7 @@
 /*
-   sdmatch.c - command matching support
+   sdmatch.cpp - command matching support
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -105,7 +105,7 @@ int level_concept_list_length;
 struct pat2_block {
    Cstring car;
    pat2_block *cdr;
-   concept_descriptor *special_concept;
+   const concept_descriptor *special_concept;
    match_result *folks_to_restore;
    long_boolean demand_a_call;
    long_boolean anythingers;
@@ -136,7 +136,7 @@ static void scan_concepts_and_calls(
    int patxi);
 
 static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2,
-                           int patxi, concept_descriptor *special);
+                           int patxi, const concept_descriptor *special);
 
 
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
@@ -305,7 +305,6 @@ SDLIB_API void do_accelerator_spec(Cstring qq)
 {
    char key_name[MAX_FILENAME_LENGTH];
    char junk_name[MAX_FILENAME_LENGTH];
-   char errbuf[255];
    modifier_block **table_thing;
    modifier_block *newthing;
    int ccount;
@@ -328,10 +327,8 @@ SDLIB_API void do_accelerator_spec(Cstring qq)
          keybindcode = translate_keybind_spec(key_name);
    }
 
-   if (keybindcode < 0) {
-      (*the_callback_block.uims_database_error_fn)("Bad format in key binding.", qq);
-      return;
-   }
+   if (keybindcode < 0)
+      gg->fatal_error_exit(1, "Bad format in key binding", qq);
 
    user_match.match.kind = ui_call_select;
 
@@ -376,15 +373,14 @@ SDLIB_API void do_accelerator_spec(Cstring qq)
             something could just mean that it was a call off the list.  At C4X, we
             take it seriously.  So the initialization file should always be tested at C4X. */
          if (calling_level >= l_c4x)
-            (*the_callback_block.uims_database_error_fn)("Didn't find target of key binding.", qq);
+            gg->fatal_error_exit(1, "Didn't find target of key binding", qq);
 
          return;
       }
 
       if (user_match.match.packed_next_conc_or_subcall ||
           user_match.match.packed_secondary_subcall) {
-         (*the_callback_block.uims_database_error_fn)("Target of key binding is too complicated.", qq);
-         return;
+         gg->fatal_error_exit(1, "Target of key binding is too complicated", qq);
       }
    }
 
@@ -399,19 +395,14 @@ SDLIB_API void do_accelerator_spec(Cstring qq)
             user_match.match.kind == ui_command_select) {
       table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
    }
-   else {
-      (*the_callback_block.uims_database_error_fn)("Anomalous key binding.", qq);
-      return;
-   }
+   else
+      gg->fatal_error_exit(1, "Anomalous key binding", qq);
 
-   newthing = (modifier_block *) (*the_callback_block.get_mem_fn)(sizeof(modifier_block));
+   newthing = (modifier_block *) get_mem(sizeof(modifier_block));
    *newthing = user_match.match;
 
-   if (*table_thing) {
-      sprintf(errbuf, "Redundant key binding.");
-      (*the_callback_block.uims_database_error_fn)(errbuf, qq);
-      return;
-   }
+   if (*table_thing)
+      gg->fatal_error_exit(1, "Redundant key binding", qq);
 
    *table_thing = newthing;
 }
@@ -458,7 +449,7 @@ static void hash_me(int bucket, int i)
 {
    call_hash_list_sizes[bucket]++;
    call_hash_lists[bucket] = (short *)
-      (*the_callback_block.get_more_mem_fn)(call_hash_lists[bucket],
+      get_more_mem(call_hash_lists[bucket],
                    call_hash_list_sizes[bucket] * sizeof(short));
    call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
 }
@@ -497,11 +488,11 @@ SDLIB_API int delete_matcher_word()
    i, the field concept_descriptor_table[i].name has the text that we
    should display for the user.
 */
-SDLIB_API void matcher_initialize()
+void matcher_initialize()
 {
    int i, j;
    int concept_number;
-   concept_descriptor *p;
+   const concept_descriptor *p;
    short int *item, *level_item;
    concept_kind end_marker = concept_diagnose;
 
@@ -536,9 +527,9 @@ SDLIB_API void matcher_initialize()
    /* create the concept lists */
 
    concept_list = (short int *)
-      (*the_callback_block.get_mem_fn)(sizeof(short int) * concept_list_length);
+      get_mem(sizeof(short int) * concept_list_length);
    level_concept_list = (short int *)
-      (*the_callback_block.get_mem_fn)(sizeof(short int) * level_concept_list_length);
+      get_mem(sizeof(short int) * level_concept_list_length);
 
    item = concept_list;
    level_item = level_concept_list;
@@ -568,13 +559,11 @@ SDLIB_API void matcher_initialize()
 
       /* First, do the selectors.  Before that, be sure "<anyone>" is hashed. */
 
-      selector_hash_list = (short *) (*the_callback_block.get_mem_fn)(sizeof(short));
+      selector_hash_list = (short *) get_mem(sizeof(short));
       selector_hash_list_size = 1;
 
-      if (!get_hash("<an", &bucket)) {
-         (*the_callback_block.uims_database_error_fn)("Can't hash selector base!", (Cstring) 0);
-         (*the_callback_block.exit_program_fn)(2);
-      }
+      if (!get_hash("<an", &bucket))
+         gg->fatal_error_exit(2, "Can't hash selector base");
 
       selector_hash_list[0] = bucket;
 
@@ -582,8 +571,7 @@ SDLIB_API void matcher_initialize()
          if (!get_hash(selector_list[i].name, &bucket)) {
             char errbuf[255];
             sprintf(errbuf, "Can't hash selector %d - 1!", i);
-            (*the_callback_block.uims_database_error_fn)(errbuf, (Cstring) 0);
-            (*the_callback_block.exit_program_fn)(2);
+            gg->fatal_error_exit(2, errbuf);
          }
 
          /* See if this bucket is already accounted for. */
@@ -594,7 +582,7 @@ SDLIB_API void matcher_initialize()
 
          selector_hash_list_size++;
          selector_hash_list = (short *)
-            (*the_callback_block.get_more_mem_fn)(selector_hash_list, selector_hash_list_size * sizeof(short));
+            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
          selector_hash_list[selector_hash_list_size-1] = bucket;
 
          /* Now do it again for the singular names. */
@@ -604,8 +592,7 @@ SDLIB_API void matcher_initialize()
          if (!get_hash(selector_list[i].sing_name, &bucket)) {
             char errbuf[255];
             sprintf(errbuf, "Can't hash selector %d - 2!", i);
-            (*the_callback_block.uims_database_error_fn)(errbuf, (Cstring) 0);
-            (*the_callback_block.exit_program_fn)(2);
+            gg->fatal_error_exit(2, errbuf);
          }
 
          for (j=0; j<selector_hash_list_size; j++) {
@@ -614,7 +601,7 @@ SDLIB_API void matcher_initialize()
 
          selector_hash_list_size++;
          selector_hash_list = (short *)
-            (*the_callback_block.get_more_mem_fn)(selector_hash_list, selector_hash_list_size * sizeof(short));
+            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
          selector_hash_list[selector_hash_list_size-1] = bucket;
 
          already_in2: ;
@@ -622,13 +609,11 @@ SDLIB_API void matcher_initialize()
 
       /* Next, do the taggers.  Before that, be sure "<atc>" is hashed. */
 
-      tagger_hash_list = (short *) (*the_callback_block.get_mem_fn)(sizeof(short));
+      tagger_hash_list = (short *) get_mem(sizeof(short));
       tagger_hash_list_size = 1;
 
-      if (!get_hash("<at", &bucket)) {
-         (*the_callback_block.uims_database_error_fn)("Can't hash tagger base!", (Cstring) 0);
-         (*the_callback_block.exit_program_fn)(2);
-      }
+      if (!get_hash("<at", &bucket))
+         gg->fatal_error_exit(2, "Can't hash tagger base!");
 
       tagger_hash_list[0] = bucket;
 
@@ -637,8 +622,7 @@ SDLIB_API void matcher_initialize()
             if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
                char errbuf[255];
                sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-               (*the_callback_block.uims_database_error_fn)(errbuf, (Cstring) 0);
-               (*the_callback_block.exit_program_fn)(2);
+               gg->fatal_error_exit(2, errbuf);
             }
    
             for (j=0; j<tagger_hash_list_size; j++) {
@@ -647,7 +631,7 @@ SDLIB_API void matcher_initialize()
    
             tagger_hash_list_size++;
             tagger_hash_list = (short *)
-               (*the_callback_block.get_more_mem_fn)(tagger_hash_list,
+               get_more_mem(tagger_hash_list,
                             tagger_hash_list_size * sizeof(short));
             tagger_hash_list[tagger_hash_list_size-1] = bucket;
    
@@ -735,7 +719,7 @@ SDLIB_API void matcher_initialize()
                bucket = selector_hash_list[j];
                conc_hash_list_sizes[bucket]++;
                conc_hash_lists[bucket] = (short *)
-                  (*the_callback_block.get_more_mem_fn)(conc_hash_lists[bucket],
+                  get_more_mem(conc_hash_lists[bucket],
                                conc_hash_list_sizes[bucket] * sizeof(short));
                conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
             }
@@ -744,7 +728,7 @@ SDLIB_API void matcher_initialize()
          else if (get_hash(name, &bucket)) {
             conc_hash_list_sizes[bucket]++;
             conc_hash_lists[bucket] = (short *)
-               (*the_callback_block.get_more_mem_fn)(conc_hash_lists[bucket],
+               get_more_mem(conc_hash_lists[bucket],
                             conc_hash_list_sizes[bucket] * sizeof(short));
             conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
             continue;
@@ -755,7 +739,7 @@ SDLIB_API void matcher_initialize()
          for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
             conc_hash_list_sizes[bucket]++;
             conc_hash_lists[bucket] = (short *)
-               (*the_callback_block.get_more_mem_fn)(conc_hash_lists[bucket],
+               get_more_mem(conc_hash_lists[bucket],
                             conc_hash_list_sizes[bucket] * sizeof(short));
             conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
          }
@@ -775,7 +759,7 @@ SDLIB_API void matcher_initialize()
                bucket = selector_hash_list[j];
                conclvl_hash_list_sizes[bucket]++;
                conclvl_hash_lists[bucket] = (short *)
-                  (*the_callback_block.get_more_mem_fn)(conclvl_hash_lists[bucket],
+                  get_more_mem(conclvl_hash_lists[bucket],
                                conclvl_hash_list_sizes[bucket] * sizeof(short));
                conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
             }
@@ -784,7 +768,7 @@ SDLIB_API void matcher_initialize()
          else if (get_hash(name, &bucket)) {
             conclvl_hash_list_sizes[bucket]++;
             conclvl_hash_lists[bucket] = (short *)
-               (*the_callback_block.get_more_mem_fn)(conclvl_hash_lists[bucket],
+               get_more_mem(conclvl_hash_lists[bucket],
                             conclvl_hash_list_sizes[bucket] * sizeof(short));
             conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
             continue;
@@ -795,7 +779,7 @@ SDLIB_API void matcher_initialize()
          for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
             conclvl_hash_list_sizes[bucket]++;
             conclvl_hash_lists[bucket] = (short *)
-               (*the_callback_block.get_more_mem_fn)(conclvl_hash_lists[bucket],
+               get_more_mem(conclvl_hash_lists[bucket],
                             conclvl_hash_list_sizes[bucket] * sizeof(short));
             conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
          }
@@ -886,13 +870,13 @@ static long_boolean verify_call(void)
 
          if (anythings->kind == ui_call_select) {
             verify_options = anythings->call_conc_options;
-            if ((*the_callback_block.deposit_call_fn)(anythings->call_ptr, &anythings->call_conc_options)) goto failed;
+            if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) goto failed;
             save1 = *parse_state.concept_write_ptr;
             theres_a_call_in_here = TRUE;
          }
          else if (anythings->kind == ui_concept_select) {
             verify_options = anythings->call_conc_options;
-            if ((*the_callback_block.deposit_concept_fn)(anythings->concept_ptr)) goto failed;
+            if (deposit_concept(anythings->concept_ptr)) goto failed;
          }
          else break;   /* Huh? */
 
@@ -959,7 +943,7 @@ static void copy_sublist(const match_result *outbar, modifier_block *tails)
          modifier_inactive_list = out->gc_ptr;
       }
       else
-         out = (modifier_block *) (*the_callback_block.get_mem_fn)(sizeof(modifier_block));
+         out = (modifier_block *) get_mem(sizeof(modifier_block));
 
       *out = newoutbar->match;
       out->packed_next_conc_or_subcall = (modifier_block *) 0;
@@ -979,7 +963,7 @@ static void copy_sublist(const match_result *outbar, modifier_block *tails)
          modifier_inactive_list = out->gc_ptr;
       }
       else
-         out = (modifier_block *) (*the_callback_block.get_mem_fn)(sizeof(modifier_block));
+         out = (modifier_block *) get_mem(sizeof(modifier_block));
 
       *out = newoutbar->match;
       out->packed_next_conc_or_subcall = (modifier_block *) 0;
@@ -1064,8 +1048,7 @@ static void record_a_match(void)
       GLOB_yielding_matches++;
 
    if (GLOB_showing) {
-      if (verify_call())
-         (*the_callback_block.show_match_fn)();
+      if (verify_call()) gg->show_match();
    }
 }
 
@@ -1187,7 +1170,7 @@ Theorem B (prefix match):
 
 static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi)
 {
-   concept_descriptor *pat2_concept = (concept_descriptor *) 0;
+   const concept_descriptor *pat2_concept = (concept_descriptor *) 0;
 
    if (pat2->special_concept &&
        !(pat2->special_concept->concparseflags & CONCPARSE_PARSE_DIRECT))
@@ -1528,7 +1511,7 @@ static void scan_concepts_and_calls(
       // Don't waste time after user stops us.
       if (GLOB_showing && showing_has_stopped) break;
 
-      concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
+      const concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
       local_result.match.concept_ptr = this_concept;
       p2b.special_concept = this_concept;
       p2b.car = this_concept->name;
@@ -1663,7 +1646,7 @@ static void match_wildcard(
    Cstring pat,
    pat2_block *pat2,
    int patxi,
-   concept_descriptor *special)
+   const concept_descriptor *special)
 {
    Cstring prefix;
    Cstring *number_table;
@@ -2146,7 +2129,7 @@ static void search_menu(uims_reply kind)
             // Don't waste time after user stops us.
             if (GLOB_showing && showing_has_stopped) break;
 
-            concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
+            const concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
 
             // Another quick check -- there are hundreds of concepts.
             char pch = this_concept->name[0];

@@ -64,7 +64,7 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 #endif
 
 
-extern void ttu_final_option_setup()
+void iofull::final_initialize()
 {
    /* If no "-no_graphics" switch was not given, and our run-time
       system supports it, switch over to the "pointy triangles"
@@ -76,10 +76,10 @@ extern void ttu_final_option_setup()
 #endif
 }
 
-extern void ttu_display_help()
+void iofull::display_help()
 {
    printf("-lines <N>                  assume this many lines on the screen\n");
-   printf("-no_cursor                  do not use screen management functions\n");
+   printf("-no_cursor                  do not use screen management functions at all\n");
    printf("-journal <filename>         echo input commands to journal file\n");
 }
 
@@ -87,10 +87,7 @@ extern void ttu_set_window_title(char s[])
 {
 }
 
-extern bool uims_help_manual()
-{
-   return false;
-}
+bool iofull::help_manual() { return false; }
 
 
 extern void ttu_initialize()
@@ -112,7 +109,7 @@ extern void ttu_initialize()
    lines_in_buffer = 0;
 }
 
-extern void ttu_terminate()
+void iofull::terminate()
 {
 #if !defined(DJGPP)
    csetmode(0);   /* Restore normal input mode. */
@@ -425,8 +422,4 @@ extern void get_string(char *dest, int max)
 extern void ttu_bell()
 {
    (void) putchar('\007');
-}
-
-extern void initialize_signal_handlers()
-{
 }

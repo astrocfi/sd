@@ -648,10 +648,11 @@ char *schematab[] = {
    "seq_with_split_1x8_id",
    ""};
 
-/* This table is keyed to "call_restriction". */
+// This table is keyed to "call_restriction".
 char *qualtab[] = {
    "none",
    "alwaysfail",
+   "give_fudgy_warn",
    "wave_only",
    "wave_unless_say_2faced",
    "all_facing_same",

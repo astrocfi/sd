@@ -58,15 +58,13 @@ extern void initialize_tgl_tables()
 
    for (tabp = tgl_map_init_table ; tabp->mykey != tgl0 ; tabp++) {
       if (tgl_map_ptr_table[tabp->mykey])
-         (*the_callback_block.uims_database_error_fn)
-            ("Tgl_map table initialization failed: dup.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Tgl_map table initialization failed", "dup");
       tgl_map_ptr_table[tabp->mykey] = tabp;
    }
 
    for (i=tgl0+1 ; i<tgl_ENUMLAST ; i++) {
       if (!tgl_map_ptr_table[i])
-         (*the_callback_block.uims_database_error_fn)
-            ("Tgl_map table initialization failed: undef.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Tgl_map table initialization failed", "undef");
    }
 }
 
@@ -319,7 +317,7 @@ static void innards(
    const map_thing *final_map = (map_thing *) 0;
    uint32 vrot;
    const veryshort *getptr;
-   setup z[8];
+   setup z[16];
 
    uint32 rot = maps->rot;
    int vert = (maps->vert ^ rot) & 1;
@@ -1120,8 +1118,8 @@ extern void divided_setup_move(
    setup *result) THROW_DECL
 {
    int i, j;
-   int vflags[8];
-   setup x[8];
+   int vflags[16];
+   setup x[16];
    setup_kind kn_twicerem;
 
    if (!maps || ss->kind != maps->outer_kind)
@@ -1701,7 +1699,7 @@ extern void distorted_2x2s_move(
    uint32 directions, livemask, misc2_zflag;
    const veryshort *map_ptr;
 
-   concept_descriptor *this_concept = parseptr->concept;
+   const concept_descriptor *this_concept = parseptr->concept;
 
    // Check for special case of "interlocked parallelogram",
    // which doesn't look like the kind of concept we are expecting.

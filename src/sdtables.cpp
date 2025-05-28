@@ -93,6 +93,7 @@
    map_4x4_spec6
    map_4x4_spec7
    map_4x4v
+   map_4x4_1x1
    map_trglbox3x4a
    map_trglbox3x4b
    map_trglbox4x4
@@ -1329,6 +1330,10 @@ const map_thing map_4x4_spec7 = {{14, 0,    10, 15,    7, 2,    8, 6},
 const map_thing map_4x4v = {{12, 10, 8, 9,         13, 15, 6, 11,
                        14, 3, 5, 7,      0, 1, 4, 2},
                       s1x4,4,MPKIND__SPLIT,1,       0,  s4x4,      0x055, 0};
+const map_thing map_4x4_1x1 = {{0, 1, 2, 3, 4, 5, 6, 7,
+                                8, 9, 10, 11, 12, 13, 14, 15},
+                           s1x1,16,MPKIND__NONE,0, 0, s4x4, 0, 0};
+
 const map_thing map_trglbox3x4a = {{0, 2, 7, 11,        1, 5, 6, 8},
                             s2x2,2,MPKIND__NONE,0,        0,  s3x4,      0x000, 0};
 const map_thing map_trglbox3x4b = {{11, 2, 7, 9,        1, 3, 5, 8},

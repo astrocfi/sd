@@ -39,6 +39,7 @@ and the following external variables:
    global_error_flag
    global_reply
    global_age
+   global_leave_missing_calls_blank
    clipboard
    clipboard_size
    wrote_a_sequence
@@ -78,6 +79,7 @@ and the following external variables:
 error_flag_type global_error_flag;
 uims_reply global_reply;
 int global_age;
+bool global_leave_missing_calls_blank;
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 long_boolean wrote_a_sequence = FALSE;
@@ -307,9 +309,6 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
 }
 
 
-// **** This is duplicated here and in sdmain in sdmain.cpp
-static char directions[] = "?>?<????^?V?????";
-
 static void printperson(uint32 x)
 {
    if (x & BIT_PERSON) {
@@ -319,7 +318,7 @@ static void printperson(uint32 x)
          writechar(ui_options.pn1[(x >> 6) & 7]);
          writechar(ui_options.pn2[(x >> 6) & 7]);
          if (enable_file_writing)
-            writechar(directions[x & 017]);
+            writechar(ui_options.stddirec[x & 017]);
          else
             writechar(ui_options.direc[x & 017]);
       }
@@ -357,11 +356,11 @@ static void do_write(Cstring s)
          if (*s == '7') {
             s++;
             ui_options.squeeze_this_newline = 1;
-            (*the_callback_block.newline_fn)();
+            newline();
             ui_options.squeeze_this_newline = 0;
          }
          else
-            (*the_callback_block.newline_fn)();
+            newline();
       }
       else if (c >= 'a' && c <= 'x')
          printperson(rotperson(printarg->people[personstart + ((c-'a'-offs)%modulus)].id1, ri));
@@ -415,13 +414,13 @@ static void print_4_person_setup(int ps, small_setup *s, int elong)
       str = setup_attrs[s->skind].print_strings[roti & 1];
 
    if (str) {
-      (*the_callback_block.newline_fn)();
+      newline();
       do_write(str);
    }
    else
       writestuff(" ????");
 
-   (*the_callback_block.newline_fn)();
+   newline();
 }
 
 
@@ -435,7 +434,7 @@ static void printsetup(setup *x)
    modulus = setup_attrs[x->kind].setup_limits+1;
    roti = x->rotation & 3;
    
-   (*the_callback_block.newline_fn)();
+   newline();
 
    personstart = 0;
 
@@ -514,39 +513,46 @@ static void printsetup(setup *x)
       case s_dead_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers only:");
-         (*the_callback_block.newline_fn)();
+         newline();
          ui_options.drawing_picture = 1;
          print_4_person_setup(0, &(x->inner), -1);
          break;
       case s_normal_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers:");
-         (*the_callback_block.newline_fn)();
+         newline();
          ui_options.drawing_picture = 1;
          print_4_person_setup(0, &(x->inner), -1);
          ui_options.drawing_picture = 0;
          writestuff(" ends:");
-         (*the_callback_block.newline_fn)();
+         newline();
          ui_options.drawing_picture = 1;
          print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
          break;
       default:
          ui_options.drawing_picture = 0;
          writestuff("???? UNKNOWN SETUP ????");
-         (*the_callback_block.newline_fn)();
+         newline();
          ui_options.drawing_picture = 1;
       }
    }
 
-   (*the_callback_block.newline_fn)();
+   newline();
    ui_options.drawing_picture = 0;
-   (*the_callback_block.newline_fn)();
+   newline();
 }
 
 
-SDLIB_API void write_history_line(int history_index, const char *header,
-                                  long_boolean picture, file_write_flag write_to_file)
+
+
+SDLIB_API void write_history_line(int history_index,
+                                  bool picture,
+                                  bool leave_missing_calls_blank,
+                                  file_write_flag write_to_file,
+                                  const char *header)
 {
+   global_leave_missing_calls_blank = leave_missing_calls_blank;
+
    int centersp, w, i;
    parse_block *thing;
    configuration *this_item = &history[history_index];
@@ -556,7 +562,7 @@ SDLIB_API void write_history_line(int history_index, const char *header,
 
    centersp = this_item->centersp;
 
-   /* Do not put index numbers into output file -- user may edit it later. */
+   // Do not put index numbers into output file -- user may edit it later.
 
    if (!enable_file_writing && !diagnostic_mode) {
       i = history_index-whole_sequence_low_lim+1;
@@ -579,7 +585,9 @@ SDLIB_API void write_history_line(int history_index, const char *header,
       If this is the first line of the history, and we started with heads of sides,
       change the name of this concept from "centers" to the appropriate thing. */
 
-   if (history_index == 2 && thing->concept->kind == concept_centers_or_ends && thing->concept->value.arg1 == selector_centers) {
+   if (history_index == 2 &&
+       thing->concept->kind == concept_centers_or_ends &&
+       thing->concept->value.arg1 == selector_centers) {
       centersp = history[1].centersp;
       if (startinfolist[centersp].into_the_middle) {
          writestuff(startinfolist[centersp].name);
@@ -592,7 +600,7 @@ SDLIB_API void write_history_line(int history_index, const char *header,
 
    final:
 
-   (*the_callback_block.newline_fn)();
+   newline();
 
    morefinal:
 
@@ -619,7 +627,7 @@ SDLIB_API void write_history_line(int history_index, const char *header,
          if (this_item->warnings.testbit((warning_index) w)) {
             writestuff("  Warning:  ");
             writestuff(&warning_strings[w][1]);
-            (*the_callback_block.newline_fn)();
+            newline();
          }
       }
    }
@@ -629,12 +637,12 @@ SDLIB_API void write_history_line(int history_index, const char *header,
 
       if (this_item->state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
          writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
-         (*the_callback_block.newline_fn)();
+         newline();
       }
    }
 
    // Record that this history item has been written to the UI.
-   this_item->text_line = the_callback_block.text_line_count;
+   this_item->text_line = text_line_count;
 }
 
 
@@ -690,7 +698,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 
    while (local_cptr) {
       concept_kind k;
-      concept_descriptor *item;
+      const concept_descriptor *item;
 
       item = local_cptr->concept;
       k = item->kind;
@@ -1067,7 +1075,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
          parse_block *sub1_ptr;
          parse_block *sub2_ptr;
          parse_block *search;
-         long_boolean pending_subst1, pending_subst2;
+         bool pending_subst1, pending_subst2;
 
          selector_kind i16junk = local_cptr->options.who;
          direction_kind idirjunk = local_cptr->options.where;
@@ -1075,8 +1083,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
          call_with_name *localcall = local_cptr->call_to_print;
          parse_block *save_cptr = local_cptr;
 
-         long_boolean subst1_in_use = FALSE;
-         long_boolean subst2_in_use = FALSE;
+         bool subst1_in_use = false;
+         bool subst2_in_use = false;
 
          if (request_final_space) writestuff(" ");
 
@@ -1100,13 +1108,13 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 
                   if (this_is_subst1) {
                      if (subst1_in_use) writestuff("ERROR!!!");
-                     subst1_in_use = TRUE;
+                     subst1_in_use = true;
                      sub1_ptr = subsidiary_ptr;
                   }
 
                   if (this_is_subst2) {
                      if (subst2_in_use) writestuff("ERROR!!!");
-                     subst2_in_use = TRUE;
+                     subst2_in_use = true;
                      sub2_ptr = subsidiary_ptr;
                   }
                }
@@ -1154,7 +1162,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 &
+                             CFLAG1_BASE_TAG_CALL_MASK)) {
                            print_recurse(subsidiary_ptr, 0);
                            goto did_tagger;
                         }
@@ -1186,7 +1195,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 &
+                             CFLAG1_BASE_CIRC_CALL)) {
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
                            goto did_circcer;
                         }
@@ -1291,8 +1301,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                      }
                      break;
                   case 'l': case 'L': case 'R': case 'F': case '8': case 'o':
-                     /* Just skip these -- they end stuff that we could have
-                        elided but didn't. */
+                     // Just skip these -- they end stuff that we could have
+                     // elided but didn't.
                      break;
                   case 'n': case 'p': case 'r': case 'm': case 't':
                      if (subst2_in_use) {
@@ -1308,13 +1318,18 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         }
                      }
    
-                     if (pending_subst2 && savec != 'p' && savec != 'n') {
-                        write_blank_if_needed();
-                        writestuff("[");
-                        print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
-                        writestuff("]");
-         
-                        pending_subst2 = FALSE;
+                     if (savec != 'p' && savec != 'n') {
+                        if (pending_subst2) {
+                           write_blank_if_needed();
+                           writestuff("[");
+                           print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
+                           writestuff("]");
+                           pending_subst2 = false;
+                        }
+                        else if (savec == 'm' && !global_leave_missing_calls_blank) {
+                           write_blank_if_needed();
+                           writestuff("[???]");
+                        }
                      }
          
                      break;
@@ -1339,13 +1354,19 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         }
                      }
          
-                     if (pending_subst1 && savec != '4' && savec != '7') {
-                        write_blank_if_needed();
-                        writestuff("[");
-                        print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
-                        writestuff("]");
-                        if (savec == 'T') writestuff(" er's");
-                        pending_subst1 = FALSE;
+                     if (savec != '4' && savec != '7') {
+                        if (pending_subst1) {
+                           write_blank_if_needed();
+                           writestuff("[");
+                           print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
+                           writestuff("]");
+                           if (savec == 'T') writestuff(" er's");
+                           pending_subst1 = false;
+                        }
+                        else if (savec == '0' && !global_leave_missing_calls_blank) {
+                           write_blank_if_needed();
+                           writestuff("[???]");
+                        }
                      }
          
                      break;
@@ -1414,8 +1435,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                      case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT:
-                        /* This is a natural replacement.
-                           It may already have been taken care of. */
+                        // This is a natural replacement.
+                        // It may already have been taken care of.
                         if (pending_subst1 ||
                             search->replacement_key ==
                             DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT) {
@@ -1431,8 +1452,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
-                        /* This is a secondary replacement.
-                           It may already have been taken care of. */
+                        // This is a secondary replacement.
+                        // It may already have been taken care of.
                         if (pending_subst2) {
                            write_blank_if_needed();
                            writestuff("[modification: ");
@@ -1488,8 +1509,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 SDLIB_API void clear_screen(void)
 {
    written_history_items = -1;
-   the_callback_block.text_line_count = 0;
-   (*the_callback_block.uims_reduce_line_count_fn)(0);
+   text_line_count = 0;
+   gg->reduce_line_count(0);
    open_text_line();
 }
 
@@ -1499,15 +1520,15 @@ SDLIB_API void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_
       /* log creation version info */
       if (with_ui_version) {     /* This is the "pretty" form that we display while running. */
          writestuff("Sd ");
-         writestuff((*the_callback_block.sd_version_string_fn)());
+         writestuff(sd_version_string());
          writestuff(" : db");
          writestuff(database_version);
          writestuff(" : ui");
-         writestuff((*the_callback_block.uims_version_string_fn)());
+         writestuff(gg->version_string());
       }
       else {                     /* This is the "compact" form that goes into the file. */
          writestuff("Sd");
-         writestuff((*the_callback_block.sd_version_string_fn)());
+         writestuff(sd_version_string());
          writestuff(":db");
          writestuff(database_version);
       }
@@ -1604,10 +1625,10 @@ SDLIB_API void newline(void)
 
 
    if (enable_file_writing)
-      (*the_callback_block.write_file_fn)(current_line);
+      write_file(current_line);
 
-   the_callback_block.text_line_count++;
-   (*the_callback_block.uims_add_new_line_fn)(current_line,
+   text_line_count++;
+   gg->add_new_line(current_line,
       enable_file_writing ? 0 : (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
    open_text_line();
 }
@@ -1627,7 +1648,7 @@ extern void open_text_line(void)
 
 SDLIB_API void doublespace_file(void)
 {
-   (*the_callback_block.write_file_fn)("");
+   write_file("");
 }
 
 
@@ -1697,7 +1718,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 }
 
 
-SDLIB_API parse_block *get_parse_block(void)
+parse_block *get_parse_block(void)
 {
    parse_block *item;
 
@@ -1706,7 +1727,7 @@ SDLIB_API parse_block *get_parse_block(void)
       parse_inactive_list = item->gc_ptr;
    }
    else {
-      item = (parse_block *) (*the_callback_block.get_mem_fn)(sizeof(parse_block));
+      item = (parse_block *) get_mem(sizeof(parse_block));
    }
 
    item->gc_ptr = parse_active_list;
@@ -1803,7 +1824,7 @@ SDLIB_API void string_copy(char **dest, Cstring src)
    The "num_pics" argument tells how many of the last history items
    are to have pictures forced, so we can tell exactly what items
    have pictures. */
-SDLIB_API void display_initial_history(int upper_limit, int num_pics)
+void display_initial_history(int upper_limit, int num_pics)
 {
    int j, startpoint, compilerbug;
 
@@ -1831,8 +1852,8 @@ SDLIB_API void display_initial_history(int upper_limit, int num_pics)
    if (written_history_items > 0) {
       /* We win.  Back up the text line count to the right place, and rewrite the rest. */
 
-      the_callback_block.text_line_count = history[written_history_items].text_line;
-      (*the_callback_block.uims_reduce_line_count_fn)(the_callback_block.text_line_count);
+      text_line_count = history[written_history_items].text_line;
+      gg->reduce_line_count(text_line_count);
       open_text_line();
       startpoint = written_history_items+1;
    }
@@ -1840,17 +1861,18 @@ SDLIB_API void display_initial_history(int upper_limit, int num_pics)
       /* We lose, there is nothing we can use. */
       clear_screen();
       write_header_stuff(TRUE, 0);
-      (*the_callback_block.newline_fn)();
-      (*the_callback_block.newline_fn)();
+      newline();
+      newline();
       startpoint = 1;
    }
 
-   for (j=startpoint; j<=upper_limit-num_pics; j++) write_history_line(j, (char *) 0, FALSE, file_write_no);
+   for (j=startpoint; j<=upper_limit-num_pics; j++)
+      write_history_line(j, false, false, file_write_no);
 
-   /* Now write stuff with forced pictures. */
+   // Now write stuff with forced pictures.
 
    for (j=upper_limit-num_pics+1; j<=upper_limit; j++) {
-      if (j >= startpoint) write_history_line(j, (char *) 0, TRUE, file_write_no);
+      if (j >= startpoint) write_history_line(j, true, false, file_write_no);
    }
 
    written_history_items = upper_limit;   /* This stuff is now safe. */
@@ -1885,12 +1907,12 @@ static void do_change_outfile(long_boolean signal)
 {
    char newfile_string[MAX_FILENAME_LENGTH];
 
-   if ((*the_callback_block.uims_do_outfile_popup_fn)(newfile_string)) {
+   if (gg->do_outfile_popup(newfile_string)) {
       if (newfile_string[0]) {
          char confirm_message[MAX_FILENAME_LENGTH+25];
          char *final_message;
 
-         if ((*the_callback_block.install_outfile_string_fn)(newfile_string)) {
+         if (install_outfile_string(newfile_string)) {
             (void) strncpy(confirm_message, "Output file changed to \"", 25);
             (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
             (void) strncat(confirm_message, "\"", 2);
@@ -1964,7 +1986,7 @@ static long_boolean write_sequence_to_file(void) THROW_DECL
 
    /* Put up the getout popup to see if the user wants to enter a header string. */
 
-   getout_ind = (*the_callback_block.uims_do_getout_popup_fn)(second_header);
+   getout_ind = gg->do_getout_popup(second_header);
 
    /* Some user interfaces (those with icons) may have an icon to abort the
       sequence, rather than just decline the comment.  Such an action comes
@@ -1977,16 +1999,16 @@ static long_boolean write_sequence_to_file(void) THROW_DECL
    /* Open the file and write it. */
 
    clear_screen();
-   (*the_callback_block.open_file_fn)();
+   open_file();
    enable_file_writing = TRUE;
    doublespace_file();
-   (*the_callback_block.get_date_fn)(date);
+   get_date(date);
    writestuff(date);
    writestuff("     ");
    write_header_stuff(FALSE, history[history_ptr].state.result_flags);
    newline();
 
-   if (!(*the_callback_block.sequence_is_resolved_fn)()) {
+   if (!sequence_is_resolved()) {
       writestuff("             NOT RESOLVED");
       newline();
    }
@@ -2026,22 +2048,22 @@ static long_boolean write_sequence_to_file(void) THROW_DECL
    if (sequence_number >= 0) sequence_number++;
 
    for (j=whole_sequence_low_lim; j<=history_ptr; j++)
-      write_history_line(j, (char *) 0, FALSE, file_write_double);
+      write_history_line(j, false, false, file_write_double);
 
-   /* Echo the concepts entered so far.  */
+   // Echo the concepts entered so far.
 
    if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
-      write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_double);
+      write_history_line(history_ptr+1, false, false, file_write_double);
    }
 
-   if ((*the_callback_block.sequence_is_resolved_fn)())
+   if (sequence_is_resolved())
       write_resolve_text(TRUE);
 
    newline();
    enable_file_writing = FALSE;
    newline();
 
-   (*the_callback_block.close_file_fn)();     /* This will signal a "specialfail" if a file error occurs. */
+   close_file();     /* This will signal a "specialfail" if a file error occurs. */
 
    writestuff("Sequence");
 
@@ -2186,7 +2208,7 @@ static uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 
 
 
-SDLIB_API void run_program()
+void run_program()
 {
    int i;
 
@@ -2248,11 +2270,11 @@ SDLIB_API void run_program()
 
    try {
       if (global_error_flag) {
-         /* The call we were trying to do has failed.  Abort it and display the error message. */
+         // The call we were trying to do has failed.  Abort it and display the error message.
    
          if (interactivity == interactivity_database_init ||
              interactivity == interactivity_verify)
-            (*the_callback_block.init_error_fn)(error_message1);
+            gg->fatal_error_exit(1, "Unknown error context", error_message1);
 
          // If this is a real call execution error, save the call that caused it.
 
@@ -2309,7 +2331,7 @@ SDLIB_API void run_program()
       newline();
 
       if (need_new_header_comment) {
-         (void) (*the_callback_block.uims_do_header_popup_fn)(header_comment);
+         (void) gg->do_header_popup(header_comment);
          need_new_header_comment = FALSE;
       }
    
@@ -2342,12 +2364,12 @@ SDLIB_API void run_program()
             (void) sprintf(title, "%s%s",
                            &filename_strings[calling_level][1], numstuff);
 
-         (*the_callback_block.uims_set_window_title_fn)(title);
+         gg->set_window_title(title);
       }
 
       /* Query for the starting setup. */
 
-      global_reply = (*the_callback_block.uims_get_startup_command_fn)();
+      global_reply = gg->get_startup_command();
 
       if (global_reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
       if (global_reply != ui_start_select) goto normal_exit;           /* Huh? */
@@ -2387,19 +2409,19 @@ SDLIB_API void run_program()
             singing_call_mode = 2;
          goto new_sequence;
       case start_select_select_print_font:
-         if (!(*the_callback_block.uims_choose_font_fn)()) {
+         if (!gg->choose_font()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_current:
-         if (!(*the_callback_block.uims_print_this_fn)()) {
+         if (!gg->print_this()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_any:
-         if (!(*the_callback_block.uims_print_any_fn)()) {
+         if (!gg->print_any()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
@@ -2411,7 +2433,7 @@ SDLIB_API void run_program()
 
             if (session) {
                (void) fclose(session);
-               if ((*the_callback_block.uims_do_session_init_popup_fn)() != POPUP_ACCEPT) {
+               if (gg->do_session_init_popup() != POPUP_ACCEPT) {
                   writestuff("No action has been taken.");
                   newline();
                   goto new_sequence;
@@ -2458,7 +2480,7 @@ SDLIB_API void run_program()
          do_change_outfile(FALSE);
          goto new_sequence;
       case start_select_change_header_comment:
-         (void) (*the_callback_block.uims_do_header_popup_fn)(header_comment);
+         (void) gg->do_header_popup(header_comment);
          need_new_header_comment = FALSE;
          goto new_sequence;
       case start_select_exit:
@@ -2507,7 +2529,7 @@ SDLIB_API void run_program()
          configuration * t;
          history_allocation <<= 1;
          t = (configuration *)
-            (*the_callback_block.get_more_mem_gracefully_fn)(history, history_allocation * sizeof(configuration));
+            get_more_mem_gracefully(history, history_allocation * sizeof(configuration));
          if (!t) {
             /* Couldn't get memory; we are in serious trouble. */
             history_allocation >>= 1;
@@ -2524,7 +2546,7 @@ SDLIB_API void run_program()
       /* Check for first call given to heads or sides only. */
    
       if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
-         (*the_callback_block.deposit_concept_fn)(&centers_concept);
+         deposit_concept(&centers_concept);
    
       /* Come here to get a concept or call or whatever from the user. */
    
@@ -2532,7 +2554,7 @@ SDLIB_API void run_program()
    
    simple_restart:
 
-      if ((!reply_pending) && (!(*the_callback_block.query_for_call_fn)())) {
+      if ((!reply_pending) && (!query_for_call())) {
          // User specified a call (and perhaps concepts too).
 
          // The call to toplevelmove may make a call to "fail", which will get caught
@@ -2554,11 +2576,11 @@ SDLIB_API void run_program()
       if (global_reply == ui_command_select) {
          switch ((command_kind) uims_menu_index) {
          case command_quit:
-            if ((*the_callback_block.uims_do_abort_popup_fn)() != POPUP_ACCEPT)
+            if (gg->do_abort_popup() != POPUP_ACCEPT)
                goto simple_restart;
             goto normal_exit;
          case command_abort:
-            if ((*the_callback_block.uims_do_abort_popup_fn)() != POPUP_ACCEPT)
+            if (gg->do_abort_popup() != POPUP_ACCEPT)
                goto simple_restart;
             clear_screen();
             goto show_banner;
@@ -2578,7 +2600,7 @@ SDLIB_API void run_program()
                /* Increase by 50% beyond what we have now. */
                clipboard_allocation += clipboard_allocation >> 1;
                t = (configuration *)
-                  (*the_callback_block.get_more_mem_gracefully_fn)(clipboard,
+                  get_more_mem_gracefully(clipboard,
                                           clipboard_allocation * sizeof(configuration));
                if (!t) specialfail("Not enough memory!");
                clipboard = t;
@@ -2590,7 +2612,7 @@ SDLIB_API void run_program()
             goto start_cycle;
          case command_delete_entire_clipboard:
             if (clipboard_size != 0) {
-               if ((*the_callback_block.uims_do_delete_clipboard_popup_fn)() != POPUP_ACCEPT)
+               if (gg->do_delete_clipboard_popup() != POPUP_ACCEPT)
                   goto simple_restart;
             }
 
@@ -2809,7 +2831,7 @@ SDLIB_API void run_program()
                help_string[MAX_ERR_LENGTH-1] = '\0';
                current_length = strlen(help_string);
 
-               if ((*the_callback_block.sequence_is_resolved_fn)()) {
+               if (sequence_is_resolved()) {
                   (void) strncpy(&help_string[current_length],
                                  "  You may also write out this finished sequence "
                                  "by typing 'write this sequence'.",
@@ -2831,7 +2853,7 @@ SDLIB_API void run_program()
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
          
-               if ((*the_callback_block.uims_do_header_popup_fn)(newhead_string)) {
+               if (gg->do_header_popup(newhead_string)) {
                   (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
                   if (newhead_string[0]) {
@@ -2850,8 +2872,8 @@ SDLIB_API void run_program()
          case command_getout:
             /* Check that it is really resolved. */
 
-            if (!(*the_callback_block.sequence_is_resolved_fn)()) {
-               if ((*the_callback_block.uims_do_write_anyway_popup_fn)() != POPUP_ACCEPT)
+            if (!sequence_is_resolved()) {
+               if (gg->do_write_anyway_popup() != POPUP_ACCEPT)
                   specialfail("This sequence is not resolved.");
                history[history_ptr].draw_pic = TRUE;
             }
@@ -2860,19 +2882,19 @@ SDLIB_API void run_program()
                goto start_cycle; /* user cancelled action */
             goto new_sequence;
          case command_select_print_font:
-            if (!(*the_callback_block.uims_choose_font_fn)())
+            if (!gg->choose_font())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_current:
-            if (!(*the_callback_block.uims_print_this_fn)())
+            if (!gg->print_this())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_any:
-            if (!(*the_callback_block.uims_print_any_fn)())
+            if (!gg->print_any())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_help_manual:
-            if (!(*the_callback_block.uims_help_manual_fn)())
+            if (!gg->help_manual())
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          default:     /* Should be some kind of search command. */

@@ -1592,7 +1592,7 @@ static bool handle_4x4_division(
          division_maps = &map_lh_s2x3_2;
          goto handle_other_z;
       case 0x4B4B: case 0xB4B4:
-         /* See comment above, for 3x4. */
+         // See comment above, for 3x4.
          forbid_little_stuff =
             !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
             (assoc(b_2x4, ss, calldeflist) ||
@@ -1602,18 +1602,16 @@ static bool handle_4x4_division(
              assoc(b_qtag, ss, calldeflist) ||
              assoc(b_pqtag, ss, calldeflist));
 
-         /* We are in "clumps".  See if we can do the call in 2x2 or smaller setups. */
+         // We are in "clumps".  See if we can do the call in 2x2 or smaller setups.
 
          // Special stuff:  See if we survive overriding things when call has 1x1 def'n.
          if (!assoc(b_1x1, ss, calldeflist)) {
-
             if (forbid_little_stuff ||
                 (!assoc(b_2x2, ss, calldeflist) &&
                  !assoc(b_1x2, ss, calldeflist) &&
                  !assoc(b_2x1, ss, calldeflist) &&
                  !assoc(b_1x1, ss, calldeflist)))
                fail("Don't know how to do this call in this setup.");
-
          }
 
          if (!matrix_aware) warn(warn__each2x2);
@@ -1625,8 +1623,8 @@ static bool handle_4x4_division(
 
  dont_handle_z:
 
-   /* Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
-      If so, divide the 4x4 into 2 2x4's. */
+   // Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
+   // If so, divide the 4x4 into 2 2x4's.
 
    forbid_little_stuff =
       assoc(b_2x4, ss, calldeflist) ||
@@ -1664,19 +1662,26 @@ static bool handle_4x4_division(
       }
    }
 
+   // If the call has a 1x1 definition, and we can't do anything else,
+   // divide it up into all 16 people.
+   if (assoc(b_1x1, ss, calldeflist)) {
+      division_maps = &map_4x4_1x1;
+      return true;
+   }
+
    fail("You must specify a concept.");
 
  handle_z:
 
-   /* If this changes shape (as it will in the only known case
-      of this -- Z axle), divided_setup_move will give a warning
-      about going to a parallelogram, since we did not start
-      with 50% offset, though common practice says that a
-      parallelogram is the correct result.  If the call turns out
-      not to be a shape-changer, no warning will be given.  If
-      the call is a shape changer that tries to go into a setup
-      other than a parallelogram, divided_setup_move will raise
-      an error. */
+   // If this changes shape (as it will in the only known case
+   // of this -- Z axle), divided_setup_move will give a warning
+   // about going to a parallelogram, since we did not start
+   // with 50% offset, though common practice says that a
+   // parallelogram is the correct result.  If the call turns out
+   // not to be a shape-changer, no warning will be given.  If
+   // the call is a shape changer that tries to go into a setup
+   // other than a parallelogram, divided_setup_move will raise
+   // an error.
    ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
    if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
        (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
@@ -1952,9 +1957,9 @@ static int divide_the_setup(
       if (ss->people[i].id1) livemask |= j;
    }
 
-   /* Take care of "snag" and "mystic".  "Central" is illegal, and was already caught.
-      We first limit it to just the few setups for which it can possibly be legal, to make
-      it easier to test later. */
+   // Take care of "snag" and "mystic".  "Central" is illegal, and was already caught.
+   // We first limit it to just the few setups for which it can possibly be legal, to make
+   // it easier to test later.
 
    if (must_do_mystic) {
       switch (ss->kind) {

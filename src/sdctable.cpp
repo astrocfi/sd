@@ -23,7 +23,7 @@
    main_call_lists
    number_of_calls
    calling_level
-   concept_descriptor_table
+   unsealed_concept_descriptor_table
    concept_fixer_table
    nice_setup_thing_4x4
    nice_setup_thing_3x4
@@ -102,7 +102,9 @@ dance_level calling_level;
 /* **** BEWARE!!!!  In addition to the "size" definitions, there are numerous definitions of positions of
     various concepts for use in the "normalize" operation. */
 
-concept_descriptor concept_descriptor_table[] = {
+const concept_descriptor *concept_descriptor_table;
+
+concept_descriptor unsealed_concept_descriptor_table[] = {
 
 /* phantom concepts */
 
@@ -1174,7 +1176,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DIAGNOSE",                              concept_diagnose,                  D, l_mainstream},  /* Only appears if "-diagnostic" given. */
    {"???",                                   marker_end_of_list}};
 
-/* **** BEWARE!!!!  These things are keyed to "concept_descriptor_table"
+/* **** BEWARE!!!!  These things are keyed to "unsealed_concept_descriptor_table"
    (above) and tell how to divide things into the various menus and popups.
    BE CAREFUL!! */
 

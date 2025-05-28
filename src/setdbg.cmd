@@ -1,1 +1,0 @@
-copy makefile.dbg makefile

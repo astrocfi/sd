@@ -755,7 +755,6 @@ extern void do_call_in_series(
 
    setup qqqq = *sss;
 
-
    /* Check for a concept that will need to be re-evaluated under "twice".
       The test for this is [waves] initially twice initially once removed
       hinge the lock.  We want the "once removed" to be re-evaluated. */
@@ -2511,7 +2510,7 @@ extern bool get_real_subcall(
    /* Do the substitutions called for by star turn replacements (from "@S" escape codes.) */
 
    if (current_options.star_turn_option != 0 && orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) {
-      parse_block *xx = (*the_callback_block.get_parse_block_fn)();
+      parse_block *xx = get_parse_block();
       xx->concept = &marker_concept_mod;
       xx->options = current_options;
       xx->options.star_turn_option = 0;
@@ -3898,7 +3897,6 @@ static void do_sequential_call(
       uint32 this_mod1;
       setup_command foo1, foo2;
       setup_command foobar;
-      setup_command *fooptr;
       by_def_item *alt_item;
       long_boolean recompute_id = FALSE;
       uint32 saved_number_fields = current_options.number_fields;
@@ -4070,7 +4068,9 @@ static void do_sequential_call(
          }
       }
 
-      if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE && use_alternate)
+      setup_command *fooptr;
+
+      if ((this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) && use_alternate)
          fooptr = &foo2;
       else
          fooptr = &foo1;
@@ -5934,6 +5934,10 @@ extern void move(
 
       if (t->concept->kind == concept_another_call_next_mod) {
          // This is a "supercall".
+
+         if (ss->cmd.callspec == 0)
+            fail("Incomplete supercall.");
+
          parse_block p1 = *t;
          parse_block p2 = *p1.next;
          parse_block p3 = *(p2.subsidiary_root);
@@ -6326,7 +6330,7 @@ extern void move(
       uint32 foobar = 0;
       uint32 fooble = 0;
 
-      concept_descriptor *ddd = ss->cmd.parseptr->concept;
+      const concept_descriptor *ddd = ss->cmd.parseptr->concept;
 
       if (!(concept_table[ddd->kind].concept_prop &
           CONCPROP__PERMIT_MODIFIERS)) {

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2001  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -249,7 +249,7 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
       if (first != first_part_none) {
          writestuff(resolve_first_parts[first]);
          if (doing_file) {
-            (*the_callback_block.newline_fn)();
+            newline();
             if (!ui_options.singlespace_mode) doublespace_file();
          }
          else
@@ -402,25 +402,25 @@ static long_boolean inner_search(command_kind goal,
       found_k_and_l:
 
          c = nice_setup_info[k].array_to_use_now
-            [(*the_callback_block.generate_random_number_fn)(l)];
+            [generate_random_number(l)];
 
          /* If the concept is a tandem or as couples type, we really want "phantom"
             or "2x8 matrix"" in front of it. */
 
          if (concept_descriptor_table[c].kind == concept_tandem) {
             if (history[history_ptr].state.kind == s4x4)
-               (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[phantom_concept_index]);
+               deposit_concept(&concept_descriptor_table[phantom_concept_index]);
             else
-               (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[matrix_2x8_concept_index]);
+               deposit_concept(&concept_descriptor_table[matrix_2x8_concept_index]);
          }
 
-         (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[c]);
+         deposit_concept(&concept_descriptor_table[c]);
       }
 
       /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
       /* This may, of course, add more concepts. */
 
-      (void) (*the_callback_block.query_for_call_fn)();
+      (void) query_for_call();
 
       /* Do the call.  An error will signal and go to try_again. */
 
@@ -748,7 +748,7 @@ static long_boolean inner_search(command_kind goal,
       if (avoid_list_allocation <= avoid_list_size) {
          int *t;
          avoid_list_allocation = avoid_list_size+100;
-         t = (int *) (*the_callback_block.get_more_mem_gracefully_fn)(avoid_list, avoid_list_allocation * sizeof(int));
+         t = (int *) get_more_mem_gracefully(avoid_list, avoid_list_allocation * sizeof(int));
          if (!t) specialfail("Not enough memory!");
          avoid_list = t;
       }
@@ -827,7 +827,7 @@ SDLIB_API uims_reply full_resolve(void)
       /* Increase by 50% beyond what we have now. */
       huge_history_allocation += huge_history_allocation >> 1;
       t = (configuration *)
-         (*the_callback_block.get_more_mem_gracefully_fn)(huge_history_save,
+         get_more_mem_gracefully(huge_history_save,
                                  huge_history_allocation * sizeof(configuration));
       if (!t) specialfail("Not enough memory!");
       huge_history_save = t;
@@ -837,7 +837,7 @@ SDLIB_API uims_reply full_resolve(void)
 
    if (all_resolves == 0) {
       resolve_allocation = 10;
-      all_resolves = (resolve_rec *) (*the_callback_block.get_mem_gracefully_fn)(resolve_allocation * sizeof(resolve_rec));
+      all_resolves = (resolve_rec *) get_mem_gracefully(resolve_allocation * sizeof(resolve_rec));
       if (!all_resolves) specialfail("Not enough memory!");
    }
 
@@ -897,7 +897,7 @@ SDLIB_API uims_reply full_resolve(void)
       if (find_another_resolve) {
          /* Put up the resolve title showing that we are searching. */
 
-         (*the_callback_block.uims_update_resolve_menu_fn)
+         gg->update_resolve_menu
             (search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
          (void) restore_parse_state();
@@ -979,29 +979,32 @@ SDLIB_API uims_reply full_resolve(void)
          /* Or a dotted line if doing a reconcile. */
          if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
-            (*the_callback_block.newline_fn)();
+            newline();
          }
 
-         /* Show the resolve itself, without its last item. */
+         // Show the resolve itself, without its last item.
 
-         for (j=huge_history_ptr-this_resolve->insertion_point+1; j<history_ptr-this_resolve->insertion_point; j++)
-            write_history_line(j, (char *) 0, FALSE, file_write_no);
+         for (j=huge_history_ptr-this_resolve->insertion_point+1;
+              j<history_ptr-this_resolve->insertion_point;
+              j++)
+            write_history_line(j, false, false, file_write_no);
 
-         /* Show the last item of the resolve, with a forced picture. */
+         // Show the last item of the resolve, with a forced picture.
          write_history_line(history_ptr-this_resolve->insertion_point,
-                            (char *) 0,
                             search_goal != command_reconcile,
+                            false,
                             file_write_no);
 
          /* Or a dotted line if doing a reconcile. */
          if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
-            (*the_callback_block.newline_fn)();
+            newline();
          }
 
-         /* Show whatever comes after the resolve. */
+         // Show whatever comes after the resolve.
          for (j=history_ptr-this_resolve->insertion_point+1; j<=history_ptr; j++)
-            write_history_line(j, (char *) 0, j==history_ptr-this_resolve->insertion_point, file_write_no);
+            write_history_line(j, j==history_ptr-this_resolve->insertion_point,
+                               false, file_write_no);
       }
       else if (show_resolve) {
          /* We don't have any resolve to show.  Just draw the usual picture. */
@@ -1014,21 +1017,21 @@ SDLIB_API uims_reply full_resolve(void)
       }
 
       if (show_resolve && (history[history_ptr].resolve_flag.kind != resolve_none)) {
-         (*the_callback_block.newline_fn)();
+         newline();
          writestuff("     resolve is:");
-         (*the_callback_block.newline_fn)();
+         newline();
          write_resolve_text(FALSE);
-         (*the_callback_block.newline_fn)();
-         (*the_callback_block.newline_fn)();
+         newline();
+         newline();
       }
 
-      (*the_callback_block.uims_update_resolve_menu_fn)
+      gg->update_resolve_menu
          (search_goal, current_resolve_index, max_resolve_index, big_state);
 
       show_resolve = TRUE;
 
       for (;;) {          /* We ignore any "undo" or "erase" clicks. */
-         reply = (*the_callback_block.uims_get_resolve_command_fn)();
+         reply = gg->get_resolve_command();
          if ((reply != ui_command_select) || ((uims_menu_index != command_undo) && (uims_menu_index != command_erase))) break;
       }
 
@@ -1039,7 +1042,7 @@ SDLIB_API uims_reply full_resolve(void)
                /* Increase allocation if necessary. */
                int new_allocation = resolve_allocation << 1;
                resolve_rec *t = (resolve_rec *)
-                  (*the_callback_block.get_more_mem_gracefully_fn)(all_resolves, new_allocation * sizeof(resolve_rec));
+                  get_more_mem_gracefully(all_resolves, new_allocation * sizeof(resolve_rec));
                if (!t) break;               /* By not turning on "find_another_resolve",
                                                we will take no action. */
                resolve_allocation = new_allocation;
@@ -1114,12 +1117,12 @@ static void display_reconcile_history(int current_depth, int n)
    display_initial_history(n-current_depth, 0);
    if (current_depth > 0) {
       writestuff("------------------------------------");
-      (*the_callback_block.newline_fn)();
+      newline();
       for (j=n-current_depth+1; j<=n; j++)
-         write_history_line(j, (char *) 0, FALSE, file_write_no);
+         write_history_line(j, false, false, file_write_no);
    }
 
-   (*the_callback_block.uims_add_new_line_fn)("", 0);   // Write a blank line.
+   gg->add_new_line("", 0);   // Write a blank line.
 }
 
 extern int concepts_in_place(void)
@@ -1257,7 +1260,7 @@ SDLIB_API void create_resolve_menu_title(
 }
 
 
-SDLIB_API void initialize_getout_tables(void)
+void initialize_getout_tables(void)
 {
    int i, j, k;
 
@@ -1269,7 +1272,7 @@ SDLIB_API void initialize_getout_tables(void)
          the 1x12 things), it might not be necessary. */
 
       if (!nice->on_level_list) {
-         nice->on_level_list = (int *) (*the_callback_block.get_mem_fn)(nice->full_list_size);
+         nice->on_level_list = (int *) get_mem(nice->full_list_size);
 
          /* Copy those concepts that are on the level. */
          for (i=0,j=0 ; ; i++) {

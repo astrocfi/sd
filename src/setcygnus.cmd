@@ -1,2 +1,2 @@
-call C:\bin\setcygwin
+call C:\bin\setcygnus
 copy makefile.cygnus makefile

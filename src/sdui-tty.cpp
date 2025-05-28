@@ -5,7 +5,7 @@
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
- * Copyright (c) 1994-2000 William B. Ackerman
+ * Copyright (c) 1994-2002 William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -33,42 +33,13 @@
 #define UI_VERSION_STRING "1.12"
 #define UI_TIME_STAMP "wba@alum.mit.edu  14 Mar 2000 $"
 
-/* This file defines the following functions:
-   uims_version_string
-   uims_process_command_line
-   uims_display_help
-   uims_display_ui_intro_text
-   uims_open_session
-   uims_create_menu
-   uims_set_window_title
-   show_match
-   uims_get_startup_command
-   uims_get_call_command
-   uims_get_resolve_command
-   uims_do_comment_popup
-   uims_do_outfile_popup
-   uims_do_header_popup
-   uims_do_getout_popup
-   uims_do_write_anyway_popup
-   uims_do_delete_clipboard_popup
-   uims_do_abort_popup
-   uims_do_session_init_popup
-   uims_do_neglect_popup
-   uims_do_selector_popup
-   uims_do_direction_popup
-   uims_do_tagger_popup
-   uims_do_circcer_popup
-   uims_get_number_fields
-   uims_do_modifier_popup
-   uims_add_new_line
-   uims_reduce_line_count
-   uims_update_resolve_menu
-   uims_terminate
-   uims_database_tick_max
-   uims_database_tick
-   uims_database_tick_end
-   uims_database_error
-   uims_bad_argument
+/* This file defines all the functions in class iofull
+   except for
+
+   iofull::display_help
+   iofull::terminate
+   iofull::help_manual
+   iofull::final_initialize
 
 and the following other variables:
 
@@ -95,7 +66,7 @@ extern void exit(int code);
 #include "sd.h"
 #include "paths.h"
 
-/* See comments in sdmain.c regarding this string. */
+// See comments in sdmain.cpp regarding this string.
 static const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
 
@@ -115,29 +86,26 @@ int sdtty_no_cursor = 0;
 int sdtty_no_console = 0;
 int sdtty_no_line_delete = 0;
 
-static char version_mem[12];
-
-extern char *uims_version_string(void)
+char *iofull::version_string()
 {
-    (void) sprintf(version_mem, "%stty", UI_VERSION_STRING);
-    return version_mem;
+   return UI_VERSION_STRING "tty";
 }
 
 static char journal_name[MAX_TEXT_LINE_LENGTH];
 
 static resolver_display_state resolver_happiness = resolver_display_failed;
 
-int main(int argc, char *argv[])
 
+int main(int argc, char *argv[])
 {
    // In Sdtty, the defaults are reverse video (white-on-black) and pastel colors.
-   ui_options.no_graphics = 0;
-   ui_options.no_intensify = 0;
+
    ui_options.reverse_video = 1;
    ui_options.pastel_color = 1;
-   ui_options.color_scheme = color_by_gender;
-   ui_options.no_sound = 0;
-   ui_options.sequence_num_override = -1;
+
+   // Initialize all the callbacks that sdlib will need.
+   iofull ggg;
+   gg = &ggg;
 
    return sdmain(argc, argv);
 }
@@ -154,7 +122,7 @@ static char user_input[INPUT_TEXTLINE_SIZE+1];
 static char *user_input_prompt;
 static char *function_key_expansion;
 
-void refresh_input(void)
+void refresh_input()
 {
    erase_matcher_input();
    user_input[0] = '\0';
@@ -174,9 +142,9 @@ void refresh_input(void)
    bottom of the screen.
 
    The main program typically updates the transcript in a "clean" way by
-   calling "uims_reduce_line_count" to erase some number of lines at the
+   calling "reduce_line_count" to erase some number of lines at the
    end of the transcript, followed by a rewrite of new material.  We compare
-   what "uims_reduce_line_count" tells us against the value of this variable
+   what "reduce_line_count" tells us against the value of this variable
    to find out how many lines to actually erase.  That way, we erase the input
    lines and produce a truly clean transcript, on devices (like VT-100's)
    capable of doing so.  If the display device can't erase lines, the user
@@ -210,7 +178,7 @@ static void get_string_input(char prompt[], char dest[], int max)
  * must be made anyway.
  */
  
-extern void uims_process_command_line(int *argcp, char ***argvp)
+void iofull::process_command_line(int *argcp, char ***argvp)
 {
    int argno = 1;
    char **argv = *argvp;
@@ -240,7 +208,7 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
          if (!journal_file) {
             printf("Can't open journal file\n");
             perror(argv[argno+1]);
-            exit_program(1);
+            final_exit(1);
          }
 
          goto remove_two;
@@ -262,26 +230,16 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
    }
 }
 
-extern void uims_display_help(void)
-{
-   ttu_display_help();
-}
 
-
-extern long_boolean uims_open_session(int argc, char **argv)
+static bool really_open_session()
 {
-   int session_outcome;
    Cstring session_error_msg;
-   char session_error_msg1[200], session_error_msg2[200];
-
    char line[MAX_FILENAME_LENGTH];
 
-   if (glob_call_list_mode != call_list_mode_none) {
-      if (open_call_list_file(call_list_string))
-         exit_program(1);
-   }
+   if (glob_call_list_mode != call_list_mode_none)
+      open_call_list_file(call_list_string);  // Will exit if it fails.
 
-   /* Put up the session list. */
+   // Put up the session list.
 
    if (get_first_session_line()) goto no_session;
 
@@ -299,26 +257,26 @@ extern long_boolean uims_open_session(int argc, char **argv)
       goto no_session;
 
    if (!sscanf(line, "%d", &session_index)) {
-      session_index = 0;         /* User typed garbage -- exit the program immediately. */
-      close_init_file();
-      return TRUE;
+      session_index = 0;         // User typed garbage -- exit the program immediately.
+      return true;
    }
 
    if (session_index < 0) {
-      close_init_file();
-      return TRUE;    /* Exit the program immediately. */
+      return true;    // Exit the program immediately.  Deletion will take place.
    }
 
-   session_outcome = process_session_info(&session_error_msg);
+   {
+      int session_info = process_session_info(&session_error_msg);
 
-   if (session_outcome & 2)
-      printf("%s\n", session_error_msg);
+      if (session_info & 2)
+         printf("%s\n", session_error_msg);
 
-   if (session_outcome & 1) {
-      /* We are not using a session, either because the user selected
-         "no session", or because of some error in processing the
-         selected session. */
-      goto no_session;
+      if (session_info & 1) {
+         // We are not using a session, either because the user selected
+         // "no session", or because of some error in processing the
+         // selected session.
+         goto no_session;
+      }
    }
 
    goto really_do_it;
@@ -328,19 +286,39 @@ extern long_boolean uims_open_session(int argc, char **argv)
    session_index = 0;
    sequence_number = -1;
 
-   really_do_it:
+ really_do_it:
 
-   if (ui_options.sequence_num_override > 0)
-      sequence_number = ui_options.sequence_num_override;
+   return false;
+}
 
-   if (calling_level == l_nonexistent_concept) {
 
-      /* The level never got specified, either from a command line argument
-         or from the session file.  Perhaps the program was invoked under
-         a window-ish OS in which one clicks on icons rather than typing
-         a command line.  In that case, we need to query the user for the level. */
+static int db_tick_max;
+static int db_tick_cur;   /* goes from 0 to db_tick_max */
 
-      calling_level = l_mainstream;   /* Default in case we fail. */
+#define TICK_STEPS 52
+static int tick_displayed;   /* goes from 0 to TICK_STEPS */
+
+
+bool iofull::init_step(init_callback_state s, int n)
+{
+   // Some operations (e.g. get_session_info) can return information
+   // in the boolean return value.  The others don't care.
+
+   char line[MAX_FILENAME_LENGTH];
+
+   switch (s) {
+
+   case get_session_info:
+      return really_open_session();
+
+   case final_level_query:
+      // The level never got specified, either from a command line argument
+      // or from the session file.  Perhaps the program was invoked under
+      // a window-ish OS in which one clicks on icons rather than typing
+      // a command line.  In that case, we need to query the user for the
+      // level.
+
+      calling_level = l_mainstream;   // Default in case we fail.
       printf("Enter the level: ");
 
       if (fgets(line, MAX_FILENAME_LENGTH, stdin)) {
@@ -353,77 +331,51 @@ extern long_boolean uims_open_session(int argc, char **argv)
       }
 
       (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
-   }
+      break;
 
-   if (new_outfile_string)
-      (void) install_outfile_string(new_outfile_string);
+   case init_database1:
+      // The level has been chosen.  We are about to open the database.
 
-   starting_sequence_number = sequence_number;
-
-   if (glob_call_list_mode == call_list_mode_none ||
-       glob_call_list_mode == call_list_mode_abridging) {
-      current_text_line = 0;
-      ttu_initialize();
-   }
-
-   initialize_misc_lists();
-   prepare_to_read_menus();
-
-   /* Opening the database sets up the values of
-      abs_max_calls and max_base_calls.
-      Must do before telling the uims so any open failure messages
-      come out first. */
-
-   if (open_database(session_error_msg1, session_error_msg2)) {
-      uims_fatal_error(session_error_msg1, session_error_msg2);
-      exit_program(1);
-   }
-
-   build_database(glob_call_list_mode);
-
-   /* This is the thing that takes all the time! */
-
-   initialize_menus(glob_call_list_mode);
-
-   /* If we wrote a call list file, that's all we do. */
-   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full) {
-      close_init_file();
-      return TRUE;
-   }
-
-   call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
-
-   matcher_initialize();
-
-   {
-      long_boolean save_allow = allowing_all_concepts;
-      allowing_all_concepts = TRUE;
-
-      /* Process the keybindings for user-definable calls, concepts, and commands. */
-
-      if (open_accelerator_region()) {
-         char q[INPUT_TEXTLINE_SIZE];
-         while (get_accelerator_line(q))
-            do_accelerator_spec(q);
-      }
-      else {
-         Cstring *q;
-         for (q = concept_key_table ; *q ; q++)
-            do_accelerator_spec(*q);
+      if (glob_call_list_mode == call_list_mode_none ||
+          glob_call_list_mode == call_list_mode_abridging) {
+         current_text_line = 0;
+         ttu_initialize();
       }
 
-      allowing_all_concepts = save_allow;
+      call_menu_prompts[call_list_empty] = "--> ";   // This prompt should never be used.
+      break;
+
+   case init_database2:
+      break;
+
+   case calibrate_tick:
+      db_tick_max = n;
+      db_tick_cur = 0;
+      printf("Sd: reading database...");
+      fflush(stdout);
+      tick_displayed = 0;
+      break;
+
+   case do_tick:
+      db_tick_cur += n;
+      {
+         int tick_new = (TICK_STEPS*db_tick_cur)/db_tick_max;
+         while (tick_displayed < tick_new) {
+            printf(".");
+            tick_displayed++;
+         }
+      }
+      fflush(stdout);
+      break;
+   case tick_end:
+      printf("done\n");
+      break;
+
+   case do_accelerator:
+      break;
    }
 
-   ttu_final_option_setup();
-
-#if !defined(MSDOS)
-   initialize_signal_handlers();
-#endif
-
-   close_init_file();
-
-   return FALSE;
+   return false;
 }
 
 
@@ -436,7 +388,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
  * This will be called once for each value in the enumeration call_list_kind.
  */
 
-extern void uims_create_menu(call_list_kind cl)
+void iofull::create_menu(call_list_kind cl)
 {
    call_menu_prompts[cl] = (char *) get_mem(50);  /* *** Too lazy to compute it. */
    matcher_setup_call_menu(cl);
@@ -455,7 +407,7 @@ extern void uims_create_menu(call_list_kind cl)
 
 
 /* The main program calls this after all the call menus have been created,
-   after all calls to uims_create_menu.
+   after all calls to create_menu.
    This performs any final initialization required by the interface package.
 
    It must also perform any required setup of the concept menu.  The
@@ -469,7 +421,7 @@ extern void uims_create_menu(call_list_kind cl)
 
 
 
-extern void uims_set_window_title(char s[])
+void iofull::set_window_title(char s[])
 {
    char full_text[MAX_TEXT_LINE_LENGTH];
 
@@ -484,7 +436,7 @@ extern void uims_set_window_title(char s[])
 }
 
 
-extern void uims_bell(void)
+static void uims_bell()
 {
    if (!ui_options.no_sound) ttu_bell();
 }
@@ -524,7 +476,7 @@ static int match_counter;
 static int match_lines;
 
 
-static int prompt_for_more_output(void)
+static int prompt_for_more_output()
 {
     put_line("--More--");
 
@@ -550,7 +502,7 @@ static int prompt_for_more_output(void)
     }
 }
 
-extern void show_match(void)
+void iofull::show_match()
 {
    if (showing_has_stopped) return;  /* Showing has been turned off. */
 
@@ -655,8 +607,8 @@ static long_boolean get_user_input(char *prompt, int which)
                the system automatically provides that action. */
             if (nc == AFKEY+4) {
                if (which_target == match_startup_commands ||
-                   uims_do_abort_popup() == POPUP_ACCEPT)
-                  exit_program(0);
+                   gg->do_abort_popup() == POPUP_ACCEPT)
+                  final_exit(0);
             }
 
             continue;   /* No binding for this key; ignore it. */
@@ -852,7 +804,7 @@ static long_boolean get_user_input(char *prompt, int which)
 
    diagnostic_error:
 
-   uims_terminate();
+   gg->terminate();
    (void) fputs("\nParsing error during diagnostic.\n", stdout);
    (void) fputs("\nParsing error during diagnostic.\n", stderr);
    final_exit(1);
@@ -895,7 +847,7 @@ static char *banner_prompts4[] = {
 
 
 
-extern uims_reply uims_get_startup_command(void)
+uims_reply iofull::get_startup_command()
 {
    for (;;) {
       if (!get_user_input("Enter startup command> ", (int) match_startup_commands))
@@ -921,8 +873,8 @@ extern uims_reply uims_get_startup_command(void)
 
 
 
-/* This returns TRUE if it fails, e.g. the user waves the mouse away. */
-extern long_boolean uims_get_call_command(uims_reply *reply_p)
+// This returns TRUE if it fails, e.g. the user waves the mouse away.
+long_boolean iofull::get_call_command(uims_reply *reply_p)
 {
    char prompt_buffer[200];
    char *prompt_ptr;
@@ -1016,7 +968,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 }
 
 
-extern uims_reply uims_get_resolve_command(void)
+uims_reply iofull::get_resolve_command()
 {
    for (;;) {
       if (!get_user_input("Enter search command> ", (int) match_resolve_commands))
@@ -1051,7 +1003,7 @@ static int get_popup_string(char prompt[], char dest[])
     return POPUP_ACCEPT_WITH_STRING;
 }
 
-extern int uims_do_comment_popup(char dest[])
+int iofull::do_comment_popup(char dest[])
 {
    int retval = get_popup_string("Enter comment", dest);
 
@@ -1065,7 +1017,7 @@ extern int uims_do_comment_popup(char dest[])
    return retval;
 }
 
-extern int uims_do_outfile_popup(char dest[])
+int iofull::do_outfile_popup(char dest[])
 {
     char buffer[MAX_TEXT_LINE_LENGTH];
     (void) sprintf(buffer, "Sequence output file is \"%s\".\n", outfile_string);
@@ -1075,7 +1027,7 @@ extern int uims_do_outfile_popup(char dest[])
     return get_popup_string("Enter new file name", dest);
 }
 
-extern int uims_do_header_popup(char dest[])
+int iofull::do_header_popup(char dest[])
 {
    if (header_comment[0]) {
       char buffer[MAX_TEXT_LINE_LENGTH];
@@ -1086,21 +1038,12 @@ extern int uims_do_header_popup(char dest[])
    return get_popup_string("Enter new title", dest);
 }
 
-extern int uims_do_getout_popup(char dest[])
+int iofull::do_getout_popup(char dest[])
 {
     put_line("Type comment for this sequence, if desired.\n");
     current_text_line++;
     return get_popup_string("Enter comment", dest);
 }
-
-#ifdef NEGLECT
-extern int uims_do_neglect_popup(char dest[])
-{
-    put_line("Specify integer percentage of neglected calls.\n");
-    current_text_line++;
-    return get_popup_string("Enter percentage", dest);
-}
-#endif
 
 static int confirm(char *question)
 {
@@ -1125,7 +1068,7 @@ static int confirm(char *question)
       if (c < 128) put_char(c);
 
       if (diagnostic_mode) {
-         uims_terminate();
+         gg->terminate();
          (void) fputs("\nParsing error during diagnostic.\n", stdout);
          (void) fputs("\nParsing error during diagnostic.\n", stderr);
          final_exit(1);
@@ -1138,35 +1081,35 @@ static int confirm(char *question)
    }
 }
 
-extern int uims_do_write_anyway_popup(void)
+int iofull::do_write_anyway_popup()
 {
     put_line("This sequence is not resolved.\n");
     current_text_line++;
     return confirm("Do you want to write it anyway? ");
 }
 
-extern int uims_do_delete_clipboard_popup(void)
+int iofull::do_delete_clipboard_popup()
 {
     put_line("There are calls in the clipboard.\n");
     current_text_line++;
     return confirm("Do you want to delete all of them? ");
 }
 
-extern int uims_do_abort_popup(void)
+int iofull::do_abort_popup()
 {
     put_line("The current sequence will be aborted.\n");
     current_text_line++;
     return confirm("Do you really want to abort it? ");
 }
 
-extern int uims_do_session_init_popup(void)
+int iofull::do_session_init_popup()
 {
     put_line("You already have a session file.\n");
     current_text_line++;
     return confirm("Do you really want to delete it and start over? ");
 }
 
-extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
+int iofull::do_modifier_popup(Cstring callname, modify_popup_kind kind)
 {
     char *line_format = "Internal error: unknown modifier kind.\n";
     char tempstuff[200];
@@ -1189,100 +1132,78 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
     return confirm("Do you want to replace it? ");
 }
 
-extern void uims_update_resolve_menu(command_kind goal, int cur, int max,
-                                     resolver_display_state state)
+void iofull::update_resolve_menu(command_kind goal, int cur, int max,
+                                 resolver_display_state state)
 {
    char title[MAX_TEXT_LINE_LENGTH];
 
    resolver_happiness = state;
 
    create_resolve_menu_title(goal, cur, max, state, title);
-   uims_add_new_line(title, 0);
+   gg->add_new_line(title, 0);
 }
 
-extern int uims_do_selector_popup(void)
+int iofull::do_selector_popup()
 {
-   int retval;
+   match_result saved_match = user_match;
 
-   if (!user_match.valid || (user_match.match.call_conc_options.who == selector_uninitialized)) {
-      match_result saved_match = user_match;
+   for (;;) {
+      if (!get_user_input("Enter who> ", (int) match_selectors))
+         break;
 
-      for (;;) {
-         if (!get_user_input("Enter who> ", (int) match_selectors))
-            break;
-
-         writestuff("The program wants you to type a person designator.  "
-                    "Try typing something like 'boys' and pressing Enter.");
-         newline();
-      }
-
-      /* We skip the zeroth selector, which is selector_uninitialized. */
-      retval = user_match.match.index+1;
-      user_match = saved_match;
+      writestuff("The program wants you to type a person designator.  "
+                 "Try typing something like 'boys' and pressing Enter.");
+      newline();
    }
-   else {
-      retval = (int) user_match.match.call_conc_options.who;
-      user_match.match.call_conc_options.who = selector_uninitialized;
-   }
+
+   // We skip the zeroth selector, which is selector_uninitialized.
+   int retval = user_match.match.index+1;
+   user_match = saved_match;
    return retval;
 }
 
-extern int uims_do_direction_popup(void)
+int iofull::do_direction_popup()
 {
-   int retval;
+   match_result saved_match = user_match;
 
-   if (!user_match.valid ||
-       (user_match.match.call_conc_options.where == direction_uninitialized)) {
-      match_result saved_match = user_match;
+   for (;;) {
+      if (!get_user_input("Enter direction> ", (int) match_directions))
+         break;
 
-      for (;;) {
-         if (!get_user_input("Enter direction> ", (int) match_directions))
-            break;
-
-         writestuff("The program wants you to type a direction.  "
-                    "Try typing something like 'right' and pressing Enter.");
-         newline();
-      }
-
-      /* We skip the zeroth direction, which is direction_uninitialized. */
-      retval = user_match.match.index+1;
-      user_match = saved_match;
+      writestuff("The program wants you to type a direction.  "
+                 "Try typing something like 'right' and pressing Enter.");
+      newline();
    }
-   else {
-      retval = (int) user_match.match.call_conc_options.where;
-      user_match.match.call_conc_options.where = direction_uninitialized;
-   }
+
+   // We skip the zeroth direction, which is direction_uninitialized.
+   int retval = user_match.match.index+1;
+   user_match = saved_match;
+
    return retval;
 }
 
-extern int uims_do_tagger_popup(int tagger_class)
+int iofull::do_tagger_popup(int tagger_class)
 {
-   int retval;
+   match_result saved_match = user_match;
 
-   if (!user_match.valid ||
-       (user_match.match.call_conc_options.tagger == 0)) {
-      match_result saved_match = user_match;
+   for (;;) {
+      if (!get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class))
+         break;
 
-      for (;;) {
-         if (!get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class))
-            break;
-
-         writestuff("The program wants you to type an 'ATC' (tagging) call.  "
-                    "Try typing something like 'vertical tag' and pressing Enter.");
-         newline();
-      }
-
-      saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
-      user_match = saved_match;
+      writestuff("The program wants you to type an 'ATC' (tagging) call.  "
+                 "Try typing something like 'vertical tag' and pressing Enter.");
+      newline();
    }
 
-   retval = user_match.match.call_conc_options.tagger;
+   saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
+   user_match = saved_match;
+   int retval = user_match.match.call_conc_options.tagger;
    user_match.match.call_conc_options.tagger = 0;
    return retval;
 }
 
 
-extern int uims_do_circcer_popup(void)
+int iofull::do_circcer_popup()
 {
    uint32 retval;
 
@@ -1315,7 +1236,7 @@ extern int uims_do_circcer_popup(void)
 }
 
 
-extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
+uint32 iofull::get_number_fields(int nnumbers, long_boolean forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;
@@ -1361,7 +1282,7 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
+void iofull::add_new_line(char the_line[], uint32 drawing_picture)
 {
     put_line(the_line);
     put_line("\n");
@@ -1371,7 +1292,7 @@ extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
 /* Throw away all but the first n lines of the text output.
    n = 0 means to erase the entire buffer. */
 
-extern void uims_reduce_line_count(int n)
+void iofull::reduce_line_count(int n)
 {
    if (current_text_line > n)
       erase_last_n(current_text_line-n);
@@ -1380,96 +1301,40 @@ extern void uims_reduce_line_count(int n)
 }
 
 
-extern bool uims_choose_font()
-{ return FALSE; }
+bool iofull::choose_font() { return false; }
+bool iofull::print_this() { return false; }
+bool iofull::print_any() { return false; }
 
 
-extern bool uims_print_this()
-{ return FALSE; }
 
-
-extern bool uims_print_any()
-{ return FALSE; }
-
-
-extern void uims_terminate(void)
+void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
 {
-   ttu_terminate();
-}
-
-/*
- * The following three functions allow the UI to put up a progress
- * indicator while the call database is being read (and processed).
- *
- * uims_database_tick_max is called before reading the database
- * with the number of ticks that will be sent.
- * uims_database_tick is called repeatedly with the number of new
- * ticks to add.
- */
-
-static int db_tick_max;
-static int db_tick_cur;   /* goes from 0 to db_tick_max */
-
-#define TICK_STEPS 52
-static int tick_displayed;   /* goes from 0 to TICK_STEPS */
-
-extern void uims_database_tick_max(int n)
-{
-   db_tick_max = n;
-   db_tick_cur = 0;
-   printf("Sd: reading database...");
-   fflush(stdout);
-   tick_displayed = 0;
-}
-
-extern void uims_database_tick(int n)
-{
-   int tick_new;
-
-   db_tick_cur += n;
-   tick_new = TICK_STEPS*db_tick_cur/db_tick_max;
-   while (tick_displayed < tick_new) {
-      printf(".");
-      tick_displayed++;
+   if (s2 && s2[0]) {
+      fprintf(stderr, "%s: %s\n", s1, s2);
    }
-   fflush(stdout);
-}
-
-extern void uims_database_tick_end(void)
-{
-    printf("done\n");
-}
-
-extern void uims_database_error(Cstring message, Cstring call_name)
-{
-   print_line("");
-   print_line(message);
-   if (call_name) {
-      print_line("while reading this call from the database:");
-      print_line(call_name);
+   else {
+      fprintf(stderr, "%s\n", s1);
    }
+
+   if (s3) fprintf(stderr, "%s\n", s3);
+   fprintf(stderr, "%s", "Use the -help flag for help.\n");
+   final_exit(1);
 }
 
-extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3)
+
+void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
 {
-   if (s1) print_line(s1);
-   if (s2) print_line(s2);
-   if (s3) print_line(s3);
-   print_line("Use the -help flag for help.");
-   exit_program(1);
+   if (s2 && s2[0])
+      fprintf(stderr, "%s: %s\n", s1, s2);
+   else
+      fprintf(stderr, "%s\n", s1);
+
+   session_index = 0;  // Prevent attempts to update session file.
+   final_exit(code);
 }
 
 
-extern void uims_fatal_error(Cstring pszLine1, Cstring pszLine2)
-{
-   session_index = 0;    /* We don't write back the session file in this case. */
-   fprintf(stderr, "%s\n", pszLine1);
-   if (pszLine2)
-      fprintf(stderr, "%s\n", pszLine2);
-}
-
-
-extern void uims_final_exit(int code)
+void iofull::uims_final_exit(int code)
 {
    exit(code);
 }

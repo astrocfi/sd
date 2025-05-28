@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7e"
+version "34.7f"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -4277,8 +4277,84 @@ call "@6 roll" plus tag anyoneroll
    rolldefine
 
 call "roll" plus tag roll
-            dont_use_in_nice_resolve
+            dont_use_in_nice_resolve one_person_call
    rolldefine
+            dont_use_in_nice_resolve one_person_call
+   setup 1x1 1x1 qualifier alwaysfail   // We don't use the plain definition.
+      array [0]
+            alternate_definition [half] plus
+   // The following stuff appears 5 times:
+   //    roll, first half
+   //    roll, second half
+   //    1/4 R/L, first half
+   //    1/4 R/L, second half
+   //    1/8 R/L
+   // Be sure it is replicated properly.
+   setup 4x4 hyperglass plus_eighth_rotation
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
+                         CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
+         if roll_is_ccw [AL3W AL5W AL5W AL4W AL6W AL8W AL8W AL7W
+                         AL9W AL11W AL11W AL10W AL0W AL2W AL2W AL1W]
+   setup qtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if roll_is_ccw [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup pqtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if roll_is_ccw [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup 2x4 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if roll_is_ccw [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup 4x2 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if roll_is_ccw [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup c1phan 4x4 plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR9N CR10N CR15N CR11N CR13N CR14N CR3N CR15N
+                         CR1N CR2N CR7N CR3N CR5N CR6N CR11N CR7N]
+         if roll_is_ccw [AL9W AL10W AL15W AL11W AL13W AL14W AL3W AL15W
+                         AL1W AL2W AL7W AL3W AL5W AL6W AL11W AL7W]
+            alternate_definition [lasthalf] plus
+   // The following stuff appears 5 times:
+   //    roll, first half
+   //    roll, second half
+   //    1/4 R/L, first half
+   //    1/4 R/L, second half
+   //    1/8 R/L
+   // Be sure it is replicated properly.
+   setup 4x4 hyperglass plus_eighth_rotation
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
+                         CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
+         if roll_is_ccw [AL3W AL5W AL5W AL4W AL6W AL8W AL8W AL7W
+                         AL9W AL11W AL11W AL10W AL0W AL2W AL2W AL1W]
+   setup qtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if roll_is_ccw [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup pqtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if roll_is_ccw [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup 2x4 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if roll_is_ccw [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup 4x2 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if roll_is_ccw [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup c1phan 4x4 plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if roll_is_cw  [CR9N CR10N CR15N CR11N CR13N CR14N CR3N CR15N
+                         CR1N CR2N CR7N CR3N CR5N CR6N CR11N CR7N]
+         if roll_is_ccw [AL9W AL10W AL15W AL11W AL13W AL14W AL3W AL15W
+                         AL1W AL2W AL7W AL3W AL5W AL6W AL11W AL7W]
+
 
 call "roll @b times" dontshow tag roll_n
             neednumber
@@ -4913,7 +4989,7 @@ call "quarter @eright@f" dontshow tag quarter_right
    setup 1x1 1x1
       array [CR0E]
 
-/* This one doesn't allow "no direction". */
+// This one doesn't allow "no direction".
 call "quarter @h" mainstream tag quarter_dir
             dont_use_in_nice_resolve one_person_call
    setup 2x2 2x2
@@ -4980,12 +5056,122 @@ call "quarter @h" mainstream tag quarter_dir
          if leftp  [AL0W AL1W AL2W AL3W AL4W AL5W]
          if inp    [CR0E CR1E CR2E AL3W AL4W AL5W]
          if outp   [AL0W AL1W AL2W CR3E CR4E CR5E]
+            alternate_definition [half] mainstream
+   // The following stuff appears 5 times:
+   //    roll, first half
+   //    roll, second half
+   //    1/4 R/L, first half
+   //    1/4 R/L, second half
+   //    1/8 R/L
+   // Be sure it is replicated properly.
+   setup 4x4 hyperglass plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
+                   CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
+         if leftp  [AL3W AL5W AL5W AL4W AL6W AL8W AL8W AL7W
+                   AL9W AL11W AL11W AL10W AL0W AL2W AL2W AL1W]
+   setup qtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if leftp  [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup pqtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if leftp  [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup 2x4 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if leftp  [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup 4x2 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if leftp  [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup c1phan 4x4 plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR9N CR10N CR15N CR11N CR13N CR14N CR3N CR15N
+                    CR1N CR2N CR7N CR3N CR5N CR6N CR11N CR7N]
+         if leftp  [AL9W AL10W AL15W AL11W AL13W AL14W AL3W AL15W
+                    AL1W AL2W AL7W AL3W AL5W AL6W AL11W AL7W]
+            alternate_definition [lasthalf] mainstream
+   // The following stuff appears 5 times:
+   //    roll, first half
+   //    roll, second half
+   //    1/4 R/L, first half
+   //    1/4 R/L, second half
+   //    1/8 R/L
+   // Be sure it is replicated properly.
+   setup 4x4 hyperglass plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
+                   CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
+         if leftp  [AL3W AL5W AL5W AL4W AL6W AL8W AL8W AL7W
+                   AL9W AL11W AL11W AL10W AL0W AL2W AL2W AL1W]
+   setup qtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if leftp  [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup pqtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if leftp  [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup 2x4 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if leftp  [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup 4x2 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if leftp  [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup c1phan 4x4 plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR9N CR10N CR15N CR11N CR13N CR14N CR3N CR15N
+                    CR1N CR2N CR7N CR3N CR5N CR6N CR11N CR7N]
+         if leftp  [AL9W AL10W AL15W AL11W AL13W AL14W AL3W AL15W
+                    AL1W AL2W AL7W AL3W AL5W AL6W AL11W AL7W]
 
 call "1/4 @h" mainstream
-            dont_use_in_nice_resolve one_person_call
+            dont_use_in_nice_resolve one_person_call visible_fractions
    seq quarter_dir []
 
-/* This one allows "no direction". */
+call "1/8 @h" c1
+            dont_use_in_nice_resolve one_person_call
+   // The following stuff appears 5 times:
+   //    roll, first half
+   //    roll, second half
+   //    1/4 R/L, first half
+   //    1/4 R/L, second half
+   //    1/8 R/L
+   // Be sure it is replicated properly.
+   setup 4x4 hyperglass plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
+                   CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
+         if leftp  [AL3W AL5W AL5W AL4W AL6W AL8W AL8W AL7W
+                   AL9W AL11W AL11W AL10W AL0W AL2W AL2W AL1W]
+   setup qtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if leftp  [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup pqtag 4x4 plus_eighth_rotation
+      preds "Direction must be right or left."
+         if rightp [CR10N CR13N CR0N CR3N CR2N CR5N CR8N CR11N]
+         if leftp  [AL10W AL13W AL0W AL3W AL2W AL5W AL8W AL11W]
+   setup 2x4 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if leftp  [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup 4x2 c1phan plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR13N CR14N CR7N CR4N CR5N CR6N CR15N CR12N]
+         if leftp  [AL13W AL14W AL7W AL4W AL5W AL6W AL15W AL12W]
+   setup c1phan 4x4 plus_eighth_rotation restriction give_fudgy_warn
+      preds "Direction must be right or left."
+         if rightp [CR9N CR10N CR15N CR11N CR13N CR14N CR3N CR15N
+                    CR1N CR2N CR7N CR3N CR5N CR6N CR11N CR7N]
+         if leftp  [AL9W AL10W AL15W AL11W AL13W AL14W AL3W AL15W
+                    AL1W AL2W AL7W AL3W AL5W AL6W AL11W AL7W]
+
+// This one allows "no direction".
 call "_maybe quarter @h" dontshow tag quarter_maybe
             one_person_call
    setup 1x2 1x2
@@ -5124,6 +5310,12 @@ call "face @h" mainstream tag face_dir
          if inp      [CR0E CR1E    0 CR3E AL4W AL5W    0 AL7W]
          if outp     [AL0W AL1W    0 AL3W CR4E CR5E    0 CR7E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup 4x4 4x4
+      preds "Direction must be right or left."
+         if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E
+                     CR8E CR9E CR10E CR11E CR12E CR13E CR14E CR15E]
+         if leftp    [AL0W AL1W AL2W AL3W AL4W AL5W AL6W AL7W
+                     AL8W AL9W AL10W AL11W AL12W AL13W AL14W AL15W]
    setup 1x8 1x8
       preds "Direction must be right, left, in, or out."
          if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E]
@@ -5350,13 +5542,13 @@ call "centers split the outsides, first go right, next go left" mainstream
 call "@6 split the others, first go left, next go right" mainstream
    setup c1phan 2x6
       preds "People aren't designated consistently."
-         if unselect         [ZM1N 0 ZM2N 0 0 ZM4N 0 ZM3N ZM7N 0 ZM8N 0 0 ZM10N 0 ZM9N] 
+         if unselect         [ZM1N 0 ZM2N 0 0 ZM4N 0 ZM3N ZM7N 0 ZM8N 0 0 ZM10N 0 ZM9N]
          if conc_from_select [0 0 0 0 0 0 0 0 0 CR5S 0 AL2S CR3S 0 AL0S 0]
 
 call "@6 split the others, first go right, next go left" mainstream
    setup c1phan 2x6
       preds "People aren't designated consistently."
-         if unselect         [ZM1N 0 ZM2N 0 0 ZM4N 0 ZM3N ZM7N 0 ZM8N 0 0 ZM10N 0 ZM9N] 
+         if unselect         [ZM1N 0 ZM2N 0 0 ZM4N 0 ZM3N ZM7N 0 ZM8N 0 0 ZM10N 0 ZM9N]
          if conc_from_select [0 0 0 0 0 0 0 0 0 AL2S 0 CR5S AL0S 0 CR3S 0]
 
 call "pass thru" mainstream tag passthru
@@ -18014,7 +18206,7 @@ call "scoot back" mainstream tag scootback
       array [AL1W 0 0 AL2W]
             alternate_definition [interlocked half] c3a
    setup qtag 2x4 rotate qualifier right 2fl_only
-      array [0 0 0    0    CR2N CR5N CR7N CR0N]       
+      array [0 0 0    0    CR2N CR5N CR7N CR0N]
    setup qtag 2x4 rotate qualifier left 2fl_only
       array [0 0 AL0S AL7S AL2S AL5S 0    0]
             alternate_definition [lasthalf] mainstream

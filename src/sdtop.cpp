@@ -52,10 +52,10 @@
    finish_toplevelmove
    deposit_call_tree
    do_subcall_query
-   print_id_error
    find_proper_call_list
 and the following external variables:
-   the_callback_block
+   gg
+   text_line_count
    error_message1
    error_message2
    collision_person1
@@ -140,7 +140,8 @@ and the following external variables:
 
 
 
-callbackstuff the_callback_block;
+iobase *gg;
+int text_line_count = 0;
 char error_message1[MAX_ERR_LENGTH];
 char error_message2[MAX_ERR_LENGTH];
 uint32 collision_person1;
@@ -1533,14 +1534,14 @@ static void initialize_concept_sublists(void)
    int test_call_list_kind;
    concept_kind end_marker = concept_diagnose;
 
-   /* Decide whether we allow the "diagnose" concept, by deciding
-      when we will stop the concept list scan. */
+   // Decide whether we allow the "diagnose" concept, by deciding
+   // when we will stop the concept list scan.
    if (diagnostic_mode) end_marker = marker_end_of_list;
 
-   /* First, just count up all the available concepts. */
+   // First, just count up all the available concepts.
 
    for (concept_index=0,all_legal_concepts=0 ; ; concept_index++) {
-      concept_descriptor *p = &concept_descriptor_table[concept_index];
+      const concept_descriptor *p = &concept_descriptor_table[concept_index];
       if (p->kind == end_marker) break;
       if ((p->concparseflags & CONCPARSE_MENU_DUP) || p->level > calling_level)
          continue;
@@ -1551,9 +1552,9 @@ static void initialize_concept_sublists(void)
    general_concept_size = concept_index - general_concept_offset;
 
    concept_sublists[call_list_any] =
-      (short int *) (*the_callback_block.get_mem_fn)(all_legal_concepts*sizeof(short int));
+      (short int *) get_mem(all_legal_concepts*sizeof(short int));
    good_concept_sublists[call_list_any] =
-      (short int *) (*the_callback_block.get_mem_fn)(all_legal_concepts*sizeof(short int));
+      (short int *) get_mem(all_legal_concepts*sizeof(short int));
 
    // Make the concept sublists, one per setup.  We do them in downward order,
    // with "any setup" last.  This is because we put our results into the
@@ -1570,7 +1571,7 @@ static void initialize_concept_sublists(void)
            concept_index++) {
          uint32 setup_mask = ~0;      /* Default is to accept the concept. */
          uint32 good_setup_mask = 0;  /* Default for this is not to. */
-         concept_descriptor *p = &concept_descriptor_table[concept_index];
+         const concept_descriptor *p = &concept_descriptor_table[concept_index];
          if (p->kind == end_marker) break;
          if ((p->concparseflags & CONCPARSE_MENU_DUP) || p->level > calling_level)
             continue;
@@ -1684,14 +1685,14 @@ static void initialize_concept_sublists(void)
       if (test_call_list_kind != (int) call_list_any) {
          if (concepts_in_this_setup != 0) {
             concept_sublists[test_call_list_kind] =
-               (short int *) (*the_callback_block.get_mem_fn)(concepts_in_this_setup*sizeof(short int));
+               (short int *) get_mem(concepts_in_this_setup*sizeof(short int));
             (void) memcpy(concept_sublists[test_call_list_kind],
                           concept_sublists[call_list_any],
                           concepts_in_this_setup*sizeof(short int));
          }
          if (good_concepts_in_this_setup != 0) {
             good_concept_sublists[test_call_list_kind] =
-               (short int *) (*the_callback_block.get_mem_fn)(good_concepts_in_this_setup*sizeof(short int));
+               (short int *) get_mem(good_concepts_in_this_setup*sizeof(short int));
             (void) memcpy(good_concept_sublists[test_call_list_kind],
                           good_concept_sublists[call_list_any],
                           good_concepts_in_this_setup*sizeof(short int));
@@ -1717,7 +1718,9 @@ extern void initialize_sdlib(void)
 
    writechar_block.usurping_writechar = FALSE;
 
-   for (int i=0 ; i<warn__NUM_WARNINGS ; i++) {
+   int i;
+
+   for (i=0 ; i<warn__NUM_WARNINGS ; i++) {
       switch (warning_strings[i][0]) {
       case '#':
          useless_phan_clw_warnings.setbit((warning_index) i);
@@ -1731,6 +1734,40 @@ extern void initialize_sdlib(void)
          dyp_each_warnings.setbit((warning_index) i); break;
       }
    }
+
+   // Create the tagger menu lists.
+
+   uint32 ui;
+
+   for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
+      tagger_menu_list[i] = (Cstring *) get_mem((number_of_taggers[i]+1) * sizeof(char *));
+
+      for (ui=0; ui<number_of_taggers[i]; ui++)
+         tagger_menu_list[i][ui] = tagger_calls[i][ui]->menu_name;
+
+      tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
+   }
+
+   // Create the selector menu list.  It is one item shorter than the enumeration,
+   // because we skip the first item in the enumeration.
+
+   selector_menu_list = (Cstring *) get_mem((selector_enum_extent) * sizeof(char *));
+
+   for (i=0; i<selector_enum_extent-1; i++)
+      selector_menu_list[i] = selector_list[i+1].name;
+
+   selector_menu_list[selector_enum_extent-1] = (Cstring) 0;
+
+   /* Create the circcer list. */
+
+   circcer_menu_list = (Cstring *) get_mem((number_of_circcers+1) * sizeof(char *));
+
+   for (ui=0; ui<number_of_circcers; ui++)
+      circcer_menu_list[ui] = circcer_calls[ui]->menu_name;
+
+   circcer_menu_list[number_of_circcers] = (Cstring) 0;
+
+   initialize_getout_tables();
 }
 
 
@@ -2021,6 +2058,9 @@ extern restriction_test_result verify_restriction(
    switch (tt.assumption) {
    case cr_alwaysfail:
       return restriction_fails;
+   case cr_give_fudgy_warn:
+      warn(warn__may_be_fudgy);
+      return restriction_passes;
    case cr_nice_diamonds:
       // B=1 => right-handed; B=2 => left-handed.
       // The handedness stuff isn't documented!
@@ -5162,13 +5202,13 @@ SDLIB_API long_boolean deposit_call_tree(modifier_block *anythings, parse_block 
    user_match.match.call_conc_options = anythings->call_conc_options;
 
    if (anythings->kind == ui_call_select) {
-      if ((*the_callback_block.deposit_call_fn)(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
+      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
       save1 = *parse_state.concept_write_ptr;
       if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
       there_is_a_call = TRUE;
    }
    else if (anythings->kind == ui_concept_select) {
-      if ((*the_callback_block.deposit_concept_fn)(anythings->concept_ptr)) return TRUE;
+      if (deposit_concept(anythings->concept_ptr)) return TRUE;
    }
    else return TRUE;   /* Huh? */
 
@@ -5302,7 +5342,7 @@ extern long_boolean do_subcall_query(
       else if (this_is_tagger_circcer) kind = modify_popup_only_circ;
       else kind = modify_popup_any;
 
-      if ((*the_callback_block.uims_do_modifier_popup_fn)(pretty_call_name, kind)) {
+      if (gg->do_modifier_popup(pretty_call_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
 
@@ -5346,7 +5386,7 @@ extern long_boolean do_subcall_query(
       throw error_flag_type(error_flag_wrong_command);
    }
    else {
-      if ((*the_callback_block.query_for_call_fn)()) {
+      if (query_for_call()) {
          // User clicked on something unusual like "exit" or "undo".
          throw error_flag_type(error_flag_wrong_command);
       }
@@ -5355,13 +5395,6 @@ extern long_boolean do_subcall_query(
    return FALSE;
 }
 
-
-SDLIB_API void print_id_error(int n)
-{
-   char msg [50];
-   sprintf(msg, "Call didn't identify self -- %d", n);
-   (*the_callback_block.uims_fatal_error_fn)(msg, 0);
-}
 
 
 extern call_list_kind find_proper_call_list(setup *s)

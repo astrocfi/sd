@@ -6489,7 +6489,7 @@ extern long_boolean do_big_concept(
    void (*concept_func)(setup *, parse_block *, setup *);
    parse_block *orig_concept_parse_block = ss->cmd.parseptr;
    parse_block *this_concept_parse_block = orig_concept_parse_block;
-   concept_descriptor *this_concept = this_concept_parse_block->concept;
+   const concept_descriptor *this_concept = this_concept_parse_block->concept;
    concept_kind this_kind = this_concept->kind;
    concept_table_item *this_table_item = &concept_table[this_kind];
 

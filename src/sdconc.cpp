@@ -93,15 +93,13 @@ extern void initialize_fix_tables()
 
    for (tabp = fixer_init_table ; tabp->mykey != fx0 ; tabp++) {
       if (fixer_ptr_table[tabp->mykey])
-         (*the_callback_block.uims_database_error_fn)
-            ("Fixer table initialization failed: dup.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Fixer table initialization failed", "dup");
       fixer_ptr_table[tabp->mykey] = tabp;
    }
 
    for (i=fx0+1 ; i<fx_ENUMLAST ; i++) {
       if (!fixer_ptr_table[i])
-         (*the_callback_block.uims_database_error_fn)
-            ("Fixer table initialization failed: undef.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Fixer table initialization failed", "undef");
    }
 }
 

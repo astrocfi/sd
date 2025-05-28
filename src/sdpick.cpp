@@ -146,10 +146,10 @@ SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration)
    else {
       /* We don't generate unsymmetrical selectors when searching.  It generates
          too many "couple #3 u-turn-back" calls. */
-      j = (*the_callback_block.generate_random_number_fn)(unsymm_selector_start-1)+1;
+      j = generate_random_number(unsymm_selector_start-1)+1;
    }
 
-   (*the_callback_block.hash_nonrandom_number_fn)(j-1);
+   hash_nonrandom_number(j-1);
    return (selector_kind) j;
 }
 
@@ -191,10 +191,10 @@ SDLIB_API direction_kind do_direction_iteration(void)
       }
    }
    else {
-      j = (*the_callback_block.generate_random_number_fn)(last_direction_kind)+1;
+      j = generate_random_number(last_direction_kind)+1;
    }
 
-   (*the_callback_block.hash_nonrandom_number_fn)(j-1);
+   hash_nonrandom_number(j-1);
    return (direction_kind) j;
 }
 
@@ -240,11 +240,11 @@ SDLIB_API void do_number_iteration(int howmanynumbers,
          this_num = ((number_iterator >> (i*2)) & 3) + 1;
       }
       else if (odd_number_only)
-         this_num = ((*the_callback_block.generate_random_number_fn)(2)<<1)+1;
+         this_num = (generate_random_number(2)<<1)+1;
       else
-         this_num = (*the_callback_block.generate_random_number_fn)(4)+1;
+         this_num = generate_random_number(4)+1;
 
-      (*the_callback_block.hash_nonrandom_number_fn)(this_num-1);
+      hash_nonrandom_number(this_num-1);
 
       *number_list |= (this_num << (i*4));
    }
@@ -283,9 +283,9 @@ SDLIB_API void do_circcer_iteration(uint32 *circcp)
       }
    }
    else
-      *circcp = (*the_callback_block.generate_random_number_fn)(number_of_circcers)+1;
+      *circcp = generate_random_number(number_of_circcers)+1;
 
-   (*the_callback_block.hash_nonrandom_number_fn)(*circcp - 1);
+   hash_nonrandom_number(*circcp - 1);
 }
 
 
@@ -338,10 +338,10 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
       }
    }
    else {
-      tag = (*the_callback_block.generate_random_number_fn)(numtaggers);
+      tag = generate_random_number(numtaggers);
    }
 
-   (*the_callback_block.hash_nonrandom_number_fn)(tag);
+   hash_nonrandom_number(tag);
 
    /* We don't generate "dont_use_in_resolve" taggers in any random search. */
    if (tagtable[tag]->the_defn.callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
@@ -357,7 +357,7 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
    did.  If the iterators are nonzero, we will just repeat that call.
    Otherwise, we will advance it to the next and use that call. */
 
-SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_place)
+SDLIB_API const concept_descriptor *pick_concept(long_boolean already_have_concept_in_place)
 {
    long_boolean do_concept = FALSE;
 
@@ -379,7 +379,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
       resolve_scan_start_point =
          (diagnostic_mode) ?
          0 :
-         (*the_callback_block.generate_random_number_fn)(number_of_calls[parse_state.call_list_to_use]);
+         generate_random_number(number_of_calls[parse_state.call_list_to_use]);
       resolve_scan_current_point = resolve_scan_start_point-1;
       current_pick_type = (int) pick_plain_scan_nice_only;
       reset_internal_iterators();
@@ -435,7 +435,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
       case command_resolve:
       case command_random_call:
       case command_standardize:
-         do_concept = (*the_callback_block.generate_random_number_fn)(8) <
+         do_concept = generate_random_number(8) <
             ((search_goal == command_standardize) ?
              STANDARDIZE_CONCEPT_PROBABILITY : CONCEPT_PROBABILITY);
 
@@ -444,7 +444,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
             what is happening.  To remedy the problem, we hash just the yes-no
             result of our decision. */
 
-         (*the_callback_block.hash_nonrandom_number_fn)((int) do_concept);
+         hash_nonrandom_number((int) do_concept);
          break;
       }
    }
@@ -455,7 +455,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
       if (j != 0) {    /* If no concepts are available (perhaps some clown has
                           selected "pick concept call" at mainstream) we don't
                           insert a concept. */
-         j = (*the_callback_block.generate_random_number_fn)(j);
+         j = generate_random_number(j);
 
          uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
          return &concept_descriptor_table[uims_menu_index];
@@ -483,12 +483,12 @@ SDLIB_API call_with_name *do_pick(void)
       i = resolve_scan_current_point;
    }
    else        /* In random search. */
-      i = (*the_callback_block.generate_random_number_fn)(number_of_calls[parse_state.call_list_to_use]);
+      i = generate_random_number(number_of_calls[parse_state.call_list_to_use]);
 
    /* Fix up the "hashed randoms" stuff as though we had generated this number
          through the random number generator. */
 
-   (*the_callback_block.hash_nonrandom_number_fn)(i);
+   hash_nonrandom_number(i);
    result = main_call_lists[parse_state.call_list_to_use][i];
 
    /* Why don't we just call the random number generator again if the call is inappropriate?

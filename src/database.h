@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 194
+#define DATABASE_FORMAT_VERSION 195
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 enum base_call_index {
@@ -624,10 +624,11 @@ enum begin_kind {
 #define CAF__NO_COMPRESS          0x8000
 #define CAF__PLUSEIGHTH_ROTATION 0x10000
 
-// BEWARE!!  This list must track the array "qualtab" in dbcomp.c
+// BEWARE!!  This list must track the array "qualtab" in dbcomp.cpp
 enum call_restriction {
    cr_none,                /* Qualifier only. */
    cr_alwaysfail,          /* Restriction only. */
+   cr_give_fudgy_warn,
    cr_wave_only,
    cr_wave_unless_say_2faced, /* Not implemented. */
    cr_all_facing_same,

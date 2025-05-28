@@ -548,9 +548,9 @@ static void initialize_one_table(tm_thing *map_start, int np)
 
       /* We can't encode the virtual person number in the required 3-bit field if this is > 8. */
       if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1)
-         (*the_callback_block.uims_database_error_fn)("Tandem table initialization failed: limit wrong.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Tandem table initialization failed", "limit wrong");
       if (map_search->olatmask != osidemask)
-         (*the_callback_block.uims_database_error_fn)("Tandem table initialization failed: Smask.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Tandem table initialization failed", "smask");
    }
 }
 

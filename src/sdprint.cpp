@@ -13,7 +13,7 @@
     This is for version 34. */
 
 /* This defines the following functions:
-   uims_choose_font
+   iofull::choose_font
 */
 
 #define STRICT
@@ -327,9 +327,7 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
 }
 
 
-
-
-extern bool uims_choose_font()
+void windows_choose_font()
 {
    // This operation will take place in the context of the display
    // rather than the printer, but we have to do it that way, because
@@ -350,7 +348,6 @@ extern bool uims_choose_font()
    // Now "lf" has all the info, though it is, unfortunately, calibrated
    // for the display.  Also, "cf.iPointSize" has the point size times 10,
    // which is, fortunately, invariant.
-   return TRUE;
 }
 
 
