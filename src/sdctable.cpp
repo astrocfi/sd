@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2020  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 /* This defines the following external variables:
    centers_concept

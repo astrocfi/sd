@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 
 //    Calls database source for Sd -- square dance caller's helper.
@@ -57,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.36"
+version "39.37"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -6603,7 +6601,11 @@ call "_maybe single trade" dontshow tag maybesingletrade
 
 
 call "@6 trade" mainstream
-   matrix use_selector find_traders not_true_invader [AL16S 16 CR16S 16]
+   matrix use_selector find_traders not_true_invader
+      [AL16S 16 CR16S 16]
+            alternate_definition [half] c1
+      [AL16W 20 CR16E 20]
+
    // Some setups have natural holes, or unusual positions.
    // Use the old definition for those.
 

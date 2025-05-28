@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2020  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 /* This defines the following functions:
    get_multiple_parallel_resultflags
@@ -4708,15 +4706,15 @@ void merge_table::merge_setups(setup *ss,
       if (res1->rotation == res2->rotation) {
          *result = *res2;
          bool what_do_we_put_in = action >= merge_c1_phantom;
-         collision_collector CC(what_do_we_put_in ? collision_severity_ok : collision_severity_no);
-         CC.note_prefilled_result(result);
+         collision_collector CC(result, what_do_we_put_in ? collision_severity_ok : collision_severity_no);
+         CC.note_prefilled_result();
 
          for (i=0; i<=attr::slimit(res1); i++) {
             if (res1->people[i].id1)
-               CC.install_with_collision(result, i, res1, i, 0);
+               CC.install_with_collision(i, res1, i, 0);
          }
 
-         CC.fix_possible_collision(result);
+         CC.fix_possible_collision();
          canonicalize_rotation(result);
          return;
       }
@@ -5126,15 +5124,15 @@ void merge_table::merge_setups(setup *ss,
       }
 
       bool what_do_we_put_in = action >= merge_c1_phantom && !(the_map->swap_setups & 4);
-      collision_collector CC(what_do_we_put_in ? collision_severity_ok : collision_severity_no);
-      CC.note_prefilled_result(result);
+      collision_collector CC(result, what_do_we_put_in ? collision_severity_ok : collision_severity_no);
+      CC.note_prefilled_result();
 
       for (i=0; i<=attr::slimit(res1); i++) {
          if (res1->people[i].id1)
-            CC.install_with_collision(result, the_map->innermap[i], res1, i, rot);
+            CC.install_with_collision(the_map->innermap[i], res1, i, rot);
       }
 
-      CC.fix_possible_collision(result);
+      CC.fix_possible_collision();
    }
 
  final_getout:

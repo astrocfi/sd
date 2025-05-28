@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2017  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 /* This defines the following external variables:
    direction_names
@@ -11093,6 +11091,19 @@ select::fixer select::fixer_init_table[] = {
    {fx_f4x4rzza, s1x2, s2x6,        0, 0, 0x100+2, {4, 5, 11, 10},
     fx0,   fx_f4x4nw,           fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+
+
+   {fx_f3x50306, s1x2, s3x5,         0, 0, 2, {1, 2, 9, 8},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f3x50183, s1x2, s3x5,         0, 0, 2, {0, 1, 8, 7},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f3x5060C, s1x2, s3x5,         0, 0, 2, {2, 3, 10, 9},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f3x50C18, s1x2, s3x5,         0, 0, 2, {3, 4, 11, 10},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f3x53060, s1x2, s3x5,         0, 0, 2, {12, 13, 6, 5},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
    {fx_f2x4tt0, s2x2, s2x4,         0, 0, 1, {1, 2, 4, 7},
     fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4tt1, s2x2, s2x4,         0, 0, 1, {0, 3, 5, 6},
@@ -12650,6 +12661,12 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s2x6,        06060,  fx_f3x4rzz,    fx0, -1},
    {LOOKUP_NONE,                      s2x8,       0x0303,  fx_f4x4lzz,    fx0, -1},
    {LOOKUP_NONE,                      s2x8,       0xC0C0,  fx_f4x4rzz,    fx0, -1},
+
+   {LOOKUP_NONE,                      s3x5,       0x0306,  fx_f3x50306,   fx0, -1},
+   {LOOKUP_NONE,                      s3x5,       0x0183,  fx_f3x50183,   fx0, -1},
+   {LOOKUP_NONE,                      s3x5,       0x060C,  fx_f3x5060C,   fx0, -1},
+   {LOOKUP_NONE,                      s3x5,       0x0C18,  fx_f3x50C18,   fx0, -1},
+   {LOOKUP_NONE,                      s3x5,       0x3060,  fx_f3x53060,   fx0, -1},
 
    {LOOKUP_TRAPEZOID,                 s2x4,         0x96,  fx_f2x4tt0,    fx0, -1},
    {LOOKUP_TRAPEZOID,                 s2x4,         0x69,  fx_f2x4tt1,    fx0, -1},

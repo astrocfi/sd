@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2019  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -35,8 +35,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 // Figure out how to do dll linkage.  If the source file that includes this
 // had "SDLIB_EXPORTS" set (which it will if it's a file for sdlib.dll),
@@ -53,6 +51,7 @@
 #else
 #define SDLIB_API
 #endif
+
 
 // Codes for special accelerator keystrokes and such.
 

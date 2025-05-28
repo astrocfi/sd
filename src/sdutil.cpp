@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 38.
 
 /* This defines the following functions:
    get_escape_string
@@ -2319,7 +2317,7 @@ void ui_utils::writestuff(const char *s)
    while (*s) writechar(*s++);
 }
 
-void ui_utils::show_match_item()
+__declspec(dllexport) void ui_utils::show_match_item()
 {
    if (matcher_p->m_final_result.indent) writestuff("   ");
    writestuff(matcher_p->m_user_input);

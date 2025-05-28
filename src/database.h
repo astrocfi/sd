@@ -35,8 +35,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 // These are written as the first two halfwords of the binary database file.
 // The format version is not related to the version of the program or database.

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2020  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -2618,7 +2616,7 @@ static int finish_matrix_call(
    result->eighth_rotation = go_one_eighth_clockwise ? 1 : 0;
    result->kind = checkptr->result_kind;
 
-   collision_collector CC(allow_collisions);
+   collision_collector CC(result, allow_collisions);
 
    for (i=0; i<nump; i++) {
       int mx, my;
@@ -2644,24 +2642,24 @@ static int finish_matrix_call(
          fail("Person has moved into an ill-defined location.");
 
       int rot = ((mp->deltarot-result->rotation) & 3)*011;
-      CC.install_with_collision(result, place, people, i, rot);
+      uint32_t *destid1 = CC.install_with_collision(place, people, i, rot);
 
       if (do_roll_stability) {
          uint32_t sliderollstuff = (mp->roll_stability_info * (NROLL_BIT/DBSLIDEROLL_BIT)) & NSLIDE_ROLL_MASK;
          // If just "L" or "R" (but not "M", that is, not both bits), turn on "moved".
          if ((sliderollstuff+NROLL_BIT) & (NROLL_BIT*2)) sliderollstuff |= PERSON_MOVED;
-         result->people[place].id1 &= ~NSLIDE_ROLL_MASK;
-         result->people[place].id1 |= sliderollstuff;
+         *destid1 &= ~NSLIDE_ROLL_MASK;
+         *destid1 |= sliderollstuff;
 
-         if (result->people[place].id1 & STABLE_ENAB)
-            do_stability(&result->people[place].id1,
+         if (*destid1 & STABLE_ENAB)
+            do_stability(destid1,
                          mp->roll_stability_info/DBSTAB_BIT,
                          mp->deltarot, mp->mirror_this_op);
       }
    }
 
    // Pass the "action" in case it's merge_c1_phantom_real_couples.
-   CC.fix_possible_collision(result, action);
+   CC.fix_possible_collision(action);
    return alldelta;
 }
 
@@ -2808,35 +2806,39 @@ static int matrixmove(
             if (((dircount[0] + dircount[1]) & 1) == 0)
                fail("Can't find trade target.");
 
-            int absdelx, absdely;
-
             int whichway = (dircount[0] & 1) ? 0 : 1;   // 0 if left, 1 if right.
 
             if (passed_a_gap[whichway])
                warn(warn__trade_across_gap);
 
-            absdelx = xposition[whichway] - thisrec->x;
-            absdely = yposition[whichway] - thisrec->y;
-            thisrec->roll_stability_info = callstuff[whichway];  // Get the boy encoding; it has "AL" direction.
+            int absdelx = xposition[whichway] - thisrec->x;
+            int absdely = yposition[whichway] - thisrec->y;
+
+            if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
+               absdelx >>= 1;
+               thisrec->deltarot = 3 - (whichway << 1);
+            }
+
+            thisrec->roll_stability_info = callstuff[whichway];
 
             // This suff is absolute, but later code wants it relative and will convert
             // to absolute, so we have to unwind that.
             switch (thisrec->dir) {
             case 0:
-               thisrec->deltax = absdelx;
-               thisrec->deltay = absdely;
+               thisrec->deltax += absdelx;
+               thisrec->deltay += absdely;
                break;
             case 1:
-               thisrec->deltax = -absdely;
-               thisrec->deltay = absdelx;
+               thisrec->deltax -= absdely;
+               thisrec->deltay += absdelx;
                break;
             case 2:
-               thisrec->deltax = -absdelx;
-               thisrec->deltay = -absdely;
+               thisrec->deltax -= absdelx;
+               thisrec->deltay -= absdely;
                break;
             case 3:
-               thisrec->deltax = absdely;
-               thisrec->deltay = -absdelx;
+               thisrec->deltax += absdely;
+               thisrec->deltay -= absdelx;
                break;
             }
          }
@@ -2861,7 +2863,11 @@ static int matrixmove(
 
    current_options.who.who[0] = saved_selector;
 
-   int alldelta = finish_matrix_call(ss, matrix_info, nump, the_schema, flags, callstuff, true, collision_severity_no,
+   // Normally, matrix calls do not permit colliding and taking right hands.  But
+   // "<anyone> trade" sometimes masquerades as a matrix call in order to use the matrix
+   // mechanism.  In this case the MTX_FIND_TRADERS flag is on.
+   int alldelta = finish_matrix_call(ss, matrix_info, nump, the_schema, flags, callstuff, true,
+                                     (flags & MTX_FIND_TRADERS) ? collision_severity_ok : collision_severity_no,
                                      true, merge_strict_matrix, &people, result);
 
    if (ss->kind == s2x2 && result->kind == s2x4) {
@@ -3591,20 +3597,20 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
 
    int rot = r * 011;
    int lim1 = attr::slimit(res1)+1;
-   collision_collector CC(allow_collisions);
+   collision_collector CC(result, allow_collisions);
 
    if (lim1 <= 0) fail("Can't figure out result setup.");
 
    *result = *res2;
 
-   CC.note_prefilled_result(result);
+   CC.note_prefilled_result();
 
    for (i=0; i<lim1; i++) {
       if (res1->people[i].id1)
-         CC.install_with_collision(result, i, res1, i, rot);
+         CC.install_with_collision(i, res1, i, rot);
    }
 
-   CC.fix_possible_collision(result);
+   CC.fix_possible_collision();
 }
 
 
@@ -7209,7 +7215,7 @@ void really_inner_move(
          selector_kind local_selector = current_options.who.who[0];
 
          // For fairly hairy reasons "<anyone> trade" is given as a matrix call.  That
-         // code can't deal with conentric setups, which are presumably setups with
+         // code can't deal with concentric setups, which are presumably setups with
          // centers and ends at 45 degress to each other.  If the <anyone> are the
          // centers or the ends, we may be able to use the concentric mechanism.
          if (ss->kind == s_normal_concentric && (callspec->stuff.matrix.matrix_flags & MTX_FIND_TRADERS)) {

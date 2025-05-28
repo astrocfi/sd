@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 
 //    The version of this file is as shown immediately below.  This string
@@ -46,8 +44,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.36"
-#define TIME_STAMP "wba@alum.mit.edu Jul 19 2021 $"
+#define VERSION_STRING "39.37"
+#define TIME_STAMP "wba@alum.mit.edu Aug 19 2021 $"
 
 /* This defines the following functions:
    sd_version_string

@@ -49,8 +49,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 38.
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2019  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -32,8 +32,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 // Figure out how to do dll linkage.  If the source file that includes this
 // had "SDLIB_EXPORTS" set (which it will if it's a file for sdlib.dll),
@@ -2843,6 +2841,11 @@ class select {
       fx_f4x4rzza,
       fx_f2x4tt0,
       fx_f2x4tt1,
+      fx_f3x50306,
+      fx_f3x50183,
+      fx_f3x5060C,
+      fx_f3x50C18,
+      fx_f3x53060,
       fx_f2x8qq0,
       fx_f2x8qq1,
       fx_f2x8tt0,
@@ -5605,7 +5608,8 @@ class collision_collector {
 public:
 
    // Simple constructor, takes argument saying whether collisions will be legal.
-   collision_collector(collision_severity allow):
+   collision_collector(setup *const result, collision_severity allow):
+      m_result_ptr(result),
       m_allow_collisions(allow),
       m_collision_mask(0),
       m_callflags1(CFLAG1_TAKE_RIGHT_HANDS),  // Default is that collisions are legal.
@@ -5616,10 +5620,14 @@ public:
       m_collision_appears_illegal(1),  // Halfway between "appears_illegal"
                                        // and not -- use table item.
       m_result_mask(0)
-   {}
+   {
+      m_extra_collided_people.clear_people();
+   }
 
    // Glorious constructor, takes all sorts of stuff.
-   collision_collector(bool mirror, setup_command *cmd, const calldefn *callspec):
+   collision_collector(setup *const result, bool mirror,
+                       setup_command *cmd, const calldefn *callspec):
+      m_result_ptr(result),
       m_allow_collisions(collision_severity_ok),
       m_collision_mask(0),
       m_callflags1(callspec->callflags1),
@@ -5629,30 +5637,32 @@ public:
       m_cmd_misc_flags(cmd->cmd_misc_flags),
       m_collision_appears_illegal(0),  // May change to 2 as call progresses.
       m_result_mask(0)
-      {
-         // If doing half of a call, and doing it left,
-         // and there is a "collision", make them come to left hands.
-         if (mirror && cmd->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
-            m_force_mirror_warn = false;
-            m_doing_half_override = true;
-         }
+   {
+      m_extra_collided_people.clear_people();
+      // If doing half of a call, and doing it left,
+      // and there is a "collision", make them come to left hands.
+      if (mirror && cmd->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
+         m_force_mirror_warn = false;
+         m_doing_half_override = true;
       }
+   }
 
-   void note_prefilled_result(const setup *result)
-      { m_result_mask = little_endian_live_mask(result); }
+   void note_prefilled_result()
+      { m_result_mask = little_endian_live_mask(m_result_ptr); }
 
-   void install_with_collision(
-      setup *result, int resultplace,
+   uint32_t * install_with_collision(
+      int resultplace,
       const setup *sourcepeople, int sourceplace,
       int rot,
       bool force_moved_bit = false) THROW_DECL;
 
-   void fix_possible_collision(setup *result,
-                               merge_action action = merge_strict_matrix,
+   void fix_possible_collision(merge_action action = merge_strict_matrix,
                                uint32_t callarray_flags = 0,
                                setup *ss = (setup *) 0) THROW_DECL;
 
 private:
+   setup *const m_result_ptr;
+   setup m_extra_collided_people;
    const collision_severity m_allow_collisions;
    int m_collision_index;
    uint32_t m_collision_mask;
@@ -5669,6 +5679,8 @@ private:
 };
 
 extern void mirror_this(setup *s) THROW_DECL;
+
+/* In SDBASIC */
 
 extern void do_stability(uint32_t *personp,
                          int field,
@@ -6405,9 +6417,6 @@ SDLIB_API void create_resolve_menu_title(
 
 /* In SDMATCH */
 
-SDLIB_API bool process_accel_or_abbrev(modifier_block & mb, char linebuff[]);
-SDLIB_API void erase_matcher_input();
-SDLIB_API int delete_matcher_word();
 void matcher_initialize();
 SDLIB_API void matcher_setup_call_menu(call_list_kind cl);
 

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2012  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //    Copyright (C) 1995  Robert E. Cays
 //    Copyright (C) 1996  Charles Petzold
 //
@@ -34,8 +34,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 38.
 
 //    sdui-win.cpp - SD -- Microsoft Windows User Interface
 

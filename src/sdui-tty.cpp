@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1994-2012  William B. Ackerman.
+//    Copyright (C) 1994-2021  William B. Ackerman.
 //
 
 /*
@@ -27,8 +27,6 @@
  * Type SPC to complete the current word.
  * Type TAB to complete as much as possible.
  * Type Control-U to clear the line.
- *
- * For use with version 38 of the Sd program.
  *
  * The version of this file is as shown immediately below.  This string
  * gets displayed at program startup, as the "ui" part of the complete
@@ -63,8 +61,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 38.
 
 #define UI_VERSION_STRING "1.13"
 #define UI_TIME_STAMP "wba@alum.mit.edu  5 Jul 2005 $"

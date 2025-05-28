@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2019  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -35,8 +35,6 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
-//
-//    This is for version 39.
 
 // Figure out how to do dll linkage.  If the source file that includes this
 // had "SDLIB_EXPORTS" set (which it will if it's a file for sdlib.dll),
@@ -44,14 +42,10 @@
 // Unless this isn't for the WIN32 API at all, in which case make the
 // "SDLIB_API" symbol do nothing.
 
-#if defined(WIN32)
 #if defined(SDLIB_EXPORTS)
 #define SDLIB_API __declspec(dllexport)
 #else
 #define SDLIB_API __declspec(dllimport)
-#endif
-#else
-#define SDLIB_API
 #endif
 
 
