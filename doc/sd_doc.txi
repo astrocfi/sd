@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.6
-@set Time-stamp: September 16, 2001
+@set sd-version 34.7
+@set Time-stamp: September 1, 2002
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -44,7 +44,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-2001 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-2002 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX or other text
@@ -207,9 +207,9 @@ Call Notes
 
 * Sweeping Direction::          Sweeping Direction
 * <ANYONE> roll::               <ANYTHING> and the <ANYONE> roll
+* Roll after Exchange the Gears:: Roll after Exchange the Gears
 * C1 Single Rotate::            C1 Single Rotate
 * Spread::                      Spread
-* <ANYTHING> and circle::       <ANYTHING> and circle
 * Centers Back Away::           Centers Back Away
 * <ANYONE> Promenade::          <ANYONE> Promenade
 * Up to the Middle::            Up to the Middle
@@ -577,7 +577,7 @@ something like:
 @noindent The subcall in brackets may be any combination of concepts and calls,
 and these may be nested.  As an example of this, you can type:
 @example
-   [[vertical tag your neighbor] and spread] percolate
+   [[vertical tag your neighbor] and spread] er's percolate
    clover and [3/4 stable left catch
                 [[reflected flip your neighbor] and spread] 3]
 @end example
@@ -594,6 +594,14 @@ tell the difference between
 and
 @example
    [clover and [swap around]] and roll
+@end example
+or between
+@example
+   first 1/2 stable swing thru
+@end example
+and
+@example
+   first [1/2 stable swing thru]
 @end example
 
 You can also enter such things in a piecemeal fashion, typing the keyword ``@code{<ANYTHING>}''
@@ -682,23 +690,26 @@ Only bona-fide circulate-type calls, and other well-recognized similar
 things such as @code{split counter percolate} can be obtained by this method.
 You can get more general substitutions by using the @samp{<ANYTHING>} (as opposed to
 @samp{<ANYCIRC>}) mechanism.  The more general substitutions are in brackets.
-For example, you can type @samp{[2/3 recycle] percolate}, which is of course pronounced
-``2/3 recycler's percolate''.
+Such things will print out with the word ``er's'' to distinguish them.
+You can type in the ``er's'' or not, as you choose.  The apostrophe is
+optional.
+
+For example, you can type @samp{[2/3 recycle] er's percolate} or
+@samp{[2/3 recycle] percolate}.
 
 @noindent Note that
 @example
 @group
-   trade motivate          @r{(an instance of @code{<ANYCIRC> motivate})}
+   trade motivate           @r{(an instance of @code{<ANYCIRC> motivate})}
 @end group
 @end example
 @noindent and
 @example
 @group
-   [trade] motivate        @r{(an instance of @code{<ANYTHING> motivate})}
+   [trade] er's motivate    @r{(an instance of @code{<ANYTHING> motivate})}
 @end group
 @end example
-@noindent are very different.  The latter is of course pronounced ``trader's
-motivate.''
+@noindent are very different.
 
 There is a third way to enter such calls.  By giving the @samp{simple modifications}
 or @samp{allow modifications} command and then just entering the call
@@ -2141,7 +2152,7 @@ file never use these icons.  This option is meaningless in @code{Sdtty}.
 This suppresses the use of special PC graphics characters (``triangles'') when drawing pictures
 on the screen.  These characters are not standard on all PC's.  Pictures
 drawn in the output file will never use the special graphics characters.
-This is not meaningful in @code{Sd} unless @code{no_icons} is also given.
+This is not meaningful in @code{Sd} unless @code{no_checkers} is also given.
 @item no_color
 @code{Sdtty} and @code{Sd} normally color-code
 the dancers shown on the screen, according to various color schemes that
@@ -2149,32 +2160,35 @@ are controlled by options listed below.  This option disables the use of color.
 Pictures drawn in the
 output file will never be in color, and will never use ``checkers'' or
 triangles.
-@item no_intensify
-@code{Sdtty} normally displays text at full brightness, rather than the
-3/4 brightness that is customary for Command Prompt windows.
-This option leaves the brightness at the lower level.
-It is meaningless in @code{Sd}.
 @item color_by_couple
-This draws dancers on the screen in four colors, one for each couple.
-In the absence of this option, girls are drawn in red and boys in blue.
-Pictures drawn in the output file never use color.
+This draws dancers on the screen in four colors, one for each couple, in the sequence
+red, green, blue, and yellow.
+@item color_by_couple_rgyb
+Like color_by_couple, but the color sequence is red, green, yellow, and blue.
 @item color_by_corner
 Like color_by_couple, but dancers have the same color as their respective corners.
+In the absence of these color options, girls are drawn in red and boys in blue.
+Pictures drawn in the output file never use color.
 @item reverse_video
 This displays the transcript area (or the whole window in @code{Sdtty})
 with a black background and white text.  This is the default for @code{Sdtty},
 so you only need this option for @code{Sd}.
-If you are using @code{color_by_couple} or @code{color_by_corner},
-you may want to use this also, to make yellow easier to see.
 @item normal_video
 This displays the transcript area (or the whole window in @code{Sdtty})
 with a white background and black text.  This is the default for @code{Sd},
 so you only need this option for @code{Sdtty}.
+@item no_intensify
+This changes all ``white'' displayed matter to be light gray instead.
+In reverse_video mode, text will be light gray on black instead of white on
+black.  In particular, this will make @code{Sdtty} look like the customary
+appearance of a Command Prompt window.
+In normal_video mode, text will be black on light gray instead of black on
+white.
 @item pastel_color
 This causes the colors for the usual girls-are-red and boys-are-blue
 scheme to use lighter shades.  This may be preferable if
 @code{reverse_video} is used.  It has no effect when using the
-@code{color_by_couple} or @code{color_by_corner} schemes.
+@code{color_by_couple}, @code{color_by_couple_rgyb}, or @code{color_by_corner} schemes.
 This is the default for @code{Sdtty},
 so you only need this option for @code{Sd}.
 @item bold_color
@@ -2183,6 +2197,17 @@ This is the default for @code{Sd},
 so you only need this option for @code{Sdtty}.
 @item no_sound
 Do not ring the bell or make any other sound when reporting errors.
+@item new_style_filename
+The output file will be written with the extension @file{.txt},
+as in @file{sequence_C1.txt} or @file{01sep02_C1.txt}.
+Without this switch one gets the default ``old'' behavior, which
+is @file{sequence.C1} or @file{01sep02.C1}.  This default may
+change soon.  Having a file name of
+this form should make the output files able to be read and printed
+by common text editors and word processors.
+@item old_style_filename
+This forces the output file to be written in the ``old'' style.
+This will be needed after the default changes to the ``new'' style.
 @item db @var{filename}
 location of the calls database.  The default is @file{sd_calls.dat} in
 the current directory.
@@ -2551,7 +2576,9 @@ or to redirect input or output to files.
 
 To deal with different types of display hardware with various screen sizes,
 the @code{-lines @var{n}} switch can be given at program startup, as in
-@code{sdtty -lines 36 a2}.  The default size is 25.
+@code{sdtty -lines 36 a2}.  If this is not given, the size is set from
+the actual window size if that can be determined (this depends on the
+operating system software), or 25 otherwise.
 
 @node Function Keys, Sdtty on Unix, Sdtty, Terminal Interface
 @section Function Keys
@@ -2586,12 +2613,12 @@ following special keys are defined:
 @example
 @group
 <home>             resolve
-<end>              write this sequence     (inside search only)
+<end>              write this sequence     (only inside a search)
 <insert>           insert a comment
 shift-<up-arrow>   raise reconcile point
 shift-<down arrow> lower reconcile point
-<left-arrow>       previous     (inside search only)
-<right-arrow>      find another (inside search only)
+<left-arrow>       previous                (only inside a search)
+<right-arrow>      find another            (only inside a search)
 @end group
 @end example
 All of these except @key{F8} execute the command directly, that is,
@@ -2604,7 +2631,8 @@ if you define, for example, @key{alt-S} to mean ``swing thru'', do not type
    left @key{alt-S}
 @end group
 @end example
-@noindent Instead, type in the @samp{left} concept by itself:
+@noindent It would erase the word @code{left}.  Instead, type in the
+@samp{left} concept by itself:
 @example
 @group
    left @key{ENTER}
@@ -2683,14 +2711,6 @@ dancers do not necessarily know this computer-ese dialect.  Use the words
 that you think are correct and natural.  Your judgement is much better than any
 program's judgement can ever be.
 
-The program sometimes requires you to say various @dfn{helper} words, such
-as @code{left} in cases where their necessity is not universally
-agreed upon.  For example, from a left-handed quarter-tag, @code{Sd}
-will not accept @code{scoot and plenty}---you are required to enter
-@code{left scoot and plenty}, even though the Callerlab definition does
-not require the word @code{left} in this case.  What helper words you
-use or don't use when calling is, of course, up to you.
-
 There are some innocent-looking things that the program can generate for which
 appropriate words do not exist.  You must not write sequences containing such
 things, because you won't be able to call them.  For example, from
@@ -2760,9 +2780,9 @@ This section documents these calls.
 @menu
 * Sweeping Direction::          Sweeping Direction
 * <ANYONE> roll::               <ANYTHING> and the <ANYONE> roll
+* Roll after Exchange the Gears:: Roll after Exchange the Gears
 * C1 Single Rotate::            C1 Single Rotate
 * Spread::                      Spread
-* <ANYTHING> and circle::       <ANYTHING> and circle
 * Centers Back Away::           Centers Back Away
 * <ANYONE> Promenade::          <ANYONE> Promenade
 * Up to the Middle::            Up to the Middle
@@ -2787,7 +2807,7 @@ The program infers the sweeping direction from the roll direction of
 the preceding call.  This is known to work for the common calls such as
 @i{recycle}, but may do something tasteless if used with an unusual call.
 
-@node <ANYONE> roll, C1 Single Rotate, Sweeping Direction, Call Notes
+@node <ANYONE> roll, Roll after Exchange the Gears, Sweeping Direction, Call Notes
 @section ANYTHING and the ANYONE roll
 
 The call @samp{<anything> and the <anyone> roll} re-evaluates people's
@@ -2799,14 +2819,34 @@ make that clear to the dancers by saying something like @samp{swing thru
 and the new centers roll}.  Of course, if you have the girls roll there
 will be no problem.
 
-@node C1 Single Rotate, Spread, <ANYONE> roll, Call Notes
+@node Roll after Exchange the Gears, C1 Single Rotate, <ANYONE> roll, Call Notes
+@section Roll after Exchange the Gears, 
+
+The program considers @samp{roll} to be of limited use after @samp{spin
+chain and exchange the gears} if using the true Callerlab definition.
+This is because that definition appears to be a description of something
+that gets people to the correct ending point, rather than a description
+of a course of action that dancers actually follow when they do the
+call.  Instead, the program defines the call in terms of @samp{exchange
+the diamond 3/4} and @samp{flip the interlocked diamond}, which appears
+to be the definition that is more likely to be used by people who
+actually care about accurate definitions.  Because of this, calling
+@samp{roll} after this call will result in a 8-chain formation.  If the
+actual Callerlab definition had been used, the result would have been
+some kind of T-bone formation.
+
+Users who call this need to be aware of what they are getting into.
+
+Some people might consider this a bug.
+
+@node C1 Single Rotate, Spread, Roll after Exchange the Gears, Call Notes
 @section C1 Single Rotate
 
 @samp{Single rotate while the others} is intended to be called to the
 heads or sides from a squared set.  It performs the common C1 usage of
 this call.  It is nonsensical in other contexts.
 
-@node Spread, <ANYTHING> and circle, C1 Single Rotate, Call Notes
+@node Spread, Centers Back Away, C1 Single Rotate, Call Notes
 @section Spread
 
 The term @dfn{spread} can mean different things.  It is four calls in
@@ -2854,32 +2894,7 @@ For example, you could enter
 (There is also the call @samp{wheel and spread}, which is just the
 special case call on the Plus list.)
 
-@node <ANYTHING> and circle, Centers Back Away, Spread, Call Notes
-@section @code{ANYTHING} and circle
-
-Callers use the @code{<ANYTHING> and circle} construction with either
-an 8-person call to be done by everyone, or a 4-person call to be done
-just by the centers, and dancers generally have no confusion about it.
-The program is not so clever.  The @code{<ANYTHING> and circle} call
-has all 8 people do the call, so, for example, it could be used with
-@code{ping-pong circulate} or @code{scoot and plenty}.  If you want
-just the centers to do the <ANYTHING> call, you can use the @code{centers}
-concept.  For example, you could select @code{<ANYTHING> and circle 1/4},
-then @code{centers}, then @code{switch the wave}.  The result will
-come out as @code{[CENTERS switch the wave] and circle 1/4}.
-You presumably would not say the word @samp{centers} when calling this.
-
-There is another way to get this effect is to select @code{simple
-modifications} followed by @code{swing and circle}.  When this
-method is used, the modification call will be done by the centers
-only.  So you could select @code{simple modifications}, then
-@code{swing and circle 1/4}, and then give the modification call
-@code{switch the wave}.
-
-If all else fails, there is a call @code{and circle 1/4} that just
-does the final circling part.
-
-@node Centers Back Away, <ANYONE> Promenade, <ANYTHING> and circle, Call Notes
+@node Centers Back Away, <ANYONE> Promenade, Spread, Call Notes
 @section Centers Back Away
 
 This call is intended for use in sequences that begin with heads or
@@ -3916,13 +3931,15 @@ Something like ``consider the following two calls to be one unit, and do a stabl
 swing thru and turn thru'' might be appropriate.
 @item precede it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item follow it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item add@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 The concepts @code{precede it by} and @code{follow it by} take two subject
 calls.  They perform the first call (first in textual order, that is)
-@i{before} or @i{after}, respectively, the second.  For example,
-@code{follow it by roll, swing thru} does a swing thru and roll.
+@i{before} or @i{after}, respectively, the second.
+The concept @code{add} is the same as @code{follow it by}.
+For example, @code{follow it by roll, swing thru} does a swing thru and roll.
 There is only one context in which these concepts are sensible---they can be
 the subject of the @code{piecewise}, @code{random}, or @code{reverse random}
-meta-concepts.  For example, @code{piecewise follow it by criss cross the
+meta-concepts.  For example, @code{piecewise add criss cross the
 deucey, turn the key} will do a @samp{criss cross the deucey}
 after each of the three parts of @samp{turn the key}.
 
@@ -3999,6 +4016,7 @@ such as ``twice,'' ``circulate two positions,'' or whatever.
 @item secondly
 @item thirdly
 @item finally
+@item initially and finally
 @item piecewise
 @item random
 @item reverse random
@@ -4044,61 +4062,87 @@ You must, of course, verify yourself that the casting direction is correct for
 smooth dancing of this figure.
 @item <ANYONE> start
 @item skip the <Nth> part
-@item do the <Nth> part
-@item do the last part
-@item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item use (call) for the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item use (call) in@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item interrupt after <M>/<N>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item interrupt before the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item start with@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item sandwich@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These concepts cause the call to be interrupted or replaced as indicated.
 
-The @code{<ANYONE> start} concept has the indicated people do their own
+The @kbd{<ANYONE> start} concept has the indicated people do their own
 part of the first part of the call, after which the others join them.
 You should type this in as, for example
 @example
    @kbd{boys start quarter thru @key{ENTER}}
 @end example
-@xref{Anyone Start}, for more on the @code{<ANYONE> start} concept.
+@xref{Anyone Start}, for more on the @kbd{<ANYONE> start} concept.
 
-The @code{do the <Nth> part} and @code{do the last part} concepts are
+@item do the <Nth> part
+@item do the last part
+
+The @kbd{do the <Nth> part} and @kbd{do the last part} concepts are
 intended to be used with a following concept, as in @samp{do the 2nd
 part tandem remake}.  It applies the following concept to the indicated
 part of the call, but not to the rest.
 
-The @code{replace} and @code{interrupt} concepts require two calls.  After
+@item first <M>/<N>
+@item middle <M>/<N>
+@item last <M>/<N>
+
+The @kbd{first <M>/<N>}, @kbd{middle <M>/<N>}, and @kbd{last <M>/<N>}
+are similar, but apply the concept to the indicated first, middle, or
+last fraction of the call, independently of how the call divides into
+parts.  For example, @samp{first 1/4 tandem spin the top},
+@samp{middle 1/3 tandem remake}, or @samp{last 1/4 stable swing thru}.
+Whether these are precisely the words you should use is up to you.
+
+@item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item interrupt after <M>/<N>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item interrupt before the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+
+The @kbd{replace} and @kbd{interrupt} concepts require two calls.  After
 typing the concept, type the call that is to have a part interrupted or replaced.
 The program will then ask you for the call that comprises the interruption or
 replacement.
 For example, you might type
 @example
 @group
-   @kbd{replace the 3rd part @key{ENTER}
-   swing the fractions @key{ENTER}
-   2/3 recycle @key{ENTER}}
+   @kbd{replace the 3rd part        @key{ENTER}
+   swing the fractions         @key{ENTER}
+   2/3 recycle                 @key{ENTER}}
 @end group
 @end example
 
-The @code{use (call) for the <Nth> part} concept is the same as
-@code{replace the <Nth> part}, except that the replacement call is entered first.
+@item use for the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 
-The @code{use (call) in} concept simply replaces the second call with the first.
-By itself, it is rather nonsensical.  It is intended to be used in applications
-like @samp{reverse random use acey deucey in swing the fractions}.
+The @kbd{use for the <Nth> part} concept is the same as
+@kbd{replace the <Nth> part}, except that the replacement call is entered first.
+It is entered thusly:
+@example
+@group
+   @kbd{use for the 3rd part      @key{ENTER}
+   ah so                     @key{ENTER}
+   swing the fractions       @key{ENTER}}
+@end group
+@end example
 
-For the preceding two concepts, you literally type the concept name,
-which has the word ``call'' in parentheses.  Command completion makes
-the typing easier than it might seem.  Type @code{use} and press
-@key{TAB} or @key{ESC} to cause completion of the @code{(call)} part.
-Then type @code{in} or @code{for} to specify which of the two concepts
-is desired.  After entering the concept, follow the prompts.  The
-concept will be printed in the transcript in a more sensible way.
+It will apear in the transcript as ``use ah so for the 3rd part:
+swing the fractions''.
 
-The @code{start with} concept is equivalent to replacing the first part.
+@item use @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+
+The @kbd{use} concept simply replaces the second call with the first.
+By itself, it is rather nonsensical.  It is intended to be used with
+meta concepts.  It is entered thusly:
+@example
+@group
+   @kbd{reverse random use        @key{ENTER}
+   acey deucey               @key{ENTER}
+   swing the fractions       @key{ENTER}}
+@end group
+@end example
+
+@item start with@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+
+The @kbd{start with} concept is equivalent to replacing the first part.
 However, you must enter the replacement call first, and the program will then
 prompt you for the call that is to have its first part replaced.
 For example, you might type
@@ -4110,8 +4154,8 @@ For example, you might type
 @end group
 @end example
 
-Because the @code{replace}, @code{interrupt} and @code{start with} require
-two calls, you must press @key{ENTER}
+Because the @kbd{replace}, @kbd{interrupt} @kbd{start with}, and @kbd{use}
+concepts require two calls, you must press @key{ENTER}
 after typing them, and then type the two calls with @key{ENTER} after each one.
 
 See @ref{Interruptions and Replacements}, for information about some tricky aspects
@@ -4151,6 +4195,8 @@ See @ref{Concentric}.
 @item rightrigger
 @item backrigger
 @item frontrigger
+@item right wing
+@item left wing
 These are straightforward.
 @item common point galaxy
 @item common point diamonds

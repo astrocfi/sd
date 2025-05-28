@@ -26,7 +26,7 @@ del appnote*.html
 del appnote*.txt
 del demo.html
 del demo.txt
-REM del sample.html     This is a derived object, but don't delete it just yet
+del sample.html     This is a derived object, but don't delete it just yet
 del *.ps
 del *.pdf
 REM what are these "bin" files?

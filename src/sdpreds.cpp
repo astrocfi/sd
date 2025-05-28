@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -47,7 +47,9 @@ long_boolean mandatory_call_used;
 
 #define DIR_MASK (BIT_PERSON | 3)
 
-#define ID1_PERM_ALL_ID (ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL)
+enum {
+   ID1_PERM_ALL_ID = ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL
+};
 
 
 
@@ -88,7 +90,7 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
       // space.
 
       if (setup_attrs[ss->kind].setup_limits < 8) {
-         id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+         const id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
          if (ptr) {
             switch (current_options.who) {
@@ -145,20 +147,28 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
          else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return FALSE;
          break;
       case selector_headboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB)
+            return FALSE;
          break;
       case selector_headgirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG)
+            return FALSE;
          break;
       case selector_sideboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB)
+            return FALSE;
          break;
       case selector_sidegirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG)
+            return FALSE;
          break;
       case selector_centers:
       case selector_ends:
@@ -432,8 +442,10 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
 
 static const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 static const long int dbl_tab01[4] = {0, 1, FALSE, TRUE};
-static const long int dbl_tab03[2] = {0, 3};
-static const long int dbl_tab23[2] = {2, 3};
+static const long int x22tabtand[3] = {3, 0, 1};
+static const long int x22tabface[3] = {3, 2, 1};
+static const long int x24tabtand[3] = {7, 0, 1};
+static const long int x24tabface[3] = {7, 2, 1};
 static const long int dbl_tab21[4] = {2, 1, TRUE, FALSE};
 
 static const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
@@ -631,12 +643,26 @@ static long_boolean select_once_rem_from_unselect(setup *real_people, int real_i
    if (current_options.who == selector_all || current_options.who == selector_everyone)
       return FALSE;
 
-   if (real_people->kind == s2x4)
-      return   !(real_people->people[real_index ^ 2].id1 & BIT_PERSON) ||
-               !selectp(real_people, real_index ^ 2);
+   int other_index;
+
+   if (real_people->kind == s2x6) {
+      int q = (real_index >= 6) ? real_index-6 : real_index;
+      other_index = real_index + 2;
+      if (q >= 4) other_index = real_index - 2;
+      else if (q >= 2) {
+         // We demand BOTH outer people be (nonexistent or unselected).
+         if ((real_people->people[real_index - 2].id1 & BIT_PERSON) &&
+             selectp(real_people, real_index - 2))
+            return FALSE;
+      }
+   }
+   else if (real_people->kind == s2x4)
+      other_index = real_index ^ 2;
    else
-      return   !(real_people->people[real_index ^ 3].id1 & BIT_PERSON) ||
-               !selectp(real_people, real_index ^ 3);
+      other_index = real_index ^ 3;
+
+   return !(real_people->people[other_index].id1 & BIT_PERSON) ||
+          !selectp(real_people, other_index);
 }
 
 /* ARGSUSED */
@@ -658,14 +684,14 @@ static long_boolean unselect_once_rem_from_select(setup *real_people, int real_i
 static long_boolean select_and_roll_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITR) != 0;
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
 }
 
 /* ARGSUSED */
 static long_boolean select_and_roll_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITL) != 0;
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
 }
 
 /* ARGSUSED */
@@ -692,12 +718,12 @@ static long_boolean x22_cpltest(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static long_boolean x22_facing_test(setup *real_people, int real_index,
+static long_boolean facing_test(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   int other_index = real_index ^ (((real_direction << 1) & 2) ^ extra_stuff[1]);
+   int other_index = real_index ^ extra_stuff[(real_direction << 1) & 2];
    return ((real_people->people[real_index].id1 ^
-            real_people->people[other_index].id1) & DIR_MASK) == (uint32) *extra_stuff;
+            real_people->people[other_index].id1) & DIR_MASK) == (uint32) extra_stuff[1];
 }
 
 /* ARGSUSED */
@@ -1088,7 +1114,7 @@ static long_boolean once_rem_test(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 2].id1;
-   return ((this_person ^ other_person) & DIR_MASK) == (uint32) extra_stuff[0];
+   return ((this_person ^ other_person) & DIR_MASK) == extra_stuff[0];
 }
 
 /* ARGSUSED */
@@ -1868,7 +1894,7 @@ static long_boolean column_double_down(setup *real_people, int real_index,
 static long_boolean apex_test(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   uint32 unmoving_end = (real_people->people[0].id1 & (ROLLBITR|ROLLBITL)) ? 2 : 0;
+   uint32 unmoving_end = ((real_people->people[0].id1+NROLL_BIT) & (NROLL_BIT*2)) ? 2 : 0;
    uint32 status;
 
    if ((real_people->people[0].id1 &
@@ -1902,14 +1928,14 @@ static long_boolean boygirlp(setup *real_people, int real_index,
 static long_boolean roll_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   return (real_people->people[real_index].id1 & ROLLBITR) != 0;
+   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
 }
 
 /* ARGSUSED */
 static long_boolean roll_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   return (real_people->people[real_index].id1 & ROLLBITL) != 0;
+   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
 }
 
 /* ARGSUSED */
@@ -2162,7 +2188,7 @@ static long_boolean q_tag_check(setup *real_people, int real_index,
 }
 
 
-/* BEWARE!!  This list must track the array "predtab" in dbcomp.c . */
+// BEWARE!!  This list must track the array "predtab" in dbcomp.c
 
 /* The first several of these take a predicate.
    Any call that uses one of these predicates will have its "need_a_selector"
@@ -2204,8 +2230,10 @@ predicate_descriptor pred_table[] = {
       {always,                       (const long int *) 0},      /* "always" */
       {x22_cpltest,                    dbl_tab21},               /* "x22_miniwave" */
       {x22_cpltest,                    dbl_tab01},               /* "x22_couple" */
-      {x22_facing_test,                dbl_tab23},               /* "x22_facing_someone" */
-      {x22_facing_test,                dbl_tab03},               /* "x22_tandem_with_someone" */
+      {facing_test,                    x22tabface},              /* "x22_facing_someone" */
+      {facing_test,                    x22tabtand},              /* "x22_tandem_with_someone" */
+      {facing_test,                    x24tabface},              /* "x24_facing_someone" */
+      {facing_test,                    x24tabtand},              /* "x24_tandem_with_someone" */
       {cols_someone_in_front,        (const long int *) 0},      /* "columns_someone_in_front" */
       {x14_once_rem_miniwave,         &iden_tab[1]},             /* "x14_once_rem_miniwave" */
       {x14_once_rem_couple,          (const long int *) 0},      /* "x14_once_rem_couple" */

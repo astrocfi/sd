@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11

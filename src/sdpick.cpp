@@ -13,14 +13,15 @@
     This is for version 33. */
 
 /* This defines the following functions:
+   in_exhaustive_search
    reset_internal_iterators
    do_selector_iteration
    do_direction_iteration
    do_number_iteration
-   do_circcer_iteration
    do_tagger_iteration
-   do_pick
+   do_circcer_iteration
    pick_concept
+   do_pick
    get_resolve_goodness_info
    pick_allow_multiple_items
    start_pick
@@ -38,35 +39,40 @@ and the following external variables:
 #define SDLIB_API
 #endif
 
+#define SHOW_PICK_PHASE
+
 #include <string.h>
+#if defined(WIN32) && defined(SHOW_PICK_PHASE)
+#include <windows.h>
+#endif
 #include "sd.h"
 
 
-typedef enum {
+enum pick_type {
    pick_starting_first_scan,
-   pick_plain_scan_nice_only,  /* Just calls, very picky about quality. */
-   pick_concept_nice_only,     /* Concept/call, very picky about quality. */
-   pick_plain_accept_all,      /* Just calls, but accept anything. */
-   pick_concept_accept_all,    /* Concept/call, accept anything. */
+   pick_plain_scan_nice_only,  // Just calls, very picky about quality.
+   pick_concept_nice_only,     // Concept/call, very picky about quality.
+   pick_plain_accept_all,      // Just calls, but accept anything.
+   pick_concept_accept_all,    // Concept/call, accept anything.
    pick_in_random_search,
    pick_not_in_any_pick_at_all
-} pick_type;
+};
 
 
-typedef struct {
-   long_boolean exhaustive_search;
-   long_boolean accept_nice_only;
-   long_boolean with_concept;
-} pick_type_descriptor;
+struct pick_type_descriptor {
+   bool exhaustive_search;
+   bool accept_nice_only;
+   bool with_concept;
+};
 
 pick_type_descriptor pick_type_table[] = {
-   { FALSE, FALSE, FALSE },
-   { TRUE,  TRUE,  FALSE },
-   { TRUE,  TRUE,  TRUE },
-   { TRUE,  FALSE, FALSE },
-   { TRUE,  FALSE, TRUE },
-   { FALSE, FALSE, FALSE },
-   { FALSE, FALSE, FALSE },};
+   { false, false, false },
+   { true,  true,  false },
+   { true,  true,  true },
+   { true,  false, false },
+   { true,  false, true },
+   { false, false, false },
+   { false, false, false },};
 
 command_kind search_goal;
 
@@ -83,12 +89,37 @@ static uint32 tagger_iterator = 0;
 static uint32 circcer_iterator = 0;
 static int resolve_scan_start_point;
 static int resolve_scan_current_point;
-/* This is only meaningful if interactivity = interactivity_picking. */
-static int current_pick_type = (int) pick_not_in_any_pick_at_all;
+// This is only meaningful if interactivity = interactivity_picking.
+static pick_type current_pick_type = pick_not_in_any_pick_at_all;
+
+
+static void display_pick()
+{
+#if defined(WIN32) && defined(SHOW_PICK_PHASE)
+   char *bar[] = {
+      "start first scan",
+      "plain nice scan",
+      "concept nice scan",
+      "plain any scan",
+      "concept any scan",
+      "random search",
+      "none"};
+
+   char foo[200];
+   (void) sprintf(foo, "pick %s", bar[current_pick_type]);
+   (void) SetConsoleTitle(foo);
+#endif
+}
 
 
 
-SDLIB_API void reset_internal_iterators(void)
+bool in_exhaustive_search()
+{
+   return pick_type_table[current_pick_type].exhaustive_search;
+}
+
+
+void reset_internal_iterators()
 {
    selector_iterator = 0;
    direction_iterator = 0;
@@ -97,7 +128,7 @@ SDLIB_API void reset_internal_iterators(void)
    circcer_iterator = 0;
 }
 
-SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration)
+selector_kind do_selector_iteration(long_boolean allow_iteration)
 {
    static selector_kind selector_iterator_table[] = {
       selector_boys,
@@ -130,7 +161,7 @@ SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration)
       /* See if we have exhausted all possible selectors.
          We only look for "boys", "girls", "centers", and "ends" in the first scan. */
       if (selector_iterator_table[selector_iterator] ==
-          ((current_pick_type == (int) pick_plain_scan_nice_only) ?
+          ((current_pick_type == pick_plain_scan_nice_only) ?
            selector_leads :
            ((calling_level < beau_belle_level) ?
             selector_beaus :
@@ -142,19 +173,18 @@ SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration)
          the "<anyone> are tandem" stuff. */
       j = (int) selector_centers;
    }
-
    else {
       /* We don't generate unsymmetrical selectors when searching.  It generates
          too many "couple #3 u-turn-back" calls. */
-      j = (*the_callback_block.generate_random_number_fn)(unsymm_selector_start-1)+1;
+      j = generate_random_number(unsymm_selector_start-1)+1;
    }
 
-   (*the_callback_block.hash_nonrandom_number_fn)(j-1);
+   hash_nonrandom_number(j-1);
    return (selector_kind) j;
 }
 
 
-SDLIB_API direction_kind do_direction_iteration(void)
+direction_kind do_direction_iteration()
 {
    static direction_kind direction_iterator_table[] = {
       direction_left,
@@ -184,25 +214,25 @@ SDLIB_API direction_kind do_direction_iteration(void)
          /* See if we have exhausted all possible directions.
             We only look for "left" and "right" in the first scan. */
          if (     direction_iterator_table[direction_iterator] == 
-                  ((current_pick_type == (int) pick_plain_scan_nice_only) ?
+                  ((current_pick_type == pick_plain_scan_nice_only) ?
                    direction_in :
                    direction_uninitialized))
             direction_iterator = 0;
       }
    }
    else {
-      j = (*the_callback_block.generate_random_number_fn)(last_direction_kind)+1;
+      j = generate_random_number(last_direction_kind)+1;
    }
 
-   (*the_callback_block.hash_nonrandom_number_fn)(j-1);
+   hash_nonrandom_number(j-1);
    return (direction_kind) j;
 }
 
 
-SDLIB_API void do_number_iteration(int howmanynumbers,
-                                   uint32 odd_number_only,
-                                   long_boolean allow_iteration,
-                                   uint32 *number_list)
+void do_number_iteration(int howmanynumbers,
+                         uint32 odd_number_only,
+                         long_boolean allow_iteration,
+                         uint32 *number_list)
 {
    int i;
 
@@ -240,11 +270,11 @@ SDLIB_API void do_number_iteration(int howmanynumbers,
          this_num = ((number_iterator >> (i*2)) & 3) + 1;
       }
       else if (odd_number_only)
-         this_num = ((*the_callback_block.generate_random_number_fn)(2)<<1)+1;
+         this_num = (generate_random_number(2)<<1)+1;
       else
-         this_num = (*the_callback_block.generate_random_number_fn)(4)+1;
+         this_num = generate_random_number(4)+1;
 
-      (*the_callback_block.hash_nonrandom_number_fn)(this_num-1);
+      hash_nonrandom_number(this_num-1);
 
       *number_list |= (this_num << (i*4));
    }
@@ -258,7 +288,7 @@ SDLIB_API void do_number_iteration(int howmanynumbers,
          time enumerating 256 combinations of i-j-k-l quarter the deucey.
          We will get to them on the second scan in any case. */
       if (odd_number_only ||
-          (howmanynumbers >= 2 && current_pick_type == (int) pick_plain_scan_nice_only)) {
+          (howmanynumbers >= 2 && current_pick_type == pick_plain_scan_nice_only)) {
          while (number_iterator & 0x55555555)
             number_iterator += number_iterator & ~(number_iterator-1);
       }
@@ -269,30 +299,10 @@ SDLIB_API void do_number_iteration(int howmanynumbers,
 }
 
 
-SDLIB_API void do_circcer_iteration(uint32 *circcp)
-{
-   if (pick_type_table[current_pick_type].exhaustive_search) {
-      *circcp = circcer_iterator+1;
-
-      if ((selector_iterator | direction_iterator | number_iterator | tagger_iterator) == 0) {
-         circcer_iterator++;
-
-         /* See if we have exhausted all possible circcers. */
-         if (circcer_iterator == number_of_circcers)
-            circcer_iterator = 0;
-      }
-   }
-   else
-      *circcp = (*the_callback_block.generate_random_number_fn)(number_of_circcers)+1;
-
-   (*the_callback_block.hash_nonrandom_number_fn)(*circcp - 1);
-}
-
-
-SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
-                                           uint32 *tagg,
-                                           uint32 numtaggers,
-                                           call_with_name **tagtable)
+bool do_tagger_iteration(uint32 tagclass,
+                         uint32 *tagg,
+                         uint32 numtaggers,
+                         call_with_name **tagtable)
 {
    uint32 tag;
 
@@ -316,7 +326,7 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
          tag++;
 
       if (tag == numtaggers && tagger_iterator == 0)
-         return TRUE;  /* There simply are no acceptable taggers. */
+         return true;  /* There simply are no acceptable taggers. */
 
       if ((selector_iterator | direction_iterator | number_iterator) == 0) {
          tagger_iterator = tag+1;
@@ -338,17 +348,37 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
       }
    }
    else {
-      tag = (*the_callback_block.generate_random_number_fn)(numtaggers);
+      tag = generate_random_number(numtaggers);
    }
 
-   (*the_callback_block.hash_nonrandom_number_fn)(tag);
+   hash_nonrandom_number(tag);
 
    /* We don't generate "dont_use_in_resolve" taggers in any random search. */
    if (tagtable[tag]->the_defn.callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
       fail("This shouldn't get printed.");
 
    *tagg = (tagclass << 5) | (tag+1);
-   return FALSE;
+   return false;
+}
+
+
+void do_circcer_iteration(uint32 *circcp)
+{
+   if (pick_type_table[current_pick_type].exhaustive_search) {
+      *circcp = circcer_iterator+1;
+
+      if ((selector_iterator | direction_iterator | number_iterator | tagger_iterator) == 0) {
+         circcer_iterator++;
+
+         /* See if we have exhausted all possible circcers. */
+         if (circcer_iterator == number_of_circcers)
+            circcer_iterator = 0;
+      }
+   }
+   else
+      *circcp = generate_random_number(number_of_circcers)+1;
+
+   hash_nonrandom_number(*circcp - 1);
 }
 
 
@@ -357,14 +387,14 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
    did.  If the iterators are nonzero, we will just repeat that call.
    Otherwise, we will advance it to the next and use that call. */
 
-SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_place)
+const concept_descriptor *pick_concept(long_boolean already_have_concept_in_place)
 {
    long_boolean do_concept = FALSE;
 
    if (interactivity != interactivity_picking)
       return (concept_descriptor *) 0;
 
-   if (current_pick_type == (int) pick_starting_first_scan) {
+   if (current_pick_type == pick_starting_first_scan) {
 
          /* Generate the random starting point for the scan, so it won't be identical
          each time we resolve from this position.  This is the only time that we use
@@ -379,9 +409,10 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
       resolve_scan_start_point =
          (diagnostic_mode) ?
          0 :
-         (*the_callback_block.generate_random_number_fn)(number_of_calls[parse_state.call_list_to_use]);
+         generate_random_number(number_of_calls[parse_state.call_list_to_use]);
       resolve_scan_current_point = resolve_scan_start_point-1;
-      current_pick_type = (int) pick_plain_scan_nice_only;
+      current_pick_type = pick_plain_scan_nice_only;
+      display_pick();
       reset_internal_iterators();
    }
    else if (pick_type_table[current_pick_type].exhaustive_search) {
@@ -392,41 +423,57 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
            tagger_iterator | circcer_iterator) == 0) {
          if (resolve_scan_current_point == resolve_scan_start_point) {
 
-            /* Done with this scan.  Advance to the next thing to do. */
+            // Done with this scan.  Advance to the next thing to do.
 
             if (pick_type_table[current_pick_type].with_concept) {
-               /* Currently doing a scan with concepts.  Go to the next
-                  concept.  If run out, go to next scan. */
+               // Currently doing a scan with concepts.  Go to the next
+               // concept.  If run out, go to next scan.
                concept_scan_index++;
                if (concept_scan_index < concept_scan_limit)
                   goto foobar;
             }
 
-            /* Now we are really doing the next major scan type. */
+            // Now we are really doing the next major scan type.
 
-            current_pick_type++;
+            // We want to advance to the next choice in an enumeration type.
+            // The C++ language quite rightly doesn't allow this, since it
+            // takes types seriously and doesn't consider an enumeration
+            // to be nothing but a funny form for an integer.  Shame on us.
+            // So we use a type cast.  Shame on us.
 
-            concept_scan_index = 0;  /* If this is a concept scan, we will need these. */
+            current_pick_type = (pick_type) (current_pick_type+1);
+            display_pick();
+
+            concept_scan_index = 0;  // If this is a concept scan, we will need these.
             concept_scan_limit = good_concept_sublist_sizes[parse_state.call_list_to_use];
             concept_scan_table = good_concept_sublists[parse_state.call_list_to_use];
 
-            /* Now, if we are in a scan that involves concepts, check whether
-               there are any concepts to use.  (There might not be --
-               we severely restrict the number of available concepts in these scans.) */
+            // Now, if we are in a scan that involves concepts, check whether
+            // there are any concepts to use.  (There might not be --
+            // we severely restrict the number of available concepts in these scans.)
 
             if (search_goal != command_resolve ||
-                good_concept_sublist_sizes[parse_state.call_list_to_use] == 0) {
-               /* Can't go into concept scans, so skip over any of same. */
+
+                // Well, we *always* skip this stuff now.
+                // It's just bad.
+
+                true ||
+
+                concept_scan_limit == 0) {
+               // Can't go into concept scans, so skip over any of same.
                while (pick_type_table[current_pick_type].with_concept)
-                  current_pick_type++;
+                  current_pick_type = (pick_type) (current_pick_type+1);
+               display_pick();
             }
+
+
          foobar: ;
          }
 
          resolve_scan_current_point--;   /* Might go to -1.  Do_pick will fix same. */
       }
    }
-   else if (current_pick_type == (int) pick_in_random_search) {
+   else if (current_pick_type == pick_in_random_search) {
       switch (search_goal) {
       case command_concept_call:
          if (!already_have_concept_in_place)
@@ -435,7 +482,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
       case command_resolve:
       case command_random_call:
       case command_standardize:
-         do_concept = (*the_callback_block.generate_random_number_fn)(8) <
+         do_concept = generate_random_number(8) <
             ((search_goal == command_standardize) ?
              STANDARDIZE_CONCEPT_PROBABILITY : CONCEPT_PROBABILITY);
 
@@ -444,7 +491,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
             what is happening.  To remedy the problem, we hash just the yes-no
             result of our decision. */
 
-         (*the_callback_block.hash_nonrandom_number_fn)((int) do_concept);
+         hash_nonrandom_number((int) do_concept);
          break;
       }
    }
@@ -455,7 +502,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
       if (j != 0) {    /* If no concepts are available (perhaps some clown has
                           selected "pick concept call" at mainstream) we don't
                           insert a concept. */
-         j = (*the_callback_block.generate_random_number_fn)(j);
+         j = generate_random_number(j);
 
          uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
          return &concept_descriptor_table[uims_menu_index];
@@ -471,7 +518,7 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
 }
 
 
-SDLIB_API call_with_name *do_pick(void)
+call_with_name *do_pick()
 {
    int i;
    uint32 rejectflag;
@@ -483,12 +530,12 @@ SDLIB_API call_with_name *do_pick(void)
       i = resolve_scan_current_point;
    }
    else        /* In random search. */
-      i = (*the_callback_block.generate_random_number_fn)(number_of_calls[parse_state.call_list_to_use]);
+      i = generate_random_number(number_of_calls[parse_state.call_list_to_use]);
 
    /* Fix up the "hashed randoms" stuff as though we had generated this number
          through the random number generator. */
 
-   (*the_callback_block.hash_nonrandom_number_fn)(i);
+   hash_nonrandom_number(i);
    result = main_call_lists[parse_state.call_list_to_use][i];
 
    /* Why don't we just call the random number generator again if the call is inappropriate?
@@ -510,7 +557,7 @@ SDLIB_API call_with_name *do_pick(void)
 }
 
 
-SDLIB_API resolve_goodness_test get_resolve_goodness_info(void)
+resolve_goodness_test get_resolve_goodness_info()
 {
    if (interactivity == interactivity_picking) {
       if (pick_type_table[current_pick_type].accept_nice_only)
@@ -518,7 +565,7 @@ SDLIB_API resolve_goodness_test get_resolve_goodness_info(void)
             that is, RLG, LA, and prom.  And only if the promenade is short
             (if at C2 or above).  And only if one call long. */
          return resolve_goodness_only_nice;
-      else if (current_pick_type != (int) pick_in_random_search)
+      else if (current_pick_type != pick_in_random_search)
          /* Other exhaustive scans: accept any one-call resolve. */
          return resolve_goodness_always;
    }
@@ -529,16 +576,13 @@ SDLIB_API resolve_goodness_test get_resolve_goodness_info(void)
 }
 
 
-SDLIB_API long_boolean pick_allow_multiple_items(void)
+bool pick_allow_multiple_items()
 {
-   if (pick_type_table[current_pick_type].exhaustive_search)
-      return FALSE;
-   else
-      return TRUE;
+   return !pick_type_table[current_pick_type].exhaustive_search;
 }
 
 
-SDLIB_API void start_pick(void)
+void start_pick()
 {
    /* Following a suggestion of Eric Brosius, we initially scan the entire database once,
       looking for one-call resolves, before we start the complex search.  This way, we
@@ -554,21 +598,24 @@ SDLIB_API void start_pick(void)
        search_goal == command_normalize ||
        search_goal == command_standardize ||
        search_goal >= command_create_any_lines)
-      current_pick_type = (int) pick_starting_first_scan;
+      current_pick_type = pick_starting_first_scan;
    else
-      current_pick_type = (int) pick_in_random_search;
+      current_pick_type = pick_in_random_search;
+
+   display_pick();
 }
 
 
-SDLIB_API void end_pick(void)
+void end_pick()
 {
-   current_pick_type = (int) pick_not_in_any_pick_at_all;
+   current_pick_type = pick_not_in_any_pick_at_all;
+   display_pick();
 }
 
 
-/* When doing a pick, this predicate says that any call that takes a
-   mandatory subcall is simply rejected. */
-SDLIB_API long_boolean forbid_call_with_mandatory_subcall(void)
+// When doing a pick, this predicate says that any call that takes a
+// mandatory subcall is simply rejected.
+long_boolean forbid_call_with_mandatory_subcall()
 {
    if (pick_type_table[current_pick_type].exhaustive_search)
       return TRUE;
@@ -576,12 +623,12 @@ SDLIB_API long_boolean forbid_call_with_mandatory_subcall(void)
       return FALSE;
 }
 
-/* When we are doing the special scans in the resolver, we don't geneerate
-   random subcalls -- we just leave the default call in place.  Only when in the random search
-   do we generate random subcalls. */
-SDLIB_API long_boolean allow_random_subcall_pick(void)
+// When we are doing the special scans in the resolver, we don't geneerate
+// random subcalls -- we just leave the default call in place.
+// Only when in the random search do we generate random subcalls.
+long_boolean allow_random_subcall_pick()
 {
-   if (current_pick_type == (int) pick_in_random_search)
+   if (current_pick_type == pick_in_random_search)
       return TRUE;
    else
       return FALSE;

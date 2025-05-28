@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -15,15 +15,20 @@
 /* This defines the following functions:
    start_sel_dir_num_iterator
    iterate_over_sel_dir_num
-   build_database
-   initialize_menus
 and the following external variables:
    selector_for_initialize
    direction_for_initialize
    number_for_initialize
+   color_index_list
 */
 
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <string.h>
+#include <time.h>
+#include <ctype.h>
 
 #ifdef WIN32
 #define SDLIB_API __declspec(dllexport)
@@ -36,6 +41,7 @@ and the following external variables:
 selector_kind selector_for_initialize;
 direction_kind direction_for_initialize;
 int number_for_initialize;
+int *color_index_list;
 
 /* Global to this file. */
 
@@ -45,23 +51,30 @@ static call_with_name *empty_menu[] = {(call_with_name *) 0};
 static call_with_name **global_temp_call_list;
 static int global_callcount;     /* Index into the above. */
 
-#define WEST (d_west|ROLLBITL)
-#define EAST (d_east|ROLLBITL)
-#define NORT (d_north|ROLLBITL)
-#define SOUT (d_south|ROLLBITL)
 
-/* The following 8 definitions are taken verbatim from sdtables.c . */
-#define B1A (0000 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY)
-#define G1A (0100 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL)
-#define B2A (0200 | ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY)
-#define G2A (0300 | ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL)
-#define B3A (0400 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY)
-#define G3A (0500 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL)
-#define B4A (0600 | ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY)
-#define G4A (0700 | ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL)
+#define WEST (d_west|PERSON_MOVED|ROLL_IS_L)
+#define EAST (d_east|PERSON_MOVED|ROLL_IS_L)
+#define NORT (d_north|PERSON_MOVED|ROLL_IS_L)
+#define SOUT (d_south|PERSON_MOVED|ROLL_IS_L)
 
-/* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
-   ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
+// The following 8 definitions are taken verbatim from sdtables.c
+enum {
+   B1A = 0000|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
+   G1A = 0100|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
+   B2A = 0200|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
+   G2A = 0300|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL,
+   B3A = 0400|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
+   G3A = 0500|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
+   B4A = 0600|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
+   G4A = 0700|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL
+};
+
+// In all of these setups in which people are facing, they are normal couples.
+// In general, we use the "Callerlab #0" arrangement for things like lines and waves.
+// This makes initialization work for things like star thru, ladies chain, curlique,
+// and half breed thru from waves.
+//
+// But the setup for starting DPT has the appropriate sex for triple star thru.
 static setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
 static setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
 static setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0}, {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, 0};
@@ -72,8 +85,8 @@ static setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EA
 static setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, 0};
 static setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0}, {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, 0};
 static setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
-static setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
-static setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+static setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|G2A, 0}, {NORT|B1A, 0}}, 0};
+static setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {NORT|B3A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {SOUT|B1A, 0}}, 0};
 static setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, 0};
 static setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
 
@@ -114,6 +127,9 @@ SDLIB_API long_boolean iterate_over_sel_dir_num(
          selector_for_initialize = selector_ends;
          return TRUE;
       case selector_ends:
+         selector_for_initialize = selector_leads;
+         return TRUE;
+      case selector_leads:
          // This will select just one end of each wave in parallel waves or a tidal wave,
          // so "prefer the <anyone> out roll circulate" will work.
          selector_for_initialize = selector_sideboys;
@@ -179,11 +195,11 @@ SDLIB_API long_boolean iterate_over_sel_dir_num(
 
 
 
-static void test_starting_setup(call_list_kind cl, Const setup *test_setup)
+static void test_starting_setup(call_list_kind cl, const setup *test_setup)
 {
    int i;
 
-   (*the_callback_block.uims_database_tick_fn)(10);
+   gg->init_step(do_tick, 2);
 
    call_index = -1;
    global_callcount = 0;
@@ -219,42 +235,47 @@ static void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    number_used = FALSE;
    mandatory_call_used = FALSE;
 
-   history_ptr = 1;
+   configuration::history_ptr = 1;
 
-   history[history_ptr].centersp = 0;
-   history[history_ptr].state = *test_setup;
+   configuration::current_config().init_centersp_specific();
+   configuration::current_config().state = *test_setup;
    initialize_parse();
 
-   /* If the call has the "rolldefine" schema, we accept it, since the test setups
-      are all in the "roll unsupported" state. */
-
+   // If the call has the "rolldefine" schema, we accept it, since the test setups
+   // are all in the "roll unsupported" state.
    if (test_call->the_defn.schema == schema_roll) goto accept;
 
-   /* If the call has the "matrix" schema, and it is sex-dependent, we accept it,
-      since the test setups that we use might have people placed in such a way
-      that something like "1/2 truck" is illegal. */
+   // If the call takes 3 or more numeric arguments, accept it.  This makes
+   // "hinge by I x J x K" work from columns.
+   if ((test_call->the_defn.callflags1 & ((uint32) CFLAG1_NUMBER_MASK)) >=
+       3*((uint32) CFLAG1_NUMBER_BIT))
+      goto accept;
 
+   // If the call has the "matrix" schema, and it is sex-dependent, we accept it,
+   // since the test setups that we use might have people placed in such a way
+   // that something like "1/2 truck" is illegal.
    if (test_call->the_defn.schema == schema_matrix &&
        test_call->the_defn.stuff.matrix.stuff[0] != test_call->the_defn.stuff.matrix.stuff[1])
       goto accept;
 
-   /* We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
-      since we don't know what the tagging call will be. */
-   if (test_call->the_defn.callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
+   // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
+   // since we don't know what the tagging call will be.
+   if (test_call->the_defn.callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT))
+      goto accept;
 
    // Do the call.  An error will signal and go to try_again.
 
    try {
       if (crossiness)
-         (void) (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[cross_concept_index]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_cross]]);
 
       if (magicness)
-         (void) (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[magic_concept_index]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_magic]]);
 
       if (intlkness)
-         (void) (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[intlk_concept_index]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_intlk]]);
 
-      if ((*the_callback_block.deposit_call_fn)(test_call, &null_options)) goto try_again;
+      if (deposit_call(test_call, &null_options)) goto try_again;
       toplevelmove();
    }
    catch(error_flag_type) {
@@ -306,13 +327,13 @@ static void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    // Create the call list itself.
 
    number_of_calls[cl] = global_callcount;
-   main_call_lists[cl] = (call_with_name **) (*the_callback_block.get_mem_fn)(global_callcount * sizeof(call_with_name *));
+   main_call_lists[cl] = (call_with_name **) get_mem(global_callcount * sizeof(call_with_name *));
    for (i=0; i < global_callcount; i++)
       main_call_lists[cl][i] = global_temp_call_list[i];
 
-   /* Create the menu for it. */
+   // Create the menu for it.
 
-   (*the_callback_block.uims_create_menu_fn)(cl);
+   gg->create_menu(cl);
 }
 
 
@@ -387,7 +408,7 @@ static long_boolean callcompare(call_with_name *x, call_with_name *y)
                mc = 500-6; break;
             case 'N':
                mc = 500-5; break;
-            case '0': case 'm':
+            case '0': case 'T': case 'm':
                mc = 500-4; break;
             case '9':
                mc = 500-3; break;
@@ -426,7 +447,7 @@ static long_boolean callcompare(call_with_name *x, call_with_name *y)
                nc = 500-6; break;
             case 'N':
                nc = 500-5; break;
-            case '0': case 'm':
+            case '0': case 'T': case 'm':
                nc = 500-4; break;
             case '9':
                nc = 500-3; break;
@@ -574,14 +595,14 @@ static void create_misc_call_lists(call_list_kind cl)
    /* Create the call list itself. */
 
    number_of_calls[cl] = callcount;
-   main_call_lists[cl] = (call_with_name **) (*the_callback_block.get_mem_fn)(callcount * sizeof(call_with_name *));
+   main_call_lists[cl] = (call_with_name **) get_mem(callcount * sizeof(call_with_name *));
 
    for (i=0; i < callcount; i++) {
       main_call_lists[cl][i] = global_temp_call_list[i];
    }
 
-   /* Create the menu for it. */
-   (*the_callback_block.uims_create_menu_fn)(cl);
+   // Create the menu for it.
+   gg->create_menu(cl);
 }
 
 
@@ -594,30 +615,32 @@ static callarray *tp;
 static int highest_base_call;
 
 
-static void read_halfword(void)
+static void read_halfword()
 {
-   last_datum = (*the_callback_block.read_16_from_database_fn)();
+   last_datum = read_16_from_database();
    last_12 = last_datum & 0xFFF;
 }
 
 
-static void read_fullword(void)
+static void read_fullword()
 {
-   uint32 t = (*the_callback_block.read_16_from_database_fn)();
-   last_datum = t << 16 | (*the_callback_block.read_16_from_database_fn)();
+   uint32 t = read_16_from_database();
+   last_datum = t << 16 | read_16_from_database();
 }
 
 
 
-/* Found an error while reading CALL out of the database.
-   Print an error message and quit.
-   Should take the call as an argument, but since this entire file uses global variables,
-   we will, too. */
+// Found an error while reading a call out of the database.
+// Print an error message and quit.
+// Should take the call as an argument, but since this entire file uses global variables,
+// we will, too.
 
-static void database_error(char *message)
+static void database_error_exit(char *message)
 {
-   (*the_callback_block.uims_database_error_fn)(message, call_root ? call_root->name : 0);
-   (*the_callback_block.exit_program_fn)(1);
+   if (call_root)
+      gg->fatal_error_exit(1, message, call_root->name);
+   else
+      gg->fatal_error_exit(1, message);
 }
 
 
@@ -627,7 +650,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
    callarray *current_call_block;
 
    if ((last_datum & 0xE000) != 0x6000)
-      database_error("database phase error 3");
+      database_error_exit("database phase error 3");
 
    current_call_block = 0;
 
@@ -661,16 +684,18 @@ static void read_level_3_groups(calldef_block *where_to_put)
       if (these_flags & CAF__PREDS) {
          read_halfword();    /* Get error message count. */
          char_count = last_datum & 0xFF;
-         /* We will naturally get 4 items in the "stuff.prd.errmsg" field; we are responsible all for the others. */
-         /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
+         // We will naturally get 4 items in the "stuff.prd.errmsg" field;
+         // we are responsible all for the others.
+         // We subtract 3 because 4 chars are already present, but we need one extra for the pad.
          extra = (char_count-3) * sizeof(char);
       }
       else {
-         /* We will naturally get 4 items in the "stuff.def" field; we are responsible all for the others. */
+         // We will naturally get 4 items in the "stuff.def" field;
+         // we are responsible all for the others.
          extra = (this_start_size-4) * sizeof(unsigned short int);
       }
 
-      tp = (callarray *) (*the_callback_block.get_mem_fn)(sizeof(callarray) + extra);
+      tp = (callarray *) get_mem(sizeof(callarray) + extra);
       tp->next = 0;
 
       if (!current_call_block)
@@ -698,31 +723,33 @@ static void read_level_3_groups(calldef_block *where_to_put)
          predptr_pair *temp_predlist;
          predptr_pair *this_predlist = (predptr_pair *) 0;
 
-         /* Read error message text. */
+         // Read error message text.
 
          for (j=1; j <= ((char_count+1) >> 1); j++) {
             read_halfword();
             tp->stuff.prd.errmsg[(j << 1)-2] = (char) ((last_datum >> 8) & 0xFF);
-            if ((j << 1) != char_count+1) tp->stuff.prd.errmsg[(j << 1)-1] = (char) (last_datum & 0xFF);
+            if ((j << 1) != char_count+1)
+               tp->stuff.prd.errmsg[(j << 1)-1] = (char) (last_datum & 0xFF);
          }
 
          tp->stuff.prd.errmsg[char_count] = '\0';
 
          read_halfword();
 
-         /* Demand level 4 group. */
+         // Demand level 4 group.
          if (last_datum != 0x8000) {
-            database_error("database phase error 4");
+            database_error_exit("database phase error 4");
          }
 
          while ((last_datum & 0xE000) == 0x8000) {
             read_halfword();       /* Read predicate indicator. */
-            /* "predptr_pair" will get us 4 items in the "arr" field; we are responsible all for the others. */
-            temp_predlist = (predptr_pair *) (*the_callback_block.get_mem_fn)(sizeof(predptr_pair) +
+            // "predptr_pair" will get us 4 items in the "arr" field;
+            // we are responsible all for the others.
+            temp_predlist = (predptr_pair *) get_mem(sizeof(predptr_pair) +
                     (this_start_size-4) * sizeof(unsigned short));
             temp_predlist->pred = &pred_table[last_datum];
-            /* If this call uses a predicate that takes a selector, flag the call so that
-               we will query the user for that selector. */
+            // If this call uses a predicate that takes a selector, flag the call so that
+            // we will query the user for that selector.
 
             if ((int) last_datum < selector_preds)
                call_root->the_defn.callflagsf |= CFLAGH__REQUIRES_SELECTOR;
@@ -737,7 +764,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
             read_halfword();    /* Get next level 4 header, or whatever. */
          }
 
-         /* need to reverse stuff in "this_predlist" */
+         // Need to reverse stuff in "this_predlist".
          temp_predlist = 0;
          while (this_predlist) {
             predptr_pair *revptr = this_predlist;
@@ -762,7 +789,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
 static void check_tag(int tag)
 {
    if (tag >= max_base_calls)
-      database_error("Too many tagged calls -- mkcalls made an error");
+      database_error_exit("Too many tagged calls -- mkcalls made an error");
    if (tag > highest_base_call) highest_base_call = tag;
 }
 
@@ -786,7 +813,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       np = call_root->name;
 
       for (j=0; j<char_count; j++)
-         *np++ = (char) (*the_callback_block.read_8_from_database_fn)();
+         *np++ = (char) read_8_from_database();
 
       *np = '\0';
 
@@ -815,7 +842,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
                root_to_use->callflagsf |= CFLAGH__CIRC_CALL_RQ_BIT;
          }
          else if (c == '[' || c == ']')
-            database_error("calls may not have brackets in their name");
+            database_error_exit("calls may not have brackets in their name");
       }
    }
 
@@ -846,7 +873,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
 
       root_to_use->stuff.matrix.stuff =
-         (uint32 *) (*the_callback_block.get_mem_fn)(sizeof(uint32)*8);
+         (uint32 *) get_mem(sizeof(uint32)*8);
 
       for (j=0; j<lim; j++) {
          uint32 firstpart;
@@ -871,7 +898,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       {
          calldef_block *zz, *yy;
 
-         zz = (calldef_block *) (*the_callback_block.get_mem_fn)(sizeof(calldef_block));
+         zz = (calldef_block *) get_mem(sizeof(calldef_block));
          zz->next = 0;
          zz->modifier_seth = 0;
          zz->modifier_level = l_mainstream;
@@ -880,7 +907,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          read_level_3_groups(zz);    /* The first group. */
 
          while ((last_datum & 0xE000) == 0x4000) {
-            yy = (calldef_block *) (*the_callback_block.get_mem_fn)(sizeof(calldef_block));
+            yy = (calldef_block *) get_mem(sizeof(calldef_block));
             zz->next = yy;
             zz = yy;
             zz->modifier_level = (dance_level) (last_datum & 0xFF);
@@ -902,7 +929,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
          /* Demand a level 2 group. */
          if ((last_datum & 0xE000) != 0x4000)
-            database_error("database phase error 6");
+            database_error_exit("database phase error 6");
 
          while ((last_datum & 0xE000) == 0x4000) {
             check_tag(last_12);
@@ -916,8 +943,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
          root_to_use->stuff.seq.howmanyparts = next_definition_index;
          root_to_use->stuff.seq.defarray = (by_def_item *)
-            (*the_callback_block.get_mem_fn)
-            ((next_definition_index) * sizeof(by_def_item));
+            get_mem((next_definition_index) * sizeof(by_def_item));
 
          while (--next_definition_index >= 0)
             root_to_use->stuff.seq.defarray[next_definition_index] =
@@ -927,7 +953,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    default:          /* These are all the variations of concentric. */
       /* Demand a level 2 group. */
       if ((last_datum & 0xE000) != 0x4000)
-         database_error("database phase error 7");
+         database_error_exit("database phase error 7");
 
       check_tag(last_12);
       root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
@@ -955,7 +981,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       calldef_schema call_schema;
 
       calldefn *recursed_call_root = (calldefn *)
-         (*the_callback_block.get_mem_fn)(sizeof(calldefn));
+         get_mem(sizeof(calldefn));
 
       read_halfword();       /* Get level and 8 bits of "callflags2" stuff. */
       saveflags2 = last_datum >> 8;
@@ -980,26 +1006,545 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 }
 
 
+static FILE *init_file;
+static int session_linenum = 0;
+
+/* 0 for "no session" line, 1 for real ones, 2 for "new session". */
+static int session_line_state = 0;
+
+static char rewrite_filename_as_star[2] = { '\0' , '\0' };  /* First char could be "*" or "+". */
+static FILE *fp;
+
+
+
+/* This makes sure that outfile string is a legal filename, and sets up
+   "outfile_special" to tell if it is a printing device.
+   Returns FALSE if error occurs.  No action taken in that case. */
+
+
+extern long_boolean install_outfile_string(char newstring[])
+{
+   char test_string[MAX_FILENAME_LENGTH];
+   long_boolean file_is_ok;
+   int j;
+
+   rewrite_filename_as_star[0] = '\0';
+
+   // Clean off leading blanks, and stop after any internal blank.
+
+   (void) sscanf(newstring, "%s", test_string);
+
+   // Look for special file string of "*" or "+".
+   // If so, generate a new file name.
+   // If the character is "+", make the name unique.
+
+   if ((test_string[0] == '*' || test_string[0] == '+') && !test_string[1]) {
+      time_t clocktime;
+      FILE *filetest;
+      char junk[30], junk2[30], t1[20], t2[20], t3[20], t4[20], t5[20];
+      char letter[2];
+      char *p;
+
+      letter[0] = 'a';
+      letter[1] = '\0';
+      time(&clocktime);
+      (void) sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
+
+      // Now t2 = "Jan", t3 = "16", and t5 = "1996".
+
+      (void) strncpy(junk, t3, 3);
+      (void) strncat(junk, t2, 3);
+      (void) strncat(junk, &t5[strlen(t5)-2], 2);
+      for (p=junk ; *p ; p++) *p = tolower(*p);  // Month in lower case.
+      (void) strncpy(junk2, junk, 10);           // This should be "16jan96".
+
+      for (;;) {
+         (void) strcat(junk2, filename_strings[calling_level]);
+
+         /* If the given filename is "+", accept it immediately.
+            Otherwise, fuss with the generated name until we get a
+            nonexistent file. */
+
+         if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
+         (void) fclose(filetest);
+         if (letter[0] == 'z'+1) letter[0] = 'A';
+         else if (letter[0] == 'Z'+1) return FALSE;
+         (void) strncpy(junk2, junk, 10);
+         (void) strncat(junk2, letter, 4);     /* Try appending a letter. */
+         letter[0]++;
+      }
+
+      (void) strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
+      outfile_special = FALSE;
+      last_file_position = -1;
+      rewrite_filename_as_star[0] = test_string[0];
+      return TRUE;
+   }
+
+   /* Now see if we can write to it. */
+
+#ifdef POSIX_STYLE
+   /* If the file does not exist, we allow it, even though creation may
+      not be possible because of directory permissions.  It is unfortunate
+      that there is no feasible way to determine whether a given pathname
+      could be opened for writing. */
+   if (access(test_string, F_OK) || !access(test_string, W_OK))
+      file_is_ok =  TRUE;
+   else
+      file_is_ok =  FALSE;
+#else
+   file_is_ok =  TRUE;
+#endif
+
+   if (file_is_ok) {
+      (void) strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
+      j = strlen(outfile_string);
+      outfile_special = (j>0 && outfile_string[j-1] == ':');
+      last_file_position = -1;
+      return TRUE;
+   }
+   else
+      return FALSE;
+}
+
+
+static bool find_init_file_region(Cstring key, int length)
+{
+   char line[MAX_FILENAME_LENGTH];
+
+   if (!init_file) return false;
+
+   if (fseek(init_file, 0, SEEK_SET))
+      return false;
+
+   // Search for the indicator.
+   // We need to use strncmp, and give an explicit length,
+   // because various operating systems put various types of
+   // newline garbage at the end of the line when we read it
+   // from the file.
+
+   for (;;) {
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) return false;
+      if (!strncmp(line, key, length)) return true;
+   }
+}
+
+extern long_boolean get_first_session_line()
+{
+   session_line_state = 0;
+
+   // If we are writing a call list file, that's all we do.
+
+   if (glob_call_list_mode == call_list_mode_writing ||
+       glob_call_list_mode == call_list_mode_writing_full)
+      return TRUE;
+
+   // Or if the file didn't exist, or we are in diagnostic mode.
+   if (!init_file || diagnostic_mode) return TRUE;
+
+   // Search for the "[Sessions]" indicator.
+
+   if (!find_init_file_region("[Sessions]", 10))
+      return TRUE;
+
+   return FALSE;
+}
+
+
+extern long_boolean get_next_session_line(char *dest)
+{
+   int j;
+   char line[MAX_FILENAME_LENGTH];
+
+   if (session_line_state == 0) {
+      session_line_state = 1;
+      sprintf(dest, "  0     (no session)");
+      return TRUE;
+   }
+   else if (session_line_state == 2)
+      return FALSE;
+
+   if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n' || line[0] == '[') {
+      session_line_state = 2;
+      sprintf(dest, "%3d     (create a new session)", session_linenum+1);
+      return TRUE;
+   }
+
+   j = strlen(line);
+   if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+   sprintf(dest, "%3d  %s", ++session_linenum, line);
+   return TRUE;
+}
+
+
+extern void prepare_to_read_menus()
+{
+   uint32 arithtest = 2081607680;
+
+   /* This "if" should never get executed.  We expect compilers to optimize
+      it away, and perhaps print a warning about it. */
+
+   /* Test that the constants ROLL_BIT and DBROLL_BIT are in the right
+      relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
+      in a person record are to the left of the roll bits in the binary database.
+      This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.cpp to
+      align stuff from the binary database into the person record. */
+
+   if ((int) NROLL_BIT < (int) NDBROLL_BIT)
+      gg->fatal_error_exit(1, "Constants not consistent",
+                           "program has been compiled incorrectly.");
+   else if ((508205 << 12) != arithtest)
+      gg->fatal_error_exit(1, "Arithmetic is less than 32 bits",
+                           "program has been compiled incorrectly.");
+   else if (NUM_QUALIFIERS > 125)
+      gg->fatal_error_exit(1, "Insufficient qualifier space",
+                           "program has been compiled incorrectly.");
+
+   // We need to take away the "zig-zag" directions if the level is below A2.
+
+   if (calling_level < zig_zag_level) {
+      last_direction_kind = direction_zigzag-1;
+      direction_names[direction_zigzag] = (Cstring) 0;
+   }
+
+   if (glob_call_list_mode == call_list_mode_none ||
+       glob_call_list_mode == call_list_mode_abridging) {
+      int i;
+
+      /* Find out how big the command menu needs to be. */
+
+      for (num_command_commands = 0 ;
+           command_menu[num_command_commands].command_name ;
+           num_command_commands++) ;
+
+      command_commands = (Cstring *) get_mem(sizeof(Cstring) * num_command_commands);
+      command_command_values =
+         (command_kind *) get_mem(sizeof(command_kind) * num_command_commands);
+
+      for (i = 0 ; i < num_command_commands; i++) {
+         command_commands[i] = command_menu[i].command_name;
+         command_command_values[i] = command_menu[i].action;
+      }
+
+      /* Find out how big the startup menu needs to be. */
+
+      for (num_startup_commands = 0 ;
+           startup_menu[num_startup_commands].startup_name ;
+           num_startup_commands++) ;
+
+      startup_commands = (Cstring *) get_mem(sizeof(Cstring) * num_startup_commands);
+      startup_command_values =
+         (start_select_kind *) get_mem(sizeof(start_select_kind) * num_startup_commands);
+
+      for (i = 0 ; i < num_startup_commands; i++) {
+         startup_commands[i] = startup_menu[i].startup_name;
+         startup_command_values[i] = startup_menu[i].action;
+      }
+
+      /* Find out how big the resolve menu needs to be. */
+
+      for (number_of_resolve_commands = 0 ;
+           resolve_menu[number_of_resolve_commands].command_name ;
+           number_of_resolve_commands++) ;
+
+      resolve_command_strings = (Cstring *) get_mem(sizeof(Cstring) * number_of_resolve_commands);
+      resolve_command_values = (resolve_command_kind *)
+         get_mem(sizeof(resolve_command_kind) * number_of_resolve_commands);
+
+      for (i = 0 ; i < number_of_resolve_commands; i++) {
+         resolve_command_strings[i] = resolve_menu[i].command_name;
+         resolve_command_values[i] = resolve_menu[i].action;
+      }
+   }
+}
+
+extern int process_session_info(Cstring *error_msg)
+{
+   int i, j;
+
+   if (session_index == 0)
+      return 1;
+
+   if (session_index <= session_linenum) {
+      char line[MAX_FILENAME_LENGTH];
+      int ccount;
+      int num_fields_parsed;
+      char junk_name[MAX_FILENAME_LENGTH];
+      char filename_string[MAX_FILENAME_LENGTH];
+      char session_levelstring[50];
+
+      // Find the "[Sessions]" indicator again.
+
+      if (!find_init_file_region("[Sessions]", 10)) {
+         *error_msg = "Can't find correct position in session file.";
+         return 3;
+      }
+
+      // Skip over the lines before the one we want.
+
+      for (i=0 ; i<session_index ; i++) {
+         if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) break;
+      }
+
+      if (i != session_index)
+         return 1;
+
+      j = strlen(line);
+      if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+
+      num_fields_parsed = sscanf(
+                             line, "%s %s %d %n%s",
+                             filename_string, session_levelstring,
+                             &sequence_number, &ccount,
+                             junk_name);
+
+      if (num_fields_parsed < 3) {
+         *error_msg = "Bad format in session file.";
+         return 3;
+      }
+
+      if (!parse_level(session_levelstring, &calling_level)) {
+         *error_msg = "Bad level given in session file.";
+         return 3;
+      }
+
+      if (num_fields_parsed == 4)
+         strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
+      else
+         header_comment[0] = 0;
+
+      if (!install_outfile_string(filename_string)) {
+         *error_msg = "Bad file name in session file, using default instead.";
+         return 2;    /* This return code will not abort the session. */
+      }
+   }
+   else {
+      // We are creating a new session to be appended to the file.
+      sequence_number = 1;
+      need_new_header_comment = TRUE;
+   }
+
+   return 0;
+}
+
+
+extern void open_call_list_file(char filename[])
+{
+   call_list_file = fopen(filename,
+      (glob_call_list_mode == call_list_mode_abridging) ? "r" : "w");
+
+   if (!call_list_file)
+      gg->fatal_error_exit(1, "Can't open call list file", filename);
+}
+
+
+static bool get_accelerator_line(char line[])
+{
+   for ( ;; ) {
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n' || line[0] == '[') return false;
+
+      int j = strlen(line);
+      if (j>0) line[j-1] = '\0';   // Strip off the <NEWLINE> -- we don't want it.
+
+      if (line[0] != '#') return true;
+   }
+}
+
+
+extern void close_init_file()
+{
+   if (init_file) (void) fclose(init_file);
+}
+
+
+static int write_back_session_line(FILE *wfile)
+{
+   char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string;
+
+   if (header_comment[0])
+      return
+         fprintf(wfile, "%-20s %-11s %6d      %s\n",
+                 filename,
+                 getout_strings[calling_level],
+                 sequence_number,
+                 header_comment);
+   else
+      return
+         fprintf(wfile, "%-20s %-11s %6d\n",
+                 filename,
+                 getout_strings[calling_level],
+                 sequence_number);
+}
+
+
+extern void general_final_exit(int code)
+{
+   if (session_index != 0) {
+      char line[MAX_FILENAME_LENGTH];
+      FILE *rfile;
+      FILE *wfile;
+      int i;
+
+      remove(SESSION2_FILENAME);
+
+      if (rename(SESSION_FILENAME, SESSION2_FILENAME)) {
+         printf("Failed to save file '" SESSION_FILENAME "' in '" SESSION2_FILENAME "'\n");
+         printf("%s\n", get_errstring());
+      }
+      else {
+         if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
+            printf("Failed to open '" SESSION2_FILENAME "'\n");
+         }
+         else {
+            if (!(wfile = fopen(SESSION_FILENAME, "w"))) {
+               printf("Failed to open '" SESSION_FILENAME "'\n");
+            }
+            else {
+               long_boolean more_stuff = FALSE;
+
+               /* Search for the "[Sessions]" indicator. */
+
+               for (;;) {
+                  if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+                  if (fputs(line, wfile) == EOF) goto copy_failed;
+                  if (!strncmp(line, "[Sessions]", 10)) break;
+               }
+
+               for (i=0 ; ; i++) {
+                  if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+                  if (line[0] == '\n') { more_stuff = TRUE; break; }
+
+                  if (i == session_index-1) {
+                     if (write_back_session_line(wfile) < 0)
+                        goto copy_failed;
+                  }
+                  else if (i == -session_index-1) {
+                  }
+                  else {
+                     if (fputs(line, wfile) == EOF) goto copy_failed;
+                  }
+               }
+
+               if (i < session_index) {
+                  /* User has requested a line number larger than the file.  Append a new line. */
+                  if (write_back_session_line(wfile) < 0)
+                     goto copy_failed;
+               }
+
+               if (more_stuff) {
+                  if (fputs("\n", wfile) == EOF) goto copy_failed;
+                  for (;;) {
+                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+                     if (fputs(line, wfile) == EOF) goto copy_failed;
+                  }
+               }
+
+               goto copy_done;
+
+               copy_failed:
+
+               printf("Failed to write to '" SESSION_FILENAME "'\n");
+
+               copy_done:
+
+               (void) fclose(wfile);
+            }
+            (void) fclose(rfile);
+         }
+      }
+   }
+
+   gg->terminate(code);
+}
+
+extern long_boolean open_database(char *msg1, char *msg2)
+{
+   int format_version, n, j;
+
+   *msg1 = (char) 0;
+   *msg2 = (char) 0;
+
+   /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
+      however, require it for correct handling of binary data. */
+   if (!(fp = fopen(database_filename, "rb"))) {
+      strncpy(msg1, "Can't open database file.", 199);
+      return TRUE;
+   }
+
+   if (read_16_from_database() != DATABASE_MAGIC_NUM) {
+      sprintf(msg1,
+              "Database file \"%s\" has improper format.", database_filename);
+      return TRUE;
+   }
+
+   format_version = read_16_from_database();
+   if (format_version != DATABASE_FORMAT_VERSION) {
+      sprintf(msg1,
+              "Database format version (%d) is not the required one (%d)",
+              format_version, DATABASE_FORMAT_VERSION);
+      strncpy(msg2, "You must recompile the database.", 199);
+      return TRUE;
+   }
+
+   abs_max_calls = read_16_from_database();
+   max_base_calls = read_16_from_database();
+
+   n = read_16_from_database();
+
+   if (n > 80) {
+      strncpy(msg1, "Database version string is too long.", 199);
+      return TRUE;
+   }
+
+   for (j=0; j<n; j++)
+      database_version[j] = (unsigned char) read_8_from_database();
+
+   database_version[j] = '\0';
+   return FALSE;
+}
+
+
+extern uint32 read_8_from_database()
+{
+   return fgetc(fp) & 0xFF;
+}
+
+
+extern uint32 read_16_from_database()
+{
+   uint32 bar;
+
+   bar = (read_8_from_database() & 0xFF) << 8;
+   bar |= read_8_from_database() & 0xFF;
+   return bar;
+}
+
+
+extern void close_database()
+{
+   fclose(fp);
+}
+
+
 
 /* This fills the permanent array "main_call_lists[call_list_any]" with the stuff
       read in from the database, including name pointer fields containing the original text
       with "@" escapes.  It also sets "number_of_calls[call_list_any]" to the size thereof.
          It does this only for calls that are legal at this level.  If we are just
-         writing a call list, a call is legal only if its level is exactly the level
+         writing a call list with a "write_list" command, a call is legal only if
+         its level is exactly the level
          specified when the program was invoked, rather than the usual case of including
          any call whose level is at or below the specified level.  If we are doing a
-         "write full" we do the usual action.
+         "write_full_list" we do the usual action.
    It also fills in the "base_calls" array with tagged calls, independent of level. */
 
-SDLIB_API void build_database(call_list_mode_t call_list_mode)
+static void build_database(call_list_mode_t call_list_mode)
 {
    int i, char_count;
    int local_callcount;
    dance_level this_level;
    call_with_name **local_call_list;
    dance_level acceptable_level = calling_level;
-
-   (*the_callback_block.uims_database_tick_max_fn)(10*16);
 
    if (call_list_mode == call_list_mode_none)
       acceptable_level = higher_acceptable_level[calling_level];
@@ -1013,12 +1558,12 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
    circcer_calls = (call_with_name **) 0;
 
    /* This list will be permanent. */
-   base_calls = (call_with_name **) (*the_callback_block.get_mem_fn)(max_base_calls * sizeof(call_with_name *));
+   base_calls = (call_with_name **) get_mem(max_base_calls * sizeof(call_with_name *));
 
    /* These two will be temporary.  The first lasts through the entire initialization
       process.  The second one only in this procedure. */
-   global_temp_call_list = (call_with_name **) (*the_callback_block.get_mem_fn)(abs_max_calls * sizeof(call_with_name *));
-   local_call_list = (call_with_name **) (*the_callback_block.get_mem_fn)(abs_max_calls * sizeof(call_with_name *));
+   global_temp_call_list = (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
+   local_call_list = (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
 
    /* Clear the tag list.  Calls will fill this in as they announce themselves. */
    for (i=0; i < max_base_calls; i++) base_calls[i] = (call_with_name *) 0;
@@ -1037,7 +1582,7 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
       if ((last_datum & 0xE000) == 0) break;
 
       if ((last_datum & 0xE000) != 0x2000) {
-         database_error("database phase error 1");
+         database_error_exit("database phase error 1");
       }
 
       savetag = last_12;     /* Get tag, if any. */
@@ -1061,10 +1606,10 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
       /* **** We should only allocate the call root if we are going to use this call,
          either because it is tagged or because it is legal at this level!!!! */
 
-      /* Now that we know how long the name is, create the block and fill in the saved stuff. */
-      /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
+      // Now that we know how long the name is, create the block and fill in the saved stuff.
+      // We subtract 3 because 4 chars are already present, but we need one extra for the pad.
 
-      call_root = (call_with_name *) (*the_callback_block.get_mem_fn)(sizeof(call_with_name) + char_count - 3);
+      call_root = (call_with_name *) get_mem(sizeof(call_with_name) + char_count - 3);
       call_root->menu_name = (Cstring) 0;
 
       if (savetag) {
@@ -1077,42 +1622,50 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
       call_root->the_defn.callflagsf = saveflags2 << 24;
-      /* Will get "CFLAGH" and "ESCAPE_WORD" bits later. */
+      // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
       call_root->the_defn.callflagsh = saveflagsh;
       read_in_call_definition(&call_root->the_defn, char_count);
 
-      /* We accept a call if:
-         (1) we are writing out just this list, and the call matches the desired level exactly, or
-         (2) we are writing out this list and those below, and the call is <= the desired level, or
-         (3) we are running, and the call is <= the desired level or the "higher acceptable level".
-            The latter is c3x if the desired level is c3, or c4x if the desired level is c4.
-            That way, c3x calls will be included.  We will print a warning if they are used. */
+      // We accept a call if:
+      // (1) we are writing out just this list, and the call matches the desired level exactly,
+      //          or
+      // (2) we are writing out this list and those below, and the call is <= the desired level,
+      //          or
+      // (3) we are running, and the call is <= the desired level or the
+      //    "higher acceptable level".
+      //    The latter is c3x if the desired level is c3, or c4x if the desired level is c4.
+      //    That way, c3x calls will be included.  We will print a warning if they are used.
 
-      if (     this_level == calling_level ||
-               (call_list_mode != call_list_mode_writing && this_level <= acceptable_level)) {
+      if (this_level == calling_level ||
+          (call_list_mode != call_list_mode_writing && this_level <= acceptable_level)) {
 
-         /* Process tag base calls specially. */
+         // Process tag base calls specially.
          if (call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
-            int tagclass = ((call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) / CFLAG1_BASE_TAG_CALL_BIT) - 1;
+            int tagclass = ((call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) /
+                            CFLAG1_BASE_TAG_CALL_BIT) - 1;
 
-            /* All classes go into list 0.  Additionally, the other classes go into their own list. */
+            // All classes go into list 0.  Additionally, the other classes
+            // go into their own list.
             number_of_taggers[tagclass]++;
-            tagger_calls[tagclass] = (call_with_name **) (*the_callback_block.get_more_mem_fn)(tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(call_with_name *));
+            tagger_calls[tagclass] = (call_with_name **)
+               get_more_mem(tagger_calls[tagclass],
+                            number_of_taggers[tagclass]*sizeof(call_with_name *));
             tagger_calls[tagclass][number_of_taggers[tagclass]-1] = call_root;
             if (tagclass != 0) {
                number_of_taggers[0]++;
-               tagger_calls[0] = (call_with_name **) (*the_callback_block.get_more_mem_fn)(tagger_calls[0], number_of_taggers[0]*sizeof(call_with_name *));
+               tagger_calls[0] = (call_with_name **)
+                  get_more_mem(tagger_calls[0],
+                               number_of_taggers[0]*sizeof(call_with_name *));
                tagger_calls[0][number_of_taggers[0]-1] = call_root;
             }
             else if (call_root->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
-               /* But anything that invokes a tagging call goes into each list,
-                  inheriting its own class. */
-               int xxx;
+               // But anything that invokes a tagging call goes into each list,
+               // inheriting its own class.
 
-               /* Iterate over all tag classes except class 0. */
-               for (xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
+               // Iterate over all tag classes except class 0.
+               for (int xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
                   call_with_name *new_call =
-                     (call_with_name *) (*the_callback_block.get_mem_fn)(sizeof(call_with_name) + char_count - 3);
+                     (call_with_name *) get_mem(sizeof(call_with_name) + char_count - 3);
                   (void) memcpy(new_call, call_root, sizeof(call_with_name) + char_count - 3);
                   /* Fix it up. */
                   new_call->the_defn.callflagsf =
@@ -1120,7 +1673,7 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
                      CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
                   number_of_taggers[xxx]++;
                   tagger_calls[xxx] = (call_with_name **)
-                     (*the_callback_block.get_more_mem_fn)(tagger_calls[xxx],
+                     get_more_mem(tagger_calls[xxx],
                                   number_of_taggers[xxx]*sizeof(call_with_name *));
                   tagger_calls[xxx][number_of_taggers[xxx]-1] = new_call;
                }
@@ -1131,33 +1684,43 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
             if (call_root->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
                number_of_circcers++;
                circcer_calls = (call_with_name **)
-                  (*the_callback_block.get_more_mem_fn)(circcer_calls, number_of_circcers*sizeof(call_with_name *));
+                  get_more_mem(circcer_calls, number_of_circcers*sizeof(call_with_name *));
                circcer_calls[number_of_circcers-1] = call_root;
             }
             if (local_callcount >= abs_max_calls)
-               database_error("Too many base calls -- mkcalls made an error");
+               database_error_exit("Too many base calls -- mkcalls made an error");
             local_call_list[local_callcount++] = call_root;
          }
       }
    }
 
    number_of_calls[call_list_any] = local_callcount;
-   main_call_lists[call_list_any] = (call_with_name **) (*the_callback_block.get_mem_fn)(local_callcount * sizeof(call_with_name *));
+   main_call_lists[call_list_any] = (call_with_name **) get_mem(local_callcount * sizeof(call_with_name *));
    for (i=0; i < local_callcount; i++) {
       main_call_lists[call_list_any][i] = local_call_list[i];
    }
-   (*the_callback_block.free_mem_fn)(local_call_list);
+   free_mem(local_call_list);
 
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]) {
-         print_id_error(i);
-         (*the_callback_block.exit_program_fn)(1);
+         char msg [50];
+         sprintf(msg, "%d", i);
+         gg->fatal_error_exit(1, "Call didn't identify self", msg);
       }
    }
 
-   (*the_callback_block.close_database_fn)();
-   (*the_callback_block.uims_database_tick_fn)(10);
+   close_database();
 }
+
+
+// We will call "do_tick" with total arguments of 32.
+// 2 at the end of "build_database", after we have read the database file.
+// 1 after sorting the database.
+// 1 after making the universal menu.
+// 2 after testing each starting setup and making its menu.  There are 14.
+
+#define TICK_TOTAL 32
+
 
 
 /* This cleans up the text of a call or concept name, returning the
@@ -1204,7 +1767,7 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
          c = orig_name[j];
 
          if (c == '@') {
-            Const char *q = get_escape_string(orig_name[++j]);
+            const char *q = get_escape_string(orig_name[++j]);
             if (q && *q) {
                while (*q) temp_ptr[templength++] = *q++;
                continue;
@@ -1224,7 +1787,7 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
 
       tempname[templength] = '\0';
       /* Must copy the text into some fresh memory, being careful about overflow. */
-      new_ptr = (char *) (*the_callback_block.get_mem_fn)(templength+1);
+      new_ptr = (char *) get_mem(templength+1);
       for (j=0; j<=templength; j++) new_ptr[j] = tempname[j];
       return new_ptr;
    }
@@ -1234,11 +1797,335 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
 
 
 
-SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
+// The internal color scheme is:
+//
+// 0 - not used
+// 1 - substitute yellow
+// 2 - red
+// 3 - green
+// 4 - yellow
+// 5 - blue
+// 6 - magenta
+// 7 - cyan
+//
+// The substitute yellow is for use when normal_video (white background)
+// is selected.  It is dark yellow if available, otherwise black.
+
+// Alternating blue and red.
+static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
+
+// Alternating bletcherous blue and putrid pink.
+static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
+
+// Red, green, blue, yellow, red for wraparound if coloring by corner.
+static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
+
+// Red, green, blue, substitute yellow, red for wraparound if coloring by corner.
+static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
+
+// Red, green, yellow, blue.
+static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
+
+// Red, green, substitute yellow, blue.
+static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
+
+
+int useful_concept_indices[UC_extent];
+
+extern long_boolean open_session(int argc, char **argv)
 {
-   uint32 escape_bit_junk;
-   uint32 uj;
    int i, j;
+   uint32 uj;
+   int argno;
+   char line[MAX_FILENAME_LENGTH];
+   char **args;
+   int nargs = argc;
+
+   /* Copy the arguments, so that we can use "realloc" to grow the list. */
+
+   args = (char **) get_mem(nargs * sizeof(char *));
+
+   (void) memcpy(args, argv, nargs * sizeof(char *));
+
+   /* Read the initialization file, looking for options. */
+
+   init_file = fopen(SESSION_FILENAME, "r");
+   int insert_pos = 1;
+
+   // Search for the "[Options]" indicator.
+
+   if (find_init_file_region("[Options]", 9)) {
+      for (;;) {
+         char *lineptr = line;
+
+         // Blank line or line starting with left bracket ends the section.
+         if (!fgets(&line[1], MAX_FILENAME_LENGTH, init_file) || line[1] == '\n' || line[1] == '[') break;
+
+         j = strlen(&line[1]);
+         if (j>0) line[j] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+         line[0] = '-';             /* Put a '-' in front of it. */
+
+         for (;;) {
+            char token[MAX_FILENAME_LENGTH];
+            int newpos;
+
+            /* Break the line into tokens, and insert each as a command-line argument. */
+
+            /* We need to put a blank at the end, so that the "%s %n" spec won't get confused. */
+
+            j = strlen(lineptr);
+            if (j > 0 && lineptr[j-1] != ' ') {
+               lineptr[j] = ' ';
+               lineptr[j+1] = '\0';
+            }
+            if (sscanf(lineptr, "%s%n ", token, &newpos) != 1) break;
+
+            j = strlen(token)+1;
+            nargs++;
+            args = (char **) get_more_mem(args, nargs * sizeof(char *));
+            for (i=nargs-1 ; i>insert_pos ; i--) args[i] = args[i-1];
+            args[insert_pos] = (char *) get_mem(j);
+            (void) memcpy(args[insert_pos], token, j);
+            insert_pos++;
+            lineptr += newpos;
+         }
+      }
+   }
+
+   /* This lets the user interface intercept command line arguments that it is interested in. */
+   gg->process_command_line(&nargs, &args);
+
+   glob_call_list_mode = call_list_mode_none;
+   calling_level = l_nonexistent_concept;    /* Mark it uninitialized. */
+
+   for (argno=1; argno < nargs; argno++) {
+      if (args[argno][0] == '-') {
+
+         /* Special flag: must be one of
+            -write_list <filename>  -- write out the call list for the
+                  indicated level INSTEAD OF running the program
+            -write_full_list <filename>  -- write out the call list for the
+                  indicated level and all lower levels INSTEAD OF running the program
+            -abridge <filename>  -- read in the file, strike all the calls
+                  contained therein off the menus, and proceed.
+            -diagnostic  -- (this is a hidden flag) suppress display of version info */
+
+         if (strcmp(&args[argno][1], "write_list") == 0) {
+            glob_call_list_mode = call_list_mode_writing;
+            if (argno+1 < nargs) call_list_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "write_full_list") == 0) {
+            glob_call_list_mode = call_list_mode_writing_full;
+            if (argno+1 < nargs) call_list_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "abridge") == 0) {
+            glob_call_list_mode = call_list_mode_abridging;
+            if (argno+1 < nargs) call_list_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "sequence") == 0) {
+	     if (argno+1 < nargs) new_outfile_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "db") == 0) {
+            if (argno+1 < nargs) database_filename = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "sequence_num") == 0) {
+            if (argno+1 < nargs) {
+               if (sscanf(args[argno+1], "%d", &ui_options.sequence_num_override) != 1)
+                  gg->bad_argument("Bad number", args[argno+1], 0);
+            }
+         }
+         else if (strcmp(&args[argno][1], "no_intensify") == 0)
+            { ui_options.no_intensify = 1; continue; }
+         else if (strcmp(&args[argno][1], "reverse_video") == 0)
+            { ui_options.reverse_video = 1; continue; }
+         else if (strcmp(&args[argno][1], "normal_video") == 0)
+            { ui_options.reverse_video = 0; continue; }
+         else if (strcmp(&args[argno][1], "pastel_color") == 0)
+            { ui_options.pastel_color = 1; continue; }
+         else if (strcmp(&args[argno][1], "bold_color") == 0)
+            { ui_options.pastel_color = 0; continue; }
+         else if (strcmp(&args[argno][1], "no_color") == 0)
+            { ui_options.color_scheme = no_color; continue; }
+         else if (strcmp(&args[argno][1], "color_by_couple") == 0)
+            { ui_options.color_scheme = color_by_couple; continue; }
+         else if (strcmp(&args[argno][1], "color_by_couple_rgyb") == 0)
+            { ui_options.color_scheme = color_by_couple_rgyb; continue; }
+         else if (strcmp(&args[argno][1], "color_by_corner") == 0)
+            { ui_options.color_scheme = color_by_corner; continue; }
+         else if (strcmp(&args[argno][1], "no_sound") == 0)
+            { ui_options.no_sound = 1; continue; }
+         else if (strcmp(&args[argno][1], "single_click") == 0)
+            { ui_options.accept_single_click = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "no_checkers") == 0)
+            { ui_options.no_graphics = 1; continue; }
+         else if (strcmp(&args[argno][1], "no_graphics") == 0)
+            { ui_options.no_graphics = 2; continue; }
+         else if (strcmp(&args[argno][1], "diagnostic") == 0)
+            { diagnostic_mode = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "singlespace") == 0)
+            { ui_options.singlespace_mode = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "no_warnings") == 0)
+            { ui_options.nowarn_mode = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "concept_levels") == 0)
+            { allowing_all_concepts = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "minigrand_getouts") == 0)
+            { allowing_minigrand = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "active_phantoms") == 0)
+            { using_active_phantoms = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "discard_after_error") == 0)
+            { retain_after_error = false; continue; }
+         else if (strcmp(&args[argno][1], "retain_after_error") == 0)
+            { retain_after_error = true; continue; }
+         else if (strcmp(&args[argno][1], "new_style_filename") == 0)
+            { filename_strings = new_filename_strings; continue; }
+         else if (strcmp(&args[argno][1], "old_style_filename") == 0)
+            { filename_strings = old_filename_strings; continue; }
+         else
+            gg->bad_argument("Unknown flag", args[argno], 0);
+
+         argno++;
+         if (argno >= nargs)
+            gg->bad_argument("This flag must be followed by a number or file name",
+                             args[argno-1], 0);
+      }
+      else if (!parse_level(args[argno], &calling_level)) {
+         gg->bad_argument("Unknown calling level argument", args[argno],
+            "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, c4, or c4x.");
+      }
+   }
+
+   free(args);
+
+   /* If we have a calling level at this point, fill in the output file name.
+      If we do not have a calling level, we will either get it from the session
+      file, in which case we will get the file name also, or we will have to query
+      the user.  In the latter case, we will do this step again. */
+
+   if (calling_level != l_nonexistent_concept)
+      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+
+   /* At this point, the command-line arguments, and the preferences in the "[Options]"
+      section of the initialization file, have been processed.  Some of those things
+      may still interact with the start-up procedure.  They are:
+
+         glob_call_list_mode [default = call_list_mode_none]
+         calling_level       [default = l_nonexistent_concept]
+         new_outfile_string  [default = (char *) 0, this is just a pointer]
+         call_list_string    [default = (char *) 0], this is just a pointer]
+         database_filename   [default = "sd_calls.dat", this is just a pointer]
+   */
+
+   // Now open the session file and find out what we are doing.
+
+   // This could return true, either with session_index<0 for deletion,
+   // or because of error, to get immediate exit.
+   if (gg->init_step(get_session_info, 0)) {
+      close_init_file();
+      return TRUE;
+   }
+
+   // Set up the color translations based on the user's options.
+
+   if (ui_options.color_scheme == color_by_gender ||
+       ui_options.color_scheme == no_color) {
+      // It doesn't really matter if "no_color" is selected,
+      // as long as we put in something.  The Windows interface
+      // code simply sets the palette so that all colors are
+      // monochrome, and then uses color_index_list.
+      if (ui_options.pastel_color)
+         color_index_list = pastel_person_colors;
+      else
+         color_index_list = bold_person_colors;
+   }
+   else {
+      if (ui_options.reverse_video || ui_options.no_intensify) {
+         if (ui_options.color_scheme == color_by_corner)
+            color_index_list = couple_colors_rgby+1;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            color_index_list = couple_colors_rgyb;
+         else                      // color_by_couple
+            color_index_list = couple_colors_rgby;
+      }
+      else {
+         if (ui_options.color_scheme == color_by_corner)
+            color_index_list = couple_colors_rgbk+1;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            color_index_list = couple_colors_rgkb;
+         else                      // color_by_couple
+            color_index_list = couple_colors_rgbk;
+      }
+   }
+
+   if (ui_options.sequence_num_override > 0)
+      sequence_number = ui_options.sequence_num_override;
+
+   if (calling_level == l_nonexistent_concept)
+      gg->init_step(final_level_query, 0);
+
+   if (new_outfile_string)
+      (void) install_outfile_string(new_outfile_string);
+
+   // We now have the following things filled in:
+   // session_index
+   // glob_call_list_mode
+
+   uint32 escape_bit_junk;
+
+   for (i = 0 ; i < UC_extent ; i++)
+      useful_concept_indices[i] = -1;
+
+   for (i=0; unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++) {
+      unsealed_concept_descriptor_table[i].menu_name =
+         translate_menu_name(unsealed_concept_descriptor_table[i].name, &escape_bit_junk);
+
+      if (unsealed_concept_descriptor_table[i].useful != UC_none) {
+         if (useful_concept_indices[unsealed_concept_descriptor_table[i].useful] >= 0)
+            gg->fatal_error_exit(1, "Concept registered twice.");
+
+         useful_concept_indices[unsealed_concept_descriptor_table[i].useful] = i;
+      }
+   }
+
+   for (i = 1 ; i < UC_extent ; i++) {
+     if (useful_concept_indices[i] < 0)
+        gg->fatal_error_exit(1, "Concept failed to register.");
+   }
+
+   // "Seal" various statically initialized tables.  It seems that C-style
+   // aggregate initializers make C++ compilers unhappy and cantankerous,
+   // and they punish us by forbidding const declarations of the fields.
+   // So the initialized tables are writable.  We copy their address into
+   // a pointer that has the const attribute.
+
+   concept_descriptor_table = unsealed_concept_descriptor_table;
+
+   starting_sequence_number = sequence_number;
+
+   gg->init_step(init_database1, 0);
+
+   initialize_sdlib();
+   prepare_to_read_menus();
+
+   // Opening the database sets up the values of
+   // abs_max_calls and max_base_calls.
+   // Must do before telling the uims so any open failure messages
+   // come out first.
+
+   char session_error_msg1[200], session_error_msg2[200];
+
+   if (open_database(session_error_msg1, session_error_msg2))
+      gg->fatal_error_exit(1, session_error_msg1, session_error_msg2);
+
+   // This actually reads the calls database file and creates the
+   // "any" menu.  It calls init_step(init_calibrate_tick), which calibrates
+   // the progress bar.
+   build_database(glob_call_list_mode);
+
+   gg->init_step(init_database2, 0);
+   gg->init_step(calibrate_tick, TICK_TOTAL);
+   gg->init_step(do_tick, 2);
+
+   // This is the thing that takes all the time!
 
    /* Make the translated names for all calls and concepts.  These have the "<...>"
       phrases, suitable for external display on menus, instead of "@" escapes. */
@@ -1251,7 +2138,8 @@ SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
    for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
       for (uj=0; uj<number_of_taggers[i]; uj++)
          tagger_calls[i][uj]->menu_name =
-            translate_menu_name(tagger_calls[i][uj]->name, &tagger_calls[i][uj]->the_defn.callflagsf);
+            translate_menu_name(tagger_calls[i][uj]->name,
+                                &tagger_calls[i][uj]->the_defn.callflagsf);
    }
 
    for (uj=0; uj<number_of_circcers; uj++)
@@ -1266,10 +2154,6 @@ SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
             translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
    }
 
-   for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++)
-      concept_descriptor_table[i].menu_name =
-         translate_menu_name(concept_descriptor_table[i].name, &escape_bit_junk);
-
    the_array = main_call_lists[call_list_any];
    heapsort(number_of_calls[call_list_any]);
 
@@ -1281,15 +2165,15 @@ SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
          display in the menus (no "@" signs) and initialize the menus with the
          cleaned-up and subsetted text. */
 
-   (*the_callback_block.uims_database_tick_fn)(5);
+   gg->init_step(do_tick, 1);
 
    /* Do special stuff if we are reading or writing a call list file. */
 
-   if (call_list_mode != call_list_mode_none) {
-      if (call_list_mode == call_list_mode_abridging) {
+   if (glob_call_list_mode != call_list_mode_none) {
+      if (glob_call_list_mode == call_list_mode_abridging) {
          char abridge_call[100];
    
-         while ((*the_callback_block.read_from_call_list_file_fn)(abridge_call, 99)) {
+         while (read_from_call_list_file(abridge_call, 99)) {
             /* Remove the newline character. */
             abridge_call[strlen(abridge_call)-1] = '\0';
             /* Search through the call name list for this call.
@@ -1309,18 +2193,16 @@ SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
             }
          }
       }
-      else {      /* Writing a list of some kind. */
-         for (i=0; i<number_of_calls[call_list_any]; i++) {
-            (*the_callback_block.write_to_call_list_file_fn)(main_call_lists[call_list_any][i]->menu_name);
-         }
+      else {      // Writing a list of some kind.
+         for (i=0; i<number_of_calls[call_list_any]; i++)
+            write_to_call_list_file(main_call_lists[call_list_any][i]->menu_name);
       }
 
-      /* Close the file. */
-      if ((*the_callback_block.close_call_list_file_fn)())
-         (*the_callback_block.exit_program_fn)(1);
+      // Close the file.  Will exit if it fails.
+      close_call_list_file();
 
-      if (call_list_mode != call_list_mode_abridging)
-         goto getout;   /* That's all! */
+      if (glob_call_list_mode != call_list_mode_abridging)
+         goto just_writing_list;   // That's all!
    }
 
    /* Now the array "main_call_lists[call_list_any]"
@@ -1329,11 +2211,11 @@ SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
          those calls legal from columns), and initialize the menus with the
          subsetted text. */
 
-   /* This is the universal menu. */
-   (*the_callback_block.uims_create_menu_fn)(call_list_any);
-   (*the_callback_block.uims_database_tick_fn)(5);
+   // This is the universal menu.
+   gg->create_menu(call_list_any);
+   gg->init_step(do_tick, 1);
 
-   /* Create the special call menus for restricted setups. */
+   // Create the special call menus for restricted setups.
 
    test_starting_setup(call_list_1x8,  &test_setup_1x8);          /* RH grand wave */
    test_starting_setup(call_list_l1x8, &test_setup_l1x8);         /* LH grand wave */
@@ -1353,15 +2235,58 @@ SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
    create_misc_call_lists(call_list_qtag);                        /* QTAG */
 
    /* This was global to the initialization, but it goes away also. */
-   (*the_callback_block.free_mem_fn)(global_temp_call_list);
+   free_mem(global_temp_call_list);
 
    /* Initialize the special empty call menu */
 
    main_call_lists[call_list_empty] = empty_menu;
    number_of_calls[call_list_empty] = 0;
 
-   getout:
+ just_writing_list: ;
 
-   (*the_callback_block.uims_database_tick_end_fn)();
-   return;
+   gg->init_step(tick_end, 0);
+
+   // If we wrote a call list file, that's all we do.
+   if (glob_call_list_mode == call_list_mode_writing ||
+       glob_call_list_mode == call_list_mode_writing_full) {
+      close_init_file();
+      return TRUE;
+   }
+
+   matcher_initialize();
+
+   // Make the status bar show that we are processing accelerators.
+   gg->init_step(do_accelerator, 0);
+
+   {
+      long_boolean save_allow = allowing_all_concepts;
+      allowing_all_concepts = TRUE;
+
+      // Process the keybindings for user-definable calls, concepts, and commands.
+
+      if (find_init_file_region("[Accelerators]", 14)) {
+         char q[INPUT_TEXTLINE_SIZE];
+         while (get_accelerator_line(q))
+            do_accelerator_spec(q, true);
+      }
+      else {
+         Cstring *q;
+         for (q = concept_key_table ; *q ; q++)
+            do_accelerator_spec(*q, true);
+      }
+
+      // Now do the abbreviations.
+
+      if (find_init_file_region("[Abbreviations]", 15)) {
+         char q[INPUT_TEXTLINE_SIZE];
+         while (get_accelerator_line(q))
+            do_accelerator_spec(q, false);
+      }
+
+      allowing_all_concepts = save_allow;
+   }
+
+   close_init_file();
+   gg->final_initialize();
+   return FALSE;
 }

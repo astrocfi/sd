@@ -8,10 +8,30 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 </p>
 <br>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 34.6</strong>, released on September 16, 2001.
+<strong>The current version of Sd/Sdtty is 34.7</strong>, released on September 1, 2002.
+<p align="center">
+<strong>COMPILER BUG ALERT!!!!!</strong>
 <p>
-The program can handle simple cases of setups tilted at a 45 degree
-angle.
+Microsoft Visual C++, professional edition, version 6.0, service pack 5, has a
+bug that renders it unfit for compiling Sd or Sdtty.  See the release notes for
+version 34.7 for details.  This bug does not affect users, because this compiler
+has never been used, and never will be used, for compiling Sd.
+</p>
+<br>
+<p>
+The program is now able to write the output file with a "new style" name.
+These names end in ".txt", as in "sequence_C1.txt" or "01sep02_C1.txt".
+Files with these names are expected to behave better when read into word
+processors, printed, or sent as email attachments.
+The simplest way to get this new behavior is to add the following line
+to the "[options]" section of the sd.ini file:
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new_style_filename
+<p>
+The program now allows you to define call or concept abbreviations
+in the sd.ini file.  See the release notes.
+<p>
+The resolver has been modified to improve its behavior at high levels.
 <p>
 <dl>
 <dt>
@@ -31,7 +51,7 @@ Background and availability info.
 <dd>
 Be running the latest, fully-functional version
 <a href="download-pc.html">on your own PC</a>
-(Windows, Linux, or DOS) in minutes.
+(Windows or Linux) in minutes.
 <br>
 Or download the program for other varieties of
 <a href="download-unix.html">Unix</a>.
@@ -41,16 +61,7 @@ Or download the program for other varieties of
 <font size="+1"><a href="readings.html">Documentation</a></font></dt>
 <dd>
 Browse or download documents about Sd,
-including the entire <a href="manual/">users manual</a>.
-<br>&nbsp;<!--blank line--><br>
-</dd>
-<dt>
-<font size="+1">Mailing List</font></dt>
-<dd>
-To add yourself to the mailing list to receive announcements
-of new versions, send a message to
-<a href="mailto:sd-request@lists.best.com">&lt;sd-request@lists.best.com&gt;</a>.
-Put the single lower-case word "subscribe" in the message body.
+including the entire <a href="sd_doc.html">users manual</a>.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>
@@ -66,10 +77,10 @@ Email
 <a href="mailto:wba@alum.mit.edu">&lt;wba@alum.mit.edu&gt;</a>.
 <hr>
 For general info on square dancing, see the
-<a href="http://www.doSAdo.com/">Western Square Dancing</a>
+<a href="http://www.dosado.com/">Western Square Dancing</a>
 site.
 <br>
-<em>Time-stamp: "3 February 2000"</em>
+<em>Time-stamp: "11 August 2002"</em>
 <!-- end of body text -->
 </td>
 <td bgcolor="#ff9900">&nbsp;</td>

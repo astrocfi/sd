@@ -1,6 +1,6 @@
               FORMAT OF THE SD/SDTTY DATABASE
 
-    Copyright (C) 1990-2001  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -159,6 +159,15 @@ shown with a map giving the person numbering:
             |     |     |     |     |     |     |     |     |
             | 15  | 14  | 13  | 12  | 11  | 10  |  9  |  8  |
             |_____|_____|_____|_____|_____|_____|_____|_____|
+
+
+             _____ _____ _____ _____ _____ _____ _____ _____ _____
+            |     |     |     |     |     |     |     |     |     |
+            |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |
+2x9         |_____|_____|_____|_____|_____|_____|_____|_____|_____|
+            |     |     |     |     |     |     |     |     |     |
+            | 17  | 16  | 15  | 14  | 13  | 12  | 11  | 10  |  9  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|_____|
 
 
              _____ _____ _____ _____ _____ _____ _____ _____ _____ _____
@@ -468,16 +477,17 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                   |_____|           |_____|           |_____|
 
 
-                                  _____
-                                 |     |
-                   _____         |  1  |         _____
-             _____|     |_____ __|__ __|__ _____|     |_____
-            |     |  0  |     |     |     |     |  2  |     |
-3mptpd      |  9  |_____| 10  | 11  |  5  |  4  |_____|  3  |
-            |_____|     |_____|_____|_____|_____|     |_____|
-                  |  8  |        |     |        |  6  |
-                  |_____|        |  7  |        |_____|
-                                 |_____|
+                                  _____       _____
+                                 |     |     |     |
+                   _____         |  1  |     |  2  |         _____
+             _____|     |_____ __|__ __|__ __|__ __|__ _____|     |_____
+            |     |  0  |     |     |     |     |     |     |  3  |     |
+4mptpd      | 12  |_____| 13  | 14  | 15  |  7  |  6  |  5  |_____|  4  |
+            |_____|     |_____|_____|_____|_____|_____|_____|     |_____|
+                  | 11  |        |     |     |     |        |  8  |
+                  |_____|        | 10  |     |  9  |        |_____|
+                                 |_____|     |_____|
+
 
 
                    _____             _____             _____             _____
@@ -552,6 +562,18 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                |     |        |  7  |        |     |
                |  8  |        |_____|        |  6  |
                |_____|                       |_____|
+
+
+                                  _____
+                                 |     |
+                   _____         |  1  |         _____
+             _____|     |_____ __|__ __|__ _____|     |_____
+            |     |  0  |     |     |     |     |  2  |     |
+3mptpd      |  9  |_____| 10  | 11  |  5  |  4  |_____|  3  |
+            |_____|     |_____|_____|_____|_____|     |_____|
+                  |  8  |        |     |        |  6  |
+                  |_____|        |  7  |        |_____|
+                                 |_____|
 
 
                 _____       _____       _____       _____
@@ -1040,6 +1062,25 @@ bigptpd     |  2  |_____|  3  |  9  |_____|  8  |
 
 
 
+                _____       _____       _____
+               |     |     |     |     |     |
+               |  0  |     |  1  |     |  2  |
+               |_____|     |_____|     |_____|
+               |     |     |     |     |     |
+               |  5  |     |  4  |     |  3  |
+             __|__ __|__ __|__ __|__ __|__ __|__
+            |     |     |     |     |     |     |
+big3dmd     | 15  | 16  | 17  |  8  |  7  |  6  |
+            |_____|_____|_____|_____|_____|_____|
+               |     |     |     |     |     |
+               | 12  |     | 13  |     | 14  |
+               |_____|     |_____|     |_____|
+               |     |     |     |     |     |
+               | 11  |     | 10  |     |  9  |
+               |_____|     |_____|     |_____|
+
+
+
                             _____
                            |     |
              _____ _____   |  2  |   _____ _____
@@ -1128,6 +1169,22 @@ wqtag       |  7  |  8  |  9  |  4  |  3  |  2  |
                         |     |     |
                         |  6  |  5  |
                         |_____|_____|
+
+
+             _____                         _____
+            |     |   _____       _____   |     |
+            |  0  |  |     |     |     |  | 11  |
+            |_____|  |  4  |     |  5  |  |_____|
+            |     |__|__ __|__ __|__ __|__|     |
+            |  1  |     |     |     |     | 10  |
+hqtag       |_____| 14  | 15  |  7  |  6  |_____|
+            |     |_____|_____|_____|_____|     |
+            |  2  |  |     |     |     |  |  9  |
+            |_____|  | 13  |     | 12  |  |_____|
+            |     |  |_____|     |_____|  |     |
+            |  3  |                       |  8  |
+            |_____|                       |_____|
+
 
 
                       _____
@@ -2158,6 +2215,8 @@ pair_person_select
       "quadruple pair" is selected.
 
 select_once_rem_from_unselect
+        ****** Also in 2x6.  Requires a parallelogram to function sensibly.
+
       applies to 1x4, 1x8, or 2x4 only.  Returns TRUE if the person under test is
       selected and the person once-removed from that person is not
       selected.  Returns FALSE otherwise.  See the descriptions of "select"
@@ -2182,20 +2241,26 @@ x22_couple
       or is T-boned.
 
 x22_facing_someone
-      applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
       person under test is alive and facing the opposite direction.
       Returns FALSE if the vertical partner is a phantom or faces the
       same way or is T-boned.  The name may be misleading.  It is intended
       to be used to determine if the person being tested is facing someone
       else's face, but, if the two people are back-to-back, the predicate
-      will also be satisfied.  To get the desired effect, you must require
-      everyone to be a trailer.
+      will also be satisfied.  To get the effect actually implied by the name,
+      you must require everyone to be a trailer.
 
 x22_tandem_with_someone
-      applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
       person under test is alive and facing the same direction.
       Returns FALSE if the vertical partner is a phantom or faces the
       opposite way or is T-boned.
+
+x24_facing_someone
+x24_tandem_with_someone
+      Applies to 2x4 only (lines or columns).  Equivalent to x22_facing_someone
+      or x22_tandem_with_someone, for 2x4's.  Finds the vertical partner in
+      the person's 2x2 box.
 
 columns_someone_in_front
       applies to 3x2 or 4x2 only.  For a 3x2:  Returns TRUE for any of the
@@ -2652,12 +2717,12 @@ roll_is_ccw
       is clockwise, or the person can't roll, or roll direction from the
       preceding call is ill-defined.
 
-x12_boy_facing_girl
+x12_boy_with_girl
       applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
       is an unambiguous boy, and the other person in the column is alive and an
       unambiguous girl.  Facing directions are not checked.
 
-x12_girl_facing_boy
+x12_girl_with_boy
       applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
       is an unambiguous girl, and the other person in the column is alive and an
       unambiguous boy.  Facing directions are not checked.
@@ -2928,13 +2993,37 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    awkward_centers,                 1x2, 1x4, 1x6, 2x4, or 1x8 - centers must not have
                                        left hands with each other
 
-   diamond_like                     dmd, qtag or ptpd - points look sideways, and centers
-                                       are line-like.  Restriction or qualifier.
+   diamond_like    R/Q              dmd, qtag or ptpd - points look sideways, and centers
+                                       are line-like.
 
-   qtag_like,                       dmd/qtag/ptpd/3dmd/4dmd - points look in or out,
-                                       and centers are line-like
-   pu_qtag_like,                    dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
-                                       and centers are column-like
+   qtag_like       R/Q              dmd/qtag/ptpd/3dmd/4dmd - points look in or out,
+                                       and centers are line-like.  When used as a qualifier,
+                                    we additionally allow the "in" or "out" modifiers, to
+                                    demand 1/4 tag or 3/4 tag, respectively.
+                                    Also, if "in" or "out" is given, the "live" modifier
+                                    requires at least one live end to make the distinction
+                                    definitive.  It does not require all live people.
+                                    NOTE that "gen_n_4_tag" is identical to "qtag_like"
+
+
+   gen_n_4_tag     Q                dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
+                                    in which the ends could individually be facing either
+                                    in or out, and the centers form some kind of line.
+                                    Modifier "in" or "out" applies to ends, and tests for
+                                    1/4 tag or 3/4 tag, respectively.  If "in" or "out"
+                                    is given, the "live" modifier makes it demand at least
+                                    one live end, so that the in/out test is definitive.
+                                    It does not test for all live people the way it does
+                                    in some other cases.
+
+   pu_qtag_like    R/Q              dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
+                                       and centers are column-like.
+                                       When used as a qualifier, right/left refer
+                                       to points.  The "live" modifier demands that there be
+                                       be at least one definitive person to test right or left.
+                                       It does not demand all people live.  It is meaningless
+                                       if left or right isn't specified.
+
    regular_tbone                    2x2/1x4/2x4 - demands that the box (or each box, if this is
                                        a 2x4) be a "regular T-bone".  It must be locally
                                        symmetric, 2 people looking in and 2 looking out.
@@ -2946,14 +3035,14 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        Also, the ends must be column-like and the centers
                                        must be line-like.
 
-   nice_diamonds                    dmd, qtag, ptpd, or c1phan - diamond(s) are actual
+   nice_diamonds   R/Q              dmd, qtag, ptpd, or c1phan - diamond(s) are actual
                                        diamonds, and have consistent handedness.
-                                       Restriction or qualifier.  "Right/left" and "live"
-                                       may be used when it is a qualifier -- right/left
-                                       demand that handedness.  When used in a c1phan,
-                                       the expectation is that people are in stars.
+                                       "Right/left" and "live" may be used when it
+                                       is a qualifier -- right/left demand that handedness.
+                                       When used in a c1phan, the expectation is that
+                                       people are in stars.
 
-   dmd_facing                       dmd, qtag, ptpd, or c1phan - diamond(s) are actual
+   dmd_facing      R/Q              dmd, qtag, ptpd, or c1phan - diamond(s) are actual
                                        diamonds, are facing, and have consistent handedness.
                                        Restriction or qualifier.  "Right/left" and "live"
                                        may be used when it is a qualifier -- right/left
@@ -2962,8 +3051,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        the expectation is that people are in stars, and
                                        "right"/"left" are meaningless.
 
-   nice_wv_triangles                short6, bone6, trngl - triangle(s) are wave-based and
-                                       of consistent handedness.  Restriction or qualifier.
+   nice_wv_triangles R/Q            short6, bone6, trngl - triangle(s) are wave-based and
+                                       of consistent handedness.
                                        "Right/left" and "live" may be used when it
                                        is a qualifier.
    nice_tnd_triangles               as above, triangles are tandem-based.
@@ -3023,30 +3112,6 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
 
 
-   qtag_like,                       Same as corresponding restriction, above.
-                                    We additionally allow the "in" or "out" modifiers, to
-                                    demand 1/4 tag or 3/4 tag, respectively.
-                                    Also, if "in" or "out" is given, the "live" modifier
-                                    requires at least one live end to make the distinction
-                                    definitive.  It does not require all live people.
-                                    NOTE that "gen_n_4_tag" is identical to "qtag_like"
-
-   gen_n_4_tag                      dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
-                                    in which the ends could individually be facing either
-                                    in or out, and the centers form some kind of line.
-                                    Modifier "in" or "out" applies to ends, and tests for
-                                    1/4 tag or 3/4 tag, respectively.  If "in" or "out"
-                                    is given, the "live" modifier makes it demand at least
-                                    one live end, so that the in/out test is definitive.
-                                    It does not test for all live people the way it does
-                                    in some other cases.
-
-   pu_qtag_like                     Same as corresponding restriction, above.  Right/left refer
-                                       to points.  The "live" modifier demands that there be
-                                       be at least one definitive person to test right or left.
-                                       It does not demand all people live.  It is meaningless
-                                       if left or right isn't specified.
-
    regular_tbone                    Same as corresponding restriction, above.
                                        The "live" modifier demands that there all people
                                        be present.  The "in" or "out" modifiers may be used
@@ -3087,6 +3152,10 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    true_Z_cw, true_Z_ccw,           2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.
                                     In a 2x3 setup it also demands that the shear direction
+                                    be as shown.  In the larger setups either qualifier
+                                    passes the test for any shear direction.
+   true_PG_cw, true_PG_ccw,         2x6, 4x6, 2x12 - each 2x6 setup is a genuine parallelogram.
+                                    In a 2x6 setup it also demands that the shear direction
                                     be as shown.  In the larger setups either qualifier
                                     passes the test for any shear direction.
    lateral_columns_empty,           3x4, 4x4, 4x6, 3x8 - everyone is oriented consistently,
@@ -3159,9 +3228,12 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    dmd_ctrs_1f,                     dmd, 1x4 - the centers (2 of them) are in a couple
    said_triangle,                   short6/pshort6 - caller said the word "triangle"
    didnt_say_triangle               short6/pshort6 - caller didn't say the word "triangle"
-   occupied_as_h                    3x4/4x3 - live bodies are (a subset of) an "H"
-   occupied_as_qtag                 3x4/4x3 - live bodies are (a subset of) a qtag
-   occupied_as_3x1tgl               3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
+   occupied_as_stars  Q             c1phan - live bodies are in 2 stars
+   occupied_as_clumps Q             4x4 - live bodies are in 2 clumps
+   occupied_as_blocks Q             4x4 - live bodies are in blocks
+   occupied_as_h      Q             3x4/4x3 - live bodies are (a subset of) an "H"
+   occupied_as_qtag   Q             3x4/4x3 - live bodies are (a subset of) a qtag
+   occupied_as_3x1tgl Q             3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
                                     triangles of some sort.  Symmetric only.
    line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads,
                                     and at least one center must be column-like.
@@ -3467,13 +3539,20 @@ inherit_single
                   These are not in any particularly logical order.
 
 @0        - for call with mandatory substitution (e.g. "clover and ...") put
-                      subcall here.
+                      subcall here.  (See @m and @T also).
+@T        - like @0, but put in "er's".
+@m        - put mandatory secondary call substitution here.
+@n ... @o - text to ADD if optional secondary substitution has been made,
+                  as in the "ing" for "fascinating <anything>".
+@p ... @q - text to remove if optional secondary substitution has been made.
+@r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
+@t        - put optional secondary call substitution here.
 @1        - put optional subcall here.
 @2 ... @3 - text to remove and replace with subcall.  Like @4 ... @5 along with @1.
 @4 ... @5 - text to remove if optional substitution has been made.
-@6        - put selector here.
 @7 ... @8 - text to ADD if optional substitution has been made, as in the "ing"
                   for "fascinating <anything>".
+@6        - put selector here.
 @9        - put number here.
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
@@ -3491,16 +3570,8 @@ inherit_single
 @E ... @F - text to add if this call has "interlocked" modifier.  Presumably
                   has the word "interlocked" in it.
 @I          equivalent to "@Einterlocked @F".
-@P ... @Q - text to add if this call has "grand" modifier.  Presumably
-                  has the word "grand" in it.
-@G          equivalent to "@Pgrand @Q".
+@G        - put the word "grand" here if this call has "grand" modifier.
 @k        - put selector here, but use singular name, as in "beau tie".
-@m        - put mandatory secondary call substitution here.
-@n ... @o - text to ADD if optional secondary substitution has been made,
-                  as in the "ing" for "fascinating <anything>".
-@p ... @q - text to remove if optional secondary substitution has been made.
-@r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
-@t        - put optional secondary call substitution here.
 @u        - put ordinal number (1st, 2nd, ...) here.
 @v        - put tagging call here.
 @w        - put tagging call here.
@@ -3508,3 +3579,4 @@ inherit_single
 @y        - put tagging call here.
 @N        - put circulate call here.
 @O ... @P - text to remove if invoked as a circulate-type call
+@S        - put star turn modifier here.

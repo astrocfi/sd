@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 21 August 2000.
+        Last modified 19 May 2002.
 
 -----------------------------------------------------------------
 
@@ -27,6 +27,14 @@ Be sure the version numbers and dates are correct in:
 
                        BEFORE STARTING
 
+BEWARE!!!!!
+
+MANY OPERATIONS REQUIRE A LOCAL ACCOUNT!!!
+THESE INCLUDE ALL DOCUMENT PREPARATION, AND THE DO_LINUX SCRIPT.
+
+LOG OUT OF THE NETWORK ACCOUNT!!!!!   LOG IN IN THE LOCAL DOMAIN!!!!
+
+
 Do "clean clean" in sddoc.  This deletes all the derived documentation
 files, the self-extracting .exe files, and the ".zip" and ".msg"
 files used for uploading to the web.
@@ -40,8 +48,11 @@ Then choose the poster child.  Do "do_index <number>".
 It is important that this be done before "new_binary" is run, because
 the manual is now wrapped into the binary distribution file.
 
+LOG OUT OF THE NETWORK ACCOUNT!!!!!   LOG IN IN THE LOCAL DOMAIN!!!!
+
 BE SURE THAT THE "CYGWIN" LIBRARY IS IN THE PATH!!!
-The "uufix" program requires it.
+Do "setcygwin" or "setcygnus" as appropriate.
+The "uufix" program requires it.  Not to mention "make".
 
 Go to sddoc directory and do:
 
@@ -65,7 +76,12 @@ Go to sddoc directory and do:
 19 Feb 01  -  12 Mar 01  #10
 12 Mar 01  -  27 May 01  #11
 27 May 01  -  16 Sep 01   #5
-16 Sep 01  -             #14
+16 Sep 01  -  7  Apr 02  #14
+7  Apr 02  -  30 Apr 02  #15
+30 Apr 02  -  15 May 02  #12
+15 May 02  -  15 Jul 02  #16
+15 Jul 02  -  1  Sep 02  #17
+1  Sep 02  -             #18
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - DJGPP
@@ -80,7 +96,12 @@ This is not done any more .....
 ###       doit
 If this is done, do not distribute this.  It stinks.
 
-Build and test the optimized version from DJGPP:
+Build and test the optimized version from DJGPP.
+This should be done on Windows NT4.0, not Windows 2000 or any similar
+abomination.  Micro$oft has broken NTVDM.EXE in Windows 2000, so it
+frequently crashes while running DJGPP.  Restarting the "make" operation
+each time it crashes has been observed to result in a successful
+compilation.
     setdjgpp
     [del *.o if necessary to force build]
     make
@@ -134,7 +155,7 @@ In \wba\sd\regress:  save _vnnnn
 
 Copy these onto archival disks.  All sources can fit onto 2 disks.
 If taking stuff to MPG at this point, be sure to take "install.exe"
-and "installw.exe" also (if preparing release at MPG.)  If preparing
+and "install3.exe" also (if preparing release at MPG.)  If preparing
 release at home, just continue.
 
     At MPG, if desired to send sources:
@@ -148,9 +169,13 @@ On Atlas, create directories sd and sd\regress under /users/wba.
 FTP (in binary mode) the zipfiles for sources and regression tests
 into those directories.
 
+It seems best, because atlas and hpanjph don't recognize the same
+users and groups, to do all accesses through hpanjph.
+On hpanjph, cd to /atlas/users/wba/sd.
+
 Telnet to hpanjph, unzip (with "-a" option) those two zipfiles.
 In sd, do
-   cp makefile.linux makefile
+   cp makefile.linux Makefile
    make
    cd regress
    chmod 777 *.sh
@@ -161,9 +186,12 @@ Get sd_calls.dat also, just to check it.
 
 Now get out of Linux.
 
+LOG OUT OF THE NETWORK ACCOUNT!!!!!   LOG IN IN THE LOCAL DOMAIN!!!!
+
 Once working \wba\sd\sdtty and \wba\sd\mkcalls files are in the
 sd directory, and working sd_calls.txt and sd_calls.dat files are
-also present, go to sddoc, and do
+also present, go to sddoc.
+   setcygnus or setcygwin if needed
    do_linux
 
 -----------------------------------------------------------------
@@ -214,157 +242,70 @@ lp -dlp194 -opostscript -odouble whatever.ps
 
 -----------------------------------------------------------------
 
-To mail files for web update:
+             UPLOADING TO LYNETTE'S WEB SITE
 
-  * Copy the various files from the ZIP disk on which they were
-    transported.
+The script "do_pack" will pack all files below except linux.tar.gz
+and solaris.tar.gz into pack.zip for transport to Philips.
+Note that the files linux.tar.gz and solaris.tar.gz are
+produced by other means and must be uploaded separately.
 
-  * It is best if the .txt files are are copied from the ZIP disk
-    to the \temp directory.  (It's hard to convince the mailer that
-    the computer's directory structure contains directories other
-    than \temp.  I have no idea why, except that, being software
-    bastardized by Hewlett-Packard, this sort of stupidity isn't
-    all that surprising.)
+BEWARE:  Be sure to delete extraneous .html files, since the "do_pack"
+script simply copies them all.  Note that things like "foo.html" sometimes
+arise when making poster children.
 
-  * Start cc:Mail, and then, for each file, do this:
+These are the files:
+               html   pdf   ps   txt
+appnote1,2,3    *      *     *    *
+demo            *      *     *    *
+sd_doc          *      *     *    *
+sessions        *      *     *    *
+relnotes        *      *     *    *
+relnotes98      *      *     *    *
+readings        *
+sample          *
+download-pc     *
+index           *
+intro           *
+sessions_toc    *
+sd_doc*         *
 
-  * Alt-MM    Click the "address" button.  Double click "Any Name
-        or Post Office"
-
-  * <TAB> <down arrow>  This will highlight "ftp-update@gildea.com"  <RET>
-
-  * Alt-D
-
-  * Alt-AF  Try to navigate the stupid mailer to the desired file.  <RET>
-
-  * Wait for attachment to appear, then verify date & time in
-         upper right corner, and verify address.
-
-  * Check off the file name.
-
-  * Alt-MS
-
------------------------------------------------------------------
-
-Local files:
-
-Copy all but psdoc.exe to a new release directory "\wba\vnnnn".
-Copy the "label" file there also.
-
-(Psdoc.exe would overflow the disk.)
-
-To prepare a diskette, copy the entire contents of that directory.
-
------------------------------------------------------------------
-
-                  MAKING HP-UX VERSION
-
-In sd, run "tarball _v320" or whatever.  This creates tr_v320.gz
-run the command "rtarball _v320" in regress directory.  This
-creates rtr_v320.gz   (However, the current procedure doesn't
-use those--maybe fix it for next time.)
-
-Delete .tmp files from sd\regress directory -- they just waste time
-sending to HP-UX.
-
-telnet to hpanee1:
-   cd /tmp/wba/sd
-   rm -f -R *
-   #mkdir X11
-   #mkdir X11/Xaw
-   #mkdir X11/Xmu
-
-ftp to hpanee1:
-   cd /tmp/wba/sd
-   lcd sd
-   prompt
-   mput *.c
-   mput *.h
-   mput makefile*
-   put sd_calls.txt
-   binary
-   put x11inctar
-   put x11libtar
-   ascii
-   lcd regress
-   mput *
-
-Also, send these files from sddoc:
-   readme
-   sample*.ini
+Also:
+                         tar.gz   zip   exe
+linux   (upload separately) *
+solaris (upload separately) *
+pdfdoc                      *      *
+psdoc                       *      *
+textdoc                     *      *
+install                                  *
+install3                                 *
 
 
-telnet to hpanee1:
-   cd sd
-   tar xovf x11libtar
-   tar xovf x11inctar
-   #gunzip tr_v320
-   #gunzip rtr_v320
-   #tar xovf tr_v320
-   #tar xovf rtr_v320
-   make -f makefile.hpux
-   make -f makefile.hpux sd
-   chmod 777 *.cmd
-   hdoit.cmd > log
-Examine log when finished.
-   tar cvf hpux sd sdtty mkcalls sd_calls* lib* sample* readme
-   gzip hpux
+Run the program "winscp2".
+Highlight the saved session "goblin", and press "login".
+Copy pack.zip (or whatever) from \wba\sddoc to remote host,
+using real drag-and-drop.
 
-ftp to hpanee1:
-   cd sd
-   lcd sd
-   binary
-   get hpux.gz
+Then run "putty".
+Click on goblin, load, open, user = wba, pw = wba;sd
 
-on hpansdx:
-   Be sure version number is updated in download-unix.html
-   cd sddoc
-   do_hpux
-   do_download-unix
-Then mail these:
-    dnu.zip    /  dnu.txt
-    hpux.zip   /  hpux.txt
+Sftp to slowlaris.tobkin.com
+user = wba, pw = 12b0z0s
+copy up the files.
+***** NOTE PROBLEM:   INSTALL3.EXE is in upper case, so "mput *.exe" fails for it!
+Be careful when uploading INSTALL3.EXE by itself.  If done as part of the
+"do_pack" operation, it's OK.
 
+(For pack.zip:)
+Then ssh from goblin to slowlaris, rm sd_doc*.html, unzip pack, rm pack.zip.
+
+Then, back on goblin, rm pack.zip or whatever files were left there.
+
+
+Putty was from www.openssh.com.
+Scp was from winscp.vse.cz.
+
+Actual directory is /home/lynette/public-html/sd
+It is visible to me as /home/wba
+Files in it are visible on the web as http://www.lynette.org/sd/*
 
 -----------------------------------------------------------------
-
-When all the required files have been mailed, they update the
-following things on the web server:
-
-Files in html area:
-
-public_html/sd/relnotes.html
-               relnotes.pdf
-               download-pc.html
-               download-unix.html    (HP-UX only)
-
-public_html/sd/sessions/sessions.html
-                        sessions_toc.html
-                        sessions.pdf
-
-public_html/sd/demo/demo.html
-                    demo.pdf
-
-public_html/sd/manual/sd_doc.html
-                      sd_doc_toc.html
-                      sd_doc_[1-100 or so].html
-                      sd_doc.pdf
-
-Files in download area:
-
-sd/sd_doc.ps
-   sd_doc.txt
-   relnotes.ps
-   relnotes.txt
-   demo.ps
-   demo.txt
-   sessions.ps
-   sessions.txt
-   install.exe
-   psdoc.exe
-   psdoc.tar.gz
-   pdfdoc.exe
-   pdfdoc.tar.gz
-   textdoc.exe
-   textdoc.tar.gz
-   sd-hpux10.tar.gz      (Only if doing HP-UX distribution.)

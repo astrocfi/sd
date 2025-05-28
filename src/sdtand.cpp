@@ -247,6 +247,18 @@ static tm_thing maps_isearch_threesome[] = {
    {{0, 5,                 1, 4,                 2, 3},                          0,      077,         2, 1,  0,  0, 0,  s1x2,  s2x3},
    {{0, 3, 8, 11,          1, 4, 7, 10,          2, 5, 6, 9},                 0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
    {{3, 8, 11, 0,          4, 7, 10, 1,          5, 6, 9, 2},                    0,    07777,         4, 1,  0,  0, 0,  s2x2,  s2x6},
+
+
+   {{3, 8, 11, 14, 15, 0,          4, 7, 10, 13, 16, 1,
+                      5, 6, 9, 12, 17, 2},                                       0,  0777777,         6, 1,  0,  0, 0,  s2x3,  s3x6},
+
+   // Ones with missing people:
+   {{-2, 8, 10, -2, 15, 1,         -2, 7, -1, -2, 16, -1,
+                      -2, 6, -1, -2, 17, -1},                                    0,  0700700,         6, 1,  0,  0, 0,  s2x3,  s3x6},
+
+   {{4, 8, -2, 13, 15, -2,          -1, 7, -2, -1, 16, -2,
+                      -1, 6, -2, -1, 17, -2},                                    0,  0700700,         6, 1,  0,  0, 0,  s2x3,  s3x6},
+
    {{0, 3, 6, 9, 14, 17, 20, 23,          1, 4, 7, 10, 13, 16, 19, 22,
                       2, 5, 8, 11, 12, 15, 18, 21},                         0x5555,077777777,         8, 0,  0,  0, 0,  s2x4,  s2x12},
    {{0, 3, 6, 7,           1, -1, 5, -1,         2, -1, 4, -1},               0x11,     0x77,         4, 0,  0,  0, 0,  sdmd,  s1x3dmd},
@@ -536,9 +548,9 @@ static void initialize_one_table(tm_thing *map_start, int np)
 
       /* We can't encode the virtual person number in the required 3-bit field if this is > 8. */
       if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1)
-         (*the_callback_block.uims_database_error_fn)("Tandem table initialization failed: limit wrong.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Tandem table initialization failed", "limit wrong");
       if (map_search->olatmask != osidemask)
-         (*the_callback_block.uims_database_error_fn)("Tandem table initialization failed: Smask.\n", (Cstring) 0);
+         gg->fatal_error_exit(1, "Tandem table initialization failed", "smask");
    }
 }
 
@@ -582,7 +594,7 @@ static void unpack_us(
             /* Unpack single person. */
 
             personrec f = tandstuff->real_saved_people[0][ii];
-            if (f.id1) f.id1 = (f.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
+            if (f.id1) f.id1 = (f.id1 & ~(NROLL_MASK|STABLE_MASK|077)) | (z & (NROLL_MASK|STABLE_MASK|013));
             result->people[map_ptr->maps[i]] = f;
          }
          else {
@@ -594,8 +606,8 @@ static void unpack_us(
             for (j=0 ; j<tandstuff->np ; j++) {
                fb[j] = tandstuff->real_saved_people[j][ii];
                if (fb[j].id1) fb[j].id1 =
-                                 (fb[j].id1 & ~(ROLL_MASK|STABLE_MASK|077)) |
-                                 (z & (ROLL_MASK|STABLE_MASK|013));
+                                 (fb[j].id1 & ~(NROLL_MASK|STABLE_MASK|077)) |
+                                 (z & (NROLL_MASK|STABLE_MASK|013));
             }
 
             if (map_ptr->maps[i+map_ptr->limit] < 0)
@@ -629,10 +641,10 @@ static void unpack_us(
    Real_saved_people[0] gets person on left (lat=1) near person (lat=0).
    Real_saved_people[last] gets person on right (lat=1) or far person (lat=0). */
 
-// Returns TRUE if it found people facing the wrong way.  This can happen if we are
+// Returns true if it found people facing the wrong way.  This can happen if we are
 // trying siamese and we shouldn't be.
 
-static long_boolean pack_us(
+static bool pack_us(
    personrec *s,
    tm_thing *map_ptr,
    int fraction,
@@ -644,16 +656,22 @@ static long_boolean pack_us(
    uint32 m, sgl;
    int virt_index = -1;
 
+   clear_people(&tandstuff->virtual_setup);
    tandstuff->virtual_setup.rotation = map_ptr->rot & 1;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
-   for (i=0, m=map_ptr->ilatmask, sgl=map_ptr->insinglemask; i<map_ptr->limit; i++, m>>=2, sgl>>=2) {
+   for (i=0, m=map_ptr->ilatmask, sgl=map_ptr->insinglemask;
+        i<map_ptr->limit;
+        i++, m>>=2, sgl>>=2) {
       personrec fb[8];
       personrec *ptr = &tandstuff->virtual_setup.people[i];
       uint32 vp1, vp2;
       int vert = (1 + map_ptr->rot + m) & 3;
 
-      fb[0] = s[map_ptr->maps[i]];
+      fb[0].id1 = 0;
+      fb[0].id2 = 0;
+      int thingy = map_ptr->maps[i];
+      if (thingy >= 0) fb[0] = s[thingy];
 
       if (!tandstuff->no_unit_symmetry) vert &= 1;
 
@@ -663,12 +681,14 @@ static long_boolean pack_us(
          fb[1].id1 = ~0UL;
       }
       else {
-         uint32 orpeople = 0;
-         uint32 andpeople = ~0;
+         uint32 orpeople = fb[0].id1;
+         uint32 andpeople = fb[0].id1;
 
-         for (j=1 ; j<tandstuff->np ; j++) fb[j] = s[map_ptr->maps[i+(map_ptr->limit*j)]];
-
-         for (j=0 ; j<tandstuff->np ; j++) {
+         for (j=1 ; j<tandstuff->np ; j++) {
+            fb[j].id1 = 0;
+            fb[j].id2 = 0;
+            int thingy2 = map_ptr->maps[i+(map_ptr->limit*j)];
+            if (thingy2 >= 0) fb[j] = s[thingy2];
             orpeople |= fb[j].id1;
             andpeople &= fb[j].id1;
          }
@@ -715,26 +735,26 @@ static long_boolean pack_us(
             vp1 = ~0UL;
             vp2 = ~0UL;
 
-            /* Create the virtual person.  When both people are present, anding
-               the real peoples' id2 bits gets the right bits.  For example,
-               the virtual person will be a boy and able to do a tandem star thru
-               if both real people were boys.  Remove the identity field (700 bits)
-               from id1 and replace with a virtual person indicator.  Check that
-               direction, roll, and stability parts of id1 are consistent. */
+            // Create the virtual person.  When both people are present, anding
+            // the real peoples' id2 bits gets the right bits.  For example,
+            // the virtual person will be a boy and able to do a tandem star thru
+            // if both real people were boys.  Remove the identity field (700 bits)
+            // from id1 and replace with a virtual person indicator.  Check that
+            // direction, roll, and stability parts of id1 are consistent.
 
             for (j=0 ; j<tandstuff->np ; j++) {
                if (fb[j].id1) {
                   vp1 &= fb[j].id1;
                   vp2 &= fb[j].id2;
 
-                  /* If they have different fractional stability states,
-                     just clear them -- they can't do it. */
+                  // If they have different fractional stability states,
+                  // just clear them -- they can't do it.
                   if ((fb[j].id1 ^ orpeople) & STABLE_MASK) vp1 &= ~STABLE_MASK;
-                  /* If they have different roll states, just clear them -- they can't roll. */
-                  if ((fb[j].id1 ^ orpeople) & ROLL_MASK) vp1 &= ~ROLL_MASK;
-                  /* Check that all real people face the same way. */
+                  // If they have different roll states, just clear them -- they can't roll.
+                  if ((fb[j].id1 ^ orpeople) & NROLL_MASK) vp1 &= ~NROLL_MASK;
+                  // Check that all real people face the same way.
                   if ((fb[j].id1 ^ orpeople) & 077)
-                     return TRUE;
+                     return true;
                }
             }
          }
@@ -776,7 +796,7 @@ static long_boolean pack_us(
       }
    }
 
-   return FALSE;
+   return false;
 }
 
 
@@ -796,19 +816,14 @@ extern void tandem_couples_move(
    tandrec tandstuff;
    tm_thing *map;
    tm_thing *map_search;
-   uint32 nsmask, ewmask, allmask, special_mask;
    int i, np;
    uint32 jbit;
-   uint32 hmask, hmask2;
-   uint32 orbitmask;
-   uint32 sglmask, sglmask2;
-   uint32 livemask, livemask2;
    long_boolean fractional = FALSE;
    long_boolean dead_conc = FALSE;
    long_boolean dead_xconc = FALSE;
    tm_thing *our_map_table;
 
-   special_mask = 0;
+   uint32 special_mask = 0;
    tandstuff.single_mask = 0;
    tandstuff.no_unit_symmetry = FALSE;
    tandstuff.phantom_pairing_ok = phantom_pairing_ok;
@@ -816,8 +831,6 @@ extern void tandem_couples_move(
    remove_z_distortion(ss);
 
    if (mxn_bits != 0) {
-      uint32 directions = 0;
-      uint32 livemask = 0;
       tandem_key transformed_key = key;
 
       if (key == tandem_key_tand3 || key == tandem_key_tand4)
@@ -848,119 +861,142 @@ extern void tandem_couples_move(
          goto foobarves;
       }
 
-      for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
-         uint32 t = ss->people[i].id1;
-         directions <<= 2;
-         livemask <<= 2;
-         if (t) { livemask |= 3 ; directions |= t & 3; }
+      {
+         uint32 livemaskl = 0;
+         uint32 livemaskr = 0;
+         uint32 directionsl = 0;
+         uint32 directionsr = 0;
+
+         for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
+            uint32 t = ss->people[i].id1;
+            livemaskl = (livemaskl & 0x3FFFFFFF) << 2;
+            directionsl = (directionsl & 0x3FFFFFFF) << 2;
+            livemaskl |= (livemaskr >> 30) & 3;
+            directionsl |= (directionsr >> 30) & 3;
+            livemaskr = (livemaskr & 0x3FFFFFFF) << 2;
+            directionsr = (directionsr & 0x3FFFFFFF) << 2;
+            if (t) { livemaskr |= 3 ; directionsr |= t & 3; }
+         }
+
+         if (mxn_bits == INHERITFLAGMXNK_2X1 || mxn_bits == INHERITFLAGMXNK_1X2) {
+            np = 2;
+            our_map_table = maps_isearch_twosome;
+
+            if (ss->kind == s2x3 || ss->kind == s1x6) {
+               if (transformed_key == tandem_key_tand) directionsr ^= 0x555;
+
+               if (((directionsr ^ 0x0A8) & livemaskr) == 0 ||
+                   ((directionsr ^ 0xA02) & livemaskr) == 0)
+                  special_mask |= 044;
+
+               if (((directionsr ^ 0x2A0) & livemaskr) == 0 ||
+                   ((directionsr ^ 0x80A) & livemaskr) == 0)
+                  special_mask |= 011;
+
+               if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directionsr ^ 0x02A) & livemaskr) == 0)
+                  special_mask |= 011;
+   
+               if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directionsr ^ 0xA80) & livemaskr) == 0)
+                  special_mask |= 044;
+   
+               if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directionsr ^ 0x02A) & livemaskr) == 0)
+                  special_mask |= 044;
+   
+               if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directionsr ^ 0xA80) & livemaskr) == 0)
+                  special_mask |= 011;
+   
+               if (special_mask != 011 && special_mask != 044) special_mask = 0;
+            }
+         }
+         else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
+            np = 3;
+            our_map_table = maps_isearch_threesome;
+            if (transformed_key == tandem_key_tand) directionsr ^= 0x555555;
+
+            if (ss->kind == s2x4) {
+               if (((directionsr ^ 0x02A8) & livemaskr) == 0 ||
+                   ((directionsr ^ 0xA802) & livemaskr) == 0)
+                  special_mask |= 0x88;
+   
+               if (((directionsr ^ 0x2A80) & livemaskr) == 0 ||
+                   ((directionsr ^ 0x802A) & livemaskr) == 0)
+                  special_mask |= 0x11;
+   
+               if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
+                  special_mask |= 0x11;
+   
+               if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
+                  special_mask |= 0x88;
+   
+               if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
+                  special_mask |= 0x88;
+   
+               if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
+                  special_mask |= 0x11;
+   
+               if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
+            }
+            else if (ss->kind == s3x4 && livemaskr == 0xC3FC3F) {
+               // Don't look at facing directions; there's only one way it can be.
+               special_mask = 0x820;
+            }
+            else if (ss->kind == s3x4 && livemaskr == 0x3CF3CF) {
+               special_mask = 0x410;
+            }
+            else if (ss->kind == s3x6 && livemaskl == 0x3 && livemaskr == 0x00FCC03F) {
+               special_mask = 0022022;
+            }
+            else if (ss->kind == s3x6 && livemaskl == 0x0 && livemaskr == 0x0CFC033F) {
+               special_mask = 0022022;
+            }
+            else if (ss->kind == s3x6 && livemaskl == 0xF && livemaskr == 0xC033F00C) {
+               special_mask = 0220220;
+            }
+            else if (ss->kind == s3x6 && livemaskl == 0x0 && livemaskr == 0x3F300FCC) {
+               special_mask = 0202202;
+            }
+            else if (ss->kind == s3dmd && livemaskr == 0xFC3FC3) {
+               special_mask = 0x820;
+            }
+            else if (ss->kind == s_qtag) {
+               special_mask = 0x44;
+            }
+            else if (ss->kind == s1x8) {
+               if (((directionsr ^ 0x08A2) & livemaskr) == 0 ||
+                   ((directionsr ^ 0xA208) & livemaskr) == 0)
+                  special_mask |= 0x44;
+
+               if (((directionsr ^ 0x2A80) & livemaskr) == 0 ||
+                   ((directionsr ^ 0x802A) & livemaskr) == 0)
+                  special_mask |= 0x11;
+
+               if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
+                  special_mask |= 0x11;
+   
+               if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
+                  special_mask |= 0x44;
+   
+               if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
+                  special_mask |= 0x44;
+   
+               if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
+                  special_mask |= 0x11;
+   
+               if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;
+            }
+            else if (ss->kind == s3x1dmd) {
+               if (((directionsr ^ 0x00A8) & 0xFCFC & livemaskr) == 0 ||
+                   ((directionsr ^ 0xA800) & 0xFCFC & livemaskr) == 0)
+                  special_mask |= 0x88;
+            }
+         }
+         else
+            fail("Can't do this combination of concepts.");
+
+         if (!special_mask) fail("Can't find 3x3/3x1/2x1 people.");
       }
 
-      if (mxn_bits == INHERITFLAGMXNK_2X1 || mxn_bits == INHERITFLAGMXNK_1X2) {
-         np = 2;
-         our_map_table = maps_isearch_twosome;
-
-         if (ss->kind == s2x3 || ss->kind == s1x6) {
-            if (transformed_key == tandem_key_tand) directions ^= 0x555;
-
-            if (((directions ^ 0x0A8) & livemask) == 0 ||
-                ((directions ^ 0xA02) & livemask) == 0)
-               special_mask |= 044;
-
-            if (((directions ^ 0x2A0) & livemask) == 0 ||
-                ((directions ^ 0x80A) & livemask) == 0)
-               special_mask |= 011;
-
-            if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directions ^ 0x02A) & livemask) == 0)
-               special_mask |= 011;
-   
-            if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directions ^ 0xA80) & livemask) == 0)
-               special_mask |= 044;
-   
-            if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directions ^ 0x02A) & livemask) == 0)
-               special_mask |= 044;
-   
-            if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directions ^ 0xA80) & livemask) == 0)
-               special_mask |= 011;
-   
-            if (special_mask != 011 && special_mask != 044) special_mask = 0;
-         }
-      }
-      else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
-         np = 3;
-         our_map_table = maps_isearch_threesome;
-         if (transformed_key == tandem_key_tand) directions ^= 0x555555;
-
-         if (ss->kind == s2x4) {
-            if (((directions ^ 0x02A8) & livemask) == 0 ||
-                ((directions ^ 0xA802) & livemask) == 0)
-               special_mask |= 0x88;
-   
-            if (((directions ^ 0x2A80) & livemask) == 0 ||
-                ((directions ^ 0x802A) & livemask) == 0)
-               special_mask |= 0x11;
-   
-            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0x00AA) & livemask) == 0)
-               special_mask |= 0x11;
-   
-            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0xAA00) & livemask) == 0)
-               special_mask |= 0x88;
-   
-            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0x00AA) & livemask) == 0)
-               special_mask |= 0x88;
-   
-            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0xAA00) & livemask) == 0)
-               special_mask |= 0x11;
-   
-            if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
-         }
-         else if (ss->kind == s3x4 && livemask == 0xC3FC3F) {
-            // Don't look at facing directions; there's only one way it can be.
-            special_mask = 0x820;
-         }
-         else if (ss->kind == s3x4 && livemask == 0x3CF3CF) {
-            special_mask = 0x410;
-         }
-         else if (ss->kind == s3dmd && livemask == 0xFC3FC3) {
-            special_mask = 0x820;
-         }
-         else if (ss->kind == s_qtag) {
-            special_mask = 0x44;
-         }
-         else if (ss->kind == s1x8) {
-            if (((directions ^ 0x08A2) & livemask) == 0 ||
-                ((directions ^ 0xA208) & livemask) == 0)
-               special_mask |= 0x44;
-
-            if (((directions ^ 0x2A80) & livemask) == 0 ||
-                ((directions ^ 0x802A) & livemask) == 0)
-               special_mask |= 0x11;
-
-            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0x00AA) & livemask) == 0)
-               special_mask |= 0x11;
-   
-            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0xAA00) & livemask) == 0)
-               special_mask |= 0x44;
-   
-            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0x00AA) & livemask) == 0)
-               special_mask |= 0x44;
-   
-            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0xAA00) & livemask) == 0)
-               special_mask |= 0x11;
-   
-            if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;
-         }
-         else if (ss->kind == s3x1dmd) {
-            if (((directions ^ 0x00A8) & 0xFCFC & livemask) == 0 ||
-                ((directions ^ 0xA800) & 0xFCFC & livemask) == 0)
-               special_mask |= 0x88;
-         }
-      }
-      else
-         fail("Can't do this combination of concepts.");
-
-      if (!special_mask) fail("Can't find 3x3/3x1/2x1 people.");
-
-   foobarves:
+      foobarves:
 
       // This will make it look like "as couples" or "tandem", as needed,
       // for swapping masks, but won't trip the assumption transformation stuff.
@@ -1127,9 +1163,9 @@ extern void tandem_couples_move(
    if (selector != selector_uninitialized)
       current_options.who = selector;
 
-   nsmask = 0;
-   ewmask = 0;
-   allmask = 0;
+   uint32 nsmask = 0;
+   uint32 ewmask = 0;
+   uint32 allmask = 0;
 
    for (i=0, jbit=1; i<=setup_attrs[ss->kind].setup_limits; i++, jbit<<=1) {
       uint32 p = ss->people[i].id1;
@@ -1476,9 +1512,9 @@ extern void tandem_couples_move(
    if (setup_attrs[tandstuff.virtual_result.kind].setup_limits < 0)
       fail("Don't recognize ending position from this tandem or as couples call.");
 
-   sglmask2 = 0;    /* Bits appear here in pairs!  Both are duplicates. */
-   livemask2 = 0;   /* Bits appear here in pairs!  Both are duplicates. */
-   orbitmask = 0;   /* Bits appear here in pairs! */
+   uint32 sglmask2 = 0;    /* Bits appear here in pairs!  Both are duplicates. */
+   uint32 livemask2 = 0;   /* Bits appear here in pairs!  Both are duplicates. */
+   uint32 orbitmask = 0;   /* Bits appear here in pairs! */
 
    /* Compute orbitmask, livemask2, and sglmask2.
       Since we are synthesizing bit masks, we scan in reverse order to make things easier. */
@@ -1524,12 +1560,12 @@ extern void tandem_couples_move(
       }
    }
 
-   sglmask = sglmask2 & 0x55555555UL;     /* Bits appear here in pairs!  Only low bit of each pair is used. */
-   livemask = livemask2 & 0x55555555UL;   /* Bits appear here in pairs!  Only low bit of each pair is used. */
-   hmask2 = ~orbitmask & livemask2 & ~sglmask2;
+   uint32 sglmask = sglmask2 & 0x55555555UL;     /* Bits appear here in pairs!  Only low bit of each pair is used. */
+   uint32 livemask = livemask2 & 0x55555555UL;   /* Bits appear here in pairs!  Only low bit of each pair is used. */
+   uint32 hmask2 = ~orbitmask & livemask2 & ~sglmask2;
 
    /* Pick out only low bits for map search, and only bits of live paired people. */
-   hmask = hmask2 & 0x55555555UL;
+   uint32 hmask = hmask2 & 0x55555555UL;
    if (tandstuff.no_unit_symmetry) {
       hmask = hmask2;
       livemask = livemask2;

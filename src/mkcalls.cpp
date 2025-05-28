@@ -1,8 +1,6 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,7 +18,6 @@
 
     This is for version 30. */
 
-/* mkcalls.c */
 
 #include "paths.h"
 
@@ -35,13 +32,22 @@
     if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
    We have taken it out and replaced with what you see below.  If this breaks
    anything, let us know. */
-#if defined(__STDC__) || defined(sun)
+
+#if __STDC__ || defined(sun)
 #include <stdlib.h>
 #else
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
 extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 #include <stdarg.h>
@@ -50,10 +56,10 @@ extern void exit(int code);
 #define SEEK_SET 0
 #endif
 
-/* This table is a copy of the one in sdtables.c . */
+// This table is a copy of the one in sdtables.cpp .
 
-/* BEWARE!!  This list is keyed to the definition of "begin_kind" in sd.h . */
-/*   It must also match the similar table in the sdtables.c. */
+// BEWARE!!  This list is keyed to the definition of "begin_kind" in sd.h .
+//   It must also match the similar table in the sdtables.cpp .
 int begin_sizes[] = {
    0,          /* b_nothing */
    1,          /* b_1x1 */
@@ -119,6 +125,8 @@ int begin_sizes[] = {
    12,         /* b_6x2 */
    14,         /* b_2x7 */
    14,         /* b_7x2 */
+   18,         /* b_2x9 */
+   18,         /* b_9x2 */
    12,         /* b_d3x4 */
    12,         /* b_d4x3 */
    16,         /* b_2x8 */
@@ -172,6 +180,8 @@ int begin_sizes[] = {
    12,         /* b_p3ptpd */
    16,         /* b_4ptpd */
    16,         /* b_p4ptpd */
+   16,         /* b_hqtag */
+   16,         /* b_phqtag */
    8,          /* b_wingedstar */
    8,          /* b_pwingedstar */
    8,          /* b_323 */
@@ -212,14 +222,18 @@ int begin_sizes[] = {
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
+   18,         /* b_big3dmd */
+   18,         /* b_pbig3dmd */
+   24,         /* b_big4dmd */
+   24,         /* b_pbig4dmd */
    16,         /* b_dblxwave */
    16,         /* b_pdblxwave */
    16,         /* b_dblspindle */
    16};        /* b_pdblspindle */
 
-extern void do_exit(void)
+extern void do_exit()
 {
-   /* close files here if desired */
+   // Close files here if desired.
    exit(1);
 }
 
@@ -242,10 +256,10 @@ extern int do_printf(char *fmt, ...)
 }
 
 
-extern void dbcompile(void);
+extern void dbcompile();
 
-static void db_input_error(void);
-static void db_output_error(void);
+static void db_input_error();
+static void db_output_error();
 
 static FILE *db_input = NULL;
 static FILE *db_output = NULL;
@@ -389,8 +403,7 @@ db_close_output(void)
  *
  */
 
-static void
-db_input_error(void)
+static void db_input_error()
 {
     fprintf(stderr, "Error reading input file ");
     perror(db_input_filename);
@@ -403,8 +416,7 @@ db_input_error(void)
  *
  */
 
-static void
-db_output_error(void)
+static void db_output_error()
 {
     fprintf(stderr, "Error writing output file ");
     perror(db_output_filename);

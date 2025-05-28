@@ -433,7 +433,7 @@ appropriately, however far the inactives have to be pushed out.
 @end example
 @sp 1
 The @samp{ignore} concept is the way to make 6 people work disconnected.
-Naming them explicitly (``heads and side boys'') is unwieldy, and is
+Naming them explicitly (``heads and side girls'') is unwieldy, and is
 not supported by @code{Sd}.
 
 In both of these cases, the designated people
