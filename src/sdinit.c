@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -912,8 +912,12 @@ Private void build_database(call_list_mode_t call_list_mode)
    calldef_schema call_schema;
    int local_callcount;
    char *np, c;
-   dance_level savelevel;
+   dance_level this_level;
    callspec_block **local_call_list;
+   dance_level acceptable_level = calling_level;
+
+   if (call_list_mode == call_list_mode_none)
+      acceptable_level = higher_acceptable_level[calling_level];
 
    for (i=0 ; i<4 ; i++) {
       number_of_taggers[i] = 0;
@@ -953,7 +957,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       savetag = last_12;     /* Get tag, if any. */
 
       read_halfword();       /* Get level. */
-      savelevel = (dance_level) last_datum;
+      this_level = (dance_level) last_datum;
 
       read_fullword();       /* Get top level flags, first word.  This is the "callflags1" stuff. */
       saveflags1 = last_datum;
@@ -981,7 +985,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       }
 
       call_root->age = 0;
-      call_root->level = (int) savelevel;
+      call_root->level = (int) this_level;
       call_root->callflags1 = saveflags1;
       call_root->callflagsf = 0;
       call_root->callflagsh = saveflagsh;
@@ -1025,7 +1029,16 @@ Private void build_database(call_list_mode_t call_list_mode)
 
       read_in_call_definition();
 
-      if (savelevel == calling_level || (call_list_mode != call_list_mode_writing && savelevel < calling_level)) {
+      /* We accept a call if:
+         (1) we are writing out just this list, and the call matches the desired level exactly, or
+         (2) we are writing out this list and those below, and the call is <= the desired level, or
+         (3) we are running, and the call is <= the desired level or the "higher acceptable level".
+            The latter is c3x if the desired level is c3, or c4x if the desired level is c4.
+            That way, c3x calls will be included.  We will print a warning if they are used. */
+
+      if (     this_level == calling_level ||
+               (call_list_mode != call_list_mode_writing && this_level <= acceptable_level)) {
+
          /* Process tag base calls specially. */
          if (call_root->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
             int tagclass = ((call_root->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) / CFLAG1_BASE_TAG_CALL_BIT) - 1;

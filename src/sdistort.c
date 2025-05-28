@@ -147,6 +147,12 @@ Private void innards(
       nonisotropic_1x2 = TRUE;
       goto noniso1;
    }
+   else if (map_kind == MPKIND__SPEC_ONCEREM) {
+      canonicalize_rotation(&z[0]);
+      canonicalize_rotation(&z[1]);
+      result->result_flags = get_multiple_parallel_resultflags(z, arity);
+      goto noniso1;
+   }
 
    if (fix_n_results(arity, z)) {
       result->kind = nothing;
@@ -303,6 +309,29 @@ Private void innards(
       goto got_map;
    }
 
+   if (map_kind == MPKIND__SPEC_ONCEREM) {
+      if (z[0].kind == s2x2 || z[1].kind == s1x4) {
+         setup temp = z[1];
+         z[1] = z[0];
+         z[0] = temp;
+      }
+
+      result->rotation = 0;
+      final_map = 0;
+
+      if (z[0].rotation == 0 && z[1].rotation == 0) {
+         if (z[0].kind == sdmd && z[1].kind == s2x2) {
+            final_map = &map_spndle_once_rem;
+         }
+         else if (z[0].kind == s1x4 && z[1].kind == sdmd) {
+            final_map = &map_1x3dmd_once_rem;
+         }
+      }
+
+      warn(warn__colocated_once_rem);
+      goto got_map;
+   }
+
    if (maps == &map_tgl4_1 && z[0].kind == s1x2) {
       final_map = &map_tgl4_2;
       result->rotation = z[0].rotation;
@@ -339,7 +368,6 @@ Private void innards(
             break;
          case MPKIND__NONE:
             fail("Can't do this shape-changing call here.");
-            break;
       }
 
       result->rotation = z[0].rotation;
@@ -646,6 +674,8 @@ extern void divided_setup_move(
    if (v2flag) x[1].kind = kn;
    if (v3flag) x[2].kind = kn;
    if (v4flag) x[3].kind = kn;
+
+   if (maps->map_kind == MPKIND__SPEC_ONCEREM) x[1].kind = (setup_kind) maps->maps[insize*2];
 
    if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
       /* Pass it through. */
@@ -1853,6 +1883,7 @@ extern void common_spot_move(
    setup a0, a1;
    setup the_results[2];
    common_spot_map *map_ptr;
+   warning_info saved_warnings = history[history_ptr+1].warnings;
 
    rstuff = parseptr->concept->value.arg1;
    /* rstuff =
@@ -1989,4 +2020,12 @@ extern void common_spot_move(
       reinstate_rotation(ss, &the_results[0]);
       *result = the_results[0];
    }
+
+   /* Turn of any "do your part" warnings that arose during execution
+      of the subject call.  The dancers already know. */
+
+   history[history_ptr+1].warnings.bits[warn__do_your_part>>5] &= ~(1 << (warn__do_your_part & 0x1F));
+
+   for (i=0 ; i<WARNING_WORDS ; i++)
+      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
 }

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -239,7 +239,20 @@ typedef struct {
 
 /* This table is keyed to "level". */
 char *leveltab[] = {
-   "mainstream", "plus", "a1", "a2", "c1", "c2", "c3a", "c3", "c3x", "c4a", "c4", "dontshow", ""};
+   "mainstream",
+   "plus",
+   "a1",
+   "a2",
+   "c1",
+   "c2",
+   "c3a",
+   "c3",
+   "c3x",
+   "c4a",
+   "c4",
+   "c4x",
+   "dontshow",
+   ""};
 
 /* This table is keyed to "begin_kind". */
 char *sstab[] = {
@@ -308,6 +321,8 @@ char *sstab[] = {
    "16x1",
    "c1phan",
    "galaxy",
+   "3x6",
+   "6x3",
    "3x8",
    "8x3",
    "4x6",
@@ -390,6 +405,7 @@ char *estab[] = {
    "barredstar12",
    "barredstar16",
    "galaxy",
+   "3x6",
    "3x8",
    "4x6",
    "thar",
@@ -1225,7 +1241,7 @@ static void write_defmod_flags(void)
          else if ((i = search(defmodtabh)) >= 0) {
             uint32 bit = 1 << i;
 
-            /* Don't check that left/reverse flags -- they are complicated, so there is no "force" word for them. */
+            /* Don't check the left/reverse flags -- they are complicated, so there is no "force" word for them. */
             if (bit & ~(call_flagsh | INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
@@ -1234,7 +1250,7 @@ static void write_defmod_flags(void)
          else if ((i = search(forcetabh)) >= 0) {
             uint32 bit = 1 << i;
 
-            /* Don't check that left/reverse flags -- they are complicated, so there is no "force" word for them. */
+            /* Don't check the left/reverse flags -- they are complicated, so there is no "force" word for them. */
             if (bit & call_flagsh & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use a \"force\" flag unless corresponding top level flag is off");
 

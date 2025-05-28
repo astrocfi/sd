@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: January 18, 1997
+@set Time-stamp: February 9, 1997
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.83
+@set sd-version 31.84
 @set full-manual
 @c %**end of header
 @iftex
@@ -506,7 +506,7 @@ For example, typing
       heads do your part <ENTER>
 @end ifinfo
 @end example
-is probably more than you want to do.  If you type just
+@noindent is probably more than you want to do.  If you type just
 @example
       heads do
 @end example
@@ -3056,14 +3056,14 @@ These are straightforward.
 @item triple C/L/W/B/D/1 working together
 @item triple C/L/W/B working apart
 @item triple L/W/B working forward/backward
-@item triple C/B working right/left
+@item triple C/B/1 working right/left
 @item triple C/L/W/B working clockwise/counterclockwise
 @item quadruple C/L/W/B/D/1 working together
 @item quadruple C/L/W/B working apart
 @item quadruple L/W/B working forward/backward
-@item quadruple C/B working right/left
+@item quadruple C/B/1 working right/left
 @item quadruple C/L/W/B working clockwise/counterclockwise
-@item quadruple C/L/W/B/D working toward the center
+@item quadruple C/L/W/B/D/1 working toward the center
 These are straightforward.
 @item triple diagonal C/L/W
 @item triple diagonal L/W working forward/backward
@@ -3132,7 +3132,21 @@ Any of the above twosome/threesome/whateversome may also be
 The concepts like @samp{as couples in a 1/4 tag} are intended to be used from tidal
 2-faced lines or tidal 1-faced lines.  They cause the live dancers to become the
 centers of the resulting 1/4 tag or 1/4 line.  They may also be used when the live
-people are partially or entirely on the outside.
+people are partially or entirely on the outside.  If you want to instantiate outside
+phantoms with facing directions other than those provided, use the
+@samp{16 matrix of parallel diamonds} concept to create the spots, and then use
+whatever @samp{assume} concepts you need.  For example, from a tidal 2-faced
+line, you could say:
+
+@example
+@group
+   16 matrix of parallel diamonds siamese twosome diamond circulate
+@noindent or
+   16 matrix of parallel diamonds siamese twosome assume normal diamonds 6x2 acey deucey
+@noindent or
+   16 matrix of parallel diamonds assume normal interlocked diamonds siamese twosome 6x2 acey deucey
+@end group
+@end example
 
 Any of the above may be used with the @code{phantom} concept in front
 of it.  There are no concepts like @code{phantom tandem} listed
@@ -3989,24 +4003,26 @@ are the as-couples center wave of a quarter-tag.  The way to specify this
 when calling is typically something like @samp{as couples in a quarter-tag,
 scoot and little}.
 
-The proper way to specify this in @code{Sd} or @code{Sdtty} is with the
-@code{as couples} (or @code{tandem} or @code{couples twosome} or whatever)
-concept, followed by a suitable @code{assume} concept, such as @code{assume
-general 1/4 tags} or @code{assume right 1/4 tags}.  Which of these assumptions
-you choose doesn't matter as long as it is consistent with the setup you are
-creating, since you probably won't read the concept verbatim anyway.
+You can do this in either of two ways.  You can use the concepts with names like
+@code{as couples in a 1/4 tag}.  These concepts exist for @samp{1/4 tag},
+@samp{1/4 line}, @samp{3/4 tag}, and @samp{3/4 line} formations, with all the usual
+@samp{twosome} variations.  There are no @code{tandem} variations of this.
+
+Alternatively, you can use the @code{as couples} (or whatever) concept,
+followed by a suitable @code{assume} concept, such as @code{assume
+general 1/4 tags} or @code{assume right 1/4 tags}.
 
 For example, from an as-couples wave, you could select:
 @example
-   as couples
-   assume right 1/4 tags
-   scoot and little
+   as couples in a 1/4 tag scoot and little
+@end example
+or
+@example
+   as couples assume right 1/4 tags scoot and little
 @end example
 Or, from parallel waves, you could select:
 @example
-   tandem
-   assume general 1/4 tags
-   ping-pong circulate
+   tandem assume general 1/4 tags ping-pong circulate
 @end example
 
 @node Designating Certain People, Anyone Start, Assuming a Quarter-Tag, Concept Notes

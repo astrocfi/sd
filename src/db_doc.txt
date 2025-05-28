@@ -116,6 +116,18 @@ shown with a map giving the person numbering:
             |_____|_____|_____|_____|_____|_____|_____|_____|
 
 
+             _____ _____ _____ _____ _____ _____
+            |     |     |     |     |     |     |
+            |  0  |  1  |  2  |  3  |  4  |  5  |
+            |_____|_____|_____|_____|_____|_____|
+            |     |     |     |     |     |     |
+3x6         | 15  | 16  | 17  |  8  |  7  |  6  |
+            |_____|_____|_____|_____|_____|_____|
+            |     |     |     |     |     |     |
+            | 14  | 13  | 12  | 11  | 10  |  9  |
+            |_____|_____|_____|_____|_____|_____|
+
+
              _____ _____ _____ _____ _____ _____ _____ _____
             |     |     |     |     |     |     |     |     |
             |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
@@ -1505,7 +1517,7 @@ select_near_select
       unless the selector is "everyone" or "no one".  See the description
       of "select" above.
 
-select_near_select_or_hantom
+select_near_select_or_phantom
       As above, but is satisfied if this person is selected and (other person is phantom or is selected).
 
 
@@ -2182,7 +2194,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     magic columns, diamonds, wave-based triangles... */
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way and are line-like,
    4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way and are line-like,
-   awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
+   awkward_centers,              /* 1x2, 1x4, 1x6, 2x4, or 1x8 - centers must not have left hands with each other */
    diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
    qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
    nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are diamonds and not qtags */

@@ -21,10 +21,54 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.83
-         Database version = 31.83 format = 90
+          RELEASE NOTES FOR SD VERSION 31.84
+         Database version = 31.84 format = 91
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.84 ******
+
+The mechanism for deciding when to step to a wave or rear back
+from one has been improved, hopefully making it better able
+to reflect the way real dancers thing about this issue.
+
+The level "c4x" has been added, and the interpretation of level "c3x"
+has been changed.  These levels are for calls that might not be considered
+really legitimate, but that are nevertheless used.  In the case of
+c3x, these calls are not on the official list.  In the case
+of c4x, these calls don't appear to be commonly used, according to
+informal lists.
+
+It is generally NOT NECESSARY to run the program at either of these
+levels.  When you run at c3, c3x calls may be used.
+When you run at c4, c4x calls may be used.  Whenever such a call is
+used, a warning is printed.  (If you explicitly run the program at
+c3x or c4x, you may use the calls without getting a warning.)
+
+Examples of c3x calls are:
+@example
+@group
+<ATC> nuclear reaction
+change lanes
+<anyone> run the wheel
+snake
+trixie
+settle back
+hang loose
+@end group
+@end example
+
+Examples of c4x calls are:
+@example
+@group
+disperse
+mayday
+loop the loop
+trap it
+@end group
+@end example
+
+The above lists are intended to be illustrative, not exhaustive.
 
 ****** Changes as of version 31.83 ******
 
@@ -49,7 +93,7 @@ A number of minor bugs and inconveniences were fixed.
 
 There is added detail in the manual describing subtleties of @samp{<anyone> start}
 and @samp{initially <anyone>}.  Please see the section ``Anyone Start'', at
-page 90.
+approximately page 90.
 
 
 A number of minor improvements were made in various calls, such as:

@@ -604,6 +604,8 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
             *levelp = l_c3x;
          else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && !s[3])
             *levelp = l_c4a;
+         else if (s[1] == '4' && (s[2] == 'z' || s[2] == 'X') && !s[3])
+            *levelp = l_c4x;
          else if (!s[2]) {
             switch (s[1]) {
                case '1': *levelp = l_c1; return TRUE;
@@ -886,7 +888,7 @@ extern long_boolean open_session(int argc, char **argv)
       }
       else if (!parse_level(args[argno], &calling_level)) {
          uims_bad_argument("Unknown calling level argument:", args[argno],
-            "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
+            "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, c4, or c4x.");
       }
    }
 
@@ -1066,7 +1068,7 @@ extern void final_exit(int code)
 
                for (;;) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
-                  if (!fputs(line, wfile)) goto copy_failed;
+                  if (fputs(line, wfile) == EOF) goto copy_failed;
                   if (!strncmp(line, "[Sessions]", 10)) break;
                }
 
@@ -1081,7 +1083,7 @@ extern void final_exit(int code)
                   else if (i == -session_index-1) {
                   }
                   else {
-                     if (!fputs(line, wfile)) goto copy_failed;
+                     if (fputs(line, wfile) == EOF) goto copy_failed;
                   }
                }
 
@@ -1092,10 +1094,10 @@ extern void final_exit(int code)
                }
 
                if (more_stuff) {
-                  if (!fputs("\n", wfile)) goto copy_failed;
+                  if (fputs("\n", wfile) == EOF) goto copy_failed;
                   for (;;) {
                      if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
-                     if (!fputs(line, wfile)) goto copy_failed;
+                     if (fputs(line, wfile) == EOF) goto copy_failed;
                   }
                }
 

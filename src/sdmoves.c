@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -1893,14 +1893,14 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
    int subcall_index, highlimit;
 
    int available_fractions = (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT;
-   if (available_fractions == 3 || (frac_flags & 0x02000000)) available_fractions = 1000;     /* 3 means all parts. */
+   if (available_fractions == 3 || (frac_flags & CMD_FRAC_FORCE_VIS)) available_fractions = 1000;     /* 3 means all parts. */
 
 
    retval.reverse_order = 0;
    retval.instant_stop = 0;
    retval.do_half_of_last_part = 0;
 
-   this_part = (frac_flags & 0xF0000) >> 16;
+   this_part = (frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
    s_numer = (frac_flags & 0xF000) >> 12;      /* Start point. */
    s_denom = (frac_flags & 0xF00) >> 8;
    e_numer = (frac_flags & 0xF0) >> 4;         /* End point. */
@@ -2166,17 +2166,17 @@ Private void do_sequential_call(
 
    highlimit = total;
 
-   /* If the "cmd_frac_flags" word is nonzero, we are being asked to do something special. */
+   /* If the "cmd_frac_flags" word is no null, we are being asked to do something special. */
 
-   if (ss->cmd.cmd_frac_flags) {
+   if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
       fraction_info zzz;
 
       /* If we are doing something under a craziness restraint, take out the low 16 bits of the
          fraction stuff -- they aren't meant for us -- and pass them to the subject call later. */
 
       if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) {
-         restrained_fraction = ss->cmd.cmd_frac_flags;
-         ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | 0x0111;
+         restrained_fraction = ss->cmd.cmd_frac_flags & 0xFFFF;
+         ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | CMD_FRAC_NULL_VALUE;
       }
 
       zzz = get_fraction_info(ss->cmd.cmd_frac_flags, callflags1, total);
@@ -2212,16 +2212,17 @@ Private void do_sequential_call(
    /* Test for all this is "random left, swing thru".
       The test cases for this stuff are such things as "left swing thru". */
 
-   if ((!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_STEP_TO_WAVE)) && (start_point == 0) && !reverse_order &&
-         (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
-
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
+   if (     !(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
+            (start_point == 0) &&
+            !reverse_order &&
+            (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
 
       if (new_final_concepts.herit & INHERITFLAG_LEFT) {
          if (!*mirror_p) mirror_this(ss);
          *mirror_p = TRUE;
       }
 
+      ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
       touch_or_rear_back(ss, *mirror_p, callflags1);
    }
 
@@ -2402,15 +2403,13 @@ do_plain_call:
          result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHECK_MOD_LEVEL;
 
       if (do_half_of_last_part && *test_index == highlimit)
-         result->cmd.cmd_frac_flags = 0x000112UL;
+         result->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
       else
-         result->cmd.cmd_frac_flags = 0;
+         result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
 
       if (restrained_fraction) {
-         if (result->cmd.cmd_frac_flags) fail("Random/piecewise is too complex.");
-         result->cmd.cmd_frac_flags = restrained_fraction & 0xFFFF;
-         if (result->cmd.cmd_frac_flags == 0x000111UL)
-            result->cmd.cmd_frac_flags = 0;
+         if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) fail("Random/piecewise is too complex.");
+         result->cmd.cmd_frac_flags = restrained_fraction;
       }
 
       if (!first_call) {
@@ -2504,7 +2503,7 @@ done_with_big_cycle:
       /* If we are being asked to do just one part of a call (from cmd_frac_flags),
          exit now.  Also, see if we just did the last part. */
 
-      if (ss->cmd.cmd_frac_flags && instant_stop != 99) {
+      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE && instant_stop != 99) {
          /* Check whether we honored the last possible request.  That is,
             whether we did the last part of the call in forward order, or
             the first part in reverse order. */
@@ -2594,8 +2593,9 @@ Private void move_with_real_call(
    result->result_flags = 0;   /* In case we bail out. */
 
    if (ss->kind == nothing) {
-      if (ss->cmd.cmd_frac_flags)
+      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
          fail("Can't fractionalize a call if no one is doing it.");
+
       result->kind = nothing;
       return;
    }
@@ -2713,20 +2713,20 @@ that probably need to be put in. */
    /* Do some quick error checking for visible fractions.  For now, any flag is acceptable.  Later, we will
       distinguish among the various flags. */
 
-   if (ss->cmd.cmd_frac_flags) {
+   if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
       switch (the_schema) {
          case schema_by_array:
             /* We allow the fraction "1/2" to be given.  Basic_move will handle it. */
-            if (ss->cmd.cmd_frac_flags != 0x000112)
+            if (ss->cmd.cmd_frac_flags != CMD_FRAC_HALF_VALUE)
                fail("This call can't be fractionalized this way.");
-            ss->cmd.cmd_frac_flags = 0;
+            ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
             ss->cmd.cmd_final_flags.herit |= INHERITFLAG_HALF;
             break;
          case schema_nothing: case schema_matrix: case schema_partner_matrix: case schema_roll:
             fail("This call can't be fractionalized.");
             break;
          case schema_sequential: case schema_split_sequential:
-            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) && !(ss->cmd.cmd_frac_flags & 0x02000000))
+            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) && !(ss->cmd.cmd_frac_flags & CMD_FRAC_FORCE_VIS))
                fail("This call can't be fractionalized.");
             break;
          default:
@@ -2740,9 +2740,9 @@ that probably need to be put in. */
                   flag allows it.  We turn the fraction into a "final concept". */
 
                if (!(callspec->callflagsh & INHERITFLAG_HALF) ||
-                     (ss->cmd.cmd_frac_flags != 0x000112))
+                     (ss->cmd.cmd_frac_flags != CMD_FRAC_HALF_VALUE))
                   fail("This call can't be fractionalized this way.");
-               ss->cmd.cmd_frac_flags = 0;
+               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
                ss->cmd.cmd_final_flags.herit |= INHERITFLAG_HALF;
             }
 
@@ -2796,18 +2796,17 @@ that probably need to be put in. */
       we will do it later.  We also can't do it yet if we are going
       to split the setup for "central" or "crazy", or if we are doing the call "mystic". */
 
-   if (  !ss->cmd.cmd_frac_flags &&
-         (ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__MUST_SPLIT)) == 0 &&
+   if (  ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE &&
+         !(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED | CMD_MISC__MUST_SPLIT)) &&
          ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) != CMD_MISC2__CENTRAL_MYSTIC || the_schema != schema_by_array) &&
          (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
-
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
       if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_LEFT) {
          mirror_this(ss);
          mirror = TRUE;
       }
 
+      ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
       touch_or_rear_back(ss, mirror, callflags1);
 
       /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left" flag for the
@@ -2955,8 +2954,9 @@ that probably need to be put in. */
             etc., rather than as a virtual-setup concept, or if the "split sequential" schema
             is in use.  In those cases, some "split approved" flag will still be on. */
 
-         if (!(ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)))
-            fail("Split concept is meaningless in a 2x2.");
+         if (     !(ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
+                  !(ss->cmd.cmd_frac_flags & CMD_FRAC_BREAKING_UP))   /* If "BREAKING_UP", caller presumably knows what she is doing. */
+            warn(warn__excess_split);
 
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
             fail("\"Matrix\" concept must be followed by applicable concept.");
@@ -2988,7 +2988,7 @@ that probably need to be put in. */
       for (j=0; j<=setup_attrs[ss->kind].setup_limits; j++) tbonetest |= ss->people[j].id1;
       if (!(tbonetest & 011)) {
 /*      this make "ends start, bits and pieces" fail in diamonds.
-         if (ss->cmd.cmd_frac_flags)
+         if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
             fail("Can't fractionalize a call if no one is doing it.");
 */
          if (the_schema != schema_by_array) {    /* If it's by array, we go ahead anyway. */
@@ -3339,6 +3339,7 @@ extern void move(
       current_options.number_fields = parseptrcopy->options.number_fields;
       ss->cmd.parseptr = parseptrcopy;
       ss->cmd.callspec = parseptrcopy->call;
+      if (((dance_level) parseptrcopy->call->level) > calling_level && !parseptrcopy->no_check_call_level) warn(warn__bad_call_level);
       move_with_real_call(ss, qtfudged, result);
       current_options.who = saved_selector;
       current_options.where = saved_direction;

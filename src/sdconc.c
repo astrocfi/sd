@@ -914,6 +914,10 @@ extern void concentric_move(
    /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
+   /* But, if we thought we weren't sure enough of where people were to allow stepping
+      to a wave, we are once again sure. */
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__NO_STEP_TO_WAVE;
+
    /* We allow "quick so-and-so shove off"! */
 
    if (     analyzer != schema_in_out_triple_squash &&
@@ -940,7 +944,7 @@ extern void concentric_move(
    if (snagflag & CMD_MISC2__CTR_END_MASK) {
       switch (snagflag & CMD_MISC2__CTR_END_KMASK) {
          case CMD_MISC2__CENTRAL_SNAG:
-            if (ss->cmd.cmd_frac_flags)
+            if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
                fail("Can't do fractional \"snag\".");
 
             /* FALL THROUGH!!!! */
@@ -1174,6 +1178,16 @@ extern void concentric_move(
                      }
                   }
                }
+               else if (ss->kind == s_qtag && begin_ptr->kind == s2x2 && begin_ptr->cmd.cmd_assume.assump_col == 0) {
+                  if (      begin_ptr->cmd.cmd_assume.assumption == cr_jright ||
+                            begin_ptr->cmd.cmd_assume.assumption == cr_jleft ||
+                            begin_ptr->cmd.cmd_assume.assumption == cr_ijright ||
+                            begin_ptr->cmd.cmd_assume.assumption == cr_ijleft) {
+                     begin_ptr->cmd.cmd_assume.assumption = cr_li_lo;       /* 1/4 tag or line [whatever/0/2] go to facing in [lilo/0/1]. */
+                     begin_ptr->cmd.cmd_assume.assump_both ^= 3;            /* 3/4 tag or line [whatever/0/1] go to facing out [lilo/0/2]. */
+                     goto got_new_assumption;
+                  }
+               }
             }
             else if (analyzer == schema_concentric_2_6) {
                if (ss->kind == s_qtag && begin_ptr->kind == s_short6 && (doing_ends ^ crossing)) {
@@ -1215,7 +1229,7 @@ extern void concentric_move(
             if ((snagflag & (CMD_MISC2__CTR_END_KMASK | CMD_MISC2__CTR_END_INV_CONC)) == (CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__CTR_END_INV_CONC)) {
                if (mystictest == CMD_MISC2__CENTRAL_MYSTIC)
                   fail("Can't do \"central/snag/mystic\" with this call.");
-               begin_ptr->cmd.cmd_frac_flags = 0x000112;
+               begin_ptr->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
             }
          }
          else {
@@ -1227,7 +1241,7 @@ extern void concentric_move(
             if ((snagflag & (CMD_MISC2__CTR_END_KMASK | CMD_MISC2__CTR_END_INV_CONC)) == CMD_MISC2__CENTRAL_SNAG) {
                if (mystictest == (CMD_MISC2__CENTRAL_MYSTIC | CMD_MISC2__CTR_END_INV_CONC))
                   fail("Can't do \"central/snag/mystic\" with this call.");
-               begin_ptr->cmd.cmd_frac_flags = 0x000112;
+               begin_ptr->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
             }
          }
 
@@ -1253,6 +1267,7 @@ extern void concentric_move(
                f2.options = current_options;
                f2.options.tagger = -1;
                f2.options.circcer = -1;
+               f2.no_check_call_level = 1;
                begin_ptr->cmd.callspec = (callspec_block *) 0;
                begin_ptr->cmd.parseptr = &f1;
             }
@@ -1829,6 +1844,8 @@ static concmerge_thing map_2218q  = {schema_concentric,     s2x2,        s1x4,  
 static concmerge_thing map_223x1  = {schema_concentric,     s2x2,        sdmd,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
 static concmerge_thing map_1424   = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
 static concmerge_thing map_qt24   = {schema_concentric,     s1x4,        s2x2,     0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}};
+static concmerge_thing map_th124  = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 1, 4, 5},               {0, 3, 4, 7}};
+static concmerge_thing map_th224  = {schema_concentric,     s1x4,        s2x2,     1, 0, {2, 3, 6, 7},               {0, 3, 4, 7}};
 static concmerge_thing map_hr24   = {schema_concentric,     sdmd,        s2x2,     0, 0, {6, 3, 2, 7},               {0, 3, 4, 7}};
 static concmerge_thing map_dm24   = {schema_concentric,     sdmd,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
 static concmerge_thing map_ptp22  = {schema_concentric,     s2x2,        s2x2,     0, 0, {0, 1, 2, 3},               {1, 7, 5, 3}};
@@ -1997,9 +2014,15 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       /* Even later-breaking news:  We now go to a 16 matrix anyway, if the actual spots that people
          occupy are "O" spots. */
 
-      if (action == merge_strict_matrix ||
-               (res1->people[1].id1 | res1->people[2].id1 | res1->people[5].id1 | res1->people[6].id1 |
-               res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1) == 0) {
+      /* Even later-breaking news:  If the poeple would go to stars, do so, even if "strict_matrix"
+         was specified.  To go to a 4x4 would be impossible. */
+
+      if (   (    action == merge_strict_matrix && 
+                  ((mask1 != 0x33) || (mask2 != 0xCC))
+                                 &&
+                  ((mask1 != 0xCC) || (mask2 != 0x33)))
+                           ||
+               ((mask1 | mask2) & 0x66) == 0) {
          result->kind = s4x4;
          clear_people(result);
          scatter(result, res2, matrixmap, 7, 0);
@@ -2315,6 +2338,27 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_qt24;
       goto merge_concentric;
    }
+
+
+   else if (res2->kind == s_thar && res1->kind == s2x4 && (r&1) && ((mask1 & 0x66) == 0) && ((mask2 & 0xCC) == 0)) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      outer_elongation = res2->rotation & 1;
+      the_map = &map_th124;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_thar && res1->kind == s2x4 && r == 0 && ((mask1 & 0x66) == 0) && ((mask2 & 0x33) == 0)) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      outer_elongation = res2->rotation & 1;
+      the_map = &map_th224;
+      goto merge_concentric;
+   }
+
+
+
    else if (res2->kind == s_hrglass && res1->kind == s_qtag && (r&1) && ((mask1 & 0x88) == 0) && ((mask2 & 0xBB) == 0)) {
       warn(warn__check_galaxy);
       outer_elongation = res2->rotation & 1;
@@ -2775,9 +2819,9 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
             ss->cmd.parseptr->next->call->schema == schema_sequential &&
             (ss->cmd.parseptr->next->call->callflagsh & INHERITFLAG_YOYO) &&
             (ss->cmd.parseptr->next->call->stuff.def.defarray[0].modifiersh & INHERITFLAG_YOYO) &&
-            ss->cmd.cmd_frac_flags == 0) {
+            ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
       doing_yoyo = TRUE;
-      ss->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | 0x02000000 | 0x00010111;
+      ss->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE;
    }
 
    for (setupcount=0; setupcount<2; setupcount++) {
@@ -2808,7 +2852,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
       the_setups[0] = *result;
       the_setups[0].cmd = ss->cmd;    /* Restore original command stuff (though we clobbered fractionalization info). */
       the_setups[0].cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
-      the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | 0x02000000 | 0x00810111;
+      the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | (CMD_FRAC_CODE_BIT*4) | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE;
       the_setups[0].cmd.parseptr = parseptrcopy->next;      /* Skip over the concept. */
       move(&the_setups[0], FALSE, result);
       finalresultflags |= result->result_flags;
@@ -2898,6 +2942,10 @@ static Const fixer f1x8aad   = {s1x4, s1x8,        0, 0, 1,       0,          0,
 static Const fixer fxwv1d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv1d,    0,    0,          0,          {0, 2, 4, 6}};
 static Const fixer fxwv2d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv2d,    0,    0,          0,          {0, 3, 4, 7}};
 static Const fixer fxwv3d    = {sdmd, s_crosswave, 1, 0, 1,       0,          0,          0,          0, &fxwv3d,    0,    0,          0,          {2, 5, 6, 1}};
+
+static Const fixer fqtgns    = {s1x2, s_qtag,      0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 5, 4}};
+static Const fixer ftharns   = {s1x2, s_thar,      1, 0, 2,       &ftharns,   &fqtgns,    0,          0, 0,          0,    0,          0,          {2, 3, 7, 6}};
+static Const fixer ftharew   = {s1x2, s_thar,      0, 0, 2,       &ftharew,   &fqtgns,    0,          0, 0,          0,    0,          0,          {0, 1, 5, 4}};
 
 static Const fixer fqtgj1    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj1,    0,          0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
 static Const fixer fqtgj2    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj2,    0,          0,          0, 0,          0,    0,          0,          {0, 7, 3, 4}};
@@ -3143,6 +3191,8 @@ static Const sel_item sel_table[] = {
    {LOOKUP_NONE,               s4x4,        0x6006, &fcpl23,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s4x4,        0x6600, &fcpl34,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s4x4,        0x0660, &fcpl41,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_thar,      0x00CC, &ftharns,    (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_thar,      0x0033, &ftharew,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0x33,   &foo33,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0xCC,   &foocc,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0x99,   &f2x4endo,   (fixer *) 0, -1},

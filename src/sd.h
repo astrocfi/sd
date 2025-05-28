@@ -388,10 +388,10 @@ typedef struct {
 /* available:                        0x01000000UL */
 #define CMD_MISC__MUST_SPLIT         0x02000000UL
 /* available:                        0x04000000UL */
-/* available:                        0x08000000UL */
-#define CMD_MISC__NO_CHK_ELONG       0x10000000UL
-#define CMD_MISC__PHANTOMS           0x20000000UL
-#define CMD_MISC__NO_STEP_TO_WAVE    0x40000000UL
+#define CMD_MISC__NO_CHK_ELONG       0x08000000UL
+#define CMD_MISC__PHANTOMS           0x10000000UL
+#define CMD_MISC__NO_STEP_TO_WAVE    0x20000000UL
+#define CMD_MISC__ALREADY_STEPPED    0x40000000UL
 #define CMD_MISC__DOING_ENDS         0x80000000UL
 
 /* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
@@ -662,7 +662,8 @@ typedef enum {
    MPKIND__DMD_STUFF,
    MPKIND__STAG,
    MPKIND_DBLBENTCW,
-   MPKIND_DBLBENTCCW
+   MPKIND_DBLBENTCCW,
+   MPKIND__SPEC_ONCEREM
 } mpkind;
 
 #define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 10) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
@@ -972,7 +973,8 @@ typedef struct glock {
    struct glock *subsidiary_root; /* for concepts that take a second call, this is its parse root */
    struct glock *gc_ptr;          /* used for reclaiming dead blocks */
    call_conc_option_state options;/* number, selector, direction, etc. */
-   int replacement_key;           /* this is the "DFM1_CALL_MOD_MASK" stuff (shifted down) for a modification block */
+   short replacement_key;         /* this is the "DFM1_CALL_MOD_MASK" stuff (shifted down) for a modification block */
+   short no_check_call_level;     /* if nonzero, don't check whether this call is at the level. */
 } parse_block;
 
 /* The following items are not actually part of the setup description,
@@ -1045,12 +1047,15 @@ typedef struct {
       A zero means there was no elongation. */
 
 
+#define CMD_FRAC_NULL_VALUE  0x00000111
+#define CMD_FRAC_HALF_VALUE  0x00000112
 #define CMD_FRAC_PART_BIT    0x00010000
 #define CMD_FRAC_PART_MASK   0x000F0000
 #define CMD_FRAC_REVERSE     0x00100000
 #define CMD_FRAC_CODE_BIT    0x00200000
 #define CMD_FRAC_CODE_MASK   0x00E00000
 #define CMD_FRAC_BREAKING_UP 0x01000000
+#define CMD_FRAC_FORCE_VIS   0x02000000
 
 
 typedef struct {
@@ -1158,10 +1163,12 @@ typedef enum {
    warn__bad_interlace_match,
    warn__not_on_block_spots,
    warn__bad_modifier_level,
+   warn__bad_call_level,
    warn__did_not_interact,
    warn__opt_for_normal_cast,
    warn__opt_for_normal_hinge,
    warn__split_1x6,
+   warn__colocated_once_rem,
    warn_bad_collision,
    warn__dyp_resolve_ok,
    warn__unusual,
@@ -1840,6 +1847,7 @@ extern Cstring concept_menu_strings[];                              /* in SDCTAB
 extern Cstring getout_strings[];                                    /* in SDTABLES */
 extern Cstring filename_strings[];                                  /* in SDTABLES */
 extern dance_level level_threshholds[];                             /* in SDTABLES */
+extern dance_level higher_acceptable_level[];                       /* in SDTABLES */
 extern Cstring menu_names[];                                        /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
 extern cm_thing map2x4_2x4;                                         /* in SDTABLES */
@@ -1856,6 +1864,8 @@ extern map_thing map_bone_trngl4;                                   /* in SDTABL
 extern map_thing map_rig_trngl4;                                    /* in SDTABLES */
 extern map_thing map_s8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_p8_tgl4;                                       /* in SDTABLES */
+extern map_thing map_spndle_once_rem;                               /* in SDTABLES */
+extern map_thing map_1x3dmd_once_rem;                               /* in SDTABLES */
 extern map_thing map_phan_trngl4a;                                  /* in SDTABLES */
 extern map_thing map_phan_trngl4b;                                  /* in SDTABLES */
 extern map_thing map_lh_zzztgl;                                     /* in SDTABLES */

@@ -301,6 +301,8 @@ siamese_item siamese_table[] = {
    {s4x4,        0xCCCC0000UL, 0x4848UL, warn__none},
    {s_qtag,      0x003300CCUL, 0xCCUL,   warn__ctrscpls_endstand},
    {s_qtag,      0x00CC0033UL, 0x33UL,   warn__ctrstand_endscpls},
+   {s4dmd,       0x0F0FF0F0UL, 0xF0F0UL, warn__ctrscpls_endstand},
+   {s4dmd,       0xF0F00F0FUL, 0x0F0FUL, warn__ctrstand_endscpls},
    {s_rigger,    0x00FF0000UL, 0x33UL,   warn__ctrscpls_endstand},
    {s_rigger,    0x00CC0033UL, 0x33UL,   warn__ctrscpls_endstand},
    {s_rigger,    0x000000FFUL, 0xCCUL,   warn__ctrstand_endscpls},
@@ -972,8 +974,20 @@ extern void tandem_couples_move(
 
    if (ss->cmd.cmd_assume.assumption == cr_wave_only && key == 1)
       fail("Couples or tandem concept is inconsistent with phantom facing direction.");
+   else if (ss->cmd.cmd_assume.assumption == cr_jright || ss->cmd.cmd_assume.assumption == cr_jleft)
+      fail("Couples or tandem concept is inconsistent with phantom facing direction.");
 
    tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_none;
+
+   /* There are a small number of assumptions that we can transform. */
+
+   if (ss->cmd.cmd_assume.assump_col == 4) {
+      if (ss->cmd.cmd_assume.assumption == cr_ijright)
+         tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_jright;
+      else if (ss->cmd.cmd_assume.assumption == cr_ijleft)
+         tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_jleft;
+   }
+
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    if (phantom == 3) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    pack_us(ss->people, map, fraction, twosome, key, &tandstuff);

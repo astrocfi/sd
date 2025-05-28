@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -16,6 +16,7 @@
    getout_strings
    filename_strings
    level_threshholds
+   higher_acceptable_level
    menu_names
    id_bit_table_3x4_h
    map2x4_2x4
@@ -32,6 +33,8 @@
    map_rig_trngl4
    map_s8_tgl4
    map_p8_tgl4
+   map_spndle_once_rem
+   map_1x3dmd_once_rem
    map_phan_trngl4a
    map_phan_trngl4b
    map_lh_zzztgl
@@ -337,6 +340,18 @@ Private coordrec thing2x8 = {s2x8, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
        0,  1,  2,  3,  4,  5,  6,  7,
       15, 14, 13, 12, 11, 10,  9,  8,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+Private coordrec thing3x6 = {s3x6, 3,
+   {-10,  -6,  -2,   2,   6,  10,  10,   6,   2,  10,   6,   2,  -2,  -6, -10, -10,  -6,  -2},
+   {  4,   4,   4,   4,   4,   4,   0,   0,   0,  -4,  -4,  -4,  -4,  -4,  -4,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  1,  2,  3,  4,  5, -1,
+      -1, 15, 16, 17,  8,  7,  6, -1,
+      -1, 14, 13, 12, 11, 10,  9, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
@@ -706,6 +721,7 @@ Cstring getout_strings[] = {
    "C3X",
    "C4A",
    "C4",
+   "C4X",
    "all",
    ""};
 
@@ -722,22 +738,48 @@ Cstring filename_strings[] = {
    ".C3X",
    ".C4A",
    ".C4",
+   ".C4X",
    ".all",
    ""};
 
+/* This list tells what level calls will be accepted for the "pick level call"
+   operation.  When doing a "pick level call, we don't actually require calls
+   to be exactly on the indicated level, as long as it's plausibly close. */
 /* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
 dance_level level_threshholds[] = {
    l_mainstream,
    l_plus,
    l_a1,
-   l_a1,
+   l_a1,      /* If a2 is given, an a1 call is OK. */
    l_c1,
    l_c2,
    l_c3a,
+   l_c3a,     /* If c3 is given, a c3a call is OK. */
+   l_c3a,     /* If c3x is given, a c3a call is OK. */
+   l_c3x,     /* If c4a is given, a c3x call is OK. */
+   l_c3x,     /* If c4 is given, a c3x call is OK. */
+   l_c3x,     /* If c4x is given, a c3x call is OK. */
+   l_dontshow,
+   l_nonexistent_concept};
+
+/* This list tells what level calls will be put in the menu and hence made available.
+   In some cases, we make calls available that are higher than the requested level.
+   When we use such a call, a warning is printed. */
+
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+dance_level higher_acceptable_level[] = {
+   l_mainstream,
+   l_plus,
+   l_a1,
+   l_a2,
+   l_c1,
+   l_c2,
    l_c3a,
-   l_c3a,
+   l_c3x,     /* If c3 is given, we allow c3x. */
    l_c3x,
-   l_c3x,
+   l_c4a,
+   l_c4x,     /* If c4 is given, we allow c4x. */
+   l_c4x,
    l_dontshow,
    l_nonexistent_concept};
 
@@ -2287,6 +2329,17 @@ setup_attr setup_attrs[] = {
       id_bit_table_gal,
       {  "     c@   bd@a      e@   hf@     g",
          (Cstring) 0}},
+   /* s3x6 */
+      {17,
+      &thing3x6,
+      &thing3x6,
+      (cm_hunk *) 0,
+      {b_3x6,       b_6x3},
+      { 6, 3},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c  d  e  f@@p  q  r  i  h  g@@o  n  m  l  k  j",
+         "o  p  a@@n  q  b@@m  r  c@@l  i  d@@k  h  e@@j  g  f"}},
    /* s3x8 */
       {23,
       &thing3x8,
@@ -2522,6 +2575,8 @@ int begin_sizes[] = {
    16,         /* b_16x1 */
    16,         /* b_c1phan */
    8,          /* b_galaxy */
+   18,         /* b_3x6 */
+   18,         /* b_6x3 */
    24,         /* b_3x8 */
    24,         /* b_8x3 */
    24,         /* b_4x6 */
@@ -2667,12 +2722,12 @@ startinfo startinfolist[] = {
         map_thing map_rig_trngl4        = {{6, 7, 0, 5,                       2, 3, 4, 1},                           MPKIND__SPLIT,       0, 2,  s_rigger,s_trngl4, 0x10D, 0};
         map_thing map_s8_tgl4           = {{2, 7, 5, 0,                       6, 3, 1, 4},                           MPKIND__REMOVED,     0, 2,  s_bone, s_trngl4,  0x207, 0};
         map_thing map_p8_tgl4           = {{0, 2, 7, 5,                       4, 6, 3, 1},                           MPKIND__REMOVED,     0, 2,  s_ptpd, s_trngl4,  0x10D, 0};
+        map_thing map_spndle_once_rem   = {{7, 1, 3, 5,                       0, 2, 4, 6, (int) s2x2},               MPKIND__SPEC_ONCEREM,0, 2,  s_spindle, sdmd,   0x000, 0};
+        map_thing map_1x3dmd_once_rem   = {{0, 2, 4, 6,                       1, 3, 5, 7, (int) sdmd},               MPKIND__SPEC_ONCEREM,0, 2,  s1x3dmd, s1x4,     0x000, 0};
         map_thing map_phan_trngl4a      = {{9, 11, 7, 5,                      1, 3, 15, 13},                         MPKIND__SPLIT,       0, 2,  s_c1phan,s_trngl4, 0x208, 0};
         map_thing map_phan_trngl4b      = {{12, 14, 0, 2,                     4, 6, 8, 10},                          MPKIND__SPLIT,       0, 2,  s_c1phan,s_trngl4, 0x108, 0};
-
         map_thing map_lh_zzztgl         = {{11, 7, 2, 4,                      3, 15, 10, 12},                        MPKIND__OFFS_L_HALF, 4, 2,  s4x4,   s_trngl4,  0x00D, 1};
         map_thing map_rh_zzztgl         = {{7, 11, 8, 9,                      15, 3, 0, 1},                          MPKIND__OFFS_R_HALF, 4, 2,  s4x4,   s_trngl4,  0x007, 1};
-                                          
         map_thing map_2x2v              = {{0, 3,                             1, 2},                                 MPKIND__SPLIT,       0, 2,  s2x2,   s1x2,      0x005, 0};
         map_thing map_2x4_magic         = {{0, 6, 3, 5,                       7, 1, 4, 2},                           MPKIND__NONE,        0, 2,  s2x4,   s1x4,      0x000, 0};
         map_thing map_qtg_magic         = {{0, 2, 5, 3,                       1, 7, 4, 6},                           MPKIND__NONE,        0, 2,  s_qtag, sdmd,      0x005, 0};
@@ -2756,6 +2811,7 @@ Private map_thing map_1x2_1x1           = {{0,                                1}
 Private map_thing map_1x4_1x2           = {{0, 1,                             3, 2},                                 MPKIND__SPLIT,       0, 2,  s1x4,   s1x2,      0x000, 0};
         map_thing map_tgl4_1            = {{1, 0,                             2, 3},                                 MPKIND__NONE,        0, 2,  s_trngl4,s1x2,     0x001, 1};
         map_thing map_tgl4_2            = {{3, 2,                             1, 0},                                 MPKIND__NONE,        0, 2,  s_trngl4,s1x2,     0x006, 1};
+Private map_thing map_3x6_2x3           = {{1, 16, 13, 14, 15, 0,  3, 8, 11, 12, 17, 2,   5, 6, 9, 10, 7, 4},        MPKIND__SPLIT,       0, 3,  s3x6,   s2x3,      0x015, 0};
 Private map_thing map_2x6_2x2           = {{0, 1, 10, 11,          2, 3, 8, 9,            4, 5, 6, 7},               MPKIND__SPLIT,       0, 3,  s2x6,   s2x2,      0x000, 0};
 Private map_thing map_2x6_2x2r          = {{1, 10, 11, 0,          3, 8, 9, 2,            5, 6, 7, 4},               MPKIND__SPLIT,       0, 3,  s2x6,   s2x2,      0x015, 0};
 Private map_thing map_conc_tb           = {{0, 5, 6, 11,           1, 4, 7, 10,           2, 3, 8, 9},               MPKIND__CONCPHAN,    0, 3,  s2x6,   s2x2,      0x000, 0};
@@ -2770,6 +2826,8 @@ Private map_thing map_2x4_2x2r          = {{1, 6, 7, 0,                       3,
 Private map_thing map_1x2_rmv           = {{0, 3,                             1, 2},                                 MPKIND__REMOVED,     0, 2,  s1x4,   s1x2,      0x000, 0};
 Private map_thing map_1x2_rmvr          = {{0, 3,                             1, 2},                                 MPKIND__REMOVED,     0, 2,  s2x2,   s1x2,      0x005, 0};
 Private map_thing map_2x2_rmv           = {{0, 2, 5, 7,                       1, 3, 4, 6},                           MPKIND__REMOVED,     0, 2,  s2x4,   s2x2,      0x000, 0};
+Private map_thing map_1x3_rmv           = {{0, 2, 4,                          1, 5, 3},                              MPKIND__REMOVED,     0, 2,  s1x6,   s1x3,      0x000, 0};
+Private map_thing map_1x3_rmvr          = {{5, 4, 3,                          0, 1, 2},                              MPKIND__REMOVED,     0, 2,  s2x3,   s1x3,      0x000, 1};
 Private map_thing map_1x4_rmv           = {{0, 3, 5, 6,                       1, 2, 4, 7},                           MPKIND__REMOVED,     0, 2,  s1x8,   s1x4,      0x000, 0};
 Private map_thing map_1x4_rmvr          = {{7, 6, 4, 5,                       0, 1, 3, 2},                           MPKIND__REMOVED,     0, 2,  s2x4,   s1x4,      0x000, 1};
 Private map_thing map_1x6_rmv           = {{0, 2, 4, 7, 9, 11,                1, 3, 5, 6, 8, 10},                    MPKIND__REMOVED,     0, 2,  s1x12,  s1x6,      0x000, 0};
@@ -3025,6 +3083,8 @@ mapcoder map_init_table[] = {
    {MAPCODE(s1x2,2,MPKIND__REMOVED,     0), &map_1x2_rmv},
    {MAPCODE(s1x2,2,MPKIND__REMOVED,     1), &map_1x2_rmvr},
    {MAPCODE(s2x2,2,MPKIND__REMOVED,     0), &map_2x2_rmv},
+   {MAPCODE(s1x3,2,MPKIND__REMOVED,     0), &map_1x3_rmv},
+   {MAPCODE(s1x3,2,MPKIND__REMOVED,     1), &map_1x3_rmvr},
    {MAPCODE(s1x4,2,MPKIND__REMOVED,     0), &map_1x4_rmv},
    {MAPCODE(s1x4,2,MPKIND__REMOVED,     1), &map_1x4_rmvr},
    {MAPCODE(sdmd,2,MPKIND__REMOVED,     0), &map_dmd_rmv},
@@ -3053,7 +3113,7 @@ map_thing *split_lists[][6] = {
    {0,             0,             0,             0,             0,             0},          /* s_bone6 */
    {0,             0,             0,             0,             0,             0},          /* s_short6 */
    {&map_1x12_1x6, &map_2x6_1x6,  0,             0,             0,             0},          /* s1x6 */
-   {&map_2x6_2x3,  &map_3x4_2x3,  0,             0,             0,             0},          /* s2x3 */
+   {&map_2x6_2x3,  &map_3x4_2x3,  0,  &map_3x6_2x3,             0,             0},          /* s2x3 */
    {&map_bone_12d, &map_bigd_12d, 0,             0,             0,             0},          /* s_1x2dmd */
    {0,             0,             0,             0,             0,             0},          /* s_2x1dmd */
    {&map_hv_qtg_2, &map_vv_qtg_2, 0,             0,             0,             0},          /* s_qtag */

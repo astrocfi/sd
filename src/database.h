@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 90
+#define DATABASE_FORMAT_VERSION 91
 
 
 
@@ -122,12 +122,23 @@
 /* BEWARE!!  This list must track the table "getout_strings" in sdtables.c . */
 /* BEWARE!!  This list must track the table "filename_strings" in sdtables.c . */
 /* BEWARE!!  This list must track the table "level_threshholds" in sdtables.c . */
+/* BEWARE!!  This list must track the table "higher_acceptable_level" in sdtables.c . */
 
 typedef enum {
-   l_mainstream, l_plus,
-   l_a1, l_a2, l_c1, l_c2,
-   l_c3a, l_c3, l_c3x, l_c4a, l_c4,
-   l_dontshow, l_nonexistent_concept
+   l_mainstream,
+   l_plus,
+   l_a1,
+   l_a2,
+   l_c1,
+   l_c2,
+   l_c3a,
+   l_c3,
+   l_c3x,
+   l_c4a,
+   l_c4,
+   l_c4x,
+   l_dontshow,
+   l_nonexistent_concept
 } dance_level;
 
 /* These are the states that people can be in, and the "ending setups" that can appear
@@ -193,6 +204,7 @@ typedef enum {
    s_barredstar12,
    s_barredstar16,
    s_galaxy,
+   s3x6,
    s3x8,
    s4x6,
    s_thar,
@@ -281,6 +293,8 @@ typedef enum {
    b_16x1,
    b_c1phan,
    b_galaxy,
+   b_3x6,
+   b_6x3,
    b_3x8,
    b_8x3,
    b_4x6,

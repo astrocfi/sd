@@ -668,14 +668,16 @@ extern long_boolean check_restriction(
    else {
       /* Restriction is "line-like" or special. */
 
-      static Const veryshort mapwkg8[2] = {2, 6};
-      static Const veryshort mapwkg6[2] = {2, 5};
-      static Const veryshort mapwkg4[2] = {1, 3};
-      static Const veryshort mapwkg2[2] = {0, 1};
+      static Const veryshort mapwkg8[3] = {2, 2, 6};
+      static Const veryshort mapwkg6[3] = {2, 2, 5};
+      static Const veryshort mapwkg4[3] = {2, 1, 3};
+      static Const veryshort mapwkg2[3] = {2, 0, 1};
+      static Const veryshort mapwk24[5] = {4, 1, 2, 6, 5};
 
       switch (restr.assumption) {
          case cr_awkward_centers:       /* check for centers not having left hands */
             switch (ss->kind) {
+               case s2x4: mp = mapwk24; goto check_wk;
                case s1x8: mp = mapwkg8; goto check_wk;
                case s1x6: mp = mapwkg6; goto check_wk;
                case s1x4: mp = mapwkg4; goto check_wk;
@@ -755,95 +757,17 @@ extern long_boolean check_restriction(
                break;
          }
       }
-      else if (ss->kind == s_qtag) {
-         switch (restr.assumption) {
-            case cr_real_1_4_tag:
-               q0 = 0; q4 = 0; q5 = 0;
-               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
-
-               if ((t = ss->people[0].id1) != 0) { q0 |= (t^2); }
-               if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); }
-               if ((t = ss->people[4].id1) != 0) { q0 |= t; }
-               if ((t = ss->people[5].id1) != 0) { q0 |= t; }
-               if (q0 & 2) goto restr_failed;
-
-               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
-               if ((t = ss->people[7].id1) != 0) { q4 |= (t^2); q5 |= t;     }
-               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q4 |= t;     }
-
-               if ((q5&2) && (q4&2))
-                  goto restr_failed;
-
-               break;
-            case cr_real_3_4_tag:
-               q0 = 0; q4 = 0; q5 = 0;
-               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
-
-               if ((t = ss->people[0].id1) != 0) { q0 |= t; }
-               if ((t = ss->people[1].id1) != 0) { q0 |= t; }
-               if ((t = ss->people[4].id1) != 0) { q0 |= (t^2); }
-               if ((t = ss->people[5].id1) != 0) { q0 |= (t^2); }
-               if (q0 & 2) goto restr_failed;
-
-               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
-               if ((t = ss->people[7].id1) != 0) { q4 |= (t^2); q5 |= t;     }
-               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q4 |= t;     }
-
-               if ((q5&2) && (q4&2))
-                  goto restr_failed;
-
-               break;
-            case cr_real_1_4_line:
-               q0 = 0; q4 = 0; q5 = 0;
-               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
-
-               if ((t = ss->people[0].id1) != 0) { q0 |= (t^2); }
-               if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); }
-               if ((t = ss->people[4].id1) != 0) { q0 |= t; }
-               if ((t = ss->people[5].id1) != 0) { q0 |= t; }
-               if (q0 & 2) goto restr_failed;
-
-               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q4 |= (t^2); q5 |= t;     }
-               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
-               if ((t = ss->people[7].id1) != 0) { q5 |= (t^2); q4 |= t;     }
-
-               if ((q5&2) && (q4&2))
-                  goto restr_failed;
-
-               break;
-            case cr_real_3_4_line:
-               q0 = 0; q4 = 0; q5 = 0;
-               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
-
-               if ((t = ss->people[0].id1) != 0) { q0 |= t; }
-               if ((t = ss->people[1].id1) != 0) { q0 |= t; }
-               if ((t = ss->people[4].id1) != 0) { q0 |= (t^2); }
-               if ((t = ss->people[5].id1) != 0) { q0 |= (t^2); }
-               if (q0 & 2) goto restr_failed;
-
-               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q4 |= (t^2); q5 |= t;     }
-               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
-               if ((t = ss->people[7].id1) != 0) { q5 |= (t^2); q4 |= t;     }
-
-               if ((q5&2) && (q4&2))
-                  goto restr_failed;
-
-               break;
-         }
-      }
    }
 
    goto getout;
 
    check_wk:   /* check the "awkward_centers" restriction. */
 
-   t = ss->people[mp[0]].id1;
-   z = ss->people[mp[1]].id1;
-   if ((z&t) && !((z | (~t)) & 2)) warn(warn__awkward_centers);
+   for (idx=0 ; idx < mp[0] ; idx+=2) {
+      t = ss->people[mp[idx+1]].id1;
+      z = ss->people[mp[idx+2]].id1;
+      if ((z&t) && !((z | (~t)) & 2)) warn(warn__awkward_centers);
+   }
 
    goto getout;
 

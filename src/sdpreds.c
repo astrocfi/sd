@@ -450,7 +450,7 @@ Private long_boolean x22_miniwave(setup *real_people, int real_index,
 
    switch (real_people->cmd.cmd_assume.assumption) {
       case cr_wave_only: case cr_miniwaves: return TRUE;
-      case cr_2fl_only: case cr_couples_only: return FALSE;
+      case cr_2fl_only: case cr_couples_only: case cr_li_lo: return FALSE;
    }
 
    this_person = real_people->people[real_index].id1;
@@ -467,7 +467,7 @@ Private long_boolean x22_couple(setup *real_people, int real_index,
 
    switch (real_people->cmd.cmd_assume.assumption) {
       case cr_wave_only: case cr_miniwaves: return FALSE;
-      case cr_2fl_only: case cr_couples_only: return TRUE;
+      case cr_2fl_only: case cr_couples_only: case cr_li_lo: return TRUE;
    }
 
    this_person = real_people->people[real_index].id1;

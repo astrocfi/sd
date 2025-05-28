@@ -277,17 +277,19 @@ Cstring warning_strings[] = {
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
    /*  warn__bad_modifier_level  */   "*Use of this modifier on this call is not allowed at this level.",
+   /*  warn__bad_call_level      */   "*This call is not really legal at this level.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast.",
    /*  warn__opt_for_normal_hinge */  "*If in doubt, assume a normal hinge.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
+   /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
    /*  warn_bad_collision        */   "*This collision may be controversial.",
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
-   /*  warn__tasteless_com_spot  */   "*Common-spot people have left hands.",
-   /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave is questionable."};
+   /*  warn__tasteless_com_spot  */   "*Common-spot people have left hands -- this may be controversial.",
+   /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave is very controversial."};
 
 
 
@@ -377,14 +379,14 @@ static restriction_thing mnwv_1x6      = {2, {0, 2, 4, 1, 5, 3},                
 static restriction_thing mnwv_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
 
 static restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
-static restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
+static restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
 static restriction_thing box_in_or_out = {0, {0, 0, 2, 2},                {0, 2, 2, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for facing couples or back-to-back couples */
 static restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
 static restriction_thing s4x4_wave     = {0,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
-                                               {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+                                               {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, TRUE,  chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 static restriction_thing s4x4_2fl     = {0,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},  
-                                               {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+                                               {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, TRUE,  chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 static restriction_thing cwave_qtg     = {4, {2, 3, 7, 6},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 static restriction_thing wave_qtag     = {4, {6, 7, 3, 2},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for wave across the center */
@@ -416,6 +418,11 @@ static restriction_thing all_4_ew      = {4, {0}, {4, 0, 1, 2, 3},              
 static restriction_thing all_8_ns      = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
 static restriction_thing all_16_ns     = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, {0}, FALSE, chk_dmd_qtag};
 static restriction_thing all_8_ew      = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
+
+static restriction_thing r1qt          = {4, {6, 7, 3, 2},             {4, 4, 0, 5, 1},                   {0}, {0}, TRUE, chk_qtag};
+static restriction_thing r3qt          = {4, {6, 7, 3, 2},             {4, 0, 4, 1, 5},                   {0}, {0}, TRUE, chk_qtag};
+static restriction_thing r1ql          = {4, {6, 3, 7, 2},             {4, 4, 0, 5, 1},                   {0}, {0}, TRUE, chk_qtag};
+static restriction_thing r3ql          = {4, {6, 3, 7, 2},             {4, 0, 4, 1, 5},                   {0}, {0}, TRUE, chk_qtag};
 
 static restriction_thing check_4x1_8ch = {4, {0, 1, 3, 2},                                           {0}, {0}, {0}, FALSE, chk_wave};
 
@@ -504,6 +511,10 @@ static restr_initializer restr_init_table[] = {
    {s3x4, cr_2fl_only, &two_faced_3x4},
    {s_thar, cr_wave_only, &wave_thar},
    {s_thar, cr_1fl_only, &thar_1fl},
+   {s_qtag, cr_real_1_4_tag, &r1qt},
+   {s_qtag, cr_real_3_4_tag, &r3qt},
+   {s_qtag, cr_real_1_4_line, &r1ql},
+   {s_qtag, cr_real_3_4_line, &r3ql},
    {nothing}
 };
 
@@ -542,12 +553,97 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          restr_hash_bucket = restr_hash_bucket->next;
       }
    }
+   else if (t.assump_col == 1) {
+      switch (k) {
+         case s2x3:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &cwave_2x3;
+            else if (t.assumption == cr_magic_only)
+               restr_thing_ptr = &cmagic_2x3;
+            else if (t.assumption == cr_peelable_box)
+               restr_thing_ptr = &peelable_3x2;
+            else if (t.assumption == cr_all_facing_same)
+               restr_thing_ptr = &all_same_6;
+            break;
+         case s1x4:
+            if (t.assumption == cr_all_facing_same)
+               restr_thing_ptr = &all_same_4;
+            else if (t.assumption == cr_2fl_only)
+               restr_thing_ptr = &two_faced_1x4;
+            break;
+         case s1x6:
+            if (t.assumption == cr_all_facing_same)
+               restr_thing_ptr = &all_same_6;
+            break;
+         case s1x8:
+            if (t.assumption == cr_all_facing_same)
+               restr_thing_ptr = &all_same_8;
+            break;
+         case s2x4:
+            if (t.assumption == cr_li_lo)
+               restr_thing_ptr = &wave_2x4;
+            else if (t.assumption == cr_2fl_only)
+               restr_thing_ptr = &two_faced_2x4;
+            else if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &cwave_2x4;
+            else if (t.assumption == cr_magic_only)
+               restr_thing_ptr = &cmagic_2x4;
+            else if (t.assumption == cr_peelable_box)
+               restr_thing_ptr = &peelable_4x2;
+            else if (t.assumption == cr_couples_only)
+               restr_thing_ptr = &cpls_4x2;
+            else if (t.assumption == cr_miniwaves)
+               restr_thing_ptr = &mnwv_4x2;
+            else if (t.assumption == cr_all_facing_same)
+               restr_thing_ptr = &all_same_8;
+            break;
+         case s1x2:
+            if (t.assumption == cr_all_facing_same)
+               restr_thing_ptr = &all_same_2;
+            break;
+         case s2x6:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &cwave_2x6;
+            else if (t.assumption == cr_peelable_box)
+               restr_thing_ptr = &peelable_6x2;
+            else if (t.assumption == cr_couples_only)
+               restr_thing_ptr = &cpls_6x2;
+            break;
+         case s2x8:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &cwave_2x8;
+            else if (t.assumption == cr_peelable_box)
+               restr_thing_ptr = &peelable_8x2;
+            else if (t.assumption == cr_couples_only)
+               restr_thing_ptr = &cpls_8x2;
+            break;
+         case s_qtag:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &cwave_qtg;
+            break;
+         case s_trngl:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &wave_tgl;   /* isn't this bogus?  It checks for TANDEM-BASE. */
+            break;
+         case sdmd:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &wave_dmd;
+            else if (t.assumption == cr_miniwaves)
+               restr_thing_ptr = &wave_dmd;
+            break;
+         case s_ptpd:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &wave_ptpd;
+            else if (t.assumption == cr_miniwaves)
+               restr_thing_ptr = &miniwave_ptpd;
+            break;
+      }
+
+      if (restr_thing_ptr) return restr_thing_ptr;
+   }
 
    switch (k) {
       case s2x2:
-/* try this
-         if (t.assump_col != 0) {
-*/
             switch (t.assumption) {
                case cr_wave_only:
                   restr_thing_ptr = &box_wave;
@@ -555,16 +651,13 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
                case cr_all_facing_same: case cr_2fl_only:
                   restr_thing_ptr = &box_1face;
                   break;
-               case cr_trailers_only: case cr_leads_only:
+               case cr_trailers_only: case cr_leads_only: case cr_li_lo:
                   restr_thing_ptr = &box_in_or_out;
                   break;
                case cr_magic_only:
                   restr_thing_ptr = &box_magic;
                   break;
             }
-/*
-         }
-*/
          break;
       case s4x4:
          if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
@@ -572,78 +665,20 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          if (t.assumption == cr_2fl_only && (t.assump_col & 1) == 0)
             restr_thing_ptr = &s4x4_2fl;
          break;
-      case s2x3:
-         if (t.assumption == cr_wave_only && t.assump_col != 0)
-            restr_thing_ptr = &cwave_2x3;
-         else if (t.assumption == cr_magic_only && t.assump_col != 0)
-            restr_thing_ptr = &cmagic_2x3;
-         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
-            restr_thing_ptr = &peelable_3x2;
-         else if (t.assumption == cr_all_facing_same && t.assump_col != 0)
-            restr_thing_ptr = &all_same_6;
-         break;
-      case s1x4:
-         if (t.assumption == cr_all_facing_same && t.assump_col != 0)
-            restr_thing_ptr = &all_same_4;
-         break;
-      case s1x6:
-         if (t.assumption == cr_all_facing_same && t.assump_col != 0)
-            restr_thing_ptr = &all_same_6;
-         break;
-      case s1x8:
-         if (t.assumption == cr_all_facing_same && t.assump_col != 0)
-            restr_thing_ptr = &all_same_8;
-         break;
       case s2x4:
-         if (t.assumption == cr_li_lo && t.assump_col != 0)
-            restr_thing_ptr = &wave_2x4;
-         else if (t.assumption == cr_2fl_only && t.assump_col != 0)
-            restr_thing_ptr = &two_faced_2x4;
-         else if (t.assumption == cr_wave_only && t.assump_col == 2)
+         if (t.assumption == cr_wave_only && t.assump_col == 2)
             restr_thing_ptr = &mnwv_2x4;  /* WRONG!!!  This is "assume normal boxes" while in gen'lized lines, but will accept any miniwaves. */
-         else if (t.assumption == cr_wave_only && t.assump_col != 0)
-            restr_thing_ptr = &cwave_2x4;
-         else if (t.assumption == cr_magic_only && t.assump_col == 1)
-            restr_thing_ptr = &cmagic_2x4;
          else if (t.assumption == cr_magic_only && (t.assump_col & 2) == 2)
             /* "assume inverted boxes", people are in general lines (col=2) or cols (col=3) */
             restr_thing_ptr = &cmagic_2x4;   /* This is wrong, need something that allows real mag col or unsymm congruent inv boxes.
                                                       This is a "check mixed groups" type of thing!!!! */
-         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
-            restr_thing_ptr = &peelable_4x2;
-         else if (t.assumption == cr_couples_only && t.assump_col == 1)
-            restr_thing_ptr = &cpls_4x2;
-         else if (t.assumption == cr_miniwaves && t.assump_col == 1)
-            restr_thing_ptr = &mnwv_4x2;
-         else if (t.assumption == cr_all_facing_same && t.assump_col != 0)
-            restr_thing_ptr = &all_same_8;
          break;
       case s1x2:
          if (t.assumption == cr_wave_only && t.assump_col == 2)
             restr_thing_ptr = &wave_1x2;
-         else if (t.assumption == cr_all_facing_same && t.assump_col != 0)
-            restr_thing_ptr = &all_same_2;
-         break;
-      case s2x6:
-         if (t.assumption == cr_wave_only && t.assump_col != 0)
-            restr_thing_ptr = &cwave_2x6;
-         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
-            restr_thing_ptr = &peelable_6x2;
-         else if (t.assumption == cr_couples_only && t.assump_col == 1)
-            restr_thing_ptr = &cpls_6x2;
-         break;
-      case s2x8:
-         if (t.assumption == cr_wave_only && t.assump_col != 0)
-            restr_thing_ptr = &cwave_2x8;
-         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
-            restr_thing_ptr = &peelable_8x2;
-         else if (t.assumption == cr_couples_only && t.assump_col == 1)
-            restr_thing_ptr = &cpls_8x2;
          break;
       case s_qtag:
-         if (t.assumption == cr_wave_only && t.assump_col == 1)
-            restr_thing_ptr = &cwave_qtg;
-         else if (t.assumption == cr_jleft)
+         if (t.assumption == cr_jleft)
             restr_thing_ptr = &jleft_qtag;
          else if (t.assumption == cr_jright)
             restr_thing_ptr = &jright_qtag;
@@ -675,19 +710,13 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &dmd4_3;
          break;
       case s_trngl:
-         if (t.assumption == cr_wave_only && t.assump_col == 1)
-            restr_thing_ptr = &wave_tgl;   /* isn't this bogus?  It checks for TANDEM-BASE. */
-         else if (t.assumption == cr_miniwaves && t.assump_col == 0)
+         if (t.assumption == cr_miniwaves && t.assump_col == 0)
             restr_thing_ptr = &wave_tgl;
          else if (t.assumption == cr_wave_only && t.assump_col == 0)
             restr_thing_ptr = &wave_tgl;
          break;
       case sdmd:
-         if (t.assumption == cr_wave_only && t.assump_col == 1)
-            restr_thing_ptr = &wave_dmd;
-         else if (t.assumption == cr_miniwaves && t.assump_col == 1)
-            restr_thing_ptr = &wave_dmd;
-         else if (t.assumption == cr_jright)
+         if (t.assumption == cr_jright)
             restr_thing_ptr = &jright_dmd;
          else if (t.assumption == cr_diamond_like)
             restr_thing_ptr = &dmd_d;
@@ -699,11 +728,7 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &dmd_3;
          break;
       case s_ptpd:
-         if (t.assumption == cr_wave_only && t.assump_col == 1)
-            restr_thing_ptr = &wave_ptpd;
-         else if (t.assumption == cr_miniwaves && t.assump_col == 1)
-            restr_thing_ptr = &miniwave_ptpd;
-         else if (t.assumption == cr_jright)
+         if (t.assumption == cr_jright)
             restr_thing_ptr = &jright_ptpd;
          else if (t.assumption == cr_diamond_like)
             restr_thing_ptr = &ptpd_d;
@@ -2385,7 +2410,7 @@ extern long_boolean verify_restriction(
 
          if (rr->ok_for_assume) {
             if (instantiate_phantoms) {
-               if ((qa0 | qa1 | qa3 | qa2) == 0)
+               if (!(qa0 & BIT_PERSON))
                   fail("Need live person to determine handedness.");
 
                for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
@@ -2543,6 +2568,25 @@ extern long_boolean verify_restriction(
 
          if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
             goto bad;
+
+         goto good;
+      case chk_qtag:
+         qaa[0] = tt.assump_both;
+         qaa[1] = tt.assump_both << 1;
+
+         for (idx=0; idx<rr->map2[0]; idx++) {
+            if ((t = ss->people[rr->map2[idx+1]].id1) != 0 && ((t ^ (idx << 1)) & 2) != 0)
+               goto bad;
+         }
+
+         for (idx=0; idx<rr->size; idx++) {
+            if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
+         }
+
+         if ((qaa[0] & qaa[1] & 2) != 0)
+            goto bad;
+
+         for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto bad; }
 
          goto good;
       default:
@@ -2801,6 +2845,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             if (        ss->kind == s3x4 && (t & 1) == 0 &&
                         (  (mask & 04646) == 0 || (mask & 04532) == 0 || (mask & 03245) == 0 ||
                            (mask & 02525) == 0 || (mask & 03232) == 0 || (mask & 04651) == 0 || (mask & 05146) == 0))
+               goto good;
+            else if (   ss->kind == s3x6 && (t & 1) == 0 &&
+                        ((mask & 0222222) == 0))
                goto good;
             else if (   ss->kind == s4x4 && (t & 1) == 0 &&
                         ((mask & 0xE8E8) == 0 || (mask & 0xA3A3) == 0 || (mask & 0x5C5C) == 0))
@@ -3095,7 +3142,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case s1x3:
             if (tt.assump_both) goto bad;   /* We can't check a 1x3 for right-or-left-handedness. */
             /* FALL THROUGH!!! */
-         case s1x2: case s1x4: case s1x6: case s1x8: case s1x10:
+         case s1x2: case s1x6: case s1x8: case s1x10:
          case s1x12: case s1x14: case s1x16:
          case s2x2: case s4x4: case s_thar: case s_qtag: case s_trngl:
             /* FELL THROUGH!!! */
@@ -3103,6 +3150,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sdmd: case s_ptpd:
             tt.assump_col = 1;
             goto check_tt;
+         case s1x4:  /* Note that 1x6, 1x8, etc should be here also.  This will
+                           make "cr_2fl_only" and such things work in 4x1. */
          case s2x4:
          case s2x6:
          case s2x8:
@@ -3517,7 +3566,17 @@ extern long_boolean fix_n_results(int arity, setup z[])
             lineflag = TRUE;
          else {
             if (kk == nothing) kk = z[i].kind;
-            if (kk != z[i].kind) goto lose;
+
+            if (kk != z[i].kind) {
+               /* We may have a minor problem -- a 2x4 with just the ends present might want to be a qtag instead. */
+               if (     ((kk == s2x4 && z[i].kind == s_qtag) || (kk == s_qtag && z[i].kind == s2x4)) &&
+                        ((rr ^ z[i].rotation) & 1)) {
+                  if (kk == s2x4) { kk = s_qtag ; rr ^= 1; }
+                  continue;
+               }
+               else
+                  goto lose;
+            }
          }
 
          if (rr < 0) rr = z[i].rotation;
@@ -3541,20 +3600,46 @@ extern long_boolean fix_n_results(int arity, setup z[])
                that is, rotation = rr.  (We know that rr has something in it by now.) */
             z[i].inner.srotation -= rr;
             canonicalize_rotation(&z[i]);
-            z[i].kind = s2x4;
+            z[i].kind = kk;
             z[i].rotation = rr;
+            swap_people(&z[i], 3, 6);
+            swap_people(&z[i], 2, 5);
+            swap_people(&z[i], 2, 1);
+            swap_people(&z[i], 1, 0);
             clear_person(&z[i], 4);
             clear_person(&z[i], 7);
-            z[i].people[6] = z[i].people[3];
-            z[i].people[5] = z[i].people[2];
-            z[i].people[2] = z[i].people[1];
-            z[i].people[1] = z[i].people[0];
             clear_person(&z[i], 0);
             clear_person(&z[i], 3);
             canonicalize_rotation(&z[i]);
          }
+         else if (z[i].inner.skind == s1x4 && kk == s_qtag && z[i].inner.srotation == rr) {
+            /* Turn the 1x4 into a qtag. */
+            z[i].kind = kk;
+            z[i].rotation = rr;
+            swap_people(&z[i], 0, 6);
+            swap_people(&z[i], 1, 7);
+            clear_person(&z[i], 0);
+            clear_person(&z[i], 1);
+            clear_person(&z[i], 4);
+            clear_person(&z[i], 5);
+            canonicalize_rotation(&z[i]);
+         }
          else
             fail("Can't do this: don't know where the phantoms went.");
+      }
+      else if (z[i].kind == s2x4 && kk == s_qtag) {
+         /* Turn the 2x4 into a qtag. */
+         if (z[i].people[1].id1 | z[i].people[2].id1 | z[i].people[5].id1 | z[i].people[6].id1) goto lose;
+
+         z[i].kind = kk;
+         z[i].rotation++;
+         (void) copy_rot(&z[i], 5, &z[i], 0, 033);
+         (void) copy_rot(&z[i], 0, &z[i], 3, 033);
+         (void) copy_rot(&z[i], 1, &z[i], 4, 033);
+         (void) copy_rot(&z[i], 4, &z[i], 7, 033);
+         clear_person(&z[i], 3);
+         clear_person(&z[i], 7);
+         canonicalize_rotation(&z[i]);
       }
    }
   

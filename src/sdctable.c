@@ -349,7 +349,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"CENTER TRIPLE DIAMOND",                 concept_in_out_dmd_3,              D, l_c3a, {0, 5, CONCPROP__NEED_CTR_DMD, 0}},
    {"OUTSIDE TRIPLE DIAMONDS",               concept_in_out_dmd_3,              D, l_c3a, {0, 8+5, CONCPROP__NEED_END_DMD, 0}},
    {"TRIPLE DIAMOND SPOTS",                  concept_triple_diamonds,           D, l_c3a, {0, 0, 0}},
-   {"TRIPLE DIAMONDS WORKING TOGETHER",    concept_triple_diamonds_together,    D, l_c4a},
+   {"TRIPLE DIAMONDS WORKING TOGETHER",      concept_triple_diamonds_together,  D, l_c4a, {0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -367,7 +367,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE DIAMONDS WORKING TOGETHER",   concept_quad_diamonds_together,    D, l_c4a, {0, 0, 0}},
    {"QUADRUPLE DIAMONDS WORKING TOWARD THE CENTER",concept_quad_diamonds_together, D, l_c4, {0, 12, 0}},
 /* -------- column break -------- */
-#define pb__3_size 52
+#define pb__3_size 59
 #define pb__3_sp1 0
 #define pb__3_ip1 1
 #define pb__3_p1 2
@@ -412,12 +412,12 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE 3/4 LINES",                      concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},   /* ***** make assumption tighter */
    {"TRIPLE GENERAL 1/4 TAGS",               concept_triple_diamonds,           D, l_c3x, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"TRIPLE 1/4 TAGS WORKING TOGETHER",      concept_triple_diamonds_together,  D, l_c4a},
-   {"TRIPLE 1/4 LINES WORKING TOGETHER",     concept_triple_diamonds_together,  D, l_c4a},
-         {"", concept_comment, 0, l_nonexistent_concept},
-         {"", concept_comment, 0, l_nonexistent_concept},
-         {"", concept_comment, 0, l_nonexistent_concept},
-         {"", concept_comment, 0, l_nonexistent_concept},
+   {"TRIPLE 1/4 TAGS WORKING TOGETHER",      concept_triple_diamonds_together,  D, l_c4a, {0, 0}},
+   {"TRIPLE 1/4 LINES WORKING TOGETHER",     concept_triple_diamonds_together,  D, l_c4a, {0, 0}},
+   {"TRIPLE 1/4 TAGS WORKING LEFT",          concept_triple_diamonds_together,  D, l_c4a, {0, 2}},
+   {"TRIPLE 1/4 LINES WORKING LEFT",         concept_triple_diamonds_together,  D, l_c4a, {0, 2}},
+   {"TRIPLE 1/4 TAGS WORKING RIGHT",         concept_triple_diamonds_together,  D, l_c4a, {0, 1}},
+   {"TRIPLE 1/4 LINES WORKING RIGHT",        concept_triple_diamonds_together,  D, l_c4a, {0, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -428,7 +428,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE GENERAL 1/4 TAGS",            concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"CENTER PHANTOM GENERAL 1/4 TAGS",       concept_in_out_dmd_4,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"OUTSIDE PHANTOM GENERAL 1/4 TAGS",      concept_in_out_dmd_4,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
-   {"QUADRUPLE 1/4 TAGS WORKING TOGETHER",   concept_quad_diamonds_together,    D, l_c4a},
+   {"QUADRUPLE 1/4 TAGS WORKING TOGETHER",   concept_quad_diamonds_together,    D, l_c4a, {0, 0}},
+   {"QUADRUPLE 1/4 LINES WORKING TOGETHER",  concept_quad_diamonds_together,    D, l_c4a, {0, 0}},
+   {"QUADRUPLE 1/4 TAGS WORKING LEFT",       concept_quad_diamonds_together,    D, l_c4a, {0, 2}},
+   {"QUADRUPLE 1/4 LINES WORKING LEFT",      concept_quad_diamonds_together,    D, l_c4a, {0, 2}},
+   {"QUADRUPLE 1/4 TAGS WORKING RIGHT",      concept_quad_diamonds_together,    D, l_c4a, {0, 1}},
+   {"QUADRUPLE 1/4 LINES WORKING RIGHT",     concept_quad_diamonds_together,    D, l_c4a, {0, 1}},
+   {"QUADRUPLE 1/4 TAGS WORKING TOWARD THE CENTER",concept_quad_diamonds_together,D, l_c4a, {0, 12}},
+   {"QUADRUPLE 1/4 LINES WORKING TOWARD THE CENTER",concept_quad_diamonds_together,D, l_c4a, {0, 12}},
 
 /* tandem concepts */
 
