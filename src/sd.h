@@ -1856,6 +1856,7 @@ extern callspec_block **circcer_calls;                              /* in SDMAIN
 extern char outfile_string[];                                       /* in SDMAIN */
 extern char header_comment[];                                       /* in SDMAIN */
 extern long_boolean need_new_header_comment;                        /* in SDMAIN */
+extern call_list_mode_t glob_call_list_mode;                        /* in SDMAIN */
 extern int sequence_number;                                         /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
@@ -1941,13 +1942,16 @@ extern void free_mem(void *ptr);
 extern void get_date(char dest[]);
 extern void unparse_number(int arg, char dest[]);
 extern void open_file(void);
-extern long_boolean probe_file(char filename[]);
 extern void write_file(char line[]);
 extern void close_file(void);
 extern void print_line(Cstring s);
 extern void print_id_error(int n);
 extern void init_error(char s[]);
 extern void add_resolve_indices(char junk[], int cur, int max);
+extern char *read_from_call_list_file(char name[], int n);
+extern void write_to_call_list_file(Const char name[]);
+extern long_boolean close_call_list_file(void);
+extern long_boolean install_outfile_string(char newstring[]);
 extern long_boolean open_session(int argc, char **argv);
 extern void final_exit(int code);
 extern void open_database(void);
@@ -1956,10 +1960,6 @@ extern uint32 read_16_from_database(void);
 extern void close_database(void);
 extern void fill_in_neglect_percentage(char junk[], int n);
 extern int parse_number(char junk[]);
-extern long_boolean open_call_list_file(call_list_mode_t call_list_mode, char filename[]);
-extern char *read_from_call_list_file(char name[], int n);
-extern void write_to_call_list_file(Const char name[]);
-extern long_boolean close_call_list_file(void);
 
 /* In SDUI */
 

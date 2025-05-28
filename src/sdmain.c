@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.57"
+#define VERSION_STRING "31.58"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -145,7 +145,7 @@ callspec_block **circcer_calls;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 char header_comment[MAX_TEXT_LINE_LENGTH] = "";
 long_boolean need_new_header_comment = FALSE;
-call_list_mode_t call_list_mode;
+call_list_mode_t glob_call_list_mode;
 int sequence_number = -1;
 int last_file_position = -1;
 int global_age;
@@ -1189,7 +1189,7 @@ extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_fla
    /* log level info */
    writestuff(getout_strings[calling_level]);
 
-   if (call_list_mode == call_list_mode_abridging)
+   if (glob_call_list_mode == call_list_mode_abridging)
       writestuff(" (abridged)");
 }
 
@@ -1360,7 +1360,7 @@ void main(int argc, char *argv[])
       direction_names[direction_out+1] = (Cstring) 0;
    }
 
-   if (call_list_mode == call_list_mode_none || call_list_mode == call_list_mode_abridging)
+   if (glob_call_list_mode == call_list_mode_none || glob_call_list_mode == call_list_mode_abridging)
       uims_preinitialize();
 
    if (history == 0) {
@@ -1375,10 +1375,10 @@ void main(int argc, char *argv[])
    initialize_restr_tables();
    initialize_conc_tables();
    
-   initialize_menus(call_list_mode);    /* This sets up max_base_calls. */
+   initialize_menus(glob_call_list_mode);    /* This sets up max_base_calls. */
 
    /* If we wrote a call list file, that's all we do. */
-   if (call_list_mode == call_list_mode_writing || call_list_mode == call_list_mode_writing_full)
+   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full)
       goto normal_exit;
 
    initialize_concept_sublists();
@@ -1513,10 +1513,8 @@ void main(int argc, char *argv[])
             char newfile_string[MAX_FILENAME_LENGTH];
       
             if (uims_do_outfile_popup(newfile_string)) {
-               if (newfile_string[0] != '\0') {
-                  (void) strncpy(outfile_string, newfile_string, MAX_FILENAME_LENGTH);
-                  last_file_position = -1;
-               }
+               if (newfile_string[0])
+                  (void) install_outfile_string(newfile_string);
             }
          }
          goto new_sequence;
@@ -1662,20 +1660,16 @@ void main(int argc, char *argv[])
                char newfile_string[MAX_FILENAME_LENGTH];
          
                if (uims_do_outfile_popup(newfile_string)) {
-                  if ( (newfile_string[0] != '\0') && (strcmp(outfile_string, newfile_string) != 0) ) {
-                     char confirm_message[MAX_FILENAME_LENGTH+25];
-      
-                     if (probe_file(newfile_string)) {
-                        (void) strncpy(outfile_string, newfile_string, MAX_FILENAME_LENGTH);
+                  if (newfile_string[0]) {
+                     if (install_outfile_string(newfile_string)) {
+                        char confirm_message[MAX_FILENAME_LENGTH+25];
                         (void) strncpy(confirm_message, "Output file changed to \"", 25);
                         (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
                         (void) strncat(confirm_message, "\"", 2);
-                        last_file_position = -1;
                         specialfail(confirm_message);
                      }
-                     else {
+                     else
                         specialfail("No write access to that file, no action taken.");
-                     }
                   }
                }
                goto start_cycle;

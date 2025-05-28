@@ -29,13 +29,16 @@
    free_mem
    get_date
    open_file
-   probe_file
    write_file
    close_file
    print_line
    print_id_error
    init_error
    add_resolve_indices
+   read_from_call_list_file
+   write_to_call_list_file
+   close_call_list_file
+   install_outfile_string
    open_session
    final_exit
    open_database
@@ -44,10 +47,6 @@
    close_database
    fill_in_neglect_percentage
    parse_number
-   open_call_list_file
-   read_from_call_list_file
-   write_to_call_list_file
-   close_call_list_file
 
 and the following external variables:
    random_number
@@ -150,8 +149,6 @@ extern char *strerror(int);
 
 #include "sd.h"
 #include "paths.h"
-extern long_boolean need_new_header_comment;
-extern call_list_mode_t call_list_mode;
 
 
 /* These variables are external. */
@@ -166,6 +163,7 @@ Private FILE *fildes;
 Private long_boolean file_error;
 Private char fail_message[MAX_ERR_LENGTH];
 Private char fail_errstring[MAX_ERR_LENGTH];
+Private long_boolean outfile_special = FALSE;
 
 Private char *get_errstring(void)
 {
@@ -289,6 +287,24 @@ extern void open_file(void)
 #endif
 
    file_error = FALSE;
+
+   /* If this is a "special" file (indicatyed by ending with a colon),
+      we simply open it and write. */
+
+   if (outfile_special) {
+      if (!(fildes = fopen(outfile_string, "w"))) {
+         (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+         (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+         file_error = TRUE;
+         return;
+      }
+
+      writestuff("Writing to special device.");
+      newline();
+      newline();
+      return;
+   }
+
 
 /* If not on a PC, things are fairly simple.  We open the file in "append"
    mode, thankful that we have escaped one of the most monumentally stupid
@@ -467,9 +483,9 @@ extern void open_file(void)
 
       No.  It actually seems to work.  Aren't computers wonderful? */
 
-   really_just_append:
-
 #endif
+
+   really_just_append:
 
    if (this_file_position == 0) {
       writestuff("File does not exist, creating it.");
@@ -491,23 +507,6 @@ extern void open_file(void)
          file_error = TRUE;
       }
    }
-}
-
-
-extern long_boolean probe_file(char filename[])
-{
-   /* If the file does not exist, we allow it, even though creation may
-      not be possible because of directory permissions.  It is unfortunate
-      that there is no feasible way to determine whether a given pathname
-      could be opened for writing. */
-#ifdef POSIX_STYLE
-   if (access(filename, F_OK) || !access(filename, W_OK))
-      return (TRUE);
-   else
-      return (FALSE);
-#else
-   return (TRUE);
-#endif
 }
 
 
@@ -539,7 +538,8 @@ extern void close_file(void)
    char foo[MAX_ERR_LENGTH*10];
 
    if (file_error) goto fail;
-   last_file_position = ftell(fildes);
+
+   if (!outfile_special) last_file_position = ftell(fildes);
 
    if (!fclose(fildes)) return;
 
@@ -554,6 +554,7 @@ extern void close_file(void)
    (void) strncat(foo, outfile_string, MAX_ERR_LENGTH);
    (void) strncat(foo, "\": ", MAX_ERR_LENGTH);
    (void) strncat(foo, fail_errstring, MAX_ERR_LENGTH);
+   (void) strncat(foo, " -- try \"change output file\" operation.", MAX_ERR_LENGTH);
    specialfail(foo);
 }
 
@@ -622,11 +623,93 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
 
 
 
+
+static FILE *call_list_file;
+
+Private long_boolean open_call_list_file(char filename[])
+{
+   call_list_file = fopen(filename,
+      (glob_call_list_mode == call_list_mode_abridging) ? "r" : "w");
+
+   if (!call_list_file) {
+      printf("Can't open call list file\n");
+      perror(filename);
+      return TRUE;
+   }
+   else
+      return FALSE;
+}
+
+
+extern char *read_from_call_list_file(char name[], int n)
+{
+   return (fgets(name, n, call_list_file));
+}
+
+
+extern void write_to_call_list_file(Const char name[])
+{
+   fputs(name, call_list_file);
+   fputs("\n", call_list_file);
+}
+
+
+extern long_boolean close_call_list_file(void)
+{
+   if (fclose(call_list_file)) {
+      printf("Can't close call list file\n");
+      return TRUE;
+   }
+   else
+      return FALSE;
+}
 /* Stuff used for controlling the session file.  When index is nonzero,
    the session file is in use, and the final state should be written back
    to it at that line. */
 
 static int session_index = 0;        /* If this is nonzero, we have opened a session. */
+
+
+/* This makes sure that outfile string is a legal filename, and sets up
+   "outfile_special" to tell if it is a printing device.
+   Returns FALSE if error occurs.  No action taken in that case. */
+
+extern long_boolean install_outfile_string(char newstring[])
+{
+   char test_string[MAX_FILENAME_LENGTH];
+   long_boolean file_is_ok;
+   int j;
+
+   /* Clean off leading blanks, and stop after any internal blank. */
+
+   (void) sscanf(newstring, "%s", test_string);
+
+   /* Now see if we can write to it. */
+
+#ifdef POSIX_STYLE
+   /* If the file does not exist, we allow it, even though creation may
+      not be possible because of directory permissions.  It is unfortunate
+      that there is no feasible way to determine whether a given pathname
+      could be opened for writing. */
+   if (access(test_string, F_OK) || !access(test_string, W_OK))
+      file_is_ok =  TRUE;
+   else
+      file_is_ok =  FALSE;
+#else
+   file_is_ok =  TRUE;
+#endif
+
+   if (file_is_ok) {
+      (void) strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
+      j = strlen(outfile_string);
+      outfile_special = (j>0 && outfile_string[j-1] == ':');
+      last_file_position = -1;
+      return TRUE;
+   }
+   else
+      return FALSE;
+}
+
 
 
 extern long_boolean open_session(int argc, char **argv)
@@ -637,6 +720,7 @@ extern long_boolean open_session(int argc, char **argv)
    int argno;
    FILE *session;
    char line[MAX_FILENAME_LENGTH];
+   char *new_outfile_string = (char *) 0;
    char **args;
    int nargs = argc;
 
@@ -676,7 +760,7 @@ extern long_boolean open_session(int argc, char **argv)
    /* This lets the user interface intercept command line arguments that it is interested in. */
    uims_process_command_line(&nargs, &args);
 
-   call_list_mode = call_list_mode_none;
+   glob_call_list_mode = call_list_mode_none;
    calling_level = l_mainstream;    /* The default. */
 
    for (argno=1; argno < nargs; argno++) {
@@ -707,13 +791,11 @@ extern long_boolean open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)
             { using_active_phantoms = TRUE; continue; }
          else if (strcmp(&args[argno][1], "sequence") == 0) {
-	     if (argno+1 < nargs)
-		 strncpy(outfile_string, args[argno+1], MAX_FILENAME_LENGTH);
-	 }
+	     if (argno+1 < nargs) new_outfile_string = args[argno+1];  /* We'll install it later. */
+	}
          else if (strcmp(&args[argno][1], "db") == 0) {
-	     if (argno+1 < nargs)
-		 database_filename = args[argno+1];
-	 }
+	     if (argno+1 < nargs) database_filename = args[argno+1];
+	}
          else
             uims_bad_argument("Unknown flag:", args[argno], (char *) 0);
 
@@ -726,8 +808,8 @@ extern long_boolean open_session(int argc, char **argv)
             uims_bad_argument("This flag must be followed by a file name:", args[argno-1], NULL);
 
          if (this_mode_maybe != call_list_mode_none) {
-            call_list_mode = this_mode_maybe;
-            if (open_call_list_file(call_list_mode, args[argno]))
+            glob_call_list_mode = this_mode_maybe;
+            if (open_call_list_file(args[argno]))
                exit_program(1);
          }
       }
@@ -737,12 +819,16 @@ extern long_boolean open_session(int argc, char **argv)
       }
    }
 
-   /* initialize outfile_string to calling-level-specific default outfile */
+   /* Initialize outfile_string to calling-level-specific default outfile, that is,
+      "sequence.A2" or whatever.  It already contains "sequence". */
 
    (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
 
+   if (new_outfile_string)
+      (void) install_outfile_string(new_outfile_string);
+
    /* If we are writing a call list file, that's all we do. */
-   if (call_list_mode == call_list_mode_writing || call_list_mode == call_list_mode_writing_full)
+   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full)
       goto no_session;
 
    /* Or if the file didn't exist, or we are in diagnostic mode. */
@@ -792,11 +878,16 @@ extern long_boolean open_session(int argc, char **argv)
 
          if (i == session_index) {
             int ccount;
+            char test_string[MAX_FILENAME_LENGTH];
             char session_levelstring[50];
 
-            if (sscanf(line, "%s %s %d %n", outfile_string, session_levelstring, &sequence_number, &ccount) != 3) {
+            if (sscanf(line, "%s %s %d %n", test_string, session_levelstring, &sequence_number, &ccount) != 3) {
                printf("Bad format in session file.\n");
                goto no_session;
+            }
+
+            if (!install_outfile_string(test_string)) {
+               printf("Bad file name in session file, using default instead.\n");
             }
 
             #if defined(MSDOS)
@@ -995,48 +1086,3 @@ extern void fill_in_neglect_percentage(char junk[], int n)
    sprintf(junk, "LEAST RECENTLY USED %d%% OF THE CALLS ARE:", n);
 }
 #endif
-
-
-Private FILE *call_list_file;
-
-extern long_boolean open_call_list_file(call_list_mode_t call_list_mode, char filename[])
-{
-   if (call_list_mode == call_list_mode_abridging) {
-      call_list_file = fopen(filename, "r");
-   }
-   else {
-      call_list_file = fopen(filename, "w");
-   }
-
-   if (!call_list_file) {
-      printf("Can't open call list file\n");
-      perror(filename);
-      return TRUE;
-   }
-   else
-      return FALSE;
-}
-
-
-extern char *read_from_call_list_file(char name[], int n)
-{
-   return (fgets(name, n, call_list_file));
-}
-
-
-extern void write_to_call_list_file(Const char name[])
-{
-   fputs(name, call_list_file);
-   fputs("\n", call_list_file);
-}
-
-
-extern long_boolean close_call_list_file(void)
-{
-   if (fclose(call_list_file)) {
-      printf("Can't close call list file\n");
-      return TRUE;
-   }
-   else
-      return FALSE;
-}

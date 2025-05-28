@@ -1,7 +1,20 @@
-		   RELEASE NOTES FOR SD VERSION 31.57
-		 Database version = 31.57 format = 72.
+		   RELEASE NOTES FOR SD VERSION 31.58
+		 Database version = 31.58 format = 72.
                 X11 UI version 1.16, SDTTY UI version 1.6.
 
+
+****** Changes as of version 31.58 ******
+
+If the name of the file to which sequences are written ends
+with a colon, as in "LPT:", the program will assume that it
+is a special device such as a printer, and will simply write
+sequences to it without doing any checking of the previous
+contents.  This should cause each sequence to be printed
+immediately after it is created.
+
+Special file names of this type may be set with the
+"change output file" command, and may be placed in the
+filename field of the "sd.ini" session file.
 
 ****** Changes as of version 31.56 ******
 

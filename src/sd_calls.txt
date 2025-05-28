@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.57"
+version "31.58"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -1617,7 +1617,7 @@ call "_finish @2spin @3the windmill" dontshow tag finish_windmill
    conc ctrwindmill [inherit_left] dblcirc [conc_demand_lines conc_force_lines]
 
 call "@2spin @3the windmill, outsides @h" a2
-            left_means_mirror
+            sequence_starter left_means_mirror
    seq set_windmill_direction []
    seq finish_windmill [inherit_left]
 
@@ -3767,7 +3767,7 @@ call "@v back and dodge" c4
 call "@v back and scatter" c4
             left_means_mirror first_part_visible
    seq tagnullcall0 [inherit_left]
-   seq scatscoot []
+   seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
 
 call "@v chain thru" c3a
             left_means_mirror first_part_visible
@@ -8926,6 +8926,8 @@ call "scoot back to a wave" c1
    setup pmd 2x2 qualifier dmd_ctrs_lh
       array [AL0S 0 0 AL1S]
             alternate_definition [yoyo] c4
+   setup 2x2 thar restriction unusual alwaysfail
+      array [CR2S AL2S AL7E CR7W]
    setup pmd 1x4 qualifier dmd_ctrs_rh
       array [CR0W CR3W 0 0]
    setup pmd 1x4 qualifier dmd_ctrs_lh
@@ -8971,10 +8973,6 @@ call "scoot the diamond" c3a
    seq fixscootdiamond [inherit_intlk]
    seq diamondcirc [inherit_intlk]
 
-call "scatter scoot" c1 tag scatscoot
-   setup 2x4 2x4 restriction forbidden wave_only
-      array [CR3S CR2S AL1S AL0S AM5S CM4S AM7S CM6S]
-
 call "_fudgy scatter scoot" dontshow tag fudgyscatscoot
    /* The yoyo version of this has the same fudge as "fudgyboxyscootback".  See above. */
    setup 2x4 2x4 restriction forbidden wave_only
@@ -9011,6 +9009,11 @@ call "scoot chain thru to a wave" c1
       array [0 0 L0S    0  L7S AL6N   0 AL1N]
    setup 2x4 qtag restriction forbidden wave_only
       array [C0S A0S C1S A1S L6S CR3N AL7N R2S]
+            alternate_definition [yoyo] c4
+   setup pmd 1x4 qualifier dmd_ctrs_rh restriction unusual alwaysfail
+      array [CCR1E R0W 0 0]
+   setup pmd 1x4 qualifier dmd_ctrs_lh restriction unusual alwaysfail
+      array [AAL1W 0 0 L0E]
 
 call "scoot and dodge" a1 tag scootndodge
    setup 2x2 2x2 restriction forbidden wave_only
@@ -9020,16 +9023,29 @@ call "scoot chain thru and dodge" c4 tag scootchainthrundodge
    setup 2x4 2x4 restriction forbidden wave_only
       array [ZM1N ZM0N ZM3N ZM2N 7S CM2N AM1N 4S]
 
-call "scatter scoot chain thru" c1 tag scatscootchainthru
-            yoyo_is_inherited
-   seq scatscoot [inherit_yoyo]  /* The yoyo version is only legal in a 1/4-tag. */
-   seq fixscootchainthru []
-
 call "_fudgy scatter scoot chain thru" dontshow tag fudgyscatscootchainthru
    /* The yoyo version of this has the same fudge as "fudgyboxyscootback".  See above. */
             yoyo_is_inherited
-   seq fudgyscatscoot [inherit_yoyo]
+   seq fudgyscatscoot [inherit_yoyo]  /* The yoyo version is only legal in a T-bone. */
    seq fixscootchainthru []
+
+call "scatter scoot" c1
+   seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
+
+call "scatter scoot to a wave" c1
+            yoyo_is_inherited
+   seq fudgyscatscoot [inherit_yoyo]  /* We allow yoyo in a T-bone. */
+   seq backemup []
+
+call "scatter scoot chain thru" c1 tag scatscootchainthru
+   seq fudgyscatscoot []
+   seq fixscootchainthru []
+
+call "scatter scoot chain thru to a wave" c1
+            yoyo_is_inherited
+   seq fudgyscatscoot [inherit_yoyo]  /* We allow yoyo in a T-bone. */
+   seq fixscootchainthru []
+   seq backemup []
 
 call "quick change" c4
    conc trade_and_roll [] circ_and_quarter_in [conc_demand_lines conc_force_spots]
@@ -9427,7 +9443,7 @@ call "@v @Creaction" c3
 call "@v and scatter @Creaction" c4
             left_means_mirror cross_is_inherited first_part_visible
    seq tagnullcall0 [inherit_left]
-   seq scatscoot []
+   seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
    seq wvchreact_1 [inherit_cross]
    seq wvchreact_2 []
    seq turnstar1_endstrade []
@@ -9512,7 +9528,7 @@ call "@v @Creactivate" c3
 call "@v and scatter @Creactivate" c4
             left_means_mirror cross_is_inherited first_part_visible
    seq tagnullcall0 [inherit_left]
-   seq scatscoot []
+   seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
    seq wvchreact_1 [inherit_cross]
    seq spindlefudge []
    seq reactivate2 []
@@ -9597,7 +9613,7 @@ call "@v @Cnuclear reaction" c3x
 call "@v and scatter @Cnuclear reaction" c4
             left_means_mirror cross_is_inherited first_part_visible
    seq tagnullcall0 [inherit_left]
-   seq scatscoot []
+   seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
    seq backemup []
    seq makepass_1 [inherit_cross]
    seq nuclear_nucleus []

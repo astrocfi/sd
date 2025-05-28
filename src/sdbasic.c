@@ -307,6 +307,8 @@ Private int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
 Private int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
 Private int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
 Private int sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
+Private int sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
+Private int sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
 Private int s3dmftranslateh[12] = {9, 10, 11, 1, 0, 0, 3, 4, 5, 7, 0, 0};
 Private int s3dmftranslatev[12] = {7, 0, 0, 9, 10, 11, 1, 0, 0, 3, 4, 5};
 Private int s3dmntranslateh[12] = {9, 10, 11, 0, 1, 0, 3, 4, 5, 0, 7, 0};
@@ -3332,6 +3334,19 @@ extern void basic_move(
             else if ((lilresult_mask[0] & 00505) == 0) {    /* Check vert 3dmd spots w/points in close. */
                result->kind = s3dmd;
                permuter = s3dmntranslatev;
+               rotator = 1;
+            }
+            else
+               fail("Call went to improperly-formed setup.");
+         }
+         else if (result->kind == s_thar) {
+            if ((lilresult_mask[0] & 0x66) == 0) {    /* Check horiz dmd spots. */
+               result->kind = sdmd;
+               permuter = sdmdtranslateh;
+            }
+            else if ((lilresult_mask[0] & 0x99) == 0) {    /* Check vert dmd spots. */
+               result->kind = sdmd;
+               permuter = sdmdtranslatev;
                rotator = 1;
             }
             else

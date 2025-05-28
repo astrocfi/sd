@@ -2567,6 +2567,10 @@ static Const fixer d2x4d1    = {sdmd, s2x4,        0, 1,       0,          0,   
 static Const fixer d2x4d2    = {sdmd, s2x4,        0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    {{0, 2, 4, 6}},     {{-1}}};
 static Const fixer d2x4c1    = {s2x2, s2x4,        0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer d2x4c2    = {s2x2, s2x4,        0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    {{0, 2, 4, 6}},     {{-1}}};
+static Const fixer d2x4z1    = {s2x2, s4x4,        0, 1,       0,          0,          0,          0, 0,          0,    0,          {{9, 11, 1, 3}},    {{-1}}};
+static Const fixer d2x4z2    = {s2x2, s4x4,        0, 1,       0,          0,          0,          0, 0,          0,    0,          {{10, 15, 2, 7}},   {{-1}}};
+static Const fixer d2x4y1    = {s2x2, s2x4,        0, 1,       0,          0,          &d2x4w1,    &d2x4z1, 0,    0,    &d2x4y1,    {{0, 1, 4, 5}},     {{-1}}};
+static Const fixer d2x4y2    = {s2x2, s2x4,        0, 1,       0,          0,          &d2x4w2,    &d2x4z2, 0,    0,    &d2x4y2,    {{2, 3, 6, 7}},     {{-1}}};
 static Const fixer d2x4x1    = {s1x4, s2x4,        0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    {{7, 1, 3, 5}},     {{-1}}};
 static Const fixer d2x4x2    = {s1x4, s2x4,        0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    {{0, 6, 4, 2}},     {{-1}}};
 static Const fixer dgalw1    = {s1x4, s_galaxy,    1, 1,       0,          0,          &dgalw1,    0, &dgald1,    0,    0,          {{2, 1, 6, 5}},     {{-1}}};
@@ -2591,12 +2595,7 @@ static Const fixer distrig8  = {sdmd, s_rigger,    0, 1,       0,          0,   
 static Const fixer distrig6  = {s1x4, s_rigger,    0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          {{7, 5, 3, 1}},     {{-1}}};
 static Const fixer disthrg1  = {s1x4, s_hrglass,   1, 1,       0,          0,          &disthrg1,  0, 0,          0,    0,          {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer disthrg2  = {s1x4, s_hrglass,   1, 1,       0,          0,          &disthrg2,  0, 0,          0,    0,          {{0, 3, 4, 7}},     {{-1}}};
-
-
-                                                                                                            /* think this VVVVV is wrong! */
-static Const fixer foo55d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,    0,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
-
-
+static Const fixer foo55d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,   0,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
 static Const fixer fgalctb   = {s2x2, s_galaxy,    0, 1,       0,          0,          0,          0, 0,          0,    &fgalctb,   {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f3x1ctl   = {s1x4, s3x1dmd,     0, 1,       0,          0,          &f3x1ctl,   0, 0,          0,    &fgalctb,   {{1, 2, 5, 6}},     {{-1}}};
 static Const fixer foo99d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo99d,    0, 0,          0,    &f2x4endd,  {{0, 3, 4, 7}},     {{-1}}};
@@ -2842,6 +2841,10 @@ back_here:
                fixp = &d2x4c1;
             else if (kk == s2x4 && thislivemask == 0x55)
                fixp = &d2x4c2;
+            else if (kk == s2x4 && thislivemask == 0x33)
+               fixp = &d2x4y1;
+            else if (kk == s2x4 && thislivemask == 0xCC)
+               fixp = &d2x4y2;
          }
          else if (arg2 != 0) {
             /* Search for distorted column/line/wave. */
