@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.68
-@set title2 Database version = 38.68 format = 320
+@set title1 RELEASE NOTES FOR VERSION 38.69
+@set title2 Database version = 38.69 format = 320
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.69::
 * 38.68::
 * 38.67::
 * 38.66::
@@ -107,7 +108,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.68, Top, (dir)
+@node Intro, 38.69, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -118,11 +119,17 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.68::               Changes in the current version
+* 38.69::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.68, 38.67, Intro, Top
+@node 38.69, 38.68, Intro, Top
+@unnumberedsec Version 38.69 changes
+
+Minor tweak.
+
+@c ************
+@node 38.68, 38.67, 38.69, Top
 @unnumberedsec Version 38.68 changes
 
 The roll behavior after things like @strong{wheel the ocean} is correct.

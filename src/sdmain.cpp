@@ -46,7 +46,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.68"
+#define VERSION_STRING "38.69"
 #define TIME_STAMP "wba@alum.mit.edu 18 August 2014 $"
 
 /* This defines the following functions:

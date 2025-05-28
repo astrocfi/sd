@@ -1,7 +1,7 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.68
+@set sd-version 38.69
 @set Time-stamp: August 18, 2014
 @c
 @setfilename sd_doc.info

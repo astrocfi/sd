@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.68"
+version "38.69"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -15722,7 +15722,7 @@ call "leads wheel the ocean" c2
             reverse_means_mirror single_is_inherited funny_is_inherited
             nxn_is_inherited mxn_is_inherited bigmatrix_is_inherited visible_fractions
    seq leadswheel [inherit_reverse inherit_single inherit_funny
-                   inherit_nxn inherit_mxn inherit_bigmatrix roll_transparent]
+                   inherit_nxn inherit_mxn inherit_bigmatrix]
    // The second part is implicitly funny anyway.
    seq finwheelocean [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix roll_transparent]
 
