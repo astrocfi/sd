@@ -1687,6 +1687,8 @@ static const expand::thing expand_2x6_4x6 = {
 
 // This handles the end-to-end versions also.  We should either have a 4x4 or a 1x16.
 
+// This comes in with a DISTORTKEY (always DISTORTKEY_DIST_CLW) in arg2.
+// If this goes to "distorted_move" (see below) that will be important.
 extern void do_phantom_2x4_concept(
    setup *ss,
    parse_block *parseptr,
@@ -1698,7 +1700,8 @@ extern void do_phantom_2x4_concept(
    // and global_livemask, but may not look at anyone's facing direction other
    // than through global_tbonetest.
 
-   int linesp = parseptr->concept->arg2 & 1;
+   int clw = parseptr->concept->arg2 & 3;
+   int linesp = clw & 1;
    int rot = (global_tbonetest ^ linesp ^ 1) & 1;
    uint32 map_code;
 
@@ -1706,7 +1709,7 @@ extern void do_phantom_2x4_concept(
        parseptr->concept->arg3 != MPKIND__CONCPHAN)
       fail("Mystic not allowed with this concept.");
 
-   if (parseptr->concept->arg2 == 3)
+   if (clw == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    // We allow stuff like "dodge [split phantom lines zing]" from a butterfly.
@@ -1750,7 +1753,7 @@ extern void do_phantom_2x4_concept(
           parseptr->concept->arg1 == phantest_only_one) {
          if (global_livemask != 0x2D2D && global_livemask != 0xD2D2) {
             warn(warn__not_on_block_spots);
-            distorted_move(ss, parseptr, disttest_any, result);
+            distorted_move(ss, parseptr, disttest_any, parseptr->concept->arg2, result);
             result->clear_all_overcasts();
             return;
          }
@@ -2682,39 +2685,36 @@ extern void distorted_move(
    setup *ss,
    parse_block *parseptr,
    disttest_kind disttest,
+   uint32 keys,
    setup *result) THROW_DECL
 {
    ss->clear_all_overcasts();
 
-/*
-   Args from the concept are as follows:
-   disttest (usually just the arg1 field from the concept,
-            but may get fudged for random bigblock/stagger) =
-      disttest_offset - user claims this is offset line(s)/column(s)
-      disttest_z      - user claims this is Z lines/columns
-      disttest_any    - user claims this is distorted lines/columns
-   linesp & 7 =
-      0 - user claims this is some kind of columns
-      1 - user claims this is some kind of lines
-      3 - user claims this is waves
-   linesp & 8 != 0:
-      this is a single tidal (grand) setup
-   linesp & 16 != 0:
-      this is distorted 1/4 tags or diamonds or whatever
-   linesp & 32 != 0:
-      this is C/L/W of 3 (not distorted)
-   linesp & 64 != 0:
-      this is staggered C/L/W of 3
-   linesp & 128 != 0:
-      this is offset split phantom boxes
-   linesp & 256 != 0:
-      this is offset 1/4 tag
+   // Incoming args are as follows:
+   //
+   // disttest (usually just the arg1 field from the concept,
+   //       but may get fudged for random bigblock/stagger):
+   //    disttest_offset - user claims this is offset line(s)/column(s)
+   //    disttest_z      - user claims this is Z lines/columns
+   //    disttest_any    - user claims this is distorted lines/columns
+   //
+   // keys (usually just the arg2 field from the concept), low bits:
+   //    0 - user claims this is some kind of columns
+   //    1 - user claims this is some kind of lines
+   //    3 - user claims this is waves
+   //
+   // keys, high bits = a "distort_key", telling what kind of operation is involved.
+   //
+   // This concept is "standard", which means that it can look at global_tbonetest
+   // and global_livemask, but may not look at anyone's facing direction other
+   // than through global_tbonetest.
 
-   Global_tbonetest has the OR of all the people, or all the standard people if
-      this is "standard", so it is what we look at to interpret the
-      lines vs. columns nature of the concept.
-*/
-
+   static const uint32 offs_boxes_map_code_table[4] = {
+      ~0U, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0), MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), ~0U};
+   static const uint32 offs_triple_clw_map_code_table[4] = {
+      ~0U, MAPCODE(s1x4,3,MPKIND__OVLOFS_L_HALF,0), MAPCODE(s1x4,3,MPKIND__OVLOFS_R_HALF,0), ~0U};
+   static const uint32 offs_triple_boxes_map_code_table[4] = {
+      ~0U, MAPCODE(s2x2,3,MPKIND__OVLOFS_L_HALF,1), MAPCODE(s2x2,3,MPKIND__OVLOFS_R_HALF,1), ~0U};
 
    veryshort the_map[8];
    const parse_block *next_parseptr;
@@ -2727,248 +2727,20 @@ extern void distorted_move(
    uint32 map_code = ~0U;
    int rotate_back = 0;
    uint32 livemask = global_livemask;
-   uint32 linesp = parseptr->concept->arg2;
+   uint32 linesp = keys & 7;
+   distort_key distkey = (distort_key) (keys / 16);
    bool zlines = true;
    concept_kind kk;
+   int map_table_key = 0;
 
-   if (linesp & 8) {
-      if (linesp & 1) {
-         if (global_tbonetest & 1) fail("There is no tidal line here.");
-      }
-      else {
-         if (global_tbonetest & 010) fail("There is no tidal column here.");
-      }
-
-      if (disttest == disttest_offset) {
-         // Offset tidal C/L/W.
-         if (ss->kind == s2x8) {
-            if (global_livemask == 0xF0F0) { map_code = MAPCODE(s1x8,1,MPKIND__OFFS_L_FULL,0); }
-            else if (global_livemask == 0x0F0F) { map_code = MAPCODE(s1x8,1,MPKIND__OFFS_R_FULL,0); }
-            else fail("Can't find offset 1x8.");
-
-            goto do_divided_call;
-         }
-         else
-            fail("Must have 2x8 setup for this concept.");
-      }
-      else {
-         // Distorted tidal C/L/W.
-         if (ss->kind == sbigbone) {
-            if (global_livemask == 01717) { map_code = spcmap_dbgbn1; }
-            else if (global_livemask == 07474) { map_code = spcmap_dbgbn2; }
-            else fail("Can't find distorted 1x8.");
-
-            // We know what we are doing -- shut off the error message.
-            disttest = disttest_offset;
-            goto do_divided_call;
-         }
-         else if (ss->kind == s2x8) {
-            // Search for the live people.
-
-            full_search(8, 2, false, 1, the_map, list_2x8_in, list_2x8, ss);
-            k = s1x8;
-            zlines = false;
-            rot = 0;
-            rotz = 0;
-            result->kind = s2x8;
-         }
-         else
-            fail("Must have 2x8 setup for this concept.");
-      }
-   }
-   else if (linesp & 16) {
-      // The thing to verify, like CMD_MISC__VERIFY_1_4_TAG.
-      ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
-
-      switch (ss->kind) {
-      case s3dmd:
-         if (global_livemask == 06363) { map_code = spcmap_dqtag1; }
-         else if (global_livemask == 06666) { map_code = spcmap_dqtag2; }
-         break;
-      case s4x4:
-         if (global_livemask == 0x6C6C) { map_code = spcmap_dqtag3; }
-         else if (global_livemask == 0xE2E2) { map_code = spcmap_dqtag4; }
-         else {
-            rotate_back = 1;   // It must be rotated.
-            ss->rotation++;
-            canonicalize_rotation(ss);
-
-            if (global_livemask == 0xC6C6) { map_code = spcmap_dqtag3; }
-            else if (global_livemask == 0x2E2E) { map_code = spcmap_dqtag4; }
-         }
-         break;
-      case s4x6:
-         if (global_livemask == 0xA88A88) { map_code = spcmap_dqtag5; }
-         else if (global_livemask == 0x544544) { map_code = spcmap_dqtag6; }
-         break;
-      }
-
-      if (map_code == ~0U)
-         fail("Must have 4x4 or triple diamond setup for this concept.");
-
-      goto do_divided_nocheck;
-   }
-   else if (linesp & 32) {
-      // This is C/L/W of 3 (not distorted).
-
-      int goodcount = 0;
-      const clw3_thing *goodmap = (const clw3_thing *) 0;
-
-      for (const clw3_thing *gptr=clw3_table ; gptr->mask ; gptr++) {
-         if (gptr->k == ss->kind &&
-             (global_livemask & gptr->mask) == gptr->test) {
-
-            const map::map_thing *map_ptr = map::get_map_from_code(gptr->map_code);
-
-            uint32 tberrtest = global_tbonetest;
-            uint32 mytbone = 0;
-            for (int k=0 ; k < 3*map_ptr->arity ; k++)
-               mytbone |= ss->people[map_ptr->maps[k]].id1;
-
-            if (!((linesp ^ gptr->rot ^ map_ptr->rot) & 1)) mytbone >>= 3;
-
-            if (mytbone & 1) {
-               // These 1x3's aren't facing the right way.  But if "standard"
-               // was used, and the standard people are facing the right way,
-               // accept it.
-               if (!((linesp ^ gptr->rot ^ map_ptr->rot) & 1)) tberrtest >>= 3;
-               if (tberrtest & 1) continue;    // Too bad.
-            }
-
-            goodcount++;
-            goodmap = gptr;
-         }
-      }
-
-      if (goodcount != 1)
-         fail((linesp & 1) ?
-              "There are no lines of 3 here." :
-              "There are no columns of 3 here.");
-
-      rotate_back = goodmap->rot;
-      ss->rotation += rotate_back;
-      canonicalize_rotation(ss);
-
-      setup ssave = *ss;
-
-      if ((linesp & 7) == 3)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
-
-      divided_setup_move(ss, goodmap->map_code, phantest_ok, true, result);
-      if (result->kind != goodmap->k) fail("Can't figure out result setup.");
-
-      // Now we have to put back the inactives.  Note also that they can't roll.
-
-      const veryshort *inactivemap = goodmap->inactives;
-
-      for (int i=0 ; ; i++) {
-         int j = inactivemap[i];
-         if (j < 0) break;
-         copy_person(result, j, &ssave, j);
-         result->suppress_roll(j);
-      }
-
-      goto getoutnosplit;
-   }
-   else if (linesp & 64) {
-      // This is staggered C/L/W of 3.  We allow only a few patterns.
-      // There is no general way to scan the columns unambiguously.
-
-      if (ss->kind == s4x4) {
-         if (!((linesp ^ global_tbonetest) & 1)) {
-            /* What a crock -- this is all backwards. */
-            rotate_back = 1;     /* (Well, actually everything else is backwards.) */
-            ss->rotation++;
-            canonicalize_rotation(ss);
-            livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
-         }
-
-         // We know what we are doing -- shut off the error message.
-         disttest = disttest_offset;
-
-         if (livemask == 0xD0D0) {
-            map_code = spcmap_stw3a;
-            goto do_divided_call;
-         }
-         else if (livemask == 0x2929) {
-            map_code = spcmap_stw3b;
-            goto do_divided_call;
-         }
-      }
-
-      fail("Can't do this concept in this setup.");
-   }
-   else if (linesp & 128) {
-      // Offset split phantom boxes.
-      static const uint32 map_code_table[4] = {~0U, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0),
-                                               MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), ~0U};
-
-      do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, false);
-      if (ss->kind != s3x8) fail("Can't do this concept in this setup.");
-
-      // Need to recompute this, darn it.
-      global_livemask = little_endian_live_mask(ss);
-
-      int key = 0;
-      if ((global_livemask & 0x00F00F) == 0) key |= 1;
-      if ((global_livemask & 0x0F00F0) == 0) key |= 2;
-
-      map_code = map_code_table[key];
-      if (map_code == ~0U) fail("Can't find offset 2x4's.");
-      goto do_divided_call;
-   }
-   else if (linesp & 256) {
-      if (ss->kind != spgdmdcw && ss->kind != spgdmdccw) {
-         // Try to fudge a 4x4 into the setup we want.
-         if (global_tbonetest & 1) {
-            rotate_back = 1;
-            global_tbonetest >>= 3;
-            livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
-            ss->rotation++;
-            canonicalize_rotation(ss);
-         }
-
-         if (ss->kind != s4x4 || (global_tbonetest & 1)) fail("Can't find distorted 1/4 tag.");
-         const expand::thing *p;
-         static const expand::thing foo1 = {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
-                                            s4x4, spgdmdccw, 0, 0U, 0U, false,
-                                            warn__none, warn__none, simple_normalize, 0};
-         static const expand::thing foo2 = {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
-                                            s4x4, spgdmdcw, 0, 0U, 0U, false,
-                                            warn__none, warn__none, simple_normalize, 0};
-
-         if (livemask == 0xCACA)
-            p = &foo1;
-         else if (livemask == 0xACAC)
-            p = &foo2;
-         else fail("Can't find distorted 1/4 tag.");
-
-         expand::expand_setup(*p, ss);
-         warn(warn__fudgy_half_offset);
-
-         // This line taken from do_matrix_expansion.  Would like to do it right.
-         clear_absolute_proximity_bits(ss);
-      }
-
-      // Now we have the setup we want.
-      // **** We probably ought to put in a check to demand a real 1/4 tag.  Or whatever.
-
-      if (ss->kind == spgdmdcw)
-         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,0);
-      else if (ss->kind == spgdmdccw)
-         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,0);
-      else
-         fail("Can't find distorted 1/4 tag.");
-
-      ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
-      goto do_divided_nocheck;
-   }
-   else {
+   switch (distkey) {
+   case DISTORTKEY_DIST_CLW:
+   case DISTORTKEY_OFFSCLW_SINGULAR:
       // Look for singular "offset C/L/W" in a 2x4.
 
       if (disttest == disttest_offset &&
           ss->kind == s2x4 &&
-          parseptr->concept->arg4 == 1) {
+          distkey == DISTORTKEY_OFFSCLW_SINGULAR) {
          if (linesp & 1) {
             if (global_tbonetest & 1) fail("There is no offset line here.");
          }
@@ -2986,7 +2758,7 @@ extern void distorted_move(
       }
 
       // Otherwise, it had better be plural.
-      if (parseptr->concept->arg4 != 0)
+      if (distkey == DISTORTKEY_OFFSCLW_SINGULAR)
          fail("Use plural offset C/L/W's.");
 
       k = s2x4;
@@ -3010,7 +2782,7 @@ extern void distorted_move(
             return;
          }
 
-         /* Look for butterfly or "O" spots occupied. */
+         // Look for butterfly or "O" spots occupied.
 
          if (livemask == 0x6666 || livemask == 0x9999) {
             if (!((linesp ^ global_tbonetest) & 1)) {
@@ -3124,6 +2896,261 @@ extern void distorted_move(
          else
             fail("Can't do this concept in this setup.");
       }
+
+      break;
+   case DISTORTKEY_TIDALCLW:
+      if (linesp & 1) {
+         if (global_tbonetest & 1) fail("There is no tidal line here.");
+      }
+      else {
+         if (global_tbonetest & 010) fail("There is no tidal column here.");
+      }
+
+      if (disttest == disttest_offset) {
+         // Offset tidal C/L/W.
+         if (ss->kind == s2x8) {
+            if (global_livemask == 0xF0F0) { map_code = MAPCODE(s1x8,1,MPKIND__OFFS_L_FULL,0); }
+            else if (global_livemask == 0x0F0F) { map_code = MAPCODE(s1x8,1,MPKIND__OFFS_R_FULL,0); }
+            else fail("Can't find offset 1x8.");
+
+            goto do_divided_call;
+         }
+         else
+            fail("Must have 2x8 setup for this concept.");
+      }
+      else {
+         // Distorted tidal C/L/W.
+         if (ss->kind == sbigbone) {
+            if (global_livemask == 01717) { map_code = spcmap_dbgbn1; }
+            else if (global_livemask == 07474) { map_code = spcmap_dbgbn2; }
+            else fail("Can't find distorted 1x8.");
+
+            // We know what we are doing -- shut off the error message.
+            disttest = disttest_offset;
+            goto do_divided_call;
+         }
+         else if (ss->kind == s2x8) {
+            // Search for the live people.
+
+            full_search(8, 2, false, 1, the_map, list_2x8_in, list_2x8, ss);
+            k = s1x8;
+            zlines = false;
+            rot = 0;
+            rotz = 0;
+            result->kind = s2x8;
+         }
+         else
+            fail("Must have 2x8 setup for this concept.");
+      }
+      break;
+   case DISTORTKEY_DIST_QTAG:
+      // The thing to verify, like CMD_MISC__VERIFY_1_4_TAG.
+      ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
+
+      switch (ss->kind) {
+      case s3dmd:
+         if (global_livemask == 06363) { map_code = spcmap_dqtag1; }
+         else if (global_livemask == 06666) { map_code = spcmap_dqtag2; }
+         break;
+      case s4x4:
+         if (global_livemask == 0x6C6C) { map_code = spcmap_dqtag3; }
+         else if (global_livemask == 0xE2E2) { map_code = spcmap_dqtag4; }
+         else {
+            rotate_back = 1;   // It must be rotated.
+            ss->rotation++;
+            canonicalize_rotation(ss);
+
+            if (global_livemask == 0xC6C6) { map_code = spcmap_dqtag3; }
+            else if (global_livemask == 0x2E2E) { map_code = spcmap_dqtag4; }
+         }
+         break;
+      case s4x6:
+         if (global_livemask == 0xA88A88) { map_code = spcmap_dqtag5; }
+         else if (global_livemask == 0x544544) { map_code = spcmap_dqtag6; }
+         break;
+      }
+
+      if (map_code == ~0U)
+         fail("Must have 4x4 or triple diamond setup for this concept.");
+
+      goto do_divided_nocheck;
+
+   case DISTORTKEY_CLW_OF_3:
+      // This is C/L/W of 3 (not distorted).
+
+      {
+         int goodcount = 0;
+         const clw3_thing *goodmap = (const clw3_thing *) 0;
+
+         for (const clw3_thing *gptr=clw3_table ; gptr->mask ; gptr++) {
+            if (gptr->k == ss->kind &&
+                (global_livemask & gptr->mask) == gptr->test) {
+
+               const map::map_thing *map_ptr = map::get_map_from_code(gptr->map_code);
+
+               uint32 tberrtest = global_tbonetest;
+               uint32 mytbone = 0;
+               for (int k=0 ; k < 3*map_ptr->arity ; k++)
+                  mytbone |= ss->people[map_ptr->maps[k]].id1;
+
+               if (!((linesp ^ gptr->rot ^ map_ptr->rot) & 1)) mytbone >>= 3;
+
+               if (mytbone & 1) {
+                  // These 1x3's aren't facing the right way.  But if "standard"
+                  // was used, and the standard people are facing the right way,
+                  // accept it.
+                  if (!((linesp ^ gptr->rot ^ map_ptr->rot) & 1)) tberrtest >>= 3;
+                  if (tberrtest & 1) continue;    // Too bad.
+               }
+
+               goodcount++;
+               goodmap = gptr;
+            }
+         }
+
+         if (goodcount != 1)
+            fail((linesp & 1) ?
+                 "There are no lines of 3 here." :
+                 "There are no columns of 3 here.");
+
+         rotate_back = goodmap->rot;
+         ss->rotation += rotate_back;
+         canonicalize_rotation(ss);
+
+         setup ssave = *ss;
+
+         if ((linesp & 7) == 3)
+            ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+         divided_setup_move(ss, goodmap->map_code, phantest_ok, true, result);
+         if (result->kind != goodmap->k) fail("Can't figure out result setup.");
+
+         // Now we have to put back the inactives.  Note also that they can't roll.
+
+         const veryshort *inactivemap = goodmap->inactives;
+
+         for (int i=0 ; ; i++) {
+            int j = inactivemap[i];
+            if (j < 0) break;
+            copy_person(result, j, &ssave, j);
+            result->suppress_roll(j);
+         }
+      }
+
+      goto getoutnosplit;
+
+   case DISTORTKEY_STAGGER_CLW_OF_3:
+      // This is staggered C/L/W of 3.  We allow only a few patterns.
+      // There is no general way to scan the columns unambiguously.
+
+      if (ss->kind == s4x4) {
+         if (!((linesp ^ global_tbonetest) & 1)) {
+            // What a crock -- this is all backwards.
+            rotate_back = 1;     // (Well, actually everything else is backwards.)
+            ss->rotation++;
+            canonicalize_rotation(ss);
+            livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
+         }
+
+         // We know what we are doing -- shut off the error message.
+         disttest = disttest_offset;
+
+         if (livemask == 0xD0D0) {
+            map_code = spcmap_stw3a;
+            goto do_divided_call;
+         }
+         else if (livemask == 0x2929) {
+            map_code = spcmap_stw3b;
+            goto do_divided_call;
+         }
+      }
+
+      fail("Can't do this concept in this setup.");
+      break;
+   case DISTORTKEY_OFFS_SPL_PHAN_BOX:
+      // Offset split phantom boxes.
+      if (ss->kind != s3x8) fail("Can't do this concept in this setup.");
+
+      if ((global_livemask & 0x00F00F) == 0) map_table_key |= 1;
+      if ((global_livemask & 0x0F00F0) == 0) map_table_key |= 2;
+
+      map_code = offs_boxes_map_code_table[map_table_key];
+      if (map_code == ~0U) fail("Can't find offset 2x4's.");
+
+      goto do_divided_call;
+   case DISTORTKEY_OFFS_QTAG:
+      if (ss->kind != spgdmdcw && ss->kind != spgdmdccw) {
+         // Try to fudge a 4x4 into the setup we want.
+         if (global_tbonetest & 1) {
+            rotate_back = 1;
+            global_tbonetest >>= 3;
+            livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
+            ss->rotation++;
+            canonicalize_rotation(ss);
+         }
+
+         if (ss->kind != s4x4 || (global_tbonetest & 1)) fail("Can't find distorted 1/4 tag.");
+         const expand::thing *p;
+         static const expand::thing foo1 = {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
+                                            s4x4, spgdmdccw, 0, 0U, 0U, false,
+                                            warn__none, warn__none, simple_normalize, 0};
+         static const expand::thing foo2 = {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
+                                            s4x4, spgdmdcw, 0, 0U, 0U, false,
+                                            warn__none, warn__none, simple_normalize, 0};
+
+         if (livemask == 0xCACA)
+            p = &foo1;
+         else if (livemask == 0xACAC)
+            p = &foo2;
+         else fail("Can't find distorted 1/4 tag.");
+
+         expand::expand_setup(*p, ss);
+         warn(warn__fudgy_half_offset);
+
+         // This line taken from do_matrix_expansion.  Would like to do it right.
+         clear_absolute_proximity_bits(ss);
+      }
+
+      // Now we have the setup we want.
+      // **** We probably ought to put in a check to demand a real 1/4 tag.  Or whatever.
+
+      if (ss->kind == spgdmdcw)
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,0);
+      else if (ss->kind == spgdmdccw)
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,0);
+      else
+         fail("Can't find distorted 1/4 tag.");
+
+      ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
+      goto do_divided_nocheck;
+   case DISTORTKEY_OFFS_TRIPLECLW:
+      // Offset triple C/L/W.
+      if (ss->kind != s4x4) fail("Can't do this concept in this setup.");
+
+      if (!((linesp ^ global_tbonetest) & 1)) {
+         rotate_back = 1;
+         ss->rotation++;
+         canonicalize_rotation(ss);
+         livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
+      }
+
+      if ((livemask & 0x3030) == 0) map_table_key |= 1;
+      if ((livemask & 0x4141) == 0) map_table_key |= 2;
+
+      map_code = offs_triple_clw_map_code_table[map_table_key];
+      if (map_code == ~0U) fail("Can't find offset triple 1x4's.");
+
+      goto do_divided_call;
+   case DISTORTKEY_OFFS_TRIPLE_BOX:
+      // Offset triple boxes.
+      if (ss->kind != s2x8) fail("Must have a 2x8 setup to do this concept.");
+
+      if ((global_livemask & 0xC0C0) == 0) map_table_key |= 1;
+      if ((global_livemask & 0x0303) == 0) map_table_key |= 2;
+
+      map_code = offs_triple_boxes_map_code_table[map_table_key];
+      if (map_code == ~0U) fail("Can't find offset triple boxes.");
+      goto do_divided_call;
    }
 
    // Now see if the concept was correctly named.

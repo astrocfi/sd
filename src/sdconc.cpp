@@ -4360,7 +4360,12 @@ extern void concentric_move(
       result->result_flags.copy_split_info(outer_inners[0].result_flags);
       minimize_splitting_info(result, outer_inners[1].result_flags);
    }
-
+   else if (analyzer == schema_in_out_triple && center_arity == 2 &&
+            result->kind == s2x9 && (result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3)) {
+      static const expand::thing fix_2x9 = {{0, 1, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 16, 17}, s2x7, s2x9, 0};
+      if ((little_endian_live_mask(result) & 0104104) == 0)
+         expand::compress_setup(fix_2x9, result);
+   }
    result->rotation += rotate_back;
    reinstate_rotation(ss, result);
 }

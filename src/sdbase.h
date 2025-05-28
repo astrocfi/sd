@@ -97,7 +97,6 @@ struct small_setup;
 struct setup;
 class parse_block;
 struct call_conc_option_state;
-class parse_block;
 struct call_with_name;
 struct resolve_tester;
 class matcher_class;
@@ -198,6 +197,7 @@ enum concept_kind {
    concept_multiple_boxes,
    concept_quad_boxes_together,
    concept_triple_boxes_together,
+   concept_offset_triple_boxes_tog,
    concept_multiple_diamonds,
    concept_multiple_formations,
    concept_triple_diamonds_together,
@@ -576,6 +576,7 @@ enum warning_index {
    warn_bogus_yoyo_rims_hubs,
    warn__centers_are_diamond,
    warn_pg_in_2x6,
+   warn__deprecate_pg_3box,
    warn_real_people_spots,
    warn__tasteless_com_spot,
    warn__tasteless_junk,

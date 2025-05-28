@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.60"
-#define TIME_STAMP "wba@alum.mit.edu 8 Feb 2014 $"
+#define VERSION_STRING "38.62"
+#define TIME_STAMP "wba@alum.mit.edu 20 Apr 2014 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -1029,6 +1029,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
       printf("-no_sound                   do not make any noise when an error occurs\n");
       printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
       printf("-tab_changes_focus          (Sd only) make the tab key move keyboard focus\n");
+      printf("-no_c3x                     C3X calls are off-list, even at C4\n");
       printf("-singlespace                single space the output file\n");
       printf("-keep_all_pictures          keep the picture after every call\n");
       printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");

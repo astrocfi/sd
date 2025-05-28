@@ -6274,23 +6274,23 @@ foobar:
       four_way_startsetup = false;
 
       if (key1 != b_nothing && key2 != b_nothing) {
-         if (key1 == key2) {     /* This is for things like 2x2 or 1x1. */
+         if (key1 == key2) {     // This is for things like 2x2 or 1x1.
             linedefinition = assoc(key1, ss, calldeflist);
             coldefinition = linedefinition;
             four_way_startsetup = true;
          }
          else {
-            /* If the setup is empty, get whatever definitions we can get, so that
-               we can find the "CFLAG1_PARALLEL_CONC_END" bit,
-               also known as the "other_elongate" bit. */
+            // If the setup is empty, get whatever definitions we can get, so that
+            // we can find the "CFLAG1_PARALLEL_CONC_END" bit,
+            // also known as the "other_elongate" bit.
 
-            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK) {
-               /* See if the call has a 2x3 definition (we know the setup is a 2x3)
-                  that goes to a setup of size 4.  That is, see if this is "Z axle".
-                  If so, turn off the special "Z" flags and forget about it.
-                  Otherwise, change to a 2x2 and try again. */
-               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
-               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+            if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
+            if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+
+            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK && ss->kind == s2x3) {
+               // See if the call has a 2x3 definition that goes to a setup of size 4.
+               // That is, see if this is "Z axle".  If so, turn off the special "Z" flags
+               // and forget about it.  Otherwise, change to a 2x2 and try again.
 
                if ((linedefinition &&
                     (attr::klimit(linedefinition->get_end_setup()) == 3 ||
@@ -6307,10 +6307,6 @@ foobar:
                   coldefinition = linedefinition;
                   four_way_startsetup = true;
                }
-            }
-            else {
-               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
-               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
             }
          }
       }

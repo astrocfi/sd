@@ -308,7 +308,7 @@ selector_item selector_list[] = {
    {"notctr dmd???", "notctr dmd???", "NOTCTR DMD???", "NOTCTR DMD???",  selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
 
-// BEWARE!!  These strings are keyed to the definition of "warning_index" in sd.h .
+// BEWARE!!  These strings are keyed to the definition of "warning_index" in sdbase.h .
 // A "*" as the first character means that this warning precludes acceptance while searching.
 // A "+" as the first character means that this warning is cleared if a
 //   concentric call was done and the "suppress_elongation_warnings" flag was on.
@@ -430,6 +430,7 @@ Cstring warning_strings[] = {
    /*  warn_bogus_yoyo_rims_hubs */   "*Using incorrect definition of rims/hubs trade.",
    /*  warn__centers_are_diamond */   "*The centers are the diamond.",
    /*  warn_pg_in_2x6            */   "*Offset the resulting 2x6 by 50%, or 3 positions.",
+   /*  warn__deprecate_pg_3box   */   "*Parallelogram triple boxes is deprecated.  Use offset triple boxes instead.",
    /*  warn_real_people_spots    */   "*The distorted setup is formed by the real people.",
    /*  warn__tasteless_com_spot  */   "*Not all common-spot people had right hands.",
    /*  warn__tasteless_junk      */   "*The algorithmic nondeterminism of this usage is truly extraordinary.",
@@ -1890,6 +1891,38 @@ map::map_thing map::map_init_table[] = {
    {{1, 11, 10, 0,                     4, 6, 7, 5},
     s2x2,2,MPKIND__OFFS_R_HALF,1, 0,  s3x4,      0x005, 0},
 
+   {{10, 15, 0, 14, 9, 11, 1, 3, 8, 6, 2, 7},
+    s1x4,3,MPKIND__OVLOFS_L_HALF,0, 0,  s4x4,      0x000, 0},
+   {{12, 13, 1, 3, 10, 15, 2, 7, 9, 11, 4, 5},
+    s1x4,3,MPKIND__OVLOFS_R_HALF,0, 0,  s4x4,      0x000, 0},
+
+   {{0, 1, 3, 2,       4, 5, 10, 11,     9, 8, 6, 7},
+    s1x4,3,MPKIND__OVLOFS_L_HALF,1, 2,  s1x12,     0x000, 0},
+   {{0, 1, 3, 2,       4, 5, 10, 11,     9, 8, 6, 7},
+    s1x4,3,MPKIND__OVLOFS_R_HALF,1, 2,  s1x12,     0x000, 0},
+
+   {{5, 8, 9, 4,       3, 10, 11, 2,     1, 12, 13, 0},
+    s2x2,3,MPKIND__OVLOFS_L_HALF,0, 0,  s2x8,      0x015, 0},
+   {{7, 10, 11, 6,     5, 12, 13, 4,     3, 14, 15, 2},
+    s2x2,3,MPKIND__OVLOFS_R_HALF,0, 0,  s2x8,      0x015, 0},
+   {{0, 1, 12, 13,     2, 3, 10, 11,     4, 5, 8, 9},
+    s2x2,3,MPKIND__OVLOFS_L_HALF,1, 0,  s2x8,      0x000, 0},
+   {{2, 3, 14, 15,     4, 5, 12, 13,     6, 7, 10, 11},
+    s2x2,3,MPKIND__OVLOFS_R_HALF,1, 0,  s2x8,      0x000, 0},
+
+   {{10, 15, 14, 0, 1, 3, 11, 9,     9, 11, 3, 1, 2, 7, 6, 8},
+    s2x4,2,MPKIND__OVLOFS_L_HALF,0, 0,s4x4,      0x000, 0},
+   {{12, 13, 3, 1, 2, 7, 15, 10,     10, 15, 7, 2, 4, 5, 11, 9},
+    s2x4,2,MPKIND__OVLOFS_R_HALF,0, 0,s4x4,      0x000, 0},
+   {{0, 1, 2, 3, 10, 11, 12, 13,     2, 3, 4, 5, 8, 9, 10, 11},
+    s2x4,2,MPKIND__OVLOFS_L_HALF,1, 0,s2x8,      0x000, 0},
+   {{2, 3, 4, 5, 12, 13, 14, 15,     4, 5, 6, 7, 10, 11, 12, 13},
+    s2x4,2,MPKIND__OVLOFS_R_HALF,1, 0,s2x8,      0x000, 0},
+   {{0, 1, 3, 2, 10, 11, 4, 5,       4, 5, 10, 11, 6, 7, 9, 8},
+    s1x8,2,MPKIND__OVLOFS_L_HALF,1, 2,  s1x12,     0x000, 0},
+   {{0, 1, 3, 2, 10, 11, 4, 5,       4, 5, 10, 11, 6, 7, 9, 8},
+    s1x8,2,MPKIND__OVLOFS_R_HALF,1, 2,  s1x12,     0x000, 0},
+
    {{10, 9,          1, 11,            5, 7,         3, 4},
     s1x2,4,MPKIND__OFFS_L_HALF_STAGGER,1, 0,  s3x4,      0x055, 0},
    {{0, 10,          11, 8,            2, 5,         4, 6},
@@ -1935,6 +1968,11 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 4, 5},
     s1x4,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x000, 0},
 
+   {{10, 15, 0, 14, 9, 11, 1, 3, 8, 6, 2, 7},
+    s1x4,3,MPKIND__OFFS_L_FULL,0, 0,  s4x4,      0x000, 0},
+   {{12, 13, 1, 3, 10, 15, 2, 7, 9, 11, 4, 5},
+    s1x4,3,MPKIND__OFFS_R_FULL,0, 0,  s4x4,      0x000, 0},
+
    {{0, 1, 4, 5},
     s2x2,1,MPKIND__OFFS_L_FULL,1, 0,  s2x4,      0x000, 0},
    {{2, 3, 6, 7},
@@ -1944,6 +1982,16 @@ map::map_thing map::map_init_table[] = {
     s2x2,1,MPKIND__OFFS_L_FULL,0, 0,  s2x4,      0x001, 0},
    {{3, 6, 7, 2},
     s2x2,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x001, 0},
+
+   {{0, 1, 12, 13, 2, 3, 10, 11, 4, 5, 8, 9},
+    s2x2,3,MPKIND__OFFS_L_FULL,1, 0,  s2x8,      0x000, 0},
+   {{2, 3, 14, 15, 4, 5, 12, 13, 6, 7, 10, 11},
+    s2x2,3,MPKIND__OFFS_R_FULL,1, 0,  s2x8,      0x000, 0},
+
+   {{5, 8, 9, 4, 3, 10, 11, 2, 1, 12, 13, 0},
+    s2x2,3,MPKIND__OFFS_L_FULL,0, 0,  s2x8,      0x015, 0},
+   {{7, 10, 11, 6, 5, 12, 13, 4, 3, 14, 15, 2},
+    s2x2,3,MPKIND__OFFS_R_FULL,0, 0,  s2x8,      0x015, 0},
 
    {{9, 8, 6, 7,                       0, 1, 3, 2},
     s1x4,2,MPKIND__OFFS_L_HALF,1, 0,  s2x6,      0x000, 0},
@@ -2063,10 +2111,10 @@ map::map_thing map::map_init_table[] = {
    {{-1, 0, 7, 6, 5, -1, -1, -1,       1, -1, -1, -1, -1, 4, 3, 2},
     s_qtag,2,MPKIND__OFFS_R_HALF,0, 0, spgdmdcw, 0x000, 0},
 
-   {{13, 12, 10, 11, -1, -1, 9, 8,     -1, -1, 1, 0, 5, 4, 2, 3},
-    s1x8,2,MPKIND__OFFS_L_HALF,1, 0,  s2x8,      0x000, 0},
-   {{-1, -1, 14, 15, 10, 11, 13, 12,   2, 3, 5, 4, -1, -1, 6, 7},
-    s1x8,2,MPKIND__OFFS_R_HALF,1, 0,  s2x8,      0x000, 0},
+   {{19, 18, 16, 17, 12, 13, 15, 14,   0, 1, 3, 2, 7, 6, 4, 5},
+    s1x8,2,MPKIND__OFFS_L_HALF,1, 0,  s2x12,     0x000, 0},
+   {{23, 22, 20, 21, 16, 17, 19, 18,   4, 5, 7, 6, 11, 10, 8, 9},
+    s1x8,2,MPKIND__OFFS_R_HALF,1, 0,  s2x12,     0x000, 0},
 
    {{10, 1, 11, 9,                     5, 3, 4, 7},
     s2x2,2,MPKIND__LILZCCW,0,     0,  s3x4,      0x000, 0},
@@ -3418,6 +3466,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x2,     s2x2,     0, 1, 1, 2,  0x2FD, schema_concentric_others},
    {s2x6,           schema_nothing, {11, 0, 1, 10, 7, 4, 5, 6,           9, 2, 3, 8},
              s2x2,     s2x2,     1, 1, 2, 2,  0x2FB, schema_in_out_triple},
+   {s2x9,           schema_nothing, {0, 1, 2, 15, 16, 17, 6, 7, 8, 9, 10, 11,    3, 4, 5, 12, 13, 14},
+             s2x3,     s2x3,     0, 0, 2, 2,  0x2FA, schema_in_out_triple},
    {sbigdmd,        schema_nothing, {0, 1, 10, 11, 4, 5, 6, 7,           8, 9, 2, 3},
              s2x2,     s1x4,     0, 1, 2, 2,  0x2F7, schema_in_out_triple},
    {s_hrglass,      schema_nothing, {5, 0, 1, 4,       6, 3, 2, 7},

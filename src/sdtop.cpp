@@ -1396,7 +1396,6 @@ bool expand::expand_from_hash_table(setup *ss,
                                     uint32 needpropbits,
                                     uint32 livemask) THROW_DECL
 {
-
    uint32 hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
    const thing *eptr;
 

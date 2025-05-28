@@ -472,7 +472,7 @@ enum dance_level {
    magic_triangle_level = l_c2,
    triangle_in_box_level = l_c2,
    stagger_not_in_2x4_level = l_c3a,
-   general_magic_level = l_c3,
+   general_magic_level = l_c4a,
    phantom_tandem_level = l_c4a,
    quadruple_CLW_level = l_c4a,
    Z_CLW_level = l_c4a

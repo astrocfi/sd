@@ -825,6 +825,7 @@ static void do_concept_multiple_lines_tog(
    int rotfix = 0;
    setup_kind base_setup = s2x4;
    int base_vert = 1;
+   uint32 map_code = ~0U;
    uint32 masks[8];
 
    // Arg4 = number of C/L/W.
@@ -878,16 +879,9 @@ static void do_concept_multiple_lines_tog(
          base_vert = 0;
       }
       else {
-         int i, tbonetest;
-
          if (ss->kind != s3x4) fail("Must have a 3x4 setup for this concept.");
 
-         if (cstuff >= 8)
-            tbonetest = global_tbonetest;
-         else {
-            tbonetest = 0;
-            for (i=0; i<12; i++) tbonetest |= ss->people[i].id1;
-         }
+         uint32 tbonetest = (cstuff < 8) ? or_all_people(ss) : global_tbonetest;
 
          if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
@@ -914,6 +908,62 @@ static void do_concept_multiple_lines_tog(
             if ((ss->people[11].id1 ^ cstuff) & 2) { masks[1] &= ~0x40 ; masks[0] |= 0x2; };
             if ((ss->people[5].id1  ^ cstuff) & 2) { masks[1] &= ~0x20 ; masks[0] |= 0x4; };
             if ((ss->people[4].id1  ^ cstuff) & 2) { masks[1] &= ~0x10 ; masks[0] |= 0x8; };
+         }
+      }
+   }
+   else if (parseptr->concept->arg4 == 16+3) {
+      // Offset triple C/L/W working.
+
+      if (ss->kind != s4x4) fail("Must have a 4x4 setup for this concept.");
+
+      uint32 livemask = (cstuff < 8) ? little_endian_live_mask(ss) : global_livemask;
+      uint32 tbonetest = (cstuff < 8) ? or_all_people(ss) : global_tbonetest;
+      int map_table_key = 0;
+
+      if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+      if (!((linesp ^ tbonetest) & 1)) {
+         rotfix = 1;
+         ss->rotation++;
+         canonicalize_rotation(ss);
+         livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
+      }
+
+      if ((livemask & 0x3030) == 0) map_table_key |= 1;
+      if ((livemask & 0x4141) == 0) map_table_key |= 2;
+
+      static const uint32 offs_triple_clw_working_table[4] = {
+         ~0U, MAPCODE(s2x4,2,MPKIND__OVLOFS_L_HALF,0), MAPCODE(s2x4,2,MPKIND__OVLOFS_R_HALF,0), ~0U};
+
+      map_code = offs_triple_clw_working_table[map_table_key];
+      if (map_code == ~0U) fail("Can't find offset triple 1x4's.");
+
+      // Look at the center line people and put each one in the correct group.
+
+      // Initially assign the centers to the upper (masks[0]) group.
+      masks[0] = 0xFF; masks[1] = 0xF0;
+
+      if (cstuff == 8) {
+         masks[0] = 0xCF; masks[1] = 0xFC;   // clockwise, no matter which way the offset goes.
+      }
+      else if (cstuff == 9) {
+         masks[0] = 0x3F; masks[1] = 0xF3;   // counterclockwise, no matter which way the offset goes.
+      }
+      else {
+         // Forward/back/left/right.  What we do depends on which way the offset goes.
+         if (map_table_key == 2) {
+            // Offset is "clockwise".
+            if ((ss->people[10].id1 ^ cstuff) & 2) { masks[0] &= ~0x80 ; masks[1] |= 0x1; };
+            if ((ss->people[15].id1 ^ cstuff) & 2) { masks[0] &= ~0x40 ; masks[1] |= 0x2; };
+            if ((ss->people[7].id1  ^ cstuff) & 2) { masks[0] &= ~0x20 ; masks[1] |= 0x4; };
+            if ((ss->people[2].id1  ^ cstuff) & 2) { masks[0] &= ~0x10 ; masks[1] |= 0x8; };
+         }
+         else {
+            // Offset is "counterclockwise".
+            if ((ss->people[9].id1  ^ cstuff) & 2) { masks[0] &= ~0x80 ; masks[1] |= 0x1; };
+            if ((ss->people[11].id1 ^ cstuff) & 2) { masks[0] &= ~0x40 ; masks[1] |= 0x2; };
+            if ((ss->people[3].id1  ^ cstuff) & 2) { masks[0] &= ~0x20 ; masks[1] |= 0x4; };
+            if ((ss->people[1].id1  ^ cstuff) & 2) { masks[0] &= ~0x10 ; masks[1] |= 0x8; };
          }
       }
    }
@@ -1011,16 +1061,9 @@ static void do_concept_multiple_lines_tog(
    else if (parseptr->concept->arg4 == 5) {
       // Quintuple C/L/W working.
 
-      int i, tbonetest;
-
       if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
 
-      if (cstuff >= 8)
-         tbonetest = global_tbonetest;
-      else {
-         tbonetest = 0;
-         for (i=0; i<20; i++) tbonetest |= ss->people[i].id1;
-      }
+      uint32 tbonetest = (cstuff < 8) ? or_all_people(ss) : global_tbonetest;
 
       if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
@@ -1062,16 +1105,10 @@ static void do_concept_multiple_lines_tog(
    else {
       // Sextuple C/L/W working.
 
-      int i;
-      uint32 tbonetest = global_tbonetest;
-
       // Expanding to a 4x6 is tricky.  See the extensive comments in the
       // function "triple_twin_move" in sdistort.c .
 
-      if (cstuff < 8) {
-         tbonetest = 0;
-         for (i=0; i<24; i++) tbonetest |= ss->people[i].id1;
-      }
+      uint32 tbonetest = (cstuff < 8) ? or_all_people(ss) : global_tbonetest;
 
       if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
@@ -1125,8 +1162,10 @@ static void do_concept_multiple_lines_tog(
       }
    }
 
+   if (map_code == ~0U) map_code = MAPCODE(base_setup,(parseptr->concept->arg4 & 0xF)-1,MPKIND__OVERLAP,base_vert);
+
    overlapped_setup_move(ss,
-                         MAPCODE(base_setup,parseptr->concept->arg4-1,MPKIND__OVERLAP,base_vert),
+                         map_code,
                          masks,
                          result,
                          CMD_MISC__NO_EXPAND_1);
@@ -1263,7 +1302,8 @@ static void do_concept_parallelogram(
       if (kk == concept_multiple_boxes &&
           next_parseptr->concept->arg4 == 3 &&
           next_parseptr->concept->arg5 == MPKIND__SPLIT) {
-         // This is "parallelogram triple boxes".
+         // This is "parallelogram triple boxes".  It is deprecated.
+         warn(warn__deprecate_pg_3box);
          if (standard_concept) fail("Don't use \"standard\" with triple boxes.");
          goto whuzzzzz;
       }
@@ -1592,24 +1632,22 @@ static void do_concept_triple_boxes_tog(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   int cstuff;
    uint32 m1, m2;
-   uint32 masks[2];
 
    if (ss->kind != s2x6) fail("Must have a 2x6 setup to do this concept.");
 
-   cstuff = parseptr->concept->arg1;
-   /* cstuff =
-      forward          : 0
-      left             : 1
-      back             : 2
-      right            : 3
-      together         : 6
-      apart            : 7
-      clockwise        : 8
-      counterclockwise : 9 */
+   int cstuff = parseptr->concept->arg1;
+   // cstuff =
+   // forward          : 0
+   // left             : 1
+   // back             : 2
+   // right            : 3
+   // together         : 6
+   // apart            : 7
+   // clockwise        : 8
+   // counterclockwise : 9
 
-   if (cstuff < 4) {         /* Working forward/back/right/left. */
+   if (cstuff < 4) {         // Working forward/back/right/left.
       int tbonetest = ss->people[2].id1 |
                       ss->people[3].id1 |
                       ss->people[8].id1 |
@@ -1641,8 +1679,94 @@ static void do_concept_triple_boxes_tog(
       m1 = 0xCF; m2 = 0xFC;
    }
 
+   uint32 masks[2];
    masks[0] = m1; masks[1] = m2;
    overlapped_setup_move(ss, MAPCODE(s2x4,2,MPKIND__OVERLAP,0), masks, result, CMD_MISC__NO_EXPAND_2);
+}
+
+
+static void do_concept_offset_triple_boxes_tog(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   static const uint32 offs_triple_boxes_map_code_table[4] = {
+      ~0U, MAPCODE(s2x4,2,MPKIND__OVLOFS_L_HALF,1), MAPCODE(s2x4,2,MPKIND__OVLOFS_R_HALF,1), ~0U};
+
+   int cstuff = parseptr->concept->arg1;
+   // cstuff =
+   // forward          : 0
+   // left             : 1
+   // back             : 2
+   // right            : 3
+   // together         : 6
+   // apart            : 7
+   // clockwise        : 8
+   // counterclockwise : 9
+
+   uint32 m0, m1;
+
+   if (ss->kind != s2x8) fail("Must have a 2x8 setup to do this concept.");
+   int map_table_key = 0;
+   uint32 map_code = ~0U;
+   uint32 livemask = little_endian_live_mask(ss);
+
+   if ((livemask & 0xC0C0) == 0) map_table_key |= 1;
+   if ((livemask & 0x0303) == 0) map_table_key |= 2;
+
+   map_code = offs_triple_boxes_map_code_table[map_table_key];
+   if (map_code == ~0U) fail("Can't find offset triple boxes.");
+
+   // These 4 specs are independent of which way the offset goes.
+   if (cstuff == 6) {        // Working together.
+      m0 = 0xE7; m1 = 0x7E;
+   }
+   else if (cstuff == 7) {   // Working apart.
+      m0 = 0xDB; m1 = 0xBD;
+   }
+   else if (cstuff == 8) {   // Working clockwise.
+      m0 = 0xF3; m1 = 0x3F;
+   }
+   else if (cstuff == 9) {   // Working counterclockwise.
+      m0 = 0xCF; m1 = 0xFC;
+   }
+   else {                    // Working forward/back/right/left.
+      uint32 A, B, C, D;
+
+      // Need to check which way the offset goes in order to pick up
+      // the logical center box.  All else is the same.
+      if (map_table_key == 2) {
+         A = ss->people[4].id1;
+         B = ss->people[5].id1;
+         C = ss->people[12].id1;
+         D = ss->people[13].id1;
+      }
+      else {
+         A = ss->people[2].id1;
+         B = ss->people[3].id1;
+         C = ss->people[10].id1;
+         D = ss->people[11].id1;
+      }
+
+      uint32 tbonetest = A | B | C | D;
+
+      if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+      if ((tbonetest & 01) && (cstuff & 1)) fail("Must indicate forward/back.");
+
+      // Look at the center 4 people and put each one in the correct group.
+      // Tentatively put them all in the m1 group; will selectively remove them and put them in m0.
+
+      m0 = 0xC3; m1 = 0xFF;
+      cstuff <<= 2;
+      if (((A + 6) ^ cstuff) & 8) { m0 |= 0x04 ; m1 &= ~0x01; };
+      if (((B + 6) ^ cstuff) & 8) { m0 |= 0x08 ; m1 &= ~0x02; };
+      if (((C + 6) ^ cstuff) & 8) { m0 |= 0x10 ; m1 &= ~0x40; };
+      if (((D + 6) ^ cstuff) & 8) { m0 |= 0x20 ; m1 &= ~0x80; };
+   }
+
+   uint32 masks[2];
+   masks[0] = m0; masks[1] = m1;
+   overlapped_setup_move(ss, map_code, masks, result, CMD_MISC__NO_EXPAND_2);
 }
 
 
@@ -1654,7 +1778,7 @@ static void do_triple_formation(
 {
    // Concepts that use this must have:
    // arg5 = a map_kind, typically MPKIND_SPLIT.  It may be MPKIND_CONCPHAN
-   //   for "concentric triple boxes".  among other things, this will force
+   //   for "concentric triple boxes".  Among other things, this will force
    //   the use of "divided_setup_move" to force spots or whatever.
    // arg3 = assumption stuff to put into misc bits:
    //
@@ -1857,7 +1981,6 @@ static void do_concept_triple_1x8_tog(
 {
    uint32 m1, m2;
    uint32 masks[2];
-   int i, tbonetest;
 
    int cstuff = parseptr->concept->arg1;
    /* cstuff =
@@ -1874,8 +1997,7 @@ static void do_concept_triple_1x8_tog(
 
    if (ss->kind != s3x8) fail("Must have a 3x8 setup for this concept.");
 
-   tbonetest = 0;
-   for (i=0; i<24; i++) tbonetest |= ss->people[i].id1;
+   uint32 tbonetest = or_all_people(ss);
 
    if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
@@ -2437,7 +2559,8 @@ static void do_concept_distorted(
    setup *result) THROW_DECL
 {
    ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_PG_OFFSET;
-   distorted_move(ss, parseptr, (disttest_kind) parseptr->concept->arg1, result);
+   distorted_move(ss, parseptr,
+                  (disttest_kind) parseptr->concept->arg1, parseptr->concept->arg4, result);
 }
 
 
@@ -3456,6 +3579,9 @@ static void do_concept_crazy(
       switch (incomingfracs.flags & (CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK)) {
       case CMD_FRAC_CODE_ONLY:
          // Request is to do just part this_part.
+         if (e_numer != 0 && this_part >= highlimit)
+            fail("Can't select fractional part of \"crazy\".");
+         e_numer = 0;
          i = this_part-1;
          highlimit = this_part;
          finalresultflagsmisc |= RESULTFLAG__PARTS_ARE_KNOWN;
@@ -3463,6 +3589,9 @@ static void do_concept_crazy(
          break;
       case CMD_FRAC_CODE_FROMTO:
          // Request is to do everything up through part this_part.
+         if (e_numer != 0 && this_part >= highlimit)
+            fail("Can't select fractional part of \"crazy\".");
+         e_numer = 0;
          highlimit = this_part;
          break;
       case CMD_FRAC_CODE_FROMTOREV:
@@ -3471,6 +3600,9 @@ static void do_concept_crazy(
          break;
       case CMD_FRAC_CODE_ONLYREV:
          // Request is to do just part this_part, counting from the end.
+         if (e_numer != 0 && this_part >= highlimit)
+            fail("Can't select fractional part of \"crazy\".");
+         e_numer = 0;
          i = highlimit-this_part;
          highlimit += 1-this_part;
          finalresultflagsmisc |= RESULTFLAG__PARTS_ARE_KNOWN;
@@ -6040,7 +6172,19 @@ static void do_concept_ferris(
       fail("Illegal modifier before \"ferris\" or \"release\".");
 
    expand::expand_setup(*map_ptr, ss);
-   concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, false, ~0U, result);
+
+   // If the next thing is an "offset CLW" concept or a "triple CLW" concept,
+   // just do it, directly from the current 3x4 setup.
+   if (ss->cmd.parseptr && ss->cmd.parseptr->concept &&
+       ((ss->cmd.parseptr->concept->kind == concept_distorted &&
+        ss->cmd.parseptr->concept->arg1 == disttest_offset &&
+        (ss->cmd.parseptr->concept->arg4 >> 4) == DISTORTKEY_DIST_CLW) ||
+       (ss->cmd.parseptr->concept->kind == concept_multiple_lines &&
+        ss->cmd.parseptr->concept->arg4 == 3))) {
+      move(ss, false, result);
+   }
+   else
+      concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, false, ~0U, result);
 }
 
 
@@ -8724,7 +8868,7 @@ const concept_table_item concept_table[] = {
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK |
     Nostandard_matrix_phantom,
     do_concept_do_divided_bones},                           // concept_do_divided_bones
-   {CONCPROP__STANDARD,
+   {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD,
     do_concept_distorted},                                  // concept_distorted
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,
     do_concept_single_diagonal},                            // concept_single_diagonal
@@ -8746,6 +8890,8 @@ const concept_table_item concept_table[] = {
     do_concept_quad_boxes_tog},                             // concept_quad_boxes_together
    {CONCPROP__NEEDK_2X6 | Nostandard_matrix_phantom,
     do_concept_triple_boxes_tog},                           // concept_triple_boxes_together
+   {CONCPROP__NEEDK_2X8 | Nostandard_matrix_phantom,
+    do_concept_offset_triple_boxes_tog},                    // concept_offset_triple_boxes_tog
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__NO_STEP | Nostandard_matrix_phantom,
     do_concept_multiple_diamonds},                          // concept_multiple_diamonds
    {CONCPROP__NO_STEP | Nostandard_matrix_phantom,

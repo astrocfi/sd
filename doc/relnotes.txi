@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.60
-@set title2 Database version = 38.60 format = 317
+@set title1 RELEASE NOTES FOR VERSION 38.62
+@set title2 Database version = 38.62 format = 317
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.62::
+* 38.61::
 * 38.60::
 * 38.59::
 * 38.58::
@@ -99,7 +101,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.60, Top, (dir)
+@node Intro, 38.62, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -110,11 +112,47 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.60::               Changes in the current version
+* 38.62::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.60, 38.59, Intro, Top
+@node 38.62, 38.61, Intro, Top
+@unnumberedsec Version 38.62 changes
+
+The just-completed changes to the C3 list were incorporated.
+
+Many, but not all, calls on the "c3x" program were moved to c4a or c4.
+The general rule was that things on Richard Tuck's teach order up
+through week 4 were c4a, and anything higher was c4.
+
+There is a startup switch "-no_c3x" that, when used with an invocation of c4a or higher,
+rejects c3x calls, even though such calls are nominally considered lower than c4a.
+
+The misbehavior of the @strong{mimic} concepts in combination with the @strong{couples/tandem} concepts was fixed.
+
+The @strong{triple lines step and slide} bug was fixed.
+
+Various problems with @strong{detour}, and counter rotate in general, when the centers are in a "Z", were fixed.
+
+The problem with some 2x2 calls in Z's, with the "Z" concept, was fixed.
+
+@c ************
+@node 38.61, 38.60, 38.62, Top
+@unnumberedsec Version 38.61 changes
+
+New concepts: @strong{offset triple lines/waves/columns}, done from a 4x4.  These may be used with @strong{standard}.
+These also support @code{working left/right/forward/backward/clockwise/counterclockwise},
+the first two of which can be used with @strong{standard}.
+
+Also: @strong{offset triple boxes}, done from a 2x8.  This also supports
+@code{working left/right/forward/backward/together/apart/clockwise/counterclockwise}.
+
+Also: @strong{fifthly}.  (@strong{initially} through @strong{fourthly} were already supported.)
+
+The @strong{parallelogram triple boxes} concept is deprecated.  Do not use it.
+
+@c ************
+@node 38.60, 38.59, 38.61, Top
 @unnumberedsec Version 38.60 changes
 
 A failure to read command-line arguments correctly in Sd, leading to such things as wrong icon colors, was fixed.

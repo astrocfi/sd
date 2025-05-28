@@ -592,7 +592,7 @@ static tm_thing maps_isearch_ysome[] = {
 
 struct siamese_item {
    setup_kind testkind;
-   uint32 testval;
+   uint32 testval; // High 16 = people facing E/W (little-endian), low 16 = people facing N/S.
    uint32 fixup;   // High bit means phantom pairing is OK.
    warning_index warning;
 };
@@ -608,6 +608,8 @@ const siamese_item siamese_table_of_2[] = {
    {s1x8,        0x003300CCU, 0xCCU,   warn__ctrscpls_endstand},
    {s2x4,        0x003300CCU, 0xCCU,   warn__none},
    {s2x4,        0x00CC0033U, 0x33U,   warn__none},
+   {s2x6,        0x030C0CF3U, 0xCF3U,  warn__none},
+   {s2x6,        0x0CF3030CU, 0x30CU,  warn__none},
    {s_trngl4,    0x000F0000U, 0x03U,   warn__none},
    {s_trngl4,    0x0000000FU, 0x0CU,   warn__none},
    {s_c1phan,    0x0000AAAAU, 0xA0A0U, warn__none},
@@ -2778,6 +2780,7 @@ static void small_mimic_move(setup *ss,
 
    ttt.unpack_us(map_search, 0, 0, &temp1);
    if (MI.setup_hint & MIMIC_SETUP_WAVES) temp1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+   temp1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
 
    if (division_code != ~0U)
       divided_setup_move(&temp1, division_code, phantest_ok, true, result);

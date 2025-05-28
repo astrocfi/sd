@@ -1931,6 +1931,21 @@ enum {
    CONCPROP__PERMIT_MODIFIERS= 0x40000000U
 };
 
+// Used by distorted_move.
+enum distort_key {
+   DISTORTKEY_DIST_CLW,
+   DISTORTKEY_OFFSCLW_SINGULAR,
+   DISTORTKEY_TIDALCLW,
+   DISTORTKEY_DIST_QTAG,
+   DISTORTKEY_CLW_OF_3,
+   DISTORTKEY_STAGGER_CLW_OF_3,
+   DISTORTKEY_OFFS_SPL_PHAN_BOX,
+   DISTORTKEY_OFFS_QTAG,
+   DISTORTKEY_OFFS_TRIPLECLW,
+   DISTORTKEY_OFFS_TRIPLE_BOX
+};
+
+
 // A "configuration" is a state in the evolving sequence.
 // There is a global array of these, making up the sequence itself.
 // It is in the static array "history", running from 1 or 2 up to "config_history_ptr".
@@ -2831,6 +2846,8 @@ enum mpkind {
    MPKIND__OFFS_R_HALF,
    MPKIND__OFFS_L_STEP,
    MPKIND__OFFS_R_STEP,
+   MPKIND__OVLOFS_L_HALF,
+   MPKIND__OVLOFS_R_HALF,
    MPKIND__OFFS_L_HALF_STAGGER,
    MPKIND__OFFS_R_HALF_STAGGER,
    MPKIND__OFFS_L_HALF_NONISO,
@@ -3688,6 +3705,7 @@ extern void distorted_move(
    setup *ss,
    parse_block *parseptr,
    disttest_kind disttest,
+   uint32 keys,
    setup *result) THROW_DECL;
 
 extern void triple_twin_move(

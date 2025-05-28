@@ -1158,9 +1158,7 @@ extern uint32 do_call_in_series(
    }
 
    uint32 save_expire = sss->cmd.prior_expire_bits;
-   //   setup_command savecmd = sss->cmd;
    *sss = tempsetup;
-   //   sss->cmd = savecmd = sss->cmd;
    sss->cmd.prior_expire_bits = save_expire;
    sss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   // But pick these up from the call.
    sss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;     // But not this one!
