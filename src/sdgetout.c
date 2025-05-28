@@ -138,54 +138,141 @@ Private void display_reconcile_history(int current_depth, int n);
 
 
 typedef struct {
-   uint32 d35, d32, d13, d71, d10, d76;
-   dance_level level_needed;
    resolve_kind k;
-   int distance;
+   dance_level level_needed;
+   int distance;      /* Add the 64 bit for singer-only; these must be last. */
+   int locations[8];
+   uint32 directions;
 } resolve_tester;
 
-static resolve_tester test_thar_rlg    = {0173, 0702, 0207, 0167, 0702, 0676, l_mainstream,      resolve_rlg, 2};              /* RLG from thar. */
-static resolve_tester test_thar_la     = {0167, 0076, 0207, 0173, 0076, 0102, l_mainstream,      resolve_la, 5};               /* LA from thar. */
-static resolve_tester test_thar_xbyla  = {0173, 0102, 0207, 0167, 0102, 0076, cross_by_level,    resolve_xby_la, 5};           /* cross-by-LA from thar. */
-static resolve_tester test_thar_xbyrlg = {0167, 0676, 0207, 0173, 0676, 0702, cross_by_level,    resolve_xby_rlg, 2};          /* cross-by-RLG from thar. */
-static resolve_tester test_thar_slc_rg = {0173, 0102, 0207, 0167, 0102, 0076, l_mainstream,      resolve_slipclutch_rlg, 1};   /* slip-the-clutch-RLG from thar. */
-static resolve_tester test_thar_scl_la = {0167, 0676, 0207, 0173, 0676, 0702, l_mainstream,      resolve_slipclutch_la, 6};    /* slip-the-clutch-LA from thar. */
-static resolve_tester test_thar_pr     = {0173, 0700, 0207, 0167, 0700, 0700, l_mainstream,      resolve_prom, 6};             /* promenade from thar. */
-static resolve_tester test_thar_revpr  = {0167, 0100, 0207, 0173, 0100, 0100, l_mainstream,      resolve_revprom, 5};          /* reverse promenade from thar. */
-static resolve_tester test_2x4_circle  = {0173, 0671, 0207, 0167, 0711, 0671, l_mainstream,      resolve_circle, 7};           /* "circle left/right" from pseudo or real squared-set. */
-static resolve_tester test_sglfile     = {0202, 0700, 0200, 0176, 0700, 0700, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from L columns */
-static resolve_tester test_revsglfile  = {0176, 0700, 0200, 0202, 0700, 0700, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from R columns */
-static resolve_tester test_sglfilex    = {0207, 0705, 0173, 0207, 0671, 0711, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from T-bone */
-static resolve_tester test_revsglfilex = {0207, 0711, 0167, 0207, 0671, 0705, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from T-bone */
-static resolve_tester test_wv_la       = {0076, 0676, 0300, 0102, 0076, 0702, l_mainstream,      resolve_la, 6};               /* LA from waves. */
-static resolve_tester test_wv_extla    = {0276, 0076, 0100, 0302, 0676, 0102, extend_34_level,   resolve_ext_la, 7};           /* ext-LA from waves. */
-static resolve_tester test_wv_crcla    = {0476, 0276, 0700, 0502, 0476, 0302, l_mainstream,      resolve_circ_la, 0};          /* circulate-LA from waves. */
-static resolve_tester test_2x4_xby_la  = {0102, 0702, 0300, 0076, 0102, 0676, cross_by_level,    resolve_xby_la, 6};           /* cross-by-LA from waves. */
-static resolve_tester test_wv_rg       = {0302, 0102, 0100, 0276, 0702, 0076, l_mainstream,      resolve_rlg, 3};              /* RLG from waves. */
-static resolve_tester test_wv_extrg    = {0102, 0702, 0300, 0076, 0102, 0676, extend_34_level,   resolve_ext_rlg, 2};          /* extend-RLG from waves. */
-static resolve_tester test_wv_crcrg    = {0702, 0502, 0500, 0676, 0302, 0476, l_mainstream,      resolve_circ_rlg, 1};         /* circulate-RLG from waves. */
-static resolve_tester test_wv_xbyrg    = {0276, 0076, 0100, 0302, 0676, 0102, cross_by_level,    resolve_xby_rlg, 3};          /* cross-by-RLG from waves. */
-static resolve_tester test_2fl_prom    = {0300, 0100, 0102, 0300, 0700, 0100, l_mainstream,      resolve_prom, 7};             /* promenade from 2FL. */
-static resolve_tester test_2fl_revprom = {0100, 0700, 0276, 0100, 0100, 0700, l_mainstream,      resolve_revprom, 6};          /* reverse promenade from 2FL. */
-static resolve_tester test_8ch_rg      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_rlg, 3};              /* RLG from 8-chain or squared set. */
-static resolve_tester test_v44_rg      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from vertical 8-chain-squared set. */
-static resolve_tester test_8ch_pthrg   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_rlg, 2};          /* pass-thru-RLG from 8-chain. */
-static resolve_tester test_tby_rg      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from trade-by. */
-static resolve_tester test_tby_tbyrg   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_rlg, 4};          /* trade-by-RLG from trade-by. */
-static resolve_tester test_tbone_rg    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_rlg, 3};              /* RLG from T-bone setup, ends facing. */
-static resolve_tester test_8ch_la      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_la, 7};               /* LA from 8-chain or squared set. */
-static resolve_tester test_v44_la      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_la, 7};               /* LA from vertical 8-chain-squared set. */
-static resolve_tester test_8ch_pthla   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_la, 6};           /* pass-thru-LA from 8-chain. */
-static resolve_tester test_tby_la      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_la, 7};               /* LA from trade-by. */
-static resolve_tester test_tby_tbyla   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_la, 0};           /* trade-by-LA from trade-by. */
-static resolve_tester test_tbone_la    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_la, 7};               /* LA from T-bone setup, ends facing. */
-static resolve_tester test_sqo_la      = {0207, 0707, 0173, 0207, 0673, 0707, l_mainstream,      resolve_la, 7};               /* LA from squared set, back-to-back. */
-static resolve_tester test_dpt_dix     = {0700, 0600, 0476, 0700, 0600, 0600, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from DPT. */
-static resolve_tester test_qtag_dix    = {0700, 0476, 0502, 0700, 0300, 0502, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from 1/4 tag. */
-static resolve_tester test_3tag_rg     = {0176, 0676, 0200, 0202, 0700, 0702, l_mainstream,      resolve_rlg, 4};              /* RLG from 3/4 tag. */
-static resolve_tester test_dmd_rg      = {0207, 0676, 0173, 0207, 0702, 0702, l_mainstream,      resolve_rlg, 4};              /* RLG from diamonds with points facing each other. */
-static resolve_tester test_3tag_la     = {0300, 0102, 0076, 0300, 0700, 0076, l_mainstream,      resolve_la, 0};               /* LA from 3/4 tag. */
-static resolve_tester test_dmd_la      = {0311, 0102, 0071, 0305, 0702, 0076, l_mainstream,      resolve_la, 0};               /* LA from diamonds with points facing each other. */
+static resolve_tester test_thar_stuff[] = {
+   {resolve_rlg,            l_mainstream,      2,   5, 4, 3, 2, 1, 0, 7, 6,     0x8A31A813},    /* RLG from thar. */
+   {resolve_prom,           l_mainstream,      6,   5, 4, 3, 2, 1, 0, 7, 6,     0x8833AA11},    /* promenade from thar. */
+   {resolve_slipclutch_rlg, l_mainstream,      1,   5, 2, 3, 0, 1, 6, 7, 4,     0x8138A31A},    /* slip-the-clutch-RLG from thar. */
+   {resolve_la,             l_mainstream,      5,   5, 2, 3, 0, 1, 6, 7, 4,     0xA31A8138},    /* LA from thar. */
+   {resolve_slipclutch_la,  l_mainstream,      6,   5, 4, 3, 2, 1, 0, 7, 6,     0xA8138A31},    /* slip-the-clutch-LA from thar. */
+   {resolve_xby_rlg,        cross_by_level,    1,   4, 3, 2, 1, 0, 7, 6, 5,     0x8138A31A},    /* cross-by-RLG from thar. */
+   {resolve_revprom,        l_mainstream,      4,   2, 3, 0, 1, 6, 7, 4, 5,     0x33AA1188},    /* reverse promenade from thar. */
+   {resolve_xby_la,         cross_by_level,    4,   2, 3, 0, 1, 6, 7, 4, 5,     0x138A31A8},    /* cross-by-LA from thar. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_4x4_stuff[] = {
+   {resolve_circle,         l_mainstream,      6,   2, 1, 14, 13, 10, 9, 6, 5,  0x33AA1188},    /* "circle left/right" from squared-set, normal. */
+   {resolve_circle,         l_mainstream,      7,   5, 2, 1, 14, 13, 10, 9, 6,  0x833AA118},    /* "circle left/right" from squared-set, sashayed. */
+   {resolve_rlg,            l_mainstream,      3,   5, 2, 1, 14, 13, 10, 9, 6,  0x8A8AA8A8},    /* RLG from vertical 8-chain in "O". */
+   {resolve_rlg,            l_mainstream,      3,   5, 2, 1, 14, 13, 10, 9, 6,  0x13313113},    /* RLG from horizontal 8-chain in "O". */
+   {resolve_la,             l_mainstream,      6,   2, 1, 14, 13, 10, 9, 6, 5,  0x33131131},    /* LA from horizontal 8-chain in "O". */
+   {resolve_la,             l_mainstream,      6,   2, 1, 14, 13, 10, 9, 6, 5,  0xA8AA8A88},    /* LA from vertical 8-chain in "O". */
+   {resolve_rlg,            l_mainstream,      2,   2, 1, 14, 13, 10, 9, 6, 5,  0x8A31A813},    /* RLG from squared set, facing directly. */
+   {resolve_la,             l_mainstream,      7,   5, 2, 1, 14, 13, 10, 9, 6,  0x38A31A81},    /* LA from squared set, facing directly. */
+   {resolve_rlg,            l_mainstream,      3,   5, 2, 1, 14, 13, 10, 9, 6,  0x1A8138A3},    /* RLG from squared set, around the corner. */
+   {resolve_la,             l_mainstream,      6,   2, 1, 14, 13, 10, 9, 6, 5,  0xA8138A31},    /* LA from squared set, around the corner. */
+   {resolve_rlg,            l_mainstream,      3,   7, 2, 3, 14, 15, 10, 11, 6, 0x138A31A8},    /* RLG from pinwheel, all facing. */
+   {resolve_rlg,            l_mainstream,      3,   5, 7, 1, 3, 13, 15, 9, 11,  0x8A31A813},    /* RLG from pinwheel, all facing. */
+   {resolve_rlg,            l_mainstream,      3,   7, 5, 3, 1, 15, 13, 11, 9,  0x138A31A8},    /* RLG from pinwheel, all in miniwaves. */
+   {resolve_rlg,            l_mainstream,      3,   7, 2, 3, 14, 15, 10, 11, 6, 0x8A31A813},    /* RLG from pinwheel, all in miniwaves. */
+   {resolve_rlg,            l_mainstream,      3,   7, 2, 3, 14, 15, 10, 11, 6, 0x13313113},    /* RLG from pinwheel, some of each. */
+   {resolve_rlg,            l_mainstream,      3,   7, 2, 3, 14, 15, 10, 11, 6, 0x8A8AA8A8},    /* RLG from pinwheel, others of each. */
+   {resolve_rlg,            l_mainstream,      3,   5, 7, 3, 1, 13, 15, 11, 9,  0x8A8AA8A8},    /* RLG from pinwheel, some of each. */
+   {resolve_rlg,            l_mainstream,      3,   7, 5, 1, 3, 15, 13, 9, 11,  0x13313113},    /* RLG from pinwheel, others of each. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_c1phan_stuff[] = {
+   {resolve_rlg,            l_mainstream,      3,   10, 8, 6, 4, 2, 0, 14, 12,  0x138A31A8},    /* RLG from phantoms, all facing. */
+   {resolve_rlg,            l_mainstream,      3,   9, 11, 5, 7, 1, 3, 13, 15,  0x8A31A813},    /* RLG from phantoms, all facing. */
+   {resolve_rlg,            l_mainstream,      3,   11, 9, 7, 5, 3, 1, 15, 13,  0x138A31A8},    /* RLG from phantoms, all in miniwaves. */
+   {resolve_rlg,            l_mainstream,      3,   10, 8, 6, 4, 2, 0, 14, 12,  0x8A31A813},    /* RLG from phantoms, all in miniwaves. */
+   {resolve_rlg,            l_mainstream,      3,   10, 8, 6, 4, 2, 0, 14, 12,  0x13313113},    /* RLG from phantoms, some of each. */
+   {resolve_rlg,            l_mainstream,      3,   10, 8, 6, 4, 2, 0, 14, 12,  0x8A8AA8A8},    /* RLG from phantoms, others of each. */
+   {resolve_rlg,            l_mainstream,      3,   9, 11, 7, 5, 1, 3, 15, 13,  0x8A8AA8A8},    /* RLG from phantoms, some of each. */
+   {resolve_rlg,            l_mainstream,      3,   11, 9, 5, 7, 3, 1, 13, 15,  0x13313113},    /* RLG from phantoms, others of each. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_qtag_stuff[] = {
+   {resolve_dixie_grand,    dixie_grand_level, 2,   5, 0, 2, 7, 1, 4, 6, 3,     0x8AAAA888},    /* dixie grand from 1/4 tag. */
+   {resolve_rlg,            l_mainstream,      4,   5, 4, 3, 2, 1, 0, 7, 6,     0xAA8A88A8},    /* RLG from 3/4 tag. */
+   {resolve_rlg,            l_mainstream,      4,   5, 4, 3, 2, 1, 0, 7, 6,     0x138A31A8},    /* RLG from diamonds with points facing each other. */
+   {resolve_rlg,            l_mainstream,      4,   5, 4, 3, 2, 1, 0, 7, 6,     0x8A8AA8A8},    /* RLG from "6x2 acey deucey" type of 1/4 tag. */
+   {resolve_la,             l_mainstream,      7,   4, 2, 3, 1, 0, 6, 7, 5,     0xA8A88A8A},    /* LA from 3/4 tag. */
+   {resolve_la,             l_mainstream,      7,   4, 2, 3, 1, 0, 6, 7, 5,     0x38A31A81},    /* LA from diamonds with points facing each other. */
+   /* Singers only. */
+   {resolve_rlg,            l_mainstream,   64+4,   4, 5, 3, 2, 0, 1, 7, 6,     0xAA8A88A8},    /* swing/prom from 3/4 tag, ends sashayed (normal case is above). */
+   {resolve_rlg,            l_mainstream,   64+4,   5, 4, 2, 3, 1, 0, 6, 7,     0xAAA8888A},    /* swing/prom from 3/4 tag, centers traded, ends normal. */
+   {resolve_rlg,            l_mainstream,   64+4,   4, 5, 2, 3, 0, 1, 6, 7,     0xAAA8888A},    /* swing/prom from 3/4 tag, centers traded, ends sashayed. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_2x6_stuff[] = {
+   {resolve_rlg,            l_mainstream,      3,   7, 6, 4, 3, 1, 0, 10, 9,    0x13313113},    /* RLG from "Z" 8-chain. */
+   {resolve_rlg,            l_mainstream,      3,   8, 7, 5, 4, 2, 1, 11, 10,   0x13313113},    /* RLG from "Z" 8-chain. */
+   {resolve_la,             l_mainstream,      6,   6, 4, 3, 1, 0, 10, 9, 7,    0x33131131},    /* LA from "Z" 8-chain. */
+   {resolve_la,             l_mainstream,      6,   7, 5, 4, 2, 1, 11, 10, 8,   0x33131131},    /* LA from "Z" 8-chain. */
+   {resolve_rlg,            l_mainstream,      3,   7, 6, 4, 5, 1, 0, 10, 11,   0x8A8AA8A8},    /* RLG from outer triple boxes. */
+   {resolve_la,             l_mainstream,      6,   7, 5, 4, 0, 1, 11, 10, 6,   0xA8AA8A88},    /* LA from outer triple boxes. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_3x4_stuff[] = {
+   {resolve_rlg,            l_mainstream,      3,   7, 6, 5, 4, 1, 0, 11, 10,   0x8A8AA8A8},    /* RLG from offset waves. */
+   {resolve_rlg,            l_mainstream,      3,   5, 4, 2, 3, 11, 10, 8, 9,   0x8A8AA8A8},    /* RLG from offset waves. */
+   {resolve_la,             l_mainstream,      6,   7, 4, 5, 0, 1, 10, 11, 6,   0xA8AA8A88},    /* LA from offset waves. */
+   {resolve_la,             l_mainstream,      6,   5, 3, 2, 10, 11, 9, 8, 4,   0xA8AA8A88},    /* LA from offset waves. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_4dmd_stuff[] = {
+   {resolve_la,             l_mainstream,      6,   8, 4, 5, 1, 0, 12, 13, 9,   0x38A31A81},    /* LA from whatever. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_spindle_stuff[] = {
+   {resolve_rlg,            l_mainstream,      3,   4, 3, 2, 1, 0, 7, 6, 5,     0x13313113},    /* RLG from whatever. */
+   {resolve_la,             l_mainstream,      7,   4, 3, 2, 1, 0, 7, 6, 5,     0x33131131},    /* LA from whatever. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_2x4_stuff[] = {
+   {resolve_rlg,            l_mainstream,      3,   5, 4, 3, 2, 1, 0, 7, 6,     0x13313113},    /* RLG from 8-chain. */
+   {resolve_rlg,            l_mainstream,      3,   5, 4, 2, 3, 1, 0, 6, 7,     0x8A8AA8A8},    /* RLG from waves. */
+   {resolve_rlg,            l_mainstream,      2,   4, 3, 2, 1, 0, 7, 6, 5,     0x11313313},    /* RLG from trade-by. */
+   {resolve_ext_rlg,        extend_34_level,   2,   5, 3, 2, 0, 1, 7, 6, 4,     0x8A88A8AA},    /* extend-RLG from waves. */
+   {resolve_circ_rlg,       l_mainstream,      1,   5, 0, 2, 7, 1, 4, 6, 3,     0x8888AAAA},    /* circulate-RLG from waves. */
+   {resolve_pth_rlg,        l_mainstream,      2,   5, 2, 3, 0, 1, 6, 7, 4,     0x11313313},    /* pass-thru-RLG from 8-chain. */
+   {resolve_tby_rlg,        l_mainstream,      3,   6, 3, 4, 1, 2, 7, 0, 5,     0x11113333},    /* trade-by-RLG from trade-by. */
+   {resolve_xby_rlg,        cross_by_level,    2,   4, 2, 3, 1, 0, 6, 7, 5,     0x8A88A8AA},    /* cross-by-RLG from waves. */
+   {resolve_rlg,            l_mainstream,      2,   4, 3, 2, 1, 0, 7, 6, 5,     0x8A31A813},    /* RLG from T-bone setup, ends facing. */
+   {resolve_rlg,            l_mainstream,      2,   4, 3, 2, 1, 0, 7, 6, 5,     0x31311313},    /* RLG from centers facing and ends in miniwaves. */
+   {resolve_la,             l_mainstream,      6,   4, 3, 2, 1, 0, 7, 6, 5,     0x33131131},    /* LA from 8-chain. */
+   {resolve_la,             l_mainstream,      6,   5, 3, 2, 0, 1, 7, 6, 4,     0xA8AA8A88},    /* LA from waves. */
+   {resolve_la,             l_mainstream,      7,   5, 4, 3, 2, 1, 0, 7, 6,     0x31131331},    /* LA from trade-by. */
+   {resolve_ext_la,         extend_34_level,   7,   5, 4, 2, 3, 1, 0, 6, 7,     0xA8A88A8A},    /* ext-LA from waves. */
+   {resolve_circ_la,        l_mainstream,      0,   5, 7, 2, 4, 1, 3, 6, 0,     0xAAA8888A},    /* circulate-LA from waves. */
+   {resolve_pth_la,         l_mainstream,      5,   2, 3, 0, 1, 6, 7, 4, 5,     0x13133131},    /* pass-thru-LA from 8-chain. */
+   {resolve_tby_la,         l_mainstream,      0,   5, 6, 3, 4, 1, 2, 7, 0,     0x31111333},    /* trade-by-LA from trade-by. */
+   {resolve_xby_la,         cross_by_level,    5,   3, 2, 0, 1, 7, 6, 4, 5,     0xA88A8AA8},    /* cross-by-LA from waves. */
+   {resolve_la,             l_mainstream,      7,   5, 4, 3, 2, 1, 0, 7, 6,     0x38A31A81},    /* LA from T-bone setup, ends facing. */
+   {resolve_prom,           l_mainstream,      7,   5, 4, 2, 3, 1, 0, 6, 7,     0x8888AAAA},    /* promenade from 2FL. */
+   {resolve_revprom,        l_mainstream,      5,   3, 2, 0, 1, 7, 6, 4, 5,     0xAA8888AA},    /* reverse promenade from 2FL. */
+   {resolve_circle,         l_mainstream,      6,   4, 3, 2, 1, 0, 7, 6, 5,     0x33AA1188},    /* "circle left/right" from pseudo squared-set, normal. */
+   {resolve_circle,         l_mainstream,      7,   5, 4, 3, 2, 1, 0, 7, 6,     0x833AA118},    /* "circle left/right" from pseudo squared-set, sashayed. */
+   {resolve_dixie_grand,    dixie_grand_level, 2,   5, 2, 4, 7, 1, 6, 0, 3,     0x33311113},    /* dixie grand from DPT. */
+   {resolve_sglfileprom,    l_mainstream,      7,   5, 4, 3, 2, 1, 0, 7, 6,     0x11333311},    /* single file promenade from L columns */
+   {resolve_sglfileprom,    l_mainstream,      6,   4, 3, 2, 1, 0, 7, 6, 5,     0x13333111},    /* single file promenade from L columns */
+   {resolve_sglfileprom,    l_mainstream,      7,   5, 4, 3, 2, 1, 0, 7, 6,     0x18833AA1},    /* single file promenade from T-bone */
+   {resolve_sglfileprom,    l_mainstream,      6,   4, 3, 2, 1, 0, 7, 6, 5,     0x8833AA11},    /* single file promenade from T-bone */
+   {resolve_revsglfileprom, l_mainstream,      7,   5, 4, 3, 2, 1, 0, 7, 6,     0x33111133},    /* reverse single file promenade from R columns */
+   {resolve_revsglfileprom, l_mainstream,      6,   4, 3, 2, 1, 0, 7, 6, 5,     0x31111333},    /* reverse single file promenade from R columns */
+   {resolve_revsglfileprom, l_mainstream,      7,   5, 4, 3, 2, 1, 0, 7, 6,     0x3AA11883},    /* reverse single file promenade from T-bone */
+   {resolve_revsglfileprom, l_mainstream,      6,   4, 3, 2, 1, 0, 7, 6, 5,     0xAA118833},    /* reverse single file promenade from T-bone */
+   {resolve_rlg,            l_mainstream,      3,   5, 4, 2, 3, 1, 0, 6, 7,     0x138A31A8},    /* RLG, T-bone mixed 8-chain and waves. */
+   {resolve_rlg,            l_mainstream,      3,   5, 4, 3, 2, 1, 0, 7, 6,     0x8A31A813},    /* RLG, other T-bone mixed 8-chain and waves. */
+   {resolve_la,             l_mainstream,      6,   4, 3, 2, 1, 0, 7, 6, 5,     0x38A31A81},    /* LA, T-bone mixed 8-chain and waves. */
+   {resolve_la,             l_mainstream,      6,   5, 3, 2, 0, 1, 7, 6, 4,     0xA31A8138},    /* LA, other T-bone mixed 8-chain and waves. */
+   /* Singers only. */
+   {resolve_rlg,            l_mainstream,   64+3,   5, 4, 3, 2, 1, 0, 7, 6,     0x8AA8A88A},    /* swing/prom from waves, boys looking in. */
+   {resolve_rlg,            l_mainstream,   64+3,   4, 5, 2, 3, 0, 1, 6, 7,     0xA88A8AA8},    /* swing/prom from waves, girls looking in. */
+   {resolve_rlg,            l_mainstream,   64+3,   4, 5, 2, 3, 0, 1, 6, 7,     0xAA8888AA},    /* swing/prom from lines-out. */
+   {resolve_rlg,            l_mainstream,   64+1,   3, 2, 0, 1, 7, 6, 4, 5,     0xA88A8AA8},    /* same as cross-by-LA from waves (above), but it's mainstream here. */
+   {resolve_rlg,            l_mainstream,   64+3,   5, 4, 2, 3, 1, 0, 6, 7,     0x13133131},    /* 8-chain, boys in center. */
+   {resolve_rlg,            l_mainstream,   64+1,   3, 2, 0, 1, 7, 6, 4, 5,     0x31131331},    /* 8-chain, girls in center. */
+   {resolve_rlg,            l_mainstream,   64+2,   4, 3, 1, 2, 0, 7, 5, 6,     0x11133331},    /* trade-by, ends sashayed. */
+   {resolve_rlg,            l_mainstream,   64+4,   6, 5, 3, 4, 2, 1, 7, 0,     0x13113133},    /* trade-by, centers sashayed. */
+   {resolve_none,           l_mainstream,      64}};
 
 
 
@@ -193,211 +280,82 @@ extern resolve_indicator resolve_p(setup *s)
 {
    resolve_indicator k;
    resolve_tester *testptr;
+   int i;
    uint32 singer_offset = 0;
 
-   if (singing_call_mode == 1) singer_offset = 0200;
-   else if (singing_call_mode == 2) singer_offset = 0600;
+   if (singing_call_mode == 1) singer_offset = 0600;
+   else if (singing_call_mode == 2) singer_offset = 0200;
 
    switch (s->kind) {
-      case s_qtag:
-         switch (s->people[5].id1 & 0177) {
-            case 0010:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0300: testptr = &test_qtag_dix; goto check_me;
-               }
-               break;
-            case 0012:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0700: testptr = &test_3tag_rg; goto check_me;
-               }
-               break;
-            case 0112:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0700: testptr = &test_3tag_la; goto check_me;
-               }
-               break;
-            case 0001:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0676: testptr = &test_dmd_rg; goto check_me;
-               }
-               break;
-            case 0101:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0676: testptr = &test_dmd_la; goto check_me;
-               }
-               break;
-         }
-         break;
       case s2x4:
-         switch (s->people[5].id1 & 0177) {
-            case 0010:
-               switch ((s->people[5].id1 - s->people[4].id1 - singer_offset) & 0777) {
-                  case 0676: testptr = &test_wv_rg; goto check_me;
-                  case 0076: testptr = &test_wv_extrg; goto check_me;
-                  case 0276: testptr = &test_wv_crcrg; goto check_me;
-                  case 0700: testptr = &test_2fl_prom; goto check_me;
-                  case 0705: testptr = &test_2x4_circle; goto check_me;
-               }
-               break;
-            case 0012:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0102: testptr = &test_wv_la; goto check_me;
-                  case 0702: testptr = &test_wv_extla; goto check_me;
-                  case 0502: testptr = &test_wv_crcla; goto check_me;
-               }
-               break;
-            case 0001:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0676: testptr = &test_8ch_rg; goto check_me;
-                  case 0076: testptr = &test_8ch_pthrg; goto check_me;
-                  case 0700: testptr = &test_sglfile; goto check_me;
-                  case 0671: testptr = &test_sglfilex; goto check_me;
-               }
-               break;
-            case 0003:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0702: testptr = &test_tby_la; goto check_me;
-                  case 0673: testptr = &test_tbone_la; goto check_me;
-                  case 0502: testptr = &test_tby_tbyla; goto check_me;
-                  case 0600: testptr = &test_dpt_dix; goto check_me;
-                  case 0700: testptr = &test_revsglfile; goto check_me;
-                  case 0671: testptr = &test_revsglfilex; goto check_me;
-               }
-               break;
-            case 0112:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0702: testptr = &test_wv_xbyrg; goto check_me;
-                  case 0100: testptr = &test_2fl_revprom; goto check_me;
-               }
-               break;
-            case 0110:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0076: testptr = &test_2x4_xby_la; goto check_me;
-                  case 0705: testptr = &test_2x4_circle; goto check_me;
-               }
-               break;
-            case 0101:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0676: testptr = &test_8ch_la; goto check_me;
-                  case 0076: testptr = &test_8ch_pthla; goto check_me;
-                  case 0700: testptr = &test_sglfile; goto check_me;
-                  case 0671: testptr = &test_sglfilex; goto check_me;
-               }
-               break;
-            case 0103:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0702: testptr = &test_tby_rg; goto check_me;
-                  case 0673: testptr = &test_tbone_rg; goto check_me;
-                  case 0502: testptr = &test_tby_tbyrg; goto check_me;
-                  case 0700: testptr = &test_revsglfile; goto check_me;
-                  case 0671: testptr = &test_revsglfilex; goto check_me;
-               }
-               break;
-         }
-         break;
+         testptr = test_2x4_stuff; break;
+      case s3x4:
+         testptr = test_3x4_stuff; break;
+      case s2x6:
+         testptr = test_2x6_stuff; break;
+      case s_qtag:
+         testptr = test_qtag_stuff; break;
+      case s4dmd:
+         testptr = test_4dmd_stuff; break;
       case s4x4:
-         switch (s->people[5].id1 & 0177) {
-            case 0001:
-               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
-                  case 0676: testptr = &test_8ch_rg; goto check_me;
-               }
-               break;
-            case 0101:
-               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
-                  case 0676: testptr = &test_8ch_la; goto check_me;
-                  case 0667: testptr = &test_sqo_la; goto check_me;
-               }
-               break;
-            case 0010:
-               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
-                  case 0676: testptr = &test_v44_rg; goto check_me;
-                  case 0705: testptr = &test_2x4_circle; goto check_me;
-               }
-               break;
-            case 0110:
-               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
-                  case 0676: testptr = &test_v44_la; goto check_me;
-                  case 0705: testptr = &test_2x4_circle; goto check_me;
-               }
-               break;
-            case 0103:
-               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
-                  case 0673: testptr = &test_tbone_rg; goto check_me;
-               }
-               break;
-            case 0003:
-               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
-                  case 0673: testptr = &test_tbone_la; goto check_me;
-               }
-               break;
-         }
-         break;
+         testptr = test_4x4_stuff; break;
+      case s_c1phan:
+         testptr = test_c1phan_stuff; break;
       case s_crosswave: case s_thar:
          /* This makes use of the fact that the person numbering
             in crossed lines and thars is identical. */
-
-         switch (s->people[5].id1 & 0177) {
-            case 0010:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0700: testptr = &test_thar_pr; goto check_me;
-                  case 0676: testptr = &test_thar_rlg; goto check_me;
-                  case 0076: testptr = &test_thar_slc_rg; goto check_me;
-               }
-               break;
-            case 0012:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0102: testptr = &test_thar_la; goto check_me;
-                  case 0702: testptr = &test_thar_scl_la; goto check_me;
-               }
-               break;
-            case 0112:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0702: testptr = &test_thar_xbyrlg; goto check_me;
-                  case 0100: testptr = &test_thar_revpr; goto check_me;
-               }
-               break;
-            case 0110:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
-                  case 0076: testptr = &test_thar_xbyla; goto check_me;
-               }
-               break;
-         }
-         break;
+         testptr = test_thar_stuff; break;
+      case s_spindle:
+         testptr = test_spindle_stuff; break;
+      default: goto no_resolve;
    }
 
-   k.kind = resolve_none;
-   k.distance = 0;    /* To get around warnings from buggy and confused compilers. */
-   return(k);
+   do {
+      uint32 directionword;
+      uint32 firstperson = s->people[testptr->locations[0]].id1 & 0700;
+      if (firstperson & 0100) goto not_this_one;
 
-   check_me:
+      /* We run the tests in descending order, because the test for i=0 is especially
+         likely to pass (since the person ID is known to match), and we want to find
+         failures as quickly as possible. */
 
-   if (((s->kind == s4x4 &&
-         ((s->people[1].id1  - s->people[5].id1)  & 0777) == testptr->d35 &&
-         ((s->people[1].id1  - s->people[14].id1) & 0777) == testptr->d32 &&
-         ((s->people[13].id1 - s->people[1].id1)  & 0777) == testptr->d13 &&
-         ((s->people[9].id1  - s->people[13].id1) & 0777) == testptr->d71 &&
-         ((s->people[13].id1 - s->people[10].id1) & 0777) == testptr->d10 &&
-         ((s->people[9].id1  - s->people[6].id1)  & 0777) == testptr->d76)
-                  ||
-        (((s->people[3].id1 - s->people[5].id1) & 0777) == testptr->d35 &&
-         ((s->people[3].id1 - s->people[2].id1) & 0777) == testptr->d32 &&
-         ((s->people[1].id1 - s->people[3].id1) & 0777) == testptr->d13 &&
-         ((s->people[7].id1 - s->people[1].id1) & 0777) == testptr->d71 &&
-         ((s->people[1].id1 - s->people[0].id1) & 0777) == testptr->d10 &&
-         ((s->people[7].id1 - s->people[6].id1) & 0777) == testptr->d76))
-                  &&
-         calling_level >= testptr->level_needed) {
+      for (i=7,directionword=testptr->directions ; i>=0 ; i--,directionword>>=4) {
+         uint32 expected_id = (i << 6) + ((i&1) ? singer_offset : 0);
+
+         /* The add of "expected_id" and "firstperson" may overflow out of the "700" bits
+            into the next 2 bits.  (One bit for each add.) */
+
+         if (  (
+                  s->people[testptr->locations[i]].id1   /* The person under test. */
+                              ^                          /* XOR */
+                  (expected_id + firstperson + (directionword & 0xF))   /* What we check against. */
+               )
+                  &
+               0777)    /* The bits we check -- the person ID and the direction. */
+            goto not_this_one;
+      }
+
+      if (calling_level < testptr->level_needed) goto not_this_one;
+
       k.kind = testptr->k;
-      k.distance = ((s->rotation << 1) + (s->people[5].id1 >> 6) + testptr->distance) & 7;
+      k.distance = ((s->rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
+      return k;
 
-      return(k);
+      not_this_one: ;
    }
-
+   while (
+            !((++testptr)->distance & 64)    /* always do next one if it doesn't have the singer-only mark. */
+                     ||
+            (singing_call_mode != 0 && testptr->k != resolve_none)  /* Even if it has the mark, do it if    */
+         );                                                         /* this is a singer and it isn't really */
+                                                                    /* the end of the table.                */
    /* Too bad. */
 
+   no_resolve:
+
    k.kind = resolve_none;
    k.distance = 0;    /* To get around warnings from buggy and confused compilers. */
-   return(k);
+   return k;
 }
 
 
@@ -412,13 +370,18 @@ static char *resolve_distances[] = {
    "7/8",
    "0"};
 
-typedef struct {
-   int how_bad;  /* 0 means accept all such resolves.
-                  Otherwise, this is (2**N)-1, and accepts only one out of 2**N of them. */
-   int first_part;
-   char *name;
-} resolve_descriptor;
+/* BEWARE!!  This enum must track the table "resolve_first_parts". */
+typedef enum {
+   first_part_none,
+   first_part_ext,
+   first_part_slcl,
+   first_part_circ,
+   first_part_pthru,
+   first_part_trby,
+   first_part_xby
+} first_part_kind;
 
+/* Beware!!  This table must track the definition of enum "first_part_kind". */
 static Cstring resolve_first_parts[] = {
    (Cstring) 0,
    "extend",
@@ -428,29 +391,64 @@ static Cstring resolve_first_parts[] = {
    "trade by",
    "cross by"};
 
+/* BEWARE!!  This enum must track the table "resolve_main_parts". */
+typedef enum {
+   main_part_none,
+   main_part_rlg,
+   main_part_la,
+   main_part_dixgnd,
+   main_part_prom,
+   main_part_revprom,
+   main_part_sglprom,
+   main_part_rsglprom,
+   main_part_circ,
+   main_part_swing
+} main_part_kind;
+
+/* Beware!!  This table must track the definition of enum "main_part_kind". */
+static Cstring resolve_main_parts[] = {
+   "???",
+   "right and left grand",
+   "left allemande",
+   "dixie grand, left allemande",
+   "promenade",
+   "reverse promenade",
+   "single file promenade",
+   "reverse single file promenade",
+   "circle right",
+   "swing and promenade"};
+
+
+typedef struct {
+   int how_bad;  /* 0 means accept all such resolves.
+                  Otherwise, this is (2**N)-1, and accepts only one out of 2**N of them. */
+   first_part_kind first_part;
+   main_part_kind main_part;
+} resolve_descriptor;
+
 /* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */
 static resolve_descriptor resolve_table[] = {
-   {3,  0, "???"},                           /* resolve_none */
-   {0,  0, "right and left grand"},          /* resolve_rlg */
-   {0,  0, "left allemande"},                /* resolve_la */
-   {0,  1, "right and left grand"},          /* resolve_ext_rlg */
-   {1,  1, "left allemande"},                /* resolve_ext_la */
-   {1,  2, "right and left grand"},          /* resolve_slipclutch_rlg */
-   {1,  2, "left allemande"},                /* resolve_slipclutch_la */
-   {3,  3, "right and left grand"},          /* resolve_circ_rlg */
-   {3,  3, "left allemande"},                /* resolve_circ_la */
-   {3,  4, "right and left grand"},          /* resolve_pth_rlg */
-   {3,  4, "left allemande"},                /* resolve_pth_la */
-   {3,  5, "right and left grand"},          /* resolve_tby_rlg */
-   {3,  5, "left allemande"},                /* resolve_tby_la */
-   {1,  6, "right and left grand"},          /* resolve_xby_rlg */
-   {0,  6, "left allemande"},                /* resolve_xby_la */
-   {0,  0, "dixie grand, left allemande"},   /* resolve_dixie_grand */
-   {0,  0, "promenade"},                     /* resolve_prom */
-   {1,  0, "reverse promenade"},             /* resolve_revprom */
-   {15, 0, "single file promenade"},         /* resolve_sglfileprom */
-   {15, 0, "reverse single file promenade"}, /* resolve_revsglfileprom */
-   {0,  0, "circle right"}};                 /* resolve_circle */
+   {3,  first_part_none,  main_part_none},     /* resolve_none */
+   {0,  first_part_none,  main_part_rlg},      /* resolve_rlg */
+   {0,  first_part_none,  main_part_la},       /* resolve_la */
+   {0,  first_part_ext,   main_part_rlg},      /* resolve_ext_rlg */
+   {1,  first_part_ext,   main_part_la},       /* resolve_ext_la */
+   {1,  first_part_slcl,  main_part_rlg},      /* resolve_slipclutch_rlg */
+   {1,  first_part_slcl,  main_part_la},       /* resolve_slipclutch_la */
+   {3,  first_part_circ,  main_part_rlg},      /* resolve_circ_rlg */
+   {3,  first_part_circ,  main_part_la},       /* resolve_circ_la */
+   {3,  first_part_pthru, main_part_rlg},      /* resolve_pth_rlg */
+   {3,  first_part_pthru, main_part_la},       /* resolve_pth_la */
+   {3,  first_part_trby,  main_part_rlg},      /* resolve_tby_rlg */
+   {3,  first_part_trby,  main_part_la},       /* resolve_tby_la */
+   {1,  first_part_xby,   main_part_rlg},      /* resolve_xby_rlg */
+   {0,  first_part_xby,   main_part_la},       /* resolve_xby_la */
+   {0,  first_part_none,  main_part_dixgnd},   /* resolve_dixie_grand */
+   {0,  first_part_none,  main_part_prom},     /* resolve_prom */
+   {1,  first_part_none,  main_part_revprom},  /* resolve_revprom */
+   {15, first_part_none,  main_part_sglprom},  /* resolve_sglfileprom */
+   {15, first_part_none,  main_part_rsglprom}, /* resolve_revsglfileprom */
+   {0,  first_part_none,  main_part_circ}};    /* resolve_circle */
 
 
 /* This assumes that "sequence_is_resolved" passes. */
@@ -479,9 +477,22 @@ extern void write_resolve_text(long_boolean doing_file)
    }
    else {
       int index = (int) r.kind;
-      int first = resolve_table[index].first_part;
+      int distance = r.distance;
+      first_part_kind first;
+      main_part_kind main;
 
-      if (first != 0) {
+      first = resolve_table[index].first_part;
+      main = resolve_table[index].main_part;
+
+      /* In a singer, "pass thru, allemande left", "trade by, allemande left", or
+         "cross by, allemande left" can be just "swing and promenade". */
+
+      if (singing_call_mode != 0 && (index == resolve_pth_la || index == resolve_tby_la || index == resolve_xby_la)) {
+         first = first_part_none;
+         main = main_part_swing;
+      }
+
+      if (first != first_part_none) {
          writestuff(resolve_first_parts[first]);
          if (doing_file) {
             newline();
@@ -491,20 +502,26 @@ extern void write_resolve_text(long_boolean doing_file)
             writestuff(", ");
       }
 
-      writestuff(resolve_table[index].name);
+      if (singing_call_mode != 0 && main == main_part_rlg) {
+         main = main_part_swing;
+         distance += 4;
+      }
+
+      writestuff(resolve_main_parts[main]);
+
       writestuff("  (");
       if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
          writestuff("approximately ");
 
-      if ((r.distance & 7) == 0) {
+      if ((distance & 7) == 0) {
          writestuff("at home)");
       }
       else {
          if (  r.kind == resolve_revprom ||
                r.kind == resolve_revsglfileprom)
-            writestuff(resolve_distances[8 - (r.distance & 7)]);
+            writestuff(resolve_distances[8 - (distance & 7)]);
          else
-            writestuff(resolve_distances[r.distance & 7]);
+            writestuff(resolve_distances[distance & 7]);
          writestuff(" promenade)");
       }
    }
@@ -524,7 +541,7 @@ Private int history_insertion_point;    /* Where our resolve should lie in the h
                                           everything in the given history past this point. */
 Private int history_save;               /* Where we are inserting calls now.  This moves
                                           forward as we build multiple-call resolves. */
-       
+
 
 Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, int insertion_point)
 {
@@ -576,12 +593,12 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    /* Mark the parse block allocation, so that we throw away the garbage
       created by failing attempts. */
    inner_parse_mark = outer_parse_mark = mark_parse_blocks();
-   
+
    /* Create a special error handler.  Any time a call fails, we will get back here. */
-   
+
    longjmp_ptr = &my_longjmp_buffer;          /* point the global pointer at it. */
    setjmp(my_longjmp_buffer.the_buf);
-   
+
    /* This loop searches through a group of twenty single-call resolves, then a group
       of twenty two-call resolves, then a group of twenty three-call resolves,
       repeatedly.  Any time it finds a resolve in less than the length of the sequence
@@ -593,7 +610,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
       deeper when an attempt fails.  The searches are in groups of twenty in order
       to save time: once we decide to search for some two-call resolves, we re-use
       the setup left by the same initial call. */
-   
+
    try_again:
 
    /* Throw away garbage from last attempt. */
@@ -609,14 +626,14 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    }
 
    /* Now clear any concepts if we are not on the first call of the series. */
-   
+
    if (history_ptr != history_insertion_point || goal == command_reconcile)
       initialize_parse();
    else
       (void) restore_parse_state();
-   
+
    /* Generate the concepts and call. */
-   
+
    hashed_randoms = hashed_random_list[history_ptr - history_insertion_point];
 
    /* Put in a special initial concept if needed to normalize. */
@@ -650,15 +667,16 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
       deposit_concept(&concept_descriptor_table[c]);
    }
-   
+
    /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
    /* This may, of course, add more concepts. */
-   
+
    (void) query_for_call();
 
    /* Do the call.  An error will signal and go to try_again. */
-   
+
    toplevelmove();
+   finish_toplevelmove();
 
    /* We don't like certain warnings either. */
 
@@ -678,15 +696,15 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
       /* But if "allow all concepts" was given, and that's the only bad warning, we let it pass. */
       if (!allowing_all_concepts || w != 0) goto try_again;
    }
-   
+
    /* See if we have already seen this sequence. */
-   
+
    for (i=0; i<avoid_list_size; i++) {
       if (hashed_randoms == avoid_list[i]) goto try_again;
    }
-   
+
    /* The call was legal, see if it satisfies our criterion. */
-   
+
    /* ***** Because of an apparent bug in the C compiler, the "switch" statement that we would
       like to have used doesn't work, so we use an "if". */
 
@@ -865,7 +883,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
       sure, we have to examine all future calls (for a reconcile -- for other stuff
       there are no future calls), to make sure that, aside from the permutation
       that gets performed, they will be executed the same way. */
-   
+
    /* But first, we make the dynamic part of the parse state be a copy of what we
       had, since we are repeatedly overwriting existing blocks. */
 
@@ -917,6 +935,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
       /* Now execute the call again, from the new starting configuration. */
       /* This might signal and go to try_again. */
       toplevelmove();
+      finish_toplevelmove();
 
       this_state = history[history_ptr+1];
       this_state.state.rotation -= new_resolve->rotchange;
@@ -950,7 +969,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    }
 
    testing_fidelity = FALSE;
-   
+
    /* One more check.  If this was a "reconcile", demand that we have an acceptable resolve.
       How could the permutation be acceptable but not lead to an acceptable resolve?  Because,
       if the resolve is "at home", we demand that the promenade distance be zero.  Our
@@ -984,9 +1003,9 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
    retval = TRUE;
    goto timeout;
-   
+
    what_a_loss:
-   
+
    if (interactivity == interactivity_in_first_scan) goto try_again;
 
    if (++little_count == 60) {
@@ -1025,7 +1044,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    }
 
    goto try_again;
-   
+
    timeout:
 
    /* Restore the global error handler. */
@@ -1106,7 +1125,7 @@ extern uims_reply full_resolve(command_kind goal)
 
    huge_history_ptr = history_ptr;
    save_parse_state();
-      
+
    (void) restore_parse_state();
    current_resolve_index = 0;
    show_resolve = TRUE;
@@ -1133,7 +1152,7 @@ extern uims_reply full_resolve(command_kind goal)
 
             /* Put up the resolve title showing this resolve,
                but without saying "searching". */
-            state = resolver_display_ok;      
+            state = resolver_display_ok;
          }
          else {
             /* Display the sequence with the current resolve inserted. */
@@ -1143,7 +1162,7 @@ extern uims_reply full_resolve(command_kind goal)
 
          written_history_items = -1;
          history_ptr = huge_history_ptr;
-   
+
          for (j=0; j<=history_ptr+1; j++)
             history[j] = huge_history_save[j];
 
@@ -1183,13 +1202,13 @@ extern uims_reply full_resolve(command_kind goal)
                personrec t = this_state->state.people[k];
 
                if (t.id1) {
-                  this_state->state.people[k].id1 = 
+                  this_state->state.people[k].id1 =
                      (t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | this_resolve->permute1[(t.id1 & PID_MASK) >> 6]
                                                               | this_resolve->permute2[(t.id1 & PID_MASK) >> 6];
                   this_state->state.people[k].id2 = t.id2;
                }
             }
-            
+
             this_state->resolve_flag = resolve_p(&this_state->state);
          }
 

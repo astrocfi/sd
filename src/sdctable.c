@@ -86,22 +86,22 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* phantom concepts */
 
-#define pl__1_size 43
+#define pl__1_size 46
 #define pl__1_spl 0
 #define pl__1_ipl 1
 #define pl__1_pl 2
 #define pl__1_pl8 10
 #define pl__1_pl6 11
-#define pl__1_tl 17
-#define pl__1_tlwt 20
-#define pl__1_tlwa 21
-#define pl__1_tlwf 22
-#define pl__1_tlwb 23
-#define pl__1_trtl 31
-#define pl__1_qlwt 36
-#define pl__1_qlwa 37
-#define pl__1_qlwf 38
-#define pl__1_qlwb 39
+#define pl__1_tl 18
+#define pl__1_tlwt 21
+#define pl__1_tlwa 22
+#define pl__1_tlwf 23
+#define pl__1_tlwb 24
+#define pl__1_trtl 34
+#define pl__1_qlwt 39
+#define pl__1_qlwa 40
+#define pl__1_qlwf 41
+#define pl__1_qlwb 42
    {"SPLIT PHANTOM LINES",                   concept_do_phantom_2x4,            D, l_c3a, {&map_split_f, phantest_impossible, 1, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM LINES",             concept_do_phantom_2x4,            D, l_c4a, {&map_intlk_f, phantest_impossible, 1, MPKIND__INTLK}},
    {"PHANTOM LINES",                         concept_do_phantom_2x4,            D, l_c3, {&map_full_f, phantest_first_or_both, 1, MPKIND__CONCPHAN}},
@@ -114,14 +114,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"12 MATRIX DIVIDED LINES",               concept_divided_2x3,               D, l_c4, {&map_2x6_2x3, phantest_impossible, 1}},
    {"TWIN PHANTOM TIDAL LINES",              concept_do_phantom_1x8,            D, l_c3, {0, phantest_impossible, TRUE, 1}},
    {"TWIN PHANTOM LINES OF 6",               concept_do_phantom_1x6,            D, l_c3, {0, phantest_impossible, TRUE, 1}},
+   {"TRIPLE TIDAL LINES",                    concept_do_phantom_triple_1x8,     D, l_c3, {0, phantest_impossible, TRUE, 1}},
    {"CRAZY PHANTOM LINES",                   concept_phan_crazy,                D, l_c4, {0, 1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
    {"REVERSE CRAZY PHANTOM LINES",           concept_phan_crazy,                D, l_c4, {0, 8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
    {"@a CRAZY PHANTOM LINES",                concept_frac_phan_crazy,           D, l_c4, {0, 16+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
    {"@a REVERSE CRAZY PHANTOM LINES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE LINES",                          concept_triple_lines,              D, l_c2, {0, 1}},
-   {"CENTER TRIPLE LINE",                    concept_in_out_line_3,             D, l_c2, {0, 1, CONCPROP__NEEDK_CTR_1X4, 0}},
-   {"OUTSIDE TRIPLE LINES",                  concept_in_out_line_3,             D, l_c2, {0, 8+1, CONCPROP__NEEDK_END_1X4, 0}},
+   {"CENTER TRIPLE LINE",                    concept_in_out_std,                D, l_c2, {0, 1, CONCPROP__NEEDK_CTR_1X4, 0}},
+   {"OUTSIDE TRIPLE LINES",                  concept_in_out_std,                D, l_c2, {0, 8+1, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE LINES WORKING TOGETHER",         concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 1}},
    {"TRIPLE LINES WORKING APART",            concept_triple_lines_tog_std,      D, l_c4a, {0, 11, 1}},
    {"TRIPLE LINES WORKING FORWARD",          concept_triple_lines_tog,          D, l_c3, {0, 0, 1}},
@@ -132,12 +133,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE DIAGONAL LINES",                 concept_triple_diag,               D, l_c4, {0, 1}},
    {"TRIPLE DIAGONAL LINES WORKING FORWARD", concept_triple_diag_together,      D, l_c4, {0, 0, 1}},
    {"TRIPLE DIAGONAL LINES WORKING BACKWARD",concept_triple_diag_together,      D, l_c4, {0, 2, 1}},
+   {"TRIPLE TIDAL LINES WORKING FORWARD",    concept_triple_1x8_tog,            D, l_c4, {0, 0, 1}},
+   {"TRIPLE TIDAL LINES WORKING BACKWARD",   concept_triple_1x8_tog,            D, l_c4, {0, 2, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE TWIN LINES",                     concept_triple_twin,               D, l_c4a, {&map_4x6_2x4, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE LINES",                       concept_quad_lines,                D, l_c4a, {0, 1}},
-   {"CENTER PHANTOM LINES",                  concept_in_out_line_4,             D, l_c3,  {0, 16+1, CONCPROP__NEEDK_4X4_1X16, 0}},
-   {"OUTSIDE PHANTOM LINES",                 concept_in_out_line_4,             D, l_c3,  {0, 16+8+1, CONCPROP__NEEDK_4X4_1X16, 0}},
+   {"CENTER PHANTOM LINES",                  concept_in_out_std,                D, l_c3,  {0, 16+1, CONCPROP__NEEDK_4X4_1X16, 0}},
+   {"OUTSIDE PHANTOM LINES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+1, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"QUADRUPLE LINES WORKING TOGETHER",      concept_quad_lines_tog_std,        D, l_c4a, {0, 10, 1}},
    {"QUADRUPLE LINES WORKING APART",         concept_quad_lines_tog_std,        D, l_c4a, {0, 11, 1}},
    {"QUADRUPLE LINES WORKING FORWARD",       concept_quad_lines_tog,            D, l_c4a, {0, 0, 1}},
@@ -146,7 +149,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE LINES WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,      D, l_c4,  {0, 9, 1}},
    {"QUADRUPLE LINES WORKING TOWARD THE CENTER",concept_quad_lines_tog_std,     D, l_c4,  {0, 12, 1}},
 /* -------- column break -------- */
-#define pl__2_size 43
+#define pl__2_size 46
 #define pl__2_spw 0
 #define pl__2_ipw 1
 #define pl__2_pw 2
@@ -162,14 +165,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"12 MATRIX DIVIDED WAVES",               concept_divided_2x3,               D, l_c4, {&map_2x6_2x3, phantest_impossible, 3}},
    {"TWIN PHANTOM TIDAL WAVES",              concept_do_phantom_1x8,            D, l_c3, {0, phantest_impossible, TRUE, 3}},
    {"TWIN PHANTOM WAVES OF 6",               concept_do_phantom_1x6,            D, l_c3, {0, phantest_impossible, TRUE, 3}},
+   {"TRIPLE TIDAL WAVES",                    concept_do_phantom_triple_1x8,     D, l_c3, {0, phantest_impossible, TRUE, 3}},
    {"CRAZY PHANTOM WAVES",                   concept_phan_crazy,                D, l_c4, {0, 3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
    {"REVERSE CRAZY PHANTOM WAVES",           concept_phan_crazy,                D, l_c4, {0, 8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
    {"@a CRAZY PHANTOM WAVES",                concept_frac_phan_crazy,           D, l_c4, {0, 16+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
    {"@a REVERSE CRAZY PHANTOM WAVES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE WAVES",                          concept_triple_lines,              D, l_c2, {0, 3}},
-   {"CENTER TRIPLE WAVE",                    concept_in_out_line_3,             D, l_c2, {0, 3, CONCPROP__NEEDK_CTR_1X4, 0}},
-   {"OUTSIDE TRIPLE WAVES",                  concept_in_out_line_3,             D, l_c2, {0, 8+3, CONCPROP__NEEDK_END_1X4, 0}},
+   {"CENTER TRIPLE WAVE",                    concept_in_out_std,                D, l_c2, {0, 3, CONCPROP__NEEDK_CTR_1X4, 0}},
+   {"OUTSIDE TRIPLE WAVES",                  concept_in_out_std,                D, l_c2, {0, 8+3, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE WAVES WORKING TOGETHER",         concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 3}},
    {"TRIPLE WAVES WORKING APART",            concept_triple_lines_tog_std,      D, l_c4a, {0, 11, 3}},
    {"TRIPLE WAVES WORKING FORWARD",          concept_triple_lines_tog,          D, l_c3, {0, 0, 3}},
@@ -180,12 +184,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE DIAGONAL WAVES",                 concept_triple_diag,               D, l_c4, {0, 3}},
    {"TRIPLE DIAGONAL WAVES WORKING FORWARD", concept_triple_diag_together,      D, l_c4, {0, 0, 3}},
    {"TRIPLE DIAGONAL WAVES WORKING BACKWARD",concept_triple_diag_together,      D, l_c4, {0, 2, 3}},
+   {"TRIPLE TIDAL WAVES WORKING FORWARD",    concept_triple_1x8_tog,            D, l_c4, {0, 0, 3}},
+   {"TRIPLE TIDAL WAVES WORKING BACKWARD",   concept_triple_1x8_tog,            D, l_c4, {0, 2, 3}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE TWIN WAVES",                     concept_triple_twin,               D, l_c4a, {&map_4x6_2x4, 3}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE WAVES",                       concept_quad_lines,                D, l_c4a, {0, 3}},
-   {"CENTER PHANTOM WAVES",                  concept_in_out_line_4,             D, l_c3,  {0, 16+3, CONCPROP__NEEDK_4X4_1X16, 0}},
-   {"OUTSIDE PHANTOM WAVES",                 concept_in_out_line_4,             D, l_c3,  {0, 16+8+3, CONCPROP__NEEDK_4X4_1X16, 0}},
+   {"CENTER PHANTOM WAVES",                  concept_in_out_std,                D, l_c3,  {0, 16+3, CONCPROP__NEEDK_4X4_1X16, 0}},
+   {"OUTSIDE PHANTOM WAVES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+3, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"QUADRUPLE WAVES WORKING TOGETHER",      concept_quad_lines_tog_std,        D, l_c4a, {0, 10, 3}},
    {"QUADRUPLE WAVES WORKING APART",         concept_quad_lines_tog_std,        D, l_c4a, {0, 11, 3}},
    {"QUADRUPLE WAVES WORKING FORWARD",       concept_quad_lines_tog,            D, l_c4a, {0, 0, 3}},
@@ -194,22 +200,22 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE WAVES WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,      D, l_c4, {0, 9, 3}},
    {"QUADRUPLE WAVES WORKING TOWARD THE CENTER",concept_quad_lines_tog_std,     D, l_c4, {0, 12, 3}},
 /* -------- column break -------- */
-#define pl__3_size 43
+#define pl__3_size 46
 #define pl__3_spc 0
 #define pl__3_ipc 1
 #define pl__3_pc 2
 #define pl__3_pc8 10
 #define pl__3_pc6 11
-#define pl__3_tc 17
-#define pl__3_tcwt 20
-#define pl__3_tcwa 21
-#define pl__3_tcwr 22
-#define pl__3_tcwl 23
-#define pl__3_trtc 31
-#define pl__3_qcwt 36
-#define pl__3_qcwa 37
-#define pl__3_qcwr 38
-#define pl__3_qcwl 39
+#define pl__3_tc 18
+#define pl__3_tcwt 21
+#define pl__3_tcwa 22
+#define pl__3_tcwr 23
+#define pl__3_tcwl 24
+#define pl__3_trtc 34
+#define pl__3_qcwt 39
+#define pl__3_qcwa 40
+#define pl__3_qcwr 41
+#define pl__3_qcwl 42
    {"SPLIT PHANTOM COLUMNS",                 concept_do_phantom_2x4,            D, l_c3a, {&map_split_f, phantest_impossible, 0, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM COLUMNS",           concept_do_phantom_2x4,            D, l_c4a, {&map_intlk_f, phantest_impossible, 0, MPKIND__INTLK}},
    {"PHANTOM COLUMNS",                       concept_do_phantom_2x4,            D, l_c3, {&map_full_f, phantest_first_or_both, 0, MPKIND__CONCPHAN}},
@@ -222,14 +228,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"12 MATRIX DIVIDED COLUMNS",             concept_divided_2x3,               D, l_c4, {&map_2x6_2x3, phantest_impossible, 0}},
    {"TWIN PHANTOM TIDAL COLUMNS",            concept_do_phantom_1x8,            D, l_c3, {0, phantest_impossible, TRUE, 0}},
    {"TWIN PHANTOM COLUMNS OF 6",             concept_do_phantom_1x6,            D, l_c3, {0, phantest_impossible, TRUE, 0}},
+   {"TRIPLE TIDAL COLUMNS",                  concept_do_phantom_triple_1x8,     D, l_c3, {0, phantest_impossible, TRUE, 0}},
    {"CRAZY PHANTOM COLUMNS",                 concept_phan_crazy,                D, l_c4, {0, 0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
    {"REVERSE CRAZY PHANTOM COLUMNS",         concept_phan_crazy,                D, l_c4, {0, 8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
    {"@a CRAZY PHANTOM COLUMNS",              concept_frac_phan_crazy,           D, l_c4, {0, 16+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
    {"@a REVERSE CRAZY PHANTOM COLUMNS",      concept_frac_phan_crazy,           D, l_c4, {0, 16+8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE COLUMNS",                        concept_triple_lines,              D, l_c3, {0, 0}},
-   {"CENTER TRIPLE COLUMN",                  concept_in_out_line_3,             D, l_c3, {0, 0, CONCPROP__NEEDK_CTR_1X4, 0}},
-   {"OUTSIDE TRIPLE COLUMNS",                concept_in_out_line_3,             D, l_c3, {0, 8+0, CONCPROP__NEEDK_END_1X4, 0}},
+   {"CENTER TRIPLE COLUMN",                  concept_in_out_std,                D, l_c3, {0, 0, CONCPROP__NEEDK_CTR_1X4, 0}},
+   {"OUTSIDE TRIPLE COLUMNS",                concept_in_out_std,                D, l_c3, {0, 8+0, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE COLUMNS WORKING TOGETHER",       concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 0}},
    {"TRIPLE COLUMNS WORKING APART",          concept_triple_lines_tog_std,      D, l_c4a, {0, 11, 0}},
    {"TRIPLE COLUMNS WORKING RIGHT",          concept_triple_lines_tog,          D, l_c4a, {0, 2, 0}},
@@ -240,12 +247,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE DIAGONAL COLUMNS",               concept_triple_diag,               D, l_c4, {0, 0}},
    {"TRIPLE DIAGONAL COLUMNS WORKING RIGHT", concept_triple_diag_together,      D, l_c4, {0, 3, 0}},
    {"TRIPLE DIAGONAL COLUMNS WORKING LEFT",  concept_triple_diag_together,      D, l_c4, {0, 1, 0}},
+   {"TRIPLE TIDAL COLUMNS WORKING RIGHT",    concept_triple_1x8_tog,            D, l_c4, {0, 2, 0}},
+   {"TRIPLE TIDAL COLUMNS WORKING LEFT",     concept_triple_1x8_tog,            D, l_c4, {0, 0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE TWIN COLUMNS",                   concept_triple_twin,               D, l_c4a, {&map_4x6_2x4, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE COLUMNS",                     concept_quad_lines,                D, l_c4a, {0, 0}},
-   {"CENTER PHANTOM COLUMNS",                concept_in_out_line_4,             D, l_c3a, {0, 16+0, CONCPROP__NEEDK_4X4_1X16, 0}},
-   {"OUTSIDE PHANTOM COLUMNS",               concept_in_out_line_4,             D, l_c3a, {0, 16+8+0, CONCPROP__NEEDK_4X4_1X16, 0}},
+   {"CENTER PHANTOM COLUMNS",                concept_in_out_std,                D, l_c3a, {0, 16+0, CONCPROP__NEEDK_4X4_1X16, 0}},
+   {"OUTSIDE PHANTOM COLUMNS",               concept_in_out_std,                D, l_c3a, {0, 16+8+0, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"QUADRUPLE COLUMNS WORKING TOGETHER",    concept_quad_lines_tog_std,        D, l_c4a, {0, 10, 0}},
    {"QUADRUPLE COLUMNS WORKING APART",       concept_quad_lines_tog_std,        D, l_c4a, {0, 11, 0}},
    {"QUADRUPLE COLUMNS WORKING RIGHT",       concept_quad_lines_tog,            D, l_c4a, {0, 2, 0}},
@@ -288,8 +297,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE BOXES",                          concept_triple_boxes,              D, l_c1, {0, MPKIND__SPLIT}},
-   {"CENTER TRIPLE BOX",                     concept_in_out_box_3,              D, l_c1, {0, 4, CONCPROP__NEEDK_CTR_2X2, 0}},
-   {"OUTSIDE TRIPLE BOXES",                  concept_in_out_box_3,              D, l_c1, {0, 8+4, CONCPROP__NEEDK_END_2X2, 0}},
+   {"CENTER TRIPLE BOX",                     concept_in_out_nostd,              D, l_c1, {0, 4, CONCPROP__NEEDK_CTR_2X2, 0}},
+   {"OUTSIDE TRIPLE BOXES",                  concept_in_out_nostd,              D, l_c1, {0, 8+4, CONCPROP__NEEDK_END_2X2, 0}},
    {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,              D, l_c4, {0, MPKIND__CONCPHAN}},
    {"TRIPLE BOXES WORKING TOGETHER",         concept_triple_boxes_together,     D, l_c4a, {0, 6, 0}},
    {"TRIPLE BOXES WORKING APART",            concept_triple_boxes_together,     D, l_c4a, {0, 7, 0}},
@@ -301,8 +310,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE BOXES WORKING COUNTERCLOCKWISE", concept_triple_boxes_together,     D, l_c4, {0, 9, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE BOXES",                       concept_quad_boxes,                D, l_c4a, {0, MPKIND__SPLIT}},
-   {"CENTER PHANTOM BOXES",                  concept_in_out_box_4,              D, l_c4a, {0, 16+4, CONCPROP__NEEDK_2X8, 0}},
-   {"OUTSIDE PHANTOM BOXES",                 concept_in_out_box_4,              D, l_c4a, {0, 16+8+4, CONCPROP__NEEDK_2X8, 0}},
+   {"CENTER PHANTOM BOXES",                  concept_in_out_nostd,              D, l_c4a, {0, 16+4, CONCPROP__NEEDK_2X8, 0}},
+   {"OUTSIDE PHANTOM BOXES",                 concept_in_out_nostd,              D, l_c4a, {0, 16+8+4, CONCPROP__NEEDK_2X8, 0}},
    {"CONCENTRIC QUADRUPLE BOXES",            concept_quad_boxes,                D, l_c4a, {0, MPKIND__CONCPHAN}},
    {"QUADRUPLE BOXES WORKING TOGETHER",      concept_quad_boxes_together,       D, l_c4a, {0, 6, 0}},
    {"QUADRUPLE BOXES WORKING APART",         concept_quad_boxes_together,       D, l_c4a, {0, 7, 0}},
@@ -346,8 +355,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE DIAMONDS",                       concept_triple_diamonds,           D, l_c3a, {0, 0, CMD_MISC__VERIFY_DMD_LIKE}},
-   {"CENTER TRIPLE DIAMOND",                 concept_in_out_dmd_3,              D, l_c3a, {0, 5, CONCPROP__NEEDK_CTR_DMD, 0}},
-   {"OUTSIDE TRIPLE DIAMONDS",               concept_in_out_dmd_3,              D, l_c3a, {0, 8+5, CONCPROP__NEEDK_END_DMD, 0}},
+   {"CENTER TRIPLE DIAMOND",                 concept_in_out_nostd,              D, l_c3a, {0, 5, CONCPROP__NEEDK_CTR_DMD, 0}},
+   {"OUTSIDE TRIPLE DIAMONDS",               concept_in_out_nostd,              D, l_c3a, {0, 8+5, CONCPROP__NEEDK_END_DMD, 0}},
    {"TRIPLE DIAMOND SPOTS",                  concept_triple_diamonds,           D, l_c3a, {0, 0, 0}},
    {"TRIPLE DIAMONDS WORKING TOGETHER",      concept_triple_diamonds_together,  D, l_c4a, {0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -359,10 +368,10 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE DIAMONDS",                    concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_DMD_LIKE}},
-   {"CENTER PHANTOM DIAMONDS",               concept_in_out_dmd_4,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_DMD_LIKE}},
-   {"OUTSIDE PHANTOM DIAMONDS",              concept_in_out_dmd_4,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_DMD_LIKE}},
-   {"CENTER PHANTOM DIAMOND SPOTS",          concept_in_out_dmd_4,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, 0}},
-   {"OUTSIDE PHANTOM DIAMOND SPOTS",         concept_in_out_dmd_4,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, 0}},
+   {"CENTER PHANTOM DIAMONDS",               concept_in_out_nostd,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"OUTSIDE PHANTOM DIAMONDS",              concept_in_out_nostd,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"CENTER PHANTOM DIAMOND SPOTS",          concept_in_out_nostd,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, 0}},
+   {"OUTSIDE PHANTOM DIAMOND SPOTS",         concept_in_out_nostd,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, 0}},
    {"QUADRUPLE DIAMOND SPOTS",               concept_quad_diamonds,             D, l_c4a, {0, 0, 0}},
    {"QUADRUPLE DIAMONDS WORKING TOGETHER",   concept_quad_diamonds_together,    D, l_c4a, {0, 0, 0}},
    {"QUADRUPLE DIAMONDS WORKING TOWARD THE CENTER",concept_quad_diamonds_together, D, l_c4, {0, 12, 0}},
@@ -426,8 +435,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE 1/4 LINES",                   concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_REAL_1_4_LINE}},
    {"QUADRUPLE 3/4 LINES",                   concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_REAL_3_4_LINE}},
    {"QUADRUPLE GENERAL 1/4 TAGS",            concept_quad_diamonds,             D, l_c4a, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
-   {"CENTER PHANTOM GENERAL 1/4 TAGS",       concept_in_out_dmd_4,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
-   {"OUTSIDE PHANTOM GENERAL 1/4 TAGS",      concept_in_out_dmd_4,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"CENTER PHANTOM GENERAL 1/4 TAGS",       concept_in_out_nostd,              D, l_c4a, {0, 16+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"OUTSIDE PHANTOM GENERAL 1/4 TAGS",      concept_in_out_nostd,              D, l_c4a, {0, 16+8+5, CONCPROP__NEEDK_4DMD, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"QUADRUPLE 1/4 TAGS WORKING TOGETHER",   concept_quad_diamonds_together,    D, l_c4a, {0, 0}},
    {"QUADRUPLE 1/4 LINES WORKING TOGETHER",  concept_quad_diamonds_together,    D, l_c4a, {0, 0}},
    {"QUADRUPLE 1/4 TAGS WORKING LEFT",       concept_quad_diamonds_together,    D, l_c4a, {0, 2}},
@@ -591,8 +600,8 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* distorted concepts */
 
-#define dd__1_size 22
-#define dd__1_pofl 21
+#define dd__1_size 23
+#define dd__1_pofl 22
    {"BIG BLOCK",                             concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
    {"STAIRSTEP LINES",                       concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 1, MPKIND__NONE}},
    {"LADDER LINES",                          concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 1, MPKIND__NONE}},
@@ -604,6 +613,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DIAGONAL LINES",                        concept_double_diagonal,           D, l_c4a,        {0, 1, 0}},
    {"DIAGONAL LINES OF 3",                   concept_double_diagonal,           D, l_c1,         {0, 1, 1}},
    {"DISTORTED TIDAL LINE",                  concept_distorted,                 D, l_c3,         {0, disttest_any, 8+1}},
+   {"DISTORTED LINE OF 6",                   concept_double_diagonal,           D, l_c3,         {0, 1, 2}},
    {"DOUBLE BENT TIDAL LINE",                concept_dblbent,                   D, l_c4,         {0, 1}},
    {"@6 IN YOUR DISTORTED LINE",             concept_so_and_so_only,            D, l_c1,         {0, 6, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -616,7 +626,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"PHANTOM LADDER LINES",                  concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 1, MPKIND__NONE}},
    {"PHANTOM OFFSET LINES",                  concept_do_phantom_2x4,            D, l_c4a,        {&map_offset, phantest_both, 1, MPKIND__NONE}},
 /* -------- column break -------- */
-#define dd__2_size 22
+#define dd__2_size 23
    {"BIG BLOCK WAVES",                       concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 3, MPKIND__NONE}},
    {"STAIRSTEP WAVES",                       concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 3, MPKIND__NONE}},
    {"LADDER WAVES",                          concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 3, MPKIND__NONE}},
@@ -628,6 +638,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DIAGONAL WAVES",                        concept_double_diagonal,           D, l_c4a,        {0, 3, 0}},
    {"DIAGONAL WAVES OF 3",                   concept_double_diagonal,           D, l_c1,         {0, 3, 1}},
    {"DISTORTED TIDAL WAVE",                  concept_distorted,                 D, l_c3,         {0, disttest_any, 8+3}},
+   {"DISTORTED WAVE OF 6",                   concept_double_diagonal,           D, l_c3,         {0, 3, 2}},
    {"DOUBLE BENT TIDAL WAVE",                concept_dblbent,                   D, l_c4,         {0, 3}},
    {"@6 IN YOUR DISTORTED WAVE",             concept_so_and_so_only,            D, l_c1,         {0, 6, 3}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -640,9 +651,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"PHANTOM LADDER WAVES",                  concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 3, MPKIND__NONE}},
    {"PHANTOM OFFSET WAVES",                  concept_do_phantom_2x4,            D, l_c4a,        {&map_offset, phantest_both, 3, MPKIND__NONE}},
 /* -------- column break -------- */
-#define dd__3_size 22
-#define dd__3_pob 16
-#define dd__3_pofc 21
+#define dd__3_size 23
+#define dd__3_pob 17
+#define dd__3_pofc 22
    {"STAGGER",                               concept_do_phantom_2x4,            D, l_c2,         {&map_stagger, phantest_only_one, 0, MPKIND__NONE}},
    {"STAIRSTEP COLUMNS",                     concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 0, MPKIND__NONE}},
    {"LADDER COLUMNS",                        concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 0, MPKIND__NONE}},
@@ -654,6 +665,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DIAGONAL COLUMNS",                      concept_double_diagonal,           D, l_c4a,        {0, 0, 0}},
    {"DIAGONAL COLUMNS OF 3",                 concept_double_diagonal,           D, l_c1,         {0, 0, 1}},
    {"DISTORTED TIDAL COLUMN",                concept_distorted,                 D, l_c3,         {0, disttest_any, 8+0}},
+   {"DISTORTED COLUMN OF 6",                 concept_double_diagonal,           D, l_c3,         {0, 0, 2}},
    {"DOUBLE BENT TIDAL COLUMN",              concept_dblbent,                   D, l_c4,         {0, 0}},
    {"@6 IN YOUR DISTORTED COLUMN",           concept_so_and_so_only,            D, l_c1,         {0, 6, 2}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -797,7 +809,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 70
+#define mm__2_size 72
    {"CENTERS",                               concept_centers_or_ends,           D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,           D, l_mainstream, {0, selector_ends,    FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
@@ -808,6 +820,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"CENTER 6/OUTER 2",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center6, FALSE}},
    {"CENTER 2/OUTER 6",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center2, FALSE}},
    {"ENDS CONCENTRIC",                       concept_centers_or_ends,           D, l_c1,         {0, selector_ends,    TRUE}},
+   {"OUTER 2 CONCENTRIC",                    concept_centers_or_ends,           D, l_c1,         {0, selector_outer2,  TRUE}},
+   {"OUTER 6 CONCENTRIC",                    concept_centers_or_ends,           D, l_c1,         {0, selector_outer6,  TRUE}},
    {"CENTERS AND ENDS CONCENTRIC",           concept_centers_and_ends,          0, l_c1,         {0, selector_centers, TRUE}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"CHECKPOINT",                            concept_checkpoint,                0, l_c2,         {0, 0}},
@@ -869,9 +883,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"START WITH",                            concept_special_sequential,        0, l_c2,         {0, 2}},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,          0, l_c1,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 61
-#define mm__3_3x3 55
-#define mm__3_4x4 56
+#define mm__3_size 63
+#define mm__3_3x3 57
+#define mm__3_4x4 58
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,               D, l_c1,         {0, 3}},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,               D, l_c1,         {0, 5}},
@@ -914,6 +928,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"COMMON SPOT COLUMNS",                   concept_common_spot,               D, l_c4,         {0, 2,    0}},
    {"COMMON POINT DIAMONDS",                 concept_common_spot,               D, l_c4,         {0, 4,    0}},
    {"COMMON SPOT DIAMONDS",                  concept_common_spot,               D, l_c4,         {0, 4,    0}},
+   {"COMMON POINT HOURGLASS",                concept_common_spot,               D, l_c4,         {0, 0x80, 0}},
+   {"COMMON SPOT HOURGLASS",                 concept_common_spot,               D, l_c4,         {0, 0x80, 0}},
    {"COMMON END LINES",                      concept_common_spot,               D, l_c4,         {0, 0x10, 0}},
    {"COMMON END WAVES",                      concept_common_spot,               D, l_c4,         {0, 0x10, CMD_MISC__VERIFY_WAVES}},
    {"COMMON CENTER LINES",                   concept_common_spot,               D, l_c4,         {0, 0x20, 0}},

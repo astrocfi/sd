@@ -155,6 +155,34 @@ extern long_boolean selectp(setup *ss, int place)
          else if (p2 == ID2_OUTR2) s = selector_outer2;
          else break;
          goto eq_return;
+#ifdef TGL_SELECTORS
+      case selector_wvbasetgl:
+         break;
+      case selector_tndbasetgl:
+         break;
+      case selector_insidetgl:
+         switch (ss->kind) {
+            case s_ptpd: case s_qtag: case s_rigger:
+               p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+               if      (p2 == ID2_CTR6)  return TRUE;
+               else if (p2 == ID2_OUTR2) return FALSE;
+               break;
+         }
+         break;
+      case selector_outsidetgl:
+         switch (ss->kind) {
+            case s_ptpd: case s_qtag: case s_bone: case s_spindle:
+               p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+               if      (p2 == ID2_CTR2)  return FALSE;
+               else if (p2 == ID2_OUTR6) return TRUE;
+               break;
+         }
+         break;
+      case selector_inpttgl:
+         break;
+      case selector_outpttgl:
+         break;
+#endif
       case selector_ctrdmd:
          if      ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_CTRDMD) return TRUE;
          else if ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_NCTRDMD) return FALSE;
@@ -656,7 +684,9 @@ Private long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
             if (extra_stuff[0] & 2) {
                /* This is "cast_normal_or_warn".  Don't give the warning if person
                   would have known what to do anyway. */
-               if (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3))
+               if (     real_people->kind == s1x2
+                                    ||
+                        (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
                   warn(warn__opt_for_normal_cast);
                return TRUE;
             }
@@ -776,28 +806,14 @@ Private long_boolean same_in_magic(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean lines_once_rem_miniwave(setup *real_people, int real_index,
+Private long_boolean once_rem_test(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 2].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 2);
+   return(((this_person ^ other_person) & DIR_MASK) == extra_stuff[0]);
 }
 
-/* ARGSUSED */
-Private long_boolean lines_once_rem_couple(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 2].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 0);
-}
-
-/* Next test is used for figuring out how to hinge. */
-/* Legal from 1x2. */
-/* Returns TRUE if this person is beau, or else this belle is in a miniwave with
-   the other person.  Returns FALSE if this belle is in a couple with the
-   other person.  Complains if this belle can't tell. */
 /* ARGSUSED */
 Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
@@ -810,23 +826,51 @@ Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
       return FALSE;
    else {
-      int other_person = real_people->people[real_index ^ 1].id1;
+      int other_person = real_people->people[real_index ^ 1 ^ ((real_direction&1) << 1)].id1;
       int direction_diff = other_person ^ real_direction;
 
       /* This was "1x2_beau_miniwave_or_warn", and the other person is a phantom,
          we give a warning and assume we had a miniwave. */
 
-      if ((*extra_stuff) != 0 && !other_person) {
+      if (extra_stuff[0] == 1 && !other_person) {
          warn(warn__opt_for_normal_hinge);
+         return TRUE;
+      }
+
+      if (extra_stuff[0] == 2 && !other_person) {
          return TRUE;
       }
 
       if (!other_person || (direction_diff & 1))
          fail("Need a real, not T-boned, person to work with."); 
 
-      return ((direction_diff & 2) == 2);
+      if ((direction_diff & 2) == 2)
+         return TRUE;
+
+      if (extra_stuff[0] == 2)
+         warn(warn__like_linear_action);
+
+      return FALSE;
    }
 }
+
+static Const long int swingleft_3x1dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
+
+Private long_boolean can_swing_left(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
+{
+   switch (real_people->kind) {
+      case s1x3dmd:
+         {
+            int t = swingleft_3x1dmd[northified_index];
+            if (t < 0) return FALSE;
+            t ^= northified_index ^ real_index;
+            return ((real_people->people[real_index].id1 ^ real_people->people[t].id1) & DIR_MASK) == 2;
+         }
+      default: return FALSE;
+   }
+}
+
 
 /* Test for wheel and deal to be done 2FL-style, or beau side of 1FL.  Returns
    false if belle side of 1FL.  Raises an error if wheel and deal can't be done. */
@@ -1708,7 +1752,21 @@ Private long_boolean q_tag_check(setup *real_people, int real_index,
       else {
          int z;
          if (real_index & 1) z = real_index ^ 3; else z = real_index ^ 6;
-         return(((real_people->people[z].id1 & 017) == (actionp->end_action ^ (real_index >> 1))) &&
+
+            /* Demand that the indicated line end or diamond point be facing toward
+               or way from this person, as required by the front/back nature of
+               the predicate.
+
+               Also, demand that the line in the center consist of miniwaves or couples,
+               as required by the wave/line nature of the predicate.  But if the setup
+               is an hourglass, we waive the second test.  Hence "q_tag_front" and
+               "q_line_front" are indistinguishable in an hourglass. */
+
+         return
+            ((real_people->people[z].id1 & 017) == (actionp->end_action ^ (real_index >> 1)))
+                                       &&
+               (real_people->kind == s_hrglass
+                                 ||
                (((real_people->people[z].id1 ^ real_people->people[z ^ 1].id1) & DIR_MASK) == actionp->bbbbb));
       }
    }
@@ -1769,20 +1827,22 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */
       {opp_in_magic,                 (Const long int *) 0},      /* "lines_magic_miniwave" */
       {same_in_magic,                (Const long int *) 0},      /* "lines_magic_couple" */
-      {lines_once_rem_miniwave,      (Const long int *) 0},      /* "lines_once_rem_miniwave" */
-      {lines_once_rem_couple,        (Const long int *) 0},      /* "lines_once_rem_couple" */
+      {once_rem_test,                  &iden_tab[2]},            /* "lines_once_rem_miniwave" */
+      {once_rem_test,                  &iden_tab[0]},            /* "lines_once_rem_couple" */
       {same_in_pair,                 (Const long int *) 0},      /* "lines_tandem" */
       {opp_in_pair,                  (Const long int *) 0},      /* "lines_antitandem" */
       {columns_tandem,                 &iden_tab[0]},            /* "columns_tandem" */
       {columns_tandem,                 &iden_tab[1]},            /* "columns_antitandem" */
       {same_in_magic,                (Const long int *) 0},      /* "columns_magic_tandem" */
       {opp_in_magic,                 (Const long int *) 0},      /* "columns_magic_antitandem" */
-      {lines_once_rem_couple,        (Const long int *) 0},      /* "columns_once_rem_tandem" */
-      {lines_once_rem_miniwave,      (Const long int *) 0},      /* "columns_once_rem_antitandem" */
+      {once_rem_test,                  &iden_tab[0]},            /* "columns_once_rem_tandem" */
+      {once_rem_test,                  &iden_tab[2]},            /* "columns_once_rem_antitandem" */
       {same_in_pair,                 (Const long int *) 0},      /* "columns_couple" */
       {opp_in_pair,                  (Const long int *) 0},      /* "columns_miniwave" */
       {x12_beau_or_miniwave,           &iden_tab[0]},            /* "1x2_beau_or_miniwave" */
       {x12_beau_or_miniwave,           &iden_tab[1]},            /* "1x2_beau_miniwave_or_warn" */
+      {x12_beau_or_miniwave,           &iden_tab[2]},            /* "1x2_beau_miniwave_for_breaker" */
+      {can_swing_left,               (Const long int *) 0},      /* "can_swing_left" */
       {x14_wheel_and_deal,           (Const long int *) 0},      /* "1x4_wheel_and_deal" */
       {x16_wheel_and_deal,           (Const long int *) 0},      /* "1x6_wheel_and_deal" */
       {x18_wheel_and_deal,           (Const long int *) 0},      /* "1x8_wheel_and_deal" */

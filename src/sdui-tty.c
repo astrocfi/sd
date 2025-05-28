@@ -48,6 +48,7 @@
    uims_do_outfile_popup
    uims_do_header_popup
    uims_do_getout_popup
+   uims_do_write_anyway_popup
    uims_do_abort_popup
    uims_do_neglect_popup
    uims_do_selector_popup
@@ -395,11 +396,7 @@ concept_descriptor *two_calls_concept_ptr = (concept_descriptor *) 0;
 
 /* BEWARE!!  These two lists must stay in step. */
 
-#ifdef SINGERS
-int num_command_commands = 52;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
-#else
-int num_command_commands = 50;
-#endif
+int num_command_commands = 50;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 
 
 Cstring command_commands[] = {
@@ -412,10 +409,6 @@ Cstring command_commands[] = {
    "toggle ignoreblanks",
    "toggle retain after error",
    "toggle nowarn mode",
-#ifdef SINGERS
-   "toggle singing call",
-   "toggle singing call with backward progression",
-#endif
    "undo last call",
    "discard entered concepts",
    "abort this sequence",
@@ -469,10 +462,6 @@ static command_kind command_command_values[] = {
    command_toggle_ignoreblanks,
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
-#ifdef SINGERS
-   command_toggle_singer,
-   command_toggle_singer_backward,
-#endif
    command_undo,
    command_erase,
    command_abort,
@@ -750,9 +739,10 @@ Private void get_user_input(char *prompt, int which)
             if (user_match.match.kind == ui_concept_select) {
                user_match.match.concept_ptr = *((concept_descriptor **) fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index);
                if (!user_match.match.concept_ptr) continue;
-               user_match.match.next = (modifier_block *) 0;
+               user_match.match.next_conc_or_subcall = (modifier_block *) 0;
                user_match.match.call_conc_options = null_options;
-               user_match.next = (match_result *) 0;
+               user_match.real_next_subcall = (match_result *) 0;
+               user_match.real_secondary_subcall = (match_result *) 0;
             }
             else
                user_match.match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
@@ -827,7 +817,7 @@ Private void get_user_input(char *prompt, int which)
 
          if (  (matches == 1 || matches - static_ss.yielding_matches == 1 || user_match.exact)
                               &&
-              (!user_match.match.next || user_match.match.kind == ui_call_select || user_match.match.kind == ui_concept_select)) {
+              (!user_match.match.next_conc_or_subcall || user_match.match.kind == ui_call_select || user_match.match.kind == ui_concept_select)) {
 
             p = static_ss.extended_input;
             while (*p)
@@ -1049,7 +1039,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
          else break;   /* Huh? */
 
          user_match.match.call_conc_options = save_stuff;
-         anythings = anythings->next;
+         anythings = anythings->next_conc_or_subcall;
       }
 
       if (save2_active) parse_state.topcallflags1 = save2;
@@ -1161,8 +1151,14 @@ Private int confirm(char *question)
     }
 }
 
-extern int
-uims_do_abort_popup(void)
+extern int uims_do_write_anyway_popup(void)
+{
+    put_line("This sequence is not resolved.\n");
+    current_text_line++;
+    return confirm("Do you want to write it anyway? ");
+}
+
+extern int uims_do_abort_popup(void)
 {
     put_line("The current sequence will be aborted.\n");
     current_text_line++;

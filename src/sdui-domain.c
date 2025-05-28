@@ -36,6 +36,7 @@
    uims_do_header_popup
    uims_do_comment_popup
    uims_do_getout_popup
+   uims_do_write_anyway_popup
    uims_do_abort_popup
    uims_do_neglect_popup
    uims_do_selector_popup
@@ -72,6 +73,7 @@
    uims_do_header_popup       Put up a popup to let user change the header comment
    uims_do_comment_popup      Put up a popup to let user type a comment
    uims_do_getout_popup       Put up a popup to let user type a header line on a sequence
+   uims_do_write_anyway_popup Put up a popup to ask whether user wants to write unresolved sequence
    uims_do_abort_popup        Put up a popup to ask whether user really wants to abort
    uims_do_neglect_popup      Put up a popup to query for percentage of stale calls to show
    uims_do_selector_popup     Put up a popup to query for a selector (heads/sides..)
@@ -698,6 +700,19 @@ extern int uims_do_getout_popup(char dest[])
 
 
 
+extern int uims_do_write_anyway_popup(void)
+{
+   int my_task;
+
+   dialog_signal(write_confirm_enabler);    /* It pops itself down. */
+   dialog_read(&my_task);
+   if (my_task == write_confirm_select_task) return POPUP_ACCEPT;
+   else return POPUP_DECLINE;
+}
+
+
+
+
 extern int uims_do_abort_popup(void)
 {
    int my_task;
@@ -987,7 +1002,9 @@ Private long_boolean get_mouse_action(uims_reply *reply_p)
          If we move the mouse into that popup and out again, we get "popup_abort_task" here, even though
          we are supposedly querying for a call.  Yuk. */
       case abort_confirm_select_task:
+      case write_confirm_select_task:
       case abort_confirm_abort_task:
+      case write_confirm_abort_task:
       case popup_abort_task:
          goto getcmd;
    }

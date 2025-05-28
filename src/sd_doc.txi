@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: June 29, 1997
+@set Time-stamp: August 24, 1997
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.88
+@set sd-version 31.89
 @set full-manual
 @c %**end of header
 @iftex
@@ -163,6 +163,7 @@ Miscellaneous Commands
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
+* Singing Call Progressions::   Singing Call Progressions
 * Changing Modes::              Changing Modes
 
 Terminal Interface
@@ -181,6 +182,7 @@ Call Notes
 * Centers Back Away::           Centers Back Away
 * <ANYONE> Promenade::          <ANYONE> Promenade
 * Up to the Middle::            Up to the Middle
+* <ANYONE> Cloverleaf::         <ANYONE> Cloverleaf
 * And N/4 More::                And N/4 More
 * Ends Divide::                 Ends Divide
 * Little/Little More/Plenty::   Little/Little More/Plenty
@@ -722,6 +724,9 @@ This makes the program recognize calls and concepts that have been typed
 in without the spaces that normally separate words.  In particular, it
 makes the program behave as though you had given the @code{toggle ignoreblanks}
 command.  @xref{Ignoring Blanks}.
+@item -no_warnings
+This suppresses the display and printing of the
+warning messages that are sometimes given to help less-experienced callers.
 @item -retain_after_error
 This makes the program automatically retain all concepts that had
 been typed prior to the current call, whenever an error occurs.
@@ -1026,8 +1031,8 @@ The line
 @example
    no_warnings
 @end example
-would be used if you wish to suppress the printing of the warning messages
-that are sometimes printed to help less-experienced callers.
+would be used if you wish to suppress the display and printing of the
+warning messages that are sometimes given to help less-experienced callers.
 
 The line
 @example
@@ -1068,13 +1073,24 @@ generate a sequence of calls of your choosing.
 
 The startup menu is displayed when the program starts and after each
 sequence has been completed and written to a file.
-In addition to the program exit choice, this permits you to select
-the starting operation.  The selections here, and almost everywhere else
-in the program, are made in @code{Sd} by moving the mouse until the
-cursor is over the
-chosen item, and pressing Mouse Button 1 (typically the left button).
-In @code{Sdtty}, selections are made by typing them.  To see the ``menu'',
-that is, the list of things you could type, type a question mark.
+It provides a number of miscellaneous commands, including
+commands to change various modes such as the @code{active phantoms}
+mode or the @code{singing call} mode.  @xref{Misc Commands} for further
+discussion of these.  The startup menu also allows you
+to @code{exit from the program} and return to your computer's operating
+system.
+
+In addition to the miscellaneous choices, this permits you to select
+the starting operation.
+
+The selections here, and almost everywhere else
+in the program, are made in @code{Sdtty} by typing them.
+To see the ``menu'', that is, the list of things you could type,
+type a question mark or exclamation point.
+
+In @code{Sd}, selections are made by moving the mouse until the
+cursor is over the chosen item, and pressing Mouse Button 1
+(typically the left button).
 
 @menu
 * Heads/Sides Start::           starting with the heads or sides
@@ -2073,6 +2089,7 @@ sequences.
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
+* Singing Call Progressions::   Singing Call Progressions
 * Changing Modes::              Changing Modes
 @end menu
 
@@ -2173,7 +2190,7 @@ the transcript exactly where it was entered.  Because of the way the program
 assembles mouse-clicks into transcript lines, it is not possible to enter
 a comment at the end of a line.
 
-@node Keeping Pictures, Changing Modes, Inserting Comments, Misc Commands
+@node Keeping Pictures, Singing Call Progressions, Inserting Comments, Misc Commands
 @section Keeping Pictures
 
 The program shows pictures on the screen for the current position
@@ -2184,7 +2201,31 @@ sequence is very difficult and you believe it may be necessary to say
 something helpful then like ``check a parallelogram with boys in the center
 box'') select the command @code{keep picture}.
 
-@node Changing Modes, , Keeping Pictures, Misc Commands
+@node Singing Call Progressions, Changing Modes, Keeping Pictures, Misc Commands
+@section Singing Call Progressions
+
+You can write singing call sequences with the usual ``progressions'' in them.
+At the start of the sequence (that is, when you could have typed
+@samp{heads start}), issue one of the following commands:
+@example
+   toggle singing call
+   toggle reverse singing call
+@end example
+@noindent The first gives the usual ``corner'' progression, and the second gives
+a reverse (``right hand lady'') progression.
+
+When in singing call mode, the program looks for resolves that cause people
+to promenade with the appropriate person who is not their partner.  It assumes
+that you are looking primarily for @samp{swing and promenade} getouts, though
+it will show other types of getouts when they appear.
+
+Note that, for the ``usual'' type of singing call figure (equivalent to
+@samp{square thru 4, swing corner, and promenade}) the promenade distance
+will be shown as 1/8.  The dancers will of course promenade 1-1/8.  You
+should consider @samp{at home} or @samp{1/8 promenade} to be the ``usual''
+timing for singing call figures.
+
+@node Changing Modes, , Singing Call Progressions, Misc Commands
 @section Changing Modes
 
 There are several commands that change some aspect of the way @code{Sd}
@@ -2194,13 +2235,16 @@ or @code{Sdtty} runs.  They are:
    toggle active phantoms
    toggle ignoreblanks
    toggle retain after error
+   toggle nowarn mode
+   toggle singing call
+   toggle reverse singing call
 @end example
 Normally, all of these are off.
 You may want to turn one or more of them on for your own personal
 preference, or for some special reason.  These commands @dfn{toggle} their
 respective modes.  That is, they turn the mode on if it was off, and
-off if it was on.  The current state of the @code{concept levels} and
-@code{active phantoms} modes is always displayed
+off if it was on.  The current state of the @code{concept levels},
+@code{active phantoms}, and @code{singing call} modes is always displayed
 in the input prompt in @code{Sdtty}, or the mode line in the upper
 right corner in @code{Sd}.
 
@@ -2217,9 +2261,18 @@ blanks separating them, or without hyphens.  @xref{Ignoring Blanks}.
 
 The @code{toggle retain after error} command changes the option whereby
 program retains the concepts that
-you had typed when an error occurs.  @xref{Retaining Concepts After an Error}.
+you had typed when an error occurs.
+@xref{Retaining Concepts After an Error}.
 
-Any of these modes can be turned on automatically when the program begins,
+The @code{toggle nowarn mode} command changes the suppression
+of warning messages.  More experienced callers may not wish to
+see these messages.
+
+The @code{toggle singing call} commands change the singing call mode.
+@xref{Singing Call Progressions}.
+
+Any of these modes, except the singing call modes, can be turned on
+automatically when the program begins,
 either by giving a command-line option (@xref{Command-Line Options}) or
 through the use of the initialization file (@xref{Option Control}).
 
@@ -2480,6 +2533,7 @@ appropriate to get the dancers through the action that you intend.
 * Centers Back Away::           Centers Back Away
 * <ANYONE> Promenade::          <ANYONE> Promenade
 * Up to the Middle::            Up to the Middle
+* <ANYONE> Cloverleaf::         <ANYONE> Cloverleaf
 * And N/4 More::                And N/4 More
 * Ends Divide::                 Ends Divide
 * Little/Little More/Plenty::   Little/Little More/Plenty
@@ -2621,7 +2675,7 @@ as in @code{promenade halfway, while the others [square thru 4]}.
 The @samp{<ANYTHING>} call will be
 done by the appropriate people in the center of the set.
 
-@node Up to the Middle, And N/4 More, <ANYONE> Promenade, Call Notes
+@node Up to the Middle, <ANYONE> Cloverleaf, <ANYONE> Promenade, Call Notes
 @section Up to the Middle
 
 When the program starts a sequence with the @code{heads start} or
@@ -2652,7 +2706,34 @@ square thru 2}.  The way this would be entered to the program is:
 @end group
 @end example
 
-@node And N/4 More, Ends Divide, Up to the Middle, Call Notes
+@node <ANYONE> Cloverleaf, And N/4 More, Up to the Middle, Call Notes
+@section <ANYONE> Cloverleaf
+
+The call @samp{cloverleaf} is expected to be done from a completed
+double pass thru setup, and has everyone doing the call.
+
+There are some other uses of this call, some sanctioned by the Callerlab
+definitions and others simply in common usage.  These involve just
+having four people (who must be looking out, but do not necessarily have
+to be ends) do the call.  The call @samp{<ANYONE> cloverleaf} does this.
+You must use an appropriate designator, such as @samp{ends cloverleaf}.
+An example of this, in which the designated people are not ends, is:
+@example
+@group
+   heads start
+   pass thru
+   heads cloverleaf
+@end group
+@end example
+@noindent 
+@noindent In this example, the sides would step into the center.
+
+The call "<ANYONE> cloverleaf while the others <ANYTHING>" is similar,
+but has the inactive people, after they step into the center, do the
+other call.  It is in many cases identical to the A1 call
+@samp{clover and <ANYTHING>}, but the latter call is more restrictive.
+
+@node And N/4 More, Ends Divide, <ANYONE> Cloverleaf, Call Notes
 @section And N/4 More
 
 The calls @samp{and 1/4 more} and @samp{and 1/2 more} are intended to
@@ -2685,7 +2766,7 @@ it in brackets.  So, for example, you might type:
    6x2 acey deucey
 @end group
 @end example
-You might read this as @samp{heads swing thru, while the sides divide
+@noindent You might read this as @samp{heads swing thru, while the sides divide
 and touch 1/4}.
 
 @node Little/Little More/Plenty, Flip Back, Ends Divide, Call Notes
@@ -3137,7 +3218,8 @@ done from a 2x6.  The setup is separated into
 end-to-end 2x3's, and the call is done in each of those setups.  There is no
 @i{split phantom boxes} equivalent for these.
 @item twin phantom tidal C/L/W
-These are done from a 2x8, and form two parallel 1x8's with phantoms,
+@item triple tidal C/L/W
+These are done from a 2x8 or 3x8, respectively, and form two or three parallel 1x8's with phantoms,
 in each of which the call is done independently.
 
 The program uses the term ``tidal'' to mean a 1x8.  You may prefer to
@@ -3177,6 +3259,8 @@ These are straightforward.
 @item triple L/W/B working forward/backward
 @item triple C/B/1T/1L working right/left
 @item triple C/L/W/B working clockwise/counterclockwise
+@item triple tidal L/W working forward/backward
+@item triple tidal C working right/left
 @item quadruple C/L/W/B/D/1T/1L working together
 @item quadruple C/L/W/B working apart
 @item quadruple L/W/B working forward/backward
@@ -3269,9 +3353,12 @@ line, you could say:
 @group
    16 matrix of parallel diamonds siamese twosome diamond circulate
 @noindent or
-   16 matrix of parallel diamonds siamese twosome assume normal diamonds 6x2 acey deucey
+   16 matrix of parallel diamonds siamese twosome
+         assume normal diamonds 6x2 acey deucey
 @noindent or
-   16 matrix of parallel diamonds assume normal interlocked diamonds siamese twosome 6x2 acey deucey
+   16 matrix of parallel diamonds
+         assume normal interlocked diamonds
+         siamese twosome 6x2 acey deucey
 @end group
 @end example
 
@@ -3366,6 +3453,8 @@ in a 2x3 matrix, doing a 6-person call.
 @item distorted tidal C/L/W (singular)
 These are done from a 2x8 matrix in which the real people form some
 kind of distorted 1x8.
+@item distorted C/L/W (singular) of 6
+These are done from a center diamond with offset pairs of people on the outside.
 @item double bent tidal C/L/W (singular)
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
@@ -3570,6 +3659,8 @@ wheel around}, it will have @emph{everyone} wheel around.  To get the effect tha
 is usually indicated by the words ``promenade, do not stop @dots{}, heads wheel around'',
 you must enter enter @code{heads lead for a heads wheel around}.
 @item ends concentric
+@item outer 2 concentric
+@item outer 6 concentric
 @item centers and ends concentric@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These are like @samp{ends} and @samp{centers and ends}, except that the
 concentric rules (e.g., lines-to-lines and columns-to-columns) are used
@@ -3894,14 +3985,24 @@ See @ref{Concentric}.
 These are straightforward.
 @item common point galaxy
 @item common point diamonds
+@item common point hourglass
 @item common end L/W
 @item common center L/W
 @item common spot C/L/W/D
+@item common spot hourglass
 @item common two-faced lines
-The program assumes that the ``common spot'' concepts treat people as though
-they had collided and taken @i{right} hands.  Left-hand miniwaves are not
-accepted.  If you want to use these concepts with people in left-hand
-miniwaves, you must apply the @samp{mirror} concept to the entire operation.
+The ``common spot'' concept directs people to do their part of the call
+as though the presumed collision from the previous call had not forced
+them to take right hands, and they are simply occupying the same spot.
+(This is not to say that a collision from a previous call is the only
+way that such a setup can be created---the dancers are simply directed
+to act as though that is how they got there.  Some people consider the
+use of collisions to set up ``common spot'' calls to be among the
+less creative ways to get into these formations.)
+
+The program therefore expects the ``common spot'' people to have
+@i{right} hands.  If you want to use these concepts with people in left-hand
+miniwaves, we recommend that you apply the @samp{mirror} concept to the entire operation.
 
 The @code{common point galaxy} concept is used from a ``rigger'' setup in
 which the ``wings'' are collided points.  The @code{common spot columns}
@@ -4478,13 +4579,13 @@ in the galaxy, which is impossible.
 
 Suppose we have a galaxy and wish to have the centers begin a @samp{with confidence}.
 That is, the centers @samp{hinge} but the ends do @emph{not} do a @samp{1/2 circulate}.
-The first part of @samp{with confidence} is @samp{centers hinge}.  If we say
+The first part of @samp{with confidence} is @samp{centers hinge while the ends 1/2 circulate}.  If we say
 @example
 @group
    @code{centers start with confidence}
 @end group
 @end example
-the centers will do their part of a @samp{centers hinge} in the entire galaxy.
+@noindent the centers will do their part of a @samp{centers hinge} in the entire galaxy.
 That means, of course, that they will recognize themselves as centers, and will
 @samp{hinge}, so the call will work.  If we had said
 @example
@@ -4492,7 +4593,7 @@ That means, of course, that they will recognize themselves as centers, and will
    @code{initially centers with confidence}
 @end group
 @end example
-the centers would recognize only their center box, from which a @samp{centers hinge}
+@noindent the centers would recognize only their center box, from which a @samp{centers hinge}
 is impossible because the centers have been designated twice.
 
 In some cases you can do it either way.  From appropriate facing diamonds,

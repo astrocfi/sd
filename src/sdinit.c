@@ -642,11 +642,8 @@ Private void read_level_3_groups(calldef_block *where_to_put)
    int j, char_count;
    callarray *current_call_block;
 
-   read_halfword();
-
-   if ((last_datum & 0xE000) != 0x6000) {
+   if ((last_datum & 0xE000) != 0x6000)
       database_error("database phase error 3");
-   }
 
    current_call_block = 0;
 
@@ -661,7 +658,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       uint32 these_flags;
       int extra;
 
-      these_flags = last_12;
+      these_flags = last_datum & 0x1FFF;    /* We allow 13 callarray_flags. */
 
       read_halfword();       /* Get qualifier and start setup. */
       this_qualifier = (search_qualifier) ((last_datum & 0xFF00) >> 8);
@@ -797,6 +794,8 @@ Private void read_in_call_definition(void)
    int lim = 8;
    uint32 left_half;
 
+   read_halfword();
+
    switch (call_root->schema) {
       case schema_nothing:
          break;
@@ -822,20 +821,13 @@ Private void read_in_call_definition(void)
          {
             calldef_block *zz, *yy;
 
-            /* Demand a level 2 group. */
-            if ((last_datum) != 0x4000) {
-               database_error("database phase error 2");
-            }
-
             zz = (calldef_block *) get_mem(sizeof(calldef_block));
             zz->next = 0;
             zz->modifier_seth = 0;
             zz->modifier_level = l_mainstream;
             call_root->stuff.arr.def_list = zz;
 
-            read_level_3_groups(zz);
-
-            /* Check for more level 2 groups. */
+            read_level_3_groups(zz);    /* The first group. */
 
             while ((last_datum & 0xE000) == 0x4000) {
                yy = (calldef_block *) get_mem(sizeof(calldef_block));
@@ -845,7 +837,7 @@ Private void read_in_call_definition(void)
                zz->next = 0;
                read_fullword();
                zz->modifier_seth = last_datum;
-
+               read_halfword();
                read_level_3_groups(zz);
             }
          }
@@ -857,9 +849,8 @@ Private void read_in_call_definition(void)
             int next_definition_index = 0;
 
             /* Demand a level 2 group. */
-            if ((last_datum & 0xE000) != 0x4000) {
+            if ((last_datum & 0xE000) != 0x4000)
                database_error("database phase error 6");
-            }
 
             while ((last_datum & 0xE000) == 0x4000) {
                check_tag(last_12);
@@ -880,9 +871,8 @@ Private void read_in_call_definition(void)
          break;
       default:          /* These are all the variations of concentric. */
          /* Demand a level 2 group. */
-         if ((last_datum & 0xE000) != 0x4000) {
+         if ((last_datum & 0xE000) != 0x4000)
             database_error("database phase error 7");
-         }
 
          check_tag(last_12);
          call_root->stuff.conc.innerdef.call_id = last_12;
@@ -994,6 +984,7 @@ Private void build_database(call_list_mode_t call_list_mode)
 
       call_root->age = 0;
       call_root->level = (int) this_level;
+      call_root->schema = call_schema;
       call_root->callflags1 = saveflags1;
       call_root->callflagsf = 0;
       call_root->callflagsh = saveflagsh;
@@ -1030,10 +1021,6 @@ Private void build_database(call_list_mode_t call_list_mode)
                call_root->callflagsf |= CFLAGH__CIRC_CALL_RQ_BIT;
          }
       }
-
-      read_halfword();       /* Get next thing, whatever that is. */
-
-      call_root->schema = call_schema;
 
       read_in_call_definition();
 

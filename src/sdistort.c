@@ -649,10 +649,13 @@ extern void divided_setup_move(
    }
 
    switch (phancontrol) {
+#ifdef NOCANDO
+/* So "phantest_impossible" is obsolete and shoudl be replaced with "phantest_ok". */
       case phantest_impossible:
          if (!(v1flag && v2flag))
             fail("This is impossible in a symmetric setup!!!!");
          break;
+#endif
       case phantest_both:
          if (!(v1flag && v2flag))
             /* Only one of the two setups is occupied. */
@@ -1009,6 +1012,10 @@ extern void distorted_2x2s_move(
    static Const veryshort mape[16] = {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
    static Const veryshort mapf[16] = {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
 
+   /* maps for split phantom 1/4 tag Z's */
+   static Const veryshort mapg[16] = {0, 14, 10, 13, 2, 5, 8, 6, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const veryshort maph[16] = {13, 1, 14, 11, 6, 3, 5, 9, -1, -1, -1, -1, -1, -1, -1, -1};
+
    /* maps for 2x3 Z */
    static Const veryshort mape1[8] = {0, 1, 3, 4, -1, -1, -1, -1};
    static Const veryshort mapf1[8] = {1, 2, 4, 5, -1, -1, -1, -1};
@@ -1060,7 +1067,7 @@ extern void distorted_2x2s_move(
                3, 2, 4, 5, 0, 1, 7, 6};
 
    int table_offset, arity, misc_indicator, i;
-   setup a1, a2;
+   setup inputs[2];
    setup results[2];
    uint32 directions, livemask;
    Const veryshort *map_ptr;
@@ -1132,6 +1139,12 @@ extern void distorted_2x2s_move(
                else if ((livemask & 0xC30C30) == 0) map_ptr = mapf;
                else goto lose;
                break;
+            case s4dmd:
+               arity = 2;
+               if (     (livemask & 0x33C333C3) == 0) map_ptr = mapg;
+               else if ((livemask & 0xCCC3CCC3) == 0) map_ptr = maph;
+               else goto lose;
+               break;
             case s2x3:
                if (arity != 1) fail("Use the 'Z' concept here.");
                if (     (livemask & 0x0C3) == 0) map_ptr = mape1;
@@ -1139,7 +1152,7 @@ extern void distorted_2x2s_move(
                else goto lose;
                break;
             default:
-               fail("Must have 3x4, 2x6, 2x3, or 4x4 setup for this concept.");
+               fail("Must have 3x4, 2x6, 2x3, 4x4, or split 1/4 tags for this concept.");
          }
          break;
       case 1:
@@ -1212,7 +1225,6 @@ extern void distorted_2x2s_move(
          {
             setup rotss = *ss;
             veryshort the_map[16];
-            int rot, rotz;
          
             int rows = 1;
             int columns = 1;
@@ -1245,29 +1257,20 @@ extern void distorted_2x2s_move(
                map_ptr = &the_map[8];
             }
          
-            rot = 011;
-            rotz = 033;
+            for (i=0 ; i<2 ; i++) {
+               gather(&inputs[i], ss, &map_ptr[i*4], 3, 011);
+               inputs[i].kind = s2x2;
+               inputs[i].rotation = 0;
+               inputs[i].cmd = ss->cmd;
+               inputs[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+               update_id_bits(&inputs[i]);
+               move(&inputs[i], FALSE, &results[i]);
+               if (results[i].kind != s2x2 || (results[i].rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
+               scatter(result, &results[i], &map_ptr[i*4], 3, 033);
+            }
+
             result->kind = s4x4;
-            gather(&a1, ss, map_ptr, 3, rot);
-            a1.kind = s2x2;
-            a1.rotation = 0;
-            a1.cmd = ss->cmd;
-            a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-            update_id_bits(&a1);
-            move(&a1, FALSE, &results[0]);
-            if (results[0].kind != s2x2 || (results[0].rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
-            gather(&a2, ss, &map_ptr[4], 3, rot);
-            a2.kind = s2x2;
-            a2.rotation = 0;
-            a2.cmd = ss->cmd;
-            a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-            update_id_bits(&a2);
-            move(&a2, FALSE, &results[1]);
-            if (results[1].kind != s2x2 || (results[1].rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
-         
             result->rotation = results[0].rotation;
-            scatter(result, &results[0], map_ptr, 3, rotz);
-            scatter(result, &results[1], &map_ptr[4], 3, rotz);
             result->result_flags = results[0].result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
             reinstate_rotation(ss, result);
          
@@ -1284,34 +1287,20 @@ extern void distorted_2x2s_move(
 
    result->kind = ss->kind;
    result->rotation = 0;
-   ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   result->result_flags = 0;
 
-   a1 = *ss;
-   gather(&a1, ss, &map_ptr[table_offset], 3, 0);
-   a1.rotation = 0;
-   a1.kind = s2x2;
-   a1.cmd.cmd_assume.assumption = cr_none;
-   update_id_bits(&a1);
-   move(&a1, FALSE, &results[0]);
-   if (results[0].kind != s2x2) fail("Can't do shape-changer with this concept.");
-   scatter(result, &results[0], &map_ptr[table_offset], 3, 0);
-
-   if (arity == 2) {
-      a2 = *ss;
-      gather(&a2, ss, &map_ptr[table_offset+4], 3, 0);
-      a2.kind = s2x2;
-      a2.rotation = 0;
-      a2.cmd.cmd_assume.assumption = cr_none;
-      update_id_bits(&a2);
-      move(&a2, FALSE, &results[1]);
-      if (results[1].kind != s2x2) fail("Can't do shape-changer with this concept.");
-      scatter(result, &results[1], &map_ptr[table_offset+4], 3, 0);
-   }
-
-   result->result_flags = results[0].result_flags;
-
-   if (arity == 2) {
-      result->result_flags |= results[1].result_flags;
+   for (i=0 ; i<arity ; i++) {
+      inputs[i] = *ss;
+      gather(&inputs[i], ss, &map_ptr[table_offset+i*4], 3, 0);
+      inputs[i].rotation = 0;
+      inputs[i].kind = s2x2;
+      inputs[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+      inputs[i].cmd.cmd_assume.assumption = cr_none;
+      update_id_bits(&inputs[i]);
+      move(&inputs[i], FALSE, &results[i]);
+      if (results[i].kind != s2x2) fail("Can't do shape-changer with this concept.");
+      scatter(result, &results[i], &map_ptr[table_offset+i*4], 3, 0);
+      result->result_flags |= results[i].result_flags;
    }
 
    reinstate_rotation(ss, result);
@@ -1341,6 +1330,8 @@ extern void distorted_move(
       3 - user claims this is waves
    arg2 & 8 != 0:
       user claims this is a single tidal (grand) setup
+   arg2 & 16 != 0:
+      user claims this is a single 6-person setup (legal only in bighrgl)
 
    Global_tbonetest has the OR of all the people, or all the standard people if
       this is "standard", so it is what we look at to interpret the
@@ -1391,6 +1382,21 @@ extern void distorted_move(
       rot = 0;
       rotz = 0;
       result->kind = s2x8;      
+   }
+   else if (linesp & 16) {
+      if (ss->kind == sbighrgl) {
+         if (linesp & 1) {
+            if (global_tbonetest & 1) fail("There is no line of 6 here.");
+         }
+         else {
+            if (global_tbonetest & 010) fail("There is no column of 6 here.");
+         }
+         
+         if (livemask == 0x3CF) { map_ptr = &map_dhrgl1; goto do_divided_call; }
+         if (livemask == 0xF3C) { map_ptr = &map_dhrgl2; goto do_divided_call; }
+      }
+
+      fail("Can't find distorted 1x6.");
    }
    else {
       k = s2x4;
@@ -1480,11 +1486,7 @@ extern void distorted_move(
 
    /* Now see if the concept was correctly named. */
 
-   if (zlines) {
-      if (disttest != disttest_z)
-         fail("You must specify Z lines/columns when in this setup.");
-   }
-   else {
+   if (!zlines) {
       switch (disttest) {
          case disttest_z:
             fail("Can't find Z lines/columns, perhaps you mean distorted.");
@@ -1492,6 +1494,14 @@ extern void distorted_move(
             fail("Can't find offset lines/columns, perhaps you mean distorted.");
       }
    }
+   /* We used to have this also, which would raise an error if you said "distorted lines"
+      when the setup is in fact Z lines.  Unfortunately, "distorted lines" are legal at C3,
+      but "Z lines" are not, so the error is not helpful.
+   else {
+      if (disttest != disttest_z)
+         fail("You must specify Z lines/columns when in this setup.");
+   }
+   */
 
    gather(&a1, ss, the_map, 7, rot);
    a1.kind = k;
@@ -1802,6 +1812,18 @@ common_spot_map cmaps[] = {
          {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
          {       0, d_north,       0,       0,       0, d_south,       0,       0}, sbigdmd, s_qtag, 1},
 
+   /* common point hourglass */
+   {0x80,{      -1,      -1,       8,       3,      -1,      -1,       2,       9},
+         {       5,      -1,      -1,      -1,      11,      -1,      -1,      -1},
+         { d_south,       0,       0,       0, d_north,       0,       0,       0},
+         {       4,      -1,      -1,      -1,      10,      -1,      -1,      -1},
+         { d_north,       0,       0,       0, d_south,       0,       0,       0}, sbighrgl, s_hrglass, 1},
+   {0x80,{      -1,      -1,       8,       3,      -1,      -1,       2,       9},
+         {      -1,       6,      -1,      -1,      -1,       0,      -1,      -1},
+         {       0, d_south,       0,       0,       0, d_north,       0,       0},
+         {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
+         {       0, d_north,       0,       0,       0, d_south,       0,       0}, sbighrgl, s_hrglass, 1},
+
    /* common spot lines from a parallelogram -- the centers are themselves and the wings become ends. */
    /* We currently have no defense against unchecked spots being occupied! */
    {0x10,{      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
@@ -1940,6 +1962,7 @@ extern void common_spot_move(
       common point galaxy from rigger          : 0x1
       common spot columns (from 4x4)           : 0x2
       common point diamonds                    : 0x4
+      common point hourglass                   : 0x80
       common end lines/waves (from 2x6)        : 0x10
       common center lines/waves (from 2x4)     : 0x20
       common spot 2-faced lines (from 2x8)     : 0x8

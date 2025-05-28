@@ -1683,16 +1683,17 @@ Private int divide_the_setup(
                could be seen during the recursion. */
 
             forbid_little_stuff =
-                  assoc(b_2x4, ss, calldeflist) ||
-                  assoc(b_4x2, ss, calldeflist) ||
-                  assoc(b_2x3, ss, calldeflist) ||
-                  assoc(b_3x2, ss, calldeflist) ||
+               !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
+                    (assoc(b_2x4, ss, calldeflist) ||
+                     assoc(b_4x2, ss, calldeflist) ||
+                     assoc(b_2x3, ss, calldeflist) ||
+                     assoc(b_3x2, ss, calldeflist) ||
 /*   Taking these lines out -- they prevent pass the ocean from working in offset facing lines.
-                  assoc(b_dmd, ss, calldeflist) ||
-                  assoc(b_pmd, ss, calldeflist) ||
+                     assoc(b_dmd, ss, calldeflist) ||
+                     assoc(b_pmd, ss, calldeflist) ||
 */
-                  assoc(b_qtag, ss, calldeflist) ||
-                  assoc(b_pqtag, ss, calldeflist);
+                     assoc(b_qtag, ss, calldeflist) ||
+                     assoc(b_pqtag, ss, calldeflist));
 
             switch (livemask) {
                case 0xF3C: case 0xCF3:
@@ -1876,14 +1877,15 @@ Private int divide_the_setup(
                /* See comment above, for 3x4. */
                {
                   long_boolean forbid_little_stuff =
-                        assoc(b_2x4, ss, calldeflist) ||
-                        assoc(b_4x2, ss, calldeflist) ||
-                        assoc(b_2x3, ss, calldeflist) ||
-                        assoc(b_3x2, ss, calldeflist) ||
-                        assoc(b_dmd, ss, calldeflist) ||
-                        assoc(b_pmd, ss, calldeflist) ||
-                        assoc(b_qtag, ss, calldeflist) ||
-                        assoc(b_pqtag, ss, calldeflist);
+                     !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
+                          (assoc(b_2x4, ss, calldeflist) ||
+                           assoc(b_4x2, ss, calldeflist) ||
+                           assoc(b_2x3, ss, calldeflist) ||
+                           assoc(b_3x2, ss, calldeflist) ||
+                           assoc(b_dmd, ss, calldeflist) ||
+                           assoc(b_pmd, ss, calldeflist) ||
+                           assoc(b_qtag, ss, calldeflist) ||
+                           assoc(b_pqtag, ss, calldeflist));
 
                   /* We are in "clumps".  See if we can do the call in 2x2 or smaller setups. */
                   if (  forbid_little_stuff ||
@@ -2256,9 +2258,10 @@ Private int divide_the_setup(
          if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
             goto divide_us_no_recompute;
 
-         /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope. */
+         /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope.
+            Also, split it to boxes if the "split_to_box" flag was given. */
 
-         if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)
+         if (calldeflist->callarray_flags & (CAF__LATERAL_TO_SELECTEES | CAF__SPLIT_TO_BOX))
             goto divide_us_no_recompute;
 
          /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
@@ -2520,6 +2523,10 @@ Private int divide_the_setup(
 
 
 
+static veryshort exp_conc_1x8[] = {3, 2, 7, 6};
+static veryshort exp_conc_qtg[] = {6, 7, 2, 3};
+static veryshort exp_conc_2x2[] = {1, 2, 5, 6};
+
 /* For this routine, we know that callspec is a real call, with an array definition schema.
    Also, result->people have been cleared. */
 
@@ -2531,7 +2538,6 @@ extern void basic_move(
    setup *result)
 {
    int i, j, k;
-   uint32 newtb;
    callarray *calldeflist;
    long_boolean funny;
    uint32 division_code;
@@ -2553,6 +2559,7 @@ extern void basic_move(
    int orig_elongation = 0;
    int inconsistent_rotation, inconsistent_setup;
    long_boolean four_way_startsetup;
+   uint32 newtb = tbonetest;
    uint32 resultflags = 0;
    int desired_elongation = 0;
    long_boolean funny_ok1 = FALSE;
@@ -2574,45 +2581,6 @@ extern void basic_move(
    result->result_flags = 0;   /* Do this now, in case we bail out.  Note also that
       this means the RESULTFLAG__SPLIT_AXIS_MASK stuff will be clear for the normal case.
       It will only have good stuff if splitting actually occurs. */
-
-   if (     (ss->kind == s_dead_concentric && ss->inner.skind == s1x4) ||
-            (ss->kind == s_normal_concentric && ss->inner.skind == s1x4 && ss->outer.skind == nothing)) {
-      tbonetest = 0;
-      for (j=0; j<4; j++) tbonetest |= ss->people[j].id1;
-      ss->kind = s1x8;
-      ss->rotation = ss->inner.srotation;
-      clear_person(ss, 4);
-      clear_person(ss, 5);
-      ss->people[6] = ss->people[3];
-      ss->people[7] = ss->people[2];
-      ss->people[2] = ss->people[1];
-      ss->people[3] = ss->people[0];
-      clear_person(ss, 0);
-      clear_person(ss, 1);
-   }
-   else if ((ss->kind == s_dead_concentric && ss->inner.skind == s2x2) ||
-            (ss->kind == s_normal_concentric && ss->inner.skind == s2x2 && ss->outer.skind == nothing)) {
-      if (ss->concsetup_outer_elongation) {
-         /* Do nothing, which will cause an error. */
-      }
-      else {
-         tbonetest = 0;
-         for (j=0; j<4; j++) tbonetest |= ss->people[j].id1;
-         ss->kind = s2x4;
-         ss->rotation = ss->inner.srotation;
-         clear_person(ss, 4);
-         clear_person(ss, 7);
-         ss->people[6] = ss->people[3];
-         ss->people[5] = ss->people[2];
-         ss->people[2] = ss->people[1];
-         ss->people[1] = ss->people[0];
-         clear_person(ss, 0);
-         clear_person(ss, 3);
-      }
-   }
-
-   newtb = tbonetest;
-   if (setup_attrs[ss->kind].setup_limits < 0) fail("Setup is extremely bizarre.");
 
    /* We demand that the final concepts that remain be only the following ones. */
 
@@ -2788,7 +2756,7 @@ foobar:
                   /* But which way is appropriate?  A 4x4 is ambiguous.  Being too lazy to look at
                      the call definition (the "assoc" stuff), we assume the call wants lines, since
                      it seems that that is true for all calls that have the "12_16_matrix_means_split" property. */
-   
+
                   if (newtb & 1) {    /* If the setup is empty and newtb is zero, it doesn't matter what we do. */
                      division_code = ~0;
                      division_maps = &map_4x4v;
@@ -2833,8 +2801,53 @@ foobar:
    if (     calldeflist &&
             !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
             !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
-      begin_kind key1 = setup_attrs[ss->kind].keytab[0];
-      begin_kind key2 = setup_attrs[ss->kind].keytab[1];
+      begin_kind key1, key2;
+
+      /* If we came in with a "dead concentric" or its equivalent, try to turn it
+         into a real setup, depending on what the call is looking for.  If we fail
+         to do so, setup_limits will be negative and an error will arise shortly. */
+
+      if (     (ss->kind == s_dead_concentric) ||
+               (ss->kind == s_normal_concentric && ss->outer.skind == nothing)) {
+         setup stemp;
+         newtb = 0;
+         for (j=0; j<4; j++) newtb |= ss->people[j].id1;
+         stemp = *ss;
+         stemp.rotation = ss->inner.srotation;
+   
+         if (ss->inner.skind == s1x4) {
+            stemp.kind = s1x8;
+            clear_people(&stemp);
+            scatter(&stemp, ss, exp_conc_1x8, 3, 0);
+
+            if (  (!(newtb & 010) || assoc(b_1x8, &stemp, calldeflist))
+                                    &&
+                  (!(newtb & 1) || assoc(b_8x1, &stemp, calldeflist))) {
+               *ss = stemp;
+            }
+            else {
+               stemp.kind = s_qtag;
+               clear_people(&stemp);
+               scatter(&stemp, ss, exp_conc_qtg, 3, 0);
+
+               if (  (!(newtb & 010) || assoc(b_qtag, &stemp, calldeflist))
+                                       &&
+                     (!(newtb & 1) || assoc(b_pqtag, &stemp, calldeflist))) {
+                  *ss = stemp;
+               }
+            }
+         }
+         else if (ss->inner.skind == s2x2 && !ss->concsetup_outer_elongation) {
+            if (ss->concsetup_outer_elongation) fail("Setup is bizarre.");
+            stemp.kind = s2x4;
+            clear_people(&stemp);
+            scatter(&stemp, ss, exp_conc_2x2, 3, 0);
+            *ss = stemp;
+         }
+      }
+
+      key1 = setup_attrs[ss->kind].keytab[0];
+      key2 = setup_attrs[ss->kind].keytab[1];
 
       four_way_startsetup = FALSE;
 
@@ -2853,6 +2866,8 @@ foobar:
          }
       }
    }
+
+   if (setup_attrs[ss->kind].setup_limits < 0) fail("Setup is extremely bizarre.");
 
    switch (ss->kind) {
       case s_short6:
@@ -2962,8 +2977,12 @@ foobar:
       why there is no definition, and we need to call "divide_the_setup" to fix it. */
 
    if (matrix_check_flag == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
-      if (ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12) matrix_check_flag = INHERITFLAG_12_MATRIX;
-      else if (ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) matrix_check_flag = INHERITFLAG_16_MATRIX;
+      if (        !(search_concepts & INHERITFLAG_16_MATRIX) &&
+                  (ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12))
+         matrix_check_flag = INHERITFLAG_12_MATRIX;
+      else if (   !(search_concepts & INHERITFLAG_12_MATRIX) &&
+                  (ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16))
+         matrix_check_flag = INHERITFLAG_16_MATRIX;
 
       /* But we might not have set "matrix_check_flag" nonzero!  How are we going to prevent looping?
          The answer is that we won't execute the goto unless we did set set it nonzero. */
@@ -3006,8 +3025,18 @@ foobar:
          search_temp = search_concepts;
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
       }
-      else
-         search_temp = matrix_check_flag | search_concepts;
+      else {
+         if (    ((matrix_check_flag & INHERITFLAG_12_MATRIX) && (search_concepts & INHERITFLAG_3X3) && (search_concepts & INHERITFLAG_12_MATRIX))
+                                             ||                                                                                            
+                 ((matrix_check_flag & INHERITFLAG_16_MATRIX) && (search_concepts & INHERITFLAG_4X4) && (search_concepts & INHERITFLAG_16_MATRIX))) {
+            search_concepts &= ~matrix_check_flag;
+            ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
+            search_temp = search_concepts;
+         }
+         else {
+            search_temp = matrix_check_flag | search_concepts;
+         }
+      }
 
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0)
          goto foobar;

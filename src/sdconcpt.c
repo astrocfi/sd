@@ -27,7 +27,6 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
-extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *result);
 
 
 static uint32 orig_tbonetest;
@@ -66,6 +65,10 @@ typedef struct {
 static phan_map map_c1_phan   = {7, s2x4,   {0, 2, 7, 5, 8, 10, 15, 13},    {4, 6, 11, 9, 12, 14, 3, 1}};
 static phan_map map_pinwheel1 = {7, s2x4,   {10, 15, -1, -1, 2, 7, -1, -1}, {14, 3, -1, -1, 6, 11, -1, -1}};
 static phan_map map_pinwheel2 = {7, s2x4,   {-1, -1, 3, 1, -1, -1, 11, 9},  {-1, -1, 7, 5, -1, -1, 15, 13}};
+#ifdef THIS_IS_TOO_WEIRD
+static phan_map map_pinwheel3 = {7, s2x4,   {0, 1, -1, -1, 6, 7, -1, -1}, {2, 5, -1, -1, 8, 11, -1, -1}};
+static phan_map map_pinwheel4 = {7, s2x4,   {-1, -1, 2, 3, -1, -1, 8, 9},  {-1, -1, 5, 7, -1, -1, 11, 1}};
+#endif
 static phan_map map_o_spots   = {7, s2x4,   {10, -1, -1, 1, 2, -1, -1, 9},  {14, -1, -1, 5, 6, -1, -1, 13}};
 static phan_map map_qt_phan   = {7, s_qtag, {-1, -1, 2, 3, -1, -1, 6, 7},   {1, 4, -1, -1, 5, 0, -1, -1}};
 
@@ -152,8 +155,34 @@ Private void do_c1_phantom_move(
    else if (ss->kind == s_bone)
       /* We allow "phantom" in a bone setup to mean two "dunlap" quarter tags. */
       map_ptr = &map_qt_phan;
+#ifdef THIS_IS_TOO_WEIRD
+   else if (ss->kind == s3x4) {
+
+      /* Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms. */
+
+      if (global_livemask == 04747) {
+         map_ptr = &map_pinwheel3;
+         goto use_map;
+      }
+      else if (global_livemask == 05656) {
+         map_ptr = &map_pinwheel4;
+         goto use_map;
+      }
+   }
+#endif
    else if (ss->kind == s4x4) {
       setup temp;
+
+      /* Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms. */
+
+      if (global_livemask == 0xCCCC) {
+         map_ptr = &map_pinwheel1;
+         goto use_map;
+      }
+      else if (global_livemask == 0xAAAA) {
+         map_ptr = &map_pinwheel2;
+         goto use_map;
+      }
 
       /* Next, check for a "phantom turn and deal" sort of thing from stairsteps.
          Do the call in each line, them remove resulting phantoms carefully. */
@@ -165,14 +194,6 @@ Private void do_c1_phantom_move(
       else if (global_livemask == 0xC5C5 || global_livemask == 0x3A3A) {
          /* Split into 4 horizontal strips. */
          new_divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
-      }
-      else if (global_livemask == 0xCCCC) {   /* Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms. */
-         map_ptr = &map_pinwheel1;
-         goto use_map;
-      }
-      else if (global_livemask == 0xAAAA) {   /* Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms. */
-         map_ptr = &map_pinwheel2;
-         goto use_map;
       }
       else
          fail("Inappropriate setup for phantom concept.");
@@ -283,7 +304,38 @@ Private void do_concept_double_diagonal(
    uint32 tbonetest;
    map_thing *map_ptr;
 
-   if (parseptr->concept->value.arg2) {
+   if (parseptr->concept->value.arg2 == 2) {
+
+      /* This is "distorted CLW of 6". */
+
+      setup ssave = *ss;
+
+      if (ss->kind != sbighrgl) global_livemask = 0;   /* Force error. */
+
+      if (global_livemask == 0x3CF) { map_ptr = &map_dhrgl1; }
+      else if (global_livemask == 0xF3C) { map_ptr = &map_dhrgl2; }
+      else fail("Can't find distorted 1x6.");
+
+      if (parseptr->concept->value.arg1 == 3)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+      else if (parseptr->concept->value.arg1 == 1)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES;
+      else
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS;
+
+      divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
+
+      /* I wish this weren't so sleazy, but a new concentricity schema seems excessive. */
+
+      if (result->kind != sbighrgl) fail("Can't figure out result setup.");
+
+      (void) copy_person(result, 2, &ssave, 2);
+      (void) copy_person(result, 8, &ssave, 8);
+   }
+   else if (parseptr->concept->value.arg2) {
+
+      /* This is "diagonal CLW's of 3". */
+
       setup ssave = *ss;
       int switcher = (parseptr->concept->value.arg1 ^ global_tbonetest) & 1;
 
@@ -1025,6 +1077,60 @@ Private void do_concept_triple_lines_tog(
 }
 
 
+Private void do_concept_triple_1x8_tog(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int m1, m2;
+   int i, tbonetest;
+
+   int cstuff = parseptr->concept->value.arg1;
+   /* cstuff =
+      forward (lines) or left (cols)   : 0
+      backward (lines) or right (cols) : 2 */
+
+   int linesp = parseptr->concept->value.arg2;
+
+   if (linesp & 1)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
+
+   if (linesp == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   if (ss->kind != s3x8) fail("Must have a 3x8 setup for this concept.");
+
+   tbonetest = 0;
+   for (i=0; i<24; i++) tbonetest |= ss->people[i].id1;
+
+   if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+   if (linesp & 1) {
+      if (tbonetest & 1) fail("There are no lines of 8 here.");
+   }
+   else {
+      if (!(tbonetest & 1)) fail("There are no columns of 8 here.");
+   }
+
+   /* Initially assign the centers to the upper (m2) group. */
+   m1 = 0xFF00; m2 = 0xFFFF;
+
+   /* Look at the center line people and put each one in the correct group. */
+
+   if ((ss->people[20].id1 ^ cstuff) & 2) { m2 &= ~0x8000 ; m1 |= 0x1; };
+   if ((ss->people[21].id1 ^ cstuff) & 2) { m2 &= ~0x4000 ; m1 |= 0x2; };
+   if ((ss->people[22].id1 ^ cstuff) & 2) { m2 &= ~0x2000 ; m1 |= 0x4; };
+   if ((ss->people[23].id1 ^ cstuff) & 2) { m2 &= ~0x1000 ; m1 |= 0x8; };
+   if ((ss->people[11].id1 ^ cstuff) & 2) { m2 &= ~0x800  ; m1 |= 0x10; };
+   if ((ss->people[10].id1 ^ cstuff) & 2) { m2 &= ~0x400  ; m1 |= 0x20; };
+   if ((ss->people[9].id1  ^ cstuff) & 2) { m2 &= ~0x200  ; m1 |= 0x40; };
+   if ((ss->people[8].id1  ^ cstuff) & 2) { m2 &= ~0x100  ; m1 |= 0x80; };
+
+   new_overlapped_setup_move(ss, MAPCODE(s2x8,2,MPKIND__OVERLAP,1),
+      m1, m2, 0, result);
+}
+
+
 Private void do_concept_triple_diag(
    setup *ss,
    parse_block *parseptr,
@@ -1102,7 +1208,8 @@ Private void do_concept_grand_working(
    parse_block *parseptr,
    setup *result)
 {
-   int cstuff, tbonetest;
+   int cstuff;
+   uint32 tbonetest;
    int m1, m2, m3;
    setup_kind kk;
    int arity = 2;
@@ -1118,11 +1225,11 @@ Private void do_concept_grand_working(
       as centers       : 10
       as ends          : 11 */
 
-   if (cstuff < 4) {      /* Working forward/back/right/left. */
-      if (ss->kind == s2x4) {
+   if (ss->kind == s2x4) {
+      if (cstuff < 4) {      /* Working forward/back/right/left. */
          tbonetest = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
          if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
-         if ((tbonetest & 01) && (cstuff & 1)) fail("Must indicate forward/back.");
+         if ((tbonetest & 001) && (cstuff & 1)) fail("Must indicate forward/back.");
 
          /* Look at the center 4 people and put each one in the correct group. */
 
@@ -1130,31 +1237,11 @@ Private void do_concept_grand_working(
          cstuff <<= 2;
 
          if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
          if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m2 |= 0x2 ; m3 &= ~0x1; };
          if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x8; };
-         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
       }
-      else if (ss->kind == s2x3) {
-         tbonetest = ss->people[1].id1 | ss->people[4].id1;
-         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
-         if ((tbonetest & 01) && (cstuff & 1)) fail("Must indicate forward/back.");
-
-         /* Look at the center 2 people and put each one in the correct group. */
-
-         m1 = 0x9; m2 = 0xF; m3 = 0;
-         cstuff <<= 2;
-
-         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
-         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
-         arity = 1;
-      }
-      else
-         fail("Must have a 2x3 or 2x4 setup for this concept.");
-
-      kk = s2x2;
-   }
-   else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
-      if (ss->kind == s2x4) {
+      else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
          /* Put each of the center 4 people in the correct group, no need to look. */
 
          if (cstuff & 1) {
@@ -1164,7 +1251,26 @@ Private void do_concept_grand_working(
             m1 = 0xD; m2 = 0x5; m3 = 0x7;
          }
       }
-      else if (ss->kind == s2x3) {
+      else        /* Working as-ends or as-centers. */
+         fail("May not specify as-ends/as-centers here.");
+
+      kk = s2x2;
+   }
+   else if (ss->kind == s2x3) {
+      if (cstuff < 4) {      /* Working forward/back/right/left. */
+         tbonetest = ss->people[1].id1 | ss->people[4].id1;
+         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+         if ((tbonetest & 001) && (cstuff & 1)) fail("Must indicate forward/back.");
+
+         /* Look at the center 2 people and put each one in the correct group. */
+
+         m1 = 0x9; m2 = 0xF; m3 = 0;
+         cstuff <<= 2;
+
+         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
+      }
+      else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
          m3 = 0;
          if (cstuff & 1) {
             m1 = 0xB; m2 = 0xE;
@@ -1172,15 +1278,33 @@ Private void do_concept_grand_working(
          else {
             m1 = 0xD; m2 = 0x7;
          }
-         arity = 1;
       }
-      else
-         fail("Must have a 2x3 or 2x4 setup for this concept.");
+      else        /* Working as-ends or as-centers. */
+         fail("May not specify as-ends/as-centers here.");
 
       kk = s2x2;
+      arity = 1;
    }
-   else {      /* Working as-ends or as-centers. */
-      if (ss->kind == s1x8) {
+   else if (ss->kind == s1x8) {
+      if (cstuff < 4) {      /* Working forward/back/right/left. */
+         tbonetest = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
+         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+         if ((tbonetest & 001) && (cstuff & 1)) fail("Must indicate forward/back.");
+
+         /* Look at the center 4 people and put each one in the correct group. */
+
+         m1 = 0x3; m2 = 0x3; m3 = 0xF;
+         cstuff <<= 2;
+
+         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x2; };
+         if (((ss->people[3].id1 + 6) ^ cstuff) & 8) { m1 |= 0x8 ; m2 &= ~0x1; };
+         if (((ss->people[7].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x2; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m2 |= 0x8 ; m3 &= ~0x1; };
+      }
+      else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
+         fail("Must have a 2x3 or 2x4 setup for this concept.");
+      }
+      else {      /* Working as-ends or as-centers. */
          /* Put each of the center 4 people in the correct group, no need to look. */
 
          if (cstuff & 1) {
@@ -1190,7 +1314,27 @@ Private void do_concept_grand_working(
             m1 = 0xB; m2 = 0xA; m3 = 0xE;
          }
       }
-      else if (ss->kind == s1x6) {
+
+      kk = s1x4;
+   }
+   else if (ss->kind == s1x6) {
+      if (cstuff < 4) {      /* Working forward/back/right/left. */
+         tbonetest = ss->people[2].id1 | ss->people[5].id1;
+         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+         if ((tbonetest & 001) && (cstuff & 1)) fail("Must indicate forward/back.");
+
+         /* Look at the center 2 people and put each one in the correct group. */
+
+         m1 = 0x3; m2 = 0xF; m3 = 0;
+         cstuff <<= 2;
+
+         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m1 |= 0x8 ; m2 &= ~0x1; };
+         if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x2; };
+      }
+      else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
+         fail("Must have a 2x3 or 2x4 setup for this concept.");
+      }
+      else {      /* Working as-ends or as-centers. */
          m3 = 0;
          if (cstuff & 1) {
             m1 = 0x7; m2 = 0xD;
@@ -1198,13 +1342,13 @@ Private void do_concept_grand_working(
          else {
             m1 = 0xB; m2 = 0xE;
          }
-         arity = 1;
       }
-      else
-         fail("May not specify as-ends/as-centers here.");
 
+      arity = 1;
       kk = s1x4;
    }
+   else
+      fail("Must have a 2x3, 2x4, 1x6, or 1x8 setup for this concept.");
 
    new_overlapped_setup_move(ss, MAPCODE(kk,arity+1,MPKIND__OVERLAP,0), m1, m2, m3, result);
 }
@@ -1486,6 +1630,36 @@ Private void do_concept_do_phantom_1x8(
    }
    else
       fail("Must have a 2x8 or 1x16 setup for this concept.");
+
+   new_divided_setup_move(ss, map_code, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+}
+
+
+Private void do_concept_do_phantom_triple_1x8(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+/* This concept is "standard", which means that it can look at global_tbonetest
+   and global_livemask, but may not look at anyone's facing direction other
+   than through global_tbonetest. */
+
+{
+   uint32 map_code;
+
+   if (ss->kind != s3x8) fail("Must have a 3x8 setup for this concept.");
+
+   if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+   if (parseptr->concept->value.arg3 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   if (!((parseptr->concept->value.arg3 ^ global_tbonetest) & 1)) {
+      if (global_tbonetest & 1) fail("There are no grand lines here.");
+      else                      fail("There are no grand columns here.");
+   }
+
+   map_code = MAPCODE(s1x8,3,MPKIND__SPLIT,1);
 
    new_divided_setup_move(ss, map_code, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
@@ -2058,41 +2232,39 @@ Private void do_concept_crazy(
    i = 0;   /* The start point. */
    highlimit = craziness;   /* The end point. */
 
-   this_part = ((cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
+   this_part = ((cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT);
 
-   switch (cmd.cmd_frac_flags & (CMD_FRAC_CODE_MASK | CMD_FRAC_REVERSE | 0xFFFF)) {
-      case CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE:
-         /* Request is to do just part this_part+1. */
-         if (this_part >= 0) {
-            i = this_part;
-            /* We are taking the part number indication. */
-            highlimit = this_part+1;          /* This will make us do just the selected part. */
+   if (this_part > 0) {
+      switch (cmd.cmd_frac_flags & (CMD_FRAC_CODE_MASK | 0xFFFF)) {
+         case CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE:
+            /* Request is to do just part this_part. */
+            i = this_part-1;
+            highlimit = this_part;
             finalresultflags |= RESULTFLAG__PARTS_ARE_KNOWN;
             if (highlimit == craziness) finalresultflags |= RESULTFLAG__DID_LAST_PART;
-            cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;   /* No fractions for subject, we have consumed them. */
-         }
-         break;
-      case CMD_FRAC_CODE_UPTO | CMD_FRAC_NULL_VALUE:
-         /* Request is to do everything up through part this_part+1. */
-         if (this_part >= 0) {
-            /* We are taking the part number indication. */
-            highlimit = this_part+1;          /* This will make us do up through the selected part. */
-            cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;   /* No fractions for subject, we have consumed them. */
-         }
-         break;
-      case CMD_FRAC_CODE_BEYOND | CMD_FRAC_NULL_VALUE:
-         /* Request is to do everything strictly after part this_part+1. */
-         if (this_part >= 0) {
-            /* We are taking the part number indication. */
-            i = this_part+1;          /* This will make us do after the selected part. */
-            cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;   /* No fractions for subject, we have consumed them. */
-         }
-         break;
-      default:
-         fail("\"crazy\" is not allowed with fractional or reverse-order concepts.");
+            break;
+         case CMD_FRAC_CODE_UPTO | CMD_FRAC_NULL_VALUE:
+            /* Request is to do everything up through part this_part. */
+            highlimit = this_part;
+            break;
+         case CMD_FRAC_CODE_BEYOND | CMD_FRAC_NULL_VALUE:
+            /* Request is to do everything strictly after part this_part. */
+            i = this_part;
+            break;
+         default:
+            fail("\"crazy\" is not allowed after this concept.");
+      }
    }
 
    if (highlimit <= i || highlimit > craziness) fail("Illegal fraction for \"crazy\".");
+
+   if ((cmd.cmd_frac_flags & 0xFFFF) != CMD_FRAC_NULL_VALUE)
+      fail("\"crazy\" is not allowed with fractional concepts.");
+
+   if (cmd.cmd_frac_flags & CMD_FRAC_REVERSE)
+      reverseness ^= (craziness ^ 1);    /* That's all it takes! */
+
+   cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;   /* No fractions for subject, we have consumed them. */
 
    for ( ; i<highlimit; i++) {
       tempsetup.cmd = cmd;    /* Get a fresh copy of the command. */
@@ -3167,6 +3339,10 @@ Private void do_concept_inner_outer(
             break;
          if (ss->kind == sbigdmd)
             break;
+         if (ss->kind == sbighrgl)
+            break;
+         if (ss->kind == sbigdhrgl)
+            break;
          fail("Need outer triple boxes for this.");
       case 16+4:
       case 16+8+4:
@@ -3184,6 +3360,10 @@ Private void do_concept_inner_outer(
          if (ss->kind == s_hrglass)
             break;
          if (ss->kind == s_dhrglass)
+            break;
+         if (ss->kind == sbighrgl)
+            break;
+         if (ss->kind == sbigdhrgl)
             break;
          fail("Need center triple diamond for this.");
       case 8+5:
@@ -5020,6 +5200,7 @@ concept_table_item concept_table[] = {
    /* concept_do_phantom_diamonds */      {CONCPROP__NEEDK_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_do_phantom_diamonds},
    /* concept_do_phantom_1x6 */           {CONCPROP__NEEDK_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_1x6},
    /* concept_do_phantom_1x8 */           {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_1x8},
+   /* concept_do_phantom_triple_1x8 */    {CONCPROP__NEEDK_3X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_triple_1x8},
    /* concept_do_phantom_2x4 */           {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,           do_phantom_2x4_concept},
    /* concept_do_phantom_2x3 */           {CONCPROP__NEEDK_3X4 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_2x3},
    /* concept_divided_2x4 */              {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_divided_2x4},
@@ -5033,6 +5214,7 @@ concept_table_item concept_table[] = {
    /* concept_triple_lines */             {CONCPROP__NEEDK_TRIPLE_1X4 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,         do_concept_triple_lines},
    /* concept_triple_lines_tog */         {CONCPROP__NEEDK_TRIPLE_1X4 | Nostandard_matrix_phantom,                                 do_concept_triple_lines_tog},
    /* concept_triple_lines_tog_std */     {CONCPROP__NEEDK_TRIPLE_1X4 | Standard_matrix_phantom,                                   do_concept_triple_lines_tog},
+   /* concept_triple_1x8_tog */           {CONCPROP__NEEDK_3X8 | Nostandard_matrix_phantom,                                        do_concept_triple_1x8_tog},
    /* concept_quad_lines */               {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom,                                     do_concept_quad_lines},
    /* concept_quad_lines_tog */           {CONCPROP__NEEDK_4X4_1X16 | Nostandard_matrix_phantom,                                   do_concept_quad_lines_tog},
    /* concept_quad_lines_tog_std */       {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom,                                     do_concept_quad_lines_tog},
@@ -5044,12 +5226,8 @@ concept_table_item concept_table[] = {
    /* concept_triple_diamonds_together */ {CONCPROP__NEEDK_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_triple_diamonds_tog},
    /* concept_quad_diamonds */            {CONCPROP__NEEDK_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_quad_diamonds},
    /* concept_quad_diamonds_together */   {CONCPROP__NEEDK_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_quad_diamonds_tog},
-   /* concept_in_out_line_3 */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
-   /* concept_in_out_line_4 */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
-   /* concept_in_out_box_3 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
-   /* concept_in_out_box_4 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
-   /* concept_in_out_dmd_3 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
-   /* concept_in_out_dmd_4 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
+   /* concept_in_out_std */               {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
+   /* concept_in_out_nostd */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
    /* concept_triple_diag */              {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__STANDARD,                             do_concept_triple_diag},
    /* concept_triple_diag_together */     {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__GET_MASK,                             do_concept_triple_diag_tog},
    /* concept_triple_twin */              {CONCPROP__NEEDK_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      triple_twin_move},

@@ -38,6 +38,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <96/05/01 12:49:02 gildea>";
    uims_do_outfile_popup
    uims_do_header_popup
    uims_do_getout_popup
+   uims_do_write_anyway_popup
    uims_do_abort_popup
    uims_do_neglect_popup
    uims_do_selector_popup
@@ -568,6 +569,7 @@ Private String message_trans =
 typedef struct _SdResources {
     String sequence;		/* -sequence */
     String database;		/* -db */
+    String write_anyway_query;
     String abort_query;
     String modify_format;
     String modify_tag_format;
@@ -609,6 +611,8 @@ Private XtResource startup_resources[] = {
     MENU("toggleIgnoreBlanks", start_list[start_select_toggle_ignoreblank], "Toggle ignoreblanks"),
     MENU("toggleRetain_after_error", start_list[start_select_toggle_retain], "Toggle retain after error"),
     MENU("toggleNowarnMode", start_list[start_select_toggle_nowarn_mode], "Toggle nowarn mode"),
+    MENU("toggleSinger", start_list[start_select_toggle_singer], "Toggle singing call"),
+    MENU("toggleReverseSinger", start_list[start_select_toggle_singer_backward], "Toggle singing call with backward progression"),
     MENU("changeOutputFile", start_list[start_select_change_outfile], "Change output file"),
     MENU("changeTitle", start_list[start_select_change_header_comment], "Change title")
 };
@@ -665,6 +669,7 @@ Private XtResource enabledmods_resources[] = {
 };
 
 Private XtResource confirm_resources[] = {
+    MENU("writeAnyway", write_anyway_query, "Do you want to write this sequence anyway?"),
     MENU("abort", abort_query, "Do you really want to abort this sequence?"),
     MENU("modifyFormat", modify_format, "The \"%s\" can be replaced."),
     MENU("modifyTagFormat", modify_tag_format, "The \"%s\" can be replaced with a tagging call."),
@@ -1605,16 +1610,20 @@ uims_do_neglect_popup(char dest[])
 #endif
 
 
-Private int
-confirm(String question)
+Private int confirm(String question)
 {
     XtVaSetValues(confirmlabel, XtNlabel, question, NULL);
     return do_popup(confirmpopup);
 }
 
 
-extern int
-uims_do_abort_popup(void)
+extern int uims_do_write_anyway_popup(void)
+{
+    return confirm(sd_resources.write_anyway_query);
+}
+
+
+extern int uims_do_abort_popup(void)
 {
     return confirm(sd_resources.abort_query);
 }

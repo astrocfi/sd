@@ -35,6 +35,8 @@
 *startup.toggleIgnoreBlanks: Toggle ignoreblanks
 *startup.toggleRetain_after_error: Toggle retain after error
 *startup.toggleNowarnMode: Toggle nowarn mode
+*startup.toggleSinger: Toggle singing call
+*startup.toggleReverseSinger: Toggle singing call with backward progression
 *startup.changeOutputFile: Change output file
 *startup.changeTitle: Change title
 *command.exit: Exit the program
@@ -78,6 +80,7 @@
 *text*displayCaret: false
 *text*scrollVertical: always
 *text*wrap: word
+*confirmpopup.writeAnyway: Do you want to write this sequence anyway?
 *confirmpopup.abort: Do you really want to abort this sequence?
 *confirmpopup.modifyFormat: The "%s" can be replaced.
 *confirmpopup.modifyTagFormat: The "%s" can be replaced with a tagging call.

@@ -351,6 +351,10 @@ char *sstab[] = {
    "pbigx",
    "bigrig",
    "pbigrig",
+   "bighrgl",
+   "pbighrgl",
+   "bigdhrgl",
+   "pbigdhrgl",
    "bigbone",
    "pbigbone",
    "bigdmd",
@@ -427,6 +431,8 @@ char *estab[] = {
    "bigh",
    "bigx",
    "bigrig",
+   "bighrgl",
+   "bigdhrgl",
    "bigbone",
    "bigdmd",
    "???",
@@ -486,18 +492,23 @@ char *schematab[] = {
 char *qualtab[] = {
    "none",
    "wave_only",
+   "right_wave",
+   "left_wave",
    "not_wave_only",
    "all_facing_same",
    "1fl_only",
    "2fl_only",
+   "right_2fl",
+   "left_2fl",
+   "live_2fl_only",
+   "live_right_2fl",
+   "live_left_2fl",
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",
    "magic_only",
    "in_or_out",
    "miniwaves",
-   "right_wave",
-   "left_wave",
    "1_4_tag",
    "3_4_tag",
    "dmd_same_point",
@@ -515,6 +526,8 @@ char *qualtab[] = {
    "trade_by",
    "facing_in",
    "facing_out",
+   "all_ctrs_rh",
+   "all_ctrs_lh",
    "dmd_ctrs_rh",
    "dmd_ctrs_lh",
    "dmd_ctrs_1f",
@@ -546,6 +559,7 @@ char *crtab[] = {
    "all_facing_same",
    "1fl_only",
    "2fl_only",
+   "live_2fl_only",
    "3x3_2fl_only",
    "4x4_2fl_only",
    "leads_only",
@@ -844,6 +858,8 @@ char *predtab[] = {
    "columns_miniwave",
    "1x2_beau_or_miniwave",
    "1x2_beau_miniwave_or_warn",
+   "1x2_beau_miniwave_for_breaker",
+   "can_swing_left",
    "1x4_wheel_and_deal",
    "1x6_wheel_and_deal",
    "1x8_wheel_and_deal",
@@ -939,16 +955,17 @@ tagtabitem tagtabinit[] = {
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info for part 2 of chain reaction. */
       {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info for part 2 of make a pass. */
+      {0, "circulate"},     /* This is used for propagating the cast off 3/4 info for part 2 of make a pass. */
       {0, "tagnullcall0"},   /* These 4 must be consecutive. */
       {0, "tagnullcall1"},
       {0, "tagnullcall2"},
       {0, "tagnullcall3"},
       {0, "circnullcall"}};
-#define N_INITIAL_TAGS 10
+#define N_INITIAL_TAGS 12
 
 int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
 int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
-tagtabitem *tagtab;      /* The dynamically allocated tag list. */
+tagtabitem *tagtab;               /* The dynamically allocated tag list. */
 
 
 int errnum1 = -1;   /* These may get set >= when raising a fatal error. */
@@ -1183,6 +1200,7 @@ static uint32 tagsearch(int def)
    tagtab[i].def = 0;
 
    done:
+
    if (def) {
       if (tagtab[i].def) errexit("Multiple definition of a call tag");
       tagtab[i].def = 1;
@@ -1455,18 +1473,47 @@ static void write_seq_stuff(void)
 }
 
 
-static void write_level_3_group(uint32 arrayflags)
+static void write_array_def_block(uint32 callarrayflags)
 {
-   write_halfword(0x6000 | arrayflags);
+   write_halfword(0x6000 | callarrayflags);
    write_halfword(call_startsetup | (call_qualifier << 8));
    write_halfword(call_qual_num);
-   if (arrayflags & CAF__CONCEND) {
+   if (callarrayflags & CAF__CONCEND) {
       write_halfword(call_endsetup_in | (restrstate << 8));
       write_halfword(call_endsetup_out);
    }
    else {
       write_halfword(call_endsetup | (restrstate << 8));
    }
+}
+
+
+static int scan_for_per_array_def_flags(void)
+{
+   int funnyflag = 0;
+
+foobar:
+
+   if (!strcmp(tok_str, "simple_funny")) {
+      funnyflag |= CAF__FACING_FUNNY;
+      get_tok();
+      if (tok_kind != tok_symbol) errexit("Missing indicator");
+      goto foobar;
+   }
+   else if (!strcmp(tok_str, "lateral_to_selectees")) {
+      funnyflag |= CAF__LATERAL_TO_SELECTEES;
+      get_tok();
+      if (tok_kind != tok_symbol) errexit("Missing indicator");
+      goto foobar;
+   }
+   else if (!strcmp(tok_str, "split_to_box")) {
+      funnyflag |= CAF__SPLIT_TO_BOX;
+      get_tok();
+      if (tok_kind != tok_symbol) errexit("Missing indicator");
+      goto foobar;
+   }
+
+   return funnyflag;
 }
 
 
@@ -1477,8 +1524,6 @@ static void write_array_def(uint32 funnyflag)
 
    write_call_header(schema_by_array);
 
-   /* Write a level 2 array define group. */
-   write_halfword(0x4000);
    callarray_flags1 = funnyflag;
 
 def2:
@@ -1502,14 +1547,14 @@ def2:
       if (tok_kind != tok_symbol) errexit("Missing indicator");
 
       if (!strcmp(tok_str, "array")) {
-         write_level_3_group(callarray_flags1 | callarray_flags2);             /* Pred flag off. */
+         write_array_def_block(callarray_flags1 | callarray_flags2);             /* Pred flag off. */
          get_tok();
          write_callarray(begin_sizes[call_startsetup], 0);
          get_tok_or_eof();
          break;
       }
       else if (!strcmp(tok_str, "preds")) {
-         write_level_3_group(CAF__PREDS | callarray_flags1 | callarray_flags2);        /* Pred flag on. */
+         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2);        /* Pred flag on. */
          get_tok();
          if (tok_kind != tok_string) errexit("Missing string");
          iii = char_ct;
@@ -1678,20 +1723,10 @@ def2:
       write_fullword(rrr);
    
       /* Now do another group of arrays. */
-   
+
       get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
-   
-      if (!strcmp(tok_str, "simple_funny")) {
-         callarray_flags1 = CAF__FACING_FUNNY;
-         get_tok();
-         if (tok_kind != tok_symbol) errexit("Missing indicator");
-      }
-      else if (!strcmp(tok_str, "lateral_to_selectees")) {
-         callarray_flags1 = CAF__LATERAL_TO_SELECTEES;
-         get_tok();
-         if (tok_kind != tok_symbol) errexit("Missing indicator");
-      }
+      callarray_flags1 |= scan_for_per_array_def_flags();
 
       if (strcmp(tok_str, "setup") != 0)
          errexit("Need \"setup\" indicator");
@@ -1710,7 +1745,6 @@ extern void dbcompile(void)
    uint32 funnyflag;
 
    tagtabmax = 100; /* try to make it reentrant */
-   tagtabsize = 3;
    tagtabsize = N_INITIAL_TAGS;
    lineno = 0;
    chars_left = 0;
@@ -1799,18 +1833,7 @@ extern void dbcompile(void)
 
          /* Process the actual definition.  First, check for the "simple_funny" or "lateral_to_selectees" indicator. */
 
-         funnyflag = 0;
-
-         if (!strcmp(tok_str, "simple_funny")) {
-            funnyflag = CAF__FACING_FUNNY;
-            get_tok();
-            if (tok_kind != tok_symbol) errexit("Missing indicator");
-         }
-         else if (!strcmp(tok_str, "lateral_to_selectees")) {
-            funnyflag = CAF__LATERAL_TO_SELECTEES;
-            get_tok();
-            if (tok_kind != tok_symbol) errexit("Missing indicator");
-         }
+         funnyflag = scan_for_per_array_def_flags();
 
          /* Find out what kind of call it is. */
          iii = search(schematab);

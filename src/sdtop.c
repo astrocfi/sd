@@ -25,9 +25,11 @@
    do_matrix_expansion
    normalize_setup
    toplevelmove
+   finish_toplevelmove
 */
 
 #include "sd.h"
+extern id_bit_table id_bit_table_4x4_but[];
 
 typedef struct {
    Const veryshort source_indices[24];
@@ -49,11 +51,16 @@ typedef struct grilch {
    struct grilch *next;
 } full_expand_thing;
 
+
+
+Private expand_thing comp_qtag_2x4_stuff   = {{5, -1, -1, 0, 1, -1, -1, 4}, 8, s2x4, nothing, 1};
+Private expand_thing comp_dhrg_2x4_stuff   = {{0, -1, -1, 1, 4, -1, -1, 5}, 8, s2x4, nothing, 0};
 Private expand_thing exp_1x8_rig_stuff     = {{6, 7, -1, -1, 2, 3, -1, -1}, 8, s1x8, s_rigger, 0};
 Private expand_thing exp_2x4_rig_stuff     = {{-1, 0, 1, -1, -1, 4, 5, -1}, 8, s2x4, s_rigger, 0};
 Private expand_thing exp_1x8_bone_stuff    = {{-1, -1, 7, 6, -1, -1, 3, 2}, 8, s1x8, s_bone, 0};
 Private expand_thing exp_2x4_bone_stuff    = {{0, -1, -1, 1, 4, -1, -1, 5}, 8, s2x4, s_bone, 0};
 Private expand_thing exp_3x4_bigd_stuff    = {{-1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 8, 9}, 12, s3x4, sbigdmd, 1};
+Private expand_thing exp_3dmd_bighrgl_stuff= {{-1, 2, -1, -1, -1, 3, -1, 8, -1, -1, -1, 9}, 12, s3dmd, sbighrgl, 0};
 Private expand_thing exp_dmd_3x1d_stuff    = {{7, 2, 3, 6}, 4, sdmd, s3x1dmd, 1};
 Private expand_thing exp_1x2_3x1d_stuff    = {{2, 6}, 2, s1x2, s3x1dmd, 0};
 Private expand_thing exp_3x4_4dm_stuff     = {{0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, 12, s3x4, s4dmd, 0};
@@ -76,6 +83,8 @@ Private expand_thing exp_3x4_3x8_stuff     = {{2, 3, 4, 5, 10, 11, 14, 15, 16, 1
 Private expand_thing exp_3x6_3x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 13, 14, 15, 16, 17, 18, 21, 22, 23}, 18, s3x6, s3x8, 0};
 Private expand_thing exp_1x8_3x8_stuff     = {{20, 21, 23, 22, 8, 9, 11, 10}, 8, s1x8, s3x8, 0};
 Private expand_thing exp_qtag_bigdmd_stuff = {{10, 1, 2, 3, 4, 7, 8, 9}, 8, s_qtag, sbigdmd, 1};
+Private expand_thing exp_hrgl_bighrgl_stuff = {{10, 1, 2, 9, 4, 7, 8, 3}, 8, s_hrglass, sbighrgl, 1};
+Private expand_thing exp_dhrgl_bigdhrgl_stuff = {{1, 4, 3, 2, 7, 10, 9, 8}, 8, s_dhrglass, sbigdhrgl, 0};
 Private expand_thing exp_bone_bigh_stuff   = {{1, 8, 10, 11, 7, 2, 4, 5}, 8, s_bone, sbigh, 0};
 Private expand_thing exp_xwv_bigx_stuff    = {{2, 3, 4, 5, 8, 9, 10, 11}, 8, s_crosswave, sbigx, 0};
 Private expand_thing exp_1x3d_bigx_stuff   = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s1x3dmd, sbigx, 0};
@@ -118,36 +127,6 @@ Private void compress_setup(expand_thing *thing, setup *stuff)
 }
 
 
-
-Private id_bit_table spec_3dmd_ctr1x4[] = {
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4},
-   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4},
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
-   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4},
-   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4}};
-
-Private id_bit_table spec_3dmd_ctr1x6[] = {
-   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
-   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
-   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
-   {ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4},
-   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4},
-   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4},
-   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
-   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
-   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
-   {ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4},
-   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4},
-   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4}};
-
-
 extern void update_id_bits(setup *ss)
 {
    int i;
@@ -173,7 +152,20 @@ extern void update_id_bits(setup *ss)
          if (livemask != 0x3CFUL && livemask != 0xF3CUL) ptr = (id_bit_table *) 0;
          break;
       case sbigdmd:
-         if (livemask != 0xF3CUL && livemask != 0x3CFUL) ptr = (id_bit_table *) 0;
+         /* If this is populated appropriately, we can identify "outer pairs". */
+         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bigdmd_wings;
+         break;
+      case sbigbone:
+         /* If this is populated appropriately, we can identify "outer pairs". */
+         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bigbone_wings;
+         break;
+      case sbigdhrgl:
+         /* If this is populated appropriately, we can identify "outer pairs". */
+         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bigdhrgl_wings;
+         break;
+      case sbighrgl:
+         /* If this is populated appropriately, we can identify "outer pairs". */
+         if (livemask == 0xF3CUL || livemask == 0x3CFUL) ptr = id_bit_table_bighrgl_wings;
          break;
       case s3x4:
 
@@ -188,12 +180,18 @@ extern void update_id_bits(setup *ss)
          if (livemask == 0xE79UL) ptr = id_bit_table_3x4_h;
          else if (livemask != 0xF3CUL && livemask != 0xCF3UL) ptr = (id_bit_table *) 0;
          break;
+      case s4x4:
+
+         /* We recognize centers and ends if this is populated as a butterfly. */
+
+         if (livemask == 0x9999UL) ptr = id_bit_table_4x4_but;
+         break;
       case s3dmd:
          /* The standard table requires all points, and centers of center diamond only, occupied.
             But first we look for a few other configurations. */
 
-         if ((livemask & 0xE38UL) == 0xE38UL) ptr = spec_3dmd_ctr1x6;          /* Look for center 1x6 occupied. */
-         else if ((livemask & 0xC30UL) == 0xC30UL) ptr = spec_3dmd_ctr1x4;     /* Look for center 1x6 having center 1x4 occupied. */
+         if ((livemask & 0xE38UL) == 0xE38UL) ptr = id_bit_table_3dmd_ctr1x6;          /* Look for center 1x6 occupied. */
+         else if ((livemask & 0xC30UL) == 0xC30UL) ptr = id_bit_table_3dmd_ctr1x4;     /* Look for center 1x6 having center 1x4 occupied. */
          else if (livemask != 0x9E7UL) ptr = (id_bit_table *) 0;
          break;
    }
@@ -712,6 +710,10 @@ extern void do_matrix_expansion(
                   eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
                case s_bone:
                   eptr = &exp_bone_bigbone_stuff; goto expand_me;
+               case s_hrglass:
+                  eptr = &exp_hrgl_bighrgl_stuff; goto expand_me;
+               case s_dhrglass:
+                  eptr = &exp_dhrgl_bigdhrgl_stuff; goto expand_me;
             }
             break;
          case CONCPROP__NEEDK_CTR_DMD:
@@ -869,6 +871,16 @@ extern void normalize_setup(setup *ss, normalize_action action)
    if (ss->kind == sbigdmd) {         /* This might leave a qtag, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
          compress_setup(&exp_qtag_bigdmd_stuff, ss);
+   }
+
+   if (ss->kind == sbighrgl) {
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
+         compress_setup(&exp_hrgl_bighrgl_stuff, ss);
+   }
+
+   if (ss->kind == sbigdhrgl) {
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
+         compress_setup(&exp_dhrgl_bigdhrgl_stuff, ss);
    }
 
    if (ss->kind == s1x16) {         /* This might leave a 1x14, which might be reduced further. */
@@ -1044,11 +1056,13 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
       else if ((ss->kind == s_qtag) && (!(ss->people[2].id1 | ss->people[6].id1)))
          compress_setup(&exp_2x3_qtg_stuff, ss);
-      else if (ss->kind == s_hrglass && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+      else if ((ss->kind == s_hrglass || ss->kind == s_dhrglass) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
          if (!(ss->people[2].id1 | ss->people[6].id1)) {
             ss->kind = s1x2;
-            (void) copy_person(ss, 0, ss, 7);
-            (void) copy_person(ss, 1, ss, 3);
+            ss->rotation++;
+            (void) copy_rot(ss, 0, ss, 3, 033);
+            (void) copy_rot(ss, 1, ss, 7, 033);
+            canonicalize_rotation(ss);
          }
          else {
             ss->kind = sdmd;
@@ -1096,60 +1110,18 @@ extern void normalize_setup(setup *ss, normalize_action action)
 
    if (action >= normalize_before_isolated_call) {
       if (ss->kind == s_qtag || ss->kind == s_hrglass) {
-
-#ifdef never
-
-/*
-We used to do this stuff, with the following comment:
-      For example, if we are selecting just the center line of
-      a quarter tag, we reduce the setup all the way down to a line.  Normally we
-      wouldn't do this, lest we lose phantoms when gluing setups together.
-But we have taken it out.  It goes beyond losing phantoms when gluing setups together.
-The code you see deleted here would preclude "own the <points>, trade by flip the diamond"
-from normal diamonds.  We believe that having the centers of diamonds know that they are
-still in diamonds on an "on your own" or "do your part" is exremely important.  In fact,
-it's hard to imagine why I thought otherwise.  I can only guess that
-"normalize_before_isolated_call" was formerly used for some other operation.
-
-In fact, the comment above: "we remove outboard phantoms more aggressively"
-suggests that.  We are definitely NOT removing outboard phantoms.  We are simply
-moving them so as to make the overall setup seem more normal to the remaining live
-people.
-
-In any case, let's try it without this.
-*/
-
-         if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
-            /* This makes the centers able to do it. */
-            if (!(ss->people[2].id1 | ss->people[6].id1)) {
-               ss->kind = s1x2;
-               (void) copy_person(ss, 0, ss, 7);
-               (void) copy_person(ss, 1, ss, 3);
-            }
-            else {
-               ss->kind = s1x4;
-               (void) copy_person(ss, 0, ss, 6);
-               (void) copy_person(ss, 1, ss, 7);
-            }
-         }
-#endif
-
-
          if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
             /* This makes it possible to do "own the <points>, trade by flip the diamond" from
                normal diamonds. */
             /* We do NOT compress to a 2x2 -- doing so might permit people to
                work with each other across the set when they shouldn't, as in
                "heads pass the ocean; heads recycle while the sides star thru". */
-            ss->kind = s2x4;
-            ss->rotation++;
-            (void) copy_rot(ss, 7, ss, 0, 033);         /* careful -- order is important */
-            (void) copy_rot(ss, 3, ss, 4, 033);
-            (void) copy_rot(ss, 0, ss, 1, 033);
-            (void) copy_rot(ss, 4, ss, 5, 033);
-            clear_person(ss, 1);
-            clear_person(ss, 5);
-            canonicalize_rotation(ss);
+            compress_setup(&comp_qtag_2x4_stuff, ss);
+         }
+      }
+      else if (ss->kind == s_dhrglass) {
+         if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+            compress_setup(&comp_dhrg_2x4_stuff, ss);
          }
       }
       else if (ss->kind == sdmd) {
@@ -1181,6 +1153,26 @@ In any case, let's try it without this.
          else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1))
             ss->kind = s2x6;     /* That's all! */
       }
+      else if (ss->kind == sbighrgl) {
+         /* If only the center diamond is present, turn it into a 3dmd.  If only the "wings" are
+            present, turn it into a 2x6. */
+         if (!(   ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1 |
+                  ss->people[6].id1 | ss->people[7].id1 | ss->people[10].id1 | ss->people[11].id1))
+            compress_setup(&exp_3dmd_bighrgl_stuff, ss);
+         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1))
+            ss->kind = s2x6;     /* That's all! */
+      }
+
+      else if (ss->kind == sbigbone) {
+         /* If only the "wings" are present, turn it into a 2x6. */
+         if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1))
+            ss->kind = s2x6;     /* That's all! */
+      }
+      else if (ss->kind == sbigdhrgl) {
+         /* If only the "wings" are present, turn it into a 2x6. */
+         if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1))
+            ss->kind = s2x6;     /* That's all! */
+      }
       else if (ss->kind == s3x1dmd && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
          if (!(ss->people[3].id1 | ss->people[7].id1))
             compress_setup(&exp_1x2_3x1d_stuff, ss);
@@ -1206,7 +1198,6 @@ In any case, let's try it without this.
 extern void toplevelmove(void)
 {
    int i;
-   setup new_setup;
 
    setup starting_setup = history[history_ptr].state;
    configuration *newhist = &history[history_ptr+1];
@@ -1356,22 +1347,33 @@ extern void toplevelmove(void)
    starting_setup.cmd.callspec = NULLCALLSPEC;
    starting_setup.cmd.cmd_final_flags.final = 0;
    starting_setup.cmd.cmd_final_flags.herit = 0;
-   move(&starting_setup, FALSE, &new_setup);
+   move(&starting_setup, FALSE, &newhist->state);
 
-   /* Remove outboard phantoms from the resulting setup. */
-
-   if (new_setup.kind == s1p5x8)
+   if (newhist->state.kind == s1p5x8)
       fail("Can't go into a 50% offset 1x8.");
-   else if (new_setup.kind == s_dead_concentric) {
-      new_setup.kind = new_setup.inner.skind;
-      new_setup.rotation = new_setup.inner.srotation;
+   else if (newhist->state.kind == s_dead_concentric) {
+      newhist->state.kind = newhist->state.inner.skind;
+      newhist->state.rotation = newhist->state.inner.srotation;
    }
 
-   normalize_setup(&new_setup, simple_normalize);
-   for (i=0; i<MAX_PEOPLE; i++) new_setup.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
-   newhist->state = new_setup;
    /* Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here. */
    newhist->state.result_flags |= starting_setup.result_flags &
          (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
+}
+
+
+/* Do the extra things that a call requires, that are not required when only testing for legality. */
+
+extern void finish_toplevelmove(void)
+{
+   int i;
+
+   setup starting_setup = history[history_ptr].state;
+   configuration *newhist = &history[history_ptr+1];
+
+   /* Remove outboard phantoms from the resulting setup. */
+
+   normalize_setup(&newhist->state, simple_normalize);
+   for (i=0; i<MAX_PEOPLE; i++) newhist->state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
    newhist->resolve_flag = resolve_p(&newhist->state);
 }

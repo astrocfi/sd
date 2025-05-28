@@ -54,7 +54,7 @@ typedef struct {
 
 Private tm_thing maps_isearch_twosome[] = {
 
-/*         map1                              map2                map3  map4   ilatmask olatmask    limit rot            insetup outsetup            old name */
+/*         map1                              map2                map3  map4   ilatmask olatmask    limit rot            insetup outsetup */
    {{7, 6, 4, 5},                   {0, 1, 3, 2},                 {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
    {{0, 2, 5, 7},                   {1, 3, 4, 6},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0},                   {3, 4, 6, 1},                 {0}, {0},      0,     0xFF,         4, 1,  0,  0, 0,  s2x2,  s2x4},
@@ -75,9 +75,24 @@ Private tm_thing maps_isearch_twosome[] = {
    {{7, 22, 15, 20, 18, 11, 2, 9},  {6, 23, 14, 21, 19, 10, 3, 8},{0}, {0},      0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
    {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17},
                      {0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},  {0}, {0},      0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
+   /* This is for everyone as couples in a 3x4, making virtual columns of 6. */
    {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s2x3,  s3x4},
+   /* This is for various people as couples in a 1/4 tag, making virtual columns of 6. */
+   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0xCC,         6, 1,  0,  0, 0,  s2x3,  s_qtag},
+
+   /* There is an issue involving the order of the two pairs of items that follow.  In the order shown, (3x4 matrix stuff before c1phan),
+      the program will opt for a 3x4 if we say (normal columns; centers trail off) centers are as couples, circulate.  In the other
+      order, it would opt for C1 phantoms.  We believe that having them arranged in 3 definite lines, from which, for example, we
+      could have the very center 2 trade, is better. */
+
+   /* Next two are for various people as couples in a 3x4 matrix, making virtual columns of 6. */
    {{2, 5, 7, 8, 11, 0},            {-1, -1, 6, -1, -1, 1},       {0}, {0},      0,   0x00C3,         6, 1,  0,  0, 0,  s2x3,  s3x4},
    {{2, 5, 7, 9, 11, 1},            {3, -1, -1, 8, -1, -1},       {0}, {0},      0,   0x030C,         6, 1,  0,  0, 0,  s2x3,  s3x4},
+
+   /* Next two are for various people as couples in a C1 phantom, making virtual columns of 6. */
+   {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
+   {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
+
    {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
    {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22},
                      {1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23}, {0}, {0}, 0x555555, 0xFFFFFF,      12, 0,  0,  0, 0,  s3x4,  s3x8},
@@ -98,23 +113,13 @@ Private tm_thing maps_isearch_twosome[] = {
    /* Next two are for certain center column people in tandem in a 1/4 tag, making a virtual short6. */
    {{3, 2, 4, 5, 6, 0},             {1, -1, -1, 7, -1, -1},       {0}, {0},  0x041,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
    {{1, 2, 4, 5, 6, 7},             {-1, -1, 3, -1, -1, 0},       {0}, {0},  0x410,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
-
-
-
-/* new */
    /* Next two are for certain center column people in tandem in a spindle, making a virtual short6. */
    {{2, 3, 5, 6, 7, 0},             {-1, -1, 4, -1, -1, 1},       {0}, {0},      0,     0x33,         6, 1,  0,  0, 0,  s_short6, s_spindle},
    {{1, 3, 4, 6, 7, 0},             {2, -1, -1, 5, -1, -1},       {0}, {0},      0,     0x66,         6, 1,  0,  0, 0,  s_short6, s_spindle},
-
-
    /* Next three are for various people in tandem in columns of 8, making virtual columns of 6. */
    {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0x66,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s2x3,  s2x4},
-   /* Next three are for various people as couples in a C1 phantom or 1/4 tag, making virtual columns of 6. */
-   {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
-   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0xCC,         6, 1,  0,  0, 0,  s2x3,  s_qtag},
-   {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
    /* Next three are for various people in tandem in a rigger or PTP diamonds, making a virtual line of 6. */
    {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_rigger},
    {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_ptpd},
@@ -133,6 +138,11 @@ Private tm_thing maps_isearch_twosome[] = {
 
    {{15, 3, 5, 9},                  {13, 1, 7, 11},               {0}, {0},   0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* These do C1-phantom-like stuff from fudgy 4x4 */
    {{10, 3, 7, 6},                  {15, 14, 2, 11},              {0}, {0},   0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* They must follow the pair just above. */
+
+/* These two are new */
+   {{11, 2, 7, 9},                  {1, 3, 5, 8},                 {0}, {0},   0x44,    01414,         4, 0,  0,  0, 0,  s2x2,  s3x4},         /* These do C1-phantom-like stuff from fudgy 3x4 */
+   {{0, 5, 7, 8},                   {1, 2, 6, 11},                {0}, {0},   0x11,    00303,         4, 0,  0,  0, 0,  s2x2,  s3x4},
+
    {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0xCC,         6, 1,  0,  0, 0,  s_short6, s_rigger},
    {{6, 0, 3, 5},                   {7, 1, 2, 4},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
    {{6, 5, 3, 4},                   {7, 0, 2, 1},                 {0}, {0},   0x11,     0xCC,         4, 0,  0,  0, 0,  s1x4,  s_rigger},     /* must be after "2x4_4" */
@@ -249,6 +259,7 @@ Private tm_thing maps_isearch_tglsome[] = {
    {{0, 1, 4, 5},     {7, -1, 3, -1},   {6, -1, 2, -1},   {0},                0x31,     0xDD,         4, 0,  0,  0, 0,  sdmd,  s_spindle},
    {{5, 3, 1, 7},     {6, -1, 2, -1},   {0, -1, 4, -1},   {0},                0x13,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_dhrglass},
    {{6, 0, 2, 4},     {-1, 3, -1, 7},   {-1, 1, -1, 5},   {0},                0x08,        0,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
+   {{0, 3, 4, 7},     {6, -1, 2, -1},   {5, -1, 1, -1},   {0},                0x31,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
 
    {{0, 3, 4, 7},     {-1, 2, -1, 6},   {-1, 1, -1, 5},   {0},                0x80,        0,         4, 0,  0,  0, 0,  sdmd,  s_galaxy},
    {{2, 5, 6, 1},     {-1, 4, -1, 0},   {-1, 3, -1, 7},   {0},                0x08,     0xBB,         4, 1,  0,  0, 0,  sdmd,  s_galaxy},
@@ -301,6 +312,12 @@ siamese_item siamese_table[] = {
    {s4x4,        0x0000CCCCUL, 0x8484UL, warn__none},
    {s4x4,        0xAAAA0000UL, 0xA0A0UL, warn__none},
    {s4x4,        0xCCCC0000UL, 0x4848UL, warn__none},
+
+   {s3x4,        0x09E70000UL, 0x0924UL, warn__none},
+   {s3x4,        0x000009E7UL, 0x00C3UL, warn__none},
+   {s3x4,        0x0BAE0000UL, 0x08A2UL, warn__none},
+   {s3x4,        0x00000BAEUL, 0x030CUL, warn__none},
+
    {s_qtag,      0x003300CCUL, 0xCCUL,   warn__ctrscpls_endstand},
    {s_qtag,      0x00CC0033UL, 0x33UL,   warn__ctrstand_endscpls},
    {s4dmd,       0x0F0FF0F0UL, 0xF0F0UL, warn__ctrscpls_endstand},
@@ -991,6 +1008,10 @@ extern void tandem_couples_move(
       else if (ss->cmd.cmd_assume.assumption == cr_1fl_only) {
          if (ss->kind == s1x4 || ss->kind == s2x4)
             tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_couples_only;
+      }
+      else if (ss->cmd.cmd_assume.assumption == cr_2fl_only) {
+         if (ss->kind == s1x4 || ss->kind == s2x4)
+            tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_wave_only;
       }
    }
 

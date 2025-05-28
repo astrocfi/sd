@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.88"
-#define TIME_STAMP "wba@apollo.hp.com  29 Jun 97 $"
+#define VERSION_STRING "31.89"
+#define TIME_STAMP "wba@apollo.hp.com  2 Aug 97 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -976,22 +976,6 @@ extern long_boolean query_for_call(void)
             nowarn_mode = !nowarn_mode;
             goto check_menu;
          }
-         else if (uims_menu_index == (int) command_toggle_singer) {
-            if (singing_call_mode != 0)
-               singing_call_mode = 0;    /* Turn it off. */
-            else
-               singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
-
-            goto check_menu;
-         }
-         else if (uims_menu_index == (int) command_toggle_singer_backward) {
-            if (singing_call_mode != 0)
-               singing_call_mode = 0;    /* Turn it off. */
-            else
-               singing_call_mode = 2;
-
-            goto check_menu;
-         }
          else if (uims_menu_index == command_refresh) {
              written_history_items = -1; /* suppress optimized display update */
              error_flag = old_error_flag; /* want to see error messages, too */
@@ -1352,6 +1336,19 @@ Private long_boolean write_sequence_to_file(void)
 
    newline();
 
+   if (!sequence_is_resolved()) {
+      writestuff("             NOT RESOLVED");
+      newline();
+   }
+
+   if (singing_call_mode != 0) {
+      writestuff(
+         (singing_call_mode == 2) ?
+         "             Singing call reverse progression" :
+         "             Singing call progression");
+      newline();
+   }
+
    /* Write header comment, if it exists. */
 
    if (header_comment[0]) {
@@ -1608,6 +1605,18 @@ void main(int argc, char *argv[])
       case start_select_toggle_nowarn_mode:
          nowarn_mode = !nowarn_mode;
          goto new_sequence;
+      case start_select_toggle_singer:
+         if (singing_call_mode != 0)
+            singing_call_mode = 0;    /* Turn it off. */
+         else
+            singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
+         goto new_sequence;
+      case start_select_toggle_singer_backward:
+         if (singing_call_mode != 0)
+            singing_call_mode = 0;    /* Turn it off. */
+         else
+            singing_call_mode = 2;
+         goto new_sequence;
       case start_select_change_outfile:
          {
             char newfile_string[MAX_FILENAME_LENGTH];
@@ -1708,6 +1717,7 @@ void main(int argc, char *argv[])
          above, reset history_ptr, and go to start_cycle with the error message displayed. */
 
       toplevelmove();
+      finish_toplevelmove();
       
       /* Call successfully completed and has been stored in history. */
       
@@ -1867,8 +1877,10 @@ void main(int argc, char *argv[])
          case command_getout:
             /* Check that it is really resolved. */
 
-            if (!sequence_is_resolved())
-               specialfail("This sequence is not resolved.");
+            if (!sequence_is_resolved()) {
+               if (uims_do_write_anyway_popup() != POPUP_ACCEPT) specialfail("This sequence is not resolved.");
+            }
+
             if (!write_sequence_to_file())
                goto start_cycle; /* user cancelled action */
             goto new_sequence;

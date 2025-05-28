@@ -493,6 +493,8 @@ extern void triangle_move(
                case s_qtag:
                case s_spindle:
                case s_bone:
+               case s_hrglass:
+               case s_dhrglass:
                   schema = schema_concentric_2_6;
                   break;
                default:

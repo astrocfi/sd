@@ -34,15 +34,17 @@ typedef struct glozk {
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    callspec_block *call_ptr;
    concept_descriptor *concept_ptr;
-   struct glozk *next;            /* next concept, or, if this is end mark, points to substitution list */
-   struct glozk *gc_ptr;          /* used for reclaiming dead blocks */
+   struct glozk *next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
+   struct glozk *secondary_subcall;     /* points to substitution list for secondary subcall */
+   struct glozk *gc_ptr;                /* used for reclaiming dead blocks */
 } modifier_block;
 
 typedef struct filch {
    long_boolean valid;       /* set to TRUE if a match was found */
    long_boolean exact;       /* set to TRUE if an exact match was found */
    modifier_block match;
-   Const struct filch *next;
+   Const struct filch *real_next_subcall;
+   Const struct filch *real_secondary_subcall;
    int yield_depth;          /* if nonzero, this yields by that amount */
 } match_result;
 

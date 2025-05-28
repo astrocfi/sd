@@ -156,6 +156,10 @@ int begin_sizes[] = {
    12,         /* b_pbigx */
    12,         /* b_bigrig */
    12,         /* b_pbigrig */
+   12,         /* b_bighrgl */
+   12,         /* b_pbighrgl */
+   12,         /* b_bigdhrgl */
+   12,         /* b_pbigdhrgl */
    12,         /* b_bigbone */
    12,         /* b_pbigbone */
    12,         /* b_bigdmd */

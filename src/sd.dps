@@ -130,6 +130,14 @@ APPLICATION_INTERFACE sd_dialog
       COMP => <RETURN> ;
       END
 
+   write_confirm_select_task := NULL:
+      COMP => <RETURN> ;
+      END
+
+   write_confirm_abort_task := NULL:
+      COMP => <RETURN> ;
+      END
+
    abort_confirm_select_task := NULL:
       COMP => <RETURN> ;
       END
@@ -192,6 +200,10 @@ APPLICATION_INTERFACE sd_dialog
          start$toggle_ignore
          start$toggle_retain
          start$toggle_nowarn
+
+         start$toggle_singer
+         start$toggle_revsinger
+
          start$change_outfile
          start$change_header_comment)
       END
@@ -406,8 +418,8 @@ APPLICATION_INTERFACE sd_dialog
    misc_concepts_enabler := task_group: END
    misc_concepts_disabler := task_group: END
 
+   write_confirm_enabler := task_group: END
    abort_confirm_enabler := task_group: END
-
    search_enabler := task_group: END
 
 
@@ -535,8 +547,8 @@ USER_INTERFACE sd_dialog
    misc_concepts_enabler activate => <misc_concepts_popup show>
    misc_concepts_disabler activate => <misc_concepts_popup popdown>
 
+   write_confirm_enabler activate => <write_confirm_popup show>
    abort_confirm_enabler activate => <abort_confirm_popup show>
-
    search_enabler activate => <search_stuff be_current_child>
 
    whole_call_show activate => <whole_call_menu be_current_child>
@@ -836,7 +848,9 @@ USER_INTERFACE sd_dialog
                 "Toggle active phantoms"    => start$toggle_act
                 "Toggle ignoreblanks"       => start$toggle_ignore
                 "Toggle retain after error" => start$toggle_retain
-                "Toggle nowarn mode" => start$toggle_nowarn
+                "Toggle nowarn mode"        => start$toggle_nowarn
+                "Toggle singing call"       => start$toggle_singer
+                "Toggle reverse singing call" => start$toggle_revsinger
                 "Change output file"        => start$change_outfile
                 "Change title"              => start$change_header_comment) ;
             HELP_TEXT = "You are about to start a sequence."
@@ -1330,6 +1344,25 @@ USER_INTERFACE sd_dialog
                      TASK = task$misc_concept_menu_3 ;
                      SIZE = ((5 47) (47 47) (100 47)) chars ;
                      END )
+               END )
+         END
+      END
+
+   write_confirm_popup := POPUP:
+      [m1] => <write_confirm_popup popdown; write_confirm_abort_task comp> ;
+      leave => <write_confirm_popup popdown; write_confirm_abort_task comp> ;
+      HELP_TEXT = "The sequence you are working on is not resolved."
+                 &"Click on WRITE IT ANYWAY to write it to disk and start"
+                 &"a new sequence."
+                 &"Move the mouse away to exit this popup and continue the sequence." ;
+      CONTENTS = NICE_ROW:
+         ORIENTATION = vertical ;
+         CONTENTS = (
+            NICE_HEADER: TEXT = "This sequence is not resolved."; END
+            NICE_ICON:
+               [m1] => <write_confirm_popup popdown; write_confirm_select_task comp> ;
+               TASK = write_confirm_select_task ;
+               STRING = "WRITE IT ANYWAY?" ;
                END )
          END
       END

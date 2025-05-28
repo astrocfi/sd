@@ -757,6 +757,7 @@ typedef enum {
    concept_do_phantom_diamonds,
    concept_do_phantom_1x6,
    concept_do_phantom_1x8,
+   concept_do_phantom_triple_1x8,
    concept_do_phantom_2x4,
    concept_do_phantom_2x3,
    concept_divided_2x4,
@@ -770,6 +771,7 @@ typedef enum {
    concept_triple_lines,
    concept_triple_lines_tog,
    concept_triple_lines_tog_std,
+   concept_triple_1x8_tog,
    concept_quad_lines,
    concept_quad_lines_tog,
    concept_quad_lines_tog_std,
@@ -781,12 +783,8 @@ typedef enum {
    concept_triple_diamonds_together,
    concept_quad_diamonds,
    concept_quad_diamonds_together,
-   concept_in_out_line_3,
-   concept_in_out_line_4,
-   concept_in_out_box_3,
-   concept_in_out_box_4,
-   concept_in_out_dmd_3,
-   concept_in_out_dmd_4,
+   concept_in_out_std,
+   concept_in_out_nostd,
    concept_triple_diag,
    concept_triple_diag_together,
    concept_triple_twin,
@@ -905,6 +903,15 @@ typedef enum {
    selector_ctr_1x6,
    selector_center4,
    selector_outerpairs,
+#ifdef TGL_SELECTORS
+   /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
+   selector_wvbasetgl,
+   selector_tndbasetgl,
+   selector_insidetgl,
+   selector_outsidetgl,
+   selector_inpttgl,
+   selector_outpttgl,
+#endif
    selector_headliners,
    selector_sideliners,
    selector_all,
@@ -1183,6 +1190,7 @@ typedef enum {
    warn__did_not_interact,
    warn__opt_for_normal_cast,
    warn__opt_for_normal_hinge,
+   warn__like_linear_action,
    warn__split_1x6,
    warn__colocated_once_rem,
    warn_bad_collision,
@@ -1276,6 +1284,8 @@ typedef enum {
    start_select_toggle_ignoreblank,
    start_select_toggle_retain,
    start_select_toggle_nowarn_mode,
+   start_select_toggle_singer,
+   start_select_toggle_singer_backward,
    start_select_change_outfile,
    start_select_change_header_comment
 } start_select_kind;
@@ -1307,8 +1317,6 @@ typedef enum {
    command_toggle_ignoreblanks,
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
-   command_toggle_singer,
-   command_toggle_singer_backward,
    command_refresh,
    command_resolve,            /* Search commands start here */
    command_normalize,
@@ -1877,7 +1885,13 @@ extern Cstring filename_strings[];                                  /* in SDTABL
 extern dance_level level_threshholds[];                             /* in SDTABLES */
 extern dance_level higher_acceptable_level[];                       /* in SDTABLES */
 extern Cstring menu_names[];                                        /* in SDTABLES */
+extern id_bit_table id_bit_table_bigdmd_wings[];                    /* in SDTABLES */
+extern id_bit_table id_bit_table_bigbone_wings[];                   /* in SDTABLES */
+extern id_bit_table id_bit_table_bighrgl_wings[];                   /* in SDTABLES */
+extern id_bit_table id_bit_table_bigdhrgl_wings[];                  /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
+extern id_bit_table id_bit_table_3dmd_ctr1x6[];                     /* in SDTABLES */
+extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABLES */
 extern cm_thing map2x4_2x4;                                         /* in SDTABLES */
 extern cm_thing map2x4_2x4v;                                        /* in SDTABLES */
 extern cm_thing mapgnd1x2_1x2;                                      /* in SDTABLES */
@@ -1948,6 +1962,8 @@ extern map_thing map_qtag_2x3;                                      /* in SDTABL
 extern map_thing map_2x3_rmvr;                                      /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
+extern map_thing map_dhrgl1;                                        /* in SDTABLES */
+extern map_thing map_dhrgl2;                                        /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
 extern map_thing map_inner_box;                                     /* in SDTABLES */
@@ -2108,6 +2124,7 @@ extern int uims_do_outfile_popup(char dest[]);
 extern int uims_do_header_popup(char dest[]);
 extern int uims_do_comment_popup(char dest[]);
 extern int uims_do_getout_popup(char dest[]);
+extern int uims_do_write_anyway_popup(void);
 extern int uims_do_abort_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
@@ -2245,6 +2262,8 @@ extern void do_call_in_series(
    long_boolean roll_transparent,
    long_boolean normalize,
    long_boolean qtfudged);
+
+extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *result);
 
 extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int total);
 
@@ -2421,3 +2440,5 @@ extern void do_matrix_expansion(
 extern void normalize_setup(setup *ss, normalize_action action);
 
 extern void toplevelmove(void);
+
+extern void finish_toplevelmove(void);

@@ -59,7 +59,7 @@ typedef struct pat2_blockstruct {
    Cstring car;
    concept_descriptor *special_concept;
    match_result *folks_to_restore;
-   struct pat2_blockstruct *next;
+   struct pat2_blockstruct *cdr;
    long_boolean demand_a_call;
 } pat2_block;
 
@@ -97,6 +97,8 @@ static Cstring startup_commands[] = {
    "toggle ignoreblanks",
    "toggle retain after error",
    "toggle nowarn mode",
+   "toggle singing call",
+   "toggle reverse singing call",
    "change output file",
    "change title",
    (Cstring) 0
@@ -352,7 +354,7 @@ Private long_boolean verify_call(void)
          else break;   /* Huh? */
 
          static_ss.result.match.call_conc_options = save_stuff;
-         anythings = anythings->next;
+         anythings = anythings->next_conc_or_subcall;
       }
 
       parse_state.call_list_to_use = savecl;         /* deposit_concept screwed it up */
@@ -441,19 +443,19 @@ static void record_a_match(void)
                   static_ss.exact_count == 0 || 
                   current_result->yield_depth <= old_yield))) {
       Const match_result *outbar;
-      modifier_block **mod_tail = &static_ss.result.match.next;
+      modifier_block **mod_tail = &static_ss.result.match.next_conc_or_subcall;
 
       static_ss.result = everyones_real_result;
       static_ss.lowest_yield_depth = current_result->yield_depth;
 
       outbar = &static_ss.result;
 
-      while (outbar->next) {
+      while (outbar->real_next_subcall) {
          modifier_block *out;
 
          /* We need to copy the modifiers to reasonably stable storage. */
 
-         outbar = outbar->next;
+         outbar = outbar->real_next_subcall;
 
          if (modifier_inactive_list) {
             out = modifier_inactive_list;
@@ -463,11 +465,11 @@ static void record_a_match(void)
             out = (modifier_block *) get_mem(sizeof(modifier_block));
 
          *out = outbar->match;
-         out->next = (modifier_block *) 0;
+         out->next_conc_or_subcall = (modifier_block *) 0;
          out->gc_ptr = modifier_active_list;
          modifier_active_list = out;
          *mod_tail = out;
-         mod_tail = &out->next;
+         mod_tail = &out->next_conc_or_subcall;
       }
    }
 
@@ -529,7 +531,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             }
             pat1 = pat2->car;
             pat2_concept = pat2->special_concept;
-            pat2 = pat2->next;
+            pat2 = pat2->cdr;
             continue;
          }
       }
@@ -689,10 +691,10 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
    pat2_block p2b;
    match_result *saved_folksptr = current_result;
 
-   current_result->next = saved_result_p;
+   current_result->real_next_subcall = saved_result_p;
    p2b.folks_to_restore = (match_result *) 0;
    p2b.demand_a_call = FALSE;
-   p2b.next = pat2;
+   p2b.cdr = pat2;
 
    /* We force any call invoked under a modifier to yield if it is ambiguous.  This way,
       if the user types "cross roll", preference will be given to the call "cross roll",
@@ -701,7 +703,8 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
       an ambiguous call/concept utterance.  For example, we do not expect anyone to
       invent a call "and turn" that can be used with the "cross" modifier. */
    saved_result_p->yield_depth++;
-   saved_result_p->next = (match_result *) 0;
+   saved_result_p->real_next_subcall = (match_result *) 0;
+   saved_result_p->real_secondary_subcall = (match_result *) 0;
 
    /* scan concepts */
 
@@ -743,7 +746,8 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
    }
 
    current_result = saved_folksptr;
-   current_result->next = (match_result *) 0;
+   current_result->real_next_subcall = (match_result *) 0;
+   current_result->real_secondary_subcall = (match_result *) 0;
 }
 
 
@@ -771,7 +775,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
    p2b.special_concept = special;
    p2b.folks_to_restore = (match_result *) 0;
    p2b.demand_a_call = FALSE;
-   p2b.next = pat2;
+   p2b.cdr = pat2;
 
    /* if we are just listing the matching commands, there
       is no point in expanding wildcards that are past the
@@ -802,7 +806,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
                p3b.special_concept = (concept_descriptor *) 0;
                p3b.folks_to_restore = current_result;
                p3b.demand_a_call = TRUE;
-               p3b.next = &p2b;
+               p3b.cdr = &p2b;
                scan_concepts_and_calls(user, "[", &p3b, &saved_result, patxi);
                return;
             }
@@ -1041,7 +1045,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
       current_result->match.kind = ui_concept_select;
       current_result->match.call_conc_options = null_options;
       current_result->match.concept_ptr = &concept_descriptor_table[concidx];
-      current_result->next = &saved_result;
+      current_result->real_next_subcall = &saved_result;
       p2b.car = pat;
       current_result = &saved_result;
       match_suffix_2(user, pattern, &p2b, patxi);
@@ -1095,7 +1099,7 @@ static void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
    p2b.special_concept = this_is_grand;
    p2b.folks_to_restore = (match_result *) 0;
    p2b.demand_a_call = FALSE;
-   p2b.next = (pat2_block *) 0;
+   p2b.cdr = (pat2_block *) 0;
 
    match_suffix_2(static_ss.full_input, "", &p2b, 0);
 }
@@ -1110,7 +1114,8 @@ static void search_menu(uims_reply kind)
    everyones_real_result.exact = FALSE;
    everyones_real_result.match.kind = kind;
    everyones_real_result.match.call_conc_options = null_options;
-   everyones_real_result.next = (match_result *) 0;
+   everyones_real_result.real_next_subcall = (match_result *) 0;
+   everyones_real_result.real_secondary_subcall = (match_result *) 0;
    everyones_real_result.yield_depth = 0;
 
    current_result = &everyones_real_result;

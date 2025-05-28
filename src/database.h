@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 94
+#define DATABASE_FORMAT_VERSION 98
 
 
 
@@ -31,12 +31,13 @@
 #define BASE_CALL_ENDS_SHADOW 3
 #define BASE_CALL_CHREACT_1   4
 #define BASE_CALL_MAKEPASS_1  5
+#define BASE_CALL_CIRCULATE   6
 /* The next 4 must be consecutive. */
-#define BASE_CALL_TAGGER0     6
-#define BASE_CALL_TAGGER1     7
-#define BASE_CALL_TAGGER2     8
-#define BASE_CALL_TAGGER3     9
-#define BASE_CALL_CIRCCER    10
+#define BASE_CALL_TAGGER0     7
+#define BASE_CALL_TAGGER1     8
+#define BASE_CALL_TAGGER2     9
+#define BASE_CALL_TAGGER3    10
+#define BASE_CALL_CIRCCER    11
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -221,6 +222,8 @@ typedef enum {
    sbigh,
    sbigx,
    sbigrig,
+   sbighrgl,
+   sbigdhrgl,
    sbigbone,
    sbigdmd,
    s_dead_concentric,
@@ -328,6 +331,10 @@ typedef enum {
    b_pbigx,
    b_bigrig,
    b_pbigrig,
+   b_bighrgl,
+   b_pbighrgl,
+   b_bigdhrgl,
+   b_pbigdhrgl,
    b_bigbone,
    b_pbigbone,
    b_bigdmd,
@@ -335,7 +342,7 @@ typedef enum {
 } begin_kind;
 
 /* These bits are used in the "callarray_flags" field of a "callarray".
-   There is room for 12 of them. */
+   There is room for 13 of them. */
 
 /* This one must be 1!!!! */
 #define CAF__ROT                    0x1
@@ -358,6 +365,7 @@ typedef enum {
 #define CAF__LATERAL_TO_SELECTEES 0x200
 #define CAF__VACATE_CENTER        0x400
 #define CAF__OTHER_ELONGATE       0x800
+#define CAF__SPLIT_TO_BOX        0x1000
 
 /* These qualifiers are "overloaded" -- their meaning depends on the starting setup. */
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
@@ -365,18 +373,23 @@ typedef enum {
 typedef enum {
    sq_none,                /* See db_doc.txt for explanation of these. */
    sq_wave_only,
+   sq_rwave_only,
+   sq_lwave_only,
    sq_not_wave_only,
    sq_all_facing_same,
    sq_1fl_only,
    sq_2fl_only,
+   sq_r2fl_only,
+   sq_l2fl_only,
+   sq_live_2fl_only,
+   sq_live_r2fl_only,
+   sq_live_l2fl_only,
    sq_couples_only,
    sq_3x3couples_only,
    sq_4x4couples_only,
    sq_magic_only,
    sq_in_or_out,
    sq_miniwaves,
-   sq_rwave_only,
-   sq_lwave_only,
    sq_1_4_tag,
    sq_3_4_tag,
    sq_dmd_same_pt,
@@ -394,6 +407,8 @@ typedef enum {
    sq_trade_by,
    sq_facing_in,
    sq_facing_out,
+   sq_all_ctrs_rh,
+   sq_all_ctrs_lh,
    sq_dmd_ctrs_rh,
    sq_dmd_ctrs_lh,
    sq_dmd_ctrs_1f,
@@ -427,6 +442,7 @@ typedef enum {
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
+   cr_live_2fl_only,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
    cr_leads_only,

@@ -18,6 +18,7 @@
    divide_for_magic
    do_simple_split
    do_call_in_series
+   anchor_someone_and_move
    get_fraction_info
    fill_active_phantoms_and_move
    move_perhaps_with_active_phantoms
@@ -28,7 +29,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
-extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *result);
 
 
 static long_boolean debug_popup = FALSE;   /* Helps debug popups under Domain/OS. */
@@ -1056,9 +1056,6 @@ Private void matrixmove(
    int i, nump, alldelta;
    uint32 flags = callspec->stuff.matrix.flags;
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
-      fail("Can't split the setup.");
-
    alldelta = 0;
 
    nump = start_matrix_call(ss, matrix_info, flags, &people);
@@ -1081,8 +1078,16 @@ Private void matrixmove(
       }
    }
 
-   if ((alldelta != 0) && (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED))
-      fail("This call not allowed in distorted or virtual setup.");
+   if (alldelta != 0) {
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED)
+         fail("This call not allowed in distorted or virtual setup.");
+
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
+         fail("Can't split the setup.");
+   }
+   else
+      /* This call split the setup in every possible way. */
+      result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
    finish_matrix_call(matrix_info, nump, &people, result);
    reinstate_rotation(ss, result);
@@ -2954,12 +2959,13 @@ that probably need to be put in. */
       imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
 
    /* We of course don't allow "mystic" or "snag" for things that are
-      *CROSS* concentrically defined. */
+      *CROSS* concentrically defined.  That will be taken care of later, in concentric_move. */
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
       switch (the_schema) {
          case schema_sequential:
          case schema_concentric:
+         case schema_concentric_2_6:
          case schema_conc_o:
          case schema_single_concentric:
          case schema_single_concentric_together:
@@ -3216,9 +3222,16 @@ that probably need to be put in. */
       cause splitting to take place. */
 
    if (the_schema == schema_split_sequential) {
-      if (ss->kind == s3x4 && !(ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3)) {
+      if (setup_attrs[ss->kind].setup_limits == 7) {
+         if (!(ss->cmd.cmd_final_flags.herit & (INHERITFLAG_3X3|INHERITFLAG_4X4)))
+            ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+      }
+      else if ((setup_attrs[ss->kind].setup_limits == 11 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3)) ||
+               (setup_attrs[ss->kind].setup_limits == 15 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_4X4)))
+         ;    /* No action. */
+      else if (setup_attrs[ss->kind].setup_limits != 3) {
 
-         /* If this is a 3x4 inhabited in boxes, we allow the splitting into those boxes. */
+         /* If this is a 3x4 or 4x4 inhabited in boxes, we allow the splitting into those boxes. */
 
          int i, j;
          uint32 mask = 0;
@@ -3227,20 +3240,21 @@ that probably need to be put in. */
             if (ss->people[i].id1) mask |= j;
          }
 
-         if (mask == 0xF3C || mask == 0xCF3)
-            ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+         if (ss->kind == s3x4) {
+            if (mask == 0xF3C || mask == 0xCF3)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+            else
+               fail("Can't split this setup.");
+         }
+         else if (ss->kind == s4x4) {
+            if (mask == 0x4B4B || mask == 0xB4B4)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+            else
+               fail("Can't split this setup.");
+         }
          else
-            fail("Can't split this setup.");
+            fail("Need a 4 or 8 person setup for this.");
       }
-      else if (setup_attrs[ss->kind].setup_limits == 7) {
-         if (!(ss->cmd.cmd_final_flags.herit & (INHERITFLAG_3X3|INHERITFLAG_4X4)))
-            ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
-      }
-      else if ((setup_attrs[ss->kind].setup_limits == 11 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3)) ||
-               (setup_attrs[ss->kind].setup_limits == 15 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_4X4)))
-         ;    /* No action. */
-      else if (setup_attrs[ss->kind].setup_limits != 3)
-         fail("Need a 4 or 8 person setup for this.");
    }
 
    /* If the split concept is still present, do it. */
@@ -3510,10 +3524,10 @@ that probably need to be put in. */
 
                      /* We need to orient the setup so that it is vertical with respect
                         to the way we want to pick out the outer 1x4's. */
-   
+
                      uint32 t1 = ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
                      uint32 t2 = ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1;
-   
+
                      if (t1 && !t2)      rot = 1;              /* It has to be left-to-right. */
                      else if (t2 && !t1) ;                     /* It has to be top-to-bottom. */
                      else if (t2 && t1) fail("Can't pick out outside lines.");
@@ -3526,7 +3540,7 @@ that probably need to be put in. */
                         /* Otherwise, it either needs a vertical orientaion, or only the center 2x2 is occupied,
                            in which case it doesn't matter. */
                      }
-   
+
                      ss->rotation += rot;
                      canonicalize_rotation(ss);
                   }

@@ -288,7 +288,7 @@ crosswave   |  0  |  1  |_____|  5  |  4  |
             |_____|_____|_____|_____|
 
 
-             _____ _____ _____ _____ _____ 
+             _____ _____ _____ _____ _____
             |     |     |     |     |     |
             |  0  |  1  |  2  |  3  |  4  |
             |_____|_____|_____|_____|_____|
@@ -411,7 +411,7 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
             |_____|_____|_____|     |_____|_____|_____|
                               |  7  |
                               |_____|
-                  
+
 
                             _____
                            |     |
@@ -461,9 +461,9 @@ wingedstar     |  0  |  1  |  2           6  |  5  |  4  |
                                  |     |
                                  |  7  |
                                  |_____|
-   
-   
-   
+
+
+
                                   _____             _____
                                  |     |           |     |
                                  |  3  |           |  5  |
@@ -474,9 +474,9 @@ wingedstar12   |  0  |  1  |  2           4  | 10           8  |  7  |  6  |
                                  |     |           |     |
                                  | 11  |           |  9  |
                                  |_____|           |_____|
-   
 
-   
+
+
                                   _____             _____             _____
                                  |     |           |     |           |     |
                                  |  3  |           |  7  |           | 12  |
@@ -487,10 +487,10 @@ wingedstar16   |  0  |  1  |  2           5  |  6          14  | 13          10 
                                  |     |           |     |           |     |
                                  |  4  |           | 15  |           | 11  |
                                  |_____|           |_____|           |_____|
-   
 
 
-                _____       _____       _____ 
+
+                _____       _____       _____
                |     |     |     |     |     |
                |  0  |     |  1  |     |  2  |
                |_____|_____|     |_____|_____|
@@ -500,10 +500,10 @@ barredstar     |  8  |  9           4  |  3  |
                |     |     |     |     |     |
                |  7  |     |  6  |     |  5  |
                |_____|     |_____|     |_____|
-   
-                      
-                      
-                _____       _____             _____       _____ 
+
+
+
+                _____       _____             _____       _____
                |     |     |     |           |     |     |     |
                |  0  |     |  1  |           |  2  |     |  3  |
                |_____|_____|     |_____ _____|     |_____|_____|
@@ -513,10 +513,10 @@ barredstar12   | 11  | 12          13  |  6           5  |  4  |
                |     |     |     |           |     |     |     |
                | 10  |     |  9  |           |  8  |     |  7  |
                |_____|     |_____|           |_____|     |_____|
-                      
-                      
-                      
-                _____       _____             _____             _____       _____ 
+
+
+
+                _____       _____             _____             _____       _____
                |     |     |     |           |     |           |     |     |     |
                |  0  |     |  1  |           |  2  |           |  3  |     |  4  |
                |_____|_____|     |_____ _____|     |_____ _____|     |_____|_____|
@@ -559,10 +559,10 @@ hyperglass  |  0  |  1           7  |  6  |      (4 way symmetry)
                         |_____|
 
 
-                   _____       _____       _____ 
+                   _____       _____       _____
                   |     |     |     |     |     |
                   |  0  |     |  1  |     |  2  |
-             _____|_____|_____|_____|_____|_____|_____ 
+             _____|_____|_____|_____|_____|_____|_____
             |     |     |     |     |     |     |     |
             | 17  | 18  | 19  |  6  |  5  |  4  |  3  |
 3oqtg       |_____|_____|_____|_____|_____|_____|_____|
@@ -617,19 +617,19 @@ thar        |  0  |  1           5  |  4  |      (4 way symmetry)
 
 
 
-                   _____ _____      
+                   _____ _____
                   |     |     |
                   |  0  |  1  |
-             _____|_____|_____|_____ 
+             _____|_____|_____|_____
             |     |           |     |
             |  7  |           |  2  |
 alamo       |_____|           |_____|            (4 way symmetry)
             |     |           |     |
             |  6  |           |  3  |
             |_____|_____ _____|_____|
-                  |     |     |      
-                  |  5  |  4  |      
-                  |_____|_____|      
+                  |     |     |
+                  |  5  |  4  |
+                  |_____|_____|
 
 
              _____                         _____
@@ -648,7 +648,7 @@ bigh        |_____|  4  |  5  | 11  | 10  |_____|
 
 
 
-                        
+
                                      _____
                                     |     |
                                     |  4  |
@@ -685,19 +685,6 @@ bigbone     |_____|_____|  2  |  3  |  9  |  8  |_____|_____|
             |_____|_____|                       |_____|_____|
 
 
-
-             _____                   _____
-            |     |_____ _____ _____|     |
-            |  0  |     |     |     |  4  |
-            |_____|  1  |  2  |  3  |_____|
-            |     |_____|_____|_____|     |
-d3x4        | 11  |     |     |     |  5  |
-            |_____|  9  |  8  |  7  |_____|
-            |     |_____|_____|_____|     |
-            | 10  |                 |  6  |
-            |_____|                 |_____|
-
-
                          _____
              _____ _____|     |_____ _____
             |     |     |  2  |     |     |
@@ -711,6 +698,43 @@ bigdmd                  |_____|
             |_____|_____|     |_____|_____|
                         |  8  |
                         |_____|
+
+
+
+                            _____
+                           |     |
+             _____ _____   |  2  |   _____ _____
+            |     |     |__|__ __|__|     |     |
+            |  0  |  1  |     |     |  4  |  5  |
+bighrgl     |_____|_____|  9  |  3  |_____|_____|
+            |     |     |_____|_____|     |     |
+            | 11  | 10  |  |     |  |  7  |  6  |
+            |_____|_____|  |  8  |  |_____|_____|
+                           |_____|
+
+
+
+             _____ _____       _____       _____ _____
+            |     |     |_____|     |_____|     |     |
+            |  0  |  1  |     |  2  |     |  4  |  5  |
+bigdhrgl    |_____|_____|  9  |_____|  3  |_____|_____|
+            |     |     |_____|     |_____|     |     |
+            | 11  | 10  |     |  8  |     |  7  |  6  |
+            |_____|_____|     |_____|     |_____|_____|
+
+
+
+             _____                   _____
+            |     |_____ _____ _____|     |
+            |  0  |     |     |     |  4  |
+            |_____|  1  |  2  |  3  |_____|
+            |     |_____|_____|_____|     |
+d3x4        | 11  |     |     |     |  5  |
+            |_____|  9  |  8  |  7  |_____|
+            |     |_____|_____|_____|     |
+            | 10  |                 |  6  |
+            |_____|                 |_____|
+
 
 
 
@@ -1831,6 +1855,14 @@ columns_miniwave
       person is a phantom) it issues the warning
       "If in doubt, assume a normal hinge." and returns TRUE.
 
+can_swing_left
+      applies to 1x3dmd only.  People are required to be in "normal"
+      diamond-like orientation.  That is, the center 2 must be a line
+      of 2, and the groups of 3 must be lines.  Returns TRU if the
+      person can cast 1/2 to the left, because he has a live person on
+      his left hand, and that person is facing in the opposite direction.
+      returns FALSE otherwise.
+
 1x4_wheel_and_deal
       applies to 1x4 lines only.  This implements the decision necessary
       to do a wheel and deal.  It is only as strict as necessary to resolve
@@ -2277,6 +2309,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    all_facing_same,                 Same as corresponding restriction, above.
    1fl_only,                        Same as corresponding restriction, above.
    2fl_only,                        Same as corresponding restriction, above.
+   live_2fl_only                    Same as corresponding restriction, above.
    couples_only,                    Same as corresponding restriction, above.
    3x3couples_only,                 Same as corresponding restriction, above.
    4x4couples_only,                 Same as corresponding restriction, above.
@@ -2299,6 +2332,12 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        thar - right waves
 
    left_wave,                    /* As above, but left-handed.
+
+   right_2fl                        ????
+   left_2fl                         ????
+   live_right_2fl                   ????
+   live_left_2fl                    ????
+
    1_4_tag,                      /* dmd, qtag - this is a 1/4 tag, i.e. points are looking in */
    3_4_tag,                      /* dmd, qtag - this is a 3/4 tag, i.e. points are looking out */
    dmd_same_point,               /* dmd - centers would circulate to same point */
@@ -2317,10 +2356,27 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    trade_by,                     /* 4x2/4x1/2x1 - [single] trade by */
    facing_in,                    /* 2x2 - all people are trailers, and not T-boned.  2x4 - lines in.  4x2/4x1/2x1 - [single] 8 chain.
    facing_out,                   /* 2x2 - all people are leads, and not T-boned.  2x4 - lines out.  4x2/4x1/2x1 - [single] trade by.
-   dmd_ctrs_rh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
-                                    are consistently in right-handed miniwaves; other people not checked at all */
-   dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
-                                    are consistently in left-handed miniwaves; other people not checked at all */
+
+   all_ctrs_rh,                  /* Same as "dmd_ctrs_rh", below, for now.
+   all_ctrs_lh,                  /* Same as "dmd_ctrs_lh", below, for now.
+
+   dmd_ctrs_rh,                  /* dmd, trngl, qtag, ptpd, short6, bone6, spindle, 1x4 - the centers or base (2, 4, or 6 of them)
+                                    are consistently in right-handed miniwaves; other people not checked at all.  For bone6, it checks triangle base, i.e. outsides.
+   dmd_ctrs_lh,                  /* dmd, trngl, qtag, ptpd, short6, bone6, spindle, 1x4 - the centers or base (2, 4, or 6 of them)
+                                    are consistently in left-handed miniwaves; other people not checked at all.  For bone6, it checks triangle base, i.e. outsides.
+
+                  ** We don't list trngl4 in the above two, because it doesn't obey the all-larger-setups rule, that is,
+                     it hasn't been implemented for bone and rigger.  (and how about c1phantoms?)
+                  There is another potential problem -- these are used to examine the base of individual triangles,
+                     but the bone6 and short6 versions demand consistent handedness.  We would like to have tests
+                     specifically aimed at individual triangles, even if they are unsymmetrical.  (The way "miniwaves"
+                     works -- when it tests larger setups like boxes, it passes if the boxes are inverted, because all
+                     we are asking about is the individual miniwaves.  Now this test, applied to spindles and short6's
+                     is specifically required to demand consistent handedness.  Therefore, we need additional names
+                     that check individual triangles.  Of course, if they see an unsymmetrical bone6, both the RH and
+                     LH versions will pass, so that splitting will take place.
+
+
    ctr_pts_rh,                   /* qtag, 2x1dmd, hrglass - the "points of the centers" (ends of the center
                                     line of 4 in qtag or 2x1dmd; points of the center diamond in hrglass)
                                     are in a right-handed line or diamond, from their own perspective.
@@ -2333,7 +2389,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    occupied_as_qtag              /* 3x4/4x3 - live bodies are (a subset of) a qtag */
    occupied_as_3x1tgl            /* 3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1 triangles of some sort.
                                     Symmetric only. */
-   line_ends_looking_out         /* 2x4 lines - the ends are leads */
+   line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads, and at least one center must be column-like.
    col_ends_looking_in           /* 2x4 columns - the ends are #4 */
    ripple stuff .......
    people_1_and_5_real           /* 1x8 (or any applicable setup) people #1 and #5 are real */

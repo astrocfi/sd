@@ -21,10 +21,34 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.88
-         Database version = 31.88 format = 94
+          RELEASE NOTES FOR SD VERSION 31.89
+         Database version = 31.89 format = 98
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.89 ******
+
+The program can do singing call progressions.  There are two new
+commands, available only at the start of a sequence (that is, when
+you could say "heads start"):
+
+         toggle singing call
+         toggle reverse singing call
+
+The "reverse" singing call option chooses a reverse ("right hand lady")
+progression.
+
+
+It has a much more sophisticated way of checking for
+getouts, and can see many more of them than previously.
+
+
+It has an improved understanding of how 12 matrix, 16 matrix, 3x3,
+and 4x4 interact.
+
+
+Plus several dozen minor improvements in the database, the program's
+awareness of where people are, and so on.
 
 ****** Changes as of version 31.88 ******
 
@@ -49,8 +73,8 @@ call (without the word @samp{matrix}) is completely fractionalizable.
 See the manual for details.
 
 @samp{Cover up} and @samp{percolate} can be used with the @samp{central}
-concept from some formations.  The calls @samp{cover up (centers and ends} and
-@samp{percolate (centers and ends} have been created for this purpose.
+concept from some formations.  The calls @samp{cover up (centers and ends)} and
+@samp{percolate (centers and ends)} have been created for this purpose.
 See the manual for details.
 
 The call "scoot and counter", if done from a left-handed 1/4 tag, will
