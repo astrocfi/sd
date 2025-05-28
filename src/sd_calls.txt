@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.87"
+version "38.89"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -9144,7 +9144,24 @@ call "trail and peel the deal" c4
    setup 4x2 1x8 rotate restriction peelable_box
       array [AL0N AL1N CR7S CR6S AL2N AL3N CR5S CR4S]
 
-// This call does *not* finish with an an extend.  It finishes with "centers ...
+call "_weird crossfire 1" dontshow tag weirdxfire1
+   setup 2x4 2x4 rotate qualifier live ntbone none restriction unusual alwaysfail
+      array [CR0E CR1E AL6E AL7E 0 AL5E CR2E 0]
+
+call "_weird crossfire 2" dontshow tag weirdxfire2
+   conc weirdxfire3 [] nullcall [conc_demand_columns conc_force_columns]
+
+call "_weird crossfire 3" dontshow tag weirdxfire3
+   setup 2x2 trngl4 rotate
+      array [ZM7W ZM2W ZM5W ZM0W]
+
+call "_weird crossfire 4" dontshow tag weirdxfire4
+   setup 4x1 2x2
+      array [Z0N 0 0 Z1N]
+   setup pmd dmd
+      array [Z0N ZM1N Z2N ZM3N]
+
+// This call does *not* finish with an extend.  It finishes with "centers ...
 // step straight forward".  Callerlab Plus definitions, page 2.  The ends do not
 // participate in the step forward.  Therefore, they can roll.
 call "crossfire" plus
@@ -9218,6 +9235,11 @@ call "crossfire" plus
             alternate_definition [8x8] c4
    setup 1x16 2x8 rotate restriction forbidden 4x4couples_only
       array [C0E C1E C2E C3E C4E C5E C6E C7E A15E A14E A13E A12E A11E A10E A9E A8E]
+
+   // Really weird one.
+   seq weirdxfire1 []
+   seq weirdxfire2 []
+   seq weirdxfire4 []
 
 call "cross sashay" c4a
    setup 1x4 2x2 restriction wave_only
@@ -11738,6 +11760,21 @@ call "_eight chain part 2" dontshow tag eightchain2
    setup 4x2 qtag rotate
       array [0 ZM6S 0 AL1E AL0E 0 ZM3S 0]
 
+// If use an odd number with "centers to a wave", this will get called with HALF, and it will fail.
+call "_eight chain part 1, centers to a wave" dontshow tag eightchain1_centers_to_wave
+            rear_back_from_r_wave left_means_mirror
+   simple_funny
+   setup 4x2 2x4
+      array [ZM1N 0 ZM3N 0 0 ZM4N 0 ZM6N]
+
+call "_eight chain part 2, centers to a wave" dontshow tag eightchain2_centers_to_wave
+            left_means_mirror
+   setup 4x2 2x4
+      array [0 ZM2N 0 AL4S AL3S 0 ZM5N 0]
+            alternate_definition [half] mainstream
+   setup 4x2 qtag rotate
+      array [0 ZM7W 0 AL1E AL0E 0 ZM2W 0]
+
 call "eight chain @9" mainstream
             rear_back_from_r_wave left_means_mirror twisted_is_inherited
             neednumber visible_fractions distribute_repetitions
@@ -11749,6 +11786,12 @@ call "eight chain @9-1/2" mainstream
             neednumber visible_fractions distribute_repetitions
    seq_alternate eightchain1 [inherit_left inherit_twisted repeat_n do_half_more]
    seq eightchain2 [inherit_left inherit_twisted]
+
+call "eight chain @9, new centers to a wave" mainstream
+            rear_back_from_r_wave left_means_mirror twisted_is_inherited
+            neednumber visible_fractions distribute_repetitions
+   seq_alternate eightchain1_centers_to_wave [inherit_left inherit_twisted repeat_nm1 do_half_more]
+   seq           eightchain2_centers_to_wave [inherit_left inherit_twisted]
 
 call "weave" c1 tag weave
             step_to_wave
@@ -19544,7 +19587,7 @@ call "_finish rotary @0" dontshow tag fin_rot_anything
    seq centers_mandatory_call [inherit_single inherit_grand]
 
 call "rotary @2spin@3" c1
-            left_means_mirror first_part_visible twisted_is_inherited gen_sting_is_inherited
+            visible_fractions left_means_mirror twisted_is_inherited gen_sting_is_inherited
             magic_is_inherited funny_is_inherited single_is_inherited
             grand_is_inherited nxn_is_inherited bigmatrix_is_inherited
    seq passthru [inherit_left inherit_twisted inherit_magic inherit_funny inherit_bigmatrix]
@@ -19554,7 +19597,7 @@ call "rotary @2spin@3" c1
                      inherit_nxn inherit_bigmatrix inherit_grand]
 
 call "rotary @0" c2
-            left_means_mirror first_part_visible twisted_is_inherited
+            visible_fractions left_means_mirror twisted_is_inherited
             magic_is_inherited funny_is_inherited single_is_inherited grand_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
    seq fin_rot_anything [inherit_left inherit_single inherit_funny inherit_grand]
@@ -20259,22 +20302,22 @@ call "_finish cross chain and roll @b@S" dontshow tag fin_x_chain_roll
                       conc_demand_columns conc_force_spots]
 
 call "cross chain thru@S" c1
-            left_means_mirror first_part_visible twisted_is_inherited
+            visible_fractions left_means_mirror twisted_is_inherited
             magic_is_inherited funny_is_inherited single_is_inherited
             nxn_is_inherited bigmatrix_is_inherited
    seq passthru [inherit_left inherit_twisted inherit_magic inherit_funny inherit_bigmatrix]
-   /* We do the usual "funny" trick -- inherit it to everything so it will
-      only be legal if you say "initially funny". */
+   // We do the usual "funny" trick -- inherit it to everything so it will
+   // only be legal if you say "initially funny".
    seq fin_x_chain_thru [inherit_left inherit_funny inherit_single
                          inherit_nxn inherit_bigmatrix insert_number 2]
 
 call "cross chain and roll@S" c1
-            left_means_mirror first_part_visible twisted_is_inherited
+            visible_fractions left_means_mirror twisted_is_inherited
             magic_is_inherited funny_is_inherited single_is_inherited
             nxn_is_inherited bigmatrix_is_inherited
    seq passthru [inherit_left inherit_twisted inherit_magic inherit_funny inherit_bigmatrix]
-   /* We do the usual "funny" trick -- inherit it to everything so it will
-      only be legal if you say "initially funny". */
+   // We do the usual "funny" trick -- inherit it to everything so it will
+   // only be legal if you say "initially funny".
    seq fin_x_chain_roll [inherit_left inherit_funny inherit_single
                          inherit_nxn inherit_bigmatrix insert_number 2]
 
@@ -20720,7 +20763,7 @@ call "triple scoot" a1 tag triple_scoot
    setup 1x8 2x4
       array [CR0E CR1E CR2E AL0W AL3W AL2W AL1W CR3E]
 
-call "triple cross" a2 tag triplecross
+call "triple cross" a1 tag triplecross
    // Check for the cases in which we can definitively
    // deduce the handedness of the center box.
    setup 4x2 2x4 restriction quarterbox_or_col qualifier live right gen_qbox
@@ -21294,6 +21337,13 @@ call "substitute" c1
       array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
    setup trngl trngl
       array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
+            alternate_definition [half] c1
+   setup 4x2 2x4 rotate
+      array [ZM6W ZM7W ZM1W ZM0W ZM3W ZM2W ZM4W ZM5W]
+   setup ptrngl 1x3
+      array [ZM1N ZM0N ZM2N ZM1N ZM2N ZM0N]
+   setup trngl 1x3
+      array [ZM1N ZM0N ZM2N ZM1N ZM2N ZM0N]
             alternate_definition [twisted] c4
    setup 4x2 2x4 rotate
       array [AM7S AM6S CM1N CM0N AM3S AM2S CM5N CM4N]
@@ -21317,6 +21367,10 @@ call "lateral substitute" c2
       array [ZM1N ZM0N ZM2N ZM1N ZM2N ZM0N]
    setup trngl 1x3
       array [   0 ZM0N ZM2N    0 ZM2N ZM0N]
+   setup 2x4 2x4 rotate
+      array [ZM6W ZM7W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W]
+   setup 4x2 2x4 rotate
+      array [ZM6W    0    0 ZM1W ZM2W    0    0 ZM5W]
             alternate_definition [twisted] c4
    setup 2x4 2x4 rotate
       array [AM7S AM6S CM1N CM0N AM3S AM2S CM5N CM4N]
@@ -21329,6 +21383,11 @@ call "triangle substitute" c1
       array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
    setup trngl trngl
       array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
+            alternate_definition [half] c2
+   setup ptrngl 1x3
+      array [ZM1N ZM0N ZM2N ZM1N ZM2N ZM0N]
+   setup trngl 1x3
+      array [ZM1N ZM0N ZM2N ZM1N ZM2N ZM0N]
 
 call "step and slide" a1
    setup 1x4 2x3 rotate
@@ -24213,7 +24272,7 @@ call "galaxy circulate" c1
          if next_galaxyspot_is_tboned [R1E R2E 0 L2W L3W M4N 0 M0N]
          if always [M1N R2E 0 L2W M3N M4N 0 M0N]
 
-call "flip the galaxy" c2
+call "flip the galaxy" c1
    setup galaxy thar
       array [CR1S CR2E 0 AL2W AL5S ZM4N 0 ZM0N]
             alternate_definition [reverse] c2
@@ -24222,7 +24281,7 @@ call "flip the galaxy" c2
          if next_galaxyspot_is_tboned [CR1E AL0S 0 CR3S AL2W CR4S 0 AL7S]
          if always                    [ZM1N AL0S 0 CR3S ZM2N CR4S 0 AL7S]
 
-call "cut the galaxy" c2
+call "cut the galaxy" c1
    setup galaxy thar
       array [CR5S CR2E 0 AL2W AL1S ZM4N 0 ZM0N]
             alternate_definition [reverse] c2
@@ -24821,6 +24880,23 @@ call "_trans_nothing" dontshow tag trans_nothing
    seq transfer [inherit_magic inherit_fractal]
    seq backemup []
 
+// New, as of C3A definition rewrite.
+call "transfer the column @jcross @lreaction@S" c3a
+            last_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq transfer [inherit_magic inherit_fractal]
+   seq wvchreact_1 [inherit_cross]
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
+   seq finishwithplainmod [inherit_fractal inherit_gensting]
+
+call "transfer the column @jcross @lreaction@S but @m" c3a
+            last_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq transfer [inherit_magic inherit_fractal]
+   seq wvchreact_1 [inherit_cross]
+   seq wvchreact_2 [inherit_fractal inherit_gensting]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
+   seq finishwithmodbut2nd []
+
 call "trans@j cross chain re@laction@S" c4a
             last_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq transfer [inherit_magic inherit_fractal]
@@ -24859,7 +24935,8 @@ call "trans@j cross chain re@laction@S but @m" c4a
    seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
-call "open up @jcross chain @lreaction@S" c4
+// New, as of C3A definition rewrite.
+call "open up @jcross @lreaction@S" c3a
             last_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq openup [inherit_magic]
    seq wvchreact_1 [inherit_cross]
@@ -24867,7 +24944,7 @@ call "open up @jcross chain @lreaction@S" c4
    seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
-call "open up @jcross chain @lreaction@S but @m" c4
+call "open up @jcross @lreaction@S but @m" c3a
             last_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq openup [inherit_magic]
    seq wvchreact_1 [inherit_cross]
@@ -24875,7 +24952,7 @@ call "open up @jcross chain @lreaction@S but @m" c4
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithmodbut2nd []
 
-call "triple play @jcross chain @lreaction@S" c4
+call "triple play @jcross @lreaction@S" c3a
             last_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq tripleplay [inherit_magic]
    seq wvchreact_1 [inherit_cross]
@@ -24883,7 +24960,7 @@ call "triple play @jcross chain @lreaction@S" c4
    seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithplainmod [inherit_fractal inherit_gensting]
 
-call "triple play @jcross chain @lreaction@S but @m" c4
+call "triple play @jcross @lreaction@S but @m" c3a
             last_part_visible magic_is_inherited cross_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq tripleplay [inherit_magic]
    seq wvchreact_1 [inherit_cross]
@@ -27054,14 +27131,14 @@ call "@N set your pace" c4    /* We leave the word "set" in for stuff like
    seq pace3 []
 
 call "_percolate part 3" dontshow tag percolate3
-            fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
    // Inheriting generous/stingy here makes it illegal unless you say "boys (or whatever) work generous, percolate."
-   conc nicely [inherit_fractal inherit_gensting]
+   conc nicely [inherit_left inherit_fractal inherit_gensting]
         natturnthru [allow_forced_mod inherit_fractal inherit_yoyo inherit_gensting endscando
                     conc_force_spots suppress_elongation_warnings]
 
 call "_percolate part 3 but @m" dontshow tag percolate3butany
-            yoyo_is_inherited gen_sting_is_inherited
+            left_means_mirror yoyo_is_inherited gen_sting_is_inherited
    conc nullsecond [mandatory_secondary_call]
         natturnthru [allow_forced_mod inherit_yoyo inherit_gensting endscando
                     conc_force_spots suppress_elongation_warnings]
@@ -27070,51 +27147,56 @@ call "_percolate part 3 but @m" dontshow tag percolate3butany
 // that centers stay centers and ends stay ends.
 // Of course, we put the version that allows replacement first.
 call "@1percolate" c1
-            fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
             twisted_is_inherited first_two_parts_visible funny_is_inherited
-   seq circulate [or_anycall inherit_funny inherit_twisted]
-   seq circulate [inherit_funny force_half]
-   seq percolate3 [inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
+   seq circulate [or_anycall inherit_left inherit_funny inherit_twisted]
+   seq circulate [inherit_funny force_half inherit_left]
+   seq percolate3 [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
    // People sometimes do "central percolate"-types of things, so we have to
    // recognize that the circulate and 1/2 circulate are sometimes concentric,
    // at the cost of not being able to do other things that might also be interesting.
-            fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible
-   seq conccirculate []
-   seq conccirculate [force_half]
-   seq percolate3 [inherit_fractal inherit_yoyo inherit_gensting]
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible
+   seq conccirculate [inherit_left]
+   seq conccirculate [force_half inherit_left]
+   seq percolate3 [inherit_left inherit_fractal inherit_yoyo inherit_gensting]
 
 call "@T percolate" c2
-            yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible funny_is_inherited
-   seq circulate [inherit_funny mandatory_anycall]
-   seq circulate [inherit_funny force_half]
-   seq percolate3 [inherit_funny inherit_yoyo inherit_gensting]
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            twisted_is_inherited first_two_parts_visible funny_is_inherited
+   seq circulate [mandatory_anycall inherit_left inherit_funny inherit_twisted]
+   seq circulate [inherit_funny force_half inherit_left]
+   seq percolate3 [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
 
 call "@N percolate" c2
-            yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible funny_is_inherited
-   seq circnullcall [inherit_funny or_anycall]
-   seq circulate [inherit_funny force_half]
-   seq percolate3 [inherit_funny inherit_yoyo inherit_gensting]
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            first_two_parts_visible funny_is_inherited
+   seq circnullcall [or_anycall inherit_left inherit_funny]
+   seq circulate [inherit_funny force_half inherit_left]
+   seq percolate3 [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
 
 call "@1percolate but @m" c1
-            yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible funny_is_inherited
-   seq circulate [or_anycall inherit_funny inherit_twisted]
-   seq circulate [inherit_funny force_half]
-   seq percolate3butany [inherit_yoyo inherit_gensting]
-            yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible
-   seq conccirculate []
-   seq conccirculate [force_half]
-   seq percolate3butany [inherit_yoyo inherit_gensting]
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            twisted_is_inherited first_two_parts_visible funny_is_inherited
+   seq circulate [or_anycall inherit_left inherit_funny inherit_twisted]
+   seq circulate [inherit_funny force_half inherit_left]
+   seq percolate3butany [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible
+   seq conccirculate [inherit_left]
+   seq conccirculate [force_half inherit_left]
+   seq percolate3butany [inherit_left inherit_fractal inherit_yoyo inherit_gensting]
 
 call "@T percolate but @m" c2
-            yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible funny_is_inherited
+            left_means_mirror yoyo_is_inherited gen_sting_is_inherited
+            first_two_parts_visible funny_is_inherited
    seq circulate [inherit_funny mandatory_anycall]
    seq circulate [inherit_funny force_half]
    seq percolate3butany [inherit_yoyo inherit_gensting]
 
 call "@N percolate but @m" c2
-            yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible funny_is_inherited
-   seq circnullcall [inherit_funny or_anycall]
-   seq circulate [inherit_funny force_half]
+            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            twisted_is_inherited first_two_parts_visible funny_is_inherited
+   seq circnullcall [or_anycall inherit_left inherit_funny]
+   seq circulate [inherit_funny force_half inherit_left]
    seq percolate3butany [inherit_yoyo inherit_gensting]
 
 /* *** This isn't right -- the "nicely" people aren't checking that they aren't selected.

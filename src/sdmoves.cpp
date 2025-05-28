@@ -226,6 +226,8 @@ extern void reinstate_rotation(const setup *ss, setup *result) THROW_DECL
       case s_normal_concentric:
          result->inner.srotation += globalrotation;
          result->outer.srotation += globalrotation;
+         if ((globalrotation & 1) && ((result->concsetup_outer_elongation + 1) & 2))
+            result->concsetup_outer_elongation ^= 3;
          break;
       case s_dead_concentric:
          result->inner.srotation += globalrotation;
@@ -4932,7 +4934,8 @@ static void do_sequential_call(
             }
 
             if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) {
-               delta++;
+               if (!(this_mod1 & DFM1_SEQ_REPEAT_NM1))
+                  delta++;
                zzz.m_do_half_of_last_part = FRAC_FRAC_HALF_VALUE;
             }
 

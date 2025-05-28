@@ -581,12 +581,14 @@ static tm_thing maps_isearch_tglsome[] = {
    {{6, 0, 2, 4,       -1, 3, -1, 7,     -1, 1, -1, 5},                       0,00040,        0,         4, 0,  sdmd,  s_hrglass},
    {{0, 3, 4, 7,       6, -1, 2, -1,     5, -1, 1, -1},                       0,00602,     0x77,         4, 0,  sdmd,  s_hrglass},
 
-   // These four need to show a "fudgy" warning.
-   // Well, the last two are being changed to be not fudgy.
+   // These two ought to show a "fudgy" warning.
    {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0,00400,        0,         4, 0,  sdmd,  s2x4},
    {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0,00004,        0,         4, 0,  sdmd,  s2x4},
-   {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0,00040,        0,         4, 0,  s1x4,  s_nxtrglccw},
+
    {{7, 5, 3, 1,       -1, 0, -1, 4,     -1, 6, -1, 2},                       0,04000,        0,         4, 0,  s1x4,  s_nxtrglcw},
+   {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0,00040,        0,         4, 0,  s1x4,  s_nxtrglccw},
+   {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0,00400,        0,         4, 0,  s1x4,  s_nptrglcw},
+   {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0,00004,        0,         4, 0,  s1x4,  s_nptrglccw},
 
    {{0, 3, 4, 7,       -1, 2, -1, 6,     -1, 1, -1, 5},                       0,04000,        0,         4, 0,  sdmd,  s_galaxy},
    {{2, 5, 6, 1,       -1, 4, -1, 0,     -1, 3, -1, 7},                       0,00040,     0xBB,         4, 1,  sdmd,  s_galaxy},
@@ -1324,7 +1326,6 @@ extern void tandem_couples_move(
    uint32 dynamic = twosome >> 2;
    twosome &= 3;
 
-
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       result->kind = nothing;
       clear_result_flags(result);
@@ -1356,6 +1357,44 @@ extern void tandem_couples_move(
    bool no_unit_symmetry = false;
    bool melded = (key == tandem_key_overlap_siam) || (phantom & 0xC);
    phantom &= 3;    // Get rid of those bits.
+
+   // Look for very special cases of selectors that specify triangles and concepts
+   // that work with same.  The triangle designators are:
+   //   selector_inside_tgl
+   //   selector_outside_tgl
+   //   selector_inpoint_tgl
+   //   selector_outpoint_tgl
+   // and the action designators are
+   //   SOLID
+   //   SOLID @9/@9 THREESOME
+   //   THREESOME
+   //   THREESOME @9/@9 SOLID
+
+   if (key == tandem_key_special_triangles) {
+      switch (selector) {
+      case selector_inside_tgl:
+         key = tandem_key_inside_tgls;
+         break;
+      case selector_outside_tgl:
+         key = tandem_key_outside_tgls;
+         break;
+      case selector_inpoint_tgl:
+         key = tandem_key_inpoint_tgls;
+         break;
+      case selector_outpoint_tgl:
+         key = tandem_key_outpoint_tgls;
+         break;
+      default:
+         fail("Can't use this designator.");   // This will happen if say "girls work threesome".
+      }
+
+      selector = selector_uninitialized;
+   }
+   else if (selector == selector_inside_tgl || selector == selector_outside_tgl ||
+            selector == selector_inpoint_tgl || selector == selector_outpoint_tgl) {
+      // If it wasn't a couples/tandem concept, the special selectors are not allowed.
+      fail("Can't use this designator.");   // This will happen if say "inside triangles work tandem".
+   }
 
    if (mxn_bits != 0) {
       tandem_key transformed_key = key;

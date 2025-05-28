@@ -325,7 +325,7 @@ bool conc_tables::synthesize_this(
 {
    int index;
 
-   if (inners[0].kind == s_trngl) {
+   if (inners[0].kind == s_trngl || inners[0].kind == s_trngl4) {
       // For triangles, we use the "2" bit of the rotation, demanding that it be even.
       if (relative_rotation&1) fail("Ends can't figure out what spots to finish on.");
       index = (relative_rotation&2) >> 1;
@@ -5396,17 +5396,19 @@ extern void selective_move(
       if (concept_table[k].concept_prop & CONCPROP__SET_PHANTOMS)
          indicator = selective_key_work_no_concentric;
 
-      // Check for special case of "<anyone> work tandem", and change it to
-      // "<anyone> are tandem".  But sometimes (rarely) this isn't what is wanted.
+      // The "<anyone> WORK" concept is set to allow selectors in the "some" region
+      // (e.g. "some", "inside triangles"), because it has a control key letter of 'K'.
+      // But these special selectors are only allowed if the concept is a couples/tandem
+      // concept, in which case the "<anyone> work tandem" will be changed to
+      // "<anyone> are tandem".
 
       if ((k == concept_tandem || k == concept_frac_tandem) &&
           kk->arg1 == 0 &&
           kk->arg2 == 0 &&
           (kk->arg3 & ~0xF0) == 0 &&
-          (kk->arg4 == tandem_key_cpls ||
-           kk->arg4 == tandem_key_tand ||
-           kk->arg4 == tandem_key_cpls3 ||
-           kk->arg4 == tandem_key_tand3) &&
+          (kk->arg4 == tandem_key_cpls || kk->arg4 == tandem_key_tand ||
+           kk->arg4 == tandem_key_cpls3 || kk->arg4 == tandem_key_tand3 ||
+           kk->arg4 == tandem_key_special_triangles) &&
           ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
                                                  INHERITFLAG_MXNMASK |
                                                  INHERITFLAG_NXNMASK |
@@ -5435,20 +5437,26 @@ extern void selective_move(
             // Fall into regular "work" code.
          }
       }
-      else if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
-         ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
-         stable_move(ss,
-                     kk->arg2 != 0,
-                     false,
-                     kkk->options.number_fields,
-                     parseptr->options.who,
-                     result);
-         return;
-      }
-      if (k == concept_nose) {
-         ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
-         nose_move(ss, false, parseptr->options.who, kkk->options.where, result);
-         return;
+      else {
+         // If it wasn't a couples/tandem concept, the special selectors are not allowed.
+         if (selector_to_use >= selector_SOME_START)
+            fail("Not a legal designator with 'WORK'.");
+
+         if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
+            ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
+            stable_move(ss,
+                        kk->arg2 != 0,
+                        false,
+                        kkk->options.number_fields,
+                        parseptr->options.who,
+                        result);
+            return;
+         }
+         else if (k == concept_nose) {
+            ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
+            nose_move(ss, false, parseptr->options.who, kkk->options.where, result);
+            return;
+         }
       }
    }
    else if (indicator != selective_key_snag_anyone && others != 9)

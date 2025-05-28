@@ -681,6 +681,14 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       }
       break;
 
+
+   case selector_inside_tgl:
+   case selector_outside_tgl:
+   case selector_inpoint_tgl:
+   case selector_outpoint_tgl:
+      // We don't consider these to be legal.  They are handled only in special tandem/couples code.
+      fail("Can't use this designator.");
+
    case selector_some:
       // We have to figure out how to group the people, based on unambiguous information from facing directions.
       thing_to_test = -1;

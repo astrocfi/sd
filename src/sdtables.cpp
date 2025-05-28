@@ -312,10 +312,18 @@ selector_item selector_list[] = {
                                                                   selector_uninitialized},
    {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4",
                                                                   selector_uninitialized},
+
+   // These are in the "selector_SOME_START" section.  They are only parsed for "<any> are/work tandem" things.
    {"some",         "some",        "SOME",         "SOME",        selector_uninitialized},
+   {"inside triangles","inside triangle","INSIDE TRIANGLES","INSIDE TRIANGLE",selector_uninitialized},
+   {"outside triangles","outside triangle","OUTSIDE TRIANGLES","OUTSIDE TRIANGLE",selector_uninitialized},
+   {"in point triangles","in point triangle","IN POINT TRIANGLES","IN POINT TRIANGLE",selector_uninitialized},
+   {"out point triangles","out point triangle","OUT POINT TRIANGLES","OUT POINT TRIANGLE",selector_uninitialized},
+
+   // These are in the "selector_INVISIBLE_START" section.  They are never parsed.
    {"Mbeaus???",    "Mbeaus???",   "MBEAUS???",    "MBEAUS???",   selector_uninitialized},
    {"Mbelles???",   "Mbelles???",  "MBELLES???",   "MBELLES???",  selector_uninitialized},
-   {"notctr dmd???", "notctr dmd???", "NOTCTR DMD???", "NOTCTR DMD???",  selector_uninitialized},
+   {"notctr dmd???","notctr dmd???","NOTCTR DMD???","NOTCTR DMD???",selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
 
 // BEWARE!!  These strings are keyed to the definition of "warning_index" in sdbase.h .
@@ -2503,6 +2511,11 @@ map::map_thing map::map_init_table[] = {
    {{6, 7, 4, 5,             3, 2, 0, 1},
     s2x2,2,MPKIND__HET_SPLIT,0, warn__none, slinebox,  (((veryshort) s1x4) << 24) | 0x20000, 0xAAAA},
 
+   {{5, 6, 7, 4,             2, 3, 0, 1},
+    s2x2,2,MPKIND__HET_SPLIT,0, warn__none, sboxdmd,   (((veryshort) sdmd) << 24) | 0x04, 0x5555},
+   {{0, 1, 2, 3,             4, 5, 6, 7},
+    sdmd,2,MPKIND__HET_SPLIT,1, warn__none, sboxdmd,   (((veryshort) s2x2) << 24) | 0x00, 0x0000},
+
    {{0, 1, 3, 2,             5, 6, 7, 4},
     s1x4,2,MPKIND__HET_SPLIT,0, warn__none, splinedmd, (((veryshort) sdmd) << 24) | 0x004, 0},
    {{7, 4, 5, 6,             3, 2, 0, 1},
@@ -2744,10 +2757,9 @@ map::map_thing map::map_init_table[] = {
    {{9, 11, 6, 8,       7, 2, 4, 5,      12, 13, 15, 10,     14, 0, 1, 3},
     s2x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none, s4x4,0x000, 0},
 
-   /* Don't seem to need this.  But I believe it's corrrect.
-   {{9, 11, 6, 8,       7, 2, 4, 5,      12, 13, 15, 10,     14, 0, 1, 3},
-    s2x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, 0, s4x4, 0x000, 0},
-   */
+   // Don't seem to need this.  But I believe it's corrrect.
+   //{{9, 11, 6, 8,       7, 2, 4, 5,      12, 13, 15, 10,     14, 0, 1, 3},
+   // s2x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, 0, s4x4, 0x000, 0},
 
    {{18, 19, 16, 17,       20, 21, 14, 15,      22, 23, 12, 13,
      0, 1, 10, 11,         2, 3, 8, 9,          4, 5, 6, 7},
@@ -4053,7 +4065,11 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
                                                       2, 3, 8, 9},
              s2x4,     s1x4,     0, 0, 1, 2,  0x900, schema_nothing},
 
-
+   // For incredibly evil unsymmetrical crossfire.
+   {slinedmd,       schema_nothing, {3, 1, 5, 7,     2, 0, 4, 6},
+             s_trngl4, s2x2,     0, 2, 1, 1,  0xAFD, schema_concentric},
+   {slinedmd,       schema_nothing, {3, 1, 5, 7,     4, 6, 2, 0},
+             s_trngl4, s2x2,     0, 0, 1, 1,  0xAFE, schema_concentric},
 
    {s_hsqtag,       schema_in_out_triple, {3, 2, 0, 1, 6, 7, 9, 8,         10, 11, 4, 5},
              s1x4,     sdmd,     1, 1, 1, 2,  0x8FB, schema_in_out_triple},

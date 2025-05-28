@@ -5387,14 +5387,24 @@ bool fix_n_results(
          // If the setups are "trngl" or "trngl4", the rotations have
          // to alternate by 180 degrees.
 
-         if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
-            rotstates &= 0xF00;
+         int zirot = z[i].rotation;
+
+         if (z[i].kind == s_trngl || z[i].kind == s_trngl4) {
+            // Except that, if there are two of them, and they are both triangles with the
+            // SAME rotation, we treat them normally.  The "hetero" maps can now deal with
+            // this situation.
+            if (arity == 2 && z[0].kind == z[1].kind && z[0].rotation == z[1].rotation) {
+               zirot = 0;  // The rotstate_table table won't understand what we are doing.
+               rotstates &= 0x033;
+            }
+            else
+               rotstates &= 0xF00;
+         }
          else
             rotstates &= 0x033;
 
          canonicalize_rotation(&z[i]);
-         rotstates &= rotstate_table[((i << 2) & 4) |
-                                    ((z[i].rotation^dmdqtagfudge) & 3)];
+         rotstates &= rotstate_table[((i << 2) & 4) | ((zirot^dmdqtagfudge) & 3)];
       }
    }
 

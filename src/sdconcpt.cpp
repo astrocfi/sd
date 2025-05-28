@@ -8367,7 +8367,7 @@ static void so_and_so_only_move(
    if (save_throw_this != error_flag_none) {
 
       // Try the special stuff, reevaluating through a "two calls in succession".
-      // Do this only under carefully controlled circumstances.  Failuer to check
+      // Do this only under carefully controlled circumstances.  Failure to check
       // could lead to infinite recursion.
 
       // Don't do it if this is "concept_some_vs_others" or "concept_same_sex_disconnected",

@@ -768,7 +768,8 @@ static void multiple_move_innards(
          }
       }
 
-      if (arity >= 2 && (z[0].kind != z[1].kind || z[0].rotation != z[1].rotation))  {
+      if (arity >= 2 && (z[0].kind != z[1].kind || z[0].rotation != z[1].rotation ||
+                         z[0].kind == s_trngl || z[0].kind == s_trngl4))  {
          if (map_kind == MPKIND__SPLIT)
             map_kind = MPKIND__HET_SPLIT;
          else if (map_kind == MPKIND__REMOVED)

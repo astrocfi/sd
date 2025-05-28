@@ -800,9 +800,14 @@ enum selector_kind {
    selector_cpls2_3,
    selector_cpls3_4,
    selector_cpls4_1,
-   selector_some,   // Used only in "some are tandem" operations.
+   // Start of selectors used only in "some are tandem" operations, with a control key of 'K'.
+   selector_some,          selector_SOME_START = selector_some,
+   selector_inside_tgl,
+   selector_outside_tgl,
+   selector_inpoint_tgl,
+   selector_outpoint_tgl,
    // Start of invisible selectors.
-   selector_INVISIBLE_START,   selector_mysticbeaus = selector_INVISIBLE_START,
+   selector_mysticbeaus,   selector_INVISIBLE_START = selector_mysticbeaus,
    selector_mysticbelles,
    selector_notctrdmd,
    selector_ENUM_EXTENT   // Not a selector; indicates extent of the enum.

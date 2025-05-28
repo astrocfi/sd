@@ -4038,6 +4038,14 @@ static int divide_the_setup(
       // This is the only way we can divide it.
       division_code = HETERO_MAPCODE(s1x4,2,MPKIND__HET_SPLIT,0,s2x2,0x0);
       goto divide_us_no_recompute;
+   case slinedmd:
+      // This is the only way we can divide it.
+      division_code = HETERO_MAPCODE(s1x4,2,MPKIND__HET_SPLIT,1,sdmd,0x5);
+      goto divide_us_no_recompute;
+   case sboxdmd:
+      // This is the only way we can divide it.
+      division_code = HETERO_MAPCODE(sdmd,2,MPKIND__HET_SPLIT,1,s2x2,0x0);
+      goto divide_us_no_recompute;
    case sdbltrngl4:
       division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0x5);
       goto divide_us_no_recompute;

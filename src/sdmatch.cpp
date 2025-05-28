@@ -1584,13 +1584,10 @@ void matcher_class::match_wildcard(
       case '6': case 'k': case 'K': case 'V':
          if (m_current_result->match.call_conc_options.who == selector_uninitialized) {
             for (i=1; i<selector_INVISIBLE_START; i++) {
-               switch ((selector_kind) i) {
-               case selector_some: if (key != 'K') continue;
-                  break;
-               case selector_centers: case selector_ends:
-               if (key == 'V') continue;
-               break;
-               }
+               if (key != 'K' && i >= selector_SOME_START)
+                  continue;
+               if (key == 'V' && (i == selector_centers || i == selector_ends))
+                  continue;
 
                m_current_result->match.call_conc_options.who = (selector_kind) i;
                match_suffix_2(user,

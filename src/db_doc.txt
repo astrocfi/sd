@@ -4369,7 +4369,7 @@ inherit_single
 @I          equivalent to "@Einterlocked @F".
 @G        - put the word "grand" here if this call has "grand" modifier.
 @k        - put selector here, but use singular name, as in "beau tie".
-@K        - put selector here, and allow "some" in parse expand.  (@6 and @k don't expand "some".)
+@K        - put selector here, and allow "some" (and a few others) in parse expand.  (@6 and @k don't expand "some".)
 @V        - put selector here, but don't allow "centers" or "ends".
 @u        - put ordinal number (1st, 2nd, ...) here.
 @v        - put tagging call here.

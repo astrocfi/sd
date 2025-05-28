@@ -2668,7 +2668,8 @@ enum tandem_key {
    tandem_key_tand_tgls = 27,
    tandem_key_anyone_tgls = 30,
    tandem_key_3x1tgls = 31,
-   tandem_key_ys = 32
+   tandem_key_ys = 32,
+   tandem_key_special_triangles = 33
 };
 
 enum part_key_kind {
