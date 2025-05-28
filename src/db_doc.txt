@@ -2573,6 +2573,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     are line-like
    qtag_like,                       dmd, qtag or ptpd - points look in or out, and centers
                                     are line-like
+   pu_qtag_like,                    dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
+                                    and centers are column-like
    nice_diamonds,                   dmd, qtag or ptpd - diamond(s) have consistent handedness,
                                     assuming they are diamonds and not qtags
    in_or_out,                       2x2/2x4 - all facing in or all facing out of box of 4.
@@ -2651,6 +2653,11 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                              outer disconnected wave.
    diamond_like,                    Same as corresponding restriction, above.
    qtag_like,                       Same as corresponding restriction, above.
+   pu_qtag_like,                    Same as corresponding restriction, above.  Right/left refer
+                                       to points.  The "live" modifier demands that there be
+                                       be at least one definitive person to test right or left.
+                                       It does not demand all people live.  It is meaningless
+                                       if left or right isn't specified.
    in_or_out,                       Same as corresponding restriction, above.
                                        This can take the "live" and/or "in" or "out" mofifiers
                                        to specify, for example, an 8 chain or a trade by.
@@ -2662,8 +2669,15 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    miniwaves,                       Same as corresponding restriction, above.
    not_miniwaves,                   True if all people are live, and the miniwaves restriction,
                                     above, FAILS.
-   1_4_tag,                         dmd, qtag - this is a 1/4 tag, i.e. points are looking in
-   3_4_tag,                         dmd, qtag - this is a 3/4 tag, i.e. points are looking out
+   gen_n_4_tag                      dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
+                                    in which the ends could individually be facing either
+                                    in or out, and the centers form some kind of line.
+                                    Modifier "in" or "out" applies to ends, and tests for
+                                    1/4 tag or 3/4 tag, respectively.  If "in" or "out"
+                                    is given, the "live" modifier makes it demand at least
+                                    one live end, so that the in/out test is definitive.
+                                    It does not test for all live people the way it does
+                                    in some other cases.
    dmd_same_point,                  dmd - centers would circulate to same point
    dmd_facing,                      dmd - diamond is fully occupied and fully facing
    true_Z_cw, true_Z_ccw,           2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.

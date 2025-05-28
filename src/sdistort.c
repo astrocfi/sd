@@ -1952,13 +1952,15 @@ extern void distorted_move(
       is followed by "split phantom C/L/W" or "split phantom boxes", in which
       case we do something esoteric. */
 
+   junk_concepts.her8it = 0;
+   junk_concepts.final = 0;
+
    next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
 
-   if (     next_parseptr->concept->kind == concept_do_phantom_2x4 &&
-            ss->kind == s3x4 &&     /* Only allow 50% offset. */
-            junk_concepts.herit == 0 &&
-            junk_concepts.final == 0 &&
-            linesp == (next_parseptr->concept->value.arg2 & 7) &&  /* Demand same "CLW" as original. */
+   if (next_parseptr->concept->kind == concept_do_phantom_2x4 &&
+       ss->kind == s3x4 &&     /* Only allow 50% offset. */
+       (junk_concepts.her8it | junk_concepts.final) == 0 &&
+       linesp == (next_parseptr->concept->value.arg2 & 7) &&  /* Demand same "CLW" as original. */
             next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
       int i;
 
@@ -1974,8 +1976,7 @@ extern void distorted_move(
    }
    else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     /* Only allow 50% offset. */
-            junk_concepts.herit == 0 &&
-            junk_concepts.final == 0 &&
+            (junk_concepts.her8it | junk_concepts.final) == 0 &&
             next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, FALSE);
@@ -3074,12 +3075,12 @@ extern void triangle_move(
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
    }
    else {
-      if (indicator >= 2 && indicator <= 21 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
+      if (indicator >= 2 && indicator <= 21 && (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_INTLK))) {
          indicator |= 0100;     /* Interlocked triangles. */
-         ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_INTLK;
+         ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_INTLK;
       }
 
-      if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)   /* Now demand that no flags remain. */
+      if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)   /* Now demand that no flags remain. */
          fail("Illegal modifier for this concept.");
    }
 

@@ -1229,6 +1229,7 @@ extern void concentric_move(
 
    uint32 save_cmd_misc2_flags = ss->cmd.cmd_misc2_flags;
    parse_block *save_skippable = ss->cmd.skippable_concept;
+   uint32 scnxn = ss->cmd.cmd_final_flags.her8it & (INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK);
 
    ss->cmd.cmd_misc2_flags &= ~(0xFFF | CMD_MISC2__ANY_WORK_INVERT | CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG);
    ss->cmd.skippable_concept = (parse_block *) 0;
@@ -1240,17 +1241,20 @@ extern void concentric_move(
       to a wave, we are once again sure. */
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__NO_STEP_TO_WAVE;
 
+
    if (ss->kind == s_qtag &&
-            (  ss->cmd.cmd_final_flags.herit &
-               (INHERITFLAG_12_MATRIX|INHERITFLAG_1X3|INHERITFLAG_3X1|INHERITFLAG_3X3)))
+       ((ss->cmd.cmd_final_flags.her8it & INHERITFLAG_12_MATRIX) ||
+        (scnxn == INHERITFLAGMXNK_1X3) ||
+        (scnxn == INHERITFLAGMXNK_3X1) ||
+        (scnxn == INHERITFLAGNXNK_3X3)))
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, TRUE);
 
    /* We allow "quick so-and-so shove off"! */
 
-   if (     analyzer != schema_in_out_triple_squash &&
-            analyzer != schema_in_out_triple &&
-            analyzer != schema_in_out_quad &&
-            analyzer != schema_in_out_12mquad)
+   if (analyzer != schema_in_out_triple_squash &&
+       analyzer != schema_in_out_triple &&
+       analyzer != schema_in_out_quad &&
+       analyzer != schema_in_out_12mquad)
       ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
    for (i=0; i<32; i++) {
@@ -1447,10 +1451,12 @@ extern void concentric_move(
             put the "3x3" flag into the 6-person call, whichever call that is,
             and "single" into the other one. */
          if (analyzer == schema_1331_concentric) {
-            if (setup_attrs[begin_ptr->kind].setup_limits == 5)
-               begin_ptr->cmd.cmd_final_flags.herit |= INHERITFLAG_3X3;
+            if (setup_attrs[begin_ptr->kind].setup_limits == 5) {
+               begin_ptr->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_NXNMASK;
+               begin_ptr->cmd.cmd_final_flags.her8it |= INHERITFLAGNXNK_3X3;
+            }
             else
-               begin_ptr->cmd.cmd_final_flags.herit |= INHERITFLAG_SINGLE;
+               begin_ptr->cmd.cmd_final_flags.her8it |= INHERITFLAG_SINGLE;
          }
 
          if (doing_ends) {
@@ -1474,9 +1480,15 @@ extern void concentric_move(
 
             if (!inverting && !begin_ptr->cmd.callspec && !(localmodsout1 & DFM1_CONC_CONCENTRIC_RULES)) {
                uint64 junk_concepts;
-               Const parse_block *next_parseptr = process_final_concepts(begin_ptr->cmd.parseptr, FALSE, &junk_concepts);
+               Const parse_block *next_parseptr;
 
-               if (!junk_concepts.herit && !junk_concepts.final && next_parseptr->concept->kind == concept_concentric) {
+               junk_concepts.her8it = 0;
+               junk_concepts.final = 0;
+               next_parseptr = process_final_concepts(begin_ptr->cmd.parseptr, FALSE, &junk_concepts);
+
+               if (junk_concepts.her8it == 0 &&
+                   junk_concepts.final == 0 &&
+                   next_parseptr->concept->kind == concept_concentric) {
                   localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
                   begin_ptr->cmd.parseptr = next_parseptr->next;
                }
@@ -3265,7 +3277,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
          else if (this_one->cmd.cmd_frac_flags == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE))
             this_one->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE;
          else
-            this_one->cmd.cmd_frac_flags |= CMD_FRAC_SNAG_EVERYTHING;
+            this_one->cmd.cmd_frac_flags |= CMD_FRAC_FIRSTHALF_ALL;
       }
       else if (setupcount == 0 &&
                (cmd2word &
@@ -3276,7 +3288,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
          else if (this_one->cmd.cmd_frac_flags == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE))
             this_one->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE;
          else
-            this_one->cmd.cmd_frac_flags |= CMD_FRAC_SNAG_EVERYTHING;
+            this_one->cmd.cmd_frac_flags |= CMD_FRAC_FIRSTHALF_ALL;
       }
       else if (setupcount == 1 &&
                (cmd2word &
@@ -3287,7 +3299,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
          else if (this_one->cmd.cmd_frac_flags == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE))
             this_one->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE;
          else
-            this_one->cmd.cmd_frac_flags |= CMD_FRAC_SNAG_EVERYTHING;
+            this_one->cmd.cmd_frac_flags |= CMD_FRAC_FIRSTHALF_ALL;
       }
 
       move(this_one, FALSE, &the_results[setupcount]);
@@ -3357,7 +3369,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
       the_setups[0] = *result;
       the_setups[0].cmd = ss->cmd;    /* Restore original command stuff (though we clobbered fractionalization info). */
       the_setups[0].cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
-      the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_CODE_BEYOND | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE;
+      the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_CODE_FROMTOREV | (CMD_FRAC_PART_BIT*2) | CMD_FRAC_NULL_VALUE;
       the_setups[0].cmd.parseptr = parseptrcopy->next;      /* Skip over the concept. */
       move(&the_setups[0], FALSE, result);
       finalresultflags |= result->result_flags;

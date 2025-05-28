@@ -398,11 +398,13 @@ extern int get_char(void)
 extern void get_string(char *dest)
 {
    int size;
+
 #if !defined(DJGPP)
    csetmode(0);         /* Regular full-line mode with system echo. */
 #endif
    (void) gets(dest);
    size = strlen(dest);
+
    if (size > 0 && dest[size-1] == '\n') {
       size--;
       dest[size] = '\000';
@@ -414,6 +416,9 @@ extern void get_string(char *dest)
       size--;
       dest[size] = '\000';
    }
+
+   (void) fputs(dest, stdout);
+   (void) putchar('\n');
 }
 
 extern void ttu_bell(void)

@@ -305,9 +305,8 @@ extern void put_char(int c)
 
 extern int get_char(void)
 {
-   DWORD numRead, numWrite;
+   DWORD numRead;
    INPUT_RECORD inputRecord;
-   char s[200];
 
    if (no_console)
       return getchar();    /* A "stdio" call. */
@@ -315,102 +314,104 @@ extern int get_char(void)
    for ( ;; ) {
       ReadConsoleInput(consoleStdin, &inputRecord, 1, &numRead);
 
-      if (inputRecord.EventType == KEY_EVENT) {
-         KEY_EVENT_RECORD *p = &inputRecord.Event.KeyEvent;
+      if (inputRecord.EventType == KEY_EVENT && inputRecord.Event.KeyEvent.bKeyDown) {
+         DWORD ctlbits = inputRecord.Event.KeyEvent.dwControlKeyState & (~NUMLOCK_ON | SCROLLLOCK_ON);
+         unsigned int c = inputRecord.Event.KeyEvent.uChar.AsciiChar;
+         int key = inputRecord.Event.KeyEvent.wVirtualKeyCode;
+         int npdigit;
 
-         if (p->bKeyDown) {
-            DWORD ctlbits = p->dwControlKeyState & (~NUMLOCK_ON | SCROLLLOCK_ON);
-            unsigned int c = p->uChar.AsciiChar;
-            int key = p->wVirtualKeyCode;
-
-            /* Canonicalize the control bits -- we don't distinguish
+         /* Canonicalize the control bits -- we don't distinguish
                between left ALT and right ALT, for example. */
 
-            if (ctlbits & CAPSLOCK_ON) ctlbits |= SHIFT_PRESSED;
-            if (ctlbits & RIGHT_CTRL_PRESSED) ctlbits |= LEFT_CTRL_PRESSED;
-            if (ctlbits & RIGHT_ALT_PRESSED) ctlbits |= LEFT_ALT_PRESSED;
-            ctlbits &= ~(CAPSLOCK_ON | RIGHT_CTRL_PRESSED | RIGHT_ALT_PRESSED);
+         if (ctlbits & CAPSLOCK_ON) ctlbits |= SHIFT_PRESSED;
+         if (ctlbits & RIGHT_CTRL_PRESSED) ctlbits |= LEFT_CTRL_PRESSED;
+         if (ctlbits & RIGHT_ALT_PRESSED) ctlbits |= LEFT_ALT_PRESSED;
+         ctlbits &= ~(CAPSLOCK_ON | RIGHT_CTRL_PRESSED | RIGHT_ALT_PRESSED);
 
-            if (key >= 'A' && key <= 'Z') {    /* Letter key was pressed. */
-               ctlbits &= ~SHIFT_PRESSED;
-               if (ctlbits == 0) return c;
-               else if (ctlbits == LEFT_CTRL_PRESSED) {
-                  return CTLLET + key;
-               }
-               else if (ctlbits == LEFT_ALT_PRESSED) {
-                  return ALTLET + key;
-               }
-               else if (ctlbits == (LEFT_ALT_PRESSED|LEFT_CTRL_PRESSED)) {
-                  return CTLALTLET + key;
-               }
-               else {
-                  (void) sprintf(s, "Letter, but some unsupported control bits were on.  Key is %0X : %0X : %0X\n",
-                                 p->dwControlKeyState, key, c);
-                  WriteFile(consoleStdout, s, strlen(s), &numWrite, 0);
-               }
-            }
-            else if (key >= '0' && key <= '9') {       /* Digit key. */
-               ctlbits &= ~SHIFT_PRESSED;
-               if (ctlbits == 0) return c;
-               else if (ctlbits == LEFT_CTRL_PRESSED) return key-'0'+CTLDIG;
-               else if (ctlbits == LEFT_ALT_PRESSED)  return key-'0'+ALTDIG;
-               else if (ctlbits == LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED) return key-'0'+CTLALTDIG;
-               else
-                  continue;   /* Don't know what it is. */
-            }
-            else if (key == 0x10 || key == 0x11 || key == 0x12 || key == 0x14)
-               continue;      /* Just an actual shift/control/alt key. */
-            else if (key >= 0x70 && key <= 0x7B) {    /* Function key. */
-               if (ctlbits == 0)                      return key-0x6F+FKEY;
-               else if (ctlbits == SHIFT_PRESSED)     return key-0x6F+SFKEY;
-               else if (ctlbits == LEFT_CTRL_PRESSED) return key-0x6F+CFKEY;
-               else if (ctlbits == LEFT_ALT_PRESSED)  return key-0x6F+AFKEY;
-               else if (ctlbits == LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED) return key-0x6F+CAFKEY;
-               else
-                  continue;   /* Don't know what it is. */
-            }
-            else if ((ctlbits & ENHANCED_KEY) && key >= 0x20 && key <= 0x20+15) {    /* "Enhanced" key. */
-               if (ctlbits == ENHANCED_KEY)                        return key-0x20+EKEY;
-               else if (ctlbits == ENHANCED_KEY|SHIFT_PRESSED)     return key-0x20+SEKEY;
-               else if (ctlbits == ENHANCED_KEY|LEFT_CTRL_PRESSED) return key-0x20+CEKEY;
-               else if (ctlbits == ENHANCED_KEY|LEFT_ALT_PRESSED)  return key-0x20+AEKEY;
-               else if (ctlbits == ENHANCED_KEY|LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED) return key-0x20+CAEKEY;
-               else
-                  continue;   /* Don't know what it is. */
-            }
-            else if ((key >= 0xBA && key <= 0xBF) ||     /* Random other keys ... */
-                     (key == 0x20) ||                    /* Space. */
-                     (key == 0x09) ||                    /* Tab. */
-                     (key == 0x08) ||                    /* Backspace. */
-                     (key == 0x0D) ||                    /* Enter (CR). */
-                     (key == 0x1B) ||                    /* Escape. */
-                     (key == 0xC0) ||                    /* Random other keys ... */
-                     (key >= 0xDB && key <= 0xDE)) {     /* Random other keys ... */
-               ctlbits &= ~SHIFT_PRESSED;
-               if (ctlbits == 0) return c;
-               else {
-                  (void) sprintf(s, "Random key.  Key is (ctl) %0X : (key) %0X\n",
-                                 p->dwControlKeyState,
-                                 key);
-                  WriteFile(consoleStdout, s, strlen(s), &numWrite, 0);
-               }
-            }
-            else if (isprint(c)) {
-               return c;
-            }
-
-            /* Codes are:
-               RIGHT_ALT_PRESSED     0x0001 // the right alt key is pressed.
-               LEFT_ALT_PRESSED      0x0002 // the left alt key is pressed.
-               RIGHT_CTRL_PRESSED    0x0004 // the right ctrl key is pressed.
-               LEFT_CTRL_PRESSED     0x0008 // the left ctrl key is pressed.
-               SHIFT_PRESSED         0x0010 // the shift key is pressed.
-               NUMLOCK_ON            0x0020 // the numlock light is on.
-               SCROLLLOCK_ON         0x0040 // the scrolllock light is on.
-               CAPSLOCK_ON           0x0080 // the capslock light is on.
-               ENHANCED_KEY          0x0100 // the key is enhanced.
-            */
+         if (key >= 'A' && key <= 'Z') {    /* Letter key was pressed. */
+            ctlbits &= ~SHIFT_PRESSED;
+            if (ctlbits == 0) return c;
+            else if (ctlbits == LEFT_CTRL_PRESSED)
+               return CTLLET + key;
+            else if (ctlbits == LEFT_ALT_PRESSED)
+               return ALTLET + key;
+            else if (ctlbits == (LEFT_ALT_PRESSED|LEFT_CTRL_PRESSED))
+               return CTLALTLET + key;
+            else
+               continue;
          }
+         else if (key >= '0' && key <= '9') {       /* Digit key. */
+            ctlbits &= ~SHIFT_PRESSED;
+            if (ctlbits == 0) return c;
+            else if (ctlbits == LEFT_CTRL_PRESSED)
+               return key-'0'+CTLDIG;
+            else if (ctlbits == LEFT_ALT_PRESSED)
+               return key-'0'+ALTDIG;
+            else if (ctlbits == LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED)
+               return key-'0'+CTLALTDIG;
+            else
+               continue;   /* Don't know what it is. */
+         }
+         else if (key == 0x10 || key == 0x11 || key == 0x12 || key == 0x14)
+            continue;      /* Just an actual shift/control/alt key. */
+         else if (key >= 0x70 && key <= 0x7B) {    /* Function key. */
+            if (ctlbits == 0)                      return key-0x6F+FKEY;
+            else if (ctlbits == SHIFT_PRESSED)     return key-0x6F+SFKEY;
+            else if (ctlbits == LEFT_CTRL_PRESSED) return key-0x6F+CFKEY;
+            else if (ctlbits == LEFT_ALT_PRESSED)  return key-0x6F+AFKEY;
+            else if (ctlbits == LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED) return key-0x6F+CAFKEY;
+            else
+               continue;   /* Don't know what it is. */
+         }
+         else if ((ctlbits & ENHANCED_KEY) && key >= 0x20 && key <= 0x20+15) {    /* "Enhanced" key. */
+            if (ctlbits == ENHANCED_KEY)                        return key-0x20+EKEY;
+            else if (ctlbits == ENHANCED_KEY|SHIFT_PRESSED)     return key-0x20+SEKEY;
+            else if (ctlbits == ENHANCED_KEY|LEFT_CTRL_PRESSED) return key-0x20+CEKEY;
+            else if (ctlbits == ENHANCED_KEY|LEFT_ALT_PRESSED)  return key-0x20+AEKEY;
+            else if (ctlbits == ENHANCED_KEY|LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED) return key-0x20+CAEKEY;
+            else
+               continue;   /* Don't know what it is. */
+         }
+         else if ((key >= 0xBA && key <= 0xBF) ||     /* Random other keys ... */
+                  (key == 0x20) ||                    /* Space. */
+                  (key == 0x09) ||                    /* Tab. */
+                  (key == 0x08) ||                    /* Backspace. */
+                  (key == 0x0D) ||                    /* Enter (CR). */
+                  (key == 0x1B) ||                    /* Escape. */
+                  (key == 0xC0) ||                    /* Random other keys ... */
+                  (key >= 0xDB && key <= 0xDE)) {     /* Random other keys ... */
+            ctlbits &= ~SHIFT_PRESSED;
+            if (ctlbits == 0) return c;
+            else continue;
+         }
+         else if (key == 0x23) npdigit = '1';    /* Numeric keypad -- just treat as normal digits. */
+         else if (key == 0x28) npdigit = '2';
+         else if (key == 0x22) npdigit = '3';
+         else if (key == 0x25) npdigit = '4';
+         else if (key == 0x0C) npdigit = '5';
+         else if (key == 0x27) npdigit = '6';
+         else if (key == 0x24) npdigit = '7';
+         else if (key == 0x26) npdigit = '8';
+         else if (key == 0x21) npdigit = '9';
+         else if (key == 0x2D) npdigit = '0';
+         else if (ctlbits == 0 && isprint(c)) {
+            return c;
+         }
+         else
+            continue;
+
+         /* If we get here, this is a numeric keypad press. */
+
+         ctlbits &= ~SHIFT_PRESSED;
+         if (ctlbits == 0) return npdigit;
+         else if (ctlbits == LEFT_CTRL_PRESSED)
+            return npdigit-'0'+CTLNKP;
+         else if (ctlbits == LEFT_ALT_PRESSED)
+            return npdigit-'0'+ALTNKP;
+         else if (ctlbits == LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED)
+            return npdigit-'0'+CTLALTNKP;
+         else
+            continue;   /* Don't know what it is. */
       }
    }
 }
@@ -436,6 +437,8 @@ extern void get_string(char *dest)
          }
          continue;
       }
+
+      if (key > 128) continue;   /* This was a function key press. */
 
       put_char(key);
       dest[size++] = key;

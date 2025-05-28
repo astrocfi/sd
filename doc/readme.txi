@@ -174,9 +174,9 @@ Apollo systems.  It is not yet available for PC compatibles.
 
 Sdtty is the name of the program that uses a character-oriented keyboard
 interface.  Calls are selected by typing their names.
-Sdtty runs on
-Unix-like systems and under DOS, Windows 3.1, Windows 95, and Windows NT on PC
-compatibles.  PC users may take comfort from the fact that most serious
+Sdtty runs on Unix-like systems and under
+DOS, Windows 3.1, Windows 95, Windows 98, and NT on PC's.
+PC users may take comfort from the fact that most serious
 callers prefer Sdtty rather than Sd.
 
 @menu
@@ -223,13 +223,24 @@ to your WWW browser program.
 @node Getting Sd or Sdtty, A Few Technical Details, Documentation, Intro
 @unnumberedsec Getting Sd or Sdtty
 
-You can obtain Sdtty for DOS on PC-compatible computers,
-on a 3.5-inch HD disk, with printed documentation.
-The price is $4 (price valid for 1997).
+The most straightforward way to obtain @code{Sd} or @code{Sdtty} is to
+download the program from
+@ifclear html
+@t{http://www.gildea.com/sd/}
+@end ifclear
+@ifset html
+@t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
+@end ifset
+on the World Wide Web.  The reference manual and other documentation may be
+browsed there or downloaded for your local use as well.
+
+You can obtain Sdtty for PC-compatible computers,
+on a 3.5-inch HD diskette, with printed documentation.
+The price is $4 (price valid for 1999).
 @ifset full-manual
 @xref{Author Contact}.
 @end ifset
-If you want a different format instead, please say so.
+If you are running DOS or Windows 3.1, or you want a different format, please say so.
 
 Sd and Sdtty are also available via FTP from the directory
 @file{sd/} on host ftp.gildea.com.
@@ -262,16 +273,7 @@ The file
 @end ifset
 contains a description of all the files in this directory.
 
-You must transfer the files in FTP's binary mode.
-
-You can download the program from
-@ifclear html
-@t{http://www.gildea.com/sd/}
-@end ifclear
-@ifset html
-@t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
-@end ifset
-on the World Wide Web.
+If you choose to download by an FTP connection, you must transfer the files in binary mode.
 
 If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail, and
@@ -280,16 +282,19 @@ it includes support for mailing large binary files.
 @node A Few Technical Details, Installing Sdtty on a PC, Getting Sd or Sdtty, Intro
 @unnumberedsec A Few Technical Details
 
-On a PC, @code{Sdtty} uses the @code{DPMI} memory manager.  If necessary, it uses its own
-copy of @code{DPMI}@.  It can be started under either standalone DOS or the
-@samp{MS-DOS Prompt} under Windows.  It can also be started directly as a Windows
-application, even though it does not use the mouse while running.
+Although it is a ``Windows application'', @code{Sdtty} does not use the
+mouse while running.  It looks rather like the Command Prompt window.
 
-You need a 386 or higher processor and 2Mb of memory.
-A hard disk is recommended.  There
-should be at least 175 kilobytes of memory free in the first 640Kb.
-The authors have not actually tried it on a system this small, and we
-would be interested in your experiences.
+The usual version of @code{Sdtty} uses the ``win32'' subsytem.  Users of DOS and Windows 3.1
+need to run a different version of @code{Sdtty}, identified by the installation
+file being @file{installw.exe} instead of @file{install.exe}.  (If you use DOS
+or Windows 3.1, be sure to download the correct version of the program from the
+web, or request the correct version when ordering it on diskette.)  The two versions
+are identical in their behavior with respect to square dance calling.
+
+The Windows 3.1 version of @code{Sdtty} uses the @code{DPMI} memory manager.
+If necessary, it uses its own
+copy of @code{DPMI}@.
 
 @code{Sd} and @code{Sdtty} are believed to be
 insensitive to slight inaccuracies in floating-point division.
@@ -310,10 +315,10 @@ since some dancers have extraordinarily long memories.
 
 To install the program from a floppy disk to a PC-compatible, you must
 run a Command Prompt window (``DOS window'').
-In Windows 95 and systems with a similar interface (Windows 98 or modern versions
-of NT), double-click the @code{Command Prompt} icon.  This is typically in the
+In Windows 95, Windows 98, or NT 4.0 or later,
+double-click the @code{Command Prompt} icon.  This is typically in the
 @code{Programs} sub-menu of the @code{Start} menu.
-In Windows 3.1 and early versions of NT, double-click the @code{DOS Prompt} icon.
+In Windows 3.1 and NT 3.51, double-click the @code{DOS Prompt} icon.
 This is typically in the @code{main} program group.
 
 Now do this if you are installing Sdtty for the first time:
@@ -337,7 +342,7 @@ overwrite existing files.  Type ``Y'' in each case, assuming that you want
 to replace the existing version.  It will not damage or delete any sequence
 transcript files or initialization files.
 
-To exit from the Command Prompt window, just type @code{exit} to DOS.
+To exit from the Command Prompt window, just type @code{exit}.
 
 Once the installation is complete, you can run Sdtty under DOS or Windows.
 To run it from a Command Prompt (DOS), type

@@ -26,15 +26,14 @@
  * Type Control-U to clear the line.
  *
  * For use with version 32 of the Sd program.
- * Based on sdui-x11.c 1.10
  *
  * The version of this file is as shown immediately below.  This string
  * gets displayed at program startup, as the "ui" part of the complete
  * version.
  */
 
-#define UI_VERSION_STRING "1.10"
-#define UI_TIME_STAMP "wba@an.hp.com  29 Sept 98 $"
+#define UI_VERSION_STRING "1.11"
+#define UI_TIME_STAMP "wba@an.hp.com  29 Nov 98 $"
 
 /* This file defines the following functions:
    uims_version_string
@@ -554,6 +553,23 @@ Private int translate_keybind_spec(char key_name[])
             return -1;
          }
       }
+      if (key_name[key_length-2] == 'n') {
+         if (digits > 9 || key_length < 3)
+            return -1;
+
+         if (key_length == 3 && key_name[0] == 'c') {
+            return CTLNKP+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'a') {
+            return ALTNKP+digits;
+         }
+         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+            return CTLALTNKP+digits;
+         }
+         else {
+            return -1;
+         }
+      }
       if (key_name[key_length-2] == 'e') {
          if (digits > 15)
             return -1;
@@ -765,8 +781,7 @@ long_boolean verify_has_stopped;
    to see an enormous amount of output. */
 Private int match_lines;
 
-Private void
-start_matches(void)
+Private void start_matches(void)
 {
    /*
     * Find the number of lines on the screen.
@@ -781,28 +796,28 @@ start_matches(void)
    verify_has_stopped = FALSE;
 }
 
-Private int
-prompt_for_more_output(void)
+Private int prompt_for_more_output(void)
 {
     put_line("--More--");
 
     for (;;) {
-        char c = get_char();
+        int c = get_char();
         clear_line();   /* Erase the "more" line; next item goes on that line. */
 
         switch (c) {
-          case '\r':
-          case '\n': match_counter = 1; /* show one more line */
-                     return TRUE;  /* keep going */
-
-          case '\b':
-          case DEL:
-          case 'q':
-          case 'Q':  return FALSE; /* stop showing */
-
-          case ' ':  return TRUE;  /* keep going */
-
-          default:   put_line("Type Space to see more, Return for next line, Delete to stop:  --More--");
+        case '\r':
+        case '\n':
+           match_counter = 1; /* show one more line */
+           return TRUE;       /* but otherwise keep going */
+        case '\b':
+        case DEL:
+        case EKEY+14:    /* The "delete" key on a PC. */
+        case 'q':
+        case 'Q':
+           return FALSE; /* stop showing */
+        case ' ':
+           return TRUE;  /* keep going */
+        default:   put_line("Type Space to see more, Return for next line, Delete to stop:  --More--");
         }
     }
 }
@@ -1361,7 +1376,7 @@ extern int uims_do_neglect_popup(char dest[])
 
 Private int confirm(char *question)
 {
-   char c;
+   int c;
 
    for (;;) {
       put_line(question);
@@ -1378,7 +1393,8 @@ Private int confirm(char *question)
          if (journal_file) fputc('y', journal_file);
          return POPUP_ACCEPT;
       }
-      put_char(c);
+
+      if (c < 128) put_char(c);
 
       if (diagnostic_mode) {
          uims_terminate();
@@ -1553,7 +1569,6 @@ extern int uims_do_direction_popup(void)
 extern int uims_do_tagger_popup(int tagger_class)
 {
    uint32 retval;
-   int j = 0;
 
    if (interactivity == interactivity_verify) {
       user_match.match.call_conc_options.tagger = verify_options.tagger;
@@ -1576,17 +1591,10 @@ extern int uims_do_tagger_popup(int tagger_class)
       user_match = saved_match;
    }
 
-   while ((user_match.match.call_conc_options.tagger & 0xFF000000UL) == 0) {
-      user_match.match.call_conc_options.tagger <<= 8;
-      j++;
-   }
+   retval = user_match.match.call_conc_options.tagger;
+   user_match.match.call_conc_options.tagger = 0;
 
-   retval = user_match.match.call_conc_options.tagger >> 24;
-   user_match.match.call_conc_options.tagger &= 0x00FFFFFF;
-   while (j-- != 0) user_match.match.call_conc_options.tagger >>= 8;   /* Shift it back. */
-
-   if (interactivity == interactivity_verify)
-      verify_options.tagger = user_match.match.call_conc_options.tagger;
+   if (interactivity == interactivity_verify) verify_options.tagger = 0;
 
    return retval;
 }

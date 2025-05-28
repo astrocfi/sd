@@ -456,29 +456,30 @@ static restriction_thing wave_3x1d     = {6, {0, 1, 2, 6, 5, 4},                
 
 static restriction_thing miniwave_ptpd = {2, {1, 7, 3, 5},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for miniwaves in center of each diamond */
 
-static restriction_thing qtag_1        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
-static restriction_thing dmd4_1        = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {4, 8, 9, 10, 11}, {4, 0, 1, 2, 3}, FALSE, chk_dmd_qtag};
-
-static restriction_thing dmd_1         = {4, {0}, {4, 0, 1, 2, 3},                            {1, 0},    {1, 2},    FALSE, chk_dmd_qtag};
-static restriction_thing ptpd_1        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag};
-static restriction_thing qtag_3        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 0, 1}, {2, 4, 5}, FALSE, chk_dmd_qtag};
-
-static restriction_thing dmd4_3        = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {4, 0, 1, 2, 3}, {4, 8, 9, 10, 11}, FALSE, chk_dmd_qtag};
-
-static restriction_thing dmd_3         = {4, {0}, {4, 0, 1, 2, 3},                            {1, 2},    {1, 0},    FALSE, chk_dmd_qtag};
-static restriction_thing ptpd_3        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 2, 4}, {2, 0, 6}, FALSE, chk_dmd_qtag};
-static restriction_thing dmd_q         = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
-static restriction_thing qtag_d        = {4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},                {0},       {0},       FALSE, chk_dmd_qtag};
-
-static restriction_thing dmd4_d        = {8, {8, 4, 5, 6, 7, 12, 13, 14, 15}, {8, 0, 1, 2, 3, 8, 9, 10, 11}, {0},       {0},       FALSE, chk_dmd_qtag};
+static restriction_thing dmd_gq        = {4, {0}, {4, 0, 1, 2, 3},                            {1, 0},    {1, 2},    FALSE, chk_dmd_qtag};
+static restriction_thing qtag_gq       = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
+static restriction_thing ptpd_gq       = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag};
+static restriction_thing dmd3_gq       = {0, {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, {0}, {3, 6, 7, 8}, {3, 0, 1, 2}, FALSE, chk_dmd_qtag};
+static restriction_thing dmd4_gq       = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {4, 8, 9, 10, 11}, {4, 0, 1, 2, 3}, FALSE, chk_dmd_qtag};
 
 static restriction_thing dmd_d         = {4, {2, 0, 2}, {2, 1, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
+static restriction_thing qtag_d        = {4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},                {0},       {0},       FALSE, chk_dmd_qtag};
 static restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 6}, {4, 1, 3, 5, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
+static restriction_thing dmd3_d        = {0, {6, 3, 4, 5, 9, 10, 11}, {6, 0, 1, 2, 6, 7, 8}, {0},       {0},       FALSE, chk_dmd_qtag};
+static restriction_thing dmd4_d        = {8, {8, 4, 5, 6, 7, 12, 13, 14, 15}, {8, 0, 1, 2, 3, 8, 9, 10, 11}, {0},       {0},       FALSE, chk_dmd_qtag};
+
 static restriction_thing all_4_ns      = {4, {4, 0, 1, 2, 3}, {0},                            {0},       {0},       FALSE, chk_dmd_qtag};
+
+
+static restriction_thing dmd_p        = {4, {4, 0, 1, 2, 3}, {0},  {1, 0},  {1, 2},  FALSE, chk_dmd_qtag};
+
+
+
 static restriction_thing all_4_ew      = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
 static restriction_thing all_8_ns      = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
-static restriction_thing all_16_ns     = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, {0}, FALSE, chk_dmd_qtag};
 static restriction_thing all_8_ew      = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
+static restriction_thing all_16_ns     = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, {0}, FALSE, chk_dmd_qtag};
+static restriction_thing all_16_ew     = {4, {0}, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, FALSE, chk_dmd_qtag};
 
 static restriction_thing r1qt          = {4, {6, 7, 3, 2},             {4, 4, 0, 5, 1},                   {0}, {0}, TRUE, chk_qtag};
 static restriction_thing r3qt          = {4, {6, 7, 3, 2},             {4, 0, 4, 1, 5},                   {0}, {0}, TRUE, chk_qtag};
@@ -673,24 +674,26 @@ static restr_initializer restr_init_table2[] = {
    {s_qtag, cr_ijright, &ijright_qtag},
    {s_qtag, cr_diamond_like, &qtag_d},
    {s_qtag, cr_qtag_like, &all_8_ns},
-   {s_qtag, cr_gen_1_4_tag, &qtag_1},
-   {s_qtag, cr_gen_3_4_tag, &qtag_3},
+   {s_qtag, cr_pu_qtag_like, &all_8_ew},
+   {s_qtag, cr_gen_n_4_tag, &qtag_gq},
    {s4dmd, cr_jleft, &jleft_4dmd},
    {s4dmd, cr_jright, &jright_4dmd},
    {s4dmd, cr_diamond_like, &dmd4_d},
+   {s3dmd, cr_diamond_like, &dmd3_d},
    {s4dmd, cr_qtag_like, &all_16_ns},
-   {s4dmd, cr_gen_1_4_tag, &dmd4_1},
-   {s4dmd, cr_gen_3_4_tag, &dmd4_3},
+   {s4dmd, cr_pu_qtag_like, &all_16_ew},
+   {s4dmd, cr_gen_n_4_tag, &dmd4_gq},
+   {s3dmd, cr_gen_n_4_tag, &dmd3_gq},
    {sdmd, cr_jright, &jright_dmd},
    {sdmd, cr_diamond_like, &dmd_d},
-   {sdmd, cr_qtag_like, &dmd_q},
-   {sdmd, cr_gen_1_4_tag, &dmd_1},
-   {sdmd, cr_gen_3_4_tag, &dmd_3},
+   {sdmd, cr_qtag_like, &all_4_ew},
+   {sdmd, cr_pu_qtag_like, &dmd_p},
+   {sdmd, cr_gen_n_4_tag, &dmd_gq},
    {s_ptpd, cr_jright, &jright_ptpd},
    {s_ptpd, cr_diamond_like, &ptpd_d},
    {s_ptpd, cr_qtag_like, &all_8_ew},
-   {s_ptpd, cr_gen_1_4_tag, &ptpd_1},
-   {s_ptpd, cr_gen_3_4_tag, &ptpd_3},
+   {s_ptpd, cr_pu_qtag_like, &all_8_ns},
+   {s_ptpd, cr_gen_n_4_tag, &ptpd_gq},
    {s2x2, cr_wave_only, &box_wave},
    {s2x2, cr_all_facing_same, &box_1face},
    {s2x2, cr_2fl_only, &box_1face},
@@ -816,37 +819,33 @@ Private long_boolean check_for_concept_group(Const parse_block *parseptrcopy,
 
    if (k == concept_c1_phantom) {
       uint64 junk_concepts;
+
+      junk_concepts.her8it = 0;
+      junk_concepts.final = 0;
+
       *next_parseptr_p =
          process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
 
       if (((*next_parseptr_p)->concept->kind == concept_tandem ||
            (*next_parseptr_p)->concept->kind == concept_frac_tandem) &&
-          junk_concepts.herit == 0 && junk_concepts.final == 0)
+          (junk_concepts.her8it | junk_concepts.final) == 0)
          return TRUE;
    }
    else if (k == concept_meta) {
-      uint64 junk_concepts;
-      uint32 subkey = parseptrcopy->concept->value.arg1;
+      meta_key_kind subkey = parseptrcopy->concept->value.arg1;
 
       if (subkey == meta_key_random || subkey == meta_key_rev_random ||
           subkey == meta_key_piecewise || subkey == meta_key_nth_part_work ||
           subkey == meta_key_initially || subkey == meta_key_finally ||
           subkey == meta_key_echo || subkey == meta_key_rev_echo) {
-         *next_parseptr_p =
-            process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+         *next_parseptr_p = parseptr_skip;
          return TRUE;
       }
    }
-   else if (k == concept_so_and_so_only) {
-      uint64 junk_concepts;
-
-      if (((selective_key) parseptrcopy->concept->value.arg1) == selective_key_work_concept) {
-         *next_parseptr_p =
-            process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
-         if (junk_concepts.herit != 0 || junk_concepts.final != 0)
-            *next_parseptr_p = parseptr_skip;
-         return TRUE;
-      }
+   else if (k == concept_so_and_so_only &&
+            ((selective_key) parseptrcopy->concept->value.arg1) == selective_key_work_concept) {
+      *next_parseptr_p = parseptr_skip;
+      return TRUE;
    }
 
    return FALSE;
@@ -1383,28 +1382,41 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
 
             if (local_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
    
-               /* These concepts want to take special action if there are no following concepts and
-                  certain escape characters are found in the name of the following call. */
+               /* These concepts want to take special action if there are no following
+                  concepts and certain escape characters are found in the name of
+                  the following call. */
    
-               uint64 finaljunk;
+               uint64 junk_concepts;
+
+               junk_concepts.her8it = 0;
+               junk_concepts.final = 0;
                
-               /* Skip all final concepts, then demand that what remains is a marker (as opposed to a serious
-                   concept), and that a real call has been entered, and that its name starts with "@g". */
-               tptr = process_final_concepts(next_cptr, FALSE, &finaljunk);
+               /* Skip all final concepts, then demand that what remains is a marker
+                  (as opposed to a serious concept), and that a real call
+                  has been entered, and that its name starts with "@g". */
+               tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts);
    
                if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call;
             }
 
-            if (target_call && k == concept_left && (target_call->callflagsf & ESCAPE_WORD__LEFT)) {
+            if (target_call &&
+                k == concept_left &&
+                (target_call->callflagsf & ESCAPE_WORD__LEFT)) {
                use_left_name = TRUE;
             }
-            else if (target_call && k == concept_magic && (target_call->callflagsf & ESCAPE_WORD__MAGIC)) {
+            else if (target_call &&
+                     k == concept_magic &&
+                     (target_call->callflagsf & ESCAPE_WORD__MAGIC)) {
                use_magic_name = TRUE;
             }
-            else if (target_call && k == concept_interlocked && (target_call->callflagsf & ESCAPE_WORD__INTLK)) {
+            else if (target_call &&
+                     k == concept_interlocked &&
+                     (target_call->callflagsf & ESCAPE_WORD__INTLK)) {
                use_intlk_name = TRUE;
             }
-            else if (target_call && k == concept_cross && (target_call->callflagsf & ESCAPE_WORD__CROSS)) {
+            else if (target_call &&
+                     k == concept_cross &&
+                     (target_call->callflagsf & ESCAPE_WORD__CROSS)) {
                use_cross_name = TRUE;
             }
             else if (allow_deferred_concept &&
@@ -2703,8 +2715,10 @@ extern long_boolean verify_restriction(
 
       goto bad;
    case chk_dmd_qtag:
-      qa1 = 0;
       qa0 = 0;
+      qa1 = 0;
+      qa2 = 0;
+      qa3 = 0;
 
       for (idx=0; idx<rr->map1[0]; idx++)
          qa1 |= ss->people[rr->map1[idx+1]].id1;
@@ -2713,17 +2727,32 @@ extern long_boolean verify_restriction(
          qa0 |= ss->people[rr->map2[idx+1]].id1;
 
       for (idx=0; idx<rr->map3[0]; idx++) {
-         if ((t = ss->people[rr->map3[idx+1]].id1) != 0 && (t & 2) != 0)
-            goto bad;
+         if ((t = ss->people[rr->map3[idx+1]].id1) != 0) {
+            qa2 |= t;
+            qa3 |= ~t;
+         }
       }
 
       for (idx=0; idx<rr->map4[0]; idx++) {
-         if ((t = ss->people[rr->map4[idx+1]].id1) != 0 && (t & 2) != 2)
-            goto bad;
+         if ((t = ss->people[rr->map4[idx+1]].id1) != 0) {
+            qa2 |= ~t;
+            qa3 |= t;
+         }
       }
 
       if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
          goto bad;
+
+      if (tt.assump_both) {
+         /* The "live" modifier means that we need a definitive person
+            to distinguish "in" or "out". */
+         if (tt.assump_live && !(qa2 | qa3))
+            goto bad;
+
+         if ((qa2 & (tt.assump_both << 1) & 2) != 0 ||
+             (qa3 & tt.assump_both & 2) != 0)
+            goto bad;
+      }
 
       goto good;
    case chk_qtag:
@@ -2816,7 +2845,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
    long_boolean booljunk;
 
    for (p = spec; p; p = p->next) {
-      uint32 i, k, t, u, v, w, mask;
+      uint32 i, k, t, u, w, mask;
       assumption_thing tt;
       int idx, plaini;
       restriction_thing *rr;
@@ -3180,68 +3209,24 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          else if (ss->kind == s4x6 && (t & 010) == 0) goto good;
          else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
          goto bad;
-      case cr_1_4_tag:                      /* dmd or qtag - is a 1/4 tag,
-                                               i.e. points looking in */
+      case cr_gen_n_4_tag:
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
-            if (tt.assump_both == 2) goto good;
+            if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1)
+               goto good;
+            if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 2)
+               goto good;
          }
 
-         switch (ss->kind) {
-         case sdmd:
-            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_east) &&  /* We forgive phantoms up to a point. */
-                   (!(u = ss->people[2].id1 & d_mask) || u == d_west) &&
-                   (t | u))               /* But require at least one live person to make the setup definitive. */
-               goto good;
-            goto bad;
-         case s_qtag:
-            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(u = ss->people[1].id1 & d_mask) || u == d_south) &&
-                   (!(v = ss->people[4].id1 & d_mask) || v == d_north) &&
-                   (!(w = ss->people[5].id1 & d_mask) || w == d_north) &&
-                   (t | u | v | w))
-               goto good;
-            goto bad;
-         default:
-            goto good;                 /* We don't understand the setup --
-                                          we'd better accept it. */
-         }
-      case cr_3_4_tag:                      /* dmd or qtag - is a 3/4 tag, i.e.
-                                               points looking out */
-         switch (ss->cmd.cmd_assume.assumption) {
-         case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
-            if (tt.assump_both == 1) goto good;
-         }
-
-         /* Took out the "one person to be definitive" stuff, so that snag reverse order
-            turn on will work in a 3/4 tag. */
-
-         switch (ss->kind) {
-         case sdmd:
-            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_west) &&  /* We forgive phantoms up to a point. */
-                   (!(u = ss->people[2].id1 & d_mask) || u == d_east) &&
-                   (t | u | 99))               /* But require at least one live person to make the setup definitive. */
-               goto good;
-            goto bad;
-         case s_qtag:
-            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(u = ss->people[1].id1 & d_mask) || u == d_north) &&
-                   (!(v = ss->people[4].id1 & d_mask) || v == d_south) &&
-                   (!(w = ss->people[5].id1 & d_mask) || w == d_south) &&
-                   (t | u | v | w | 99))
-               goto good;
-            goto bad;
-         default:
-            goto good;                 /* We don't understand the setup --
-                                          we'd better accept it. */
-         }
+         goto check_tt;
       case cr_dmd_same_pt:                   /* dmd or pdmd - centers would circulate
                                                 to same point */
          if (((ss->people[1].id1 & 01011) == d_east) &&         /* faces either east or west */
              (!((ss->people[3].id1 ^ ss->people[1].id1) & d_mask)))  /* and both face same way */
             goto good;
          goto bad;
-      case cr_dmd_facing:                    /* dmd or pdmd - diamond is fully occupied and fully facing */
+      case cr_dmd_facing:                    /* dmd or pdmd - diamond is fully occupied
+                                                and fully facing */
          if ((ss->people[0].id1 & d_mask) == d_north &&
              (ss->people[1].id1 & d_mask) == d_west &&
              (ss->people[2].id1 & d_mask) == d_south &&
@@ -3255,17 +3240,21 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          goto bad;
       case cr_qtag_like:
          switch (ss->cmd.cmd_assume.assumption) {
-         case cr_diamond_like:
+         case cr_diamond_like: case cr_pu_qtag_like:
             goto bad;
          }
-
          goto check_tt;
       case cr_diamond_like:
          switch (ss->cmd.cmd_assume.assumption) {
-         case cr_qtag_like:
+         case cr_qtag_like: case cr_pu_qtag_like:
             goto bad;
          }
-
+         goto check_tt;
+      case cr_pu_qtag_like:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_qtag_like: case cr_diamond_like:
+            goto bad;
+         }
          goto check_tt;
       case cr_dmd_intlk:
          switch (ss->cmd.cmd_assume.assumption) {
@@ -3736,6 +3725,83 @@ extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *re
 
 
 
+/* WARNING!!!!  This procedure appears verbatim in sdutil.c and dbcomp.c . */
+
+/* These combinations are not allowed. */
+
+#define FORBID1 (INHERITFLAG_FRACTAL|INHERITFLAG_YOYO)
+#define FORBID2 (INHERITFLAG_SINGLEFILE|INHERITFLAG_SINGLE)
+#define FORBID3 (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)
+#define FORBID4 (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)
+
+
+static long_boolean do_heritflag_merge(uint32 *dest, uint32 source)
+{
+   uint32 revertsource = source & INHERITFLAG_REVERTMASK;
+
+   if (revertsource) {
+      /* If the source is a revert/reflect bit, things are complicated. */
+
+      uint32 revertdest = (*dest) & INHERITFLAG_REVERTMASK;
+
+      if (!revertdest) {
+         goto good;
+      }
+      else if (revertsource == INHERITFLAGRVRTK_REVERT &&
+               revertdest == INHERITFLAGRVRTK_REFLECT) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RFV;
+         return FALSE;
+      }
+      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
+               revertdest == INHERITFLAGRVRTK_REVERT) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RVF;
+         return FALSE;
+      }
+      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
+               revertdest == INHERITFLAGRVRTK_REFLECT) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RFF;
+         return FALSE;
+      }
+      else if (revertsource == INHERITFLAGRVRTK_REVERT &&
+               revertdest == INHERITFLAGRVRTK_RVF) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RVFV;
+         return FALSE;
+      }
+      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
+               revertdest == INHERITFLAGRVRTK_RFV) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RFVF;
+         return FALSE;
+      }
+      else
+         return TRUE;
+   }
+
+   /* Check for plain redundancy.  If this is a bit in one of the complex
+      fields, this simple test may not catch the error, but the next one will. */
+
+   if ((*dest & source))
+      return TRUE;
+
+   if (((*dest & FORBID1) && (source & FORBID1)) ||
+       ((*dest & FORBID2) && (source & FORBID2)) ||
+       ((*dest & FORBID3) && (source & FORBID3)) ||
+       ((*dest & FORBID4) && (source & FORBID4)))
+      return TRUE;
+
+   good:
+
+   *dest |= source;
+
+   return FALSE;
+}
+
+
+
 /* Take a concept pointer and scan for all "final" concepts,
    returning an updated concept pointer and a mask of all such concepts found.
    "Final" concepts are those that modify the execution of a call but
@@ -3744,144 +3810,156 @@ extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *re
    any "magic" or "interlocked" concept, it drops a pointer to where the
    last such occurred into the external variable "last_magic_diamond". */
 
+/* If not checking for errors, we set the "final" bits correctly
+   (we can always do that, since the complex bit field stuff isn't
+   used in this), and we just set anything in the "herit" field.
+   In fact, we set something in the "herit" field even if this item
+   was "final".  Doing all this gives the required behavior, which is:
+
+   (1) If any concept at all, final or herit, the herit field
+      will be nonzero.
+   (2) The herit field is otherwise messed up.  Only zero/nonzero matters.
+   (3) In any case the "final" field will be correct. */
+
+
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
    uint64 *final_concepts)
 {
-   final_concepts->herit = 0;
-   final_concepts->final = 0;
-
    while (cptr) {
-      uint64 bit_to_set;
-      uint64 bit_to_forbid;
-      bit_to_set.herit = 0;
-      bit_to_set.final = 0;
-      bit_to_forbid.herit = 0;
-      bit_to_forbid.final = 0;
+      uint32 the_final_bit;
+      uint32 heritsetbit = 0;
+      uint32 heritforbidbit = 0;
 
       switch (cptr->concept->kind) {
       case concept_comment:
          goto get_next;               /* Skip comments. */
-      case concept_triangle: bit_to_set.final = FINAL__TRIANGLE; break;
+      case concept_triangle:
+         the_final_bit = FINAL__TRIANGLE;
+         goto new_final;
       case concept_magic:
          last_magic_diamond = cptr;
-         bit_to_set.herit = INHERITFLAG_MAGIC;
-         bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+         heritsetbit = INHERITFLAG_MAGIC;
+         heritforbidbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
          break;
       case concept_interlocked:
          last_magic_diamond = cptr;
-         bit_to_set.herit = INHERITFLAG_INTLK;
-         bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+         heritsetbit = INHERITFLAG_INTLK;
+         heritforbidbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
          break;
       case concept_grand:
-         bit_to_set.herit = INHERITFLAG_GRAND;
-         bit_to_forbid.herit = INHERITFLAG_SINGLE;
+         heritsetbit = INHERITFLAG_GRAND;
+         heritforbidbit = INHERITFLAG_SINGLE;
          break;
       case concept_cross:
-         bit_to_set.herit = INHERITFLAG_CROSS; break;
+         heritsetbit = INHERITFLAG_CROSS; break;
       case concept_yoyo:
-         bit_to_set.herit = INHERITFLAG_YOYO;
-         bit_to_forbid.herit = INHERITFLAG_FRACTAL;
-         break;
+         heritsetbit = INHERITFLAG_YOYO; break;
       case concept_fractal:
-         bit_to_set.herit = INHERITFLAG_FRACTAL;
-         bit_to_forbid.herit = INHERITFLAG_YOYO;
-         break;
-      case concept_straight: bit_to_set.herit = INHERITFLAG_STRAIGHT; break;
-      case concept_twisted: bit_to_set.herit = INHERITFLAG_TWISTED; break;
+         heritsetbit = INHERITFLAG_FRACTAL; break;
+      case concept_straight:
+         heritsetbit = INHERITFLAG_STRAIGHT; break;
+      case concept_twisted:
+         heritsetbit = INHERITFLAG_TWISTED; break;
       case concept_single:
-         bit_to_set.herit = INHERITFLAG_SINGLE;
-         bit_to_forbid.herit = INHERITFLAG_SINGLEFILE;
-         break;
+         heritsetbit = INHERITFLAG_SINGLE; break;
       case concept_singlefile:
-         bit_to_set.herit = INHERITFLAG_SINGLEFILE;
-         bit_to_forbid.herit = INHERITFLAG_SINGLE;
-         break;
+         heritsetbit = INHERITFLAG_SINGLEFILE; break;
       case concept_1x2:
-         bit_to_set.herit = INHERITFLAG_1X2;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGMXNK_1X2; break;
       case concept_2x1:
-         bit_to_set.herit = INHERITFLAG_2X1;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
-      case concept_2x2:
-         bit_to_set.herit = INHERITFLAG_2X2;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGMXNK_2X1; break;
       case concept_1x3:
-         bit_to_set.herit = INHERITFLAG_1X3;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGMXNK_1X3; break;
       case concept_3x1:
-         bit_to_set.herit = INHERITFLAG_3X1;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGMXNK_3X1; break;
+      case concept_2x2:
+         heritsetbit = INHERITFLAGNXNK_2X2; break;
       case concept_3x3:
-         bit_to_set.herit = INHERITFLAG_3X3;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGNXNK_3X3; break;
       case concept_4x4:
-         bit_to_set.herit = INHERITFLAG_4X4;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGNXNK_4X4; break;
       case concept_5x5:
-         bit_to_set.herit = INHERITFLAG_5X5;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGNXNK_5X5; break;
       case concept_6x6:
-         bit_to_set.herit = INHERITFLAG_6X6;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGNXNK_6X6; break;
       case concept_7x7:
-         bit_to_set.herit = INHERITFLAG_7X7;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGNXNK_7X7; break;
       case concept_8x8:
-         bit_to_set.herit = INHERITFLAG_8X8;
-         bit_to_forbid.herit = MXN_BITS;
-         break;
+         heritsetbit = INHERITFLAGNXNK_8X8; break;
+      case concept_revert:
+         heritsetbit = cptr->concept->value.arg1; break;
       case concept_split:
-         bit_to_set.final = FINAL__SPLIT; break;
+         the_final_bit = FINAL__SPLIT;
+         goto new_final;
       case concept_reverse:
-         bit_to_set.herit = INHERITFLAG_REVERSE; break;
+         heritsetbit = INHERITFLAG_REVERSE; break;
       case concept_left:
-         bit_to_set.herit = INHERITFLAG_LEFT; break;
+         heritsetbit = INHERITFLAG_LEFT; break;
       case concept_12_matrix:
-         if (check_errors && (final_concepts->herit | final_concepts->final))
+         if (check_errors && (final_concepts->her8it | final_concepts->final))
             fail("Matrix modifier must appear first.");
-         bit_to_set.herit = INHERITFLAG_12_MATRIX;
+         heritsetbit = INHERITFLAG_12_MATRIX;
          break;
       case concept_16_matrix:
-         if (check_errors && (final_concepts->herit | final_concepts->final))
+         if (check_errors && (final_concepts->her8it | final_concepts->final))
             fail("Matrix modifier must appear first.");
-         bit_to_set.herit = INHERITFLAG_16_MATRIX;
+         heritsetbit = INHERITFLAG_16_MATRIX;
          break;
       case concept_diamond:
-         bit_to_set.herit = INHERITFLAG_DIAMOND;
-         bit_to_forbid.herit = INHERITFLAG_SINGLE;
+         heritsetbit = INHERITFLAG_DIAMOND;
+         heritforbidbit = INHERITFLAG_SINGLE;
          break;
       case concept_funny:
-         bit_to_set.herit = INHERITFLAG_FUNNY; break;
+         heritsetbit = INHERITFLAG_FUNNY; break;
       default:
          goto exit5;
       }
 
+      /* At this point we have a "herit" concept. */
+
       if (check_errors) {
-         if (cptr->concept->level > calling_level) warn(warn__bad_concept_level);
-   
-         if ((final_concepts->herit & bit_to_set.herit) || (final_concepts->final & bit_to_set.final))
-            fail("Redundant call modifier.");
-   
-         if ((final_concepts->herit & bit_to_forbid.herit) || (final_concepts->final & bit_to_forbid.final))
-            fail("Illegal combination or order of call modifiers.");
+         if (final_concepts->her8it & heritforbidbit)
+            fail("Illegal order of call modifiers.");
+
+         if (do_heritflag_merge(&final_concepts->her8it, heritsetbit))
+            fail("Illegal combination of call modifiers.");
+      }
+      else {
+         /* If not checking for errors, we just have to set the "herit" field
+            nonzero. */
+
+         final_concepts->her8it |= heritsetbit;
       }
 
-      final_concepts->herit |= bit_to_set.herit;
-      final_concepts->final |= bit_to_set.final;
+      goto check_level;
 
-      get_next:
+   new_final:
+
+      /* This is a "final" concept.  It is more straightforward, because the word
+         is not broken into fields that need special checking. */
+
+      if (check_errors) {
+         if ((final_concepts->final & the_final_bit))
+            fail("Redundant call modifier.");
+      }
+      else {
+         /* Put the bit into the "herit" stuff also, so that "herit" will tell
+            whether any modifier at all was seen.  Only the zero/nonzero nature
+            of the "herit" word will be looked at if we are not checking for errors. */
+
+         final_concepts->her8it |= the_final_bit;
+      }
+
+      final_concepts->final |= the_final_bit;
+
+   check_level:
+
+      if (check_errors && cptr->concept->level > calling_level)
+         warn(warn__bad_concept_level);
+
+   get_next:
 
       cptr = cptr->next;
    }
@@ -3897,19 +3975,22 @@ extern parse_block *really_skip_one_concept(
    concept_kind *k_p,
    parse_block **parseptr_skip_p)
 {
-   uint64 new_final_concepts;
+   uint64 junk_concepts;
    parse_block *next_parseptr;
    parse_block *parseptrcopy;
 
    while (incoming->concept->kind == concept_comment)
       incoming = incoming->next;
 
-   parseptrcopy = process_final_concepts(incoming, FALSE, &new_final_concepts);
+   junk_concepts.her8it = 0;
+   junk_concepts.final = 0;
+
+   parseptrcopy = process_final_concepts(incoming, FALSE, &junk_concepts);
 
    /* Find out whether the next concept (the one that will be "random" or whatever)
       is a modifier or a "real" concept. */
 
-   if (new_final_concepts.herit | new_final_concepts.final) {
+   if (junk_concepts.her8it | junk_concepts.final) {
       parseptrcopy = incoming;
    }
    else if (parseptrcopy->concept) {

@@ -1617,9 +1617,8 @@ Private long_boolean check_tbone(setup *real_people, int real_index,
          case cr_diamond_like:
             return TRUE;
          case cr_qtag_like:
-         case cr_gen_1_4_tag:
-         case cr_gen_3_4_tag:
-            return FALSE;
+         case cr_gen_n_4_tag:
+			return FALSE;
          case cr_jleft:
          case cr_jright:
          case cr_ijleft:

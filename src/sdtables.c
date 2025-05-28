@@ -2291,6 +2291,7 @@ static Const fixer n1x4a     = {s1x2, s1x4,        0, 0, 1,       &n1x4a,     0,
 
 static Const fixer f1x6aa    = {s1x2, s1x6,        0, 0, 2,       &f1x6aa,    &fo6zz,     0,          0, 0,          0,    0,          0,          {0, 1, 4, 3}};
 static Const fixer f1x8aa    = {s1x2, s1x8,        0, 0, 2,       &f1x8aa,    &foozz,     0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
+static Const fixer f1x855    = {s1x1, s1x8,        0, 0, 4,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 2, 4, 6}};
 static Const fixer fo6zz     = {s1x2, s_bone6,     1, 0, 2,       &fo6zz,     &f1x6aa,    0,          0, 0,          0,    0,          0,          {0, 4, 1, 3}};
 static Const fixer foozz     = {s1x2, s_ptpd,      1, 0, 2,       &foozz,     &f1x8aa,    0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
 static Const fixer fo6zzd    = {s2x2, s_bone6,     0, 1, 1,       0,          0,          &f1x6aad,   0, 0,          0,    &fo6zzd,    0,          {0, 1, 3, 4}};
@@ -2735,6 +2736,7 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s2x4,        0x99,   &f2x4endo,   (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x6,         033,   &f1x6aa,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x8,        0xAA,   &f1x8aa,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s1x8,        0x55,   &f1x855,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s3x4,        03131,  &f3x4outer,  (fixer *) 0, -1},
    {LOOKUP_NONE,               s3dmd,       00707,  &f3dmouter,  (fixer *) 0, -1},
    {LOOKUP_NONE,               s_dhrglass,   0x77,  &fdhrgl,     (fixer *) 0, -1},

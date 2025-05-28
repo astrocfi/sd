@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: November 17, 1998
-@set sd-version 32.3
+@set Time-stamp: December 6, 1998
+@set sd-version 32.4
 @set full-manual
 @c %**end of header
 @iftex
@@ -191,7 +191,7 @@ Call Notes
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
-* Countershake::                Countershake
+* Countershake/Recoil/Easy Does It:: These have alternate forms in the Database
 * Mini Busy::                   Mini Busy
 * <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
@@ -939,6 +939,9 @@ Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain digits
 always have their normal meaning, and shift digits are punctuation.)
 @item @r{a function key: f1 through f12}
 These may be plain, shifted, control, alt, or control-alt.
+@item @r{a numeric keypad key: n0 through n9}
+Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain numeric
+key presses are always equivalent to that digit.)
 @item @r{an ``enhanced'' key: e1 through e14}
 These may be plain, shifted, control, alt, or control-alt.
 @end table
@@ -2382,8 +2385,8 @@ the @code{-lines @var{n}} switch can be given at program startup, as in
 On Windows and other systems that allow it,
 @code{Sdtty} recognizes a number of function keys and other
 special keystrokes.  They can be programmed to your personal preferences
-through the initialization file.  The default key interpretations are as
-follows:
+through the initialization file.  If you do not program your personal
+preferences, you get the following ``standard'' definitions:
 
 @example
 @group
@@ -2604,14 +2607,14 @@ This section documents these calls.
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
-* Countershake::                Countershake
+* Countershake/Recoil/Easy Does It:: These have alternate forms in the Database
 * Mini Busy::                   Mini Busy
 * <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
-* Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have two forms in the Database
+* Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have alternate forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
@@ -2903,7 +2906,7 @@ Use this call when you want just the centers or ends to do their part,
 or you are using some concept like @samp{central}.  In other circumstances,
 just @samp{grand chain 8} should work.
 
-@node Percolate and Cover Up, Countershake, Grand Chain 8, Call Notes
+@node Percolate and Cover Up, Countershake/Recoil/Easy Does It, Grand Chain 8, Call Notes
 @section Percolate, Perk Up, and Cover Up
 
 When performed from some formations (but not waves), these calls have the
@@ -2917,23 +2920,41 @@ and @samp{cover up (centers and ends)} when using the @samp{central} concept.
 @code{Sd} will, of course, check that the facing directions are such that
 the dancers would have stayed in the center had all 8 people done the call.
 
-@node Countershake, Mini Busy, Percolate and Cover Up, Call Notes
-@section Countershake
+@node Countershake/Recoil/Easy Does It, Mini Busy, Percolate and Cover Up, Call Notes
+@section Countershake, Recoil, Easy Does It
 
-The centers and ends each have 3 parts on this call, but they are
-not synchronized with each other.  Therefore, some variants of
-@samp{countershake} have the property that the fractionalization
-is not well defined.  If you want to call @samp{3x3 countershake} from
-a 2x6 matrix, some of the dancers won't be able to fractionalize it, though
-they may consider it possible to do the entire call.
+The definition that @code{Sd} uses for these calls attempts to be completely
+correct with respect to subtleties in the definition.  For example, fractions
+are observed, and the definition is followed when the call is used from unusual
+starting formations.  These general definitions are not always usable when the
+call is used with certain modifiers such as @samp{single} or @samp{3x3}.  In such cases,
+@code{Sd} has alternate calls with the parenthesized word ``matrix'' after them,
+as in @samp{recoil (matrix)}.  These alternate forms compromise the definition
+as needed to make the call work with the modifier.
 
-The plain call @samp{countershake} is defined by parts, and can handle all
-of the usual modifiers, such as @samp{3x1}, or @samp{3x3} from quadruple
-lines of 3.  @code{Sd} has another call, @samp{countershake (matrix)} that
-can handle the occasional uses that violate the definition, such as
-@samp{3x3} in a 2x6 matrix.  It is not fractionalizable.
+The call @samp{recoil (matrix)} sacrifices fractionalization, and
+can only be done when people are facing in, but it can be done with the
+@samp{3x3} modifier from facing lines of 3.
 
-@node Mini Busy, <ANYONE> Run the Wheel, Countershake, Call Notes
+The call @samp{easy does it (matrix)} sacrifices fractionalization and the
+knowledge of the centers' and ends' parts, but it can be done with the
+@samp{3x3} modifier from suitable 2x6 matrix two-faced lines.
+
+The call @samp{countershake (matrix)} sacrifices fractionalization and the
+ability to use the real definition from unusual positions, but it can
+be done with the @samp{3x3} modifier from a 2x6 matrix completed
+double-pass-thru formation.
+
+The plain call @samp{countershake} can handle fractions, centers' and
+ends' parts, unusual formations, and even modifiers such as @samp{3x1}
+or @samp{3x3} from quadruple lines of 3.  However, it can't handle
+@samp{3x3 countershake} from a 2x6 matrix completed double-pass-thru
+formation.  The reason for this is that, when done from a 2x6 matrix,
+the fractions are not synchronized with each other, and the definitions
+of the various parts are not consistent.  You need @samp{countershake (matrix)}
+for this.
+
+@node Mini Busy, <ANYONE> Run the Wheel, Countershake/Recoil/Easy Does It, Call Notes
 @section Mini Busy
 
 This call is defined with three parts: @samp{1/2 Press Ahead}, @samp{center 2

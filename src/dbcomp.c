@@ -19,11 +19,14 @@
 typedef unsigned long int uint32;
 typedef unsigned short int uint16;
 typedef unsigned char uint8;
+typedef int long_boolean;
+#define TRUE 1
+#define FALSE 0
 #define Const const
-
 typedef Const char *Cstring;
 
 #include "database.h"
+
 
 #define DB_FMT_STR(name) DB_FMT_NUM(name)
 #define DB_FMT_NUM(number) #number
@@ -599,12 +602,11 @@ char *qualtab[] = {
    "ctr_miniwaves",
    "ctr_couples",
    "awkward_centers",
-   "1_4_tag",
-   "3_4_tag",
    "dmd_same_point",
    "dmd_facing",
    "diamond_like",
    "qtag_like",
+   "pu_qtag_like",
    "nice_diamonds",
    "magic_only",
    "in_or_out",
@@ -656,8 +658,7 @@ char *qualtab[] = {
    "quarterbox_or_magic_col",
    "???",
    "???",
-   "???",
-   "???",
+   "gen_n_4_tag",
    "???",
    "???",
    "???",
@@ -766,17 +767,6 @@ char *flagtabh[] = {
    "16_matrix_is_inherited",
    "cross_is_inherited",
    "single_is_inherited",
-   "1x2_is_inherited",
-   "2x1_is_inherited",
-   "2x2_is_inherited",
-   "1x3_is_inherited",
-   "3x1_is_inherited",
-   "3x3_is_inherited",
-   "4x4_is_inherited",
-   "5x5_is_inherited",
-   "6x6_is_inherited",
-   "7x7_is_inherited",
-   "8x8_is_inherited",
    "singlefile_is_inherited",
    "half_is_inherited",
    "yoyo_is_inherited",
@@ -800,17 +790,6 @@ char *altdeftabh[] = {
    "16matrix",
    "cross",
    "single",
-   "1x2",
-   "2x1",
-   "2x2",
-   "1x3",
-   "3x1",
-   "3x3",
-   "4x4",
-   "5x5",
-   "6x6",
-   "7x7",
-   "8x8",
    "singlefile",
    "half",
    "yoyo",
@@ -818,6 +797,60 @@ char *altdeftabh[] = {
    "twisted",
    "lasthalf",
    "fractal",
+   ""};
+
+char *mxntabplain[] = {
+   "1x2",
+   "2x1",
+   "1x3",
+   "3x1",
+   ""};
+
+char *nxntabplain[] = {
+   "2x2",
+   "3x3",
+   "4x4",
+   "5x5",
+   "6x6",
+   "7x7",
+   "8x8",
+   ""};
+
+char *reverttabplain[] = {
+   "revert",
+   "reflect",
+   "revertreflect",
+   "reflectrevert",
+   "revertreflectrevert",
+   "reflectrevertreflect",
+   "reflectreflect",
+   ""};
+
+char *mxntabforce[] = {
+   "force_1x2",
+   "force_2x1",
+   "force_1x3",
+   "force_3x1",
+   ""};
+
+char *nxntabforce[] = {
+   "force_2x2",
+   "force_3x3",
+   "force_4x4",
+   "force_5x5",
+   "force_6x6",
+   "force_7x7",
+   "force_8x8",
+   ""};
+
+char *reverttabforce[] = {
+   "force_revert",
+   "force_reflect",
+   "force_revertreflect",
+   "force_reflectrevert",
+   "force_revertreflectrevert",
+   "force_reflectrevertreflect",
+   "force_reflectreflect",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -831,21 +864,10 @@ char *defmodtabh[] = {
    "inherit_intlk",
    "inherit_magic",
    "inherit_grand",
-   "inherit_12_matrix",
-   "inherit_16_matrix",
+   "???",
+   "???",
    "inherit_cross",
    "inherit_single",
-   "inherit_1x2",
-   "inherit_2x1",
-   "inherit_2x2",
-   "inherit_1x3",
-   "inherit_3x1",
-   "inherit_3x3",
-   "inherit_4x4",
-   "inherit_5x5",
-   "inherit_6x6",
-   "inherit_7x7",
-   "inherit_8x8",
    "inherit_singlefile",
    "inherit_half",
    "inherit_yoyo",
@@ -873,22 +895,12 @@ char *forcetabh[] = {
    "force_16_matrix",
    "force_cross",
    "force_single",
-   "force_1x2",
-   "force_2x1",
-   "force_2x2",
-   "force_1x3",
-   "force_3x1",
-   "force_3x3",
-   "force_4x4",
-   "force_5x5",
-   "force_6x6",
-   "force_7x7",
-   "force_8x8",
    "force_singlefile",
    "force_half",
    "force_yoyo",
    "force_straight",
    "force_twisted",
+   "force_lasthalf",
    "force_fractal",
    ""};
 
@@ -1329,7 +1341,7 @@ static uint32 tagsearch(int def)
 
    if (i >= tagtabmax) {
       tagtabmax <<= 1;
-      tagtab = (tagtabitem *) realloc(tagtab, tagtabmax * sizeof(tagtabitem));
+      tagtab = (tagtabitem *) realloc((void *) tagtab, tagtabmax * sizeof(tagtabitem));
       if (!tagtab) errexit("Out of memory!!!!!!");
    }
 
@@ -1367,8 +1379,8 @@ static int get_num(char s[])
 
 static void write_halfword(uint32 n)
 {
-   db_putc((n>>8) & 0xFF);
-   db_putc((n) & 0xFF);
+   db_putc((char) ((n>>8) & 0xFF));
+   db_putc((char) ((n) & 0xFF));
    filecount += 2;
 }
 
@@ -1376,11 +1388,78 @@ static void write_halfword(uint32 n)
 
 static void write_fullword(uint32 n)
 {
-   db_putc((n>>24) & 0xFF);
-   db_putc((n>>16) & 0xFF);
-   db_putc((n>>8) & 0xFF);
-   db_putc((n) & 0xFF);
+   db_putc((char) ((n>>24) & 0xFF));
+   db_putc((char) ((n>>16) & 0xFF));
+   db_putc((char) ((n>>8) & 0xFF));
+   db_putc((char) ((n) & 0xFF));
    filecount += 4;
+}
+
+
+/* WARNING!!!!  This procedure appears verbatim in sdutil.c and dbcomp.c . */
+
+/* These combinations are not allowed. */
+
+#define FORBID1 (INHERITFLAG_FRACTAL|INHERITFLAG_YOYO)
+#define FORBID2 (INHERITFLAG_SINGLEFILE|INHERITFLAG_SINGLE)
+#define FORBID3 (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)
+#define FORBID4 (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)
+
+
+static long_boolean do_heritflag_merge(uint32 *dest, uint32 source)
+{
+
+   if (source & INHERITFLAG_REVERTMASK) {
+      /* If the source is a revert/reflect bit, things are complicated. */
+      if (!(*dest & INHERITFLAG_REVERTMASK)) {
+         goto good;
+      }
+      else if (source == INHERITFLAGRVRTK_REVERT && *dest == INHERITFLAGRVRTK_REFLECT) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RFV;
+         return FALSE;
+      }
+      else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_REVERT) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RVF;
+         return FALSE;
+      }
+      else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_REFLECT) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RFF;
+         return FALSE;
+      }
+      else if (source == INHERITFLAGRVRTK_REVERT && *dest == INHERITFLAGRVRTK_RVF) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RVFV;
+         return FALSE;
+      }
+      else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_RFV) {
+         *dest &= ~INHERITFLAG_REVERTMASK;
+         *dest |= INHERITFLAGRVRTK_RFVF;
+         return FALSE;
+      }
+      else
+         return TRUE;
+   }
+
+   /* Check for plain redundancy.  If this is a bit in one of the complex
+      fields, this simple test may not catch the error, but the next one will. */
+
+   if ((*dest & source))
+      return TRUE;
+
+   if (((*dest & FORBID1) && (source & FORBID1)) ||
+       ((*dest & FORBID2) && (source & FORBID2)) ||
+       ((*dest & FORBID3) && (source & FORBID3)) ||
+       ((*dest & FORBID4) && (source & FORBID4)))
+      return TRUE;
+
+   good:
+
+   *dest |= source;
+
+   return FALSE;
 }
 
 
@@ -1426,26 +1505,57 @@ static void write_defmod_flags(int is_seq)
             if (nnn <= 0 || nnn >= 8) errexit("bad number");
             rr1 |= (nnn*DFM1_NUM_INSERT_BIT) | DFM1_FRACTAL_INSERT;
          }
+         else if (!strcmp(tok_str, "inherit_nxn")) {
+            if (INHERITFLAG_NXNMASK & ~call_flagsh)
+               errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
+
+            rrh |= INHERITFLAG_NXNMASK;
+         }
+         else if (!strcmp(tok_str, "inherit_mxn")) {
+            if (INHERITFLAG_MXNMASK & ~call_flagsh)
+               errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
+
+            rrh |= INHERITFLAG_MXNMASK;
+         }
+         else if (strcmp(tok_str, "inherit_bigmatrix") == 0) {
+            if ((INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX) & ~call_flagsh)
+               errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
+
+            rrh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
+         }
+         else if (strcmp(tok_str, "inherit_revert") == 0) {
+            if ((INHERITFLAG_REVERTMASK) & ~call_flagsh)
+               errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
+
+            rrh |= INHERITFLAG_REVERTMASK;
+         }
          else if ((i = search(defmodtabh)) >= 0) {
             uint32 bit = 1 << i;
 
-            /* Don't check the left/reverse flags -- they are complicated, so there is no "force" word for them. */
+            /* Don't check the left/reverse flags -- they are complicated,
+               so there is no "force" word for them. */
             if (bit & ~(call_flagsh | INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
             rrh |= bit;
          }
-         else if ((i = search(forcetabh)) >= 0) {
-            uint32 bit = 1 << i;
+         else {
+            uint32 bit;
 
-            /* Don't check the left/reverse flags -- they are complicated, so there is no "force" word for them. */
+            if ((i = search(forcetabh)) >= 0) bit = (1 << i);
+            else if ((i = search(mxntabforce)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
+            else if ((i = search(nxntabforce)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
+            else if ((i = search(reverttabforce)) >= 0) bit = INHERITFLAG_REVERTBIT * (i+1);
+            else errexit("Unknown defmod key");
+
+            /* Don't check the left/reverse flags -- they are complicated,
+                  so there is no "force" word for them. */
             if (bit & call_flagsh & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use a \"force\" flag unless corresponding top level flag is off");
 
-            rrh |= bit;
+            if (do_heritflag_merge(&rrh, bit))
+               errexit("Redundant \"force\" flags");
          }
-         else
-            errexit("Unknown defmod key");
 
          get_tok();
          if (tok_kind == tok_rbkt) break;
@@ -1586,7 +1696,7 @@ static void write_call_header(calldef_schema schema)
    write_halfword((call_namelen << 8) | (uint32) schema);
 
    for (j=0; j<call_namelen; j++)
-      db_putc(((uint32) call_name[j]) & 0xFF);
+      db_putc((char) (((uint32) call_name[j]) & 0xFF));
 
    filecount += call_namelen;
    callcount++;
@@ -1888,11 +1998,19 @@ def2:
       get_tok();
       if (tok_kind != tok_rbkt) {
          for (;;) {
+            uint32 bit;
+
             if (tok_kind != tok_symbol)
                errexit("Improper alternate_definition key");
 
-            if ((i = search(altdeftabh)) < 0) errexit("Unknown alternate_definition key");
-            rrr |= (1 << i);
+            if ((i = search(altdeftabh)) >= 0) bit = (1 << i);
+            else if ((i = search(mxntabplain)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
+            else if ((i = search(nxntabplain)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
+            else if ((i = search(reverttabplain)) >= 0) bit = INHERITFLAG_REVERTBIT * (i+1);
+            else errexit("Unknown alternate_definition key");
+
+            if (do_heritflag_merge(&rrr, bit))
+               errexit("Can't specify this combination of flags");
 
             get_tok();
             if (tok_kind == tok_rbkt) break;
@@ -1958,7 +2076,7 @@ extern void dbcompile(void)
    if (tok_kind != tok_string) errexit("Improper version string -- must be in quotes");
    write_halfword(char_ct);
    for (i=0; i<char_ct; i++)
-      db_putc(((uint32) tok_str[i]) & 0xFF);
+      db_putc((char) (((uint32) tok_str[i]) & 0xFF));
    filecount += char_ct;
 
    callcount = 0;
@@ -2014,6 +2132,14 @@ extern void dbcompile(void)
                   call_flags1 |= (3*CFLAG1_NUMBER_BIT);
                else if (strcmp(tok_str, "base_tag_call_2") == 0)
                   call_flags1 |= (3*CFLAG1_BASE_TAG_CALL_BIT);
+               else if (strcmp(tok_str, "mxn_is_inherited") == 0)
+                  call_flagsh |= INHERITFLAG_MXNMASK;
+               else if (strcmp(tok_str, "nxn_is_inherited") == 0)
+                  call_flagsh |= INHERITFLAG_NXNMASK;
+               else if (strcmp(tok_str, "bigmatrix_is_inherited") == 0)
+                  call_flagsh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
+               else if (strcmp(tok_str, "revert_is_inherited") == 0)
+                  call_flagsh |= INHERITFLAG_REVERTMASK;
                else if ((iii = search(flagtabh)) >= 0)
                   call_flagsh |= (1 << iii);
                else

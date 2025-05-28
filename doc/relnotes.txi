@@ -10,9 +10,9 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.3
-@set title2 Database version = 32.3 format = 139
-@set title3 X11 UI version 1.17, SDTTY UI version 1.10
+@set title1 RELEASE NOTES FOR SD VERSION 32.4
+@set title2 Database version = 32.4 format = 141
+@set title3 X11 UI version 1.17, SDTTY UI version 1.11
 
 @node Top, Intro, (dir), (dir)
 
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 32.4::
 * 32.3::
 * 32.2::
 * 32.0::
@@ -56,7 +57,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.3, Top, (dir)
+@node Intro, 32.4, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -67,11 +68,43 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 32.3::               Changes in the current version
+* 32.4::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.3, 32.2, Intro, Top
+@node 32.4, 32.3, Intro, Top
+@unnumberedsec Version 32.4 changes
+
+It is once again possible to exit from a multiple-screen listing from
+``?'' or ``!'' by pressing the ``delete'' key on a PC.  You can also
+press ``backspace'' or the letter ``q''.
+
+Digits on the numeric keypad are treated the same as ordinary digits.
+Control, alt, and control-alt numeric keypad presses can be programmed
+as accelerator keys by using designators such as ``cn3'', ``an4'', or ``can5''.
+See the manual for details.
+
+A few bugs were fixed in the handling of heavily stacked concepts and meta-concepts.
+
+Linear cycle from inverted lines is now done by the official Callerlab definition.
+The pass is right shoulders, but the final peel is in the direction
+of the original minwave.
+
+There is a call @samp{easy does it (matrix)} which allows @samp{3x3} usage while
+compromising other aspects of the call.
+
+There is a call @samp{recoil (matrix)}, permitted only from facing couples,
+which allows @samp{3x3} usage while compromising other aspects of the call.
+
+The usual number of radical changes were made in the internal mechanism of the
+program, making it more elegant, general, and powerful.  The usual number of
+ad-hoc kludges were replaced with more powerful and general mechanisms.  The
+particular areas revamped in this release were the inheritance mechanism
+(particularly relating to NxN modifiers and revert/reflect), the qualifiers to
+test general 1/4 tags, and, of course, the fractionalization mechanism.
+
+@c ************
+@node 32.3, 32.2, 32.4, Top
 @unnumberedsec Version 32.3 changes
 
 An improper handling of screen erasure, scrolling, and cursor motion in the new

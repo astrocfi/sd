@@ -98,6 +98,8 @@ Private tm_thing maps_isearch_twosome[] = {
    {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22, 
                       1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23},           0x555555, 0xFFFFFF,      12, 0,  0,  0, 0,  s3x4,  s3x8},
    {{2, 3, 5, 6, 7, 0,               -1, -1, 4, -1, -1, 1},                      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_crosswave},
+   {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},                      0,        0,         6, 0,  0,  0, 0,  s_1x2dmd, s_crosswave},
+   {{6, 7, 0, 2, 3, 5,               -1, -1, 1, -1, -1, 4},                  0x410,     0x33,         6, 0,  0,  0, 0,  s_1x2dmd, s_rigger},
    {{0, 3, 2, 5, 7, 6,               1, -1, -1, 4, -1, -1},                      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_hrglass},
    {{0, 2, 3, 5, 6, 7,               1, -1, -1, 4, -1, -1},                  0x041,     0x33,         6, 0,  0,  0, 0,  s_2x1dmd, s3x1dmd},
    {{0, 1, 3, 4, 6, 7,               -1, 2, -1, -1, 5, -1},                  0x104,     0x66,         6, 0,  0,  0, 0,  s_2x1dmd, s3x1dmd},
@@ -694,19 +696,19 @@ extern void tandem_couples_move(
       if ((key & ~1) != 0) fail("Can't do this combination of concepts.");
 
       switch (mxn_bits) {
-      case INHERITFLAG_3X3:
+      case INHERITFLAGNXNK_3X3:
          np = 3;
          our_map_table = maps_isearch_threesome;
          goto foobarves;
-      case INHERITFLAG_4X4:
+      case INHERITFLAGNXNK_4X4:
          np = 4;
          our_map_table = maps_isearch_foursome;
          goto foobarves;
-      case INHERITFLAG_6X6:
+      case INHERITFLAGNXNK_6X6:
          np = 6;
          our_map_table = maps_isearch_sixsome;
          goto foobarves;
-      case INHERITFLAG_8X8:
+      case INHERITFLAGNXNK_8X8:
          np = 8;
          our_map_table = maps_isearch_eightsome;
          goto foobarves;
@@ -719,7 +721,7 @@ extern void tandem_couples_move(
          if (t) { livemask |= 3 ; directions |= t & 3; }
       }
 
-      if (mxn_bits == INHERITFLAG_2X1 || mxn_bits == INHERITFLAG_1X2) {
+      if (mxn_bits == INHERITFLAGMXNK_2X1 || mxn_bits == INHERITFLAGMXNK_1X2) {
          np = 2;
          our_map_table = maps_isearch_twosome;
 
@@ -734,22 +736,22 @@ extern void tandem_couples_move(
                 ((directions ^ 0x80A) & livemask) == 0)
                special_mask |= 011;
 
-            if (mxn_bits == INHERITFLAG_2X1 && ((directions ^ 0x02A) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directions ^ 0x02A) & livemask) == 0)
                special_mask |= 011;
    
-            if (mxn_bits == INHERITFLAG_2X1 && ((directions ^ 0xA80) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directions ^ 0xA80) & livemask) == 0)
                special_mask |= 044;
    
-            if (mxn_bits == INHERITFLAG_1X2 && ((directions ^ 0x02A) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directions ^ 0x02A) & livemask) == 0)
                special_mask |= 044;
    
-            if (mxn_bits == INHERITFLAG_1X2 && ((directions ^ 0xA80) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directions ^ 0xA80) & livemask) == 0)
                special_mask |= 011;
    
             if (special_mask != 011 && special_mask != 044) special_mask = 0;
          }
       }
-      else if (mxn_bits == INHERITFLAG_3X1 || mxn_bits == INHERITFLAG_1X3) {
+      else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
          np = 3;
          our_map_table = maps_isearch_threesome;
          if (key == 0) directions ^= 0x5555;
@@ -763,16 +765,16 @@ extern void tandem_couples_move(
                 ((directions ^ 0x802A) & livemask) == 0)
                special_mask |= 0x11;
    
-            if (mxn_bits == INHERITFLAG_3X1 && ((directions ^ 0x00AA) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0x00AA) & livemask) == 0)
                special_mask |= 0x11;
    
-            if (mxn_bits == INHERITFLAG_3X1 && ((directions ^ 0xAA00) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0xAA00) & livemask) == 0)
                special_mask |= 0x88;
    
-            if (mxn_bits == INHERITFLAG_1X3 && ((directions ^ 0x00AA) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0x00AA) & livemask) == 0)
                special_mask |= 0x88;
    
-            if (mxn_bits == INHERITFLAG_1X3 && ((directions ^ 0xAA00) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0xAA00) & livemask) == 0)
                special_mask |= 0x11;
    
             if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
@@ -786,16 +788,16 @@ extern void tandem_couples_move(
                 ((directions ^ 0x802A) & livemask) == 0)
                special_mask |= 0x11;
 
-            if (mxn_bits == INHERITFLAG_3X1 && ((directions ^ 0x00AA) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0x00AA) & livemask) == 0)
                special_mask |= 0x11;
    
-            if (mxn_bits == INHERITFLAG_3X1 && ((directions ^ 0xAA00) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions ^ 0xAA00) & livemask) == 0)
                special_mask |= 0x44;
    
-            if (mxn_bits == INHERITFLAG_1X3 && ((directions ^ 0x00AA) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0x00AA) & livemask) == 0)
                special_mask |= 0x44;
    
-            if (mxn_bits == INHERITFLAG_1X3 && ((directions ^ 0xAA00) & livemask) == 0)
+            if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions ^ 0xAA00) & livemask) == 0)
                special_mask |= 0x11;
    
             if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;

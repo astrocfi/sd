@@ -1001,7 +1001,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"INTERRUPT AFTER @9/@9",                 concept_interrupt_at_fraction,     0, l_c1,         {0, 2}},
    {"SANDWICH",                              concept_sandwich,                  0, l_c3,         {0, 3}},
 /* -------- column break -------- */
-#define mm__3_size 72
+#define mm__3_size 78
 #define mm__3_3x3 62
 #define mm__3_4x4 63
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
@@ -1076,6 +1076,12 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"ALL 4 COUPLES",                         concept_all_8,                     D, l_a2,         {0, 0}},
    {"ALL 8",                                 concept_all_8,                     D, l_a2,         {0, 1}},
    {"ALL 8 (diamonds)",                      concept_all_8,                     D, l_a2,         {0, 2}},
+   {"REVERT",                                concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_REVERT}},
+   {"REFLECTED",                             concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_REFLECT}},
+   {"REVERT AND THEN REFLECT",               concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RVF}},
+   {"REFLECT AND THEN REVERT",               concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RFV}},
+   {"REVERT, THEN REFLECT, THEN REVERT",     concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RVFV}},
+   {"REFLECT, THEN REVERT, THEN REFLECT",    concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RFVF}},
 
 /* general concepts */
 

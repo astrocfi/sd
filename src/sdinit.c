@@ -1054,17 +1054,23 @@ Private void build_database(call_list_mode_t call_list_mode)
                tagger_calls[0][number_of_taggers[0]-1] = call_root;
             }
             else if (call_root->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
-               /* But anything that invokes a tagging call goes into each list, inheriting its own class. */
+               /* But anything that invokes a tagging call goes into each list,
+                  inheriting its own class. */
                int xxx;
 
                /* Iterate over all tag classes except class 0. */
                for (xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
-                  callspec_block *new_call = (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
+                  callspec_block *new_call =
+                     (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
                   (void) memcpy(new_call, call_root, sizeof(callspec_block) + char_count - 3);
                   /* Fix it up. */
-                  new_call->callflagsf = (new_call->callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) | CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
+                  new_call->callflagsf =
+                     (new_call->callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) |
+                     CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
                   number_of_taggers[xxx]++;
-                  tagger_calls[xxx] = get_more_mem(tagger_calls[xxx], number_of_taggers[xxx]*sizeof(callspec_block *));
+                  tagger_calls[xxx] =
+                     get_more_mem(tagger_calls[xxx],
+                                  number_of_taggers[xxx]*sizeof(callspec_block *));
                   tagger_calls[xxx][number_of_taggers[xxx]-1] = new_call;
                }
             }
@@ -1073,7 +1079,8 @@ Private void build_database(call_list_mode_t call_list_mode)
             /* But circ calls are treated normally, as well as being put on the special list. */
             if (call_root->callflags1 & CFLAG1_BASE_CIRC_CALL) {
                number_of_circcers++;
-               circcer_calls = get_more_mem(circcer_calls, number_of_circcers*sizeof(callspec_block *));
+               circcer_calls =
+                  get_more_mem(circcer_calls, number_of_circcers*sizeof(callspec_block *));
                circcer_calls[number_of_circcers-1] = call_root;
             }
             if (local_callcount >= abs_max_calls)

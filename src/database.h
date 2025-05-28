@@ -23,7 +23,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 139
+#define DATABASE_FORMAT_VERSION 141
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -71,11 +71,14 @@ typedef enum {
 #endif
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
-   "forcetabh", and "altdeftabh" in dbcomp.c .  These are the infamous
-   "heritable flags".  They are used in generally corresponding ways in
-   the "callflagsh" word of a top level callspec_block, the "modifiersh"
-   word of a "by_def_item", and the "modifier_seth" word of a "calldef_block",
-   and the "cmd_final_flags.herit" of a setup with its command block.
+   "forcetabh", and "altdeftabh" in dbcomp.c .  The "K" items also track
+   the tables "mxntabforce", "nxntabforce", "nxntabplain", "mxntabplain",
+   and "reverttabplain" in dbcomp.c .
+
+   These are the infamous "heritable flags".  They are used in generally
+   corresponding ways in the "callflagsh" word of a top level callspec_block,
+   the "modifiersh" word of a "by_def_item", and the "modifier_seth" word of a
+   "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
 */
 
 static Const uint32 INHERITFLAG_DIAMOND    = 0x00000001UL;
@@ -89,27 +92,53 @@ static Const uint32 INHERITFLAG_12_MATRIX  = 0x00000080UL;
 static Const uint32 INHERITFLAG_16_MATRIX  = 0x00000100UL;
 static Const uint32 INHERITFLAG_CROSS      = 0x00000200UL;
 #define             INHERITFLAG_SINGLE       0x00000400UL
-static Const uint32 INHERITFLAG_1X2        = 0x00000800UL;
-static Const uint32 INHERITFLAG_2X1        = 0x00001000UL;
-static Const uint32 INHERITFLAG_2X2        = 0x00002000UL;
-#define             INHERITFLAG_1X3          0x00004000UL
-#define             INHERITFLAG_3X1          0x00008000UL
-#define             INHERITFLAG_3X3          0x00010000UL
-#define             INHERITFLAG_4X4          0x00020000UL
-#define             INHERITFLAG_5X5          0x00040000UL
-#define             INHERITFLAG_6X6          0x00080000UL
-#define             INHERITFLAG_7X7          0x00100000UL
-#define             INHERITFLAG_8X8          0x00200000UL
-static Const uint32 INHERITFLAG_SINGLEFILE = 0x00400000UL;
-static Const uint32 INHERITFLAG_HALF       = 0x00800000UL;
-static Const uint32 INHERITFLAG_YOYO       = 0x01000000UL;
-static Const uint32 INHERITFLAG_STRAIGHT   = 0x02000000UL;
-static Const uint32 INHERITFLAG_TWISTED    = 0x04000000UL;
-static Const uint32 INHERITFLAG_LASTHALF   = 0x08000000UL;
-static Const uint32 INHERITFLAG_FRACTAL    = 0x10000000UL;
+static Const uint32 INHERITFLAG_SINGLEFILE = 0x00000800UL;
+static Const uint32 INHERITFLAG_HALF       = 0x00001000UL;
+static Const uint32 INHERITFLAG_YOYO       = 0x00002000UL;
+static Const uint32 INHERITFLAG_STRAIGHT   = 0x00004000UL;
+static Const uint32 INHERITFLAG_TWISTED    = 0x00008000UL;
+static Const uint32 INHERITFLAG_LASTHALF   = 0x00010000UL;
+static Const uint32 INHERITFLAG_FRACTAL    = 0x00020000UL;
 
-#define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | \
-            INHERITFLAG_3X3 | INHERITFLAG_4X4 | INHERITFLAG_5X5 | INHERITFLAG_6X6 | INHERITFLAG_7X7 | INHERITFLAG_8X8)
+/* This is a 3 bit field. */
+#define             INHERITFLAG_MXNMASK      0x001C0000UL
+/* This is its low bit. */
+#define             INHERITFLAG_MXNBIT       0x00040000UL
+
+/* These 4 things are the choices available inside. */
+#define             INHERITFLAGMXNK_1X2      0x00040000UL
+#define             INHERITFLAGMXNK_2X1      0x00080000UL
+#define             INHERITFLAGMXNK_1X3      0x000C0000UL
+#define             INHERITFLAGMXNK_3X1      0x00100000UL
+
+/* This is a 3 bit field. */
+#define             INHERITFLAG_NXNMASK      0x00E00000UL
+/* This is its low bit. */
+#define             INHERITFLAG_NXNBIT       0x00200000UL
+
+/* These 7 things are the choices available inside. */
+#define             INHERITFLAGNXNK_2X2      0x00200000UL
+#define             INHERITFLAGNXNK_3X3      0x00400000UL
+#define             INHERITFLAGNXNK_4X4      0x00600000UL
+#define             INHERITFLAGNXNK_5X5      0x00800000UL
+#define             INHERITFLAGNXNK_6X6      0x00A00000UL
+#define             INHERITFLAGNXNK_7X7      0x00C00000UL
+#define             INHERITFLAGNXNK_8X8      0x00E00000UL
+
+/* This is a 3 bit field. */
+#define             INHERITFLAG_REVERTMASK   0x07000000UL
+/* This is its low bit. */
+#define             INHERITFLAG_REVERTBIT    0x01000000UL
+
+/* These 7 things are the choices available inside. */
+#define             INHERITFLAGRVRTK_REVERT  0x01000000UL
+#define             INHERITFLAGRVRTK_REFLECT 0x02000000UL
+#define             INHERITFLAGRVRTK_RVF     0x03000000UL
+#define             INHERITFLAGRVRTK_RFV     0x04000000UL
+#define             INHERITFLAGRVRTK_RVFV    0x05000000UL
+#define             INHERITFLAGRVRTK_RFVF    0x06000000UL
+#define             INHERITFLAGRVRTK_RFF     0x07000000UL
+
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block,
@@ -515,12 +544,11 @@ typedef enum {
    cr_ctr_miniwaves,       /* Restriction only. */
    cr_ctr_couples,         /* Restriction only. */
    cr_awkward_centers,     /* Restriction only. */
-   cr_1_4_tag,             /* Qualifier only. */
-   cr_3_4_tag,             /* Qualifier only. */
    cr_dmd_same_pt,         /* Qualifier only. */
    cr_dmd_facing,          /* Qualifier only. */
    cr_diamond_like,
    cr_qtag_like,
+   cr_pu_qtag_like,
    cr_nice_diamonds,       /* Restriction only. */
    cr_magic_only,
    cr_li_lo,               /* Qualifier only. */
@@ -572,8 +600,7 @@ typedef enum {
    cr_quarterbox_or_magic_col, /* Restriction only. */
    cr_all_ns,              /* Restriction only. */
    cr_all_ew,              /* Restriction only. */
-   cr_gen_1_4_tag,         /* Restriction only. */
-   cr_gen_3_4_tag,         /* Restriction only. */
+   cr_gen_n_4_tag,         /* Restriction only. */
    cr_real_1_4_tag,        /* Restriction only. */
    cr_real_3_4_tag,        /* Restriction only. */
    cr_real_1_4_line,       /* Restriction only. */

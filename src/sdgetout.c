@@ -208,40 +208,65 @@ static resolve_tester test_2x6_stuff[] = {
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_3x4_stuff[] = {
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},    /* RLG from offset waves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},    /* RLG from offset waves. */
-   {resolve_la,             l_mainstream,      6, 0,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},    /* LA from offset waves. */
-   {resolve_la,             l_mainstream,      6, 0,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},    /* LA from offset waves. */
-   {resolve_none,           l_mainstream,      64}};
+   /* These test for offset waves. */
+   {resolve_rlg,            l_mainstream, 3, 0,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},
+   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},
+   {resolve_la,             l_mainstream, 6, 0,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},
+   {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},
+   {resolve_none,           l_mainstream, 64}};
 
 static resolve_tester test_4dmd_stuff[] = {
-   {resolve_la,             l_mainstream,      6, 0,   {8, 4, 5, 1, 0, 12, 13, 9},   0x38A31A81},    /* LA from whatever. */
-   {resolve_none,           l_mainstream,      64}};
+   /* These test for people in a miniwave as centers of the outer diamonds,
+      while the others are facing each other as points.  There are three of each
+      to allow for the outsides to be symmetrical (points of the center diamonds)
+      or unsymmetrical (points of a center diamond and the adjacent outer diamond). */
+   {resolve_la,             l_mainstream, 7, 0,   {8, 4, 5, 1, 0, 12, 13, 9},   0x38A31A81},
+   {resolve_la,             l_mainstream, 7, 0,   {9, 4, 5, 2, 1, 12, 13, 10},  0x38A31A81},
+   {resolve_la,             l_mainstream, 7, 0,   {10, 4, 5, 3, 2, 12, 13, 11}, 0x38A31A81},
+   {resolve_rlg,            l_mainstream, 4, 0,   {9, 8, 5, 4, 1, 0, 13, 12},   0x138A31A8},
+   {resolve_rlg,            l_mainstream, 4, 0,   {10, 9, 5, 4, 2, 1, 13, 12},  0x138A31A8},
+   {resolve_rlg,            l_mainstream, 4, 0,   {11, 10, 5, 4, 3, 2, 13, 12}, 0x138A31A8},
+   {resolve_none,           l_mainstream, 64}};
+
+static resolve_tester test_bigdmd_stuff[] = {
+   /* These test for miniwaves in "common point diamonds". */
+   {resolve_rlg,            l_mainstream, 2, 0,   {7, 6, 3, 2, 1, 0, 9, 8},     0x8A31A813},
+   {resolve_rlg,            l_mainstream, 2, 0,   {4, 5, 3, 2, 10, 11, 9, 8},   0x8A31A813},
+   {resolve_la,             l_mainstream, 5, 0,   {7, 2, 3, 0, 1, 8, 9, 6},     0xA31A8138},
+   {resolve_la,             l_mainstream, 5, 0,   {4, 2, 3, 11, 10, 8, 9, 5},   0xA31A8138},
+   {resolve_none,           l_mainstream, 64}};
 
 static resolve_tester test_spindle_stuff[] = {
-   {resolve_rlg,            l_mainstream,      3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13313113},    /* RLG from whatever. */
-   {resolve_la,             l_mainstream,      7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},    /* LA from whatever. */
-   {resolve_none,           l_mainstream,      64}};
+   /* These test for people looking around the corner. */
+   {resolve_rlg,            l_mainstream, 3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13313113},
+   {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
+   {resolve_none,           l_mainstream, 64}};
 
 static resolve_tester test_2x4_stuff[] = {
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x13313113},    /* RLG from 8-chain. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},    /* RLG from waves. */
-   {resolve_rlg,            l_mainstream,      2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},    /* RLG from trade-by. */
-   {resolve_ext_rlg,        extend_34_level,   2, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},    /* extend-RLG from waves. */
-   {resolve_circ_rlg,       l_mainstream,      1, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},    /* circulate-RLG from waves. */
-   {resolve_pth_rlg,        l_mainstream,      2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},    /* pass-thru-RLG from 8-chain. */
-   {resolve_tby_rlg,        l_mainstream,      3, 0,   {6, 3, 4, 1, 2, 7, 0, 5},     0x11113333},    /* trade-by-RLG from trade-by. */
-   {resolve_xby_rlg,        cross_by_level,    2, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},    /* cross-by-RLG from waves. */
-   {resolve_rlg,            l_mainstream,      2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},    /* RLG from T-bone setup, ends facing. */
-   {resolve_rlg,            l_mainstream,      2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},    /* RLG from centers facing and ends in miniwaves. */
-   {resolve_la,             l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},    /* LA from 8-chain. */
-   {resolve_la,             l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},    /* LA from lines-out. */
-   {resolve_la,             l_mainstream,      6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},    /* LA from waves. */
-   {resolve_la,             l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x31131331},    /* LA from trade-by. */
+   /* 8-chain. */
+   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x13313113},
+   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
+   {resolve_pth_rlg,        l_mainstream, 2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},
+   {resolve_pth_la,         l_mainstream, 5, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
+
+   /* trade-by. */
+   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
+   {resolve_la,             l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x31131331},
+   {resolve_tby_rlg,        l_mainstream, 3, 0,   {6, 3, 4, 1, 2, 7, 0, 5},     0x11113333},
+   {resolve_tby_la,         l_mainstream, 0, 0,   {5, 6, 3, 4, 1, 2, 7, 0},     0x31111333},
+
+   /* waves. */
+   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},
+   {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
+
+   {resolve_ext_rlg,        extend_34_level, 2, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},    /* extend-RLG from waves. */
+   {resolve_circ_rlg,       l_mainstream, 1, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},    /* circulate-RLG from waves. */
+   {resolve_xby_rlg,        cross_by_level, 2, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},    /* cross-by-RLG from waves. */
+   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},    /* RLG from T-bone setup, ends facing. */
+   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},    /* RLG from centers facing and ends in miniwaves. */
+   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},    /* LA from lines-out. */
    {resolve_ext_la,         extend_34_level,   7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},    /* ext-LA from waves. */
    {resolve_circ_la,        l_mainstream,      0, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},    /* circulate-LA from waves. */
-   {resolve_pth_la,         l_mainstream,      5, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},    /* pass-thru-LA from 8-chain. */
-   {resolve_tby_la,         l_mainstream,      0, 0,   {5, 6, 3, 4, 1, 2, 7, 0},     0x31111333},    /* trade-by-LA from trade-by. */
    {resolve_xby_la,         cross_by_level,    5, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},    /* cross-by-LA from waves. */
    {resolve_la,             l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},    /* LA from T-bone setup, ends facing. */
    {resolve_prom,           l_mainstream,      7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8888AAAA},    /* promenade from 2FL. */
@@ -289,27 +314,29 @@ extern resolve_indicator resolve_p(setup *s)
    else if (singing_call_mode == 2) singer_offset = 0200;
 
    switch (s->kind) {
-      case s2x4:
-         testptr = test_2x4_stuff; break;
-      case s3x4:
-         testptr = test_3x4_stuff; break;
-      case s2x6:
-         testptr = test_2x6_stuff; break;
-      case s_qtag:
-         testptr = test_qtag_stuff; break;
-      case s4dmd:
-         testptr = test_4dmd_stuff; break;
-      case s4x4:
-         testptr = test_4x4_stuff; break;
-      case s_c1phan:
-         testptr = test_c1phan_stuff; break;
-      case s_crosswave: case s_thar:
-         /* This makes use of the fact that the person numbering
-            in crossed lines and thars is identical. */
-         testptr = test_thar_stuff; break;
-      case s_spindle:
-         testptr = test_spindle_stuff; break;
-      default: goto no_resolve;
+   case s2x4:
+      testptr = test_2x4_stuff; break;
+   case s3x4:
+      testptr = test_3x4_stuff; break;
+   case s2x6:
+      testptr = test_2x6_stuff; break;
+   case s_qtag:
+      testptr = test_qtag_stuff; break;
+   case s4dmd:
+      testptr = test_4dmd_stuff; break;
+   case sbigdmd:
+      testptr = test_bigdmd_stuff; break;
+   case s4x4:
+      testptr = test_4x4_stuff; break;
+   case s_c1phan:
+      testptr = test_c1phan_stuff; break;
+   case s_crosswave: case s_thar:
+      /* This makes use of the fact that the person numbering
+         in crossed lines and thars is identical. */
+      testptr = test_thar_stuff; break;
+   case s_spindle:
+      testptr = test_spindle_stuff; break;
+   default: goto no_resolve;
    }
 
    do {

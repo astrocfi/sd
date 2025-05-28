@@ -12,7 +12,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* This defines the following functions:
    mirror_this
@@ -1004,9 +1004,9 @@ extern long_boolean check_restriction(
       case CAF__RESTR_FORBID:
          fail("This call is not legal from this formation.");
       case 99:
-         if (restr.assumption == cr_gen_1_4_tag)
+         if (restr.assumption == cr_gen_n_4_tag && restr.assump_both == 1)
             fail("People are not facing as in 1/4 tags.");
-         else if (restr.assumption == cr_gen_3_4_tag)
+         else if (restr.assumption == cr_gen_n_4_tag && restr.assump_both == 2)
             fail("People are not facing as in 3/4 tags.");
          else if (restr.assumption == cr_wave_only && restr.assump_col == 0)
             fail("People are not in waves.");
@@ -1023,38 +1023,46 @@ extern long_boolean check_restriction(
 
    getout:
 
-   /* One final check.  If there is an assumption in place that is inconsistent with the restriction
-      being enforced, then it is an error, even though no live people violate the restriction. */
+   /* One final check.  If there is an assumption in place that is inconsistent
+      with the restriction being enforced, then it is an error, even though
+      no live people violate the restriction. */
 
    switch (ss->cmd.cmd_assume.assumption) {
-      case cr_gen_1_4_tag: case cr_gen_3_4_tag: case cr_qtag_like:
-         switch (restr.assumption) {
-            case cr_diamond_like:
-               fail("An assumed facing direction for phantoms is illegal for this call.");
-               break;
-         }
+   case cr_gen_n_4_tag: case cr_qtag_like:
+      switch (restr.assumption) {
+      case cr_diamond_like: case cr_pu_qtag_like:
+         fail("An assumed facing direction for phantoms is illegal for this call.");
          break;
-      case cr_diamond_like:
-         switch (restr.assumption) {
-            case cr_gen_1_4_tag: case cr_gen_3_4_tag: case cr_qtag_like:
-               fail("An assumed facing direction for phantoms is illegal for this call.");
-               break;
-         }
+      }
+      break;
+   case cr_diamond_like:
+      switch (restr.assumption) {
+      case cr_gen_n_4_tag: case cr_qtag_like: case cr_pu_qtag_like:
+         fail("An assumed facing direction for phantoms is illegal for this call.");
          break;
-      case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
-         switch (restr.assumption) {
-            case cr_wave_only: case cr_miniwaves:
-               fail("An assumed facing direction for phantoms is illegal for this call.");
-               break;
-         }
+      }
+      break;
+   case cr_pu_qtag_like:
+      switch (restr.assumption) {
+      case cr_gen_n_4_tag: case cr_qtag_like: case cr_diamond_like:
+         fail("An assumed facing direction for phantoms is illegal for this call.");
          break;
+      }
+      break;
+   case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
+      switch (restr.assumption) {
       case cr_wave_only: case cr_miniwaves:
-         switch (restr.assumption) {
-            case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
-               fail("An assumed facing direction for phantoms is illegal for this call.");
-               break;
-         }
+         fail("An assumed facing direction for phantoms is illegal for this call.");
          break;
+      }
+      break;
+   case cr_wave_only: case cr_miniwaves:
+      switch (restr.assumption) {
+      case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
+         fail("An assumed facing direction for phantoms is illegal for this call.");
+         break;
+      }
+      break;
    }
 
    return retval;
@@ -1348,13 +1356,14 @@ Private int divide_the_setup(
          /* Check whether it has 2x4/4x2/1x8/8x1 definitions, and divide the setup if so,
             or if the caller explicitly said "2x8 matrix". */
 
-         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-            !(ss->cmd.cmd_final_flags.herit & INHERITFLAG_4X4);
+         temp =
+            (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+            (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_4X4;
 
          /* NEW STUFF!!!! */
 
          if (temp ||
-             (ss->cmd.cmd_final_flags.herit & INHERITFLAG_16_MATRIX) ||
+             (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_16_MATRIX)) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
             if ((!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
@@ -1465,13 +1474,14 @@ Private int divide_the_setup(
             for permitting "Z axle" from a 2x6 but forbidding "circulate".
             We also enable this if the caller explicitly said "2x6 matrix". */
 
-         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-            !(ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3);
+         temp =
+            (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+            (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_3X3;
 
          /* NEW STUFF!!!! */
 
          if (temp ||
-             (ss->cmd.cmd_final_flags.herit & INHERITFLAG_12_MATRIX) ||
+             (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
             if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
@@ -1495,15 +1505,16 @@ Private int divide_the_setup(
             }
          }
 
-         /* Next, check whether it has 1x2/2x1/2x2/1x1 definitions, and we are doing some phantom concept.
+         /* Next, check whether it has 1x2/2x1/2x2/1x1 definitions,
+            and we are doing some phantom concept.
             Divide the setup into 3 boxes if so. */
 
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) {
-            if (
-                  assoc(b_2x2, ss, calldeflist) ||
-                  assoc(b_1x2, ss, calldeflist) ||
-                  assoc(b_2x1, ss, calldeflist) ||
-                  assoc(b_1x1, ss, calldeflist)) {
+         if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) ||
+             (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) {
+            if (assoc(b_2x2, ss, calldeflist) ||
+                assoc(b_1x2, ss, calldeflist) ||
+                assoc(b_2x1, ss, calldeflist) ||
+                assoc(b_1x1, ss, calldeflist)) {
                division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
                goto divide_us_no_recompute;
             }
@@ -1587,7 +1598,7 @@ Private int divide_the_setup(
          temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS);
 
          if (temp ||
-             (ss->cmd.cmd_final_flags.herit & INHERITFLAG_12_MATRIX) ||
+             (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
             if ((!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
@@ -1632,7 +1643,7 @@ Private int divide_the_setup(
          temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS);
 
          if (temp ||
-             (ss->cmd.cmd_final_flags.herit & INHERITFLAG_16_MATRIX) ||
+             (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_16_MATRIX)) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
             if (
                   (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
@@ -1761,9 +1772,10 @@ Private int divide_the_setup(
 
          /* Check for "twisted split" stuff. */
 
-         if (     (ss->cmd.cmd_final_flags.herit & INHERITFLAG_TWISTED) &&
-                  (ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
-                  (livemask == 0xAAAA || livemask == 0x5555)) {
+         if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_TWISTED)) &&
+             (ss->cmd.cmd_final_flags.final &
+              (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
+             (livemask == 0xAAAA || livemask == 0x5555)) {
             finalrot = newtb & 1;
             map_kind = (livemask & 1) ? MPKIND__SPLIT : MPKIND__NONISOTROP1;
             division_code = MAPCODE(s_trngl4,2,map_kind,0);
@@ -1980,6 +1992,9 @@ Private int divide_the_setup(
             long_boolean forbid_little_stuff;
             setup sss;
             long_boolean really_fudged;
+            uint32 nxnbits =
+               ss->cmd.cmd_final_flags.her8it &
+               (INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
             /* The call has no applicable 3x4 or 4x3 definition. */
             /* First, check whether it has 2x3/3x2 definitions, and divide the setup if so,
@@ -1988,9 +2003,11 @@ Private int divide_the_setup(
                phantom columns.)  We also enable this if the caller explicitly said
                "3x4 matrix". */
 
-            if (        (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
-                        (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
-                        (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_1X3|INHERITFLAG_3X1|INHERITFLAG_3X3))) {
+            if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+                (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
+                nxnbits == INHERITFLAGMXNK_1X3 ||
+                nxnbits == INHERITFLAGMXNK_3X1 ||
+                nxnbits == INHERITFLAGNXNK_3X3) {
 
                if (  (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
@@ -2280,55 +2297,66 @@ Private int divide_the_setup(
 
          fail("You must specify a concept.");
       case s_qtag:
-         if (assoc(b_dmd, ss, calldeflist) ||
-             assoc(b_pmd, ss, calldeflist) ||
-             assoc(b_1x1, ss, calldeflist) ||
-             assoc(b_1x4, ss, calldeflist)) {
-            division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
-            goto divide_us_no_recompute;
-         }
+         {
+            uint32 nxnbits =
+               ss->cmd.cmd_final_flags.her8it &
+               (INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
-         /* Check whether it has 2x3/3x2 definitions, and divide the setup if so,
+            if (assoc(b_dmd, ss, calldeflist) ||
+                assoc(b_pmd, ss, calldeflist) ||
+                assoc(b_1x1, ss, calldeflist) ||
+                assoc(b_1x4, ss, calldeflist)) {
+               division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
+               goto divide_us_no_recompute;
+            }
+
+            /* Check whether it has 2x3/3x2 definitions, and divide the setup if so,
             and if the call permits it.  This is important for permitting "Z axle" from
             a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
             phantom columns.)  We also enable this if the caller explicitly said
             "3x4 matrix". */
 
-         if (  (  (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
-                  (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
-                  (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_1X3|INHERITFLAG_3X1|INHERITFLAG_3X3))     ) &&
-               (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
-               (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
-            division_maps = &map_qtag_2x3;
-            goto divide_us_no_recompute;
-         }
+            if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+                 (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
+                 nxnbits == INHERITFLAGMXNK_1X3 ||
+                 nxnbits == INHERITFLAGMXNK_3X1 ||
+                 nxnbits == INHERITFLAGNXNK_3X3) &&
+                (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
+               division_maps = &map_qtag_2x3;
+               goto divide_us_no_recompute;
+            }
 
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
-            fail("Can't split the setup.");
+            if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+               fail("Can't split the setup.");
 
-         if (must_do_mystic)
-            goto do_mystically;
+            if (must_do_mystic)
+               goto do_mystically;
 
-         if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-                  (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-            goto do_concentrically;
-         }
-         else if ((livemask & 0x55) == 0) {    /* Check for stuff like "heads pass the ocean; side corners */
-            division_maps = &map_qtag_f1;      /* only slide thru". */
-            goto divide_us_no_recompute;
-         }
-         else if ((livemask & 0x66) == 0) {
-            division_maps = &map_qtag_f2;
-            goto divide_us_no_recompute;
-         }
+            if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
+                (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
+               goto do_concentrically;
+            }
+            else if ((livemask & 0x55) == 0) {
+               /* Check for stuff like "heads pass the ocean; side corners only slide thru". */
+               division_maps = &map_qtag_f1;
+               goto divide_us_no_recompute;
+            }
+            else if ((livemask & 0x66) == 0) {
+               division_maps = &map_qtag_f2;
+               goto divide_us_no_recompute;
+            }
 
-/* ******** Regression test OK to here.  The next thing doesn't work, because the
-   "do your part" junk doesn't work right!  This has been a known problem for some
-   time, of course.  It's about time it got fixed.  It appears to have been broken as far back as 27.8. */
+            /* ******** Regression test OK to here.  The next thing doesn't work, because the
+               "do your part" junk doesn't work right!  This has been a known problem for some
+               time, of course.  It's about time it got fixed.  It appears to have been broken
+               as far back as 27.8. */
 
-         else if ((livemask & 0x77) == 0) {    /* Check for stuff like "center two slide thru". */
-            division_maps = &map_qtag_f0;
-            goto divide_us_no_recompute;
+            else if ((livemask & 0x77) == 0) {
+               /* Check for stuff like "center two slide thru". */
+               division_maps = &map_qtag_f0;
+               goto divide_us_no_recompute;
+            }
          }
          break;
       case s_2stars:
@@ -3188,7 +3216,6 @@ extern void basic_move(
    long_boolean other_elongate = FALSE;
    calldef_block *qq;
    Const callspec_block *callspec = ss->cmd.callspec;
-   uint64 final_concepts = ss->cmd.cmd_final_flags;
    long_boolean check_peeloff_migration = FALSE;
 
    /* We don't allow "central" or "invert" with array-defined calls.  We might allow "snag" or "mystic". */
@@ -3202,7 +3229,7 @@ extern void basic_move(
 
    /* We demand that the final concepts that remain be only the following ones. */
 
-   if (final_concepts.final &
+   if (ss->cmd.cmd_final_flags.final &
          ~(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED | FINAL__TRIANGLE))
       fail("This concept not allowed here.");
 
@@ -3248,7 +3275,7 @@ extern void basic_move(
          case s2x2:
             /* Now we do a special check for split-square-thru or split-dixie-style types of things. */
 
-            if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
+            if (ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
                uint32 i1, i2, p1, p2;
 
                ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
@@ -3277,7 +3304,7 @@ extern void basic_move(
                /* Now do the required transformation, if it is a "split square thru" type.
                   For "split dixie style" stuff, do nothing -- the database knows what to do. */
 
-               if (!(final_concepts.final & FINAL__SPLIT_DIXIE_APPROVED)) {
+               if (!(ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED)) {
                   swap_people(ss, i1, i2);
                   copy_rot(ss, i1, ss, i1, 033);
                   copy_rot(ss, i2, ss, i2, 011);
@@ -3290,8 +3317,9 @@ extern void basic_move(
          case s_trngl4:
             /* The same, with twisted. */
 
-            if (     (final_concepts.herit & INHERITFLAG_TWISTED) &&
-                     (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
+            if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_TWISTED)) &&
+                (ss->cmd.cmd_final_flags.final &
+                 (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
                if (  ((ss->people[0].id1 & d_mask) != d_north) ||
@@ -3303,7 +3331,7 @@ extern void basic_move(
                /* Now do the required transformation, if it is a "split square thru" type.
                   For "split dixie style" stuff, do nothing -- the database knows what to do. */
 
-               if (!(final_concepts.final & FINAL__SPLIT_DIXIE_APPROVED)) {
+               if (!(ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED)) {
                   copy_rot(ss, 0, ss, 0, 011);
                   copy_rot(ss, 1, ss, 1, 011);
                   copy_rot(ss, 2, ss, 2, 011);
@@ -3328,7 +3356,7 @@ extern void basic_move(
       except "funny" and "left", but "left" has been taken care of)
       determine what call definition we will get. */
 
-   search_concepts = final_concepts.herit & ~INHERITFLAG_FUNNY;
+   search_concepts = ss->cmd.cmd_final_flags.her8it & ~INHERITFLAG_FUNNY;
    search_temp = search_concepts;
 
 foobar:
@@ -3365,70 +3393,80 @@ foobar:
       /* First, check for "magic" and "interlocked" stuff, and do those divisions if so. */
       if (divide_for_magic(
                ss,
-               final_concepts.herit,
-               search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS | INHERITFLAG_GRAND),
+               search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE |
+                                   INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS |
+                                   INHERITFLAG_GRAND | INHERITFLAG_REVERTMASK),
                result))
          goto un_mirror;
 
-      /* Now check for 12 matrix or 16 matrix things.  If the call has the "12_16_matrix_means_split" flag, and that
-         (plus possible 3x3/4x4 stuff) was what we were looking for, remove those flags and split the setup. */
+      /* Now check for 12 matrix or 16 matrix things.  If the call has the
+         "12_16_matrix_means_split" flag, and that (plus possible 3x3/4x4 stuff)
+         was what we were looking for, remove those flags and split the setup. */
 
       if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
-         uint32 z = search_concepts & ~(INHERITFLAG_3X3 | INHERITFLAG_4X4 | INHERITFLAG_6X6 | INHERITFLAG_8X8);
+         uint32 z = search_concepts & ~INHERITFLAG_NXNMASK;
 
          switch (ss->kind) {
-            case s3x4:
-               if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-                  /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-                  division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
-                  goto divide_us;
-               }
-               break;
-            case s3dmd:
-               if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-                  /* "12 matrix" was specified.  Split it into diamonds in the appropriate way. */
-                  division_code = MAPCODE(sdmd,3,MPKIND__SPLIT,1);
-                  goto divide_us;
-               }
-               break;
-            case s4dmd:
-               if (z == INHERITFLAG_16_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-                  /* "16 matrix" was specified.  Split it into diamonds in the appropriate way. */
-                  division_code = MAPCODE(sdmd,4,MPKIND__SPLIT,1);
-                  goto divide_us;
-               }
-               break;
-            case s2x6:
-               if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-                  /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-                  division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
-                  goto divide_us;
-               }
-               break;
-            case s2x8:
-               if (z == INHERITFLAG_16_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-                  /* "16 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-                  division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
-                  goto divide_us;
-               }
-               break;
-            case s4x4:
-               if (z == INHERITFLAG_16_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-                  /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-                  /* But which way is appropriate?  A 4x4 is ambiguous.  Being too lazy to look at
-                     the call definition (the "assoc" stuff), we assume the call wants lines, since
-                     it seems that that is true for all calls that have the "12_16_matrix_means_split" property. */
+         case s3x4:
+            if (z == INHERITFLAG_12_MATRIX ||
+                (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+               /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
+               division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
+               goto divide_us;
+            }
+            break;
+         case s3dmd:
+            if (z == INHERITFLAG_12_MATRIX ||
+                (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+               /* "12 matrix" was specified.  Split it into diamonds in the appropriate way. */
+               division_code = MAPCODE(sdmd,3,MPKIND__SPLIT,1);
+               goto divide_us;
+            }
+            break;
+         case s4dmd:
+            if (z == INHERITFLAG_16_MATRIX ||
+                (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+               /* "16 matrix" was specified.  Split it into diamonds in the appropriate way. */
+               division_code = MAPCODE(sdmd,4,MPKIND__SPLIT,1);
+               goto divide_us;
+            }
+            break;
+         case s2x6:
+            if (z == INHERITFLAG_12_MATRIX ||
+                (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+               /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
+               division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+               goto divide_us;
+            }
+            break;
+         case s2x8:
+            if (z == INHERITFLAG_16_MATRIX ||
+                (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+               /* "16 matrix" was specified.  Split it into 2x2's in the appropriate way. */
+               division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
+               goto divide_us;
+            }
+            break;
+         case s4x4:
+            if (z == INHERITFLAG_16_MATRIX ||
+                (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+               /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
+               /* But which way is appropriate?  A 4x4 is ambiguous.  Being too lazy to look
+                  at the call definition (the "assoc" stuff), we assume the call wants lines,
+                  since it seems that that is true for all calls that have the
+                  "12_16_matrix_means_split" property. */
 
-                  if (newtb & 1) {    /* If the setup is empty and newtb is zero, it doesn't matter what we do. */
-                     division_code = ~0;
-                     division_maps = &map_4x4v;
-                  }
-                  else
-                     division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
-   
-                  goto divide_us;
+               if (newtb & 1) {
+                  /* If the setup is empty and newtb is zero, it doesn't matter what we do. */
+                  division_code = ~0;
+                  division_maps = &map_4x4v;
                }
-               break;
+               else
+                  division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
+   
+               goto divide_us;
+            }
+            break;
          }
       }
 
@@ -3436,12 +3474,13 @@ foobar:
 
       divide_us:
 
-      final_concepts.herit &= ~search_concepts;
-      ss->cmd.cmd_final_flags = final_concepts;
+      ss->cmd.cmd_final_flags.her8it &= ~search_concepts;
+
       if (division_code == ~0UL)
          divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
       else
          new_divided_setup_move(ss, division_code, phantest_ok, TRUE, result);
+
       goto un_mirror;
    }
 
@@ -3581,7 +3620,7 @@ foobar:
       case s_trngl:
          break;
       default:
-         if (final_concepts.final & FINAL__TRIANGLE)
+         if (ss->cmd.cmd_final_flags.final & FINAL__TRIANGLE)
             fail("Triangle concept not allowed here.");
    }
 
@@ -3621,7 +3660,7 @@ foobar:
       }
       */
 
-      if (final_concepts.final & FINAL__TRIANGLE)
+      if (ss->cmd.cmd_final_flags.final & FINAL__TRIANGLE)
          fail("Triangle concept not allowed here.");
 
       /* We got here if either linedefinition or coldefinition had something.
@@ -3706,14 +3745,16 @@ foobar:
           calldeflist == 0 &&
           (matrix_check_flag & ~search_concepts) == 0) {
 
-         /* Here is where we do the very special stuff.  We turn a "12 matrix" concept into an explicit matrix.
-            Note that we only do it if we would have lost anyway about 25 lines below (note that "calldeflist"
-            is zero, and the search again stuff won't be executed unless CMD_MISC__EXPLICIT_MATRIX is on,
-            which it isn't.)  So we turn on the CMD_MISC__EXPLICIT_MATRIX bit, and we turn off the
-            INHERITFLAG_12_MATRIX or INHERITFLAG_16_MATRIX bit. */
+         /* Here is where we do the very special stuff.  We turn a "12 matrix" concept
+            into an explicit matrix.  Note that we only do it if we would have lost
+            anyway about 25 lines below (note that "calldeflist" is zero, and
+            the search again stuff won't be executed unless CMD_MISC__EXPLICIT_MATRIX is on,
+            which it isn't.)  So we turn on the CMD_MISC__EXPLICIT_MATRIX bit,
+            and we turn off the INHERITFLAG_12_MATRIX or INHERITFLAG_16_MATRIX bit. */
 
          if (matrix_check_flag == 0) {
-            /* We couldn't figure out from the setup what the matrix is, so we have to expand it. */
+            /* We couldn't figure out from the setup what the matrix is,
+               so we have to expand it. */
 
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
                if (search_concepts & INHERITFLAG_12_MATRIX) {
@@ -3722,32 +3763,40 @@ foobar:
                      (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
                      TRUE);
 
-                  if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12) fail("Can't expand to a 12 matrix.");
+                  if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12)
+                     fail("Can't expand to a 12 matrix.");
                   matrix_check_flag = INHERITFLAG_12_MATRIX;
                }
                else if (search_concepts & INHERITFLAG_16_MATRIX) {
                   if (ss->kind == s2x6) do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, TRUE);
                   else if (ss->kind != s2x4) do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, TRUE);
-                  /* Take no action (and hence cause an error) if the setup was a 2x4.  If someone wants to say
-                     "16 matrix 4x4 peel off" from normal columns, that person needs more help than we can give. */
+                  /* Take no action (and hence cause an error) if the setup was a 2x4.
+                     If someone wants to say "16 matrix 4x4 peel off" from normal columns,
+                     that person needs more help than we can give. */
 
-                  if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16) fail("Can't expand to a 16 matrix."); 
+                  if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16)
+                     fail("Can't expand to a 16 matrix."); 
                   matrix_check_flag = INHERITFLAG_16_MATRIX;
                }
             }
          }
 
          search_concepts &= ~matrix_check_flag;
-         ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
+         ss->cmd.cmd_final_flags.her8it &= ~matrix_check_flag;
          search_temp = search_concepts;
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
       }
       else {
-         if (    ((matrix_check_flag & INHERITFLAG_12_MATRIX) && (search_concepts & (INHERITFLAG_3X3|INHERITFLAG_6X6)) && (search_concepts & INHERITFLAG_12_MATRIX))
-                                             ||                                                                                            
-                 ((matrix_check_flag & INHERITFLAG_16_MATRIX) && (search_concepts & (INHERITFLAG_4X4|INHERITFLAG_8X8)) && (search_concepts & INHERITFLAG_16_MATRIX))) {
+         uint32 sc = search_concepts & INHERITFLAG_NXNMASK;
+
+         if (((matrix_check_flag & INHERITFLAG_12_MATRIX) &&
+              (search_concepts & INHERITFLAG_12_MATRIX) &&
+              (sc == INHERITFLAGNXNK_3X3 || sc == INHERITFLAGNXNK_6X6)) ||
+             ((matrix_check_flag & INHERITFLAG_16_MATRIX) &&
+              (search_concepts & INHERITFLAG_16_MATRIX) &&
+              (sc == INHERITFLAGNXNK_4X4 || sc == INHERITFLAGNXNK_8X8))) {
             search_concepts &= ~matrix_check_flag;
-            ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
+            ss->cmd.cmd_final_flags.her8it &= ~matrix_check_flag;
             search_temp = search_concepts;
          }
          else {
@@ -3761,7 +3810,7 @@ foobar:
 
    /* We need to divide the setup. */
 
-   need_to_divide:
+ need_to_divide:
 
    if (!newtb) {
       result->kind = nothing;
@@ -3772,39 +3821,43 @@ foobar:
       fail("Can't do this call with this modifier.");
 
    j = divide_the_setup(ss, &newtb, calldeflist, &desired_elongation, result);
-   if (j == 1) goto un_mirror;                     /* It divided and did the call.  We are done. */
-   else if (j == 2) goto search_for_call_def;      /* It did some necessary expansion or transformation,
-                                                      but did not do the call.  Try again. */
+   if (j == 1) goto un_mirror;     /* It divided and did the call.  We are done. */
+   else if (j == 2) goto search_for_call_def;      /* It did some necessary expansion
+                                                      or transformation, but did not
+                                                      do the call.  Try again. */
 
    /* If we get here, linedefinition and coldefinition are both zero, and we will fail. */
 
    /* We are about to do the call by array! */
 
-   do_the_call:
+ do_the_call:
 
    /* This shouldn't happen, but we are being very careful here. */
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
       fail("Can't do \"snag/mystic\" with this call.");
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-   funny = final_concepts.herit & INHERITFLAG_FUNNY;
+   funny = TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_FUNNY);
    inconsistent_rotation = 0;
    inconsistent_setup = 0;
 
    if (funny && (!(calldeflist->callarray_flags & CAF__FACING_FUNNY)))
       fail("Can't do this call 'funny'.");
 
-   if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) other_elongate = TRUE;
-   if (coldefinition && (coldefinition->callarray_flags & CAF__OTHER_ELONGATE)) other_elongate = TRUE;
-   if (linedefinition && (linedefinition->callarray_flags & CAF__OTHER_ELONGATE)) other_elongate = TRUE;
+   if ((callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) ||
+       (coldefinition && (coldefinition->callarray_flags & CAF__OTHER_ELONGATE)) ||
+       (linedefinition && (linedefinition->callarray_flags & CAF__OTHER_ELONGATE)))
+      other_elongate = TRUE;
 
    if (other_elongate &&
-            (desired_elongation == 1 || desired_elongation == 2))
+       (desired_elongation == 1 || desired_elongation == 2))
       desired_elongation ^= 3;
 
    if (!newtb) {
-      result->kind = nothing;   /* Note that we get the benefit of the "CFLAG1_PARALLEL_CONC_END" stuff here.  */
-      goto un_mirror;           /*   This means that a counter rotate in an empty 1x2 will still change shape. */
+      result->kind = nothing;   /* Note that we get the benefit of the
+                                   "CFLAG1_PARALLEL_CONC_END" stuff here.  */
+      goto un_mirror;           /* This means that a counter rotate in
+                                   an empty 1x2 will still change shape. */
    }
 
    /* Check that "linedefinition" has been set up if we will need it. */
@@ -3816,36 +3869,36 @@ foobar:
 
       if (!linedefinition) {
          switch (ss->kind) {
-            case sdmd:
-               fail("Can't handle people in diamond or PU quarter-tag for this call.");
-            case s_trngl:
-               fail("Can't handle people in triangle for this call.");
-            case s_qtag:
-               fail("Can't handle people in quarter tag for this call.");
-            case s_ptpd:
-               fail("Can't handle people in point-to-point diamonds for this call.");
-            case s3x4:
-               fail("Can't handle people in triple lines for this call.");
-            case s2x3: case s2x4:
-               fail("Can't handle people in lines for this call.");
-            case s_short6:
-               fail("Can't handle people in tall/short 6 for this call.");
-            case s2x2:
-               fail("Can't handle people in box of 4 for this call.");
-            case s1x2:
-               fail("Can't handle people in line of 2 for this call.");
-            case s1x3:
-               fail("Can't handle people in line of 3 for this call.");
-            case s1x4:
-               fail("Can't handle people in line of 4 for this call.");
-            case s1x6:
-               fail("Can't handle people in line of 6 for this call.");
-            case s1x8:
-               fail("Can't handle people in line of 8 for this call.");
-            case s_galaxy:
-               fail("Can't handle people in galaxy for this call.");
-            default:
-               fail("Can't do this call.");
+         case sdmd:
+            fail("Can't handle people in diamond or PU quarter-tag for this call.");
+         case s_trngl:
+            fail("Can't handle people in triangle for this call.");
+         case s_qtag:
+            fail("Can't handle people in quarter tag for this call.");
+         case s_ptpd:
+            fail("Can't handle people in point-to-point diamonds for this call.");
+         case s3x4:
+            fail("Can't handle people in triple lines for this call.");
+         case s2x3: case s2x4:
+            fail("Can't handle people in lines for this call.");
+         case s_short6:
+            fail("Can't handle people in tall/short 6 for this call.");
+         case s2x2:
+            fail("Can't handle people in box of 4 for this call.");
+         case s1x2:
+            fail("Can't handle people in line of 2 for this call.");
+         case s1x3:
+            fail("Can't handle people in line of 3 for this call.");
+         case s1x4:
+            fail("Can't handle people in line of 4 for this call.");
+         case s1x6:
+            fail("Can't handle people in line of 6 for this call.");
+         case s1x8:
+            fail("Can't handle people in line of 8 for this call.");
+         case s_galaxy:
+            fail("Can't handle people in galaxy for this call.");
+         default:
+            fail("Can't do this call.");
          }
       }
 
@@ -3861,7 +3914,9 @@ foobar:
          t.assump_col = 4;
       }
 
-      if (t.assumption != cr_none) (void) check_restriction(ss, t, FALSE, linedefinition->callarray_flags & CAF__RESTR_MASK);
+      if (t.assumption != cr_none)
+         (void) check_restriction(ss, t, FALSE,
+                                  linedefinition->callarray_flags & CAF__RESTR_MASK);
       goodies = linedefinition;
    }
 
@@ -3872,28 +3927,28 @@ foobar:
 
       if (!coldefinition) {
          switch (ss->kind) {
-            case sdmd:
-               fail("Can't handle people in diamond or normal quarter-tag for this call.");
-            case s_trngl:
-               fail("Can't handle people in triangle for this call.");
-            case s_qtag: case s3x4:
-               fail("Can't handle people in triple columns for this call.");
-            case s2x3: case s2x4:
-               fail("Can't handle people in columns for this call.");
-            case s_short6:
-               fail("Can't handle people in tall/short 6 for this call.");
-            case s1x2:
-               fail("Can't handle people in column of 2 for this call.");
-            case s1x4:
-               fail("Can't handle people in column of 4 for this call.");
-            case s1x6:
-               fail("Can't handle people in column of 6 for this call.");
-            case s1x8:
-               fail("Can't handle people in column of 8 for this call.");
-            case s_galaxy:
-               fail("Can't handle people in galaxy for this call.");
-            default:
-               fail("Can't do this call.");
+         case sdmd:
+            fail("Can't handle people in diamond or normal quarter-tag for this call.");
+         case s_trngl:
+            fail("Can't handle people in triangle for this call.");
+         case s_qtag: case s3x4:
+            fail("Can't handle people in triple columns for this call.");
+         case s2x3: case s2x4:
+            fail("Can't handle people in columns for this call.");
+         case s_short6:
+            fail("Can't handle people in tall/short 6 for this call.");
+         case s1x2:
+            fail("Can't handle people in column of 2 for this call.");
+         case s1x4:
+            fail("Can't handle people in column of 4 for this call.");
+         case s1x6:
+            fail("Can't handle people in column of 6 for this call.");
+         case s1x8:
+            fail("Can't handle people in column of 8 for this call.");
+         case s_galaxy:
+            fail("Can't handle people in galaxy for this call.");
+         default:
+            fail("Can't do this call.");
          }
       }
 
@@ -3904,14 +3959,18 @@ foobar:
       t.assump_live = 0;
       t.assump_negate = 0;
 
-      if (t.assumption != cr_none) (void) check_restriction(ss, t, FALSE, coldefinition->callarray_flags & CAF__RESTR_MASK);
+      if (t.assumption != cr_none)
+         (void) check_restriction(ss, t, FALSE,
+                                  coldefinition->callarray_flags & CAF__RESTR_MASK);
 
       /* If we have linedefinition also, check for consistency. */
 
       if (goodies) {
          /* ***** should also check the other stupid fields! */
-         inconsistent_rotation = (goodies->callarray_flags ^ coldefinition->callarray_flags) & CAF__ROT;
-         if ((setup_kind) goodies->end_setup != (setup_kind) coldefinition->end_setup) inconsistent_setup = 1;
+         inconsistent_rotation =
+            (goodies->callarray_flags ^ coldefinition->callarray_flags) & CAF__ROT;
+         if ((setup_kind) goodies->end_setup != (setup_kind) coldefinition->end_setup)
+            inconsistent_setup = 1;
       }
 
       goodies = coldefinition;
@@ -3919,12 +3978,15 @@ foobar:
 
    result->kind = (setup_kind) goodies->end_setup;
 
-   if (result->kind == s_normal_concentric) {         /* ***** this requires an 8-person call definition */
+   if (result->kind == s_normal_concentric) {
+      /* ***** this requires an 8-person call definition */
       setup outer_inners[2];
       int outer_elongation;
       setup p1;
 
-      if (inconsistent_rotation | inconsistent_setup) fail("This call is an inconsistent shape-changer.");
+      if (inconsistent_rotation | inconsistent_setup)
+         fail("This call is an inconsistent shape-changer.");
+
       if (funny) fail("Sorry, can't do this call 'funny'");
 
       clear_people(&p1);
@@ -3936,7 +3998,8 @@ foobar:
             int real_direction = this_person.id1 & 3;
             int d2 = (this_person.id1 << 1) & 4;
             northified_index = (real_index ^ d2);
-            z = find_calldef((real_direction & 1) ? coldefinition : linedefinition, ss, real_index, real_direction, northified_index);
+            z = find_calldef((real_direction & 1) ? coldefinition : linedefinition,
+                             ss, real_index, real_direction, northified_index);
             k = ((z >> 4) & 0x1F) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
             p1.people[k].id1 = (p1.people[k].id1 & ~(ROLL_MASK | 077)) | ((z + real_direction * 011) & 013) | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);

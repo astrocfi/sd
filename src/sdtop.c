@@ -748,7 +748,7 @@ extern void touch_or_rear_back(
    if (setup_attrs[scopy->kind].setup_limits < 0) return;          /* We don't understand absurd setups. */
 
    /* We don't do this if doing the last half of a call. */
-   if (scopy->cmd.cmd_final_flags.herit & INHERITFLAG_LASTHALF) return;
+   if (TEST_HERITBITS(scopy->cmd.cmd_final_flags,INHERITFLAG_LASTHALF)) return;
 
    if (!(callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|
                        CFLAG1_STEP_TO_WAVE|
@@ -1820,7 +1820,7 @@ extern void toplevelmove(void)
 
    starting_setup.cmd.cmd_misc_flags = 0;
    starting_setup.cmd.cmd_misc2_flags = 0;
-   starting_setup.cmd.do_couples_heritflags = 0;
+   starting_setup.cmd.do_couples_her8itflags = 0;
    starting_setup.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
    starting_setup.cmd.cmd_assume.assumption = cr_none;
    starting_setup.cmd.cmd_assume.assump_cast = 0;
@@ -1828,7 +1828,7 @@ extern void toplevelmove(void)
    starting_setup.cmd.prior_expire_bits = 0;
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
-   starting_setup.cmd.restrained_superflags = 0;
+   starting_setup.cmd.restrained_super8flags = 0;
 
    for (i=0 ; i<WARNING_WORDS ; i++) newhist->warnings.bits[i] = 0;
 
@@ -1849,6 +1849,10 @@ extern void toplevelmove(void)
          conceptptr = conceptptr->next;
       else if (parse_state.topcallflags1 & (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) {
          uint64 finaljunk;
+
+         finaljunk.her8it = 0;
+         finaljunk.final = 0;
+
          (void) process_final_concepts(conceptptr->next, FALSE, &finaljunk);
          if (finaljunk.final & FINAL__SPLIT)
             conceptptr = conceptptr->next;
@@ -1981,7 +1985,7 @@ extern void toplevelmove(void)
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = NULLCALLSPEC;
    starting_setup.cmd.cmd_final_flags.final = 0;
-   starting_setup.cmd.cmd_final_flags.herit = 0;
+   starting_setup.cmd.cmd_final_flags.her8it = 0;
    move(&starting_setup, FALSE, &newhist->state);
 
    if (newhist->state.kind == s1p5x8)

@@ -109,11 +109,17 @@ extern void put_char(int c);
 #define ALTDIG 298
 #define CTLALTDIG 308
 
+/* Numeric keypad can be control, alt, or control-alt. */
+
+#define CTLNKP 318
+#define ALTNKP 328
+#define CTLALTNKP 338
+
 /* Letters can be control, alt, or control-alt. */
 
-#define CTLLET (318-'A')
-#define ALTLET (344-'A')
-#define CTLALTLET (370-'A')
+#define CTLLET (348-'A')
+#define ALTLET (374-'A')
+#define CTLALTLET (400-'A')
 
 #define FCN_KEY_TAB_LOW (FKEY+1)
 #define FCN_KEY_TAB_LAST (CTLALTLET+'Z')

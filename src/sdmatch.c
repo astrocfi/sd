@@ -37,7 +37,6 @@
 /* #define TIMING */ /* uncomment to display timing information */
 
 #include "sd.h"
-#define SCREWED_UP_REVERTS
 #include "sdmatch.h"
 #include <string.h> /* for strcpy */
 #include <stdio.h>  /* for sprintf */
@@ -1336,52 +1335,26 @@ Private void match_wildcard(
             }
             break;
          case 'v': case 'w': case 'x': case 'y':
-            if ((current_result->match.call_conc_options.tagger & 0xFF000000UL) == 0) {
-               /* We allow recursion 4 levels deep.  In fact, we consider it
-                  inappropriate to stack revert/reflect things.  There are special
-                  calls "revert, then reflect", etc. for this purpose. */
-               int tagclass;
-               uint32 save_tagger = current_result->match.call_conc_options.tagger;
-#ifdef SCREWED_UP_REVERTS
-               uint32 old_low_tagger;
-               uint32 test_mask = 0xFF;
-               old_low_tagger = save_tagger & 0xFF;
-#endif
-         
-               /* If we are already operating under a tagger field, this is a "revert" type of thing.
-                  Use the tagger class from above in preference to the one that we deduce from the
-                  escape letter, since the escape letters are not always correct for recursive
-                  invocations of "revert" things. */
-         
-               if (save_tagger & 0xFF) {
-                  tagclass = (save_tagger >> 5) & 3;
-               }
-               else {
-                  tagclass = 0;
-                  if (key == 'w') tagclass = 1;
-                  else if (key == 'x') tagclass = 2;
-                  else if (key == 'y') tagclass = 3;
-               }
 
-#ifdef SCREWED_UP_REVERTS
-               while ((current_result->match.call_conc_options.tagger & test_mask) != 0) {
-                  test_mask <<= 8;
-                  old_low_tagger <<= 8;
-               }
+            /* We don't allow this if we are already doing a tagger.  It won't happen
+               in any case, because we have taken out "revert <atc>" and "reflected <atc>"
+               as taggers. */
 
-               current_result->match.call_conc_options.tagger |= old_low_tagger;
-               current_result->match.call_conc_options.tagger &= ~0xFF;
-#else
-               current_result->match.call_conc_options.tagger <<= 8;
-#endif
-               current_result->match.call_conc_options.tagger |= tagclass << 5;
+            if (current_result->match.call_conc_options.tagger == 0) {
+               int tagclass = 0;
+
+               if (key == 'w') tagclass = 1;
+               else if (key == 'x') tagclass = 2;
+               else if (key == 'y') tagclass = 3;
+
+               current_result->match.call_conc_options.tagger = tagclass << 5;
          
                for (iu=0; iu<number_of_taggers[tagclass]; iu++) {
                   current_result->match.call_conc_options.tagger++;
                   match_suffix_2(user, tagger_calls[tagclass][iu]->name, &p2b, patxi);
                }
       
-               current_result->match.call_conc_options.tagger = save_tagger;
+               current_result->match.call_conc_options.tagger = 0;
                return;
             }
             break;

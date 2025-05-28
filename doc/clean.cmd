@@ -1,3 +1,17 @@
+echo on
+rem        This command alone cleans temporary stuff and mailing
+rem        files, but not actual derived objects.  With the arguemnt
+rem        "clean" (that is, "clean clean") it deletes all derived
+rem        objects.
+rem
+rem
+if /i "%1" == "clean" goto realclean
+goto plainstuff
+:realclean
+rem
+rem    This is the stuff we delete when we want to make things really clean.
+rem       It deletes a lot of useful derived objects.
+rem
 del sd_doc.html
 del sd_doc_*.html
 del sd_doc.txt
@@ -11,28 +25,43 @@ del demo.txt
 REM del sample.html     This is a derived object, but don't delete it just yet
 del *.ps
 del *.pdf
-del html.msg
-del html.bin
-del html.zip
-del ps.msg
-del ps.bin
-del ps.zip
-del ps.txt
-del pdf.msg
-del pdf.bin
-del pdf.zip
-del pdf.txt
-del dnu.msg
-del dnu.bin
-del dnu.zip
-del dnu.txt
-del dnp.msg
-del dnp.bin
-del dnp.zip
-del dnp.txt
+REM what are these "bin" files?
+REM del html.bin
+REM del ps.bin
+REM del pdf.bin
+REM del dnu.bin
+REM del dnp.bin
+del psdoc.exe
+del textdoc.exe
+del pdfdoc.exe
+del install.exe
+del installw.exe
 del *.gz
-del *.log
 del *.dvi
+:plainstuff
+rem
+rem      This is the stuff we want to clean all the time.  It's just temporary junk.
+rem      Well, it's also the "txt" or "zip" files that we mail to upload.
+rem
+del ps.txt
+del plain.txt
+del pdf.txt
+del dnu.txt
+del dnp.txt
+del html.zip
+del ps.zip
+del plain.zip
+del pdf.zip
+del dnu.zip
+del dnp.zip
+del html.msg
+del ps.msg
+del plain.msg
+del pdf.msg
+del dnu.msg
+del dnp.msg
+del *.lzh
+del *.log
 del *.aux
 del *.toc
 del *.cp
@@ -41,3 +70,4 @@ del *.vr
 del *.tp
 del *.ky
 del *.pg
+

@@ -619,24 +619,49 @@ typedef struct glork {
 typedef struct {
    short call_id;
    uint32 modifiers1;
+
+   /* The "modifiersh" field of an invocation of a subcall tells what
+      incoming modifiers will be passed to the subcall.  What the bits mean
+      depends on whether the call's top-level "callflagsh" bit is on.
+
+      If the bit is on in "callflagsh", the corresponding bit in "modifiersh"
+      says to pass the modifier, if present, on to the subcall.  If this is
+      a group (e.g. INHERITFLAG_MXNMASK), and it is on in "callflagsh", the
+      entire field in "modifiersh" must be on or off.  It will be on if the
+      subcall involcation is marked "inherit_mxn" or wahatever.
+
+      If the bit is off in "callflagsh", the corresponding bit in "modifiersh"
+      says to force the modifier.  In this case groups are treated as individual
+      modifiers.  An individual switch like "force_3x3" causes that key to be
+      placed in the field of "modifiersh". */
+
    uint32 modifiersh;
 } by_def_item;
 
 typedef struct glowk {
+   /* This has individual keys for groups of heritable modifiers.  Hence one
+      can't say anything like "alternate_definition [3x3 4x4]".  But of course
+      one can mix things from different groups. */
    uint32 modifier_seth;
    callarray *callarray_list;
    struct glowk *next;
    dance_level modifier_level;
 } calldef_block;
 
+#define TEST_HERITBITS(x,y) ((x).her8it & (y))
+
 typedef struct {
-   uint32 herit;
+   uint32 her8it;
    uint32 final;
 } uint64;
 
 typedef struct {
    uint32 callflags1;    /* The CFLAG1_??? flags. */
-   uint32 callflagsh;    /* The heritable flags. */
+   uint32 callflagsh;    /* The mask for the heritable flags. */
+   /* Within the "callflagsh" field, the various grouped fields
+      (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
+      on or they are all off.  A call can only inherit the entire group,
+      by saying "mxn_is_inherited". */
    uint32 callflagsf;    /* The ESCAPE_WORD__???  and CFLAGH__??? flags. */
    short int age;
    short int level;
@@ -802,6 +827,7 @@ typedef enum {
    concept_twisted,
    concept_12_matrix,
    concept_16_matrix,
+   concept_revert,
    concept_1x2,
    concept_2x1,
    concept_2x2,
@@ -1063,10 +1089,9 @@ typedef enum {
 typedef struct {
    selector_kind who;        /* selector, if any, used by concept or call */
    direction_kind where;     /* direction, if any, used by concept or call */
-   uint32 tagger;            /* tagging call indices, if any, used by call
-                                This is 4 8-bit fields, each of which, if nonzero,
-                                is 3 bits for the 0-based tagger class and 5 bits
-                                for the 1-based tagger call */
+   uint32 tagger;            /* tagging call indices, if any, used by call.
+                                If nonzero, this is 3 bits for the 0-based tagger class
+                                and 5 bits for the 1-based tagger call */
    uint32 circcer;           /* circulating call index, if any, used by call */
    uint32 number_fields;     /* number, if any, used by concept or call */
    int howmanynumbers;       /* tells how many there are */
@@ -1179,16 +1204,14 @@ typedef struct {
    when these are in use.  If the PART_MASK field is zero, the code must be zero
    (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
 
-   The PART2_MASK is unused (and zero) except for codes FROMTO and FROMTOPOST. */
+   The PART2_MASK is unused (and zero) except for codes FROMTO, FROMTOREV and FROMTOPOST. */
 
 #define CMD_FRAC_CODE_ONLY       0x00000000
 #define CMD_FRAC_CODE_ONLYREV    0x00200000
-#define CMD_FRAC_CODE_FROMTOMOST 0x00400000
-#define CMD_FRAC_CODE_UPTOREV    0x00600000
-#define CMD_FRAC_CODE_FINUPTOREV 0x00800000
-#define CMD_FRAC_CODE_BEYOND     0x00A00000
-#define CMD_FRAC_CODE_FROMTO     0x00C00000
-#define CMD_FRAC_CODE_PREBEYOND  0x00E00000
+#define CMD_FRAC_CODE_FROMTO     0x00400000
+#define CMD_FRAC_CODE_FROMTOREV  0x00600000
+#define CMD_FRAC_CODE_FROMTOMOST 0x00800000
+#define CMD_FRAC_CODE_PREBEYOND  0x00A00000
 
 #define CMD_FRAC_PART2_BIT       0x01000000
 #define CMD_FRAC_PART2_MASK      0x07000000
@@ -1196,8 +1219,7 @@ typedef struct {
 #define CMD_FRAC_BREAKING_UP     0x10000000
 #define CMD_FRAC_FORCE_VIS       0x20000000
 #define CMD_FRAC_LASTHALF_ALL    0x40000000
-#define CMD_FRAC_SNAG_EVERYTHING 0x80000000
-
+#define CMD_FRAC_FIRSTHALF_ALL   0x80000000
 
 
 typedef struct {
@@ -1206,13 +1228,13 @@ typedef struct {
    uint64 cmd_final_flags;
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
-   uint32 do_couples_heritflags;
+   uint32 do_couples_her8itflags;
    uint32 cmd_frac_flags;
    parse_block *restrained_concept;
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
    uint32 prior_expire_bits;
-   uint32 restrained_superflags;
+   uint32 restrained_super8flags;
    parse_block *skippable_concept;
 } setup_command;
 
@@ -1764,7 +1786,7 @@ typedef enum {
 typedef struct {
    int size;
    veryshort map1[17];
-   veryshort map2[16];
+   veryshort map2[17];
    veryshort map3[8];
    veryshort map4[8];
    long_boolean ok_for_assume;
@@ -2485,7 +2507,6 @@ extern void reinstate_rotation(setup *ss, setup *result);
 
 extern long_boolean divide_for_magic(
    setup *ss,
-   uint32 heritflags_to_use,
    uint32 heritflags_to_check,
    setup *result);
 
