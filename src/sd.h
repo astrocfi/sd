@@ -384,9 +384,8 @@ typedef struct {
 #define CMD_MISC__VERIFY_QTAG_LIKE   0x00000C00UL
 #define CMD_MISC__VERIFY_1_4_TAG     0x00001000UL
 #define CMD_MISC__VERIFY_3_4_TAG     0x00001400UL
-/* available:                        0x00001800UL */
-/* available:                        0x00001C00UL */
-
+#define CMD_MISC__VERIFY_LINES       0x00001800UL
+#define CMD_MISC__VERIFY_COLS        0x00001C00UL
 
 /* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed.
 

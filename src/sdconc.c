@@ -1669,6 +1669,7 @@ static concmerge_thing map_12d14  = {schema_nothing,        s1x8,        nothing
 static concmerge_thing map_31d18  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
 static concmerge_thing map_pp18   = {schema_nothing,        s_ptpd,      nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
 static concmerge_thing map_13d12d = {schema_nothing,        s1x3dmd,     nothing, 0, {0}, {1, 2, 3, 5, 6, 7}};
+static concmerge_thing map_rig1x8 = {schema_nothing,        s_rigger,    nothing, 0, {0}, {6, 7, 0, 0, 2, 3, 0, 0}};
 static concmerge_thing map_14xw   = {schema_nothing,        s_crosswave, nothing, 0, {0}, {3, 2, 7, 6}};
 static concmerge_thing map_14qt   = {schema_nothing,        s_qtag,      nothing, 0, {0}, {6, 7, 2, 3}};
 static concmerge_thing map_1434   = {schema_nothing,        s3x4,        nothing, 0, {0}, {10, 11, 4, 5}};
@@ -2013,6 +2014,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    }
    else if (res2->kind == s1x3dmd && res1->kind == s_1x2dmd && r == 0) {
       the_map = &map_13d12d;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_rigger && res1->kind == s1x8 && r == 0 &&
+            (!(res1->people[2].id1 | res1->people[3].id1 | res1->people[6].id1 | res1->people[7].id1))) {
+      the_map = &map_rig1x8;
       goto merge_concentric;
    }
    else if (res2->kind == s_crosswave && res1->kind == s1x2 && !(r&1)) {
@@ -2522,6 +2528,7 @@ static Const fixer f1x8endo  = {s1x2, s1x8,        0, 2,       &f1x8endo,  &fbon
 static Const fixer fbonectr  = {s1x4, s_bone,      0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &bar55d,    {{6, 7, 2, 3}},     {{-1}}};
 static Const fixer fboneendd = {s2x2, s_bone,      0, 1,       0,          0,          &f1x8endd,  0, 0,          0,    &fboneendd, {{0, 1, 4, 5}},     {{-1}}};
 static Const fixer fbonetgl  = {s_bone6, s_bone,   0, 1,       0,          0,          0,          0, 0,          0,    0,          {{0, 1, 3, 4, 5, 7}}, {{-1}}};
+static Const fixer frigtgl   = {s_short6, s_rigger,1, 1,       0,          0,          0,          0, 0,          0,    0,          {{1, 2, 4, 5, 6, 0}}, {{-1}}};
 static Const fixer fboneendo = {s1x2, s_bone,      1, 2,       &fboneendo, &f1x8endo,  0,          0, 0,          0,    0,          {{0, 5}, {1, 4}},   {{-1}}};
 static Const fixer frigendd  = {s1x4, s_rigger,    0, 1,       0,          0,          &frigendd,  0, 0,          0,    &f2x4endd,  {{6, 7, 2, 3}},     {{-1}}};
 static Const fixer frigctr   = {s2x2, s_rigger,    0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &frigctr,   {{0, 1, 4, 5}},     {{-1}}};
@@ -2831,15 +2838,10 @@ back_here:
                   fixp = &f1x8endd;
                else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x33)
                   fixp = &fboneendd;
-
-
-
-
                else if (the_setups[setupcount].kind == s_bone && thislivemask == 0xBB)
                   fixp = &fbonetgl;
-
-
-
+               else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x77)
+                  fixp = &frigtgl;
                else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xAA)
                   fixp = &fppaad;
                else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x55)
@@ -3019,7 +3021,7 @@ back_here:
                fixp = fixp->nextdmd;
             else if (lilresult[0].kind == s2x2)
                fixp = fixp->next2x2;
-            else if (lilresult[0].kind != fixp->ink || fixp->rot != 0)
+            else if (lilresult[0].kind != fixp->ink)
                fixp = 0;    /* Raise an error. */
 
             if (!fixp) goto lose;

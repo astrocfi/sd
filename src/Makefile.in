@@ -228,7 +228,7 @@ ls:
 pcdist: sd@PCVERSION@bn
 
 sd@PCVERSION@bn: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme relnotes oldnotes copying
+	lha a $@ readme relnotes oldnotes
 	lha a $@ sdtty.exe mkcalls.exe go32.exe
 	lha a $@ sample1.ini sample2.ini
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
@@ -239,7 +239,7 @@ BIN_TARFILE = sd-@VERSION@-@SYSTEM@.tar
 
 @BINDIST_RULE@
 
-TARFILES = README Relnotes oldnotes COPYING \
+TARFILES = README Relnotes oldnotes \
 	 sd sdtty mkcalls \
 	 sample1.ini sample2.ini \
 	 sd_calls.txt sd_calls.dat db_doc.txt \

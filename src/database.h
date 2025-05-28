@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 68
+#define DATABASE_FORMAT_VERSION 70
 
 
 
@@ -179,7 +179,6 @@ typedef enum {
    s_2x1dmd,
    s_qtag,
    s_bone,
-   s_rigger,
    s_spindle,
    s_hrglass,
    s_dhrglass,
@@ -187,6 +186,7 @@ typedef enum {
    s_crosswave,
    s1x8,
    s2x4,
+   s_rigger,
    s2x3,
    s1x6,
    s3x4,
@@ -409,6 +409,8 @@ typedef enum {
    cr_opposite_sex,
    cr_quarterbox_or_col,
    cr_quarterbox_or_magic_col,
+   cr_all_ns,
+   cr_all_ew,
    cr_gen_1_4_tag,
    cr_gen_3_4_tag,
    cr_jleft,

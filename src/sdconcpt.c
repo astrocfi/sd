@@ -1623,6 +1623,8 @@ extern void impose_assumption_and_move(setup *ss, setup *result)
          case CMD_MISC__VERIFY_QTAG_LIKE: t.assumption = cr_qtag_like;    break;
          case CMD_MISC__VERIFY_1_4_TAG:   t.assumption = cr_gen_1_4_tag;  break;
          case CMD_MISC__VERIFY_3_4_TAG:   t.assumption = cr_gen_3_4_tag;  break;
+         case CMD_MISC__VERIFY_LINES:     t.assumption = cr_all_ns;       break;
+         case CMD_MISC__VERIFY_COLS:      t.assumption = cr_all_ew;       break;
          default:
             fail("Unknown assumption verify code.");
       }
@@ -2466,6 +2468,7 @@ Private void do_concept_twice(
    if (ss->cmd.cmd_frac_flags && (restraint & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
       /* The fractions were meant for us, not the subject call. */
       fraction_info zzz;
+
       zzz = get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, repetitions);
       reverse_order = zzz.reverse_order;
       do_half_of_last_part = zzz.do_half_of_last_part;
@@ -2790,7 +2793,11 @@ Private void do_concept_inner_outer(
                }
                break;
             case sbigh: case sbigx: case sbigdmd: case sbigbone:
-               /* ****** We punt the checking here.  It is rather hairy. */
+               switch (parseptr->concept->value.arg1 & 7) {
+                  case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
+                  case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
+               }
+
                break;
             default:
                fail("Need a triple line/column setup for this.");
@@ -2809,7 +2816,10 @@ Private void do_concept_inner_outer(
                }
                break;
             case sbigh: case sbigx: case sbigrig:
-               /* ****** We punt the checking here.  It is rather hairy. */
+               switch (parseptr->concept->value.arg1 & 7) {
+                  case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
+                  case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
+               }
                break;
             default:
                fail("Need a triple line/column setup for this.");
@@ -2829,9 +2839,9 @@ Private void do_concept_inner_outer(
             canonicalize_rotation(ss);
          }
          else {
-            if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
-               if (global_tbonetest & 1) fail("There are no quadruple lines here.");
-               else                      fail("There are no quadruple columns here.");
+            switch (parseptr->concept->value.arg1 & 7) {
+               case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
+               case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
             }
          }
 
@@ -3446,7 +3456,8 @@ Private void do_concept_meta(
       finally <concept>         : 7
       do the Nth part <concept> : 8
       skip the Nth part         : 9
-      shift N                   : 10 */
+      shift N                   : 10
+      shifty                    : 11 */
 
    if (key == 0 && (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE)) {
       key = 1;     /* "reverse" and "random"  ==>  "reverse random" */
@@ -3505,7 +3516,7 @@ Private void do_concept_meta(
 
    *result = *ss;
 
-   if (key != 9 && key != 10) {
+   if (key != 9 && key != 10 && key != 11) {
       /* Scan the modifiers, remembering them and their end point.  The reason for this is to
          avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
          This code used to have the beginnings of stuff to do it really right.  It isn't
@@ -3546,7 +3557,10 @@ Private void do_concept_meta(
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
    }
-   else if (key == 10) {      /* shift <N> */
+   else if (key == 10 || key == 11) {      /* shift <N> or shifty */
+      int shiftynum;
+      shiftynum = (key == 11) ? 1 : parseptr->number;
+
       if (ss->cmd.cmd_frac_flags)
          fail("Can't stack meta or fractional concepts.");
    
@@ -3554,7 +3568,7 @@ Private void do_concept_meta(
 
       tttt = *result;
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = 0x800111 | (parseptr->number << 16);
+      tttt.cmd.cmd_frac_flags = 0x800111 | (shiftynum << 16);
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3563,7 +3577,7 @@ Private void do_concept_meta(
 
       tttt = *result;
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = ((parseptr->number) << 16) | 0x400111;
+      tttt.cmd.cmd_frac_flags = (shiftynum << 16) | 0x400111;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);

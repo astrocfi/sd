@@ -1401,28 +1401,6 @@ To summarize some general properties of predicates:
 
 The existing predicates are listed in the appendix.
 
-                  RESTRICTIONS
-
-A restriction is given only for calls defined by array, either with or without
-predicates.  It appears after the "setup" keyword and the starting and ending
-setups, and the "rotation" keyword, if any.  Only one restriction may be given
-with a "setup" specification.
-
-A restriction consists of the word "restriction", an optional action keyword,
-and the restriction name.  The action keyword tells what is to be done if the
-restriction is violated, as follows:
-   no keyword -- the warning "do your part" is given, and the call is not
-               considered acceptable when searching for resolves, "pick
-               random call", etc.
-   "resolve_ok" -- as above, but the call is still acceptable for resolves.
-   "unusual" -- the warning "This is an unusual setup for this call" is given,
-               and the call is not considered acceptable when searching for
-               resolves.  This should be used to alert the user of the program
-               that this may not be an appropriate use of the call, but that
-               telling the dancers to do their own part isn't the right fix.
-   "forbidden" -- an error is given.  The call is simply not permitted.
-
-
 
 
 
@@ -2011,6 +1989,25 @@ q_line_back
 
                            APPENDIX B -- RESTRICTIONS
 
+A restriction is given only for calls defined by array, either with or without
+predicates.  It appears after the "setup" keyword and the starting and ending
+setups, and the "rotation" keyword, if any.  Only one restriction may be given
+with a "setup" specification.
+
+A restriction consists of the word "restriction", an optional action keyword,
+and the restriction name.  The action keyword tells what is to be done if the
+restriction is violated, as follows:
+   no keyword -- the warning "do your part" is given, and the call is not
+               considered acceptable when searching for resolves, "pick
+               random call", etc.
+   "resolve_ok" -- as above, but the call is still acceptable for resolves.
+   "unusual" -- the warning "This is an unusual setup for this call" is given,
+               and the call is not considered acceptable when searching for
+               resolves.  This should be used to alert the user of the program
+               that this may not be an appropriate use of the call, but that
+               telling the dancers to do their own part isn't the right fix.
+   "forbidden" -- an error is given.  The call is simply not permitted.
+
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
 
    alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
@@ -2040,6 +2037,8 @@ q_line_back
    opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
    quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
    quarterbox_or_magic_col,      /* 4x2 - acceptable setup for "make magic" */
+   all_ns,                       /* SPECIAL -- used for "assume" stuff - 1x4/1x8/2x4 is lines */
+   all_ew,                       /* SPECIAL -- used for "assume" stuff - 1x4/1x8/2x4 is columns */
    gen_1_4_tag,                  /* SPECIAL -- used for "assume" stuff */
    gen_3_4_tag,                  /* SPECIAL -- used for "assume" stuff */
    jleft,                        /* SPECIAL -- used for "assume" stuff */

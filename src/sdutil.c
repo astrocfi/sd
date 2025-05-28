@@ -329,12 +329,14 @@ Private restriction_thing ptpd_1        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, 
 Private restriction_thing qtag_3        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 0, 1}, {2, 4, 5}, FALSE, chk_dmd_qtag};
 Private restriction_thing dmd_3         = {4, {0}, {4, 0, 1, 2, 3},                            {1, 2},    {1, 0},    FALSE, chk_dmd_qtag};
 Private restriction_thing ptpd_3        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 2, 4}, {2, 0, 6}, FALSE, chk_dmd_qtag};
-Private restriction_thing qtag_q        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing dmd_q         = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
-Private restriction_thing ptpd_q        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing qtag_d        = {4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},                {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing dmd_d         = {4, {2, 0, 2}, {2, 1, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 7}, {4, 1, 3, 5, 6},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing all_4_ns      = {4, {4, 0, 1, 2, 3}, {0},                            {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing all_4_ew      = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing all_8_ns      = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing all_8_ew      = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
 
 
 
@@ -366,6 +368,12 @@ static restr_initializer restr_init_table[] = {
    {s1x4, cr_all_facing_same, &all_same_4},
    {s1x4, cr_couples_only, &cpls_1x4},
    {s1x4, cr_magic_only, &invert_1x4},
+   {s1x4, cr_all_ns, &all_4_ns},
+   {s1x4, cr_all_ew, &all_4_ew},
+   {s2x4, cr_all_ns, &all_8_ns},
+   {s2x4, cr_all_ew, &all_8_ew},
+   {s1x8, cr_all_ns, &all_8_ns},
+   {s1x8, cr_all_ew, &all_8_ew},
    {s1x6, cr_wave_only, &wave_1x6},
    {s1x6, cr_1fl_only, &all_same_6},
    {s1x6, cr_all_facing_same, &all_same_6},
@@ -511,7 +519,7 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          else if (t.assumption == cr_diamond_like)
             restr_thing_ptr = &qtag_d;
          else if (t.assumption == cr_qtag_like)
-            restr_thing_ptr = &qtag_q;
+            restr_thing_ptr = &all_8_ns;
          else if (t.assumption == cr_gen_1_4_tag)
             restr_thing_ptr = &qtag_1;
          else if (t.assumption == cr_gen_3_4_tag)
@@ -531,7 +539,7 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          if (t.assumption == cr_diamond_like)
             restr_thing_ptr = &ptpd_d;
          else if (t.assumption == cr_qtag_like)
-            restr_thing_ptr = &ptpd_q;
+            restr_thing_ptr = &all_8_ew;
          else if (t.assumption == cr_gen_1_4_tag)
             restr_thing_ptr = &ptpd_1;
          else if (t.assumption == cr_gen_3_4_tag)

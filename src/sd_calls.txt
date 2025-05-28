@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.53"
+version "31.55"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -796,6 +796,10 @@ call "exchange the diamonds" c2
       array [0 0 6N 7N 0 0 2N 3N]
    setup pqtag qtag restriction forbidden diamond_like
       array [1S 0S 0 0 5S 4S 0 0]
+   setup ptpd ptpd restriction forbidden diamond_like
+      array [4N 0 6N 0 0N 0 2N 0]
+   setup pptpd ptpd restriction forbidden diamond_like
+      array [0 7S 0 5S 0 3S 0 1S]
 
 call "exchange the triangles" c3a
    setup bone6 bone6
@@ -1489,7 +1493,7 @@ call "swing and mix" a2
             grand_is_inherited visible_fractions
    seq swing []
    seq ctrcrossrun [inherit_grand]
-   seq maybegrandslip [inherit_grand]
+   seq maybegrandslip [inherit_grand roll_transparent]
 
 call "trade the wave" plus tag tradethewave
    setup 1x4 1x4 restriction forbidden wave_only
@@ -4943,17 +4947,17 @@ call "square thru @9 to a wave" c1
    seq crosslockit [repeat_nm1]
 
 call "square thru 2" dontshow tag square_thru_2
-            split_like_square_thru
+            split_like_square_thru rear_back_from_r_wave
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM0W CM1E]
 
 call "square thru 3" dontshow tag square_thru_3
-            split_like_square_thru
+            split_like_square_thru rear_back_from_r_wave
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM3S CM2S]
 
 call "square thru 4" dontshow tag square_thru_4
-            split_like_square_thru
+            split_like_square_thru rear_back_from_r_wave
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM2E CM3W]
 
@@ -9214,7 +9218,7 @@ call "mini busy" a2
    setup 2x4 qtag
       array [R0S R1S L0S L1S L3S L6S R2S R7S]
 
-call "2/3 mini busy" c3
+call "2/3 mini busy" c1
    setup 2x4 hrglass
       array [R0E R1E L0W L1W M2N L3W R3E M6N]
 
@@ -10554,18 +10558,16 @@ call "_start action" dontshow tag startaction
             left_means_mirror
    conc half_rev_swap [inherit_left] hinge [inherit_left conc_demand_columns]
 
-call "the action" c4
+call "the action" c4 tag the_action
             left_means_mirror
    seq startaction [inherit_left]
    seq turnstar1_endstrade []
    seq finishwithmod []
 
 call "barge the action" c4
-            split_like_square_thru left_means_mirror
+            visible_fractions split_like_square_thru left_means_mirror
    seq square_thru_2 []
-   seq startaction [inherit_left]
-   seq turnstar1_endstrade []
-   seq finishwithmod []
+   seq the_action [inherit_left]
 
 call "spin the windmill, outsides as you are" dontshow tag swapwindmill4
    conc swingslipcast3 [] dblcirc [conc_demand_lines conc_force_lines]

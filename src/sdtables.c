@@ -1543,17 +1543,6 @@ setup_attr setup_attrs[] = {
       id_bit_table_bone,
       {  "a                   b@    g h d c@f                   e",
          "fa@  g@  h@  d@  c@eb"}},
-   /* s_rigger */
-      { 7,
-      &thingrigger,
-      &thingrigger,
-      &concthing_rigger,
-      {b_rigger,    b_prigger},
-      { 0, 0},
-      FALSE,
-      id_bit_table_rigger,
-      {  "        a b@gh         dc@        f e",
-         "  g@  h@fa@eb@  d@  c"}},
    /* s_spindle */
       { 7,
       &thingspindle,
@@ -1631,6 +1620,17 @@ setup_attr setup_attrs[] = {
       id_bit_table_2x4,
       {  "a  b  c  d@@h  g  f  e",
          "h  a@@g  b@@f  c@@e  d"}},
+   /* s_rigger */
+      { 7,
+      &thingrigger,
+      &thingrigger,
+      &concthing_rigger,
+      {b_rigger,    b_prigger},
+      { 0, 0},
+      FALSE,
+      id_bit_table_rigger,
+      {  "        a b@gh         dc@        f e",
+         "  g@  h@fa@eb@  d@  c"}},
    /* s2x3 */
       { 5,
       &thing2x3,
@@ -2726,7 +2726,6 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* s_2x1dmd */
    {0,         &mm_qtg_2, &mm_qtg_3, 0},          /* s_qtag */
    {0,         0,         0,         0},          /* s_bone */
-   {0,         0,         0,         0},          /* s_rigger */
    {0,         &mm_spn_2, 0,         0},          /* s_spindle */
    {0,         &mm_hrg_2, 0,         0},          /* s_hrglass */
    {0,         0,         0,         0},          /* s_dhrglass */
@@ -2734,6 +2733,7 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* s_crosswave */
    {&mm_1x8_1, &mm_1x8_2, &mm_1x8_3, 0},          /* s1x8 */
    {&mm_2x4_1, &mm_2x4_2, &mm_2x4_3, 0},          /* s2x4 */
+   {0,         0,         0,         0},          /* s_rigger */
    {0,         &mm_2x3_2, &mm_2x3_3, 0},          /* s2x3 */
    {0,         &mm_1x6_2, 0,         0},          /* s1x6 */
    {0,         &mm_3x4_2, 0,         0},          /* s3x4 */

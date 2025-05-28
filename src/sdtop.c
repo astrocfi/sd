@@ -200,6 +200,14 @@ Private expand_thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing,
 Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
 Private expand_thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, nothing, s_rigger, 0};
 Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
+
+
+Private expand_thing step_phan1_stuff = {{-1, 7, -1, 6, -1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4}, 16, nothing, s2x4, 1};
+Private expand_thing step_phan2_stuff = {{7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1}, 16, nothing, s2x4, 1};
+Private expand_thing step_phan3_stuff = {{0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6, -1}, 16, nothing, s2x4, 0};
+Private expand_thing step_phan4_stuff = {{-1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4, -1, 7, -1, 6}, 16, nothing, s2x4, 0};
+
+
 Private expand_thing step_bigd_stuff1 = {{0, 1, 3, 2, -1, -1, 6, 7, 9, 8, -1, -1}, 12, nothing, s2x6, 0};
 Private expand_thing step_bigd_stuff2 = {{-1, -1, 3, 2, 4, 5, -1, -1, 9, 8, 10, 11}, 12, nothing, s2x6, 0};
 Private expand_thing step_tgl4_stuff = {{2, 3, 0, 1}, 4, nothing, s1x4, 1};
@@ -219,6 +227,10 @@ Private full_expand_thing step_1x2_pair      = {warn__none,       0, &step_1x2_s
 Private full_expand_thing step_bone_pair     = {warn__some_touch, 0, &step_bone_stuff};
 Private full_expand_thing step_bone_rigpair  = {warn__none      , 0, &step_bone_rigstuff};
 Private full_expand_thing step_rig_pair      = {warn__some_touch, 0, &step_rig_stuff};
+Private full_expand_thing step_phan1_pair    = {warn__some_touch, 0, &step_phan1_stuff};
+Private full_expand_thing step_phan2_pair    = {warn__some_touch, 0, &step_phan2_stuff};
+Private full_expand_thing step_phan3_pair    = {warn__some_touch, 0, &step_phan3_stuff};
+Private full_expand_thing step_phan4_pair    = {warn__some_touch, 0, &step_phan4_stuff};
 Private full_expand_thing step_bigd_pair1    = {warn__some_touch, 0, &step_bigd_stuff1};
 Private full_expand_thing step_bigd_pair2    = {warn__some_touch, 0, &step_bigd_stuff2};
 Private full_expand_thing step_tgl4_pair     = {warn__some_touch, 0, &step_tgl4_stuff};
@@ -367,7 +379,9 @@ extern void touch_or_rear_back(
             }
             break;
          case s2x4:
-            if (livemask == 0xFFFFUL && directions == 0x77DDUL)
+            if (     ((livemask == 0xFFFFUL) || (livemask == 0xF0F0UL) || (livemask == 0x0F0FUL))
+                              &&
+                     ((directions ^ 0x77DDUL) & livemask) == 0)
                tptr = &step_8ch_pair;         /* Check for stepping to parallel waves from an 8 chain. */
             else if (livemask == 0xFFFFUL && directions == 0xAA00UL)
                tptr = &step_li_pair;          /* Check for stepping to a grand wave from lines facing. */
@@ -457,12 +471,10 @@ extern void touch_or_rear_back(
             }
             break;
          case s1x8:
-            if ((livemask == 0xFFFFUL) && (directions == 0x7DD7UL))
+            if (     ((livemask == 0xFFFFUL) || (livemask == 0xF0F0UL) || (livemask == 0x0F0FUL))
+                              &&
+                     ((directions ^ 0x7DD7UL) & livemask) == 0)
                tptr = &step_1x8_pair;         /* Check for stepping to a column from a 1x8 single 8 chain. */
-            else if ((livemask == 0xF0F0UL) && (directions == 0x70D0UL))
-               tptr = &step_1x8_pair;         /* Same, with missing people. */
-            else if ((livemask == 0x0F0FUL) && (directions == 0x0D07UL))
-               tptr = &step_1x8_pair;         /* Same, with missing people. */
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask) != (0x2882UL & livemask))
                   fail("Setup is not left-handed.");
@@ -477,6 +489,20 @@ extern void touch_or_rear_back(
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask & 0x0F0F) != (0x0802UL & livemask))
                   fail("Setup is not left-handed.");
+            }
+            break;
+         case s_c1phan:
+            if (livemask == 0x33333333UL) {
+               if (directions == 0x13313113UL)
+                  tptr = &step_phan1_pair;
+               else if (directions == 0x20200202UL)
+                  tptr = &step_phan4_pair;
+            }
+            else if (livemask == 0xCCCCCCCCUL) {
+               if (directions == 0x08808008UL)
+                  tptr = &step_phan3_pair;
+               else if (directions == 0x4C4CC4C4UL)
+                  tptr = &step_phan2_pair;
             }
             break;
       }
