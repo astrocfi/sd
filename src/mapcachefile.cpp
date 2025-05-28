@@ -111,8 +111,8 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
          // We will leave this file descriptor zero, which the client
          // will find.  The client will conclude that we can't proceed
          // with the operation, since we can't open the source files.
-         innards->the_miss_reason = MISS_CANT_OPEN_SOURCE;
          innards->properly_opened = false;
+         innards->the_miss_reason = MISS_CANT_OPEN_SOURCE;
       }
       else if (fstat(fileno(srcfiles[i]), &innards->source_stats[i])) {
          // If we can open the source files but can't get their

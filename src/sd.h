@@ -4647,12 +4647,18 @@ void initialize_sdlib();
 
 extern void crash_print(const char *filename, int linenum) THROW_DECL;
 
-// This writes over its 2nd and 3rd arguments.
+struct skipped_concept_info {
+   parse_block *old_retval;
+   parse_block *skipped_concept;
+   uint32 need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
+   parse_block *concept_with_root;
+   parse_block **root_of_result_of_skip;
+};
+
 extern bool check_for_concept_group(
    parse_block *parseptrcopy,
-   parse_block * & kkk,
-   uint32 & need_to_restrain,   // 1=(if not doing echo), 2=(yes, always)
-   parse_block ***parseptr_skip_p = (parse_block ***) 0) THROW_DECL;
+   skipped_concept_info & retstuff,
+   bool want_result_root) THROW_DECL;
 
 NORETURN1 void fail(const char s[]) THROW_DECL NORETURN2;
 
@@ -4751,12 +4757,9 @@ extern parse_block *process_final_concepts(
    const char *filename,
    int linenum) THROW_DECL;
 
-// This writes over its 2nd and 3rd arguments.
-extern parse_block *really_skip_one_concept(
+extern void really_skip_one_concept(
    parse_block *incoming,
-   parse_block * & kkk,
-   uint32 & need_to_restrain,   // 1=(if not doing echo), 2=(yes, always)
-   parse_block ***parseptr_skip_p) THROW_DECL;
+   skipped_concept_info & retstuff) THROW_DECL;
 
 extern bool fix_n_results(int arity, int goal, setup z[],
                           uint32 & rotstates,

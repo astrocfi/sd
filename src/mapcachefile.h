@@ -102,13 +102,13 @@
 // calling the procedure "map_address()".  It will be zero if mapping
 // was unsuccessful for any reason.
 
-// After constructing a cache object, examine the map address first by
-// making a call to "map_address()".  If it is nonzero, we found and
-// opened the cache file and all the source files, and found that the
-// cache file matched your given version number and the size and creation
-// times of the source files.  The contents of the cache file (other
-// than our header) are mapped at the address that we returned.  It
-// will be word-aligned.  (We consider a "word" to be 32 bits.)
+// After constructing a cache object, examine the map address first,
+// by making a call to "map_address()".  If it is nonzero, we found
+// and opened the cache file and all the source files, and found that
+// the cache file matched your given version number and the size and
+// creation times of the source files.  The contents of the cache file
+// (other than our header) are mapped at the address that we returned.
+// It will be word-aligned.  (We consider a "word" to be 32 bits.)
 // The source files are also open.
 
 // At this point you may elect to look at the mapped memory and do
@@ -121,9 +121,10 @@
 // like what you see in the mapped memory, you need to recompute and
 // rewrite the cache file.  First, check the "srcfiles" array.  If any
 // item is zero, we couldn't even open that source file.  You should
-// presumably give some error message to that effect.  Also, you should
-// look to see whether any other source file descriptors are nonzero.
-// If so, you should close them.
+// presumably give some error message to that effect.  Also, you
+// should look to see whether any other source file descriptors are
+// nonzero.  If so, you should close them.  Since the source files
+// couldn't be opened, you presumably can't proceed.
 
 // If the address was zero and all the source files were successfully
 // opened, as indicated by the "srcfiles" array elements all being
@@ -142,6 +143,11 @@
 // which you have written the cached data, exactly as you would have
 // used it if you had not rewritten the cache file.  Don't modify it
 // further, as the cache file may not yet have been written.
+
+// The function "get_miss_reason" will tell why a construction failed.
+// It is intended for debugging purposes.  In general, you don't need
+// to use it--rewriting the cache when "map_address()" returns zero,
+// as described above, is all you need.
 
 // The object destructor will remove the mapping, and write and close
 // the cache file.  The created cache file will be the size indicated
@@ -179,13 +185,13 @@ class MAPPED_CACHE_FILE {
 
    enum miss_reason {
       NO_MISS,
-      MISS_CANT_OPEN_SOURCE,
-      MISS_CANT_GET_SOURCE_STATUS,
+      MISS_CANT_OPEN_CACHE,
       MISS_WRONG_SOURCE_FILE_SIZE,
       MISS_WRONG_SOURCE_FILE_TIME,
-      MISS_CANT_OPEN_CACHE,
       MISS_WRONG_CLIENT_VERSION,
-      MISS_WRONG_ENDIAN
+      MISS_WRONG_ENDIAN,
+      MISS_CANT_OPEN_SOURCE,
+      MISS_CANT_GET_SOURCE_STATUS
    };
 
    MAPPED_CACHE_FILE(int numsourcefiles,

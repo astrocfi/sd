@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 36.55
-@set title2 Database version = 36.55 format = 228
+@set title1 RELEASE NOTES FOR SD VERSION 36.56
+@set title2 Database version = 36.56 format = 228
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.56::
 * 36.55::
 * 36.54::
 * 36.53::
@@ -58,7 +59,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.55, Top, (dir)
+@node Intro, 36.56, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -69,11 +70,19 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 36.55::               Changes in the current version
+* 36.56::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.55, 36.54, Intro, Top
+@node 36.56, 36.55, Intro, Top
+@unnumberedsec Version 36.56 changes
+
+The program is better about doing intricate meta-concepts, such as
+@strong{initially finally sandwich reverse order flip your neighbor
+around settle back}, or @strong{finally contour the line around recoil}.
+
+@c ************
+@node 36.55, 36.54, 36.56, Top
 @unnumberedsec Version 36.55 changes
 
 The program is better about stepping to a wave on @strong{swing and circle}

@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.55"
+version "36.56"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -7723,6 +7723,9 @@ call "_linear cycle pre 1" dontshow tag linear_cycle_pre_1
    // If in a wave, it's always OK.
    setup 1x4 1x4 qualifier wave_only
       array [ZM0N ZM1N ZM2N ZM3N]
+   // If in a miniwave, it's always OK.  This allows "initially once removed" from a 2FL.
+   setup 1x2 1x2 qualifier wave_only
+      array [ZM0N ZM1N]
    // Otherwise, it's not OK at plus.  But Callerlab doesn't tell us
    // the level at which it becomes legal.  The "partner hinge"
    // becomes legal at A1, so that's what we do.
@@ -9872,12 +9875,25 @@ call "_half by the right" dontshow tag 1_2_by_right
       array [0 CR3E 0 0]
    setup 2x2 1x4 rotate qualifier right wave_only
       array [CR0N 0 0 CR3N]
+   setup 1x4 2x2 qualifier right wave_only
+      array [CR0E 0 0 CR1E]
+   setup 1x4 dmd qualifier left wave_only
+      array [0 CR1E ZM2N 0]
             alternate_definition [grand] plus
    setup 1x6 1x6 restriction wave_only
       array [CR1S CR2S CR5S ZM3N CR3S CR4S]
    setup 1x8 1x8 restriction wave_only
       array [CR1S CR3S CR6S CR2S ZM4N CR4S CR7S CR5S]
             alternate_definition [half grand] plus
+   setup 1x6 2x3 qualifier right wave_only
+      array [CR0E 0 CR1E 0 CR2E 0]
+   setup 1x8 2x4 qualifier right wave_only
+      array [CR0E 0 0 CR1E 0 CR3E CR2E 0]
+   setup 1x6 short6 rotate qualifier left wave_only
+      array [0 CR5N 0 ZM1W 0 CR0N]
+   setup 1x8 spindle qualifier left wave_only
+      array [0 CR0E CR1E 0 ZM3N 0 0 CR2E]
+            alternate_definition [lasthalf grand] plus
    setup 1x6 2x3 qualifier right wave_only
       array [CR0E 0 CR1E 0 CR2E 0]
    setup 1x8 2x4 qualifier right wave_only
@@ -9987,6 +10003,10 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [0 0 0 AL3W]
    setup 2x2 1x4 rotate qualifier left wave_only
       array [0 AL0S AL3S 0]
+   setup 1x4 2x2 qualifier left wave_only
+      array [0 AL0W AL1W 0]
+   setup 1x4 dmd qualifier right wave_only
+      array [ZM0N 0 0 AL1W]
             alternate_definition [grand] plus
    setup 1x6 1x6 qualifier wave_only
       array [ZM0N AL0S AL1S AL4S AL5S AL2S]
@@ -9999,6 +10019,15 @@ call "_half by the left" dontshow tag 1_2_by_left
    setup 1x3dmd 1x3dmd
       array [ZM0N 0 0 0 0 AL6S 0 0]
             alternate_definition [half grand] plus
+   setup 1x6 2x3 qualifier left wave_only
+      array [0 AL0W 0 AL2W 0 AL1W]
+   setup 1x8 2x4 qualifier left wave_only
+      array [0 AL0W AL1W 0 AL3W 0 0 AL2W]
+   setup 1x6 short6 rotate qualifier right wave_only
+      array [ZM4W 0 AL5S 0 AL0S 0]
+   setup 1x8 spindle qualifier right wave_only
+      array [ZM7N 0 0 AL0W 0 AL2W AL1W 0]
+            alternate_definition [lasthalf grand] plus
    setup 1x6 2x3 qualifier left wave_only
       array [0 AL0W 0 AL2W 0 AL1W]
    setup 1x8 2x4 qualifier left wave_only

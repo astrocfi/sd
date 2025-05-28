@@ -6102,7 +6102,7 @@ static void move_with_real_call(
          }
       }
 
-      throw(foo);
+      throw foo;
    }
 }
 
@@ -6265,7 +6265,15 @@ extern void move(
             ss->cmd.parseptr = *z0;
          }
 
-         (concept_table[t->concept->kind].concept_action)(ss, t, result);
+         error_flag_type maybe_throw_this = error_flag_none;
+
+         try {
+            (concept_table[t->concept->kind].concept_action)(ss, t, result);
+         }
+         catch(error_flag_type foo) {
+            // An error occurred.  We need to restore stuff.
+            maybe_throw_this = foo;
+         }
 
          if (foobar) *y0 = foobar;
 
@@ -6281,6 +6289,9 @@ extern void move(
 
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
          ss->cmd.cmd_final_flags.herit = (heritflags) ss->cmd.restrained_super8flags;
+
+         if (maybe_throw_this != error_flag_none)
+            throw maybe_throw_this;
       }
 
       return;
@@ -6338,15 +6349,12 @@ extern void move(
    // But if we have a pending "centers/ends work <concept>" concept, don't.
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
-      parse_block *kstuff;
-      uint32 njunk;
+      skipped_concept_info foo;
 
-      parse_block **foop;
+      really_skip_one_concept(ss->cmd.parseptr, foo);
+      parseptrcopy = *foo.root_of_result_of_skip;
 
-      really_skip_one_concept(ss->cmd.parseptr, kstuff, njunk, &foop);
-      parseptrcopy = *foop;
-
-      if (kstuff->concept->kind == concept_supercall)
+      if (foo.skipped_concept->concept->kind == concept_supercall)
          fail("A concept is required.");
    }
    else

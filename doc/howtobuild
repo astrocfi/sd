@@ -5,7 +5,7 @@ Doing so would cause it to be included in the "do_pack" script.
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 18 Apr 2004.
+        Last modified 27 Feb 2005.
 
 -----------------------------------------------------------------
 
@@ -67,7 +67,8 @@ Go to sddoc directory and do:
 1  Sep 02  -  16 Jan 03  #18
 16 Jan 03  -  1  May 03  #19
 1  May 03  -  11 Oct 03  #20
-11 Oct 03  -             #21
+11 Oct 03  -  27 Feb 05  #21
+27 Feb 05  -             #22
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++

@@ -3956,7 +3956,9 @@ static void do_concept_checkpoint(
 
    setup_command this_cmd = ss->cmd;
 
-   if (this_cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST) {
+   if ((this_cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
+       CMD_MISC__PUT_FRAC_ON_FIRST) {
+      
       // Curried meta-concept, as in "finally checkpoint recycle
       // by 1/4 thru".  Take the fraction info off the first
       // call.  In this example, the 1/4 thru is affected but the
@@ -4105,6 +4107,19 @@ static void do_concept_special_sequential(
    //    2 - start with (call)
    //    3 - use (call) for <Nth> part
    //    4 - use (call) in
+
+
+
+   /*
+   if ((ss->cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
+       CMD_MISC__PUT_FRAC_ON_FIRST) {
+      // Curried meta-concept.  Take the fraction info off the first call.
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
+      ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+   }
+   */
+
+
 
    if (parseptr->concept->arg1 == 3) {
       // This is "use (call) for <Nth> part", which is the same as "replace the <Nth> part".
@@ -5556,7 +5571,7 @@ static void do_concept_meta(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   parse_block *parseptr_skip;
+   parse_block *result_of_skip;
    parse_block fudgyblock;
    setup_command nocmd, yescmd;
    uint32 expirations_to_clearmisc = 0;
@@ -5583,6 +5598,11 @@ static void do_concept_meta(
 
    nocmd = ss->cmd;
    yescmd = ss->cmd;
+
+   // The CMD_MISC__PUT_FRAC_ON_FIRST bit tells the "special_sequential" concept
+   // (if that is the subject concept) that fractions are allowed, and they
+   // are to be applied to the first call only.
+   yescmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
 
    if (key != meta_key_initially && key != meta_key_finally &&
        key != meta_key_initially_and_finally &&
@@ -5670,50 +5690,38 @@ static void do_concept_meta(
        key != meta_key_revorder &&
        key != meta_key_shift_n &&
        key != meta_key_shift_half) {
-      parse_block *kstuff;
-      uint32 need_to_restrain;
-      parse_block *parseptrcopy;
 
-      /* Scan the modifiers, remembering them and their end point.  The reason for this is to
-         avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
-         This code used to have the beginnings of stuff to do it really right.  It isn't
-         worth it, and isn't worth holding up "random left" for.  In any case, the stupid
-         handling of comments will go away soon. */
-   
-      parse_block **foop;
-      parse_block **fooq;
+      // Scan the modifiers, remembering them and their end point.  The reason for this is to
+      // avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
+      // This code used to have the beginnings of stuff to do it really right.  It isn't
+      // worth it, and isn't worth holding up "random left" for.  In any case, the stupid
+      // handling of comments will go away soon.
 
-      parseptrcopy = really_skip_one_concept(parseptr->next, kstuff,
-                                             need_to_restrain, &foop);
-      parseptr_skip = *foop;
-      concept_kind k = kstuff->concept->kind;
+      skipped_concept_info foo;
 
-      yescmd.parseptr = parseptrcopy;
+      really_skip_one_concept(parseptr->next, foo);
+
+      result_of_skip = *foo.root_of_result_of_skip;
+      yescmd.parseptr = foo.old_retval;
+      nocmd.parseptr = result_of_skip;
+
+      if ((foo.need_to_restrain & 2) ||
+          ((foo.need_to_restrain & 1) &&
+           (key != meta_key_rev_echo && key != meta_key_echo))) {
+         fudgyblock = *foo.old_retval;
+         yescmd.restrained_concept = &fudgyblock;
+         yescmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_CRAZINESS;
+         yescmd.restrained_final = foo.root_of_result_of_skip;
+         yescmd.parseptr = result_of_skip;
+      }
 
       // If the skipped concept is "twisted" or "yoyo", get ready to clear
       // the expiration bit for same, if we do it "piecewise" or whatever.
 
-      if (k == concept_yoyo)
+      if (foo.skipped_concept->concept->kind == concept_yoyo)
          expirations_to_clearmisc = RESULTFLAG__YOYO_EXPIRED;
-      if (k == concept_twisted)
+      if (foo.skipped_concept->concept->kind == concept_twisted)
          expirations_to_clearmisc = RESULTFLAG__TWISTED_EXPIRED;
-
-      if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL)
-         fooq = &parseptrcopy->subsidiary_root;
-      else
-         fooq = foop;
-
-      nocmd.parseptr = *fooq;
-
-      if ((need_to_restrain & 2) ||
-          ((need_to_restrain & 1) &&
-           (key != meta_key_rev_echo && key != meta_key_echo))) {
-         yescmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_CRAZINESS;
-         yescmd.restrained_concept = &fudgyblock;
-         yescmd.restrained_final = fooq;
-         yescmd.parseptr = parseptr_skip;
-         fudgyblock = *parseptrcopy;
-      }
    }
 
    // Some concepts take a number, which might be wired into the concept ("shifty"),
@@ -5996,8 +6004,7 @@ static void do_concept_meta(
          // Do afracs without.
          if (afracs != ~0UL) {
             result->cmd = nocmd;
-            result->cmd.parseptr = parseptr_skip;      // Skip over the concept.
-            result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
+            result->cmd.parseptr = result_of_skip;      // Skip over the concept.
             result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | afracs;
             do_call_in_series_simple(result);
          }
@@ -6005,7 +6012,6 @@ static void do_concept_meta(
          // Do bfracs with.
          if (bfracs != ~0UL) {
             result->cmd = yescmd;
-            result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
             result->cmd.cmd_frac_flags = (corefracs & ~0xFFFF) |
                CMD_FRAC_BREAKING_UP | bfracs;
             do_call_in_series_simple(result);
@@ -6014,8 +6020,7 @@ static void do_concept_meta(
          // Do cfracs without.
          if (cfracs != ~0UL) {
             result->cmd = nocmd;
-            result->cmd.parseptr = parseptr_skip;      // Skip over the concept.
-            result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
+            result->cmd.parseptr = result_of_skip;      // Skip over the concept.
             result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | cfracs;
             do_call_in_series_simple(result);
          }
@@ -6037,7 +6042,6 @@ static void do_concept_meta(
          result->cmd.cmd_frac_flags =
             ((shiftynum-1) * CMD_FRAC_PART_BIT) |
             CMD_FRAC_CODE_FROMTO | CMD_FRAC_NULL_VALUE;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
          do_call_in_series_simple(result);
       }
 
@@ -6048,7 +6052,6 @@ static void do_concept_meta(
          FRACS(CMD_FRAC_CODE_ONLY,shiftynum,0) |
          CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
 
-      result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
       do_call_in_series_simple(result);
 
       int did_last = 0;
@@ -6066,8 +6069,7 @@ static void do_concept_meta(
       // Do the final part, if there is more.
       if (!did_last) {
          result->cmd = ss->cmd;
-         result->cmd.parseptr = parseptr_skip;      // Skip over the concept.
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
+         result->cmd.parseptr = result_of_skip;      // Skip over the concept.
          result->cmd.cmd_frac_flags =
             FRACS(CMD_FRAC_CODE_FROMTOREV,shiftynum+1,0) | CMD_FRAC_NULL_VALUE;
          goto do_less;
@@ -6103,7 +6105,7 @@ static void do_concept_meta(
                              CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE)) {
 
          // In any case, just pass it through.
-         result->cmd.parseptr = parseptr_skip;
+         result->cmd.parseptr = result_of_skip;
       }
       else if (corefracs == (FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) |
                              CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE)) {
@@ -6154,7 +6156,6 @@ static void do_concept_meta(
          result->cmd = yescmd;
          result->cmd.cmd_frac_flags =
             FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
          do_call_in_series_simple(result);
 
@@ -6164,7 +6165,6 @@ static void do_concept_meta(
          result->cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
          result->cmd.cmd_frac_flags =
             FRACS(CMD_FRAC_CODE_FROMTOREV,2,0) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
       }
       else
          fail("Can't stack meta or fractional concepts.");
@@ -6245,7 +6245,6 @@ static void do_concept_meta(
          result->cmd = nocmd;
          result->cmd.cmd_frac_flags = FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) |
             CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
          do_call_in_series_simple(result);
          // Do the call with the concept.
          // Set the fractionalize field to execute the last part of the call.
@@ -6255,7 +6254,6 @@ static void do_concept_meta(
          // Assumptions don't carry through.
          result->cmd.cmd_assume.assumption = cr_none;
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
       }
       else
          fail("Can't stack meta or fractional concepts.");
@@ -6267,7 +6265,6 @@ static void do_concept_meta(
       // This is "initially and finally": we select the first part with the concept,
       // the interior part without the concept,
       // and then the last part with the concept.
-
       if (corefracs == CMD_FRAC_NULL_VALUE) {   // The only case we care about.
 
          // Do the first part with the concept,
@@ -6275,7 +6272,6 @@ static void do_concept_meta(
          result->cmd = yescmd;
          result->cmd.cmd_frac_flags =
             FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
          do_call_in_series_simple(result);
 
@@ -6286,7 +6282,6 @@ static void do_concept_meta(
          result->cmd.cmd_assume.assumption = cr_none;
          result->cmd.cmd_frac_flags =
             FRACS(CMD_FRAC_CODE_FROMTOREV,2,1) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
          do_call_in_series_simple(result);
 
@@ -6299,7 +6294,6 @@ static void do_concept_meta(
          result->cmd.cmd_assume.assumption = cr_none;
          result->cmd.cmd_frac_flags =
             FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
       }
       else
@@ -6309,8 +6303,8 @@ static void do_concept_meta(
 
    default:
 
-      /* Otherwise, this is the "random", "reverse random", or "piecewise" concept.
-         Repeatedly execute parts of the call, skipping the concept where required. */
+      // Otherwise, this is the "random", "reverse random", or "piecewise" concept.
+      // Repeatedly execute parts of the call, skipping the concept where required.
 
       index = 0;
       shortenhighlim = 0;
@@ -6352,21 +6346,21 @@ static void do_concept_meta(
       uint32 saved_last_flagmisc = 0;
 
       do {
-         /* Here is where we make use of actual numerical assignments. */
+         // Here is where we make use of actual numerical assignments.
          uint32 revrand = key-meta_key_random;
 
          index++;
          if (index > 7) fail("Sorry, can't handle this number.");
          copy_cmd_preserve_elong_and_expire(ss, result);
 
-         /* If concept is "[reverse] random" and this is an even/odd-numbered part,
-            as the case may be, skip over the concept. */
+         // If concept is "[reverse] random" and this is an even/odd-numbered part,
+         // as the case may be, skip over the concept.
          if (((revrand & ~1) == 0) && ((index & 1) == revrand)) {
-            /* But how do we skip the concept?  If it an ordinary single-call concept,
-               it's easy.  But, if the concept takes a second call (the only legal case
-               of this being "concept_special_sequential") we use its second subject call
-               instead of the first.  This is part of the peculiar behavior of this
-               particular combination. */
+            // But how do we skip the concept?  If it an ordinary single-call concept,
+            // it's easy.  But, if the concept takes a second call (the only legal case
+            // of this being "concept_special_sequential") we use its second subject call
+            // instead of the first.  This is part of the peculiar behavior of this
+            // particular combination.
 
             result->cmd = nocmd;
          }
@@ -6376,10 +6370,6 @@ static void do_concept_meta(
          }
 
          // Set the fractionalize field to do the indicated part.
-         // The CMD_MISC__PUT_FRAC_ON_FIRST bit tells the "special_sequential" concept
-         // (if that is the subject concept) that fractions are allowed, and they
-         // are to be applied to the first call only.
-         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
          result->cmd.cmd_frac_flags = FRACS(code_to_use_for_only,index,shortenhighlim) |
             CMD_FRAC_BREAKING_UP | frac_flags;
 
@@ -6472,6 +6462,8 @@ static void do_concept_replace_nth_part(
 
    prepare_for_call_in_series(result, ss);
 
+   uint32 fracs_for_middle_part = CMD_FRAC_NULL_VALUE;
+
    // Fill in some default values that might be useful.
 
    uint32 frac_key1 = FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) |
@@ -6514,6 +6506,17 @@ static void do_concept_replace_nth_part(
       break;
    }
 
+   // Handle Curried meta-concept on "sandwich".  "Sandwich" is the only concept
+   // we will see that can use a Curried meta-concept.
+
+   if (concept_key == 3 &&
+       (cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
+       CMD_MISC__PUT_FRAC_ON_FIRST) {
+      cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
+      fracs_for_middle_part = incoming_fracs;
+      incoming_fracs = CMD_FRAC_NULL_VALUE;
+   }
+
    // Handle special fractionalization commands on "sandwich".  These are the
    // only instances of fractionalization that we allow on these concepts.
 
@@ -6521,14 +6524,17 @@ static void do_concept_replace_nth_part(
        (incoming_fracs &
         (CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK|0xFFFF)) ==
        (FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_NULL_VALUE)) {
+      // Do the last part only.
       frac_key1 = FRACS(CMD_FRAC_CODE_FROMTO,0,0);
       skip_replacement_call = true;
    }
    else if (concept_key == 3 &&
-       (incoming_fracs &
-        (CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK|0xFFFF)) ==
-       (FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) | CMD_FRAC_NULL_VALUE))
-      frac_key2 = 0;     // Don't do the last part.
+            (incoming_fracs &
+             (CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK|0xFFFF)) ==
+            (FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) | CMD_FRAC_NULL_VALUE)) {
+      // Don't do the last part.
+      frac_key2 = 0;
+   }
    else if (incoming_fracs != CMD_FRAC_NULL_VALUE)
       fail("Can't stack meta or fractional concepts.");
 
@@ -6536,11 +6542,10 @@ static void do_concept_replace_nth_part(
    // If frac_key1 is CMD_FRAC_CODE_FROMTO with K=0 and N=0, there is no first part.
 
    if ((frac_key1 & (CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK)) !=
-       CMD_FRAC_CODE_FROMTO) {
+       FRACS(CMD_FRAC_CODE_FROMTO,0,0)) {
       cmd.cmd_frac_flags = frac_key1;
 
       ss->cmd = cmd;
-
 
       // Lift the craziness restraint from before -- we are about to pull things apart.
       // But only if it is "sandwich".
@@ -6551,8 +6556,6 @@ static void do_concept_replace_nth_part(
             cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
          }
       }
-
-
 
       copy_cmd_preserve_elong_and_expire(ss, result);
       result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
@@ -6565,7 +6568,7 @@ static void do_concept_replace_nth_part(
    // Do the interruption/replacement call.
 
    if (!skip_replacement_call) {
-      cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+      cmd.cmd_frac_flags = fracs_for_middle_part;
       ss->cmd = cmd;
       result->cmd = ss->cmd;
       result->cmd.parseptr = parseptr->subsidiary_root;

@@ -3034,12 +3034,10 @@ static bool check_for_supercall(parse_block *parseptrcopy)
 static parse_block pbend(&conzept::mark_end_of_list);
 static parse_block pbsuper(&conzept::marker_concept_supercall);
 
-// This writes over its 2nd and 3rd arguments.
-extern bool check_for_concept_group(
+bool check_for_concept_group(
    parse_block *parseptrcopy,
-   parse_block * & kkk,
-   uint32 & need_to_restrain,   // 1=(if not doing echo), 2=(yes, always)
-   parse_block ***parseptr_skip_p) THROW_DECL
+   skipped_concept_info & retstuff,
+   bool want_result_root) THROW_DECL
 {
    concept_kind k;
    parse_block *kk;
@@ -3049,8 +3047,8 @@ extern bool check_for_concept_group(
 
    parse_block *first_arg = parseptrcopy;
 
-   kkk = &pbend;
-   need_to_restrain = 0;
+   retstuff.skipped_concept = &pbend;
+   retstuff.need_to_restrain = 0;
 
  try_again:
 
@@ -3070,12 +3068,12 @@ extern bool check_for_concept_group(
    k = kk->concept->kind;
 
    if (!retval) {
-      kkk = kk;
+      retstuff.skipped_concept = kk;
 
       if (k == concept_crazy || k == concept_frac_crazy)
-         need_to_restrain |= 1;
+         retstuff.need_to_restrain |= 1;
       else if (k == concept_n_times_const || k == concept_n_times)
-         need_to_restrain |= 2;
+         retstuff.need_to_restrain |= 2;
    }
 
    // We do these even if we aren't the first concept.
@@ -3090,7 +3088,7 @@ extern bool check_for_concept_group(
        (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_rev_echo) ||
        (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_revorder) ||
        (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_finish))
-      need_to_restrain |= 1;
+      retstuff.need_to_restrain |= 1;
 
 
    // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
@@ -3156,15 +3154,22 @@ extern bool check_for_concept_group(
       goto try_again;
    }
 
-   if (parseptr_skip_p) {
-      if (k == concept_supercall)
-         *parseptr_skip_p = &parseptrcopy->next->subsidiary_root;
-      else if (retval)
-         *parseptr_skip_p = &next_parseptr->next;
-      else if (parseptrcopy->concept->kind == concept_special_sequential)
-         *parseptr_skip_p = &first_arg->subsidiary_root;
-      else
-         *parseptr_skip_p = &first_arg->next;
+   if (want_result_root) {
+      if (k == concept_supercall) {
+         retstuff.concept_with_root = parseptrcopy->next;
+         retstuff.root_of_result_of_skip = &retstuff.concept_with_root->subsidiary_root;
+      }
+      else {
+         if (retval)
+            retstuff.concept_with_root = next_parseptr;
+         else
+            retstuff.concept_with_root = first_arg;
+
+         if (concept_table[retstuff.concept_with_root->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
+            retstuff.root_of_result_of_skip = &retstuff.concept_with_root->subsidiary_root;
+         else
+            retstuff.root_of_result_of_skip = &retstuff.concept_with_root->next;
+      }
    }
 
    return retval;
@@ -4541,12 +4546,9 @@ extern parse_block *process_final_concepts(
 }
 
 
-// This writes over its 2nd and 3rd arguments.
-extern parse_block *really_skip_one_concept(
+void really_skip_one_concept(
    parse_block *incoming,
-   parse_block * & kkk,
-   uint32 & need_to_restrain,   // 1=(if not doing echo), 2=(yes, always)
-   parse_block ***parseptr_skip_p) THROW_DECL
+   skipped_concept_info & retstuff) THROW_DECL
 {
    final_and_herit_flags junk_concepts;
    parse_block *parseptrcopy;
@@ -4568,15 +4570,17 @@ extern parse_block *really_skip_one_concept(
       concept_kind kk = parseptrcopy->concept->kind;
 
       if (check_for_supercall(parseptrcopy)) {
-         *parseptr_skip_p = &parseptrcopy->next->subsidiary_root;
-         kkk = &pbsuper;
+         retstuff.concept_with_root = parseptrcopy->next;
+         retstuff.root_of_result_of_skip = &retstuff.concept_with_root->subsidiary_root;
+         retstuff.skipped_concept = &pbsuper;
 
          /* We don't restrain for echo with supercalls, because echo doesn't pull parts
             apart, and supercalls don't work with multiple-part calls as the target
             for which they are restraining the concept. */
 
-         need_to_restrain = 1;
-         return parseptrcopy;
+         retstuff.need_to_restrain = 1;
+         retstuff.old_retval = parseptrcopy;
+         return;
       }
 
       if (concept_table[kk].concept_action == 0)
@@ -4584,6 +4588,7 @@ extern parse_block *really_skip_one_concept(
 
       if ((concept_table[kk].concept_prop & CONCPROP__SECOND_CALL) &&
           parseptrcopy->concept->kind != concept_checkpoint &&
+          parseptrcopy->concept->kind != concept_sandwich &&
           parseptrcopy->concept->kind != concept_on_your_own &&
           (parseptrcopy->concept->kind != concept_some_vs_others ||
            parseptrcopy->concept->arg1 != selective_key_own) &&
@@ -4591,9 +4596,10 @@ extern parse_block *really_skip_one_concept(
          fail("Can't use a concept that takes a second call.");
    }
 
-   (void) check_for_concept_group(parseptrcopy, kkk, need_to_restrain, parseptr_skip_p);
+   check_for_concept_group(parseptrcopy, retstuff, true);
 
-   return parseptrcopy;
+   retstuff.old_retval = parseptrcopy;
+   return;
 }
 
 

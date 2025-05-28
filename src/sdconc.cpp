@@ -2687,7 +2687,7 @@ extern void concentric_move(
                impose_assumption_and_move(begin_ptr, result_ptr);
             }
             catch(error_flag_type foo) {
-               // An error occurred.  We need to resore stuff.
+               // An error occurred.  We need to restore stuff.
                begin_ptr->cmd.callspec = z1->call;
                begin_ptr->cmd.parseptr = savebeginparse;
                z1->call = savecall;
@@ -3723,7 +3723,9 @@ extern void on_your_own_move(
    clear_person(&setup1, 6);
    setup1.cmd = ss->cmd;
    setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
-   if (setup1.cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST) {
+
+   if ((setup1.cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
+       CMD_MISC__PUT_FRAC_ON_FIRST) {
       // Curried meta-concept.  Take the fraction info off the first call.
       setup1.cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
       setup1.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
@@ -3963,14 +3965,13 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
 
       if (setupcount == 1 && (cmd2word & CMD_MISC2__ANY_WORK)) {
-         parse_block *kstuff;
-         uint32 njunk;
-         parse_block **foop;
+         skipped_concept_info foo;
 
-         parseptrcopy = really_skip_one_concept(ss->cmd.parseptr, kstuff, njunk, &foop);
-         this_one->cmd.parseptr = *foop;
+         really_skip_one_concept(ss->cmd.parseptr, foo);
+         parseptrcopy = foo.old_retval;
+         this_one->cmd.parseptr = *foo.root_of_result_of_skip;
 
-         if (kstuff->concept->kind == concept_supercall)
+         if (foo.skipped_concept->concept->kind == concept_supercall)
             fail("A concept is required.");
       }
       else if (setupcount == 0 &&
@@ -4169,14 +4170,12 @@ extern void selective_move(
       cmd1thing.parseptr = parseptr->next;
       cmd2thing.parseptr = parseptr->next;
 
-      parse_block *kstuff;
-      uint32 njunk;
-      parse_block **foop;
+      skipped_concept_info foo;
 
-      (void) really_skip_one_concept(parseptr->next, kstuff, njunk, &foop);
-      cmd2thing.parseptr = *foop;
+      really_skip_one_concept(parseptr->next, foo);
+      cmd2thing.parseptr = *foo.root_of_result_of_skip;
 
-      concept_kind k = kstuff->concept->kind;
+      concept_kind k = foo.skipped_concept->concept->kind;
 
       if (k == concept_supercall)
          fail("A concept is required.");
@@ -4192,15 +4191,15 @@ extern void selective_move(
       // Check for special case of "<anyone> work tandem", and change it to
       // "<anyone> are tandem".
 
-      if ((kstuff->concept->kind == concept_tandem ||
-           kstuff->concept->kind == concept_frac_tandem) &&
-          kstuff->concept->arg1 == 0 &&
-          kstuff->concept->arg2 == 0 &&
-          (kstuff->concept->arg3 & ~0xF0) == 0 &&
-          (kstuff->concept->arg4 == tandem_key_cpls ||
-           kstuff->concept->arg4 == tandem_key_tand ||
-           kstuff->concept->arg4 == tandem_key_cpls3 ||
-           kstuff->concept->arg4 == tandem_key_tand3) &&
+      if ((foo.skipped_concept->concept->kind == concept_tandem ||
+           foo.skipped_concept->concept->kind == concept_frac_tandem) &&
+          foo.skipped_concept->concept->arg1 == 0 &&
+          foo.skipped_concept->concept->arg2 == 0 &&
+          (foo.skipped_concept->concept->arg3 & ~0xF0) == 0 &&
+          (foo.skipped_concept->concept->arg4 == tandem_key_cpls ||
+           foo.skipped_concept->concept->arg4 == tandem_key_tand ||
+           foo.skipped_concept->concept->arg4 == tandem_key_cpls3 ||
+           foo.skipped_concept->concept->arg4 == tandem_key_tand3) &&
           ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
                                                  INHERITFLAG_MXNMASK |
                                                  INHERITFLAG_NXNMASK |
@@ -4209,23 +4208,23 @@ extern void selective_move(
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the tandem concept.
          tandem_couples_move(ss, 
                              parseptr->options.who,
-                             kstuff->concept->arg3 >> 4,
-                             kstuff->options.number_fields,
+                             foo.skipped_concept->concept->arg3 >> 4,
+                             foo.skipped_concept->options.number_fields,
                              0,
-                             (tandem_key) kstuff->concept->arg4,
+                             (tandem_key) foo.skipped_concept->concept->arg4,
                              0,
                              false,
                              result);
          return;
       }
-      else if ((kstuff->concept->kind == concept_stable ||
-                kstuff->concept->kind == concept_frac_stable) &&
-               kstuff->concept->arg1 == 0) {
+      else if ((foo.skipped_concept->concept->kind == concept_stable ||
+                foo.skipped_concept->concept->kind == concept_frac_stable) &&
+               foo.skipped_concept->concept->arg1 == 0) {
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the stable concept.
          stable_move(ss,
-                     kstuff->concept->arg2 != 0,
+                     foo.skipped_concept->concept->arg2 != 0,
                      false,
-                     kstuff->options.number_fields,
+                     foo.skipped_concept->options.number_fields,
                      parseptr->options.who,
                      result);
          return;
@@ -5298,7 +5297,8 @@ back_here:
          }
 
          if (others > 0 && setupcount == 0) {
-            if (this_one->cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST) {
+            if ((this_one->cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
+                CMD_MISC__PUT_FRAC_ON_FIRST) {
                // Curried meta-concept.  Take the fraction info off the first call.
                // This should only be legal for "own the <anyone>".
                this_one->cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
