@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.54"
+version "38.55"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -24744,6 +24744,35 @@ call "@0 yoyo chain thru" c4
    seq nullcall [mandatory_anycall]
    seq ctrs_slip_with_mod [force_yoyo roll_transparent]
    seq ctrscastoff_n [roll_transparent insert_number 3]
+
+call "in point triangle circulate" c1 tag inpttglcirc
+            fudge_to_q_tag
+   setup qtag qtag restriction forbidden nice_diamonds
+      array [0 0 AL1W CR2S 0 0 CR0E AL6S]
+   setup pqtag qtag restriction forbidden nice_diamonds
+      array [CR7E ZM1N 0 0 ZM4N AL7W 0 0]
+
+call "out point triangle circulate" c1 tag outpttglcirc
+            fudge_to_q_tag
+   setup qtag qtag restriction forbidden nice_diamonds
+      array [0 0 AL3S CR1E 0 0 CR7S AL0W]
+   setup pqtag qtag restriction forbidden nice_diamonds
+      array [ZM0N CR2E 0 0 AL2W ZM5N 0 0]
+
+call "in point triangle chain thru" c1
+            yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited visible_fractions
+   seq inpttglcirc []
+   seq ctrs_slip_with_mod [inherit_yoyo inherit_gensting roll_transparent]
+   seq ctrscastoff_n [inherit_fractal roll_transparent insert_number 3]
+
+call "out point triangle chain thru" c1
+            yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited visible_fractions
+   seq outpttglcirc []
+   seq ctrs_slip_with_mod [inherit_yoyo inherit_gensting roll_transparent]
+   seq ctrscastoff_n [inherit_fractal roll_transparent insert_number 3]
+
+
+
 
 call "sterling chain thru" c4x
             dont_use_in_resolve fractal_is_inherited

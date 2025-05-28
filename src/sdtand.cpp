@@ -1033,6 +1033,9 @@ bool tandrec::pack_us(
       personrec fb[8];    // Will receive the people being assembled.
       uint32 vp1, vp2, vp3;
       uint32 vp1a, vp2a, vp3a;
+      vp1a = 0;   // Do we need these?
+      vp2a = 0;
+      vp3a = 0;
       // We know (hopefully) that this map doesn't have the "1/8 twosome" stuff, so the bits will be AB0.
       // This will get an error, of course.  Where m was ......AB,
       // mlow is .....AB0.  Or maybe AB1, in which case this map must not be used.
@@ -1113,6 +1116,15 @@ bool tandrec::pack_us(
             vp2 = ~0U;
             vp3 = ~0U;
 
+            if (m_melded) {
+               vp1 = 0;
+               vp2 = 0;
+               vp3 = 0;
+               vp1a = 0;
+               vp2a = 0;
+               vp3a = 0;
+            }
+
             // Create the virtual person.  When both people are present, anding
             // the real peoples' id2 bits gets the right bits.  For example,
             // the virtual person will be a boy and able to do a tandem star thru
@@ -1122,6 +1134,7 @@ bool tandrec::pack_us(
 
             for (j=0 ; j<m_people_per_group ; j++) {
                if (fb[j].id1) {
+                  // **** Do this right.
                   if (m_melded) {
                      if (j == 0) {
                         vp1 = fb[j].id1;
@@ -1169,7 +1182,6 @@ bool tandrec::pack_us(
          }
 
          if (vp1) {
-
             // Create a virtual person number.  Only 8 are allowed, because of the tightness
             // in the person representation.  That shouldn't be a problem, since each
             // virtual person came from a group of real people that had at least one
@@ -1192,7 +1204,7 @@ bool tandrec::pack_us(
             }
 
             if (map_ptr->rot & 1)   // Compensate for setup rotation.
-               ptr->id1 = rotperson(ptr->id1, (-map_ptr->rot & 3) * 011);
+               ptr->id1 = rotperson(ptr->id1, ((- map_ptr->rot) & 3) * 011);
 
             if (m_melded) {
                m_real_saved_people[meld_number].people[virt_index] = fb[meld_number];
@@ -1961,8 +1973,6 @@ extern void tandem_couples_move(
 
       update_id_bits(&tandstuff.m_virtual_setup[1]);
 
-      // ***** Used to be 8
-
       for (int k=0 ; k<2 ; k++) {
          for (int j=0 ; j<=attr::klimit(map->insetup) ; j++) {
             setup sss = tandstuff.m_virtual_setup[k];
@@ -1973,19 +1983,6 @@ extern void tandem_couples_move(
             }
          }
       }
-
-      /*
-      for (int j=0 ; j<= attr::klimit(map->outsetup) ; j++) {
-         // Used to be 0/0/0/0/1/1/1/1
-         setup sss = tandstuff.m_virtual_setup[j >> 2];
-         sss.clear_people();
-         // Used to be 0/0/0/0/1/1/1/1, and 0/1/2/3/0/1/2/3
-         if (copy_person(&sss, j&3, &tandstuff.m_virtual_setup[j >> 2], j&3)) {
-            if ((++tttcount) >= 8) fail("Sorry, too many tandem or as couples people.");
-            impose_assumption_and_move(&sss, &ttt[tttcount]);
-         }
-      }
-      */
 
       if (fix_n_results(tttcount+1, -1, false, ttt, rotstate, pointclip, 0) || !(rotstate & 0xF03))
          fail("Can't do this.");

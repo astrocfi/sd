@@ -668,6 +668,8 @@ static void do_concept_double_diagonal(
          else
             tbonetest = ~0U;   // Force error.
       }
+      else
+         tbonetest = ~0U;   // Force error.
 
       if (parseptr->concept->arg1 & 1) {
          if (tbonetest & 010) fail("There are no diagonal lines here.");

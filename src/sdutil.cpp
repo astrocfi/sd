@@ -2138,7 +2138,7 @@ extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head
    parse_block *old_item = original_tree;
 
    for (;;) {
-      if (!new_item || !old_item) crash_print(__FILE__, __LINE__);
+      if (!new_item || !old_item) crash_print(__FILE__, __LINE__, 0, (setup *) 0);
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->call_to_print = old_item->call_to_print;

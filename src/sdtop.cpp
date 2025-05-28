@@ -3478,12 +3478,19 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
    }
 }
 
-extern void crash_print(const char *filename, int linenum) THROW_DECL
+extern void crash_print(const char *filename, int linenum, int newtb, setup *ss) THROW_DECL
 {
    char tempstring_text[10000];  // If this isn't big enough, I guess we lose.
 
    int n = sprintf(tempstring_text, "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n");
-   n += sprintf(tempstring_text+n, "%s %d\n", filename, linenum);
+   n += sprintf(tempstring_text+n, "%s %d 0x%08x\n", filename, linenum, newtb);
+
+   if (ss && attr::slimit(ss) <= 24) {
+      n += sprintf(tempstring_text+n, "%d\n", ss->kind);
+      for (int q = 0 ; q <= attr::slimit(ss) ; q++) {
+         n += sprintf(tempstring_text+n, "  0x%08x\n", ss->people[q].id1);
+      }
+   }
 
    int hsize = configuration::history_ptr+1;
    for (int jjj = 2 ; jjj <= hsize ; jjj++) {

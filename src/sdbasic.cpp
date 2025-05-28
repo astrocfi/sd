@@ -1428,7 +1428,7 @@ static uint32 find_calldef(
    int real_direction,
    int northified_index) THROW_DECL
 {
-   if (!tdef) crash_print(__FILE__, __LINE__);
+   if (!tdef) crash_print(__FILE__, __LINE__, 0, (setup *) 0);
 
    unsigned short *calldef_array;
    uint32 z;
@@ -4534,7 +4534,7 @@ static uint32 do_actual_array_call(
       goodies = coldefinition;
    }
 
-   if (!goodies) crash_print(__FILE__, __LINE__);
+   if (!goodies) crash_print(__FILE__, __LINE__, newtb, ss);
 
    result->kind = goodies->get_end_setup();
 

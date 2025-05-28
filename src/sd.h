@@ -4929,7 +4929,7 @@ extern void do_matrix_expansion(
 void initialize_sdlib();
 void finalize_sdlib();
 
-extern void crash_print(const char *filename, int linenum) THROW_DECL;
+extern void crash_print(const char *filename, int linenum, int newtb, setup *ss) THROW_DECL;
 
 struct skipped_concept_info {
    parse_block *m_old_retval;
