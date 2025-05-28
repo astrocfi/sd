@@ -7145,6 +7145,8 @@ extern void inner_selective_move(
            (kk == s1x6 && (thislivemask == 033)) ||
            (kk == s_spindle12 && ((thislivemask & 0xE7) == 0)) ||
            (kk == s_trngl4 && two_couple_calling && (thislivemask == 0x0C)) ||
+           (kk == s2x2 && two_couple_calling && (thislivemask == 0x3 || thislivemask == 0x6 ||
+                                                 thislivemask == 0xC || thislivemask == 0x9)) ||
            (kk == s2x6 && (thislivemask == 00303 || thislivemask == 06060)))) {
          const call_with_name *callspec = this_one->cmd.callspec;
 

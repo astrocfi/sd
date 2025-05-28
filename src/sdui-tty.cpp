@@ -95,8 +95,6 @@ and the following other variables:
 #include <ctype.h>
 #include <stdlib.h>
 
-//extern void exit(int code);
-
 #include "sd.h"
 
 // See comments in sdmain.cpp regarding this string.

@@ -2756,7 +2756,9 @@ void ShowListBox(int nWhichOne)
          short int *item;
          int menu_length;
 
-         index_list *list_to_use = &gg77->matcher_p->m_concept_lists[which_concept_menu];
+         index_list *list_to_use = allowing_all_concepts ?
+            &gg77->matcher_p->m_concept_list :
+            &gg77->matcher_p->m_level_concept_list;
          item = list_to_use->the_list;
          menu_length = list_to_use->the_list_size;
 

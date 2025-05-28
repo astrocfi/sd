@@ -174,7 +174,7 @@ Stress tests to try:
 BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
 BEFORE DOING THIS.
 
-In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- No periods)
+In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
 In \wba\sd\regress:  save _vnnnn
 In \wba\sddoc:       save _vnnnn
 

@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 376
+#define DATABASE_FORMAT_VERSION 378
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1120,6 +1120,7 @@ enum call_restriction {
    cr_occupied_as_stars,   // Qualifier only.
    cr_occupied_as_clumps,  // Qualifier only.
    cr_occupied_as_blocks,  // Qualifier only.
+   cr_occupied_as_traps,   // Qualifier only.
    cr_occupied_as_h,       // Qualifier only.
    cr_occupied_as_qtag,    // Qualifier only.
    cr_occupied_as_3x1tgl,  // Qualifier only.
@@ -1176,8 +1177,10 @@ enum call_restriction {
    cr_real_3_4_tag,        // Restriction only.
    cr_real_1_4_line,       // Restriction only.
    cr_real_3_4_line,       // Restriction only.
+   cr_hourglass,           // Restriction only.
    cr_galaxy,              // Restriction only.
    cr_split_square_setup,  // Restriction only.
+   cr_i_setup,             // Restriction only.
    cr_jleft,               // Restriction only.
    cr_jright,              // Restriction only.
    cr_ijleft,              // Restriction only.

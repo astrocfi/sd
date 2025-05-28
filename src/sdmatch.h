@@ -165,8 +165,8 @@ public:
    // Things below here are effectively "static constants".  They are filled in by
    // matcher_initialize and open_session at program startup.
 
-   // These 3 lists have:  0 = only concepts on this level; 1 = same plus "assume" concepts; 2 = all.
-   index_list m_concept_lists[3];
+   index_list m_concept_list;        // indices of all concepts
+   index_list m_level_concept_list;  // indices of concepts valid at current level
 
    index_list *call_hashers;
    index_list *conc_hashers;

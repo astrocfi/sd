@@ -2569,8 +2569,6 @@ extern SDLIB_API int number_of_calls[call_list_extent];
 extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
 extern SDLIB_API bool two_couple_calling;                           /* in SDTOP */
 extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
-// 0 = only concepts on this level; 1 = same plus "assume" concepts; 2 = all.
-extern SDLIB_API int which_concept_menu;                            /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int config_history_ptr;                            /* in SDTOP */
 extern SDLIB_API int abs_max_calls;                                 /* in SDTOP */
@@ -4796,12 +4794,14 @@ extern const expand::thing s_2x2_2x4_ctrs;
 extern const expand::thing s_2x2_2x4_ctrsb;
 extern const expand::thing s_2x2_2x4_ends;
 extern const expand::thing s_2x2_2x4_endsb;
+extern const expand::thing s_1x4_bone_ctrs;
 extern const expand::thing s_1x4_1x8_ctrs;
 extern const expand::thing s_1x4_1x8_ends;
 extern const expand::thing s_1x6_1x8_ctrs;
 extern const expand::thing s_qtg_2x3;
 extern const expand::thing s_qtg_2x4;
 extern const expand::thing s_2x2_gal_ctrs;
+extern const expand::thing s_2x4_hrgl_pts;
 extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;
 extern const expand::thing s_4x4_4dma;
@@ -5216,7 +5216,11 @@ struct skipped_concept_info {
 
    skipped_concept_info() : m_nocmd_misc3_bits(0) {}
    skipped_concept_info(parse_block *incoming) THROW_DECL;    // In SDTOP
-   parse_block *get_next() { return (m_heritflag.r != 0 || m_heritflag.l != 0) ? m_concept_with_root : m_result_of_skip; }
+   parse_block *get_next() {
+      parse_block *t =  (m_heritflag.r != 0 || m_heritflag.l != 0) ? m_concept_with_root : m_result_of_skip;
+      if (!t)
+         fail("Need a concept.");
+      return t; }
 };
 
 extern bool check_for_concept_group(
@@ -6260,9 +6264,6 @@ parse_block **get_parse_block_subsidiary_root_addr(parse_block *p);
 // Well, these are more than just accessors.
 warning_info config_save_warnings();
 void config_restore_warnings(const warning_info & rhs);
-
-void update_which_concept_menu();
-
 
 extern selector_kind selector_for_initialize;                       /* in SDINIT */
 extern direction_kind direction_for_initialize;                     /* in SDINIT */

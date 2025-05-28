@@ -605,22 +605,14 @@ void matcher_initialize()
       constant_with_marker_end_of_list :
       constant_with_concept_diagnose;
 
-   // Create the three concept lists.
+   // Create the concept lists, both universal and level-restricted.
 
    for (concept_number=0 ; ; concept_number++) {
       p = access_concept_descriptor_table(concept_number);
       if (get_concept_kind(p) == end_marker) break;
-
-      // List #2 always
-      gg77->matcher_p->m_concept_lists[2].add_one(concept_number);
-
-      // List #1 if on level or it is an "assume".
-      if (get_concept_level(p) <= calling_level || p->kind == concept_assume_waves)
-         gg77->matcher_p->m_concept_lists[1].add_one(concept_number);
-
-      // List #0 only if on level.
+      gg77->matcher_p->m_concept_list.add_one(concept_number);
       if (get_concept_level(p) <= calling_level)
-         gg77->matcher_p->m_concept_lists[0].add_one(concept_number);
+         gg77->matcher_p->m_level_concept_list.add_one(concept_number);
    }
 
    // Initialize the hash buckets for selectors, concepts, and calls.
@@ -773,8 +765,8 @@ void matcher_initialize()
 
    // Now do the concepts from the full concept list.
 
-   for (i=0; i<gg77->matcher_p->m_concept_lists[2].the_list_size; i++) {
-      int the_item = gg77->matcher_p->m_concept_lists[2].the_list[i];
+   for (i=0; i<gg77->matcher_p->m_concept_list.the_list_size; i++) {
+      int the_item = gg77->matcher_p->m_concept_list.the_list[i];
       Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
 
       if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
@@ -802,8 +794,8 @@ void matcher_initialize()
 
    // Now do the "level concepts".
 
-   for (i=0; i<gg77->matcher_p->m_concept_lists[0].the_list_size; i++) {
-      int the_item = gg77->matcher_p->m_concept_lists[0].the_list[i];
+   for (i=0; i<gg77->matcher_p->m_level_concept_list.the_list_size; i++) {
+      int the_item = gg77->matcher_p->m_level_concept_list.the_list[i];
       Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
 
       if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
@@ -1482,7 +1474,7 @@ void matcher_class::scan_concepts_and_calls(
    if (using_hash)
       list_to_use = allowing_all_concepts ? &conc_hashers[bucket] : &conclvl_hashers[bucket];
    else
-      list_to_use = &m_concept_lists[which_concept_menu];
+      list_to_use = allowing_all_concepts ? &m_concept_list : &m_level_concept_list;
 
    local_result.match.kind = ui_concept_select;
 
@@ -2106,7 +2098,7 @@ void matcher_class::search_menu(uims_reply_kind kind)
       }
    }
    else if (kind == ui_concept_select) {
-      index_list *list_to_use = &m_concept_lists[which_concept_menu];
+      index_list *list_to_use = allowing_all_concepts ? &m_concept_list : &m_level_concept_list;
       menu_length = list_to_use->the_list_size;
       short int *item = list_to_use->the_list;
 

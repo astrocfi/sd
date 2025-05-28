@@ -546,12 +546,14 @@ const expand::thing s_2x2_2x4_ctrs = {{1, 2, 5, 6}, s2x2, s2x4, 0};
 const expand::thing s_2x2_2x4_ctrsb = {{6, 1, 2, 5}, s2x2, s2x4, 1};
 const expand::thing s_2x2_2x4_ends = {{0, 3, 4, 7}, s2x2, s2x4, 0};
 const expand::thing s_2x2_2x4_endsb = {{7, 0, 3, 4}, s2x2, s2x4, 1};
+const expand::thing s_1x4_bone_ctrs = {{6, 7, 2, 3}, s1x4, s_bone, 0};
 const expand::thing s_1x4_1x8_ctrs = {{3, 2, 7, 6}, s1x4, s1x8, 0};
 const expand::thing s_1x4_1x8_ends = {{0, 1, 4, 5}, s1x4, s1x8, 0};
 const expand::thing s_1x6_1x8_ctrs = {{1, 3, 2, 5, 7, 6}, s1x6, s1x8, 0};
 const expand::thing s_qtg_2x3 = {{5, -1, 0, 1, -1, 4}, s2x3, s_qtag, 1};
 const expand::thing s_qtg_2x4 = {{5, -1, -1, 0, 1, -1, -1, 4}, s2x4, s_qtag, 1};
 const expand::thing s_2x2_gal_ctrs = {{1, 3, 5, 7}, s2x2, s_galaxy, 0};
+const expand::thing s_2x4_hrgl_pts = {{5, -1, -1, 0, 1, -1, -1, 4}, s2x4, s_hrglass, 1};
 const expand::thing s_4x4_4x6a = {
    {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, s4x4, s4x6, 0};
 const expand::thing s_4x4_4x6b = {
@@ -710,6 +712,14 @@ expand::thing expand::init_table[] = {
 
    {{0, 1, 4, 5},
     s2x2, s2x3, 0, 0U, 014, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 3, 2},
+    s1x4, s2x4, 0, 0U, 0xF0, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{7, 6, 4, 5},
+    s1x4, s2x4, 0, 0U, 0x0F, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 4, 7, 8, 9},
@@ -888,6 +898,13 @@ expand::thing expand::init_table[] = {
       If only the "wings" are present, turn it into a 2x6. */
    {{-1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 8, 9},
     s3x4, sbigdmd, 1, 0U, 06363, false,
+    warn__none, warn__none, normalize_before_isolated_call, 0},
+
+   {{0, 1, -1, -1},
+    s1x4, s_trngl4, 1, 0U, 0xC, false,
+    warn__none, warn__none, normalize_before_isolated_call, 0},
+   {{2, 3, -1, -1},
+    s2x2, s_trngl4, 0, 0U, 0x3, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{0, -1, -1, 1, 3, -1, -1, 4},
@@ -3516,20 +3533,24 @@ full_expand::thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_li6_stuff,   s1x6,       0xFFFU,      0x222U, ~0U},
    // Ends rear back from a "bone" to grand 8-chain or whatever.
    {warn__some_rear_back,  8, &rear_bone_stuffa, s_bone,    0xFFFFU,     0x55F5U, 0xF5F5U},
+
    // Centers rear back from a "bone" to lines facing or "split square thru" setup.
    {warn__some_rear_back,  0, &rear_bone_stuffb, s_bone,    0xFFFFU,     0x0802U, 0x0F0FU},
+   // Same, with various populations of live people, mostly for two-couple calling.
+   {warn__some_rear_back,  0, &rear_bone_stuffb, s_bone,    0xCCCCU,     0x48C0U, 0xCCCCU},
+   {warn__some_rear_back,  0, &rear_bone_stuffb, s_bone,    0x3333U,     0x3012U, 0x3333U},
+   {warn__some_rear_back,  0, &rear_bone_stuffb, s_bone,    0x3C3CU,     0x3810U, 0x3C3CU},
+   {warn__some_rear_back,  0, &rear_bone_stuffb, s_bone,    0xC3C3U,     0x40C2U, 0xC3C3U},
+
    // All rear back from a "bone" to a "rigger".
    {warn__rear_back,       0, &rear_bone_stuffc, s_bone,    0xFFFFU,     0x58F2U, 0xFFFFU},
    // Rear back from an alamo wave to crossed single 8-chains.
    {warn__rear_back,       0, &rear_ohh_stuff, s4x4,    0x3C3C3C3CU, 0x1C203408U, ~0U},
 
-
    // All rear back from a "qtag" to a "rigger".
    {warn__rear_back,       0, &rear_qtag_stuffa, s_qtag,    0xFFFFU,     0x2882U, 0xFFFFU},
    // Some rear back from a "qtag" to a "crosswave".
    {warn__rear_back,       0, &rear_qtag_stuffb, s_qtag,    0xFFFFU,     0x2D87U, 0xFFFFU},
-
-
 
    // Rear back from parallel waves to an 8 chain.
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFFFFU,     0x2288U, ~0U},

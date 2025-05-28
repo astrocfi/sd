@@ -3421,6 +3421,12 @@ static void do_concept_assume_waves(
          else
             goto check_for_2x2;
       }
+      else if (t.assumption == cr_i_setup) {
+         if (ss->kind == s_bone)
+            goto check_it;
+         else
+            goto check_for_1x4_to_bone;
+      }
    }
    else if (t.assump_col == 1) {
       // This is a "column-like" assumption.
@@ -3504,6 +3510,19 @@ static void do_concept_assume_waves(
       case cr_qtag_like:
       case cr_pu_qtag_like:
          goto fudge_diamond_like;
+      case cr_hourglass:
+         if (ss->kind == s_hrglass)
+            goto check_it;
+         else if (ss->kind == s2x4 &&
+                  (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
+            if (two_couple_calling) {
+               no_phan_error = false;
+               expand::expand_setup(s_2x4_hrgl_pts, ss);
+               goto check_it;
+            }
+            else
+               goto bad_assume;
+         }
       case cr_galaxy:
          if (ss->kind == s_galaxy)
             goto check_it;
@@ -3513,13 +3532,8 @@ static void do_concept_assume_waves(
                expand::expand_setup(s_2x2_gal_ctrs, ss);
                goto check_it;
             }
-
             else
                goto bad_assume;
-         }
-      case cr_split_square_setup:
-         switch (ss->kind) {
-         case s2x2: goto check_for_2x2;
          }
       }
    }
@@ -3536,6 +3550,19 @@ static void do_concept_assume_waves(
             expand::expand_setup(s_2x2_2x4_ctrsb, ss);
          else
             expand::expand_setup(s_2x2_2x4_ctrs, ss);
+      }
+      else
+         goto bad_assume;
+   }
+
+   goto check_it;
+
+ check_for_1x4_to_bone:
+
+   if (ss->kind == s1x4) {
+      if (two_couple_calling) {
+         no_phan_error = false;
+         expand::expand_setup(s_1x4_bone_ctrs, ss);
       }
       else
          goto bad_assume;

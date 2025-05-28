@@ -280,7 +280,6 @@ bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
 bool two_couple_calling = false;
 bool allowing_all_concepts = false;
-int which_concept_menu = 0;
 int allowing_modifications = 0;
 
 int last_direction_kind = direction_ENUM_EXTENT-1;
@@ -368,12 +367,6 @@ parse_block *get_parse_block()
    return item;
 }
 
-
-// 0 = only concepts on this level; 1 = same plus "assume" concepts; 2 = all.
-void update_which_concept_menu()
-{
-   which_concept_menu = allowing_all_concepts ? 2 : (two_couple_calling ? 1 : 0);
-}
 
 
 warning_info config_save_warnings()
@@ -2333,6 +2326,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = 
     {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 1, 2}, {2, 5, 6}, false, chk_dmd_qtag},
    {s2x4, cr_split_square_setup, 0, {2, 0, 7}, {2, 3, 4},
     {2, 5, 6}, {2, 1, 2},         false, chk_star},
+   {s2x4, cr_i_setup, 0, {2, 0, 5}, {2, 1, 4},
+    {2, 3, 6}, {2, 7, 2},         false, chk_star},
    {s2x2, cr_wave_only, 1, {2, 0, 0, 2},
     {0, 0, 2, 2},         {0}, {0}, true, chk_box},
    {s2x2, cr_all_facing_same, 1, {2, 2, 2, 2},
@@ -3968,6 +3963,7 @@ extern callarray *assoc(
 
       k = 0;   // Many tests will find these values useful.
       mask = 0;
+      uint32_t livemask;
       tt.assumption = this_qualifier;
       tt.assump_col = 0;
       tt.assump_cast = 0;
@@ -4466,17 +4462,26 @@ extern callarray *assoc(
             goto bad;
          goto good;
       case cr_occupied_as_blocks:
-         if (ssK != s4x4 ||
-             ((ss->people[0].id1 | ss->people[13].id1 |
-               ss->people[10].id1 | ss->people[3].id1 |
-               ss->people[8].id1 | ss->people[5].id1 |
-               ss->people[2].id1 | ss->people[11].id1) &&
-              (ss->people[4].id1 | ss->people[9].id1 |
-               ss->people[6].id1 | ss->people[7].id1 |
-               ss->people[12].id1 | ss->people[1].id1 |
-               ss->people[14].id1 | ss->people[15].id1)))
-            goto bad;
-         goto good;
+         livemask = little_endian_live_mask(ss);
+         if (ssK == s4x4 &&
+             ((livemask & 0x2D2D) == 0 || (livemask & 0xD2D2) == 0))
+            goto good;
+         goto bad;
+      case cr_occupied_as_traps:
+         livemask = little_endian_live_mask(ss);
+         if (ssK == s4x4 &&
+             ((livemask & 0x6666) == 0 || (livemask & 0x9999) == 0 ||
+              (livemask & 0x6D92) == 0 || (livemask & 0x926D) == 0 ||
+              (livemask & 0xD926) == 0 || (livemask & 0x26D9) == 0))
+            goto good;
+         else if (ssK == s2x8 &&
+             ((livemask & 0x6969) == 0 || (livemask & 0x9696) == 0 ||
+              (livemask & 0x6699) == 0 || (livemask & 0x9966) == 0))
+            goto good;
+         else if (ssK == s2x4 &&
+             ((livemask & 0x69) == 0 || (livemask & 0x96) == 0))
+            goto good;
+         goto bad;
       case cr_occupied_as_qtag:
          if (ssK != s3x4 ||
              (ss->people[0].id1 | ss->people[3].id1 |

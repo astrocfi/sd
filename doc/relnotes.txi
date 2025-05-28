@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <01 Sep 2020 wba>
+@c Time-stamp: <07 Sep 2020 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.22
-@set title2 Database version = 39.21 format = 376
+@set title1 RELEASE NOTES FOR VERSION 39.23
+@set title2 Database version = 39.23 format = 378
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.23::
 * 39.22::
 * 39.21::
 * 39.20::
@@ -122,7 +123,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.22, Top, (dir)
+@node Intro, 39.23, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -133,11 +134,26 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2020 William B. Ackerman
 @sp 3
 @menu
-* 39.22::               Changes in the current version
+* 39.23::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.22, 39.21, Intro, Top
+@node 39.23, 39.22, Intro, Top
+@unnumberedsec Version 39.23 changes
+
+All @strong{assume} commands are now legal at all levels.  So, in
+two-couple Mainstream, from back-to-back couples, you can say things
+like @strong{assume eight chain touch 1/4} or @strong{assume
+back-to-back lines wheel and deal}.
+
+Two new assumptions: @strong{Assume galaxy} can place phantom points
+around a 2x2 box.  @strong{Assume hourglass} can place the phantom
+diamond spots on a 2x4 setup occupied by the ends.
+
+And the usual other improvements for two-couple calling.
+
+@c ************
+@node 39.22, 39.21, 39.23, Top
 @unnumberedsec Version 39.22 changes
 
 Many issues relating to two-couple writing, in a variety of areas,
@@ -242,7 +258,6 @@ the word @strong{phantom} to the dancers when calling.
 
 There is a rudimentary ability to write 2-couple material.  This is
 initiated by giving the starting setup @strong{two couples only}. 
-
 
 The exact words you need to use when calling this material is not
 universally agreed upon.  In Sd, you should not need to say

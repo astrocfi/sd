@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.22
-@set Time-stamp: September 1, 2020
+@set sd-version 39.23
+@set Time-stamp: September 7, 2020
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -5187,6 +5187,10 @@ phantoms are facing.  They are
    assume facing diamonds
    assume normal interlocked diamonds
    assume facing interlocked diamonds
+   assume split square thru setup
+   assume I setup
+   assume galaxy
+   assume hourglass
 @end example
 
 Additionally, there are two related concepts, @code{assume normal casts} and
