@@ -616,19 +616,19 @@ static void database_error_exit(const char *message)
 }
 
 
-static void read_level_3_groups(calldef_block *where_to_put)
+static void read_array_def_blocks(calldef_block *where_to_put)
 {
    int j, char_count;
    callarray *current_call_block;
 
-   if ((last_datum & 0xE000) != 0x6000)
-      database_error_exit("database phase error 3");
+   if (!(last_datum & 0x8000))
+      database_error_exit("database phase error: array def block");
 
    current_call_block = 0;
 
-   while ((last_datum & 0xE000) == 0x6000) {
+   while (last_datum & 0x8000) {
       begin_kind this_start_setup;
-      unsigned short this_qualifierstuff;
+      uint32 this_qualifierstuff;
       call_restriction this_restriction;
       setup_kind end_setup;
       setup_kind end_setup_out;
@@ -636,25 +636,26 @@ static void read_level_3_groups(calldef_block *where_to_put)
       uint32 these_flags;
       int extra;
 
-      these_flags = (last_datum & 0x1FFF) << 8;    /* We allow 21 callarray_flags. */
-      read_halfword();       /* Get callaray continuation and start setup. */
-      these_flags |= ((last_datum & 0xFF00) >> 8);
-      this_start_setup = (begin_kind) (last_datum & 0xFF);
-      this_start_size = begin_sizes[this_start_setup];
+      these_flags = (last_datum & 0x7FFF) << 7;    // We allow 22 callarray_flags.
 
-      read_halfword();       /* Get qualifier stuff. */
-      this_qualifierstuff = (uint16) last_datum;
-      read_halfword();       /* Get restriction and end setup. */
-      this_restriction = (call_restriction) ((last_datum & 0xFF00) >> 8);
+      read_fullword();
+      these_flags |= ((last_datum >> 25) & 0x7F);
+      this_restriction = (call_restriction) ((last_datum >> 17) & 0xFF);
+      this_qualifierstuff = last_datum & 0x1FFFF;
+
+      // Get start setup and end setup.
+      read_halfword();
+      this_start_setup = (begin_kind) ((last_datum & 0xFF00) >> 8);
+      this_start_size = begin_sizes[this_start_setup];
       end_setup = (setup_kind) (last_datum & 0xFF);
 
-      if (these_flags & CAF__CONCEND) {      /* See if "concendsetup" was used. */
-         read_halfword();       /* Get outer setup and outer rotation. */
+      if (these_flags & CAF__CONCEND) {    // See if "concendsetup" was used.
+         read_halfword();                  // Get outer setup and outer rotation.
          end_setup_out = (setup_kind) (last_datum & 0xFF);
       }
 
       if (these_flags & CAF__PREDS) {
-         read_halfword();    /* Get error message count. */
+         read_halfword();    // Get error message count.
          char_count = last_datum & 0xFF;
          // We will naturally get 4 items in the "stuff.prd.errmsg" field;
          // we are responsible all for the others.
@@ -671,9 +672,9 @@ static void read_level_3_groups(calldef_block *where_to_put)
       tp->next = 0;
 
       if (!current_call_block)
-         where_to_put->callarray_list = tp;   /* First time. */
+         where_to_put->callarray_list = tp;   // First time.
       else {
-         current_call_block->next = tp;       /* Subsequent times. */
+         current_call_block->next = tp;       // Subsequent times.
       }
 
       current_call_block = tp;
@@ -682,7 +683,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
       tp->start_setup = (uint8) this_start_setup;
       tp->restriction = this_restriction;
 
-      if (these_flags & CAF__CONCEND) {      /* See if "concendsetup" was used. */
+      if (these_flags & CAF__CONCEND) {      // See if "concendsetup" was used.
          tp->end_setup = (uint8) s_normal_concentric;
          tp->end_setup_in = (uint8) end_setup;
          tp->end_setup_out = (uint8) end_setup_out;
@@ -709,12 +710,12 @@ static void read_level_3_groups(calldef_block *where_to_put)
          read_halfword();
 
          // Demand level 4 group.
-         if (last_datum != 0x8000) {
+         if (last_datum != 0x6000) {
             database_error_exit("database phase error 4");
          }
 
-         while ((last_datum & 0xE000) == 0x8000) {
-            read_halfword();       /* Read predicate indicator. */
+         while ((last_datum & 0xE000) == 0x6000) {
+            read_halfword();       // Read predicate indicator, that is, level 4 group.
             // "predptr_pair" will get us 4 items in the "arr" field;
             // we are responsible all for the others.
             temp_predlist = (predptr_pair *) ::operator new(sizeof(predptr_pair) +
@@ -895,7 +896,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          }
 
          read_halfword();
-         // Check for compound definition.
+         // Check for compound definition, that is, level 2 group.
          if ((last_datum & 0xE000) == 0x4000) {
             this_matrix_block->next = (matrix_def_block *)
                ::operator new(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
@@ -920,7 +921,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          zz->modifier_level = l_mainstream;
          root_to_use->stuff.arr.def_list = zz;
 
-         read_level_3_groups(zz);    /* The first group. */
+         read_array_def_blocks(zz);    // The first group.
 
          while ((last_datum & 0xE000) == 0x4000) {
             yy = new calldef_block;
@@ -931,7 +932,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             read_fullword();
             zz->modifier_seth = last_datum;
             read_halfword();
-            read_level_3_groups(zz);
+            read_array_def_blocks(zz);
          }
       }
       break;
@@ -1178,7 +1179,7 @@ extern void prepare_to_read_menus()
       gg->fatal_error_exit(1, "Arithmetic is less than 32 bits", "program has been compiled incorrectly.");
    else if (l_nonexistent_concept > 15)
       gg->fatal_error_exit(1, "Too many levels", "program has been compiled incorrectly.");
-   else if (NUM_QUALIFIERS > 125)
+   else if (NUM_QUALIFIERS > 253)
       gg->fatal_error_exit(1, "Insufficient qualifier space", "program has been compiled incorrectly.");
    else if (NUM_PLAINMAP_KINDS > 252)
       gg->fatal_error_exit(1, "Insufficient mapkind space", "program has been compiled incorrectly.");

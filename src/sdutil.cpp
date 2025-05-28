@@ -2819,7 +2819,7 @@ void run_program()
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2010 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2011 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

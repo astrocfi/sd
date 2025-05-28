@@ -4298,10 +4298,12 @@ static void do_stuff_inside_sequential_call(
       else if (result->cmd.callspec == base_calls[base_call_scootback]) {
          if (result->kind == s_qtag) {
             if (old_assumption == cr_jright && old_assump_both == 2) {
+               // Jright:2 is left 1/4 tag, change to left 3/4 tag.
                *fix_next_assumption_p = cr_jleft;
                *fix_next_assump_both_p = 1;
             }
             else if (old_assumption == cr_jleft && old_assump_both == 2) {
+               // Jleft:2 is right 1/4 tag, change to right 3/4 tag.
                *fix_next_assumption_p = cr_jright;
                *fix_next_assump_both_p = 1;
             }

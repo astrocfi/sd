@@ -158,7 +158,7 @@ In \wba\sd\regress:  save _vnnnn
    do_pack        (this depends on all of the above, and the result of "savesource")
 
 
-Copy these files onto a zip disk:
+Copy these into an appropriate directory:
    \wba\sd\sd_vnnnn.zip
    \wba\sd\regress\r_vnnnn.zip
    \wba\sddoc\doc_vnnnn.zip

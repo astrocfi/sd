@@ -814,8 +814,8 @@ struct predptr_pair;
 struct callarray {
    callarray *next;
    uint32 callarray_flags;
+   uint32 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
    call_restriction restriction;
-   uint16 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
 
    uint8 start_setup;       /* Must cast to begin_kind! */
    uint8 end_setup;         /* Must cast to setup_kind! */
@@ -2764,13 +2764,11 @@ struct writechar_block_type {
 };
 
 
-enum {
    // Probability (out of 8) that a concept will be placed on a randomly generated call.
-   CONCEPT_PROBABILITY = 2,
+enum { CONCEPT_PROBABILITY = 2 };
    // We use lots more concepts for "standardize", since it is much less likely (though
    // by no means impossible) that a plain call will do the job.
-   STANDARDIZE_CONCEPT_PROBABILITY = 6
-};
+enum { STANDARDIZE_CONCEPT_PROBABILITY = 6 };
 
 // Actually, we don't make a resolve bigger than 3.  This is how much space
 // we allocate for things.  Just being careful.

@@ -812,6 +812,7 @@ const char *qualtab[] = {
    "not_split_dixie",
    "dmd_ctrs_mwv",
    "dmd_ctrs_mwv_no_mirror",
+   "dmd_ctrs_mwv_change_to_34_tag",
    "spd_base_mwv",
    "qtag_mwv",
    "qtag_mag_mwv",
@@ -1477,12 +1478,12 @@ char call_name[100];
 int call_namelen;
 int call_level;
 int call_startsetup;
-int call_qual_stuff;
+uint32 qual_stuff;
 int call_endsetup;
 int call_endsetup_in;
 int call_endsetup_out;
 int bmatrix, gmatrix;
-int restrstate;
+int restriction;
 
 
 
@@ -2100,18 +2101,26 @@ static void write_seq_stuff(void)
 
 static void write_array_def_block(uint32 callarrayflags)
 {
-   if (callarrayflags & 0xFFE00000) errexit("Internal error -- too many array flags");
-   write_halfword(0x6000 | (callarrayflags>>8));
+   // Bits in specifying an array def are very precious, so we use only a single "1" bit
+   // to indicate an array def block.
+   // The other indicators use 3 bits:
+   //    000 - end of file
+   //    001 (0x2000) - top level call
+   //    010 (0x4000) - compound call def
+   //    011 (0x6000) - predicate group
+   if (callarrayflags & 0xFFC00000) errexit("Internal error -- too many callarray flags");
+   write_halfword(0x8000 | (callarrayflags>>7));
+
+   write_fullword(((callarrayflags & 0x7F) << 25) | (restriction << 17) | qual_stuff);
+
    if (call_startsetup >= 256) errexit("Internal error -- too many start setups");
-   write_halfword(call_startsetup | ((callarrayflags & 0xFF) << 8));
-   write_halfword(call_qual_stuff);
 
    if (callarrayflags & CAF__CONCEND) {
-      write_halfword(call_endsetup_in | (restrstate << 8));
+      write_halfword(call_endsetup_in | (call_startsetup << 8));
       write_halfword(call_endsetup_out);
    }
    else {
-      write_halfword(call_endsetup | (restrstate << 8));
+      write_halfword(call_endsetup | (call_startsetup << 8));
    }
 }
 
@@ -2188,9 +2197,9 @@ static void write_array_def(uint32 incoming)
    callarray_flags1 = incoming;
 
 def2:
-   restrstate = 0;
+   restriction = 0;
    callarray_flags2 = 0;
-   call_qual_stuff = 0;
+   qual_stuff = 0;
 
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper starting setup");
@@ -2236,7 +2245,7 @@ def2:
                if ((iii = search(predtab)) < 0) errexit("Unknown predicate");
 
                // Write a level 4 group.
-               write_halfword(0x8000);
+               write_halfword(0x6000);
                write_halfword(iii);
                get_tok();
                write_callarray(begin_sizes[call_startsetup], false);
@@ -2250,46 +2259,46 @@ def2:
       else if (!strcmp(tok_str, "qualifier")) {
          int t;
 
-         if (call_qual_stuff) errexit("Only one qualifier is allowed");
+         if (qual_stuff) errexit("Only one qualifier is allowed");
          get_tok();
 
          // Look for other indicators.
          for (;;) {
             if (tok_kind == tok_symbol && (!strcmp(tok_str, "left") || !strcmp(tok_str, "out"))) {
-               call_qual_stuff |= QUALBIT__LEFT;
+               qual_stuff |= QUALBIT__LEFT;
                get_tok();
             }
             else if (tok_kind == tok_symbol && (!strcmp(tok_str, "right") || !strcmp(tok_str, "in"))) {
-               call_qual_stuff |= QUALBIT__RIGHT;
+               qual_stuff |= QUALBIT__RIGHT;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "live")) {
-               call_qual_stuff |= QUALBIT__LIVE;
+               qual_stuff |= QUALBIT__LIVE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "tbone")) {
-               if (call_qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
+               if (qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
                   errexit("Can't specify both \"tbone\" and \"ntbone\"");
-               call_qual_stuff |= QUALBIT__TBONE;
+               qual_stuff |= QUALBIT__TBONE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "ntbone")) {
-               if (call_qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
+               if (qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
                   errexit("Can't specify both \"tbone\" and \"ntbone\"");
-               call_qual_stuff |= QUALBIT__NTBONE;
+               qual_stuff |= QUALBIT__NTBONE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "explicit")) {
-               if (call_qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
+               if (qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
                   errexit("Can't specify \"explicit\" and \"tbone\"");
-               call_qual_stuff |= QUALBIT__TBONE|QUALBIT__NTBONE;
+               qual_stuff |= QUALBIT__TBONE|QUALBIT__NTBONE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "num")) {
                int n = get_num("Need a qualifier number here");
                if (n > 14)
                   errexit("Number may not be greater than 14");
-               call_qual_stuff |= (n+1) * QUALBIT__NUM_BIT;
+               qual_stuff |= (n+1) * QUALBIT__NUM_BIT;
                get_tok();
             }
             else
@@ -2298,7 +2307,8 @@ def2:
 
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((t = search(qualtab)) < 0) errexit("Unknown qualifier");
-         call_qual_stuff |= t;
+         if (t > 255) errexit("Too many qualifiers");
+         qual_stuff |= t;
       }
       else if (!strcmp(tok_str, "restriction")) {
          get_tok();
@@ -2335,7 +2345,8 @@ def2:
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }
 
-         if ((restrstate = search(qualtab)) < 0) errexit("Unknown restriction specifier");
+         if ((restriction = search(qualtab)) < 0) errexit("Unknown restriction specifier");
+         if (restriction > 255) errexit("Too many restrictions");
       }
       else if (!strcmp(tok_str, "rotate"))
          callarray_flags1 |= CAF__ROT;

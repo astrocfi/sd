@@ -1127,9 +1127,9 @@ static void do_concept_parallelogram(
       uint32 map_code;
 
       if (ss->kind == spgdmdcw)
-         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,1);
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,0);
       else if (ss->kind == spgdmdccw)
-         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,1);
+         map_code = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,0);
       else
          fail("Can't find parallelogram diamonds.");
 

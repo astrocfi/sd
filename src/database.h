@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 304
+#define DATABASE_FORMAT_VERSION 306
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -317,23 +317,24 @@ enum {
 };
 
 
-// These definitions help to encode things in the "qualifierstuff" field
-// of a call definition.  That field is an unsigned 16 bit integer.  The low
-// 7 bits are a cast of the qualifier kind itself (hence we allow 127
-// nontrivial qualifiers).  The high 9 bits are as follows.
+// These definitions help to encode things in the "qualifierstuff" field of a call
+// definition.  That field is an unsigned 32 bit integer, of which we may only use 17
+// bits (it is tightly packed in the compiled database file.)  The low 8 bits are a cast
+// of the qualifier kind itself (hence we allow 255 nontrivial qualifiers).  The high 9
+// bits are as follows.
 
 enum {
    // The next two must be consecutive for encoding in the "assump_both" field.
-   QUALBIT__LEFT           = 0x8000,
-   QUALBIT__RIGHT          = 0x4000,
-   QUALBIT__LIVE           = 0x2000,
-   QUALBIT__TBONE          = 0x1000,  // TBONE and NTBONE together mean "explicit assumption"
-   QUALBIT__NTBONE         = 0x0800,
+   QUALBIT__LEFT           = 0x00010000,
+   QUALBIT__RIGHT          = 0x00008000,
+   QUALBIT__LIVE           = 0x00004000,
+   QUALBIT__TBONE          = 0x00002000,  // TBONE and NTBONE together mean "explicit assumption"
+   QUALBIT__NTBONE         = 0x00001000,
    // A 4 bit field.  If nonzero, there is a number requirement,
    // and the field is that number plus 1.
-   QUALBIT__NUM_MASK       = 0x0780,
-   QUALBIT__NUM_BIT        = 0x0080,
-   QUALBIT__QUAL_CODE      = 0x007F
+   QUALBIT__NUM_MASK       = 0x00000F00,
+   QUALBIT__NUM_BIT        = 0x00000100,
+   QUALBIT__QUAL_CODE      = 0x000000FF
 };
 
 
@@ -788,7 +789,7 @@ enum {
 };
 
 // BEWARE!!  This list must track the array "qualtab" in mkcalls.cpp
-// There is room for 127 of them, because they have to fit into a 7 bit field
+// There is room for 255 of them, because they have to fit into a 8 bit field
 // in the "qualifierstuff" field of a callarray.  This is checked at startup.
 enum call_restriction {
    cr_none,                // Qualifier only.
@@ -843,6 +844,7 @@ enum call_restriction {
    cr_not_split_dixie,     // Qualifier only.
    cr_dmd_ctrs_mwv,        // Qualifier only.
    cr_dmd_ctrs_mwv_no_mirror,  // Qualifier only.
+   cr_dmd_ctrs_mwv_change_to_34_tag,// Qualifier only.
    cr_spd_base_mwv,        // Qualifier only.
    cr_qtag_mwv,            // Qualifier only.
    cr_qtag_mag_mwv,        // Qualifier only.
