@@ -151,6 +151,8 @@ Copy these files onto a zip disk:
 
 This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd\regress directory.
 
+****** BE SURE SOURCE FILES IN THE CURRENT DIRECTORY ARE UP TO DATE!
+
 windows> cd sd
 windows> del *~
 windows> savelinuxsource

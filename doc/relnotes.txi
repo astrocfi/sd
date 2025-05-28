@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <9 Jan 2005 wba>
+@c Time-stamp: <9 Feb 2005 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 36.54
-@set title2 Database version = 36.54 format = 227
+@set title1 RELEASE NOTES FOR SD VERSION 36.55
+@set title2 Database version = 36.55 format = 228
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.55::
 * 36.54::
 * 36.53::
 * 36.52::
@@ -57,7 +58,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.54, Top, (dir)
+@node Intro, 36.55, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -68,11 +69,20 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 36.54::               Changes in the current version
+* 36.55::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.54, 36.53, Intro, Top
+@node 36.55, 36.54, Intro, Top
+@unnumberedsec Version 36.55 changes
+
+The program is better about stepping to a wave on @strong{swing and circle}
+in the presence of phantoms.
+
+A bug that might have made the program slow to start on Linux was fixed.
+
+@c ************
+@node 36.54, 36.53, 36.55, Top
 @unnumberedsec Version 36.54 changes
 
 The program handles "curried metaconcepts".  This means that one can

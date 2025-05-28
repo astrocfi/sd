@@ -3886,6 +3886,7 @@ extern SDLIB_API int *color_index_list;                             /* in SDINIT
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL */
+extern SDLIB_API int global_cache_miss_reason[3];                   /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
 extern SDLIB_API int global_age;                                    /* in SDUTIL */
 extern bool global_leave_missing_calls_blank;                       /* in SDUTIL */

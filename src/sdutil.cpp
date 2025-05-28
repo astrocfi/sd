@@ -45,6 +45,7 @@
 and the following external variables:
    global_error_flag
    global_cache_failed_flag
+   global_cache_miss_reason
    global_reply
    global_age
    global_leave_missing_calls_blank
@@ -74,6 +75,11 @@ and the following external variables:
 // External variables.
 error_flag_type global_error_flag;
 bool global_cache_failed_flag;
+// Word 0 is the error code
+//   (Zero if hit, missing index+1 if miss, 9 if couldn't open the cache file.)
+// Word 1 is what we wanted at the index.
+// Word 2 is what we got.
+int global_cache_miss_reason[3];
 uims_reply global_reply;
 int global_age;
 bool global_leave_missing_calls_blank;
@@ -2325,6 +2331,20 @@ void run_program()
    if (global_cache_failed_flag) {
       newline();
       writestuff("Cache file mechanism failed, continuing anyway.");
+      newline();
+      newline();
+   }
+
+   // If in diagnostic mode, we print a detailed reason for any cache miss.
+   if (ui_options.diagnostic_mode && global_cache_miss_reason[0] != 0) {
+      char reasonstuff[50];
+
+      (void) sprintf(reasonstuff, "Cache miss, reloaded: %d %d %d.",
+                     global_cache_miss_reason[0],
+                     global_cache_miss_reason[1],
+                     global_cache_miss_reason[2]);
+      newline();
+      writestuff(reasonstuff);
       newline();
       newline();
    }

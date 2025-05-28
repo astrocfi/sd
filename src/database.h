@@ -29,7 +29,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 227
+#define DATABASE_FORMAT_VERSION 228
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -175,6 +175,7 @@ enum {
    CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL,
    CFLAG1_STEP_TO_WAVE_4_PEOPLE     = 0x00001400UL,
    CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001800UL,
+   CFLAG1_STEP_TO_QTAG              = 0x00001C00UL,
    CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00002000UL,
    CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
    CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit

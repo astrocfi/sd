@@ -2151,7 +2151,7 @@ extern bool open_session(int argc, char **argv)
 
       MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
                                     sourcenames, database_input_files,
-                                    cachename, 6, binaryfileflags);
+                                    cachename, 7, binaryfileflags);
 
       int *mapped_cache = cache_stuff.map_address();
 
@@ -2199,15 +2199,16 @@ extern bool open_session(int argc, char **argv)
          circcer_calls[uj]->menu_name =
             translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->the_defn.callflagsf);
 
-      // Do the base calls (calls that are used in definitions of other calls).  These may have
-      // already been done, if they were on the level.
+      // Do the base calls (calls that are used in definitions of other calls).
+      // These may have already been done, if they were on the level.
       for (i=1; i <= highest_base_call; i++) {
          if (!base_calls[i]->menu_name)
             base_calls[i]->menu_name =
                translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
       }
 
-      SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any], number_of_calls[call_list_any]);
+      SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any],
+                                                  number_of_calls[call_list_any]);
 
       // Now the permanent array "main_call_lists[call_list_any]" has all the legal calls,
       //    including name pointer fields containing the original text with "@" escapes,
@@ -2310,19 +2311,40 @@ extern bool open_session(int argc, char **argv)
 
       call_list_kind cl;
 
-      if (mapped_cache &&
-          mapped_cache[0] == number_of_calls[call_list_any] &&
-          mapped_cache[1] == (int) calling_level &&
-          mapped_cache[2] == (int) l_dontshow &&
-          mapped_cache[3] == (int) call_list_extent &&
-          mapped_cache[4] == callchecksum &&
-          mapped_cache[5] == DATABASE_FORMAT_VERSION) {
+      // What we wanted from the cache.
+      int cache_keys[6];
+
+      cache_keys[0] = number_of_calls[call_list_any];
+      cache_keys[1] = (int) calling_level;
+      cache_keys[2] = (int) l_dontshow;
+      cache_keys[3] = (int) call_list_extent;
+      cache_keys[4] = callchecksum;
+      cache_keys[5] = DATABASE_FORMAT_VERSION;
+
+      global_cache_miss_reason[0] = 0;
+
+      if (!mapped_cache) {
+         global_cache_miss_reason[0] = 9;
+         global_cache_miss_reason[1] = (int) cache_stuff.get_miss_reason();
+      }
+      else {
+         for (int jj=0 ; jj<6 ; jj++) {
+            if (mapped_cache[jj] != cache_keys[jj]) {
+               global_cache_miss_reason[0] = jj+1;
+               global_cache_miss_reason[1] = mapped_cache[jj];
+               global_cache_miss_reason[2] = cache_keys[jj];
+            }
+         }
+      }
+
+      if (global_cache_miss_reason[0] == 0) {
          int cache_menu_words = 6;
 
          for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
             // Read the menu length.
             number_of_calls[cl] = mapped_cache[cache_menu_words++];
-            main_call_lists[cl] = (call_with_name **) get_mem(number_of_calls[cl] * sizeof(call_with_name *));
+            main_call_lists[cl] =
+               (call_with_name **) get_mem(number_of_calls[cl] * sizeof(call_with_name *));
             // Read the menu itself.
             memcpy(main_call_lists[cl],
                    mapped_cache+cache_menu_words,

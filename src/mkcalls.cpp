@@ -2607,6 +2607,11 @@ int main(int argc, char *argv[])
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_REAR_BACK_FROM_EITHER;
          }
+         else if (!strcmp(tok_str, "step_to_qtag")) {
+            if (call_flags1 & CFLAG1_STEP_REAR_MASK)
+               errexit("Too many touch/rear flags");
+            call_flags1 |= CFLAG1_STEP_TO_QTAG;
+         }
          else if (!strcmp(tok_str, "visible_fractions"))
             call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
          else if (!strcmp(tok_str, "last_part_visible"))  // Do this right someday.

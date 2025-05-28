@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.54"
+version "36.55"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1953,7 +1953,7 @@ call "center 2 cast off @b" dontshow tag ctr2castoff_n
    select_center2 cast_off_n4_with_warn [allow_forced_mod] nullcall []
 
 call "_something and circle 1/4" dontshow tag something_and_circle
-            fudge_to_q_tag step_to_wave left_means_touch_or_check
+            fudge_to_q_tag step_to_qtag left_means_touch_or_check
             yoyo_is_inherited magic_is_inherited
    seq ctrsswingslip [inherit_yoyo]
    seq andcircle [inherit_magic]
@@ -1972,7 +1972,7 @@ call "_@0 and circle 1/4" dontshow tag anything_and_circle
    seq andcircle []
 
 call "@2swing @3and circle @a" c1    /* If modified, center 4 do the modification. */
-            step_to_wave left_means_touch_or_check neednumber
+            step_to_qtag left_means_touch_or_check neednumber
             yoyo_is_inherited magic_is_inherited
    seq something_and_circle [repeat_n inherit_yoyo inherit_magic]
 

@@ -936,6 +936,7 @@ extern void touch_or_rear_back(
    case CFLAG1_STEP_TO_WAVE:
    case CFLAG1_STEP_TO_NONPHAN_BOX:
    case CFLAG1_STEP_TO_WAVE_4_PEOPLE:
+   case CFLAG1_STEP_TO_QTAG:
 
       // Special stuff:  If lines facing, but people are incomplete,
       // we honor an "assume facing lines" command.
@@ -971,7 +972,8 @@ extern void touch_or_rear_back(
 
       bool step_ok =
          touchflags == CFLAG1_STEP_TO_WAVE ||
-         touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE;
+         touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE ||
+         touchflags == CFLAG1_STEP_TO_QTAG;
 
       switch (scopy->kind) {
       case s2x4:
@@ -986,6 +988,17 @@ extern void touch_or_rear_back(
                      ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
                // Check for stepping to some kind of 1/4 tag
                // from a DPT or trade-by or whatever.
+               tptr = &step_qtag_pair;
+               goto found_tptr;
+            }
+            else if (touchflags == CFLAG1_STEP_TO_QTAG &&
+                     ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0 &&
+                     (livemask & 0x3C3C) != 0) {
+               // If the command is specifically to step to a qtag, we are
+               // more accepting relative to missing people.
+               // There must be at least 1 person in the middle.  Everyone in
+               // the middle must be as if in a DPT or trade-by.  Everyone
+               // else must be in generalized columns.
                tptr = &step_qtag_pair;
                goto found_tptr;
             }

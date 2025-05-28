@@ -176,6 +176,18 @@ class MAPPED_CACHE_FILE {
    int *client_address;
    struct MAPPED_CACHE_INNARDS *innards;
  public:
+
+   enum miss_reason {
+      NO_MISS,
+      MISS_CANT_OPEN_SOURCE,
+      MISS_CANT_GET_SOURCE_STATUS,
+      MISS_WRONG_SOURCE_FILE_SIZE,
+      MISS_WRONG_SOURCE_FILE_TIME,
+      MISS_CANT_OPEN_CACHE,
+      MISS_WRONG_CLIENT_VERSION,
+      MISS_WRONG_ENDIAN
+   };
+
    MAPPED_CACHE_FILE(int numsourcefiles,
                      const char * const * srcnames,
                      FILE **srcfiles,
@@ -185,6 +197,7 @@ class MAPPED_CACHE_FILE {
    ~MAPPED_CACHE_FILE();
    inline int *map_address() { return client_address; }
    void map_for_writing(int clientmapfilesizeinbytes);
+   miss_reason get_miss_reason();
 };
 
 #endif
