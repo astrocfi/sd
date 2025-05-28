@@ -1,5 +1,3 @@
-static char *id="@(#)$Sd: sdui-x11.c  1.15    gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/12/04 18:39:21 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -16,10 +14,18 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/12/04 18:39:21 gildea>";
  *
  * For use with version 30 of the Sd program.
  *
- *  The version of this file is as shown in the third field of the id
- *  string in the first line.  This string gets displayed at program
- *  startup, as the "ui" part of the complete version.
+ * The version of this file is as shown immediately below.  This string
+ * gets displayed at program startup, as the "ui" part of the complete
+ * version.
  */
+
+#define UI_VERSION_STRING "1.15"
+
+/* See comments in sdmain.c regarding this string. */
+static char *id="@(#)$He" "ader: Sd: sdui-x11.c "
+   UI_VERSION_STRING
+   "  gildea@lcs.mit.edu  18 Mar 93 $";
+static char *time_stamp = "sdui-x11.c Time-stamp: <93/12/04 18:39:21 gildea>";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -80,9 +86,6 @@ Private Widget getoutpopup, getoutbox;
 Private Widget neglectpopup, neglectbox;
 #endif
 
-/* This is a special value we use internally. */
-#define UI_SPECIAL_CONCEPT (uims_reply) -2
-
 /* This is the order in which command buttons will appear on the screen.
     These will be translated into the things required by the main program by
     the translation table "button_translations", which must track this enumeration. */
@@ -117,24 +120,7 @@ Private char version_mem[12];
 extern char *
 uims_version_string(void)
 {
-    int field;
-    char *start, *end;
-
-    start = id;
-    end = time_stamp;		/* keep lint happy */
-
-    /*
-     * extract the version number from the id string
-     */
-    for (field=1; field<3; field++) {
-	start += strcspn(start, " \t");
-	start += strspn(start, " \t");
-    }
-    end = start + strcspn(start, " \t");
-
-    (void) strncpy(version_mem, start, end-start);
-    (void) strcpy(version_mem+(end-start), "X11");
-    return version_mem;
+    return UI_VERSION_STRING;
 }
 
 
@@ -334,7 +320,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
             /* Fudge the number to be relative to the entire concept list. */
             uims_menu_index += general_concept_offset;
         }
-        else if (local_reply == UI_SPECIAL_CONCEPT) {
+        else if (local_reply == ui_special_concept) {
             int column, index, menu;
             unsigned int i;
             unsigned int row, col;
@@ -759,7 +745,7 @@ uims_preinitialize(void)
 	XtVaCreateManagedWidget("conceptspecial", listWidgetClass,
 				speconsbox, NULL);
     XtAddCallback(conceptspecialmenu, XtNcallback,
-		  command_or_menu_chosen, (XtPointer) UI_SPECIAL_CONCEPT);
+		  command_or_menu_chosen, (XtPointer) ui_special_concept);
     XtOverrideTranslations(conceptspecialmenu, list_trans);
 
     callbox = XtVaCreateManagedWidget("callbox", panedWidgetClass,
@@ -1114,7 +1100,7 @@ uims_postinitialize(void)
     number_of_calls[call_list_empty] = 0;
     call_menu_names[call_list_empty] = "";
 
-    /* fill in general concept menuu */
+    /* fill in general concept menu */
     for (i=0; i<general_concept_size; i++)
 	add_call_to_menu(&concept_menu_list, i, general_concept_size,
 			 concept_descriptor_table[i+general_concept_offset].name);

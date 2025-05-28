@@ -1,6 +1,6 @@
 		   RELEASE NOTES FOR SD VERSION 30
 		 Database version = 30, format = 43,
-    X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
+    X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.1.
 
 
 The good news is that there are a lot of new features.  The bad news is
@@ -51,8 +51,7 @@ New concepts:
 
 The command formerly known as "nice setup" has been renamed "normalize".
 The command formerly known as "save picture" has been renamed "keep picture".
-The command formerly known as "do anything" has been renamed "pick
-random call".
+The command formerly known as "do anything" has been renamed "pick random call".
 
 In sdtty, the concepts containing references to parts of calls are easier
 to enter.  Type the part number in the natural way, as in
@@ -141,7 +140,7 @@ Fixed the "stable split phantom boxes roll em", "stable 2x8 matrix roll em"
 and "1/4 split phantom boxes split the difference" bugs, not to mention
 the "2x8 matrix roll em" bug.
 
-The "normalize" command works from more setups and uses a larger
+The "nice setup" command works from more setups and uses a larger
 repertoire of concepts.  It sticks to concepts on the level unless the
 command "toggle concept levels" (see below) was given.
 
@@ -214,10 +213,9 @@ sd_doc.PS, a PostScript file, and sd_doc.txt, a plain text file.
 
 USER INTERFACE CHANGES:
 
-There is a now a Macintosh version available.  Sources are included in
-the source distribution, and a binary distribution will be included
-with a future release.  This port is still experimental, so expect it
-to change.
+There is a now a Macintosh version available, MacSd.  Sources are
+included in the source distribution, and a binary distribution is
+available, too.
 
 The program "sdtty" has been extensively rewritten for PC's and Unix
 systems.

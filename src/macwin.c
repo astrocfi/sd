@@ -862,8 +862,6 @@ static void
 menu_setup(TextWindow *twp)
 {
     unsigned char buf[100];
-    void *perm_map;
-    long_boolean accept_extend;
 
     EnableItem(apple_menu, hintsCommand);
     EnableItem(sd_menu, 0);
@@ -899,7 +897,7 @@ menu_setup(TextWindow *twp)
         if (resolve_command_ok()) {
             EnableItem(sequence_menu, resolveCommand);
         }
-        if (reconcile_command_ok(&perm_map, &accept_extend)) {
+        if (reconcile_command_ok()) {
             EnableItem(sequence_menu, reconcileCommand);
         }
         EnableItem(sequence_menu, randomCommand);

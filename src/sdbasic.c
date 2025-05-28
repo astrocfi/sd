@@ -1285,7 +1285,7 @@ static int divide_the_setup(
                   the call is a shape changer that tries to go into a setup
                   other than a parallelogram, divided_setup_move will raise
                   an error. */
-               ss->setupflags |= SETUPFLAG__OFFSET_Z;
+               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
                if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
@@ -1293,7 +1293,7 @@ static int divide_the_setup(
                break;
             case 0xA6A6: case 0x9C9C:
                division_maps = &map_lh_s2x3_3;
-               ss->setupflags |= SETUPFLAG__OFFSET_Z;
+               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
                if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
@@ -1301,7 +1301,7 @@ static int divide_the_setup(
                break;
             case 0xE4E4: case 0xB8B8:
                division_maps = &map_rh_s2x3_2;
-               ss->setupflags |= SETUPFLAG__OFFSET_Z;
+               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
                if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
@@ -1309,7 +1309,7 @@ static int divide_the_setup(
                break;
             case 0x6A6A: case 0xC9C9:
                division_maps = &map_lh_s2x3_2;
-               ss->setupflags |= SETUPFLAG__OFFSET_Z;
+               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
                if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
@@ -1327,7 +1327,7 @@ static int divide_the_setup(
          /* Check whether it has 2x4/4x2/1x8/8x1 definitions, and divide the setup if so,
             and if the caller explicitly said "2x8 matrix". */
 
-         if (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX) {
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
             if (
                   (!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
@@ -1382,7 +1382,7 @@ static int divide_the_setup(
          /* See if this call has applicable 2x8 definitions and matrix expansion is permitted.
             If so, that is what we must do. */
 
-         if (  !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX) &&
+         if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
             do_matrix_expansion(ss, CONCPROP__NEED_2X8, TRUE);
@@ -1395,7 +1395,7 @@ static int divide_the_setup(
             a 2x6 but forbidding "circulate".  We also enable this if the caller explicitly
             said "2x6 matrix". */
 
-         if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) {
+         if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
             if (
                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
@@ -1443,7 +1443,7 @@ static int divide_the_setup(
          /* Check whether it has 1x6/6x1 definitions, and divide the setup if so,
             and if the caller explicitly said "1x12 matrix". */
 
-         if (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX) {
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
             if (  (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
                division_maps = (*map_lists[s_1x6][1])[MPKIND__SPLIT][0];
@@ -1459,7 +1459,7 @@ static int divide_the_setup(
          /* Check whether it has 1x8/8x1 definitions, and divide the setup if so,
             and if the caller explicitly said "1x16 matrix". */
 
-         if (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX) {
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
             if (
                   (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
@@ -1475,7 +1475,7 @@ static int divide_the_setup(
             If so, that is what we must do.
             These two cases are required to make things like 12 matrix grand swing thru work from a 1x10. */
 
-         if (  !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX) &&
+         if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_1x12, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_12x1, ss, calldeflist))) {
             do_matrix_expansion(ss, CONCPROP__NEED_1X12, TRUE);
@@ -1487,7 +1487,7 @@ static int divide_the_setup(
          /* See if this call has applicable 1x16 definitions and matrix expansion is permitted.
             If so, that is what we must do. */
 
-         if (  !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX) &&
+         if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_1x16, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_16x1, ss, calldeflist))) {
             do_matrix_expansion(ss, CONCPROP__NEED_1X16, TRUE);
@@ -1511,7 +1511,7 @@ static int divide_the_setup(
    
          goto divide_us_no_recompute;
       case s2x2:
-         ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
          /* Any 2x2 -> 2x2 call that acts by dividing itself into 1x2's
             is presumed to want the people in each 1x2 to stay near each other.
@@ -1557,7 +1557,7 @@ static int divide_the_setup(
                goto divide_us_no_recompute;
 
             if (losing) {
-               if (ss->setupflags & SETUPFLAG__PHANTOMS)
+               if (ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)
                   fail("Sorry, should have people do their own part, but don't know how.");
                else
                   fail("People are not working with each other in a consistent way.");
@@ -1571,7 +1571,6 @@ static int divide_the_setup(
                inconsistent with our decision. */
 
             unsigned long int elong = 0;
-            unsigned long int foo;
 
             if (assoc(b_2x1, ss, calldeflist)) {
                elong |= (2 -  (newtb & 1));
@@ -1588,14 +1587,13 @@ static int divide_the_setup(
                   goto divide_us_no_recompute;
             }
             else {
-               elong *= SETUPFLAG__ELONGATE_BIT;
-               foo = (ss->setupflags | ~elong) & SETUPFLAG__ELONGATE_MASK;
+               unsigned long int foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
 
                if (foo == 0) {
                   fail("Can't figure out who should be working with whom.");
                }
-               else if (foo == SETUPFLAG__ELONGATE_MASK) {
-                  /* We are in trouble if SETUPFLAG__NO_CHK_ELONG is off.
+               else if (foo == 3) {
+                  /* We are in trouble if CMD_MISC__NO_CHK_ELONG is off.
                      But, if there was a 1x1 definition, we allow it anyway.
                      This is what makes "you all" legal from lines.
                      The "U-turn-back" is done in a 2x2 that is elongated laterally.
@@ -1608,12 +1606,12 @@ static int divide_the_setup(
                      illegally separated.  Since they could have done it in 1x1's, we allow
                      it.  And, incidentally, we allow a roll afterwards. */
 
-                  if (!(ss->setupflags & SETUPFLAG__NO_CHK_ELONG) && !assoc(b_1x1, ss, calldeflist))
+                  if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG) && !assoc(b_1x1, ss, calldeflist))
                      fail("People are too far away to work with each other on this call.");
                   foo ^= elong;
                }
 
-               if (foo == (1*SETUPFLAG__ELONGATE_BIT))
+               if (foo == 1)
                   division_maps = &map_2x2v;
 
                goto divide_us_no_recompute;
@@ -1629,8 +1627,12 @@ static int divide_the_setup(
                facing appropriately.  Then do it concentrically. */
    
             if ((!(tinytb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-               (!(tinytb & 1) || assoc(b_2x1, ss, calldeflist))) {
-               concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
+                  (!(tinytb & 1) || assoc(b_2x1, ss, calldeflist))) {
+               setup_command foo;
+               foo.parseptr = parseptr;
+               foo.callspec = callspec;
+               foo.cmd_final_flags = final_concepts;
+               concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
                goto un_mirror;
             }
          }
@@ -1648,7 +1650,7 @@ static int divide_the_setup(
                phantom columns.)  We also enable this if the caller explicitly said
                "3x4 matrix". */
 
-            if (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) &&
+            if (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                division_maps = (*map_lists[s_2x3][1])[MPKIND__SPLIT][1];
@@ -1735,9 +1737,13 @@ static int divide_the_setup(
          
             sss.kind = s_qtag;
             sss.rotation = ss->rotation;
-            sss.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-            ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
-            move(&sss, parseptr, callspec, final_concepts, really_fudged, result);
+            sss.cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
+            sss.cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
+            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+            sss.cmd.parseptr = parseptr;
+            sss.cmd.callspec = callspec;
+            sss.cmd.cmd_final_flags = final_concepts;
+            move(&sss, really_fudged, result);
          }
 
          goto un_mirror;
@@ -1748,7 +1754,11 @@ static int divide_the_setup(
          }
          else if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
                   (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-            concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
+            setup_command foo;
+            foo.parseptr = parseptr;
+            foo.callspec = callspec;
+            foo.cmd_final_flags = final_concepts;
+            concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
             goto un_mirror;
          }
          else if ((livemask & 0x55) == 0) {    /* Check for stuff like "heads pass the ocean; side corners */
@@ -1776,7 +1786,11 @@ static int divide_the_setup(
 
             if ((!((tbi & 010) | (tbo & 001)) || assoc(b_1x2, ss, calldeflist)) &&
                      (!((tbi & 001) | (tbo & 010)) || assoc(b_2x1, ss, calldeflist))) {
-               concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
+               setup_command foo;
+               foo.parseptr = parseptr;
+               foo.callspec = callspec;
+               foo.cmd_final_flags = final_concepts;
+               concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
                goto un_mirror;
             }
          }
@@ -1811,7 +1825,7 @@ static int divide_the_setup(
          break;
       case s_trngl:
          if (assoc(b_2x2, ss, calldeflist)) {
-            if (ss->setupflags & SETUPFLAG__SAID_TRIANGLE) {
+            if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) {
                if (final_concepts & FINAL__TRIANGLE)
                   fail("'Triangle' concept is redundant.");
             }
@@ -1828,7 +1842,10 @@ static int divide_the_setup(
                fail("Can't figure out which way triangle point is facing.");
 
             final_concepts &= ~FINAL__TRIANGLE;
-            divided_setup_move(ss, parseptr, callspec, final_concepts, division_maps, phantest_ok, FALSE, result);
+            ss->cmd.parseptr = parseptr;
+            ss->cmd.callspec = callspec;
+            ss->cmd.cmd_final_flags = final_concepts;
+            divided_setup_move(ss, division_maps, phantest_ok, FALSE, result);
 
             switch (result->kind) {
                int rot;
@@ -1944,11 +1961,11 @@ static int divide_the_setup(
             flip the diamond".  Yes, it's stupid.  Now normalize_setup turned the centerless diamonds
             into a 1x8 (it needs to do that in order for "own the <points>, trade by flip the diamond"
             to work.  We must turn that 1x8 back into diamonds.  The "own the so-and-so" concept turns
-            on SETUPFLAG__PHANTOMS.  If this flag weren't on, we would have no business saying "I see
+            on CMD_MISC__PHANTOMS.  If this flag weren't on, we would have no business saying "I see
             phantoms in the center 2 spots of my wave, I'm allowed to think of this as a diamond."
             The same thing is done below for 2x4's and 1x4's. */
 
-         if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
+         if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
                   (ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1) == 0) {
             setup sstest = *ss;
 
@@ -1972,7 +1989,11 @@ static int divide_the_setup(
 
          if (!assoc(b_4x1, ss, calldeflist) && !assoc(b_1x4, ss, calldeflist) &&
                (assoc(b_2x1, ss, calldeflist) || assoc(b_1x2, ss, calldeflist) || assoc(b_1x1, ss, calldeflist))) {
-            concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
+            setup_command foo;
+            foo.parseptr = parseptr;
+            foo.callspec = callspec;
+            foo.cmd_final_flags = final_concepts;
+            concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
             goto un_mirror;
          }
 
@@ -1990,7 +2011,7 @@ static int divide_the_setup(
             If so, that is what we must do.  But if it has a 4x4 definition also, it is ambiguous,
             so we can't do it. */
 
-         if (  !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX) &&
+         if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                !assoc(b_4x4, ss, calldeflist) &&
                (!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist))) {
@@ -2002,7 +2023,7 @@ static int divide_the_setup(
          /* See long comment above for s1x8.  The test cases for this are "own the <points>, trade
             by flip the diamond", and "own the <points>, flip the diamond by flip the diamond". */
 
-         if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
+         if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
                   (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
             setup sstest = *ss;
             unsigned int tbtest;
@@ -2044,7 +2065,7 @@ static int divide_the_setup(
             everyone do their part if we say "heads into the middle and heads are standard in split phantom
             lines, partner trade". */
    
-         else if (     (((newtb & 011) != 011) || (ss->setupflags & SETUPFLAG__PHANTOMS))
+         else if (     (((newtb & 011) != 011) || (ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS))
                                                   &&
                        (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)))
             goto divide_us_no_recompute;
@@ -2063,7 +2084,11 @@ static int divide_the_setup(
             if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
                if ((!(tbo & 010) || assoc(b_2x1, ss, calldeflist)) &&
                         (!(tbo & 1) || assoc(b_1x2, ss, calldeflist))) {
-                  concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
+                  setup_command foo;
+                  foo.parseptr = parseptr;
+                  foo.callspec = callspec;
+                  foo.cmd_final_flags = final_concepts;
+                  concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
                   goto un_mirror;
                }
 
@@ -2096,9 +2121,9 @@ static int divide_the_setup(
                had previously set perpendicular to the 1x4 axis, overriding anything that may
                have been in the call definition. */
 
-            *desired_elongation_p = orig_elongation ^ RESULTFLAG__ELONGATE_MASK;
+            *desired_elongation_p = orig_elongation ^ 3;
             /* If the flags were zero and we complemented them so that both are set, that's not good. */
-            if (*desired_elongation_p == RESULTFLAG__ELONGATE_MASK)
+            if (*desired_elongation_p == 3)
                *desired_elongation_p = 0;
 
             division_maps = (*map_lists[s_1x2][1])[MPKIND__SPLIT][0];
@@ -2109,7 +2134,7 @@ static int divide_the_setup(
             by flip the diamond", and "tandem own the <points>, flip the diamond by flip the diamond",
             both from a tandem diamond (the point being that there will be only one of them.) */
 
-         if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
+         if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
                   (ss->people[1].id1 | ss->people[3].id1) == 0) {
             setup sstest = *ss;
 
@@ -2130,7 +2155,10 @@ static int divide_the_setup(
 
    divide_us_no_recompute:
 
-   divided_setup_move(ss, parseptr, callspec, final_concepts, division_maps, phantest_ok, FALSE, result);
+   ss->cmd.parseptr = parseptr;
+   ss->cmd.callspec = callspec;
+   ss->cmd.cmd_final_flags = final_concepts;
+   divided_setup_move(ss, division_maps, phantest_ok, FALSE, result);
 
    /* If expansion to a 2x3 occurred (because the call was, for example, a "pair the line"),
       and the two 2x3's are end-to-end in a 2x6, see if we can squash phantoms.  We squash both
@@ -2138,7 +2166,7 @@ static int divide_the_setup(
       been squashed anyway due to the top level normalization, but we want this to occur
       immediately, not just at the top level, though we can't think of a concrete example
       in which it makes a difference. */
-   if ((result->setupflags & RESULTFLAG__EXPAND_TO_2X3) && (result->kind == s2x6)) {
+   if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && (result->kind == s2x6)) {
       if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1)) {
          /* Inner spots are empty. */
          result->kind = s2x4;
@@ -2227,18 +2255,18 @@ extern void basic_move(
 
    switch (ss->kind) {
       case s2x2:
-         desired_elongation = ((ss->setupflags & SETUPFLAG__ELONGATE_MASK) / SETUPFLAG__ELONGATE_BIT) * RESULTFLAG__ELONGATE_BIT;
+         desired_elongation = ss->cmd.prior_elongation_bits;
          break;
       case s1x4: case sdmd:
-         desired_elongation = ((2 - (ss->rotation & 1)) * RESULTFLAG__ELONGATE_BIT);
+         desired_elongation = 2 - (ss->rotation & 1);
          break;
    }
 
    orig_elongation = desired_elongation;   /* We may need this later. */
 
-   if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) desired_elongation ^= RESULTFLAG__ELONGATE_MASK;
+   if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) desired_elongation ^= 3;
    /* If the flags were zero and we complemented them so that both are set, that's not good. */
-   if (desired_elongation == RESULTFLAG__ELONGATE_MASK)
+   if (desired_elongation == 3)
       desired_elongation = 0;
 
    /* Attend to a few details. */
@@ -2250,7 +2278,7 @@ extern void basic_move(
          if (final_concepts & FINAL__SPLIT_SQUARE_APPROVED) {
             unsigned int i1, i2, p1, p2;
 
-            ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
             /* Find out who are facing each other directly and will therefore start. */
    
@@ -2420,7 +2448,10 @@ extern void basic_move(
 
       divide_us:
 
-      divided_setup_move(ss, parseptr, callspec, final_concepts, division_maps, phantest_ok, TRUE, result);
+      ss->cmd.parseptr = parseptr;
+      ss->cmd.callspec = callspec;
+      ss->cmd.cmd_final_flags = final_concepts;
+      divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
       goto un_mirror;
    }
    
@@ -2481,7 +2512,7 @@ extern void basic_move(
    led us to make this a warning.  It was originally an error.  Which is correct?
    It is probably best to leave it as a warning of the "don't use in resolve" type.
 
-      if (ss->setupflags & SETUPFLAG__SAID_SPLIT) {
+      if (ss->setupflags & CMD_MISC__SAID_SPLIT) {
          switch (ss->kind) {
             case s2x2:
                if (!assoc(b_2x4, ss, calldeflist) && !assoc(b_4x2, ss, calldeflist))
@@ -2503,7 +2534,7 @@ extern void basic_move(
       if (final_concepts & FINAL__TRIANGLE)
          fail("Triangle concept not allowed here.");
 
-      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
       goto do_the_call;
    }
 
@@ -2515,7 +2546,7 @@ extern void basic_move(
 
    /* First, see if adding a "12 matrix" or "16 matrix" modifier to the call will help.
       We need to be very careful about this.  The code below will divide, for example,
-      a 2x6 into 2x3's if SETUPFLAG__EXPLICIT_MATRIX is on (that is, if the caller
+      a 2x6 into 2x3's if CMD_MISC__EXPLICIT_MATRIX is on (that is, if the caller
       said "2x6 matrix") and the call has a 2x3 definition.  This is what makes
       "2x6 matrix double play" work correctly from parallelogram columns, while
       just "double play" is not legal.  We take the position that the division of the
@@ -2534,7 +2565,7 @@ extern void basic_move(
       we would split the setup and do the circulate in each 2x3, which is not
       what people want. */
       
-   if (matrix_check_flag == 0 && (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) {
+   if (matrix_check_flag == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
       if (ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12) matrix_check_flag |= INHERITFLAG_12_MATRIX;
       else matrix_check_flag |= INHERITFLAG_16_MATRIX;
 
@@ -2565,7 +2596,7 @@ extern void basic_move(
 
    do_the_call:
 
-   ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
    funny = final_concepts & INHERITFLAG_FUNNY;
    inconsistent_rotation = 0;
@@ -2692,8 +2723,8 @@ extern void basic_move(
          (void) copy_person(&outers, k, &p1, k+4);
       }
 
-      inners.setupflags = 0;
-      outers.setupflags = 0;
+      inners.result_flags = 0;
+      outers.result_flags = 0;
       inners.kind = goodies->end_setup_in;
       outers.kind = goodies->end_setup_out;
       inners.rotation = goodies->callarray_flags & CAF__ROT;
@@ -3099,6 +3130,6 @@ extern void basic_move(
    /* We take out any elongation info that divided_setup_move may have put in
       and override it with the correct info. */
 
-   result->setupflags &= ~RESULTFLAG__ELONGATE_MASK;
-   result->setupflags |= resultflags | desired_elongation;
+   result->result_flags &= ~RESULTFLAG__ELONGATE_MASK;
+   result->result_flags |= resultflags | (desired_elongation * RESULTFLAG__ELONGATE_BIT);
 }

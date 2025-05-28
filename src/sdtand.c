@@ -308,7 +308,7 @@ Private void unpack_us(
 
    result->kind = map_ptr->outsetup;
    result->rotation = tandstuff->virtual_result.rotation - map_ptr->rot;
-   result->setupflags = tandstuff->virtual_result.setupflags;
+   result->result_flags = tandstuff->virtual_result.result_flags;
 
    for (i=0, m=map_ptr->insinglemask, o=orbitmask; i<map_ptr->limit; i++, m>>=2, o>>=2) {
       int z = tandstuff->virtual_result.people[i].id1;
@@ -434,7 +434,7 @@ Private void pack_us(
                some phantom concept was used (either something like "phantom tandem" or some other
                phantom concept such as "split phantom lines"). */
 
-            if (!(tandstuff->virtual_setup.setupflags & SETUPFLAG__PHANTOMS)) {
+            if (!(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
                if ((((f.id1 ^ b.id1) | (f.id1 ^ b2.id1) | (f.id1 ^ b3.id1)) & BIT_PERSON))
                   fail("Use \"phantom\" concept in front of this concept.");
             }
@@ -539,9 +539,6 @@ Private void pack_us(
 
 extern void tandem_couples_move(
    setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
    selector_kind selector,
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
@@ -567,6 +564,10 @@ extern void tandem_couples_move(
    long_boolean fractional = FALSE;
    tm_thing *our_map_table;
 
+   parse_block *parseptr = ss->cmd.parseptr;
+   callspec_block *callspec = ss->cmd.callspec;
+   final_set final_concepts = ss->cmd.cmd_final_flags;
+
    conceptptrcopy = parseptr;
    tandstuff.single_mask = 0;
    clear_people(result);
@@ -575,9 +576,9 @@ extern void tandem_couples_move(
 
    /* We use the phantom indicator to forbid an already-distorted setup.
       The act of forgiving phantom pairing is based on the setting of the
-      SETUPFLAG__PHANTOMS bit in the incoming setup, not on the phantom indicator. */
+      CMD_MISC__PHANTOMS bit in the incoming setup, not on the phantom indicator. */
 
-   if ((ss->setupflags & SETUPFLAG__DISTORTED) && (phantom != 0))
+   if ((ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) && (phantom != 0))
       fail("Can't specify phantom tandem/couples in virtual or distorted setup.");
 
    /* Find out who is selected, if this is a "so-and-so are tandem". */
@@ -714,12 +715,16 @@ extern void tandem_couples_move(
    }
 
    tandstuff.np = np;
-   tandstuff.virtual_setup.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+   tandstuff.virtual_setup.cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
+   tandstuff.virtual_setup.cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
    pack_us(ss->people, map, fraction, twosome, tnd_cpl_siam, &tandstuff);
    update_id_bits(&tandstuff.virtual_setup);
    saved_originals = tandstuff.virtual_setup;    /* Move will clobber the incoming setup.  This bug caused
                                                     embarrassment at an ATA dance, April 3, 1993. */
-   move(&tandstuff.virtual_setup, conceptptrcopy, callspec, final_concepts, FALSE, &tandstuff.virtual_result);
+   tandstuff.virtual_setup.cmd.parseptr = conceptptrcopy;
+   tandstuff.virtual_setup.cmd.callspec = callspec;
+   tandstuff.virtual_setup.cmd.cmd_final_flags = final_concepts;
+   move(&tandstuff.virtual_setup, FALSE, &tandstuff.virtual_result);
 
    if (setup_limits[tandstuff.virtual_result.kind] < 0)
       fail("Don't recognize ending position from this tandem or as couples call.");

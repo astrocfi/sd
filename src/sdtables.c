@@ -903,12 +903,13 @@ int begin_sizes[] = {
 startinfo startinfolist[] = {
    {
       "???",      /* A non-existent setup. */
-      FALSE,
+      FALSE,                         /* into_the_middle */
       {
-         nothing,
-         0,
+         nothing,                    /* kind */
+         1,                          /* rotation */
+         {0},                        /* cmd */
          {{0,0}},
-         1
+         0,
       }
    },
    {
@@ -916,10 +917,10 @@ startinfo startinfolist[] = {
       FALSE,                         /* into_the_middle */
       {
          s2x4,                       /* kind */
-         0,                          /* setupflags */
+         1,                          /* rotation */
+         {0},                        /* cmd */
          {{G2A|d_south,G2B}, {B2A|d_south,B2B}, {G1A|d_south,G1B}, {B1A|d_south,B1B},
-            {G4A|d_north,G4B}, {B4A|d_north,B4B}, {G3A|d_north,G3B}, {B3A|d_north,B3B}},
-         1                           /* rotation */
+            {G4A|d_north,G4B}, {B4A|d_north,B4B}, {G3A|d_north,G3B}, {B3A|d_north,B3B}}
       }
    },
    {
@@ -927,10 +928,10 @@ startinfo startinfolist[] = {
       FALSE,                         /* into_the_middle */
       {
          s2x4,                       /* kind */
-         0,                          /* setupflags */
+         0,                          /* rotation */
+         {0},                        /* cmd */
          {{G3A|d_south,G3B}, {B3A|d_south,B3B}, {G2A|d_south,G2B}, {B2A|d_south,B2B},
-            {G1A|d_north,G1B}, {B1A|d_north,B1B}, {G4A|d_north,G4B}, {B4A|d_north,B4B}},
-         0                           /* rotation */
+            {G1A|d_north,G1B}, {B1A|d_north,B1B}, {G4A|d_north,G4B}, {B4A|d_north,B4B}}
       }
    },
    {
@@ -938,10 +939,10 @@ startinfo startinfolist[] = {
       TRUE,                          /* into_the_middle */
       {
          s2x4,                       /* kind */
-         0,                          /* setupflags */
+         0,                          /* rotation */
+         {0},                        /* cmd */
          {{B4A|d_east,B4B}, {G3A|d_south,G3B}, {B3A|d_south,B3B}, {G2A|d_west,G2B},
-            {B2A|d_west,B2B}, {G1A|d_north,G1B}, {B1A|d_north,B1B}, {G4A|d_east,G4B}},
-         0                           /* rotation */
+            {B2A|d_west,B2B}, {G1A|d_north,G1B}, {B1A|d_north,B1B}, {G4A|d_east,G4B}}
       }
    },
    {
@@ -949,10 +950,10 @@ startinfo startinfolist[] = {
       TRUE,                          /* into_the_middle */
       {
          s2x4,                       /* kind */
-         0,                          /* setupflags */
+         1,                          /* rotation */
+         {0},                        /* cmd */
          {{B3A|d_east,B3B}, {G2A|d_south,G2B}, {B2A|d_south,B2B}, {G1A|d_west,G1B},
-            {B1A|d_west,B1B}, {G4A|d_north,G4B}, {B4A|d_north,B4B}, {G3A|d_east,G3B}},
-         1                           /* rotation */
+            {B1A|d_west,B1B}, {G4A|d_north,G4B}, {B4A|d_north,B4B}, {G3A|d_east,G3B}}
       }
    },
    {
@@ -960,11 +961,11 @@ startinfo startinfolist[] = {
       FALSE,                         /* into_the_middle */
       {
          s4x4,                       /* kind */
-         0,                          /* setupflags */
+         0,                          /* rotation */
+         {0},                        /* cmd */
          {{0,0}, {G2A|d_west,G2B}, {B2A|d_west,B2B}, {0,0}, {0,0}, {G1A|d_north,G1B},
             {B1A|d_north,B1B}, {0,0}, {0,0}, {G4A|d_east,G4B}, {B4A|d_east,B4B}, {0,0},
-            {0,0}, {G3A|d_south,G3B}, {B3A|d_south,B3B}, {0,0}},
-         0                           /* rotation */
+            {0,0}, {G3A|d_south,G3B}, {B3A|d_south,B3B}, {0,0}}
       }
    }
 #ifdef RIPNSNORT
@@ -973,10 +974,10 @@ startinfo startinfolist[] = {
       TRUE,                          /* into_the_middle */
       {
          s2x4,                       /* kind */
-         0,                          /* setupflags */
+         0,                          /* rotation */
+         {0},                        /* cmd */
          {{B4A|d_south,B4B}, {G3A|d_west,G3B}, {B3A|d_east,B3B}, {G2A|d_south,G2B},
-            {B2A|d_south,B2B}, {G1A|d_west,G1B}, {B1A|d_east,B1B}, {G4A|d_south,G4B}},
-         0                           /* rotation */
+            {B2A|d_south,B2B}, {G1A|d_west,G1B}, {B1A|d_east,B1B}, {G4A|d_south,G4B}}
       }
    }
 #endif

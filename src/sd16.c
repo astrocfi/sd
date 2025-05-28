@@ -32,7 +32,6 @@ extern void phantom_2x4_move(
    int lineflag,
    phantest_kind phantest,
    map_thing *maps,
-   parse_block *parseptr,
    setup *result)
 {
    setup resv;
@@ -88,8 +87,8 @@ extern void phantom_2x4_move(
    if (vflag) {
       vpeople.rotation--;
       canonicalize_rotation(&vpeople);
-      divided_setup_move(&vpeople, parseptr, NULLCALLSPEC, 0, maps, newphantest, 0, &resv);
-      finalsetupflags |= resv.setupflags;
+      divided_setup_move(&vpeople, maps, newphantest, 0, &resv);
+      finalsetupflags |= resv.result_flags;
       resv.rotation++;
       canonicalize_rotation(&resv);
    }
@@ -99,13 +98,13 @@ extern void phantom_2x4_move(
    /* Do the N-S facing people. */
 
    if (hflag) {
-      divided_setup_move(&hpeople, parseptr, NULLCALLSPEC, 0, maps, newphantest, 0, result);
-      finalsetupflags |= result->setupflags;
+      divided_setup_move(&hpeople, maps, newphantest, 0, result);
+      finalsetupflags |= result->result_flags;
    }
    else
       result->kind = nothing;
   
    merge_setups(&resv, merge_strict_matrix, result);
-   result->setupflags = finalsetupflags;
+   result->result_flags = finalsetupflags;
    reinstate_rotation(ss, result);
 }

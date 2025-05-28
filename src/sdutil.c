@@ -168,9 +168,34 @@ Private void writechar(char src)
 }
 
 
+/* Getting blanks into all the right places in the presence of substitions,
+   insertions, and elisions is way too complicated to do in the database or
+   to test.  For example, consider calls like "@4keep @5busy@1",
+   "fascinat@pe@q@ning@o@t", or "spin the pulley@7 but @8".  So we try to
+   help by never putting two blanks together, always putting blanks adjacent
+   to the outside of brackets, and never putting blanks adjacent to the
+   inside of brackets.  This procedure is part of that mechanism. */
+Private void write_blank_if_needed(void)
+{
+   if (lastchar != ' ' && lastchar != '[' && lastchar != '-') writestuff(" ");
+}
+
+
+
 extern void newline(void)
 {
-   /* Erase any trailing blanks. */
+   /* Erase any trailing blanks.  Failure to do so can lead to some
+      incredibly obscure bugs when some editors on PC's try to "fix"
+      the file, ultimately leading to apparent loss of entire sequences.
+      The problem was that the editor took out the trailing blanks
+      and moved the rest of the text downward, but didn't reduce the
+      file's byte count.  Control Z's were thereby introduced at the
+      end of the file.  Subsequent runs of Sd appended new sequences
+      to the file, leaving the ^Z's intact.  (Making Sd look for ^Z's
+      at the end of a file it is about to append to, and remove same,
+      is very hard.)  It turns out that some printing software stops,
+      as though it reached the end of the file, when it encounters a
+      ^Z, so the appended sequences were effectively lost. */
    while (destcurr != current_line && destcurr[-1] == ' ') destcurr--;
 
    *destcurr = '\0';
@@ -376,7 +401,7 @@ char *direction_names[] = {
    NULL};         /* The X11 interface uses this when making the popup text. */
 
 
-/* BEWARE!!  These strings are keyed to the definitions of "warn__<whatever>" in sd.h . */
+/* BEWARE!!  These strings are keyed to the definitions of "warn__???" in sd.h . */
 Private char *warning_strings[] = {
    /*  warn__none                */   "Unknown warning????",
    /*  warn__do_your_part        */   "Do your part.",
@@ -422,12 +447,15 @@ Private char *warning_strings[] = {
    /*  warn__split_to_2x4s       */   "Do the call in each 2x4.",
    /*  warn__split_to_2x3s       */   "Do the call in each 2x3.",
    /*  warn__split_to_1x8s       */   "Do the call in each 1x8.",
-   /*  warn__split_to_1x6s       */   "Do the call in each 1x6."};
+   /*  warn__split_to_1x6s       */   "Do the call in each 1x6.",
+   /*  warn__evil_interlocked    */   "Interlocked phantom shape-changers are very evil.",
+   /*  warn__split_phan_in_pgram */   "The split phantom setups are directly adjacent to the real people."};
 
 /* Bits that go into argument to print_recurse. */
 #define PRINT_RECURSE_STAR 01
 #define PRINT_RECURSE_TAGREACT 02
 #define PRINT_RECURSE_TAGENDING 04
+
 
 Private void print_recurse(parse_block *thing, int print_recurse_arg)
 {
@@ -762,7 +790,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
                   switch (savec) {
                      case '6': case 'k':
-                        if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                        write_blank_if_needed();
                         if (savec == '6')
                            writestuff(selector_names[i16junk]);
                         else
@@ -772,14 +800,14 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         np += 2;       /* skip the digit */
                         break;
                      case 'h':                   /* Need to plug in a direction. */
-                        if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                        write_blank_if_needed();
                         writestuff(direction_names[idirjunk]);
                         if (np[2] && np[2] != ' ' && np[2] != ']')
                            writestuff(" ");
                         np += 2;       /* skip the indicator */
                         break;
                      case '9': case 'a': case 'b':    /* Need to plug in a number. */
-                        if (lastchar != ' ' && lastchar != ' ' && lastchar != '[' && lastchar != '-') writestuff(" ");
+                        write_blank_if_needed();
                         nn[0] = '0' + (number_list & 0xF);
                         nn[1] = '\0';
                         if (savec == '9')
@@ -840,7 +868,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         }
    
                         if (pending_subst2 && savec != 'p' && savec != 'n') {
-                           if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                           write_blank_if_needed();
                            writestuff("[");
                            print_recurse(sub2_ptr, next_recurse2_arg | PRINT_RECURSE_STAR);
                            writestuff("]");
@@ -865,7 +893,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         }
          
                         if (pending_subst1 && savec != '4' && savec != '7') {
-                           if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                           write_blank_if_needed();
                            writestuff("[");
                            print_recurse(sub1_ptr, next_recurse1_arg | PRINT_RECURSE_STAR);
                            writestuff("]");
@@ -905,7 +933,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             while (search) {
                subsidiary_ptr = search->subsidiary_root;
                if (subsidiary_ptr) {
-
                   switch (search->concept->kind) {
                      case concept_another_call_next_mod:
                      case concept_another_call_next_modreact:
@@ -913,7 +940,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                      case concept_another_call_next_plain:
                         /* This is a natural replacement.  It may already have been taken care of. */
                         if (pending_subst1 || search->concept->kind == concept_another_call_next_plain) {
-                           writestuff(" [modification: ");
+                           write_blank_if_needed();
+                           writestuff("[modification: ");
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                            writestuff("]");
                         }
@@ -923,7 +951,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                      case concept_another_call_next_2ndtag:
                         /* This is a secondary replacement.  It may already have been taken care of. */
                         if (pending_subst2) {
-                           writestuff(" [modification: ");
+                           write_blank_if_needed();
+                           writestuff("[modification: ");
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                            writestuff("]");
                         }
@@ -932,20 +961,20 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         /* This is a forced replacement.  Need to check for case of replacing
                            one star turn with another. */
                         localcall = search->call;
-   
+                        write_blank_if_needed();
                         if ((!(first_replace++)) && subsidiary_ptr &&
                               (localcall->callflags1 & CFLAG1_IS_STAR_CALL) &&
                                     ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
                                     (subsidiary_ptr->concept->kind == concept_another_call_next_mod)) &&
                               (subsidiary_ptr->call) &&
                               (subsidiary_ptr->call->callflags1 & CFLAG1_IS_STAR_CALL)) {
-                           writestuff(" BUT [");
+                           writestuff("BUT [");
                         }
                         else {
                            if (first_replace == 1)
-                              writestuff(" BUT REPLACE ");
+                              writestuff("BUT REPLACE ");
                            else
-                              writestuff(" AND REPLACE ");
+                              writestuff("AND REPLACE ");
                            writestuff(localcall->name);
                            writestuff(" WITH [");
                         }
@@ -1240,7 +1269,7 @@ extern void display_initial_history(int upper_limit, int num_pics)
       /* We lose, there is nothing we can use. */
       clear_screen();
 #ifndef THINK_C			/* Mac interface provides "About Sd" popup instead */
-      write_header_stuff();
+      write_header_stuff(TRUE);
       newline();
 #endif
       startpoint = 1;

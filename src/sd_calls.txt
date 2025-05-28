@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "30.0"
+version "30.01"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -5481,15 +5481,15 @@ call "with finesse" c4a
 call "polly wally" c3a
             reverse_means_mirror
    setup 4x2 2x4 rotate
-      array [5E 2W 7E 0E 1E 6E 3W 4E]
+      array [CR5E CAL2W AL7E AL0E AL1E AL6E CAL3W CR4E]
             alternate_definition [single] c3a
    setup 4x1 2x2
-      array [R3S 2N L1S 0S]
+      array [CR3S CAL2N AL1S AL0S]
             alternate_definition [grand single] c4
    setup 8x1 2x4
-      array [7S 6N 5N 0S 3S 2S 1S 4N]
+      array [CR7S CAL6N CAL5N AL0S AL3S AL2S AL1S CAL4N]
    setup 6x1 2x3
-      array [5S 4N 0S 2S 1S 3N]
+      array [CR5S CAL4N AL0S AL2S AL1S CAL3N]
 
 call "_sidetrack part 1" dontshow tag sidetrack1
             reverse_means_mirror
@@ -7217,7 +7217,7 @@ call "_finish stimulate" dontshow tag finstim
    setup 4x2 2x4 rotate restriction forbidden wave_only
    array [6E 1E 3E 4E 7E 0E 2E 5E]
 
-call "@1stimulate" c4a
+call "@1stimulate the column" c4a
             first_part_visible finish_means_skip_first_part
    seq colcirc [or_anycall]
    seq finstim []

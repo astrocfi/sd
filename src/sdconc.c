@@ -206,10 +206,10 @@ extern void normalize_concentric(
       calls run out of parts at the same time, and, when that happens, we
       report it to the higher level in the recursion. */
 
-   if ((inners[0].setupflags ^ outers->setupflags) & RESULTFLAG__DID_LAST_PART)
+   if ((inners[0].result_flags ^ outers->result_flags) & RESULTFLAG__DID_LAST_PART)
       fail("Centers and ends parts must use the same number of fractions.");
 
-   result->setupflags = inners[0].setupflags | outers->setupflags;
+   result->result_flags = inners[0].result_flags | outers->result_flags;
 
    if (inners[0].kind == nothing && outers->kind == nothing) {
       result->kind = nothing;
@@ -227,14 +227,14 @@ extern void normalize_concentric(
       if (inners[0].kind == nothing) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
-         inners[0].setupflags = outers->setupflags;
+         inners[0].result_flags = outers->result_flags;
          clear_people(&inners[0]);
       }
 
       if (inners[1].kind == nothing) {
          inners[1].kind = s_star;
          inners[1].rotation = 0;
-         inners[1].setupflags = outers->setupflags;
+         inners[1].result_flags = outers->result_flags;
          clear_people(&inners[1]);
       }
 
@@ -253,21 +253,21 @@ extern void normalize_concentric(
       if (inners[0].kind == nothing) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
-         inners[0].setupflags = outers->setupflags;
+         inners[0].result_flags = outers->result_flags;
          clear_people(&inners[0]);
       }
 
       if (inners[1].kind == nothing) {
          inners[1].kind = s_star;
          inners[1].rotation = 0;
-         inners[1].setupflags = outers->setupflags;
+         inners[1].result_flags = outers->result_flags;
          clear_people(&inners[1]);
       }
 
       if (inners[2].kind == nothing) {
          inners[2].kind = s_star;
          inners[2].rotation = 0;
-         inners[2].setupflags = outers->setupflags;
+         inners[2].result_flags = outers->result_flags;
          clear_people(&inners[2]);
       }
 
@@ -287,14 +287,14 @@ extern void normalize_concentric(
       if (inners[0].kind == nothing) {
          inners[0].kind = outers->kind;
          inners[0].rotation = outers->rotation;
-         inners[0].setupflags = outers->setupflags;
+         inners[0].result_flags = outers->result_flags;
          clear_people(&inners[0]);
          i = 0;
       }
       else if (outers->kind == nothing) {
          outers->kind = inners[0].kind;
          outers->rotation = inners[0].rotation;
-         outers->setupflags = inners[0].setupflags;
+         outers->result_flags = inners[0].result_flags;
          clear_people(outers);
          i = 0;
       }
@@ -346,7 +346,7 @@ extern void normalize_concentric(
       if (inners[0].kind == nothing && outers->kind == s1x4) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
-         inners[0].setupflags = outers->setupflags;
+         inners[0].result_flags = outers->result_flags;
          clear_people(&inners[0]);
          goto compute_rotation_again;
       }
@@ -354,7 +354,7 @@ extern void normalize_concentric(
          /* The test case for this is: RWV:intlkphanbox relay top;splitphanbox flip reaction. */
          outers->kind = s1x4;
          outers->rotation = inners[0].rotation;
-         outers->setupflags = inners[0].setupflags;
+         outers->result_flags = inners[0].result_flags;
          clear_people(outers);
          goto compute_rotation_again;
       }
@@ -374,21 +374,21 @@ extern void normalize_concentric(
       if (outers->kind == nothing && inners[0].kind == s1x4) {
          outers->kind = s_star;
          outers->rotation = 0;
-         outers->setupflags = inners[0].setupflags;
+         outers->result_flags = inners[0].result_flags;
          clear_people(outers);
          goto compute_rotation_again;
       }
       else if (outers->kind == nothing && inners[0].kind == s_star) {
          outers->kind = s1x4;
          outers->rotation = outer_elongation;
-         outers->setupflags = inners[0].setupflags;
+         outers->result_flags = inners[0].result_flags;
          clear_people(outers);
          goto compute_rotation_again;
       }
       else if (outers->kind == s1x4 && inners[0].kind == nothing) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
-         inners[0].setupflags = outers->setupflags;
+         inners[0].result_flags = outers->result_flags;
          clear_people(&inners[0]);
          goto compute_rotation_again;
       }
@@ -458,14 +458,14 @@ extern void normalize_concentric(
       if (inners[0].kind == nothing) {
          inners[0].kind = outers->kind;
          inners[0].rotation = outers->rotation;
-         inners[0].setupflags = outers->setupflags;
+         inners[0].result_flags = outers->result_flags;
          clear_people(&inners[0]);
          i = 0;
       }
       else if (outers->kind == nothing) {
          outers->kind = inners[0].kind;
          outers->rotation = inners[0].rotation;
-         outers->setupflags = inners[0].setupflags;
+         outers->result_flags = inners[0].result_flags;
          clear_people(outers);
          i = 0;
       }
@@ -799,8 +799,10 @@ Private void concentrify(
    clear_people(outers);
    clear_people(&inners[0]);
 
-   outers->setupflags = ss->setupflags;
-   inners[0].setupflags = ss->setupflags;
+   outers->cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
+   inners[0].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
+   outers->cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
+   inners[0].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
 
    *center_arity = 1;
 
@@ -1010,7 +1012,8 @@ Private void concentrify(
    if (lmap_ptr == &map_spec_star12) {
       *center_arity = 2;
       clear_people(&inners[1]);
-      inners[1].setupflags = ss->setupflags;
+      inners[1].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
+      inners[1].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
       inners[1].kind = lmap_ptr->insetup;
       inners[1].rotation = ss->rotation;
       (void) copy_person(&inners[1], 0, ss, 10);
@@ -1022,8 +1025,10 @@ Private void concentrify(
       *center_arity = 3;
       clear_people(&inners[1]);
       clear_people(&inners[2]);
-      inners[1].setupflags = ss->setupflags;
-      inners[2].setupflags = ss->setupflags;
+      inners[1].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
+      inners[2].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
+      inners[1].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
+      inners[2].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
       inners[1].kind = lmap_ptr->insetup;
       inners[2].kind = lmap_ptr->insetup;
       inners[1].rotation = ss->rotation;
@@ -1098,12 +1103,8 @@ warning_index concwarndmdtable[] = {warn__xcdmdconc_perp, warn__dmdconc_perp, wa
 
 extern void concentric_move(
    setup *ss,
-   parse_block *parsein,
-   parse_block *parseout,
-   callspec_block *callspecin,
-   callspec_block *callspecout,
-   final_set final_conceptsin,
-   final_set final_conceptsout,
+   setup_command *cmdin,
+   setup_command *cmdout,
    calldef_schema analyzer,
    defmodset modifiersin1,
    defmodset modifiersout1,
@@ -1137,7 +1138,7 @@ extern void concentric_move(
    int saved_number_fields = current_number_fields;
 
    /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
-   ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
    for (i=0; i<8; i++) {
       orig_inners_start_directions[i] =
@@ -1181,36 +1182,43 @@ extern void concentric_move(
       final_outers_start_directions = orig_outers_start_directions;
    }
 
-   begin_inner[0].setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   begin_inner[1].setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   begin_inner[2].setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+   begin_inner[0].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
+   begin_inner[1].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
+   begin_inner[2].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
+   begin_inner[0].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
+   begin_inner[1].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
+   begin_inner[2].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
 
    /* If the call turns out to be "detour", this will make it do just the ends part. */
-   begin_outer.setupflags = ss->setupflags | SETUPFLAG__DISTORTED | SETUPFLAG__DOING_ENDS;
+   begin_outer.cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED | CMD_MISC__DOING_ENDS;
+   begin_outer.cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
 
    /* There are two special pieces of information we now have that will help us decide where to
-      put the outsides.  "Orig_outers_kind" tells what setup the outsides were originally in,
+      put the outsides.  "Orig_outers_start_kind" tells what setup the outsides were originally in,
       and "begin_outer_elongation" is odd if the outsides were oriented vertically.
       "begin_outer_elongation" refers to absolute orientation, that is, "our" view of the
-      setups, taking all rotations into account.  "Final_outers_start_dir" gives the individual
+      setups, taking all rotations into account.  "final_outers_start_directions" gives the individual
       orientations (absolute) of the people who are finishing on the outside.  Later, we will compute
       "final_outers_finish_dirs", telling how the individual people were oriented.  How we use all this
       information depends on many things that we will attend to below. */
 
    /* Giving one of the concept descriptor pointers as nil indicates that we don't want those people to do anything. */
 
-   if (parsein) {
+   if (cmdin) {
       for (k=0; k<center_arity; k++) {
          update_id_bits(&begin_inner[k]);
          current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersin1) / DFM1_NUM_SHIFT_BIT) * 4;
-         move(&begin_inner[k], parsein, callspecin, final_conceptsin, FALSE, &result_inner[k]);
+         begin_inner[k].cmd.parseptr = cmdin->parseptr;
+         begin_inner[k].cmd.callspec = cmdin->callspec;
+         begin_inner[k].cmd.cmd_final_flags = cmdin->cmd_final_flags;
+         move(&begin_inner[k], FALSE, &result_inner[k]);
          current_number_fields = saved_number_fields;
       }
    }
    else {
       for (k=0; k<center_arity; k++) {
          result_inner[k] = begin_inner[k];
-         result_inner[k].setupflags = 0;
+         result_inner[k].result_flags = 0;
          /* Strip out the roll bits -- people who didn't move can't roll. */
          if (setup_limits[result_inner[k].kind] >= 0) {
             for (i=0; i<=setup_limits[result_inner[k].kind]; i++) {
@@ -1220,9 +1228,9 @@ extern void concentric_move(
       }
    }
 
-   if (parseout) {
+   if (cmdout) {
       /* If the ends' starting setup is a 2x2, and we did not say "concentric" (indicated by
-         the "concentric rules" flag being off), we mark the setup as elongated.  If the call
+         the DFM1_CONC_CONCENTRIC_RULES flag being off), we mark the setup as elongated.  If the call
          turns out to be a 2-person call, the elongation will be checked against the pairings
          of people, and an error will be given if it isn't right.  This is what makes "cy-kick"
          illegal from diamonds, and "ends hinge" illegal from waves.  The reason this is turned
@@ -1234,7 +1242,7 @@ extern void concentric_move(
 
       if (begin_outer.kind == s2x2 && analyzer != schema_rev_checkpoint &&
             !(begin_outer_elongation & ~1)) {      /* We demand elongation be 0 or 1. */
-         begin_outer.setupflags |= ((begin_outer_elongation+1) * SETUPFLAG__ELONGATE_BIT);
+         begin_outer.cmd.prior_elongation_bits = begin_outer_elongation+1;
 
          /* If "demand lines" or "demand columns" has been given, we suppress elongation
             checking.  In that case, the database author knows what elongation is required
@@ -1245,20 +1253,23 @@ extern void concentric_move(
 
          if (((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS) & modifiersout1) ||
                (analyzer == schema_cross_concentric) || (analyzer == schema_single_cross_concentric))
-            begin_outer.setupflags |= SETUPFLAG__NO_CHK_ELONG;
+            begin_outer.cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
       }
 
       current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersout1) / DFM1_NUM_SHIFT_BIT) * 4;
       update_id_bits(&begin_outer);
       /* This call to "move" will fill in good stuff (viz. the DFM1_CONCENTRICITY_FLAG_MASK)
-         into begin_outer.setupflags, which we will use below to do various "force_lines",
+         into begin_outer.cmd.cmd_misc_flags, which we will use below to do various "force_lines",
          "demand_columns", etc. things. */
-      move(&begin_outer, parseout, callspecout, final_conceptsout, FALSE, &result_outer);
+      begin_outer.cmd.parseptr = cmdout->parseptr;
+      begin_outer.cmd.callspec = cmdout->callspec;
+      begin_outer.cmd.cmd_final_flags = cmdout->cmd_final_flags;
+      move(&begin_outer, FALSE, &result_outer);
       current_number_fields = saved_number_fields;
    }
    else {
       result_outer = begin_outer;
-      result_outer.setupflags = 0;
+      result_outer.result_flags = 0;
       localmodsout1 |= DFM1_CONC_FORCE_SPOTS;      /* Make sure these people go to the same spots. */
       /* Strip out the roll bits -- people who didn't move can't roll. */
       if (setup_limits[result_outer.kind] >= 0) {
@@ -1269,9 +1280,9 @@ extern void concentric_move(
    }
 
    /* If the call was something like "ends detour", the concentricity info was left in the
-      setupflags during the execution of the call, so we have to pick it up to make sure
+      cmd_misc_flags during the execution of the call, so we have to pick it up to make sure
       that the necessary "demand" and "force" bits are honored. */
-   localmodsout1 |= (begin_outer.setupflags & DFM1_CONCENTRICITY_FLAG_MASK);
+   localmodsout1 |= (begin_outer.cmd.cmd_misc_flags & DFM1_CONCENTRICITY_FLAG_MASK);
 
    /* Check whether the necessary "demand" conditions are met.  First, set "localmods1"
       to the demand info for the call that the original ends did.  Where this comes from
@@ -1390,7 +1401,7 @@ extern void concentric_move(
 
          result_outer.kind = s1x4;
          clear_people(&result_outer);
-         result_outer.setupflags = 0;
+         result_outer.result_flags = 0;
          result_outer.rotation = ss->rotation;
       }
       else if (analyzer == schema_concentric_diamond_line) {
@@ -1402,7 +1413,7 @@ extern void concentric_move(
                The test for this is 1P2P; touch 1/4; column circ; boys truck; split phantom
                lines tag chain thru reaction.  They should finish in outer triple boxes,
                not a 2x4. */
-            result_outer.setupflags = (result_inner[0].setupflags & ~RESULTFLAG__ELONGATE_MASK) |
+            result_outer.result_flags = (result_inner[0].result_flags & ~RESULTFLAG__ELONGATE_MASK) |
                   (((~ss->rotation & 1) + 1) * RESULTFLAG__ELONGATE_BIT);
          }
          else
@@ -1418,11 +1429,12 @@ extern void concentric_move(
             from columns far apart. */
    
          result_outer = begin_outer;               /* Restore the original bunch of phantoms. */
+         result_outer.result_flags = 0;
          /* Make sure these people go to the same spots, and remove possibly misleading info. */
          localmods1 |= DFM1_CONC_FORCE_SPOTS;
          localmods1 &= ~(DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS | DFM1_CONC_FORCE_OTHERWAY);
    
-         if (parseout && callspecout && (callspecout->schema == schema_nothing))
+         if (cmdout && cmdout->callspec && (cmdout->callspec->schema == schema_nothing))
             ;        /* It's OK. */
          else if (center_arity > 1)
             ;        /* It's OK. */
@@ -1466,7 +1478,7 @@ extern void concentric_move(
       else if (result_outer.kind == s2x2 && center_arity == 1) {
          result_inner[0].kind = s2x2;
          clear_people(&result_inner[0]);
-         result_inner[0].setupflags = 0;
+         result_inner[0].result_flags = 0;
          result_inner[0].rotation = 0;
       }
       /* If the ends are a 1x4, we just set the missing centers to a 1x4,
@@ -1477,7 +1489,7 @@ extern void concentric_move(
       else if (result_outer.kind == s1x4 && center_arity == 1) {
          result_inner[0].kind = s2x2;
          clear_people(&result_inner[0]);
-         result_inner[0].setupflags = 0;
+         result_inner[0].result_flags = 0;
          result_inner[0].rotation = result_outer.rotation;
       }
       else {
@@ -1580,9 +1592,9 @@ from a bone (heads left swing thru, side girl turn back).
             }
             else {
                /* Get the elongation from the result setup, if possible. */
-               unsigned long int newelong = ((result_outer.setupflags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) - 1;
+               unsigned long int newelong = ((result_outer.result_flags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) - 1;
 
-               if (result_outer.setupflags & RESULTFLAG__ELONGATE_MASK) {
+               if (result_outer.result_flags & RESULTFLAG__ELONGATE_MASK) {
                   if (final_elongation == newelong) {
                      warn(concwarntable[2]);
                   }
@@ -1633,6 +1645,9 @@ from a bone (heads left swing thru, side girl turn back).
             else if (DFM1_CONC_CONCENTRIC_RULES & localmods1) {       /* do "lines-to-lines / columns-to-columns" */
                int new_elongation = -1;
 
+               if (final_elongation < 0)
+                  fail("People who finish on the outside can't tell whether they started in line-like or column-like orientation.");
+
                for (i=0; i<8; i++) {
                   if (final_outers_finish_directions[i]) {
                      int t = (final_outers_start_directions[i] ^ final_outers_finish_directions[i] ^ final_elongation) & 1;
@@ -1649,7 +1664,7 @@ from a bone (heads left swing thru, side girl turn back).
                final_elongation = new_elongation;
             }
             else
-               final_elongation = ((result_outer.setupflags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) - 1;
+               final_elongation = ((result_outer.result_flags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) - 1;
 
             break;
          default:
@@ -2009,7 +2024,6 @@ extern void on_your_own_move(
    setup *ss,
    parse_block *parseptr,
    setup *result)
-
 {
    setup setup1, setup2, res1;
 
@@ -2020,17 +2034,20 @@ extern void on_your_own_move(
    clear_person(&setup1, 2);
    clear_person(&setup1, 5);
    clear_person(&setup1, 6);
-   setup1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED | SETUPFLAG__PHANTOMS;
-   move(&setup1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
+   setup1.cmd = ss->cmd;
+   setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
+   move(&setup1, FALSE, &res1);
 
    setup2 = *ss;              /* Get inners only. */
    clear_person(&setup2, 0);
    clear_person(&setup2, 3);
    clear_person(&setup2, 4);
    clear_person(&setup2, 7);
-   setup2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED | SETUPFLAG__PHANTOMS;
-   move(&setup2, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, result);
-   result->setupflags |= res1.setupflags;
+   setup1.cmd = ss->cmd;
+   setup2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
+   setup2.cmd.parseptr = parseptr->subsidiary_root;
+   move(&setup2, FALSE, result);
+   result->result_flags |= res1.result_flags;
    
    merge_setups(&res1, merge_strict_matrix, result);
 }
@@ -2041,7 +2058,6 @@ extern void so_and_so_only_move(
    setup *ss,
    parse_block *parseptr,
    setup *result)
-
 {
    selector_kind saved_selector;
    int i;
@@ -2072,23 +2088,26 @@ extern void so_and_so_only_move(
    
    normalize_setup(&setup1, normalize_before_isolated_call);
    normalize_setup(&setup2, normalize_before_isolated_call);
-   setup1.setupflags = ss->setupflags | SETUPFLAG__PHANTOMS;
-   setup2.setupflags = ss->setupflags | SETUPFLAG__PHANTOMS;
-   
-   move(&setup1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
+   setup1.cmd = ss->cmd;
+   setup1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
+   move(&setup1, FALSE, &res1);
    
    if (others) {     /* This is "own the <anyone>". */
-      move(&setup2, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, result);
+      setup2.cmd = ss->cmd;
+      setup2.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+      setup2.cmd.parseptr = parseptr->subsidiary_root;
+      move(&setup2, FALSE, result);
 
-      if ((res1.setupflags ^ result->setupflags) & RESULTFLAG__DID_LAST_PART)
+      if ((res1.result_flags ^ result->result_flags) & RESULTFLAG__DID_LAST_PART)
          fail("Two calls must use the same number of fractions.");
    
-      result->setupflags |= res1.setupflags;
+      result->result_flags |= res1.result_flags;
       merge_setups(&res1, merge_strict_matrix, result);
    }
    else {            /* This is "<anyone> do your part". */
       *result = setup2;
-      result->setupflags = res1.setupflags;
+      result->result_flags = res1.result_flags;
       merge_setups(&res1, merge_c1_phantom, result);
    }
 }

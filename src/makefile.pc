@@ -1,6 +1,6 @@
-# Generated automatically from makefile.pc.in by configure.
+# Generated automatically from Makefile.in by configure.
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <93/12/10 19:07:40 gildea>
+# Time-stamp: <93/12/05 18:21:33 gildea>
 
 srcdir = .
 # VPATH is for GNU make
@@ -210,11 +210,12 @@ dist-files: configure INSTALL README sd_doc.txt sd_doc.PS pc-files
 ls:
 	@echo $(DISTFILES)
 
-sd300bn: sdtty mkcalls sd_calls.dat
-	lha a $@ readme relnotes oldnotes copying
-	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
-	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps
-	lha s $@
+bnarc:
+	lharc a sd300bn readme install relnotes oldnotes copying \
+	 sd_calls.txt sd_calls.dat db_doc.txt \
+	 sdtty.exe mkcalls.exe go32.exe \
+	 sd_doc.txt sd_doc.ps
+	lharc s sd300bn
 
 pc-files: pcfiles.lnk makefile.pc
 

@@ -37,7 +37,9 @@ Getting Sd
 protocol.  The file `sd-nn.tar.Z' (where `nn' changes with the version)
 is a compressed tar file containing the sources.  The file
 `sdxxxbn.exe' (where `xxx' changes with the version) is a
-self-extracting DOS archive containing a pre-built executable.
+self-extracting DOS archive containing a pre-built executable.  The
+file `MacSdxxx.Hqx' (where `xxx' changes with the version) is a
+self-extracting Macintosh archive containing a pre-built executable.
 
    If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail.  It

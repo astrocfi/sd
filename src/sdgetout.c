@@ -812,8 +812,6 @@ extern uims_reply full_resolve(search_kind goal)
    int current_resolve_index, max_resolve_index;
    long_boolean show_resolve;
    personrec *current_people = history[history_ptr].state.people;
-   int junk;
-   void *junk2;
    int current_depth = 0;
    long_boolean find_another_resolve = TRUE;
    resolver_display_state state; /* for display to the user */
@@ -851,7 +849,7 @@ extern uims_reply full_resolve(search_kind goal)
             specialfail("Not in acceptable setup for resolve.");
          break;
       case search_reconcile:
-         if (!reconcile_command_ok(&junk2, &junk))
+         if (!reconcile_command_ok())
             specialfail("Not in acceptable setup for reconcile, or sequence is too short, or concepts are selected.");
 
          for (j=0; j<8; j++)
@@ -1098,9 +1096,7 @@ extern int concepts_in_place(void)
 }
 
 
-/* If this returns TRUE, it drops useful stuff into the places that its arguments
-   point to.  If you don't want that, point the arguments at dummies. */
-extern int reconcile_command_ok(void **permutation_map_p, int *accept_extend_p)
+extern int reconcile_command_ok(void)
 {
    int k;
    int dirmask = 0;

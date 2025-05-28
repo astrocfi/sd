@@ -1135,8 +1135,6 @@ that involve those concepts.  Hence, this operation is useful for finding
 cute uses of difficult concepts such as @i{checkpoint},
 @i{interlace}, or @i{on your own}.
 
-In the Macintosh version, this command is called @code{pick random call}.
-
 @node Reconcile,  , Pick Random Call, Resolving and Searching
 @section The @code{Reconcile} operation
 

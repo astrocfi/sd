@@ -396,22 +396,20 @@ typedef enum {
    dfm_conc_force_columns            --  concdefine outers: force them to column spots when done
    dfm_conc_force_otherway           --  concdefine outers: force them to other spots when done
    dfm_conc_force_spots              --  concdefine outers: force them to same spots when done
-   dfm_conc_concentric_rules         --  concdefine outers: apply actual concentric ("lines-to-lines/columns-to-columns") rule
-   dfm_suppress_elongation_warnings  --  concdefine outers: suppress warn_lineconc_perp etc.
+   dfm1_conc_concentric_rules        --  concdefine outers: apply actual concentric ("lines-to-lines/columns-to-columns") rule
+   dfm1_suppress_elongation_warnings --  concdefine outers: suppress warn_lineconc_perp etc.
            NOTE: the above 8 flags are specified only in the second spec, even if the concept is
               cross-concentric, in which case the "demand" flags might be considered to belong
               with the first spec.
-   dfm_or_anycall                    --  concdefine/seqdefine: can substitute something if clicked on "allow mods"
-   dfm_mandatory_anycall             --  concdefine/seqdefine: always substitute something
-   dfm_repeat_n                      --  seqdefine: take a numeric argument and replicate this part N times
-   dfm_repeat_nm1                    --  seqdefine: take a numeric argument and replicate this part N-1 times
-   dfm_repeat_n_alternate            --  seqdefine: take a numeric argument and replicate this part and the next one N times alternately
-   dfm_endscando                     --  concdefine outers: can tell ends only to do this
-   dfm_allow_forced_mod              --  concdefine/seqdefine: can forcibly substitute something if clicked on "allow forcible mods"
-   dfm_roll_transparent              --  seqdefine: any person who is marked roll-neutral after this call has his previous roll status restored
-   dfm_must_be_tag_call              --  seqdefine: the subject call (or any replacement for it) must be a tagging call
-   dfm_must_be_scoot_call            --  seqdefine: the subject call (or any replacement for it) must be a scoot-back-type call
-   dfm_cpls_unless_single            --  seqdefine: the do this part as couples, unless this call is being done "single"
+   dfm1_call_mod_mask                --  concdefine/seqdefine: can substitute something under certain circumstances
+   dfm1_repeat_n                      --  seqdefine: take a numeric argument and replicate this part N times
+   dfm1_repeat_n_alternate            --  seqdefine: take a numeric argument and replicate this part and the next one N times alternately
+   dfm1_endscando                     --  concdefine outers: can tell ends only to do this
+   dfm1_repeat_nm1                    --  seqdefine: take a numeric argument and replicate this part N-1 times
+   dfm1_roll_transparent              --  seqdefine: any person who is marked roll-neutral after this call has his previous roll status restored
+   dfm1_must_be_tag_call              --  seqdefine: the subject call (or any replacement for it) must be a tagging call
+   dfm1_must_be_scoot_call            --  seqdefine: the subject call (or any replacement for it) must be a scoot-back-type call
+   dfm1_cpls_unless_single            --  seqdefine: the do this part as couples, unless this call is being done "single"
                                                                and "single_is_inherited" was set
    INHERITFLAG_DIAMOND               --  concdefine/seqdefine: if original call said "diamond" apply it to this part
    INHERITFLAG_LEFT                  --  concdefine/seqdefine: if original call said "left" apply it to this part

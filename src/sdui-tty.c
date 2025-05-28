@@ -21,20 +21,20 @@
  * Type TAB to complete as much as possible.
  * Type Control-U to clear the line.
  *
- * Calls with a number or person designator must be typed with that
- * information.
- *
- * Uses the console interface defined in the Think-C 5.0 ANSI library.
- *
  * For use with version 30 of the Sd program.
  * Based on sdui-x11.c 1.10
  *
- *  The version of this file is as shown immediately below.  This
- *  string gets displayed at program startup, as the "ui" part of
- *  the complete version.
+ * The version of this file is as shown immediately below.  This string
+ * gets displayed at program startup, as the "ui" part of the complete
+ * version.
  */
 
-static char *sdui_version = "1.6";
+#define UI_VERSION_STRING "1.6"
+
+/* See comments in sdmain.c regarding this string. */
+static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
+   UI_VERSION_STRING
+   "  wba@apollo.hp.com  10 Dec 93 $";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -99,8 +99,7 @@ Private char version_mem[12];
 extern char *
 uims_version_string(void)
 {
-    (void) sprintf(version_mem, "%stty", sdui_version);
-    return version_mem;
+    return UI_VERSION_STRING;
 }
 
 /*

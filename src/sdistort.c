@@ -36,9 +36,6 @@
 
 Private void innards(
    setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
    map_thing *maps,
    long_boolean recompute_id,
    setup *x,
@@ -49,7 +46,7 @@ Private void innards(
    map_hunk *hunk;
    setup z[4];
 
-   int finalsetupflags = 0;
+   unsigned int finalresultflags = 0;
    int rot = maps->rot;
    int vert = maps->vert;
    int arity = maps->arity;
@@ -58,12 +55,13 @@ Private void innards(
 
    for (i=0; i<arity; i++) {
       if (x[i].kind != nothing) {
-         /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
-         x[i].setupflags = (ss->setupflags & ~SETUPFLAG__OFFSET_Z) | SETUPFLAG__DISTORTED | SETUPFLAG__NO_EXPAND_MATRIX;
+         x[i].cmd = ss->cmd;
          x[i].rotation = 0;
+         /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
+         x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags & ~CMD_MISC__OFFSET_Z) | CMD_MISC__DISTORTED | CMD_MISC__NO_EXPAND_MATRIX;
          if (recompute_id) update_id_bits(&x[i]);
-         move(&x[i], parseptr, callspec, final_concepts, FALSE, &z[i]);
-         finalsetupflags |= z[i].setupflags;
+         move(&x[i], FALSE, &z[i]);
+         finalresultflags |= z[i].result_flags;
       }
       else
          z[i].kind = nothing;
@@ -74,12 +72,12 @@ Private void innards(
       return;
    }
    
-   /* Set the final setupflags to the OR of everything that happened.
+   /* Set the final result_flags to the OR of everything that happened.
       The PAR_CONC_END flag doesn't matter --- if the result is a 2x2
       begin done around the outside, the procedure that called us
       (basic_move) knows what is happening and will fix that bit. */
 
-   result->setupflags = finalsetupflags;
+   result->result_flags = finalresultflags;
 
    /* Some maps (the ones used in "triangle peel and trail") do not want the result
       to be reassembled, so we get out now.  These maps are indicated by arity = 1
@@ -153,7 +151,7 @@ Private void innards(
       else final_map = 0;        /* Raise an error. */
    }
 
-   if ((ss->setupflags & SETUPFLAG__OFFSET_Z) && final_map && (maps->map_kind == MPKIND__OFFS_L_HALF || maps->map_kind == MPKIND__OFFS_R_HALF)) {
+   if ((ss->cmd.cmd_misc_flags & CMD_MISC__OFFSET_Z) && final_map && (maps->map_kind == MPKIND__OFFS_L_HALF || maps->map_kind == MPKIND__OFFS_R_HALF)) {
       if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
       else final_map = 0;        /* Raise an error. */
    }
@@ -270,9 +268,6 @@ Private void innards(
 
 extern void divided_setup_move(
    setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
    map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
@@ -411,13 +406,12 @@ extern void divided_setup_move(
    if (v3flag) x[2].kind = maps->inner_kind;
    if (v4flag) x[3].kind = maps->inner_kind;
 
-   innards(ss, parseptr, callspec,
-      final_concepts, maps, recompute_id, x, result);
+   innards(ss, maps, recompute_id, x, result);
 }
 
 
-extern void overlapped_setup_move(setup *s, map_thing *maps,
-   int m1, int m2, int m3, parse_block *parseptr, setup *result)
+extern void overlapped_setup_move(setup *ss, map_thing *maps,
+   int m1, int m2, int m3, setup *result)
 {
    int i, j;
    setup x[4];
@@ -431,9 +425,9 @@ extern void overlapped_setup_move(setup *s, map_thing *maps,
    for (i=0, j=1; i<=setup_limits[kn]; i++, j<<=1) {
       setup tstuff;
 
-      tstuff.people[0] = s->people[maps->map1[i]];
-      if (arity >= 2) tstuff.people[1] = s->people[maps->map2[i]];
-      if (arity == 3) tstuff.people[2] = s->people[maps->map3[i]];
+      tstuff.people[0] = ss->people[maps->map1[i]];
+      if (arity >= 2) tstuff.people[1] = ss->people[maps->map2[i]];
+      if (arity == 3) tstuff.people[2] = ss->people[maps->map3[i]];
 
       if (rot & 1) {
          /* Rotation is odd.  3 is a special case. */
@@ -470,8 +464,7 @@ extern void overlapped_setup_move(setup *s, map_thing *maps,
    x[1].kind = maps->inner_kind;
    x[2].kind = maps->inner_kind;
 
-   innards(s, parseptr, NULLCALLSPEC,
-      0, maps, TRUE, x, result);
+   innards(ss, maps, TRUE, x, result);
 }
 
 static int list_10_6_5_4[4] = {8, 6, 5, 4};
@@ -547,7 +540,6 @@ extern void do_phantom_2x4_concept(
          parseptr->concept->value.arg2,
          (phantest_kind) parseptr->concept->value.arg1,
          maps,
-         parseptr->next,
          result);
       return;
    }
@@ -556,7 +548,7 @@ extern void do_phantom_2x4_concept(
 
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
-   divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0, maps,
+   divided_setup_move(ss, maps,
          (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
    result->rotation -= rot;   /* Flip the setup back. */
 }
@@ -564,9 +556,8 @@ extern void do_phantom_2x4_concept(
 
 extern void distorted_2x2s_move(
    setup *ss,
-   parse_block *parseptr,
+   concept_descriptor *this_concept,
    setup *result)
-
 {
    /* maps for 4x4 Z's */
    static Const int map1[16] = {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
@@ -644,13 +635,13 @@ extern void distorted_2x2s_move(
    /* Check for special case of "interlocked parallelogram", which doesn't look like the
       kind of concept we are expecting. */
 
-   if (parseptr->concept->kind == concept_do_both_boxes) {
+   if (this_concept->kind == concept_do_both_boxes) {
       table_offset = 8;
       misc_indicator = 3;
    }
    else {
-      table_offset = parseptr->concept->value.arg2;
-      misc_indicator = parseptr->concept->value.arg1;
+      table_offset = this_concept->value.arg2;
+      misc_indicator = this_concept->value.arg1;
    }
    
    /* misc_indicator    concept                                                      */
@@ -820,6 +811,10 @@ extern void distorted_2x2s_move(
    result->kind = ss->kind;
    result->rotation = 0;
    
+   ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   a1 = *ss;
+   a2 = *ss;
+
    for (i=0; i<4; i++) {
       (void) copy_person(&a1, i, ss, map_ptr[i+table_offset]);
       (void) copy_person(&a2, i, ss, map_ptr[i+table_offset+4]);
@@ -827,13 +822,11 @@ extern void distorted_2x2s_move(
    
    a1.kind = s2x2;
    a1.rotation = 0;
-   a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
-   
    a2.kind = s2x2;
    a2.rotation = 0;
-   a2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   move(&a2, parseptr->next, NULLCALLSPEC, 0, FALSE, &res2);
+
+   move(&a1, FALSE, &res1);
+   move(&a2, FALSE, &res2);
    
    if (res1.kind != s2x2 || res2.kind != s2x2) fail("Can't do shape-changer with this concept.");
    
@@ -842,7 +835,7 @@ extern void distorted_2x2s_move(
       (void) copy_person(result, map_ptr[i+table_offset+4], &res2, i);
    }
    
-   result->setupflags = res1.setupflags | res2.setupflags;
+   result->result_flags = res1.result_flags | res2.result_flags;
    return;
    
    lose: fail("Can't find the indicated formation.");
@@ -897,7 +890,6 @@ extern void distorted_move(
    setup *ss,
    parse_block *parseptr,
    setup *result)
-
 {
 
 /*
@@ -952,7 +944,7 @@ extern void distorted_move(
          if (disttest != disttest_offset)
             fail("Sorry, can't apply this concept when people are T-boned.");
    
-         phantom_2x4_move(ss, linesp, phantest_only_one, &(map_offset), parseptr->next, result);
+         phantom_2x4_move(ss, linesp, phantest_only_one, &(map_offset), result);
          return;
       }
    
@@ -1039,13 +1031,14 @@ extern void distorted_move(
 
    a1.kind = s2x4;
    a1.rotation = 0;
-   a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
+   a1.cmd = ss->cmd;
+   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   move(&a1, FALSE, &res1);
 
    if (res1.kind != s2x4 || (res1.rotation & 1)) fail("Can only do non-shape-changing 2x4 -> 2x4 calls in Z or distorted setups.");
    result->rotation = res1.rotation;
    for (i=0; i<8; i++) (void) copy_rot(result, the_map[i], &res1, i, rotz);
-   result->setupflags = res1.setupflags;
+   result->result_flags = res1.result_flags;
 
    reinstate_rotation(ss, result);
    return;
@@ -1055,8 +1048,7 @@ extern void distorted_move(
    if (disttest != disttest_offset)
       fail("You must specify offset lines/columns when in this setup.");
 
-   divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
-      map_ptr, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
 }
 
 
@@ -1125,8 +1117,8 @@ extern void triple_twin_move(
       else fail("Can't find triple twin lines.");
    }
    
-   divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
-         (*map_lists[s2x4][2])[MPKIND__SPLIT][1], phantest_not_just_centers, TRUE, result);
+   divided_setup_move(ss, (*map_lists[s2x4][2])[MPKIND__SPLIT][1],
+         phantest_not_just_centers, TRUE, result);
 }
 
 
@@ -1198,8 +1190,9 @@ extern void do_concept_rigger(
    
    a1.kind = s2x4;
    a1.rotation = 0;
-   a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
+   a1.cmd = ss->cmd;
+   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   move(&a1, FALSE, &res1);
    
    if (res1.kind != s2x4) fail("Can only do 2x4 -> 2x4 calls.");
 
@@ -1209,7 +1202,7 @@ extern void do_concept_rigger(
 
    result->kind = base ? s_qtag : s_rigger;
    result->rotation = res1.rotation;
-   result->setupflags = res1.setupflags;
+   result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
 }
 
@@ -1267,8 +1260,9 @@ extern void do_concept_slider(
 
    a1.rotation = 0;
    a1.kind = s2x4;
-   a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
+   a1.cmd = ss->cmd;
+   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   move(&a1, FALSE, &res1);
    
    if (res1.kind != s2x4) fail("Can only do 2x4 -> 2x4 calls.");
 
@@ -1280,7 +1274,7 @@ extern void do_concept_slider(
 
    result->kind = base ? s_qtag : s_bone;
    result->rotation = (res1.rotation-rot1-rot2) & 3;
-   result->setupflags = res1.setupflags;
+   result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
 }
 
@@ -1307,7 +1301,6 @@ extern void do_concept_callrigger(
    setup *ss,
    parse_block *parseptr,
    setup *result)
-
 {
    /* First half is for wing; second half is for 1/4-tag. */
    /* A huge coincidence is at work here -- the two halves of the maps are the same. */
@@ -1341,18 +1334,19 @@ extern void do_concept_callrigger(
          (void) copy_person(&a2, i, ss, rig_map->map_a2[i]);
    }
 
-
    a1.rotation = 0;
    a1.kind = rig_map->start_kind;
-   a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+   a1.cmd = ss->cmd;
+   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
    a2.rotation = 0;
    a2.kind = rig_map->start_kind;
-   a2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+   a2.cmd = ss->cmd;
+   a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
-   move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &z[0]);
-   move(&a2, parseptr->next, NULLCALLSPEC, 0, FALSE, &z[1]);
-   result->setupflags = z[0].setupflags | z[1].setupflags;
+   move(&a1, FALSE, &z[0]);
+   move(&a2, FALSE, &z[1]);
+   result->result_flags = z[0].result_flags | z[1].result_flags;
 
    if (fix_n_results(2, z))
       fail("There are no wings???");
@@ -1398,8 +1392,10 @@ extern void do_concept_callrigger(
 
    a1.kind = s2x4;
    a1.rotation = rig_map->outrot;
-   a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   move(&a1, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &z[0]);
+   a1.cmd = ss->cmd;
+   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   a1.cmd.parseptr = parseptr->subsidiary_root;
+   move(&a1, FALSE, &z[0]);
    
    if (z[0].kind != s2x4) fail("Can only do 2x4 -> 2x4 calls.");
    result->rotation = z[0].rotation;
@@ -1413,6 +1409,6 @@ extern void do_concept_callrigger(
       result->kind = s_rigger;
    }
    
-   result->setupflags |= z[0].setupflags;
+   result->result_flags |= z[0].result_flags;
    reinstate_rotation(ss, result);
 }

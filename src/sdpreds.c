@@ -324,7 +324,7 @@ Private long_boolean x14_once_rem_couple(setup *real_people, int real_index,
 Private long_boolean lines_couple(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return FALSE;
    else {
       int this_person = real_people->people[real_index].id1;
@@ -350,7 +350,7 @@ Private long_boolean columns_tandem(setup *real_people, int real_index,
 Private long_boolean lines_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return TRUE;
    else {
       int this_person = real_people->people[real_index].id1;
@@ -435,7 +435,7 @@ Private long_boolean lines_once_rem_couple(setup *real_people, int real_index,
 Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if ((real_people->setupflags & SETUPFLAG__ASSUME_WAVES) || northified_index == 0)
+   if ((real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES) || northified_index == 0)
       return(TRUE);
    else {
       int other_person = real_people->people[real_index ^ 1].id1;
@@ -683,7 +683,7 @@ Private long_boolean inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
 
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
 
    return in_out_roll_select(
@@ -698,7 +698,7 @@ Private long_boolean magic_inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
 
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
 
    return in_out_roll_select(
@@ -712,7 +712,7 @@ Private long_boolean magic_inroller_is_cw(setup *real_people, int real_index,
 Private long_boolean outroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
 
    return in_out_roll_select(
@@ -726,7 +726,7 @@ Private long_boolean outroller_is_cw(setup *real_people, int real_index,
 Private long_boolean magic_outroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
 
    return in_out_roll_select(
@@ -740,7 +740,7 @@ Private long_boolean magic_outroller_is_cw(setup *real_people, int real_index,
 Private long_boolean inroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -754,7 +754,7 @@ Private long_boolean inroller_is_cw_2x3(setup *real_people, int real_index,
 Private long_boolean magic_inroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -768,7 +768,7 @@ Private long_boolean magic_inroller_is_cw_2x3(setup *real_people, int real_index
 Private long_boolean outroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -782,7 +782,7 @@ Private long_boolean outroller_is_cw_2x3(setup *real_people, int real_index,
 Private long_boolean magic_outroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -797,7 +797,7 @@ Private long_boolean inroller_is_cw_2x6(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
 
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index / 6)) & 1) == 0;
 
    return in_out_roll_select(
@@ -812,7 +812,7 @@ Private long_boolean outroller_is_cw_2x6(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
 
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index / 6)) & 1) != 0;
 
    return in_out_roll_select(
@@ -827,7 +827,7 @@ Private long_boolean inroller_is_cw_2x8(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
 
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index >> 3)) & 1) == 0;
 
    return in_out_roll_select(
@@ -842,7 +842,7 @@ Private long_boolean outroller_is_cw_2x8(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
 
-   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
       return ((northified_index ^ (northified_index >> 3)) & 1) != 0;
 
    return in_out_roll_select(

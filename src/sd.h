@@ -213,19 +213,19 @@ typedef struct {
    int srotation;
 } small_setup;
 
-/* Flags that reside in the "setupflags" word of a setup BEFORE a call is executed.
+/* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
 
-   BEWARE!! These flags co-exist in the setupflags word with copies of some
+   BEWARE!! These flags co-exist in the cmd_misc_flags word with copies of some
    of the call invocation flags.  The mask for those flags is
    DFM1_CONCENTRICITY_FLAG_MASK.  Those flags, and that mask, are defined
    in database.h .  We define these flags at the extreme left end of the
    word in order to keep them away from the concentricity flags.
 
-   SETUPFLAG__DISTORTED means that we are at a level of recursion in which some
+   CMD_MISC__DISTORTED means that we are at a level of recursion in which some
    distorted-setup concept has been used.  When this is set, "matrix" (a.k.a.
    "space invader") calls, such as press and truck, are not permitted.  Sorry, Clark.
 
-   SETUPFLAG__OFFSET_Z means that we are doing a 2x3 call (the only known case
+   CMD_MISC__OFFSET_Z means that we are doing a 2x3 call (the only known case
    of this is "Z axle") that came from Z's picked out of a 4x4 setup.  The map
    that we are using has a "50% offset" map schema, so that, if the call goes
    into 1x4's (which Z axle does) it will put the results into a parallelogram,
@@ -238,36 +238,29 @@ typedef struct {
    trying to be very careful.)  So, when this flag is on and a shape-changer
    occurs, the program insists on a parallelogram result.
 
-   SETUPFLAG__SAID_SPLIT means that we are at a level of recursion in which
+   CMD_MISC__SAID_SPLIT means that we are at a level of recursion in which
    the "split" concept has been used.  When this is on, it is not permissible
    to do a 4-person call that has not 8-person definition, and hence would have
    been done the same way without the "split" concept.  This prevents superfluous
    things like "split pass thru".
 
-   SETUPFLAG__SAID_TRIANGLE means that we are at a level of recursion in which
+   CMD_MISC__SAID_TRIANGLE means that we are at a level of recursion in which
    the word "triangle" has been uttered, so it is OK to do things like "triangle
    peel and trail" without giving the explicit "triangle" concept again.  This
    makes it possible to say things like "tandem-based triangles peel and trail".
 
-   SETUPFLAG__FRACTIONALIZE_MASK is a 9 bit field that is nonzero when some form
+   CMD_MISC__FRACTIONALIZE_MASK is a 9 bit field that is nonzero when some form
    of fractionalization control is in use.  These bits are set up by concepts like
    "random" and "fractional", and are used in sdmoves.c to control sequentially
    defined calls.  See the comments there for details.
 
-   SETUPFLAG__ELONGATE_MASK is a 2 bit field that tells, for a 2x2 setup prior to
-   having a call executed, how that 2x2 is elongated (due to these people
-   being the outsides) in the east-west or north-south direction.  Since 2x2's are
-   always totally canonical, the interpretation of the elongation direction is
-   always absolute.  A 1 in this field means the elongation is east-west.  A 2
-   means the elongation is north-south.  A zero means the elongation is unknown.
-
-   SETUPFLAG__NO_CHK_ELONG means that the elongation of the incoming setup is for
+   CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
    raised if we have people in a facing 2x2 star thru when they are far from the
    ones they are facing.
 
-   SETUPFLAG__PHANTOMS means that we are at a level of recursion in which some phantom
+   CMD_MISC__PHANTOMS means that we are at a level of recursion in which some phantom
    concept has been used, or when "on your own" or "so-and-so do your part" concepts
    are in use.  It indicates that we shouldn't be surprised if there are phantoms
    in the setup.  When this is set, the "tandem" or "as couples" concepts will
@@ -278,52 +271,49 @@ typedef struct {
    "so-and-so do your part" operation, it may well be that, even though the setup
    is, say, point-to-point diamonds, the centers of the diamonds are none of my
    business (I am a point), and I want to think of the setup as a grand wave,
-   so I can do my part of a grand mix.  The "SETUPFLAG__PHANTOMS" flag makes it
+   so I can do my part of a grand mix.  The "CMD_MISC__PHANTOMS" flag makes it
    possible to do a grand mix from point-to-point diamonds in which the centers
    are absent.
 
-   SETUPFLAG__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
+   CMD_MISC__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
 
-   SETUPFLAG__ASSUME_WAVES means that the "assume waves" concept has been given.
+   CMD_MISC__ASSUME_WAVES means that the "assume waves" concept has been given.
 
-   SETUPFLAG__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
+   CMD_MISC__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
    so we got to this matrix explicitly.  This enables natural splitting of the setup, e.g. form
    a parallelogram, "2x6 matrix 1x2 checkmate" is legal -- the 2x6 gets divided naturally
    into 2x3's.
 
-   SETUPFLAG__NO_EXPAND_MATRIX means that we are at a level of recursion that no longer permits us to do the
+   CMD_MISC__NO_EXPAND_MATRIX means that we are at a level of recursion that no longer permits us to do the
    implicit expansion of the matrix (e.g. add outboard phantoms to turn a 2x4 into a 2x6
    if the concept "triple box" is used) that some concepts perform at the top level.
 
-   SETUPFLAG__DOING_ENDS means that this call is directed only to the ends (and the setup is the ends
+   CMD_MISC__DOING_ENDS means that this call is directed only to the ends (and the setup is the ends
    of the original setup.  If the call turns out to be an 8-person call with distinct
    centers and ends parts, we may want to just apply the ends part.  This is what
    makes "ends detour" work.
 */
 
-/* We are getting dangerously low on bits!!!  200 and 100 are the only spares we have. */
-#define SETUPFLAG__ASSUME_WAVES       0x00000400
-#define SETUPFLAG__EXPLICIT_MATRIX    0x00000800
-#define SETUPFLAG__NO_EXPAND_MATRIX   0x00001000
-#define SETUPFLAG__DISTORTED          0x00002000
-#define SETUPFLAG__OFFSET_Z           0x00004000
-#define SETUPFLAG__SAID_SPLIT         0x00008000
-#define SETUPFLAG__SAID_TRIANGLE      0x00010000
+/* We are getting dangerously low on bits!!!  200 and 100 (and 0x04000000) are the only spares we have. */
+#define CMD_MISC__ASSUME_WAVES       0x00000400
+#define CMD_MISC__EXPLICIT_MATRIX    0x00000800
+#define CMD_MISC__NO_EXPAND_MATRIX   0x00001000
+#define CMD_MISC__DISTORTED          0x00002000
+#define CMD_MISC__OFFSET_Z           0x00004000
+#define CMD_MISC__SAID_SPLIT         0x00008000
+#define CMD_MISC__SAID_TRIANGLE      0x00010000
 /* This one is a 9 bit field -- FRACTIONALIZE_BIT tells where its low bit lies. */
-#define SETUPFLAG__FRACTIONALIZE_MASK 0x03FE0000
-#define SETUPFLAG__FRACTIONALIZE_BIT  0x00020000
-/* This one is a 2 bit field -- ELONGATE_BIT tells where its low bit lies. */
-#define SETUPFLAG__ELONGATE_MASK      0x0C000000
-#define SETUPFLAG__ELONGATE_BIT       0x04000000
-#define SETUPFLAG__NO_CHK_ELONG       0x10000000
-#define SETUPFLAG__PHANTOMS           0x20000000
-#define SETUPFLAG__NO_STEP_TO_WAVE    0x40000000
-#define SETUPFLAG__DOING_ENDS         0x80000000
+#define CMD_MISC__FRACTIONALIZE_MASK 0x03FE0000
+#define CMD_MISC__FRACTIONALIZE_BIT  0x00020000
+#define CMD_MISC__MUST_SPLIT         0x04000000
+#define CMD_MISC__CENTRAL            0x08000000
+#define CMD_MISC__NO_CHK_ELONG       0x10000000
+#define CMD_MISC__PHANTOMS           0x20000000
+#define CMD_MISC__NO_STEP_TO_WAVE    0x40000000
+#define CMD_MISC__DOING_ENDS         0x80000000
 
-/* Flags that reside in the "setupflags" word of a setup AFTER a call is executed.
-   There shouldn't be a problem of conflict with the "before" flags, but we take
-   no chances.
+/* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
 
    RESULTFLAG__EXPAND_TO_2X3 means that a call was executed that takes a four person
    starting setup (typically a line) and yields a 2x3 result setup.  Two of those
@@ -334,7 +324,7 @@ typedef struct {
    and "step and slide" behave correctly from parallel lines and from a grand line.
 
    RESULTFLAG__DID_LAST_PART means that, when a sequentially defined call was executed
-   with the SETUPFLAG__FRACTIONALIZE_MASK nonzero, so that just one part was done,
+   with the CMD_MISC__FRACTIONALIZE_MASK nonzero, so that just one part was done,
    that part was the last part.  Hence, if we are doing a call with some "piecewise"
    or "random" concept, we do that parts of the call one at a time, with appropriate
    concepts on each part, until it comes back with this flag set.
@@ -369,245 +359,16 @@ typedef struct {
 #define RESULTFLAG__ELONGATE_BIT    0x00000008
 #define RESULTFLAG__NEED_DIAMOND    0x00000020
 
-/* It should be noted that the SETUPFLAG__XXX and RESULTFLAG__XXX bits have
-   nothing to do with each other.  They just happen to occupy the same word
-   before and after the call is executed, respectively.  It is not intended that
+/* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
+   nothing to do with each other.  It is not intended that
    the flags resulting from one call be passed to the next.  In fact, that
-   would be incorrect.  The SETUPFLAG__XXX bits should start at zero at the
+   would be incorrect.  The CMD_MISC__??? bits should start at zero at the
    beginning of each call, and accumulate stuff as the call goes deeper into
    recursion.  The RESULTFLAG__XXX bits should, in general, be the OR of the
    bits of the components of a compound call, though this may not be so for
    RESULTFLAG__ELONGATE_MASK. */
 
 
-
-typedef struct {
-   setup_kind kind;
-   int setupflags;
-   personrec people[MAX_PEOPLE];
-   int rotation;
-   small_setup inner;
-   small_setup outer;
-   int outer_elongation;
-} setup;
-
-/* BEWARE!!  If change these next definitions, be sure to update the definition of
-   "warning_strings" in sdutil.c . */
-typedef enum {
-   warn__none,
-   warn__do_your_part,
-   warn__tbonephantom,
-   warn__ends_work_to_spots,
-   warn__awkward_centers,
-   warn__bad_concept_level,
-   warn__not_funny,
-   warn__hard_funny,
-   warn__unusual,
-   warn__rear_back,
-   warn__awful_rear_back,
-   warn__excess_split,
-   warn__lineconc_perp,
-   warn__dmdconc_perp,
-   warn__lineconc_par,
-   warn__dmdconc_par,
-   warn__xclineconc_perp,
-   warn__xcdmdconc_perp,
-   warn__ctrstand_endscpls,
-   warn__ctrscpls_endstand,
-   warn__each2x2,
-   warn__each1x4,
-   warn__each1x2,
-   warn__take_right_hands,
-   warn__ctrs_are_dmd,
-   warn__full_pgram,
-   warn__offset_gone,
-   warn__overlap_gone,
-   warn__to_o_spots,
-   warn__to_x_spots,
-   warn__some_rear_back,
-   warn__not_tbone_person,  /* End of the first 31. */
-   warn__check_c1_phan,     /* Any below here can't be used in the aggregates below. */
-   warn__check_dmd_qtag,
-   warn__check_2x4,
-   warn__check_pgram,
-   warn__dyp_resolve_ok,
-   warn__ctrs_stay_in_ctr,
-   warn__check_c1_stars,
-   warn__bigblock_feet,
-   warn__some_touch,
-   warn__split_to_2x4s,
-   warn__split_to_2x3s,
-   warn__split_to_1x8s,
-   warn__split_to_1x6s
-} warning_index;
-
-/* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
-   mask that is checked against the first word in the warning struct.
-   It just isn't worth doing this the really right way. */
-#define Warnings_That_Preclude_Searching (1<<warn__do_your_part | 1<<warn__ends_work_to_spots | 1<<warn__awkward_centers | \
-                                          1<<warn__hard_funny   | 1<<warn__rear_back          | 1<<warn__awful_rear_back | \
-                                          1<<warn__excess_split | \
-                                          1<<warn__unusual      | 1<<warn__bad_concept_level  | 1<<warn__not_funny)
-
-/* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
-   mask that is cleared if a concentric call was done and the "suppress_elongation_warnings"
-   flag was on.  It just isn't worth doing this the really right way. */
-#define Warnings_About_Conc_elongation   (1<<warn__lineconc_perp | 1<<warn__dmdconc_perp    | 1<<warn__lineconc_par | \
-                                          1<<warn__dmdconc_par   | 1<<warn__xclineconc_perp | 1<<warn__xcdmdconc_perp)
-
-
-/* BEWARE!!  This list must track the definition of "resolve_table" in sdgetout.c . */
-typedef enum {
-   resolve_none,
-   resolve_rlg, resolve_la,
-   resolve_ext_rlg, resolve_ext_la,
-   resolve_slipclutch_rlg, resolve_slipclutch_la,
-   resolve_circ_rlg, resolve_circ_la,
-   resolve_pth_rlg, resolve_pth_la,
-   resolve_tby_rlg, resolve_tby_la,
-   resolve_xby_rlg, resolve_xby_la,
-   resolve_dixie_grand,
-   resolve_prom, resolve_revprom,
-   resolve_sglfileprom, resolve_revsglfileprom,
-   resolve_circle
-} resolve_kind;
-
-typedef struct {
-   resolve_kind kind;
-   int distance;
-} resolve_indicator;
-
-typedef enum {
-   mode_none,     /* Not a real mode; used only for
-                     fictional purposes in the user interface;
-                     never appears in the rest of the program. */
-   mode_normal,
-   mode_startup,
-   mode_resolve
-} mode_kind;
-
-typedef enum {
-    modify_popup_any,
-    modify_popup_only_tag,
-    modify_popup_only_scoot
-} modify_popup_kind;
-
-/* These are the values returned by "uims_get_command". */
-
-typedef enum {
-   ui_command_select,   /* (normal/resolve) User chose one of the special buttons like "resolve" or "quit". */
-   ui_resolve_select,   /* (resolve only) User chose one of the various actions peculiar to resolving. */
-   ui_start_select,     /* (startup only) User chose something. This is the only outcome in startup mode. */
-   ui_concept_select,   /* (normal only) User selected a concept. */
-   ui_call_select       /* (normal only) User selected a call from the current call menu. */
-} uims_reply;
-
-/* In each case, an integer or enum is deposited into the global variable uims_menu_index.  Its interpretation
-   depends on which of the replies above was given.  For some of the replies, it gives the index
-   into a menu.  For "ui_start_select" it is a start_select_kind.
-   For other replies, it is one of the following constants: */
-
-/* BEWARE!!  This list must track the array "startup_commands" in sdmatch.c . */
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "startinfolist" in sdtables.c, and also necessary stuff in the user interfaces.
-   The latter includes the definition of "start_choices" in sd.dps
-   in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
-   in the Macintosh system.  You may also need changes in create_controls() in
-   macstuff.c. */
-typedef enum {
-   start_select_exit,        /* Don't start a sequence; exit from the program. */
-   start_select_h1p2p,       /* Start with Heads 1P2P. */
-   start_select_s1p2p,       /* Etc. */
-   start_select_heads_start,
-   start_select_sides_start,
-   start_select_as_they_are
-} start_select_kind;
-#define NUM_START_SELECT_KINDS (((int) start_select_as_they_are)+1)
-
-/* For ui_command_select: */
-typedef enum {
-   command_quit,
-   command_undo,
-   command_abort,
-   command_create_comment,
-   command_change_outfile,
-   command_getout,
-   command_resolve,
-   command_reconcile,
-   command_anything,
-   command_nice_setup,
-#ifdef NEGLECT
-   command_neglect,
-#endif
-   command_save_pic,
-   command_refresh
-} command_kind;
-#define NUM_COMMAND_KINDS (((int) command_refresh)+1)
-
-/* For ui_resolve_select: */
-/* BEWARE!!  This list must track the array "resolve_commands" in sdmatch.c . */
-typedef enum {
-   resolve_command_abort,
-   resolve_command_find_another,
-   resolve_command_goto_next,
-   resolve_command_goto_previous,
-   resolve_command_accept,
-   resolve_command_raise_rec_point,
-   resolve_command_lower_rec_point
-} resolve_command_kind;
-#define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_lower_rec_point)+1)
-
-/* BEWARE!!  There may be tables in the user interface file keyed to this enumeration.
-   In particular, this list must track the array "menu_names" in sdtables.c . */
-/* BEWARE!!  This list is keyed to some messy stuff in the procedure "initialize_concept_sublists".
-   In particular, there are octal constants like "MASK_CTR_2" that contain bits assigned
-   according to these items.  Changing these items is not recommended. */
-
-typedef enum {
-   call_list_none, call_list_empty, /* Not real call list kinds; used only for
-                                       fictional purposes in the user interface;
-				       never appear in the rest of the program. */
-   call_list_any,                   /* This is the "universal" call list; used
-                                       whenever the setup isn't one of the known ones. */
-   call_list_1x8, call_list_l1x8,
-   call_list_dpt, call_list_cdpt,
-   call_list_rcol, call_list_lcol,
-   call_list_8ch, call_list_tby,
-   call_list_lin, call_list_lout,
-   call_list_rwv, call_list_lwv,
-   call_list_r2fl, call_list_l2fl,
-   call_list_gcol, call_list_qtag
-} call_list_kind;
-#define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
-
-
-/* These flags go along for the ride, in some parts of the code, in the same word
-   as the heritable flags, but are not part of the inheritance mechanism.  We use
-   symbols that have been graciously provided for us from database.h to tell us
-   what bits may be safely used next to the heritable flags. */
-
-#define FINAL__SPLIT                      INHERITSPARE_1
-#define FINAL__SPLIT_SQUARE_APPROVED      INHERITSPARE_2
-#define FINAL__SPLIT_DIXIE_APPROVED       INHERITSPARE_3
-#define FINAL__MUST_BE_TAG                INHERITSPARE_4
-#define FINAL__MUST_BE_SCOOT              INHERITSPARE_5
-#define FINAL__TRIANGLE                   INHERITSPARE_6
-#define FINAL__SPLIT_SEQ_DONE             INHERITSPARE_7
-
-typedef unsigned int final_set;
-
-typedef long_boolean (*predicate_ptr)(
-   setup *real_people,
-   int real_index,
-   int real_direction,
-   int northified_index);
-
-typedef struct glosk {
-   predicate_ptr pred;
-   struct glosk *next;
-   /* Dynamically allocated to whatever size is required. */
-   unsigned short arr[4];
-} predptr_pair;
 
 typedef struct glork {
    struct glork *next;
@@ -622,24 +383,12 @@ typedef struct glork {
       /* Dynamically allocated to whatever size is required. */
       unsigned short def[4];     /* only if pred = false */
       struct {                   /* only if pred = true */
-         predptr_pair *predlist;
+         struct predptr_pair_struct *predlist;
          /* Dynamically allocated to whatever size is required. */
          char errmsg[4];
       } prd;
    } stuff;
 } callarray;
-
-typedef struct glonk {
-   char txt[80];
-   struct glonk *nxt;
-} comment_block;
-
-typedef struct flonk {
-   char txt[80];
-   struct flonk *nxt;
-} outfile_block;
-
-typedef unsigned int defmodset;
 
 typedef struct {
    short call_id;
@@ -712,17 +461,6 @@ typedef struct {
    int rot;
    int vert;
 } map_thing;
-
-typedef map_thing *map_hunk[][2];
-
-typedef struct {
-   setup_kind result_kind;
-   int xfactor;
-   veryshort xca[24];
-   veryshort yca[24];
-   veryshort diagram[64];
-} coordrec;
-
 
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
 typedef enum {
@@ -863,6 +601,384 @@ typedef enum {
    concept_callrigger
 } concept_kind;
 
+typedef struct {
+   char *name;
+   concept_kind kind;
+   dance_level level;
+   struct {
+      map_thing *maps;
+      int arg1;
+      int arg2;
+      int arg3;
+      int arg4;
+      int arg5;
+   } value;
+} concept_descriptor;
+
+/* BEWARE!!  If change this next definition, be sure to update the definition of
+   "selector_names" and "selector_singular" in sdutil.c, and also necessary stuff in the
+   user interfaces.  The latter includes the definition of "task$selector_menu" in sd.dps
+   in the Domain/Dialog system, and the DITL "Select Dancers" in *.rsrc in
+   the Macintosh system. */
+typedef enum {
+   selector_uninitialized,
+   selector_boys,
+   selector_girls,
+   selector_heads,
+   selector_sides,
+   selector_headcorners,
+   selector_sidecorners,
+   selector_headboys,
+   selector_headgirls,
+   selector_sideboys,
+   selector_sidegirls,
+   selector_centers,
+   selector_ends,
+   selector_leads,
+   selector_trailers,
+   selector_beaux,
+   selector_belles,
+   selector_center2,
+   selector_center6,
+   selector_outer2,
+   selector_outer6,
+   selector_nearline,
+   selector_farline,
+   selector_nearcolumn,
+   selector_farcolumn,
+   selector_nearbox,
+   selector_farbox,
+   selector_all,
+   selector_none
+} selector_kind;
+#define last_selector_kind ((int) selector_none)
+
+/* BEWARE!!  If change this next definition, be sure to update the definition of
+   "direction_names" in sdutil.c, and also necessary stuff in the user interfaces.
+   The latter includes the definition of "task$direction_menu" in sd.dps in the
+   Domain/Dialog system, and the DITL "which direction" in *.rsrc in the Macintosh
+   system. */
+typedef enum {
+   direction_uninitialized,
+   direction_left,
+   direction_right,
+   direction_in,
+   direction_out,
+   direction_zigzag,
+   direction_zagzig,
+   direction_zigzig,
+   direction_zagzag,
+   direction_no_direction
+} direction_kind;
+#define last_direction_kind ((int) direction_no_direction)
+
+typedef struct glock {
+   concept_descriptor *concept;   /* the concept or end marker */
+   callspec_block *call;          /* if this is end mark, gives the call; otherwise unused */
+   struct glock *next;            /* next concept, or, if this is end mark, points to substitution list */
+   struct glock *subsidiary_root; /* for concepts that take a second call, this is its parse root */
+   struct glock *gc_ptr;          /* used for reclaiming dead blocks */
+   selector_kind selector;        /* selector, if any, used by concept or call */
+   direction_kind direction;      /* direction, if any, used by concept or call */
+   int number;                    /* number, if any, used by concept or call */
+} parse_block;
+
+/* The following items are not actually part of the setup description,
+   but are placed here for the convenience of "move" and similar procedures.
+   They contain information about the call to be executed in this setup.
+   Once the call is complete, that is, when printing the setup or storing it
+   in a history array, this stuff is meaningless. */
+
+typedef struct {
+   parse_block *parseptr;        /* The full parse tree for the concept(s)/call(s) we are trying to do.
+                                    While we traverse the big concepts in this tree, the "callspec" and
+                                    "cmd_final_flags" are typically zero.  They only come into use when
+                                    we reach the end of a subtree of big concepts, at which point we read
+                                    the remaining "small" (or "final") concepts and the call name out of
+                                    the end of the concept parse tree. */
+   callspec_block *callspec;     /* The call, after we reach the end of the parse tree. */
+   unsigned int cmd_final_flags; /* The various "final concept" flags with names INHERITFLAG_??? and FINAL__???.
+                                    The INHERITFLAG_??? bits contain the final concepts like "single" that
+                                    can be inherited from one part of a call definition to another.  The
+                                    FINAL__??? bits contain other miscellaneous final concepts. */
+   unsigned int cmd_misc_flags;  /* Other miscellaneous info controlling the execution of the call,
+                                    with names like CMD_MISC__???. */
+/*
+   This field tells, for a 2x2 setup prior to having a call executed, how that
+   2x2 is elongated (due to these people being the outsides) in the east-west
+   or north-south direction.  Since 2x2's are always totally canonical, the
+   interpretation of the elongation direction is always absolute.  A 1 means
+   the elongation is east-west.  A 2 means the elongation is north-south.
+   A zero means the elongation is unknown.
+*/
+
+   unsigned int prior_elongation_bits;
+} setup_command;
+
+
+typedef struct {
+   setup_kind kind;
+   int rotation;
+   setup_command cmd;
+   personrec people[MAX_PEOPLE];
+
+   /* The following item is not actually part of the setup description, but contains
+      miscellaneous information left by "move" and similar procedures, for the
+      convenience of whatever called same. */
+   unsigned int result_flags;           /* Miscellaneous info, with names like RESULTFLAG__???. */
+
+   /* The following three items are only used if the setup kind is "s_normal_concentric".  Note in particular that
+      "outer_elongation" is thus underutilized, and that a lot of complexity goes into storing similar information
+      (in two different places!) in the "prior_elongation_bits" and "result_flags" words. */
+   small_setup inner;
+   small_setup outer;
+   int outer_elongation;
+} setup;
+
+typedef long_boolean (*predicate_ptr)(
+   setup *real_people,
+   int real_index,
+   int real_direction,
+   int northified_index);
+
+typedef struct predptr_pair_struct {
+   predicate_ptr pred;
+   struct predptr_pair_struct *next;
+   /* Dynamically allocated to whatever size is required. */
+   unsigned short arr[4];
+} predptr_pair;
+
+/* BEWARE!!  If change these next definitions, be sure to update the definition of
+   "warning_strings" in sdutil.c . */
+typedef enum {
+   warn__none,
+   warn__do_your_part,
+   warn__tbonephantom,
+   warn__ends_work_to_spots,
+   warn__awkward_centers,
+   warn__bad_concept_level,
+   warn__not_funny,
+   warn__hard_funny,
+   warn__unusual,
+   warn__rear_back,
+   warn__awful_rear_back,
+   warn__excess_split,
+   warn__lineconc_perp,
+   warn__dmdconc_perp,
+   warn__lineconc_par,
+   warn__dmdconc_par,
+   warn__xclineconc_perp,
+   warn__xcdmdconc_perp,
+   warn__ctrstand_endscpls,
+   warn__ctrscpls_endstand,
+   warn__each2x2,
+   warn__each1x4,
+   warn__each1x2,
+   warn__take_right_hands,
+   warn__ctrs_are_dmd,
+   warn__full_pgram,
+   warn__offset_gone,
+   warn__overlap_gone,
+   warn__to_o_spots,
+   warn__to_x_spots,
+   warn__some_rear_back,
+   warn__not_tbone_person,  /* End of the first 31. */
+   warn__check_c1_phan,     /* Any below here can't be used in the aggregates below. */
+   warn__check_dmd_qtag,
+   warn__check_2x4,
+   warn__check_pgram,
+   warn__dyp_resolve_ok,
+   warn__ctrs_stay_in_ctr,
+   warn__check_c1_stars,
+   warn__bigblock_feet,
+   warn__some_touch,
+   warn__split_to_2x4s,
+   warn__split_to_2x3s,
+   warn__split_to_1x8s,
+   warn__split_to_1x6s,
+   warn__evil_interlocked,
+   warn__split_phan_in_pgram
+} warning_index;
+
+/* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
+   mask that is checked against the first word in the warning struct.
+   It just isn't worth doing this the really right way. */
+#define Warnings_That_Preclude_Searching (1<<warn__do_your_part | 1<<warn__ends_work_to_spots | 1<<warn__awkward_centers | \
+                                          1<<warn__hard_funny   | 1<<warn__rear_back          | 1<<warn__awful_rear_back | \
+                                          1<<warn__excess_split | \
+                                          1<<warn__unusual      | 1<<warn__bad_concept_level  | 1<<warn__not_funny)
+
+/* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
+   mask that is cleared if a concentric call was done and the "suppress_elongation_warnings"
+   flag was on.  It just isn't worth doing this the really right way. */
+#define Warnings_About_Conc_elongation   (1<<warn__lineconc_perp | 1<<warn__dmdconc_perp    | 1<<warn__lineconc_par | \
+                                          1<<warn__dmdconc_par   | 1<<warn__xclineconc_perp | 1<<warn__xcdmdconc_perp)
+
+
+/* BEWARE!!  This list must track the definition of "resolve_table" in sdgetout.c . */
+typedef enum {
+   resolve_none,
+   resolve_rlg, resolve_la,
+   resolve_ext_rlg, resolve_ext_la,
+   resolve_slipclutch_rlg, resolve_slipclutch_la,
+   resolve_circ_rlg, resolve_circ_la,
+   resolve_pth_rlg, resolve_pth_la,
+   resolve_tby_rlg, resolve_tby_la,
+   resolve_xby_rlg, resolve_xby_la,
+   resolve_dixie_grand,
+   resolve_prom, resolve_revprom,
+   resolve_sglfileprom, resolve_revsglfileprom,
+   resolve_circle
+} resolve_kind;
+
+typedef struct {
+   resolve_kind kind;
+   int distance;
+} resolve_indicator;
+
+typedef enum {
+   mode_none,     /* Not a real mode; used only for fictional purposes
+                        in the user interface; never appears in the rest of the program. */
+   mode_normal,
+   mode_startup,
+   mode_resolve
+} mode_kind;
+
+typedef enum {
+    modify_popup_any,
+    modify_popup_only_tag,
+    modify_popup_only_scoot
+} modify_popup_kind;
+
+/* These are the values returned by "uims_get_command". */
+
+typedef enum {
+   ui_special_concept,  /* Not a real return; used only for fictional purposes
+                              in the user interface; never appears in the rest of the program. */
+   ui_command_select,   /* (normal/resolve) User chose one of the special buttons like "resolve" or "quit". */
+   ui_resolve_select,   /* (resolve only) User chose one of the various actions peculiar to resolving. */
+   ui_start_select,     /* (startup only) User chose something. This is the only outcome in startup mode. */
+   ui_concept_select,   /* (normal only) User selected a concept. */
+   ui_call_select       /* (normal only) User selected a call from the current call menu. */
+} uims_reply;
+
+/* In each case, an integer or enum is deposited into the global variable uims_menu_index.  Its interpretation
+   depends on which of the replies above was given.  For some of the replies, it gives the index
+   into a menu.  For "ui_start_select" it is a start_select_kind.
+   For other replies, it is one of the following constants: */
+
+/* BEWARE!!  This list must track the array "startup_commands" in sdmatch.c . */
+/* BEWARE!!  If change this next definition, be sure to update the definition of
+   "startinfolist" in sdtables.c, and also necessary stuff in the user interfaces.
+   The latter includes the definition of "start_choices" in sd.dps
+   in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
+   in the Macintosh system.  You may also need changes in create_controls() in
+   macstuff.c. */
+typedef enum {
+   start_select_exit,        /* Don't start a sequence; exit from the program. */
+   start_select_h1p2p,       /* Start with Heads 1P2P. */
+   start_select_s1p2p,       /* Etc. */
+   start_select_heads_start,
+   start_select_sides_start,
+   start_select_as_they_are
+} start_select_kind;
+#define NUM_START_SELECT_KINDS (((int) start_select_as_they_are)+1)
+
+/* For ui_command_select: */
+typedef enum {
+   command_quit,
+   command_undo,
+   command_abort,
+   command_create_comment,
+   command_change_outfile,
+   command_getout,
+   command_resolve,
+   command_reconcile,
+   command_anything,
+   command_nice_setup,
+#ifdef NEGLECT
+   command_neglect,
+#endif
+   command_save_pic,
+   command_refresh
+} command_kind;
+#define NUM_COMMAND_KINDS (((int) command_refresh)+1)
+
+/* For ui_resolve_select: */
+/* BEWARE!!  This list must track the array "resolve_commands" in sdmatch.c . */
+typedef enum {
+   resolve_command_abort,
+   resolve_command_find_another,
+   resolve_command_goto_next,
+   resolve_command_goto_previous,
+   resolve_command_accept,
+   resolve_command_raise_rec_point,
+   resolve_command_lower_rec_point
+} resolve_command_kind;
+#define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_lower_rec_point)+1)
+
+/* BEWARE!!  There may be tables in the user interface file keyed to this enumeration.
+   In particular, this list must track the array "menu_names" in sdtables.c . */
+/* BEWARE!!  This list is keyed to some messy stuff in the procedure "initialize_concept_sublists".
+   In particular, there are octal constants like "MASK_CTR_2" that contain bits assigned
+   according to these items.  Changing these items is not recommended. */
+
+typedef enum {
+   call_list_none, call_list_empty, /* Not real call list kinds; used only for
+                                       fictional purposes in the user interface;
+				       never appear in the rest of the program. */
+   call_list_any,                   /* This is the "universal" call list; used
+                                       whenever the setup isn't one of the known ones. */
+   call_list_1x8, call_list_l1x8,
+   call_list_dpt, call_list_cdpt,
+   call_list_rcol, call_list_lcol,
+   call_list_8ch, call_list_tby,
+   call_list_lin, call_list_lout,
+   call_list_rwv, call_list_lwv,
+   call_list_r2fl, call_list_l2fl,
+   call_list_gcol, call_list_qtag
+} call_list_kind;
+#define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
+
+
+/* These flags go along for the ride, in some parts of the code, in the same word
+   as the heritable flags, but are not part of the inheritance mechanism.  We use
+   symbols that have been graciously provided for us from database.h to tell us
+   what bits may be safely used next to the heritable flags. */
+
+#define FINAL__SPLIT                      INHERITSPARE_1
+#define FINAL__SPLIT_SQUARE_APPROVED      INHERITSPARE_2
+#define FINAL__SPLIT_DIXIE_APPROVED       INHERITSPARE_3
+#define FINAL__MUST_BE_TAG                INHERITSPARE_4
+#define FINAL__MUST_BE_SCOOT              INHERITSPARE_5
+#define FINAL__TRIANGLE                   INHERITSPARE_6
+#define FINAL__SPLIT_SEQ_DONE             INHERITSPARE_7
+
+typedef unsigned int final_set;
+
+typedef struct glonk {
+   char txt[80];
+   struct glonk *nxt;
+} comment_block;
+
+typedef struct flonk {
+   char txt[80];
+   struct flonk *nxt;
+} outfile_block;
+
+typedef unsigned int defmodset;
+
+typedef map_thing *map_hunk[][2];
+
+typedef struct {
+   setup_kind result_kind;
+   int xfactor;
+   veryshort xca[24];
+   veryshort yca[24];
+   veryshort diagram[64];
+} coordrec;
+
+
 /* These flags go into the "concept_prop" field of a "concept_table_item". */
 
 /* This means that the concept takes a second call, so a sublist must
@@ -924,77 +1040,6 @@ typedef enum {
    disttest_t, disttest_nil, disttest_only_two,
    disttest_any, disttest_offset, disttest_z} disttest_kind;
 
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "selector_names" and "selector_singular" in sdutil.c, and also necessary stuff in the
-   user interfaces.  The latter includes the definition of "task$selector_menu" in sd.dps
-   in the Domain/Dialog system, and the DITL "Select Dancers" in *.rsrc in
-   the Macintosh system. */
-typedef enum {
-   selector_uninitialized,
-   selector_boys,
-   selector_girls,
-   selector_heads,
-   selector_sides,
-   selector_headcorners,
-   selector_sidecorners,
-   selector_headboys,
-   selector_headgirls,
-   selector_sideboys,
-   selector_sidegirls,
-   selector_centers,
-   selector_ends,
-   selector_leads,
-   selector_trailers,
-   selector_beaux,
-   selector_belles,
-   selector_center2,
-   selector_center6,
-   selector_outer2,
-   selector_outer6,
-   selector_nearline,
-   selector_farline,
-   selector_nearcolumn,
-   selector_farcolumn,
-   selector_nearbox,
-   selector_farbox,
-   selector_all,
-   selector_none
-} selector_kind;
-#define last_selector_kind ((int) selector_none)
-
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "direction_names" in sdutil.c, and also necessary stuff in the user interfaces.
-   The latter includes the definition of "task$direction_menu" in sd.dps in the
-   Domain/Dialog system, and the DITL "which direction" in *.rsrc in the Macintosh
-   system. */
-typedef enum {
-   direction_uninitialized,
-   direction_left,
-   direction_right,
-   direction_in,
-   direction_out,
-   direction_zigzag,
-   direction_zagzig,
-   direction_zigzig,
-   direction_zagzag,
-   direction_no_direction
-} direction_kind;
-#define last_direction_kind ((int) direction_no_direction)
-
-typedef struct {
-   char *name;
-   concept_kind kind;
-   dance_level level;
-   struct {
-      map_thing *maps;
-      int arg1;
-      int arg2;
-      int arg3;
-      int arg4;
-      int arg5;
-   } value;
-} concept_descriptor;
-
 typedef enum {
    simple_normalize,
    normalize_before_isolated_call,
@@ -1006,17 +1051,6 @@ typedef enum {
    merge_c1_phantom,
    merge_c1_phantom_nowarn
 } merge_action;
-
-typedef struct glock {
-   concept_descriptor *concept;   /* the concept or end marker */
-   callspec_block *call;          /* if this is end mark, gives the call; otherwise unused */
-   struct glock *next;            /* next concept, or, if this is end mark, points to substitution list */
-   struct glock *subsidiary_root; /* for concepts that take a second call, this is its parse root */
-   struct glock *gc_ptr;          /* used for reclaiming dead blocks */
-   selector_kind selector;        /* selector, if any, used by concept or call */
-   direction_kind direction;      /* direction, if any, used by concept or call */
-   int number;                    /* number, if any, used by concept or call */
-} parse_block;
 
 typedef struct {
    int bits[2];
@@ -1285,7 +1319,7 @@ extern long_boolean restore_parse_state(void);
 extern long_boolean deposit_call(callspec_block *call);
 extern long_boolean deposit_concept(concept_descriptor *conc, unsigned int number_fields);
 extern long_boolean query_for_call(void);
-extern void write_header_stuff(void);
+extern void write_header_stuff(long_boolean with_ui_version);
 extern void get_real_subcall(
    parse_block *parseptr,
    by_def_item *item,
@@ -1412,7 +1446,7 @@ extern resolve_indicator resolve_p(setup *s);
 extern void write_resolve_text(void);
 extern uims_reply full_resolve(search_kind goal);
 extern int concepts_in_place(void);
-extern int reconcile_command_ok(void **permutation_map_p, int *accept_extend_p);
+extern int reconcile_command_ok(void);
 extern int resolve_command_ok(void);
 extern int nice_setup_command_ok(void);
 extern void create_resolve_menu_title(search_kind goal, int cur, int max, resolver_display_state state, char *title);
@@ -1439,9 +1473,6 @@ extern void canonicalize_rotation(setup *result);
 
 extern void move(
    setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
    long_boolean qtfudged,
    setup *result);
 
@@ -1449,16 +1480,13 @@ extern void move(
 
 extern void divided_setup_move(
    setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
    map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result);
 
-extern void overlapped_setup_move(setup *s, map_thing *maps,
-   int m1, int m2, int m3, parse_block *parseptr, setup *result);
+extern void overlapped_setup_move(setup *ss, map_thing *maps,
+   int m1, int m2, int m3, setup *result);
 
 extern void do_phantom_2x4_concept(
    setup *ss,
@@ -1470,12 +1498,11 @@ extern void phantom_2x4_move(
    int lineflag,
    phantest_kind phantest,
    map_thing *maps,
-   parse_block *parseptr,
    setup *result);
 
 extern void distorted_2x2s_move(
    setup *ss,
-   parse_block *parseptr,
+   concept_descriptor *this_concept,
    setup *result);
 
 extern void distorted_move(
@@ -1512,21 +1539,19 @@ extern void triangle_move(
 
 extern long_boolean do_big_concept(
    setup *ss,
-   parse_block *parseptr,
    setup *result);
 
 /* In SDTAND */
 
 extern void tandem_couples_move(
    setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
    selector_kind selector,
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
    int phantom,               /* normal=0 / phantom=1 / gruesome=2 */
-   int tnd_cpl_siam,          /* tandem=0 / couples=1 / siamese=2 / skew=3 */
+   int tnd_cpl_siam,          /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
+                                 tandem of 3 = 4 / couples of 3 = 5 / tandem of 4 = 6 / couples of 4 = 7
+                                 box = 8 / diamond = 9 */
    setup *result);
 
 extern void initialize_tandem_tables(void);
@@ -1535,12 +1560,8 @@ extern void initialize_tandem_tables(void);
 
 extern void concentric_move(
    setup *ss,
-   parse_block *parsein,
-   parse_block *parseout,
-   callspec_block *callspecin,
-   callspec_block *callspecout,
-   final_set final_conceptsin,
-   final_set final_conceptsout,
+   setup_command *cmdin,
+   setup_command *cmdout,
    calldef_schema analyzer,
    defmodset modifiersin1,
    defmodset modifiersout1,

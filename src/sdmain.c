@@ -27,7 +27,26 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.0"
+#define VERSION_STRING "30.01"
+
+/* We cause this string (that is, the concatentaion of these strings) to appear
+   in the binary image of the program, so that the "what" and "ident" utilities
+   can print the version.
+
+   We do not endorse these programs, or any probabilistic identification
+   mechanism -- we are simply trying to be helpful to those people who use them.
+   It is regrettable that these two identification mechanisms are different
+   and superficially incompatible, and that many existing programs only comply
+   with one or the other of them, but not both.
+
+   We specifically break up the "Header" word to prevent utilities like RCS or
+   SCCS, if anyone should use them to store this source file, from attempting
+   to modify this.  Version control for this program is performed manually,
+   not by any utility. */
+
+static char *id="@(#)$He" "ader: Sd: version "
+   VERSION_STRING
+   "  wba@apollo.hp.com  10 Dec 93 $";
 
 /* This defines the following functions:
    sd_version_string
@@ -130,7 +149,7 @@ Private parse_block *parse_active_list;
 Private parse_block *parse_inactive_list;
 Private int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
 Private short int *concept_sublists[NUM_CALL_LIST_KINDS];
-
+Private long_boolean diagnostic_mode = FALSE;
 
 /* Stuff for saving parse state while we resolve. */
 
@@ -946,13 +965,26 @@ Private int mark_aged_calls(
 Private call_list_mode_t call_list_mode;
 
 
-extern void write_header_stuff(void)
+extern void write_header_stuff(long_boolean with_ui_version)
 {
-   /* log creation version info */
-   writestuff("Sd");
-   writestuff(sd_version_string());
-   writestuff(":db");
-   writestuff(database_version);
+   if (!diagnostic_mode) {
+      /* log creation version info */
+      if (with_ui_version) {     /* This is the "pretty" form that we display while running. */
+         writestuff("Sd ");
+         writestuff(sd_version_string());
+         writestuff(" : db");
+         writestuff(database_version);
+         writestuff(" : ui");
+         writestuff(uims_version_string());
+      }
+      else {                     /* This is the "compact" form that goes into the file. */
+         writestuff("Sd");
+         writestuff(sd_version_string());
+         writestuff(":db");
+         writestuff(database_version);
+      }
+   }
+
    writestuff("     ");
 
    /* log level info */
@@ -991,7 +1023,8 @@ void main(int argc, char *argv[])
             -write_full_list <filename>  -- write out the call list for the
                   indicated level and all lower levels INSTEAD OF running the program
             -abridge <filename>  -- read in the file, strike all the calls
-                  contained therein off the menus, and proceed. */
+                  contained therein off the menus, and proceed.
+            -diagnostic  -- (this is a hidden flag) suppress display of verison info */
 
          if (strcmp(&argv[argno][1], "write_list") == 0)
             call_list_mode = call_list_mode_writing;
@@ -999,6 +1032,9 @@ void main(int argc, char *argv[])
             call_list_mode = call_list_mode_writing_full;
          else if (strcmp(&argv[argno][1], "abridge") == 0)
             call_list_mode = call_list_mode_abridging;
+         else if (strcmp(&argv[argno][1], "diagnostic") == 0)
+            { diagnostic_mode = TRUE; continue; }
+
 	 /*
 	  * These options may be handled by the UI, but if not
 	  * be sure it gets done.
@@ -1018,9 +1054,9 @@ void main(int argc, char *argv[])
          if (argno>=argc)
             uims_bad_argument("This flag must be followed by a file name:", argv[argno-1], NULL);
 
-	 if (call_list_mode != call_list_mode_none)
-	     if (open_call_list_file(call_list_mode, argv[argno]))
-		 exit_program(1);
+         if (call_list_mode != call_list_mode_none)
+            if (open_call_list_file(call_list_mode, argv[argno]))
+               exit_program(1);
       }
       else if (argv[argno][0] == 'm') calling_level = l_mainstream;
       else if (argv[argno][0] == 'p') calling_level = l_plus;
@@ -1139,7 +1175,7 @@ void main(int argc, char *argv[])
    show_banner:
 
    writestuff("Version ");
-   write_header_stuff();
+   write_header_stuff(TRUE);
    writestuff("Output file is \"");
    writestuff(outfile_string);
    writestuff("\"");
@@ -1225,8 +1261,6 @@ void main(int argc, char *argv[])
    
    /* Display the menu and make a choice!!!! */
    
-   restart_after_backup:
-
    simple_restart:
 
    if ((!reply_pending) && (!query_for_call())) {
@@ -1247,6 +1281,8 @@ void main(int argc, char *argv[])
    /* If get here, query_for_call exitted without completing its parse, because the operator
       selected something like "quit", "undo", or "resolve", or because we have such a command
       already pending. */
+
+   reply_pending = FALSE;
 
    if (reply == ui_command_select) {
       switch (uims_menu_index) {
@@ -1278,8 +1314,7 @@ void main(int argc, char *argv[])
                   if (this_ptr == parse_state.concept_write_ptr) {
                      parse_state.concept_write_ptr = last_ptr;
                      *last_ptr = (parse_block *) 0;
-                     reply_pending = FALSE;
-                     goto restart_after_backup;
+                     goto simple_restart;
                   }
       
                   if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
@@ -1486,7 +1521,7 @@ extern long_boolean write_sequence_to_file(void)
    get_date(date);
    writestuff(date);
    writestuff("     ");
-   write_header_stuff();
+   write_header_stuff(FALSE);
 
    if (getout_ind == POPUP_ACCEPT_WITH_STRING) {
       writestuff("             ");

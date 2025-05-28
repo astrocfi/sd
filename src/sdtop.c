@@ -270,8 +270,8 @@ Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x
 Private full_expand_thing step_1x8_pair      = {warn__none,       0, &step_1x8_stuff};
 Private full_expand_thing step_1x4_side_pair = {warn__none,       0, &step_1x4_side_stuff};
 Private full_expand_thing step_1x4_pair      = {warn__none,       0, &step_1x4_stuff};
-Private full_expand_thing step_2x2v_pair     = {warn__none,       2*SETUPFLAG__ELONGATE_BIT, &step_2x2v_stuff};
-Private full_expand_thing step_2x2h_pair     = {warn__none,       1*SETUPFLAG__ELONGATE_BIT, &step_2x2h_stuff};
+Private full_expand_thing step_2x2v_pair     = {warn__none,       2, &step_2x2v_stuff};
+Private full_expand_thing step_2x2h_pair     = {warn__none,       1, &step_2x2h_stuff};
 Private full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
 Private full_expand_thing step_li_pair       = {warn__none,       0, &step_li_stuff};
 Private full_expand_thing step_tby_pair      = {warn__none,       0, &step_tby_stuff};
@@ -451,11 +451,11 @@ extern void touch_or_rear_back(
 
    if (!tptr) return;
    warn(tptr->warning);
-   if ((scopy->setupflags & tptr->forbidden_elongation) && (!(scopy->setupflags & SETUPFLAG__NO_CHK_ELONG)))
+   if ((scopy->cmd.prior_elongation_bits & tptr->forbidden_elongation) && (!(scopy->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)))
       fail("People are too far away to work with each other on this call.");
    zptr = tptr->expand_lists;
 
-   scopy->setupflags |= SETUPFLAG__DISTORTED;
+   scopy->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
    stemp = *scopy;
    clear_people(scopy);
@@ -1074,7 +1074,8 @@ extern void toplevelmove(void)
    if (written_history_items > history_ptr)
       written_history_items = history_ptr;
 
-   starting_setup.setupflags = 0;
+   starting_setup.cmd.cmd_misc_flags = 0;
+   starting_setup.cmd.prior_elongation_bits = 0;
    newhist->warnings.bits[0] = 0;
    newhist->warnings.bits[1] = 0;
 
@@ -1179,7 +1180,10 @@ extern void toplevelmove(void)
 
    /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
    update_id_bits(&starting_setup);
-   move(&starting_setup, conceptptr, NULLCALLSPEC, 0, FALSE, &new_setup);
+   starting_setup.cmd.parseptr = conceptptr;
+   starting_setup.cmd.callspec = NULLCALLSPEC;
+   starting_setup.cmd.cmd_final_flags = 0;
+   move(&starting_setup, FALSE, &new_setup);
 
    /* Remove outboard phantoms from the resulting setup. */
 

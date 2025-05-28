@@ -27,13 +27,12 @@
 
 Private void ctr_end_triangle_move(
    setup *s,
-   parse_block *parseptr,
+   int indicator,
    setup *result)
-
 {
    calldef_schema schema;
 
-   if (parseptr->concept->value.arg1 == 2) {
+   if (indicator == 2) {
       switch (s->kind) {
          case s_hrglass:
             schema = schema_vertical_6;   /* This is the schema for picking out
@@ -50,8 +49,7 @@ Private void ctr_end_triangle_move(
             fail("There are no 'inside' triangles.");
       }
 
-      concentric_move(s, parseptr->next, (parse_block *) 0, NULLCALLSPEC, NULLCALLSPEC, 0, 0,
-               schema, 0, 0, result);
+      concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, result);
    }
    else {
       switch (s->kind) {
@@ -65,8 +63,7 @@ Private void ctr_end_triangle_move(
             fail("There are no 'outside' triangles.");
       }
 
-      concentric_move(s, (parse_block *) 0, parseptr->next, NULLCALLSPEC, NULLCALLSPEC, 0, 0,
-               schema, 0, 0, result);
+      concentric_move(s, (setup_command *) 0, &s->cmd, schema, 0, 0, result);
    }
 }
 
@@ -95,27 +92,28 @@ Private tgl_map map2b = {{5, 6, 7}, {1, 2, 3}, {0, 4}, {3, 15, 13}, {11,  7,  5}
 
 
 Private void do_glorious_triangles(
-   setup *s,
+   setup *ss,
    setup *a1,
    setup *a2,
    setup *idle,
    int startingrot,
    tgl_map *map_ptr,
-   parse_block *parseptr,
    setup *result)
-
 {
    int i, r;
    setup res1, res2;
 
+   a1->cmd = ss->cmd;
+   a2->cmd = ss->cmd;
    a1->kind = s_trngl;
    a2->kind = s_trngl;
    a1->rotation = startingrot;
    a2->rotation = startingrot;
-   a1->setupflags = s->setupflags | SETUPFLAG__DISTORTED;
-   a2->setupflags = s->setupflags | SETUPFLAG__DISTORTED;
-   move(a1, parseptr, NULLCALLSPEC, 0, FALSE, &res1);
-   move(a2, parseptr, NULLCALLSPEC, 0, FALSE, &res2);
+   a1->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   a2->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+
+   move(a1, FALSE, &res1);
+   move(a2, FALSE, &res2);
 
    if (res1.kind != res2.kind || res1.rotation != res2.rotation)
       fail("Improper result from triangle call.");
@@ -221,7 +219,7 @@ Private void do_glorious_triangles(
           warn(warn__check_dmd_qtag);
    }
 
-   result->setupflags = res1.setupflags | res2.setupflags;
+   result->result_flags = res1.result_flags | res2.result_flags;
 }
 
 
@@ -230,9 +228,8 @@ Private void do_glorious_triangles(
 /* This procedure does wave-base, tandem-base, and so-and-so-base. */
 Private void wv_tand_base_move(
    setup *s,
-   parse_block *parseptr,
+   int indicator,
    setup *result)
-
 {
    int i, t, tbonetest;
    calldef_schema schema;
@@ -243,12 +240,12 @@ Private void wv_tand_base_move(
    switch (s->kind) {
       case s_galaxy:
          /* We allow so-and-so-base triangles only in C1 phantoms. */
-         if (parseptr->concept->value.arg1 == 20)
+         if (indicator == 20)
             fail("Can't find the indicated triangles.");
          tbonetest = s->people[1].id1 | s->people[3].id1 | s->people[5].id1 | s->people[7].id1;
          if ((tbonetest & 011) == 011)
             fail("Can't find the indicated triangles.");
-         else if ((parseptr->concept->value.arg1 ^ tbonetest) & 1)
+         else if ((indicator ^ tbonetest) & 1)
             schema = schema_lateral_6;
          else
             schema = schema_vertical_6;
@@ -258,19 +255,19 @@ Private void wv_tand_base_move(
          break;
       case s_hrglass:
          /* We allow so-and-so-base triangles only in C1 phantoms. */
-         if (parseptr->concept->value.arg1 == 20)
+         if (indicator == 20)
             fail("Can't find the indicated triangles.");
          tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
          if ((tbonetest & 011) == 011)
             fail("Can't find the indicated triangles.");
-         else if ((parseptr->concept->value.arg1 ^ tbonetest) & 1)
+         else if ((indicator ^ tbonetest) & 1)
             fail("Can't find the indicated triangles.");
    
          schema = schema_vertical_6;   /* This is the schema for picking out
                                           the triangles in an hourglass. */
          break;
       case s_c1phan:
-         if (parseptr->concept->value.arg1 == 20) {
+         if (indicator == 20) {
             t = 0;
             if (global_selectmask == (global_livemask & 0x5A5A))
                t = 1;
@@ -278,7 +275,7 @@ Private void wv_tand_base_move(
                fail("Can't find the indicated triangles.");
          }
          else {
-            t = parseptr->concept->value.arg1 & 1;
+            t = indicator & 1;
             if ((global_tbonetest & 010) == 0) t ^= 1;
             else if ((global_tbonetest & 1) != 0)
                fail("Can't find the indicated triangles.");
@@ -308,7 +305,7 @@ Private void wv_tand_base_move(
          (void) copy_person(&idle, 0, s, map_ptr->mapcpi[0]);
          (void) copy_person(&idle, 1, s, map_ptr->mapcpi[1]);
       
-         do_glorious_triangles(s, &a1, &a2, &idle, 2, map_ptr, parseptr->next, result);
+         do_glorious_triangles(s, &a1, &a2, &idle, 2, map_ptr, result);
          result->rotation -= t;   /* Flip the setup back. */
          reinstate_rotation(s, result);
          return;
@@ -316,16 +313,14 @@ Private void wv_tand_base_move(
          fail("Can't do this concept in this setup.");
    }
 
-   concentric_move(s, parseptr->next, (parse_block *) 0, NULLCALLSPEC, NULLCALLSPEC, 0, 0,
-            schema, 0, 0, result);
+   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, result);
 }
 
 
 Private void tall_short_6_move(
    setup *s,
-   parse_block *parseptr,
+   int indicator,
    setup *result)
-
 {
    int tbonetest;
    calldef_schema schema;
@@ -335,7 +330,7 @@ Private void tall_short_6_move(
       tbonetest = s->people[1].id1 | s->people[3].id1 | s->people[5].id1 | s->people[7].id1;
 
       if ((tbonetest & 011) == 011) fail("Can't find tall/short 6.");
-      else if ((parseptr->concept->value.arg1 ^ tbonetest) & 1)
+      else if ((indicator ^ tbonetest) & 1)
          schema = schema_lateral_6;
       else
          schema = schema_vertical_6;
@@ -345,8 +340,7 @@ Private void tall_short_6_move(
 
    /* For galaxies, the schema is now in terms of the absolute orientation. */
 
-   concentric_move(s, parseptr->next, (parse_block *) 0, NULLCALLSPEC, NULLCALLSPEC, 0, 0,
-            schema, 0, 0, result);
+   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, result);
 }
 
 
@@ -359,43 +353,43 @@ extern void triangle_move(
    setup a1, a2;
    setup idle;
    tgl_map *map_ptr;
+   int indicator = parseptr->concept->value.arg1;
 
-/* arg1 = 0 - out point
-          1 - in point
-          2 - inside
-          3 - outside
-          4 - tall 6
-          5 - short 6
-          6 - wave-base
-          7 - tandem-base
-          20 - so-and-so-base
-*/
+/* indicator = 0 - out point
+               1 - in point
+               2 - inside
+               3 - outside
+               4 - tall 6
+               5 - short 6
+               6 - wave-base
+               7 - tandem-base
+               20 - so-and-so-base */
 
-   if (parseptr->concept->value.arg1 >= 6) {
+   if (indicator >= 6) {
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
-      ss->setupflags |= SETUPFLAG__SAID_TRIANGLE;
-      wv_tand_base_move(ss, parseptr, result);
+      ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
+      wv_tand_base_move(ss, indicator, result);
       return;
    }
-   else if (parseptr->concept->value.arg1 >= 4) {
-      tall_short_6_move(ss, parseptr, result);
+   else if (indicator >= 4) {
+      tall_short_6_move(ss, indicator, result);
       return;
    }
-   else if (parseptr->concept->value.arg1 >= 2) {
+   else if (indicator >= 2) {
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
-      ss->setupflags |= SETUPFLAG__SAID_TRIANGLE;
-      ctr_end_triangle_move(ss, parseptr, result);
+      ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
+      ctr_end_triangle_move(ss, indicator, result);
       return;
    }
 
    /* arg1 = 1 for in point, 0 for out point */
 
    /* Set this so we can do "peel and trail" without saying "triangle" again. */
-   ss->setupflags |= SETUPFLAG__SAID_TRIANGLE;
+   ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
 
    if (ss->kind != s_qtag) fail("Must have diamonds.");
 
-   if (parseptr->concept->value.arg1) {
+   if (indicator) {
       if (
             (ss->people[0].id1 & d_mask) == d_east &&
             (ss->people[1].id1 & d_mask) != d_west &&
@@ -437,6 +431,6 @@ extern void triangle_move(
    (void) copy_person(&idle, 0, ss, map_ptr->mapqti[0]);
    (void) copy_person(&idle, 1, ss, map_ptr->mapqti[1]);
 
-   do_glorious_triangles(ss, &a1, &a2, &idle, 0, map_ptr, parseptr->next, result);
+   do_glorious_triangles(ss, &a1, &a2, &idle, 0, map_ptr, result);
    reinstate_rotation(ss, result);
 }
