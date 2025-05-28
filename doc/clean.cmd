@@ -20,8 +20,10 @@ del sessions_toc.html
 del sessions.txt
 del relnotes.html
 del relnotes98.html
+del relnotes03.html
 del relnotes.txt
 del relnotes98.txt
+del relnotes03.txt
 del faq.html
 del appnote*.html
 del appnote*.txt
@@ -62,6 +64,7 @@ del demo.info
 del sessions.info
 del relnotes.info
 del relnotes98.info
+del relnotes03.info
 del appnote*.info
 del textdoc.tar
 del psdoc.tar

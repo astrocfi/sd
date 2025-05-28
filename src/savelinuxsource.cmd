@@ -5,7 +5,6 @@ md sd
 for %%f in (*.cpp) do crunfix %%f .\sd\%%f
 for %%f in (*.c) do crunfix %%f .\sd\%%f
 for %%f in (*.h) do crunfix %%f .\sd\%%f
-for %%f in (sample*.ini) do crunfix %%f .\sd\%%f
 for %%f in (makefile*) do crunfix %%f .\sd\%%f
 crunfix sd_calls.txt .\sd\sd_calls.txt
 crunfix db_doc.txt .\sd\db_doc.txt

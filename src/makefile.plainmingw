@@ -24,7 +24,7 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
 # "-DNO_CURSES" - disable compilation with curses.
 #
-TTY_FLAGS =
+TTY_FLAGS =-DNO_CURSES
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".

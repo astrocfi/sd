@@ -1,12 +1,16 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename faq.info
 @settitle Sd Frequently Asked Questions
-@c Time-stamp: <18 May 2004 wba>
+@c Time-stamp: <13 Aug 2005 wba>
 
 @sp 2
-@noindent Copyright @copyright{} 1996-2004 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2005 William B. Ackerman
 
 @contents
+
+@unnumberedsec The program offered something that I've never heard of, or don't understand, or doesn't seem right.  What should I do?
+
+Don't call it.
 
 @unnumberedsec The options for sessions and abridgement files are confusing!
 
@@ -14,9 +18,101 @@ You may find that @code{Sd} is more user-friendly than @code{Sdtty},
 particularly if you are having trouble with sessions or abridgement
 files.  It will show you the startup options more clearly.  You can type
 commands at @code{Sd} the same way you type at @code{Sdtty}.  It just
-looks different.  During the @code{Sdtty} startup screen, you can click
-on the question mark in the upper right corner and then on any button
-or checkbox to get help.
+looks different.  During the @code{Sd} startup screen, you may want to
+look at the help text for each item before using it.  Click on the
+question mark in the upper right corner, and then click on the item of
+interest.  This may help explain what is going on.
+
+Anything that you set up with @code{Sd} can be used with @code{Sdtty}.
+
+@unnumberedsec How can I set up and use the ``sessions'' feature?
+
+First, it is better to do this in Sd, not Sdtty, even if you use Sdtty
+for normal writing.  See the previous question.
+
+Sessions are used to keep track of the levels, sequence numbers, and
+similar things for the various workshops, dances, and conventions you
+might be writing material for.  You can create a session for each
+workshop, and then select the session each time you start the program.
+
+You must have an ``initialization file'' to use sessions.  It is easy to
+create one.  If you don't have one, @code{Sd} or @code{Sdtty} will print
+this whenever it starts up:
+
+@example
+@group
+   You do not have a session control file.  If you want to
+   create one, give the command "initialize session file".
+@end group
+@end example
+
+Do that.  Then exit from the program and start it again.  Some sample
+sessions will now be active.
+
+Once sessions are active and are presented during startup, you can use
+them by clicking on the desired session in @code{Sd}, or typing its
+number in @code{Sdtty}.  The level, output file name, starting sequence
+number, and header title will be set for you.
+
+If you want to create a new session, click or type the item labeled
+"(create a new session)".  You will be asked for the level.  Enter that.
+You will then be asked for the file name.  We recommend giving a "+"
+sign.  This will cause all sequences to be written to a file with a name
+based on the current date.  You will then be asked for the header title.
+This will be printed at the top of every sequence written for that
+session.
+
+@unnumberedsec How can I set up an ``abridge'' list for a session?
+
+First, it is better to do this in Sd, not Sdtty, even if you use Sdtty
+for normal writing.  See the previous two questions.
+
+Abridge lists are used for writing material for a class or workshop,
+using only the calls that the class knows at any given time.
+
+To set up a session with abridgement, start Sd.  In the startup screen,
+click "write list".  The "abridgement file name" will light up.  Fill it
+in with the name of the file you want to use with that session.
+("abridge.txt" is not a very creative name.)  Remember that file name.
+Then double-click "no session" and double-click the level that you want.
+
+Start Sd again.  Click "use abridged list", and fill in the
+same file name (again! sorry!)  Then double-click "create
+new session" and double-click the lavel.  A popup will appear,
+for the output file name.  Change it to a single "+" sign,
+unless you are a masochist.  (Or a "*" sign if you prefer,
+and if you know the difference.)  Click "accept".  A new
+popup asks for the session title.  Enter it (e.g. "my C2
+group") and click "accept".  You are now in business.
+
+Edit the file (it's in the "C:\Sd" directory) to delete calls, as you
+teach the group.  Whenever you start Sd or Sdtty, it should offer the
+new session.  It will read the abridgement file and act accordingly.
+
+See the manual, under ``abridgement'', for detailed instructions on
+how to maintain an abridge list.
+
+If you really want to do the initial setup in Sdtty, it could be
+accomplished with:
+
+@example
+@group
+sdtty -write_list my_group_list.txt c2
+sdtty -abridge my_group_list.txt c2
+Type the number associated with "create a new session".
+Type a "+" sign, or whatever file name you want.
+Type the session title.
+@end group
+@end example
+
+@unnumberedsec How can I tell how many sequences I have written in the current session?
+
+First, you must be using the ``sessions'' feature.  When running either Sd or Sdtty,
+the title bar of the window will show the sequence number at the start of the
+current run of the program, and the sequence number right now.  The title might
+look like "Sdtty C3 AACE (12:22)"  The first number in parentheses gives the number
+with which the current run started, and the second number shows the current sequence
+number.  In this example, 10 sequences have been written during the current run.
 
 @unnumberedsec Entering complex calls is confusing!
 
@@ -47,7 +143,7 @@ If you put options in it, you will get those options every time you run
 @code{Sd} or @code{Sdtty}.  If you don't have such a file, give the
 command @strong{initialize session file} to @code{Sd} or @code{Sdtty} to
 create it.  Then edit it.  Use a plain text editor such as Emacs or
-Notepad -- do not use a word processor.  You will see a section called
+Notepad---do not use a word processor.  You will see a section called
 ``[Options]''.  Add whatever options you like.  Do not put hyphens in front
 of options in this file.  For example:
 
@@ -72,7 +168,7 @@ exactly what version of Windows you have, but it generally involves
 right-clicking the icon, or going to Start->Settings->Taskbar->Start
 Menu Programs->Advanced.  Either way, you should be able to copy and
 paste it, and right-click it to rename it or edit its properties.  Put
-the copied icon wherever you want -- desktop, Start Menu, or wherever.
+the copied icon wherever you want---desktop, Start Menu, or wherever.
 Rename it to whatever you want.  Then edit its properties.  When editing
 its properties, you can change the icon that is displayed, and you can
 add options by selecting the ``shortcut'' tab.  On the ``target'' line,
@@ -116,6 +212,28 @@ have different icons to start Sd, and you want to control the window
 size separately for each icon, follow the instructions in the
 ``command-line options'' section of the manual.
 
+@unnumberedsec What are ``new style file names'', and how can I switch over to using them?
+
+New style file names are names like ``13aug05_c1.txt'' if you use
+sessions with the "+" file name generation mechanism, or
+``sequence_c1.txt'' if you don't.  The old style names are like
+``13aug05.c1'' or ``sequence.c1''.  The part after the period is called
+the "extension".  When using Windows or some other operating systems, it
+is very helpful for files to have a correct extension, and ".txt" is the
+right extension for these files.  For example, attaching files in email
+messages is sometimes facilitated by having the ".txt" extension.
+
+Newly created session files use new style names.  Older session files
+may use old style names.  If you don't use a session file, you get old
+style names, though this may change in the future.
+
+If you already have a session file, and you want to change it over to
+new style names, give the command @strong{change to new style filename}
+right after starting the program.
+
+When you change to new style file names, no previously written files
+will be renamed.  Only newly created files will have the new names.
+
 @unnumberedsec How can I uninstall @code{Sd}?
 
 @code{Sd} has no complex interactions with other software, and does not
@@ -126,7 +244,7 @@ whatever startup icons you may have placed.
 
 @unnumberedsec How can I define ``hot keys''?
 
-Edit (with a plain text editor such as Emacs or Notepad -- do not use a
+Edit (with a plain text editor such as Emacs or Notepad---do not use a
 word processor) the initialization file C:\sd\sd.ini.  If you don't have
 such a file, give the command @strong{initialize session file} to @code{Sd} to
 create it.  Then edit it.  You will see a section called ``[Accelerators]''
@@ -162,7 +280,7 @@ that key.  A combination like @strong{f6} denotes that function key.  When
 defining function keys, you may use the @strong{s} prefix, or no prefix at
 all, to get shift-function-key or plain-function key.  With letters or
 digits, you must use some combination of alt or control.  (You can't
-define just @strong{c} as a hot key for concentric -- it would make it
+define just @strong{c} as a hot key for concentric---it would make it
 impossible to type @strong{circulate}.)
 
 @unnumberedsec How can I define abreviations for calls?
@@ -192,6 +310,19 @@ p       pass thru
 @end group
 @end example
 
+@unnumberedsec Why can't I put blanks in the output file name?
+
+Sorry, but doing so would make it impossible to process session descriptors
+in the initialization file.
+
+@unnumberedsec I use ``color_by_couple'', but the blue people are too dark.  Can I do anything about that?
+
+As of version 36.63, there are two new startup options, that can be put in your
+initialization file (sd.ini), startup icons, startup scripts, or on the command line.
+They are ``use_magenta'' and ``use_cyan''.  These lighten the red and blue checker
+colors, respectively.  Remember to put a hypen in front of an option in an icon or
+on the command line, but not in the initialization file.
+
 @unnumberedsec How can I abort a sequence in progress?
 
 If you select the @strong{abort} command, the program will abort the sequence
@@ -204,17 +335,40 @@ The program only recognizes the designators @strong{boys} and @strong{girls}.
 The only exception is the call @strong{ladies chain}.  Of course, you can
 use whatever designation you want when calling.
 
-@unnumberedsec How do I have the center wave of 6 do something from a 3x1 diamond?
+@unnumberedsec The Callerlab definitions allow @strong{veer left} and @strong{veer right} with single people.  Why doesn't @code{Sd} allow this?
+
+@code{Sd} considers this situation ambiguous, so you need to say
+@strong{single veer left} or @strong{single veer right}.  Whether you
+need to say this when calling is up to you.
+
+@unnumberedsec Isn't @strong{remake the column} a ``grand'' call even without saying so?
+
+No.  The Callerlab definitions say that, unless in a thar or alamo, this
+is a 4-person call.  It is not @strong{grand} unless you say so.  If you
+believe that just saying @strong{remake the column} might confuse the
+dancers, don't do it.
+
+@unnumberedsec Now that the right-hand rule is enforced for @strong{remake}, how can I do a @strong{crazy remake}?
+
+You can say @strong{crazy any hand remake}, or @strong{reverse random mirror crazy remake},
+or @strong{reverse random left crazy remake}.
+
+@unnumberedsec How can I identify the center wave of 6 in a 3x1 diamond?
 
 This is the setup that you would get after, for example, @strong{1/2
 acey deucey} from waves.  There will be a center wave of 6.  To
-designate those people, say @strong{center 1x6}.  @strong{Center 6}
+designate those people, say @strong{center 1x6}, or the more specific
+designators @strong{center wave of 6}, @strong{center line of 6}, or
+@strong{center column of 6}.  The designator @strong{center 6}
 designates different people---all but the two people at the very ends of
-that wave.  So you can say things like @strong{center 1x6 grand swing
+that wave.  So you can say things like @strong{center wave of 6 grand swing
 thru}.  You probably don't need to call it that way---the dancers will
 know what you mean if you say @strong{center 6 grand swing thru}.
 
-@unnumberedsec How do I do @strong{plenty} from diamonds?
+The same situation occurs after @strong{sets in motion but hold the column}.
+Use the designator @strong{center column of 6}.
+
+@unnumberedsec How can I do @strong{plenty} from diamonds?
 
 Notwithstanding the Callerlab definitions, the program considers @strong{plenty}
 @emph{always} to have the outsides quarter right.  There is a call @strong{plenty,
@@ -351,7 +505,7 @@ concept is stable or fractional stable, there is also an
 @strong{<anyone> are <concept>} version of it.  As with the previous question,
 ``are'' is preferable to ``work''.
 
-@unnumberedsec How can I call @strong{split phantom lines in roll circulate}?
+@unnumberedsec How can I call @strong{Split Phantom Lines In Roll Circulate}?
 
 In all concepts that can specify either lines or waves, the ``waves''
 version has an implicit @strong{assume waves} operation in it.  Under
@@ -389,8 +543,21 @@ allow the people trading to be nonadjacent.  This means that
 concept applied to the call @strong{trade}.  @code{Sd} tries to allow you
 to type everything all on one line.  It sometimes fails in this case.
 If something like @strong{boys trade} doesn't work when typed together, try
-typing the @strong{boys} selector, pressing @strong{<ENTER>}, and then typing
+typing the @strong{boys} designator, pressing @strong{<ENTER>}, and then typing
 the @strong{trade} call.
+
+@unnumberedsec How can I use the @strong{two-faced} concept?
+
+It isn't clear that this is actually something that needs to be
+said---modern challenge choreography seems to have adopted the position
+that you just do your part anyway.  So just give the call.  A warning
+may be printed, such as "Do your part" or "This is an unusual setup for
+this call".  You may or may not choose to say "two-faced" when calling.
+
+@unnumberedsec How can I do @strong{same sex disconnected}?
+
+Just like that.  Type, for example, @strong{same sex disconnected swing thru}.
+Each sex does that call in their disconnected setup.
 
 @unnumberedsec How can I type @strong{all 8 recycle and circle 1/4}?
 
@@ -521,13 +688,14 @@ designated as the @strong{outer pairs}, and the others as the @strong{center
 You can also use designators like @strong{center line}, @strong{center box},
 @strong{center diamond}, and so on.
 
-@unnumberedsec Why is the Roll direction wrong after Spin Chain and Exchange the Gears?
+@unnumberedsec Why is the Roll direction wrong after @strong{spin chain and exchange the gears}?
 
-@code{Sd} defines this call in terms of @strong{3/4 Exchange the Diamonds} and @strong{Interlocked
-Flip the Diamond}, and sets the Roll direction accordingly.  We consider the
-Callerlab definition to be a pathetic attempt to give precision to a definition
-that was never intended to be precise.  Accordingly, we consider attempts to
-deduce Roll direction from the Callerlab definition to be misguided.
+@code{Sd} defines this call in terms of @strong{3/4 exchange the
+diamonds} and @strong{interlocked flip the diamond}, and sets the roll
+direction accordingly.  We consider the Callerlab definition to be an
+attempt to give precision to a definition that was never
+intended to be precise.  Accordingly, we consider attempts to deduce
+roll direction from the Callerlab definition to be misguided.
 
 @unnumberedsec How does @strong{common spot} work?
 
@@ -556,25 +724,30 @@ legal or appropriate.  You should not use @code{Sd}, or any other choreography
 program, if you do not understand the level that you are calling.  If you
 call beyond your knowledge and ability, the dancers will notice.
 
+@unnumberedsec Sd allows @strong{scoot back} from facing lines.  Isn't that bogus?
+
+It sure is.  That is in the database to catch people who use the program carelessly.
+If you call it, get embarrassed, and complain to me, I will point you at this FAQ.
+
 @unnumberedsec Why is @code{Sd} so fussy with apostrophes?  Why can't I just type @strong{lockers choice}?
 
 You can.  You never need to type apostrophes or hyphens.  You can type
 either @strong{lockers choice} or @strong{locker's choice}.  You can type either
 @strong{tandem based triangles} or @strong{tandem-based triangles}.
 
-@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Why can't I just type @strong{inroll circulate}?
+@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Can I just type @strong{inroll circulate}?
 
-Sorry.  The parser (the part of the program that interprets your keystrokes as
+As of version 36.63, you can type @strong{inroll circulate} or @strong{outroll circulate},
+because they are in the database as special alternate spellings.
+
+But in general, the parser (the part of the program that interprets your keystrokes as
 call and concept names) has a very hard job to do when it completes your
 input.  That is, it lets you type @strong{fe w} at Mainstream, and figures out that
 you meant @strong{ferris wheel}.  In order to do this, it must take clues from
 the spaces that you typed.  Unlike apostrophes and hyphens, it can't make
 spaces optional.
 
-We are aware that there are programs that spell some calls with shorter names,
-such as @strong{inroll circulate}.  We believe that spelling the calls the way they
-are spelled in the Callerlab lists and other commonly accepted literature is
-more important.  You can always define your own ``hot keys'' (accelerator keys)
+You can always define your own ``hot keys'' (accelerator keys)
 or abbreviations for any calls.
 
 @unnumberedsec Why is @strong{leftrigger} spelled as one word?
@@ -718,7 +891,7 @@ on two calls.
 There is also a concept @strong{precede it by}, which performs the first call
 @emph{before} the second.
 
-There is really only one context in which these concepts are sensible--they can be
+There is really only one context in which these concepts are sensible---they can be
 the subject of the @strong{piecewise}, @strong{random}, or @strong{reverse random}
 meta-concepts.  For example:
 
@@ -834,8 +1007,7 @@ will leave the dancers in a squared set.  Then, after doing the @strong{4 ladies
 chain} and whatever other thar/alamo/squared set calls you want, you may
 very well want to go into the more ``normal'' style of calling by having
 some people move in and pass the ocean or whatever.  To do this, use
-the call @strong{<anyone> press ahead}, and then have those same people
-(or just give the designator @strong{centers}) do the desired call.
+the concept @strong{<anyone> move in and}, and then then give the desired call.
 
 The sequence might look like:
 
@@ -843,27 +1015,25 @@ The sequence might look like:
 @group
 just as they are
 all 4 ladies chain
-heads press ahead
-heads pass the ocean
+heads move in and pass the ocean
 etc...
 @end group
 @end example
-
-(You would presumably say something like @strong{heads move in and pass
-the ocean} when calling this.)
-
-The call @strong{press ahead} is actually a Challenge call, but
-Sd recognizes it at Mainstream, just for the purpose of
-dealing with this issue, and other similar issues of
-brute-force moving people around.
 
 If you had the ladies chain 3/4, @strong{heads} won't do.  In that
 case, use the designator @strong{headliners} or @strong{sideliners}.  These
 are also Challenge terms that Sd recognizes at Mainstream.
 They mean "whoever is facing head/side walls right now".
 When calling, you would presumably say
-@strong{All 4 ladies chain 3/4, @strong{*AT*} the heads, square thru ....}
+@strong{All 4 ladies chain 3/4, *AT* the heads, square thru ....}
 or whatever terminology you like to use.
+
+@unnumberedsec I can't seem to get it to do anything after things like @strong{all 4 couples right and left thru}.
+
+This is really the same problem as the @strong{all 4 ladies chain}
+problem of the previous question.  You need to start the sequence with
+@strong{just as they are}, then do the @strong{all four couples} calls,
+and then have some people @strong{move in and ...} to do the rest of the sequence.
 
 @unnumberedsec Why can't I do @strong{split phantom lines load the boat} from an 8-chain?
 
@@ -962,13 +1132,18 @@ on the command line or in a script or Windows shortcut, or put the line
 
 I'm glad you asked.  The Microsoft compiler is not of acceptably high
 quality for the compilation of Sd and Sdtty.  Microsoft may know how to
-write software that aggressively propagates email viruses, and they may
-know how to write software that deletes competitors' products, and they
-may know how to write software that makes competing web browsers look
-defective, but they don't know how to write compilers.  Compilations of
-Sd and Sdtty have been observed to crash on ``snag bits and pieces''
-from waves.  At first this was believed to occur only with Visual C++
-version 6, service pack 3, which caused me to revert to version 5.
+write software that aggressively propagates email viruses
+(@uref{http://www.securityworld.com/community/hottopics/lovebugvirus.html,here}),
+and they may know how to write software that deletes competitors'
+products (@uref{http://www.dotcomeon.com/bluemountain.html,here}), and
+they may know how to write software that makes competing web browsers
+look defective
+(@uref{http://news.zdnet.com/2100-3513_22-5218163.html,here}), but they
+don't know how, or can't be bothered, to write compilers that generate
+correct code.  Compilations of Sd and Sdtty have been observed to crash
+on ``snag bits and pieces'' from waves.  At first this was believed to
+occur only with Visual C++ version 6, service pack 3, which caused me to
+revert to version 5.
 
 The bug was eventually tracked down to incorrect restoration of the ECX
 register upon exit from a ``switch'' statement.  Bugs of this type, in
@@ -988,7 +1163,7 @@ have.  As of Sd version
 always been used for the Linux release, of course.
 
 No version of Sd or Sdtty suffering from this Microsoft compiler bug was
-ever released--the code was modified to avoid the bug.  But that is not
+ever released---the code was modified to avoid the bug.  But that is not
 a workable solution in the long run, since I don't know what other parts
 of the program could be getting compiled incorrectly.
 
@@ -1011,7 +1186,7 @@ of the program could be getting compiled incorrectly.
   postscript viewer:    GSView 2.7                   free
                         Ghostscript 5.50             free
   PDF viewer:           Acrobat 4.0                  free
-  HTML viewer:          Netscape 4.76                free
+  HTML viewer:          Firefox 1.0                  free
   Zip disk software:    Iomega 2.8.0.2               commercial
   mailer for upload:    Netscape 4.76                free
 @end example

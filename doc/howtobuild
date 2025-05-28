@@ -5,7 +5,7 @@ Doing so would cause it to be included in the "do_pack" script.
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 18 Apr 2004.
+        Last modified 9 Feb 2006.
 
 -----------------------------------------------------------------
 
@@ -40,6 +40,7 @@ put a better (i.e. real cygwin) version in there.
 Go to sddoc directory and do:
 
     setmingw
+    settex
     clean clean
     do_plain
     do_ps
@@ -67,7 +68,10 @@ Go to sddoc directory and do:
 1  Sep 02  -  16 Jan 03  #18
 16 Jan 03  -  1  May 03  #19
 1  May 03  -  11 Oct 03  #20
-11 Oct 03  -             #21
+11 Oct 03  -  27 Feb 05  #21
+27 Feb 05  -   8 Oct 05  #22
+8  Oct 05  -  20 Nov 05  #23
+20 Nov 05  -             #24
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++
@@ -84,9 +88,6 @@ Go to sddoc directory and do:
    // Then perform a resolve.  Also do "heads start" and "pick random call".
    // Can do it on two processors with different arguments to get different
    // deterministic random numbers.
-   cd ..\sddoc
-   new_binary     (this depends on all documentation, binaries, and database)
-   do_pack        (this depends on all of the above)
 
 -----------------------------------------------------------------
 
@@ -101,7 +102,7 @@ Go to sddoc directory and do:
    mingw clean
    mingw all
    mingw cleanup   // optional: remove .o files etc. after building
-   mingw savesource
+   mingw savesource    // This packs the "official" source distribution.
 
    // Do regression test if desired.
    // Be sure to test resolver:
@@ -115,7 +116,7 @@ Go to sddoc directory and do:
                         SAVING SOURCES
 
 BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
-BEFORE DOING THIS.  WHATEVER IS IN THE DIRECTORY GETS PUT ON THE WEB PAGE.
+BEFORE DOING THIS.
 
 In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- No periods)
 In \wba\sddoc:       save _vnnnn
@@ -133,9 +134,9 @@ In \wba\sd\regress:  save _vnnnn
    cd sddoc
    new_binary     (this depends on all documentation, binaries, and database)
    del foo*       // be sure not to upload junk
-   REMEMBER TO KEEP THE SDDOC DIRECTORY CLEAR OF SUPERFLUOUS HTML AND TXT FILES!
-   All html and txt files get uploaded.
-   do_pack        (this depends on all of the above, and the result of a source save)
+   # REMEMBER TO KEEP THE SDDOC DIRECTORY CLEAR OF SUPERFLUOUS HTML AND TXT FILES!
+   # All html and txt files get uploaded.
+   do_pack        (this depends on all of the above, and the result of "savesource")
 
 
 Copy these files onto a zip disk:
@@ -151,11 +152,14 @@ Copy these files onto a zip disk:
 
 This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd\regress directory.
 
+****** BE SURE SOURCE FILES IN THE CURRENT DIRECTORY ARE UP TO DATE!
+****** THE "SAVELINUXSOURCE" SCRIPT USES THOSE FILES!
+
 windows> cd sd
 windows> del *~
 windows> savelinuxsource
-windows> pscp -l wba -pw and9user linuxsource.tar.gz an-cs1:linuxsource.tar.gz
-windows> pscp -l wba -pw and9user r_XXXXX.zip an-cs1:r.zip
+windows> pscp -l wba -pw And15user linuxsource.tar.gz an-cs1:linuxsource.tar.gz
+windows> pscp -l wba -pw And15user r_XXXXX.zip an-cs1:r.zip
          (whatever the zip name is.  Just leave the destination as r.zip.)
 windows> use reflection garbage to connect to an-cs1
    an-cs1> scp linuxsource.tar.gz wba@goblin.jaws.umn.edu:linuxsource.tar.gz
@@ -172,7 +176,6 @@ windows> use reflection garbage to connect to an-cs1
       goblin> make -f makefile.linux
       goblin> rm *.o *.c *.h *.cpp *.a
       goblin> rm *cache
-      goblin> rm sample*
       goblin> rm makef*
       goblin> rm db_doc.txt
       goblin> ls -l
@@ -199,37 +202,10 @@ windows> use reflection garbage to connect to an-cs1
       goblin> rm sd/*
       goblin> rmdir sd
       goblin> scp linux.tar.gz ackerman@scotch.ics.uci.edu:linux.tar.gz
-            (pass=12b0z0s)
+            (pass=And15user)
       goblin> exit
    an-cs1> exit
 windows> exit
-
------------------------------------------------------------------
-
-BE SURE THAT THE ENVIRONMENT FROM "SETDJGPP" IS NOT IN EFFECT AT THIS POINT!
-
-Presumably "new_binary" has been done at this point, so that this file exists:
-      install.exe     (mingw build of sdtty and sd)
-
-These files should exist, all in the sddoc directory:
-
-    bin.txt       \
-    bin3.txt      |
-    binu.txt      |
-    plain.txt     |
-    ps.txt        |   These files get mailed
-    pdf.txt       |   to update the web page.
-    html.txt      /
-
-    install3.exe    \
-    install.exe      |    These files are used locally for
-    textdoc.exe      |    installation or copying onto diskettes.
-    pdfdoc.exe       |
-    psdoc.exe       /
-
-Bring the "*.txt" files and the "install*.exe" files on a zip disk.
-Use the "install*.exe" files for testing the binaries on Windows.
-Then mail the "*.txt" files.
 
 -----------------------------------------------------------------
 
@@ -242,18 +218,11 @@ To update the poster child:
 
              UPLOADING TO LYNETTE'S WEB SITE
 
-Presumably "new_binary" has been done at this point, so that this file exists:
-      install.exe     (mingw build of sdtty and sd)
+Presumably "new_binary" and "do_pack" have been done at this point,
+so that install.exe and pack.zip exist.
 
-BEWARE:  Be sure to delete extraneous .html files, since the "do_pack"
-script simply copies them all.  Note that things like "foo.html" sometimes
-arise when making poster children.
-
-cd sddoc
-do_pack
-
-This will pack all files below except linux.tar.gz
-and solaris.tar.gz into pack.zip for transport to Philips.
+Pack.zip contains all files below except linux.tar.gz
+and solaris.tar.gz.
 Note that the files linux.tar.gz and solaris.tar.gz are
 produced by other means and must be uploaded separately.
 
@@ -265,8 +234,8 @@ sd_doc          *      *     *    *
 sessions        *      *     *    *
 relnotes        *      *     *    *
 relnotes98      *      *     *    *
+relnotes03      *      *     *    *
 readings        *
-sample          *
 download-pc     *
 index           *
 intro           *
@@ -285,36 +254,16 @@ sd_source                          *
 install                                  *
 
 
-windows> cd sddoc
-windows> ftp an-cs1
-            (user=wba)
-            (pass=x464pq)
-windows> bin
-windows> put pack.zip
-windows> quit
-
-
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-
-windows> pscp -l wba -pw and9user pack.zip an-cs1:pack.zip
+windows> pscp -l wba -pw And15user pack.zip an-cs1:pack.zip
 
 windows> use reflection garbage to connect to an-cs1
-   an-cs1> scp pack.zip wba@goblin.jaws.umn.edu:pack.zip
-            (pass=wba;sd)
-   an-cs1> ssh goblin.jaws.umn.edu
-            (pass=wba;sd)
-
-   goblin> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
-            (pass=12b0z0s)
-   goblin> ssh -l ackerman scotch.ics.uci.edu
-            (pass=12b0z0s)
+   an-cs1> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
+            (pass=And15user)
+   an-cs1> ssh -l ackerman scotch.ics.uci.edu
+            (pass=And15user)
           # dir will appear to be /home/ackerman,
           # is actually /home/lynette/public-html/sd,
           # which is where the web pages are.
-      scotch> rm sd_doc*.html
       scotch> unzip pack
       scotch> rm pack.zip
       scotch> exit
@@ -323,28 +272,6 @@ windows> use reflection garbage to connect to an-cs1
 windows> exit
 
 -----------------------------------------------------------------
-
-OBSOLETE OLD PROCEDURE
-Run the program "winscp2".
-Highlight the saved session "goblin", and press "login".
-Copy pack.zip (or whatever) from \wba\sddoc to remote host,
-using real drag-and-drop.
-
-Then run "putty".
-Click on goblin, load, open, user = wba, pw = wba;sd
-
-Sftp to slowlaris.tobkin.com
-user = wba, pw = 12b0z0s
-copy up the files.
-***** NOTE PROBLEM:   INSTALL3.EXE is in upper case, so "mput *.exe" fails for it!
-Be careful when uploading INSTALL3.EXE by itself.  If done as part of the
-"do_pack" operation, it's OK.
-
-(For pack.zip:)
-Then ssh from goblin to slowlaris, rm sd_doc*.html, unzip pack, rm pack.zip.
-
-Then, back on goblin, rm pack.zip or whatever files were left there.
-
 
 Putty was from www.openssh.com.
 Scp was from winscp.vse.cz.

@@ -7,10 +7,8 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 36.5</strong>, released on December 15, 2004.
+<strong>The current version of Sd/Sdtty is 36.7</strong>, released on April 22, 2006.
 <br>
-<p align="center">
-The Windows versions of Sd and Sdtty are now compiled with MinGW/Gcc.
 <p align="center">
 There is a new "Frequently Asked Questions" (FAQ) file.
 See the hyperlink below.
@@ -21,7 +19,7 @@ Source files are available below.
 <dl>
 <dt>
 <font size="+1">Hints for inexperienced users:</font></dt>
-<dd>
+<p>
 (1) You may find that Sd is more user-friendly than Sdtty, particularly if you
 are having trouble with sessions or abridgement files.  It will show you the
 startup options more clearly.  You can type commands at Sd the same way you
@@ -96,7 +94,7 @@ For general info on square dancing, see the
 <a href="http://www.dosado.com/">Western Square Dancing</a>
 site.
 <br>
-<em>Time-stamp: "6 November 2004"</em>
+<em>Time-stamp: "9 January 2005"</em>
 <!-- end of body text -->
 </td>
 <td bgcolor="#ff9900">&nbsp;</td>

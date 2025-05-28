@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -28,7 +28,6 @@
    clear_screen
    writechar
    newline
-   open_text_line
    doublespace_file
    writestuff
    mark_parse_blocks
@@ -45,9 +44,9 @@
 and the following external variables:
    global_error_flag
    global_cache_failed_flag
+   global_cache_miss_reason
    global_reply
    global_age
-   global_leave_missing_calls_blank
    clipboard
    clipboard_size
    wrote_a_sequence
@@ -74,9 +73,13 @@ and the following external variables:
 // External variables.
 error_flag_type global_error_flag;
 bool global_cache_failed_flag;
+// Word 0 is the error code
+//   (Zero if hit, missing index+1 if miss, 9 if couldn't open the cache file.)
+// Word 1 is what we wanted at the index.
+// Word 2 is what we got.
+int global_cache_miss_reason[3];
 uims_reply global_reply;
 int global_age;
-bool global_leave_missing_calls_blank;
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 bool wrote_a_sequence = false;
@@ -87,6 +90,8 @@ bool creating_new_session = false;
 int sequence_number = -1;
 int starting_sequence_number;
 
+static bool global_leave_missing_calls_blank;
+
 // Under DJGPP, the default is always old-style filenames, because
 // the underlying system (DOS or Windows 3.1) presumably can only
 // handle "8.3" failenames.  Even under Windows NT, the emulation
@@ -96,13 +101,13 @@ int starting_sequence_number;
 // has been reported to Microsoft, and, of course, was never fixed.
 
 #if defined(DJGPP)
-Cstring *filename_strings = old_filename_strings;
+const Cstring *filename_strings = old_filename_strings;
 #else
-Cstring *filename_strings = old_filename_strings; // ******** For now
+const Cstring *filename_strings = old_filename_strings; // ******** For now
 #endif
 
 // BEWARE!!  These lists are keyed to the definition of "dance_level" in database.h
-Cstring old_filename_strings[] = {
+const Cstring old_filename_strings[] = {
    ".MS",
    ".Plus",
    ".A1",
@@ -119,7 +124,7 @@ Cstring old_filename_strings[] = {
    ".all",
    ""};
 
-Cstring new_filename_strings[] = {
+const Cstring new_filename_strings[] = {
    "_MS.txt",
    "_Plus.txt",
    "_A1.txt",
@@ -136,7 +141,7 @@ Cstring new_filename_strings[] = {
    "_all.txt",
    ""};
 
-Cstring concept_key_table[] = {
+const Cstring concept_key_table[] = {
    /* These are the standard bindings. */
    "cu     deleteline",
    "cx     deleteword",
@@ -328,8 +333,8 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
          switch (f[1]) {
          case 'a': case 'b': case 'B': case 'D': case 'u': case '9':
             // DJGPP has a problem with this, need convert to int.
-            write_nice_number(f[1], (howmany <= 0) ? -1 : (int) (index & 0xF));
-            index >>= 4;
+            write_nice_number(f[1], (howmany <= 0) ? -1 : (int) (index & NUMBER_FIELD_MASK));
+            index >>= BITS_PER_NUMBER_FIELD;
             howmany--;
             break;
          case '6':
@@ -671,7 +676,15 @@ void write_history_line(int history_index,
       }
    }
 
-   if (picture || this_item->draw_pic || ui_options.keep_all_pictures) {
+   // The "keep all pictures" flag could trick us into drawing a picture of
+   // an invalid setup during sequence startup when the very intricate
+   // "heads/sides start" mechanism is being used.  But when writing out
+   // the transcript file, the same setup will be valid.  We use the
+   // "state_is_valid" flag to tell when it is permissible to draw the
+   // picture.
+
+   if (this_item->state_is_valid &&
+       (picture || this_item->draw_pic || ui_options.keep_all_pictures)) {
       printsetup(&this_item->state);
 
       if (this_item->state.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
@@ -835,6 +848,10 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                if (!local_cptr->next || !subsidiary_ptr)
                   writestuff_with_decorations(&local_cptr->options, "(for @u part) ");
             }
+            else if (k == concept_special_sequential_4num) {
+               writestuff_with_decorations(&local_cptr->options, item->name);
+               writestuff(" ");
+            }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
@@ -939,11 +956,14 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_sequential)
                writestuff(" ;");
-            else if (k == concept_special_sequential) {
+            else if (k == concept_special_sequential ||
+                     k == concept_special_sequential_4num) {
                if (item->arg1 == 2)
                   writestuff(" :");   // This is "start with".
                else if (item->arg1 == 4)
                   writestuff(" IN");
+               else if (item->arg1 == 5 || item->arg1 == 6)
+                  writestuff(" AND");
                else
                   writestuff(",");
             }
@@ -987,7 +1007,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                // Skip all final concepts, then demand that what remains is a marker
                // (as opposed to a serious concept), and that a real call
                // has been entered, and that its name starts with "@g".
-               tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, __FILE__, __LINE__);
+               tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, false);
 
                if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
@@ -1033,21 +1053,12 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                if (deferred_concept_paren) writestuff("(");
             }
             else {
-               if ((k == concept_meta_one_arg &&
-                    item->arg1 == meta_key_nth_part_work) ||
-                   (k == concept_meta_two_args &&
-                    item->arg1 == meta_key_first_frac_work) ||
-                   (k == concept_meta &&
-                    item->arg1 == meta_key_first_frac_work) ||
-                   (k == concept_snag_mystic && item->arg1 == CMD_MISC2__SAID_INVERT) ||
-                   (k == concept_meta &&
-                    (item->arg1 == meta_key_initially ||
-                     item->arg1 == meta_key_finally ||
-                     item->arg1 == meta_key_initially_and_finally))) {
-                  /* This is "DO THE <Nth> PART",
-                     or INVERT followed by another concept, which must be SNAG or MYSTIC,
-                     or INITIALLY/FINALLY.
-                     These concepts require a comma after the following concept. */
+               if ((get_meta_key_props(item) & MKP_COMMA_NEXT) ||
+                   (k == concept_snag_mystic && item->arg1 == CMD_MISC2__SAID_INVERT)) {
+                  // This is "DO THE <Nth> PART",
+                  // or INVERT followed by another concept, which must be SNAG or MYSTIC,
+                  // or INITIALLY/FINALLY.
+                  // These concepts require a comma after the following concept.
                   request_comma_after_next_concept = 1;
                }
                else if (k == concept_so_and_so_only &&
@@ -1090,10 +1101,10 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             comma_after_next_concept = request_comma_after_next_concept;
 
          if (comma_after_next_concept == 2 && next_cptr) {
-            parse_block *pbjunk;
-            uint32 njunk;
+            skipped_concept_info foo;
+            foo.root_of_result_of_skip = (parse_block **) 0;
 
-            if (check_for_concept_group(next_cptr, pbjunk, njunk))
+            if (check_for_concept_group(next_cptr, foo, false))
                comma_after_next_concept = 3;    // Will try again later.
          }
 
@@ -1273,16 +1284,16 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      write_blank_if_needed();
 
                      // Watch for "zero and a half".
-                     if (savec == '9' && (number_list & 0xF) == 0 &&
+                     if (savec == '9' && (number_list & NUMBER_FIELD_MASK) == 0 &&
                          np[0] == '-' && np[1] == '1' &&
                          np[2] == '/' && np[3] == '2') {
                         writestuff("1/2");
                         np += 4;
                      }
                      else
-                        write_nice_number(savec, number_list & 0xF);
+                        write_nice_number(savec, number_list & NUMBER_FIELD_MASK);
 
-                     number_list >>= 4;    // Get ready for next number.
+                     number_list >>= BITS_PER_NUMBER_FIELD;    // Get ready for next number.
                      break;
                   case 'e':
                      if (use_left_name) {
@@ -1563,10 +1574,23 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
    return;
 }
 
+static char current_line[MAX_TEXT_LINE_LENGTH];
+
+static void open_text_line()
+{
+   writechar_block.destcurr = current_line;
+   writechar_block.lastchar = ' ';
+   writechar_block.lastlastchar = ' ';
+   writechar_block.lastblank = (char *) 0;
+}
+
+// Nonzero arg means to clear only that many lines.
+// Otherwise, clear everything.
 void clear_screen()
 {
    written_history_items = -1;
    text_line_count = 0;
+
    gg->reduce_line_count(0);
    open_text_line();
 }
@@ -1608,8 +1632,6 @@ static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
 }
 
 
-static char current_line[MAX_TEXT_LINE_LENGTH];
-
 extern void writechar(char src)
 {
    // Don't write two consecutive commas.
@@ -1617,7 +1639,7 @@ extern void writechar(char src)
 
    writechar_block.lastlastchar = writechar_block.lastchar;
 
-   *writechar_block.destcurr = (writechar_block.lastchar = src);
+   *writechar_block.destcurr = writechar_block.lastchar = src;
    if (src == ' ' && writechar_block.destcurr != current_line)
       writechar_block.lastblank = writechar_block.destcurr;
 
@@ -1688,21 +1710,14 @@ void newline()
 
    text_line_count++;
    gg->add_new_line(current_line,
-      enable_file_writing ? 0 : (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
+      enable_file_writing ?
+                    0 :
+                    (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
    open_text_line();
 }
 
 
 
-
-
-extern void open_text_line()
-{
-   writechar_block.destcurr = current_line;
-   writechar_block.lastchar = ' ';
-   writechar_block.lastlastchar = ' ';
-   writechar_block.lastblank = (char *) 0;
-}
 
 
 void doublespace_file()
@@ -1916,6 +1931,9 @@ void display_initial_history(int upper_limit, int num_pics)
    }
    else {
       // We lose, there is nothing we can use.
+      if (no_erase_before_this != 0)
+         gg->no_erase_before_n(no_erase_before_this);
+
       clear_screen();
       write_header_stuff(true, 0);
       newline();
@@ -1934,6 +1952,7 @@ void display_initial_history(int upper_limit, int num_pics)
 
    written_history_items = upper_limit;   // This stuff is now safe.
    written_history_nopic = written_history_items-num_pics;
+   no_erase_before_this = 0;
 }
 
 
@@ -1949,6 +1968,7 @@ extern void initialize_parse()
    configuration::next_config().init_centersp_specific();
    configuration::init_warnings();
    configuration::next_config().draw_pic = false;
+   configuration::next_config().state_is_valid = false;
 
    if (written_history_items > configuration::history_ptr)
       written_history_items = configuration::history_ptr;
@@ -2267,11 +2287,17 @@ void run_program()
 {
    int i;
 
+   global_age = 1;
+   no_erase_before_this = 0;
+   global_error_flag = (error_flag_type) 0;
+   interactivity = interactivity_normal;
+   clear_screen();
+
    if (!ui_options.diagnostic_mode) {
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2004 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2006 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();
@@ -2324,6 +2350,20 @@ void run_program()
       newline();
    }
 
+   // If in diagnostic mode, we print a detailed reason for any cache miss.
+   if (ui_options.diagnostic_mode && global_cache_miss_reason[0] != 0) {
+      char reasonstuff[50];
+
+      (void) sprintf(reasonstuff, "Cache miss, reloaded: %d %d %d.",
+                     global_cache_miss_reason[0],
+                     global_cache_miss_reason[1],
+                     global_cache_miss_reason[2]);
+      newline();
+      writestuff(reasonstuff);
+      newline();
+      newline();
+   }
+
    // If anything in the "try" block throws an exception, we will get here
    // with error_flag nonzero.
 
@@ -2332,6 +2372,12 @@ void run_program()
    // Enter, or re-enter, the big try block.
 
    try {
+
+      if (global_error_flag == error_flag_user_wants_to_resolve) {
+         global_error_flag = error_flag_none;
+         goto do_a_resolve;
+      }
+
       if (global_error_flag) {
          // The call we were trying to do has failed.  Abort it and display the error message.
 
@@ -2417,16 +2463,16 @@ void run_program()
          char title[MAX_TEXT_LINE_LENGTH];
 
          if (sequence_number >= 0)
-            (void) sprintf(numstuff, " (%d:%d)", starting_sequence_number, sequence_number);
+            sprintf(numstuff, " (%d:%d)", starting_sequence_number, sequence_number);
          else
             numstuff[0] = '\0';
 
          if (header_comment[0])
-            (void) sprintf(title, "%s  %s%s",
-                           &old_filename_strings[calling_level][1], header_comment, numstuff);
+            sprintf(title, "%s  %s%s",
+                    &old_filename_strings[calling_level][1], header_comment, numstuff);
          else
-            (void) sprintf(title, "%s%s",
-                           &old_filename_strings[calling_level][1], numstuff);
+            sprintf(title, "%s%s",
+                    &old_filename_strings[calling_level][1], numstuff);
 
          gg->set_window_title(title);
       }
@@ -2495,11 +2541,11 @@ void run_program()
          goto new_sequence;
       case start_select_init_session_file:
          {
-            Cstring *q;
+            const Cstring *q;
             FILE *session = fopen(SESSION_FILENAME, "r");
 
             if (session) {
-               (void) fclose(session);
+               fclose(session);
 
                if (gg->yesnoconfirm("Confirmation",
                                     "You already have a session file.",
@@ -2538,7 +2584,7 @@ void run_program()
             }
 
             if (fputs("\n", session) == EOF) goto copy_failed;
-            (void) fclose(session);
+            fclose(session);
             writestuff("The file has been initialized, and will take effect the next time the program is started.");
             newline();
             writestuff("Exit and restart the program if you want to use it now.");
@@ -2549,14 +2595,32 @@ void run_program()
 
             writestuff("Failed to create '" SESSION_FILENAME "'");
             newline();
-            (void) fclose(session);
+            fclose(session);
+            goto new_sequence;
+         }
+      case start_select_change_to_new_style_filename:
+         {
+            FILE *session = fopen(SESSION_FILENAME, "r");
+
+            if (!session) {
+               writestuff("You must have a session file to do this.");
+               newline();
+               writestuff("Give the 'initialize session file command' to create it.");
+               newline();
+               goto new_sequence;
+            }
+
+            fclose(session);
+            rewrite_with_new_style_filename = true;
+            writestuff("Exit and restart the program to have this take effect.");
+            newline();
             goto new_sequence;
          }
       case start_select_change_outfile:
          do_change_outfile(false);
          goto new_sequence;
-      case start_select_change_header_comment:
-         (void) gg->do_header_popup(header_comment);
+      case start_select_change_title:
+         gg->do_header_popup(header_comment);
          goto new_sequence;
       case start_select_exit:
          goto normal_exit;
@@ -2571,8 +2635,10 @@ void run_program()
       configuration::history[1].init_resolve();
       // Put the people into their starting position.
       configuration::history[1].state = configuration::history[1].get_startinfo_specific()->the_setup;
+      configuration::history[1].state_is_valid = true;
 
       written_history_items = -1;
+      no_erase_before_this = 1;
 
       global_error_flag = (error_flag_type) 0;
 
@@ -2739,11 +2805,11 @@ void run_program()
                   // that we need to translate the selectors.
 
                   for (i=0; i<=attr::slimit(old); i++) {
-                     uint32 p = old->people[i].id1;
-                     uint32 q = nuu->people[i].id1;
+                     uint32 q = old->people[i].id1;
+                     uint32 p = nuu->people[i].id1;
                      uint32 oldmask = mask;
-                     uint32 a = (q >> 6) & 3;
-                     uint32 b = (p >> 6) & 3;
+                     uint32 a = (p >> 6) & 3;
+                     uint32 b = (q >> 6) & 3;
 
                      livemask1 <<= 1;
                      livemask2 <<= 1;
@@ -2751,6 +2817,8 @@ void run_program()
                      if (q) livemask2 |= 1;
                      directions1 = (directions1<<2) | (p&3);
                      directions2 = (directions2<<2) | (q&3);
+
+                     if ((p | q) == 0) continue;
 
                      mask |= (b|4) << (a*3 + 18);
                      oldmask ^= mask;     // The bits that changed.
@@ -2859,6 +2927,8 @@ void run_program()
             else {
                // There were no concepts entered.  Throw away the entire preceding line.
                if (configuration::history_ptr > 1) {
+                  configuration::current_config().draw_pic = false;
+                  configuration::current_config().state_is_valid = false;
                   configuration::history_ptr--;
                   // Going to start_cycle will make sure written_history_items
                   // does not exceed history_ptr.
@@ -2949,18 +3019,18 @@ void run_program()
          case command_change_outfile:
             do_change_outfile(true);
             goto start_cycle;
-         case command_change_header:
+         case command_change_title:
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
 
                if (gg->do_header_popup(newhead_string)) {
-                  (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
+                  strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
                   if (newhead_string[0]) {
                      char confirm_message[MAX_TEXT_LINE_LENGTH+25];
-                     (void) strncpy(confirm_message, "Header comment changed to \"", 28);
-                     (void) strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
-                     (void) strncat(confirm_message, "\"", 2);
+                     strncpy(confirm_message, "Header comment changed to \"", 28);
+                     strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
+                     strncat(confirm_message, "\"", 2);
                      specialfail(confirm_message);
                   }
                   else {
@@ -3005,8 +3075,12 @@ void run_program()
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          default:     // Should be some kind of search command.
+
             // If it wasn't, we have a serious problem.
             if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;
+
+         do_a_resolve:
+
             search_goal = (command_kind) uims_menu_index;
             global_reply = full_resolve();
 
@@ -3033,6 +3107,7 @@ void run_program()
 
                allowing_modifications = 0;
                configuration::next_config().draw_pic = false;
+               configuration::next_config().state_is_valid = false;
                parse_state.concept_write_base = &configuration::next_config().command_root;
                parse_state.concept_write_ptr = parse_state.concept_write_base;
                *parse_state.concept_write_ptr = (parse_block *) 0;

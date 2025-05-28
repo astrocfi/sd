@@ -118,7 +118,7 @@ static const WORD fgGRY =
    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
 
-static WORD color_translate_reverse_video[8] = {
+static const WORD color_translate_reverse_video[8] = {
    0,
    FOREGROUND_RED  | FOREGROUND_GREEN,                         // 1 - dark yellow
    FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // 2 - red
@@ -128,7 +128,7 @@ static WORD color_translate_reverse_video[8] = {
    FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY,  // 6 - magenta
    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY}; // 7 - cyan
 
-static WORD color_translate_normal_video[8] = {
+static const WORD color_translate_normal_video[8] = {
    0,
    FOREGROUND_RED  | FOREGROUND_GREEN                        | bgWHT,  // 1 - dark yellow
    FOREGROUND_RED                     | FOREGROUND_INTENSITY | bgWHT,  // 2 - red
@@ -138,7 +138,7 @@ static WORD color_translate_normal_video[8] = {
    FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY | bgWHT,  // 6 - magenta
    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY | bgWHT}; // 7 - cyan
 
-static WORD color_translate_normal_video_gray[8] = {
+static const WORD color_translate_normal_video_gray[8] = {
    0,
    FOREGROUND_RED  | FOREGROUND_GREEN                        | bgGRY,  // 1 - dark yellow
    FOREGROUND_RED                     | FOREGROUND_INTENSITY | bgGRY,  // 2 - red
@@ -148,7 +148,7 @@ static WORD color_translate_normal_video_gray[8] = {
    FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY | bgGRY,  // 6 - magenta
    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY | bgGRY}; // 7 - cyan
 
-static WORD *color_translate;
+static const WORD *color_translate;
 
 extern void ttu_initialize()
 {
@@ -179,7 +179,7 @@ extern void ttu_initialize()
    if (!GetConsoleMode(consoleStdin, &oldMode)) {
       int err = GetLastError();
       if (err == ERROR_INVALID_HANDLE) {
-         sdtty_no_console = 1;
+         sdtty_no_console = true;
          return;
       }
       fprintf(stderr, "GetConsoleMode failed: %d.\n", err);
@@ -195,7 +195,7 @@ extern void ttu_initialize()
    if (!SetConsoleMode(consoleStdin, newMode)) {
       int err = GetLastError();
       if (err == ERROR_INVALID_HANDLE) {
-         sdtty_no_console = 1;
+         sdtty_no_console = true;
          return;
       }
       fprintf(stderr, "SetConsoleMode failed: %d.\n", err);
@@ -206,57 +206,45 @@ extern void ttu_initialize()
    // and all resizing thereof, is irrelevant.  It will take care of itself, the way
    // it does in any decent operating system (unlike some that I've had to deal with.)
 
-   (void) GetConsoleScreenBufferInfo(consoleStdout, &globalconsoleInfo);
+   GetConsoleScreenBufferInfo(consoleStdout, &globalconsoleInfo);
 
    // If the user hasn't explicitly overridden the screen height, set it to
    // whatever the system tells us.
    if (using_default_screen_size)
       sdtty_screen_height = globalconsoleInfo.srWindow.Bottom-globalconsoleInfo.srWindow.Top+1;
 
-   WORD screen_color;
-
    if (ui_options.no_intensify) {
       if (ui_options.reverse_video) {
          text_color = fgGRY;
          color_translate = color_translate_reverse_video;
-         screen_color = fgGRY;
       }
       else {
          text_color = bgGRY;
          color_translate = color_translate_normal_video_gray;
-         screen_color = bgGRY;
       }
    }
    else {
       if (ui_options.reverse_video) {
          text_color = fgWHT;
          color_translate = color_translate_reverse_video;
-         screen_color = fgGRY;
       }
       else {
          text_color = bgWHT;
          color_translate = color_translate_normal_video;
-         screen_color = bgWHT;
       }
    }
 
-   COORD coord;
-   coord.X = 0;
-   coord.Y = 0;
+   FillConsoleOutputAttribute(consoleStdout,
+                              text_color,
+                              globalconsoleInfo.dwSize.X *
+                              (globalconsoleInfo.dwSize.Y-
+                               globalconsoleInfo.dwCursorPosition.Y)
+                              -globalconsoleInfo.dwCursorPosition.X,
+                              globalconsoleInfo.dwCursorPosition, &numWrite);
 
-   //globalconsoleInfo.dwCursorPosition.X
-   //globalconsoleInfo.dwCursorPosition.Y
+   SetConsoleTextAttribute(consoleStdout, text_color);
 
-   (void) FillConsoleOutputAttribute(consoleStdout,
-                                     screen_color,
-                                     globalconsoleInfo.dwSize.X *
-                                     (globalconsoleInfo.dwSize.Y-globalconsoleInfo.dwCursorPosition.Y)
-                                     -globalconsoleInfo.dwCursorPosition.X,
-                                     globalconsoleInfo.dwCursorPosition, &numWrite);
-
-   (void) SetConsoleTextAttribute(consoleStdout, text_color);
-
-   (void) SetConsoleCtrlHandler(&control_c_handler, TRUE);
+   SetConsoleCtrlHandler(&control_c_handler, TRUE);
 }
 
 
@@ -272,19 +260,20 @@ void ttu_terminate()
       coord.Y = 0;
 
       // Find out what line we have advanced to.
-      (void) GetConsoleScreenBufferInfo(consoleStdout, &finalconsoleInfo);
+      GetConsoleScreenBufferInfo(consoleStdout, &finalconsoleInfo);
 
       // Paint the rest of the screen to the original color.
-      (void) FillConsoleOutputAttribute(consoleStdout,
-                                        globalconsoleInfo.wAttributes,
-                                        finalconsoleInfo.dwSize.X *
-                                        (finalconsoleInfo.dwSize.Y-finalconsoleInfo.dwCursorPosition.Y)
-                                        -finalconsoleInfo.dwCursorPosition.X,
-                                        finalconsoleInfo.dwCursorPosition, &numWrite);
+      FillConsoleOutputAttribute(consoleStdout,
+                                 globalconsoleInfo.wAttributes,
+                                 finalconsoleInfo.dwSize.X *
+                                 (finalconsoleInfo.dwSize.Y-
+                                  finalconsoleInfo.dwCursorPosition.Y)
+                                 -finalconsoleInfo.dwCursorPosition.X,
+                                 finalconsoleInfo.dwCursorPosition, &numWrite);
 
-      (void) SetConsoleTextAttribute(consoleStdout, globalconsoleInfo.wAttributes);
-      (void) SetConsoleMode(consoleStdin, oldMode);
-      (void) SetConsoleCtrlHandler(&control_c_handler, FALSE);
+      SetConsoleTextAttribute(consoleStdout, globalconsoleInfo.wAttributes);
+      SetConsoleMode(consoleStdin, oldMode);
+      SetConsoleCtrlHandler(&control_c_handler, FALSE);
    }
 
    SetConsoleTitle(SavedWindowTitle);
@@ -293,14 +282,14 @@ void ttu_terminate()
 
 bool iofull::help_manual()
 {
-   (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
+   ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
    return true;
 }
 
 
 bool iofull::help_faq()
 {
-   (void) ShellExecute(NULL, "open", "c:\\sd\\faq.html", NULL, NULL, SW_SHOWNORMAL);
+   ShellExecute(NULL, "open", "c:\\sd\\faq.html", NULL, NULL, SW_SHOWNORMAL);
    return TRUE;
 }
 
@@ -316,12 +305,12 @@ extern void clear_line()
       DWORD numWrite;
       CONSOLE_SCREEN_BUFFER_INFO myconsoleInfo;
 
-      (void) GetConsoleScreenBufferInfo(consoleStdout, &myconsoleInfo);
+      GetConsoleScreenBufferInfo(consoleStdout, &myconsoleInfo);
       myconsoleInfo.dwCursorPosition.X = 0;
-      (void) SetConsoleCursorPosition(consoleStdout, myconsoleInfo.dwCursorPosition);
-      (void) FillConsoleOutputCharacter(consoleStdout, ' ', myconsoleInfo.dwSize.X,
-                                        myconsoleInfo.dwCursorPosition,
-                                        &numWrite);
+      SetConsoleCursorPosition(consoleStdout, myconsoleInfo.dwCursorPosition);
+      FillConsoleOutputCharacter(consoleStdout, ' ', myconsoleInfo.dwSize.X,
+                                 myconsoleInfo.dwCursorPosition,
+                                 &numWrite);
    }
    else
       printf(" XXX\n");
@@ -333,12 +322,12 @@ extern void rubout()
       DWORD numWrite;
       CONSOLE_SCREEN_BUFFER_INFO myconsoleInfo;
 
-      (void) GetConsoleScreenBufferInfo(consoleStdout, &myconsoleInfo);
+      GetConsoleScreenBufferInfo(consoleStdout, &myconsoleInfo);
       myconsoleInfo.dwCursorPosition.X--;
-      (void) SetConsoleCursorPosition(consoleStdout, myconsoleInfo.dwCursorPosition);
-      (void) FillConsoleOutputCharacter(consoleStdout, ' ', 1,
-                                        myconsoleInfo.dwCursorPosition,
-                                        &numWrite);
+      SetConsoleCursorPosition(consoleStdout, myconsoleInfo.dwCursorPosition);
+      FillConsoleOutputCharacter(consoleStdout, ' ', 1,
+                                 myconsoleInfo.dwCursorPosition,
+                                 &numWrite);
    }
    else
       printf("\b \b");
@@ -351,7 +340,7 @@ extern void erase_last_n(int n)
       CONSOLE_SCREEN_BUFFER_INFO myconsoleInfo;
       int delta = n;
 
-      (void) GetConsoleScreenBufferInfo(consoleStdout, &myconsoleInfo);
+      GetConsoleScreenBufferInfo(consoleStdout, &myconsoleInfo);
 
       if (myconsoleInfo.dwCursorPosition.Y < delta)
          delta = myconsoleInfo.dwCursorPosition.Y;
@@ -359,10 +348,10 @@ extern void erase_last_n(int n)
       myconsoleInfo.dwCursorPosition.X = 0;
       myconsoleInfo.dwCursorPosition.Y -= delta;
 
-      (void) SetConsoleCursorPosition(consoleStdout, myconsoleInfo.dwCursorPosition);
-      (void) FillConsoleOutputCharacter(consoleStdout, ' ', myconsoleInfo.dwSize.X * delta,
-                                        myconsoleInfo.dwCursorPosition,
-                                        &numWrite);
+      SetConsoleCursorPosition(consoleStdout, myconsoleInfo.dwCursorPosition);
+      FillConsoleOutputCharacter(consoleStdout, ' ', myconsoleInfo.dwSize.X * delta,
+                                 myconsoleInfo.dwCursorPosition,
+                                 &numWrite);
    }
 }
 
@@ -382,7 +371,8 @@ extern void put_line(const char the_line[])
             put_char(' ');
 
             if (ui_options.color_scheme != no_color)
-               (void) SetConsoleTextAttribute(consoleStdout, color_translate[color_index_list[personidx]]);
+               SetConsoleTextAttribute(consoleStdout,
+                                       color_translate[color_index_list[personidx]]);
 
             put_char(my_pn1[personidx]);
             put_char(my_pn2[personidx]);
@@ -391,14 +381,14 @@ extern void put_line(const char the_line[])
             // Set back to plain "white".
 
             if (ui_options.color_scheme != no_color)
-               (void) SetConsoleTextAttribute(consoleStdout, text_color);
+               SetConsoleTextAttribute(consoleStdout, text_color);
          }
          else
-            (void) put_char(c);
+            put_char(c);
       }
    }
    else {
-      (void) fputs(the_line, stdout);
+      fputs(the_line, stdout);
    }
 }
 
@@ -415,7 +405,7 @@ extern void put_char(int c)
          // and all resizing thereof, is irrelevant.  It will take care of itself, the way
          // it does in any decent operating system (unlike some that I've had to deal with.)
 
-         (void) GetConsoleScreenBufferInfo(consoleStdout, &consoleInfo);
+         GetConsoleScreenBufferInfo(consoleStdout, &consoleInfo);
          consoleInfo.dwCursorPosition.X = 0;   // Cursor position within the pad.
 
          if (consoleInfo.dwSize.Y-1 != consoleInfo.dwCursorPosition.Y)
@@ -438,17 +428,16 @@ extern void put_char(int c)
             coord.Y = -1;
             consoleFill.Attributes = consoleInfo.wAttributes;
             consoleFill.Char.AsciiChar = ' ';
-            (void) ScrollConsoleScreenBuffer(consoleStdout, &scrollRect, 0, coord, &consoleFill);
+            ScrollConsoleScreenBuffer(consoleStdout, &scrollRect, 0, coord, &consoleFill);
          }
 
-         (void) SetConsoleCursorPosition(consoleStdout, consoleInfo.dwCursorPosition);
+         SetConsoleCursorPosition(consoleStdout, consoleInfo.dwCursorPosition);
       }
       else
          WriteFile(consoleStdout, &cc, 1, &junk, (LPOVERLAPPED) 0);
    }
-   else {
-      (void) putchar(c);
-   }
+   else
+      putchar(c);
 }
 
 
@@ -599,5 +588,5 @@ extern void get_string(char *dest, int max)
 
 extern void ttu_bell()
 {
-   (void) MessageBeep(MB_ICONQUESTION);
+   MessageBeep(MB_ICONQUESTION);
 }

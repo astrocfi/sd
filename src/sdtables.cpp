@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -37,9 +37,10 @@
    s_2x4_qtg
    s_1x2_dmd
    s_qtg_3x4
-   s_1x2_hrgl
-   s_dmd_hrgl
-   s_dmd_hrgl_disc
+   s_short6_2x3
+   s_bigrig_dblbone
+   s_bigbone_dblrig
+   identity24
    expand::init_table
    map::map_init_table
    * Try to do something sensible with these. *
@@ -88,6 +89,7 @@
    id_bit_table_3x4_ctr6
    id_bit_table_3x4_offset
    id_bit_table_3x4_corners
+   id_bit_table_3x4_zs
    id_bit_table_butterfly
    id_bit_table_4x4_outer_pairs
    id_bit_table_525_nw
@@ -174,6 +176,9 @@ selector_item selector_list[] = {
    {"center line",  "center line", "CENTER LINE",  "CENTER LINE", selector_outerpairs},
    {"center column","center column","CENTER COLUMN","CENTER COLUMN",selector_outerpairs},
    {"center box",   "center box",  "CENTER BOX",   "CENTER BOX",  selector_outerpairs},
+   {"center wave of 6",  "center wave of 6", "CENTER WAVE OF 6",  "CENTER WAVE OF 6", selector_uninitialized},
+   {"center line of 6",  "center line of 6", "CENTER LINE OF 6",  "CENTER LINE OF 6", selector_uninitialized},
+   {"center column of 6","center column of 6","CENTER COLUMN OF 6","CENTER COLUMN OF 6",selector_uninitialized},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
    {"first 1",      "first 1",     "FIRST 1",      "FIRST 1",     selector_uninitialized},
    {"last 1",       "last 1",      "LAST 1",       "LAST 1",      selector_uninitialized},
@@ -236,6 +241,7 @@ selector_item selector_list[] = {
                                                                   selector_uninitialized},
    {"Mbeaus???",    "Mbeaus???",   "MBEAUS???",    "MBEAUS???",   selector_uninitialized},
    {"Mbelles???",   "Mbelles???",  "MBELLES???",   "MBELLES???",  selector_uninitialized},
+   {"notctr dmd???", "notctr dmd???", "NOTCTR DMD???", "NOTCTR DMD???",  selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
 
 // BEWARE!!  These strings are keyed to the definition of "warning_index" in sd.h .
@@ -246,6 +252,7 @@ selector_item selector_list[] = {
 //   during some kind of "do your part" call.
 Cstring warning_strings[] = {
    /*  warn__none                */   " Unknown warning????",
+   /*  warn__really_no_collision */   " Unknown no_collision warning????",
    /*  warn__do_your_part        */   "*Do your part.",
    /*  warn__tbonephantom        */   " This is a T-bone phantom setup call.  Everyone will do their own part.",
    /*  warn__awkward_centers     */   "*Awkward for centers.",
@@ -315,6 +322,7 @@ Cstring warning_strings[] = {
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
    /*  warn__stupid_phantom_clw  */   "#This use of phantom setups seems superfluous.",
+   /*  warn__should_say_Z        */   "*You probably should say 'Z' lines/waves/columns.",
    /*  warn__bad_modifier_level  */   "*Use of this modifier on this call is not allowed at this level.",
    /*  warn__bad_call_level      */   "*This call is not really legal at this level.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
@@ -332,6 +340,7 @@ Cstring warning_strings[] = {
    /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
    /*  warn__offset_hard_to_see  */   "*The offset setup is hard to see.",
    /*  warn__pg_hard_to_see      */   "*The parallelogram setup is hard to see.",
+   /*  warn__phantom_judge       */   "*The judge or socker may be a phantom.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
    /*  warn_big_outer_triangles  */   "*The outside triangles are very large.",
    /*  warn_hairy_fraction       */   " Fraction is very complicated.",
@@ -341,6 +350,7 @@ Cstring warning_strings[] = {
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
+   /*  warn__assume_dpt          */   "*Assume a starting DPT.",
    /*  warn_bogus_yoyo_rims_hubs */   "*Using incorrect definition of rims/hubs trade.",
    /*  warn_pg_in_2x6            */   "*Offset the resulting 2x6 by 50%, or 3 positions.",
    /*  warn_real_people_spots    */   "*The distorted setup is formed by the real people.",
@@ -380,6 +390,11 @@ const expand::thing s_bigrig_dblbone = {{6, 7, 3, 2, 1, 12, 14, 15, 11, 10, 9, 4
 // This is duplicated in the big table.
 const expand::thing s_bigbone_dblrig = {{0, 1, 3, 2, 12, 13, 8, 9, 11, 10, 4, 5},
                                         12, sbigbone, sdblrig, 0};
+
+
+const veryshort identity24[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                                  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+
 
 // This isn't declared const!  Why not?  Because there are pointers
 // linking the hash chains, that get filled in during initialization.
@@ -428,6 +443,22 @@ expand::thing expand::init_table[] = {
 
    {{0, 1, 2, 3, 4, 5, 11, 10},
     8, s2x4, s3x4, 0, 0UL, 0x3C0,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 3, 2, 7, 8, 4, 9},
+    8, s1x8, s1x10, 0, 0UL, 0x060,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 3, 9, 4, 5, 6, 8, 7},
+    8, s1x8, s1x10, 0, 0UL, 0x003,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 3, 2, 10, 11, 4, 5},
+    8, s1x8, s1x12, 0, 0UL, 0x3C0,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{4, 5, 10, 11, 6, 7, 9, 8},
+    8, s1x8, s1x12, 0, 0UL, 0x00F,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{2, 3, 4, 5, 6, 7, 8, 9},
@@ -479,12 +510,24 @@ expand::thing expand::init_table[] = {
     warn__none, warn__none, normalize_to_2, 0},
 
    {{11, 5},
-    2, s1x2, shsqtag, 0, 0UL, 03737,
+    2, s1x2, s_hsqtag, 0, 0UL, 03737,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{10, 11, 4, 5},
-    4, sdmd, shsqtag, 1, 0UL, 01717,
+    4, sdmd, s_hsqtag, 1, 0UL, 01717,
     warn__none, warn__none, normalize_to_4, 0},
+
+   {{8, 2},
+    2, s1x2, s_dmdlndmd, 0, 0UL, 07373,
+    warn__none, warn__none, normalize_to_2, 1},
+
+   {{7, 8, 1, 2},
+    4, s1x4, s_dmdlndmd, 1, 0UL, 07171,
+    warn__none, warn__none, normalize_to_4, 1},
+
+   {{10, 11, 1, 2, 4, 5, 7, 8},
+    8, s_crosswave, s_dmdlndmd, 0, 0UL, 01111,
+    warn__none, warn__none, simple_normalize, 1},
 
    {{1, 2, 3, 4, 5, 8, 9, 10, 11, 12},
     10, s2x5, s2x7, 0, 0UL, 0x20C1,
@@ -578,9 +621,6 @@ expand::thing expand::init_table[] = {
     8, s2x4, s_hrglass, 1, 0UL, 0xCC,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
-
-
-   // New stuff, 22 apr 01.
    {{0, 1, 2, 4, 5, 6},
     6, s2x3, s_spindle, 0, 0UL, 0x88,
     warn__none, warn__none, normalize_to_2, 0},
@@ -592,8 +632,6 @@ expand::thing expand::init_table[] = {
    {{0, 1, 2, 4, 5, 6},
     6, s_ntrgl6ccw, s_nxtrglccw, 0, 0UL, 0x88,
     warn__none, warn__none, normalize_to_2, 0},
-
-
 
    /* This makes it possible to do "own the <points>, trade by flip the diamond" from
       normal diamonds. */
@@ -714,6 +752,10 @@ expand::thing expand::init_table[] = {
    {{2, 3, 7, 6, 5, 4, 10, 11, 15, 14, 13, 12},
     12, sbigh, sdblxwave, 0, 0UL, 0x0303,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_DBLX)},
+
+   {{13, 14, 1, 2, 5, 6, 9, 10},
+    8, s_alamo, s4x4, 0, 0UL, 0x9999,
+    warn__none, warn__none, normalize_never, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{10, -1,-1, 1, 2, -1, -1, 9},
     8, s2x4, s4dmd, 1, 0x66, ~0UL,
@@ -955,10 +997,10 @@ expand::thing expand::init_table[] = {
 
    // Some things to compress an hqtag.
    {{0, 1, 2, 3, 14, 15, 8, 9, 10, 11, 6, 7},
-    12, sbigh, shqtag, 0, 0UL, 0x3030,
+    12, sbigh, s_hqtag, 0, 0UL, 0x3030,
     warn__none, warn__none, simple_normalize, 0},
    {{0, 4, 5, 11, -1, -1, 6, 7, 8, 12, 13, 3, -1, -1, 14, 15},
-    16, s4dmd, shqtag, 0, 0UL, 0x0606,
+    16, s4dmd, s_hqtag, 0, 0UL, 0x0606,
     warn__none, warn__none, simple_normalize, 0},
 
    {{0, 1, 3, 4, 5, 6, 8, 9},
@@ -1148,7 +1190,7 @@ expand::thing expand::init_table[] = {
 // the map is one of the "standard" maps, characterized by the inner setup kind,
 // arity, map kind, and vertical bit.  A huge number of maps are characterized
 // in this way.  They are in "map_init_table".  The macro
-// MAPCODE(setupkind,num,mapkind,rot) packs the 4 values into the code number.
+// MAPCODE(setupkind,num,mapkind,vert) packs the 4 values into the code number.
 // The four arguments can be manifest constants (and the macro will be very
 // efficient in that case), but they do not need to be.
 //
@@ -1184,165 +1226,172 @@ expand::thing expand::init_table[] = {
 map::map_thing map::map_init_table[] = {
    {{13, 15, 8, 9,     0, 1, 5, 7,
      12, 10, 6, 11,    14, 3, 4, 2},
-    s1x4,4,MPKIND__OFFS_BOTH_SINGLEH,1, 0,  s4x4, 0x055, 0},
+    s1x4,4,MPKIND__OFFS_BOTH_SINGLEH,1, 0, s4x4, 0x055, 0},
    {{8, 6, 2, 7,    10, 15, 0, 14,
      9, 11, 4, 5,     12, 13, 1, 3},
-    s1x4,4,MPKIND__OFFS_BOTH_SINGLEV,1, 0,  s4x4, 0x000, 0},
+    s1x4,4,MPKIND__OFFS_BOTH_SINGLEV,1, 0, s4x4, 0x000, 0},
    {{15, 14, 3, 2,     11, 10, 7, 6,
      0, 1, 12, 13,    4, 5, 8, 9},
-    s1x4,4,MPKIND__OFFS_BOTH_SINGLEV,0, 0,  s2x8, 0x000, 0},
+    s1x4,4,MPKIND__OFFS_BOTH_SINGLEV,0, 0, s2x8, 0x000, 0},
    {{7, 6, 3, 2,        0, 1, 4, 5},
-    s1x4,2,MPKIND__OFFS_BOTH_SINGLEV,1, 0,  s2x4, 0x000, 0},
+    s1x4,2,MPKIND__OFFS_BOTH_SINGLEV,1, 0, s2x4, 0x000, 0},
    {{0, 1, 4, 5,        2, 3, 6, 7},
-    s2x2,2,MPKIND__OFFS_BOTH_SINGLEV,0, 0,  s2x4, 0x000, 0},
+    s2x2,2,MPKIND__OFFS_BOTH_SINGLEV,0, 0, s2x4, 0x000, 0},
+   {{1, 4, 5, 0,        3, 6, 7, 2},
+    s2x2,2,MPKIND__OFFS_BOTH_SINGLEV,1, 0, s2x4, 0x005, 0},
    {{9, 13, 15, 8,      7, 0, 1, 5,        12, 11, 6, 10,       14, 2, 4, 3},
-    s2x2,4,MPKIND__OFFS_BOTH_SINGLEV,0, 0,  s4x4, 0x000, 0},
+    s2x2,4,MPKIND__OFFS_BOTH_SINGLEV,0, 0, s4x4, 0x000, 0},
    {{2, 3, 14, 15,      6, 7, 10, 11,      0, 1, 12, 13,        4, 5, 8, 9},
-    s2x2,4,MPKIND__OFFS_BOTH_SINGLEH,0, 0,  s2x8, 0x000, 0},
+    s2x2,4,MPKIND__OFFS_BOTH_SINGLEH,0, 0, s2x8, 0x000, 0},
 
    {{1, 17, 12, 0, 3, 9, 10, 8},
-    s2x2,2,MPKIND__BENT0CW,0,     0,  s3x6,  0x000, 0x1441},
+    s2x2,2,MPKIND__BENT0CW,0,     0,  s3x6,      0x000, 0x1441},
    {{14, 2, 17, 13, 8, 4, 5, 11},
-    s2x2,2,MPKIND__BENT0CCW,0,    0,  s3x6,  0x000, 0x3CC3},
+    s2x2,2,MPKIND__BENT0CCW,0,    0,  s3x6,      0x000, 0x3CC3},
    {{0, 11, 20, 19, 8, 7, 12, 23},
-    s1x4,2,MPKIND__BENT0CW,0,     0,  s4x6,  0x000, 0x5005},
+    s1x4,2,MPKIND__BENT0CW,0,     0,  s4x6,      0x000, 0x5005},
    {{17, 18, 9, 10, 21, 22, 5, 6},
-    s1x4,2,MPKIND__BENT0CCW,0,    0,  s4x6,  0x000, 0xF00F},
+    s1x4,2,MPKIND__BENT0CCW,0,    0,  s4x6,      0x000, 0xF00F},
 
    {{0, 12, 13, 15, 4, 6, 9, 3},
-    s2x2,2,MPKIND__BENT1CW,0,     0,  s3x6,  0x000, 0x4114},
+    s2x2,2,MPKIND__BENT1CW,0,     0,  s3x6,      0x000, 0x4114},
    {{15, 1, 2, 14, 11, 5, 6, 10},
-    s2x2,2,MPKIND__BENT1CCW,0,    0,  s3x6,  0x000, 0xC33C},
+    s2x2,2,MPKIND__BENT1CCW,0,    0,  s3x6,      0x000, 0xC33C},
    {{11, 10, 15, 20, 3, 8, 23, 22},
-    s1x4,2,MPKIND__BENT1CW,0,     0,  s4x6,  0x000, 0x0550},
+    s1x4,2,MPKIND__BENT1CW,0,     0,  s4x6,      0x000, 0x0550},
    {{18, 19, 2, 9, 14, 21, 6, 7},
-    s1x4,2,MPKIND__BENT1CCW,0,    0,  s4x6,  0x000, 0x0FF0},
+    s1x4,2,MPKIND__BENT1CCW,0,    0,  s4x6,      0x000, 0x0FF0},
 
    {{0, 20, 19, 11, 7, 23, 12, 8},
-    s2x2,2,MPKIND__BENT2CW,0,     0,  s4x6,  0x000, 0x4114},
+    s2x2,2,MPKIND__BENT2CW,0,     0,  s4x6,      0x000, 0x4114},
    {{18, 10, 9, 17, 21, 5, 6, 22},
-    s2x2,2,MPKIND__BENT2CCW,0,    0,  s4x6,  0x000, 0xC33C},
+    s2x2,2,MPKIND__BENT2CCW,0,    0,  s4x6,      0x000, 0xC33C},
    {{0, 1, 12, 17, 3, 8, 9, 10},
-    s1x4,2,MPKIND__BENT2CW,0,     0,  s3x6,  0x000, 0x0550},
+    s1x4,2,MPKIND__BENT2CW,0,     0,  s3x6,      0x000, 0x0550},
    {{14, 13, 2, 17, 8, 11, 5, 4},
-    s1x4,2,MPKIND__BENT2CCW,0,    0,  s3x6,  0x000, 0x0FF0},
+    s1x4,2,MPKIND__BENT2CCW,0,    0,  s3x6,      0x000, 0x0FF0},
 
    {{10, 20, 15, 11, 3, 23, 22, 8},
-    s2x2,2,MPKIND__BENT3CW,0,     0,  s4x6,  0x000, 0x1441},
+    s2x2,2,MPKIND__BENT3CW,0,     0,  s4x6,      0x000, 0x1441},
    {{18, 2, 9, 19, 21, 7, 6, 14},
-    s2x2,2,MPKIND__BENT3CCW,0,    0,  s4x6,  0x000, 0x3CC3},
+    s2x2,2,MPKIND__BENT3CCW,0,    0,  s4x6,      0x000, 0x3CC3},
    {{0, 15, 12, 13, 3, 4, 9, 6},
-    s1x4,2,MPKIND__BENT3CW,0,     0,  s3x6,  0x000, 0x5005},
+    s1x4,2,MPKIND__BENT3CW,0,     0,  s3x6,      0x000, 0x5005},
    {{14, 15, 2, 1, 11, 10, 5, 6},
-    s1x4,2,MPKIND__BENT3CCW,0,    0,  s3x6,  0x000, 0xF00F},
+    s1x4,2,MPKIND__BENT3CCW,0,    0,  s3x6,      0x000, 0xF00F},
 
    {{1, 9, 20, 0, 8, 12, 13, 21},
-    s2x2,2,MPKIND__BENT4CW,0,     0,  s4x6,  0x000, 0x1441},
+    s2x2,2,MPKIND__BENT4CW,0,     0,  s4x6,      0x000, 0x1441},
    {{17, 9, 20, 16, 8, 4, 5, 21},
-    s2x2,2,MPKIND__BENT4CCW,0,    0,  s4x6,  0x000, 0x3CC3},
+    s2x2,2,MPKIND__BENT4CCW,0,    0,  s4x6,      0x000, 0x3CC3},
    {{0, 1, 5, 4, 11, 10, 6, 7},
-    s1x4,2,MPKIND__BENT4CW,0,     0,  sbigh, 0x000, 0x5005},
+    s1x4,2,MPKIND__BENT4CW,0,     0,  sbigh,     0x000, 0x5005},
    {{3, 2, 5, 4, 11, 10, 9, 8},
-    s1x4,2,MPKIND__BENT4CCW,0,    0,  sbigh, 0x000, 0xF00F},
+    s1x4,2,MPKIND__BENT4CCW,0,    0,  sbigh,     0x000, 0xF00F},
 
    {{11, 15, 16, 18, 4, 6, 23, 3},
-    s2x2,2,MPKIND__BENT5CW,0,     0,  s4x6,  0x000, 0x4114},
+    s2x2,2,MPKIND__BENT5CW,0,     0,  s4x6,      0x000, 0x4114},
    {{11, 1, 2, 18, 14, 6, 23, 13},
-    s2x2,2,MPKIND__BENT5CCW,0,    0,  s4x6,  0x000, 0xC33C},
+    s2x2,2,MPKIND__BENT5CCW,0,    0,  s4x6,      0x000, 0xC33C},
    {{0, 1, 5, 4, 11, 10, 6, 7},
     s1x4,2,MPKIND__BENT5CW,0,     0,  sdeepxwv,  0x000, 0x0550},
    {{0, 1, 2, 3, 8, 9, 6, 7},
     s1x4,2,MPKIND__BENT5CCW,0,    0,  sdeepxwv,  0x000, 0x0FF0},
 
    {{0, 5, 4, 1, 10, 7, 6, 11},
-    s2x2,2,MPKIND__BENT6CW,0,     0,  sbigh, 0x000, 0x4114},
+    s2x2,2,MPKIND__BENT6CW,0,     0,  sbigh,     0x000, 0x4114},
    {{2, 4, 5, 3, 11, 9, 8, 10},
-    s2x2,2,MPKIND__BENT6CCW,0,    0,  sbigh, 0x000, 0xC33C},
+    s2x2,2,MPKIND__BENT6CCW,0,    0,  sbigh,     0x000, 0xC33C},
    {{0, 1, 20, 9, 8, 21, 12, 13},
-    s1x4,2,MPKIND__BENT6CW,0,     0,  s4x6,  0x000, 0x0550},
+    s1x4,2,MPKIND__BENT6CW,0,     0,  s4x6,      0x000, 0x0550},
    {{17, 16, 9, 20, 21, 8, 5, 4},
-    s1x4,2,MPKIND__BENT6CCW,0,    0,  s4x6,  0x000, 0x0FF0},
+    s1x4,2,MPKIND__BENT6CCW,0,    0,  s4x6,      0x000, 0x0FF0},
 
    {{1, 4, 5, 0, 11, 6, 7, 10},
     s2x2,2,MPKIND__BENT7CW,0,     0,  sdeepxwv,  0x000, 0x1441},
    {{0, 2, 3, 1, 9, 7, 6, 8},
     s2x2,2,MPKIND__BENT7CCW,0,    0,  sdeepxwv,  0x000, 0x3CC3},
    {{11, 18, 15, 16, 3, 4, 23, 6},
-    s1x4,2,MPKIND__BENT7CW,0,     0,  s4x6,  0x000, 0x5005},
+    s1x4,2,MPKIND__BENT7CW,0,     0,  s4x6,      0x000, 0x5005},
    {{18, 11, 2, 1, 14, 13, 6, 23},
-    s1x4,2,MPKIND__BENT7CCW,0,    0,  s4x6,  0x000, 0xF00F},
+    s1x4,2,MPKIND__BENT7CCW,0,    0,  s4x6,      0x000, 0xF00F},
 
    // Stuff for 1x8.
 
    {{1, 9, 8, 12, 13, 21, 20, 0},
-    s2x4,1,MPKIND__BENT4CW,0,     0,  s4x6,  0x000, 0x4141},
+    s2x4,1,MPKIND__BENT4CW,0,     0,  s4x6,      0x000, 0x4141},
    {{17, 9, 8, 4, 5, 21, 20, 16},
-    s2x4,1,MPKIND__BENT4CCW,0,    0,  s4x6,  0x000, 0xC3C3},
+    s2x4,1,MPKIND__BENT4CCW,0,    0,  s4x6,      0x000, 0xC3C3},
    {{0, 1, 5, 4, 6, 7, 11, 10},
-    s1x8,1,MPKIND__BENT4CW,0,     0,  sbigh, 0x000, 0x0505},
+    s1x8,1,MPKIND__BENT4CW,0,     0,  sbigh,     0x000, 0x0505},
    {{3, 2, 5, 4, 9, 8, 11, 10},
-    s1x8,1,MPKIND__BENT4CCW,0,    0,  sbigh, 0x000, 0x0F0F},
+    s1x8,1,MPKIND__BENT4CCW,0,    0,  sbigh,     0x000, 0x0F0F},
 
    // Stuff for 1x6.
 
    {{5, 4, 3, 11, 10, 9},
-    s1x6,1,MPKIND__BENT0CW,0,     0, sbigptpd, 0x000, 0x145},
+    s1x6,1,MPKIND__BENT0CW,0,     0, sbigptpd,   0x000, 0x145},
    {{0, 1, 3, 6, 7, 9},
-    s1x6,1,MPKIND__BENT0CCW,0,    0, sbigptpd, 0x000, 0x3CF},
+    s1x6,1,MPKIND__BENT0CCW,0,    0, sbigptpd,   0x000, 0x3CF},
 
    {{0, 1, 3, 2,        4, 5, 10, 11,      9, 8, 6, 7},
-    s1x4,3,MPKIND__NONISOTROPIC,1,0,  sbigh, 0x011, 0},
+    s1x4,3,MPKIND__NONISOTROPIC,1,0,  sbigh,     0x011, 0},
    {{0, 1, 3, 2,        4, 5, 10, 11,      9, 8, 6, 7},
-    s1x4,3,MPKIND__NONISOTROPIC,0,0,  sbigx, 0x004, 0},
+    s1x4,3,MPKIND__NONISOTROPIC,0,0,  sbigx,     0x004, 0},
    {{0, 10, 8, 9,       11, 1, 5, 7,       2, 3, 6, 4},
-    sdmd,3,MPKIND__NONISOTROPIC,1,0,  s_3mdmd, 0x011, 0},
+    sdmd,3,MPKIND__NONISOTROPIC,1,0,  s_3mdmd,   0x011, 0},
    {{9, 0, 10, 8,       1, 5, 7, 11,       4, 2, 3, 6},
-    sdmd,3,MPKIND__NONISOTROPIC,0,0,  s_3mptpd, 0x004, 0},
+    sdmd,3,MPKIND__NONISOTROPIC,0,0,  s_3mptpd,  0x004, 0},
 
    {{0, 1, 3, 2,        4, 5, 7, 6,        15, 14, 12, 13,      11, 10, 8, 9},
-    s1x4,4,MPKIND__NONISOTROPIC,1,0,  sbigbigh, 0x041, 0},
+    s1x4,4,MPKIND__NONISOTROP2,1,  0, sbigbigh,  0x041, 0},
    {{0, 1, 3, 2,        4, 5, 7, 6,        15, 14, 12, 13,      11, 10, 8, 9},
-    s1x4,4,MPKIND__NONISOTROPIC,0,0,  sbigbigx, 0x014, 0},
+    s1x4,4,MPKIND__NONISOTROP2,0,  0, sbigbigx,  0x014, 0},
    {{0, 13, 11, 12,     14, 1, 15, 10,     7, 2, 6, 9,          3, 4, 8, 5},
-    sdmd,4,MPKIND__NONISOTROPIC,1,0,  s_4mdmd, 0x041, 0},
+    sdmd,4,MPKIND__NONISOTROP2,1,  0, s_4mdmd,   0x041, 0},
    {{12, 0, 13, 11,     1, 15, 10, 14,     2, 6, 9, 7,          5, 3, 4, 8},
-    sdmd,4,MPKIND__NONISOTROPIC,0,0,  s_4mptpd, 0x014, 0},
+    sdmd,4,MPKIND__NONISOTROP2,0,  0, s_4mptpd,  0x014, 0},
 
-   {{0, 4, 5,                          3, 1, 2},
-    s_trngl,2,MPKIND__NONISOTROP1,0,       0,  s_ntrgl6cw, 0x102, 0},
-   {{5, 4, 0,                          2, 1, 3},
-    s_trngl,2,MPKIND__NONISOTROP1,1,       0,  s_bone6,  0x107, 0},
-   {{5, 0, 1,                          2, 3, 4},
-    s_trngl,2,MPKIND__SPLIT,0,       0,  s_ntrgl6ccw, 0x108, 0},
-   // We would like to make this rot field 10D, like the tgl4 case just below,
-   // but t00t fails horribly.  What's going on?
+   {{1, 0,                             2, 3},
+    s1x2,2,MPKIND__NONISOTROP2,0,   0, s_trngl4, 0x001, 0},
+   // "1000" bit says that the order of the setups is reversed -- if v=1 (which it does
+   // in this case), maps run from top to bottom instead of bottom to top.
+   {{2, 3,                             1, 0},
+    s1x2,2,MPKIND__NONISOTROP2,1,   0, s_trngl4, 0x1004, 0},
+
    {{4, 5, 3,                          1, 2, 0},
-    s_trngl,2,MPKIND__SPLIT,1,       0,  s_short6, 0x108, 0},
+    s_trngl,2,MPKIND__SPLIT,1,      0, s_short6, 0x108, 0},
+   {{5, 4, 0,                          2, 1, 3},
+    s_trngl,2,MPKIND__NONISOTROP1,1, 0, s_bone6, 0x107, 0},
+   {{5, 0, 1,                          2, 3, 4},
+    s_trngl,2,MPKIND__SPLIT,0,   0, s_ntrgl6ccw, 0x108, 0},
+   {{0, 4, 5,                          3, 1, 2},
+    s_trngl,2,MPKIND__NONISOTROP1,0,0,s_ntrgl6cw,0x102, 0},
 
-   {{1, 3, 15, 13,                     9, 11, 7, 5},
-    s_trngl4,2,MPKIND__NONISOTROP1,0,       0,  s_c1phan, 0x102, 0},
-   {{7, 6, 5, 0,                       3, 2, 1, 4},
-    s_trngl4,2,MPKIND__NONISOTROP1,1,       0,  s_bone,  0x107, 0},
-   {{12, 14, 0, 2,                     4, 6, 8, 10},
-    s_trngl4,2,MPKIND__SPLIT,0,       0,  s_c1phan, 0x108, 0},
    {{6, 7, 0, 5,                       2, 3, 4, 1},
-    s_trngl4,2,MPKIND__SPLIT,1,       0,  s_rigger, 0x10D, 0},
+    s_trngl4,2,MPKIND__SPLIT,1,     0, s_rigger, 0x10D, 0},
+   {{7, 6, 5, 0,                       3, 2, 1, 4},
+    s_trngl4,2,MPKIND__NONISOTROP1,1, 0, s_bone, 0x107, 0},
+   {{12, 14, 0, 2,                     4, 6, 8, 10},
+    s_trngl4,2,MPKIND__SPLIT,0,     0, s_c1phan, 0x108, 0},
+   {{1, 3, 15, 13,                     9, 11, 7, 5},
+    s_trngl4,2,MPKIND__NONISOTROP1,0, 0,s_c1phan,0x002, 0},
 
    {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},
-    s2x4,2,MPKIND__STAG,0,        0,  s4x4, 0x000, 0},
+    s2x4,2,MPKIND__STAG,0,        0,  s4x4,      0x000, 0},
    {{10, 13, 3, 0, 2, 5, 11, 8,        12, 15, 14, 1, 4, 7, 6, 9},
-    s2x4,2,MPKIND__STAG,1,        0,  s4x4, 0x000, 0},
+    s2x4,2,MPKIND__STAG,1,        0,  s4x4,      0x000, 0},
    {{12, 14, 1, 7, 4, 6, 9, 15,        13, 0, 2, 3, 5, 8, 10, 11},
-    s_qtag,2,MPKIND__STAG,0,        0,  s4x4, 0x000, 0},
+    s_qtag,2,MPKIND__STAG,0,        0,  s4x4,    0x000, 0},
    {{13, 0, 2, 3, 5, 8, 10, 11,        12, 14, 1, 7, 4, 6, 9, 15},
-    s_qtag,2,MPKIND__STAG,1,        0,  s4x4, 0x000, 0},
+    s_qtag,2,MPKIND__STAG,1,        0,  s4x4,    0x000, 0},
 
    {{14, 1, 4, 7, 6, 9, 12, 15,        2, 5, 8, 11, 10, 13, 0, 3},
-    s_qtag,2,MPKIND__DIAGQTAG,0,    0,  s4x4, 0x000, 0},
+    s_qtag,2,MPKIND__DIAGQTAG,0,    0,  s4x4,    0x000, 0},
    {{14, 1, 4, 7, 6, 9, 12, 15,        10, 13, 0, 3, 2, 5, 8, 11},
-    s_qtag,2,MPKIND__DIAGQTAG,1,    0,  s4x4, 0x000, 0},
+    s_qtag,2,MPKIND__DIAGQTAG,1,    0,  s4x4,    0x000, 0},
    {{7, 23, 13, 21, 19, 11, 1, 9,      6, 22, 16, 20, 18, 10, 4, 8},
-    s_qtag,2,MPKIND__DIAGQTAG4X6,0,        0,  s4x6, 0x005, 0},
+    s_qtag,2,MPKIND__DIAGQTAG4X6,0,    0,  s4x6, 0x005, 0},
 
    {{0, 2, 5, 3,                       1, 7, 4, 6},
     sdmd,2,MPKIND__MAGICDMD,1,    0,  s_qtag,    0x005, 0},
@@ -1351,166 +1400,180 @@ map::map_thing map::map_init_table[] = {
    {{0, 2, 5, 7,                       1, 3, 4, 6},
     sdmd,2,MPKIND__MAGICINTLKDMD,1,0, s_qtag,    0x005, 0},
    {{11, 10, 2, 6, 7, 3,               0, 1, 9, 5, 4, 8},
-    s_1x2dmd,2,MPKIND__MAGICDMD,1,0,  sbigdmd,    0x000, 0},
+    s_1x2dmd,2,MPKIND__MAGICDMD,1,0,  sbigdmd,   0x000, 0},
    {{11, 10, 3, 6, 7, 8,               0, 1, 2, 5, 4, 9},
-    s_1x2dmd,2,MPKIND__INTLKDMD,1,0,  sbigdmd,    0x000, 0},
+    s_1x2dmd,2,MPKIND__INTLKDMD,1,0,  sbigdmd,   0x000, 0},
    {{11, 10, 2, 6, 7, 9,               0, 1, 3, 5, 4, 8},
-    s_1x2dmd,2,MPKIND__MAGICINTLKDMD,1,0,sbigdmd, 0x000, 0},
+    s_1x2dmd,2,MPKIND__MAGICINTLKDMD,1,0,sbigdmd,0x000, 0},
 
    {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,0,   0,  s_thar, 0x104, 0},
+    sdmd,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},   // Changed.
    {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,1,   0,  s_thar, 0x004, 0},
+    sdmd,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},   // Changed, darn it.
    {{0, 2,                 1, 3},
-    s1x2,2,MPKIND__DMD_STUFF,0,   0,  sdmd, 0x004, 0},
+    s1x2,2,MPKIND__DMD_STUFF,0,   0,  sdmd,      0x004, 0},
    {{1, 3,                 0, 2},
-    s1x2,2,MPKIND__DMD_STUFF,1,   0,  sdmd, 0x001, 0},
-   {{0, 1, 2, 3, 1, 2, 3, 0},
-    s2x2,2,MPKIND__DMD_STUFF,0,   0,  s2x2, 0x104, 0},
+    s1x2,2,MPKIND__DMD_STUFF,1,   0,  sdmd,      0x001, 0},
+   {{0, 1, 2, 3, 0, 1, 2, 3},
+    s2x2,2,MPKIND__DMD_STUFF,0,   0,  s2x2,      0x000, 0},
    {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,0,   0,  s_thar, 0x104, 0},
+    s1x4,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},   // Changed.
    {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,1,   0,  s_thar, 0x004, 0},
+    s1x4,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},   // Changed, darn it.
 
-   {{13, 14, 5, 6,         1, 2, 9, 10},
-    s2x2,2,MPKIND__ALL_8,0,       0,  s4x4, 0x004, 0},
-
-   {{1, 2, 9, 10,          13, 14, 5, 6},
-    s2x2,2,MPKIND__ALL_8,1,       0,  s4x4, 0x001, 0},
+   {{13, 14, 5, 6,         10, 1, 2, 9},
+    s2x2,2,MPKIND__ALL_8,0,       0,  s4x4,      0x000, 0},
+   {{10, 1, 2, 9,          13, 14, 5, 6},
+    s2x2,2,MPKIND__ALL_8,1,       0,  s4x4,      0x000, 0},
    {{0, 3, 4, 7,           2, 5, 6, 1},
-    sdmd,2,MPKIND__ALL_8,0,       0,  s_thar, 0x004, 0},
+    sdmd,2,MPKIND__ALL_8,0,       0,  s_thar,    0x004, 0},
    {{2, 5, 6, 1,           0, 3, 4, 7},
-    sdmd,2,MPKIND__ALL_8,1,       0,  s_thar, 0x001, 0},
+    sdmd,2,MPKIND__ALL_8,1,       0,  s_thar,    0x001, 0},
    {{0, 1, 4, 5,           2, 3, 6, 7},
-    s1x4,2,MPKIND__ALL_8,0,       0,  s_thar, 0x004, 0},
+    s1x4,2,MPKIND__ALL_8,0,       0,  s_thar,    0x004, 0},
    {{2, 3, 6, 7,           0, 1, 4, 5},
-    s1x4,2,MPKIND__ALL_8,1,       0,  s_thar, 0x001, 0},
+    s1x4,2,MPKIND__ALL_8,1,       0,  s_thar,    0x001, 0},
 
    {{13, 14,               1, 2,                 6, 5,               10, 9},
-    s1x2,4,MPKIND__4_EDGES,0,     0,  s4x4, 0x044, 0},
+    s1x2,4,MPKIND__4_EDGES,0,     0,  s4x4,      0x044, 0},
    {{2, 3,                 5, 4,                 7, 6,               0, 1},
-    s1x2,4,MPKIND__4_EDGES,1,     0,  s_thar, 0x011, 0},
+    s1x2,4,MPKIND__4_EDGES,1,     0,  s_thar,    0x011, 0},
    {{0, 2,                 4, 6,                 10, 8,              14, 12},
-    s1x2,4,MPKIND__4_QUADRANTS,0, 0,  s_c1phan, 0x044, 0},
+    s1x2,4,MPKIND__4_QUADRANTS,0, 0,  s_c1phan,  0x044, 0},
    {{1, 3,                 7, 5,                 11, 9,              13, 15},
-    s1x2,4,MPKIND__4_QUADRANTS,1, 0,  s_c1phan, 0x011, 0},
+    s1x2,4,MPKIND__4_QUADRANTS,1, 0,  s_c1phan,  0x011, 0},
    {{0, 1, 2, 3,        7, 4, 5, 6,        10, 11, 8, 9,    13, 14, 15, 12},
-    s_star,4,MPKIND__4_QUADRANTS,0, 0,  s_c1phan, 0x000, 0},
+    s_star,4,MPKIND__4_QUADRANTS,0, 0, s_c1phan, 0x000, 0},
 
    {{-1, 0, 1, 2, 11, 12, 13, 14,      3, 4, 5, 6, -1, 8, 9, 10},
-    s2x4,2,MPKIND__OFFS_L_HALF_SPECIAL,0, 0,  s2x8,      0x000, 0},
+    s2x4,2,MPKIND__OFFS_L_HALF_SPECIAL,0, 0,s2x8,0x000, 0},
    {{1, 2, 3, 4, 13, 14, 15, -1,       5, 6, 7, -1, 9, 10, 11, 12},
-    s2x4,2,MPKIND__OFFS_R_HALF_SPECIAL,0, 0,  s2x8,      0x000, 0},
+    s2x4,2,MPKIND__OFFS_R_HALF_SPECIAL,0, 0,s2x8,0x000, 0},
 
    {{1, 8, 17, 12, 13, 16, 9, 0,       3, 6, 19, 10, 11, 18, 7, 2},
-    s2x4,2,MPKIND__OFFS_L_HALF_SPECIAL,1, 0,  s4x5,      0x005, 0},
+    s2x4,2,MPKIND__OFFS_L_HALF_SPECIAL,1, 0,s4x5,0x005, 0},
    {{2, 7, 16, 13, 14, 15, 8, 1,       4, 5, 18, 11, 12, 17, 6, 3},
-    s2x4,2,MPKIND__OFFS_R_HALF_SPECIAL,1, 0,  s4x5,      0x005, 0},
+    s2x4,2,MPKIND__OFFS_R_HALF_SPECIAL,1, 0,s4x5,0x005, 0},
 
    {{1, 10, 21, 14, 15, 20, 11, 0,     3, 8, 23, 12, 13, 22, 9, 2},
-    s2x4,2,MPKIND__OFFS_L_FULL_SPECIAL,1, 0,  s4x6,      0x005, 0},
+    s2x4,2,MPKIND__OFFS_L_FULL_SPECIAL,1, 0,s4x6,0x005, 0},
    {{3, 8, 19, 16, 17, 18, 9, 2,       5, 6, 21, 14, 15, 20, 7, 4},
-    s2x4,2,MPKIND__OFFS_R_FULL_SPECIAL,1, 0,  s4x6,      0x005, 0},
+    s2x4,2,MPKIND__OFFS_R_FULL_SPECIAL,1, 0,s4x6,0x005, 0},
 
    {{0, 1, 2, 3, 16, 17, 18, 19,       4, 5, 6, 7, 12, 13, 14, 15},
-    s2x4,2,MPKIND__OFFS_L_FULL_SPECIAL,0, 0,  s2x12,     0x000, 0},
+    s2x4,2,MPKIND__OFFS_L_FULL_SPECIAL,0,0,s2x12,0x000, 0},
    {{4, 5, 6, 7, 20, 21, 22, 23,       8, 9, 10, 11, 16, 17, 18, 19},
-    s2x4,2,MPKIND__OFFS_R_FULL_SPECIAL,0, 0,  s2x12,     0x000, 0},
+    s2x4,2,MPKIND__OFFS_R_FULL_SPECIAL,0,0,s2x12,0x000, 0},
 
    {{0, 1, 12, 13,       2, 3, 10, 11,       4, 5, 8, 9},
-    s2x2,3,MPKIND__OFFS_L_HALF_SPECIAL,0, 0,  s2x8,      0x000, 0},
+    s2x2,3,MPKIND__OFFS_L_HALF_SPECIAL,0, 0,s2x8,0x000, 0},
    {{2, 3, 14, 15,       4, 5, 12, 13,       6, 7, 10, 11},
-    s2x2,3,MPKIND__OFFS_R_HALF_SPECIAL,0, 0,  s2x8,      0x000, 0},
+    s2x2,3,MPKIND__OFFS_R_HALF_SPECIAL,0, 0,s2x8,0x000, 0},
 
    {{12, 10, 6, 11,      13, 15, 5, 7,       14, 3, 4, 2},
-    s1x4,3,MPKIND__OFFS_L_HALF_SPECIAL,1, 0,  s4x4,      0x015, 0},
+    s1x4,3,MPKIND__OFFS_L_HALF_SPECIAL,1, 0,s4x4,0x015, 0},
    {{13, 15, 8, 9,       14, 3, 6, 11,       0, 1, 5, 7},
-    s1x4,3,MPKIND__OFFS_R_HALF_SPECIAL,1, 0,  s4x4,      0x015, 0},
+    s1x4,3,MPKIND__OFFS_R_HALF_SPECIAL,1, 0,s4x4,0x015, 0},
 
    {{0, 1, 2, 3, 6, 7, 8, 9},
-    s2x4,1,MPKIND__OFFS_L_HALF,0, 0,  s2x6,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_HALF,1, 0,  s2x6,      0x000, 0},
    {{2, 3, 4, 5, 8, 9, 10, 11},
-    s2x4,1,MPKIND__OFFS_R_HALF,0, 0,  s2x6,      0x000, 0},
-
-   {{0, 1, 2, 3, 4, 5, 6, 7},
-    s_qtag,1,MPKIND__OFFS_L_HALF,1, 0, spgdmdccw,0x000, 0},
-   {{0, 1, 2, 3, 4, 5, 6, 7},
-    s_qtag,1,MPKIND__OFFS_R_HALF,1, 0, spgdmdcw, 0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_HALF,1, 0,  s2x6,      0x000, 0},
 
    {{0, 1, 2, 3, 5, 6, 7, 8},
-    s2x4,1,MPKIND__OFFS_L_ONEQ,0, 0,  s2x5,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_ONEQ,1, 0,  s2x5,      0x000, 0},
    {{1, 2, 3, 4, 6, 7, 8, 9},
-    s2x4,1,MPKIND__OFFS_R_ONEQ,0, 0,  s2x5,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_ONEQ,1, 0,  s2x5,      0x000, 0},
 
    {{0, 1, 2, 3, 7, 8, 9, 10},
-    s2x4,1,MPKIND__OFFS_L_THRQ,0, 0,  s2x7,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_THRQ,1, 0,  s2x7,      0x000, 0},
    {{3, 4, 5, 6, 10, 11, 12, 13},
-    s2x4,1,MPKIND__OFFS_R_THRQ,0, 0,  s2x7,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_THRQ,1, 0,  s2x7,      0x000, 0},
 
    {{0, 1, 2, 3, 8, 9, 10, 11},
-    s2x4,1,MPKIND__OFFS_L_FULL,0, 0,  s2x8,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_FULL,1, 0,  s2x8,      0x000, 0},
    {{4, 5, 6, 7, 12, 13, 14, 15},
-    s2x4,1,MPKIND__OFFS_R_FULL,0, 0,  s2x8,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_FULL,1, 0,  s2x8,      0x000, 0},
 
    {{0, 1, 2, 3, 7, 8, 9, 10, 11, 12, 16, 17},
-    s3x4,1,MPKIND__OFFS_L_HALF,0, 7,  s3x6,      0x000, 0},
+    s3x4,1,MPKIND__OFFS_L_HALF,1, 7,  s3x6,      0x000, 0},
    {{2, 3, 4, 5, 7, 8, 11, 12, 13, 14, 16, 17},
-    s3x4,1,MPKIND__OFFS_R_HALF,0, 7,  s3x6,      0x000, 0},
+    s3x4,1,MPKIND__OFFS_R_HALF,1, 7,  s3x6,      0x000, 0},
+
+   // Shouldn't these two go to a 3x4 instead of a 3x6???
+   /*
    {{1, 2, 7, 8, 10, 11, 16, 17},
-    s_qtag,1,MPKIND__OFFS_L_HALF,0, 7,  s3x6,    0x000, 0},
+    s_qtag,1,MPKIND__OFFS_L_HALF,1, 7,  s3x6,    0x000, 0},
    {{3, 4, 7, 8, 12, 13, 16, 17},
-    s_qtag,1,MPKIND__OFFS_R_HALF,0, 7,  s3x6,    0x000, 0},
+    s_qtag,1,MPKIND__OFFS_R_HALF,1, 7,  s3x6,    0x000, 0},
+   */
+   // Try it:
+   {{0, 1, 4, 5, 6, 7, 10, 11},
+    s_qtag,1,MPKIND__OFFS_L_HALF,1, 7,  s3x4,    0x000, 0},
+   {{2, 3, 4, 5, 8, 9, 10, 11},
+    s_qtag,1,MPKIND__OFFS_R_HALF,1, 7,  s3x4,    0x000, 0},
+
+
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s_qtag,1,MPKIND__OFFS_L_HALF,0, 0, spgdmdccw,0x000, 0},
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s_qtag,1,MPKIND__OFFS_R_HALF,0, 0, spgdmdcw, 0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14},
-    s2x6,1,MPKIND__OFFS_L_HALF,0, 5,  s2x9,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_L_HALF,1, 5,  s2x9,      0x000, 0},
    {{3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17},
-    s2x6,1,MPKIND__OFFS_R_HALF,0, 5,  s2x9,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_R_HALF,1, 5,  s2x9,      0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_L_HALF,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_L_HALF,1, 2,  s1x8,      0x000, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_R_HALF,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_R_HALF,1, 2,  s1x8,      0x000, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_L_FULL,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_L_FULL,1, 2,  s1x8,      0x000, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_R_FULL,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_R_FULL,1, 2,  s1x8,      0x000, 0},
 
    {{10, 11, 2, 3, 4, 5, 8, 9},
-    s2x4,1,MPKIND__OFFS_L_HALF,1, 0,  s3x4,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_HALF,0, 0,  s3x4,      0x000, 0},
    {{0, 1, 5, 4, 6, 7, 11, 10},
-    s2x4,1,MPKIND__OFFS_R_HALF,1, 0,  s3x4,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_HALF,0, 0,  s3x4,      0x000, 0},
 
    {{15, 16, 17, 3, 4, 5, 6, 7, 8, 12, 13, 14},
-    s2x6,1,MPKIND__OFFS_L_HALF,1, 0,  s3x6,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_L_HALF,0, 0,  s3x6,      0x000, 0},
    {{0, 1, 2, 8, 7, 6, 9, 10, 11, 17, 16, 15},
-    s2x6,1,MPKIND__OFFS_R_HALF,1, 0,  s3x6,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_R_HALF,0, 0,  s3x6,      0x000, 0},
    {{13, 15, 2, 4, 5, 7, 10, 12},
-    s2x4,1,MPKIND__OFFS_L_FULL,1, 0,  s4x4,      0x001, 0},
+    s2x4,1,MPKIND__OFFS_L_FULL,0, 0,  s4x4,      0x001, 0},
    {{0, 1, 11, 6, 8, 9, 3, 14},
-    s2x4,1,MPKIND__OFFS_R_FULL,1, 0,  s4x4,      0x001, 0},
+    s2x4,1,MPKIND__OFFS_R_FULL,0, 0,  s4x4,      0x001, 0},
 
    {{9, 11, 14, 0, 1, 3, 6, 8,         12, 13, 7, 2, 4, 5, 15, 10},
-    s2x4,2,MPKIND__OFFS_BOTH_FULL,1, 0, s4x4,      0x000, 0},
+    s2x4,2,MPKIND__OFFS_BOTH_FULL,0, 0, s4x4,    0x000, 0},
    {{0, 1, 2, 3, 8, 9, 10, 11,         4, 5, 6, 7, 12, 13, 14, 15},
-    s2x4,2,MPKIND__OFFS_BOTH_FULL,0, 0, s2x8,      0x000, 0},
+    s2x4,2,MPKIND__OFFS_BOTH_FULL,1, 0, s2x8,    0x000, 0},
 
    {{10, 11, 8, 9,                     2, 3, 4, 5},
     s2x2,2,MPKIND__OFFS_L_HALF,0, 0,  s3x4,      0x000, 0},
    {{0, 1, 11, 10,                     5, 4, 6, 7},
     s2x2,2,MPKIND__OFFS_R_HALF,0, 0,  s3x4,      0x000, 0},
-   {{9, 11, 6, 8,                      14, 0, 1, 3},
-    s2x2,2,MPKIND__OFFS_L_FULL,0, 0,  s4x4,      0x000, 0},
-   {{12, 13, 15, 10,                   7, 2, 4, 5},
-    s2x2,2,MPKIND__OFFS_R_FULL,0, 0,  s4x4,      0x000, 0},
-
    {{11, 8, 9, 10,                     3, 4, 5, 2},
     s2x2,2,MPKIND__OFFS_L_HALF,1, 0,  s3x4,      0x005, 0},
    {{1, 11, 10, 0,                     4, 6, 7, 5},
     s2x2,2,MPKIND__OFFS_R_HALF,1, 0,  s3x4,      0x005, 0},
+
+   {{9, 11, 6, 8,                      14, 0, 1, 3},
+    s2x2,2,MPKIND__OFFS_L_FULL,0, 0,  s4x4,      0x000, 0},
+   {{12, 13, 15, 10,                   7, 2, 4, 5},
+    s2x2,2,MPKIND__OFFS_R_FULL,0, 0,  s4x4,      0x000, 0},
    {{11, 6, 8, 9,                      0, 1, 3, 14},
     s2x2,2,MPKIND__OFFS_L_FULL,1, 0,  s4x4,      0x005, 0},
    {{13, 15, 10, 12,                   2, 4, 5, 7},
     s2x2,2,MPKIND__OFFS_R_FULL,1, 0,  s4x4,      0x005, 0},
+
+   {{5, 0, 1,                     2, 3, 4},
+    s_trngl,2,MPKIND__OFFS_L_HALF,0, 0,s_nftrgl6ccw,0x108, 0},
+   {{0, 4, 5,                     3, 1, 2},
+    s_trngl,2,MPKIND__OFFS_R_HALF,0, 0,s_nftrgl6cw,0x102, 0},
 
    {{15, 14, 12, 13,                   4, 5, 7, 6},
     s1x4,2,MPKIND__OFFS_L_HALF,0, 0,  s1p5x8,    0x000, 0},
@@ -1527,14 +1590,20 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 3, 2,                       11, 10, 8, 9},
     s1x4,2,MPKIND__OFFS_R_FULL,0, 0,  s2x8,      0x000, 0},
 
-   {{0, 1, 4, 5},
-    s1x4,1,MPKIND__OFFS_L_FULL,1, 0,  s2x4,      0x000, 0},
    {{7, 6, 3, 2},
-    s1x4,1,MPKIND__OFFS_R_FULL,1, 0,  s2x4,      0x000, 0},
-   {{2, 3, 6, 7},
-    s2x2,1,MPKIND__OFFS_L_FULL,0, 0,  s2x4,      0x000, 0},
+    s1x4,1,MPKIND__OFFS_L_FULL,0, 0,  s2x4,      0x000, 0},
    {{0, 1, 4, 5},
-    s2x2,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x000, 0},
+    s1x4,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x000, 0},
+
+   {{0, 1, 4, 5},
+    s2x2,1,MPKIND__OFFS_L_FULL,1, 0,  s2x4,      0x000, 0},
+   {{2, 3, 6, 7},
+    s2x2,1,MPKIND__OFFS_R_FULL,1, 0,  s2x4,      0x000, 0},
+
+   {{1, 4, 5, 0},
+    s2x2,1,MPKIND__OFFS_L_FULL,0, 0,  s2x4,      0x001, 0},
+   {{3, 6, 7, 2},
+    s2x2,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x001, 0},
 
    {{9, 8, 6, 7,                       0, 1, 3, 2},
     s1x4,2,MPKIND__OFFS_L_HALF,1, 0,  s2x6,      0x000, 0},
@@ -1577,9 +1646,14 @@ map::map_thing map::map_init_table[] = {
     sdmd,2,MPKIND__OFFS_R_FULL,0, 0,  s4x6,      0x000, 0},
 
    {{6, 7, 8, 9,                       0, 1, 2, 3},
-    s_trngl4,2,MPKIND__OFFS_L_HALF,0, 0,  sbigdmd,  0x107, 0},
+    s_trngl4,2,MPKIND__OFFS_L_HALF,0, 0, sbigdmd,0x107, 0},
    {{11, 10, 9, 8,                     5, 4, 3, 2},
-    s_trngl4,2,MPKIND__OFFS_R_HALF,0, 0,  sbigdmd,  0x10D, 0},
+    s_trngl4,2,MPKIND__OFFS_R_HALF,0, 0, sbigdmd,0x10D, 0},
+
+   {{15, 11, 6, 8,                      7, 3, 14, 0},
+    s_trngl4,2,MPKIND__OFFS_L_HALF_NONISO,0,4,s4x4,0x002, 0},
+   {{11, 15, 12, 13,                      3, 7, 4, 5},
+    s_trngl4,2,MPKIND__OFFS_R_HALF_NONISO,0,4,s4x4,0x008, 0},
 
    {{15, 16, 17, 12, 13, 14,           3, 4, 5, 6, 7, 8},
     s2x3,2,MPKIND__OFFS_L_HALF,0, 0,  s3x6,      0x000, 0},
@@ -1588,10 +1662,16 @@ map::map_thing map::map_init_table[] = {
 
    {{9, 20, 15, 19, -1, -1, -1, 16, -1, -1, -1, 17, -1, 11, 10, 18,
      -1, -1, -1, 5, -1, 23, 22, 6, 21, 8, 3, 7, -1, -1, -1, 4},
-    s4x4,2,MPKIND__OFFS_L_HALF,0, 0,  s4x6, 0x000, 0},
+    s4x4,2,MPKIND__OFFS_L_HALF,0, 0,  s4x6,      0x000, 0},
    {{-1, 2, 9, 1, 20, 19, 18, 10, -1, -1, -1, 11, -1, -1, -1, 0,
      -1, -1, -1, 23, -1, -1, -1, 12, -1, 14, 21, 13, 8, 7, 6, 22},
-    s4x4,2,MPKIND__OFFS_R_HALF,0, 0,  s4x6, 0x000, 0},
+    s4x4,2,MPKIND__OFFS_R_HALF,0, 0,  s4x6,      0x000, 0},
+   {{23, 12, -1, 13, -1, -1, -1, -1, -1, -1, 15, -1, 20, 21, 22, 14,
+     -1, -1, 3, -1, 8, 9, 10, 2, 11, 0, -1, 1, -1, -1, -1, -1},
+    s4x4,2,MPKIND__OFFS_L_HALF,1, 0,  s4x6,      0x000, 0},
+   {{21, 14, -1, 15, -1, -1, -1, -1, -1, -1, 17, -1, 18, 19, 20, 16,
+     -1, -1, 5, -1, 6, 7, 8, 4, 9, 2, -1, 3, -1, -1, -1, -1},
+    s4x4,2,MPKIND__OFFS_R_HALF,1, 0,  s4x6,      0x000, 0},
 
    {{20, 21, 22, 23, 16, 17, 18, 19,   4, 5, 6, 7, 8, 9, 10, 11},
     s2x4,2,MPKIND__OFFS_L_HALF,0, 0,  s3x8,      0x000, 0},
@@ -1604,9 +1684,9 @@ map::map_thing map::map_init_table[] = {
     s2x4,2,MPKIND__OFFS_R_ONEQ,1, 0,  s4x5,      0x000, 0},
 
    {{17, 16, 14, 15, 10, 11, 13, 12,   0, 1, 3, 2, 7, 6, 4, 5},
-    s1x8,2,MPKIND__OFFS_L_ONEQ,1, 0,  s2x10,      0x000, 0},
+    s1x8,2,MPKIND__OFFS_L_ONEQ,1, 0,  s2x10,     0x000, 0},
    {{19, 18, 16, 17, 12, 13, 15, 14,   2, 3, 5, 4, 9, 8, 6, 7},
-    s1x8,2,MPKIND__OFFS_R_ONEQ,1, 0,  s2x10,      0x000, 0},
+    s1x8,2,MPKIND__OFFS_R_ONEQ,1, 0,  s2x10,     0x000, 0},
 
    {{10, 9, 8, 7, -1, -1, -1, -1,      -1, -1, -1, -1, 3, 2, 1, 0},
     s2x4,2,MPKIND__OFFS_L_THRQ,1, 0,  s2x7,      0x000, 0},
@@ -1614,9 +1694,9 @@ map::map_thing map::map_init_table[] = {
     s2x4,2,MPKIND__OFFS_R_THRQ,1, 0,  s2x7,      0x000, 0},
 
    {{18, 17, 15, 16, -1, 12, 14, 13,   -1, 0, 2, 1, 6, 5, 3, 4},
-    s1x8,2,MPKIND__OFFS_L_THRQ,1, 0,  s2x12,      0x000, 0},
+    s1x8,2,MPKIND__OFFS_L_THRQ,1, 0,  s2x12,     0x000, 0},
    {{-1, 23, 21, 22, 17, 18, 20, 19,   5, 6, 8, 7, -1, 11, 9, 10},
-    s1x8,2,MPKIND__OFFS_R_THRQ,1, 0,  s2x12,      0x000, 0},
+    s1x8,2,MPKIND__OFFS_R_THRQ,1, 0,  s2x12,     0x000, 0},
 
    {{20, 21, 22, 23, 12, 13, 14, 15,   0, 1, 2, 3, 8, 9, 10, 11},
     s2x4,2,MPKIND__OFFS_L_HALF,1, 0,  s4x6,      0x000, 0},
@@ -1624,9 +1704,14 @@ map::map_thing map::map_init_table[] = {
     s2x4,2,MPKIND__OFFS_R_HALF,1, 0,  s4x6,      0x000, 0},
 
    {{2, -1, -1, -1, -1, 0, 1, 3,       -1, 4, 5, 7, 6, -1, -1, -1},
-    s_qtag,2,MPKIND__OFFS_L_HALF,1, 1,  s_ptpd,    0x005, 0},
+    s_qtag,2,MPKIND__OFFS_L_HALF,1, 1,  s_ptpd,  0x005, 0},
    {{-1, 2, 3, 1, 0, -1, -1, -1,       4, -1, -1, -1, -1, 6, 7, 5},
-    s_qtag,2,MPKIND__OFFS_R_HALF,1, 1,  s_ptpd,    0x005, 0},
+    s_qtag,2,MPKIND__OFFS_R_HALF,1, 1,  s_ptpd,  0x005, 0},
+
+   {{-1, 0, 7, 6, 5, -1, -1, -1,       1, -1, -1, -1, -1, 4, 3, 2},
+    s_qtag,2,MPKIND__OFFS_L_HALF,0, 0, spgdmdccw,0x000, 0},
+   {{-1, 0, 7, 6, 5, -1, -1, -1,       1, -1, -1, -1, -1, 4, 3, 2},
+    s_qtag,2,MPKIND__OFFS_R_HALF,0, 0, spgdmdcw, 0x000, 0},
 
    {{13, 12, 10, 11, -1, -1, 9, 8,     -1, -1, 1, 0, 5, 4, 2, 3},
     s1x8,2,MPKIND__OFFS_L_HALF,1, 0,  s2x8,      0x000, 0},
@@ -1659,13 +1744,13 @@ map::map_thing map::map_init_table[] = {
    {{10, 15, 3, 1, 4, 5, 6, 8,         12, 13, 14, 0, 2, 7, 11, 9},
     s2x4,2,MPKIND__INTLK,1,       0,  s4x4,      0x000, 0},
    {{0, 1, 3, 2, 8, 9, 11, 10,         4, 5, 7, 6, 12, 13, 15, 14},
-    s1x8,2,MPKIND__CONCPHAN,0,    0,  s1x16,      0x000, 0},
+    s1x8,2,MPKIND__CONCPHAN,0,    0,  s1x16,     0x000, 0},
    {{0, 1, 3, 2, 12, 13, 15, 14,       4, 5, 7, 6, 8, 9, 11, 10},
-    s1x8,2,MPKIND__INTLK,0,       0,  s1x16,      0x000, 0},
+    s1x8,2,MPKIND__INTLK,0,       0,  s1x16,     0x000, 0},
    {{0, 3, 4, 5, 8, 11, 12, 13,        1, 2, 6, 7, 9, 10, 14, 15},
-    s_qtag,2,MPKIND__CONCPHAN,0,  0,  s4dmd,    0x000, 0},
+    s_qtag,2,MPKIND__CONCPHAN,0,  0,  s4dmd,     0x000, 0},
    {{0, 2, 6, 7, 9, 11, 12, 13,        1, 3, 4, 5, 8, 10, 14, 15},
-    s_qtag,2,MPKIND__INTLK,0,     0,  s4dmd,    0x000, 0},
+    s_qtag,2,MPKIND__INTLK,0,     0,  s4dmd,     0x000, 0},
    {{12, 0, 13, 11, 4, 8, 5, 3,        14, 1, 15, 10, 6, 9, 7, 2},
     s_ptpd,2,MPKIND__CONCPHAN,0,  0,  s4ptpd,    0x000, 0},
    {{12, 0, 13, 11, 6, 9, 7, 2,        14, 1, 15, 10, 4, 8, 5, 3},
@@ -1721,7 +1806,7 @@ map::map_thing map::map_init_table[] = {
 
    {{0, 1, 3, 2, 7, 6, 4, 5,           4, 5, 7, 6, 12, 13, 15, 14,
      15, 14, 12, 13, 8, 9, 11, 10},
-    s1x8,3,MPKIND__OVERLAP,0,     0,  s1x16,      0x000, 0},
+    s1x8,3,MPKIND__OVERLAP,0,     0,  s1x16,     0x000, 0},
    {{0, 1, 3, 2, 10, 11, 4, 5,         2, 3, 5, 4, 8, 9, 11, 10,
      4, 5, 10, 11, 6, 7, 9, 8},
     s1x8,3,MPKIND__OVERLAP14,0,    0,  s1x12,    0x000, 0},
@@ -1744,21 +1829,35 @@ map::map_thing map::map_init_table[] = {
     s2x2,2,MPKIND__OVERLAP,0,     0,  s2x3,      0x000, 0},
    {{1, 4, 5, 0,                       2, 3, 4, 1},
     s2x2,2,MPKIND__OVERLAP,1,     0,  s2x3,      0x005, 0},
+
    {{0, 1, 6, 7,            1, 2, 5, 6,            2, 3, 4, 5},
     s2x2,3,MPKIND__OVERLAP,0,     0,  s2x4,      0x000, 0},
+   {{1, 6, 7, 0,            2, 5, 6, 1,            3, 4, 5, 2},
+    s2x2,3,MPKIND__OVERLAP,1,     0,  s2x4,      0x015, 0},
+
    {{0, 1, 8, 9,       1, 2, 7, 8,       2, 3, 6, 7,      3, 4, 5, 6},
     s2x2,4,MPKIND__OVERLAP,0,     0,  s2x5,      0x000, 0},
+   {{1, 8, 9, 0,       2, 7, 8, 1,       3, 6, 7, 2,      4, 5, 6, 3},
+    s2x2,4,MPKIND__OVERLAP,1,     0,  s2x5,      0x055, 0},
+
    {{0, 1, 10, 11,  1, 2, 9, 10,  2, 3, 8, 9,  3, 4, 7, 8,  4, 5, 6, 7},
     s2x2,5,MPKIND__OVERLAP,0,     0,  s2x6,      0x000, 0},
+   {{1, 10, 11, 0,  2, 9, 10, 1,  3, 8, 9, 2,  4, 7, 8, 3,  5, 6, 7, 4},
+    s2x2,5,MPKIND__OVERLAP,1,     0,  s2x6,      0x155, 0},
+
    {{0, 1, 12, 13,  1, 2, 11, 12,  2, 3, 10, 11,  3, 4, 9, 10,  4, 5, 8, 9,  5, 6, 7, 8},
     s2x2,6,MPKIND__OVERLAP,0,     0,  s2x7,      0x000, 0},
-   {{0, 1, 14, 15,  1, 2, 13, 14,  2, 3, 12, 13,  3, 4, 11, 12,
-     4, 5, 10, 11,  5, 6, 9, 10,   6, 7, 8, 9},
+   {{1, 12, 13, 0,  2, 11, 12, 1,  3, 10, 11, 2,  4, 9, 10, 3,  5, 8, 9, 4,  6, 7, 8, 5},
+    s2x2,6,MPKIND__OVERLAP,1,     0,  s2x7,      0x555, 0},
+
+   {{0, 1, 14, 15,  1, 2, 13, 14,  2, 3, 12, 13,  3, 4, 11, 12,  4, 5, 10, 11,  5, 6, 9, 10,   6, 7, 8, 9},
     s2x2,7,MPKIND__OVERLAP,0,     0,  s2x8,      0x000, 0},
+   {{1, 14, 15, 0,  2, 13, 14, 1,  3, 12, 13, 2,  4, 11, 12, 3,  5, 10, 11, 4,  6, 9, 10, 5,   7, 8, 9, 6},
+    s2x2,7,MPKIND__OVERLAP,1,     0,  s2x8,      0x1555, 0},
 
    {{0, 1, 15, 14, 10, 11, 12, 13,     1, 2, 6, 7, 9, 10, 14, 15,
      2, 3, 4, 5, 8, 9, 7, 6},
-    s_qtag,3,MPKIND__OVERLAP,0,   0,  s4dmd,    0x000, 0},
+    s_qtag,3,MPKIND__OVERLAP,0,   0,  s4dmd,     0x000, 0},
    {{12, 0, 13, 11, 15, 10, 14, 1,     14, 1, 15, 10, 6, 9, 7, 2,
      7, 2, 6, 9, 4, 8, 5, 3},
     s_ptpd,3,MPKIND__OVERLAP,0,   0,  s4ptpd,    0x000, 0},
@@ -1777,14 +1876,14 @@ map::map_thing map::map_init_table[] = {
    {{8, 6, 4, 5,   9, 11, 2, 7,   10, 15, 1, 3,   12, 13, 0, 14},
     s1x4,4,MPKIND__OVERLAP,1,     3,  s4x4,      0x000, 0},
    {{0, 1, 3, 2,  2, 3, 5, 4,  4, 5, 10, 11,  11, 10, 8, 9,  9, 8, 6, 7},
-    s1x4,5,MPKIND__OVERLAP,0,     0,  s1x12,      0x000, 0},
+    s1x4,5,MPKIND__OVERLAP,0,     0,  s1x12,     0x000, 0},
    {{0, 9, 14, 15, 1, 8, 13, 16, 2, 7, 12, 17, 3, 6, 11, 18, 4, 5, 10, 19},
     s1x4,5,MPKIND__OVERLAP,1,     3,  s4x5,      0x155, 0},
    {{0, 1, 2, 3, 1, 3, 6, 2, 3, 2, 7, 6, 2, 6, 5, 7, 6, 7, 4, 5},
-    s1x4,5,MPKIND__OVERLAP14,0,     0,  s1x8,      0x000, 0},
+    s1x4,5,MPKIND__OVERLAP14,0,     0,  s1x8,    0x000, 0},
 
    {{7, 0, -1, 6,           -1, 1, -1, 5,          -1, 2, 3, 4},
-    sdmd,3,MPKIND__OVERLAP,0,     0,s_spindle,      0x000, 0},
+    sdmd,3,MPKIND__OVERLAP,0,     0,s_spindle,   0x000, 0},
    {{0, 1, 2, 3, 12, 13, 14, 15,       2, 3, 4, 5, 10, 11, 12, 13,
      4, 5, 6, 7, 8, 9, 10, 11},
     s2x4,3,MPKIND__OVERLAP,0,     0,  s2x8,      0x000, 0},
@@ -1799,6 +1898,15 @@ map::map_thing map::map_init_table[] = {
      5, 6, 23, 12, 13, 22, 7, 4},
     s2x4,5,MPKIND__OVERLAP,1,     0,  s4x6,      0x155, 0},
 
+   {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},
+    s_hrglass,2,MPKIND__SPEC_MATRIX_OVERLAP,1,0,  s_qtag,    0x005, 0},
+   {{-1, 1, -1, 6, -1, 7, -1, 0,       -1, 3, -1, 4, -1, 5, -1, 2},
+    s_galaxy,2,MPKIND__SPEC_MATRIX_OVERLAP,1, 0,  s2x4,      0x005, 0},
+   {{19, 15, 12, 14, 13, 17, 0, 18,
+     5, 9, 11, 16, 15, 19, 1, 6,
+     3, 7, 10, 8, 9, 5, 2, 4},
+    s_qtag,3,MPKIND__SPEC_MATRIX_OVERLAP,1,   0,  s3oqtg,    0x015, 0},
+
    {{0, 3,                             1, 2},
     s1x2,2,MPKIND__REMOVED,0,     0,  s1x4,      0x000, 0},
 
@@ -1812,6 +1920,8 @@ map::map_thing map::map_init_table[] = {
     s1x3,2,MPKIND__REMOVED,1,     0,  s2x3,      0x000, 0},
    {{0, 2, 4, 7, 9, 11,                1, 3, 5, 6, 8, 10},
     s2x3,2,MPKIND__REMOVED,0,     0,  s2x6,      0x000, 0},
+   {{2, 5, 7, 9, 10, 0,                3, 4, 6, 8, 11, 1},
+    s2x3,2,MPKIND__REMOVED,1,     0,  s3x4,      0x005, 0},
    {{0, 3, 5, 6,                       1, 2, 4, 7},
     s1x4,2,MPKIND__REMOVED,0,     0,  s1x8,      0x000, 0},
    {{7, 6, 4, 5,                       0, 1, 3, 2},
@@ -1822,38 +1932,38 @@ map::map_thing map::map_init_table[] = {
     s1x8,2,MPKIND__REMOVED,1,     0,  s2x8,      0x000, 0},
 
    {{0, 5,                  1, 4,                  2, 3},
-    s1x2,3,MPKIND__TWICE_REMOVED,0,0,  s1x6,      0x000, 0},
+    s1x2,3,MPKIND__TWICE_REMOVED,0,0,  s1x6,     0x000, 0},
    {{0, 5,                  1, 4,                  2, 3},
-    s1x2,3,MPKIND__TWICE_REMOVED,1,0,  s2x3,      0x015, 0},
+    s1x2,3,MPKIND__TWICE_REMOVED,1,0,  s2x3,     0x015, 0},
    {{0, 3, 8, 11,           1, 4, 7, 10,           2, 5, 6, 9},
-    s2x2,3,MPKIND__TWICE_REMOVED,0,0,  s2x6,      0x000, 0},
+    s2x2,3,MPKIND__TWICE_REMOVED,0,0,  s2x6,     0x000, 0},
    {{0, 3, 8, 11,           1, 4, 7, 10,           2, 5, 6, 9},
-    s1x4,3,MPKIND__TWICE_REMOVED,0,0,  s1x12,      0x000, 0},
+    s1x4,3,MPKIND__TWICE_REMOVED,0,0,  s1x12,    0x000, 0},
    {{19, 18, 16, 17, 12, 13, 15, 14,     20, 21, 23, 22, 8, 9, 11, 10,
      0, 1, 3, 2, 7, 6, 4, 5},
-    s1x8,3,MPKIND__TWICE_REMOVED,1,0,  s3x8,      0x000, 0},
+    s1x8,3,MPKIND__TWICE_REMOVED,1,0,  s3x8,     0x000, 0},
    {{0, 3, 6, 9, 14, 17, 20, 23,      1, 4, 7, 10, 13, 16, 19, 22,
      2, 5, 8, 11, 12, 15, 18, 21},
-    s2x4,3,MPKIND__TWICE_REMOVED,0,0,  s2x12,      0x000, 0},
+    s2x4,3,MPKIND__TWICE_REMOVED,0,0,  s2x12,    0x000, 0},
    {{3, 8, 21, 14, 17, 18, 11, 0,     4, 7, 22, 13, 16, 19, 10, 1,
      5, 6, 23, 12, 15, 20, 9,  2},
-    s2x4,3,MPKIND__TWICE_REMOVED,1,0,  s4x6,      0x015, 0},
+    s2x4,3,MPKIND__TWICE_REMOVED,1,0,  s4x6,     0x015, 0},
 
    {{0, 6,              1, 7,              3, 5,            2, 4},
-    s1x2,4,MPKIND__THRICE_REMOVED,0,0, s1x8,      0x000, 0},
+    s1x2,4,MPKIND__THRICE_REMOVED,0,0, s1x8,     0x000, 0},
    {{0, 7,              1, 6,              2, 5,            3, 4},
-    s1x2,4,MPKIND__THRICE_REMOVED,1,0, s2x4,      0x055, 0},
+    s1x2,4,MPKIND__THRICE_REMOVED,1,0, s2x4,     0x055, 0},
    {{0, 4, 11, 15,      1, 5, 10, 14,      2, 6, 9, 13,     3, 7, 8, 12},
-    s2x2,4,MPKIND__THRICE_REMOVED,0,0, s2x8,      0x000, 0},
+    s2x2,4,MPKIND__THRICE_REMOVED,0,0, s2x8,     0x000, 0},
    {{0, 4, 11, 15,      1, 5, 10, 14,      2, 6, 9, 13,     3, 7, 8, 12},
-    s1x4,4,MPKIND__THRICE_REMOVED,0,0, s1x16,      0x000, 0},
+    s1x4,4,MPKIND__THRICE_REMOVED,0,0, s1x16,    0x000, 0},
 
    {{6, 0, 3, 5,                       7, 1, 2, 4},
-    sdmd,2,MPKIND__REMOVED,0,     0,  s_rigger,    0x000, 0},
+    sdmd,2,MPKIND__REMOVED,0,     0,  s_rigger,  0x000, 0},
    {{0, 3, 5, 6,                       1, 2, 4, 7},
-    sdmd,2,MPKIND__REMOVED,1,     0,  s_qtag,      0x005, 0},
+    sdmd,2,MPKIND__REMOVED,1,     0,  s_qtag,    0x005, 0},
    {{0, 2, 4, 7, 9, 11,                1, 3, 5, 6, 8, 10},
-    s1x6,2,MPKIND__REMOVED,0,     0,  s1x12,      0x000, 0},
+    s1x6,2,MPKIND__REMOVED,0,     0,  s1x12,     0x000, 0},
    {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},
     s1x6,2,MPKIND__REMOVED,1,     0,  s2x6,      0x000, 0},
    {{0, 2, 4, 6, 9, 11, 13, 15,        1, 3, 5, 7, 8, 10, 12, 14},
@@ -1867,20 +1977,28 @@ map::map_thing map::map_init_table[] = {
      6, 23, 14, 21, 19, 10, 3, 8},
     s_qtag,2,MPKIND__REMOVED,1,   0,  s4x6,      0x005, 0},
 
+   {{7, 1, 3, 5,             0, 2, 4, 6, (veryshort) s2x2},
+    sdmd,2,MPKIND__SPEC_ONCEREM,0, 0, s_spindle, 0x000, 0},
+   {{0, 2, 4, 6,                       1, 3, 5, 7, (veryshort) sdmd},
+    s1x4,2,MPKIND__SPEC_ONCEREM,0, 0, s1x3dmd,   0x000, 0},
+
    {{1, 7, 5, 3,                 (veryshort) s1x2, 0, 6, 2, 4},
-    s2x2,3,MPKIND__SPEC_TWICEREM,0,0,  s_ptpd,      0x000, 0},
+    s2x2,3,MPKIND__SPEC_TWICEREM,0,   0,  s_ptpd,0x000, 0},
    {{6, 7, 2, 3,                 (veryshort) s1x2, 5, 4, 0, 1},
-    s1x4,3,MPKIND__SPEC_TWICEREM,1,0,  s_qtag,      0x000, 0},
+    s1x4,3,MPKIND__SPEC_TWICEREM,1,   0,  s_qtag,0x000, 0},
 
    {{2, 7, 5, 0,                       6, 3, 1, 4},
-    s_trngl4,2,MPKIND__REMOVED,1, 0,  s_bone,  0x107, 0},
+    s_trngl4,2,MPKIND__REMOVED,1, 0,  s_bone,    0x107, 0},
+   {{0, 2, 7, 5,                       4, 6, 3, 1},
+    s_trngl4,2,MPKIND__NONISOTROPREM,1, 0,s_ptpd,0x10D, 0},
+
    {{2, 4, 0,                          5, 1, 3},
-    s_trngl,2,MPKIND__REMOVED,1,  0,  s_bone6,  0x107, 0},
+    s_trngl,2,MPKIND__REMOVED,1,  0,  s_bone6,   0x107, 0},
 
    {{0, 1,     2, 3,        4, 9,      8, 7,       6, 5},
-    s1x2,5,MPKIND__SPLIT,0,       0,  s1x10,      0x000, 0},
+    s1x2,5,MPKIND__SPLIT,0,       0,  s1x10,     0x000, 0},
    {{0, 1,     2, 3,        4, 5,      11, 10,     9, 8,     7, 6},
-    s1x2,6,MPKIND__SPLIT,0,       0,  s1x12,      0x000, 0},
+    s1x2,6,MPKIND__SPLIT,0,       0,  s1x12,     0x000, 0},
    {{0, 9,     1, 8,        2, 7,      3, 6,       4, 5},
     s1x2,5,MPKIND__SPLIT,1,       0,  s2x5,      0x155, 0},
    {{0, 11,    1, 10,       2, 9,      3, 8,       4, 7,     5, 6},
@@ -1888,7 +2006,7 @@ map::map_thing map::map_init_table[] = {
 
   {{0, 1, 2, 3, 4, 5, 18, 19, 20, 21, 22, 23,
     6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17},
-   s2x6,2,MPKIND__SPLIT,0,        0,  s2x12,      0x000, 0},
+   s2x6,2,MPKIND__SPLIT,0,        0,  s2x12,     0x000, 0},
   {{18, 19, 20, 21, 22, 23, 12, 13, 14, 15, 16, 17,
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
    s2x6,2,MPKIND__SPLIT,1,        0,  s4x6,      0x000, 0},
@@ -1901,11 +2019,11 @@ map::map_thing map::map_init_table[] = {
     s3x4,2,MPKIND__SPLIT,1,       0,  s4x6,      0x005, 0},
 
    {{6, 13, 9, 11, 12, 7, 0, 2,        4, 15, 8, 10, 14, 5, 1, 3},
-    s_rigger,2,MPKIND__SPLIT,1,       0,  sdeepbigqtg,      0x005, 0},
+    s_rigger,2,MPKIND__SPLIT,1,  0, sdeepbigqtg, 0x005, 0},
 
    {{0, 1, 2, 3, 4, 15, 16, 17, 18, 19,
      5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
-    s2x5,2,MPKIND__SPLIT,0,       0,  s2x10,      0x000, 0},
+    s2x5,2,MPKIND__SPLIT,0,       0,  s2x10,     0x000, 0},
    {{15, 16, 17, 18, 19, 10, 11, 12, 13, 14,
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
     s2x5,2,MPKIND__SPLIT,1,       0,  s4x5,      0x000, 0},
@@ -1916,36 +2034,36 @@ map::map_thing map::map_init_table[] = {
     s4x4,3,MPKIND__SPLIT,0,       0,  s4x6,      0x000, 0},
 
    {{-1, -1, -1, 0, 7, 6, -1, 5,       3, 2, -1, 1, -1, -1, -1, 4},
-    s_crosswave,2,MPKIND__SPLIT,0,0,  s_bone, 0x000, 0},
+    s_crosswave,2,MPKIND__SPLIT,0,0,  s_bone,    0x000, 0},
 
    {{-1, -1, 2, 1, -1, -1, 0, 3,       -1, -1, 4, 7, -1, -1, 6, 5},
-    s_hrglass,2,MPKIND__SPLIT,0,  0,  s_ptpd, 0x000, 0},
+    s_hrglass,2,MPKIND__SPLIT,0,  0,  s_ptpd,    0x000, 0},
 
    {{1, 11, 8, -1, 9, 10, 0, -1,       3, 4, 6, -1, 7, 5, 2, -1},
     s_spindle,2,MPKIND__SPLIT,1,  0,  s3x4, 0x005, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7,           12, 13, 14, 15, 8, 9, 10, 11},
-    s_spindle,2,MPKIND__SPLIT,0,  0,  sdblspindle, 0x000, 0},
+    s_spindle,2,MPKIND__SPLIT,0,  0, sdblspindle,0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7,           12, 13, 14, 15, 8, 9, 10, 11},
-    s_bone,2,MPKIND__SPLIT,0,  0,  sdblbone, 0x000, 0},
+    s_bone,2,MPKIND__SPLIT,0,  0,  sdblbone,     0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7,           12, 13, 14, 15, 8, 9, 10, 11},
-    s_rigger,2,MPKIND__SPLIT,0,  0,  sdblrig, 0x000, 0},
+    s_rigger,2,MPKIND__SPLIT,0,  0,  sdblrig,    0x000, 0},
 
    {{5, 0, 4, 9, 7, 8,                 3, 1, 2, 11, 6, 10},
-    s_short6,2,MPKIND__SPLIT,0,   0, sdeepqtg,  0x000, 0},
+    s_short6,2,MPKIND__SPLIT,0,   0, sdeepqtg,   0x000, 0},
 
    {{0, 1, 2, 3, 4, 5,                 9, 10, 11, 6, 7, 8},
-    s_bone6,2,MPKIND__SPLIT,0,    0,  sdblbone6,  0x000, 0},
+    s_bone6,2,MPKIND__SPLIT,0,    0,  sdblbone6, 0x000, 0},
 
    {{0, 1, 3, 2, 7, 6, 4, 5,           15, 14, 12, 13, 8, 9, 11, 10},
-    s1x8,2,MPKIND__SPLIT,0,       0,  s1x16,      0x000, 0},
+    s1x8,2,MPKIND__SPLIT,0,       0,  s1x16,     0x000, 0},
    {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},
     s1x8,2,MPKIND__SPLIT,1,       0,  s2x8,      0x000, 0},
    {{-1, -1, -1, -1, 3, 2, 0, 1,
      4, 5, 7, 6, 12, 13, 15, 14,
      11, 10, 8, 9, -1, -1, -1, -1},
-    s1x8,3,MPKIND__SPLIT,0,       0,  s1x16,      0x000, 0},
+    s1x8,3,MPKIND__SPLIT,0,       0,  s1x16,     0x000, 0},
    {{19, 18, 16, 17, 12, 13, 15, 14,
      20, 21, 23, 22, 8, 9, 11, 10,
      0, 1, 3, 2, 7, 6, 4, 5},
@@ -1958,26 +2076,26 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 2, 3, 20, 21, 22, 23,
      4, 5, 6, 7, 16, 17, 18, 19,
      8, 9, 10, 11, 12, 13, 14, 15},
-    s2x4,3,MPKIND__SPLIT,0,       0,  s2x12,      0x000, 0},
+    s2x4,3,MPKIND__SPLIT,0,       0,  s2x12,     0x000, 0},
    {{1, 10, 19, 16, 17, 18, 11, 0,
      3, 8, 21, 14, 15, 20, 9, 2,
      5, 6, 23, 12, 13, 22, 7, 4},
     s2x4,3,MPKIND__SPLIT,1,       0,  s4x6,      0x015, 0},
 
    {{0, 1, 15, 14, 10, 11, 12, 13,     2, 3, 4, 5, 8, 9, 7, 6},
-    s_qtag,2,MPKIND__SPLIT,0,     0,  s4dmd,    0x000, 0},
+    s_qtag,2,MPKIND__SPLIT,0,     0,  s4dmd,     0x000, 0},
    {{9, 20, 16, 19, 18, 11, 1, 10,     6, 23, 13, 22, 21, 8, 4, 7},
-    s_qtag,2,MPKIND__SPLIT,1,     0,  s4x6,    0x005, 0},
+    s_qtag,2,MPKIND__SPLIT,1,     0,  s4x6,      0x005, 0},
 
    {{12, 0, 13, 11, 15, 10, 14, 1,     7, 2, 6, 9, 4, 8, 5, 3},
-    s_ptpd,2,MPKIND__SPLIT,0,     0,  s4ptpd,  0x000, 0},
+    s_ptpd,2,MPKIND__SPLIT,0,     0,  s4ptpd,    0x000, 0},
    {{18, 19, 20, 16, 23, 13, 21, 22,   11, 1, 9, 10, 6, 7, 8, 4},
-    s_ptpd,2,MPKIND__SPLIT,1,     0,  s4x6,    0x000, 0},
+    s_ptpd,2,MPKIND__SPLIT,1,     0,  s4x6,      0x000, 0},
 
    {{-1, -1, 0, 7, 6, 5,               3, 2, 1, -1, -1, 4},
-    s_1x2dmd,2,MPKIND__SPLIT,0,   0,  s_bone,  0x000, 0},
+    s_1x2dmd,2,MPKIND__SPLIT,0,   0,  s_bone,    0x000, 0},
    {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},
-    s_1x2dmd,2,MPKIND__SPLIT,1,   0,  sbigdmd,  0x000, 0},
+    s_1x2dmd,2,MPKIND__SPLIT,1,   0,  sbigdmd,   0x000, 0},
 
    {{0, 1, 2, 9, 10, 11,               3, 4, 5, 6, 7, 8},
     s2x3,2,MPKIND__SPLIT,0,       0,  s2x6,      0x000, 0},
@@ -1989,7 +2107,7 @@ map::map_thing map::map_init_table[] = {
     s2x3,3,MPKIND__SPLIT,1,       0,  s3x6,      0x015, 0},
 
    {{0, 1, 2, 5, 4, 3,                 11, 10, 9, 6, 7, 8},
-    s1x6,2,MPKIND__SPLIT,0,       0,  s1x12,      0x000, 0},
+    s1x6,2,MPKIND__SPLIT,0,       0,  s1x12,     0x000, 0},
    {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},
     s1x6,2,MPKIND__SPLIT,1,       0,  s2x6,      0x000, 0},
    {{14, 13, 12, 9, 10, 11,            15, 16, 17, 6, 7, 8,
@@ -2003,28 +2121,28 @@ map::map_thing map::map_init_table[] = {
     s_star,2,MPKIND__SPLIT,0,     0,  s_2stars,  0x000, 0},
 
    {{0, 1, 2, 3,                       6, 7, 4, 5},
-    sdmd,2,MPKIND__SPLIT,0,       0,  s_ptpd,      0x000, 0},
+    sdmd,2,MPKIND__SPLIT,0,       0,  s_ptpd,    0x000, 0},
    {{0, 7, 5, 6,                       1, 2, 4, 3},
-    sdmd,2,MPKIND__SPLIT,1,       0,  s_qtag,      0x005, 0},
+    sdmd,2,MPKIND__SPLIT,1,       0,  s_qtag,    0x005, 0},
    {{9, 0, 10, 8,           11, 1, 5, 7,           4, 2, 3, 6},
-    sdmd,3,MPKIND__SPLIT,0,       0,  s3ptpd,      0x000, 0},
+    sdmd,3,MPKIND__SPLIT,0,       0,  s3ptpd,    0x000, 0},
    {{0, 10, 8, 9,           1, 5, 7, 11,           2, 3, 6, 4},
-    sdmd,3,MPKIND__SPLIT,1,       0,  s3dmd,      0x015, 0},
+    sdmd,3,MPKIND__SPLIT,1,       0,  s3dmd,     0x015, 0},
    {{12, 0, 13, 11,     14, 1, 15, 10,     7, 2, 6, 9,     5, 3, 4, 8},
-    sdmd,4,MPKIND__SPLIT,0,       0,  s4ptpd,      0x000, 0},
+    sdmd,4,MPKIND__SPLIT,0,       0,  s4ptpd,    0x000, 0},
    {{0, 13, 11, 12,     1, 15, 10, 14,     2, 6, 9, 7,     3, 4, 8, 5},
-    sdmd,4,MPKIND__SPLIT,1,       0,  s4dmd,      0x055, 0},
+    sdmd,4,MPKIND__SPLIT,1,       0,  s4dmd,     0x055, 0},
 
    {{0, 1, 2, 3,                       6, 7, 4, 5},
     s1x4,2,MPKIND__SPLIT,0,       0,  s1x8,      0x000, 0},
    {{7, 6, 4, 5,                       0, 1, 3, 2},
     s1x4,2,MPKIND__SPLIT,1,       0,  s2x4,      0x000, 0},
    {{0, 1, 3, 2,            4, 5, 10, 11,          9, 8, 6, 7},
-    s1x4,3,MPKIND__SPLIT,0,       0,  s1x12,      0x000, 0},
+    s1x4,3,MPKIND__SPLIT,0,       0,  s1x12,     0x000, 0},
    {{9, 8, 6, 7,            10, 11, 4, 5,          0, 1, 3, 2},
     s1x4,3,MPKIND__SPLIT,1,       0,  s3x4,      0x000, 0},
    {{0, 1, 3, 2,           4, 5, 7, 6,          15, 14, 12, 13,   11, 10, 8, 9},
-    s1x4,4,MPKIND__SPLIT,0,       0,  s1x16,      0x000, 0},
+    s1x4,4,MPKIND__SPLIT,0,       0,  s1x16,     0x000, 0},
    {{8, 6, 4, 5,           9, 11, 2, 7,         10, 15, 1, 3,     12, 13, 0, 14},
     s1x4,4,MPKIND__SPLIT,1,       0,  s4x4,      0x000, 0},
    {{0, 9, 14, 15,          1, 8, 13, 16,          2, 7, 12, 17,
@@ -2063,12 +2181,27 @@ map::map_thing map::map_init_table[] = {
      7, 16, 17, 6,         9, 14, 15, 8,        11, 12, 13, 10},
     s2x2,6,MPKIND__SPLIT,1,       0,  s2x12,     0x555, 0},
 
+
+   {{18, 19, 16, 17,       20, 21, 14, 15,      22, 23, 12, 13,
+     0, 1, 10, 11,         2, 3, 8, 9,          4, 5, 6, 7},
+    s2x2,6,MPKIND__SPLIT_OTHERWAY_TOO,0, 0, s4x6,0x000, 0},
+   {{1, 10, 11, 0,         3, 8, 9, 2,          5, 6, 7, 4,
+     19, 16, 17, 18,       21, 14, 15, 20,      23, 12, 13, 22},
+    s2x2,6,MPKIND__SPLIT_OTHERWAY_TOO,1, 0, s4x6,0x555, 0},
+
+   {{23, 22, 20, 21,       19, 18, 16, 17,      15, 14, 12, 13,
+     0, 1, 3, 2,           4, 5, 7, 6,          8, 9, 11, 10},
+    s1x4,6,MPKIND__SPLIT_OTHERWAY_TOO,0, 0,s2x12,0x000, 0},
+   {{15, 14, 12, 13,       11, 10, 8, 9,        4, 5, 7, 6,
+     19, 18, 16, 17,       20, 21, 23, 22,      0, 1, 3, 2},
+    s1x4,6,MPKIND__SPLIT_OTHERWAY_TOO,1, 0, s3x8,0x000, 0},
+
    {{0, 1, 2,                          5, 4, 3},
     s1x3,2,MPKIND__SPLIT,0,       0,  s1x6,      0x000, 0},
    {{5, 4, 3,                          0, 1, 2},
     s1x3,2,MPKIND__SPLIT,1,       0,  s2x3,      0x000, 0},
    {{0, 1, 2,              3, 4, 5,             11, 10, 9,        8, 7, 6},
-    s1x3,4,MPKIND__SPLIT,0,       0,  s1x12,      0x000, 0},
+    s1x3,4,MPKIND__SPLIT,0,       0,  s1x12,     0x000, 0},
    {{0, 10, 9,             1, 11, 8,            2, 5, 7,          3, 4, 6},
     s1x3,4,MPKIND__SPLIT,1,       0,  s3x4,      0x055, 0},
 
@@ -2130,32 +2263,32 @@ const map::map_thing map::spec_map_table[] = {
    {{2, 3, 4, 5, 10, 11, 12, 13},
     s2x4,1,MPKIND__NONE,0,        0,  s2x8,      0x000, 0, spcmap_inner_box},
    {{0, 10, 2, 8, 12, 22, 14, 20,        11, 1, 9, 3, 23, 13, 21, 15},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_lh_stag},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_lh_stag},
    {{2, 8, 4, 6, 14, 20, 16, 18,          9, 3, 7, 5, 21, 15, 19, 17},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_rh_stag},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_rh_stag},
    {{0, 8, 2, 6, 10, 18, 12, 16,          9, 1, 7, 3, 19, 11, 17, 13},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x5, 0x000, 0, spcmap_lh_stag_1_4},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x5,      0x000, 0, spcmap_lh_stag_1_4},
    {{1, 7, 3, 5, 11, 17, 13, 15,          8, 2, 6, 4, 18, 12, 16, 14},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x5, 0x000, 0, spcmap_rh_stag_1_4},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x5,      0x000, 0, spcmap_rh_stag_1_4},
    {{11, 1, 2, 8, 23, 13, 14, 20,         0, 10, 9, 3, 12, 22, 21, 15},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_lh_ox},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_lh_ox},
    {{9, 3, 4, 6, 21, 15, 16, 18,          2, 8, 7, 5, 14, 20, 19, 17},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_rh_ox},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_rh_ox},
    {{0, -1, 1, -1, 2, -1, 3, -1, 6, -1, 7, -1, 8, -1, 9, -1},
-    s_c1phan,1,MPKIND__OFFS_L_HALF,0, 0,  sbigdmd, 0x000, 0, spcmap_lh_c1phana},
-   {{-1, 12, -1, 10, -1, 3, -1, 15, -1, 4, -1, 2, -1, 11, -1, 7},
-    s_c1phan,1,MPKIND__OFFS_L_HALF,0, 4,  s4x4,  0x000, 0, spcmap_lh_c1phanb},
+    s_c1phan,1,MPKIND__OFFS_L_HALF,1, 0, sbigdmd,0x000, 0, spcmap_lh_c1phana},
    {{-1, 2, -1, 3, -1, 5, -1, 4, -1, 8, -1, 9, -1, 11, -1, 10},
-    s_c1phan,1,MPKIND__OFFS_R_HALF,0, 0,  sbigdmd, 0x000, 0, spcmap_rh_c1phana},
+    s_c1phan,1,MPKIND__OFFS_R_HALF,1, 0, sbigdmd,0x000, 0, spcmap_rh_c1phana},
+   {{-1, 12, -1, 10, -1, 3, -1, 15, -1, 4, -1, 2, -1, 11, -1, 7},
+    s_c1phan,1,MPKIND__OFFS_L_HALF,1, 4,  s4x4,  0x000, 0, spcmap_lh_c1phanb},
    {{15, -1, 3, -1, 0, -1, 1, -1, 7, -1, 11, -1, 8, -1, 9, -1},
-    s_c1phan,1,MPKIND__OFFS_R_HALF,0, 4,  s4x4,  0x000, 0, spcmap_rh_c1phanb},
-   {{15, 11, 6, 8, 9, 10,              0, 1, 2, 7, 3, 14},
+    s_c1phan,1,MPKIND__OFFS_R_HALF,1, 4,  s4x4,  0x000, 0, spcmap_rh_c1phanb},
+   {{15, 11, 6, 8, 9, 10,              0, 1, 2, 7, 3, 14},    // ****** This is actually offset 1/3
     s2x3,2,MPKIND__OFFS_L_HALF,1, 0,  s4x4,      0x005, 0, spcmap_lh_s2x3_3},
-   {{11, 7, 2, 4, 5, 6,                12, 13, 14, 3, 15, 10},
-    s2x3,2,MPKIND__OFFS_L_HALF,1, 0,  s4x4,      0x000, 0, spcmap_lh_s2x3_2},
-   {{13, 15, 11, 9, 10, 12,            1, 2, 4, 5, 7, 3},
+   {{13, 15, 11, 9, 10, 12,            1, 2, 4, 5, 7, 3},     // ****** This is actually offset 1/3
     s2x3,2,MPKIND__OFFS_R_HALF,1, 0,  s4x4,      0x005, 0, spcmap_rh_s2x3_3},
-   {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},
+   {{11, 7, 2, 4, 5, 6,                12, 13, 14, 3, 15, 10}, // ****** This is actually offset 1/3
+    s2x3,2,MPKIND__OFFS_L_HALF,1, 0,  s4x4,      0x000, 0, spcmap_lh_s2x3_2},
+   {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},   // ****** This is actually offset 1/3
     s2x3,2,MPKIND__OFFS_R_HALF,1, 0,  s4x4,      0x000, 0, spcmap_rh_s2x3_2},
    {{10, 19, 16, 17, 18, 11,           5, 6, 23, 22, 7, 4},
     s2x3,2,MPKIND__OFFS_L_FULL,1, 0,  s4x6,      0x005, 0, spcmap_lh_s2x3_7},
@@ -2193,15 +2326,24 @@ const map::map_thing map::spec_map_table[] = {
     s2x3,1,MPKIND__NONE,0,        0,  s4x4,      0x000, 0, spcmap_diag23c},
    {{1, 7, 6, 9, 15, 14},
     s2x3,1,MPKIND__NONE,1,        0,  s4x4,      0x001, 0, spcmap_diag23d},
+   {{-1, -1, -1, 13, -1, 15, 0, 14, -1, -1, -1, 1, -1, 3, 12, 2,
+     -1, -1, -1,  9, -1, 11, 4, 10, -1, -1, -1, 5, -1, 7,  8, 6},
+    s4x4,2,MPKIND__SPLIT,1,       0,  sfat2x8,   0x005, 0, spcmap_f2x8_4x4},
    {{-1, 3, 12, 2, -1, -1, -1, 13, -1, 15, 0, 14, -1, -1, -1, 1,
      -1, 7,  8, 6, -1, -1, -1,  9, -1, 11, 4, 10, -1, -1, -1, 5},
-    s4x4,2,MPKIND__SPLIT,0,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_4x4},
+    s4x4,2,MPKIND__SPLIT,0,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_4x4h},
+   {{6, 8, -1, 9, -1, -1, -1, -1, -1, -1, 12, -1, 13, 15, 11, 10,
+     -1, -1, 4, -1, 5, 7, 3, 2, 14, 0, -1, 1, -1, -1, -1, -1},
+    s4x4,2,MPKIND__SPLIT,1,       0,  swide4x4,  0x005, 0, spcmap_w4x4_4x4},
    {{13, 15, 11, 10, 6, 8, -1, 9, -1, -1, -1, -1, -1, -1, 12, -1,
      -1, -1, -1, -1, -1, -1, 4, -1, 5, 7, 3, 2, 14, 0, -1, 1},
-    s4x4,2,MPKIND__SPLIT,0,       0,  swide4x4,  0x000, 0, spcmap_w4x4_4x4},
-   {{15, 14, 13, 12, 11, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1, -1
+    s4x4,2,MPKIND__SPLIT,0,       0,  swide4x4,  0x000, 0, spcmap_w4x4_4x4h},
+   {{15, 14, 13, 12, 11, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1, -1,
      -1, -1, -1, -1, -1, -1, -1, -1, 7, 6, 5, 4, 3, 2, 1, 0},
     s2x8,2,MPKIND__SPLIT,1,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_2x8},
+   {{-1, -1, -1, -1, 0, 1, 2, 3, 12, 13, 14, 15, -1, -1, -1, -1,
+     4, 5, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1, 8, 9, 10, 11},
+    s2x8,2,MPKIND__SPLIT,0,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_2x8h},
    {{-1, -1, 9, 11, 7, 2, -1, -1, -1, -1,  4, 5, 6, 8, -1, -1,
      -1, -1, 12, 13, 14, 0, -1, -1, -1, -1, 1, 3, 15, 10, -1, -1},
     s2x8,2,MPKIND__SPLIT,1,       0,  swide4x4,  0x000, 0, spcmap_w4x4_2x8},
@@ -2211,16 +2353,6 @@ const map::map_thing map::spec_map_table[] = {
     s2x4,2,MPKIND__OFFS_R_THRQ,1, 0,  s4x5,      0x000, 0, spcmap_emergency2},
    {{-1, 0, 6, 5, -1, 3, -1, 7, 2, 1, -1, 4},
     sdmd,3,MPKIND__SPLIT, 0, 0,  s_dhrglass,     0x000, 0, spcmap_fix_triple_turnstyle},
-   {{0, 2, 7, 5,                       4, 6, 3, 1},
-    s_trngl4,2,MPKIND__REMOVED,1,     0,  s_ptpd,0x10D, 0, spcmap_p8_tgl4},
-   {{7, 1, 3, 5,             0, 2, 4, 6, (int) s2x2},
-    sdmd,2,MPKIND__SPEC_ONCEREM,0,0,  s_spindle, 0x000, 0, spcmap_spndle_once_rem},
-   {{0, 2, 4, 6,                       1, 3, 5, 7, (int) sdmd},
-    s1x4,2,MPKIND__SPEC_ONCEREM,0,0,  s1x3dmd,   0x000, 0, spcmap_1x3dmd_once_rem},
-   {{11, 7, 2, 4,                      3, 15, 10, 12},
-    s_trngl4,2,MPKIND__OFFS_L_HALF,0, 4,  s4x4,  0x10D, 0, spcmap_lh_zzztgl},
-   {{7, 11, 8, 9,                      15, 3, 0, 1},
-    s_trngl4,2,MPKIND__OFFS_R_HALF,0, 4,  s4x4,  0x107, 0, spcmap_rh_zzztgl},
    {{0, 3,                             1, 2},
     s1x2,2,MPKIND__SPLIT,1,       0,  s2x2,      0x005, 0, spcmap_2x2v},
    {{0, 6, 3, 5,                       7, 1, 4, 2},
@@ -2277,24 +2409,8 @@ const map::map_thing map::spec_map_table[] = {
    {{6, 7, 0, -1, -1, 5,               -1, -1, 1, 2, 3, 4},
     s_1x2dmd,2,MPKIND__NONE,0,    0,  s_rigger,  0x000, 0, spcmap_rig_1x6},
 
-   {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},
-    s_hrglass,2,MPKIND__OVERLAP,1,0,  s_qtag,    0x005, 0, spcmap_ov_hrg_1},
-   {{-1, 0, -1, 1, -1, 6, -1, 7,       -1, 2, -1, 3, -1, 4, -1, 5},
-    s_galaxy,2,MPKIND__OVERLAP,0, 0,  s2x4,      0x000, 0, spcmap_ov_gal_1},
-   {{19, 15, 12, 14, 13, 17, 0, 18,
-     5, 9, 11, 16, 15, 19, 1, 6,
-     3, 7, 10, 8, 9, 5, 2, 4},
-    s_qtag,3,MPKIND__OVERLAP,1,   0,  s3oqtg,    0x015, 0, spcmap_3o_qtag_1},
-   {{1, 0,                             2, 3},
-    s1x2,2,MPKIND__NONE,0,        0,  s_trngl4,  0x001, 0, spcmap_tgl4_1},
-   {{3, 2,                             1, 0},
-    s1x2,2,MPKIND__NONE,1,        0,  s_trngl4,  0x006, 0, spcmap_tgl4_2},
    {{0, 7, 5, -1, 6, -1,               -1, 2, -1, 4, 3, 1},
     s2x3,2,MPKIND__SPLIT,1,       0,  s_qtag,    0x005, 0, spcmap_qtag_2x3},
-   {{2, 5, 7, 9, 10, 0,                3, 4, 6, 8, 11, 1},
-    s2x3,2,MPKIND__REMOVED,1,     0,  s3x4,      0x005, 0, spcmap_2x3_rmvr},
-   {{1, 3, 4, -1, 6, -1,               -1, 2, -1, 5, 7, 0},
-    s2x3,2,MPKIND__REMOVED,1,     0,  s_qtag,    0x005, 0, spcmap_2x3_rmvs},
    {{0, 1, 3, 2, 4, 5, 7, 6},
     s_qtag,1,MPKIND__NONE,0,      0,  s2x4,      0x000, 0, spcmap_dbloff1},
    {{2, 3, 4, 5, 6, 7, 0, 1},
@@ -2382,9 +2498,9 @@ const map::map_thing map::spec_map_table[] = {
    {{21, 23, 11, 9, 12, 14, 16, 19,       0, 2, 4, 7, 9, 11, 23, 21},
     s2x4,2,MPKIND__NONE,1,        0,  s_bigblob, 0x005, 0, spcmap_wblob_1x4d},
    {{0, 1, 2, 3, 9, 8, 7, 6},
-    s1x2,4,MPKIND__NONE,0,        0,  sbigbone, 0x000, 0, spcmap_bigbone_cw},
+    s1x2,4,MPKIND__NONE,0,        0,  sbigbone,  0x000, 0, spcmap_bigbone_cw},
    {{11, 10, 2, 3, 9, 8, 4, 5},
-    s1x2,4,MPKIND__NONE,0,        0,  sbigbone, 0x000, 0, spcmap_bigbone_ccw}};
+    s1x2,4,MPKIND__NONE,0,        0,  sbigbone,  0x000, 0, spcmap_bigbone_ccw}};
 
 
 static expand::thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, s_thar, s4x4, 0};
@@ -2420,6 +2536,7 @@ static expand::thing rear_ptpd_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, nothing, s1
 static expand::thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
 static expand::thing rear_twistqtag_stuff = {{0, 3, 2, 1}, 4, nothing, sdmd, 0};
 static expand::thing rear_twist2x4c_stuff = {{5, 7, 6, 0, 1, 3, 2, 4}, 8, nothing, s_qtag, 1};
+static expand::thing rear_twist1x8c_stuff = {{0, 3, 2, 1, 4, 7, 6, 5}, 8, nothing, s_ptpd, 0};
 static expand::thing rear_3x1qtag_stuff = {{4, 5, 3, 6, 0, 1, 7, 2}, 8, nothing, s_qtag, 1};
 static expand::thing rear_1x3qtag_stuff = {{9, 10, 0, 11, 3, 4, 6, 5}, 8, nothing, s3x4, 1};
 
@@ -2448,6 +2565,7 @@ static expand::thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 static expand::thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, s2x4, s2x4, 1};
 static expand::thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, s2x4, s1x8, 0};
 static expand::thing step_li6_stuff = {{1, 5, 3, 4, 2, 0}, 6, s2x3, s1x6, 0};
+static expand::thing step_liphan_stuff = {{-1, 1, -1, 2, -1, 3, -1, 0}, 8, s2x4, s1x4, 0};
 static expand::thing step_spindle_stuff = {{3, 6, 5, 4, 7, 2, 1, 0}, 8, s_spindle, s1x8, 0};
 static expand::thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, 8, nothing, s_bone, 0};
 static expand::thing step_bn23_stuff = {{0, 2, 1, 3, 5, 4}, 6, nothing, s_bone6, 0};
@@ -2457,7 +2575,7 @@ static expand::thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_q
 static expand::thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s_rigger, 0};
 static expand::thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, s_bone, s1x8, 0};
 static expand::thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, s_bone, s_rigger, 0};
-static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
+static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, s_rigger, s1x8, 0};
 static expand::thing step_2x1d_stuff = {{0, 1, 5, 3, 4, 2}, 6, s_1x2dmd, s1x6, 0};
 
 static expand::thing step_phan1_stuff = {{-1, 7, -1, 6, -1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4},
@@ -2496,7 +2614,7 @@ full_expand::thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_1x2_stuff,   s1x2,         0xFUL,        0x2UL, ~0UL},      /* Rear back from a miniwave to facing people. */
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xDAUL, ~0UL},      /* Rear back from a 4-person triangle to a "split square thru" setup. */
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD2UL, ~0UL},      /* Two similar ones with miniwave base for funny square thru. */
-   {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD8UL, ~0UL},         /* (The base couldn't want to rear back -- result would be stupid.) */
+   {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD8UL, ~0UL},      /* (The base couldn't want to rear back -- result would be stupid.) */
    {warn__awful_rear_back, 0, &rear_tgl4b_stuff, s_trngl4,    0xFFUL,       0x22UL, ~0UL},      /* Rear back from a 4-person triangle to a single 8 chain. */
    {warn__rear_back,       8, &step_li_stuff,    s1x8,      0xFFFFUL,     0x2882UL, ~0UL},      /* Rear back from a grand wave to facing lines. */
    {warn__some_rear_back,  8, &rear_bone_stuffa, s_bone,    0xFFFFUL,     0x55F5UL, 0xF5F5UL},  /* Ends rear back from a "bone" to grand 8-chain or whatever. */
@@ -2558,18 +2676,19 @@ full_expand::thing touch_init_table1[] = {
 };
 
 full_expand::thing touch_init_table2[] = {
-   /* Have the centers rear back from a 1/4 tag or 3/4 tag. */
+   // Have the centers rear back from a 1/4 tag or 3/4 tag.
    {warn__rear_back,       0, &rear_qtag_stuff, s_qtag,     0xFFFFUL,     0x08A2UL, ~0UL},
    {warn__rear_back,       0, &rear_qtag_stuff, s_qtag,     0xFFFFUL,     0xA802UL, ~0UL},
-   /* Have the centers rear back from point-to-point 1/4 tags or 3/4 tags. */
+   // Have the centers rear back from point-to-point 1/4 tags or 3/4 tags.
    {warn__rear_back,       0, &rear_ptpd_stuff, s_ptpd,     0xFFFFUL,     0x5FF5UL, ~0UL},
    {warn__rear_back,       0, &rear_ptpd_stuff, s_ptpd,     0xFFFFUL,     0xD77DUL, ~0UL},
-   /* Have the centers rear back from a single 1/4 tag or 3/4 tag. */
+   // Have the centers rear back from a single 1/4 tag or 3/4 tag.
    {warn__awful_rear_back, 0, &rear_sqtag_stuff, sdmd,        0xFFUL,       0x5FUL, ~0UL},
    {warn__awful_rear_back, 0, &rear_sqtag_stuff, sdmd,        0xFFUL,       0xD7UL, ~0UL},
-   /* As above, but centers are "twisted". */
+   // As above, but centers are "twisted".
    {warn__awful_rear_back, 0, &rear_twistqtag_stuff, s1x4,    0xFFUL,       0x4EUL, ~0UL},
    {warn__awful_rear_back, 0, &rear_twist2x4c_stuff, s2x4,  0xFFFFUL,     0x0820UL, 0x3C3CUL},
+   {warn__awful_rear_back, 0, &rear_twist1x8c_stuff, s1x8,  0xFFFFUL,     0x0220UL, 0x3333UL},
    {warn__rear_back,       0, &rear_3x1qtag_stuff, s3x1dmd, 0xFFFFUL,     0x2088UL, 0xFCFCUL},
    {warn__rear_back,       0, &rear_1x3qtag_stuff,   s_323, 0xFFFFUL,     0x0200UL, 0x0303UL},
 
@@ -2593,6 +2712,9 @@ full_expand::thing touch_init_table3[] = {
    // Same, with missing people.
    {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},
    {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},
+
+   // Check for stepping to a wave from partially occupied lines facing, only beaus present.
+   {warn__none,     128, &step_liphan_stuff,  s2x4,         0x3333UL,     0x2200UL, ~0UL},
 
    // Check for stepping to a bone from a squared set or whatever.
    {warn__none,      16, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},
@@ -2623,9 +2745,12 @@ full_expand::thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xF0UL,       0x20UL, ~0UL},
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0x0FUL,       0x02UL, ~0UL},
 
-   // Ends touch from a "bone" to a grand wave.
+   // Ends touch from a "bone" to a tidal wave.
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA802UL, 0xFFFFUL},
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA208UL, 0xFFFFUL},
+   // Same, but we get a 3&1 or inverted line, from which fan the top is legal.
+   {warn__some_touch, 32, &step_bone_stuff,   s_bone,     0xFFFFUL,     0xAA00UL, 0xFFFFUL},
+   {warn__some_touch, 32, &step_bone_stuff,   s_bone,     0xFFFFUL,     0xA00AUL, 0xFFFFUL},
 
    // All touch from a "bone" to a rigger.
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xFFFFUL,     0xAD07UL, 0xFFFFUL},
@@ -2633,8 +2758,11 @@ full_expand::thing touch_init_table3[] = {
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xF0F0UL,     0xAD07UL, 0xF0F0UL},
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0x0F0FUL,     0xAD07UL, 0x0F0FUL},
 
-   // Centers touch from a "rigger" to a grand wave.
+   // Centers touch from a "rigger" to a tidal wave.
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xFFFFUL,     0xA802UL, 0xFFFFUL},
+   // Same, but we get a 3&1 or inverted line, from which fan the top is legal.
+   {warn__some_touch, 32, &step_rig_stuff,    s_rigger,   0xFFFFUL,     0xA00AUL, 0xFFFFUL},
+
    // Same, with missing people.
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0UL,     0xA802UL, 0xF0F0UL},
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FUL,     0xA802UL, 0x0F0FUL},
@@ -2854,7 +2982,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {sbigdmd,        schema_nothing, {8, 9, 2, 3,    0, 1, 4, 5, 6, 7, 10, 11},
              s1x4,     s2x4,     1, 0, 1, 1,  0x2FD, schema_concentric},
    {s3x4,           schema_nothing, {10, 11, 4, 5,    0, 1, 2, 3, 6, 7, 8, 9},
-             s1x4,     s2x4,     0, 0, 1, 1,  0x2FB, schema_concentric},
+             s1x4,     s2x4,     0, 0, 1, 1,  0x2FA, schema_concentric},
    {s3x6,           schema_nothing, {15, 16, 17, 6, 7, 8,    0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14},
              s1x6,     s2x6,     0, 0, 1, 1,  0x2FB, schema_concentric},
    {s3x6,           schema_nothing, {12, 17, 2, 3, 8, 11,    15, 16, 6, 7},
@@ -3011,6 +3139,9 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     sdmd,     0, 0, 1, 1,  0x100, schema_nothing},
    {s1x8,           schema_concentric_diamond_line, {1, -1, 5, -1,    0, -1, 4, -1},
              s1x4,     sdmd,     0, 0, 1, 1,  0x100, schema_nothing},
+   {s3x4,           schema_concentric_lines_z, {8, 11, 1, 2, 5, 7,    0, 3, 6, 9},
+             s2x3,     s2x2,     1, 0, 3, 1,  0x100, schema_nothing},
+
    // This one allows "finish" when the center "line" is actually a diamond
    // whose centers are empty.  This can happen because of the preference
    // given for lines over diamonds at the conclusion of certain calls.
@@ -3076,8 +3207,10 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     sdmd,     1, 0, 1, 2,  0x100, schema_nothing},
    {s3x4,           schema_in_out_triple, {9, 8, 6, 7, 0, 1, 3, 2,    10, 11, 4, 5},
              s1x4,     s1x4,     0, 0, 2, 2,  0x0FB, schema_in_out_triple},
-   {shsqtag,        schema_in_out_triple, {3, 2, 0, 1, 6, 7, 9, 8,         10, 11, 4, 5},
+   {s_hsqtag,       schema_in_out_triple, {3, 2, 0, 1, 6, 7, 9, 8,         10, 11, 4, 5},
              s1x4,     sdmd,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
+   {s_dmdlndmd,     schema_in_out_triple, {9, 10, 0, 11, 6, 5, 3, 4,         7, 8, 1, 2},
+             sdmd,     s1x4,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
    {s2x3,           schema_sgl_in_out_triple, {5, 0, 3, 2,       4, 1},
              s1x2,     s1x2,     1, 1, 1, 2,  0x100, schema_nothing},
    {s3x6,           schema_3x3_in_out_triple, {14, 13, 12, 9, 10, 11, 0, 1, 2, 5, 4, 3,
@@ -3099,7 +3232,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x2,     s1x4,     0, 0, 1, 2,  0x2FB, schema_in_out_triple},
    {s4dmd,          schema_nothing, {11, 12, 0, 13, 8, 5, 3, 4,    10, -1, -1, 1, 2, -1, -1, 9},
              sdmd,     s2x4,     1, 1, 1, 2,  0x2FB, schema_in_out_quad},
-   {shqtag,         schema_nothing, {3, 2, 0, 1, 8, 9, 11, 10,    4, 5, 6, 7, 12, 13, 14, 15},
+   {s_hqtag,        schema_nothing, {3, 2, 0, 1, 8, 9, 11, 10,    4, 5, 6, 7, 12, 13, 14, 15},
              s1x4,     s_qtag,   1, 0, 1, 2,  0x2FD, schema_in_out_quad},
    {swqtag,         schema_nothing, {9, 4,     0, 1, 2, 3, 5, 6, 7, 8},
              s1x2,     s_rigger,     0, 0, 1, 1,  0x2FB, schema_concentric},
@@ -3117,6 +3250,10 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x3,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
    {s2x5,           schema_checkpoint, {0, 2, -1, 5, 7, -1,     1, 3, 6, 8},
              s2x3,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
+   {s2x6,           schema_checkpoint, {-1, 2, -1, 5, -1, 8, -1, 11,     1, 4, 7, 10},
+             s2x4,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
+   {s2x6,           schema_checkpoint, { 0, -1, 3, -1, 6, -1, 9, -1,     1, 4, 7, 10},
+             s2x4,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
    {s1x16,          schema_in_out_quad, {0, 1, 3, 2, 11, 10, 8, 9,
                                          4, 5, 7, 6, 12, 13, 15, 14},
              s1x4,     s1x8,     0, 0, 1, 2,  0x0FE, schema_in_out_quad},
@@ -3315,6 +3452,14 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s_ntrgl6ccw,  s1x2, 0, 0, 1, 1,  0x0FE, schema_concentric},
    {s3dmd,          schema_concentric_2_6, {11, 5,    0, 1, 2, 6, 7, 8},
              s1x2,     s2x3,     0, 0, 2, 1,  0x100, schema_nothing},
+   {s3dmd,          schema_concentric_2_6, {11, 5,    0, 4, 3, 6, 10, 9},
+             s1x2,  s_nftrgl6cw, 0, 0, 1, 1,  0x0FE, schema_concentric},
+   {s3dmd,          schema_concentric_2_6, {11, 5,    9, 10, 2, 3, 4, 8},
+             s1x2,  s_nftrgl6ccw, 0, 0, 1, 1, 0x0FE, schema_concentric},
+   {s_dmdlndmd,     schema_concentric_2_6, {2, 8,    0, 5, 4, 6, 11, 10},
+             s1x2,  s_nftrgl6cw, 1, 0, 1, 1,  0x0FD, schema_concentric},
+   {s_dmdlndmd,     schema_concentric_2_6, {2, 8,    10, 11, 3, 4, 5, 9},
+             s1x2,  s_nftrgl6ccw, 1, 0, 1, 1, 0x0FD, schema_concentric},
    {s_323,          schema_concentric_2_6, {7, 3,     0, 1, 2, 4, 5, 6},
              s1x2,     s2x3,     0, 0, 2, 1,  0x0FA, schema_concentric},
    {s1x3dmd,        schema_checkpoint, {0, 3, 4, 7,    1, 2, 5, 6},
@@ -3394,15 +3539,13 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
    {s2x4,          s3x4,    0, 01717, 0x0D, 0x1, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {10, 11, 4, 5},             {0, 1, 2, 3, 4, 5, 6, 7}},
    {s2x4,          s3x4, 0x66, 01717, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {10, 11, 4, 5},             {0, 3, 4, 7}},
-   {s1x4,          s2x4, 0,     0xCC, 0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s1x4,          s2x4, 0,     0x33, 0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s1x4,          s2x4, 0,     0xCC, 0x0C, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s1x4,          s2x4, 0,     0x33, 0x0C, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
    {s1x8,          s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 3, 4, 7}},
 
    // Need both of these because they won't canonicalize.
    {s1x8,          s1x8, 0xCC,  0x33, 0x0D, 0x1, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, 4, 5}},
    {s1x8,          s1x8, 0x33,  0xCC, 0x0D, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, 4, 5}},
-
-   {s1x4,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
 
    // Even newer!  This one works for "do your part".
    // This allows [diamonds] point DYP spin the top while ctrs dmd circ.
@@ -3419,6 +3562,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
    {s2x2,       s_bone6, 0,      044, 0x0C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
    {s1x4,       s_bone6, 0,      044, 0x0E, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
+
    {s1x4,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
    {s2x4,        s_ptpd, 0x66,  0x55, 0xAD, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 6, -1, 5, -1, 2, -1, 1}, {0}},
 
@@ -3442,8 +3586,14 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x6,          s4x6, 0,        0, 0x0E, 0x0, schema_nothing,        s4x6,        nothing,  warn__none, 0, 0, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, {0}},
    {s2x6,          s4x4, 0,        0, 0x0D, 0x0, schema_matrix,         s4x6,        nothing,  warn__none, 0, 1, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, {1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}},
    {s2x6,          s4x4, 0,        0, 0x0E, 0x0, schema_matrix,         s4x6,        nothing,  warn__none, 0, 0, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}},
-   {s2x4,          s2x6, 0,        0, 0x0D, 0x0, schema_matrix,         s4x6,        nothing,  warn__none, 0, 0, {3, 8, 21, 14, 15, 20, 9, 2}, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}},
-   {s2x4,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
+
+   // These five must be in this order.
+   {s2x4,          s2x6, 0,        0, 0x0D, 0x0, schema_matrix,         s4x6,        nothing, warn__none, 0, 0, {3, 8, 21, 14, 15, 20, 9, 2}, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}},
+   {s2x4,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing, warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
+   {s2x4,          s2x6, 0x99,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing, warn__none, 0, 0, {-1, 3, 8, -1, -1, 9, 2, -1}, {0}},
+   {s2x4,          s2x6, 0x33, 06666, 0x2D, 0x0, schema_matrix,         spgdmdccw,   nothing, warn__none, 0, 1, {-1, -1, 3, 2, -1, -1, 7, 6}, {5, -1, -1, 0, -1, -1, 1, -1, -1, 4, -1, -1}},
+   {s2x4,          s2x6, 0xCC, 03333, 0x2D, 0x0, schema_matrix,         spgdmdcw,    nothing, warn__none, 0, 1, {6, 7, -1, -1, 2, 3, -1, -1},{-1, -1, 5, -1, -1, 0, -1, -1, 1, -1, -1, 4}},
+
    {sdmd,          s2x6, 0,    0x30C, 0x0E, 0x0, schema_matrix,         sbigdhrgl,   nothing,  warn__none, 0, 0, {9, 2, 3, 8},               {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
    {sdmd,          s2x6, 0,    0x30C, 0x0D, 0x0, schema_matrix,         sbighrgl,    nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
 
@@ -3525,14 +3675,16 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_crosswave,   s2x4, 0x55,  0x66, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {1, 3, 5, 7}, {0, 3, 4, 7}},
    {s1x4,        s_bone, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, 2, 3},               {0}},
    {s2x3,         s3dmd, 0,    07070, 0x0E, 0x0, schema_concentric,     s2x3,        s2x3,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 1, 2, 6, 7, 8}},
-   {sdmd,          s4x4, 0,   0x8E8E, 0x0E, 0x0, schema_matrix,         shsqtag,     nothing,  warn__none, 1, 1, {10, 11, 4, 5}, {0, -1, -1, -1, 9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1}},
-   {sdmd,          s3x4, 0,    04040, 0x0E, 0x0, schema_matrix,         shsqtag,     nothing,  warn__none, 1, 1, {10, 11, 4, 5}, {3, 2, 1, 0, 4, -1, 9, 8, 7, 6, 10, -1}},
+   {sdmd,          s4x4, 0,   0x8E8E, 0x0E, 0x0, schema_matrix,         s_hsqtag,    nothing,  warn__none, 1, 1, {10, 11, 4, 5}, {0, -1, -1, -1, 9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1}},
+   {sdmd,          s3x4, 0,    04040, 0x0E, 0x0, schema_matrix,         s_hsqtag,    nothing,  warn__none, 1, 1, {10, 11, 4, 5}, {3, 2, 1, 0, 4, -1, 9, 8, 7, 6, 10, -1}},
    {s1x4,          s3x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
-   {sdmd,       shsqtag, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {4, 5, 10, 11},             {0}},
-   {s1x4,       shsqtag, 0,    04040, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5}, {9, 8, 7, 6, 10, -1, 3, 2, 1, 0, 4, -1}},
-   {s1x2,          s3x4, 0,    04040, 0x0D, 0x0, schema_matrix,         shsqtag,     nothing,  warn__none, 0, 1, {11, 5}, {3, 2, 1, 0, 4, -1, 9, 8, 7, 6, 10, -1}},
-   {s1x2,       shsqtag, 0,    04040, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {11, 5}, {9, 8, 7, 6, 10, -1, 3, 2, 1, 0, 4, -1}},
-   {s2x2,       shsqtag, 0,    06060, 0x0E, 0x0, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},                {12, 10, 9, 8, -1, -1, 4, 2, 1, 0, -1, -1}},
+   {sdmd,       s_hsqtag, 0,       0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {4, 5, 10, 11},             {0}},
+   {s1x4,       s_hsqtag, 0,   04040, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5}, {9, 8, 7, 6, 10, -1, 3, 2, 1, 0, 4, -1}},
+   {s1x4,       s_dmdlndmd, 0,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {1, 2, 7, 8},             {0}},
+   {sdmd,       s_dmdlndmd, 0, 00606, 0x0D, 0x0, schema_matrix,         s3dmd,       nothing,  warn__none, 1, 0, {1, 5, 7, 11}, {0, 1, -1, 2, 3, 4, 6, 7, -1, 8, 9, 10}},
+   {s1x2,          s3x4, 0,    04040, 0x0D, 0x0, schema_matrix,         s_hsqtag,    nothing,  warn__none, 0, 1, {11, 5}, {3, 2, 1, 0, 4, -1, 9, 8, 7, 6, 10, -1}},
+   {s1x2,       s_hsqtag, 0,   04040, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {11, 5}, {9, 8, 7, 6, 10, -1, 3, 2, 1, 0, 4, -1}},
+   {s2x2,       s_hsqtag, 0,   06060, 0x0E, 0x0, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},                {12, 10, 9, 8, -1, -1, 4, 2, 1, 0, -1, -1}},
    {s1x4,         s4dmd, 0,   0xF6F6, 0x2D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__check_3x4, 0, 1, {0, 1, 2, 3},{3, -1, -1, 8, 11, -1, -1, 0}},
    {s1x4,         s4dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {14, 15, 6, 7},{0}},
    {s1x6,         s4dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {13, 14, 15, 5, 6, 7},{0}},
@@ -3541,11 +3693,19 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x3,         s4dmd, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 7, 9, 10, 15, 1},{0}},
    {s1x6,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {9, 10, 11, 3, 4, 5},       {0}},
    {s1x4,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
+
    {s1x2,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5},                    {0}},
-   {s1x4,         s3dmd, 0,    07272, 0x0D, 0x0, schema_matrix,         s3dmd,      nothing,   warn__none, 0, 1, {10, 11, 4, 5},{8, -1, 0, -1, -1, -1, 2, -1, 6, -1, -1, -1}},
-   {s1x4,         sbigh, 0,    06060, 0x0D, 0x0, schema_matrix,         s3x4,       nothing,   warn__none, 0, 1, {10, 11, 4, 5},{9, 8, 7, 6, -1, -1, 3, 2, 1, 0, -1, -1}},
-   {s1x4,          s3x4, 0,    06060, 0x0D, 0x0, schema_matrix,         sbigh,      nothing,   warn__none, 0, 1, {4, 5, 10, 11},{3, 2, 1, 0, -1, -1, 9, 8, 7, 6, -1, -1}},
-   {s2x2,         sbigh, 0,    06060, 0x0E, 0x0, schema_matrix,         s4x4,       nothing,   warn__none, 0, 0, {15, 3, 7, 11},{12, 10, 9, 8, -1, -1, 4, 2, 1, 0, -1, -1}},
+   {s1x2,         s3dmd, 0,    04242, 0x0D, 0x0, schema_matrix,         s_dmdlndmd,  nothing,  warn__none, 1, 0, {2, 8}, {0, -1, 3, 4, 5, -1, 6, -1, 9, 10, 11, -1}},
+   {s1x2,         s_dmdlndmd, 0,   0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {2, 8},                     {0}},
+   {s1x2,         s_dmdlndmd, 0, 00606, 0x0E, 0x0, schema_matrix,       s3dmd,       nothing,  warn__none, 0, 0, {11, 5}, {0, -1, -1, 2, 3, 4, 6, -1, -1, 9, 9, 10}},
+
+   {s1x4,         s3dmd, 0,    07272, 0x0D, 0x0, schema_matrix,         s3dmd,       nothing,  warn__none, 0, 1, {10, 11, 4, 5},{8, -1, 0, -1, -1, -1, 2, -1, 6, -1, -1, -1}},
+   {s1x4,         sbigh, 0,    06060, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5},{9, 8, 7, 6, -1, -1, 3, 2, 1, 0, -1, -1}},
+   {s1x4,          s3x4, 0,    06060, 0x0D, 0x0, schema_matrix,         sbigh,       nothing,  warn__none, 0, 1, {4, 5, 10, 11},{3, 2, 1, 0, -1, -1, 9, 8, 7, 6, -1, -1}},
+   {s2x2,         sbigh, 0,    06060, 0x0E, 0x0, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},{12, 10, 9, 8, -1, -1, 4, 2, 1, 0, -1, -1}},
+
+   {s2x4,          spgdmdcw, 0, 0xCC, 0x2D, 0x0, schema_matrix,         s2x6,        nothing,  warn__none, 0, 1, {1, 2, 3, 4, 7, 8, 9, 10}, {11, 2, -1, -1, 5, 8, -1, -1}},
+   {s2x4,         spgdmdccw, 0, 0xCC, 0x2D, 0x0, schema_matrix,         s2x6,        nothing,  warn__none, 0, 1, {1, 2, 3, 4, 7, 8, 9, 10}, {9, 0, -1, -1, 3, 6, -1, -1}},
 
    {s1x4,          s4x4, 0,   0x8E8E, 0x0E, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 0, {10, 11, 4, 5},{3, -1, -1, -1, 6, 7, 8, -1, 9, -1, -1, -1, 0, 1, 2, -1}},
    {s1x4,          s4x4, 0,   0xE8E8, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5},{0, 1, 2, -1, 3, -1, -1, -1, 6, 7, 8, -1, 9, -1, -1, -1}},
@@ -3656,7 +3816,6 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,       s1x3dmd, 0,     0xAA, 0x1E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, -1, 1, -1, 4, -1, 5, -1}},
    {s1x2,       s1x3dmd, 0,     0x88, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {3, 7},               {0}},
    {s2x2,          s4x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {0}},
-   {s2x4,          s2x6, 0x99,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 3, 8, -1, -1, 9, 2, -1}, {0}},
    {s2x2,          s2x8, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 4, 11, 12},             {0}},
    {s2x2,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0}},
 
@@ -3739,7 +3898,10 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_ntrgl6ccw, s_nxtrglccw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
    {s_ntrgl6cw,   s_nxtrglcw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
    {s1x4,      s_short6, 0,      055, 0x2D, 0x0, schema_concentric,     s1x4,        s1x2,     warn__none, 0, 1, {0, 1, 2, 3},            {1, 4}},
-   {s1x4,        s_qtag, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, 2, 3},               {0}},
+
+   // These 2 must be in the order shown.
+   {s1x4,        s_qtag, 0,     0x88, 0x0E, 0x0, schema_matrix,         s3x6,        nothing,  warn__none, 0, 0, {16, 17, 7, 8},               {2, 3, 6, -1, 11, 12, 15, -1}},
+   {s1x4,        s_qtag, 0,     0xCC, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, 2, 3},               {0}},
    {nothing, nothing}};
 
 
@@ -4364,6 +4526,30 @@ static const coordrec thingntrgl6ccw = {s_ntrgl6ccw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thingnftrgl6cw = {s_nftrgl6cw, 3,
+   { -5,   2,   6,   5,  -2,  -6},
+   {  5,   0,   0,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1, -1, -1, -1, -1,
+      -1, -1,  5,  4,  1,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  3, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingnftrgl6ccw = {s_nftrgl6ccw, 3,
+   { -6,  -2,   5,   6,   2,  -5},
+   {  0,   0,   5,   0,   0,  -5}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  2, -1, -1,
+      -1, -1,  0,  1,  4,  3, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thingntrglcw = {s_ntrglcw, 3,
    { -6,   0,   4,   8,   6,   0,  -4,  -8},
    {  2,   2,   2,   2,  -2,  -2,  -2,  -2}, {
@@ -4576,7 +4762,7 @@ static const coordrec nicethingwqtag = {swqtag, 3,   // "true" coordinates
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethinghsqtag = {shsqtag, 3,
+static const coordrec thinghsqtag = {s_hsqtag, 3,
    { -5,  -5,  -5,  -5,   0,   2,   5,   5,   5,   5,   0,  -2},
    {  6,   2,  -2,  -6,   5,   0,  -6,  -2,   2,   6,  -5,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -4588,7 +4774,19 @@ static const coordrec nicethinghsqtag = {shsqtag, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thinghqtag = {shqtag, 3,       // "fudged" coordinates
+static const coordrec thingdmdlndmd = {s_dmdlndmd, 3,
+   { -7,   0,   0,   7,   9,   5,   7,   0,   0,  -7,  -9,  -5},
+   {  5,   6,   2,   5,   0,   0,  -5,  -6,  -2,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1,  1,  3, -1, -1,
+      -1, 10, 11, -1,  2,  5,  4, -1,
+      -1, -1, -1, -1,  8, -1, -1, -1,
+      -1, -1,  9, -1,  7,  6, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thinghqtag = {s_hqtag, 3,       // "fudged" coordinates
    { -9,  -9,  -9,  -9,  -4,   5,   6,   2,   9,   9,   9,   9,   4,  -5,  -6,  -2},
    {  6,   2,  -2,  -6,   5,   5,   0,   0,  -6,  -2,   2,   6,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -4600,7 +4798,7 @@ static const coordrec thinghqtag = {shqtag, 3,       // "fudged" coordinates
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethinghqtag = {shqtag, 3,   // "true" coordinates
+static const coordrec nicethinghqtag = {s_hqtag, 3,   // "true" coordinates
    { -9,  -9,  -9,  -9,  -5,   5,   6,   2,   9,   9,   9,   9,   5,  -5,  -6,  -2},
    {  6,   2,  -2,  -6,   5,   5,   0,   0,  -6,  -2,   2,   6,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5393,6 +5591,24 @@ static const id_bit_table id_bit_table_crosswave[] = {
    SOUTHBIT(ID2_CENTER|ID2_CTR4     |ID2_OUTR6|ID2_CTR6 |ID2_NCTRDMD| ID2_CTR1X4),
    NORTHBIT(ID2_CENTER|ID2_CTR4     |ID2_CTR2 |ID2_CTR6 |ID2_CTRDMD | ID2_CTR1X4)};
 
+static const id_bit_table id_bit_table_c1phan[] = {
+   WESTBIT(0),
+   NORTHBIT(0),
+   EASTBIT(0),
+   SOUTHBIT(0),
+   NORTHBIT(0),
+   EASTBIT(0),
+   SOUTHBIT(0),
+   WESTBIT(0),
+   EASTBIT(0),
+   SOUTHBIT(0),
+   WESTBIT(0),
+   NORTHBIT(0),
+   SOUTHBIT(0),
+   WESTBIT(0),
+   NORTHBIT(0),
+   EASTBIT(0)};
+
 static const id_bit_table id_bit_table_gal[] = {
    NOBIT(ID2_END),
    NWBITS(ID2_CENTER|ID2_CTR4),
@@ -5433,35 +5649,35 @@ static const id_bit_table id_bit_table_323[] = {
    NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
    WESTBIT(ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3)};
 
-/* If the population is "common spot diamonds", the richer table below is used instead. */
+// If the population is "common spot diamonds", the richer table below is used instead.
 static const id_bit_table id_bit_table_bigdmd[] = {
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NORTHBIT(ID2_CTR1X4 | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR1X4 | ID2_CTR2),
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR1X4 | ID2_OUTR6),
+   NORTHBIT(ID2_CTR1X4 | ID2_CTR2),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
-/* This table is only accepted if the population is "common spot diamonds". */
+// This table is only accepted if the population is "common spot diamonds".
 id_bit_table id_bit_table_bigdmd_wings[] = {
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NORTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_CTR2),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_OUTR6),
+   NORTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_CTR2),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
 
 static const id_bit_table id_bit_table_bigptpd[] = {
    NOBIT(ID2_OUTR6),
@@ -5656,8 +5872,22 @@ id_bit_table id_bit_table_3x4_corners[] = {
    NOBIT(0),
    NOBIT(ID2_CTR2  | ID2_CTR1X4  | ID2_CENTER)};
 
+// Else if the setup is occupied as Z's, use this.
+id_bit_table id_bit_table_3x4_zs[] = {
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_CTR4)};
 
-/* If all else fails, use this. */
+// If all else fails, use this.
 static const id_bit_table id_bit_table_3x4[] = {
    NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
    NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
@@ -5703,7 +5933,7 @@ id_bit_table id_bit_table_bigh[] = {
    NOBIT(ID2_CTR1X4)};
 
 // This table is used when the outer 1x4's are yes-yes-no-no.
-id_bit_table id_bit_table_shsqtag[] = {
+id_bit_table id_bit_table_s_hsqtag[] = {
    NOBIT(ID2_NCTRDMD | ID2_OUTRPAIRS | ID2_OUTR6),
    NOBIT(ID2_NCTRDMD | ID2_OUTRPAIRS | ID2_OUTR6),
    NOBIT(ID2_NCTRDMD | ID2_OUTRPAIRS | ID2_OUTR6),
@@ -5717,6 +5947,19 @@ id_bit_table id_bit_table_shsqtag[] = {
    NOBIT(ID2_CTRDMD  | ID2_CTR4      | ID2_OUTR6),
    NOBIT(ID2_CTRDMD  | ID2_CTR4      | ID2_CTR2)};
 
+id_bit_table id_bit_table_sdmdlndmd[] = {
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR1X4  | ID2_OUTR6),
+   NOBIT(ID2_CTR1X4  | ID2_CTR2),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR1X4  | ID2_OUTR6),
+   NOBIT(ID2_CTR1X4  | ID2_CTR2),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
 // If the population is a butterfly, this table is used.
 id_bit_table id_bit_table_butterfly[] = {
@@ -6042,18 +6285,18 @@ static const id_bit_table id_bit_table_3dmd[] = {
 
 /* If center 1x6 is fully occupied, use this.  It is external. */
 id_bit_table id_bit_table_3dmd_ctr1x6[] = {
-   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_NCTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
-   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_NCTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4)};
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR1X6  | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4  | ID2_OUTR6),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4  | ID2_CTR2),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR1X6  | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4  | ID2_OUTR6),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4  | ID2_CTR2)};
 
 /* If only center 1x4 is fully occupied, use this.  It is external. */
 id_bit_table id_bit_table_3dmd_ctr1x4[] = {
@@ -6542,6 +6785,26 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {"a  b5   c@@9f5   e  d",
      "6  a@7f@76  b@@e@76  c@7d"}},
+   {5,                      // s_nftrgl6cw
+    &thingnftrgl6cw,
+    &thingnftrgl6cw,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {4, 3},
+    false,
+    (const id_bit_table *) 0,
+    {"5 a@@f e b c@@5 6 6 d",
+     "6  f@76  6  a@76  e@@6  b@7d@76  c"}},
+   {5,                      // s_nftrgl6ccw
+    &thingnftrgl6ccw,
+    &thingnftrgl6ccw,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {4, 3},
+    false,
+    (const id_bit_table *) 0,
+    {"5 6 6 c@@a b e d@@5 f",
+     "6  a@7f@76  b@@6  e@76  6  c@76  d"}},
    {7,                      // s_ntrglcw
     &thingntrglcw,
     &thingntrglcw,
@@ -6799,7 +7062,7 @@ const setup_attr setup_attrs[] = {
     {b_c1phan, b_c1phan},
     {0, 0},
     true,
-    (const id_bit_table *) 0,
+    id_bit_table_c1phan,
     {(Cstring) 0,
      (Cstring) 0}},
    {15,                     // s_hyperbone
@@ -6872,17 +7135,27 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {"6a696b696c696d@7m6n9o6p9h6g9f6e@76l696k696j696i",
      "5m@@la@@5n@@5o@@kb@@5p@@5h@@jc@@5g@@5f@@id@@5e"}},
-   {11,                     // shsqtag
-    &nicethinghsqtag,
-    &nicethinghsqtag,
+   {11,                     // s_hsqtag
+    &thinghsqtag,
+    &thinghsqtag,
     {0, 0, 00101, 00303},
     {b_hsqtag, b_phsqtag},
     {0, 0},
     false,
-    id_bit_table_shsqtag,
+    id_bit_table_s_hsqtag,
     {"a6 6j@76 5e@7b6 6i@76l f@7c6 6h@76 5k@7d6 6g",
      "dcba@65l@75k6e@765f@ghij"}},
-   {15,                     // shqtag
+   {11,                     // s_dmdlndmd
+    &thingdmdlndmd,
+    &thingdmdlndmd,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false,
+    id_bit_table_sdmdlndmd,
+    {"66 b@75 a6 6d@766 c@7k l6f e@766 i@75 j6 6g@766 h",
+     "65k@75j6a@765l@@hicb@@65f@75g6d@765e"}},
+   {15,                     // s_hqtag
     &thinghqtag,
     &nicethinghqtag,
     {0, 0, 0, 0},
@@ -7148,6 +7421,46 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {-1,                     // shyper4x8a
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {8, 4},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {-1,                     // shyper4x8b
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {8, 4},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {-1,                     // shyper3x8
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {8, 3},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {-1,                     // shyper2x16
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {16, 2},
     false,
     (const id_bit_table *) 0,
     {(Cstring) 0,
@@ -7511,6 +7824,8 @@ const schema_attr schema_attrs[] = {
    {0,
     schema_nothing},                     // schema_concentric_diamond_line
    {0,
+    schema_nothing},                     // schema_concentric_lines_z
+   {0,
     schema_nothing},                     // schema_concentric_diamonds
    {SCA_CROSS | SCA_COPY_LYZER,
     schema_concentric_diamonds},         // schema_cross_concentric_diamonds
@@ -7669,6 +7984,8 @@ const schema_attr schema_attrs[] = {
    {0,
     schema_nothing},                     // schema_nothing
    {0,
+    schema_nothing},                     // schema_nothing_noroll
+   {0,
     schema_nothing},                     // schema_matrix
    {0,
     schema_nothing},                     // schema_partner_matrix
@@ -7685,6 +8002,26 @@ const schema_attr schema_attrs[] = {
    {SCA_SNAGOK,
     schema_nothing},                     // schema_sequential_with_split_1x8_id
 };
+
+
+// BEWARE!!  This list is keyed to the definition of "meta_key_kind" in sd.h .
+const uint32 meta_key_props[] = {
+   MKP_RESTRAIN_2,                    // meta_key_random
+   MKP_RESTRAIN_2,                    // meta_key_rev_random
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_piecewise
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially
+   MKP_RESTRAIN_1,                    // meta_key_finish
+   MKP_RESTRAIN_1,                    // meta_key_revorder
+   0,                                 // meta_key_like_a
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_finally
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially_and_finally
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_nth_part_work
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_first_frac_work
+   0,                                 // meta_key_skip_nth_part
+   0,                                 // meta_key_shift_n
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_echo
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_echo
+   0};                                // meta_key_shift_half
 
 
 /* In the print_strings tables below, characters have the following meanings:
@@ -7890,18 +8227,6 @@ int begin_sizes[] = {
    16};        /* b_pdblrig */
 
 
-// The following 8 definitions are taken verbatim from sdinit.c
-enum {
-   B1A = 0000|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
-   G1A = 0100|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
-   B2A = 0200|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
-   G2A = 0300|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL,
-   B3A = 0400|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
-   G3A = 0500|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
-   B4A = 0600|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
-   G4A = 0700|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL
-};
-
 /* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h. */
 startinfo configuration::startinfolist[] = {
    {
@@ -7911,7 +8236,7 @@ startinfo configuration::startinfolist[] = {
          nothing,                    /* kind */
          1,                          /* rotation */
          {0},                        /* cmd */
-         {{0,0}},                    /* people */
+         {{0,0,0}},                  /* people */
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -7922,20 +8247,24 @@ startinfo configuration::startinfolist[] = {
          s2x4,                       /* kind */
          1,                          /* rotation */
          {0},                        /* cmd */
-         {{G2A|d_south,0}, {B2A|d_south,0}, {G1A|d_south,0}, {B1A|d_south,0},
-            {G4A|d_north,0}, {B4A|d_north,0}, {G3A|d_north,0}, {B3A|d_north,0}},
+         {{0300|d_south,0,ID3_G2}, {0200|d_south,0,ID3_B2},
+          {0100|d_south,0,ID3_G1}, {0000|d_south,0,ID3_B1},
+          {0700|d_north,0,ID3_G4}, {0600|d_north,0,ID3_B4},
+          {0500|d_north,0,ID3_G3}, {0400|d_north,0,ID3_B3}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
    {
       "Sides 1P2P",
       false,                         /* into_the_middle */
-      {
+     {
          s2x4,                       /* kind */
          0,                          /* rotation */
          {0},                        /* cmd */
-         {{G3A|d_south,0}, {B3A|d_south,0}, {G2A|d_south,0}, {B2A|d_south,0},
-            {G1A|d_north,0}, {B1A|d_north,0}, {G4A|d_north,0}, {B4A|d_north,0}},
+         {{0500|d_south,0,ID3_G3}, {0400|d_south,0,ID3_B3},
+          {0300|d_south,0,ID3_G2}, {0200|d_south,0,ID3_B2},
+          {0100|d_north,0,ID3_G1}, {0000|d_north,0,ID3_B1},
+          {0700|d_north,0,ID3_G4}, {0600|d_north,0,ID3_B4}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -7946,8 +8275,10 @@ startinfo configuration::startinfolist[] = {
          s2x4,                       /* kind */
          0,                          /* rotation */
          {0},                        /* cmd */
-         {{B4A|d_east,0}, {G3A|d_south,0}, {B3A|d_south,0}, {G2A|d_west,0},
-            {B2A|d_west,0}, {G1A|d_north,0}, {B1A|d_north,0}, {G4A|d_east,0}},
+         {{0600|d_east,0,ID3_B4},  {0500|d_south,0,ID3_G3},
+          {0400|d_south,0,ID3_B3}, {0300|d_west,0,ID3_G2},
+          {0200|d_west,0,ID3_B2},  {0100|d_north,0,ID3_G1},
+          {0000|d_north,0,ID3_B1}, {0700|d_east,0,ID3_G4}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -7958,8 +8289,10 @@ startinfo configuration::startinfolist[] = {
          s2x4,                       /* kind */
          1,                          /* rotation */
          {0},                        /* cmd */
-         {{B3A|d_east,0}, {G2A|d_south,0}, {B2A|d_south,0}, {G1A|d_west,0},
-            {B1A|d_west,0}, {G4A|d_north,0}, {B4A|d_north,0}, {G3A|d_east,0}},
+         {{0400|d_east,0,ID3_B3},  {0300|d_south,0,ID3_G2},
+          {0200|d_south,0,ID3_B2}, {0100|d_west,0,ID3_G1},
+          {0000|d_west,0,ID3_B1},  {0700|d_north,0,ID3_G4},
+          {0600|d_north,0,ID3_B4}, {0500|d_east,0,ID3_G3}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -7970,9 +8303,10 @@ startinfo configuration::startinfolist[] = {
          s4x4,                       /* kind */
          0,                          /* rotation */
          {0},                        /* cmd */
-         {{0,0}, {G2A|d_west,0}, {B2A|d_west,0}, {0,0}, {0,0}, {G1A|d_north,0},
-            {B1A|d_north,0}, {0,0}, {0,0}, {G4A|d_east,0}, {B4A|d_east,0}, {0,0},
-            {0,0}, {G3A|d_south,0}, {B3A|d_south,0}, {0,0}},
+         {{0,0,0}, {0300|d_west,0,ID3_G2},  {0200|d_west,0,ID3_B2},  {0,0,0},
+          {0,0,0}, {0100|d_north,0,ID3_G1}, {0000|d_north,0,ID3_B1}, {0,0,0},
+          {0,0,0}, {0700|d_east,0,ID3_G4},  {0600|d_east,0,ID3_B4},  {0,0,0},
+          {0,0,0}, {0500|d_south,0,ID3_G3}, {0400|d_south,0,ID3_B3}, {0,0,0}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    }
@@ -8039,11 +8373,11 @@ select::fixer select::fixer_init_table[] = {
    {fx_foozz, s1x2, s_ptpd,      1, 0, 2,       fx_foozz,     fx_f1x8aa,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 3, 7, 5}},
    {fx_fo6zzd, s2x2, s_bone6,     0, 1, 1,       fx0,          fx0,          fx_f1x6aad,   fx0, fx0,          fx0,    fx_fo6zzd,    fx0,          {0, 1, 3, 4}},
    {fx_foozzd, s2x2, s_ptpd,      0, 1, 1,       fx0,          fx0,          fx_f1x8aad,   fx0, fx0,          fx0,    fx_foozzd,    fx_fqtgend,   {1, 7, 5, 3}},
-   {fx_f3x4east, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4east,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {10, 9, 3, 4}},
-   {fx_f3x4west, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4west,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 10, 4, 6}},
-   {fx_f3x4left, s1x2, s3x4,        0, 0, 2,       fx_f3x4left,  fx_f3x4rzz,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
+   {fx_f3x4east, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4east,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {10, 9, 3, 4}},
+   {fx_f3x4west, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4west,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 10, 4, 6}},
+   {fx_f3x4left, s1x2, s3x4,        0, 0, 2,       fx_f3x4left,  fx_f3x4rzz,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
    {fx_f3x4right, s1x2, s3x4,        0, 0, 0x100+2, fx_f3x4right, fx_f3x4lzz,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {2, 3, 9, 8}},
-   {fx_f3x4lzz, s1x2, s2x6,        0, 0, 2,       fx_f3x4lzz,   fx_f3x4right, fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
+   {fx_f3x4lzz, s1x2, s2x6,        0, 0, 2,       fx_f3x4lzz,   fx_f3x4right,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
    {fx_f3x4rzz, s1x2, s2x6,        0, 0, 0x100+2, fx_f3x4rzz,   fx_f3x4left,  fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 5, 11, 10}},
    {fx_f4x4nw, s1x2, s4x4,        0, 0, 2,          fx0,       fx_f4x4rzza,     fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {12, 13, 5, 4}},
    {fx_f4x4ne, s1x2, s4x4,        0, 0, 0x100+2,    fx0,       fx_f4x4lzza,     fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {14, 0, 8, 6}},
@@ -8053,9 +8387,34 @@ select::fixer select::fixer_init_table[] = {
    {fx_f4x4rzz, s1x2, s2x8,        0, 0, 0x100+2, fx_f4x4rzz,   fx_f4x4nw,      fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 15, 14}},
    {fx_f4x4lzza,s1x2, s2x6,        0, 0, 2,         fx0,   fx_f4x4ne,           fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
    {fx_f4x4rzza,s1x2, s2x6,        0, 0, 0x100+2,   fx0,   fx_f4x4nw,           fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 5, 11, 10}},
+
+   {fx_f2x4tt0, s2x2, s2x4,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 4, 7}},
+   {fx_f2x4tt1, s2x2, s2x4,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 5, 6}},
+
+   {fx_f2x8qq0, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 14, 15}},
+   {fx_f2x8qq1, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 8, 9}},
+
+   {fx_f2x8tt0, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 12, 15}},
+   {fx_f2x8tt1, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 13, 14}},
+   {fx_f2x8tt2, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {5, 6, 8, 11}},
+   {fx_f2x8tt3, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 7, 9, 10}},
+
+   {fx_f2x6qq0, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 10, 11}},
+   {fx_f2x6qq1, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 5, 6, 7}},
+   {fx_f2x6tt0, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 8, 11}},
+   {fx_f2x6tt1, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 9, 10}},
+   {fx_f2x6tt2, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {2, 5, 7, 8}},
+   {fx_f2x6tt3, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 4, 6, 9}},
+
    {fx_f3x4outer, s1x3, s3x4,        1, 0, 2,       fx_f3x4outer, fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 10, 9, 3, 4, 6}},
    {fx_f3dmouter, s1x3, s3dmd,       0, 0, 2,       fx_f3dmouter, fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {8, 7, 6, 0, 1, 2}},
    {fx_f3ptpdin,  s1x2, s3ptpd,      0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {10, 11, 5, 4}},
+
+   {fx_fpgdmdcw,  s1x2, spgdmdcw,    0, 0, 2,       fx0,    fx_f2x6cw,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 3, 2}},
+   {fx_fpgdmdccw, s1x2, spgdmdccw,   0, 0, 2,       fx0,   fx_f2x6ccw,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 3, 2}},
+   {fx_f2x6cw,    s1x2, s2x6,        0, 0, 2,       fx0,  fx_fpgdmdcw,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 4, 10, 9}},
+   {fx_f2x6ccw,   s1x2, s2x6,        0, 0, 2,       fx0,  fx_fpgdmdccw,         fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 8, 7}},
+
    {fx_fdhrgl, s_trngl,s_dhrglass,0x2A03,0, 2,       fx_f323,      fx0,          fx0,          fx0, fx0,  fx_specspindle, fx0,          fx0,          {6, 5, 0, 2, 1, 4}},
    {fx_specspindle, s_trngl,s_spindle,0x2A01, 0, 2, fx_specspindle,fx0,          fx0,          fx0, fx0,    fx_fdhrgl,    fx0,          fx0,          {7, 0, 6, 3, 4, 2}},
    {fx_specfix3x40, s_trngl,s_ptpd,0x00AB,0,2,  fx_specfix3x40,    fx0,          fx0,          fx0, fx0,  fx_specfix3x41, fx0,          fx0,          {0, 1, 3, 4, 5, 7}},
@@ -8184,8 +8543,8 @@ select::fixer select::fixer_init_table[] = {
    {fx_fd2x5d, s2x3, sd2x5,      1, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {9, 8, 7, 4, 3, 2}},
    {fx_bghrgla, s1x2, sbighrgl,  0, 0, 2,       fx0,   fx_shsqtga,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {11, 10, 4, 5}},
    {fx_bghrglb, s1x2, sbighrgl,  0, 0, 2,       fx0,   fx_shsqtgb,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
-   {fx_shsqtga, s1x2, shsqtag,   1, 0, 2,       fx0,   fx_bghrgla,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {2, 3, 9, 8}},
-   {fx_shsqtgb, s1x2, shsqtag,   1, 0, 2,       fx0,   fx_bghrglb,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
+   {fx_shsqtga, s1x2, s_hsqtag,  1, 0, 2,       fx0,   fx_bghrgla,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {2, 3, 9, 8}},
+   {fx_shsqtgb, s1x2, s_hsqtag,  1, 0, 2,       fx0,   fx_bghrglb,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
    {fx_f4x6a, s1x2, s4x6,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {13, 12, 0, 1}},
    {fx_f4x6b, s1x2, s4x6,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {22, 23, 11, 10}},
    {fx_f4x6c, s1x2, s4x6,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {7, 6, 18, 19}},
@@ -8366,6 +8725,7 @@ select::fixer select::fixer_init_table[] = {
    {fx_f2x4far, s1x4, s2x4,        0, 0, 1,       fx0,          fx0,          fx_f2x4far, fx_f1x8hif, fx0,     fx0,    fx_f2x4rl,   fx_f2x4rl,     {0, 1, 3, 2}},
    {fx_f2x4near, s1x4, s2x4,        0, 0, 1,       fx0,          fx0,          fx_f2x4near, fx_f1x8lowf, fx0,   fx0,    fx_f2x4lr,   fx_f2x4lr,     {7, 6, 4, 5}},
    {fx_f4dmdiden, s4dmd, s4dmd,      0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}},
+
    {fx_f2x4pos1, s1x2, s2x4,        1, 0, 1,       fx_f2x4pos1,  fx0,         fx0,           fx0, fx0,          fx0,    fx0,          fx0,          {0, 7}},
    {fx_f2x4pos2, s1x2, s2x4,        1, 0, 1,       fx_f2x4pos2,  fx0,         fx0,           fx0, fx0,          fx0,    fx0,          fx0,          {1, 6}},
    {fx_f2x4pos3, s1x2, s2x4,        1, 0, 1,       fx_f2x4pos3,  fx0,         fx0,           fx0, fx0,          fx0,    fx0,          fx0,          {2, 5}},
@@ -8675,9 +9035,9 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,               s1x8,        0x55,   fx_f1x855,     fx0, -1},
    {LOOKUP_NONE,               s3x4,        03131,  fx_f3x4outer,  fx0, -1},
    {LOOKUP_NONE,               s3dmd,       00707,  fx_f3dmouter,  fx0, -1},
-
    {LOOKUP_NONE,               s3ptpd,      06060,  fx_f3ptpdin,   fx0, -1},
-
+   {LOOKUP_NONE,               spgdmdcw,    0xCC,   fx_fpgdmdcw,   fx0, -1},
+   {LOOKUP_NONE,               spgdmdccw,   0xCC,   fx_fpgdmdccw,  fx0, -1},
    {LOOKUP_NONE,               s_dhrglass,   0x77,  fx_fdhrgl,     fx0, -1},
    {LOOKUP_NONE,               s_ptpd,       0xBB,  fx_specfix3x40,fx0, -1},
    {LOOKUP_NONE,               s_bone,       0x77,  fx_specfix3x41,fx0, -1},
@@ -8702,6 +9062,26 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,               s2x6,        0xC30,  fx_f3x4rzz,    fx0, -1},
    {LOOKUP_NONE,               s2x8,       0x0303,  fx_f4x4lzz,    fx0, -1},
    {LOOKUP_NONE,               s2x8,       0xC0C0,  fx_f4x4rzz,    fx0, -1},
+
+   {LOOKUP_TRAPEZOID,          s2x4,         0x96,  fx_f2x4tt0,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x4,         0x69,  fx_f2x4tt1,    fx0, -1},
+
+   // Next 6 are unsymmetrical in a 2x8 - boxes and trapezoids.
+   {LOOKUP_NONE,               s2x8,       0xC003,  fx_f2x8qq0,    fx0, -1},
+   {LOOKUP_NONE,               s2x8,       0x03C0,  fx_f2x8qq1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x9006,  fx_f2x8tt0,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x6009,  fx_f2x8tt1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x0960,  fx_f2x8tt2,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x0690,  fx_f2x8tt3,    fx0, -1},
+
+   // Next 6 are unsymmetrical in a 2x6 - boxes and trapezoids.
+   {LOOKUP_NONE,               s2x6,        0xC03,  fx_f2x6qq0,    fx0, -1},
+   {LOOKUP_NONE,               s2x6,        0x0F0,  fx_f2x6qq1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x906,  fx_f2x6tt0,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x609,  fx_f2x6tt1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x1A4,  fx_f2x6tt2,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x258,  fx_f2x6tt3,    fx0, -1},
+
    {LOOKUP_NONE,               s1x8,        0x33,   fx_f1x8endo,   fx0, -1},
    {LOOKUP_NONE,               s1x8,        0x77,   fx_f1x8_77_3,  fx0, -1},
    {LOOKUP_NONE,               s1x8,        0x0F,   fx_f1x8lowf,   fx0, -1},
@@ -8733,8 +9113,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,               sd2x5,       0x294,  fx_fd2x5d,     fx0, -1},
    {LOOKUP_NONE,               sbighrgl,    0xC30,  fx_bghrgla,    fx0, -1},
    {LOOKUP_NONE,               sbighrgl,    0x0C3,  fx_bghrglb,    fx0, -1},
-   {LOOKUP_NONE,               shsqtag,     0x30C,  fx_shsqtga,    fx0, -1},
-   {LOOKUP_NONE,               shsqtag,     0x0C3,  fx_shsqtgb,    fx0, -1},
+   {LOOKUP_NONE,               s_hsqtag,    0x30C,  fx_shsqtga,    fx0, -1},
+   {LOOKUP_NONE,               s_hsqtag,    0x0C3,  fx_shsqtgb,    fx0, -1},
    {LOOKUP_NONE,               s4x6,      0x003003, fx_f4x6a,      fx0, -1},
    {LOOKUP_NONE,               s4x6,      0xC00C00, fx_f4x6b,      fx0, -1},
    {LOOKUP_NONE,               s4x6,      0x0C00C0, fx_f4x6c,      fx0, -1},

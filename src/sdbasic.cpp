@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -113,32 +113,32 @@ typedef struct {
 } collision_map;
 
 static collision_map collision_map_table[] = {
-   /* These items handle various types of "1/2 circulate" calls from 2x4's. */
+   // These items handle various types of "1/2 circulate" calls from 2x4's.
 
    {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s_crosswave, s1x8,        0, warn__none, 0},   // from lines out
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // from lines out
    {2, 0x000000, 0x11, 0x11, {0, 4},               {0, 5},                {1, 4},
-    s_crosswave, s1x8,        0, warn__none, 0},   // from lines out, only ends exist
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // from lines out, only ends exist
    {2, 0x000000, 0x22, 0x22, {1, 5},               {3, 6},                {2, 7},
-    s_crosswave, s1x8,        0, warn__none, 3},   // from lines out, only centers exist
+    s_crosswave, s1x8,        0, warn__really_no_collision, 3},   // from lines out, only centers exist
    {2, 0x000000, 0x30, 0x30, {4, 5},               {5, 6},                {4, 7},
-    s_crosswave, s1x8,        0, warn__none, 0},   // more of same
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // more of same
    {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 3},                {1, 2},
-    s_crosswave, s1x8,        0, warn__none, 0},
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},
 
    {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s_crosswave, s1x8,        1, warn__none, 0},   // from lines in
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // from lines in
    {2, 0x044044, 0x44, 0x44, {2, 6},               {0, 5},                {1, 4},
-    s_crosswave, s1x8,        1, warn__none, 0},   // from lines in, only ends exist
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // from lines in, only ends exist
    {2, 0x088088, 0x88, 0x88, {3, 7},               {3, 6},                {2, 7},
-    s_crosswave, s1x8,        1, warn__none, 2},   // from lines in, only centers exist
+    s_crosswave, s1x8,        1, warn__really_no_collision, 2},   // from lines in, only centers exist
    {2, 0x0C00C0, 0xC0, 0xC0, {6, 7},               {5, 6},                {4, 7},
-    s_crosswave, s1x8,        1, warn__none, 0},   // more of same
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // more of same
    {2, 0x00C00C, 0x0C, 0x0C, {2, 3},               {0, 3},                {1, 2},
-    s_crosswave, s1x8,        1, warn__none, 0},
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},
 
    {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s1x4,        s1x8,        0, warn__none, 0},   // more of same
+    s1x4,        s1x8,        0, warn__really_no_collision, 0},   // more of same
 
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none, 0},   // from trade by
    {2, 0x022022, 0x22, 0x22, {1, 5},               {2, 7},                {3, 6},                 s_spindle,   s_crosswave, 0, warn__none, 1},   // from trade by with no ends
@@ -231,19 +231,19 @@ static collision_map collision_map_table[] = {
    {4, 0x000000, 0x33, 0x033, {0, 1, 4, 5},        {0, 2, 9, 11},         {1, 3, 8, 10},          s2x4,        s2x8,        0, warn_bad_collision, 0},
    {4, 0x000000, 0xCC, 0x0CC, {2, 3, 6, 7},        {4, 6, 13, 15},        {5, 7, 12, 14},         s2x4,        s2x8,        0, warn_bad_collision, 0},
 
-   /* These items handle various types of "1/2 circulate" calls from 2x2's. */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, warn__none, 0},   /* from couples out if it went to diamond */
-   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    sdmd,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    sdmd,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from couples out if it went to line */
-   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    s1x4,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    s1x4,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1, warn__none, 0},   /* from couples in if it went to diamond */
-   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from couples in if it went to line */
-   {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from "head pass thru, all split circulate" */
-   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from "head pass thru, all split circulate" */
-   {3, 0x000000, 0x07, 0x04, {0, 1, 2},            {0, 1, 3},             {0, 1, 2},              s1x4,        s1x4,        0, warn__none, 0},   /* from nasty T-bone */
-   {3, 0x000000, 0x0D, 0x01, {0, 2, 3},            {0, 2, 3},             {1, 2, 3},              s1x4,        s1x4,        0, warn__none, 0},   /* from nasty T-bone */
+   // These items handle various types of "1/2 circulate" calls from 2x2's.
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, warn__none, 0},                  // From couples out if it went to diamond.
+   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    sdmd,        s1x4,        0, warn__none, 0},                  // Same, but with missing people.
+   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    sdmd,        s1x4,        0, warn__none, 0},                  // same, but with missing people.
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__really_no_collision, 0},   // From couples out if it went to line.
+   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    s1x4,        s1x4,        0, warn__really_no_collision, 0},   // Same, but with missing people.
+   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    s1x4,        s1x4,        0, warn__really_no_collision, 0},   // Same, but with missing people.
+   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1, warn__none, 0},                  // From couples in if it went to diamond.
+   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__really_no_collision, 0},   // From couples in if it went to line.
+   {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},                  // From "head pass thru, all split circulate".
+   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},                  // From "head pass thru, all split circulate".
+   {3, 0x000000, 0x07, 0x04, {0, 1, 2},            {0, 1, 3},             {0, 1, 2},              s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
+   {3, 0x000000, 0x0D, 0x01, {0, 2, 3},            {0, 2, 3},             {1, 2, 3},              s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
    /* These items handle "1/2 split trade circulate" from 2x2's.
       They also do "switch to a diamond" when the ends come to the same spot in the center. */
    {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn_bad_collision, 0},
@@ -387,13 +387,13 @@ void collision_collector::install_with_collision(
       else if (callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS)
          // If the specific violation was that "ends take right hands" was on, but
          // the centers are taking right hands, it is extremely serious.
-         collision_appears_illegal |= 4;
+         m_collision_appears_illegal |= 4;
       else
          // Otherwise it is serious.
-         collision_appears_illegal |= 2;
+         m_collision_appears_illegal |= 2;
    }
 
-   (void) copy_rot(result, destination, sourcepeople, sourceplace, rot);
+   copy_rot(result, destination, sourcepeople, sourceplace, rot);
 }
 
 
@@ -408,7 +408,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
    uint32 lowbitmask = 0;
    collision_map *c_map_ptr;
 
-   clear_people(result);
+   result->clear_people();
 
    for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
@@ -460,8 +460,8 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
          if (c_map_ptr->warning == warn_bad_collision)
             goto win;   // Entries with this warning always know exactly what they are doing.
 
-         if ((collision_appears_illegal & 6) ||
-             ((collision_appears_illegal & 1) &&
+         if ((m_collision_appears_illegal & 6) ||
+             ((m_collision_appears_illegal & 1) &&
               (c_map_ptr->assume_key & 0x80000000)))
             continue;
          else
@@ -474,12 +474,12 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 
  win:
 
-   if ((collision_appears_illegal & 4) &&
+   if ((m_collision_appears_illegal & 4) &&
        c_map_ptr->warning == warn_bad_collision)
       warn(warn_very_bad_collision);
 
-   if ((collision_appears_illegal & 2) ||
-       ((collision_appears_illegal & 1) && (c_map_ptr->assume_key & 0x80000000)) ||
+   if ((m_collision_appears_illegal & 2) ||
+       ((m_collision_appears_illegal & 1) && (c_map_ptr->assume_key & 0x80000000)) ||
        c_map_ptr->warning != warn_bad_collision)
       warn(c_map_ptr->warning);
 
@@ -492,7 +492,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
    else {
       if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
          warn(warn__take_left_hands);
-      else
+      else if (c_map_ptr->warning != warn__really_no_collision)
          warn(warn__take_right_hands);
    }
 
@@ -555,10 +555,35 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 }
 
 
+static void install_person_in_matrix(int x, int y, int doffset,
+                                     setup *s, const personrec *temp_p,
+                                     const coordrec *cptr, const coordrec *optr,
+                                     uint32 zmask)
+{
+   int place = optr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
+
+   if (place < 0 || (optr->xca[place] != x) || (optr->yca[place] != y))
+      fail("Don't recognize ending setup for this call; not able to do it mirror.");
+
+   // Switch the stable bits.
+   uint32 n = temp_p->id1;
+   uint32 t = (0 - (n & (STABLE_VBIT*7))) & (STABLE_VBIT*7);
+   uint32 z = (n & ~(STABLE_VBIT*7)) | t;
+
+   // Switch the roll bits.
+   z &= ~(3*NROLL_BIT);
+   z |= ((n >> 1) & NROLL_BIT) | ((n & NROLL_BIT) << 1);
+
+   s->people[place].id1 = (z & zmask) ? (z ^ 2) : z;
+   s->people[place].id2 = temp_p->id2;
+   s->people[place].id3 = temp_p->id3;
+}
+
+
+
 void mirror_this(setup *s) THROW_DECL
 {
-   uint32 n, t;
-   int i, x, y;
+   int i;
 
    if (s->cmd.cmd_misc2_flags & (CMD_MISC2__IN_AZ_CW|CMD_MISC2__IN_AZ_CCW))
       s->cmd.cmd_misc2_flags ^= (CMD_MISC2__IN_AZ_CW ^ CMD_MISC2__IN_AZ_CCW);
@@ -590,7 +615,7 @@ void mirror_this(setup *s) THROW_DECL
       if (s->kind == s_trngl4) {
          if (s->rotation & 1) {
             s->rotation += 2;
-            for (i=0; i<4; i++) (void) copy_rot(s, i, s, i, 022);
+            for (i=0; i<4; i++) copy_rot(&temp, i, &temp, i, 022);
             cptr = &tgl4_1;
          }
          else
@@ -599,7 +624,7 @@ void mirror_this(setup *s) THROW_DECL
       else if (s->kind == s_trngl) {
          if (s->rotation & 1) {
             s->rotation += 2;
-            for (i=0; i<3; i++) (void) copy_rot(s, i, s, i, 022);
+            for (i=0; i<3; i++) copy_rot(&temp, i, &temp, i, 022);
             cptr = &tgl3_1;
          }
          else
@@ -619,9 +644,9 @@ void mirror_this(setup *s) THROW_DECL
 
          s->kind = s->outer.skind;
          s->rotation = s->outer.srotation;
-         for (i=0 ; i<12 ; i++) swap_people(s, i, i+12);
+         for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
          mirror_this(s);    // Sorrier!
-         for (i=0 ; i<12 ; i++) swap_people(s, i, i+12);
+         for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
          s->outer.srotation = s->rotation;
 
          s->kind = s_normal_concentric;
@@ -645,7 +670,6 @@ void mirror_this(setup *s) THROW_DECL
          fail("Don't recognize ending setup for this call; not able to do it mirror.");
 
       optr = cptr;
-
    }
 
    int limit = attr::slimit(s);
@@ -653,52 +677,18 @@ void mirror_this(setup *s) THROW_DECL
    int doffset = 32 - (1 << (cptr->xfactor-1));
 
    if (s->rotation & 1) {
-      for (i=0; i<=limit; i++) {
-         x = cptr->xca[i];
-         y = - cptr->yca[i];
-         int place = optr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
-
-         if (place < 0 || (optr->xca[place] != x) || (optr->yca[place] != y))
-            fail("Don't recognize ending setup for this call; not able to do it mirror.");
-
-         n = temp.people[i].id1;
-         t = (0 - (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
-         int z = (n & ~(STABLE_VBIT*3)) | t;
-
-         // Switch the roll bits.
-         z &= ~(3*NROLL_BIT);
-         z |= ((n >> 1) & NROLL_BIT) | ((n & NROLL_BIT) << 1);
-
-         s->people[place].id1 = (z & 010) ? (z ^ 2) : z;
-         s->people[place].id2 = temp.people[i].id2;
-      }
+      for (i=0; i<=limit; i++)
+         install_person_in_matrix(cptr->xca[i], -cptr->yca[i], doffset,
+                                  s, &temp.people[i], cptr, optr, 010);
    }
    else {
-      for (i=0; i<=limit; i++) {
-         x = - cptr->xca[i];
-         y = cptr->yca[i];
-         int place = optr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
-
-         if (place < 0 || (optr->xca[place] != x) || (optr->yca[place] != y))
-            fail("Don't recognize ending setup for this call; not able to do it mirror.");
-
-         n = temp.people[i].id1;
-         t = (0 - (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
-         int z = (n & ~(STABLE_VBIT*3)) | t;
-
-         // Switch the roll bits.
-         z &= ~(3*NROLL_BIT);
-         z |= ((n >> 1) & NROLL_BIT) | ((n & NROLL_BIT) << 1);
-
-         s->people[place].id1 = (z & 1) ? (z ^ 2) : z;
-         s->people[place].id2 = temp.people[i].id2;
-      }
+      for (i=0; i<=limit; i++)
+         install_person_in_matrix(-cptr->xca[i], cptr->yca[i], doffset,
+                                  s, &temp.people[i], cptr, optr, 1);
    }
 }
 
 
-static const veryshort identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                                 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 static const veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 static const veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
                                10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
@@ -796,97 +786,103 @@ static const veryshort q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
 
 
 
-extern void do_stability(uint32 *personp, stability stab, int turning) THROW_DECL
+extern void do_stability(uint32 *personp,
+                         int field,
+                         int turning,
+                         bool mirror) THROW_DECL
 {
-   int t, at, st, atr;
+   turning &= 3;
 
-   t = turning & 3;
-
-   switch (stab) {
-      case stb_z:
-         if (t != 0)
-            fail("Person turned but was marked 'Z' stability.");
-         break;
-      case stb_a:
-         t -= 4;
-         break;
-      case stb_c:
-         if (t == 0) t = 4;
-         break;
-      case stb_ac:
-         /* Turn one quadrant anticlockwise. */
-         do_stability(personp, stb_a, 3);
-         t += 1;   /* And the rest clockwise. */
-         break;
-      case stb_aac:
-         /* Turn two quadrants anticlockwise. */
-         do_stability(personp, stb_a, 2);
-         if (t == 3) t = -1;  /* And the rest clockwise. */
-         t += 2;
-         break;
-      case stb_aaac:
-         /* Turn three quadrants anticlockwise. */
-         do_stability(personp, stb_a, 1);
-         if (t >= 2) t -= 4;  /* And the rest clockwise. */
-         t += 3;
-         break;
-      case stb_aaaac:
-         /* Turn four quadrants anticlockwise. */
-         do_stability(personp, stb_a, 0);
-         if (t == 0) t = 4;   /* And the rest clockwise. */
-         break;
-      case stb_ca:
-         /* Turn one quadrant clockwise. */
-         do_stability(personp, stb_c, 1);
-         if (t == 0) t = 4;   /* And the rest anticlockwise. */
-         t -= 5;
-         break;
-      case stb_cca:
-         /* Turn two quadrants clockwise. */
-         do_stability(personp, stb_c, 2);
-         if (t <= 1) t += 4;  /* And the rest anticlockwise. */
-         t -= 6;
-         break;
-      case stb_ccca:
-         /* Turn three quadrants clockwise. */
-         do_stability(personp, stb_c, 3);
-         if (t == 3) t = -1;  /* And the rest anticlockwise. */
-         t -= 3;
-         break;
-      case stb_cccca:
-         /* Turn four quadrants clockwise. */
-         do_stability(personp, stb_c, 0);
-         t -= 4;              /* And the rest anticlockwise. */
-         break;
-      case stb_aa:
-         /* Turn four quadrants anticlockwise. */
-         do_stability(personp, stb_a, 0);
-         break;      /* And keep turning. */
-      case stb_cc:
-         /* Turn four quadrants clockwise. */
-         do_stability(personp, stb_c, 0);
-         break;      /* And keep turning. */
-      default:
-         *personp &= ~STABLE_MASK;
-         return;
+   switch (field & STB_MASK) {
+   case STB_NONE:
+      *personp &= ~STABLE_MASK;
+      return;
+   case STB_NONE+STB_REVERSE:
+      // "None" + REV = "Z".
+      if (turning != 0)
+         fail("Person turned but was marked 'Z' stability.");
+      break;
+   case STB_A:
+      turning -= 4;
+      break;
+   case STB_A+STB_REVERSE:
+      if (turning == 0) turning = 4;
+      break;
+   case STB_AC:
+      // Turn one quadrant anticlockwise.
+      do_stability(personp, STB_A, 3, mirror);
+      turning += 1;                    // And the rest clockwise.
+      break;
+   case STB_AC+STB_REVERSE:
+      // Turn one quadrant clockwise.
+      do_stability(personp, STB_A+STB_REVERSE, 1, mirror);
+      if (turning == 0) turning = 4;   // And the rest anticlockwise.
+      turning -= 5;
+      break;
+   case STB_AAC:
+      // Turn two quadrants anticlockwise.
+      do_stability(personp, STB_A, 2, mirror);
+      if (turning == 3) turning = -1;  // And the rest clockwise.
+      turning += 2;
+      break;
+   case STB_AAC+STB_REVERSE:
+      // Turn two quadrants clockwise.
+      do_stability(personp, STB_A+STB_REVERSE, 2, mirror);
+      if (turning <= 1) turning += 4;  // And the rest anticlockwise.
+      turning -= 6;
+      break;
+   case STB_AAAC:
+      // Turn three quadrants anticlockwise.
+      do_stability(personp, STB_A, 1, mirror);
+      if (turning >= 2) turning -= 4;  // And the rest clockwise.
+      turning += 3;
+      break;
+   case STB_AAAC+STB_REVERSE:
+      // Turn three quadrants clockwise.
+      do_stability(personp, STB_A+STB_REVERSE, 3, mirror);
+      if (turning == 3) turning = -1;  // And the rest anticlockwise.
+      turning -= 3;
+      break;
+   case STB_AAAAC:
+      // Turn four quadrants anticlockwise.
+      do_stability(personp, STB_A, 0, mirror);
+      if (turning == 0) turning = 4;   // And the rest clockwise.
+      break;
+   case STB_AAAAC+STB_REVERSE:
+      // Turn four quadrants clockwise.
+      do_stability(personp, STB_A+STB_REVERSE, 0, mirror);
+      turning -= 4;                    // And the rest anticlockwise.
+      break;
+   case STB_AA:
+      // Turn four quadrants anticlockwise.
+      do_stability(personp, STB_A, 0, mirror);
+      break;      // And keep turning.
+   case STB_AA+STB_REVERSE:
+      // Turn four quadrants clockwise.
+      do_stability(personp, STB_A+STB_REVERSE, 0, mirror);
+      break;      // And keep turning.
+   default:
+      *personp &= ~STABLE_MASK;
+      return;
    }
 
-   /* Now t has the number of quadrants the person turned, clockwise or anticlockwise. */
+   // Now turning has the number of quadrants the person turned, clockwise or anticlockwise.
 
-   st = (t < 0) ? -1 : 1;
-   at = t * st;
-   atr = at - ((*personp & (STABLE_RBIT*7)) / STABLE_RBIT);
+   if (mirror) turning = -turning;
 
-   if (atr <= 0)
-      *personp -= at*STABLE_RBIT;
+   int st = (turning < 0) ? -1 : 1;
+
+   int absturning_in_eighths = turning * st * 2;     // Measured in eighths!
+   int abs_overturning_in_eighths = absturning_in_eighths -
+      ((*personp & (STABLE_RBIT*15)) / STABLE_RBIT);
+
+   if (abs_overturning_in_eighths <= 0)
+      *personp -= absturning_in_eighths*STABLE_RBIT;
    else
       *personp =
-         (*personp & ~(STABLE_RBIT*7|STABLE_VBIT*3)) |
-         ((*personp + (STABLE_VBIT * atr * st)) & (STABLE_VBIT*3));
+         (*personp & ~(STABLE_RBIT*15|STABLE_VBIT*7)) |
+         ((*personp + (STABLE_VBIT * abs_overturning_in_eighths * st)) & (STABLE_VBIT*7));
 }
-
-
-
 
 
 extern bool check_restriction(
@@ -1007,6 +1003,9 @@ extern bool check_restriction(
       case CAF__RESTR_BOGUS:
          warn(warn_serious_violation);
          break;
+      case CAF__RESTR_ASSUME_DPT:
+         warn(warn__assume_dpt);
+         break;
       case CAF__RESTR_FORBID:
          fail("This call is not legal from this formation.");
       case 99:
@@ -1075,6 +1074,15 @@ extern bool check_restriction(
 }
 
 
+
+
+static uint32 do_roll(uint32 person_in, uint32 z, int direction)
+{
+   uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
+   if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
+   return (person_in & ~(NROLL_MASK | 077)) |
+      ((z + direction * 011) & 013) | rollstuff;
+}
 
 
 static void special_4_way_symm(
@@ -1196,7 +1204,7 @@ static void special_4_way_symm(
 
    for (real_index=0; real_index<begin_size; real_index++) {
       personrec this_person = scopy->people[real_index];
-      clear_person(destination, real_index);
+      destination->clear_person(real_index);
       if (this_person.id1) {
          int real_direction = this_person.id1 & 3;
          int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
@@ -1204,17 +1212,15 @@ static void special_4_way_symm(
          k = (z >> 4) & 0x1F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
-         uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
-         if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
-         destination->people[real_index].id1 = (this_person.id1 & ~(NROLL_MASK | 077)) |
-               ((z+real_direction*011) & 013) | rollstuff;
+         destination->people[real_index].id1 = do_roll(this_person.id1, z, real_direction);
 
          if (this_person.id1 & STABLE_ENAB)
             do_stability(&destination->people[real_index].id1,
-                         (stability) ((z/DBSTAB_BIT) & 0xF),
-                         (z + result->rotation));
+                         z/DBSTAB_BIT,
+                         z + result->rotation, false);
 
          destination->people[real_index].id2 = this_person.id2;
+         destination->people[real_index].id3 = this_person.id3;
          newplacelist[real_index] = k;
          lilresult_mask[k>>5] |= (1 << (k&037));
       }
@@ -1240,8 +1246,7 @@ static void special_triangle(
 
    for (real_index=0; real_index<num; real_index++) {
       personrec this_person = scopy->people[real_index];
-      destination->people[real_index].id1 = 0;
-      destination->people[real_index].id2 = 0;
+      destination->clear_person(real_index);
       newplacelist[real_index] = -1;
       if (this_person.id1) {
          int northified_index, k;
@@ -1272,17 +1277,15 @@ static void special_triangle(
             }
          }
 
-         uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
-         if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
-         destination->people[real_index].id1 = (this_person.id1 & ~(NROLL_MASK | 077)) |
-               ((z + real_direction * 011) & 013) | rollstuff;
+         destination->people[real_index].id1 = do_roll(this_person.id1, z, real_direction);
 
          if (this_person.id1 & STABLE_ENAB)
             do_stability(&destination->people[real_index].id1,
-                         (stability) ((z/DBSTAB_BIT) & 0xF),
-                         (z+result->rotation));
+                         z/DBSTAB_BIT,
+                         z+result->rotation, false);
 
          destination->people[real_index].id2 = this_person.id2;
+         destination->people[real_index].id3 = this_person.id3;
          newplacelist[real_index] = k;
          lilresult_mask[0] |= (1 << k);
       }
@@ -1379,7 +1382,7 @@ static bool handle_3x4_division(
        assoc(b_3x2, ss, calldeflist));
 
    switch (livemask) {
-   case 0xF3C: case 0xCF3:
+   case 07474: case 06363:
       // We are in offset lines/columns, i.e. "clumps".
       // See if we can do the call in 2x2 or smaller setups.
       if (forbid_little_stuff ||
@@ -1389,11 +1392,11 @@ static bool handle_3x4_division(
            !assoc(b_1x1, ss, calldeflist)))
          fail("Don't know how to do this call in this setup.");
       if (!matrix_aware) warn(warn__each2x2);
-      division_code = (livemask == 0xF3C) ?
+      division_code = (livemask == 07474) ?
          MAPCODE(s2x2,2,MPKIND__OFFS_L_HALF,0) :
             MAPCODE(s2x2,2,MPKIND__OFFS_R_HALF,0);
       return true;
-   case 0xEBA: case 0xD75:
+   case 07272: case 06565:
       // We are in "Z"'s.  See if we can do the call in 1x2, 2x1, or 1x1 setups.
       // We do not allow 2x2 definitions.
       // We do now!!!!  It is required to allow utb in "1/2 press ahead" Z lines.
@@ -1404,7 +1407,7 @@ static bool handle_3x4_division(
             (!(newtb & 010) || assoc(b_2x1, ss, calldeflist))) ||
            assoc(b_1x1, ss, calldeflist))) {
          warn(warn__each1x2);
-         division_code = (livemask == 0xEBA) ? spcmap_lz12 : spcmap_rz12;
+         division_code = (livemask == 07272) ? spcmap_lz12 : spcmap_rz12;
          return true;
       }
    }
@@ -1412,7 +1415,7 @@ static bool handle_3x4_division(
    // Check for everyone in either the outer 2 triple lines or the
    // center triple line, and able to do the call in 1x4 or smaller setups.
 
-   if (((livemask & 0x3CF) == 0 || (livemask & 0xC30) == 0) &&
+   if (((livemask & 01717) == 0 || (livemask & 06060) == 0) &&
        !forbid_little_stuff &&
        (assoc(b_1x4, ss, calldeflist) ||
         assoc(b_4x1, ss, calldeflist) ||
@@ -1445,8 +1448,8 @@ static bool handle_3x4_division(
    //
    // But that's a pretty ambitious change.
 
-   if (!forbid_little_stuff &&
-       (assoc(b_1x1, ss, calldeflist) ||
+   if (assoc(b_1x1, ss, calldeflist) ||
+       (!forbid_little_stuff &&
         (((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
           (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)) &&
          ((!(newtb & 010) ||
@@ -1472,14 +1475,18 @@ static bool handle_3x4_division(
    // (which includes diamonds).  Note whether we fudged,
    // since some calls do not tolerate it.
    // But don't do this if the "points" are all outside and their orientation
-   // is in triple lines.
+   // is in triple lines.  Or if we would have to move someone and the call
+   // does not permit the fudging.
 
-   if (livemask == 0xE79 &&
-       ((ss->people[0].id1 & ss->people[3].id1 & ss->people[6].id1 & ss->people[9].id1) & 1))
+   if ((!(callflags1 & CFLAG1_FUDGE_TO_Q_TAG) && livemask != 06666) ||
+       (livemask == 07171 &&
+        ((ss->people[0].id1 & ss->people[3].id1 &
+          ss->people[6].id1 & ss->people[9].id1) & 1)))
       fail("Can't do this call from arbitrary 3x4 setup.");
 
    bool really_fudged = false;
    setup sss = *ss;
+
    expand::compress_setup(&s_qtg_3x4, &sss);
 
    if (ss->people[0].id1) {
@@ -1776,8 +1783,6 @@ static bool handle_4x6_division(
    uint32 & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
-   bool forbid_little_stuff;
-
    // The call has no applicable 4x6 definition.
    // First, check whether it has 2x6/6x2 definitions,
    // and divide the setup if so, and if the call permits it.
@@ -1833,27 +1838,18 @@ static bool handle_4x6_division(
    // But if user said "16 matrix" or something, do don't do implicit division.
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+      bool forbid_little_stuff;
+
       switch (livemask) {
       case 0xC03C03: case 0x0F00F0:
          // We are in "clumps".  See if we can do the call in 2x2 or smaller setups.
-         forbid_little_stuff =
-            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
-            (assoc(b_2x4, ss, calldeflist) ||
-             assoc(b_4x2, ss, calldeflist) ||
-             assoc(b_dmd, ss, calldeflist) ||
-             assoc(b_pmd, ss, calldeflist) ||
-             assoc(b_qtag, ss, calldeflist) ||
-             assoc(b_pqtag, ss, calldeflist));
-
-         if (forbid_little_stuff ||
-             (!assoc(b_2x2, ss, calldeflist) &&
-              !assoc(b_1x2, ss, calldeflist) &&
-              !assoc(b_2x1, ss, calldeflist) &&
-              !assoc(b_1x1, ss, calldeflist)))
+         if (!assoc(b_2x2, ss, calldeflist) &&
+             !assoc(b_1x2, ss, calldeflist) &&
+             !assoc(b_2x1, ss, calldeflist) &&
+             !assoc(b_1x1, ss, calldeflist))
             fail("Don't know how to do this call in this setup.");
          if (!matrix_aware) warn(warn__each2x2);
-         // This will do.
-         division_code = MAPCODE(s2x4,3,MPKIND__SPLIT,1);
+         division_code = MAPCODE(s2x2,6,MPKIND__SPLIT_OTHERWAY_TOO,0);
          return true;
       case 0xA05A05: case 0x168168:
          // We are in "offset stairsteps".  See if we can do the call in 1x2 or smaller setups.
@@ -1902,8 +1898,6 @@ static bool handle_3x8_division(
    uint32 & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
-   bool forbid_little_stuff;
-
    // The call has no applicable 3x8 definition.
    // First, check whether it has 3x4/4x3/2x3/3x2 definitions,
    // and divide the setup if so, and if the call permits it.
@@ -1929,27 +1923,16 @@ static bool handle_3x8_division(
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
       switch (livemask) {
       case 0x00F00F: case 0x0F00F0:
-         forbid_little_stuff =
-            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
-            (assoc(b_2x4, ss, calldeflist) ||
-             assoc(b_4x2, ss, calldeflist) ||
-             assoc(b_dmd, ss, calldeflist) ||
-             assoc(b_pmd, ss, calldeflist) ||
-             assoc(b_qtag, ss, calldeflist) ||
-             assoc(b_pqtag, ss, calldeflist));
-
          // We are in 1x4's in the corners.  See if we can do the call in 1x4
          // or smaller setups.
-         if (forbid_little_stuff ||
-             (!assoc(b_1x4, ss, calldeflist) &&
-              !assoc(b_4x1, ss, calldeflist) &&
-              !assoc(b_1x2, ss, calldeflist) &&
-              !assoc(b_2x1, ss, calldeflist) &&
-              !assoc(b_1x1, ss, calldeflist)))
+         if (!assoc(b_1x4, ss, calldeflist) &&
+             !assoc(b_4x1, ss, calldeflist) &&
+             !assoc(b_1x2, ss, calldeflist) &&
+             !assoc(b_2x1, ss, calldeflist) &&
+             !assoc(b_1x1, ss, calldeflist))
             fail("Don't know how to do this call in this setup.");
          if (!matrix_aware) warn(warn__each1x4);
-         // This will do.
-         division_code = MAPCODE(s1x8,3,MPKIND__SPLIT,1);
+         division_code = MAPCODE(s1x4,6,MPKIND__SPLIT_OTHERWAY_TOO,1);
          return true;
       }
    }
@@ -2506,40 +2489,69 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       }
 
-      /* The only way this can be legal is if people are in genuine
-         C1 phantom spots and the call can be done from 1x2's or 2x1's.
-         *** Actually, that isn't so.  We ought to be able to do 1x1 calls
-         from any population at all. */
+      // Check for division into trngl4's.  This is ambiguous, so we have
+      // to peek at the call to see whether it is qualifying on something
+      // that tells us how to divide.  The only such thing we know about
+      // is "ntbone" along with "dmd_ctr_mwv" or "dmd_ctr_1f".  The only
+      // call at present that uses this is "<anyone> start vertical tag".
 
-      if ((livemask & 0xAAAA) == 0)
-         division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0);
-      else if ((livemask & 0x5555) == 0)
-         division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1);
-      else if (livemask == 0x0F0F || livemask == 0xF0F0)
-         division_code = MAPCODE(s_star,4,MPKIND__4_QUADRANTS,0);
-      else if (   (livemask & 0x55AA) == 0 ||
-                  (livemask & 0xAA55) == 0 ||
-                  (livemask & 0x5AA5) == 0 ||
-                  (livemask & 0xA55A) == 0) {
-         setup scopy;
-         setup the_results[2];
+      // If that fails, the only way this can be legal is if people are in
+      // genuine C1 phantom spots and the call can be done from 1x2's or 2x1's.
+      // *** Actually, that isn't so.  We ought to be able to do 1x1 calls from
+      // any population at all.
 
-         /* This is an unsymmetrical thing.  Do each quadrant (a 1x2) separately by
-               using both maps, and then merge the result and hope for the best. */
+      {
+         bool looking_for_lateral_triangle_split = false;
+         callarray *t = calldeflist;
+         while (t) {
+            if ((t->qualifierstuff & QUALBIT__NTBONE) &&
+                (((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_mwv) ||
+                 ((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_1f))) {
+               looking_for_lateral_triangle_split = true;
+               break;
+            }
+            t = t->next;
+         }
 
-         ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
-         scopy = *ss;    /* "Move" can write over its input. */
-         divided_setup_move(ss, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0),
-                            phantest_ok, false, &the_results[0]);
-         divided_setup_move(&scopy, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1),
-                            phantest_ok, false, &the_results[1]);
-         *result = the_results[1];
-         result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
-         merge_setups(&the_results[0], merge_c1_phantom, result);
-         return 1;
+         if (looking_for_lateral_triangle_split) {
+            if (!(newtb & 010)) {
+               // Split vertically, by rotating the setup.
+               finalrot++;
+            }
+            else if (newtb & 001)
+               break;    // Can't do it.
+
+            if ((livemask & 0xAAAA) == 0)
+               division_code = MAPCODE(s_trngl4,2,MPKIND__SPLIT,0);
+            else if ((livemask & 0x5555) == 0)
+               division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0);
+         }
+         else if ((livemask & 0xAAAA) == 0)
+            division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0);
+         else if ((livemask & 0x5555) == 0)
+            division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1);
+         else if (livemask == 0x0F0F || livemask == 0xF0F0)
+            division_code = MAPCODE(s_star,4,MPKIND__4_QUADRANTS,0);
+         else if ((livemask & 0x55AA) == 0 || (livemask & 0xAA55) == 0 ||
+                  (livemask & 0x5AA5) == 0 || (livemask & 0xA55A) == 0) {
+            setup scopy;
+            setup the_results[2];
+
+            // This is an unsymmetrical thing.  Do each quadrant (a 1x2) separately by
+            // using both maps, and then merge the result and hope for the best.
+
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+            scopy = *ss;    // "Move" can write over its input.
+            divided_setup_move(ss, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0),
+                               phantest_ok, false, &the_results[0]);
+            divided_setup_move(&scopy, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1),
+                               phantest_ok, false, &the_results[1]);
+            *result = the_results[1];
+            result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
+            merge_setups(&the_results[0], merge_c1_phantom, result);
+            return 1;
+         }
       }
-      else
-         fail("You must specify a concept.");
 
       goto divide_us_no_recompute;
    case sbigbone:
@@ -2741,6 +2753,14 @@ static int divide_the_setup(
                               calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
+   case s_nftrgl6cw:
+      // The only legal thing we can do here is split into two triangles.
+      division_code = MAPCODE(s_trngl,2,MPKIND__OFFS_R_HALF,0);
+      goto divide_us_no_recompute;
+   case s_nftrgl6ccw:
+      // The only legal thing we can do here is split into two triangles.
+      division_code = MAPCODE(s_trngl,2,MPKIND__OFFS_L_HALF,0);
+      goto divide_us_no_recompute;
    case s_qtag:
       if (assoc(b_dmd, ss, calldeflist) ||
           assoc(b_pmd, ss, calldeflist)) {
@@ -2857,8 +2877,8 @@ static int divide_the_setup(
           (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
           (!(newtb & 1) || assoc(b_8x1, ss, calldeflist))) {
          ss->kind = s1x8;
-         swap_people(ss, 2, 7);
-         swap_people(ss, 3, 6);
+         ss->swap_people(2, 7);
+         ss->swap_people(3, 6);
          return 2;                        /* And try again. */
       }
       break;
@@ -3127,8 +3147,8 @@ static int divide_the_setup(
                (ss->people[0].id1 | ss->people[1].id1 |
                 ss->people[4].id1 | ss->people[5].id1) == 0) {
          setup sstest = *ss;
-         swap_people(&sstest, 2, 7);
-         swap_people(&sstest, 3, 6);
+         sstest.swap_people(2, 7);
+         sstest.swap_people(3, 6);
          sstest.kind = s_qtag;
 
          if ((!(newtb & 010) ||
@@ -3423,7 +3443,7 @@ static int divide_the_setup(
       if ((assoc(b_1x2, ss, calldeflist) ||
            assoc(b_2x1, ss, calldeflist) ||
            assoc(b_1x1, ss, calldeflist))) {
-         division_code = spcmap_tgl4_1;
+         division_code = MAPCODE(s1x2,2,MPKIND__NONISOTROP2,0);
          goto divide_us_no_recompute;
       }
    }
@@ -3442,16 +3462,12 @@ static int divide_the_setup(
    if (must_do_mystic)
       fail("Can't do \"snag/mystic\" with this call.");
 
-   {
-      uint32 save_misc = ss->cmd.cmd_misc_flags;
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
-      ss->cmd.prior_elongation_bits = 0;
-      ss->cmd.prior_expire_bits = 0;
-      ss->rotation += finalrot;   // Flip the setup around and recanonicalize.
-      canonicalize_rotation(ss);
-      divided_setup_move(ss, division_code, phantest_ok,
-                         (save_misc & CMD_MISC__MUST_SPLIT_MASK) != 0, result);
-   }
+   ss->cmd.prior_elongation_bits = 0;
+   ss->cmd.prior_expire_bits = 0;
+   ss->rotation += finalrot;   // Flip the setup around and recanonicalize.
+   canonicalize_rotation(ss);
+   divided_setup_move(ss, division_code, phantest_ok,
+                      (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) != 0, result);
 
    // Flip the setup back if necessary.  It will get canonicalized.
    result->rotation -= finalrot;
@@ -3711,6 +3727,7 @@ static veryshort starstranslatev[32] = {
 /* For this routine, we know that callspec is a real call, with an array definition schema.
    Also, result->people have been cleared. */
 
+
 extern void basic_move(
    setup *ss,
    calldefn *the_calldefn,
@@ -3841,7 +3858,7 @@ extern void basic_move(
 
             if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
                int i2 = (i1 + 1) & 3;
-               swap_people(ss, i1, i2);
+               ss->swap_people(i1, i2);
                copy_rot(ss, i1, ss, i1, 033);
                copy_rot(ss, i2, ss, i2, 011);
 
@@ -4072,7 +4089,7 @@ foobar:
    
          if (ss->inner.skind == s1x4) {
             stemp.kind = s1x8;
-            clear_people(&stemp);
+            stemp.clear_people();
             static veryshort exp_conc_1x8[] = {3, 2, 7, 6};
             scatter(&stemp, ss, exp_conc_1x8, 3, 0);
 
@@ -4082,7 +4099,7 @@ foobar:
             }
             else {
                stemp.kind = s_qtag;
-               clear_people(&stemp);
+               stemp.clear_people();
                static veryshort exp_conc_qtg[] = {6, 7, 2, 3};
                scatter(&stemp, ss, exp_conc_qtg, 3, 0);
 
@@ -4099,7 +4116,7 @@ foobar:
          }
          else if (ss->inner.skind == s2x2) {
             stemp.kind = s2x4;
-            clear_people(&stemp);
+            stemp.clear_people();
             static veryshort exp_conc_2x2[] = {6, 1, 2, 5, 6};
 
             if (ss->concsetup_outer_elongation == 1) {
@@ -4323,11 +4340,16 @@ foobar:
                   matrix_check_flag = INHERITFLAG_12_MATRIX;
                }
                else if (search_concepts_without_funny & INHERITFLAG_16_MATRIX) {
-                  if (ss->kind == s2x6) do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
-                  else if (ss->kind != s2x4) do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
-                  /* Take no action (and hence cause an error) if the setup was a 2x4.
-                     If someone wants to say "16 matrix 4x4 peel off" from normal columns,
-                     that person needs more help than we can give. */
+                  if (ss->kind == s2x6)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
+                  else if (ss->kind == s_alamo)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
+                  else if (ss->kind != s2x4)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
+
+                  // Take no action (and hence cause an error) if the setup was a 2x4.
+                  // If someone wants to say "16 matrix 4x4 peel off" from normal columns,
+                  // that person needs more help than we can give.
 
                   if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16)
                      fail("Can't expand to a 16 matrix."); 
@@ -4552,7 +4574,7 @@ foobar:
 
       if (funny) fail("Sorry, can't do this call 'funny'");
 
-      clear_people(&p1);
+      p1.clear_people();
 
       for (real_index=0; real_index<8; real_index++) {
          personrec this_person = ss->people[real_index];
@@ -4565,11 +4587,9 @@ foobar:
                              ss, real_index, real_direction, northified_index);
             k = ((z >> 4) & 0x1F) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
-            uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
-            if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
-            p1.people[k].id1 = (p1.people[k].id1 & ~(NROLL_MASK | 077)) |
-               ((z + real_direction * 011) & 013) | rollstuff;
-            /* For now, can't do fractional stable on this kind of call. */
+            p1.people[k].id1 = do_roll(p1.people[k].id1, z, real_direction);
+
+            // For now, can't do fractional stable on this kind of call.
             p1.people[k].id1 &= ~STABLE_MASK;
          }
       }
@@ -4681,8 +4701,8 @@ foobar:
       }
       else {
          int halfnumoutl, halfnumoutc, numoutl, numoutc;
-         const veryshort *final_translatec = identity;
-         const veryshort *final_translatel = identity;
+         const veryshort *final_translatec = identity24;
+         const veryshort *final_translatel = identity24;
          int rotfudge_line = 0;
          int rotfudge_col = 0;
 
@@ -4864,7 +4884,7 @@ foobar:
             callarray *the_definition;
             uint32 z;
             personrec this_person = ss->people[real_index];
-            clear_person(&newpersonlist, real_index);
+            newpersonlist.clear_person(real_index);
             if (this_person.id1) {
                int final_direction, d2out, thisnumout;
                int real_direction = this_person.id1 & 3;
@@ -4891,17 +4911,17 @@ foobar:
                z = find_calldef(the_definition, ss, real_index,
                                 real_direction, northified_index);
                k = (((z >> 4) & 0x1F) + d2out) % thisnumout;
-               uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
-               if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
-               newpersonlist.people[real_index].id1 = (this_person.id1 & ~(NROLL_MASK | 077)) |
-                     ((z + final_direction * 011) & 013) | rollstuff;
+               newpersonlist.people[real_index].id1 =
+                  do_roll(this_person.id1, z, final_direction);
 
                if (this_person.id1 & STABLE_ENAB)
                   do_stability(&newpersonlist.people[real_index].id1,
-                               (stability) ((z/DBSTAB_BIT) & 0xF),
-                               (z + final_direction - real_direction + result->rotation));
+                               z/DBSTAB_BIT,
+                               z + final_direction - real_direction + result->rotation,
+                               false);
 
                newpersonlist.people[real_index].id2 = this_person.id2;
+               newpersonlist.people[real_index].id3 = this_person.id3;
                kt = final_translate[k];
                if (kt < 0) fail("T-bone call went to a weird and confused setup.");
                newplacelist[real_index] = kt;
@@ -5437,6 +5457,7 @@ foobar:
                   k = real_index;
                   newperson.id1 = (ss->people[real_index].id1 & ~NROLL_MASK) | (3*NROLL_BIT);
                   newperson.id2 = ss->people[real_index].id2;
+                  newperson.id3 = ss->people[real_index].id3;
                   result->people[k] = newperson;
                   newpersonlist.people[k].id1 = ~0UL;
                   funny_ok1 = true;    // Someone decided not to move.  Hilarious.

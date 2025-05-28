@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.5"
-#define TIME_STAMP "wba@alum.mit.edu  15 Dec 2004 $"
+#define VERSION_STRING "36.7"
+#define TIME_STAMP "wba@alum.mit.edu  22 Apr 2006 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -59,8 +59,8 @@ and the following external variables:
 
 
 // We cause this string (that is, the concatentation of these strings) to appear
-// in the binary image of the program, so that the "what" and "ident" utilities
-// can print the version.
+// in the binary image of the program, so that the Unix "what" and "ident"
+// utilities can print the version.
 
 // We do not endorse those programs, or any probabilistic identification
 // mechanism -- we are simply trying to be helpful to those people who use them.
@@ -134,6 +134,8 @@ command_list_menu_item command_menu[] = {
    {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
    {"toggle keep all pictures",       command_toggle_keepallpic_mode, -1},
    {"toggle singleclick mode",        command_toggle_singleclick_mode, -1},
+   {"toggle singing call",            command_toggle_singer, -1},
+   {"toggle reverse singing call",    command_toggle_singer_backward, -1},
    {"choose font for printing",       command_select_print_font, ID_FILE_CHOOSE_FONT},
    {"print current file",             command_print_current, ID_FILE_PRINTTHIS},
    {"print any file",                 command_print_any, ID_FILE_PRINTFILE},
@@ -142,7 +144,7 @@ command_list_menu_item command_menu[] = {
    {"abort this sequence",            command_abort, ID_COMMAND_ABORTTHISSEQUENCE},
    {"insert a comment",               command_create_comment, ID_COMMAND_COMMENT},
    {"change output file",             command_change_outfile, ID_COMMAND_CH_OUTFILE},
-   {"change title",                   command_change_header, ID_COMMAND_CH_TITLE},
+   {"change title",                   command_change_title, ID_COMMAND_CH_TITLE},
    {"write this sequence",            command_getout, -1},
    {"end this sequence",              command_getout, ID_COMMAND_ENDTHISSEQUENCE},
    {"cut to clipboard",               command_cut_to_clipboard, -1},
@@ -227,8 +229,9 @@ startup_list_menu_item startup_menu[] = {
    {"print current file",          start_select_print_current, ID_FILE_PRINTTHIS},
    {"print any file",              start_select_print_any, ID_FILE_PRINTFILE},
    {"initialize session file",     start_select_init_session_file, -1},
+   {"change to new style filename",start_select_change_to_new_style_filename, -1},
    {"change output file",          start_select_change_outfile, ID_COMMAND_CH_OUTFILE},
-   {"change title",                start_select_change_header_comment, ID_COMMAND_CH_TITLE},
+   {"change title",                start_select_change_title, ID_COMMAND_CH_TITLE},
    {(Cstring) 0}};
 int last_file_position = -1;
 
@@ -359,18 +362,18 @@ static bool find_direction(direction_kind *dir_p)
 }
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
+// Returns TRUE if it fails, meaning that the user waved the mouse away,
+// or that the number from a verify iteration violated the "odd only" rule.
 static bool find_numbers(int howmanynumbers, bool forbid_zero,
    uint32 odd_number_only, bool allow_iteration, uint32 *number_list)
 {
-   if (interactivity == interactivity_normal) {
-      *number_list = gg->get_number_fields(howmanynumbers, forbid_zero);
-
-      if ((*number_list) == ~0UL)
-         return true;           /* User waved the mouse away. */
-   }
+   if (interactivity == interactivity_normal)
+      *number_list = gg->get_number_fields(howmanynumbers, odd_number_only != 0, forbid_zero);
    else
       do_number_iteration(howmanynumbers, odd_number_only, allow_iteration, number_list);
+
+   if ((*number_list) == ~0UL)
+      return true;           // User waved the mouse away.
 
    return false;
 }
@@ -531,6 +534,8 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
       howmanynumbers = 1;
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_TWO_NUMBERS)
       howmanynumbers = 2;
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_FOUR_NUMBERS)
+      howmanynumbers = 4;
 
    if (howmanynumbers != 0) {
       if (find_numbers(howmanynumbers, true, 0, false, &number_list)) return true;
@@ -594,6 +599,7 @@ extern bool query_for_call()
 {
    uims_reply local_reply;
    error_flag_type old_error_flag;
+   bool refresh_override = false;
    int concepts_deposited = 0;
 
    recurse_entry:
@@ -622,16 +628,19 @@ extern bool query_for_call()
          goto try_again;
       }
 
-      /* First, update the output area to the current state, with error messages, etc.
-         We draw a picture for the last two calls. */
+      // First, update the output area to the current state, with error messages, etc.
+      // We draw a picture for the last two calls.
 
       // Some things can only be done if we have a "nice" execution error.
       // Otherwise, the history array won't have the "last setup" that we want.
+      // But if we are doing a "refresh display", do it anyway.
 
-      if (global_error_flag < error_flag_wrong_command ||
+      if (refresh_override ||
+          global_error_flag < error_flag_wrong_command ||
           global_error_flag == error_flag_selector_changed ||
           global_error_flag == error_flag_formation_changed) {
-         display_initial_history(configuration::history_ptr, (ui_options.diagnostic_mode ? 1 : 2));
+         display_initial_history(configuration::history_ptr,
+                                 (ui_options.diagnostic_mode ? 1 : 2));
 
          if (configuration::sequence_is_resolved()) {
             newline();
@@ -716,16 +725,27 @@ extern bool query_for_call()
 
       try_again:
 
-      /* Display the call index number, and the partially entered call and/or prompt, as appropriate. */
+      // Display the call index number, and the partially entered call and/or
+      // prompt, as appropriate.
 
-      /* See if there are partially entered concepts.  If so, print the index number
-         and those concepts on a separate line. */
+      // See if there are partially entered concepts.  If so, print the index
+      // number and those concepts on a separate line.
 
       if (parse_state.concept_write_ptr != &configuration::next_config().command_root) {
 
          // This prints the concepts entered so far, with a "header"
          // consisting of the index number.  This partial concept tree
          // is incomplete, so write_history_line has to be (and is) very careful.
+         // By giving a third argument ("leave_missing_calls_blank") of true,
+         // subcalls that haven't yet been filled in will be left blank
+         // rather than showing as "***".  So, after typing in
+         // "tally ho but <anything>", it will echo as just "tally ho but"
+         // while it is prompting us for the subcall.
+         //
+         // If we get through the whole call without ever filling in the
+         // subcall, as in "no one do your part, tally ho but <anything>",
+         // the final result will show the missing subcall as
+         // "no one do your part, tally ho but [???]"
 
          write_history_line(configuration::history_ptr+1, false, true, file_write_no);
       }
@@ -734,7 +754,8 @@ extern bool query_for_call()
 
          if (!ui_options.diagnostic_mode) {
             char indexbuf[200];
-            (void) sprintf (indexbuf, "%2d: ", configuration::history_ptr-configuration::whole_sequence_low_lim+2);
+            sprintf (indexbuf, "%2d:",
+                     configuration::history_ptr-configuration::whole_sequence_low_lim+2);
             writestuff(indexbuf);
             newline();
          }
@@ -803,12 +824,26 @@ extern bool query_for_call()
          case command_toggle_singleclick_mode:
             ui_options.accept_single_click = !ui_options.accept_single_click;
             goto check_menu;
+         case command_toggle_singer:
+            if (ui_options.singing_call_mode != 0)
+               ui_options.singing_call_mode = 0;    // Turn it off.
+            else
+               ui_options.singing_call_mode = 1;    // 1 for forward progression,
+                                                    // 2 for backward.
+            goto check_menu;
+         case command_toggle_singer_backward:
+            if (ui_options.singing_call_mode != 0)
+               ui_options.singing_call_mode = 0;    // Turn it off.
+            else
+               ui_options.singing_call_mode = 2;
+            goto check_menu;
          case command_refresh:
-            written_history_items = -1; /* suppress optimized display update */
-            global_error_flag = old_error_flag; /* want to see error messages, too */
+            written_history_items = -1;         // Suppress optimized display update.
+            global_error_flag = old_error_flag; // Want to see error messages, too.
+            refresh_override = true;
             goto redisplay;
          default:
-            global_reply = local_reply;     /* Save this -- top level will need it. */
+            global_reply = local_reply;         // Save this -- top level will need it.
             return true;
          }
       }
@@ -900,6 +935,8 @@ ui_option_type::ui_option_type() :
    no_intensify(false),
    reverse_video(false),
    pastel_color(false),
+   use_magenta(false),
+   use_cyan(false),
    singlespace_mode(false),
    nowarn_mode(false),
    keep_all_pictures(false),
@@ -940,6 +977,8 @@ extern int sdmain(int argc, char *argv[])
       printf("-no_color                   do not display people in color\n");
       printf("-bold_color                 use bold colors when not coloring by couple or corner\n");
       printf("-pastel_color               use pastel colors when not coloring by couple or corner\n");
+      printf("-use_magenta                use magenta instead of red in all modes\n");
+      printf("-use_cyan                   use cyan instead of blue in all modes\n");
       printf("-color_by_couple            display color according to couple number, rgby\n");
       printf("-color_by_couple_rgyb       similar to color_by_couple, but with rgyb\n");
       printf("-color_by_couple_ygrb       similar to color_by_couple, but with ygrb\n");
@@ -994,14 +1033,9 @@ extern int sdmain(int argc, char *argv[])
    // must be initialized before executing calls.)
 
    global_cache_failed_flag = false;
-   clear_screen();
 
-   if (!open_session(argc, argv)) {
-      global_age = 1;
-      global_error_flag = (error_flag_type) 0;
-      interactivity = interactivity_normal;
+   if (!open_session(argc, argv))
       run_program();
-   }
 
    // This does a lot more than just exit.  It updates the init file.
    // If deletion of an item in the init file was called for, "open_session"
