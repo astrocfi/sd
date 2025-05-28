@@ -1178,6 +1178,32 @@ extern void do_matrix_expansion(
          }
          else if (needpropbits &
                   (NEEDMASK(CONCPROP__NEEDK_TWINDMD) | NEEDMASK(CONCPROP__NEEDK_TWINQTAG))) {
+            // Egads!  It turns out that the "CONCPROP__NEEDK_TWINQTAG"
+            // indicator is used not just for "twin phantom 1/4 tags", but for
+            // "tandem in a 1/4 tag"!!!!  Both require a 4x6, but with very
+            // different philosophies of how to figure it out.  The code under
+            // WOULDLIKETODOTHISBUTCANT handles the "twin phantom 1/4 tags"
+            // concept the way we would like, but fails to do the other.  The
+            // later code, which we have to use, is a sort of sleazy compromise
+            // that can handle both actions.
+#ifdef WOULDLIKETODOTHISBUTCANT
+            // If the occupation is such that one or the other orientations is
+            // impossible, we use the other.  If that turns out to be impossible
+            // also, or the facing directions of the "points" are innapropriate
+            // for the twin qtag / twin diamond nature of the concept, an error
+            // will be raised when the concept is executed.
+            if ((livemask & 0x6060UL) != 0) {
+               expand::expand_setup(&s_4x4_4x6b, ss);
+               goto expanded;
+            }
+            else if ((livemask & 0x0606UL) != 0) {
+               expand::expand_setup(&s_4x4_4x6a, ss);
+               goto expanded;
+            }
+
+            // If we get no clue from the occupation, try to deduce the
+            // answer from the facing directions of the "points".
+
             uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
                ss->people[11].id1 | ss->people[15].id1;
 
@@ -1186,10 +1212,28 @@ extern void do_matrix_expansion(
                expand::expand_setup((ctrs & 1) ? &s_4x4_4x6b : &s_4x4_4x6a, ss);
                goto expanded;
             }
+#else
+            uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
+               ss->people[11].id1 | ss->people[15].id1;
+
+            if (ctrs != 0 && (ctrs & 011) != 011) {
+               if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
+               expand::expand_setup((ctrs & 1) ? &s_4x4_4x6b : &s_4x4_4x6a, ss);
+               goto expanded;
+            }
+            else if (livemask == 0x1717UL) {
+               expand::expand_setup(&s_4x4_4x6a, ss);
+               goto expanded;
+            }
+            else if (livemask == 0x7171UL) {
+               expand::expand_setup(&s_4x4_4x6b, ss);
+               goto expanded;
+            }
+#endif
          }
       }
 
-      /* If get here, we did NOT see any concept that requires a setup expansion. */
+      // If get here, we did NOT see any concept that requires a setup expansion.
 
       return;
 
@@ -1347,6 +1391,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_qtag,    cr_qtag_mag_mwv, 8, {0, 1, 2, 3, 5, 4, 7, 6, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+
    {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s_spindle, cr_spd_base_mwv, 4, {0, 6, 2, 4, -1},
@@ -1395,6 +1440,28 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
    {s1x8,      cr_dmd_ctrs_1f, 4, {1, 3, 7, 5, -1},
     {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
+
+   {s_short6,  cr_extend_inroutl, 6, {0, 2, 5, 3, 4, 1, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_short6,  cr_extend_inloutr, 6, {2, 0, 3, 5, 4, 1, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_1x2dmd,  cr_extend_inroutl, 6, {2, 5, 0, 4, 1, 3, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_1x2dmd,  cr_extend_inloutr, 6, {5, 2, 0, 4, 1, 3, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s1x3dmd,   cr_extend_inroutl, 8, {3, 7, 0, 6, 1, 5, 2, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s1x3dmd,   cr_extend_inloutr, 8, {7, 3, 0, 6, 1, 5, 2, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_spindle, cr_extend_inroutl, 8, {0, 6, 1, 5, 2, 4, 7, 3, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_spindle, cr_extend_inloutr, 8, {6, 0, 5, 1, 4, 2, 7, 3, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_rigger,  cr_extend_inroutl, 8, {0, 5, 1, 4, 6, 3, 7, 2, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_rigger,  cr_extend_inloutr, 8, {5, 0, 4, 1, 6, 3, 7, 2, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+
    {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},
     {0}, {0}, {0}, true, chk_wave},
    {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
@@ -3764,6 +3831,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_judge_is_ccw:
       case cr_socker_is_cw:
       case cr_socker_is_ccw:
+      case cr_extend_inroutl:
+      case cr_extend_inloutr:
          /* **** FELL THROUGH!!!!!! */
          goto check_tt;
       case cr_ctr_pts_rh:

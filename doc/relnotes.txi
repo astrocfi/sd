@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 36.1
-@set title2 Database version = 36.1 format = 223
+@set title1 RELEASE NOTES FOR SD VERSION 36.4
+@set title2 Database version = 36.4 format = 226
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.4::
+* 36.3::
 * 36.1::
 * 36.0::
 * 35.1::
@@ -51,7 +53,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.1, Top, (dir)
+@node Intro, 36.4, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -62,11 +64,67 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 36.0::               Changes in the current version
+* 36.4::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.1, 36.0, Intro, Top
+@node 36.4, 36.3, Intro, Top
+@unnumberedsec Version 36.4 changes
+
+The program can do a better job of @strong{twisted <anyone> run}.
+
+It can handle @strong{finally twisted clover the horn}.
+
+The calls @strong{first couple go left, next go left} and
+@strong{first couple go right, next go right} have had @strong{keep walking}
+added to their names, and they go to a promenade position.  (They used to
+go to a 2-faced line.)  We believe that these calls are imprecise, and
+that they should be followed by something involving a promenade.
+
+An extremely peculiar bug involving @strong{anchor the <anyone>, 3x1
+triangle circulate} was fixed.
+
+The program is more careful about not allowing @strong{pass thru} unless
+people are actually facing or some phantom or matrix concept was used.
+
+In response to a recent discussion on the "challenge-sd" mailing list,
+the call @strong{grand extend} was improved to handle all cases of N/8
+tags.  Users are nevertheless warned that this is not really a call.
+It is simply something that was put into the database in response to
+the fact that callers occasionally use @strong{extend} in this way.
+
+@c ************
+@node 36.3, 36.1, 36.4, Top
+@unnumberedsec Version 36.3 changes
+
+Some call levels were changed in accordance with recent Callerlab decisions.
+Reverse Flip and Cut the Diamond are C2.  Cross Extend is C1.  Substitute is C1.
+
+The @strong{left orbitboard} concept was implemented.
+
+A new startup option was added:  tab_changes_focus.
+This applies to @code{Sd} only.  Windows programs normally use the tab key
+to move keyboard focus around among the active windows in some fixed order,
+and the shift-tab key to move in the opposite order.  This change of focus
+is nearly useless in @code{Sd}, because the keyboard focus is almost always
+on the text input region.  Therefore, the default behavior of @code{Sd} is to
+have the tab key instead perform the same completion function as the escape key,
+just as @code{Sdtty} does.  (The shift-tab key still moves focus in the backwards
+order.)  This option re-enables the conventional Windows
+meaning of the tab key.
+
+The ability to do "clover and <anything>" or "<anyone> cloverleaf" was improved.
+
+The ability to do @strong{exchange the diamonds} in the presence of phantoms
+was improved.
+
+The handling of the @strong{twin phantom 1/4 tags} and @strong{twin phantom diamonds}
+concepts was improved.
+
+Reconciles will now reject anything that has an extend or circulate.
+
+@c ************
+@node 36.1, 36.0, 36.3, Top
 @unnumberedsec Version 36.1 changes
 
 A new startup option was added:  print_length, followed by a number.
@@ -233,7 +291,7 @@ had caused that compiler to be disqualified for compiling Sd, and all Sd
 compilations to be performed on version 5 instead.  I have run out of
 Microsoft compilers.  Microsoft quality is simply unacceptable.  (Of course,
 anyone who has dealt with the dozens of recent viruses and worms, and the
-security patches for tham, already knows this.)  The
+security patches for them, already knows this.)  The
 current version of Sd is being compiled with version 5, with a software
 patch to prevent the bug from arising.  Non-Microsoft compilers are
 being investigated.  (By the way, very little Microsoft software, other

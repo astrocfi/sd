@@ -2923,6 +2923,24 @@ static int gcd(int a, int b)
 */
 
 
+// This computes "incoming_fracs of arg_fracs".  That is, it composes
+// two fraction specs.  For example, if incoming_fracs=1st half (0112)
+// and arg_fracs=last half (1211), this calculates the first half of the last
+// half, which is the part from 1/2 to 3/4 (1234).
+// If the user nests fraction concepts as in
+//          "1/2, do the last 1/2, split the difference",
+// we will process the first concept (1/2) and set the cmd_frac_flags to 0112.
+// We will then see the second concept (do the last 1/2) and call this
+// function with incoming_fracs = the cmd_frac_flags field we have so far,
+// and arg_fracs = this concept.
+//
+// If the incoming_fracs argument has the CMD_FRAC_REVERSE flag on, we
+// presumably saw something like "1/2, reverse order", and are trying to
+// do "1/2, reverse order, do the last 1/2, split the difference".
+// In that case, this function returns
+//      "incoming_fracs of reverse order of arg_fracs",
+// that is, the first 1/4 (0114).  If the client retains the
+// CMD_FRAC_REVERSE flag on that, it do the last 1/4 of the call.
 extern uint32 process_spectacularly_new_fractions(int cn, int cd, int dn, int dd,
                                                   uint32 incoming_fracs,
                                                   bool make_improper,

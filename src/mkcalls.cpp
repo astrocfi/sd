@@ -220,6 +220,8 @@ int begin_sizes[] = {
    12,         /* b_pbigdhrgl */
    12,         /* b_bigbone */
    12,         /* b_pbigbone */
+   12,         /* b_dblbone6 */
+   12,         /* b_pdblbone6 */
    12,         /* b_bigdmd */
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
@@ -606,6 +608,8 @@ char *sstab[] = {
    "pbigdhrgl",
    "bigbone",
    "pbigbone",
+   "dblbone6",
+   "pdblbone6",
    "bigdmd",
    "pbigdmd",
    "bigptpd",
@@ -741,6 +745,7 @@ char *estab[] = {
    "bighrgl",
    "bigdhrgl",
    "bigbone",
+   "dblbone6",
    "bigdmd",
    "bigptpd",
    "big3x1dmd",
@@ -934,6 +939,8 @@ char *qualtab[] = {
    "tall_6",
    "ctr_pts_rh",
    "ctr_pts_lh",
+   "extend_inroutl",
+   "extend_inloutr",
    "said_triangle",
    "didnt_say_triangle",
    "occupied_as_stars",

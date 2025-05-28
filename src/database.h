@@ -29,7 +29,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 224
+#define DATABASE_FORMAT_VERSION 226
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -388,6 +388,7 @@ enum setup_kind {
    sbighrgl,
    sbigdhrgl,
    sbigbone,
+   sdblbone6,
    sbigdmd,
    sbigptpd,
    sbig3x1dmd,
@@ -567,6 +568,8 @@ enum begin_kind {
    b_pbigdhrgl,
    b_bigbone,
    b_pbigbone,
+   b_dblbone6,
+   b_pdblbone6,
    b_bigdmd,
    b_pbigdmd,
    b_bigptpd,
@@ -682,6 +685,8 @@ enum call_restriction {
    cr_tall6,               // Actually not checked as qualifier or restriction.
    cr_ctr_pts_rh,          // Qualifier only.
    cr_ctr_pts_lh,          // Qualifier only.
+   cr_extend_inroutl,      // Qualifier only.
+   cr_extend_inloutr,      // Qualifier only.
    cr_said_tgl,            // Qualifier only.
    cr_didnt_say_tgl,       // Qualifier only.
    cr_occupied_as_stars,   // Qualifier only.

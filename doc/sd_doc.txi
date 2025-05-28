@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.1
-@set Time-stamp: August 28, 2004
+@set sd-version 36.4
+@set Time-stamp: November 6, 2004
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -2763,7 +2763,7 @@ is nearly useless in @code{Sd}, because the keyboard focus is almost always
 on the text input region.  Therefore, the default behavior of @code{Sd} is to
 have the tab key instead perform the same completion function as the escape key,
 just as @code{Sdtty} does.  (The shift-tab key still moves focus in the backwards
-order.)  This option, which is nearly useless, re-enables the conventional Windows
+order.)  This option re-enables the conventional Windows
 meaning of the tab key.
 @item keep_all_pictures
 This keeps a picture after every call, as if the ``keep picture''
@@ -4491,6 +4491,7 @@ These are straightforward.
 @item <ANYONE> (while the others)@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item <ANYONE> disconnected
 @item <ANYONE> disconnected (while the others)@ @ @ [must be entered by itself]
+@item same sex disconnected
 @item <ANYONE> do your part
 @item <ANYONE> do your part (while the others)@ @ @ [must be entered by itself]
 @item on your own@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -4814,10 +4815,7 @@ See @ref{Concentric}.
 @item grand working as centers
 @item grand working as ends
 @item grand working clockwise/counterclockwise
-@item <ANYONE> are centers of a double-offset 1/4 tag
-@item <ANYONE> are centers of a double-offset 3/4 tag
-@item <ANYONE> are centers of double-offset diamonds
-@item <ANYONE> are centers of double-offset diamond spots
+@item <ANYONE> are centers of a double-offset 1T/3T/GT/D/DS
 @item inrigger
 @item outrigger
 @item leftrigger

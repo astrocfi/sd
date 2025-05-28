@@ -326,6 +326,7 @@ static void innards(
    bool nonisotropic_1x2 = false;
    bool direct_putback = false;
    bool no_reuse_map = false;
+   bool fix_pgram = false;
    uint32 mysticflag = sscmd->cmd_misc2_flags;
    mpkind map_kind = maps->map_kind;
    if (map_kind == MPKIND__NONISOTROP1) map_kind = MPKIND__SPLIT;
@@ -1006,7 +1007,8 @@ static void innards(
 
    if ((sscmd->cmd_misc_flags & CMD_MISC__OFFSET_Z) && final_map) {
       if (map_kind == MPKIND__OFFS_L_HALF || map_kind == MPKIND__OFFS_R_HALF) {
-         if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
+         // This is "Z axle" from ends-pressed-ahead waves.
+         if (final_map->outer_kind == s1p5x8) fix_pgram = true;
          else final_map = 0;        // Raise an error.
       }
       else if (map_kind == MPKIND__OFFS_L_FULL || map_kind == MPKIND__OFFS_R_FULL) {
@@ -1020,12 +1022,12 @@ static void innards(
 
       if (arity == 1) {
          switch (map_kind) {
-            case MPKIND__OFFS_L_HALF:
-            case MPKIND__OFFS_R_HALF:
-            case MPKIND__OFFS_L_FULL:
-            case MPKIND__OFFS_R_FULL:
-               fail("Don't know how far to re-offset this.");
-               break;
+         case MPKIND__OFFS_L_HALF:
+         case MPKIND__OFFS_R_HALF:
+         case MPKIND__OFFS_L_FULL:
+         case MPKIND__OFFS_R_FULL:
+            fail("Don't know how far to re-offset this.");
+            break;
          }
       }
 
@@ -1095,7 +1097,8 @@ static void innards(
 
    finish:
 
-   // If this is a special map that expects some setup to have been flipped upside-down, do so.
+   // If this is a special map that expects some setup
+   // to have been flipped upside-down, do so.
 
    if (arity == 2) {
       if (final_map->rot & 0x200) {
@@ -1171,6 +1174,24 @@ static void innards(
    }
 
    result->kind = final_map->outer_kind;
+
+   if (fix_pgram && result->kind == s1p5x8) {
+      static const expand::thing thingyF0F0 = {
+         {-1, -1, 4, 5, 6, 7, -1, -1, 12, 13, 14, 15}, 12, s2x6, s1p5x8, 0};
+      static const expand::thing thingy0F0F = {
+         {0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, 12, s2x6, s1p5x8, 0};
+
+      switch (little_endian_live_mask(result)) {
+      case 0xF0F0:
+         expand::compress_setup(&thingyF0F0, result);
+         warn(warn__check_pgram);
+         break;
+      case 0x0F0F:
+         expand::compress_setup(&thingy0F0F, result);
+         warn(warn__check_pgram);
+         break;
+      }
+   }
 
    getout:
 
@@ -2479,7 +2500,7 @@ extern void distorted_move(
    setup a1;
    setup res1;
    mpkind mk, mkbox;
-   uint32 map_code;
+   uint32 map_code = ~0UL;
    int rotate_back = 0;
    uint32 livemask = global_livemask;
    uint32 linesp = parseptr->concept->arg2;
@@ -2531,15 +2552,15 @@ extern void distorted_move(
       }
    }
    else if (linesp & 16) {
-      /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+      // The thing to verify, like CMD_MISC__VERIFY_1_4_TAG.
       ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
 
-      if (ss->kind == s3dmd) {
+      switch (ss->kind) {
+      case s3dmd:
          if (global_livemask == 06363) { map_code = spcmap_dqtag1; }
          else if (global_livemask == 06666) { map_code = spcmap_dqtag2; }
-         else fail("Can't find offset diamonds.");
-      }
-      else if (ss->kind == s4x4) {
+         break;
+      case s4x4:
          if (global_livemask == 0x6C6C) { map_code = spcmap_dqtag3; }
          else if (global_livemask == 0xE2E2) { map_code = spcmap_dqtag4; }
          else {
@@ -2549,12 +2570,16 @@ extern void distorted_move(
 
             if (global_livemask == 0xC6C6) { map_code = spcmap_dqtag3; }
             else if (global_livemask == 0x2E2E) { map_code = spcmap_dqtag4; }
-            else
-               fail("Can't find offset diamonds.");
          }
+         break;
+      case s4x6:
+         if (global_livemask == 0xA88A88) { map_code = spcmap_dqtag5; }
+         else if (global_livemask == 0x544544) { map_code = spcmap_dqtag6; }
+         break;
       }
-      else
-         fail("Must have triple diamond setup for this concept.");
+
+      if (map_code == ~0UL)
+         fail("Must have 4x4 or triple diamond setup for this concept.");
 
       goto do_divided_nocheck;
    }

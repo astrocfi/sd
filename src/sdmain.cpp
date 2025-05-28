@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.3"
-#define TIME_STAMP "wba@alum.mit.edu  28 Aug 2004 $"
+#define VERSION_STRING "36.4"
+#define TIME_STAMP "wba@alum.mit.edu  6 Nov 2004 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -84,6 +84,10 @@ and the following external variables:
 // Sorry.  The above paragraph was written in a fit of rage.  We recognize that
 // Unix is not entirely evil.  The development of GNU and Linux, in particular,
 // have done much to compensate for some of the earlier problems.
+
+// Nevertheless, we think this "@(#)$Header:" garbage, and all those other
+// weird things with dollar signs in them that one still occasionally sees
+// in software, are totally stupid.  But we leave it in for cultural enlightenment.
 
 static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
 

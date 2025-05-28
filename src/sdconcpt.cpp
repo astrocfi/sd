@@ -7440,6 +7440,8 @@ concept_table_item concept_table[] = {
     so_and_so_only_move},                                   // concept_so_and_so_only
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_SELECTOR | CONCPROP__SECOND_CALL,
     so_and_so_only_move},                                   // concept_some_vs_others
+   {CONCPROP__MATRIX_OBLIVIOUS,
+    so_and_so_only_move},                                   // concept_same_sex_disconnected
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_stable},                                     // concept_stable
    {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,

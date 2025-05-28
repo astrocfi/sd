@@ -720,6 +720,7 @@ static const veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 static const veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
 static const veryshort qtl1x8[12] = {-1, -1, 5, 7, -1, -1, 1, 3, -1, -1, 5, 7};
 static const veryshort qtlrig[12] = {6, 7, -1, -1, 2, 3, -1, -1, 6, 7, -1, -1};
+static const veryshort qtlgls[12] = {2, 5, 6, 7, 8, 11, 0, 1, 2, 5, 6, 7};
 static const veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
 static const veryshort ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
 static const veryshort ft4x446[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
@@ -1083,7 +1084,6 @@ static void special_4_way_symm(
    int newplacelist[],
    uint32 lilresult_mask[],
    setup *result) THROW_DECL
-
 {
    static const veryshort table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 
@@ -1559,49 +1559,49 @@ static bool handle_4x4_division(
       if (livemask == 0x6969 &&
           (!(newtb & 001) || (assocstuff&001)) &&
           (!(newtb & 010) || (assocstuff&010))) {
-         division_code = spcmap_lh_s2x3_2;
+         division_code = spcmap_rh_s2x3_2;
          return true;
       }
       else if (livemask == 0x9696 &&
           (!(newtb & 010) || (assocstuff&001)) &&
           (!(newtb & 001) || (assocstuff&010))) {
-         division_code = spcmap_lh_s2x3_3;
+         division_code = spcmap_rh_s2x3_3;
          return true;
       }
       else if (livemask == 0xF0F0 &&
           (!(newtb & 001) || (assocstuff&001)) &&
           (!(newtb & 010) || (assocstuff&010))) {
-         division_code = spcmap_rh_s2x3_2;
+         division_code = spcmap_lh_s2x3_2;
          return true;
       }
       else if (livemask == 0x0F0F &&
           (!(newtb & 010) || (assocstuff&001)) &&
           (!(newtb & 001) || (assocstuff&010))) {
-         division_code = spcmap_rh_s2x3_3;
+         division_code = spcmap_lh_s2x3_3;
          return true;
       }
       else if (livemask == 0xACAC &&
-               (((newtb & 011) == 001 && (assocstuff==001)) ||
-                ((newtb & 011) == 010 && (assocstuff==010)))) {
-         division_code = spcmap_rh_s2x3_2;
-         return true;
-      }
-      else if (livemask == 0xCACA &&
                (((newtb & 011) == 001 && (assocstuff==001)) ||
                 ((newtb & 011) == 010 && (assocstuff==010)))) {
          division_code = spcmap_lh_s2x3_2;
          return true;
       }
+      else if (livemask == 0xCACA &&
+               (((newtb & 011) == 001 && (assocstuff==001)) ||
+                ((newtb & 011) == 010 && (assocstuff==010)))) {
+         division_code = spcmap_rh_s2x3_2;
+         return true;
+      }
       else if (livemask == 0xACAC &&
                (((newtb & 011) == 010 && (assocstuff==001)) ||
                 ((newtb & 011) == 001 && (assocstuff==010)))) {
-         division_code = spcmap_lh_s2x3_3;
+         division_code = spcmap_rh_s2x3_3;
          return true;
       }
       else if (livemask == 0xCACA &&
                (((newtb & 011) == 010 && (assocstuff==001)) ||
                 ((newtb & 011) == 001 && (assocstuff==010)))) {
-         division_code = spcmap_rh_s2x3_3;
+         division_code = spcmap_lh_s2x3_3;
          return true;
       }
    }
@@ -1652,16 +1652,16 @@ static bool handle_4x4_division(
          warn(warn__each1x4);
          return true;
       case 0x4E4E: case 0x8B8B:
-         division_code = spcmap_rh_s2x3_3;
-         goto handle_z;
-      case 0xA6A6: case 0x9C9C:
          division_code = spcmap_lh_s2x3_3;
          goto handle_z;
+      case 0xA6A6: case 0x9C9C:
+         division_code = spcmap_rh_s2x3_3;
+         goto handle_z;
       case 0xE4E4: case 0xB8B8:
-         division_code = spcmap_rh_s2x3_2;
+         division_code = spcmap_lh_s2x3_2;
          goto handle_other_z;
       case 0x6A6A: case 0xC9C9:
-         division_code = spcmap_lh_s2x3_2;
+         division_code = spcmap_rh_s2x3_2;
          goto handle_other_z;
       case 0x4B4B: case 0xB4B4:
          // See comment above, for 3x4.
@@ -1800,7 +1800,7 @@ static bool handle_4x6_division(
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
          switch (livemask) {
          case 043204320: case 023402340:
-            division_code = spcmap_rh_s2x3_7;
+            division_code = spcmap_lh_s2x3_7;
             if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
@@ -1808,7 +1808,7 @@ static bool handle_4x6_division(
             }
             break;
          case 061026102: case 062016201:
-            division_code = spcmap_lh_s2x3_7;
+            division_code = spcmap_rh_s2x3_7;
             if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
@@ -2087,15 +2087,17 @@ static int divide_the_setup(
          if ((!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
             division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
-            /* I consider it an abomination to call such a thing as "2x8 matrix
-               swing-o-late" from 2x8 lines, expecting people to do the call
-               in split phantom boxes, or "2x8 matrix grand mix", expecting
-               twin tidal lines.  However, we allow it for consistency with such
-               things as "2x6 matrix double play" from 2x6 columns, expecting
-               12 matrix divided columns.  The correct usage should involve the
-               explicit concepts "split phantom boxes", "phantom tidal lines",
-               or "12 matrix divided columns", as appropriate. */
-            /* If database said to split, don't give warning, unless said "4x4". */
+
+            // I consider it an abomination to call such a thing as "2x8 matrix
+            // swing-o-late" from 2x8 lines, expecting people to do the call
+            // in split phantom boxes, or "2x8 matrix grand mix", expecting
+            // twin tidal lines.  However, we allow it for consistency with such
+            // things as "2x6 matrix double play" from 2x6 columns, expecting
+            // 12 matrix divided columns.  The correct usage should involve the
+            // explicit concepts "split phantom boxes", "phantom tidal lines",
+            // or "12 matrix divided columns", as appropriate.
+
+            // If database said to split, don't give warning, unless said "4x4".
             if (!temp) warn(warn__split_to_2x4s);
             goto divide_us_no_recompute;
          }
@@ -2106,62 +2108,61 @@ static int divide_the_setup(
                    assoc(b_4x1, ss, calldeflist) ||
                    assoc(b_8x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
-            /* See comment above about abomination. */
-            /* If database said to split, don't give warning, unless said "4x4". */
+            // See comment above about abomination.
+
+            // If database said to split, don't give warning, unless said "4x4".
             if (!temp) warn(warn__split_to_1x8s);
             goto divide_us_no_recompute;
          }
       }
 
-      /* Otherwise, the only way this can be legal is if we can identify
-         smaller setups of all real people and can do the call on them.  For
-         example, we will look for 1x4 setups, so we could do things like
-         swing thru from a totally offset parallelogram. */
+      // Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2,
+      // 2x3, or other unseemly things.
+      // If so, divide the 2x8 into 2 2x4's and proceed from there.
+      // But only if user specified phantoms or matrix.
+
+      if ((ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS)) &&
+          !assoc(b_2x4, ss, calldeflist) &&
+          !assoc(b_4x2, ss, calldeflist) &&
+          !assoc(b_2x3, ss, calldeflist) &&
+          !assoc(b_3x2, ss, calldeflist) &&
+          !assoc(b_dmd, ss, calldeflist) &&
+          !assoc(b_pmd, ss, calldeflist) &&
+          !assoc(b_qtag, ss, calldeflist) &&
+          !assoc(b_pqtag, ss, calldeflist) &&
+          !assoc(b_2x2, ss, calldeflist) &&
+          (assoc(b_1x2, ss, calldeflist) ||
+           assoc(b_2x1, ss, calldeflist) ||
+           assoc(b_1x1, ss, calldeflist))) {
+         // Without a lot of examination of facing directions, and whether the call
+         // has 1x2 vs. 2x1 definitions, and all that, we don't know which axis
+         // to use when dividing it.  But any division into 2 2x4's is safe,
+         // and code elsewhere will make the tricky decisions later.
+         division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+         goto divide_us_no_recompute;
+      }
+
+      // Otherwise, the only way this can be legal is if we can identify
+      // smaller setups of all real people and can do the call on them.  For
+      // example, we will look for 1x4 setups, so we could do things like
+      // swing thru from a totally offset parallelogram.
 
       switch (livemask) {
-      case 0xF0F0:    /* a parallelogram */
+      case 0xF0F0:    // A parallelogram.
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_FULL,1);
          warn(warn__each1x4);
-         goto divide_us_no_recompute;
-      case 0x0F0F:    /* a parallelogram */
+         break;
+      case 0x0F0F:    // A parallelogram.
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_FULL,1);
          warn(warn__each1x4);
-         goto divide_us_no_recompute;
-      case 0xC3C3:    /* the outer quadruple boxes */
+         break;
+      case 0xC3C3:    // The outer quadruple boxes.
          division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
          warn(warn__each2x2);
-         goto divide_us_no_recompute;
+         break;
       }
 
-      {
-         // Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
-         // If so, divide the 2x8 into 2 2x4's.
-
-         bool forbid_little_stuff =
-            assoc(b_2x4, ss, calldeflist) ||
-            assoc(b_4x2, ss, calldeflist) ||
-            assoc(b_2x3, ss, calldeflist) ||
-            assoc(b_3x2, ss, calldeflist) ||
-            assoc(b_dmd, ss, calldeflist) ||
-            assoc(b_pmd, ss, calldeflist) ||
-            assoc(b_qtag, ss, calldeflist) ||
-            assoc(b_pqtag, ss, calldeflist);
-
-         if (!forbid_little_stuff &&
-             !assoc(b_2x2, ss, calldeflist) &&
-             (assoc(b_1x2, ss, calldeflist) ||
-              assoc(b_2x1, ss, calldeflist) ||
-              assoc(b_1x1, ss, calldeflist))) {
-            // Without a lot of examination of facing directions, and whether the call
-            // has 1x2 vs. 2x1 definitions, and all that, we don't know which axis
-            // to use when dividing it.  But any division into 2 2x4's is safe,
-            // and code elsewhere will make the tricky decisions later.
-            division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
-            goto divide_us_no_recompute;
-         }
-      }
-
-      fail("You must specify a concept.");
+      goto divide_us_no_recompute;
    case s2x6:
       // The call has no applicable 2x6 or 6x2 definition.
 
@@ -2252,8 +2253,6 @@ static int divide_the_setup(
          division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,1);
          warn(warn__each1x2);
          break;
-      default:
-         fail("You must specify a concept.");
       }
 
       goto divide_us_no_recompute;
@@ -2314,8 +2313,8 @@ static int divide_the_setup(
 
       break;
    case s1p5x8:
-      /* This is a phony setup, allowed only so that we can have people temporarily
-         in 50% offset 1x4's that are offset the impossible way. */
+      // This is a phony setup, allowed only so that we can have people temporarily
+      // in 50% offset 1x4's that are offset the impossible way.
 
       switch (livemask) {
       case 0xF0F0:
@@ -2324,8 +2323,6 @@ static int divide_the_setup(
       case 0x0F0F:
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,0);
          break;
-      default:
-         fail("You must specify a concept.");
       }
 
       goto divide_us_no_recompute;
@@ -2362,14 +2359,14 @@ static int divide_the_setup(
          else if ((!(newtb & 010) || assoc(b_1x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x3,4,MPKIND__SPLIT,0);
-            /* See comment above about abomination. */
+            // See comment above about abomination.
             warn(warn__split_1x6);
             goto divide_us_no_recompute;
          }
       }
 
-      /* Otherwise, the only way this can be legal is if we can identify
-         smaller setups of all real people and can do the call on them. */
+      // Otherwise, the only way this can be legal is if we can identify
+      // smaller setups of all real people and can do the call on them.
 
       switch (livemask) {
       case 01717:    /* outer 1x4's */
@@ -2380,8 +2377,6 @@ static int divide_the_setup(
          division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,0);
          warn(warn__each1x2);
          break;
-      default:
-         fail("You must specify a concept.");
       }
 
       goto divide_us_no_recompute;
@@ -2479,7 +2474,8 @@ static int divide_the_setup(
       case 0702702:
       case 0207207:
          warn(warn__each1x2);
-      case 0603603:
+         // FALL THROUGH!!!!!
+      case 0603603:      // WARNING!!  WE FELL THROUGH!!
       case 0306306:
          division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_HALF,0);
          break;
@@ -2487,12 +2483,11 @@ static int divide_the_setup(
       case 0720720:
       case 0270270:
          warn(warn__each1x2);
-      case 0660660:
+         // FALL THROUGH!!!!!
+      case 0660660:      // WARNING!!  WE FELL THROUGH!!
       case 0330330:
          division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_HALF,0);
          break;
-      default:
-         fail("You must specify a concept.");
       }
 
       goto divide_us_no_recompute;
@@ -2556,8 +2551,6 @@ static int divide_the_setup(
       case 07474:
          division_code = spcmap_bigbone_ccw;
          break;
-      default:
-         fail("You must specify a concept.");
       }
 
       goto divide_us_no_recompute;
@@ -2572,8 +2565,6 @@ static int divide_the_setup(
       case 07474:
          division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,0);
          break;
-      default:
-         fail("You must specify a concept.");
       }
 
       goto divide_us_no_recompute;
@@ -2954,7 +2945,6 @@ static int divide_the_setup(
          division_code = (ss->kind == s_ntrgl6cw) ?
             MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,0):
             MAPCODE(s_trngl,2,MPKIND__SPLIT,0);
-         //         ss->cmd.cmd_final_flags.final |= FINAL__TRIANGLE;
          goto divide_us_no_recompute;
       }
       break;
@@ -3446,6 +3436,9 @@ static int divide_the_setup(
 
    divide_us_no_recompute:
 
+   if (division_code == ~0UL)
+      fail("You must specify a concept.");
+
    if (must_do_mystic)
       fail("Can't do \"snag/mystic\" with this call.");
 
@@ -3476,7 +3469,7 @@ static int divide_the_setup(
                result->people[8].id1 | result->people[9].id1)) {
             // Inner spots are empty.
 
-            // If the outer ones are empty also, we don't know what to do. 
+            // If the outer ones are empty also, we don't know what to do.
             // This is presumably a "snag pair the line", or something like that.
             // Clear the inner spots away, and turn off the flag, so that
             // "punt_centers_use_concept" will know what to do.
@@ -3487,6 +3480,27 @@ static int divide_the_setup(
             static const expand::thing inner_2x6 = {
                {0, 1, 4, 5, 6, 7, 10, 11}, 8, s2x4, s2x6, 0};
             expand::compress_setup(&inner_2x6, result);
+         }
+      }
+      if (result->kind == sdblbone6) {
+         if (!(result->people[1].id1 | result->people[3].id1 |
+               result->people[7].id1 | result->people[9].id1)) {
+            // Inner spots are empty.
+
+            // If the outer ones are empty also, trim the outer ones,
+            // resulting in a rigger, and leave the flag on.
+            if (!(result->people[0].id1 | result->people[4].id1 |
+                  result->people[6].id1 | result->people[10].id1)) {
+               static const expand::thing inner_dblbone6 = {
+                  {1, 9, 11, 8, 7, 3, 5, 2}, 8, s_rigger, sdblbone6, 0};
+               expand::compress_setup(&inner_dblbone6, result);
+            }
+            else {
+               // Remove the inner ones, and leave the flag on.
+               static const expand::thing outer_dblbone6 = {
+                  {0, 10, 11, 8, 6, 4, 5, 2}, 8, s_bone, sdblbone6, 0};
+               expand::compress_setup(&outer_dblbone6, result);
+            }
          }
       }
       else if (result->kind == s2x10) {
@@ -4813,6 +4827,10 @@ foobar:
                }
                else if (result->kind == s_rigger && other_kind == s1x8) {
                   final_translatel = qtlrig;
+               }
+               else if (result->kind == s_hyperglass && other_kind == s_qtag) {
+                  numoutl = attr::klimit(other_kind)+1;
+                  final_translatel = qtlgls;
                }
                else
                   fail("T-bone call went to a weird setup.");

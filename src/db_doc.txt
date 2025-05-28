@@ -44,7 +44,7 @@ of Sd/Sdtty has database version numbers that match in the compiler,
 the main programs, and the compiled database.
 
 The version number is in the file "database.h", which describes the
-data types appearing in the ctual binary database file.
+data types appearing in the actual binary database file.
 
                          SETUP TYPES
 
@@ -74,7 +74,7 @@ shown with a map giving the person numbering:
             |     |     |     |     |
 1x4         |  0  |  1  |  3  |  2  |
             |_____|_____|_____|_____|
-
+           Yes, this numbering is stupid by today's standards.
 
              _____ _____ _____ _____ _____ _____
             |     |     |     |     |     |     |
@@ -86,7 +86,7 @@ shown with a map giving the person numbering:
             |     |     |     |     |     |     |     |     |
 1x8         |  0  |  1  |  3  |  2  |  6  |  7  |  5  |  4  |
             |_____|_____|_____|_____|_____|_____|_____|_____|
-
+           Yes, this numbering is stupid by today's standards.
 
              _____ _____ _____ _____ _____ _____ _____ ___________ _____
             |     |     |     |     |     |     |     |     |     |     |
@@ -106,10 +106,10 @@ shown with a map giving the person numbering:
        |_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|
 
 
-             _____ _____ _____ _____ _____ _____ _____ ___________ _____ _____ _____ _____ _____ _____ _____
-            |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
-1x16        |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  | 15  | 14  | 13  | 12  | 11  | 10  |  9  |  8  |
-            |_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|
+        _____ _____ _____ _____ _____ _____ _____ ___________ _____ _____ _____ _____ _____ _____ _____
+       |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
+1x16   |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  | 15  | 14  | 13  | 12  | 11  | 10  |  9  |  8  |
+       |_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|
 
 
              _____ _____
@@ -1168,6 +1168,17 @@ dblspindle  |  7  |_____|_____|_____|  3  | 11  |_____|_____|_____| 15  |
 
 
 
+             _____             _____ _____             _____
+            |     |_____ _____|     |     |_____ _____|     |
+            |  0  |     |     |  1  |  9  |     |     | 10  |
+dblbone6    |_____|  5  |  2  |_____|_____|  8  | 11  |_____|
+            |     |_____|_____|     |     |_____|_____|     |
+            |  4  |           |  3  |  7  |           |  6  |
+            |_____|           |_____|_____|           |_____|
+
+
+
+
              _____                         _____ _____                         _____
             |     |_____ _____ _____ _____|     |     |_____ _____ _____ _____|     |
             |  0  |     |     |     |     |  1  | 12  |     |     |     |     | 13  |
@@ -1465,17 +1476,17 @@ A call definition by array consists of one or more descriptors that look like:
 So, for example, the description of the call "drift apart" looks as follows:
 
    setup 2x4 2x4
-      array [M6S M4S M7S M5S L2S L0S R3S R1S]
+      array [CM6S CM4S AM7S AM5S AL2S AL0S CR3S CR1S]
    setup 4x2 2x4
-      array [R6S M4N 3LS M5S M2S R4S M3N L1S]
+      array [CR6S ZM4N AL3S CM5S AM2S CR4S ZM3N AL1S]
 
 The first descriptor tells people who think they are in lines what to do,
 and the second descriptor addresses people in columns.  For calls that start
 in a setup with 4 way symmetry, there is only one descriptor as in the
-following definition of "reach out":
+following (approximate) definition of "reach out":
 
    setup 2x2 1x4
-      array [M3S M1S R2S L0S]
+      array [CM3S AM1S CR2S AL0S]
 
 It is never appropriate for a PU setup, such as "4x2", to
 appear as the SECOND token after the word "setup".  Only the FIRST token
@@ -1503,21 +1514,40 @@ clockwise from his starting orientation, and so on.  Note that all directions
 are north for the call "walk and dodge", and are south for the call "reach
 out".  This is so even if the calls are done from T-boned formations.
 
-Finally, the optional letter before the number tells that person's roll
-direction.  "L" and "R" indicate that the person will quarter left or
-right if told to roll after the call.  "M" ("middle") says that the
-person knows that he can't roll, and will stay facing the same direction.
-No letter means that the person's roll direction is undefined
-(or controversial, or not implemented yet) and an error will be given if
-that person is told to roll.  For example, roll is considered illegal
-after "wheel fan and cross thru".
+Also, there are optional letters before the number that tell that person's
+roll direction and/or turning direction:
+
+"L" and "R" indicate that the person will quarter left or right if told to
+roll after the call.  "M" ("middle") says that the person knows that he can't
+roll, and will stay facing the same direction.  No letter means that the
+person's roll direction is undefined (or controversial, or not implemented
+yet) and an error will be given if that person is told to roll.  For example,
+roll is considered illegal after "wheel fan and cross thru".
+
+Various combinations of "C" ("clockwise") and "A" ("anticlockwise") tell how
+that person turned, for figuring out things like fractional stable and
+fractional twosome.  All letters except the last say that the person turned
+that many quadrants clockwise or anticlockwise.  The last letter says the same
+thing, but doesn't say exactly how far.  This is because the program can
+figure out the last turning amount from its knowledge of which direction the
+person faces at the end.  So, for example "AAC" says that the person turned
+anticlockwise two quadrants (each letter indicates one quadrant) and then
+turned between 1 and 4 quadrants clockwise.  Extremely complicated calls might
+require complex strings of A's and C'.  Not all possible combinations are
+supported, because they have to be coded compactly.  See database.h, and
+search for "stb_aac", to find out what is available.
+
+
 
 Example:
-     In "reach out", the first array item, which is "M3S", says that any
-person in the starting 2x2 box who is a lead beau (position 0 in the
-diagram) should think of a 1x4 line elongated laterally relative to himself,
-and should go to the second spot from the right end (position 3), turn 180
-degrees, and refuse to roll.
+     In "reach out", the first array item, which is "CM3S", says that any
+     person in the starting 2x2 box who is a lead beau (position 0 in the
+     diagram) should think of a 1x4 line elongated laterally relative to
+     himself, and should go to the second spot from the right end (position
+     3), turn 180 degrees clockwise, and refuse to roll.  (How do we know
+     it's 180 degrees clockwise?  Since he faces south at the end of the
+     call, he turned 180 degrees.  The "C" says that he ended with 1 to 4
+     quadrants of clockwise turning.)
 
       This person ---+
                      |
@@ -1540,8 +1570,8 @@ degrees, and refuse to roll.
 
 If people are T-boned, the application of these rules could result in
 people fighting over which way the resulting 1x4 should be oriented.
-The program will resolve this by turning the result into a diamond if
-it can, or giving an error otherwise.
+The program will resolve this by turning the result into a diamond,
+hourglass, or whatever, if it can, or giving an error otherwise.
 
 We will now go through all the cases in a somewhat methodical way.
 
@@ -1577,10 +1607,10 @@ out, will do this:
 
       looks at item number 1 in the call definition array, which is
             setup 2x4 2x4
-               array [R3S R2S L1S L0S M3N M2N M1N M0N]
-                           ^
-                           |
-                        item 1
+               array [CR3S CR2S AL1S AL0S ZM3N ZM2N ZM1N ZM0N]
+                             ^
+                             |
+                          item 1
 
       and so goes here ----+
                            |
@@ -1593,7 +1623,7 @@ out, will do this:
             |     |     |     |     |
             |_____|_____|_____|_____|
 
-      and faces south, ready to roll right.
+      and faces south, having turned clockwise, ready to roll right.
 
 The procedure just described only works for people who are facing north
 or south in the diagram of the beginning setup.  People facing east
@@ -1634,7 +1664,8 @@ If someone is last in a right-hand column, he will do the following:
 
       looks at item number 0 in the call definition array, which is
             setup 4x2 2x4
-               array [M1N M2N M3N R4S L3S M4N M5N M6N]
+            setup 4x2 2x4
+               array [ZM1N ZM2N ZM3N CR4S AL3S ZM4N ZM5N ZM6N]
       (Note that the beginning setup is now 4x2, but the ending setup
          is still 2x4.  PU names are never used in ending setup names.)
 
@@ -1653,7 +1684,7 @@ If someone is last in a right-hand column, he will do the following:
                            |_____|_____|
 
 
-      and faces north, ready to refuse to roll.
+      and faces north, not having turned, ready to refuse to roll.
 
 
 
@@ -1664,9 +1695,9 @@ and a "PU" one for people who are facing east or west.  The full
 definition for circulate from arbitrary 2x4's is
 
    setup 2x4 2x4
-      array [R3S R2S L1S L0S M3N M2N M1N M0N]
+      array [CR3S CR2S AL1S AL0S ZM3N ZM2N ZM1N ZM0N]
    setup 4x2 2x4
-      array [M1N M2N M3N R4S L3S M4N M5N M6N]
+      array [ZM1N ZM2N ZM3N CR4S AL3S ZM4N ZM5N ZM6N]
 
 When using the PU definition, both the beginning and ending diagrams
 are rotated 90 degrees counterclockwise relative to the above diagrams,
@@ -1679,18 +1710,20 @@ definitions and the centers use the PU definitions.  The call
 "diamond circulate" is defined as
 
    setup dmd dmd
-      array [R1E 0 L1W 0]
+      array [CR1E 0 AL1W 0]
    setup pmd dmd
-      array [0 R2E 0 L2W]
+      array [0 CR2E 0 AL2W]
 
 The zero entries mean that the call is illegal for people who
 are facing directly into or out of the diamond.  The legal starting
 positions for the call "diamond single rotate" are the other way around:
 
    setup dmd dmd
-      array [0 L0S 0 L2N]
+      array [0 AL0S 0 CAL2N]
    setup pmd dmd
-      array [L3N 0 L1S 0]
+      array [CAL3N 0 AL1S 0]
+
+(Note that some of these people turn clockwise and then anticlockwise.)
 
 The diagram that people use for the PU definition is:
                 _____
@@ -1709,9 +1742,9 @@ Another example:
 The call "flip the diamond" is defined as
 
    setup dmd 1x4
-      array [R1S 0 L3S 0]
+      array [CR1S 0 AL3S 0]
    setup pmd 1x4
-      array [0 R2E 0 L2W]
+      array [0 CR2E 0 AL2W]
 
 The centers of the diamond use the PU definition.  They
 rotate the ending diagram 90 degrees counterclockwise also,
@@ -1749,19 +1782,19 @@ use of that specification clockwise after completion of the call.  The call
 "counter rotate" is an example:
 
    setup 2x4 2x4 rotate
-      array [R0N R1N L6S L7S L0S L1S R6N R7N]
+      array [CR0N CR1N AL6S AL7S AL0S AL1S CR6N CR7N]
    setup 4x2 2x4 rotate
-      array [R0N R1N R2N R3N L0S L1S L2S L3S]
+      array [CR0N CR1N CR2N CR3N AL0S AL1S AL2S AL3S]
 
 "Lockit" is another:
 
-   setup 1x4 1x4 rotate
-      array [R0N R1N L0S L1S]
+   setup 1x4 1x4 rotate no_cutting_through
+      array [CR0N CR1N AL0S AL1S]
 
 "Single strut right" is another:
 
    setup 4x1 1x4 rotate
-      array [3W 2E 0 0]
+      array [ZM3W CR2E 0 0]
 
 Rotating call definitions are confusing to write!  The facing direction
 given in the call specification does NOT include the final clockwise
@@ -1777,7 +1810,7 @@ other does not?  If people are not T-boned, there is no problem.  Only
 one of the specifications is used.  In this case, whether the call is a
 shape-changer would depend on people's facing direction.  (The call "change
 your image" comes to mind.)  If people are T-boned, the call will be illegal
-with this definition.  "Change your image" used to be definied this way,
+with this definition.  "Change your image" used to be defined this way,
 and was illegal from T-boned setups.  It now uses a different trick, to
 be described much later.
 
@@ -1789,8 +1822,7 @@ the call is executed, the program does what it can.  Here is the definition
 of "ripoff":
 
    setup 2x2 2x2
-      array [R1S R2N M3N M0N]
-
+      array [CR1S CR2N ZM3N ZM0N]
 
             BEGINNING SETUP HAS 4 WAY SYMMETRY, ENDING SETUP DOES NOT
 
@@ -1799,15 +1831,16 @@ begins, is oriented as in one of the diagrams above, the situation is
 straightforward, as in "reach out":
 
    setup 2x2 1x4
-      array [M3S M1S R2S L0S]
+      array [CM3S AM1S CR2S AL0S]
 
 Otherwise, we must use a rotating definition.  As above, we define
 a new call that has the effect of the desired call followed by a 90
 degree counterclockwise rotation, encode that into the database, and put
-in the word "rotate".  Here is "pass the ocean":
+in the word "rotate".  Here is "pass the ocean" (well, this is what it
+used to be a long time ago):
 
    setup 2x2 1x4 rotate
-      array [0 0 L1S R0N]
+      array [0 0 AL1S CR0N]
 
                    _____ _____
                   |     |     |
@@ -1855,7 +1888,7 @@ is oriented as in one of the diagrams above, the situation is
 straightforward, as in "ah so":
 
    setup 1x4 2x2
-      array [R1S L3S L0S R2S]
+      array [CR1S AL3S AL0S CR2S]
 
 If the PU beginning setup is required, so that we turn all the
 diagrams counterclockwise, we turn the ending setup's diagram
@@ -1863,7 +1896,7 @@ counterclockwise also.  This is perhaps not intuitive.
 Here is the call "single polly wally":
 
    setup 4x1 2x2
-      array [R3S 2N L1S 0S]
+      array [CR3S CAM2N AL1S AM0S]
 
 beginning PU setup:
              _____
@@ -1899,13 +1932,14 @@ orientations of the beginning and ending setups are consistent
 WITH EACH OTHER.  (They are both rotated 90 degrees counterclockwise
 from the main diagrams.)
 
-We can of course mix specifications in which the people begin in the
-normal setup and the PU setup.  Consider "drop in":
+We can of course mix specifications in which the people begin in the normal
+setup and the PU setup.  Consider "drop in" (from a normal diamond; the actual
+definition is more complicated):
 
    setup dmd 2x2
-      array [R0E 0 L1W 0]
+      array [CR0E 0 AL1W 0]
    setup pmd 2x2
-      array [0 M1N 0 M2N]
+      array [0 ZM1N 0 ZM2N]
 
 For the "normal" people (who are the points):
 
@@ -1940,16 +1974,14 @@ General rules of thumb:
    (2) In general, use the word "rotate" for both specifications of a
       multi-specification call, or for neither.  If it is used for
       one and not the other, that means that, if people are T-boned,
-      they will disagree on whether the call is a shape-changer.  The
-      only legal case of this is calls with an ending setup which is
-      a 2x4.  In that case, if people are T-boned, the call will go
-      into a 4x4 final setup.  This is used in "change your image"
-      and "single rotate".
+      they will disagree on whether the call is a shape-changer.
+      In such a case, people will go into a 4x4 or other suitable
+      setup.  This is used in "change your image" and "single rotate".
    (3) The word "rotate" simply causes all of the people to turn their
       formation 90 degrees clockwise at the conclusion of the call.
       It is independent of everything else.
-   (3) Within any one specification, you must either turn ALL of the
-      above diagrams counterclockwise, or NONE of them.  In the former
+   (3) Within any one specification, you must either turn BOTH of the
+      above diagrams counterclockwise, or NEITHER of them.  In the former
       case, use the "PU" starting setup designation for that
       specification.  If you can't define the call this way, define
       a different call and use "rotate" to get the desired behavior.
@@ -1962,24 +1994,24 @@ found in the call "counter rotate", for which a very abbreviated
 definition is:
 
    setup 2x4 2x4 rotate
-      array [R0N R1N L6S L7S L0S L1S R6N R7N]
+      array [CR0N CR1N AL6S AL7S AL0S AL1S CR6N CR7N]
    setup 4x2 2x4 rotate
-      array [R0N R1N R2N R3N L0S L1S L2S L3S]
+      array [CR0N CR1N CR2N CR3N AL0S AL1S AL2S AL3S]
    setup 2x2 2x2
-      array [R1E L0W L1W R0E]
+      array [CR1E AL0W AL1W CR0E]
    setup dmd dmd rotate
-      array [R0N 0 L0S 0]
+      array [CR0N 0 AL0S 0]
    setup pmd dmd rotate
-      array [0 R1N 0 L1S]
+      array [0 CR1N 0 AL1S]
 
 It actually has a specification for just about every starting setup
 that exists.  This is because counter rotate is a rather unusual call.
 Many calls have just one definition from one setup.  They are legal
 from other setups that are just multiple copies of the given setup.
-For example, "circle to a wave" is just defined from a 2x2 box:
+For example, "cross and turn" is just defined from a 2x2 box:
 
    setup 2x2 2x2
-      array [0 0 0E 1E]
+      array [0 0 A2S Z1N]
 
 No other definitions are given.  When the call is executed from a
 larger setup, such as lines facing or an 8-chain, the program breaks
@@ -2019,7 +2051,7 @@ does the right thing with "heads pass thru; everyone trade".
 The reason that "counter rotate" needs so many specifications is that
 this call's definition does not involve the replication of smaller
 versions in larger setups.  If it were defined on a 1x4 but not on a
-1x8, then, if called from a grand wave, it would do a lockit on each
+1x8, then, if called from a tidal wave, it would do a lockit on each
 side, rather than a the gigantic concentric counter rotate that is
 required.
 
@@ -2079,7 +2111,7 @@ consistent with the indicated formation.  In general, predicates are
 strict (though they typically only look at one other person, not the
 whole setup), and restrictions and qualifiers are lax.
 
-                  PREDICATES
+                           APPENDIX A -- PREDICATES
 
 Predicates are used to indicate, on a person-by-person basis, how
 the call definition is determined by properties of the setup other
@@ -2193,13 +2225,7 @@ To summarize some general properties of predicates:
        errors when appropriate, in order to simplify the database.  Always
        check the documentation of the specific predicate being used.
 
-The existing predicates are listed in the appendix.
-
-
-
-
-
-                           APPENDIX A -- PREDICATES
+The existing predicates are as follows:
 
 always
       applies to any setup.  Returns TRUE in all cases.
@@ -2217,7 +2243,7 @@ select
       Use of this or similar predicates may raise an error if the application
       of the selector to the person under test is not well defined.  This
       can happen, for example, if the "trailers" selector is given but the
-      setup is a grand line or is parallel lines but the "magic" concept
+      setup is a tidal line or is parallel lines but the "magic" concept
       is in use, or if the "boys" or "girls" selector has been given
       and the "tandem" concept is in use, but the person under test is a
       tandem of a boy and a girl.
@@ -2975,7 +3001,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    alwaysfail,                      any setup - this always fails (presumably to give
                                     some warning)
-   wave_only         R/Q            1x2 - a miniwave; 1x3-1x16 - [grand] wave;
+   wave_only         R/Q            1x2 - a miniwave; 1x3-1x16 - [tidal] wave;
                                     2x3 - two "waves" -- people not in tandem with each other;
                                     2x4/3x4/2x6/2x8 - consistent waves the long way;
                                     4x4 - consistent waves either way, but not T-boned;
@@ -3037,7 +3063,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     As a qualifier, this can take the "live" modifier.
 
    2fl_only           R/Q           1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
-                                    1x8 - a grand 2FL; 4x1 - single DPT or single CDPT;
+                                    1x8 - a tidal 2FL; 4x1 - single DPT or single CDPT;
                                     qtag - 2FL in center; 2x2 - "1-faced" box;
                                     bigdmd - 2FL in center;
                                     4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;
@@ -3369,6 +3395,32 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        it tests the "points".  For a star, the people must
                                        not be T-boned, and it tests the "lateral" people.
 
+   extend_inroutl,
+   extend_inloutr          Q        short6, rigger, spindle, 1x2dmd, 1x3dmd - these
+                                       are expected to be used with the "in" or "out"
+                                       indicators.   They test whether the people are
+                                       less than halfway through ("in") or more than
+                                       halfway through ("out") a series of extends.
+                                       They test that the people who are not in the
+                                       miniwaves in the center are looking in or out.
+                                       So, for example, in a rigger, the "wings" must
+                                       be in single file, looking into the center ("in")
+                                       or away from the center ("out").
+
+                                       The "in" or "out" indicators also test the
+                                       handedness of the people who have the handholds
+                                       in the middle.  Because of the way qualifier
+                                       tests work, the interaction of the "in" or "out"
+                                       indicators tests with the handedness test is
+                                       somewhat convoluted.  The qualifier
+                                       "in extend_inroutl" tests for people looking in
+                                       and having right hands in the middle.  The
+                                       qualifier "out extend_inroutl" tests for people
+                                       looking out and having left hands in the middle.
+                                       The qualifier "extend_inloutr" does the opposite.
+                                       It tests for left hands if used with "in",
+                                       and right hands if used with "out".
+
    said_triangle           Q        short6/pshort6 - caller said the word "triangle"
    didnt_say_triangle      Q        short6/pshort6 - caller didn't say the word "triangle"
 
@@ -3552,7 +3604,7 @@ singlefile_is_inherited
 
 
 
-                           APPENDIX E -- INVOCATION FLAGS
+                           APPENDIX E -- SUBCALL INVOCATION FLAGS
 
 These will be documented more methodically someday.
 

@@ -4032,6 +4032,25 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
             swap_people(result, 3, 4);
          }
       }
+      else if ((result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) &&
+          (the_results[1].result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) &&
+          result->rotation == the_results[1].rotation) {
+         if (result->kind == s_rigger &&
+             the_results[1].kind == s2x4 &&
+             (result->people[0].id1 |
+              result->people[1].id1 |
+              result->people[4].id1 |
+              result->people[5].id1 |
+              the_results[1].people[1].id1 |
+              the_results[1].people[2].id1 |
+              the_results[1].people[5].id1 |
+              the_results[1].people[6].id1) == 0) {
+            // We are doing something like "snag pair the line".  The centers
+            // didn't know which way the ends went, so they left room for them.
+            // The ends moved to the outside.
+            result->kind = s_bone;   // This is all it takes -- merge_setups will do the rest.
+         }
+      }
 
       result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
    }
@@ -4110,6 +4129,7 @@ extern void selective_move(
    int others,  // -1 - only selectees do the call, others can still roll
                 //  0 - only selectees do the call, others can't roll
                 //  1 - both sets
+                //  9 - same sex disconnected - both sets, same call, there is no selector
    uint32 arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
@@ -4193,7 +4213,7 @@ extern void selective_move(
          return;
       }
    }
-   else if (indicator != selective_key_snag_anyone)
+   else if (indicator != selective_key_snag_anyone && others != 9)
       cmd2thing.parseptr = parseptr->subsidiary_root;
 
    inner_selective_move(
@@ -4220,6 +4240,7 @@ extern void inner_selective_move(
    int others,  // -1 - only selectees do the call, others can still roll
                 //  0 - only selectees do the call, others can't roll
                 //  1 - both sets
+                //  9 - same sex disconnected - both sets, same call, there is no selector
    uint32 arg2,
    bool demand_both_setups_live,
    uint32 override_selector,
@@ -4271,6 +4292,11 @@ extern void inner_selective_move(
             break;
          }
       }
+   }
+
+   if (others == 9) {
+      selector_to_use = selector_boys;
+      others = 1;
    }
 
    saved_selector = current_options.who;

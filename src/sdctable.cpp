@@ -1520,6 +1520,8 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, selective_key_disc_dist, 0, 0},
    {"@6 DISCONNECTED (while the others)",    concept_some_vs_others,          0, l_c2,
     UC_none, selective_key_disc_dist, 1, 0},
+   {"SAME SEX DISCONNECTED",                 concept_same_sex_disconnected,   D, l_c2,
+    UC_none, selective_key_disc_dist, 9, 0},
    {"@6 DO YOUR PART",                       concept_so_and_so_only,        F+D, l_mainstream,
     UC_none, selective_key_dyp, 0, 0},
    {"@6 DO YOUR PART (while the others)",    concept_some_vs_others,          F, l_mainstream,

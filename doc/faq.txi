@@ -42,7 +42,7 @@ If you are having really serious problems like this, use @code{Sd} instead of
 
 @unnumberedsec I want some special option, such as @code{-normal_video}.  How can put it in an icon or initialization file?
 
-You have (or can create) an initialization file, which is ``C:\sd.ini''.
+You have (or can create) an initialization file, which is ``C:\sd\sd.ini''.
 If you put options in it, you will get those options every time you run
 @code{Sd} or @code{Sdtty}.  If you don't have such a file, give the
 command @strong{initialize session file} to @code{Sd} or @code{Sdtty} to
@@ -53,6 +53,8 @@ of options in this file.  For example:
 
 @example
 @group
+[Options]            <-- you will probably find that these
+new_style_filename   <-- two lines are already present
 normal_video
 color_by_couple
 @end group
@@ -158,7 +160,7 @@ and control-alt-Z as ``single concentric''.  Prefix letters of @strong{a},
 control-alt, respectively.  After that, a plain letter or digit denotes
 that key.  A combination like @strong{f6} denotes that function key.  When
 defining function keys, you may use the @strong{s} prefix, or no prefix at
-all, to get shift-function-key or plain-function key.  With letter or
+all, to get shift-function-key or plain-function key.  With letters or
 digits, you must use some combination of alt or control.  (You can't
 define just @strong{c} as a hot key for concentric -- it would make it
 impossible to type @strong{circulate}.)
