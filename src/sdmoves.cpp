@@ -8948,7 +8948,9 @@ void move(
          uint32_t savemisc3 = ss->cmd.cmd_misc3_flags;
          final_and_herit_flags ssheritsave = ss->cmd.cmd_final_flags;
          parse_block **save_restr_fin = ss->cmd.restrained_final;
-         parse_block *save_restr_fin_ptr = *ss->cmd.restrained_final;
+         parse_block *save_restr_fin_ptr = (parse_block *) 0;
+         if (ss->cmd.restrained_final)
+            save_restr_fin_ptr = *ss->cmd.restrained_final;
          call_with_name *z0callsave = z0->call;
          bool z0levelsave = z0->no_check_call_level;
          final_and_herit_flags z0heritsave = z0->more_finalherit_flags;
@@ -8964,7 +8966,8 @@ void move(
          z0->more_finalherit_flags = ss->cmd.cmd_final_flags;
 
          ss->cmd.parseptr = t;
-         *ss->cmd.restrained_final = ssparseptrsave;
+         if (ss->cmd.restrained_final)
+            *ss->cmd.restrained_final = ssparseptrsave;
          ss->cmd.restrained_final = 0;
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
@@ -8991,7 +8994,8 @@ void move(
          ss->cmd.cmd_misc3_flags = savemisc3;
          ss->cmd.cmd_final_flags = ssheritsave;
          ss->cmd.restrained_final = save_restr_fin;
-         *ss->cmd.restrained_final = save_restr_fin_ptr;
+         if (ss->cmd.restrained_final)
+            *ss->cmd.restrained_final = save_restr_fin_ptr;
          z0->call = z0callsave;
          z0->options = saved_options;
          z0->no_check_call_level = z0levelsave;
