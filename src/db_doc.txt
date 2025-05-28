@@ -1373,16 +1373,16 @@ x14_once_rem_couple
       opposite way or is T-boned.
 
 lines_miniwave
-      applies to 1x2, 1x4, 1x6, 2x4, 2x6, or 2x8 lines only.  Returns TRUE if the
-      lateral partner of the person under test is alive and facing the
-      opposite direction.  Returns FALSE if the partner is a phantom or
-      faces the same way or is T-boned.
+      applies to 1x2, 1x4, 1x6, 2x4, 3x4, 2x6, or 2x8 lines only.
+      Returns TRUE if the lateral partner of the person under test is alive
+      and facing the opposite direction.  Returns FALSE if the partner is
+      a phantom or faces the same way or is T-boned.
 
 lines_couple
-      applies to 1x2, 1x4, 1x6, 2x4, 2x6, or 2x8 lines only.  Returns TRUE if the
-      lateral partner of the person under test is alive and facing the
-      same direction.  Returns FALSE if the partner is a phantom or
-      faces the opposite way or is T-boned.
+      applies to 1x2, 1x4, 1x6, 2x4, 3x4, 2x6, or 2x8 lines only.
+      Returns TRUE if the lateral partner of the person under test is alive
+      and facing the same direction.  Returns FALSE if the partner is
+      a phantom or faces the opposite way or is T-boned.
 
 lines_magic_miniwave
       applies to 2x4 lines only.  Returns TRUE if the magic partner

@@ -649,7 +649,7 @@ extern void do_matrix_expansion(
 
       canonicalize_rotation(ss);
    
-      /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
+      /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
       if (recompute_id) update_id_bits(ss);
    }
 }
@@ -1218,7 +1218,7 @@ extern void toplevelmove(void)
       }
    }
 
-   /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
+   /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
    update_id_bits(&starting_setup);
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = NULLCALLSPEC;

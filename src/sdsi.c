@@ -134,6 +134,11 @@ extern long int lrand48(void);
 extern char *strerror(int);
 #endif
 
+/* Despite all our efforts, some systems just can't be bothered ... */
+#ifndef SEEK_END
+#define SEEK_END 2
+#endif
+
 /* I think we have everything now.  Isn't portability fun?  Before people
    started taking these standards as semi-seriously as they do now, it was
    MUCH HARDER to make a program portable than what you just saw. */

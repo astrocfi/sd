@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.01"
+#define VERSION_STRING "30.62"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -1173,7 +1173,7 @@ void main(int argc, char *argv[])
 
    writestuff("SD -- square dance caller's helper.");
    newline();
-   writestuff("Copyright (c) 1991, 1992, 1993 William B. Ackerman and Stephen Gildea.");
+   writestuff("Copyright (c) 1991-1994 William B. Ackerman and Stephen Gildea.");
    newline();
    newline();
    writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");

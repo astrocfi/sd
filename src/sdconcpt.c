@@ -33,8 +33,6 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
-extern void check_line_restriction(setup *ss, call_restriction restr, unsigned int flags);
-extern void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags);
 
 int global_tbonetest;
 int global_livemask;
@@ -2454,6 +2452,29 @@ Private void do_concept_ferris(
 }
 
 
+Private void do_concept_all_8(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int key = parseptr->concept->value.arg1;
+
+   /* key =
+      all 4 couples    : 0
+      all 8            : 1
+      all 8 (diamonds) : 2 */
+
+   if (ss->kind != s_thar)
+      fail("Sorry.");
+
+   if (key == 1)
+      divided_setup_move(ss, (*map_lists[s1x4][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+   else if (key == 2)
+      divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+   else
+      fail("Sorry.");
+}
+
 Private void do_concept_meta(
    setup *ss,
    parse_block *parseptr,
@@ -3306,12 +3327,12 @@ concept_table_item concept_table[] = {
    /* concept_comment */                  {0,                                                                                      0},
    /* concept_concentric */               {0,                                                                                      do_concept_concentric},
    /* concept_single_concentric */        {CONCPROP__SHOW_SPLIT,                                                                   do_concept_single_concentric},
-   /* concept_tandem */                   {0,                                                                                      do_concept_tandem},
-   /* concept_gruesome_tandem */          {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS,                                            do_concept_tandem},
-   /* concept_some_are_tandem */          {CONCPROP__USE_SELECTOR,                                                                 do_concept_tandem},
-   /* concept_frac_tandem */              {CONCPROP__USE_NUMBER,                                                                   do_concept_tandem},
-   /* concept_gruesome_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS,                     do_concept_tandem},
-   /* concept_some_are_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR,                                          do_concept_tandem},
+   /* concept_tandem */                   {CONCPROP__SHOW_SPLIT,                                                                   do_concept_tandem},
+   /* concept_gruesome_tandem */          {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT,                     do_concept_tandem},
+   /* concept_some_are_tandem */          {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                                          do_concept_tandem},
+   /* concept_frac_tandem */              {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_tandem},
+   /* concept_gruesome_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT, do_concept_tandem},
+   /* concept_some_are_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                   do_concept_tandem},
    /* concept_checkerboard */             {0,                                                                                      do_concept_checkerboard},
    /* concept_reverse */                  {0,                                                                                      0},
    /* concept_left */                     {0,                                                                                      0},
@@ -3404,6 +3425,7 @@ concept_table_item concept_table[] = {
    /* concept_on_your_own */              {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              on_your_own_move},
    /* concept_trace */                    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_trace},
    /* concept_ferris */                   {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_ferris},
+   /* concept_all_8 */                    {CONCPROP__NO_STEP,                                                                      do_concept_all_8},
    /* concept_centers_and_ends */         {CONCPROP__SECOND_CALL,                                                                  do_concept_centers_and_ends},
    /* concept_twice */                    {CONCPROP__SHOW_SPLIT,                                                                   do_concept_twice},
    /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_sequential},

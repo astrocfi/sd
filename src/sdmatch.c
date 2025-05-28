@@ -779,7 +779,7 @@ verify_call(call_list_kind cl, int call_index, selector_kind who)
         
         /* sue: new plan: try (beaus, ends, all), just like initialization */
         
-        if (verify_call_with_selector(call, selector_beaux))
+        if (verify_call_with_selector(call, selector_beaus))
            return(TRUE);
         if (verify_call_with_selector(call, selector_ends))
            return(TRUE);

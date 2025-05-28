@@ -400,6 +400,11 @@ char *qualtab[] = {
    "true_Z",
    "ctrwv_end2fl",
    "ctr2fl_endwv",
+   "n_is_0",
+   "n_is_1",
+   "n_is_2",
+   "n_is_3",
+   "n_is_4",
    ""};
 
 /* This table is keyed to "call_restriction". */
@@ -413,6 +418,7 @@ char *crtab[] = {
    "2fl_only",
    "3x3_2fl_only",
    "4x4_2fl_only",
+   "leads_only",
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",

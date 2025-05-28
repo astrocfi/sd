@@ -21,11 +21,12 @@
 /* This defines the following functions:
    mirror_this
    do_stability
+   check_line_restriction
+   check_column_restriction
    basic_move
 */
 
 #include "sd.h"
-extern map_thing map_tgl4_1;
 
 
 /* This file uses a few bogus setups.  They are never allowed to escape:
@@ -531,6 +532,16 @@ extern void check_line_restriction(setup *ss, call_restriction restr, unsigned i
                if ((t = ss->people[3].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
                if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
                    ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
+                  goto ldef_failed;
+               break;
+            case cr_leads_only:
+               /* check for everyone a lead, and not T-boned */
+               q0 = 0; q2 = 3;
+               if ((t = ss->people[0].id1) != 0) { q0 |= t;     q2 &= t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t;     q2 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q0 |= (t^2); q2 &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q0 |= (t^2); q2 &= t; }
+               if ((q0&3) && ((~q2)&3))
                   goto ldef_failed;
                break;
             case cr_peelable_box:

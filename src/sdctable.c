@@ -449,9 +449,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 42
-#define mm__1_3x3 40
-#define mm__1_4x4 41
+#define mm__1_size 38
 #define mm__1_phan 22
    {"LEFT",                                  concept_left,                  l_mainstream},
    {"REVERSE",                               concept_reverse,               l_mainstream},
@@ -488,15 +486,11 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                l_c3a,        {0, 1}},
          {"", concept_comment, l_nonexistent_concept},
-   {"1X2",                                   concept_1x2,                   l_c3},
-   {"2X1",                                   concept_2x1,                   l_c3},
-   {"2X2",                                   concept_2x2,                   l_c3a},
-   {"1X3",                                   concept_1x3,                   l_c2},
-   {"3X1",                                   concept_3x1,                   l_c2},
-   {"3X3",                                   concept_3x3,                   l_c3x},
-   {"4X4",                                   concept_4x4,                   l_c3x},
+   {"ALL 4 COUPLES",                         concept_all_8,                 l_a2,         {0, 0}},
+   {"ALL 8",                                 concept_all_8,                 l_c1,         {0, 1}},
+   {"ALL 8 (diamonds)",                      concept_all_8,                 l_c1,         {0, 2}},
 /* -------- column break -------- */
-#define mm__2_size 42
+#define mm__2_size 47
    {"CENTERS",                               concept_centers_or_ends,       l_mainstream, {0, 0}},
    {"ENDS",                                  concept_centers_or_ends,       l_mainstream, {0, 1}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,      l_mainstream, {0, 0}},
@@ -513,10 +507,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"CHECKERBOX",                            concept_checkerboard,          l_c3a,        {0, s2x2}},
    {"CHECKERDIAMOND",                        concept_checkerboard,          l_c3x,        {0, sdmd}},
          {"", concept_comment, l_nonexistent_concept},
-   {"ON YOUR OWN",                           concept_on_your_own,           l_c4a},
+   {"<ANYONE> ONLY",                         concept_so_and_so_only,        l_mainstream, {0, 4}},
+   {"<ANYONE> ONLY (while the others)",      concept_some_vs_others,        l_mainstream, {0, 5}},
+   {"<ANYONE> DISCONNECTED",                 concept_so_and_so_only,        l_c2, {0, 6}},
+   {"<ANYONE> DISCONNECTED (while the others)", concept_some_vs_others,     l_c2, {0, 7}},
    {"<ANYONE> DO YOUR PART,",                concept_so_and_so_only,        l_mainstream, {0, 0}},
-   {"OWN THE <ANYONE>",                      concept_some_vs_others,        l_c3a,        {0, 1}},
-   {"<ANYONE> START",                        concept_so_and_so_begin,       l_c2,         {0, 0}},
+   {"<ANYONE> DO YOUR PART, (while the others)", concept_some_vs_others,    l_mainstream, {0, 1}},
+   {"ON YOUR OWN",                           concept_on_your_own,           l_c4a},
+   {"OWN THE <ANYONE>",                      concept_some_vs_others,        l_c3a,        {0, 3}},
          {"", concept_comment, l_nonexistent_concept},
    {"two calls in succession",               concept_sequential,            l_mainstream},
    {"FOLLOW IT BY",                          concept_special_sequential,    l_c2,        {0, 0}},
@@ -535,12 +533,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERLACE",                             concept_interlace,             l_c3x},
    {"START <concept>",                       concept_meta,                  l_c2,         {0, 3}},
    {"FINISH",                                concept_meta,                  l_c2,         {0, 4}},
+   {"<ANYONE> START",                        concept_so_and_so_begin,       l_c2,         {0, 0}},
    {"SKIP THE <Nth> PART",                   concept_nth_part,              l_c2,         {0, 1}},
    {"DO THE <Nth> PART <concept>",           concept_nth_part,              l_c2,         {0, 0}},
    {"REPLACE THE <Nth> PART",                concept_replace_nth_part,      l_c2,         {0, 0}},
    {"INTERRUPT AFTER THE <Nth> PART",        concept_replace_nth_part,      l_c2,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 33
+#define mm__3_size 41
+#define mm__3_3x3 39
+#define mm__3_4x4 40
    {"IN POINT TRIANGLE",                     concept_randomtrngl,           l_c1,         {0, 1}},
    {"OUT POINT TRIANGLE",                    concept_randomtrngl,           l_c1,         {0, 0}},
    {"INSIDE TRIANGLES",                      concept_randomtrngl,           l_c1,         {0, 2}},
@@ -574,6 +575,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"RIGHTRIGGER",                           concept_rigger,                l_c3x,        {0, 3}},
    {"BACKRIGGER",                            concept_rigger,                l_c3x,        {0, 16}},
    {"FRONTRIGGER",                           concept_rigger,                l_c3x,        {0, 18}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"1X2",                                   concept_1x2,                   l_c3},
+   {"2X1",                                   concept_2x1,                   l_c3},
+   {"2X2",                                   concept_2x2,                   l_c3a},
+   {"1X3",                                   concept_1x3,                   l_c2},
+   {"3X1",                                   concept_3x1,                   l_c2},
+   {"3X3",                                   concept_3x3,                   l_c3x},
+   {"4X4",                                   concept_4x4,                   l_c3x},
 
 /* general concepts */
 
@@ -665,7 +674,7 @@ static int nice_setup_concept_4x4[] = {
 
    tt_1_offset + tt__1_cpl,     /* phantom as couples (of course, we will need to put in "phantom") */
    tt_1_offset + tt__1_tnd,     /* phantom tandem */
-   mm_1_offset + mm__1_4x4,     /* 4x4 */
+   mm_3_offset + mm__3_4x4,     /* 4x4 */
    -1};
 
 static int nice_setup_concept_3x4[] = {
@@ -675,7 +684,7 @@ static int nice_setup_concept_3x4[] = {
    pp_1_offset + pp__1_tlwb,    /* triple lines working backward */
    pp_2_offset + pp__2_tcwr,    /* triple columns working right */
    pp_2_offset + pp__2_tcwl,    /* triple columns working left */
-   mm_1_offset + mm__1_3x3,     /* 3x3 */
+   mm_3_offset + mm__3_3x3,     /* 3x3 */
    -1};
 
 static int nice_setup_concept_2x8[] = {
@@ -690,7 +699,7 @@ static int nice_setup_concept_2x8[] = {
    pp_1_offset + pp__1_pl8,     /* phantom tidal lines */
    pp_2_offset + pp__2_pc8,     /* phantom tidal columns */
    /* The less likely ones: */
-   mm_1_offset + mm__1_4x4,
+   mm_3_offset + mm__3_4x4,
    tt_1_offset + tt__1_grc,     /* gruesome as couples */
    tt_1_offset + tt__1_grt,     /* gruesome tandem */
    tt_2_offset + tt__2_grct,    /* gruesome (as couples) twosome */
@@ -707,7 +716,7 @@ static int nice_setup_concept_2x6[] = {
    pp_3_offset + pp__3_tbwa,    /* triple boxes working apart */
    pp_1_offset + pp__1_pl6,     /* phantom lines of 6 */
    pp_2_offset + pp__2_pc6,     /* phantom columns of 6 */
-   mm_1_offset + mm__1_3x3,     /* 3x3 */
+   mm_3_offset + mm__3_3x3,     /* 3x3 */
    /* Let's give these extra probability. */
    pp_3_offset + pp__3_tb,      /* triple boxes */
    pp_3_offset + pp__3_tb,      /* triple boxes */

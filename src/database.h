@@ -316,7 +316,12 @@ typedef enum {
    sq_dmd_facing,                   /* dmd - diamond is fully occupied and fully facing */
    sq_true_Z,                       /* 2x3, 3x4, 2x6 - setup is a genuine Z */
    sq_ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl */
-   sq_ctr2fl_endwv                  /* crosswave - center line is 2fl, end line is wave */
+   sq_ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
+   sq_n_is_0,                       /* any - given number is 0 (doesn't currently work, since 0 isn't a legal number) */
+   sq_n_is_1,                       /* any - given number is 1 */
+   sq_n_is_2,                       /* any - given number is 2 */
+   sq_n_is_3,                       /* any - given number is 3 */
+   sq_n_is_4                        /* any - given number is 4 */
 } search_qualifier;
 
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
@@ -329,12 +334,13 @@ typedef enum {
                                        2x2 - real box; 4x4 -consistent waves; qtag - wave in center; pqtag - wave in center
                                        (use only if center people have no legal move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
    cr_wave_unless_say_2faced,
-   cr_all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way. */
+   cr_all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
    cr_1fl_only,                     /* 1x4/1x6/1x8 - a 1FL; 2x3/2x4 - individual 1FL's */
    cr_2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 2x2 - "1-faced" box;
                                        2x4 columns - a DPT or CDPT; qtag - 2FL in center */
    cr_3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
    cr_4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
+   cr_leads_only,                   /* 2x2 - all people are leads, and not T-boned */
    cr_couples_only,                 /* 1x2 or 1x4 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
    cr_3x3couples_only,              /* 1x6 lines - each group of 3 people are facing the same way */
    cr_4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
