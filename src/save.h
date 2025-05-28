@@ -8,13 +8,10 @@
 #define IDD_TEXTENTRY                   104
 #define IDD_START_DIALOG                105
 #define IDD_TEXT_ENTRY_DIALOG           107
-#define IDD_PRINTING_DIALOG             108
-#define IDI_ICON2                       109
-#define IDB_BITMAP1                     110
-#define IDI_ICON3                       111
-#define IDI_ICON4                       112
-#define IDI_ICON5                       113
-#define IDC_FILENAME                    1000
+#define IDI_ICON2                       108
+#define IDB_BITMAP1                     109
+#define IDI_ICON3                       110
+#define IDI_ICON4                       111
 #define IDC_FILE_ACCEPT                 1003
 #define IDC_FILE_EDIT                   1004
 #define IDC_FILE_TEXT                   1005
@@ -35,12 +32,11 @@
 #define IDC_START_DELETE_SESSION_CHECKED 1025
 #define IDC_START_COMMENTARY            1026
 #define IDC_START_PROGRESS              1027
-#define ID_FILE_CHOOSE_FONT             40001
-#define ID_FILE_PRINTTHIS               40002
-#define ID_FILE_PRINTFILE               40003
-#define ID_FILE_ABOUTSD                 40004
-#define ID_FILE_EXIT                    40005
-#define ID_COMMAND                      40006
+#define ID_FILE_PRINTDISPLAY            40001
+#define ID_FILE_PRINTFILE               40002
+#define ID_FILE_ABOUTSD                 40003
+#define ID_FILE_EXIT                    40004
+#define ID_COMMAND                      40007
 #define ID_COMMAND_UNDO                 40007
 #define ID_COMMAND_ABORTTHISSEQUENCE    40008
 #define ID_COMMAND_ENDTHISSEQUENCE      40009
@@ -95,7 +91,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        114
+#define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40056
 #define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101

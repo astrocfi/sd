@@ -42,10 +42,10 @@ X11_LIBS =
 # "sdtty".
 TTY_LIBS = -lpc
 
-SD_SRCS = sdmain.c sdutil.c sdbasic.c sdinit.c \
-          sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c \
-          sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
-          sdpick.c sdsi.c
+SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
+          sdtables.c sdctable.c sdtop.cpp sdconcpt.cpp sdpreds.cpp \
+          sdgetout.cpp sdmoves.cpp sdtand.cpp sdconc.cpp sdistort.cpp \
+          sdpick.cpp sdsi.cpp
 
 SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
@@ -100,6 +100,9 @@ sd_calls.dat: sd_calls.txt mkcalls.exe
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
+.cpp.o:
+	$(CC) $(CFLAGS) -c $<
+
 # sdui-x11.c may need -D_POSIX_SOURCE with gcc 1.40 on Ultrix 4.2
 
 sdui-x11.o: sdui-x11.c
@@ -116,12 +119,12 @@ dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
 dbcomp.o: database.h
 
-$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
+$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sdui.h basetype.h sd.h database.h
 
 configure: configure.in
 	-cd "$(srcdir)" && autoconf
 
-config.status: configure sdmain.c
+config.status: configure sdmain.cpp
 	./config.status --recheck
 
 Makefile: Makefile.in config.status

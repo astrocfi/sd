@@ -66,7 +66,7 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
    uims_bad_argument
 */
 
-#include "sd.h"
+#include "sdui.h"
 #include "paths.h"
 #include <stdio.h>
 #include <X11/Intrinsic.h>

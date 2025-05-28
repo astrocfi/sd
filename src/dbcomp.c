@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1999  William B. Ackerman.
@@ -303,6 +301,8 @@ char *sstab[] = {
    "4x3",
    "2x6",
    "6x2",
+   "2x7",
+   "7x2",
    "d3x4",
    "d4x3",
    "2x8",
@@ -429,6 +429,7 @@ char *estab[] = {
    "rigger",
    "3x4",
    "2x6",
+   "2x7",
    "d3x4",
    "???",
    "2x8",
@@ -601,6 +602,7 @@ char *qualtab[] = {
    "diamond_like",
    "qtag_like",
    "pu_qtag_like",
+   "regular_tbone",
    "gen_qbox",
    "nice_diamonds",
    "magic_only",
@@ -769,6 +771,7 @@ char *flagtabh[] = {
    "twisted_is_inherited",
    "lasthalf_is_inherited",
    "fractal_is_inherited",
+   "fast_is_inherited",
    ""};
 
 /* This table is keyed to the constants "cflag__???".
@@ -792,6 +795,7 @@ char *altdeftabh[] = {
    "twisted",
    "lasthalf",
    "fractal",
+   "fast",
    ""};
 
 char *mxntabplain[] = {
@@ -870,6 +874,7 @@ char *defmodtabh[] = {
    "inherit_twisted",
    "inherit_lasthalf",
    "inherit_fractal",
+   "inherit_fast",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -897,6 +902,7 @@ char *forcetabh[] = {
    "force_twisted",
    "force_lasthalf",
    "force_fractal",
+   "force_fast",
    ""};
 
 
@@ -937,6 +943,7 @@ char *predtab[] = {
    "person_select_sum11",
    "person_select_sum15",
    "person_select_plus4",
+   "person_select_plus6",
    "person_select_plus8",
    "person_select_plus12",
    "semi_squeezer_select",
@@ -1235,17 +1242,22 @@ static void get_tok_or_eof(void)
    letcount = 0;
    while ((ch == ' ') || (ch == '/') || (ch == '\n')) {
       if (ch == '/') {
+         char starter;
          if (get_char()) errexit("End of file in comment starter");
-         if (ch != '*') errexit("Incorrect comment starter");
+         starter = ch;
+         if (ch != '*' && ch != '/') errexit("Incorrect comment starter");
          for (;;) {
             if (get_char()) errexit("End of file inside comment");
-            if (ch == '*') {
-               for (;;) {
-                  if (get_char()) errexit("End of file inside comment");
-                  if (ch != '*') break;
+            if (starter == '*') {
+               if (ch == '*') {
+                  for (;;) {
+                     if (get_char()) errexit("End of file inside comment");
+                     if (ch != '*') break;
+                  }
+                  if (ch == '/') break;
                }
-               if (ch == '/') break;
             }
+            else if (ch == '\n') break;
          }
       }
       if (get_char()) return;
@@ -1748,41 +1760,33 @@ static void write_array_def_block(uint32 callarrayflags)
 
 static int scan_for_per_array_def_flags(void)
 {
-   int funnyflag = 0;
+   int result = 0;
 
-foobar:
+   for ( ; ; ) {
+      if (!strcmp(tok_str, "simple_funny"))
+         result |= CAF__FACING_FUNNY;
+      else if (!strcmp(tok_str, "lateral_to_selectees"))
+         result |= CAF__LATERAL_TO_SELECTEES;
+      else if (!strcmp(tok_str, "split_to_box"))
+         result |= CAF__SPLIT_TO_BOX;
+      else break;
 
-   if (!strcmp(tok_str, "simple_funny")) {
-      funnyflag |= CAF__FACING_FUNNY;
       get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
-      goto foobar;
-   }
-   else if (!strcmp(tok_str, "lateral_to_selectees")) {
-      funnyflag |= CAF__LATERAL_TO_SELECTEES;
-      get_tok();
-      if (tok_kind != tok_symbol) errexit("Missing indicator");
-      goto foobar;
-   }
-   else if (!strcmp(tok_str, "split_to_box")) {
-      funnyflag |= CAF__SPLIT_TO_BOX;
-      get_tok();
-      if (tok_kind != tok_symbol) errexit("Missing indicator");
-      goto foobar;
    }
 
-   return funnyflag;
+   return result;
 }
 
 
-static void write_array_def(uint32 funnyflag)
+static void write_array_def(uint32 incoming)
 {
    int i, iii, jjj;
    uint32 callarray_flags1, callarray_flags2;
 
    write_call_header(schema_by_array);
 
-   callarray_flags1 = funnyflag;
+   callarray_flags1 = incoming;
 
 def2:
    restrstate = 0;
@@ -1939,6 +1943,9 @@ def2:
       }
       else if (!strcmp(tok_str, "no_cutting_through")) {
          callarray_flags1 |= CAF__NO_CUTTING_THROUGH;
+      }
+      else if (!strcmp(tok_str, "no_facing_ends")) {
+         callarray_flags1 |= CAF__NO_FACING_ENDS;
       }
       else if (!strcmp(tok_str, "vacate_center")) {
          callarray_flags1 |= CAF__VACATE_CENTER;

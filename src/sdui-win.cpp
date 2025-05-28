@@ -13,6 +13,7 @@
     sdui-win.c - SD -- Microsoft Windows User Interface
   
     Copyright (C) 1995, Robert E. Cays
+    Copyright (C) 1996, Charles Petzold
   
     Permission to use, copy, modify, and distribute this software for
     any purpose is hereby granted without fee, provided that the above
@@ -25,7 +26,7 @@
     This is for version 32. */
 
 
-static char *sdui_version = "4.8";
+static char *sdui_version = "4.9";
 
 
 /* This file defines the following functions:
@@ -62,15 +63,23 @@ static char *sdui_version = "4.8";
    uims_final_exit
 */
 
+#define STRICT
+#define WIN32_LEAN_AND_MEAN
 #include <stdio.h>
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <commdlg.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "paths.h"
-#include "database.h"
+#include "basetype.h"
 #include "sdui.h"
+void windows_init_printer_font(HWND hwnd, HDC hdc);
+extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
+extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
+void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 #include "sdmatch.h"
 #include "resource.h"
 
@@ -88,8 +97,9 @@ static int dammit = 0;
    Windows command user segment. */
 #define SPECIAL_KEY_OFFSET (CM_REINIT-128+1)
 
-// ***** Declared specially in sdsi.c!
+extern "C" {
 FILE *call_list_file;
+}
 
 static char szMainWindowName[] = "Sd main window class";
 static char szTranscriptWindowName[] = "Sd transcript window class";
@@ -155,9 +165,6 @@ static LPTSTR lpBits;       // Address of the pixel data in same.
 
 static HINSTANCE GLOBhInstance;
 static int GLOBiCmdShow;
-static LRESULT Status;
-static LOGFONT LogFont;
-static CHOOSEFONT cf;
 
 static HWND hwndMain;
 static HWND hwndAcceptButton;
@@ -243,6 +250,10 @@ static long_boolean my_retval;
 
 static RECT CallsClientRect;
 static RECT TranscriptClientRect;
+
+// This is the last title sent by the main program.  We add stuff to it.
+static char szMainTitle[MAX_TEXT_LINE_LENGTH];
+
 
 
 
@@ -885,7 +896,7 @@ static void Transcript_OnPaint(HWND hwnd)
 
    SelectFont(PaintDC, GetStockObject(OEM_FIXED_FONT));
 
-   if (reverse_video) {
+   if (ui_options.reverse_video) {
       (void) SetBkColor(PaintDC, RGB(0, 0, 0));
       (void) SetTextColor(PaintDC, RGB(255, 255, 255));
    }
@@ -921,7 +932,7 @@ static void Transcript_OnPaint(HWND hwnd)
                int c1 = *++cp;
                int c2 = *++cp;
 
-               if (no_graphics == 0) {
+               if (ui_options.no_graphics == 0) {
                   xgoodies = (c1 & 7)*BMP_PERSON_SIZE;
                   ygoodies = BMP_PERSON_SIZE*(c2 & 3);
                   goto do_DIB_thing;
@@ -932,7 +943,7 @@ static void Transcript_OnPaint(HWND hwnd)
 
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 1, 0);
 
-                  if (no_color != 1)
+                  if (ui_options.no_color != 1)
                      (void) SetTextColor(PaintDC, colorlist[c1 & 7]);
 
                   cc[0] = pn1[c1 & 7];
@@ -943,8 +954,8 @@ static void Transcript_OnPaint(HWND hwnd)
 
                   /* Set back to plain "white". */
 
-                  if (no_color != 1) {
-                     if (!no_intensify)
+                  if (ui_options.no_color != 1) {
+                     if (!ui_options.no_intensify)
                         (void) SetTextColor(PaintDC, RGB(255, 255, 255));
                      else
                         (void) SetTextColor(PaintDC, RGB(192, 192, 192));
@@ -954,7 +965,7 @@ static void Transcript_OnPaint(HWND hwnd)
                }
             }
             else if (*cp == '\014') {
-               if (no_graphics == 0) {
+               if (ui_options.no_graphics == 0) {
                   xgoodies = 0;
                   ygoodies = BMP_PERSON_SIZE*4;
                   goto do_DIB_thing;
@@ -966,28 +977,28 @@ static void Transcript_OnPaint(HWND hwnd)
             }
             else if (*cp == '6') {
                // 6 means space equivalent to one person size.
-               xdelta = (no_graphics == 0) ? (BMP_PERSON_SIZE) : (TranscriptTextWidth*4);
+               xdelta = (ui_options.no_graphics == 0) ? (BMP_PERSON_SIZE) : (TranscriptTextWidth*4);
                continue;
             }
             else if (*cp == '5') {
                // 5 means space equivalent to half of a person size.
-               xdelta = (no_graphics == 0) ? (BMP_PERSON_SIZE/2) : (TranscriptTextWidth*2);
+               xdelta = (ui_options.no_graphics == 0) ? (BMP_PERSON_SIZE/2) : (TranscriptTextWidth*2);
                continue;
             }
             else if (*cp == '9') {
                // 9 means space equivalent to 3/4 of a person size.
-               xdelta = (no_graphics == 0) ? (3*BMP_PERSON_SIZE/4) : (TranscriptTextWidth*3);
+               xdelta = (ui_options.no_graphics == 0) ? (3*BMP_PERSON_SIZE/4) : (TranscriptTextWidth*3);
                continue;
             }
             else if (*cp == '8') {
                // 8 means space equivalent to half of a person size
                // if doing checkers, but only one space if in ASCII.
-               xdelta = (no_graphics == 0) ? (BMP_PERSON_SIZE/2) : (TranscriptTextWidth);
+               xdelta = (ui_options.no_graphics == 0) ? (BMP_PERSON_SIZE/2) : (TranscriptTextWidth);
                continue;
             }
             else if (*cp == ' ') {
                // The tables generally use two blanks as the inter-person spacing.
-               xdelta = (no_graphics == 0) ? (BMP_PERSON_SPACE/2) : (TranscriptTextWidth);
+               xdelta = (ui_options.no_graphics == 0) ? (BMP_PERSON_SPACE/2) : (TranscriptTextWidth);
                continue;
             }
          }
@@ -1174,7 +1185,16 @@ int WINAPI WinMain(
    GLOBiCmdShow = iCmdShow;
    GLOBhInstance = hInstance;
 
-   /* Run the SD program.  The system-supplied variables "__argc"
+   // Set the UI options for Sd.
+
+   ui_options.no_graphics = 0;
+   ui_options.no_intensify = 0;
+   ui_options.reverse_video = 0;
+   ui_options.pastel_color = 0;
+   ui_options.no_color = 0;
+   ui_options.no_sound = 0;
+
+   /* Run the Sd program.  The system-supplied variables "__argc"
       and "__argv" provide the predigested-as-in-traditional-C-programs
       command-line arguments. */
 
@@ -1200,6 +1220,8 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
    GetTextMetrics(hdc, &tm);
    SystemTextWidth = tm.tmAveCharWidth;
    SystemTextHeight = tm.tmHeight+tm.tmExternalLeading;
+
+   windows_init_printer_font(hwnd, hdc);
 
    ReleaseDC(hwnd, hdc);
 
@@ -1380,8 +1402,6 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 }
 
 
-
- 
 void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
    int i;
@@ -1391,6 +1411,9 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    switch (id) {
    case ID_FILE_ABOUTSD:
       DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, (DLGPROC) AboutWndProc);
+      break;
+   case ID_FILE_EXIT:
+      SendMessage(hwndMain, WM_CLOSE, 0, 0L);
       break;
    case EDIT_INDEX:
       if (codeNotify == EN_UPDATE)
@@ -1404,8 +1427,8 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       WaitingForCommand = FALSE;
       break;
    case LISTBOX_INDEX:
-      // See whether this an appropriate single-click of double-click.
-      if (codeNotify != LBN_DBLCLK && (!accept_single_click || codeNotify != LBN_SELCHANGE))
+      // See whether this an appropriate single-click or double-click.
+      if (codeNotify != (accept_single_click ? (UINT) LBN_SELCHANGE : (UINT) LBN_DBLCLK))
          break;
       /* Fall Through! */
    case ENTER_INDEX:
@@ -1423,7 +1446,11 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          in the edit box.  We detect this condition by noticing that the
          listbox selection has changed from what we left it when we were
          last trying to make the list box track the edit box. */
-      if (wherearewe != LB_ERR && wherearewe != nMenuIndex) {
+
+      /* We also do this if the user selected by clicking the mouse. */
+
+      if (id != ENTER_INDEX ||
+          (wherearewe != LB_ERR && wherearewe != nMenuIndex)) {
          SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");
          static_ss.full_input[0] = '\0';
          static_ss.full_input_size = 0;
@@ -1469,7 +1496,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
  
       i = SendMessage(hwndList, LB_GETITEMDATA, nMenuIndex, (LPARAM)0);
       user_match.match.index = LOWORD(i);
-      user_match.match.kind = HIWORD(i);
+      user_match.match.kind = (uims_reply) HIWORD(i);
 
    use_computed_match:
 
@@ -1509,9 +1536,6 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
       WaitingForCommand = FALSE;
       break;
-   case ID_FILE_EXIT:
-      SendMessage(hwndMain, WM_CLOSE, 0, 0L);
-      break;
    case ID_COMMAND_COPY_TEXT:
       SendMessage(hwndEdit, WM_COPY, 0, 0);
       break;
@@ -1522,14 +1546,26 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       SendMessage(hwndEdit, WM_PASTE, 0, 0);
       break;
    default:
-      if (nLastOne < 0) break;
-      for (i=0 ; command_menu[i].command_name ; i++) {
-         if (id == command_menu[i].resource_id) {
-            user_match.match.index = i;
-            user_match.match.kind = ui_command_select;
-            goto use_computed_match;
+      if (nLastOne == match_startup_commands) {
+         for (i=0 ; startup_menu[i].startup_name ; i++) {
+            if (id == startup_menu[i].resource_id) {
+               user_match.match.index = i;
+               user_match.match.kind = ui_start_select;
+               goto use_computed_match;
+            }
          }
       }
+      else if (nLastOne >= 0) {
+         for (i=0 ; command_menu[i].command_name ; i++) {
+            if (id == command_menu[i].resource_id) {
+               user_match.match.index = i;
+               user_match.match.kind = ui_command_select;
+               goto use_computed_match;
+            }
+         }
+      }
+      else
+         break;
    }
 }
 
@@ -1726,13 +1762,13 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 static void setup_level_menu(HWND hDlg)
 {
-   dance_level lev;
+   int lev;
 
    SetDlgItemText(hDlg, IDC_START_CAPTION, "Choose a level");
 
    SendDlgItemMessage(hDlg, IDC_START_LIST, LB_RESETCONTENT, 0, 0L);
 
-   for (lev=l_mainstream ; ; lev++) {
+   for (lev=(int)l_mainstream ; ; lev++) {
       Cstring this_string = getout_strings[lev];
       if (!this_string[0]) break;
       SendDlgItemMessage(hDlg, IDC_START_LIST, LB_ADDSTRING, 0, (LPARAM) this_string);
@@ -1740,10 +1776,6 @@ static void setup_level_menu(HWND hDlg)
 
    SendDlgItemMessage (hDlg, IDC_START_LIST, LB_SETCURSEL, 0, 0L);
 }
-
-
-/* This is the last title sent by the main program.  We add stuff to it. */
-static char szMainTitle[MAX_TEXT_LINE_LENGTH];
 
 
 void SetTitle(void)
@@ -1883,7 +1915,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       /* ****** Need to do this later! */
 
       if (session_outcome & 2)
-         MessageBox(hwnd, session_error_msg, "Error", MB_OK);
+         MessageBox(hwnd, session_error_msg, "Error", MB_OK | MB_ICONEXCLAMATION);
 
 
       /* If the user specified a call list file, get the name. */
@@ -2010,7 +2042,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
    wndclass.hInstance = GLOBhInstance;
    wndclass.hIcon = NULL;
    wndclass.hCursor = NULL;
-   wndclass.hbrBackground  = GetStockBrush(reverse_video ? BLACK_BRUSH : WHITE_BRUSH);
+   wndclass.hbrBackground  = GetStockBrush(ui_options.reverse_video ? BLACK_BRUSH : WHITE_BRUSH);
    wndclass.lpszMenuName = NULL;
    wndclass.lpszClassName = szTranscriptWindowName;
    wndclass.hIconSm = wndclass.hIcon;
@@ -2066,6 +2098,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    UpdateStatusBar("Reading database");
 
+   initialize_misc_lists();
    prepare_to_read_menus();
 
    /* Opening the database sets up the values of
@@ -2103,8 +2136,6 @@ extern long_boolean uims_open_session(int argc, char **argv)
       exit_program(1);
    }
 
-   initialize_concept_sublists();
-   initialize_misc_lists();
    matcher_initialize();
 
    ShowWindow(hwndProgress, SW_HIDE);
@@ -2136,7 +2167,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    /* Install the pointy triangles. */
 
-   if (no_graphics < 2)
+   if (ui_options.no_graphics < 2)
       direc = "?\020?\021????\036?\037?????";
 
    {
@@ -2213,7 +2244,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       4G - 4
    */
 
-   if (no_color == 3) {
+   if (ui_options.no_color == 3) {
       // corner colors
       colorlist = cornercolors;
       lpBi->bmiColors[1]  = lpBi->bmiColors[10];    // 1G = GRN
@@ -2225,7 +2256,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       lpBi->bmiColors[11]  = lpBi->bmiColors[2];    // 3B = BLU
       lpBi->bmiColors[12]  = lpBi->bmiColors[3];    // 4B = YEL
    }
-   else if (no_color == 2) {
+   else if (ui_options.no_color == 2) {
       // couple colors
       colorlist = couplecolors;
       lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
@@ -2237,34 +2268,22 @@ extern long_boolean uims_open_session(int argc, char **argv)
       lpBi->bmiColors[11]  = lpBi->bmiColors[3];    // 3B = BLU
       lpBi->bmiColors[12]  = lpBi->bmiColors[4];    // 4B = YEL
    }
-   else if (no_color == 1) {
+   else if (ui_options.no_color == 1) {
       // monochrome colors (colorlist won't be used in this case)
-      if (no_intensify) {
-         // dull monochrome colors
-         lpBi->bmiColors[1]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[2]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[3]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[4]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[10] = lpBi->bmiColors[7];
-         lpBi->bmiColors[11] = lpBi->bmiColors[7];
-         lpBi->bmiColors[12] = lpBi->bmiColors[7];
-      }
-      else {
-         // intense monochrome colors
-         lpBi->bmiColors[1]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[2]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[3]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[4]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[10] = lpBi->bmiColors[15];
-         lpBi->bmiColors[11] = lpBi->bmiColors[15];
-         lpBi->bmiColors[12] = lpBi->bmiColors[15];
-      }
+      RGBQUAD t = lpBi->bmiColors[ui_options.reverse_video ? (ui_options.no_intensify ? 7 : 15) : 0];
+
+      lpBi->bmiColors[1]  = t;
+      lpBi->bmiColors[2]  = t;
+      lpBi->bmiColors[3]  = t;
+      lpBi->bmiColors[4]  = t;
+      lpBi->bmiColors[9]  = t;
+      lpBi->bmiColors[10] = t;
+      lpBi->bmiColors[11] = t;
+      lpBi->bmiColors[12] = t;
    }
    else {
       // gender colors
-      if (pastel_color) {
+      if (ui_options.pastel_color) {
          colorlist = pastelpeoplecolors;
          lpBi->bmiColors[1]  = lpBi->bmiColors[13];
          lpBi->bmiColors[9]  = lpBi->bmiColors[14];
@@ -2283,7 +2302,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       lpBi->bmiColors[12] = lpBi->bmiColors[9];
    }
 
-   if (reverse_video == 0) {
+   if (ui_options.reverse_video == 0) {
       RGBQUAD t = lpBi->bmiColors[0];
       lpBi->bmiColors[0]  = lpBi->bmiColors[15];
       lpBi->bmiColors[15] = t;
@@ -2299,7 +2318,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    /* Initialize the display window linked list */
 
-   DisplayRoot = get_mem(sizeof(DisplayType));
+   DisplayRoot = (DisplayType *) get_mem(sizeof(DisplayType));
    DisplayRoot->Line[0] = -1;
    DisplayRoot->Next = NULL;
    DisplayRoot->Prev = NULL;
@@ -2342,11 +2361,11 @@ extern void uims_display_help(void)
 
 
 
-Private char version_mem[12];
+static char version_mem[12];
 
 extern char *uims_version_string (void)
 {
-   sprintf (version_mem, "%swin", sdui_version);
+   wsprintf(version_mem, "%swin", sdui_version);
    return version_mem;
 }
 
@@ -2377,11 +2396,8 @@ void ShowListBox(int nWhichOne)
 
       if (nLastOne == match_number) {
          int iu;
-         uims_reply kind;
 
          UpdateStatusBar("<number>");
-
-         kind = 0;
 
          for (iu=0 ; iu<NUM_CARDINALS; iu++) {
             Cstring name = cardinals[iu];
@@ -2395,16 +2411,13 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, kind));
+                        (LPARAM) MAKELONG(iu, 0));
          }
       }
       else if (nLastOne == match_circcer) {
          unsigned int iu;
-         uims_reply kind;
 
          UpdateStatusBar("<circulate replacement>");
-
-         kind = 0;
 
          for (iu=0 ; iu<number_of_circcers ; iu++) {
             Cstring name = circcer_calls[iu]->menu_name;
@@ -2418,19 +2431,15 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, kind));
+                        (LPARAM) MAKELONG(iu, 0));
          }
       }
       else if (nLastOne >= match_taggers &&
                nLastOne < match_taggers+NUM_TAGGER_CLASSES) {
+         unsigned int iu;
          int tagclass = nLastOne - match_taggers;
 
-         unsigned int iu;
-         uims_reply kind;
-
          UpdateStatusBar("<tagging call>");
-
-         kind = 0;
 
          for (iu=0 ; iu<number_of_taggers[tagclass] ; iu++) {
             Cstring name = tagger_calls[tagclass][iu]->menu_name;
@@ -2444,18 +2453,16 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, kind));
+                        (LPARAM) MAKELONG(iu, 0));
          }
       }
       else if (nLastOne == match_startup_commands) {
          Cstring *menu;
-         uims_reply kind;
 
          UpdateStatusBar("<startup>");
 
-         kind = ui_start_select;
          menu = startup_commands;
-         menu_length = NUM_START_SELECT_KINDS;
+         menu_length = num_startup_commands;
 
          for (i=0 ; i<menu_length ; i++) {
             Cstring name = menu[i];
@@ -2469,15 +2476,11 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_start_select));
          }
       }
       else if (nLastOne == match_resolve_commands) {
-         Cstring *menu;
-         uims_reply kind;
-
-         kind = ui_resolve_select;
-         menu = resolve_command_strings;
+         Cstring *menu = resolve_command_strings;
          menu_length = number_of_resolve_commands;
 
          for (i=0 ; i<menu_length ; i++) {
@@ -2492,16 +2495,14 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_resolve_select));
          }
       }
       else if (nLastOne == match_directions) {
          Cstring *menu;
-         uims_reply kind;
 
          UpdateStatusBar("<direction>");
 
-         kind = ui_special_concept;
          menu = &direction_names[1];
          menu_length = last_direction_kind;
 
@@ -2517,17 +2518,14 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_special_concept));
          }
       }
       else if (nLastOne == match_selectors) {
-         Cstring *menu;
-         uims_reply kind;
+         Cstring *menu = selector_menu_list;
 
          UpdateStatusBar("<selector>");
 
-         kind = ui_special_concept;
-         menu = selector_menu_list;
          menu_length = last_selector_kind;
 
          for (i=0 ; i<menu_length ; i++) {
@@ -2542,15 +2540,11 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_special_concept));
          }
       }
       else {
-         uims_reply kind;
-
          UpdateStatusBar(menu_names[nLastOne]);
-
-         kind = ui_call_select;
 
          for (i = 0; i < number_of_calls[nLastOne]; i++) {
             Cstring name = main_call_lists[nLastOne][i]->menu_name;
@@ -2564,7 +2558,7 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_call_select));
          }
 
          if (allowing_all_concepts) {
@@ -2646,6 +2640,10 @@ extern uims_reply uims_get_startup_command(void)
       /* Translate the command. */
       uims_menu_index = (int) command_command_values[uims_menu_index];
    }
+   else if (user_match.match.kind == ui_start_select) {
+      /* Translate the command. */
+      uims_menu_index = (int) startup_command_values[uims_menu_index];
+   }
 
    return user_match.match.kind;
 }
@@ -2725,7 +2723,7 @@ extern int uims_do_outfile_popup(char dest[])
 {
    char myPrompt[MAX_TEXT_LINE_LENGTH];
 
-   sprintf(myPrompt, "Sequence output file is \"%s\". Enter new name:", outfile_string);
+   wsprintf(myPrompt, "Sequence output file is \"%s\". Enter new name:", outfile_string);
    return do_general_text_popup(myPrompt, dest);
 }
 
@@ -2735,9 +2733,9 @@ extern int uims_do_header_popup(char dest[])
    char myPrompt[MAX_TEXT_LINE_LENGTH];
 
    if (header_comment[0])
-      sprintf(myPrompt, "Current title is \"%s\". Enter new title:", header_comment);
+      wsprintf(myPrompt, "Current title is \"%s\". Enter new title:", header_comment);
    else
-      sprintf(myPrompt, "Enter new title:");
+      wsprintf(myPrompt, "Enter new title:");
 
    return do_general_text_popup(myPrompt, dest);
 }
@@ -2783,7 +2781,7 @@ extern int uims_do_session_init_popup(void)
 {
    if (MessageBox(hwndMain, "You already have a session file.\n"
                   "Do you really want to delete it and start over?",
-                  "Confirmation", MB_YESNO) == IDYES)
+                  "Confirmation", MB_ICONEXCLAMATION | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK)
       return 1;
    else
       return 0;
@@ -2793,7 +2791,7 @@ extern int uims_do_session_init_popup(void)
 extern int uims_do_abort_popup(void)
 {
    if (MessageBox(hwndMain, "Do you really want to abort this sequence?",
-                  "Confirmation", MB_YESNO) == IDYES)
+                  "Confirmation", MB_ICONEXCLAMATION | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK)
       return POPUP_ACCEPT;
    else
       return POPUP_DECLINE;
@@ -2977,7 +2975,7 @@ extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
    CurDisplay->Line[DISPLAY_LINE_LENGTH-1] = 0;
    CurDisplay->in_picture = drawing_picture;
 
-   if ((CurDisplay->in_picture & 1) && no_graphics == 0) {
+   if ((CurDisplay->in_picture & 1) && ui_options.no_graphics == 0) {
       if ((CurDisplay->in_picture & 2)) {
          CurDisplay->Height = BMP_PERSON_SIZE+BMP_PERSON_SPACE;
          CurDisplay->DeltaToNext = (BMP_PERSON_SIZE+BMP_PERSON_SPACE)/2;
@@ -2997,7 +2995,7 @@ extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
    }
 
    if (!CurDisplay->Next) {
-      CurDisplay->Next = get_mem(sizeof(DisplayType));
+      CurDisplay->Next = (DisplayType *) get_mem(sizeof(DisplayType));
       CurDisplay->Next->Prev = CurDisplay;
       CurDisplay = CurDisplay->Next;
       CurDisplay->Next = NULL;
@@ -3013,7 +3011,7 @@ extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
 
 extern void uims_bell(void)
 {
-   if (!no_sound) MessageBeep(MB_ICONEXCLAMATION);
+   if (!ui_options.no_sound) MessageBeep(MB_ICONEXCLAMATION);
 }
 
 
@@ -3062,6 +3060,17 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max,
 }
 
 
+extern void uims_print_this(long_boolean in_startup)
+{
+   windows_print_this(hwndMain, szMainTitle, GLOBhInstance);
+}
+
+extern void uims_print_any(long_boolean in_startup)
+{
+   windows_print_any(hwndMain, szMainTitle, GLOBhInstance);
+}
+
+
 extern void uims_database_tick_max(int n)
 {
    SendMessage(hwndProgress, PBM_SETRANGE, 0, MAKELONG(0, n));
@@ -3083,7 +3092,7 @@ extern void uims_database_tick_end(void)
 
 extern void uims_database_error(Cstring message, Cstring call_name)
 {
-   MessageBox(hwndMain, call_name, message, MB_OK);
+   MessageBox(hwndMain, call_name, message, MB_OK | MB_ICONEXCLAMATION);
    //   uims_final_exit(0);
 }
 
@@ -3105,18 +3114,26 @@ extern void uims_fatal_error(Cstring pszLine1, Cstring pszLine2)
 
    if (pszLine2 && pszLine2[0]) {
       char msg[200];
-      sprintf(msg, "%s: %s", pszLine1, pszLine2);
+      wsprintf(msg, "%s: %s", pszLine1, pszLine2);
       pszLine1 = msg;   /* Yeah, we can do that.  Yeah, it's sleazy. */
    }
 
-   MessageBox(hwndMain, pszLine1, "Error", MB_OK);
+   MessageBox(hwndMain, pszLine1, "Error", MB_OK | MB_ICONEXCLAMATION);
 }
 
 
 extern void uims_final_exit(int code)
 {
-   if (hwndMain)
+   if (hwndMain) {
+      // Check whether we should write out the transcript file.
+      if (code == 0 && wrote_a_sequence) {
+         if (MessageBox(hwndMain, "Do you want to print the file?",
+                        "Confirmation", MB_ICONINFORMATION | MB_YESNO | MB_DEFBUTTON2) == IDYES)
+            PrintFile(outfile_string, hwndMain, szMainTitle, GLOBhInstance);
+      }
+
       SendMessage(hwndMain, WM_USER+2, 0, 0L);
+   }
 
    (void) GlobalFree(lpBi);
    ExitProcess(code);

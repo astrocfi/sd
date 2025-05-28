@@ -1,4 +1,4 @@
-\input whatever @c %**start of header -*-texinfo-*-
+\input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
 @c Time-stamp: <1998-08-15 10:20:00 wba>
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.81
-@set title2 Database version = 32.81 format = 147
+@set title1 RELEASE NOTES FOR SD VERSION 32.93
+@set title2 Database version = 32.93 format = 151
 @set title3 X11 UI version 1.17, SDTTY UI version 1.11, SD UI version 4.8
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 32.93::
+* 32.9::
 * 32.81::
 * 32.67::
 * 32.65::
@@ -62,7 +64,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.81, Top, (dir)
+@node Intro, 32.93, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -73,11 +75,179 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996-1999 William B. Ackerman
 @sp 3
 @menu
-* 32.81::               Changes in the current version
+* 32.93::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.81, 32.67, Intro, Top
+@node 32.93, 32.9, Intro, Top
+@unnumberedsec Version 32.93 changes
+
+The program has been tested successfully for year 2000 compliance.
+
+When @code{Sd} is installed for Windows 95/98/NT, two new shortcut icons are
+made available, called ``SD nocheckers'' and "SD couple''.  The first runs
+@code{Sd} in such a way that the display looks like the default color scheme
+for @code{Sdtty}.  The second runs @code{Sd} with the ``color_by_couple''
+color scheme.  You can copy these icons to the desktop or start menu in the usual way.
+
+@code{Sd} (but not @code{Sdtty}) can now print the sequence file.  At the end of
+a session, it will ask whether you want to print the file.  The files are still
+written to disk in the usual way, and you can print them later.  See the manual
+for further details.
+
+New concept:  @samp{fast}.  This applies to @samp{<ATC> back to a wave},
+@samp{<ATC> reaction}, and similar things.  It directs the @emph{first} people
+on the tagging call to do the trade, rather than the last people.
+
+New concept:  @samp{drag the <anyone>}.  Ths designated people, rather than doing
+their part of the call, simply stay rigidly attached to their current partner.
+
+New concepts:  @samp{[fractional] [reverse] crazy offset C/L/W}.  Use these
+in a 4x4 matrix occupied as ``stairsteps''.
+
+@code{Sd} now attempts to adhere to the convention that ``but'' modifiers refer
+to whatever is last done by the centers.  This is already commonly recognized for
+calls such as @samp{chain reaction} and @samp{tally ho}.  @code{Sd} now applies
+it to calls like @samp{load the boat} and @samp{square the bases}
+(replace the final centers' @samp{pass thru}) and @samp{percolate} (replace
+the final centers' cross).
+
+This convention does not apply universally.  There are a number of existing uses in
+which the ``but'' call is done by everyone, or is not just the very last thing:
+@samp{spin the pulley}, @samp{line to line}, @samp{lift off}, @samp{cast an anchor}, etc.
+@code{Sd} of course preserves those cases.
+
+The ``but'' ending modifiers can be used in the usual way with calls that also have
+an ``anything'' starting modifier.  For example, you can type
+@samp{[swap around] the boat but [swap around]}.
+
+I do not know how widely accepted this usage is, or is likely to become,
+with dancers and callers.
+
+The program can now do @samp{yoyo scoot chain thru to a wave} from T-boned boxes
+(as after @samp{split circulate and roll}).
+
+The program can now do calls like @samp{swing the fractions} from more setups,
+such as 2x1 diamonds.
+
+The interaction between @samp{shifty} and other concepts
+was improved.  One can now say, for example @samp{finally tandem shifty tap the beaus}
+or @samp{initially tandem shifty tap the beaus}.
+
+Added @samp{spin the windmill} variants that allow you to change the
+number of circulates for the ends.  That is, you can say things like
+@samp{spin the windmill, outsides left and go 3 positions}.
+You can also do @samp{spin the windmill, outsides <anything>} or
+@samp{<anything> the windmill, outsides <anything>},
+in which the final @samp{<anything>} replaces both the turning direction and
+the circulates.
+
+The program can handle parallelograms, and parallelogram split phantom
+setups, when the amount of offset is 25% or 75%.
+
+Fixed bug in fractional @samp{eight chain N} (centers came to wrong hand.)
+Fixed bug in @samp{triple star thru}.
+I thank Dave Clay for bringing the last two items to my attention.
+
+One can now do, for example,
+@samp{sandwich eight chain 3 with cross concentric zip the top}.
+
+Improved the ability to recognize triangles.  For example, from a suitable
+rigger or "dog-bone", you can say things like
+@samp{tandem-based triangles are solid swing thru}, in addition to naming
+the inside or outside triangles.
+
+The usual dozens of other improvements were made.
+
+The database compiler now recognizes C++ style comments.
+
+I thank the organizers of the 1999 National Advanced and Challenge
+Convention for producing tapes.  I thank various C4 callers for pointing out
+how important 75% offset parallelograms, T-boned yoyo scoot chain thru
+to a wave, common spot hourglasses, crazy offsets, complex interactions of
+meta-concepts, and so on, are in modern C4 calling.
+
+@c ************
+@node 32.9, 32.81, 32.93, Top
+@unnumberedsec Version 32.9 changes
+
+The installation program was improved.  If a previous version of @code{Sd} is
+found in the folder @file{C:\Sd}, you are asked whether to save that version,
+and you are allowed to choose the folder in which to place the saved copy.
+
+The program was migrated from C to C++.  Not because of any
+liking for ``object-oriented programming'', but because C++ is,
+in a great many ways, a better language than C.
+
+The programs now use Dynamically Linked Libraries (DLLs) on Windows 95/98/NT.
+
+The @samp{little more} fractionalization issue was addressed.  New calls,
+@samp{little more (nonstandard)} and @samp{little more, ends face <direction> (nonstandard)}
+were added.  The first part of these calls has the ends quarter right (or a
+specified direction) while the centers step and fold.  In the second part, the
+ends counter rotate while the ends circulate.  Callers are reminded that this
+nonstandard usage is not correct according to the Callerlab C2 definitions, the Big Five,
+the Ceder Chest, and the Ben Rubright Pocket Reference.
+
+The "everyone disconnected" concept was improved.  It is now
+possible to do "everyone disconnected mini busy" from a suitable 2x6 or 2x8.
+
+The calls @samp{finish advance to a column}, @samp{beaus advance to a column},
+and @samp{belles advance to a column} have versions with the suffix @samp{(matrix)},
+as in @samp{beaus advance to a column (matrix)}.  Use these versions when
+modifiers such as @samp{3x3} are desired.  These versions are not fully fractionalizable.
+The normal versions are fully fractionalizable, as before.
+You do not need these versions with the @samp{single} modifier.
+
+The program can see a few more resolves than before.
+
+A number of rather useless warning messages were removed.
+
+A careless bug in the handling of @code{<anyone> work <meta-concept>
+<concept>} was fixed.  It is now possible, for example, to do
+@code{centers work initially tandem, nice and easy}.
+
+The program can see 3x1 triangles in a larger variety of setups than before.
+In suitably occupied 4x6, 3x8, or 2x12 matrices, it can see
+a 1x4 or 2x2 virtual setup of 3x1 triangles.  Only 2 of those triangles
+are occupied, of course.
+
+A rather serious bug involving complex interactions of
+meta-concepts with modifiers like @code{cross} or @code{reflected},
+and calls that use such modifiers in their definitions, was fixed.
+It is surprising that this bug was never revealed by any of the
+hundreds of tips at C4 conventions and weekends that the program
+is routinely ``trained'' on.
+
+Fixed a bug in @samp{roll} after certain calls such as @code{remake}.
+I thank Andy Shore for bringing this to my attention.
+
+Fixed a bug in menu operation in the presence of partly typed-in
+calls to Sd.  I thank Uwe Themann for bringing this to my attention.
+
+Fixed a bug in multi-part calls in which an early part is defined
+as-couples and a later part is a space-invader.
+
+Fixed a difficult problem with concepts like @code{piecewise}, @code{twisted},
+and @code{yoyo}.  It is now possible to do things like @samp{piecewise yoyo swing thru}
+correctly.
+
+Fixed a bug in @samp{finally cover up but [chisel thru]}.
+
+The usual dozens of minor changes and improvements were made.
+
+In @code{Sd}, the confirmation popup that appears when you attempt
+to exit the program while a sequence is in progress no longer has ``OK''
+set as the default button.  This will prevent accidental deletion
+of a sequence through careless typing of @key{alt-F4} and @key{ENTER}.
+You must either explicitly click on ``OK'' or type @key{TAB}
+to select that button and then press @key{ENTER}.
+
+We thank the callers at a C4 weekend earlier this year for allowing
+taping.
+
+@c ************
+@node 32.81, 32.67, 32.9, Top
 @unnumberedsec Version 32.81 changes
 
 A bug was fixed in the definition of @samp{little more}.  This is a two-part

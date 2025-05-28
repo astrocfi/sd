@@ -22,7 +22,7 @@ tar cvf psdoc.tar sd_doc.ps demo.ps sessions.ps relnotes.ps
 popd
 copy \temp\psdoc.tar .
 gzip psdoc.tar -c > psdoc.gz
-del ps.msg ps.txt ps.zip
+del ps.msg ps.txt ps.zip ps.asc
 echo cd sd> ps.msg
 echo uufile>> ps.msg
 uuencode psdoc.exe|uufix>> ps.msg
@@ -33,8 +33,9 @@ call make_text sd_doc.ps ps.msg
 call make_text demo.ps ps.msg
 call make_text sessions.ps ps.msg
 call make_text relnotes.ps ps.msg
-pgp -sta +clearsig=on +armor=on ps.msg -u wba -o ps.txt
+pgp -sta +clearsig=on +armor=on ps.msg -u wba -o ps.asc
 del ps.msg
+ren ps.asc ps.txt
 REM zip ps ps.txt
 REM
 REM         The file "ps.zip" may now be unzipped to "ps.txt",

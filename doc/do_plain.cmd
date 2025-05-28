@@ -23,7 +23,7 @@ tar cvf textdoc.tar sd_doc.txt demo.txt sessions.txt relnotes.txt oldnotes
 popd
 copy \temp\textdoc.tar .
 gzip textdoc.tar -c > textdoc.gz
-del plain.msg plain.txt plain.zip
+del plain.msg plain.txt plain.zip plain.asc
 echo cd sd> plain.msg
 echo uufile>> plain.msg
 uuencode textdoc.exe|uufix>> plain.msg
@@ -34,8 +34,9 @@ call make_text sd_doc.txt plain.msg
 call make_text demo.txt plain.msg
 call make_text sessions.txt plain.msg
 call make_text relnotes.txt plain.msg
-pgp -sta +clearsig=on +armor=on plain.msg -u wba -o plain.txt
+pgp -sta +clearsig=on +armor=on plain.msg -u wba -o plain.asc
 del plain.msg
+ren plain.asc plain.txt
 REM zip plain plain.txt
 REM
 REM         The file "plain.zip" may now be unzipped to "plain.txt",

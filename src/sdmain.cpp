@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "32.81"
-#define TIME_STAMP "wba@an.hp.com  31 Ju1 99 $"
+#define VERSION_STRING "32.93"
+#define TIME_STAMP "wba@an.hp.com  5 Dec 99 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -43,12 +43,10 @@
 and the following external variables:
    abs_max_calls
    max_base_calls
-   base_calls
    number_of_taggers
-   tagger_calls
    number_of_circcers
-   circcer_calls
    outfile_string
+   wrote_a_sequence
    header_comment
    need_new_header_comment
    sequence_number
@@ -71,24 +69,16 @@ and the following external variables:
    verify_used_number
    verify_used_selector
    allowing_modifications
-   allowing_all_concepts
-   using_active_phantoms
    elide_blanks
    retain_after_error
-   singing_call_mode
-   diagnostic_mode
-   current_options
-   no_search_warnings
-   conc_elong_warnings
-   dyp_each_warnings
-   useless_phan_clw_warnings
 */
 
 
 #include <stdio.h>
 #include <string.h>
-#include "sd.h"
+#include "sdprog.h"
 #include "paths.h"
+
 
 /* We cause this string (that is, the concatentation of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -151,12 +141,10 @@ Private void display_help(void)
 
 int abs_max_calls;
 int max_base_calls;
-callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
 uint32 number_of_taggers[NUM_TAGGER_CLASSES];
-callspec_block **tagger_calls[NUM_TAGGER_CLASSES];
 uint32 number_of_circcers;
-callspec_block **circcer_calls;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
+long_boolean wrote_a_sequence = FALSE;
 char header_comment[MAX_TEXT_LINE_LENGTH];
 long_boolean need_new_header_comment = FALSE;
 call_list_mode_t glob_call_list_mode;
@@ -183,19 +171,11 @@ call_conc_option_state verify_options;
 long_boolean verify_used_number;
 long_boolean verify_used_selector;
 int allowing_modifications = 0;
-long_boolean allowing_all_concepts = FALSE;
-long_boolean using_active_phantoms = FALSE;
 #ifdef OLD_ELIDE_BLANKS_JUNK
 long_boolean elide_blanks = FALSE;
 #endif
 long_boolean retain_after_error = FALSE;
-int singing_call_mode = 0;
-long_boolean diagnostic_mode = FALSE;
-call_conc_option_state current_options;
-warning_info no_search_warnings = {{0, 0, 0}};
-warning_info conc_elong_warnings = {{0, 0, 0}};
-warning_info dyp_each_warnings = {{0, 0, 0}};
-warning_info useless_phan_clw_warnings = {{0, 0, 0}};
+
 
 /* These variables are are global to this file. */
 
@@ -212,16 +192,6 @@ static int clipboard_size = 0;
 
 static parse_state_type saved_parse_state;
 static parse_block *saved_command_root;
-
-/* This static variable is used by main. */
-
-static concept_descriptor centers_concept = {
-   "centers????",
-   concept_centers_or_ends,
-   TRUE,
-   l_mainstream,
-   {0, selector_centers, FALSE}};
-
 
 
 extern parse_block *mark_parse_blocks(void)
@@ -783,7 +753,7 @@ extern long_boolean query_for_call(void)
          newline();
          writestuff("spin chain and circulate the gears    spin chain and exchange the gears");
          newline();
-         error_flag = 0;
+         error_flag = (error_flag_type) 0;
          goto try_again;
       }
       
@@ -853,7 +823,7 @@ extern long_boolean query_for_call(void)
       }
 
       old_error_flag = error_flag; /* save for refresh command */
-      error_flag = 0;
+      error_flag = (error_flag_type) 0;
 
       if (clipboard_size != 0) {
          int j;
@@ -1199,7 +1169,7 @@ Private long_boolean backup_one_item(void)
 
 /* return TRUE if sequence was written */
 
-Private long_boolean write_sequence_to_file(void)
+static long_boolean write_sequence_to_file(void)
 {
    int getout_ind;
    char date[MAX_TEXT_LINE_LENGTH];
@@ -1225,12 +1195,10 @@ Private long_boolean write_sequence_to_file(void)
    open_file();
    enable_file_writing = TRUE;
    doublespace_file();
-
    get_date(date);
    writestuff(date);
    writestuff("     ");
    write_header_stuff(FALSE, history[history_ptr].state.result_flags);
-
    newline();
 
    if (!sequence_is_resolved()) {
@@ -1302,6 +1270,7 @@ Private long_boolean write_sequence_to_file(void)
    writestuff("\".");
    newline();
 
+   wrote_a_sequence = TRUE;
    global_age++;
    return TRUE;
 }
@@ -1435,6 +1404,20 @@ extern int sdmain(int argc, char *argv[])
 {
    int i;
 
+   // Initialize all the callbacks that sdlib will need.
+
+   writechar_block.usurping_writechar = FALSE;
+
+   the_callback_block.get_mem_fn = &get_mem;
+   the_callback_block.uims_database_error_fn = &uims_database_error;
+   the_callback_block.get_parse_block_fn = &get_parse_block;
+   the_callback_block.writechar_fn = &writechar;
+   the_callback_block.writestuff_fn = &writestuff;
+   the_callback_block.do_throw_fn = &do_throw;
+   the_callback_block.do_subcall_query_fn = &do_subcall_query;
+   the_callback_block.parse_state_ptr = &parse_state;
+   the_callback_block.writechar_block_ptr = &writechar_block;
+
    enable_file_writing = FALSE;
    singlespace_mode = FALSE;
    nowarn_mode = FALSE;
@@ -1457,29 +1440,23 @@ extern int sdmain(int argc, char *argv[])
       seeding the random number generator. */
    general_initialize();
 
-   /* Read the command line arguments and process the initialization file.
-      This will return TRUE if we are to cease execution immediately. */
+   // Read the command line arguments and process the initialization file.
+   // This will return TRUE if we are to cease execution immediately.
+   // If not, it will have called "initialize_misc_lists" to do lots
+   // of initialization of the internal workings, at the appropriate time.
+   // That appropriate time is after the level has been determined
+   // (so the "on-level concept lists" for the normalize command will
+   // be correct) but before the database is analyzed (the internal workings
+   // must be initialized before executing calls.)
 
    if (open_session(argc, argv)) goto normal_exit;
-
-   for (i=0 ; i<NUM_WARNINGS ; i++) {
-      char c = warning_strings[i][0];
-      if (c == '*' || c == '#')
-         no_search_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (c == '+')
-         conc_elong_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (c == '=')
-         dyp_each_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (c == '#')
-         useless_phan_clw_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-   }
 
    global_age = 1;
 
    /* Create the top level error handler. */
 
    longjmp_ptr = &longjmp_buffer;          /* point the global pointer at it. */
-   error_flag = setjmp(longjmp_buffer.the_buf);
+   error_flag = (error_flag_type) setjmp(longjmp_buffer.the_buf);
 
    if (error_flag) {
 
@@ -1538,8 +1515,6 @@ extern int sdmain(int argc, char *argv[])
    clear_screen();
 
    if (!diagnostic_mode) {
-      FILE *session;
-
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
@@ -1551,6 +1526,8 @@ extern int sdmain(int argc, char *argv[])
       newline();
       writestuff("Copyright (c) 1995, Robert E. Cays");
       newline();
+      writestuff("Copyright (c) 1996, Charles Petzold");
+      newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY;");
       newline();
       writestuff("   for details see the license.");
@@ -1560,9 +1537,9 @@ extern int sdmain(int argc, char *argv[])
       writestuff("   welcome to redistribute it.");
       newline();
       newline();
-      uims_display_ui_intro_text();   /* Sdtty shows additional stuff about typing question mark. */
+      uims_display_ui_intro_text();   // Sdtty shows additional stuff about typing question mark.
 
-      session = fopen(SESSION_FILENAME, "r");
+      FILE *session = fopen(SESSION_FILENAME, "r");
       if (session) {
          (void) fclose(session);
       }
@@ -1653,6 +1630,15 @@ extern int sdmain(int argc, char *argv[])
       else
          singing_call_mode = 2;
       goto new_sequence;
+   case start_select_select_print_font:
+      uims_choose_font(TRUE);
+      goto new_sequence;
+   case start_select_print_current:
+      uims_print_this(TRUE);
+      goto new_sequence;
+   case start_select_print_any:
+      uims_print_any(TRUE);
+      goto new_sequence;
    case start_select_init_session_file:
       {
          Cstring *q;
@@ -1661,19 +1647,19 @@ extern int sdmain(int argc, char *argv[])
          if (session) {
             (void) fclose(session);
             if (uims_do_session_init_popup() != POPUP_ACCEPT) {
-               writestuff("No action has been taken.\n");
+               writestuff("No action has been taken.");
                newline();
                goto new_sequence;
             }
             else if (!rename(SESSION_FILENAME, SESSION2_FILENAME)) {
                writestuff("File '" SESSION_FILENAME "' has been saved as '"
-                          SESSION2_FILENAME "'.\n");
+                          SESSION2_FILENAME "'.");
                newline();
             }
          }
 
          if (!(session = fopen(SESSION_FILENAME, "w"))) {
-            writestuff("Failed to create '" SESSION_FILENAME "'.\n");
+            writestuff("Failed to create '" SESSION_FILENAME "'.");
             newline();
             goto new_sequence;
          }
@@ -1701,7 +1687,7 @@ extern int sdmain(int argc, char *argv[])
 
       copy_failed:
 
-         writestuff("Failed to create '" SESSION_FILENAME "'\n");
+         writestuff("Failed to create '" SESSION_FILENAME "'");
          newline();
          (void) fclose(session);
          goto new_sequence;
@@ -1748,7 +1734,7 @@ extern int sdmain(int argc, char *argv[])
    history[1].state = startinfolist[uims_menu_index].the_setup;
    written_history_items = -1;
 
-   error_flag = 0;
+   error_flag = (error_flag_type) 0;
    
    /* Come here to read a bunch of concepts and a call and add an item to the history. */
    
@@ -1885,7 +1871,7 @@ extern int sdmain(int argc, char *argv[])
                uint32 directions1, directions2, livemask1, livemask2;
                parse_block *saved_root;
                setup *old = &history[history_ptr].state;
-               setup *new = &clipboard[clipboard_size-1].state;
+               setup *nuu = &clipboard[clipboard_size-1].state;
                uint32 mask = 0777777;
 
                history[history_ptr+1] = clipboard[clipboard_size-1];
@@ -1899,7 +1885,7 @@ extern int sdmain(int argc, char *argv[])
                   call execution is problematical.  We don't translate selectors.
                   The operator is responsible for what happens. */
 
-               if (new->kind != old->kind) {
+               if (nuu->kind != old->kind) {
                   status |= 4;
                   goto doitanyway;
                }
@@ -1914,7 +1900,7 @@ extern int sdmain(int argc, char *argv[])
 
                for (i=0; i<=setup_attrs[old->kind].setup_limits; i++) {
                   uint32 p = old->people[i].id1;
-                  uint32 q = new->people[i].id1;
+                  uint32 q = nuu->people[i].id1;
                   uint32 oldmask = mask;
                   uint32 a = (q >> 6) & 3;
                   uint32 b = (p >> 6) & 3;
@@ -1949,7 +1935,7 @@ extern int sdmain(int argc, char *argv[])
 
                status |=
                   translate_selector_fields(history[history_ptr+1].command_root,
-                                            (mask << 1) | ((new->rotation ^ old->rotation) & 1));
+                                            (mask << 1) | ((nuu->rotation ^ old->rotation) & 1));
 
                if (status & 2) {
                   reset_parse_tree(saved_root, history[history_ptr+1].command_root);
@@ -1990,7 +1976,7 @@ extern int sdmain(int argc, char *argv[])
 
             if (status & 4) error_flag = error_flag_formation_changed;
             else if (status & 1) error_flag = error_flag_selector_changed;
-            else error_flag = 0;
+            else error_flag = (error_flag_type) 0;
          }
 
          goto start_cycle;
@@ -2213,6 +2199,15 @@ extern int sdmain(int argc, char *argv[])
          if (!write_sequence_to_file())
             goto start_cycle; /* user cancelled action */
          goto new_sequence;
+      case command_select_print_font:
+         uims_choose_font(FALSE);
+         goto start_cycle;
+      case command_print_current:
+         uims_print_this(FALSE);
+         goto start_cycle;
+      case command_print_any:
+         uims_print_any(FALSE);
+         goto start_cycle;
       default:     /* Should be some kind of search command. */
          /* If it wasn't, we have a serious problem. */
          if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;

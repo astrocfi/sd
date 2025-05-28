@@ -1,14 +1,21 @@
 ..\sd\sd.exe
 ..\sd\sdtty.exe
 ..\sd\mkcalls.exe
+..\sd\sdlib.dll
 ..\sd\sd_calls.txt
 ..\sd\sd_calls.dat
+..\sd\sd.ico
 ..\sd\sdtty.ico
+..\sd\sdry.ico
+..\sd\sdby.ico
+..\sd\sdcpl.ico
 ..\sd\SD.lnk
 ..\sd\SDTTY.lnk
+"..\sd\SD nocheckers.lnk"
+"..\sd\SD couple.lnk"
 "..\sd\Edit sd.ini.lnk"
 sample1.ini
 sample2.ini
 sample3.ini
 readme
-deploy.bat
+..\sd\deploy.exe

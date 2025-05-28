@@ -51,8 +51,8 @@ The knowledge of calls and concepts that this program can provide is
 only a tiny part what you need to learn in order to be a good caller
 or dancer.  To call successfully, you need to master many skills,
 such as timing, flow, judging difficulty, floor interaction, and choosing
-precisely the right words to say.  This last skill is as improtant at high levels
-as at low levels.  Subtle differences in the words you choose,
+precisely the right words to say.  This last skill is as important at high
+levels as at low levels.  Subtle differences in the words you choose,
 and their timing and inflection, can have a tremendous influence on the
 success of the dancers.  Sd attempts to print the correct words in all
 cases, but you will only succeed if you have a deep understanding of
@@ -395,10 +395,10 @@ You can, of course, copy the shortcuts anywhere, and edit them with the ``Proper
 operation of the Windows Explorer.  Among the things you can do is put command-line
 arguments into them.  For example, you can make another copy of the @code{Sd} icon
 on the Desktop (under a different name), and arrange for the program, when launched
-with that icon, to run in inverse video mode.  Run the ``Properties'' operation
+with that icon, to run in reverse video mode.  Run the ``Properties'' operation
 on the copied icon, and change the @file{Target} specification on the
 @file{Shortcut} page from ``@code{C:\sd\sd.exe}'' to
-``@code{C:\sd\sd.exe -inverse_video}''.
+``@code{C:\sd\sd.exe -reverse_video}''.
 
 @node Licensing Terms, Author Contact, Installing on a PC, Intro
 @unnumberedsec Licensing Terms

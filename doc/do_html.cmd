@@ -2,7 +2,7 @@ REM        This creates the message with
 REM           all html files, for uploading to the web.
 REM
 make html.all
-del html.msg html.txt html.zip
+del html.msg html.txt html.zip html.asc
 echo cd public_html/sd/manual>> html.msg
 call make_text sd_doc.html html.msg
 call make_text sd_doc_toc.html html.msg
@@ -14,8 +14,9 @@ call make_text sessions.html html.msg
 call make_text sessions_toc.html html.msg
 echo cd ../demo>> html.msg
 call make_text demo.html html.msg
-pgp -sta +clearsig=on +armor=on html.msg -u wba -o html.txt
+pgp -sta +clearsig=on +armor=on html.msg -u wba -o html.asc
 del html.msg
+ren html.asc html.txt
 REM zip html html.txt
 REM
 REM         The file "html.zip" may now be unzipped to "html.txt",

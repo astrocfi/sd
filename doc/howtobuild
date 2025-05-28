@@ -9,7 +9,7 @@
                     UPDATING VERSION NUMBERS
 
 Be sure the version numbers and dates are correct in:
-    [sd]    sdmain.c     (version # is visible)
+    [sd]    sdmain.cpp   (version # is visible)
     [sd]    sd.rc        (SD & UI version #'s are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
     [sddoc] title.lst    (version # is visible)
@@ -60,25 +60,28 @@ Now give the command "do_binary3" (in sddoc) to save the DJGPP build for Windows
 
 EXIT FROM THIS SHELL!!!!!  The environment from "setdjgpp" must be destroyed.
 
-    Delete any upper-case MKCALLS.EXE and SDTTY.EXE left over from DJGPP,
-    so that MSVC++ will create them in lower case.  This also prevents
-    distribution of the wrong stuff.
+    Delete any upper-case MKCALLS.EXE, SDTTY.EXE, and SD_CALLS_DAT left over
+    from DJGPP, so that MSVC++ will create them in lower case.
+    This also prevents distribution of the wrong stuff.
 
     Set project configuration to "sdtty release", "sd release", and
     "mkcalls release", issuing "build / rebuild all" in each case.
+
+BE SURE THAT MKCALLS GOT BUILT BY MSVC++!!
+
+BE SURE THAT UPPER-CASE FILES WERE DELETED!!
+
+BE SURE THAT THIS WAS THE LAST BUILD BEFORE MAKING NORMAL "new_binary" RELEASE!!!
+BUILD SD, SDTTY, AND MKCALLS UNDER MSVC++.
+
+Now run mkcalls.
 
 Then do the usual:
     cd regress
     del *.tmp
     doit
 
-BE SURE THAT MKCALLS GOT BUILT BY MSVC++!!
-
-BE SURE THAT THIS WAS THE LAST BUILD BEFORE MAKING NORMAL "new_binary" RELEASE!!!
-BUILD SD, SDTTY, AND MKCALLS UNDER MSVC++.
-
-Now run mkcalls (MSVC++ doesn't do that, not that it matters),
-and give the command "new_binary" (in sddoc) to save the MSVC++
+Give the command "new_binary" (in sddoc) to save the MSVC++
 builds of Sdtty and Sd
 
 -----------------------------------------------------------------

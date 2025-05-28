@@ -5,4 +5,4 @@
 -win32
 -le
 -st "Sd Setup"
--c deploy.bat
+-c deploy.exe

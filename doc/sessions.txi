@@ -1,4 +1,4 @@
-\input whatever @c %**start of header -*-texinfo-*-
+\input texinfo @c %**start of header -*-texinfo-*-
 @setfilename sessions.info
 @settitle Sdtty sessions
 @c Time-stamp: <96/04/05 14:25:00 wba>

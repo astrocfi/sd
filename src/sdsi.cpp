@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 32. */
 
 /* This defines the following functions:
    general_initialize
@@ -66,13 +66,8 @@ and the following external variables:
    command_command_values
    number_of_resolve_commands
    resolve_command_strings
-   startup_commands
-   no_graphics
-   no_intensify
-   reverse_video
-   pastel_color
-   no_color
-   no_sound
+   concept_key_table
+   ui_options
    random_number
    hashed_randoms
    database_filename
@@ -124,8 +119,14 @@ and the following external variables:
       appearing in the XOPEN manual into ANSI C.  We can't
       imagine why anyone would ever use the prototypes
       in the prehistoric nomenclature. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void srand48(long int);
 extern long int lrand48(void);
+#ifdef __cplusplus
+}
+#endif
 #endif
 
 #if defined(_SYS5_SOURCE) || defined(_XOPEN_SOURCE) || defined(_AES_SOURCE) || defined(sun)
@@ -151,16 +152,32 @@ extern long int lrand48(void);
 #if __STDC__ || defined(sun)
 #include <stdlib.h>
 #else
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
 extern char *realloc(char *oldp, unsigned int siz);
 extern void srand48(long int);
 extern long int lrand48(void);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 #if defined(WIN32)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void srand(long int);
 extern long int rand(void);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 #if !defined(sun) && (!__STDC__ || defined(MSDOS))
@@ -179,7 +196,7 @@ extern char *strerror(int);
    started taking these standards as semi-seriously as they do now, it was
    MUCH HARDER to make a program portable than what you just saw. */
 
-#include "sd.h"
+#include "sdprog.h"
 #include "paths.h"
 
 
@@ -191,21 +208,85 @@ extern char *strerror(int);
    to it at that line. */
 
 int session_index = 0;        /* If this is nonzero, we have opened a session. */
-int num_command_commands;   /* Size of the command menu. */
+int num_command_commands;     // Size of the command menu.
 Cstring *command_commands;
 command_kind *command_command_values;
+int num_startup_commands;     // Size of the startup menu.
+Cstring *startup_commands;
+start_select_kind *startup_command_values;
 int number_of_resolve_commands;
 Cstring *resolve_command_strings;
 resolve_command_kind *resolve_command_values;
-int no_graphics = 0;     /* 1 = "no_checkers"; 2 = "no_graphics" */
-int no_intensify = 0;
-int reverse_video = 0;   /* 0 = black-on-white (default); 1 = white-on-black */
-int pastel_color = 0;    /* 1 = use pastel red/grn for color by gender;
-                            0 = bold colors.  Color by couple or color by corner
-                            are always done with bold colors. */
-int no_color = 0;        /* 0 = default (by gender); 1 = none at all;
-                            2 = by_couple; 3 = by_corner */
-int no_sound = 0;
+
+/* e1 = page up
+   e2 = page down
+   e3 = end
+   e4 = home
+   e5 = left arrow
+   e6 = up arrow
+   e7 = right arrow
+   e8 = down arrow
+   e13 = insert
+   e14 = delete */
+
+Cstring concept_key_table[] = {
+   /* These are the standard bindings. */
+   "cu     deleteline",
+   "cx     deleteword",
+   "e6     lineup",
+   "e8     linedown",
+   "e1     pageup",
+   "e2     pagedown",
+   "+f1    heads start",
+   "+sf1   sides start",
+   "+cf1   just as they are",
+   "f2     two calls in succession",
+   "sf2    twice",
+   "f3     pick random call",
+   "sf3    pick concept call",
+   "cf3    pick simple call",
+   "f4     resolve",
+   "sf4    reconcile",
+   "cf4    normalize",
+   "f5     refresh display",
+   "sf5    keep picture",
+   "cf5    insert a comment",
+   "e13    insert a comment",   /* insert */
+   "f6     simple modifications",
+   "sf6    allow modifications",
+   "cf6    centers",
+   "f7     toggle concept levels",
+   "+f7    toggle concept levels",
+   "sf7    toggle active phantoms",
+   "+sf7   toggle active phantoms",
+   "f8     quoteanything",
+   "sf8    cut to clipboard",
+   "cf8    paste one call",
+   "f9     undo last call",
+   "+f9    exit from the program",
+   "*f9    abort the search",
+   "sf9    undo last call",
+   "+sf9   exit from the program",
+   "*sf9   abort the search",
+   "f10    write this sequence",
+   "*f10   write this sequence",
+   "sf10   change output file",
+   "+sf10  change output file",
+   "f11    pick level call",
+   "sf11   pick 8 person level call",
+   "*f12   find another",
+   "*sf12  accept current choice",
+   "*cf12  previous",
+   "*af12  next",
+   "*se6   raise reconcile point",  /* shift up arrow */
+   "*e5    previous",               /* left arrow */
+   "*e7    next",                   /* right arrow */
+   "*se8   lower reconcile point",  /* shift down arrow */
+   (char *) 0};
+
+
+ui_option_type ui_options;
+
 int random_number;
 int hashed_randoms;
 char *database_filename = DATABASE_FILENAME;
@@ -309,11 +390,13 @@ extern void *get_more_mem(void *oldp, uint32 siz)
 
 /* This will not fail catastrophically, but may return nil pointer
    on nonzero request.  Client must check and react accordingly. */
+/* An older version of this actually called "malloc" or "realloc"
+   depending on whether the incoming pointer was nil.  There was
+   a comment pointing out that this was because
+   "SunOS 4 realloc doesn't handle NULL".  Isn't that funny? */
 extern void *get_more_mem_gracefully(void *oldp, uint32 siz)
 {
-   if (!oldp)
-      return malloc(siz);	/* SunOS 4 realloc doesn't handle NULL */
-   return realloc(oldp, siz);
+   return realloc((char *) oldp, siz);
 }
 
 
@@ -449,9 +532,6 @@ extern void open_file(void)
          file_error = TRUE;
          return;
       }
-
-
-
 
       goto really_just_append;
    }
@@ -618,18 +698,17 @@ extern void open_file(void)
       newline();
    }
    else {
-      char formfeed = '\f';
-
       if (last_file_position == -1) {
          writestuff("Appending to existing file.");
          newline();
          newline();
       }
 
-      if ((fwrite(&formfeed, 1, 1, fildes) != 1) || ferror(fildes)) {
+      if ((fwrite("\f", 1, 1, fildes) != 1) || ferror(fildes)) {
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-         (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
-         file_error = TRUE;
+         (void) strncpy(fail_message, "write formfeed", MAX_ERR_LENGTH);
+         file_error = TRUE;      /* Indicate that sequence will not get written. */
+         return;
       }
    }
 }
@@ -647,14 +726,16 @@ extern void write_file(char line[])
 #define NLSIZE 1
 #endif
 
-   if (file_error) return;    /* Don't keep trying after a failure. */
+   if (file_error) return;    // Don't keep trying after a failure.
 
    size = strlen(line);
-   if ((fwrite(line, 1, size, fildes) != size) || ferror(fildes)) {
-      (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-      (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
-      file_error = TRUE;      /* Indicate that sequence will not get written. */
-      return;
+   if (size != 0) {
+      if ((fwrite(line, 1, size, fildes) != size) || ferror(fildes)) {
+         (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+         (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
+         file_error = TRUE;      /* Indicate that sequence will not get written. */
+         return;
+      }
    }
 
    if ((fwrite(nl, 1, NLSIZE, fildes) != NLSIZE) || ferror(fildes)) {
@@ -769,11 +850,6 @@ extern long_boolean parse_level(Cstring s, dance_level *levelp)
          return FALSE;
    }
 }
-
-
-
-
-extern FILE *call_list_file;
 
 
 extern char *read_from_call_list_file(char name[], int n)
@@ -1001,6 +1077,21 @@ extern void prepare_to_read_menus(void)
          command_command_values[i] = command_menu[i].action;
       }
 
+      /* Find out how big the startup menu needs to be. */
+
+      for (num_startup_commands = 0 ;
+           startup_menu[num_startup_commands].startup_name ;
+           num_startup_commands++) ;
+
+      startup_commands = (Cstring *) get_mem(sizeof(Cstring) * num_startup_commands);
+      startup_command_values =
+         (start_select_kind *) get_mem(sizeof(start_select_kind) * num_startup_commands);
+
+      for (i = 0 ; i < num_startup_commands; i++) {
+         startup_commands[i] = startup_menu[i].startup_name;
+         startup_command_values[i] = startup_menu[i].action;
+      }
+
       /* Find out how big the resolve menu needs to be. */
 
       for (number_of_resolve_commands = 0 ;
@@ -1016,16 +1107,6 @@ extern void prepare_to_read_menus(void)
          resolve_command_values[i] = resolve_menu[i].action;
       }
    }
-
-
-   /* A few other modules want to initialize some static tables. */
-
-   initialize_tandem_tables();
-   initialize_getout_tables();
-   initialize_restr_tables();
-   initialize_conc_tables();
-   initialize_map_tables();
-   initialize_touch_tables();
 }
 
 
@@ -1033,6 +1114,8 @@ extern void initialize_misc_lists(void)
 {
    int i;
    uint32 ui;
+
+   initialize_sdlib();
 
    /* Create the tagger menu lists */
 
@@ -1062,6 +1145,8 @@ extern void initialize_misc_lists(void)
       circcer_menu_list[ui] = circcer_calls[ui]->menu_name;
 
    circcer_menu_list[number_of_circcers] = (Cstring) 0;
+
+   initialize_getout_tables();
 }
 
 
@@ -1162,30 +1247,36 @@ extern long_boolean open_session(int argc, char **argv)
             glob_call_list_mode = call_list_mode_abridging;
             if (argno+1 < nargs) call_list_string = args[argno+1];
          }
+         else if (strcmp(&args[argno][1], "sequence") == 0) {
+	     if (argno+1 < nargs) new_outfile_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "db") == 0) {
+            if (argno+1 < nargs) database_filename = args[argno+1];
+         }
          else if (strcmp(&args[argno][1], "no_intensify") == 0)
-            { no_intensify = 1; continue; }
+            { ui_options.no_intensify = 1; continue; }
          else if (strcmp(&args[argno][1], "reverse_video") == 0)
-            { reverse_video = 1; continue; }
+            { ui_options.reverse_video = 1; continue; }
          else if (strcmp(&args[argno][1], "normal_video") == 0)
-            { reverse_video = 0; continue; }
+            { ui_options.reverse_video = 0; continue; }
          else if (strcmp(&args[argno][1], "pastel_color") == 0)
-            { pastel_color = 1; continue; }
+            { ui_options.pastel_color = 1; continue; }
          else if (strcmp(&args[argno][1], "bold_color") == 0)
-            { pastel_color = 0; continue; }
+            { ui_options.pastel_color = 0; continue; }
          else if (strcmp(&args[argno][1], "no_color") == 0)
-            { no_color = 1; continue; }
+            { ui_options.no_color = 1; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple") == 0)
-            { no_color = 2; continue; }
+            { ui_options.no_color = 2; continue; }
          else if (strcmp(&args[argno][1], "color_by_corner") == 0)
-            { no_color = 3; continue; }
+            { ui_options.no_color = 3; continue; }
          else if (strcmp(&args[argno][1], "no_sound") == 0)
-            { no_sound = 1; continue; }
+            { ui_options.no_sound = 1; continue; }
          else if (strcmp(&args[argno][1], "single_click") == 0)
             { accept_single_click = TRUE; continue; }
          else if (strcmp(&args[argno][1], "no_checkers") == 0)
-            { no_graphics = 1; continue; }
+            { ui_options.no_graphics = 1; continue; }
          else if (strcmp(&args[argno][1], "no_graphics") == 0)
-            { no_graphics = 2; continue; }
+            { ui_options.no_graphics = 2; continue; }
          else if (strcmp(&args[argno][1], "diagnostic") == 0)
             { diagnostic_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "singlespace") == 0)
@@ -1200,12 +1291,6 @@ extern long_boolean open_session(int argc, char **argv)
             { retain_after_error = FALSE; continue; }
          else if (strcmp(&args[argno][1], "retain_after_error") == 0)
             { retain_after_error = TRUE; continue; }
-         else if (strcmp(&args[argno][1], "sequence") == 0) {
-	     if (argno+1 < nargs) new_outfile_string = args[argno+1];
-         }
-         else if (strcmp(&args[argno][1], "db") == 0) {
-            if (argno+1 < nargs) database_filename = args[argno+1];
-         }
          else
             uims_bad_argument("Unknown flag:", args[argno], (char *) 0);
 

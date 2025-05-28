@@ -38,6 +38,7 @@ del install.exe
 del installw.exe
 del install3.exe
 del installs.exe
+del *.asc
 del *.gz
 del *.dvi
 :plainstuff

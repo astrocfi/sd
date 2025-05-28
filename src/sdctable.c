@@ -48,6 +48,12 @@
    concept_menu_strings
 */
 
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
 
 
@@ -66,6 +72,14 @@
 #define L CONCPARSE_PARSE_L_TYPE
 #define F CONCPARSE_PARSE_F_TYPE
 #define G CONCPARSE_PARSE_G_TYPE
+
+
+concept_descriptor centers_concept = {
+   "centers????",
+   concept_centers_or_ends,
+   TRUE,
+   l_mainstream,
+   {0, selector_centers, FALSE}};
 
 concept_descriptor special_magic          = {"MAGIC DIAMOND,",       concept_magic,             L+U+D, l_c1, {0, 1}};
 concept_descriptor special_interlocked    = {"INTERLOCKED DIAMOND,", concept_interlocked,       L+U+D, l_c1, {0, 1}};
@@ -90,22 +104,22 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* phantom concepts */
 
-#define pl__1_size 67
+#define pl__1_size 71
 #define pl__1_spl 0
 #define pl__1_ipl 1
 #define pl__1_pl 2
 #define pl__1_pl8 14
 #define pl__1_pl6 15
-#define pl__1_tl 22
-#define pl__1_tlwt 30
-#define pl__1_tlwa 31
-#define pl__1_tlwf 32
-#define pl__1_tlwb 33
-#define pl__1_trtl 43
-#define pl__1_qlwt 51
-#define pl__1_qlwa 52
-#define pl__1_qlwf 53
-#define pl__1_qlwb 54
+#define pl__1_tl 26
+#define pl__1_tlwt 34
+#define pl__1_tlwa 35
+#define pl__1_tlwf 36
+#define pl__1_tlwb 37
+#define pl__1_trtl 47
+#define pl__1_qlwt 55
+#define pl__1_qlwa 56
+#define pl__1_qlwf 57
+#define pl__1_qlwb 58
    {"SPLIT PHANTOM LINES",                   concept_do_phantom_2x4,            D, l_c3a, {0, phantest_impossible,    1, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM LINES",             concept_do_phantom_2x4,            D, l_c4a, {0, phantest_impossible,    1, MPKIND__INTLK}},
    {"PHANTOM LINES",                         concept_do_phantom_2x4,            D, l_c3,  {0, phantest_first_or_both, 1, MPKIND__CONCPHAN}},
@@ -127,6 +141,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE CRAZY PHANTOM LINES",           concept_phan_crazy,                D, l_c4, {0, 8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
    {"@a CRAZY PHANTOM LINES",                concept_frac_phan_crazy,           D, l_c4, {0, 16+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
    {"@a REVERSE CRAZY PHANTOM LINES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
+   {"CRAZY OFFSET LINES",                    concept_phan_crazy,                D, l_c4, {0, 64+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
+   {"REVERSE CRAZY OFFSET LINES",            concept_phan_crazy,                D, l_c4, {0, 64+8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
+   {"@a CRAZY OFFSET LINES",                 concept_frac_phan_crazy,           D, l_c4, {0, 64+16+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
+   {"@a REVERSE CRAZY OFFSET LINES",         concept_frac_phan_crazy,           D, l_c4, {0, 64+16+8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE LINES",                          concept_triple_lines,              D, l_c2, {0, 1}},
    {"TRIPLE LINES OF 6",                     concept_do_phantom_triple_1x6,     D, l_c3x, {0, phantest_ok, 0, 1}},
@@ -174,7 +192,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SEXTUPLE LINES WORKING CLOCKWISE",      concept_multiple_lines_tog_std,    D, l_c4,  {0, 8,  CONCPROP__NEEDK_4X6,      1, 6}},
    {"SEXTUPLE LINES WORKING COUNTERCLOCKWISE",concept_multiple_lines_tog_std,   D, l_c4,  {0, 9,  CONCPROP__NEEDK_4X6,      1, 6}},
 /* -------- column break -------- */
-#define pl__2_size 67
+#define pl__2_size 71
 #define pl__2_spw 0
 #define pl__2_ipw 1
 #define pl__2_pw 2
@@ -199,6 +217,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE CRAZY PHANTOM WAVES",           concept_phan_crazy,                D, l_c4, {0, 8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
    {"@a CRAZY PHANTOM WAVES",                concept_frac_phan_crazy,           D, l_c4, {0, 16+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
    {"@a REVERSE CRAZY PHANTOM WAVES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
+   {"CRAZY OFFSET WAVES",                    concept_phan_crazy,                D, l_c4, {0, 64+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
+   {"REVERSE CRAZY OFFSET WAVES",            concept_phan_crazy,                D, l_c4, {0, 64+8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
+   {"@a CRAZY OFFSET WAVES",                 concept_frac_phan_crazy,           D, l_c4, {0, 64+16+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
+   {"@a REVERSE CRAZY OFFSET WAVES",         concept_frac_phan_crazy,           D, l_c4, {0, 64+16+8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE WAVES",                          concept_triple_lines,              D, l_c2, {0, 3}},
    {"TRIPLE WAVES OF 6",                     concept_do_phantom_triple_1x6,     D, l_c3x, {0, phantest_ok, 0, 3}},
@@ -246,22 +268,22 @@ concept_descriptor concept_descriptor_table[] = {
    {"SEXTUPLE WAVES WORKING CLOCKWISE",      concept_multiple_lines_tog_std,    D, l_c4,  {0, 8,  CONCPROP__NEEDK_4X6,      3, 6}},
    {"SEXTUPLE WAVES WORKING COUNTERCLOCKWISE",concept_multiple_lines_tog_std,   D, l_c4,  {0, 9,  CONCPROP__NEEDK_4X6,      3, 6}},
 /* -------- column break -------- */
-#define pl__3_size 67
+#define pl__3_size 71
 #define pl__3_spc 0
 #define pl__3_ipc 1
 #define pl__3_pc 2
 #define pl__3_pc8 14
 #define pl__3_pc6 15
-#define pl__3_tc 22
-#define pl__3_tcwt 30
-#define pl__3_tcwa 31
-#define pl__3_tcwr 32
-#define pl__3_tcwl 33
-#define pl__3_trtc 43
-#define pl__3_qcwt 51
-#define pl__3_qcwa 52
-#define pl__3_qcwr 53
-#define pl__3_qcwl 54
+#define pl__3_tc 26
+#define pl__3_tcwt 34
+#define pl__3_tcwa 35
+#define pl__3_tcwr 36
+#define pl__3_tcwl 37
+#define pl__3_trtc 47
+#define pl__3_qcwt 55
+#define pl__3_qcwa 56
+#define pl__3_qcwr 57
+#define pl__3_qcwl 58
    {"SPLIT PHANTOM COLUMNS",                 concept_do_phantom_2x4,            D, l_c3a, {0, phantest_impossible,    0, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM COLUMNS",           concept_do_phantom_2x4,            D, l_c4a, {0, phantest_impossible,    0, MPKIND__INTLK}},
    {"PHANTOM COLUMNS",                       concept_do_phantom_2x4,            D, l_c3,  {0, phantest_first_or_both, 0, MPKIND__CONCPHAN}},
@@ -283,6 +305,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE CRAZY PHANTOM COLUMNS",         concept_phan_crazy,                D, l_c4, {0, 8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
    {"@a CRAZY PHANTOM COLUMNS",              concept_frac_phan_crazy,           D, l_c4, {0, 16+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
    {"@a REVERSE CRAZY PHANTOM COLUMNS",      concept_frac_phan_crazy,           D, l_c4, {0, 16+8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
+   {"CRAZY OFFSET COLUMNS",                  concept_phan_crazy,                D, l_c4, {0, 64+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
+   {"REVERSE CRAZY OFFSET COLUMNS",          concept_phan_crazy,                D, l_c4, {0, 64+8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
+   {"@a CRAZY OFFSET COLUMNS",               concept_frac_phan_crazy,           D, l_c4, {0, 64+16+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
+   {"@a REVERSE CRAZY OFFSET COLUMNS",       concept_frac_phan_crazy,           D, l_c4, {0, 64+16+8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE COLUMNS",                        concept_triple_lines,              D, l_c2, {0, 2}},
    {"TRIPLE COLUMNS OF 6",                   concept_do_phantom_triple_1x6,     D, l_c3x, {0, phantest_ok, 0, 0}},
@@ -1000,7 +1026,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"INTERRUPT AFTER @9/@9",                 concept_interrupt_at_fraction,     0, l_c1,         {0, 2}},
    {"SANDWICH",                              concept_sandwich,                  0, l_c3,         {0, 3}},
 /* -------- column break -------- */
-#define mm__3_size 78
+#define mm__3_size 79
 #define mm__3_3x3 62
 #define mm__3_4x4 63
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
@@ -1081,6 +1107,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"REFLECT AND THEN REVERT",               concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RFV}},
    {"REVERT, THEN REFLECT, THEN REVERT",     concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RVFV}},
    {"REFLECT, THEN REVERT, THEN REFLECT",    concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RFVF}},
+   {"FAST",                                  concept_fast  ,                  L+D, l_c4,         {0}},
 
 /* general concepts */
 
@@ -1118,6 +1145,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"4X6 MATRIX",                            concept_create_matrix,             D, l_c3x,        {0, s4x6,  CONCPROP__NEEDK_4X6}},
    {"16 MATRIX OF PARALLEL DIAMONDS",        concept_create_matrix,             D, l_c3x,        {0, s4dmd, CONCPROP__NEEDK_4D_4PTPD}},
    {"PHANTOM",                               concept_c1_phantom,            L+U+D, l_c1},
+   {"DRAG THE @6",                           concept_drag,                      D, l_c4},
    {"FUNNY",                                 concept_funny,                   U+D, l_c2},
    {"CONCENTRIC",                            concept_concentric,              U+D, l_c1,         {0, schema_concentric}},
    {"AS COUPLES",                            concept_tandem,                  U+D, l_a1,         {0, FALSE, FALSE, 0, tandem_key_cpls}},
@@ -1297,50 +1325,67 @@ static int nice_setup_concept_4x6[] = {
    -1};
 
 
-nice_setup_thing nice_setup_thing_4x4 = {
+static nice_setup_thing nice_setup_thing_4x4 = {
    nice_setup_concept_4x4,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_4x4)};
 
-nice_setup_thing nice_setup_thing_3x4 = {
+static nice_setup_thing nice_setup_thing_3x4 = {
    nice_setup_concept_3x4,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_3x4)};
 
-nice_setup_thing nice_setup_thing_2x8 = {
+static nice_setup_thing nice_setup_thing_2x8 = {
    nice_setup_concept_2x8,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_2x8)};
 
-nice_setup_thing nice_setup_thing_2x6 = {
+static nice_setup_thing nice_setup_thing_2x6 = {
    nice_setup_concept_2x6,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_2x6)};
 
-nice_setup_thing nice_setup_thing_1x12 = {
+static nice_setup_thing nice_setup_thing_1x12 = {
    nice_setup_concept_1x12,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_1x12)};
 
-nice_setup_thing nice_setup_thing_1x16 = {
+static nice_setup_thing nice_setup_thing_1x16 = {
    nice_setup_concept_1x16,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_1x16)};
 
-nice_setup_thing nice_setup_thing_3dmd = {
+static nice_setup_thing nice_setup_thing_3dmd = {
    nice_setup_concept_3dmd,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_3dmd)};
 
-nice_setup_thing nice_setup_thing_4dmd = {
+static nice_setup_thing nice_setup_thing_4dmd = {
    nice_setup_concept_4dmd,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_4dmd)};
 
-nice_setup_thing nice_setup_thing_4x6 = {
+static nice_setup_thing nice_setup_thing_4x6 = {
    nice_setup_concept_4x6,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_4x6)};
+
+
+/* This array tracks the enumeration "nice_start_kind". */
+nice_setup_info_item nice_setup_info[] = {
+   {s4x4,   &nice_setup_thing_4x4,  (int *) 0, 0},
+   {s3x4,   &nice_setup_thing_3x4,  (int *) 0, 0},
+   {s2x8,   &nice_setup_thing_2x8,  (int *) 0, 0},
+   {s2x6,   &nice_setup_thing_2x6,  (int *) 0, 0},
+   {s1x10,  &nice_setup_thing_1x12, (int *) 0, 0},  /* Note overuse. */
+   {s1x12,  &nice_setup_thing_1x12, (int *) 0, 0},
+   {s1x14,  &nice_setup_thing_1x16, (int *) 0, 0},  /* Note overuse. */
+   {s1x16,  &nice_setup_thing_1x16, (int *) 0, 0},
+   {s3dmd,  &nice_setup_thing_3dmd, (int *) 0, 0},
+   {s4dmd,  &nice_setup_thing_4dmd, (int *) 0, 0},
+   {s4x6,   &nice_setup_thing_4x6,  (int *) 0, 0}
+};
+
 
 
 int phantom_concept_index = mm_1_offset + mm__1_phan;

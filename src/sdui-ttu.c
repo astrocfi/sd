@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /*
  * sdui-ttu.c - helper functions for sdui-tty interface to use the Unix
  * "curses" mechanism.
@@ -33,6 +31,7 @@
 #include <unistd.h>    /* This too. */
 #include <signal.h>
 #include <string.h>
+#include "basetype.h"
 #include "sdui.h"
 
 

@@ -15,7 +15,7 @@ lha a pdfdoc sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf
 lha s pdfdoc
 tar cvf pdfdoc.tar sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf
 gzip pdfdoc.tar -c > pdfdoc.gz
-del pdf.msg pdf.txt pdf.zip
+del pdf.msg pdf.txt pdf.zip pdf.asc
 echo cd sd> pdf.msg
 echo uufile>> pdf.msg
 uuencode pdfdoc.exe|uufix>> pdf.msg
@@ -34,8 +34,9 @@ uuencode sd_doc.pdf|uufix>> pdf.msg
 echo cd ../sessions>> pdf.msg
 echo uufile>> pdf.msg
 uuencode sessions.pdf|uufix>> pdf.msg
-pgp -sta +clearsig=on +armor=on pdf.msg -u wba -o pdf.txt
+pgp -sta +clearsig=on +armor=on pdf.msg -u wba -o pdf.asc
 del pdf.msg
+ren pdf.asc pdf.txt
 REM zip pdf pdf.txt
 REM
 REM         The file "pdf.txt" may now be mailed.
