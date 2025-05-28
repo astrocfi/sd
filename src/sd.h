@@ -2398,7 +2398,9 @@ enum {
    CMD_MISC3__SUPERCALL            = 0x00020000U,
    CMD_MISC3__SAID_TRIANGLE        = 0x00040000U,
    CMD_MISC3__SAID_DIAMOND         = 0x00080000U,
-   CMD_MISC3__SAID_Z               = 0x00100000U
+   CMD_MISC3__SAID_Z               = 0x00100000U,
+   CMD_MISC3__TRY_MIMIC_LINES      = 0x00200000U,
+   CMD_MISC3__TRY_MIMIC_COLS       = 0x00400000U
 };
 
 enum normalize_action {

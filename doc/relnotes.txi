@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.62
-@set title2 Database version = 38.62 format = 317
+@set title1 RELEASE NOTES FOR VERSION 38.63
+@set title2 Database version = 38.63 format = 317
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.63::
 * 38.62::
 * 38.61::
 * 38.60::
@@ -101,7 +102,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.62, Top, (dir)
+@node Intro, 38.63, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -112,11 +113,23 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.62::               Changes in the current version
+* 38.63::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.62, 38.61, Intro, Top
+@node 38.63, 38.62, Intro, Top
+@unnumberedsec Version 38.63 changes
+
+Fixed the behavior of @strong{mimic} with @strong{counter rotate}.
+
+Fixed @strong{generous} and @strong{stingy} with @strong{follow thru}.
+
+Made the @strong{mimic} concept properly enforce the ambiguity rules.
+If an application is ambiguous without the @strong{of lines} or @strong{of columns}
+designation, it is illegal.
+
+@c ************
+@node 38.62, 38.61, 38.63, Top
 @unnumberedsec Version 38.62 changes
 
 The just-completed changes to the C3 list were incorporated.

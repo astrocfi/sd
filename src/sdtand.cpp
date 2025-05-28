@@ -2806,19 +2806,34 @@ void mimic_move(
    bool centers = false;
    int i;
    mimic_info MI;
-   MI.lateral = 0;
-   MI.groupsize = 1;
+   MI.lateral = 0; MI.groupsize = 1;
    MI.fwd = 0;
-   MI.setup_hint = parseptr->concept->arg1;
+
+   // See if we have an incoming override of the assumed formation.
+
+   if (!(ss->cmd.cmd_misc3_flags & (CMD_MISC3__TRY_MIMIC_LINES|CMD_MISC3__TRY_MIMIC_COLS)))
+      MI.setup_hint = parseptr->concept->arg1;
+   else if (ss->cmd.cmd_misc3_flags & CMD_MISC3__TRY_MIMIC_LINES)
+      MI.setup_hint = MIMIC_SETUP_LINES;
+   else
+      MI.setup_hint = MIMIC_SETUP_COLUMNS;
+
    warning_info saved_warnings = configuration::save_warnings();
 
    ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__DOING_ENDS;
 
-   if (little_endian_live_mask(ss) != (uint32) (1U << (attr::slimit(ss)+1)) - 1)
+   uint32 directions;
+   uint32 livemask;
+   big_endian_get_directions(ss, directions, livemask);
+   directions &= 0x55555555;
+
+   if (livemask != (uint32) (1U << ((attr::slimit(ss)<<1)+2)) - 1)
       fail_no_retry("Phantoms not allowed.");
 
    // What we do is very different for centers/ends vs. other designators.
 
+   int orig_hint;
+   int trial_number;
    setup trial_results[2];
    int trial_result_mask = 0;
    error_flag_type err_from_execution;
@@ -2847,9 +2862,9 @@ void mimic_move(
             fail("Don't specify this setup.");
 
          uint32 tbonetest = or_all_people(ss);
-         int orig_hint = MI.setup_hint;
+         orig_hint = MI.setup_hint;
 
-         for (int trial_number=0 ; trial_number<2 ; trial_number++) {
+         for (trial_number=0 ; trial_number<2 ; trial_number++) {
 
             // If the hint is zero, do this with both LINES and COLUMNS, and demand that they match.
             // First, leave it at zero.  The code below will default to LINES, because it only looks at COLUMNS.
@@ -2928,14 +2943,14 @@ void mimic_move(
             warn(warn__mimic_ambiguity_resolved);
          }
          else {
-            // We have now done it both ways, and the results are in result_from_lines and *result.
+            // We have now done it both ways, and the results are in trial_results.
             // Check them.
 
-            if (trial_results[0].kind != result->kind || trial_results[0].rotation != result->rotation)
+            if (trial_results[0].kind != trial_results[1].kind || trial_results[0].rotation != trial_results[1].rotation)
                fail_no_retry("Mimic is ambiguous.");
 
             for (i=0; i<=attr::slimit(result); i++) {
-               if ((trial_results[0].people[i].id1 ^ result->people[i].id1) & 0777)
+               if ((trial_results[0].people[i].id1 ^ trial_results[1].people[i].id1) & 0777)
                   fail_no_retry("Mimic is ambiguous.");
             }
 
@@ -3001,6 +3016,75 @@ void mimic_move(
       break;
    }
 
+   // If the user gave no hint and the setup is a s24, try lines and columns
+   // and demand that, if both executions are legal, the results are the same.
+
+   orig_hint = MI.setup_hint;
+   if (orig_hint == 0 && ss->kind == s2x4) {
+      for (trial_number=0 ; trial_number<2 ; trial_number++) {
+         setup a1 = *ss;
+         a1.cmd.cmd_misc3_flags &= !(CMD_MISC3__TRY_MIMIC_LINES|CMD_MISC3__TRY_MIMIC_COLS);
+         a1.cmd.cmd_misc3_flags |= (trial_number==0) ? CMD_MISC3__TRY_MIMIC_LINES : CMD_MISC3__TRY_MIMIC_COLS;
+
+         try {
+            mimic_move(&a1, parseptr, result);
+            trial_results[trial_number] = *result;
+            trial_result_mask |= 1 << trial_number;
+         }
+         catch(error_flag_type e) {
+            err_from_execution = e;
+            if (e == error_flag_no_retry || orig_hint != 0) throw e;
+         }
+      }
+
+      // We have attempted it twice.  See what happened.
+
+      if (trial_result_mask == 0) {
+         // Both attempts failed.  Report whatever happened.  The text is still there.
+         throw err_from_execution;
+      }
+      else if (trial_result_mask == 1) {
+         // First one only (lines).
+         *result = trial_results[0];
+         // User guessed right.  Don't complain.
+         //         warn(warn__mimic_ambiguity_resolved);
+      }
+      else if (trial_result_mask == 2) {
+         // Second one only (columns).
+         *result = trial_results[1];
+         // User guessed right.  Don't complain.
+         //         warn(warn__mimic_ambiguity_resolved);
+      }
+      else {
+         // We have now done it both ways, and the results are in trial_results.
+         // Check them.
+
+         if (trial_results[0].kind != trial_results[1].kind || trial_results[0].rotation != trial_results[1].rotation)
+            fail_no_retry("Mimic is ambiguous.");
+
+         for (i=0; i<=attr::slimit(&trial_results[0]); i++) {
+            if ((trial_results[0].people[i].id1 ^ trial_results[1].people[i].id1) & 0777)
+               fail_no_retry("Mimic is ambiguous.");
+         }
+
+         warn(warn__mimic_ambiguity_checked);
+         *result = trial_results[1];
+      }
+
+      return;
+   }
+
+   // Find out whether this is a call like "counter rotate", which would give deceptive results
+   // if we were allowed to do it in smaller setups.  Counter rotate can be done in a 1x2 miniwave,
+   // but we don't want to be deceived by that.  Get the "flags2" word of the call definition.
+   uint32 flags2 = 0;
+
+   if (ss->cmd.callspec)
+      flags2 = ss->cmd.callspec->the_defn.callflagsf;
+   else if (ss->cmd.parseptr && ss->cmd.parseptr->concept && ss->cmd.parseptr->concept->kind == marker_end_of_list &&
+       ss->cmd.parseptr->call)
+      flags2 = ss->cmd.parseptr->call->the_defn.callflagsf;
+
    // Look for 2-person underlying calls that we can do with a single person.
    // Break up the incoming setup, whatever it is, into 1-person setups.
    // We don't have splitting maps for these, so do it by hand.
@@ -3010,8 +3094,8 @@ void mimic_move(
    result->clear_people();
    clear_result_flags(result);
 
-   // But don't do it if user requested any setup.
-   if (MI.groupsize <= 1 && MI.setup_hint == 0) {
+   // But don't do it if user requested any setup, or if this is a [split] counter rotate.
+   if (MI.groupsize <= 1 && MI.setup_hint == 0 && !(flags2 & CFLAG2_CAN_BE_ONE_SIDE_LATERAL)) {
       try {
          for (i=0 ; i<=sizem1; i++) {
             if (ss->people[i].id1) {
@@ -3045,11 +3129,6 @@ void mimic_move(
    if (ss->cmd.parseptr != parseptr->next)
       fail("Sorry, command tree is too complicated.");
 
-   uint32 directions;
-   uint32 livemask;
-   big_endian_get_directions(ss, directions, livemask);
-   directions &= 0x55555555;
-
    setup aa = *ss;
    aa.cmd.parseptr = parseptr;
    aa.cmd.prior_elongation_bits = 0;
@@ -3066,7 +3145,8 @@ void mimic_move(
    if (MI.groupsize <= 2) {
       try {
          // Don't split into 1x2's if user requested C/L/W.
-         if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS)) == 0) {
+         if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS)) == 0 &&
+             !((MI.setup_hint & MIMIC_SETUP_BOXES) == 0 && (flags2 & CFLAG2_CAN_BE_ONE_SIDE_LATERAL))) {
             switch (ss->kind) {
             case s1x4:
                division_code = MAPCODE(s1x2,2,MPKIND__SPLIT,0);
@@ -3276,6 +3356,7 @@ void mimic_move(
 
    fail("Can't do this \"mimic\" call.");
 }
+
 
 bool process_brute_force_mxn(
    setup *ss,

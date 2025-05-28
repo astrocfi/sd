@@ -318,3 +318,5 @@ put pack.zip
       challengedance.org> unzip pack
       challengedance.org> rm pack.zip
       challengedance.org> exit
+
+The c4 books (book1.pdf etc.) go into the same directory.
