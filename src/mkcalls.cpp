@@ -1971,8 +1971,8 @@ static void write_callarray(int num, bool doing_matrix)
                      { stab = STB_AAAAC; repetition = 0; }
                   break;
 
-                  case STB_A+STB_REVERSE: stab = STB_AA+STB_REVERSE; break;
-                  case STB_AA+STB_REVERSE: repetition++; break;
+               case STB_A+STB_REVERSE: stab = STB_AA+STB_REVERSE; break;
+               case STB_AA+STB_REVERSE: repetition++; break;
                default: errexit("Improper callarray specifier");
                }
                break;

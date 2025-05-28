@@ -24,17 +24,18 @@ Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # and date are visible)
     [sd]    sd.rc        (SD & UI version #'s, and the year, are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
-    [sd]       [When rolling the year, fix copyright notices in sd.rc,
-                              sdutil.cpp, about.lst, sd_doc.txi, and relnotes.txi]
     [sddoc] title.lst    (version # is visible)
     [sddoc] about.lst    (version # and year are visible)
-    [sddoc] sd_doc.txi         (version # and date are visible)
+    [sddoc] sd_doc.txi         (version # and date, with year, are visible)
     [sddoc] relnotes.txi       (version #, database format version #,
                                and UI version # are visible.
                                Also, check its claimed database format
                                version against database.h)
     [sddoc] index2.htmli       (version # and date are visible)
              ==> Be sure to run do_index <num> after editing this!!!
+
+    [When rolling the year, fix copyright notices in sd.rc,
+          sdutil.cpp, about.lst, sd_doc.txi, and relnotes.txi]
 
 -----------------------------------------------------------------
 
@@ -100,7 +101,7 @@ Go to sddoc directory and do:
 25 Apr 12  -  16 Jun 12  #44
 16 Jun 12  -   7 Jul 13  #46
  7 Jul 13  -  24 Aug 13  #36
-24 aug 13                #45
+24 Aug 13                #45
 
 (#25, #26, #29, #30, #47 are also available.)
 Also, do [DPT] initially touch by 1/2 x [split sidetrack]
@@ -309,7 +310,7 @@ Start psftp (under "putty" group.)
 open www.challengedance.org
 (U=USERNAME, P=PASSWORD)
 cd public_html/sd
-lcd \wba\sddoc
+lcd \wba\sddoc or \wba\sdarchive\vxxx or wherever
 put pack.zip
   This is silent and not helpful.  It takes a while.  Run putty,
   and doubleclick "chaldance" (U=USERNAME, P=PASSWORD) to connect in another window,

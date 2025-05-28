@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <2 Apr 2013 wba>
+@c Time-stamp: <4 Jan 2014 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.57
-@set title2 Database version = 38.57 format = 316
+@set title1 RELEASE NOTES FOR VERSION 38.58
+@set title2 Database version = 38.58 format = 316
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.58::
 * 38.57::
 * 38.56::
 * 38.55::
@@ -96,7 +97,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.57, Top, (dir)
+@node Intro, 38.58, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -104,14 +105,22 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2013 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.57::               Changes in the current version
+* 38.58::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.57, 38.56, Intro, Top
+@node 38.58, 38.57, Intro, Top
+@unnumberedsec Version 38.58 changes
+
+Many @strong{generous} and @strong{stingy} call variants were added.
+
+The source files were improved further for robustness with a variety of compilers and operating systems.
+
+@c ************
+@node 38.57, 38.56, 38.58, Top
 @unnumberedsec Version 38.57 changes
 
 The call @strong{top it off} has been removed.

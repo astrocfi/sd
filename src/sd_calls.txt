@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2014  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.57"
+version "38.58"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -4150,8 +4150,8 @@ call "_maybe grand slip" dontshow tag maybegrandslip
       array [ZM0N 0 ZM2N 0]
             alternate_definition [half] c1
    setup 1x4 dmd
-      /* We would like to have them do a genuine hinge,
-         but we don't have the predicates for it. */
+      // We would like to have them do a genuine hinge,
+      // but we don't have the predicates for it.
       array [ZM0N CR1E ZM2N AL1W]
             alternate_definition [lasthalf] c1
    setup dmd 1x4
@@ -4182,6 +4182,16 @@ call "_maybe grand slip" dontshow tag maybegrandslip
       array [ZM4W CR3S AL3N ZM1W AL2N CR2S]
    setup 1x8 spindle
       array [ZM7N CR6W CR5W AL6E ZM3N AL4E AL5E CR4W]
+            alternate_definition [grand generous] c3x
+   setup 1x6 short6 rotate
+      array [ZM4W CR3S AL3N ZM1W AL2N CR2S]
+   setup 1x8 spindle
+      array [ZM7N CR6W CR5W AL6E ZM3N AL4E AL5E CR4W]
+            alternate_definition [grand stingy] c3x
+   setup 1x6 short6 rotate
+      array [ZM4W CR5N AL5S ZM1W AL0S CR0N]
+   setup 1x8 spindle
+      array [ZM7N CR0E CR1E AL0W ZM3N AL2W AL1W CR2E]
 
 call "_maybe grand slip in left wave" dontshow tag maybegrandslip_in_lw
             left_means_mirror
@@ -5599,6 +5609,10 @@ call "hinge" mainstream tag hinge
    setup 1x2 1x2 restriction forbidden wave_only
       array [ZM0N ZM1N]
             alternate_definition [half] mainstream
+   setup 2x4 thar plus_eighth_rotation qualifier in live magic_only
+      array [CR0N 0 0 AL2W 0 CR5N AL7W 0]
+   setup 2x4 alamo plus_eighth_rotation qualifier out live magic_only
+      array [0 AL7W CR0N 0 AL2W 0 0 CR5N]
    setup 1x2 1x2 plus_eighth_rotation qualifier right live wave_only
       array [CR0N 0]
    setup 1x2 1x2 rotate plus_eighth_rotation qualifier left live wave_only
@@ -5751,10 +5765,11 @@ call "snake" c3x
       array [C1N A1S]
 
 call "patch the @6" c3a
-            visible_fractions diamond_is_legal dont_use_in_nice_resolve
+            visible_fractions gen_sting_is_inherited diamond_is_legal dont_use_in_nice_resolve
    // Selector identities *do not* get re-evaluated between parts of this
    // call, which makes it work.  Compare wave the <anyone>. */
-   seq hinge [seq_never_re_evaluate allow_forced_mod inherit_diamond]
+   // If it's a partner hinge, generous/stingy won't be permitted.
+   seq hinge [seq_never_re_evaluate allow_forced_mod inherit_diamond inherit_gensting]
    seq some_utb_in_roll_dir [roll_transparent]
 
 call "tap the @6" c4a
@@ -10760,6 +10775,12 @@ call "derby" c4 tag derby
             alternate_definition [yoyo] c4
    setup 1x4 dmd rotate
       array [C3E C2S A1E A2N]
+            alternate_definition [generous] c3x
+   setup 1x4 dmd rotate
+      array [C3E C2S A1E A2N]
+            alternate_definition [stingy] c3x
+   setup 1x4 dmd rotate
+      array [C3E C0N A1E A0S]
             alternate_definition [3x3] c4
    setup 1x6 1x6 restriction forbidden 3x3_2fl_only
       array [C1S C5S C3S A4S A2S A0S]
@@ -10822,35 +10843,32 @@ call "dixie style to a wave" mainstream tag full_dixie
    seq left_touch_1_4 [inherit_left inherit_reverse inherit_fractal inherit_gensting inherit_mxn]
 
 call "dixie diamond" c1
-            visible_fractions
-            split_like_dixie_style
-            singlefile_is_inherited twisted_is_inherited magic_is_inherited
-            fractal_is_inherited left_means_mirror reverse_means_mirror
+            visible_fractions split_like_dixie_style singlefile_is_inherited
+            twisted_is_inherited magic_is_inherited fractal_is_inherited
+            gen_sting_is_inherited left_means_mirror reverse_means_mirror
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
-                  inherit_fractal inherit_magic inherit_twisted]
-   seq ctrarmturn_14_utb [inherit_fractal]
+                  inherit_fractal inherit_magic inherit_gensting inherit_twisted]
+   seq ctrarmturn_14_utb [inherit_fractal inherit_gensting]
 
 call "dixie sashay" c1
-            visible_fractions
-            split_like_dixie_style
-            singlefile_is_inherited twisted_is_inherited magic_is_inherited
-            nxn_is_inherited mxn_is_inherited fractal_is_inherited
-            left_means_mirror reverse_means_mirror
+            visible_fractions split_like_dixie_style singlefile_is_inherited
+            twisted_is_inherited magic_is_inherited fractal_is_inherited
+            gen_sting_is_inherited left_means_mirror reverse_means_mirror
+            nxn_is_inherited mxn_is_inherited
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
-                  inherit_nxn inherit_mxn inherit_fractal inherit_magic inherit_twisted]
+                  inherit_nxn inherit_mxn inherit_fractal inherit_magic inherit_gensting inherit_twisted]
    seq slither [inherit_nxn inherit_mxn inherit_twisted]
 
 call "dixie derby" c3x
-            split_like_dixie_style
-            singlefile_is_inherited twisted_is_inherited nxn_is_inherited
+            visible_fractions split_like_dixie_style singlefile_is_inherited
+            twisted_is_inherited nxn_is_inherited
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited left_means_mirror reverse_means_mirror
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
-                  inherit_nxn inherit_fractal inherit_twisted]
+                  inherit_nxn inherit_fractal inherit_gensting inherit_twisted]
    seq derby [inherit_nxn inherit_yoyo inherit_gensting]
 
 call "dixie spin" c4a
-            visible_fractions
-            split_like_dixie_style
+            visible_fractions split_like_dixie_style
             singlefile_is_inherited twisted_is_inherited gen_sting_is_inherited
             fractal_is_inherited left_means_mirror reverse_means_mirror
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
@@ -10865,8 +10883,7 @@ call "_ctrs pass thru" dontshow tag ctrs_pass_thru
       nullcall [conc_force_spots]
 
 call "dixie chain" c4
-            visible_fractions
-            split_like_dixie_style
+            visible_fractions split_like_dixie_style
             singlefile_is_inherited twisted_is_inherited
             left_means_mirror reverse_means_mirror
    seq start_dixie [inherit_left inherit_reverse inherit_singlefile inherit_twisted]
@@ -11938,6 +11955,16 @@ call "_half by the right" dontshow tag 1_2_by_right
       array [CR0W CR2W CR4W 0 0 0]
    setup 4x2 1x8 qualifier right wave_only
       array [CR0W CR3W CR6W CR5W 0 0 0 0]
+            alternate_definition [grand generous] c3x
+   setup 3x2 1x6 qualifier right wave_only
+      array [CR0W CR2W CR4W 0 0 0]
+   setup 4x2 1x8 qualifier right wave_only
+      array [CR0W CR3W CR6W CR5W 0 0 0 0]
+            alternate_definition [grand stingy] c3x
+   setup 3x2 1x6 qualifier right wave_only
+      array [CR1E CR3E CR5E 0 0 0]
+   setup 4x2 1x8 qualifier right wave_only
+      array [CR1E CR2E CR7E CR4E 0 0 0 0]
 
 call "_half by the left with 12 matrix" dontshow tag 1_2_by_left_with_12_matrix
             left_means_mirror diamond_is_legal 12_16_matrix_means_split
@@ -12046,12 +12073,10 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM0N AL0S AL1S AL4S AL5S AL2S]
    setup 1x8 1x8 qualifier wave_only
       array [ZM0N AL0S AL3S AL1S AL5S AL7S AL2S AL6S]
-// new stuff
    setup short6 short6
       array [ZM0N ZM1N AL0S AL5S ZM4N ZM5N]
    setup pshort6 short6
       array [0    ZM1N    0 AL2S ZM4N AL0S]
-// end of new stuff
    setup dhrglass 1x3dmd
       array [0 0 0 0 0 0 AL1S 0]
    setup pdhrglass 1x3dmd
@@ -12067,15 +12092,10 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM4W 0 AL5S 0 AL0S 0]
    setup 1x8 spindle qualifier right wave_only
       array [ZM7N 0 0 AL0W 0 AL2W AL1W 0]
-// new stuff
-
    setup short6 1x6 rotate
       array [0    ZM0W AL1S AL5S ZM3W 0]
    setup pshort6 2x1dmd
       array [0    ZM2N 0    AL3W ZM5W AL1W]
-
-
-// end of new stuff
             alternate_definition [lasthalf grand] plus
    setup 1x6 2x3 qualifier left wave_only
       array [0 AL0W 0 AL2W 0 AL1W]
@@ -12144,12 +12164,30 @@ call "_half by the left" dontshow tag 1_2_by_left
             alternate_definition [grand yoyo] c4
    setup 1x6 short6 rotate qualifier right wave_only
       array [ZM4W 0 AL3N 0 AL2N 0]
-   setup 1x6 2x3 qualifier right wave_only
+   setup 1x6 2x3 qualifier left wave_only
       array [0 AL5E 0 AL3E 0 AL4E]
    setup 1x8 spindle qualifier right wave_only
       array [ZM7N 0 0 AL6E 0 AL4E AL5E 0]
    setup 1x8 2x4 qualifier left wave_only
       array [0 AL7E AL6E 0 AL4E 0 0 AL5E]
+            alternate_definition [grand generous] c3x
+   setup 1x6 short6 rotate qualifier right wave_only
+      array [ZM4W 0 AL3N 0 AL2N 0]
+   setup 1x6 2x3 qualifier left wave_only
+      array [0 AL5E 0 AL3E 0 AL4E]
+   setup 1x8 spindle qualifier right wave_only
+      array [ZM7N 0 0 AL6E 0 AL4E AL5E 0]
+   setup 1x8 2x4 qualifier left wave_only
+      array [0 AL7E AL6E 0 AL4E 0 0 AL5E]
+            alternate_definition [grand stingy] c3x
+   setup 1x6 short6 rotate qualifier right wave_only
+      array [ZM4W 0 AL5S 0 AL0S 0]
+   setup 1x6 2x3 qualifier left wave_only
+      array [0 AL0W 0 AL2W 0 AL1W]
+   setup 1x8 spindle qualifier right wave_only
+      array [ZM7N 0 0 AL0W 0 AL2W AL1W 0]
+   setup 1x8 2x4 qualifier left wave_only
+      array [0 AL0W AL1W 0 AL3W 0 0 AL2W]
 
 call "_half by the left for swing the fractions" dontshow tag 1_2_by_left_for_swing_fractions
             left_means_mirror diamond_is_legal
@@ -13184,6 +13222,18 @@ call "turn thru" mainstream tag turnthru
       array [CM0S 0]
    setup 1x2 1x2 qualifier right miniwaves
       array [CM0W 0]
+            alternate_definition [generous] c3x
+   split_to_box
+   setup 2x1 1x2 rotate qualifier in in_or_out
+      array [CM0S 0]
+   setup 1x2 1x2 qualifier right miniwaves
+      array [CM0W 0]
+            alternate_definition [stingy] c3x
+   split_to_box
+   setup 2x1 1x2 rotate qualifier in in_or_out
+      array [CM1N 0]
+   setup 1x2 1x2 qualifier right miniwaves
+      array [CM1E 0]
 
 call "left turn thru" dontshow tag leftturnthru
             left_means_mirror
@@ -13198,6 +13248,16 @@ call "left turn thru" dontshow tag leftturnthru
       array [AM1N 0]
    setup 1x2 1x2 qualifier left miniwaves
       array [0 AM1E]
+            alternate_definition [generous] c3x
+   setup 2x1 1x2 rotate qualifier in in_or_out
+      array [AM1N 0]
+   setup 1x2 1x2 qualifier left miniwaves
+      array [0 AM1E]
+            alternate_definition [stingy] c3x
+   setup 2x1 1x2 rotate qualifier in in_or_out
+      array [AM0S 0]
+   setup 1x2 1x2 qualifier left miniwaves
+      array [0 AM0W]
 
 call "left turn thru to a wave" dontshow tag leftturnthrutowave
             left_means_mirror
@@ -13206,6 +13266,12 @@ call "left turn thru to a wave" dontshow tag leftturnthrutowave
             alternate_definition [yoyo] c4
    setup 2x1 1x2
       array [AL0E 0]
+            alternate_definition [generous] c3x
+   setup 2x1 1x2
+      array [AL0E 0]
+            alternate_definition [stingy] c3x
+   setup 2x1 1x2
+      array [AL1W 0]
 
 call "any hand turn thru" mainstream tag natturnthru
    setup 1x2 1x2 rotate restriction forbidden wave_only
@@ -16278,6 +16344,12 @@ call "_centers plan ahead" dontshow tag plan_ctrtoend
             rear_back_from_r_wave left_means_mirror
    setup 2x2 2x2
       array [0 0 CCR0E CAL1W]
+            alternate_definition [generous] c3x
+   setup 4x1 2x2
+      array [CCR2S 0 0 CCAL3N]
+            alternate_definition [stingy] c3x
+   setup 4x1 2x2
+      array [AL1S 0 0 CR0N]
 
 call "_ends plan ahead" dontshow tag plan_endtoctr
             rear_back_from_r_wave left_means_mirror
@@ -16285,9 +16357,9 @@ call "_ends plan ahead" dontshow tag plan_endtoctr
       array [CR3N AACR0S ACR1W CR2W]
 
 call "plan ahead" c3a
-            left_means_mirror
+            left_means_mirror gen_sting_is_inherited
    crossconc plan_endtoctr [conc_demand_lines inherit_left]
-             plan_ctrtoend [conc_force_columns inherit_left]
+             plan_ctrtoend [conc_force_columns inherit_left inherit_gensting]
 
 call "take @9" c3
             left_means_mirror neednumber
@@ -21598,8 +21670,9 @@ call "detour" c2 tag detour
         endsdetour [inherit_fractal inherit_gensting conc_demand_lines conc_force_spots endscando]
 
 call "team up" c3a
+            fractal_is_inherited gen_sting_is_inherited
    // The "force columns" makes the hingers stay together.
-   conc beaurun [] half_circ_and_hinge [conc_force_columns endscando]
+   conc beaurun [] half_circ_and_hinge [conc_force_columns endscando inherit_fractal inherit_gensting]
 
 call "_tunnel part 1" dontshow tag tunnel1
            single_is_inherited
@@ -24385,9 +24458,9 @@ call "_hinge/half circ" dontshow tag hinge_and_half_circ
    seq circulate [force_half]
 
 call "_half circ/hinge" dontshow tag half_circ_and_hinge
-            visible_fractions
+            visible_fractions fractal_is_inherited gen_sting_is_inherited
    seq circulate [force_half]
-   seq hinge []
+   seq hinge [inherit_fractal inherit_gensting]
 
 call "_explode the top part 2" dontshow tag plodetop2
             left_means_mirror

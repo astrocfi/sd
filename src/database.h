@@ -113,40 +113,36 @@
 //    "Based on ISO/IEC SC22/WG14 9899 Committee draft (SC22 N2794)"
 // and shows a date of 2000-12-02.
 //
-// But it seems that more modern versions of gcc do this wrong -- the INT16_C and UINT16_C macros
-// don't convert the type to 16 bits, and that causes some compilers to object to placing such a
-// constant in a 16-bit struct field, and some code to malfunction.
 //
-// We do not know the full extent of the problem, so we make it possible for one to define
-// the compile-time symbols USE_OWN_INT_MACROS and/or __STDC_CONSTANT_MACROS, either by putting
-// the definitions in this file, or by setting them (with, for example, "-DUSE_OWN_INT_MACROS")
-// in the makefile.
+// But it seems that this is not really the official standard that all modern compilers
+// abide by.  Compliant compilers are *not required* to have the INT16_C and UINT16_C macros
+// produce a result that is of a 16 bit type.  But some other compilers demand a 16 bit
+// type in struct initializers of 16 bit type.
 //
-// We envision three scenarios:
-// (1) The system-provided file stdint.h works correctly, for both the types (e.g. uint16_t)
-//     and the macros (e.g. UINT16_C).  Don't define either symbol.  MinGW 5.1.4 does this.
-// (2) The stdint.h file can't be trusted at all, and might not even exist.  Define both
-//     USE_OWN_INT_MACROS and __STDC_CONSTANT_MACROS, so that both the types and the macros
-//     will be defined here.  Visual C++ version 6 is in this category.
-// (3) The stdint.h file provides the types, but its definition of the macros is defective.
-//     Define only USE_OWN_INT_MACROS in this case.  Recent versions of gcc seem to fall into
-//     this category.
+// But since the usual behavior of the INT16_C and UINT16_C macros is so close to what we wbat
+// that we have decided, rather than using other names (which would just make the code more
+// confusing) to tweak the definitions of those macros.  That makes it possible for someone
+// reading the code not to have to worry about these subtle problems.
+//
+// There is a common way of telling the stdint.h include file not to define those macros:
+// they are only defined if __STDC_CONSTANT_MACROS is set.  But, once again, compliant compilers
+// are *not required* to obey this, and some include files in fact do not.
+//
+// Therefore, we forcibly undefine these macros after including stdint.h, and give out own
+// definitions.
+
+// For those systems that don't have a stdint.h file at all (Visual C++ version 6), we
+// recognize the symbol USE_OWN_INT_MACROS.  When defined, we substitute our own definitions
+// of everything, hoping that our use of "short", "long", and the constant suffix "L" will do
+// the right thing.  For Visual C++ version 6, it does.
 
 // Modern versions of the Micro$oft compiler probably provide stdint.h, but we're too cheap
 // to buy modern versions, especially since both VC++ version 5 and version 6 generate
 // incorrect code, in a phase-of-the-moon-dependent way, for "snag bits and pieces",
-// and there is no evidence that Micro$oft ever fixed this.
-// So we stick with version 6 and use it only for its nice debugger.
-#if defined(_MSC_VER)
-#define __STDC_CONSTANT_MACROS
-#define USE_OWN_INT_MACROS
-#endif
+// and there is no evidence that Micro$oft ever fixed this.  So we stick with version 6
+// and use it only for its nice debugger.  Production code is compiled with MinGW/gcc.
 
-// The version of gcc that is used for production builds of sd is version 3.4.5, which does
-// this stuff correctly, and led me, naively, to think that gcc does it right in general.
-// Alas, the macros are broken.  As far as I can tell, this is at version 4.  It's known
-// to be bad at 4.1.2.  So, for major version 4, we use our own macros.
-#if defined(__GNUC__) && __GNUC__ >= 4
+#if defined(_MSC_VER)
 #define USE_OWN_INT_MACROS
 #endif
 
@@ -154,9 +150,6 @@
 
 
 #if defined(USE_OWN_INT_MACROS)
-// Need the macros.
-#if defined(__STDC_CONSTANT_MACROS)
-// Need the types also.
 typedef int int32_t;
 typedef unsigned int uint32_t;
 typedef short int int16_t;
@@ -164,26 +157,29 @@ typedef unsigned short int uint16_t;
 typedef char int8_t;
 typedef unsigned char uint8_t;
 #else
-// Need the macros but not the types.  Since __STDC_CONSTANT_MACROS is off,
-// stdint.h won't try to provide the macros.
 #include <stdint.h>
 #endif
+
+// We may or may not have definitions of the macros here.
+// Remove them, and use our own definitions.
+#undef INT8_C
+#undef UINT8_C
+#undef INT16_C
+#undef UINT16_C
+#undef INT32_C
+#undef UINT32_C
 #define INT8_C(val) ((int8_t) + (val))
 #define UINT8_C(val) ((uint8_t) + (val##U))
 #define INT16_C(val) ((int16_t) + (val))
 #define UINT16_C(val) ((uint16_t) + (val##U))
 #define INT32_C(val) ((uint32_t) + (val##L))
 #define UINT32_C(val) ((uint32_t) + (val##UL))
-#else
-// Not asking for special consideration; do everything with standard macros; they work.
-#define __STDC_CONSTANT_MACROS
-#include <stdint.h>
-#endif
 
 
-// The goal is to get rid of the following typedefs,
-// and use the standard type symbols everywhere.
-// That is, things like "uint32" are "legacy code".
+
+// The goal is to get rid of the following typedefs, and use the standard
+// type symbols everywhere. That is, things like "uint32" are "legacy code".
+// They will be replaced in due time.
 
 typedef int32_t int32;
 typedef uint32_t uint32;
