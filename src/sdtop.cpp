@@ -245,6 +245,11 @@ extern void update_id_bits(setup *ss)
       1, d_south, 2, d_north,
       ~0};
 
+   static unsigned short int face_1x3[] = {
+      2, d_west, 1, d_east,
+      1, d_west, 0, d_east,
+      ~0};
+
    static unsigned short int face_2x3[] = {
       2, d_west, 1, d_east,
       1, d_west, 0, d_east,
@@ -265,6 +270,40 @@ extern void update_id_bits(setup *ss)
       6, d_west, 2, d_east,
       ~0};
 
+   static unsigned short int face_4x5[] = {
+      1, d_west, 0, d_east,
+      2, d_west, 1, d_east,
+      3, d_west, 2, d_east,
+      4, d_west, 3, d_east,
+      8, d_west, 9, d_east,
+      7, d_west, 8, d_east,
+      6, d_west, 7, d_east,
+      5, d_west, 6, d_east,
+      16, d_west, 15, d_east,
+      17, d_west, 16, d_east,
+      18, d_west, 17, d_east,
+      19, d_west, 18, d_east,
+      13, d_west, 14, d_east,
+      12, d_west, 13, d_east,
+      11, d_west, 12, d_east,
+      10, d_west, 11, d_east,
+      0, d_south, 9, d_north,
+      1, d_south, 8, d_north,
+      2, d_south, 7, d_north,
+      3, d_south, 6, d_north,
+      4, d_south, 5, d_north,
+      9, d_south, 15, d_north,
+      8, d_south, 16, d_north,
+      7, d_south, 17, d_north,
+      6, d_south, 18, d_north,
+      5, d_south, 19, d_north,
+      15, d_south, 14, d_north,
+      16, d_south, 13, d_north,
+      17, d_south, 12, d_north,
+      18, d_south, 11, d_north,
+      19, d_south, 10, d_north,
+      ~0};
+
    for (i=0,j=1,livemask=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++,j<<=1) {
       if (ss->people[i].id1) livemask |= j;
       ss->people[i].id2 &= ~BITS_TO_CLEAR;
@@ -283,6 +322,10 @@ extern void update_id_bits(setup *ss)
       face_list = face_2x2; break;
    case s2x3:
       face_list = face_2x3; break;
+   case s4x5:
+      face_list = face_4x5; break;
+   case s1x3:
+      face_list = face_1x3; break;
    }
 
    if (face_list) {
@@ -326,8 +369,11 @@ extern void update_id_bits(setup *ss)
       if (livemask != 0x3BDUL) ptr = (id_bit_table *) 0;
       break;
    case s3x6:
-      /* We only recognize this if the center 1x6 is fully occupied. */
-      if ((livemask & 0700700UL) != 0700700UL) ptr = (id_bit_table *) 0;
+      // If the center 1x6 is fully occupied, use this better table.
+      if ((livemask & 0700700UL) == 0700700UL) ptr = id_bit_table_3x6_with_1x6;
+      // Or, if center 1x4 is occupied, use the standard table.
+      // Otherwise, fail.
+      if ((livemask & 0600600UL) != 0600600UL) ptr = (id_bit_table *) 0;
       break;
    case sbigdmd:
       /* If this is populated appropriately, we can identify "outer pairs". */
@@ -345,6 +391,10 @@ extern void update_id_bits(setup *ss)
       /* If this is populated appropriately, we can identify "outer pairs". */
       if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bighrgl_wings;
       break;
+   case sbigh:
+      // We recognize only the center 1x4, and only if it is full.
+      if ((livemask & 06060UL) != 06060UL) ptr = (id_bit_table *) 0;
+      break;
    case s_525:
       if (livemask == 04747UL) ptr = id_bit_table_525_nw;
       else if (livemask == 07474UL) ptr = id_bit_table_525_ne;
@@ -361,13 +411,15 @@ extern void update_id_bits(setup *ss)
       break;
    case s3x4:
 
-      /* There are two different things we can recognize from here.
+      /* There are three special things we can recognize from here.
             If the setup is populated as an "H", we use a special table
             (*NOT* the usual one picked up from the setup_attrs list)
             that knows about the center 2 and the outer 6 and all that.
+            If the center 2x3 is occupied, we use a table for that.
             If the setup is populated as offset lines/columns/whatever,
             we use the table from the setup_attrs list, that knows about
-            the "outer pairs". */
+            the "outer pairs".
+            If all else fails, we use the default table. */
 
       if (livemask == 07171UL) ptr = id_bit_table_3x4_h;
       else if ((livemask & 04646UL) == 04646UL) ptr = id_bit_table_3x4_ctr6;
@@ -402,11 +454,10 @@ extern void update_id_bits(setup *ss)
       else if (livemask != 04747UL) ptr = (id_bit_table *) 0;
       break;
    case s4dmd:
-      /* The standard table requires center diamonds have only centers and outer diamonds
-         have only points.  There may be other useful configurations, but we don't
-         support them yet. */
-      /* Otherwise, see whether to accept default or reject everything. */
-      if (livemask != 0xC9C9UL) ptr = (id_bit_table *) 0;
+      // If center diamonds have only centers and outer ones only points, use this.
+      if (livemask == 0xC9C9UL) ptr = id_bit_table_4dmd_cc_ee;
+      // Or if center 1x4 is occupied, use standard map.
+      else if ((livemask & 0xC0C0UL) != 0xC0C0UL) ptr = (id_bit_table *) 0;
       break;
    case s3ptpd:
       /* If the center diamond is full and the inboard points of each outer diamond
@@ -3594,6 +3645,16 @@ static resolve_tester test_4x4_stuff[] = {
    {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A8AA8A8},    /* RLG from pinwheel, others of each. */
    {resolve_rlg,            l_mainstream,      3, 0,   {5, 7, 3, 1, 13, 15, 11, 9},  0x8A8AA8A8},    /* RLG from pinwheel, some of each. */
    {resolve_rlg,            l_mainstream,      3, 0,   {7, 5, 1, 3, 15, 13, 9, 11},  0x13313113},    /* RLG from pinwheel, others of each. */
+
+   // From clumps.
+   {resolve_rlg,            l_mainstream, 2, 0,   {3, 1, 14, 0, 11, 9, 6, 8},       0x8A8AA8A8},
+   {resolve_rlg,            l_mainstream, 4, 0,   {5, 4, 7, 2, 13, 12, 15, 10},     0x8A8AA8A8},
+   {resolve_rlg,            l_mainstream, 2, 0,   {1, 0, 3, 14, 9, 8, 11, 6},       0x31311313},
+   {resolve_rlg,            l_mainstream, 4, 0,   {7, 5, 2, 4, 15, 13, 10, 12},     0x13133131},
+   {resolve_la,             l_mainstream, 5, 0,   {3, 0, 14, 9, 11, 8, 6, 1},       0xA8AA8A88},
+   {resolve_la,             l_mainstream, 7, 0,   {5, 2, 7, 12, 13, 10, 15, 4},     0xA8AA8A88},
+   {resolve_la,             l_mainstream, 5, 0,   {1, 14, 3, 8, 9, 6, 11, 0},       0x13113133},
+   {resolve_la,             l_mainstream, 7, 0,   {7, 4, 2, 13, 15, 12, 10, 5},     0x31331311},
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_c1phan_stuff[] = {
@@ -3605,6 +3666,11 @@ static resolve_tester test_c1phan_stuff[] = {
    {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A8AA8A8},    /* RLG from phantoms, others of each. */
    {resolve_rlg,            l_mainstream,      3, 0,   {9, 11, 7, 5, 1, 3, 15, 13},  0x8A8AA8A8},    /* RLG from phantoms, some of each. */
    {resolve_rlg,            l_mainstream,      3, 0,   {11, 9, 5, 7, 3, 1, 13, 15},  0x13313113},    /* RLG from phantoms, others of each. */
+   {resolve_none,           l_mainstream,      64}};
+
+static resolve_tester test_galaxy_stuff[] = {
+   {resolve_rlg,            l_mainstream, 2, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x1A313813},
+   {resolve_rlg,            l_mainstream, 2, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A81A8A3},
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_qtag_stuff[] = {
@@ -3623,12 +3689,19 @@ static resolve_tester test_qtag_stuff[] = {
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_2x6_stuff[] = {
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 3, 1, 0, 10, 9},    0x13313113},    /* RLG from "Z" 8-chain. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {8, 7, 5, 4, 2, 1, 11, 10},   0x13313113},    /* RLG from "Z" 8-chain. */
-   {resolve_la,             l_mainstream,      6, 0,   {6, 4, 3, 1, 0, 10, 9, 7},    0x33131131},    /* LA from "Z" 8-chain. */
-   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 2, 1, 11, 10, 8},   0x33131131},    /* LA from "Z" 8-chain. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},    /* RLG from outer triple boxes. */
-   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},    /* LA from outer triple boxes. */
+   // RLG/LA from "Z" 8-chain.
+   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 3, 1, 0, 10, 9},    0x13313113},
+   {resolve_rlg,            l_mainstream,      3, 0,   {8, 7, 5, 4, 2, 1, 11, 10},   0x13313113},
+   {resolve_la,             l_mainstream,      6, 0,   {6, 4, 3, 1, 0, 10, 9, 7},    0x33131131},
+   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 2, 1, 11, 10, 8},   0x33131131},
+   // RLG/LA from outer triple boxes.
+   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},
+   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},
+   // RLG/LA from parallelogram waves.
+   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 2, 3, 1, 0, 8, 9},     0x8A8AA8A8},
+   {resolve_la,             l_mainstream,      6, 0,   {7, 3, 2, 0, 1, 9, 8, 6},     0xA8AA8A88},
+   {resolve_rlg,            l_mainstream,      3, 0,   {9, 8, 4, 5, 3, 2, 10, 11},   0x8A8AA8A8},
+   {resolve_la,             l_mainstream,      6, 0,   {9, 5, 4, 2, 3, 11, 10, 8},   0xA8AA8A88},
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_3x4_stuff[] = {
@@ -3760,6 +3833,8 @@ extern resolve_indicator resolve_p(setup *s)
       testptr = test_4x4_stuff; break;
    case s_c1phan:
       testptr = test_c1phan_stuff; break;
+   case s_galaxy:
+      testptr = test_galaxy_stuff; break;
    case s_crosswave: case s_thar:
       /* This makes use of the fact that the person numbering
          in crossed lines and thars is identical. */
@@ -4016,11 +4091,17 @@ SDLIB_API void toplevelmove(void)
       else if (the_callback_block.parse_state_ptr->topcallflags1 &
                (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) {
          uint64 finaljunk;
+         parse_block *concept_scan = conceptptr->next;
 
          finaljunk.her8it = 0;
          finaljunk.final = 0;
 
-         (void) process_final_concepts(conceptptr->next, FALSE, &finaljunk);
+         // First, skip the fractional concept.  Only simple "M/N".
+         while (concept_scan->concept->kind == concept_fractional &&
+                concept_scan->concept->value.arg1 == 0)
+            concept_scan = concept_scan->next;
+
+         (void) process_final_concepts(concept_scan, FALSE, &finaljunk);
          if (finaljunk.final & FINAL__SPLIT)
             conceptptr = conceptptr->next;
       }

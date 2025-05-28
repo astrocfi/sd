@@ -222,6 +222,7 @@ typedef enum {
    MPKIND__OFFS_R_THRQ_SPECIAL,
    MPKIND__OFFS_L_FULL_SPECIAL,
    MPKIND__OFFS_R_FULL_SPECIAL,
+   MPKIND__OFFS_BOTH_FULL,
    MPKIND__LILZCCW,
    MPKIND__LILZCW,
    MPKIND__LILAZCCW,
@@ -253,6 +254,15 @@ typedef struct skrilch {
    uint32 code;
    struct skrilch *next;
 } map_thing;
+
+typedef struct {
+   const setup_kind k;
+   const uint32 mask;
+   const uint32 test;
+   const map_thing *map;
+   const int rot;
+   const veryshort inactives[9];
+} clw3_thing;
 
 typedef struct {
    Cstring name;
@@ -889,15 +899,18 @@ typedef struct dirbtek {
 } sel_item;
 
 typedef struct qwerty {
-   Const setup_kind kind;
-   Const struct qwerty *other;
-   Const veryshort mapqt1[8];   /* In quarter-tag: first triangle (upright),
+   const setup_kind kind;
+   const setup_kind kind1x3;
+   const struct qwerty *other;
+   const veryshort nointlkshapechange;
+   const veryshort switchtgls;
+   const veryshort mapqt1[8];   /* In quarter-tag: first triangle (upright),
                                    then second triangle (inverted), then idle. */
-   Const veryshort mapcp1[8];   /* In C1 phantom: first triangle (inverted),
+   const veryshort mapcp1[8];   /* In C1 phantom: first triangle (inverted),
                                    then second triangle (upright), then idle. */
-   Const veryshort mapbd1[8];   /* In bigdmd. */
-   Const veryshort map241[8];   /* In 2x4. */
-   Const veryshort map261[8];   /* In 2x6. */
+   const veryshort mapbd1[8];   /* In bigdmd. */
+   const veryshort map241[8];   /* In 2x4. */
+   const veryshort map261[8];   /* In 2x6. */
 } tgl_map;
 
 typedef struct {

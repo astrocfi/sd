@@ -333,11 +333,23 @@ static collision_map collision_map_table[] = {
    /* These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey. */
    {4, 0x12, 0x1B, 0x09, {0, 1, 3, 4},             {0, 2, 7, 8},           {1, 2, 6, 8},          s_short6,    sbigdmd,     0, warn__none, 0},
    {4, 0x12, 0x36, 0x24, {1, 2, 4, 5},             {2, 4, 8, 11},          {2, 5, 8, 10},         s_short6,    sbigdmd,     0, warn__none, 0},
-   /* These items handle more 2x2 stuff, including the "special drop in" that makes chain reaction/motivate etc. work. */
+
+   // These 4 items handle more 2x2 stuff, including the "special drop in"
+   // that makes chain reaction/motivate etc. work.
    {2, 0x005005, 0x05, 0x05, {0, 2},               {7, 2},                {6, 3},                 s2x2,        s2x4,        1, warn__none, 0},
    {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, warn__none, 0},
    {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 5},                {1, 4},                 s2x2,        s2x4,        0, warn__none, 0},
    {2, 0x000000, 0x0A, 0x0A, {1, 3},               {2, 7},                {3, 6},                 s2x2,        s2x4,        0, warn__none, 0},
+   // Same, but with missing people.
+   {1, 0x004004, 0x04, 0x04, {2},                  {2},                   {3},                    s2x2,        s2x4,        1, warn__none, 0},
+   {1, 0x001001, 0x01, 0x01, {0},                  {7},                   {6},                    s2x2,        s2x4,        1, warn__none, 0},
+   {1, 0x008008, 0x08, 0x08, {3},                  {5},                   {4},                    s2x2,        s2x4,        1, warn__none, 0},
+   {1, 0x002002, 0x02, 0x02, {1},                  {0},                   {1},                    s2x2,        s2x4,        1, warn__none, 0},
+   {1, 0x000000, 0x04, 0x01, {2},                  {5},                   {4},                    s2x2,        s2x4,        0, warn__none, 0},
+   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    s2x2,        s2x4,        0, warn__none, 0},
+   {1, 0x000000, 0x08, 0x08, {3},                  {7},                   {6},                    s2x2,        s2x4,        0, warn__none, 0},
+   {1, 0x000000, 0x02, 0x02, {1},                  {2},                   {3},                    s2x2,        s2x4,        0, warn__none, 0},
+
    /* Same spot as points of diamonds. */
    {6, 0x022022, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},     s_qtag,      sbigdmd,     1, warn__none, 0},
    {6, 0x011011, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {11, 2, 3, 4, 8, 9},   {10, 2, 3, 5, 8, 9},    s_qtag,      sbigdmd,     1, warn__none, 0},
@@ -970,53 +982,53 @@ Private void special_4_way_symm(
    Const veryshort *the_table = (Const veryshort *) 0;
 
    switch (result->kind) {
-      case s2x2: case s_galaxy:
-      case s_c1phan: case s4x4:
-      case s_hyperglass: case s_thar:
-      case s_star: case s1x1:
-         break;
-      case s1x4:
-         result->kind = s_hyperglass;
-         the_table = line_table;
-         break;
-      case sdmd:
-         result->kind = s_hyperglass;
-         the_table = dmd_table;
-         break;
-      case s2x4:
-         result->kind = s4x4;
-         the_table = table_2x4;
-         break;
-      case s2x8:
-         result->kind = s8x8;
-         the_table = table_2x8;
-         break;
-      case s3x1dmd:
-         result->kind = sx4dmd;
-         the_table = table_3x1d;
-         break;
-      case s4x6:
-         result->kind = s8x8;
-         the_table = table_4x6;
-         break;
-      case s1x16:
-         result->kind = sx1x16;
-         the_table = table_1x16;
-         break;
-      case s4dmd:
-         result->kind = sx4dmd;
-         the_table = table_4dmd;
-         break;
-      case s_bone:
-         result->kind = s_hyperbone;
-         the_table = table_hyperbone;
-         break;
-      case s2x3:
-         result->kind = sx4dmd;
-         the_table = table_2x3_4dmd;
-         break;
-      default:
-         fail("Don't recognize ending setup for this call.");
+   case s2x2: case s_galaxy:
+   case s_c1phan: case s4x4:
+   case s_hyperglass: case s_thar:
+   case s_star: case s1x1: case s_alamo:
+      break;
+   case s1x4:
+      result->kind = s_hyperglass;
+      the_table = line_table;
+      break;
+   case sdmd:
+      result->kind = s_hyperglass;
+      the_table = dmd_table;
+      break;
+   case s2x4:
+      result->kind = s4x4;
+      the_table = table_2x4;
+      break;
+   case s2x8:
+      result->kind = s8x8;
+      the_table = table_2x8;
+      break;
+   case s3x1dmd:
+      result->kind = sx4dmd;
+      the_table = table_3x1d;
+      break;
+   case s4x6:
+      result->kind = s8x8;
+      the_table = table_4x6;
+      break;
+   case s1x16:
+      result->kind = sx1x16;
+      the_table = table_1x16;
+      break;
+   case s4dmd:
+      result->kind = sx4dmd;
+      the_table = table_4dmd;
+      break;
+   case s_bone:
+      result->kind = s_hyperbone;
+      the_table = table_hyperbone;
+      break;
+   case s2x3:
+      result->kind = sx4dmd;
+      the_table = table_2x3_4dmd;
+      break;
+   default:
+      fail("Don't recognize ending setup for this call.");
    }
 
    begin_size = setup_attrs[scopy->kind].setup_limits+1;
@@ -1595,16 +1607,14 @@ Private int divide_the_setup(
             but not an 18 matrix. */
 
          if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
-            if (
-                  (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
+            if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                division_code = MAPCODE(s2x3,3,MPKIND__SPLIT,1);
                warn(warn__split_to_2x3s);
                goto divide_us_no_recompute;
             }
-            else if (
-                  (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
+            else if ((!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
+                     (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
                division_code = MAPCODE(s1x6,3,MPKIND__SPLIT,1);
                warn(warn__split_to_1x6s);
                goto divide_us_no_recompute;
@@ -1618,20 +1628,24 @@ Private int divide_the_setup(
             individual couples scattered around. */
 
          switch (livemask) {
-            case 0505505:
-            case 0702702:
-            case 0207207:
-               division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_HALF,0);
-               warn(warn__each1x2);
-               break;
-            case 0550550:
-            case 0720720:
-            case 0270270:
-               division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_HALF,0);
-               warn(warn__each1x2);
-               break;
-            default:
-               fail("You must specify a concept.");
+         case 0505505:
+         case 0702702:
+         case 0207207:
+            warn(warn__each1x2);
+         case 0603603:
+         case 0306306:
+            division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_HALF,0);
+            break;
+         case 0550550:
+         case 0720720:
+         case 0270270:
+            warn(warn__each1x2);
+         case 0660660:
+         case 0330330:
+            division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_HALF,0);
+            break;
+         default:
+            fail("You must specify a concept.");
          }
 
          goto divide_us_no_recompute;
@@ -3381,18 +3395,26 @@ foobar:
             if (z == INHERITFLAG_16_MATRIX ||
                 (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
                /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-               /* But which way is appropriate?  A 4x4 is ambiguous.  Being too lazy to look
-                  at the call definition (the "assoc" stuff), we assume the call wants lines,
-                  since it seems that that is true for all calls that have the
-                  "12_16_matrix_means_split" property. */
+               /* But which way is appropriate?  A 4x4 is ambiguous. */
+               /* Being rather lazy, we just look to see whether the call is "pass thru",
+                  which is the only one that wants tandems rather than couples.
+                  Really ought to try splitting to 2x2's and see what happens. */
 
-               if (newtb & 1) {
+#define TRYTAKINGTHISOUT
+#ifdef TRYTAKINGTHISOUT
+
+               int zxy = (callspec == base_calls[base_call_passthru]) ? 1 : 0;
+
+               if ((newtb ^ zxy) & 1) {
                   /* If the setup is empty and newtb is zero, it doesn't matter what we do. */
                   division_code = ~0;
                   division_maps = &map_4x4v;
                }
                else
                   division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
+#else
+               division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
+#endif
    
                goto divide_us;
             }

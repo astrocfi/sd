@@ -1500,7 +1500,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s3x8].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00840062) && ((signature & (~0x46203180)) == 0)) {
+   else if ((ypar == 0x00840062) && ((signature & (~0x4E203380)) == 0)) {
       checkptr = setup_attrs[s4x5].setup_coords;
       goto doit;
    }
@@ -2384,6 +2384,9 @@ extern void anchor_someone_and_move(
    for (k=0 ; k<numgroups ; k++) {
       if (Bindex[k] < 0) fail("Need exactly one 'anchored' person in each group.");
    }
+
+   // If the result is a "1p5x8", we do special stuff.
+   if (result->kind == s1p5x8) result->kind = s2x8;
 
    nump = start_matrix_call(result, after_matrix_info, 0, &people);
 
@@ -4557,9 +4560,13 @@ that probably need to be put in. */
    if ((!(ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) ||
         the_schema != schema_by_array) &&
        (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
-      if (ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE ||
-          (ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) ==
-          (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_FROMTO)) {
+      uint32 frac = ss->cmd.cmd_frac_flags;
+
+      // See if what we are doing includes the first part.
+
+      if (frac == CMD_FRAC_NULL_VALUE ||
+          frac == (CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE) ||
+          (frac & ~CMD_FRAC_PART_MASK) == (CMD_FRAC_CODE_FROMTO | CMD_FRAC_NULL_VALUE)) {
 
          if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
                                          CMD_MISC__ALREADY_STEPPED |
@@ -4588,9 +4595,9 @@ that probably need to be put in. */
             ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
          }
       }
-      else if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) ==
+      else if ((frac & ~CMD_FRAC_PART_MASK) ==
                (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_FROMTOREV) &&
-               (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2)) {
+               (frac & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2)) {
          /* If we're doing the rest of the call, just turn all that stuff off. */
          if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
             ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
@@ -5748,14 +5755,17 @@ extern void move(
 
       result->result_flags = 0;
 
-      /* ***** We used to have FINAL__SPLIT in the list below, but it caused "matrix split, tandem step thru" to fail.
-         This needs to be reworked. */
+      // ***** We used to have FINAL__SPLIT in the list below, but it caused
+      // "matrix split, tandem step thru" to fail.
+      // This needs to be reworked.
 
       if (((check_concepts.her8it &
-            (INHERITFLAG_DIAMOND | INHERITFLAG_HALF | INHERITFLAG_LASTHALF)) |
+            (INHERITFLAG_DIAMOND | INHERITFLAG_MAGIC |
+             INHERITFLAG_HALF | INHERITFLAG_LASTHALF)) |
            check_concepts.final) == 0) {
-         /* Look for virtual setup concept that can be done by dispatch from table, with no
-            intervening final concepts. */
+
+         /* Look for virtual setup concept that can be done by dispatch from table,
+            with no intervening final concepts. */
 
          ss->cmd.parseptr = parseptrcopy;
 
@@ -5780,7 +5790,7 @@ extern void move(
 
       /* Some final concept (e.g. "magic") is present in front of our virtual setup concept.
          We have to dispose of it.  This means that expanding the matrix (e.g. 2x4->2x6)
-         and stepping to a wave or rearing back from one are no longer legel. */
+         and stepping to a wave or rearing back from one are no longer legal. */
 
       ss->cmd.cmd_misc_flags |= (CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__NO_STEP_TO_WAVE);
 
@@ -5788,14 +5798,15 @@ extern void move(
          will not be treated as such if there are non-final concepts occurring
          after them.  Instead, they will be treated as virtual setup concepts.
          This is what makes "magic once removed trade" work, for
-         example.  On the other hand, if there are no non-final concepts following, treat these as final.
+         example.  On the other hand, if there are no non-final concepts following,
+         treat these as final.
          This is what makes "magic transfer" or "split square thru" work. */
 
       ss->cmd.parseptr = parseptrcopy;
       ss->cmd.callspec = (callspec_block *) 0;
 
-      /* We can tolerate the "matrix" flag if we are going to do "split".  For anything else,
-         "matrix" is illegal. */
+      /* We can tolerate the "matrix" flag if we are going to do "split".
+         For anything else, "matrix" is illegal. */
 
       if (check_concepts.final == FINAL__SPLIT && check_concepts.her8it == 0) {
          uint32 split_map;

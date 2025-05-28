@@ -1,0 +1,142 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename appnote1.info
+@settitle Sd Application Note 3
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@end iftex
+@c %**end of header
+@ifclear html
+@center @strong{SD APPLICATION NOTE 3}
+@sp 1
+@end ifclear
+Copyright @copyright{} 2000 William B. Ackerman
+@sp 1
+@center DISCONNECTED
+@center and
+@center IGNORE
+@sp 1
+The @samp{disconnected} concept has not enjoyed a lot of popularity
+over the last several years.  An article in the Zip Coder magazine
+described it as the ``lost concept''.  This may be, in part, because
+people don't always perceive it as having a sound logical basis.
+
+In recent years there has been increased interest in ``theoretical'' or
+``computational'' approaches to calls and concepts.  Calls and concepts
+that were conceptualized by examples rather than by algorithmic rules
+haven't fared very well.  The @samp{disconnected} concept may have been
+a victim of this.  It has mostly been conceptualized by examples that
+people run into on the dance floor.
+
+Common usage has given rise to the principle that, if the call is not a shape- or
+orientation-changer, you work to spots:
+@sp 1
+@example
+@group
+              4GV  3B^  4BV  3G^  1GV  2B^  1BV  2G^
+
+                  BOYS DISCONNECTED swing thru
+
+              4GV  4B^  1BV  3G^  1GV  3B^  2BV  2G^
+@end group
+@end example
+@sp 1
+@noindent and the principle that, if both groups are doing disconnected
+calls, whoever ``owned'' the center at the start will own it at the end:
+@sp 1
+@example
+@group
+              3G^  4BV  3BV  2G^  4GV  1B^  2B^  1GV
+
+      GIRLS DISCONNECTED crossfire WHILE THE BOYS crossfire
+
+                      2BV   4G^   3GV   3B^
+
+                      1BV   1G^   2GV   4B^
+@end group
+@end example
+@sp 1
+@noindent But applications that go beyond these simple principles have not been
+very popular.
+
+@noindent In this note I will try to explain how I (and @code{Sd}) believe the
+concept works.
+
+The Callerlab definition says that the designated people do the
+call as if they had slid together, that is, as though the intervening
+spots weren't there.
+@sp 1
+@example
+@group
+              4GV  3B^  4BV  3G^  1GV  2B^  1BV  2G^
+
+    BOYS DISCONNECTED <anything> -- do the call as if from here:
+
+                        3B^  4BV  2B^  1BV
+@end group
+@end example
+@sp 1
+If the call is not a shape-changer, they go back to the same
+spots.  Otherwise, they ``stay near the original centers' spots'',
+and they close any gaps:
+@sp 1
+@example
+@group
+                                               3B>
+ 3B>
+ 3G>                                           2B<
+ 2B<
+ 2G<    GIRLS DISCONNECTED lockit  -->   1G^ 2GV 4G^ 3GV
+ 4G>
+ 4B>                                           4B>
+ 1G<
+ 1B<                                           1B<
+
+
+                                     3B>
+                                     2B<
+
+   -->  (close the gaps) -->   1G^ 2GV 4G^ 3GV
+
+                                     4B>
+                                     1B<
+@end group
+@end example
+@sp 1
+From the @samp{crossfire} example, we know that the designees can sometimes
+all crowd into the center:
+@sp 1
+@example
+@group
+              4B^  3GV  3B^  4GV  2G^  1BV  1G^  2BV
+
+                  GIRLS DISCONNECTED crossfire
+
+                             1GV  4G^
+                     4B^ 3B^          1BV 2BV
+                             2GV  3G^
+@end group
+@end example
+@sp 1
+@noindent But they can't always do so:
+@sp 1
+@example
+@group
+              3GV  4B^  4G^  3BV  1B^  2GV  2BV  1G^
+
+              BOYS DISCONNECTED switch to a diamond
+
+                               4B>
+                3GV  3B^  4G^       2GV  1BV  1G^
+                               2B<
+@end group
+@end example
+@sp 1
+What was the problem in that last example?  It was that having all the
+designees crowd into the center would have pushed the others out.  So we
+have the principle that the designees crowd into the center as much as
+they can @emph{without displacing the others}.  With @samp{crossfire}
+they were able to go into the center because they saved space by
+stacking themselves 2 people deep.
+@bye

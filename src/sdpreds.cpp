@@ -71,30 +71,51 @@ extern long_boolean selectp(setup *ss, int place)
    permpid1 = ss->people[place].id1;
    pid2 = ss->people[place].id2;
 
-   /* Demand that the subject be real. */
+   // Demand that the subject be real, or that
+   // we can evaluate based on position alone.
 
    if (!(permpid1 & BIT_PERSON)) {
       // We can still do it for some selectors.  However, this violates
       // the rules about using the *original* centers in calls like
       // "rims trade back".  But, if the person isn't real, this is the best
       // we can do.
-      switch (current_options.who) {
-      case selector_centers:
-         if (ss->kind == s1x4)
-            return (place & 1) != 0;
-         else if (ss->kind == s2x4)
-            return ((place+1) & 2) != 0;
-         break;
-      case selector_ends:
-         if (ss->kind == s1x4)
-            return (place & 1) == 0;
-         else if (ss->kind == s2x4)
-            return ((place+1) & 2) == 0;
-         break;
+      //
+      // We do this based on the stuff in the attribute tables.  If the
+      // setup is larger than 8, we can't -- the tables become very complicated
+      // based on the actual occupancy, and we are looking at an unoccupied
+      // space.
+
+      if (setup_attrs[ss->kind].setup_limits < 8) {
+         id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+
+         if (ptr) {
+            switch (current_options.who) {
+            case selector_centers:
+            case selector_ends:
+            case selector_center2:
+            case selector_outer6:
+            case selector_verycenters:
+            case selector_center6:
+            case selector_outer2:
+            case selector_veryends:
+            case selector_ctrdmd:
+            case selector_ctr_1x4:
+            case selector_ctr_1x6:
+            case selector_outer1x3s:
+            case selector_center4:
+            case selector_outerpairs:
+               pid2 = ptr[place][0] &
+                  BITS_TO_CLEAR &
+                  ~(ID2_FACING|ID2_NOTFACING|ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE);
+               goto foo;
+            }
+         }
       }
 
       fail("Can't decide who are selected.");
    }
+
+ foo:
 
    switch (current_options.who) {
       case selector_boys:

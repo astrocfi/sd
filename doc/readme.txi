@@ -204,7 +204,7 @@ browsed there or downloaded for your local use as well.
 
 You can obtain Sdtty for PC-compatible computers,
 on a 3.5-inch HD diskette, with printed documentation.
-The price is $4 (price valid for 1999).
+The price is $4 (price valid for 2000).
 @ifset full-manual
 @xref{Author Contact}.
 @end ifset
@@ -461,7 +461,7 @@ Be sure to include the version number.
 @c don't use mailto URL's to try to cut down on spam
 @display
 William Ackerman
-wba@@an.hp.com
+wba@@alum.mit.edu
 
 @ifclear html
 Stephen Gildea

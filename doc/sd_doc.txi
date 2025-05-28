@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: December 18, 1999
-@set sd-version 32.95
+@set Time-stamp: January 20, 2000
+@set sd-version 33.0
 @set full-manual
 @c %**end of header
 @iftex
@@ -38,7 +38,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-1999 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-2000 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX or other text
@@ -3515,7 +3515,7 @@ These are done from a 4x6.
 @item triple 1x4s
 @item quadruple C/L/W/B/D/1T/3T/1L/3L/DS/GT
 These are straightforward.
-@item center triple C/L/W/B/D (singular)
+@item center triple C/L/W/B/D @r{(singular)}
 @item outside triple C/L/W/B/D
 These are done from a setup that can be construed as having a center
 4-person setup with two other 4-person setups on the outside.  The center
@@ -3524,7 +3524,7 @@ shape-changers are allowed.
 
 A suitably populated 4x4 matrix can be construed as a center triple box
 surrounded by outside triple lines or columns.
-@item center Z (singular)
+@item center Z @r{(singular)}
 @item outside triple Z's
 These are straightforward.
 @item center phantom C/L/W/B/D/DS/GT
@@ -3741,13 +3741,16 @@ A ``ladder'' is a 4x4 matrix occupied so that everyone has exactly one
 live person in front or in back.  It could typically be obtained
 by doing a @code{split phantom waves split circulate} from normal
 waves.  You may wish to use the @code{distorted C/L/W} concept instead.
-@item offset C/L/W
+@item offset C/L/W @r{(plural)}
 An ``offset'' C/L/W is a pair of lines or columns that has been sheared
 in the middle by either 50% or 100%, making a 3x4 or 4x4 matrix, respectively.
 A 4x4 matrix offset line or column is sometimes referred to as ``clumps.''
 All of the live people work together across the shear line.  If a shape-changer
 is called, the setup may become a 2x8 matrix, that is, a 100% offset
 parallelogram.
+@item offset C/L/W @r{(singular)}
+This is used in a 2x4 setup in which the live people make a 1x4 that has been
+sheared in the middle,
 @item Z C/L/W
 This is a pair of lines or columns that have been distorted by having the
 centers or the ends move one full matrix spot, to make a 4x4 matrix, or
@@ -3772,13 +3775,16 @@ These concepts are quite obscure.
 @item diagonal C/L/W of 3 @r{(plural)}
 These are done from ``blocks.''  The two lines or columns work together
 in a 2x3 matrix, doing a 6-person call.
+@item C/L/W of 3 @r{(plural)}
+The lines or columns are not distorted.  They are simply picked
+out from the formation.
 @item distorted tidal C/L/W @r{(singular)}
 These are done from a 2x8 matrix in which the real people form some
 kind of distorted 1x8.
 @item offset tidal C/L/W @r{(singular)}
 These are done from a 2x8 matrix in which the real people form two
 1x4's joined with an offset in the center.
-@item distorted C/L/W (singular) of 6
+@item distorted C/L/W @r{(singular)} of 6
 These are done from a center diamond with offset pairs of people on the outside.
 @item stagger D/1T/3T/1L/3L/GT
 @item diagonal D/1T/3T/1L/3L/GT
@@ -4322,6 +4328,8 @@ are up to you.
 @item 2x12 matrix
 @item 3x4 matrix
 @item 4x4 matrix
+@item 4x5 matrix
+@item 3x6 matrix
 @item 3x8 matrix
 @item 4x6 matrix
 @item 16 matrix of parallel diamonds

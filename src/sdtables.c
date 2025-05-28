@@ -39,7 +39,6 @@
    exp_qtg_3x4_stuff
    exp_1x2_hrgl_stuff
    exp_dmd_hrgl_stuff
-
    touch_init_table1
    touch_init_table2
    touch_init_table3
@@ -77,7 +76,9 @@
    id_bit_table_3dmd_in_out
    id_bit_table_3dmd_ctr1x6
    id_bit_table_3dmd_ctr1x4
+   id_bit_table_4dmd_cc_ee
    id_bit_table_3ptpd
+   id_bit_table_3x6_with_1x6
    conc_init_table
    fdhrgl
    f323
@@ -90,6 +91,8 @@
    fixgizmo
    c1tglmap1
    c1tglmap2
+   dbqtglmap1
+   dbqtglmap2
    qttglmap1
    qttglmap2
    bdtglmap1
@@ -123,7 +126,6 @@
    map_crazy_offset1
    map_crazy_offset2
    map_but_o
-   map_offset
    map_4x4v
    map_blocks
    map_trglbox
@@ -150,6 +152,9 @@
    map_off1x82
    map_dqtag1
    map_dqtag2
+   map_dqtag3
+   map_dqtag4
+   clw3_table
    map_trngl_box1
    map_trngl_box2
    map_inner_box
@@ -282,7 +287,7 @@ selector_item selector_list[] = {
    {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4", selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
 
-/* BEWARE!!  These strings are keyed to the definition of "warning_index" in sd.h . */
+/* BEWARE!!  These strings are keyed to the definition of "warning_index" in sdcom.h . */
 /* A "*" as the first character means that this warning precludes acceptance while searching. */
 /* A "+" as the first character means that this warning is cleared if a concentric call was done
    and the "suppress_elongation_warnings" flag was on. */
@@ -332,6 +337,7 @@ Cstring warning_strings[] = {
    /*  warn__check_4x4           */   "*Check a 4x4 setup.",
    /*  warn__check_hokey_4x4     */   "*Check a center box and outer lines/columns.",
    /*  warn__check_4x4_start     */   "*Check a 4x4 setup at the start of this call.",
+   /*  warn__check_centered_qtag */   "*Each 8-person twin 1/4 tag is centered, with the outsides directly adjacent.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
    /*  warn__check_c1_stars      */   " Check 'stars'.",
@@ -442,6 +448,7 @@ static expand_thing rear_twistqtag_stuff = {{0, 3, 2, 1}, 4, nothing, sdmd, 0};
 static expand_thing rear_twist2x4c_stuff = {{5, 7, 6, 0, 1, 3, 2, 4}, 8, nothing, s_qtag, 1};
 
 
+static expand_thing step_8by_stuff = {{6, 7, 0, 1, 2, 3, 4, 5}, 8, s_thar, s_qtag, 0};
 static expand_thing step_sqs_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_thar, s2x4, 0};
 static expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 0};
 static expand_thing step_qbox_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, 8, s_bone, s2x4, 0};
@@ -663,6 +670,9 @@ static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0x0FF0UL,     0x77DDUL, 0x0FF0UL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0xF00FUL,     0x77DDUL, 0xF00FUL},
 
+   // Ends touch from diamonds to thar.
+   {warn__none,       8, &step_8by_stuff,      s_qtag,    0xFFFFUL,     0x78D2UL, ~0UL},
+
    /* Touch from alamo 8-chain to thar. */
    {warn__none,       8, &rear_thar_stuff,     s4x4,  0x3C3C3C3CUL, 0x2034081CUL, ~0UL},
 
@@ -864,6 +874,10 @@ expand_thing expand_init_table[] = {
     4, sdmd, s_1x2dmd, 0, 0UL, 011,
     warn__none, warn__none, normalize_to_4, 0},
 
+   {{0, 1, 3, 4},
+    4, s1x4, s_2x1dmd, 0, 0UL, 044,
+    warn__none, warn__none, normalize_to_4, 0},
+
    {{1, 3, 5, 7},
     4, s2x2, s_galaxy, 0, 0UL, 0x55,
     warn__none, warn__none, normalize_to_4, 0},
@@ -918,6 +932,13 @@ expand_thing expand_init_table[] = {
 
    {{7, 3},
     2, s1x2, s_qtag, 0, 0UL, 0x77,
+    warn__none, warn__none, normalize_to_2, 0},
+
+   {{3, 1},
+    2, s1x2, s_star, 1, 0UL, 0x5,
+    warn__none, warn__none, normalize_to_2, 0},
+   {{0, 2},
+    2, s1x2, s_star, 0, 0UL, 0xA,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{9, 11, 13, 6, 2, 0, 1, 3, 5, 14, 10, 8},
@@ -1004,8 +1025,15 @@ expand_thing expand_init_table[] = {
     16, s4dmd, s3x4, 0, 0x3030, ~0UL,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X4) |
                                               NEEDMASK(CONCPROP__NEEDK_3X4_D3X4) |
-                                              NEEDMASK(CONCPROP__NEEDK_3X8) |
                                               NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4)},
+
+   {{0, 1, 4, 5, -1, 6, 7, 8, 9, 10, 13, 14, -1, 15, 16, 17},
+    16, s4dmd, s3x6, 0, 0x1010, ~0UL,
+    warn__check_centered_qtag, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X6)},
+   {{1, 2, 5, 6, 8, 9, 10, 11, 13, 14, 17, 18, 20, 21, 22, 23},
+    16, s4dmd, s3x8, 0, 0UL, ~0UL,
+    warn__check_centered_qtag, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X8)},
+
    {{1, 2, 3, 5, 7, 8, 9, 11},
     8, s_spindle, s_d3x4, 0, 0UL, 02121,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X4_D3X4)},
@@ -1128,7 +1156,7 @@ expand_thing expand_init_table[] = {
                                               NEEDMASK(CONCPROP__NEEDK_TWINDMD) |
                                               NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
 
-   // order of these next 3 items must be as shown: must be 3x4, 3x6, 1x8!!!!
+   // order of these next 3 items must be as shown: must be 1x8, 3x6, 3x4!!!!
    {{20, 21, 23, 22, 8, 9, 11, 10},
     8, s1x8, s3x8, 0, 0UL, 0x0FF0FF,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X8)},
@@ -1235,6 +1263,11 @@ expand_thing expand_init_table[] = {
    {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23},
     16, s4x4, s_bigblob, 0, 0UL, ~0UL,
     warn__none, warn__none, simple_normalize,   NEEDMASK(CONCPROP__NEEDK_BLOB)},
+
+   {{9, 8, 2, 7, 6, 5, 19, 18, 12, 17, 16, 15},
+    12, sbigdmd, s4x5, 0, 0UL, ~0UL,
+    warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X5)},
+
    {{9, 8, 7, 6, 5, 19, 18, 17, 16, 15},
     10, s2x5, s4x5, 0, 0UL, 0x07C1F,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X5)},
@@ -2175,14 +2208,6 @@ static coordrec thingblob = {s_bigblob, 3,
 
 #define NEBITS(otherbits) { ID2_LEAD   |ID2_BELLE | otherbits, ID2_LEAD   |ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BELLE | otherbits }
 
-#define NWBITS12(otherbits) { ID2_LEAD  | otherbits, ID2_BEAU  | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits }
-
-#define SWBITS12(otherbits) { ID2_TRAILER|otherbits, ID2_BELLE|otherbits, ID2_LEAD|otherbits, ID2_BEAU|otherbits }
-
-#define SEBITS12(otherbits) { ID2_TRAILER|otherbits, ID2_BELLE|otherbits, ID2_LEAD|otherbits, ID2_BEAU|otherbits }
-
-#define NEBITS12(otherbits) { ID2_LEAD|otherbits, ID2_BEAU|otherbits, ID2_TRAILER|otherbits, ID2_BELLE|otherbits }
-
 
 
 static id_bit_table id_bit_table_1x2[] = {
@@ -2238,18 +2263,18 @@ static id_bit_table id_bit_table_2x7[] = {
 /* Note that the people marked "ID2_END" won't actually identify
    themselves as ends.  That is just to make "center 4" work. */
 static id_bit_table id_bit_table_2x6[] = {  
-   NWBITS12(ID2_END),
-   NEBITS12(ID2_END),
-   NWBITS12(ID2_CTR4),
-   NEBITS12(ID2_CTR4),
-   NWBITS12(ID2_END),
-   NEBITS12(ID2_END),
-   SEBITS12(ID2_END),
-   SWBITS12(ID2_END),
-   SEBITS12(ID2_CTR4),
-   SWBITS12(ID2_CTR4),
-   SEBITS12(ID2_END),
-   SWBITS12(ID2_END)};
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_CTR4),
+   NORTHBIT(ID2_CTR4),
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_END),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_CTR4),
+   SOUTHBIT(ID2_CTR4),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_END)};
 
 /* This table is only accepted if the population is a parallelogram. */
 id_bit_table id_bit_table_2x6_pg[] = {
@@ -2267,22 +2292,22 @@ id_bit_table id_bit_table_2x6_pg[] = {
    SWBITS(ID2_OUTRPAIRS)};
 
 static id_bit_table id_bit_table_2x8[] = {  
-   NWBITS12(ID2_END),
-   NEBITS12(ID2_END),
-   NWBITS12(ID2_END),
-   NEBITS12(ID2_CTR4),
-   NWBITS12(ID2_CTR4),
-   NEBITS12(ID2_END),
-   NWBITS12(ID2_END),
-   NEBITS12(ID2_END),
-   SEBITS12(ID2_END),
-   SWBITS12(ID2_END),
-   SEBITS12(ID2_END),
-   SWBITS12(ID2_CTR4),
-   SEBITS12(ID2_CTR4),
-   SWBITS12(ID2_END),
-   SEBITS12(ID2_END),
-   SWBITS12(ID2_END)};
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_CTR4),
+   NORTHBIT(ID2_CTR4),
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_END),
+   NORTHBIT(ID2_END),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_CTR4),
+   SOUTHBIT(ID2_CTR4),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_END),
+   SOUTHBIT(ID2_END)};
 
 static id_bit_table id_bit_table_1x4[] = {
    WESTBIT(ID2_END),
@@ -2559,23 +2584,7 @@ id_bit_table id_bit_table_bigdhrgl_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6)};
 
-/* If the population is an "H", the richer table "id_bit_table_3x4_h" below is used instead. */
-/* If the population is offset C/L/W, this table is used. */
-/* If the center 2x3 is full, the richer table "id_bit_table_3x4_ctr6" below is used instead. */
-/* Otherwise the standard table is used, identifying only the center 1x4. */
-id_bit_table id_bit_table_3x4_offset[] = {
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_CTR4 | ID2_CTR1X4),
-   NOBIT(ID2_CTR4 | ID2_CTR1X4),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_CTR4 | ID2_CTR1X4),
-   NOBIT(ID2_CTR4 | ID2_CTR1X4)};
+/* If the population of a 3x4 is an "H", use this. */
 
 id_bit_table id_bit_table_3x4_h[] = {
    NOBIT(ID2_OUTR6 | ID2_NCTR1X4|ID2_OUTR1X3),
@@ -2591,21 +2600,68 @@ id_bit_table id_bit_table_3x4_h[] = {
    NOBIT(ID2_OUTR6 | ID2_CTR1X4 |ID2_OUTR1X3),
    NOBIT(ID2_CTR2  | ID2_CTR1X4 |ID2_NOUTR1X3)};
 
+/* Else if the center 2x3 of a 3x4 is full, use this. */
 id_bit_table id_bit_table_3x4_ctr6[] = {
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6)};
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_CTR2  | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_CTR2  | ID2_CTR6)};
 
+/* Else if the population is offset C/L/W, use this. */
+id_bit_table id_bit_table_3x4_offset[] = {
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_CTR4      | ID2_CTR1X4),
+   NOBIT(ID2_CTR2  | ID2_CTR4      | ID2_CTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_CTR4      | ID2_CTR1X4),
+   NOBIT(ID2_CTR2  | ID2_CTR4      | ID2_CTR1X4)};
+
+/* If all else fails, use this. */
 static id_bit_table id_bit_table_3x4[] = {
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_CTR1X4),
+   NOBIT(ID2_CTR2  | ID2_CTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR6 | ID2_CTR1X4),
+   NOBIT(ID2_CTR2  | ID2_CTR1X4)};
+
+/* This is only used if the center 2x3 is full. */
+static id_bit_table id_bit_table_d3x4[] = {
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_CTR2  | ID2_OUTR2),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_CTR6),
+   NOBIT(ID2_OUTR6 | ID2_OUTR2),
+   NOBIT(ID2_CTR2  | ID2_CTR6)};
+
+// Use only if center 1x4 is full.
+id_bit_table id_bit_table_bigh[] = {
    NOBIT(ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X4),
@@ -2618,21 +2674,6 @@ static id_bit_table id_bit_table_3x4[] = {
    NOBIT(ID2_NCTR1X4),
    NOBIT(ID2_CTR1X4),
    NOBIT(ID2_CTR1X4)};
-
-/* This is only used if the center 2x3 is full. */
-static id_bit_table id_bit_table_d3x4[] = {
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_CTR6),
-   NOBIT(ID2_OUTR2),
-   NOBIT(ID2_CTR6)};
 
 /* If the population is a butterfly, this table is used. */
 id_bit_table id_bit_table_butterfly[] = {
@@ -2820,8 +2861,8 @@ static id_bit_table id_bit_table_2x1dmd[] = {
    WESTBIT(ID2_NCTRDMD | ID2_CTR1X4),
    EASTBIT(ID2_CTRDMD  | ID2_CTR1X4),
    NOBIT(  ID2_CTRDMD  | ID2_NCTR1X4),
-   EASTBIT(ID2_CTRDMD  | ID2_CTR1X4),
-   WESTBIT(ID2_NCTRDMD | ID2_CTR1X4),
+   EASTBIT(ID2_NCTRDMD | ID2_CTR1X4),
+   WESTBIT(ID2_CTRDMD  | ID2_CTR1X4),
    NOBIT(  ID2_CTRDMD  | ID2_NCTR1X4)};
 
 static id_bit_table id_bit_table_3x1dmd[] = {
@@ -2879,8 +2920,27 @@ id_bit_table id_bit_table_3dmd_ctr1x4[] = {
    NOBIT(ID2_CTR1X4),
    NOBIT(ID2_CTR1X4)};
 
-/* If center diamond has only centers and outer diamonds have only points, use this. */
+// If center 1x4 is occupied, use this.
 static id_bit_table id_bit_table_4dmd[] = {
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4|ID2_CTR4),
+   NOBIT(ID2_CTR1X4|ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4|ID2_CTR4),
+   NOBIT(ID2_CTR1X4|ID2_CTR4)};
+
+// If center diamond has only centers and outer diamonds have only points, use this.
+id_bit_table id_bit_table_4dmd_cc_ee[] = {
    NOBIT(ID2_END|ID2_NCTR1X4|ID2_OUTRPAIRS),
    NOBIT(0),
    NOBIT(0),
@@ -2925,8 +2985,8 @@ static id_bit_table id_bit_table_bone[] = {
    WESTBIT(ID2_CENTER|ID2_CTR4     |ID2_OUTR6),
    EASTBIT(ID2_CENTER|ID2_CTR4     |ID2_CTR2)};
 
-/* Use this only if center 1x6 is fully occupied. */
-static id_bit_table id_bit_table_3x6[] = {
+// Use this only if center 1x6 is fully occupied.
+id_bit_table id_bit_table_3x6_with_1x6[] = {
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
@@ -2934,8 +2994,8 @@ static id_bit_table id_bit_table_3x6[] = {
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_CTR1X6  | ID2_NCTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4 | ID2_CTR4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
@@ -2943,9 +3003,51 @@ static id_bit_table id_bit_table_3x6[] = {
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_CTR1X6  | ID2_NCTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
-   NOBIT(ID2_CTR1X6  | ID2_CTR1X4)};
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4 | ID2_CTR4)};
 
+// Use this one if center 1x4 only.
+static id_bit_table id_bit_table_3x6[] = {
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4)};
+
+static id_bit_table id_bit_table_4x5[] = {
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4)};
 
 
 #define XXX schema_nothing
@@ -3561,6 +3663,8 @@ static Const fixer n1x43     = {s1x2, s1x4,        0, 0, 1,       &n1x43,     &b
 static Const fixer n1x4c     = {s1x2, s1x4,        0, 0, 1,       &n1x4c,     &box6c,     0,          0, 0,          0,    0,          0,          {3, 2}};
 static Const fixer n1x45     = {s1x1, s1x4,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 2}};
 static Const fixer n1x4a     = {s1x2, s1x4,        0, 0, 1,       &n1x4a,     0,          0,          0, 0,          0,    0,          0,          {1, 3}};
+static Const fixer n1x3a     = {s1x2, s1x3,        0, 0, 1,       &n1x3a,     0,          0,          0, 0,          0,    0,          0,          {0, 1}};
+static Const fixer n1x3b     = {s1x2, s1x3,        0, 0, 1,       &n1x3b,     0,          0,          0, 0,          0,    0,          0,          {1, 2}};
 
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
@@ -3650,8 +3754,12 @@ static Const fixer box9c     = {s1x2, s2x2,        1, 0, 1,       &box9c,     0,
 static Const fixer boxcc     = {s1x2, s2x2,        0, 0, 1,       &boxcc,     0,          0,          0, 0,          0,    0,          0,          {3, 2}};
 static Const fixer box55     = {s1x1, s2x2,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 2}};
 static Const fixer boxaa     = {s1x1, s2x2,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 3}};
-
+static Const fixer f2x5c     = {s1x2, s2x5,        0, 0, 2,       &f2x5c,     0,          0,          0, 0,          0,    0,          0,          {3, 4, 9, 8}};
+static Const fixer f2x5d     = {s1x2, s2x5,        0, 0, 2,       &f2x5d,     0,          0,          0, 0,          0,    0,          0,          {0, 1, 6, 5}};
 static Const fixer f1x2aad   = {s1x2, s_1x2dmd,    0, 0, 2,       &f1x2aad,   &f2x3c,     0,          0, 0,          0,    0,          0,          {0, 1, 4, 3}};
+
+static const fixer f2x166d   = {sdmd, s_2x1dmd,    0, 0, 1,       0,          0,          0,          0, &f2x166d,   0,    0,          0,          {2, 4, 5, 1}};
+
 static Const fixer f1x3bbd   = {s1x4, s1x3dmd,     0, 0, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  &fspindld,  {1, 2, 5, 6}};
 static Const fixer fhrglassd = {s2x2, s_hrglass,   0, 2, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 4, 5}};
 static Const fixer fspindld  = {s2x2, s_spindle,   0, 1, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  &fhrglassd, {0, 2, 4, 6}};
@@ -3762,7 +3870,7 @@ static Const fixer f1x8_dd   = {s1x6, s1x8,        0, 0, 1,       0,          0,
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
 static Const fixer foo99d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo99d,    0, 0,          0,    &f2x4endd,  &f2x4endd,  {0, 3, 4, 7}};
-static Const fixer foo66d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo66d,    0, &f1x3yyd,   0,    &bar55d,    &bar55d,    {1, 2, 5, 6}};
+static Const fixer foo66d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo66d,    &f1x4xv, &f1x3yyd, 0, &bar55d,   &bar55d,    {1, 2, 5, 6}};
 static Const fixer f1x8ctr   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &bar55d,    &bar55d,    {3, 2, 7, 6}};
 static Const fixer fqtgctr   = {s1x4, s_qtag,      0, 0, 1,       0,          0,          &fqtgctr,   0, 0,          0,    &bar55d,    &bar55d,    {6, 7, 2, 3}};
 static Const fixer fxwve     = {s1x4, s_crosswave, 0, 0, 1,       0,          0,          &fxwve,     &f1x8endd, 0,  0,    &f2x4endd,  &f2x4endd,  {0, 1, 4, 5}};
@@ -4040,7 +4148,8 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s1x4,        0xC,    &n1x4c,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x4,        0x5,    &n1x45,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x4,        0xA,    &n1x4a,      (fixer *) 0, -1},
-
+   {LOOKUP_NONE,               s1x3,        0x3,    &n1x3a,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s1x3,        0x6,    &n1x3b,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0xCC,   &foocc,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0x99,   &f2x4endo,   (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x6,         033,   &f1x6aa,     (fixer *) 0, -1},
@@ -4084,9 +4193,12 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s_galaxy,    0x44,   &fgalcv,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s_galaxy,    0x11,   &fgalch,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x3dmd,     0x66,   &f1x3aad,    (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_2x1dmd,    066,    &f2x166d,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s_1x2dmd,    033,    &f1x2aad,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s3ptpd,      06262,  &f3ptpo6,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x3,        055,    &f2x3c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x5,        0x318,  &f2x5c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x5,        0x063,  &f2x5d,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x2,        0x3,    &box3c,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x2,        0x6,    &box6c,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x2,        0x9,    &box9c,      (fixer *) 0, -1},
@@ -4103,77 +4215,126 @@ sel_item sel_init_table[] = {
 /* These need to be predeclared so that they can refer to each other. */
 static Const tgl_map map2b;
 static Const tgl_map map2i;
+static Const tgl_map map2d;
+static Const tgl_map map2m;
 static Const tgl_map map2j;
 static Const tgl_map map2k;
 
-static Const tgl_map map1b = {s_c1phan, &map2b,
+
+/*
+   In C1 phantom: first triangle (inverted),
+ then second triangle (upright), then idle.
+*/
+
+static Const tgl_map map1b = {s_c1phan, s2x4, &map2b, 0, 0,
    {4, 3, 2,   0, 7, 6,   1, 5},
    {6, 8, 10,  14,0, 2,   4, 12},
    {10, 9, 8,  4, 3, 2,   5, 11},
    {6, 5, 4, 2, 1, 0, 3, 7},
    {10, 9, 8, 4, 3, 2, 5, 11}};
 
-static Const tgl_map map2b = {s_qtag, &map1b,
+static Const tgl_map map2b = {s_qtag, s2x4, &map1b, 0, 1,
    {5, 6, 7,   1, 2, 3,   0, 4},
    {3, 15, 13, 11,7, 5,   1,  9},
    {1, 2, 3,   7, 8, 9,   0, 6},
    {7, 6, 5, 3, 2, 1, 0, 4},
    {1, 2, 3, 7, 8, 9, 0, 6}};
 
-/* Interlocked triangles: */                                                                                                                            
-static Const tgl_map map1i = {nothing, &map2i,
+static Const tgl_map map1i = {nothing, nothing, &map2i, 0, 0,   // Interlocked
    {0, 0, 0,   0, 0, 0,   0, 0},
    {4, 8, 10,  12,0, 2,   6, 14},
    {0, 0, 0,   0, 0, 0,   0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0}};
 
-static Const tgl_map map2i = {nothing,  &map1i,
+static Const tgl_map map2i = {nothing, nothing,  &map1i, 0, 0,   // Interlocked
    {0, 0, 0,   0, 0, 0,   0, 0},
    {1, 15, 13, 9, 7, 5,   3, 11},
    {0, 0, 0,   0, 0, 0,   0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0}};
 
+
+
+
+// Maps for deepbigqtg setups.
+
+static Const tgl_map map1d = {s2x8, s2x8, &map2d, 0, 0,
+   {4, 3, 2,   0, 7, 6,     1, 5},
+   {2, 6, 7,   10,14, 15,   0, 8},   // OK
+   {10, 9, 8,  4, 3, 2,     5, 11},
+   {1, 2, 3,   9, 10, 11,   8, 0},   // OK
+   {10, 9, 8, 4, 3, 2, 5, 11}};
+
+static Const tgl_map map2d = {s2x8, s2x8, &map1d, 0, 0,
+   {4, 3, 2,   0, 7, 6,   1, 5},
+   {3, 4, 5,   11,12,13,  1, 9},    // OK
+   {10, 9, 8,  4, 3, 2,   5, 11},
+   {14,13,12,  6, 5, 4,   7, 15},   // OK
+   {10, 9, 8, 4, 3, 2, 5, 11}};
+
+static Const tgl_map map1m = {nothing, s2x8, &map2m, 1, 0,   // Interlocked
+   {5, 6, 7,   1, 2, 3,   0, 4},
+   {0, 6, 7,   8,14,15,  2, 10},   // OK
+   {1, 2, 3,   7, 8, 9,   0, 6},
+   {7, 6, 5, 3, 2, 1, 0, 4},
+   {1, 2, 3, 7, 8, 9, 0, 6}};
+
+static Const tgl_map map2m = {nothing, s2x8, &map1m, 1, 0,   // Interlocked
+   {5, 6, 7,   1, 2, 3,   0, 4},
+   {1, 4, 5,   9,12,13,  3, 11},   // OK
+   {1, 2, 3,   7, 8, 9,   0, 6},
+   {7, 6, 5, 3, 2, 1, 0, 4},
+   {1, 2, 3, 7, 8, 9, 0, 6}};
+
+
+
+
+
+
 /* Interlocked triangles in quarter-tag: */                                                                                                             
-static Const tgl_map map1j = {s_qtag, &map2j,
+static Const tgl_map map1j = {s_qtag, nothing, &map2j, 1, 1,
    {4, 7, 2,   0, 3, 6,   1, 5},
-   {0, 0, 0,   0, 0, 0,   0, -1},
+   {0, 0, 0,   0, 0, 0,   0, 0},
    {0, 0, 0,   0, 0, 0,   0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0}};
 
-static Const tgl_map map2j = {s_qtag, &map1j,
+static Const tgl_map map2j = {s_qtag, nothing, &map1j, 1, 1,
    {5, 6, 3,   1, 2, 7,   0, 4},
-   {0, 0, 0,   0, 0, 0,   0, -1},
+   {0, 0, 0,   0, 0, 0,   0, 0},
    {0, 0, 0,   0, 0, 0,   0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0},
    {0, 0, 0, 0, 0, 0, 0, 0}};
 
 /* Interlocked triangles in bigdmd: */                                                                                                                  
-static Const tgl_map map1k = {nothing, &map2k,
+static Const tgl_map map1k = {nothing, nothing, &map2k, 1, 0,
    {0, 0, 0,   0, 0, 0,   0, 0},
-   {0, 0, 0,   0, 0, 0,   0, -1},
+   {0, 0, 0,   0, 0, 0,   0, 0},
    {10, 3, 8,  4, 9, 2,   5, 11},
    {0},
    {0}};
 
-static Const tgl_map map2k = {nothing, &map1k,
+static Const tgl_map map2k = {nothing, nothing, &map1k, 1, 0,
    {0, 0, 0,   0, 0, 0,   0, 0},
-   {0, 0, 0,   0, 0, 0,   0, -1},
+   {0, 0, 0,   0, 0, 0,   0, 0},
    {1, 2, 9,   7, 8, 3,   0, 6},
    {0},
    {0}};
 
-static Const tgl_map map2r = {nothing, &map2r,
+static Const tgl_map map2r = {nothing, nothing, &map2r, 1, 0,
    {0, 0, 0,   0, 0, 0,   0, 0},
-   {0, 0, 0,   0, 0, 0,   0, -1},
+   {0, 0, 0,   0, 0, 0,   0, 0},
    {7, 1, 4,   3, 5, 0,   2, 6},
    {0},
    {0}};
 
        Const tgl_map *c1tglmap1[2] = {&map1b, &map1i};
        Const tgl_map *c1tglmap2[2] = {&map2b, &map2i};
+
+       Const tgl_map *dbqtglmap1[2] = {&map1d, &map1m};
+       Const tgl_map *dbqtglmap2[2] = {&map2d, &map2m};
+
        Const tgl_map *qttglmap1[2] = {&map1b, &map1j};
        Const tgl_map *qttglmap2[2] = {&map2b, &map2j};
        Const tgl_map *bdtglmap1[2] = {&map1b, &map1k};
@@ -4586,8 +4747,8 @@ setup_attr setup_attrs[] = {
          "k  l  a@@5 j  b@@5 i  c@@5 h  d@@g  f  e"}},
    /* s1p5x8 */
       {15,
-      (coordrec *) 0,
-      (coordrec *) 0,
+      (coordrec *) 0,   // Code in anchor_someone_and_move requires that this
+      (coordrec *) 0,   // setup look a lot like a 2x8.
       0, 0, 0, 0,
       {b_nothing,   b_nothing},
       { 0, 0},
@@ -4856,7 +5017,7 @@ setup_attr setup_attrs[] = {
       {b_4x5,       b_5x4},
       { 5, 4},
       FALSE,
-      (id_bit_table *) 0,
+      id_bit_table_4x5,
       {  "a  b  c  d  e@@j  i  h  g  f@@p  q  r  s  t@@o  n  m  l  k",
          "o  p  j  a@@n  q  i  b@@m  r  h  c@@l  s  g  d@@k  t  f  e"}},
    /* s4x6 */
@@ -4962,7 +5123,7 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       TRUE,
       (id_bit_table *) 0,
-      {  "   ab@h   c@g   d@   fe",
+      {  "6ab@h66c@g66d@6fe",
          (Cstring) 0}},
    /* sx4dmd */
       {31,
@@ -5126,7 +5287,7 @@ setup_attr setup_attrs[] = {
       {b_bigh,      b_pbigh},
       { 0, 0},
       FALSE,
-      (id_bit_table *) 0,
+      id_bit_table_bigh,
       {  "a6666   j@b6666   i@76e f l k@7c6666   h@d6666   g",
          "dcba@65e@65f@65l@65k@ghij"}},
    /* sbigx */
@@ -5531,7 +5692,6 @@ Private map_thing map_phan_trngl4b      = {{12, 14, 0, 2,                     4,
         map_thing map_ladder            = {{10, 15, 14, 0, 2, 7, 6, 8,        12, 13, 3, 1, 4, 5, 11, 9},            MPKIND__NONE,        0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_crazy_offset1     = {{10, 15, 0, 14,    8, 6, 2, 7,    12, 13, 1, 3,    9, 11, 4, 5},          MPKIND__NONE,        0, 4,  s4x4,   s1x4,      0x000, 1};
         map_thing map_crazy_offset2     = {{10, 15, 2, 7,        9, 11, 1, 3},                                       MPKIND__NONE,        0, 2,  s4x4,   s1x4,      0x000, 1};
-        map_thing map_offset            = {{9, 11, 14, 0, 1, 3, 6, 8,         12, 13, 7, 2, 4, 5, 15, 10},           MPKIND__NONE,        0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_but_o             = {{10, 13, 14, 1, 2, 5, 6, 9,        12, 15, 3, 0, 4, 7, 11, 8},            MPKIND__NONE,        0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_4x4v     = {{12, 10, 8, 9,         13, 15, 6, 11,       14, 3, 5, 7,      0, 1, 4, 2},         MPKIND__SPLIT,       0, 4,  s4x4,   s1x4,      0x055, 0};
         map_thing map_blocks   = {{12, 14, 7, 9,         13, 0, 2, 11,        15, 1, 4, 6,      10, 3, 5, 8},        MPKIND__NONE,        0, 4,  s4x4,   s2x2,      0x000, 0};
@@ -5650,9 +5810,40 @@ Private map_thing map_short6_2 =
         map_thing map_off1x82           = {{15, 14, 12, 13, 7, 6, 4, 5},                                             MPKIND__NONE,        0, 1,  s2x8,    s1x8,     0x000, 0};
         map_thing map_dqtag1            = {{0, 1, 4, 5, 6, 7, 10, 11},                                               MPKIND__NONE,        0, 1,  s3dmd,   s_qtag,   0x000, 0};
         map_thing map_dqtag2            = {{1, 2, 4, 5, 7, 8, 10, 11},                                               MPKIND__NONE,        0, 1,  s3dmd,   s_qtag,   0x000, 0};
+        map_thing map_dqtag3            = {{13, 14, 2, 3, 5, 6, 10, 11},                                             MPKIND__NONE,        0, 1,  s4x4,   s_qtag,   0x000, 0};
+        map_thing map_dqtag4            = {{13, 14, 1, 7, 5, 6, 9, 15},                                              MPKIND__NONE,        0, 1,  s4x4,   s_qtag,   0x000, 0};
 
+// Maps for finding C/L/W's of 3.
 
-/* Maps for turning triangles into boxes for the "triangle" concept. */
+static map_thing map3ri            = {{9, 11, 7, 15, 3, 1},                                                     MPKIND__NONE,        0, 2,  s4x4,   s1x3,   0x000, 0};
+static map_thing map3li            = {{11, 7, 2, 10, 15, 3},                                                    MPKIND__NONE,        0, 2,  s4x4,   s1x3,   0x000, 0};
+static map_thing map3ro            = {{6, 5, 4, 12, 13, 14},                                                    MPKIND__NONE,        0, 2,  s4x4,   s1x3,   0x000, 0};
+static map_thing map3lo            = {{8, 6, 5, 13, 14, 0},                                                     MPKIND__NONE,        0, 2,  s4x4,   s1x3,   0x000, 0};
+static map_thing map328a           = {{0, 1, 2, 10, 9, 8},                                                      MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
+static map_thing map328b           = {{5, 6, 7, 15, 14, 13},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
+static map_thing map328c           = {{1, 2, 3, 11, 10, 9},                                                     MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
+static map_thing map328d           = {{4, 5, 6, 14, 13, 12},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
+static map_thing map328e           = {{2, 3, 4, 12, 11, 10},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
+static map_thing map328f           = {{3, 4, 5, 13, 12, 11},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
+
+       clw3_thing clw3_table[] = {
+         {s4x4, 0x8E8E, 0x8A8A, &map3ri,  0, {12, 13, 14, 0, 8, 6,  5, 4, -1}},
+         {s4x4, 0x8E8E, 0x8C8C, &map3li,  0, {12, 13, 14, 0, 8, 6,  5, 4, -1}},
+         {s4x4, 0x7171, 0x7070, &map3ro,  0, {10, 15,  3, 1, 9, 11, 7, 2, -1}},
+         {s4x4, 0x7171, 0x6161, &map3lo,  0, {10, 15,  3, 1, 9, 11, 7, 2, -1}},
+         {s4x4, 0xE8E8, 0xA8A8, &map3ri,  1, {12, 13, 14, 0, 8, 6,  5, 4, -1}},
+         {s4x4, 0xE8E8, 0xC8C8, &map3li,  1, {12, 13, 14, 0, 8, 6,  5, 4, -1}},
+         {s4x4, 0x1717, 0x0707, &map3ro,  1, {10, 15,  3, 1, 9, 11, 7, 2, -1}},
+         {s4x4, 0x1717, 0x1616, &map3lo,  1, {10, 15,  3, 1, 9, 11, 7, 2, -1}},
+         {s2x8, 0x0F0F, 0x0707, &map328a, 0, {4, 5, 6, 7, 12, 13, 14, 15, -1}},
+         {s2x8, 0xF0F0, 0xE0E0, &map328b, 0, {0, 1, 2, 3, 8, 9, 10, 11, -1}},
+         {s2x8, 0x1F1F, 0x0E0E, &map328c, 0, {5, 6, 7, 13, 14, 15, -1}},
+         {s2x8, 0xF8F8, 0x7070, &map328d, 0, {0, 1, 2, 8, 9, 10, -1}},
+         {s2x8, 0x3E3E, 0x1C1C, &map328e, 0, {0, 6, 7, 8, 14, 15, -1}},
+         {s2x8, 0x7C7C, 0x3838, &map328f, 0, {0, 1, 7, 8, 9, 15, -1}},
+         {0}};
+
+// Maps for turning triangles into boxes for the "triangle" concept.
 
         map_thing map_trngl_box1        = {{1, 2, -1, 0},                                                            MPKIND__NONE,        1, 1,  s_trngl, s2x2,     0x000, 0};
         map_thing map_trngl_box2        = {{1, 2, 0, -1},                                                            MPKIND__NONE,        1, 1,  s_trngl, s2x2,     0x000, 0};
@@ -5814,6 +6005,12 @@ map_thing map_init_table2[] = {
    {{13, 15, 2, 4, 5, 7, 10, 12},                                             MPKIND__OFFS_L_FULL, 0, 1,  s4x4,   s2x4,      0x001, 0, MAPCODE(s2x4,1,MPKIND__OFFS_L_FULL, 1)},
    {{0, 1, 11, 6, 8, 9, 3, 14},                                               MPKIND__OFFS_R_FULL, 0, 1,  s4x4,   s2x4,      0x001, 0, MAPCODE(s2x4,1,MPKIND__OFFS_R_FULL, 1)},
 
+   {{9, 11, 14, 0, 1, 3, 6, 8,         12, 13, 7, 2, 4, 5, 15, 10},           MPKIND__OFFS_BOTH_FULL, 0, 2, s4x4, s2x4,      0x000, 1, MAPCODE(s2x4,2,MPKIND__OFFS_BOTH_FULL, 1)},
+
+
+   {{0, 1, 2, 3, 8, 9, 10, 11,         4, 5, 6, 7, 12, 13, 14, 15},           MPKIND__OFFS_BOTH_FULL, 0, 2, s2x8, s2x4,      0x000, 0, MAPCODE(s2x4,2,MPKIND__OFFS_BOTH_FULL, 0)},
+
+
    {{10, 11, 8, 9,                     2, 3, 4, 5},                           MPKIND__OFFS_L_HALF, 0, 2,  s3x4,   s2x2,      0x000, 0, MAPCODE(s2x2,2,MPKIND__OFFS_L_HALF, 0)},
    {{0, 1, 11, 10,                     5, 4, 6, 7},                           MPKIND__OFFS_R_HALF, 0, 2,  s3x4,   s2x2,      0x000, 0, MAPCODE(s2x2,2,MPKIND__OFFS_R_HALF, 0)},
    {{9, 11, 6, 8,                      14, 0, 1, 3},                          MPKIND__OFFS_L_FULL, 0, 2,  s4x4,   s2x2,      0x000, 0, MAPCODE(s2x2,2,MPKIND__OFFS_L_FULL, 0)},
@@ -5828,6 +6025,16 @@ map_thing map_init_table2[] = {
    {{0, 1, 3, 2,                       11, 10, 8, 9},                         MPKIND__OFFS_R_HALF, 0, 2,  s1p5x8, s1x4,      0x000, 0, MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF, 0)},
    {{15, 14, 12, 13,                   4, 5, 7, 6},                           MPKIND__OFFS_L_FULL, 0, 2,  s2x8,   s1x4,      0x000, 0, MAPCODE(s1x4,2,MPKIND__OFFS_L_FULL, 0)},
    {{0, 1, 3, 2,                       11, 10, 8, 9},                         MPKIND__OFFS_R_FULL, 0, 2,  s2x8,   s1x4,      0x000, 0, MAPCODE(s1x4,2,MPKIND__OFFS_R_FULL, 0)},
+
+
+
+   {{0, 1, 4, 5},                                                             MPKIND__OFFS_R_FULL, 0, 1,  s2x4,   s1x4,      0x000, 1, MAPCODE(s1x4,1,MPKIND__OFFS_L_FULL, 1)},
+   {{7, 6, 3, 2},                                                             MPKIND__OFFS_L_FULL, 0, 1,  s2x4,   s1x4,      0x000, 1, MAPCODE(s1x4,1,MPKIND__OFFS_R_FULL, 1)},
+
+   {{0, 1, 4, 5},                                                             MPKIND__OFFS_R_FULL, 0, 1,  s2x4,   s2x2,      0x000, 0, MAPCODE(s2x2,1,MPKIND__OFFS_L_FULL, 0)},
+   {{2, 3, 6, 7},                                                             MPKIND__OFFS_R_FULL, 0, 1,  s2x4,   s2x2,      0x000, 0, MAPCODE(s2x2,1,MPKIND__OFFS_R_FULL, 0)},
+
+
 
    {{9, 8, 6, 7,                       0, 1, 3, 2},                           MPKIND__OFFS_L_HALF, 0, 2,  s2x6,   s1x4,      0x000, 1, MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF, 1)},
    {{11, 10, 8, 9,                     2, 3, 5, 4},                           MPKIND__OFFS_R_HALF, 0, 2,  s2x6,   s1x4,      0x000, 1, MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF, 1)},

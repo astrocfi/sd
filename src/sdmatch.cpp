@@ -44,6 +44,10 @@
 
 #include "sdprog.h"
 #include "sdmatch.h"
+extern void start_sel_and_num_iterator();
+extern long_boolean iterate_over_sel_and_num(
+   long_boolean enable_selector_iteration,
+   long_boolean enable_number_iteration);
 
 
 
@@ -787,54 +791,16 @@ Private long_boolean verify_call(void)
 
       if (mandatory_call_used) goto accept;
 
-      /* Or a bad choice of selector or number may be the cause.
-         Try different selectors first. */
+      // Now try cycling the selector and number according to the
+      // complex formula used for initializing the database.
 
-      if (selector_used && verify_used_selector) {
-
-         /* This call used a selector and didn't like it.  Try again with
-            a different selector, until we run out of ideas. */
-         switch (selector_for_initialize) {
-            case selector_beaus:
-               selector_for_initialize = selector_ends;
-               goto try_another_selector;
-            case selector_ends:
-               selector_for_initialize = selector_everyone;
-               goto try_another_selector;
-            case selector_everyone:
-               selector_for_initialize = selector_none;
-               goto try_another_selector;
-         }
-      }
-
-      /* Now try a different number.  Only do this if the call actually
-         consumes numbers, and the wildcard matching has not filled in all
-         required numbers. */
-
-      if (number_used && verify_used_number) {
-
-         /* Try again with a different number, until we run out of ideas. */
-
-         if (number_for_initialize < 4) {
-            /* We try all numbers from 1 to 4.  We need to do this to get
-               "exchange the boxes N/4" on the waves menu". */
-            number_for_initialize++;
-            goto try_another_number;
-         }
-      }
+      if (iterate_over_sel_and_num(verify_used_selector, verify_used_number))
+         goto try_another_selector;
 
       goto try_again;
    }
 
-   number_for_initialize = 1;
-
-   try_another_number:
-
-   /* Set the selector to try.  See the code in sdinit.c that chooses selectors
-      when trying calls to make the initial menus for a discussion of how
-      this is done. */
-
-   selector_for_initialize = selector_beaus;
+   start_sel_and_num_iterator();
 
    try_another_selector:
 

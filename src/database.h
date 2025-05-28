@@ -82,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 152
+#define DATABASE_FORMAT_VERSION 153
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -98,6 +98,7 @@ typedef enum {
    base_call_backemup,
    base_call_circulate,
    base_call_trade,
+   base_call_passthru,
    base_call_check_cross_counter,
    base_call_lockit,
    base_call_disband1,

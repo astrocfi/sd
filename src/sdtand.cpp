@@ -58,7 +58,7 @@ typedef struct {
 } tm_thing;
 
 
-Private tm_thing maps_isearch_twosome[] = {
+static tm_thing maps_isearch_twosome[] = {
 
 /*         map1                              map2                map3  map4   ilatmask olatmask    limit rot            insetup outsetup */
 
@@ -152,15 +152,22 @@ Private tm_thing maps_isearch_twosome[] = {
    {{15, 3, 5, 9,                    13, 1, 7, 11},                           0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* These do C1-phantom-like stuff from fudgy 4x4 */
    {{10, 3, 7, 6,                    15, 14, 2, 11},                          0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* They must follow the pair just above. */
 
-/* These two are new */
-   {{11, 2, 7, 9,                    1, 3, 5, 8},                             0x44,    01414,         4, 0,  0,  0, 0,  s2x2,  s3x4},         /* These do C1-phantom-like stuff from fudgy 3x4 */
+   // These two do C1-phantom-like stuff from fudgy 3x4.
+   {{11, 2, 7, 9,                    1, 3, 5, 8},                             0x44,    01414,         4, 0,  0,  0, 0,  s2x2,  s3x4},
    {{0, 5, 7, 8,                     1, 2, 6, 11},                            0x11,    00303,         4, 0,  0,  0, 0,  s2x2,  s3x4},
 
    {{1, 3, 4, 5, 6, 0,               -1, 2, -1, -1, 7, -1},                      0,     0xCC,         6, 1,  0,  0, 0,  s_short6, s_rigger},
    {{6, 0, 3, 5,                     7, 1, 2, 4},                             0x55,     0xFF,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
    {{6, 5, 3, 4,                     7, 0, 2, 1},                             0x11,     0xCC,         4, 0,  0,  0, 0,  s1x4,  s_rigger},     /* must be after "2x4_4" */
    {{5, 6, 4, 3,                     0, 7, 1, 2},                             0x44,     0xCC,         4, 0,  0,  0, 0,  s1x4,  s_bone},
-   {{0, 3, 5, 6,                     1, 2, 4, 7},                             0x11,     0063,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},  /* crosswave*/  
+   {{0, 3, 5, 6,                     1, 2, 4, 7},                             0x11,     0x33,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},
+   {{0, 3, 5, 6,                     1, 2, 4, 7},                             0x11,     0x33,         4, 0,  0,  0, 0,  s_star, s_thar},
+
+
+   {{6, 0, 3, 5,                     7, 1, 2, 4},                             0x44,     0x33,         4, 0,  0,  0, 0,  s_star, s_alamo},
+
+
+
    {{7, 1, 4, 6,                     0, 2, 3, 5},                             0x44,     0146,         4, 0,  0,  0, 0,  sdmd,  s2x4},         /* must be after "2x4_4" */
    /* Next one is for so-and-so in tandem in a bone6, making a virtual line of 4. */
    {{4, 5, 3, 2,                     0, -1, 1, -1},                              0,     0000,         4, 0,  0,  0, 0,  s1x4,  s_bone6},
@@ -168,6 +175,7 @@ Private tm_thing maps_isearch_twosome[] = {
    {{1, 0, 4, 5,                     -1, 2, -1, 3},                              0,     0055,         4, 1,  0,  0, 0,  s1x4,  s_short6},
    {{1, 3, 4, 5,                     -1, 2, -1, 0},                           0x44,     0000,         4, 1,  0,  0, 0,  sdmd,  s_short6},
    {{5, 1, 3, 4,                     0, -1, 2, -1},                              0,     0000,         4, 0,  0,  0, 0,  sdmd,  s2x3},
+
    /* Next three are for so-and-so as couples in a line of 8, making a virtual line of 6. */
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},                  0x410,     0xCC,         6, 0,  0,  0, 0,  s1x6,  s1x8},
    {{0, 1, 2, 4, 7, 6,               -1, 3, -1, -1, 5, -1},                  0x104,     0xAA,         6, 0,  0,  0, 0,  s1x6,  s1x8},
@@ -201,7 +209,7 @@ Private tm_thing maps_isearch_twosome[] = {
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
 
-Private tm_thing maps_isearch_threesome[] = {
+static tm_thing maps_isearch_threesome[] = {
 
 /*   map1                  map2                  map3                 map4    ilatmask olatmask    limit rot            insetup outsetup */
    {{0,                    1,                    2},                           0x1,       07,         1, 0,  0,  0, 0,  s1x1,  s1x3},
@@ -285,7 +293,7 @@ static tm_thing maps_isearch_boxsome[] = {
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
 
-Private tm_thing maps_isearch_dmdsome[] = {
+static tm_thing maps_isearch_dmdsome[] = {
 
 /*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
    {{0,                1,                3,                2},                   1,      0xF,         1, 0,  0,  0, 0,  s1x1,  sdmd},
@@ -298,7 +306,7 @@ Private tm_thing maps_isearch_dmdsome[] = {
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
 
-Private tm_thing maps_isearch_tglsome[] = {
+static tm_thing maps_isearch_tglsome[] = {
 
 /*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
    {{6, 0, 2, 4,       -1, 7, -1, 3,     -1, 5, -1, 1},                       0xC4,     0xBB,         4, 0,  0,  0, 0,  s1x4,  s_rigger},
@@ -327,7 +335,7 @@ Private tm_thing maps_isearch_tglsome[] = {
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
 
-Private tm_thing maps_isearch_3x1tglsome[] = {
+static tm_thing maps_isearch_3x1tglsome[] = {
 /*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
    {{9, 3,             10, 4,            0, 6,             11, 5},             0x7,    07171,         2, 0,  0,  0, 0,  s1x2,  s3x4},
    {{0, 4,             7, 3,             5, 1,             6, 2},              0xD,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_qtag},
@@ -345,7 +353,7 @@ Private tm_thing maps_isearch_3x1tglsome[] = {
 
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
-Private tm_thing maps_isearch_ysome[] = {
+static tm_thing maps_isearch_ysome[] = {
 /*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
    {{5, 1,             0, 4,             6, 2,             7, 3},              0x7,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_bone},
    {{0, 4,             5, 1,             7, 3,             6, 2},              0xD,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_rigger},
@@ -440,7 +448,7 @@ siamese_item siamese_table_of_4[] = {
    {s2x8,        0xF0F00F0FUL, 0x0F0FUL, warn__none},
    {nothing,     0,            0,        warn__none}};
 
-Private void initialize_one_table(tm_thing *map_start, int np)
+static void initialize_one_table(tm_thing *map_start, int np)
 {
    tm_thing *map_search;
 
@@ -502,7 +510,7 @@ extern void initialize_tandem_tables(void)
 }
 
 
-Private void unpack_us(
+static void unpack_us(
    tm_thing *map_ptr,
    uint32 orbitmask,
    tandrec *tandstuff,
@@ -576,7 +584,7 @@ Private void unpack_us(
 // Returns TRUE if it found people facing the wrong way.  This can happen if we are
 // trying siamese and we shouldn't be.
 
-Private long_boolean pack_us(
+static long_boolean pack_us(
    personrec *s,
    tm_thing *map_ptr,
    int fraction,
@@ -622,7 +630,11 @@ Private long_boolean pack_us(
                This means [fb[0], fb[3]] must match, [fb[1], fb[2]] must match, and
                [fb[0], fb[1]] must not match. */
 
-            if ((((fb[0].id1 ^ fb[3].id1) |
+            // But, if phantoms are allowed, and nobody is home, we allow it.
+
+            if ((orpeople ||
+                 !(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) &&
+                (((fb[0].id1 ^ fb[3].id1) |
                   (fb[1].id1 ^ fb[2].id1) |
                   (~(fb[0].id1 ^ fb[1].id1))) & BIT_PERSON))
                fail("Can't find skew people.");

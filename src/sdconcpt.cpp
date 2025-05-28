@@ -5824,8 +5824,18 @@ static void do_concept_so_and_so_begin(
    setup setup1, setup2;
    setup the_setups[2];
 
-   if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
-      fail("Can't stack meta or fractional concepts.");
+   // See if we are being requested to do only stuff that does not
+   // include the first part.  If so, we just do it.
+
+   if (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY ||
+        (ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV) &&
+       (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) >= CMD_FRAC_PART_BIT*2) {
+      move(ss, FALSE, result);
+      return;
+   }
+
+   // At this point we know that we will do stuff including the first part,
+   // which is the part that requires special action.
 
    saved_selector = current_options.who;
    current_options.who = parseptr->options.who;
@@ -5847,31 +5857,54 @@ static void do_concept_so_and_so_begin(
    
    normalize_setup(&setup1, normalize_before_isolated_call);
    normalize_setup(&setup2, normalize_before_isolated_call);
-   /* Set the fractionalize field to execute the first part of the call. */
-   setup1.cmd.cmd_frac_flags = CMD_FRAC_CODE_FROMTO | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
 
-   /* The selected people execute the first part of the call. */
+   // We just feed the "reverse" bit and the fractional stuff (low 16 bits)
+   // through.  They have no effect on what we are doing.
+
+   uint32 important_bits = ss->cmd.cmd_frac_flags & ~(CMD_FRAC_REVERSE|0xFFFF);
+   uint32 passed_bits = ss->cmd.cmd_frac_flags &
+      ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK);
+
+   // Set the fractionalize field to execute the first part of the call.
+
+   setup1.cmd.cmd_frac_flags = CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT*1 | passed_bits;
+
+   // The selected people execute the first part of the call.
 
    move(&setup1, FALSE, &the_setups[0]);
    the_setups[1] = setup2;
 
-    /* Give the people who didn't move the same result flags as those who did.
-      This is important for the "did last part" check. */
+   // Give the people who didn't move the same result flags as those who did.
+   // This is important for the "did last part" check.
    the_setups[1].result_flags = the_setups[0].result_flags;
    the_setups[1].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
 
    merge_setups(&the_setups[0], merge_c1_phantom, &the_setups[1]);
    finalresultflags = the_setups[1].result_flags;
-
    normalize_setup(&the_setups[1], simple_normalize);
-   the_setups[1].cmd = ss->cmd;   /* Just in case it got messed up, which shouldn't have happened. */
 
-   /* Set the fractionalize field to execute the rest of the call. */
-   the_setups[1].cmd.cmd_frac_flags = CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | CMD_FRAC_NULL_VALUE;
+   if ((important_bits & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY)
+      fail("Can't stack meta or fractional concepts.");
+
+   // Now we know that the code is "ONLY".  If N=0, this is the null operation;
+   // just finish the call.  If N=1, we were doing only the first part; exit now.
+   // If N>=2, we already exited.
+
+   if ((important_bits & CMD_FRAC_PART_MASK) == CMD_FRAC_PART_BIT) {
+      *result = the_setups[1];
+      finalresultflags |= result->result_flags;
+      result->result_flags = finalresultflags & ~3;
+      return;
+   }
+
+   the_setups[1].cmd = ss->cmd; // Just in case it got messed up, which shouldn't have happened.
+
+   // Set the fractionalize field to execute the rest of the call.
+   the_setups[1].cmd.cmd_frac_flags =
+      CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | passed_bits;
    move(&the_setups[1], FALSE, result);
    finalresultflags |= result->result_flags;
    normalize_setup(result, simple_normalize);
-  
    result->result_flags = finalresultflags & ~3;
 }
 
@@ -6207,19 +6240,24 @@ extern long_boolean do_big_concept(
       int stdtest = 0;
       int livemask = 0;
 
-      /* Skip to the phantom-line (or whatever) concept by going over the "standard" and skipping comments. */
+      // Skip to the phantom-line (or whatever) concept
+      // by going over the "standard" and skipping comments.
 
       junk_concepts.her8it = 0;
       junk_concepts.final = 0;
-      substandard_concptptr = process_final_concepts(orig_concept_parse_block->next, TRUE, &junk_concepts);
+      substandard_concptptr = process_final_concepts(orig_concept_parse_block->next,
+                                                     TRUE,
+                                                     &junk_concepts);
    
-      /* If we hit "matrix", do a little extra stuff and continue. */
+      // If we hit "matrix", do a little extra stuff and continue.
 
       if (junk_concepts.her8it == 0 &&
           junk_concepts.final == 0 &&
-substandard_concptptr->concept->kind == concept_matrix) {
+          substandard_concptptr->concept->kind == concept_matrix) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
-         substandard_concptptr = process_final_concepts(substandard_concptptr->next, TRUE, &junk_concepts);
+         substandard_concptptr = process_final_concepts(substandard_concptptr->next,
+                                                        TRUE,
+                                                        &junk_concepts);
       }
 
       if (junk_concepts.her8it != 0 ||
@@ -6227,21 +6265,27 @@ substandard_concptptr->concept->kind == concept_matrix) {
           (!(concept_table[substandard_concptptr->concept->kind].concept_prop & CONCPROP__STANDARD)))
          fail("This concept must be used with some offset/distorted/phantom concept.");
 
-      /* We don't think stepping to a wave is ever a good idea if standard is used.  Most calls that
-         permit standard (CONCPROP__STANDARD is on) forbid it anyway (CONCPROP__NO_STEP is on also),
-         but a few (e.g. concept_triple_lines) permit standard but don't necessarily forbid stepping
-         to a wave.  This is so that interesting cases of triple columns turn and weave will work.
-         However, we think that this should be disallowed if "so-and-so are standard in triple lines"
-         is given.  At least, that is the theory behind this next line of code. */
+      /* We don't think stepping to a wave is ever a good idea if standard is used.
+         Most calls that permit standard (CONCPROP__STANDARD is on) forbid it anyway
+         (CONCPROP__NO_STEP is on also), but a few (e.g. concept_triple_lines)
+         permit standard but don't necessarily forbid stepping to a wave.
+         This is so that interesting cases of triple columns turn and weave will work.
+         However, we think that this should be disallowed if "so-and-so are standard
+         in triple lines" is given.  At least, that is the theory behind
+         this next line of code. */
+
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 
-      if (concept_table[substandard_concptptr->concept->kind].concept_prop & CONCPROP__SET_PHANTOMS)
+      if (concept_table[substandard_concptptr->concept->kind].concept_prop &
+          CONCPROP__SET_PHANTOMS)
          ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
 
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
          uint32 prop_bits = concept_table[substandard_concptptr->concept->kind].concept_prop;
-         /* If the "arg2_matrix" bit is on, pick up additional matrix descriptor bits from the arg2 word. */
-         if (prop_bits & CONCPROP__NEED_ARG2_MATRIX) prop_bits |= substandard_concptptr->concept->value.arg2;
+         /* If the "arg2_matrix" bit is on, pick up additional matrix descriptor bits
+            from the arg2 word. */
+         if (prop_bits & CONCPROP__NEED_ARG2_MATRIX)
+            prop_bits |= substandard_concptptr->concept->value.arg2;
          do_matrix_expansion(ss, prop_bits, FALSE);
       }
 
@@ -6273,7 +6317,8 @@ substandard_concptptr->concept->kind == concept_matrix) {
          return TRUE;
       }
    
-      if ((tbonetest & 011) != 011) fail("People are not T-boned -- 'standard' is meaningless.");
+      if ((tbonetest & 011) != 011)
+         fail("People are not T-boned -- 'standard' is meaningless.");
    
       if (!stdtest) fail("No one is standard.");
       if ((stdtest & 011) == 011) fail("The standard people are not facing consistently.");
@@ -6283,7 +6328,8 @@ substandard_concptptr->concept->kind == concept_matrix) {
       orig_tbonetest = tbonetest;
 
       ss->cmd.parseptr = substandard_concptptr->next;
-      (concept_table[substandard_concptptr->concept->kind].concept_action)(ss, substandard_concptptr, result);
+      (concept_table[substandard_concptptr->concept->kind].concept_action)
+         (ss, substandard_concptptr, result);
       /* Beware -- result is not necessarily canonicalized. */
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;  /* **** For now. */
       return TRUE;
@@ -6408,9 +6454,10 @@ concept_table_item concept_table[] = {
    /* concept_7x7 */                      {0, 0},
    /* concept_8x8 */                      {0, 0},
    {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,
-    do_concept_expand_some_matrix},                                               /* concept_create_matrix */
-   /* concept_funny */                    {0,                                                                                      0},
-   /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_REVERSE,                      triangle_move},
+    do_concept_expand_some_matrix},                         /* concept_create_matrix */
+   {0, 0},                                                  /* concept_funny */
+   {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_REVERSE,
+    triangle_move},                                         /* concept_randomtrngl */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_REVERSE | CONCPROP__USE_SELECTOR,
     triangle_move},                                         /* concept_selbasedtrngl */
    {0, 0},                                                  /* concept_split */

@@ -194,6 +194,7 @@ typedef enum {
    warn__check_4x4,
    warn__check_hokey_4x4,
    warn__check_4x4_start,
+   warn__check_centered_qtag,
    warn__check_pgram,
    warn__ctrs_stay_in_ctr,
    warn__check_c1_stars,

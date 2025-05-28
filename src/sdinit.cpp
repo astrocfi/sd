@@ -54,7 +54,7 @@ Private setup test_setup_rcol = {s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {E
 Private setup test_setup_lcol = {s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0}, {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, 0};
 Private setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0}, {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, 0};
 Private setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, 0};
-Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, 0};
+Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0}, {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, 0};
 Private setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
 Private setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
 Private setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
@@ -147,6 +147,92 @@ Private long_boolean magicness;
 Private long_boolean intlkness;
 
 
+extern void start_sel_and_num_iterator()
+{
+   number_for_initialize = 1;
+   selector_for_initialize = selector_beaus;
+}
+
+
+extern long_boolean iterate_over_sel_and_num(
+   long_boolean enable_selector_iteration,
+   long_boolean enable_number_iteration)
+{
+   // Try different selectors first.
+
+   if (selector_used && enable_selector_iteration) {
+      // This call used a selector and didn't like it.  Try again with
+      // a different selector, until we run out of ideas.
+      switch (selector_for_initialize) {
+      case selector_beaus:
+         selector_for_initialize = selector_ends;
+         return TRUE;
+      case selector_ends:
+         // This will select just one end of each wave in parallel waves or a tidal wave,
+         // so "prefer the <anyone> out roll circulate" will work.
+         selector_for_initialize = selector_sideboys;
+         return TRUE;
+      case selector_sideboys:
+         selector_for_initialize = selector_everyone;
+         return TRUE;
+      case selector_everyone:
+         // This will select #1 and #2 in columns,
+         // so "<anyone> mark time" will work.
+         selector_for_initialize = selector_headcorners;
+         return TRUE;
+      case selector_headcorners:
+         // This will select the ends of each wave in a tidal wave,
+         // so "relay the shadow but <anyone> criss cross it" will work.
+         selector_for_initialize = selector_boys;
+         return TRUE;
+      case selector_boys:
+         selector_for_initialize = selector_none;
+         return TRUE;
+
+
+#ifdef TRYITTHISWAY
+      case selector_none:
+         /* When testing columns, we use an additional selector.  The way
+            the test setups are arranged, these effectively select #1 and #2 in the
+            column.  They make "<anyone> mark time" work. */
+         /* Also, for tidal waves, we select boys.  That makes "relay the
+            shadow but <anyone> criss cross it" work. */
+         if (test_setup == &test_setup_rcol || test_setup == &test_setup_lcol) {
+            selector_for_initialize = selector_headcorners;
+            return TRUE;
+         }
+         else if (test_setup == &test_setup_1x8 || test_setup == &test_setup_l1x8) {
+            selector_for_initialize = selector_boys;
+            return TRUE;
+         }
+#endif
+      }
+   }
+
+   /* Now try a different number.  Only do this if the call actually
+      consumes numbers, and the wildcard matching has not filled in all
+      required numbers. */
+
+   if (number_used && enable_number_iteration) {
+
+      /* Try again with a different number, until we run out of ideas. */
+
+      if (number_for_initialize < 4) {
+         /* We try all numbers from 1 to 4.  We need to do this to get
+            "exchange the boxes N/4" on the waves menu". */
+         number_for_initialize++;
+         selector_for_initialize = selector_beaus;
+         return TRUE;
+      }
+   }
+
+   return FALSE;
+}
+
+
+
+
+
 Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 {
    real_jmp_buf my_longjmp_buffer;
@@ -172,49 +258,8 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
       /* Or a bad choice of selector or number may be the cause.
          Try different selectors first. */
 
-      if (selector_used) {
-         /* This call used a selector and didn't like it.  Try again with
-            a different selector, until we run out of ideas. */
-         switch (selector_for_initialize) {
-            case selector_beaus:
-               selector_for_initialize = selector_ends;
-               goto try_another_selector;
-            case selector_ends:
-               selector_for_initialize = selector_everyone;
-               goto try_another_selector;
-            case selector_everyone:
-               selector_for_initialize = selector_none;
-               goto try_another_selector;
-            case selector_none:
-               /* When testing columns, we use an additional selector.  The way
-                  the test setups are arranged, these effectively select #1 and #2 in the
-                  column.  They make "<anyone> mark time" work. */
-               /* Also, for tidal waves, we select boys.  That makes "relay the
-                  shadow but <anyone> criss cross it" work. */
-               if (test_setup == &test_setup_rcol || test_setup == &test_setup_lcol) {
-                  selector_for_initialize = selector_headcorners;
-                  goto try_another_selector;
-               }
-               else if (test_setup == &test_setup_1x8 || test_setup == &test_setup_l1x8) {
-                  selector_for_initialize = selector_boys;
-                  goto try_another_selector;
-               }
-         }
-      }
-
-      /* Now try a different number. */
-
-      if (number_used) {
-         /* This call used a number and didn't like it.  Try again with
-            a different number, until we run out of ideas. */
-
-         if (number_for_initialize < 4) {
-            /* We try all numbers from 1 to 4.  We need to do this to get
-               "exchange the boxes N/4" on the waves menu". */
-            number_for_initialize++;
-            goto try_another_number;
-         }
-      }
+      if (iterate_over_sel_and_num(TRUE, TRUE))
+         goto try_another_selector;
 
       /* Now try giving the "cross" modifier. */
 
@@ -271,11 +316,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    try_another_cross:
 
-   number_for_initialize = 1;
-
-   try_another_number:
-
-   selector_for_initialize = selector_beaus;
+   start_sel_and_num_iterator();
 
    try_another_selector:
 
@@ -538,64 +579,80 @@ Private void heapsort(int n)
 Private void create_misc_call_lists(call_list_kind cl)
 {
    int j;
-   long_boolean accept_it;
    int i, callcount;
 
    callcount = 0;
 
    for (j=0; j<number_of_calls[call_list_any]; j++) {
       callspec_block *callp = main_call_lists[call_list_any][j];
-      callspec_block *callq = callp;
-
-      accept_it = FALSE;
 
       if (cl == call_list_gcol) {     /* GCOL */
-         if (callp->schema != schema_by_array) accept_it = TRUE;
-         else if (callp->callflags1 & CFLAG1_STEP_TO_WAVE) {
-            if (  assoc(b_4x2, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_4x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_2x2, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_2x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list))
-               accept_it = TRUE;
+         if (callp->schema != schema_by_array)
+            goto accept;    // We don't understand it.
+
+         callarray *deflist = callp->stuff.arr.def_list->callarray_list;
+
+         if (callp->callflags1 & CFLAG1_STEP_TO_WAVE) {
+            if (assoc(b_4x2, (setup *) 0, deflist) ||
+                assoc(b_4x1, (setup *) 0, deflist) ||
+                assoc(b_2x2, (setup *) 0, deflist) ||
+                assoc(b_2x1, (setup *) 0, deflist))
+               goto accept;
          }
          else {
-            if (  assoc(b_8x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_4x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_2x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_1x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list))
-               accept_it = TRUE;
+            if (assoc(b_8x1, (setup *) 0, deflist) ||
+                assoc(b_4x1, (setup *) 0, deflist) ||
+                assoc(b_2x1, (setup *) 0, deflist) ||
+                assoc(b_1x1, (setup *) 0, deflist))
+               goto accept;
          }
       }
       else {      /* QTAG */
+         callspec_block *callq = callp;
 
-         /* Special stuff: We try to make "mix" not legal, while "swing and circle <N/4>" is legal. */
-/* Unfortunately, this makes lots of regression tests fail, because things that used to be parsible
-but not executable are now not parsable.  So we take it out.
-         if (callp->schema == schema_sequential && !(callp->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) && callp->stuff.def.howmanyparts >= 1) {
+         /* Special stuff: We try to make "mix" not legal, while "swing and circle <N/4>"
+            is legal.
+            Unfortunately, this makes lots of regression tests fail, because things that
+            used to be parsible but not executable are now not parsable.  So we take it out.
+
+            if (callp->schema == schema_sequential &&
+            !(callp->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) &&
+            callp->stuff.def.howmanyparts >= 1) {
             callq = base_calls[callp->stuff.def.defarray[0].call_id];
-         }
-*/
-         if (callq->schema != schema_by_array) accept_it = TRUE;
-         else if ((callp->callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_REAR_BACK_FROM_QTAG) {
-            if (  assoc(b_4x2, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_4x1, (setup *) 0, callq->stuff.arr.def_list->callarray_list))
-               accept_it = TRUE;
+            }
+         */
+
+         if (callq->schema != schema_by_array)
+            goto accept;    // We don't understand it.
+
+         callarray *deflist = callq->stuff.arr.def_list->callarray_list;
+
+         if ((callq->callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_REAR_BACK_FROM_QTAG) {
+            if (assoc(b_4x2, (setup *) 0, deflist) ||
+                assoc(b_4x1, (setup *) 0, deflist))
+               goto accept;
          }
          else {
-            if (assoc(b_qtag, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_pqtag, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_dmd, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_pmd, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_1x2, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
-                  assoc(b_2x1, (setup *) 0, callq->stuff.arr.def_list->callarray_list))
-               accept_it = TRUE;
+            if ((callq->callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
+               if (assoc(b_thar, (setup *) 0, deflist))
+                  goto accept;
+            }
+
+            if (assoc(b_qtag, (setup *) 0, deflist) ||
+                assoc(b_pqtag, (setup *) 0, deflist) ||
+                assoc(b_dmd, (setup *) 0, deflist) ||
+                assoc(b_pmd, (setup *) 0, deflist) ||
+                assoc(b_1x2, (setup *) 0, deflist) ||
+                assoc(b_2x1, (setup *) 0, deflist))
+               goto accept;
          }
       }
 
-      if (accept_it) {
-         global_temp_call_list[callcount] = callp;
-         callcount++;
-      }
+      continue;
+
+   accept:
+      global_temp_call_list[callcount] = callp;
+      callcount++;
    }
 
    /* Create the call list itself. */

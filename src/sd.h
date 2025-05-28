@@ -111,7 +111,7 @@ static const uint32 CMD_FRAC_LASTHALF_VALUE  = 0x00001211UL;
 static const uint32 CMD_FRAC_PART_BIT        = 0x00010000UL;
 static const uint32 CMD_FRAC_PART_MASK       = 0x000F0000UL;
 static const uint32 CMD_FRAC_REVERSE         = 0x00100000UL;
-static const uint32 CMD_FRAC_CODE_MASK       = 0x00E00000;    // This is a 3 bit fieldUL.
+static const uint32 CMD_FRAC_CODE_MASK       = 0x00E00000UL;    // This is a 3 bit field.
 
 /* Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
    We require that the PART_MASK field be nonzero (we use 1-based part numbering)
@@ -590,7 +590,9 @@ extern id_bit_table id_bit_table_545_innr[];                        /* in SDTABL
 extern id_bit_table id_bit_table_3dmd_in_out[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_ctr1x6[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABLES */
+extern id_bit_table id_bit_table_4dmd_cc_ee[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
+extern id_bit_table id_bit_table_3x6_with_1x6[];                    /* in SDTABLES */
 extern cm_thing conc_init_table[];                                  /* in SDTABLES */
 extern const fixer fdhrgl;                                          /* in SDTABLES */
 extern const fixer f323;                                            /* in SDTABLES */
@@ -652,6 +654,8 @@ extern const coordrec press_qtag_4dmd2;                             /* in SDTABL
 extern const coordrec acc_crosswave;                                /* in SDTABLES */
 extern const tgl_map *c1tglmap1[];                                  /* in SDTABLES */
 extern const tgl_map *c1tglmap2[];                                  /* in SDTABLES */
+extern const tgl_map *dbqtglmap1[];                                 /* in SDTABLES */
+extern const tgl_map *dbqtglmap2[];                                 /* in SDTABLES */
 extern const tgl_map *qttglmap1[];                                  /* in SDTABLES */
 extern const tgl_map *qttglmap2[];                                  /* in SDTABLES */
 extern const tgl_map *bdtglmap1[];                                  /* in SDTABLES */
@@ -682,7 +686,6 @@ extern map_thing map_ladder;                                        /* in SDTABL
 extern map_thing map_crazy_offset1;                                 /* in SDTABLES */
 extern map_thing map_crazy_offset2;                                 /* in SDTABLES */
 extern map_thing map_but_o;                                         /* in SDTABLES */
-extern map_thing map_offset;                                        /* in SDTABLES */
 extern map_thing map_4x4v;                                          /* in SDTABLES */
 extern map_thing map_blocks;                                        /* in SDTABLES */
 extern map_thing map_trglbox;                                       /* in SDTABLES */
@@ -710,6 +713,9 @@ extern map_thing map_off1x81;                                       /* in SDTABL
 extern map_thing map_off1x82;                                       /* in SDTABLES */
 extern map_thing map_dqtag1;                                        /* in SDTABLES */
 extern map_thing map_dqtag2;                                        /* in SDTABLES */
+extern map_thing map_dqtag3;                                        /* in SDTABLES */
+extern map_thing map_dqtag4;                                        /* in SDTABLES */
+extern clw3_thing clw3_table[];                                     /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
 extern map_thing map_inner_box;                                     /* in SDTABLES */

@@ -1099,11 +1099,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
                                 for any mandatory modifier, e.g. "clover and [anything]"
                                 is executed as "clover and [call #1]". */
       {0, "nullsecond"},     /* Base call for mandatory secondary modification. */
-
-
       {0, "real_base_0"},
-
-
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info
@@ -1114,6 +1110,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "trade"},
+      {0, "passthru"},       /* To tell how to do "12_16_matrix_means_split". */
       {0, "check_cross_counter"},
       {0, "lockit"},
       {0, "disband1"},
