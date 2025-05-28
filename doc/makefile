@@ -77,16 +77,20 @@ relnotes.all: relnotes.ps relnotes.pdf relnotes.txt relnotes.html
 
 
 
-ps.all: demo.ps sessions.ps sd_doc.ps relnotes.ps appnote1.ps appnote2.ps
+ps.all: demo.ps sessions.ps sd_doc.ps relnotes.ps \
+        appnote1.ps appnote2.ps appnote3.ps
 
-pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf appnote1.pdf appnote2.pdf
+pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf \
+         appnote1.pdf appnote2.pdf appnote3.pdf
 
-info.all: demo.info sessions.info sd_doc.info relnotes.info appnote1.info appnote2.info
+info.all: demo.info sessions.info sd_doc.info relnotes.info \
+          appnote1.info appnote2.info appnote3.info
 
-text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt appnote1.txt appnote2.txt
+text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt \
+          appnote1.txt appnote2.txt appnote3.txt
 
 html.all: demo.html sessions.html sessions_toc.html sd_doc.html sd_doc_toc.html relnotes.html \
-          appnote1.html appnote2.html
+          appnote1.html appnote2.html appnote3.html
 
 clean::
 	-$(RM) *.aux *.log *.toc *.dvi *.ps *.pso *.pdf *.info *.msg

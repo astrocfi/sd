@@ -1,8 +1,8 @@
-pushd \wba\sd\vc\sd\sdtty
-copy \wba\sd\sd_calls.dat .
-copy \wba\sd\sd.ini .
+pushd vc\sd\sdtty
+copy ..\..\..\sd_calls.dat .
+copy ..\..\..\sd.ini .
 popd
-pushd \wba\sd\vc\sd
-copy \wba\sd\sd_calls.dat .
-copy \wba\sd\sd.ini .
+pushd vc\sd
+copy ..\..\sd_calls.dat .
+copy ..\..\sd.ini .
 popd

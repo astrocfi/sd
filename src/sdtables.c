@@ -39,6 +39,7 @@
    exp_qtg_3x4_stuff
    exp_1x2_hrgl_stuff
    exp_dmd_hrgl_stuff
+   exp_dmd_hrgl_disc_stuff
    touch_init_table1
    touch_init_table2
    touch_init_table3
@@ -158,14 +159,16 @@
    map_trngl_box1
    map_trngl_box2
    map_inner_box
-   map_lh_s2x3_3
    map_lh_c1phana
    map_lh_c1phanb
-   map_lh_s2x3_2
    map_rh_c1phana
    map_rh_c1phanb
+   map_lh_s2x3_3
+   map_lh_s2x3_2
    map_rh_s2x3_3
    map_rh_s2x3_2
+   map_lh_s2x3_7
+   map_rh_s2x3_7
    map_d1x10
    map_lz12
    map_rz12
@@ -416,6 +419,7 @@ Cstring warning_strings[] = {
        expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
        expand_thing exp_1x2_hrgl_stuff     = {{7, 3}, 2, s1x2, s_hrglass, 1};
        expand_thing exp_dmd_hrgl_stuff     = {{6, 3, 2, 7}, 4, sdmd, s_hrglass, 0};
+       expand_thing exp_dmd_hrgl_disc_stuff = {{6, -1, 3, 2, -1, 7}, 6, s_1x2dmd, s_hrglass, 0};
 
 static expand_thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, s_thar, s4x4, 0};
 static expand_thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, 16, nothing, s_thar, 0};
@@ -826,13 +830,15 @@ expand_thing expand_init_table[] = {
     4, s1x4, sdmd, 0, 0UL, 0xA,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
+   // **** Have downgraded these next two, so that points of hourglass can do
+   // disconnected peel to diamond or 1/2 circulate.
+
    {{0, -1, -1, 1, 4, -1, -1, 5},
     8, s2x4, s_dhrglass, 0, 0UL, 0xCC,
-    warn__none, warn__none, normalize_before_isolated_call, 0},
-   // comp_qtag_2x4_stuff, but for s_hrglass.
+    warn__none, warn__none, normalize_before_isolate_strict, 0},
    {{5, -1, -1, 0, 1, -1, -1, 4},
     8, s2x4, s_hrglass, 1, 0UL, 0xCC,
-    warn__none, warn__none, normalize_before_isolated_call, 0},
+    warn__none, warn__none, normalize_before_isolate_strict, 0},
 
    /* This makes it possible to do "own the <points>, trade by flip the diamond" from
       normal diamonds. */
@@ -1866,6 +1872,30 @@ static coordrec thingqtag = {s_qtag, 3,       /* "fudged" coordinates */
 
 static coordrec nicethingqtag = {s_qtag, 3,   /* "true" coordinates */
    { -5,   5,   6,   2,   5,  -5,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1, -1,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5, -1, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec thing2stars = {s_2stars, 3,       /* "fudged" coordinates */
+   { -4,   5,   7,   2,   4,  -5,  -7,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5, -1, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec nicething2stars = {s_2stars, 3,   /* "true" coordinates */
+   { -5,   5,   7,   2,   5,  -5,  -7,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -3087,6 +3117,7 @@ static id_bit_table id_bit_table_4x5[] = {
 #define X26 schema_concentric_2_6
 #define B26 schema_concentric_big2_6
 #define X24 schema_concentric_2_4
+#define X42 schema_concentric_4_2
 #define CK schema_checkpoint
 
 
@@ -3230,9 +3261,11 @@ cm_thing conc_init_table[] = {
              4, 8, s2x2,     s2x4,     12, 1, 0, 9, 1,  0x2FD, schema_concentric},
    {s2x6,           Z, {2, 3, 8, 9,      0, 1, 4, 5, 6, 7, 10, 11},
              4, 8, s2x2,     s2x4,     12, 0, 0, 9, 1,  0x2FE, schema_concentric},
-
    {s3dmd,         G3, {9, 10, 11, 3, 4, 5,          0, 1, 2, 6, 7, 8},
              6, 6, s1x6,     s2x3,     12, 0, 0, 2, 1,  0x0FB, schema_concentric},
+   {s3x4,           Z, {11, 5,           0, 1, 2, 3, 6, 7, 8, 9},
+             2, 8, s1x2,     s2x4,     12, 0, 0, 2, 1,  0x0FB, schema_concentric},
+
    {s3x8,          G3, {21, 22, 23, 9, 10, 11,       19, 20, 0, 7, 8, 12},
              6, 6, s1x6,     s2x3,     24, 0, 1, 1, 1,  0x0F7, schema_concentric},
 
@@ -3262,11 +3295,12 @@ cm_thing conc_init_table[] = {
    {s_1x2dmd,     X24, {5, 2,    0, 1, 3, 4},              2, 4, s1x2,     s1x4,     6,  1, 0, 1, 1,  0x0F5, schema_concentric},
 
    {s1x6,           Z, {2, 5,    0, 1, 3, 4},              2, 4, s1x2,     s1x4,     6,  0, 0, 1, 1,  0x2FA, schema_concentric},
-   {s1x6,           Z, {1, 2, 4, 5,    0, 3},              4, 2, s1x4,     s1x2,     6,  0, 0, 1, 1,  0x2FA, schema_concentric},
+   {s1x6,         X42, {1, 2, 4, 5,    0, 3},              4, 2, s1x4,     s1x2,     6,  0, 0, 1, 1,  0x0FA, schema_concentric},
 
    /* these two are duplicate. */
    {s_wingedstar,   Z, {7, 2, 3, 6,    0, 1, 4, 5},        4, 4, s_star,   s1x4,     8,  1, 0, 1, 1,  0x2F5, schema_conc_star},
    {s_wingedstar,   Z, {7, 2, 3, 6,    0, 1, 4, 5},        4, 4, s_star,   s1x4,     8,  1, 0, 1, 1,  0x2F5, schema_concentric},
+
    {s_rigger,       Z, {5, 0, 1, 4,    6, 7, 2, 3},
              4, 4, s2x2,     s1x4,     8,  1, 0, 1, 1,  0x2F5, schema_concentric},
    {s_qtag,         Z, {0, 1, 3, 4, 5, 7,    6, 2},        6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x2FA, schema_concentric_6_2_tgl},
@@ -3726,14 +3760,14 @@ static Const fixer f323d   =   {s2x3, s_323,       0, 0, 1,       0,          0,
 static Const fixer f3x1zzd   = {sdmd, s3x1dmd,     0, 0, 1,       0,          0,          &f1x8endd,  0, &f3x1zzd,   0,    0,          0,          {0, 3, 4, 7}};
 static Const fixer f1x3zzd   = {sdmd, s1x3dmd,     0, 0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,   0,    0,          0,          {0, 3, 4, 7}};
 static Const fixer f3x1yyd   = {sdmd, s3x1dmd,     0, 0, 1,       0,          0,          &f1x8aad,   0, &f3x1yyd,   0,    0,          0,          {1, 3, 5, 7}};
-static Const fixer f2x1yyd   = {sdmd, s_2x1dmd,    0, 0, 1,       0,          0,          &f1x8aad,   0, &f2x1yyd,   0,    0,          0,          {0, 2, 3, 5}};
-static Const fixer f1x4xv    = {s1x4, s_crosswave, 1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,    {2, 3, 6, 7}};
+static Const fixer f2x1yyd   = {s_star,s_2x1dmd,   0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 2, 3, 5}};
+static Const fixer f1x4xv    = {s1x4, s_crosswave, 1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {2, 3, 6, 7}};
 static Const fixer f1x3yyd   = {sdmd, s1x3dmd,     0, 0, 1,       0,          0,          &foo66d,    &f1x4xv, &f1x3yyd, 0, &frigctr,  &frigctr,   {1, 3, 5, 7}};
 static Const fixer f1x6aad   = {s1x4, s1x6,        0, 0, 1,       0,          0,          &f1x6aad,   0, &f3x1zzd,   0,    &fo6zzd,    &fo6zzd,    {0, 1, 3, 4}};
 static Const fixer f1x8aad   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8aad,   0, &f3x1zzd,   0,    &foozzd,    &foozzd,    {1, 3, 5, 7}};
 static Const fixer fxwv1d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv1d,    0,    0,          0,          {0, 2, 4, 6}};
 static Const fixer fxwv2d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv2d,    0,    0,          0,          {0, 3, 4, 7}};
-static Const fixer fxwv3d    = {sdmd, s_crosswave, 1, 0, 1,       0,          0,          0,          0, &fxwv3d,    0,    0,          0,          {2, 5, 6, 1}};
+static Const fixer fxwv3d    = {s_star,s_crosswave,0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 2, 5, 6}};
 
 static Const fixer fqtgns    = {s1x2, s_qtag,      0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 5, 4}};
 static Const fixer ftharns   = {s1x2, s_thar,      1, 0, 2,       &ftharns,   &fqtgns,    0,          0, 0,          0,    0,          0,          {2, 3, 7, 6}};
@@ -3754,6 +3788,8 @@ static Const fixer fspindlfd = {s2x2, s_spindle,   0, 0, 1,       0,          0,
 static Const fixer fspindlgd = {s2x2, s_spindle,   0, 0, 1,       0,          0,          0,          0, 0,          0,    &fspindlgd, 0,          {0, 1, 4, 5}};
 static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          0,          {1, 2, 6, 5}};
 static Const fixer f2x3c     = {s1x2, s2x3,        1, 0, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          0,          {0, 5, 2, 3}};
+static Const fixer f2x3a41   = {s1x2, s2x3,        1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 5}};
+static Const fixer f2x3a14   = {s1x2, s2x3,        1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {2, 3}};
 
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2         2x2v             nonrot  */
 
@@ -3900,8 +3936,8 @@ static Const fixer f1x8hif   = {s1x4, s1x8,        0, 0, 1,       0,          0,
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2         2x2v             nonrot  */
 
 static Const fixer fbonectr  = {s1x4, s_bone,      0, 0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &bar55d,    &bar55d,    {6, 7, 2, 3}};
-static Const fixer fbonetgl  = {s_bone6, s_bone,   0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 3, 4, 5, 7}};
-static Const fixer frigtgl   = {s_short6, s_rigger,1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 2, 4, 5, 6, 0}};
+static Const fixer fbonetgl  = {s_bone6, s_bone,   0, 0, 1,       0,          0,          &f1x8_77,   0, 0,          0,    0,          0,          {0, 1, 3, 4, 5, 7}};
+static Const fixer frigtgl   = {s_short6, s_rigger,1, 0, 1,       0,          0,          0,          &f1x8_77, 0,   0,    0,          0,          {1, 2, 4, 5, 6, 0}};
 static Const fixer fboneendo = {s1x2, s_bone,      1, 0, 2,       &fboneendo, &f1x8endo,  0,          0, 0,          0,    0,          0,          {0, 5, 1, 4}};
 static Const fixer frigendd  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &frigendd,  0, 0,          0,    &f2x4endd,  &f2x4endd,  {6, 7, 2, 3}};
 static Const fixer frigctr   = {s2x2, s_rigger,    0, 0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &frigctr,   &frigctr,   {0, 1, 4, 5}};
@@ -3982,6 +4018,16 @@ static Const fixer z2x3a     = {s2x3, s2x3,        0, 0, 1,       0,          0,
 static Const fixer z2x3b     = {s2x3, s2x3,        0, 0, 1,       0,          0,          &z1x4u, &z1x4u, 0,         0,    &z2x3b,     0,          {0, 1, 2, 3, 4, 5}};
 
 static Const fixer f2x4endd  = {s2x2, s2x4,        0, 1, 1,       0,          0,          &frigendd,  &frigendd, 0,  0,    &f2x4endd,  &fqtgend,   {0, 3, 4, 7}};
+
+
+
+static Const fixer fhrgl1    = {sdmd, s_2x1dmd,   1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {2, 3, 5, 0}};
+static Const fixer fhrgl2    = {sdmd, s_2x1dmd,   0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 2, 3, 5}};
+
+
+static Const fixer fhrgle    = {s2x2, s_hrglass,   0, 2, 1,       0,          0,          &frigendd,  &frigendd, &fhrgl1, &fhrgl2, &fhrgle, &fqtgend, {0, 1, 4, 5}};
+
+
 static Const fixer f2x477    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    &f2x477,    0,          {0, 1, 2, 4, 5, 6}};
 static Const fixer f2x4ee    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    &f2x4ee,    0,          {1, 2, 3, 5, 6, 7}};
 static Const fixer f2x4bb    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    &f2x4bb,    0,          {0, 1, 3, 4, 5, 7}};
@@ -4097,6 +4143,7 @@ sel_item sel_init_table[] = {
    {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0xA5,   &f2x4dleft,  (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0x5A,   &f2x4dright, (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0x99,   &f2x4endd,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_hrglass,   0x33,   &fhrgle,     (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s_dhrglass,  0x99,   &fdhrgld1,   (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s_dhrglass,  0xAA,   &fdhrgld2,   (fixer *) 0, -1},
    {LOOKUP_IGNORE,             s2x4,        0x77,   &f2x477,     (fixer *) 0, -1},  /* 2x4 with 2 corners ignored.  These 2 are *NOT* disconnected. */
@@ -4212,6 +4259,8 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s_1x2dmd,    033,    &f1x2aad,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s3ptpd,      06262,  &f3ptpo6,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x3,        055,    &f2x3c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x3,        041,    &f2x3a41,    (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x3,        014,    &f2x3a14,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x5,        0x318,  &f2x5c,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x5,        0x063,  &f2x5d,      (fixer *) 0, -1},
 
@@ -4633,8 +4682,8 @@ setup_attr setup_attrs[] = {
          (Cstring) 0}},
    /* s_2stars */
       {7,
-      (coordrec *) 0,
-      (coordrec *) 0,
+       &thing2stars,
+       &nicething2stars,
        /*
          0x33, 0xDD, 0x11, 0,
        */
@@ -5896,6 +5945,8 @@ static map_thing map328c           = {{1, 2, 3, 11, 10, 9},                     
 static map_thing map328d           = {{4, 5, 6, 14, 13, 12},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
 static map_thing map328e           = {{2, 3, 4, 12, 11, 10},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
 static map_thing map328f           = {{3, 4, 5, 13, 12, 11},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
+static map_thing map31x3d          = {{0, 1, 2, 6, 5, 4},                                                       MPKIND__NONE,        0, 2, s1x3dmd, s1x3,   0x000, 0};
+
 
        clw3_thing clw3_table[] = {
          {s4x4, 0x8E8E, 0x8A8A, &map3ri,  0, {12, 13, 14, 0, 8, 6,  5, 4, -1}},
@@ -5912,6 +5963,7 @@ static map_thing map328f           = {{3, 4, 5, 13, 12, 11},                    
          {s2x8, 0xF8F8, 0x7070, &map328d, 0, {0, 1, 2, 8, 9, 10, -1}},
          {s2x8, 0x3E3E, 0x1C1C, &map328e, 0, {0, 6, 7, 8, 14, 15, -1}},
          {s2x8, 0x7C7C, 0x3838, &map328f, 0, {0, 1, 7, 8, 9, 15, -1}},
+         {s1x3dmd, 0x77,  0x77, &map31x3d,0, {3, 7, -1}},
          {0}};
 
 // Maps for turning triangles into boxes for the "triangle" concept.
@@ -5925,16 +5977,17 @@ static map_thing map328f           = {{3, 4, 5, 13, 12, 11},                    
         map_thing map_lh_c1phana        = {{0, -1, 1, -1, 2, -1, 3, -1, 6, -1, 7, -1, 8, -1, 9, -1},                 MPKIND__OFFS_L_HALF, 0, 1,  sbigdmd, s_c1phan, 0x000, 0};
         map_thing map_lh_c1phanb        = {{-1, 12, -1, 10, -1, 3, -1, 15, -1, 4, -1, 2, -1, 11, -1, 7},             MPKIND__OFFS_L_HALF, 4, 1,  s4x4,   s_c1phan,  0x000, 0};
 
-        map_thing map_lh_s2x3_3         = {{1, 2, 4, 5, 7, 3,                 13, 15, 11, 9, 10, 12},                MPKIND__OFFS_L_HALF, 0, 2,  s4x4,   s2x3,      0x005, 1};
-        map_thing map_lh_s2x3_2         = {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},                  MPKIND__OFFS_L_HALF, 0, 2,  s4x4,   s2x3,      0x000, 0};
-
         map_thing map_rh_c1phana        = {{-1, 2, -1, 3, -1, 5, -1, 4, -1, 8, -1, 9, -1, 11, -1, 10},               MPKIND__OFFS_R_HALF, 0, 1,  sbigdmd, s_c1phan, 0x000, 0};
         map_thing map_rh_c1phanb        = {{15, -1, 3, -1, 0, -1, 1, -1, 7, -1, 11, -1, 8, -1, 9, -1},               MPKIND__OFFS_R_HALF, 4, 1,  s4x4,   s_c1phan,  0x000, 0};
+
+        map_thing map_lh_s2x3_3         = {{1, 2, 4, 5, 7, 3,                 13, 15, 11, 9, 10, 12},                MPKIND__OFFS_L_HALF, 0, 2,  s4x4,   s2x3,      0x005, 1};
+        map_thing map_lh_s2x3_2         = {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},                  MPKIND__OFFS_L_HALF, 0, 2,  s4x4,   s2x3,      0x000, 0};
 
         map_thing map_rh_s2x3_3         = {{15, 11, 6, 8, 9, 10,              0, 1, 2, 7, 3, 14},                    MPKIND__OFFS_R_HALF, 0, 2,  s4x4,   s2x3,      0x005, 1};
         map_thing map_rh_s2x3_2         = {{12, 13, 14, 3, 15, 10,            11, 7, 2, 4, 5, 6},                    MPKIND__OFFS_R_HALF, 0, 2,  s4x4,   s2x3,      0x000, 0};
 
-
+        map_thing map_lh_s2x3_7         = {{6, 23, 12, 13, 22, 7,              1, 10, 19, 18, 11, 0},                MPKIND__OFFS_L_FULL, 0, 2,  s4x6,   s2x3,      0x005, 1};
+        map_thing map_rh_s2x3_7         = {{10, 19, 16, 17, 18, 11,            5, 6, 23, 22, 7, 4},                  MPKIND__OFFS_R_FULL, 0, 2,  s4x6,   s2x3,      0x005, 1};
 
 Private map_thing map_blob_1x4a         = {{13, 10, 6, 8,          15, 17, 3, 5,          18, 20, 1, 22},            MPKIND__NONE,        0, 3,  s_bigblob,   s1x4, 0x000, 1};
 Private map_thing map_blob_1x4b         = {{19, 16, 12, 14,        21, 23, 9, 11,         0, 2, 7, 4},               MPKIND__NONE,        0, 3,  s_bigblob,   s1x4, 0x000, 1};

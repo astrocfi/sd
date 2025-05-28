@@ -110,6 +110,16 @@ SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration)
       selector_belles,
       selector_uninitialized};
 
+   if (interactivity == interactivity_database_init ||
+       interactivity == interactivity_verify) {
+      if (verify_options.who == selector_uninitialized) {
+         verify_used_selector = TRUE;
+         return selector_for_initialize;
+      }
+      else
+         return verify_options.who;
+   }
+
    int j;
 
    if (pick_type_table[current_pick_type].exhaustive_search && allow_iteration) {
@@ -153,6 +163,16 @@ SDLIB_API direction_kind do_direction_iteration(void)
       direction_out,
       direction_uninitialized};
 
+   if (interactivity == interactivity_database_init ||
+       interactivity == interactivity_verify) {
+      if (verify_options.where == direction_uninitialized) {
+         verify_used_direction = TRUE;
+         return direction_for_initialize;
+      }
+      else
+         return verify_options.where;
+   }
+
    int j;
 
    if (pick_type_table[current_pick_type].exhaustive_search) {
@@ -187,6 +207,30 @@ SDLIB_API void do_number_iteration(int howmanynumbers,
    int i;
 
    *number_list = 0;
+
+   if (interactivity == interactivity_database_init ||
+       interactivity == interactivity_verify) {
+      for (i=0 ; i<howmanynumbers ; i++) {
+         uint32 this_num;
+
+         if (verify_options.howmanynumbers == 0) {
+            // The second number in the series is always 1.
+            // This makes "N-N-N-N change the web" and "N-N-N-N
+            // relay the top" work.
+            this_num = (i==1) ? 1 : number_for_initialize;
+            verify_used_number = TRUE;
+         }
+         else {
+            this_num = verify_options.number_fields & 0xF;
+            verify_options.number_fields >>= 4;
+            verify_options.howmanynumbers--;
+         }
+
+         *number_list |= (this_num << (i*4));
+      }
+
+      return;
+   }
 
    for (i=0 ; i<howmanynumbers ; i++) {
       uint32 this_num;
@@ -248,7 +292,7 @@ SDLIB_API void do_circcer_iteration(uint32 *circcp)
 SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
                                            uint32 *tagg,
                                            uint32 numtaggers,
-                                           callspec_block **tagtable)
+                                           call_with_name **tagtable)
 {
    uint32 tag;
 
@@ -261,10 +305,10 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
             We also reject any that are marked not to be used in resolve. */
 
       while (tag < numtaggers &&
-             ((tagtable[tag]->callflags1 &
+             ((tagtable[tag]->the_defn.callflags1 &
                (CFLAG1_DONT_USE_IN_RESOLVE|
                 CFLAG1_NUMBER_MASK)) ||
-              (tagtable[tag]->callflagsf &
+              (tagtable[tag]->the_defn.callflagsf &
                (CFLAGH__TAG_CALL_RQ_MASK|
                 CFLAGH__CIRC_CALL_RQ_BIT|
                 CFLAGH__REQUIRES_SELECTOR|
@@ -278,10 +322,10 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
          tagger_iterator = tag+1;
 
          while (tagger_iterator < numtaggers &&
-                ((tagtable[tagger_iterator]->callflags1 &
+                ((tagtable[tagger_iterator]->the_defn.callflags1 &
                   (CFLAG1_DONT_USE_IN_RESOLVE|
                    CFLAG1_NUMBER_MASK)) ||
-                 (tagtable[tagger_iterator]->callflagsf &
+                 (tagtable[tagger_iterator]->the_defn.callflagsf &
                   (CFLAGH__TAG_CALL_RQ_MASK|
                    CFLAGH__CIRC_CALL_RQ_BIT|
                    CFLAGH__REQUIRES_SELECTOR|
@@ -300,7 +344,7 @@ SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
    (*the_callback_block.hash_nonrandom_number_fn)(tag);
 
    /* We don't generate "dont_use_in_resolve" taggers in any random search. */
-   if (tagtable[tag]->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
+   if (tagtable[tag]->the_defn.callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
       fail("This shouldn't get printed.");
 
    *tagg = (tagclass << 5) | (tag+1);
@@ -427,11 +471,11 @@ SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_
 }
 
 
-SDLIB_API callspec_block *do_pick(void)
+SDLIB_API call_with_name *do_pick(void)
 {
    int i;
    uint32 rejectflag;
-   callspec_block *result;
+   call_with_name *result;
 
    if (pick_type_table[current_pick_type].exhaustive_search) {
       if (resolve_scan_current_point < 0)
@@ -454,14 +498,14 @@ SDLIB_API callspec_block *do_pick(void)
       which would make the uniquefication fail, so we could see the same thing twice. */
    
    if ((search_goal == command_level_call || search_goal == command_8person_level_call) &&
-       ((dance_level) result->level) < level_threshholds[calling_level])
+       ((dance_level) result->the_defn.level) < level_threshholds[calling_level])
       fail("Level reject.");
 
    rejectflag = pick_type_table[current_pick_type].exhaustive_search ?
       (CFLAG1_DONT_USE_IN_RESOLVE|CFLAG1_DONT_USE_IN_NICE_RESOLVE) :
       CFLAG1_DONT_USE_IN_RESOLVE;
 
-   if (result->callflags1 & rejectflag) fail("This shouldn't get printed.");
+   if (result->the_defn.callflags1 & rejectflag) fail("This shouldn't get printed.");
    return result;
 }
 

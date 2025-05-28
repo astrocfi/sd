@@ -837,8 +837,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             if (deferred_concept_paren == 0) deferred_concept_paren = 2;
          }
          else {
-            Const callspec_block *target_call = (callspec_block *) 0;
-            Const parse_block *tptr;
+            const call_with_name *target_call = (call_with_name *) 0;
+            const parse_block *tptr;
 
             /* Look for special concepts that, in conjunction with calls that have certain escape codes
                in them, get deferred and inserted into the call name. */
@@ -864,22 +864,22 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 
             if (target_call &&
                 k == concept_left &&
-                (target_call->callflagsf & ESCAPE_WORD__LEFT)) {
+                (target_call->the_defn.callflagsf & ESCAPE_WORD__LEFT)) {
                use_left_name = TRUE;
             }
             else if (target_call &&
                      k == concept_magic &&
-                     (target_call->callflagsf & ESCAPE_WORD__MAGIC)) {
+                     (target_call->the_defn.callflagsf & ESCAPE_WORD__MAGIC)) {
                use_magic_name = TRUE;
             }
             else if (target_call &&
                      k == concept_interlocked &&
-                     (target_call->callflagsf & ESCAPE_WORD__INTLK)) {
+                     (target_call->the_defn.callflagsf & ESCAPE_WORD__INTLK)) {
                use_intlk_name = TRUE;
             }
             else if (target_call &&
                      k == concept_cross &&
-                     (target_call->callflagsf & ESCAPE_WORD__CROSS)) {
+                     (target_call->the_defn.callflagsf & ESCAPE_WORD__CROSS)) {
                use_cross_name = TRUE;
             }
             else if (allow_deferred_concept &&
@@ -985,7 +985,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
          selector_kind i16junk = local_cptr->options.who;
          direction_kind idirjunk = local_cptr->options.where;
          uint32 number_list = local_cptr->options.number_fields;
-         callspec_block *localcall = local_cptr->call_to_print;
+         call_with_name *localcall = local_cptr->call_to_print;
          parse_block *save_cptr = local_cptr;
 
          long_boolean subst1_in_use = FALSE;
@@ -1001,12 +1001,12 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                long_boolean this_is_subst2 = FALSE;
                if (subsidiary_ptr) {
                   switch (search->replacement_key) {
-                     case 1:
-                     case 2:
+                     case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
+                     case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
                         this_is_subst1 = TRUE;
                         break;
-                     case 5:
-                     case 6:
+                     case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
+                     case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
                         this_is_subst2 = TRUE;
                         break;
                   }
@@ -1040,7 +1040,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
          if (localcall) {
             char *np = localcall->name;
 
-            if (enable_file_writing) localcall->age = global_age;
+            if (enable_file_writing) localcall->the_defn.age = global_age;
 
             while (*np) {
                char c = *np++;
@@ -1067,7 +1067,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
                            print_recurse(subsidiary_ptr, 0);
                            goto did_tagger;
                         }
@@ -1099,7 +1099,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->callflags1 & CFLAG1_BASE_CIRC_CALL)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL)) {
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
                            goto did_circcer;
                         }
@@ -1271,7 +1271,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             int first_replace = 0;
 
             for (search = save_cptr->next ; search ; search = search->next) {
-               Const callspec_block *cc;
+               const call_with_name *cc;
                parse_block *subsidiary_ptr = search->subsidiary_root;
 
                /* If we have a subsidiary_ptr, handle the replacement that is indicated.
@@ -1283,23 +1283,23 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                cc = subsidiary_ptr->call_to_print;
 
                if (!cc ||    /* If no call pointer, it isn't a tag base call. */
-                   (!(cc->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) &&
-                    (!(cc->callflags1 & CFLAG1_BASE_CIRC_CALL) ||
+                   (!(cc->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) &&
+                    (!(cc->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) ||
                      search->call_to_print != base_calls[base_call_circcer]))) {
-                  callspec_block *replaced_call = search->call_to_print;
+                  call_with_name *replaced_call = search->call_to_print;
 
                   /* Need to check for case of replacing one star turn with another. */
 
                   if ((first_replace == 0) &&
-                      (replaced_call->callflags1 & CFLAG1_IS_STAR_CALL) &&
+                      (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) &&
                       ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
                        subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
                       cc &&
-                      ((cc->callflags1 & CFLAG1_IS_STAR_CALL) ||
-                       cc->schema == schema_nothing)) {
+                      ((cc->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ||
+                       cc->the_defn.schema == schema_nothing)) {
                      first_replace++;
 
-                     if (cc->schema == schema_nothing)
+                     if (cc->the_defn.schema == schema_nothing)
                         writestuff(", don't turn the star");
                      else {
                         writestuff(", ");
@@ -1308,14 +1308,17 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                   }
                   else {
                      switch (search->replacement_key) {
-                     case 1:
-                     case 2:
-                     case 3:
+                     case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
+                     case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
+                     case DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT:
                         /* This is a natural replacement.
                            It may already have been taken care of. */
-                        if (pending_subst1 || search->replacement_key == 3) {
+                        if (pending_subst1 ||
+                            search->replacement_key ==
+                            DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT) {
                            write_blank_if_needed();
-                           if (search->replacement_key == 3)
+                           if (search->replacement_key ==
+                               DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT)
                               writestuff("but [");
                            else
                               writestuff("[modification: ");
@@ -1323,8 +1326,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff("]");
                         }
                         break;
-                     case 5:
-                     case 6:
+                     case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
+                     case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
                         /* This is a secondary replacement.
                            It may already have been taken care of. */
                         if (pending_subst2) {
@@ -1347,7 +1350,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 
                         writestuff_with_decorations(
                            &search->options,
-                           (replaced_call->callflags1 & CFLAG1_IS_STAR_CALL) ?
+                           (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
                            "turn the star @b" : replaced_call->name);
 
                         writestuff(" WITH [");
@@ -1604,8 +1607,8 @@ SDLIB_API parse_block *get_parse_block(void)
    parse_active_list = item;
 
    item->concept = (concept_descriptor *) 0;
-   item->call = (callspec_block *) 0;
-   item->call_to_print = (callspec_block *) 0;
+   item->call = (call_with_name *) 0;
+   item->call_to_print = (call_with_name *) 0;
    item->options = null_options;
    item->replacement_key = 0;
    item->no_check_call_level = 0;

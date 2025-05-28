@@ -10,10 +10,11 @@ REM                   "sd/sessions.ps"
 REM                   "sd/relnotes.ps"
 REM                   "sd/appnote1.ps"
 REM                   "sd/appnote2.ps"
+REM                   "sd/appnote3.ps"
 REM
 make ps.all
 del psdoc.lzh psdoc.exe psdoc.tar
-lha a psdoc sd_doc.ps demo.ps sessions.ps relnotes.ps appnote1.ps appnote2.ps
+lha a psdoc sd_doc.ps demo.ps sessions.ps relnotes.ps appnote1.ps appnote2.ps appnote3.ps
 lha s psdoc
 del psdoc.lzh
 crunfix sd_doc.ps \temp\sd_doc.ps
@@ -22,8 +23,9 @@ crunfix sessions.ps \temp\sessions.ps
 crunfix relnotes.ps \temp\relnotes.ps
 crunfix appnote1.ps \temp\appnote1.ps
 crunfix appnote2.ps \temp\appnote2.ps
+crunfix appnote3.ps \temp\appnote3.ps
 pushd \temp
-tar cvf psdoc.tar sd_doc.ps demo.ps sessions.ps relnotes.ps appnote1.ps appnote2.ps
+tar cvf psdoc.tar sd_doc.ps demo.ps sessions.ps relnotes.ps appnote1.ps appnote2.ps appnote3.ps
 popd
 copy \temp\psdoc.tar .
 gzip psdoc.tar -c > psdoc.gz
@@ -40,6 +42,7 @@ call make_text sessions.ps ps.msg
 call make_text relnotes.ps ps.msg
 call make_text appnote1.ps ps.msg
 call make_text appnote2.ps ps.msg
+call make_text appnote3.ps ps.msg
 pgp -sta +clearsig=on +armor=on ps.msg -u wba -o ps.asc
 del ps.msg
 ren ps.asc ps.txt

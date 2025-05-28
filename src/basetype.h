@@ -505,7 +505,7 @@ typedef struct {
    uint32 modifiersh;
 } by_def_item;
 
-typedef struct {
+typedef struct structcalldefn{
    uint32 callflags1;    /* The CFLAG1_??? flags. */
    uint32 callflagsh;    /* The mask for the heritable flags. */
    /* Within the "callflagsh" field, the various grouped fields
@@ -516,6 +516,7 @@ typedef struct {
    short int age;
    short int level;
    calldef_schema schema;
+   struct structcalldefn *compound_part;
    union {
       struct {
          calldef_block *def_list;
@@ -527,12 +528,16 @@ typedef struct {
       struct {
          int howmanyparts;
          by_def_item *defarray;  /* Dynamically allocated, there are "howmanyparts" of them. */
-      } def;            /* if schema = schema_by_def */
+      } seq;            /* if schema = schema_sequential or whatever */
       struct {
          by_def_item innerdef;
          by_def_item outerdef;
       } conc;           /* if schema = any of the concentric ones. */
    } stuff;
+} calldefn;
+
+typedef struct {
+   calldefn the_defn;
    /* This is the "pretty" name -- "@" escapes have been changed to things like "<N>".
       If there are no escapes, this just points to the stuff below.
       If escapes are present, it points to allocated storage elsewhere.
@@ -541,12 +546,12 @@ typedef struct {
    /* Dynamically allocated to whatever size is required, will have trailing null.
       This is the name as it appeared in the database, with "@" escapes. */
    char name[4];
-} callspec_block;
+} call_with_name;
 
 typedef struct glock {
    concept_descriptor *concept;   /* the concept or end marker */
-   callspec_block *call;          /* if this is end mark, gives the call; otherwise unused */
-   callspec_block *call_to_print; /* the original call, for printing (sometimes the field
+   call_with_name *call;          /* if this is end mark, gives the call; otherwise unused */
+   call_with_name *call_to_print; /* the original call, for printing (sometimes the field
                                      above gets changed temporarily) */
    struct glock *next;            /* next concept, or, if this is end mark,
                                      points to substitution list */
@@ -867,7 +872,7 @@ typedef struct {
 
 typedef struct {
    parse_block *parseptr;
-   callspec_block *callspec;
+   call_with_name *callspec;
    uint64 cmd_final_flags;
    uint32 cmd_frac_flags;
    uint32 cmd_misc_flags;

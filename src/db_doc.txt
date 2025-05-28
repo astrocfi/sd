@@ -2642,7 +2642,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
 
                                     2x3/2x4 - individual 1FL's
-                                    thar - crossed 2FL's of opposite handedness,
+                                    thar or xwv - crossed 2FL's of opposite handedness,
                                        ready to move along
    2fl_only                         1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
                                     1x8 - a grand 2FL; 4x1 - single DPT or single CDPT;
@@ -2708,6 +2708,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    reverse_explodable,              1x4 - ends facing the same way
    peelable_box,                    2x2, 3x2, 4x2, 5x2, 6x2 or 8x2 - all people in each
                                        column are facing same way
+                                    2x4 - everyone is in real tandem with person front or back
    ends_are_peelable,               2x4 - ends are a box with each person in genuine tandem
    siamese_in_quad                  Any 2x4 or 4x2 - the people in each quadrant, if they
                                        exist, face the same way.  C1 phantom - the same.
@@ -2885,6 +2886,12 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     column-like orientation.
                                     For 2x4, the center 4 must be in line-like orientation.
                                     Use this with "right/left" keyword.
+                                    This can also be used in a star.  In such a case, it
+                                    should be used with "right" or "left".  It will check
+                                    that no one is in a star position of the other handedness.
+                                    If "ntbone" is used also, it will check that the setup
+                                    is some form of generalized 1/4 tag of the indicated
+                                    handedness.
 
                   ** We don't list trngl4 in the above two, because it doesn't obey the all-larger-setups rule, that is,
                      it hasn't been implemented for bone and rigger.  (and how about c1phantoms?)

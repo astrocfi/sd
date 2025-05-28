@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 20 December 1999.
+        Last modified 17 March 2000.
 
 -----------------------------------------------------------------
 
@@ -52,9 +52,12 @@ Build and test the optimized version from DJGPP:
     del *.tmp
     doit
 
+(By the way, this test appears to take 10 hours!!!)
+
 BE SURE THAT MKCALLS GOT BUILT BY DJGPP!!!
 
-Now give the command "do_binary3" (in sddoc) to save the DJGPP build for Windows 3.1.
+Now give the command "do_binary3" (in sddoc) to save the DJGPP build for
+Windows 3.1.
 
                TESTING AND PRODUCTION BUILD - MSVC++
 
@@ -82,7 +85,7 @@ Then do the usual:
     doit
 
 Give the command "new_binary" (in sddoc) to save the MSVC++
-builds of Sdtty and Sd
+builds of Sdtty and Sd.
 
 -----------------------------------------------------------------
 
@@ -102,12 +105,39 @@ release at home, just continue.
 
 -----------------------------------------------------------------
 
+               TESTING AND PRODUCTION BUILD - Linux
+
+On Atlas, create directories sd and sd\regress under /users/wba.
+FTP (in binary mode) the zipfiles for sources and regression tests
+into those directories.
+
+Telnet to hpanjph, unzip (with "-a" option) those two zipfiles.
+In sd, do
+   cp makefile.linux makefile
+   make
+   cd regress
+   .\doit
+
+FTP back (in binary mode) the files "sdtty" and "mkcalls" to sd.
+Get sd_calls.dat also, just to check it.
+
+Once working \wba\sd\sdtty and \wba\sd\mkcalls files are in the
+sd directory, and working sd_calls.txt and sd_calls.dat files are
+also present, go to sddoc, and do
+   do_linux
+
+-----------------------------------------------------------------
+
 BE SURE THAT THE ENVIRONMENT FROM "SETDJGPP" IS NOT IN EFFECT AT THIS POINT!
 
-Presumably "do_binary3" and "new_binary" have been done
+Presumably "do_binary3", "new_binary", and "do_linux" have been done
 at this point, so that these files exist:
       install3.exe,  bin3.txt    (DJGPP build of sdtty)
-      install.exe,  bin.txt      (VC++ build of sdtty and sd)
+      install.exe,   bin.txt     (VC++ build of sdtty and sd)
+                     binu.txt    (Linux build of sdtty)
+
+THE ABOVE IS NO LONGER TRUE!!!!!!!!!!!
+DON'T RUN "NEW_BINARY" UNTIL AFTER DOCUMENTATION HAS BEEN MADE!
 
 Go to sddoc directory and do:
 
@@ -118,10 +148,14 @@ Go to sddoc directory and do:
     do_download-unix   (at MPG, if HP-UX release is desired, see below)
     do_hpux            (at MPG, if HP-UX release is desired, see below)
 
+
+****NOW**** RUN "NEW_BINARY" !!!!!!!!!!!!!
+
 This creates these files, all in the sddoc directory:
 
     bin.txt       \
     bin3.txt      |
+    binu.txt      |
     plain.txt     |
     ps.txt        |   These files get mailed
     pdf.txt       |   to update the web page.
@@ -134,6 +168,10 @@ This creates these files, all in the sddoc directory:
     textdoc.exe      |    installation or copying onto diskettes.
     pdfdoc.exe       |
     psdoc.exe       /
+
+Bring the "*.txt" files and the "install*.exe" files on a zip disk.
+Use the "install*.exe" files for testing the binaries on Windows.
+Then mail the "*.txt" files.
 
 -----------------------------------------------------------------
 

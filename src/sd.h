@@ -376,6 +376,7 @@ typedef enum {
    normalize_to_2,
    normalize_after_triple_squash,
    normalize_before_merge,
+   normalize_after_disconnected,
    normalize_compress_bigdmd,
    normalize_recenter
 } normalize_action;
@@ -467,6 +468,7 @@ typedef enum {
    chk_box,
    chk_box_dbl,
    chk_indep_box,
+   chk_star,
    chk_dmd_qtag,
    chk_qtag,
    chk_qbox,
@@ -500,6 +502,7 @@ typedef enum {
       in sdconc.c . */
    selective_key_dyp,
    selective_key_own,
+   selective_key_plain_no_live_subsets,
    selective_key_plain,
    selective_key_disc_dist,
    selective_key_ignore,
@@ -608,6 +611,7 @@ extern expand_thing exp_1x2_dmd_stuff;
 extern expand_thing exp_qtg_3x4_stuff;
 extern expand_thing exp_1x2_hrgl_stuff;
 extern expand_thing exp_dmd_hrgl_stuff;
+extern expand_thing exp_dmd_hrgl_disc_stuff;
 
 extern full_expand_thing rear_1x2_pair;
 extern full_expand_thing rear_2x2_pair;
@@ -719,12 +723,14 @@ extern map_thing map_trngl_box2;                                    /* in SDTABL
 extern map_thing map_inner_box;                                     /* in SDTABLES */
 extern map_thing map_lh_c1phana;                                    /* in SDTABLES */
 extern map_thing map_lh_c1phanb;                                    /* in SDTABLES */
-extern map_thing map_lh_s2x3_3;                                     /* in SDTABLES */
-extern map_thing map_lh_s2x3_2;                                     /* in SDTABLES */
 extern map_thing map_rh_c1phana;                                    /* in SDTABLES */
 extern map_thing map_rh_c1phanb;                                    /* in SDTABLES */
+extern map_thing map_lh_s2x3_3;                                     /* in SDTABLES */
+extern map_thing map_lh_s2x3_2;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_3;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_2;                                     /* in SDTABLES */
+extern map_thing map_lh_s2x3_7;                                     /* in SDTABLES */
+extern map_thing map_rh_s2x3_7;                                     /* in SDTABLES */
 extern map_thing map_d1x10;                                         /* in SDTABLES */
 extern map_thing map_lz12;                                          /* in SDTABLES */
 extern map_thing map_rz12;                                          /* in SDTABLES */
@@ -770,6 +776,7 @@ extern short int *good_concept_sublists[NUM_CALL_LIST_KINDS];       /* in SDTOP 
 extern int global_age;                                              /* in SDUTIL */
 
 extern long_boolean selector_used;                                  /* in SDPREDS */
+extern long_boolean direction_used;                                 /* in SDPREDS */
 extern long_boolean number_used;                                    /* in SDPREDS */
 extern long_boolean mandatory_call_used;                            /* in SDPREDS */
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
@@ -818,6 +825,7 @@ extern long_boolean check_restriction(
 
 extern void basic_move(
    setup *ss,
+   calldefn *the_calldefn,
    int tbonetest,
    long_boolean fudged,
    long_boolean mirror,
@@ -853,8 +861,6 @@ extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *res
 
 extern void process_number_insertion(uint32 mod_word);
 
-extern int gcd(int a, int b);
-
 extern uint32 process_new_fractions(
    int numer,
    int denom,
@@ -889,6 +895,8 @@ extern void minimize_splitting_info(setup *ss, uint32 other_info);
 extern void initialize_map_tables(void);
 
 extern void remove_z_distortion(setup *ss) THROW_DECL;
+
+extern void remove_tgl_distortion(setup *ss) THROW_DECL;
 
 extern void new_divided_setup_move(
    setup *ss,
@@ -1129,7 +1137,7 @@ extern long_boolean do_subcall_query(
    parse_block **newsearch,
    long_boolean this_is_tagger,
    long_boolean this_is_tagger_circcer,
-   callspec_block *orig_call);
+   call_with_name *orig_call);
 
 extern void open_text_line(void);
 extern parse_block *mark_parse_blocks(void);

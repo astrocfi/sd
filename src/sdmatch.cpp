@@ -786,15 +786,17 @@ static long_boolean verify_call(void)
    save_parse_state();
    savecl = parse_state.call_list_to_use;
 
-   start_sel_and_num_iterator();
+   start_sel_dir_num_iterator();
 
  try_another_selector:
 
    selector_used = FALSE;
+   direction_used = FALSE;
    number_used = FALSE;
    mandatory_call_used = FALSE;
    verify_used_number = FALSE;
    verify_used_selector = FALSE;
+   verify_used_direction = FALSE;
 
    // Do the call.  An error will signal and go to failed.
 
@@ -820,7 +822,7 @@ static long_boolean verify_call(void)
             tt->concept = &marker_concept_mod;
             tt->call = base_calls[base_call_null];
             tt->call_to_print = tt->call;
-            tt->replacement_key = 2;    /* "mandatory_anycall" */
+            tt->replacement_key = DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT;
             parse_state.concept_write_ptr = &tt->subsidiary_root;
             save1 = (parse_block *) 0;
          }
@@ -867,7 +869,9 @@ static long_boolean verify_call(void)
       // Or a bad choice of selector or number may be the cause.
       // Try again with a different selector, until we run out of ideas.
 
-      if (iterate_over_sel_and_num(verify_used_selector, verify_used_number))
+      if (iterate_over_sel_dir_num(verify_used_selector,
+                                   verify_used_direction,
+                                   verify_used_number))
          goto try_another_selector;
 
       goto failed;
@@ -1407,13 +1411,13 @@ Private void scan_concepts_and_calls(
       menu_length = call_hash_list_sizes[bucket];
 
       for (i = 0; i < menu_length; i++) {
-         callspec_block *cb = main_call_lists[call_list_any][call_hash_lists[bucket][i]];
+         call_with_name *cb = main_call_lists[call_list_any][call_hash_lists[bucket][i]];
          saved_result_p->match.call_ptr = cb;
          p2b.car = cb->name;
          saved_result_p->match.call_conc_options = null_options;
          current_result = saved_result_p;
          saved_result_p->yield_depth = new_depth;
-         if (cb->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS)
+         if (cb->the_defn.callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS)
             saved_result_p->yield_depth++;
          match_suffix_2(user, firstchar, &p2b, patxi);
       }
@@ -1459,13 +1463,13 @@ Private void scan_concepts_and_calls(
    menu_length = number_of_calls[call_list_any];
 
    for (i = 0; i < menu_length; i++) {
-      callspec_block *cb = main_call_lists[call_list_any][i];
+      call_with_name *cb = main_call_lists[call_list_any][i];
       saved_result_p->match.call_ptr = cb;
       p2b.car = cb->name;
       saved_result_p->match.call_conc_options = null_options;
       current_result = saved_result_p;
       saved_result_p->yield_depth = new_depth;
-      if (cb->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS)
+      if (cb->the_defn.callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS)
          saved_result_p->yield_depth++;
       match_suffix_2(user, firstchar, &p2b, patxi);
    }
@@ -1873,13 +1877,13 @@ Private void search_menu(uims_reply kind)
       int menu_length = number_of_calls[static_call_menu];
 
       for (i = 0; i < menu_length; i++) {
-         callspec_block *cb;
+         call_with_name *cb;
 
          if (GLOB_verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
          parse_state.call_list_to_use = (call_list_kind) static_call_menu;
          cb = main_call_lists[static_call_menu][i];
          everyones_real_result.match.call_ptr = cb;
-         everyones_real_result.yield_depth = (cb->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
+         everyones_real_result.yield_depth = (cb->the_defn.callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
          match_pattern(cb->name, (concept_descriptor *) 0);
       }
    }

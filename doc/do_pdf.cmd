@@ -10,13 +10,14 @@ REM            "public_html/sd/manual/sd_doc.pdf"
 REM           "public_html/sd/sessions/sessions.pdf"
 REM               "public_html/sd/appnote1.pdf"
 REM               "public_html/sd/appnote2.pdf"
+REM               "public_html/sd/appnote3.pdf"
 REM
 make pdf.all
 del pdfdoc.lzh pdfdoc.exe pdfdoc.tar
-lha a pdfdoc sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf appnote1.pdf appnote2.pdf
+lha a pdfdoc sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf appnote1.pdf appnote2.pdf appnote3.pdf
 lha s pdfdoc
 del pdfdoc.lzh
-tar cvf pdfdoc.tar sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf appnote1.pdf appnote2.pdf
+tar cvf pdfdoc.tar sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf appnote1.pdf appnote2.pdf appnote3.pdf
 gzip pdfdoc.tar -c > pdfdoc.gz
 del pdfdoc.tar pdf.msg pdf.txt pdf.zip pdf.asc
 echo cd sd> pdf.msg
@@ -32,6 +33,8 @@ echo uufile>> pdf.msg
 uuencode appnote1.pdf|uufix>> pdf.msg
 echo uufile>> pdf.msg
 uuencode appnote2.pdf|uufix>> pdf.msg
+echo uufile>> pdf.msg
+uuencode appnote3.pdf|uufix>> pdf.msg
 echo cd demo>> pdf.msg
 echo uufile>> pdf.msg
 uuencode demo.pdf|uufix>> pdf.msg

@@ -33,15 +33,24 @@ BEGIN
         MENUITEM "Choose &font for printing",   ID_FILE_CHOOSE_FONT
         MENUITEM "&Print current file",         ID_FILE_PRINTTHIS
         MENUITEM "Print a&ny file",             ID_FILE_PRINTFILE
-        MENUITEM "&About Sd",                   ID_FILE_ABOUTSD
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
     END
-    POPUP "&Edit text"
+    POPUP "&Edit"
     BEGIN
         MENUITEM "Copy text",                   ID_COMMAND_COPY_TEXT
         MENUITEM "Cut text",                    ID_COMMAND_CUT_TEXT
         MENUITEM "Paste text",                  ID_COMMAND_PASTE_TEXT
+        MENUITEM SEPARATOR
+        MENUITEM "Cut one call\ts-F8",          ID_COMMAND_CLIPBOARD_CUT
+        MENUITEM "Paste one call\tc-F8",        ID_COMMAND_CLIPBOARD_PASTE_ONE
+
+        MENUITEM "Paste all calls",             ID_COMMAND_CLIPBOARD_PASTE_ALL
+
+        MENUITEM "Delete one call from clipboard", 
+                                                ID_COMMAND_CLIPBOARD_DEL_ONE
+        MENUITEM "Delete all calls from clipboard", 
+                                                ID_COMMAND_CLIPBOARD_DEL_ALL
     END
     POPUP "&Command"
     BEGIN
@@ -57,24 +66,26 @@ BEGIN
         MENUITEM "Change output file",          ID_COMMAND_CH_OUTFILE
         MENUITEM "Change title",                ID_COMMAND_CH_TITLE
         MENUITEM "Clipboard cut\ts-F8",         ID_COMMAND_CLIPBOARD_CUT
-        MENUITEM "Clipboard delete all",        ID_COMMAND_CLIPBOARD_DEL_ALL
-        MENUITEM "Clipboard delete one",        ID_COMMAND_CLIPBOARD_DEL_ONE
         MENUITEM "Clipboard paste one\tc-F8",   ID_COMMAND_CLIPBOARD_PASTE_ONE
+
         MENUITEM "Clipboard paste all",         ID_COMMAND_CLIPBOARD_PASTE_ALL
+
+        MENUITEM "Clipboard delete one",        ID_COMMAND_CLIPBOARD_DEL_ONE
+        MENUITEM "Clipboard delete all",        ID_COMMAND_CLIPBOARD_DEL_ALL
         MENUITEM "&Keep picture\ts-F5",         ID_COMMAND_KEEP_PICTURE
         MENUITEM "&Normalize\tc-F4",            ID_COMMAND_NORMALIZE
         MENUITEM "Rec&oncile\ts-F4",            ID_COMMAND_RECONCILE
         MENUITEM "S&tandardize\tc-F11",         ID_COMMAND_STANDARDIZE
         POPUP "&Pick\t"
         BEGIN
-            MENUITEM "&Resolve\tF4",              ID_COMMAND_RESOLVE
-            MENUITEM "&Normalize\tc-F4",          ID_COMMAND_NORMALIZE
-            MENUITEM "Rec&oncile\ts-F4",          ID_COMMAND_RECONCILE
-            MENUITEM "S&tandardize\tc-F11",       ID_COMMAND_STANDARDIZE
-            MENUITEM "R&andom call\tF3",          ID_COMMAND_PICK_RANDOM
-            MENUITEM "&Simple call\tc-F3",        ID_COMMAND_PICK_SIMPLE
-            MENUITEM "&Concept call\ts-F3",       ID_COMMAND_PICK_CONCEPT
-            MENUITEM "&Level call\tF11",          ID_COMMAND_PICK_LEVEL
+            MENUITEM "&Resolve\tF4",                ID_COMMAND_RESOLVE
+            MENUITEM "&Normalize\tc-F4",            ID_COMMAND_NORMALIZE
+            MENUITEM "Rec&oncile\ts-F4",            ID_COMMAND_RECONCILE
+            MENUITEM "S&tandardize\tc-F11",         ID_COMMAND_STANDARDIZE
+            MENUITEM "R&andom call\tF3",            ID_COMMAND_PICK_RANDOM
+            MENUITEM "&Simple call\tc-F3",          ID_COMMAND_PICK_SIMPLE
+            MENUITEM "&Concept call\ts-F3",         ID_COMMAND_PICK_CONCEPT
+            MENUITEM "&Level call\tF11",            ID_COMMAND_PICK_LEVEL
             MENUITEM "&8 person level call\ts-F11", ID_COMMAND_PICK_8P_LEVEL
         END
         POPUP "Create &setup\t"
@@ -111,6 +122,11 @@ BEGIN
             MENUITEM "Any 1/4 tag",                 ID_COMMAND_CREATE_ANY_QTAG
 
         END
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Sd &Help",                    ID_HELP_SDHELP
+        MENUITEM "&About Sd",                   ID_FILE_ABOUTSD
     END
 END
 
@@ -156,7 +172,7 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 33.15:   Copyright © 1990-2000 All rights reserved.",
+    CTEXT           "SD Version 34.0:   Copyright © 1990-2000 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8

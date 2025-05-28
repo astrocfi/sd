@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <2000-3-14 10:20:00 wba>
+@c Time-stamp: <2000-6-10 10:20:00 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 33.15
-@set title2 Database version = 33.15 format = 157
+@set title1 RELEASE NOTES FOR SD VERSION 34.0
+@set title2 Database version = 34.0 format = 160
 @set title3 X11 UI version 1.17, SDTTY UI version 1.12, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 34.0::
 * 33.15::
 * 33.0::
 * 32.95::
@@ -64,7 +65,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to even older versions.
 @end menu
 
-@node Intro, 33.15, Top, (dir)
+@node Intro, 34.0, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -75,11 +76,70 @@ The file @file{oldnotes} has notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2000 William B. Ackerman
 @sp 3
 @menu
-* 33.15::               Changes in the current version
+* 34.0::               Changes in the current version
 @end menu
 
 @c ************
-@node 33.15, 33.0, Intro, Top
+@node 34.0, 33.15, Intro, Top
+@unnumberedsec Version 34.0 changes
+
+A major redesign of the internal workings has been completed.  The database
+can now provide multiple definitions for a call.  As a result, all of the former
+``(parts)'' or ``(matrix)'' calls, and others like them, have been removed.
+In particular, the following calls have been removed:
+
+@example
+@group
+   recycle (parts)
+   cross cycle (parts)
+   scoot and weave (parts)
+   <anyone> tie (parts)
+   invert the column (parts)
+   couple up (parts)
+   hocus pocus (parts)
+   countershake (matrix)
+   sashay thru (matrix)
+   mini busy (matrix)
+   walk the plank (matrix)
+   recoil (matrix)
+   easy does it (matrix)
+   beaus advance to a column (matrix)
+   belles advance to a column (matrix)
+   <anyone> run the wheel (matrix)
+   bridge the gap (dpt)
+   grand chain 8 (centers and ends)
+   cover up (centers and ends)
+   percolate (centers and ends)
+   perk up (centers and ends)
+@end group
+@end example
+
+Wherever you would have used those calls in the past, just use the plain
+call.  For example, the call @code{recycle} can do the facing-couples
+version, or the split version, the fractionalizable wave version, or the
+3x3 version.
+
+
+The calls @samp{twist the line} and @samp{twist and <anything>} have been
+improved to handle the front-to-back ``space invader'' property.  For example,
+when called from a tidal wave, @samp{twist the line} goes to Z's.
+You can also call, from an as-couples 2-faced line, things like
+@samp{twist and [pass and roll your neighbor]}.
+
+
+In light of Miscrosoft's inability to make its email software adhere to
+the most basic common-sense principles of safety, the security on the
+computer from which versions of @code{Sd} are uploaded has been tightened.
+The computer on which @code{Sd} is developed has never had any email or
+internet connections, nor any Microsoft mail software.  The computer
+from which @code{Sd} is uploaded to the web previously had Microsoft
+Outlook installed, but not used.  In light of recent events, Microsoft
+Outlook and the ``Visual Basic Script'' mechanism have now been removed
+completely.  (These programs are all Trademarks of Microsoft Corporation,
+Redmond, Washington.)
+
+@c ************
+@node 33.15, 33.0, 34.0, Top
 @unnumberedsec Version 33.15 changes
 
 The function key control-F11 has been set to perform the @samp{standardize} operation.

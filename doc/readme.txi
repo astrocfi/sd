@@ -292,10 +292,24 @@ are developed has no Internet or modem connections at all.
 No mail is sent or received, and no web browsing is done, on this computer.
 Only software from trustworthy sources is installed.  Each version of
 the program is digitally signed, using a 512-bit secret PGP/RSA key,
-and then transferred to another computer by removable disk.  The files
+and then transferred to another computer by Zip disk.  The files
 are then mailed to the web server.  Before placing it on the web, the
 server authenticates the signature and verifies, with the PGP signature
 algorithm, that the files were not tampered with in transit.
+
+Prior to May, 2000, the computer from which the web updates take place had
+Microsoft Outlook installed, but not used.  (Netscape Communicator is used
+as my mailer, because of its technical and ethical superiority. 
+Outlook had been installed only because of the policy of my employer.)
+
+The "Love Bug" virus of May, 2000 demonstrated that Microsoft
+is unable or unwilling to make its email software adhere to the most basic
+common-sense principles of safety.  Accordingly, Outlook and the Visual Basic
+scripting / virus-propagating mechanism (wscript.exe) have been removed
+from that computer.  No Microsoft email or virus-propagating products
+exist anywhere on the @code{Sd} development path.
+
+Various terms in the preceding paragraphs are trademarks of various corporations.
 
 @node A Few Technical Details, Installing on a PC, Software Safety, Intro
 @unnumberedsec A Few Technical Details

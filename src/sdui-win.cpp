@@ -1405,6 +1405,61 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    case ID_FILE_ABOUTSD:
       DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, (DLGPROC) AboutWndProc);
       break;
+   case ID_HELP_SDHELP:
+      {
+         char szSecondBuf[200];
+         STARTUPINFO si;
+         PROCESS_INFORMATION pi;
+
+         (void) memset(&si, 0, sizeof(STARTUPINFO));
+         (void) memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+         GetStartupInfo(&si);
+
+
+         // Try this, first with Netscape, and then with that criminal thing from Redmond.
+
+         lstrcpy(szSecondBuf,
+"""C:\\program files\\netscape\\communicator\\program\\netscape.exe"" c:\\sd\\sd_doc.html");
+         if (!CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi)) {
+            lstrcpy(szSecondBuf,
+"""c:\\program files\\plus!\\microsoft internet\\iexplore.exe"" c:\\sd\\sd_doc.html");
+            (void) CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
+         }
+
+         // Now try this:
+         // Unfortunately, it just brings up another copy of Sd,
+         // even though it does the right thing from the command line
+         /*
+         lstrcpy(szSecondBuf, """C:\\sd\\sd manual.lnk""");
+         (void) CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
+         */
+
+         // Now try this:
+         // Unfortunately, it doesn't bring up anything,
+         // even though it does the right thing from the command line
+         /*
+         lstrcpy(szSecondBuf, """C:\\sd\\sd_doc.html""");
+         (void) CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
+         */
+
+         /*
+args to CreateProcess
+    LPCSTR lpApplicationName,
+    LPSTR lpCommandLine,
+    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+    BOOL bInheritHandles,
+    DWORD dwCreationFlags,
+    LPVOID lpEnvironment,
+    LPCSTR lpCurrentDirectory,
+    LPSTARTUPINFOA lpStartupInfo,
+    LPPROCESS_INFORMATION lpProcessInformation
+         */
+
+
+         // Now pi has pi.hProcess, pi.hThread, dwProcessId, dwThreadId
+      }
+      break;
    case ID_FILE_EXIT:
       SendMessage(hwndMain, WM_CLOSE, 0, 0L);
       break;

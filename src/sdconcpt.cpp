@@ -971,11 +971,40 @@ static void do_concept_parallelogram(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   mpkind mk, mkbox;
-   Const parse_block *next_parseptr;
+   /* See if it is followed by "split phantom C/L/W" or "split phantom boxes",
+      in which case we do something esoteric. */
+
+   const parse_block *next_parseptr;
    uint64 junk_concepts;
-   uint32 map_code;
-   Const parse_block *standard_concept = (parse_block *) 0;
+   junk_concepts.her8it = 0;
+   junk_concepts.final = 0;
+
+   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
+
+   const parse_block *standard_concept = (parse_block *) 0;
+
+   /* But skip over "standard" */
+   if (next_parseptr->concept->kind == concept_standard &&
+       junk_concepts.her8it == 0 &&
+       junk_concepts.final == 0) {
+      standard_concept = next_parseptr;
+      junk_concepts.her8it = 0;
+      junk_concepts.final = 0;
+      next_parseptr = process_final_concepts(next_parseptr->next, FALSE, &junk_concepts);
+   }
+
+   // The only concepts we are interested in are "split phantom 2x4"
+   // or "split phantom boxes", and only if there are no intervening modifiers.
+   // Shut off all others.
+
+   concept_kind kk = next_parseptr->concept->kind;
+
+   if (junk_concepts.her8it != 0 ||
+       junk_concepts.final != 0 ||
+       next_parseptr->concept->value.arg3 != MPKIND__SPLIT)
+      kk = concept_comment;
+
+   mpkind mk, mkbox;
 
    if (ss->kind == s2x6) {
       if (global_livemask == 07474) {
@@ -1008,29 +1037,18 @@ static void do_concept_parallelogram(
          mk = MPKIND__OFFS_L_FULL; mkbox = MPKIND__OFFS_L_FULL_SPECIAL; }
       else fail("Can't find a parallelogram.");
    }
+   else if (ss->kind == s4x6 && kk == concept_do_phantom_2x4) {
+      if      (global_livemask == 000740074) mk = MPKIND__OFFS_R_HALF;
+      else if (global_livemask == 000170017) mk = MPKIND__OFFS_L_HALF;
+      else fail("Can't find a parallelogram.");
+   }
    else
       fail("Can't do parallelogram concept from this position.");
 
-   /* See if it is followed by "split phantom C/L/W" or "split phantom boxes",
-      in which case we do something esoteric. */
+   uint32 map_code;
 
-   junk_concepts.her8it = 0;
-   junk_concepts.final = 0;
-   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
-
-   /* But skip over "standard" */
-   if (next_parseptr->concept->kind == concept_standard && junk_concepts.her8it == 0 && junk_concepts.final == 0) {
-      standard_concept = next_parseptr;
-      junk_concepts.her8it = 0;
-      junk_concepts.final = 0;
-      next_parseptr = process_final_concepts(next_parseptr->next, FALSE, &junk_concepts);
-   }
-
-   if (next_parseptr->concept->kind == concept_do_phantom_2x4 &&
-       (ss->kind == s2x6 || ss->kind == s2x5 || ss->kind == s2x7) &&
-       junk_concepts.her8it == 0 &&
-       junk_concepts.final == 0 &&
-       next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
+   if (kk == concept_do_phantom_2x4 &&
+       (ss->kind == s2x6 || ss->kind == s2x5 || ss->kind == s2x7 || ss->kind == s4x6)) {
       int linesp = next_parseptr->concept->value.arg2 & 7;
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -1093,11 +1111,8 @@ static void do_concept_parallelogram(
       ss->cmd.parseptr = next_parseptr->next;
       map_code = MAPCODE(s2x4,2,mk,1);
    }
-   else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
-            ss->kind == s2x6 &&     /* Only allow 50% offset. */
-            junk_concepts.her8it == 0 &&
-            junk_concepts.final == 0 &&
-            next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
+   else if (kk == concept_do_phantom_boxes &&
+            ss->kind == s2x6) {     /* Only allow 50% offset. */
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, FALSE);
       if (ss->kind != s2x8) fail("Not in proper setup for this concept.");
@@ -1112,7 +1127,7 @@ static void do_concept_parallelogram(
 
    new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
 
-   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
@@ -2440,6 +2455,9 @@ static void do_concept_old_stretch(
       else if (result->kind == s_ptpd) {
          swap_people(result, 2, 6);
       }
+      else if (result->kind == s1x4) {
+         swap_people(result, 1, 3);
+      }
       else
          fail("Stretch call didn't go to a legal setup.");
    }
@@ -3122,7 +3140,7 @@ static void do_concept_fan(
 
    uint64 new_final_concepts;
    Const parse_block *parseptrcopy;
-   callspec_block *callspec;
+   call_with_name *callspec;
 
    new_final_concepts.her8it = 0;
    new_final_concepts.final = 0;
@@ -3133,16 +3151,16 @@ static void do_concept_fan(
 
    callspec = parseptrcopy->call;
 
-   if (!callspec || !(callspec->callflagsf & CFLAG2_CAN_BE_FAN))
+   if (!callspec || !(callspec->the_defn.callflagsf & CFLAG2_CAN_BE_FAN))
       fail("Can't do \"fan\" with this call.");
 
    /* Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
       The "fan" concept could take care of itself later.  However, we do them both here. */
 
    if (     !(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
-            (callspec->callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
+            (callspec->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
-      touch_or_rear_back(ss, FALSE, callspec->callflags1);
+      touch_or_rear_back(ss, FALSE, callspec->the_defn.callflags1);
    }
 
    tempsetup = *ss;
@@ -4920,12 +4938,12 @@ static void do_concept_meta(
    if (key != meta_key_initially && key != meta_key_finally &&
        key != meta_key_piecewise && key != meta_key_nth_part_work &&
        key != meta_key_echo && key != meta_key_rev_echo)
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;   /* We didn't do this before. */
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;   // We didn't do this before.
 
    if (key == meta_key_finish) {
 
-      /* This is "finish".  Do the call after the first part, with the special indicator
-         saying that this was invoked with "finish", so that the flag will be checked. */
+      // This is "finish".  Do the call after the first part, with the special indicator
+      // saying that this was invoked with "finish", so that the flag will be checked.
 
       if (ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
          ss->cmd.cmd_frac_flags =
@@ -5194,45 +5212,60 @@ static void do_concept_meta(
 
    case meta_key_echo:
 
-      if (allowing_all_concepts | 1) {
-         if (!(yescmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS)) {
-            if (result->cmd.cmd_frac_flags == (CMD_FRAC_HALF_VALUE)) {
-               result->cmd = yescmd;
-               goto do_less;
-            }
-            else if (result->cmd.cmd_frac_flags == (CMD_FRAC_LASTHALF_VALUE)) {
-               result->cmd = nocmd;
-               goto do_less;
-            }
-            else if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
-               fail("Can't stack meta or fractional concepts this way.");
+      if (!(yescmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS)) {
+         if (result->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+            result->cmd = yescmd;
+            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            goto do_less;
          }
+         else if (result->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+            result->cmd = nocmd;
+            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            goto do_less;
+         }
+         else if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+            fail("Can't stack meta or fractional concepts this way.");
       }
 
-      /* Do the call with the concept. */
+      // Do the call with the concept.
       result->cmd = yescmd;
       do_call_in_series_simple(result);
 
-      /* And then again without it. */
+      // And then again without it.
       result->cmd = nocmd;
 
       if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
          update_id_bits(result);
 
-      /* Assumptions don't carry through. */
+      // Assumptions don't carry through.
       result->cmd.cmd_assume.assumption = cr_none;
       goto do_less;
 
    case meta_key_rev_echo:
 
-      /* Do the call without the concept. */
+      if (!(yescmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS)) {
+         if (result->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+            result->cmd = nocmd;
+            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            goto do_less;
+         }
+         else if (result->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+            result->cmd = yescmd;
+            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            goto do_less;
+         }
+         else if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+            fail("Can't stack meta or fractional concepts this way.");
+      }
+
+      // Do the call without the concept.
       result->cmd = nocmd;
       do_call_in_series_simple(result);
 
-      /* And then again with it. */
+      // And then again with it.
       result->cmd = yescmd;
 
-      /* Assumptions don't carry through. */
+      // Assumptions don't carry through.
       result->cmd.cmd_assume.assumption = cr_none;
       goto do_less;
 
@@ -6151,8 +6184,7 @@ extern long_boolean do_big_concept(
    setup *ss,
    setup *result) THROW_DECL
 {
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-      remove_z_distortion(ss);
+   remove_z_distortion(ss);
 
    void (*concept_func)(setup *, parse_block *, setup *);
    parse_block *orig_concept_parse_block = ss->cmd.parseptr;
@@ -6345,6 +6377,7 @@ extern long_boolean do_big_concept(
       ss->cmd.parseptr = substandard_concptptr->next;
       (concept_table[substandard_concptptr->concept->kind].concept_action)
          (ss, substandard_concptptr, result);
+      remove_tgl_distortion(result);
       /* Beware -- result is not necessarily canonicalized. */
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;  /* **** For now. */
       return TRUE;
@@ -6414,6 +6447,7 @@ extern long_boolean do_big_concept(
    }
 
    (*concept_func)(ss, this_concept_parse_block, result);
+   remove_tgl_distortion(result);
    /* Beware -- result is not necessarily canonicalized. */
    if (!(this_table_item->concept_prop & CONCPROP__SHOW_SPLIT))
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -6619,9 +6653,11 @@ concept_table_item concept_table[] = {
     do_concept_sequential},                                 /* concept_sequential */
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_special_sequential},                         /* concept_special_sequential */
-   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
+   {CONCPROP__MATRIX_OBLIVIOUS |
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
     do_concept_meta},                                       /* concept_meta */
-   {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_NUMBER |
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
     do_concept_meta},                                       /* concept_meta_one_arg */
    {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
     do_concept_so_and_so_begin},                            /* concept_so_and_so_begin */

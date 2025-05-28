@@ -952,15 +952,13 @@ extern void prepare_to_read_menus(void)
    /* Test that the constants ROLL_BIT and DBROLL_BIT are in the right
       relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
       in a person record are to the left of the roll bits in the binary database.
-      This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.c to
+      This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.cpp to
       align stuff from the binary database into the person record. */
 
    if (ROLL_BIT < DBROLL_BIT)
       init_error("constants not consistent -- program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
       init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
-   else if ((arithtest << 12) != 754974720)
-      init_error("arithmetic is more than 32 bits -- program has been compiled incorrectly.");
    else if (NUM_WARNINGS > (WARNING_WORDS << 5))
       init_error("insufficient warning bit space -- program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 125)

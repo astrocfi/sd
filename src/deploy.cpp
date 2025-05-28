@@ -60,6 +60,8 @@ char *file_list[] = {
    "SD nocheckers.lnk",
    "SD couple.lnk",
    "Edit sd.ini.lnk",
+   "Sd manual.lnk",
+   "sd_doc.html",
    "sample1.ini",
    "sample2.ini",
    "sample3.ini",
@@ -81,6 +83,7 @@ char *shortcut_list[] = {
    "SD nocheckers.lnk",
    "SD couple.lnk",
    "Edit sd.ini.lnk",
+   "Sd manual.lnk",
    (char *) 0};
 
 void do_install(HWND hwnd)

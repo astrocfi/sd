@@ -409,8 +409,8 @@ siamese_item siamese_table_of_2[] = {
    {s4x4,        0xAAAA0000UL, 0xA0A0UL, warn__none},
    {s4x4,        0xCCCC0000UL, 0x4848UL, warn__none},
 
-   {s4x5,        0x000390E4UL, 0x18060UL, warn__none},
-   {s4x5,        0x000E1384UL, 0xC0300UL, warn__none},
+   {s4x5,        0x000090E4UL, 0x18060UL, warn__none},
+   {s4x5,        0x00001384UL, 0xC0300UL, warn__none},
    {s4x5,        0x90E40000UL, 0x21084UL, warn__none},
    {s4x5,        0x13840000UL, 0x21084UL, warn__none},
 
@@ -717,7 +717,7 @@ static long_boolean pack_us(
             tandstuff->vertical_people[virt_index] = vert;
          }
 
-         if (map_ptr->rot & 1)   /* Compensate for setup rotation. */
+         if (map_ptr->rot & 1)   // Compensate for setup rotation.
             ptr->id1 = rotccw(ptr->id1);
 
          for (j=0 ; j<tandstuff->np ; j++)
@@ -739,9 +739,9 @@ static long_boolean pack_us(
 extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
-   int twosome,           /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
-   int fraction,          /* number, if doing fractional twosome/solid */
-   int phantom,           /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
+   int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
+   int fraction,          // number, if doing fractional twosome/solid
+   int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
@@ -760,6 +760,7 @@ extern void tandem_couples_move(
    uint32 livemask, livemask2;
    long_boolean fractional = FALSE;
    long_boolean dead_conc = FALSE;
+   long_boolean dead_xconc = FALSE;
    tm_thing *our_map_table;
 
    special_mask = 0;
@@ -767,9 +768,7 @@ extern void tandem_couples_move(
    tandstuff.no_unit_symmetry = FALSE;
    tandstuff.phantom_pairing_ok = phantom_pairing_ok;
    clear_people(result);
-
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-      remove_z_distortion(ss);
+   remove_z_distortion(ss);
 
    if (mxn_bits != 0) {
       uint32 directions = 0;
@@ -915,8 +914,8 @@ extern void tandem_couples_move(
 
    foobarves:
 
-      /* This will make it look like "as couples" or "tandem", as needed,
-         for swapping masks, but won't trip the assumption transformation stuff. */
+      // This will make it look like "as couples" or "tandem", as needed,
+      // for swapping masks, but won't trip the assumption transformation stuff.
       // It will also turn "threesome" into "twosome", as required by the rest of the code.
       key = (tandem_key) (transformed_key | 64);
    }
@@ -947,7 +946,7 @@ extern void tandem_couples_move(
             if ((tbonetest & 011) == 011 || ((key ^ tbonetest) & 1))
                fail("Can't find the indicated triangles.");
 
-            special_mask = 0x44;   /* The triangles have to be these. */
+            special_mask = 0x44;   // The triangles have to be these.
          }
          else if (ss->kind == s_bone) {
             uint32 tbonetest =
@@ -957,7 +956,7 @@ extern void tandem_couples_move(
             if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
                fail("Can't find the indicated triangles.");
 
-            special_mask = 0x88;   /* The triangles have to be these. */
+            special_mask = 0x88;   // The triangles have to be these.
          }
          else if (ss->kind == s_rigger) {
             uint32 tbonetest =
@@ -967,7 +966,7 @@ extern void tandem_couples_move(
             if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
                fail("Can't find the indicated triangles.");
 
-            special_mask = 0x44;   /* The triangles have to be these. */
+            special_mask = 0x44;   // The triangles have to be these.
          }
          else if (ss->kind == s_dhrglass) {
             uint32 tbonetest =
@@ -977,7 +976,7 @@ extern void tandem_couples_move(
             if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
                fail("Can't find the indicated triangles.");
 
-            special_mask = 0x88;   /* The triangles have to be these. */
+            special_mask = 0x88;   // The triangles have to be these.
          }
          else if (ss->kind == s_galaxy) {
             uint32 tbonetest =
@@ -1064,16 +1063,17 @@ extern void tandem_couples_move(
       our_map_table = maps_isearch_twosome;
    }
 
-   if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do tandem/couples concept from this position.");
+   if (setup_attrs[ss->kind].setup_limits < 0)
+      fail("Can't do tandem/couples concept from this position.");
 
-   /* We use the phantom indicator to forbid an already-distorted setup.
-      The act of forgiving phantom pairing is based on the setting of the
-      CMD_MISC__PHANTOMS bit in the incoming setup, not on the phantom indicator. */
+   // We use the phantom indicator to forbid an already-distorted setup.
+   // The act of forgiving phantom pairing is based on the setting of the
+   // CMD_MISC__PHANTOMS bit in the incoming setup, not on the phantom indicator.
 
    if ((ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) && (phantom != 0))
       fail("Can't specify phantom tandem/couples in virtual or distorted setup.");
 
-   /* Find out who is selected, if this is a "so-and-so are tandem". */
+   // Find out who is selected, if this is a "so-and-so are tandem".
    saved_selector = current_options.who;
 
    if (selector != selector_uninitialized)
@@ -1087,7 +1087,7 @@ extern void tandem_couples_move(
       uint32 p = ss->people[i].id1;
       if (p) {
          allmask |= jbit;
-         /* We allow a "special" mask to override the selector. */
+         // We allow a "special" mask to override the selector.
          if ((selector != selector_uninitialized && !selectp(ss, i)) ||
              (jbit & special_mask) != 0)
             tandstuff.single_mask |= jbit;
@@ -1245,9 +1245,12 @@ extern void tandem_couples_move(
       else
          ptr = siamese_table_of_2;
 
+      uint32 A = allmask & 0xFFFF;
+      uint32 AA = (A << 16) | A;
+      uint32 EN = ((ewmask & 0xFFFF) << 16) | (nsmask & 0xFFFF);
+
       for (; ptr->testkind != nothing; ptr++) {
-         if (ptr->testkind == ss->kind &&
-             ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
+         if (ptr->testkind == ss->kind && ((EN ^ ptr->testval) & AA) == 0) {
             siamese_warning = ptr->warning;
             siamese_fixup = ptr->fixup & 0xFFFFFF;
             goto try_siamese;   // We seem to have a match.  However, it still might be wrong.
@@ -1398,15 +1401,23 @@ extern void tandem_couples_move(
    warn(siamese_warning);
    update_id_bits(&tandstuff.virtual_setup);
    impose_assumption_and_move(&tandstuff.virtual_setup, &tandstuff.virtual_result);
+   remove_tgl_distortion(&tandstuff.virtual_result);
 
-   /* If this is a concentric setup with dead outsides, we can still handle it.
-      We have to remember to put dead outsides back when we are done, in order
+   /* If this is a concentric setup with dead ends or centers, we can still handle it.
+      We have to remember to put dead folks back when we are done, in order
       to make gluing illegal. */
 
    if (tandstuff.virtual_result.kind == s_dead_concentric) {
       dead_conc = TRUE;
       tandstuff.virtual_result.kind = tandstuff.virtual_result.inner.skind;
       tandstuff.virtual_result.rotation += tandstuff.virtual_result.inner.srotation;
+   }
+   else if (tandstuff.virtual_result.kind == s_normal_concentric &&
+            tandstuff.virtual_result.inner.skind == nothing &&
+            tandstuff.virtual_result.outer.skind == s1x2) {
+      dead_xconc = TRUE;
+      tandstuff.virtual_result.kind = tandstuff.virtual_result.outer.skind;
+      tandstuff.virtual_result.rotation += tandstuff.virtual_result.outer.srotation;
    }
 
    if (setup_attrs[tandstuff.virtual_result.kind].setup_limits < 0)
@@ -1484,6 +1495,15 @@ extern void tandem_couples_move(
             result->inner.srotation = result->rotation;
             result->rotation = 0;
             result->kind = s_dead_concentric;
+         }
+         else if (dead_xconc) {
+            result->outer.skind = result->kind;
+            result->outer.srotation = result->rotation;
+            result->concsetup_outer_elongation = tandstuff.virtual_result.outer.srotation+1;
+            result->rotation = 0;
+            result->inner.skind = nothing;
+            result->kind = s_normal_concentric;
+            for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
          }
 
          return;

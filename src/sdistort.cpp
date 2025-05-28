@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,13 +10,14 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 33. */
 
 /* This defines the following functions:
    prepare_for_call_in_series
    minimize_splitting_info
    initialize_map_tables
    remove_z_distortion
+   remove_tgl_distortion
    new_divided_setup_move
    divided_setup_move
    new_overlapped_setup_move
@@ -91,12 +92,14 @@ extern void initialize_map_tables(void)
 
 extern void remove_z_distortion(setup *ss) THROW_DECL
 {
+   if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK))
+      return;
+
    setup stemp;
    static const veryshort fix_cw[]  = {1, 2, 4, 5};
    static const veryshort fix_ccw[] = {0, 1, 3, 4};
 
-   if (ss->kind != s2x3 ||
-       (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)))
+   if (ss->kind != s2x3)
       fail("Internal error: Can't straighten 'Z'.");
 
    stemp = *ss;
@@ -113,8 +116,149 @@ extern void remove_z_distortion(setup *ss) THROW_DECL
 }
 
 
+extern void remove_tgl_distortion(setup *ss) THROW_DECL
+{
+   if (!(ss->result_flags & RESULTFLAG__DID_TGL_EXPANSION))
+      return;
 
-Private Const map_thing *get_map_from_code(uint32 map_encoding)
+   int rot;
+   const expand_thing *eptr = (expand_thing *) 0;
+
+   static const expand_thing thing1    = {{0, 1, 3},          3, s_trngl,  sdmd, 3};
+   static const expand_thing thing2    = {{2, 3, 1},          3, s_trngl,  sdmd, 1};
+   static const expand_thing thing1x8a = {{1, 3, 2, 5, 7, 6}, 6, s1x6,     s1x8, 0};
+   static const expand_thing thing1x8b = {{0, 1, 3, 4, 5, 7}, 6, s1x6,     s1x8, 0};
+   static const expand_thing thing2x4a = {{1, 2, 3, 5, 6, 7}, 6, s2x3,     s2x4, 0};
+   static const expand_thing thing2x4b = {{0, 1, 2, 4, 5, 6}, 6, s2x3,     s2x4, 0};
+   static const expand_thing thing2x4c = {{0, 3, 2, 4, 7, 6}, 6, s_bone6,  s2x4, 0};
+   static const expand_thing thing2x4d = {{6, 0, 1, 2, 4, 5}, 6, s_short6, s2x4, 1};
+   static const expand_thing thing2x4e = {{0, 3, 5, 4, 7, 1}, 6, s_bone6,  s2x4, 0};
+   static const expand_thing thing2x4f = {{6, 7, 1, 2, 3, 5}, 6, s_short6, s2x4, 1};
+   static const expand_thing thing1x4a = {{0, 1, 3},          3, s1x3,     s1x4, 0};
+   static const expand_thing thing1x4b = {{1, 3, 2},          3, s1x3,     s1x4, 0};
+
+   switch (ss->kind) {
+   case s2x4:
+      rot = ss->rotation & 1;
+
+      if (ss->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK)
+         rot += 0x1000;
+      if (ss->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK)
+         rot += 0x1001;
+      if (!(rot & 0x1000)) goto losing;   // Demand that exactly one field was on.
+
+      if (rot & 1) {
+         // This is actually 1x4's.
+         if (ss->people[3].id1 && ss->people[7].id1 &&
+             !ss->people[0].id1 && !ss->people[4].id1)
+            eptr = &thing2x4a;
+         else if (ss->people[0].id1 && ss->people[4].id1 &&
+                  !ss->people[3].id1 && !ss->people[7].id1)
+            eptr = &thing2x4b;
+      }
+      else {
+         // This is actually 2x2's.
+         if (ss->people[0].id1 & ss->people[2].id1 &
+             ss->people[4].id1 & ss->people[6].id1 & 010) {
+            if (ss->people[0].id1 & (~ss->people[1].id1) &
+                ss->people[2].id1 & ss->people[3].id1 &
+                ss->people[4].id1 & (~ss->people[5].id1) &
+                ss->people[6].id1 & ss->people[7].id1 & BIT_PERSON) {
+               eptr = &thing2x4c;
+            }
+            if (ss->people[0].id1 & ss->people[1].id1 &
+                ss->people[2].id1 & (~ss->people[3].id1) &
+                ss->people[4].id1 & ss->people[5].id1 &
+                ss->people[6].id1 & (~ss->people[7].id1) & BIT_PERSON) {
+               eptr = &thing2x4d;
+            }
+         }
+         else if (ss->people[1].id1 & ss->people[3].id1 &
+                  ss->people[5].id1 & ss->people[7].id1 & 010) {
+            if (ss->people[0].id1 & ss->people[1].id1 &
+                (~ss->people[2].id1) & ss->people[3].id1 &
+                ss->people[4].id1 & ss->people[5].id1 &
+                (~ss->people[6].id1) & ss->people[7].id1 & BIT_PERSON) {
+               eptr = &thing2x4e;
+            }
+            if ((~ss->people[0].id1) & ss->people[1].id1 &
+                ss->people[2].id1 & ss->people[3].id1 &
+                (~ss->people[4].id1) & ss->people[5].id1 &
+                ss->people[6].id1 & ss->people[7].id1 & BIT_PERSON) {
+               eptr = &thing2x4f;
+            }
+         }
+      }
+      goto check_and_do;
+   case s1x8:
+      if (ss->people[2].id1 && ss->people[6].id1 &&
+          !ss->people[0].id1 && !ss->people[4].id1)
+         eptr = &thing1x8a;
+      else if (ss->people[0].id1 && ss->people[4].id1 &&
+               !ss->people[2].id1 && !ss->people[6].id1)
+         eptr = &thing1x8b;
+      goto check_and_do;
+   case s1x4:
+      if (ss->people[0].id1 && !ss->people[2].id1)
+         eptr = &thing1x4a;
+      else if (ss->people[2].id1 && !ss->people[0].id1)
+         eptr = &thing1x4b;
+      goto check_and_do;
+   case s2x2:
+      ss->result_flags &= ~RESULTFLAG__DID_TGL_EXPANSION;
+      if      (!ss->people[0].id1) rot = 3;
+      else if (!ss->people[1].id1) rot = 2;
+      else if (!ss->people[2].id1) rot = 1;
+      else if (!ss->people[3].id1) rot = 0;
+      else
+         goto losing;
+
+      ss->rotation += rot;
+      canonicalize_rotation(ss);
+      /* Now the empty spot is in the lower-left corner. */
+      if ((!ss->people[0].id1) || (!ss->people[1].id1) || (!ss->people[2].id1))
+         goto losing;
+
+      if (ss->people[0].id1 & ss->people[2].id1 & 1) {
+         (void) copy_person(ss, 3, ss, 2);
+      }
+      else if (ss->people[0].id1 & ss->people[2].id1 & 010) {
+         rot--;
+         ss->rotation--;
+         canonicalize_rotation(ss);
+      }
+      else
+         goto losing;
+
+      (void) copy_person(ss, 2, ss, 1);
+      (void) copy_person(ss, 1, ss, 0);
+      (void) copy_person(ss, 0, ss, 3);
+      ss->kind = s_trngl;
+      ss->rotation -= rot;   /* Put it back. */
+      break;
+   case sdmd:
+      if (ss->people[0].id1 && !ss->people[2].id1)
+         eptr = &thing1;
+      else if (ss->people[2].id1 && !ss->people[0].id1)
+         eptr = &thing2;
+      goto check_and_do;
+   default:
+      goto losing;
+   }
+
+   return;
+
+ check_and_do:
+   if (!eptr) goto losing;
+   ss->result_flags &= ~RESULTFLAG__DID_TGL_EXPANSION;
+   compress_setup(eptr, ss);
+   return;
+
+ losing: fail("Bad ending setup for triangle-become-box.");
+}
+
+
+static Const map_thing *get_map_from_code(uint32 map_encoding)
 {
    int mk = (map_encoding & 0x3F0) >> 4;
    map_thing *q;
@@ -225,12 +369,12 @@ static void innards(
       }
    }
 
-   if (     arity == 2 &&
-            z[0].kind == s1x2 &&
-            z[1].kind == s1x2 &&
-            map_kind == MPKIND__SPLIT &&
-            ((z[0].rotation ^ z[1].rotation) & 1) &&
-            !(sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)) {
+   if (arity == 2 &&
+       z[0].kind == s1x2 &&
+       z[1].kind == s1x2 &&
+       map_kind == MPKIND__SPLIT &&
+       ((z[0].rotation ^ z[1].rotation) & 1) &&
+       !(sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)) {
       canonicalize_rotation(&z[0]);
       canonicalize_rotation(&z[1]);
       result->result_flags = get_multiple_parallel_resultflags(z, arity);
@@ -719,9 +863,15 @@ static void innards(
 
    got_map:
 
-   if ((sscmd->cmd_misc_flags & CMD_MISC__OFFSET_Z) && final_map && (map_kind == MPKIND__OFFS_L_HALF || map_kind == MPKIND__OFFS_R_HALF)) {
-      if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
-      else final_map = 0;        /* Raise an error. */
+   if ((sscmd->cmd_misc_flags & CMD_MISC__OFFSET_Z) && final_map) {
+      if (map_kind == MPKIND__OFFS_L_HALF || map_kind == MPKIND__OFFS_R_HALF) {
+         if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
+         else final_map = 0;        /* Raise an error. */
+      }
+      else if (map_kind == MPKIND__OFFS_L_FULL || map_kind == MPKIND__OFFS_R_FULL) {
+         if (final_map->outer_kind == s2x8) warn(warn__full_pgram);
+         else final_map = 0;        /* Raise an error. */
+      }
    }
 
    if (!final_map) {
@@ -1378,6 +1528,16 @@ extern void distorted_2x2s_move(
    static Const veryshort map7[16] = {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
    static Const veryshort map8[16] = {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
 
+   // maps for 4x6 Z's
+   static const veryshort map46a[9] = {11, 1, 10, 18, 22, 6, 23, 13, -1};
+   static const veryshort map46b[9] = {11, 19, 16, 18, 4, 6, 23, 7, -1};
+   static const veryshort map46c[9] = {0, 10, 19, 11, 7, 23, 12, 22, -1};
+   static const veryshort map46d[9] = {18, 10, 19, 17, 7, 5, 6, 22, -1};
+   static const veryshort map46e[9] = {18, 19, 15, 16, 3, 4, 6, 7, -1};
+   static const veryshort map46f[9] = {19, 20, 16, 17, 4, 5, 7, 8, -1};
+   static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
+   static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
+
    // maps for 3x4 Z's
    static Const veryshort mapb[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
    static Const veryshort mapc[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
@@ -1518,7 +1678,7 @@ extern void distorted_2x2s_move(
 
    for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
       uint32 p = ss->people[i].id1;
-      directions = (directions<<2) | (p&3);
+      directions = ((directions & 0x3FFFFFFF)<<2) | (p&3);
       livemask <<= 1;
       if (p) livemask |= 1;
    }
@@ -1570,6 +1730,18 @@ extern void distorted_2x2s_move(
             else if ((livemask & 0x6C6C) == 0) map_ptr = map8;
             else goto lose;
             break;
+         case s4x6:
+            arity = 2;
+            if (     (livemask & 0xBDCBDC) == 0) map_ptr = map46a;
+            else if ((livemask & 0xF4EF4E) == 0) map_ptr = map46b;
+            else if ((livemask & 0x7EC7EC) == 0) map_ptr = map46c;
+            else if ((livemask & 0xF8DF8D) == 0) map_ptr = map46d;
+            else if ((livemask & 0xE4FE4F) == 0) map_ptr = map46e;
+            else if ((livemask & 0xF27F27) == 0) map_ptr = map46f;
+            else if ((livemask & 0x9FC9FC) == 0) map_ptr = map46g;
+            else if ((livemask & 0x3F93F9) == 0) map_ptr = map46h;
+            else goto lose;
+            break;
          case s3x4:
             arity = 2;  /* Might have just said "Z", which would set arity
                            to 1.  We can nevertheless find the two Z's. */
@@ -1606,7 +1778,7 @@ extern void distorted_2x2s_move(
             else goto lose;
             break;
          default:
-            fail("Must have 3x4, 2x6, 3x6, 2x3, 4x4, or split 1/4 tags for this concept.");
+            fail("Must have 3x4, 2x6, 3x6, 2x3, 4x4, 4x6, or split 1/4 tags for this concept.");
          }
       }
       break;

@@ -17,6 +17,7 @@
 
 and the following external variables:
    selector_used
+   direction_used
    number_used
    mandatory_call_used
    pred_table     which is filled with pointers to the predicate functions
@@ -35,6 +36,7 @@ and the following external variables:
 /* These variables are external. */
 
 long_boolean selector_used;
+long_boolean direction_used;
 long_boolean number_used;
 long_boolean mandatory_call_used;
 
@@ -1865,6 +1867,7 @@ static direction_kind direction_list[] = {
 static long_boolean directionp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
+   direction_used = TRUE;
    return current_options.where == direction_list[extra_stuff[0]];
 }
 

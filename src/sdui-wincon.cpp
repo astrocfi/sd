@@ -28,6 +28,7 @@
 
 
 static HANDLE consoleStdout, consoleStdin;
+static char SavedWindowTitle[201];
 static CONSOLE_SCREEN_BUFFER_INFO globalconsoleInfo;
 static DWORD oldMode;
 static DWORD newMode;
@@ -121,6 +122,8 @@ extern void ttu_initialize(void)
 {
    DWORD numWrite;
    int i;
+
+   (void) GetConsoleTitle(SavedWindowTitle, 200);
 
    if (no_console) return;
 
@@ -253,6 +256,8 @@ extern void ttu_terminate(void)
       (void) SetConsoleMode(consoleStdin, oldMode);
       (void) SetConsoleCtrlHandler(&control_c_handler, FALSE);
    }
+
+   (void) SetConsoleTitle(SavedWindowTitle);
 }
 
 extern int get_lines_for_more(void)

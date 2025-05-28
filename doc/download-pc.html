@@ -10,11 +10,11 @@
 <p>
 Both Sd and Sdtty are available for PC compatibles.&nbsp;
 (Note: <a href="intro.html">summary of availability</a>.)&nbsp;
-They run under Windows 95, Windows 98, Windows NT, Windows 3.1, or DOS.
-If you are running Windows 3.1 or DOS, only Sdtty is available .
+They run under Windows 95, Windows 98, Windows 2000, Windows NT, Linux,
+Windows 3.1, or DOS.
+If you are running Linux, Windows 3.1 or DOS, only Sdtty is available .
 <p>
-This version contains preliminary support for printing your sequences.
-Sd is capable of printing the output file directly.  (You can also print
+Sd is now capable of printing your sequence output file directly.  (You can also print
 the file by whatever means you have been using in the past.)  See the
 manual for details.
 <p>
@@ -29,7 +29,7 @@ convenient form, that you can browse or download from the
 <ol>
 <li>
 Download the file(s) from your Web browser into that folder.&nbsp;
-The current version is 33.15, released on March 14, 2000.
+The current version is 34.0, released on June 10, 2000.
 <p>
 <strong>WARNING WARNING WARNING WARNING:</strong><br>
 The new installation procedure for Sd and Sdtty is much more
@@ -46,18 +46,21 @@ this problem will be.  If this creates difficulties for you, please
 let me (wba@alum.mit.edu) know.  Do not download this program if you want
 to keep SRC Sd and you do not understand this issue or its workaround.
 <p>
-If you are running Windows 3.1 or DOS, you must download a different
+If you are running Linux, Windows 3.1, or DOS, you must download a different
 file.  Choose the correct one from the list below.
 <hr>
 <ul>
 <li>Download <a href="http://www.gildea.com/ftp/sd/install.exe">install.exe</a>
-which has Sd and Sdtty for PC compatibles running Windows 95, 98, or NT.
+which has Sd and Sdtty for PC compatibles running Windows 95, 98, 2000, or NT.
 <li>Download <a href="http://www.gildea.com/ftp/sd/install3.exe">install3.exe</a>
 which has Sdtty for PC compatibles running DOS or Windows 3.1.
+<li>Download <a href="http://www.gildea.com/ftp/sd/sdtty.tar.gz">sdtty.tar.gz</a>
+which has Sdtty for PC compatibles running Linux.
 </ul>
 <hr>
 You can also download the documentation files in "bulk" form to your computer.
 <p>
+Use these for Windows or DOS:
 <ul>
 <li>Download <a href="http://www.gildea.com/ftp/sd/textdoc.exe">textdoc.exe</a>
 which has all documentation in plain text form.
@@ -67,13 +70,29 @@ which has all documentation in postscript form.
 which has all documentation in Acrobat form.
 </ul>
 <hr>
+Use these for Linux or other varieties of Unix:
+<ul>
+<li>Download <a href="http://www.gildea.com/ftp/sd/textdoc.tar.gz">textdoc.tar.gz</a>
+which has all of the above documents in plain text form.
+<li>Download <a href="http://www.gildea.com/ftp/sd/psdoc.tar.gz">psdoc.tar.gz</a>
+which has all of the above documents in postscript form.
+<li>Download <a href="http://www.gildea.com/ftp/sd/pdfdoc.tar.gz">pdfdoc.tar.gz</a>
+which has all of the above documents in Acrobat form.
+</ul>
+<hr>
 <li>
 After downloading, you should have a file named <code>INSTALL.EXE</code>
 or <code>INSTALL3.EXE</code>
 (and whatever documentation files you downloaded).
 Do the actual installation by launching that file.
-This will unpack and install the program and database
-into the folder C:\sd.
+On Windows 95, 98, 2000, or NT, launching <code>INSTALL.EXE</code> will
+unpack and install the program and database into the folder C:\sd.
+On Windows 3.1 or DOS, launching <code>INSTALL3.EXE</code> will
+unpack and install the program and database into the current folder.
+We recommend doing this in folder C:\sd.
+<p>
+On Linux, the file <code>sdtty.tar.gz</code> is a gzipped Unix archive.
+Unpack it into the chosen directory, such as /sd.
 <p>
 <li>
 A Windows explorer will appear, containing useful shortcuts.  You can copy
@@ -82,7 +101,6 @@ for the copy, and click on "Copy Here" when asked.
 <p>
 <li>
 Launching any or all of these:
-<p>
 <pre>
  &gt; textdoc
  &gt; psdoc
@@ -92,8 +110,7 @@ Launching any or all of these:
 will unpack the requested documentation files.
 <p>
 <li>
-You may now delete the <code>.EXE</code> files or move them to a
-floppy as a backup.
+You may now delete the <code>.EXE</code> files or save them for backup purposes.
 <p>
 <li>
 If you are upgrading from a previous version,
@@ -103,9 +120,9 @@ If you are upgrading from a previous version,
 You can also order a diskette and nicely printed documentation from the
 authors.
 <hr>
-See also <a href="download-unix.html">Downloading Sd for Unix</a>.<br>
+See also <a href="download-unix.html">Downloading Sd for other varieties of Unix</a>.<br>
 Up to <a href="./">Sd home page</a>.<br>
-<em>Time-stamp: "22 January 2000"</em>
+<em>Time-stamp: "1 April 2000"</em>
 </body>
 </html>
 <!--

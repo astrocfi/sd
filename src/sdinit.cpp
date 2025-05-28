@@ -13,10 +13,14 @@
     This is for version 32. */
 
 /* This defines the following functions:
-   start_sel_and_num_iterator
-   iterate_over_sel_and_num
+   start_sel_dir_num_iterator
+   iterate_over_sel_dir_num
    build_database
    initialize_menus
+and the following external variables:
+   selector_for_initialize
+   direction_for_initialize
+   number_for_initialize
 */
 
 #include <string.h>
@@ -29,13 +33,16 @@
 
 #include "sd.h"
 
+selector_kind selector_for_initialize;
+direction_kind direction_for_initialize;
+int number_for_initialize;
 
 /* Global to this file. */
 
-static callspec_block *empty_menu[] = {(callspec_block *) 0};
+static call_with_name *empty_menu[] = {(call_with_name *) 0};
 
 /* This gets temporarily allocated.  It persists through the entire initialization. */
-Private callspec_block **global_temp_call_list;
+Private call_with_name **global_temp_call_list;
 Private int global_callcount;     /* Index into the above. */
 
 #define WEST (d_west|ROLLBITL)
@@ -150,21 +157,23 @@ Private Const char *translate_menu_name(Const char *orig_name, uint32 *escape_bi
    expected to be preserved across the longjmp, so they must be static. */
 Private parse_block *parse_mark;
 Private int call_index;
-Private callspec_block *test_call;
+static call_with_name *test_call;
 Private long_boolean crossiness;
 Private long_boolean magicness;
 Private long_boolean intlkness;
 
 
-SDLIB_API void start_sel_and_num_iterator()
+SDLIB_API void start_sel_dir_num_iterator()
 {
-   number_for_initialize = 1;
    selector_for_initialize = selector_beaus;
+   direction_for_initialize = direction_right;
+   number_for_initialize = 1;
 }
 
 
-SDLIB_API long_boolean iterate_over_sel_and_num(
+SDLIB_API long_boolean iterate_over_sel_dir_num(
    long_boolean enable_selector_iteration,
+   long_boolean enable_direction_iteration,
    long_boolean enable_number_iteration)
 {
    // Try different selectors first.
@@ -197,30 +206,26 @@ SDLIB_API long_boolean iterate_over_sel_and_num(
       case selector_boys:
          selector_for_initialize = selector_none;
          return TRUE;
-
-
-#ifdef TRYITTHISWAY
-      case selector_none:
-         /* When testing columns, we use an additional selector.  The way
-            the test setups are arranged, these effectively select #1 and #2 in the
-            column.  They make "<anyone> mark time" work. */
-         /* Also, for tidal waves, we select boys.  That makes "relay the
-            shadow but <anyone> criss cross it" work. */
-         if (test_setup == &test_setup_rcol || test_setup == &test_setup_lcol) {
-            selector_for_initialize = selector_headcorners;
-            return TRUE;
-         }
-         else if (test_setup == &test_setup_1x8 || test_setup == &test_setup_l1x8) {
-            selector_for_initialize = selector_boys;
-            return TRUE;
-         }
-#endif
       }
    }
 
-   /* Now try a different number.  Only do this if the call actually
-      consumes numbers, and the wildcard matching has not filled in all
-      required numbers. */
+   // Now try a different direction.
+
+   if (direction_used && enable_direction_iteration) {
+      // This call used a direction and didn't like it.  Try again with
+      // a different direction, until we run out of ideas.
+      switch (direction_for_initialize) {
+      case direction_right:
+         // This allows "spin the windmill, outsides (no direction)" from facing lines.
+         direction_for_initialize = direction_no_direction;
+         selector_for_initialize = selector_beaus;
+         return TRUE;
+      }
+   }
+
+   // Now try a different number.  Only do this if the call actually
+   // consumes numbers, and the wildcard matching has not filled in all
+   // required numbers.
 
    if (number_used && enable_number_iteration) {
 
@@ -234,6 +239,7 @@ SDLIB_API long_boolean iterate_over_sel_and_num(
             with the list, setting the second item odd. */
          number_for_initialize++;
          selector_for_initialize = selector_beaus;
+         direction_for_initialize = direction_right;
          return TRUE;
       }
    }
@@ -277,10 +283,11 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
  try_another_magic:
    crossiness = FALSE;
  try_another_cross:
-   start_sel_and_num_iterator();
+   start_sel_dir_num_iterator();
  try_another_selector:
 
    selector_used = FALSE;
+   direction_used = FALSE;
    number_used = FALSE;
    mandatory_call_used = FALSE;
 
@@ -293,19 +300,19 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    /* If the call has the "rolldefine" schema, we accept it, since the test setups
       are all in the "roll unsupported" state. */
 
-   if (test_call->schema == schema_roll) goto accept;
+   if (test_call->the_defn.schema == schema_roll) goto accept;
 
    /* If the call has the "matrix" schema, and it is sex-dependent, we accept it,
       since the test setups that we use might have people placed in such a way
       that something like "1/2 truck" is illegal. */
 
-   if (test_call->schema == schema_matrix &&
-       test_call->stuff.matrix.stuff[0] != test_call->stuff.matrix.stuff[1])
+   if (test_call->the_defn.schema == schema_matrix &&
+       test_call->the_defn.stuff.matrix.stuff[0] != test_call->the_defn.stuff.matrix.stuff[1])
       goto accept;
 
    /* We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
       since we don't know what the tagging call will be. */
-   if (test_call->callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
+   if (test_call->the_defn.callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
 
    // Do the call.  An error will signal and go to try_again.
 
@@ -331,26 +338,26 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
       /* Or a bad choice of selector or number may be the cause.
          Try different selectors first. */
 
-      if (iterate_over_sel_and_num(TRUE, TRUE))
+      if (iterate_over_sel_dir_num(TRUE, TRUE, TRUE))
          goto try_another_selector;
 
       /* Now try giving the "cross" modifier. */
 
-      if ((test_call->callflagsf & ESCAPE_WORD__CROSS) && !crossiness) {
+      if ((test_call->the_defn.callflagsf & ESCAPE_WORD__CROSS) && !crossiness) {
          crossiness = TRUE;
          goto try_another_cross;
       }
 
       /* Now try giving the "magic" modifier. */
 
-      if ((test_call->callflagsf & ESCAPE_WORD__MAGIC) && !magicness) {
+      if ((test_call->the_defn.callflagsf & ESCAPE_WORD__MAGIC) && !magicness) {
          magicness = TRUE;
          goto try_another_magic;
       }
 
       /* Now try giving the "interlocked" modifier. */
 
-      if ((test_call->callflagsf & ESCAPE_WORD__INTLK) && !intlkness) {
+      if ((test_call->the_defn.callflagsf & ESCAPE_WORD__INTLK) && !intlkness) {
          intlkness = TRUE;
          goto try_another_intlk;
       }
@@ -371,7 +378,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    // Create the call list itself.
 
    number_of_calls[cl] = global_callcount;
-   main_call_lists[cl] = (callspec_block **) (*the_callback_block.get_mem_fn)(global_callcount * sizeof(callspec_block *));
+   main_call_lists[cl] = (call_with_name **) (*the_callback_block.get_mem_fn)(global_callcount * sizeof(call_with_name *));
    for (i=0; i < global_callcount; i++)
       main_call_lists[cl][i] = global_temp_call_list[i];
 
@@ -407,10 +414,10 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
 /* This pointer to a call array is used by the heapsort routine. */
 
-Private callspec_block **the_array;
+Private call_with_name **the_array;
 
 
-Private long_boolean callcompare(callspec_block *x, callspec_block *y)
+Private long_boolean callcompare(call_with_name *x, call_with_name *y)
 {
    char *m = x->name;
    char *n = y->name;
@@ -526,7 +533,7 @@ Private void heapify(int lo, int hi)
    int j = lo-1;
 
    for (;;) {
-      callspec_block *temp;
+      call_with_name *temp;
       int k = j*2+1;
 
       if (k+1 > hi) return;
@@ -560,7 +567,7 @@ Private void heapsort(int n)
       element 0), and letting the heap shrink down to nothing. */
 
    for (i=n; i>1; i--) {
-      callspec_block *temp;
+      call_with_name *temp;
 
       temp = the_array[0];
       the_array[0] = the_array[i-1];
@@ -578,15 +585,15 @@ Private void create_misc_call_lists(call_list_kind cl)
    callcount = 0;
 
    for (j=0; j<number_of_calls[call_list_any]; j++) {
-      callspec_block *callp = main_call_lists[call_list_any][j];
+      call_with_name *callp = main_call_lists[call_list_any][j];
 
       if (cl == call_list_gcol) {     /* GCOL */
-         if (callp->schema != schema_by_array)
+         if (callp->the_defn.schema != schema_by_array)
             goto accept;    // We don't understand it.
 
-         callarray *deflist = callp->stuff.arr.def_list->callarray_list;
+         callarray *deflist = callp->the_defn.stuff.arr.def_list->callarray_list;
 
-         if (callp->callflags1 & CFLAG1_STEP_TO_WAVE) {
+         if (callp->the_defn.callflags1 & CFLAG1_STEP_TO_WAVE) {
             if (assoc(b_4x2, (setup *) 0, deflist) ||
                 assoc(b_4x1, (setup *) 0, deflist) ||
                 assoc(b_2x2, (setup *) 0, deflist) ||
@@ -602,20 +609,20 @@ Private void create_misc_call_lists(call_list_kind cl)
          }
       }
       else {      /* QTAG */
-         callspec_block *callq = callp;
+         call_with_name *callq = callp;
 
-         if (callq->schema != schema_by_array)
+         if (callq->the_defn.schema != schema_by_array)
             goto accept;    // We don't understand it.
 
-         callarray *deflist = callq->stuff.arr.def_list->callarray_list;
+         callarray *deflist = callq->the_defn.stuff.arr.def_list->callarray_list;
 
-         if (callq->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
+         if (callq->the_defn.callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
             if (assoc(b_4x2, (setup *) 0, deflist) ||
                 assoc(b_4x1, (setup *) 0, deflist))
                goto accept;
          }
 
-         if ((callq->callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
+         if ((callq->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
             if (assoc(b_thar, (setup *) 0, deflist))
                goto accept;
          }
@@ -639,7 +646,7 @@ Private void create_misc_call_lists(call_list_kind cl)
    /* Create the call list itself. */
 
    number_of_calls[cl] = callcount;
-   main_call_lists[cl] = (callspec_block **) (*the_callback_block.get_mem_fn)(callcount * sizeof(callspec_block *));
+   main_call_lists[cl] = (call_with_name **) (*the_callback_block.get_mem_fn)(callcount * sizeof(call_with_name *));
 
    for (i=0; i < callcount; i++) {
       main_call_lists[cl][i] = global_temp_call_list[i];
@@ -653,20 +660,20 @@ Private void create_misc_call_lists(call_list_kind cl)
 /* These are used by the database reading stuff. */
 
 static uint32 last_datum, last_12;
-static callspec_block *call_root;
+static call_with_name *call_root;
 static callarray *tp;
 /* This shows the highest index we have seen so far.  It must never exceed max_base_calls-1. */
 static int highest_base_call;
 
 
-Private void read_halfword(void)
+static void read_halfword(void)
 {
    last_datum = (*the_callback_block.read_16_from_database_fn)();
    last_12 = last_datum & 0xFFF;
 }
 
 
-Private void read_fullword(void)
+static void read_fullword(void)
 {
    uint32 t = (*the_callback_block.read_16_from_database_fn)();
    last_datum = t << 16 | (*the_callback_block.read_16_from_database_fn)();
@@ -679,14 +686,14 @@ Private void read_fullword(void)
    Should take the call as an argument, but since this entire file uses global variables,
    we will, too. */
 
-Private void database_error(char *message)
+static void database_error(char *message)
 {
    (*the_callback_block.uims_database_error_fn)(message, call_root ? call_root->name : 0);
    (*the_callback_block.exit_program_fn)(1);
 }
 
 
-Private void read_level_3_groups(calldef_block *where_to_put)
+static void read_level_3_groups(calldef_block *where_to_put)
 {
    int j, char_count;
    callarray *current_call_block;
@@ -790,7 +797,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
                we will query the user for that selector. */
 
             if ((int) last_datum < selector_preds)
-               call_root->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
+               call_root->the_defn.callflagsf |= CFLAGH__REQUIRES_SELECTOR;
 
             for (j=0; j < this_start_size; j++) {
                read_halfword();
@@ -824,7 +831,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
 }
 
 
-Private void check_tag(int tag)
+static void check_tag(int tag)
 {
    if (tag >= max_base_calls)
       database_error("Too many tagged calls -- mkcalls made an error");
@@ -832,15 +839,63 @@ Private void check_tag(int tag)
 }
 
 
-Private void read_in_call_definition(void)
+static void read_in_call_definition(calldefn *root_to_use, int char_count)
 {
+   // If we are operating at the "all" level, make fractions visible everywhere,
+   // to aid in debugging.
+
+   if (calling_level == l_dontshow)
+      root_to_use->callflags1 |= 3*CFLAG1_VISIBLE_FRACTION_BIT;
+
+   if (char_count) {
+
+      // Read in the name itself, unless we are recursing for a compound call.
+
+      char *np, c;
+      int j;
+
+      // We know that call_root has what we want if char_count != 0.
+      np = call_root->name;
+
+      for (j=0; j<char_count; j++)
+         *np++ = (char) (*the_callback_block.read_8_from_database_fn)();
+
+      *np = '\0';
+
+      /* Scan the name for "@6" or "@e", fill in "needselector" or
+         "left_changes_name" flag if found. */
+
+      np = call_root->name;
+
+      while ((c = *np++)) {
+         if (c == '@') {
+            if ((c = *np++) == '6' || c == 'k')
+               root_to_use->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
+            else if (c == 'h')
+               root_to_use->callflagsf |= CFLAGH__REQUIRES_DIRECTION;
+            else if (c == 'D')
+               root_to_use->callflagsf |= CFLAGH__ODD_NUMBER_ONLY;
+            else if (c == 'v')
+               root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*1);
+            else if (c == 'w')
+               root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*2);
+            else if (c == 'x')
+               root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*3);
+            else if (c == 'y')
+               root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*4);
+            else if (c == 'N')
+               root_to_use->callflagsf |= CFLAGH__CIRC_CALL_RQ_BIT;
+         }
+      }
+   }
+
    int j;
    int lim = 8;
    uint32 left_half;
 
    read_halfword();
 
-   switch (call_root->schema) {
+   switch (root_to_use->schema) {
    case schema_nothing:
    case schema_roll:
    case schema_recenter:
@@ -852,14 +907,16 @@ Private void read_in_call_definition(void)
       /* !!!! FELL THROUGH !!!! */
       left_half = last_datum;
       read_halfword();
-      call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
+      root_to_use->stuff.matrix.flags =
+         ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
 
-      if (call_root->stuff.matrix.flags & MTX_USE_SELECTOR)
-         call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
-      if (call_root->stuff.matrix.flags & MTX_USE_NUMBER)
-         call_root->callflags1 |= CFLAG1_NUMBER_BIT;
+      if (root_to_use->stuff.matrix.flags & MTX_USE_SELECTOR)
+         root_to_use->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+      if (root_to_use->stuff.matrix.flags & MTX_USE_NUMBER)
+         root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
 
-      call_root->stuff.matrix.stuff = (uint32 *) (*the_callback_block.get_mem_fn)(sizeof(uint32)*8);
+      root_to_use->stuff.matrix.stuff =
+         (uint32 *) (*the_callback_block.get_mem_fn)(sizeof(uint32)*8);
 
       for (j=0; j<lim; j++) {
          uint32 firstpart;
@@ -870,10 +927,11 @@ Private void read_in_call_definition(void)
 
          if (firstpart) {
             read_halfword();
-            call_root->stuff.matrix.stuff[j] = firstpart | ((last_datum & 0xFFFF) << 16);
+            root_to_use->stuff.matrix.stuff[j] =
+               firstpart | ((last_datum & 0xFFFF) << 16);
          }
          else {
-            call_root->stuff.matrix.stuff[j] = 0;
+            root_to_use->stuff.matrix.stuff[j] = 0;
          }               
       }
 
@@ -887,7 +945,7 @@ Private void read_in_call_definition(void)
          zz->next = 0;
          zz->modifier_seth = 0;
          zz->modifier_level = l_mainstream;
-         call_root->stuff.arr.def_list = zz;
+         root_to_use->stuff.arr.def_list = zz;
 
          read_level_3_groups(zz);    /* The first group. */
 
@@ -926,12 +984,13 @@ Private void read_in_call_definition(void)
             read_halfword();
          }
 
-         call_root->stuff.def.howmanyparts = next_definition_index;
-         call_root->stuff.def.defarray =
-            (by_def_item *) (*the_callback_block.get_mem_fn)((next_definition_index) * sizeof(by_def_item));
+         root_to_use->stuff.seq.howmanyparts = next_definition_index;
+         root_to_use->stuff.seq.defarray = (by_def_item *)
+            (*the_callback_block.get_mem_fn)
+            ((next_definition_index) * sizeof(by_def_item));
 
          while (--next_definition_index >= 0)
-            call_root->stuff.def.defarray[next_definition_index] =
+            root_to_use->stuff.seq.defarray[next_definition_index] =
                templist[next_definition_index];
       }
       break;
@@ -941,20 +1000,52 @@ Private void read_in_call_definition(void)
          database_error("database phase error 7");
 
       check_tag(last_12);
-      call_root->stuff.conc.innerdef.call_id = (uint16) last_12;
+      root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
       read_fullword();
-      call_root->stuff.conc.innerdef.modifiers1 = last_datum;
+      root_to_use->stuff.conc.innerdef.modifiers1 = last_datum;
       read_fullword();
-      call_root->stuff.conc.innerdef.modifiersh = last_datum;
+      root_to_use->stuff.conc.innerdef.modifiersh = last_datum;
       read_halfword();
       check_tag(last_12);
-      call_root->stuff.conc.outerdef.call_id = (uint16) last_12;
+      root_to_use->stuff.conc.outerdef.call_id = (uint16) last_12;
       read_fullword();
-      call_root->stuff.conc.outerdef.modifiers1 = last_datum;
+      root_to_use->stuff.conc.outerdef.modifiers1 = last_datum;
       read_fullword();
-      call_root->stuff.conc.outerdef.modifiersh = last_datum;
+      root_to_use->stuff.conc.outerdef.modifiersh = last_datum;
       read_halfword();
       break;
+   }
+
+   // Look for compound definition.
+
+   root_to_use->compound_part = (calldefn *) 0;
+
+   if (last_datum == 0x3FFF) {
+      uint32 saveflags1, saveflags2, saveflagsh;
+      calldef_schema call_schema;
+
+      calldefn *recursed_call_root = (calldefn *)
+         (*the_callback_block.get_mem_fn)(sizeof(calldefn));
+
+      read_halfword();       /* Get level and 8 bits of "callflags2" stuff. */
+      saveflags2 = last_datum >> 8;
+      read_fullword();       /* Get top level flags, first word.
+                                This is the "callflags1" stuff. */
+      saveflags1 = last_datum;
+      read_fullword();       /* Get top level flags, second word.
+                                This is the "heritflags" stuff. */
+      saveflagsh = last_datum;
+      read_halfword();       /* Get char count (ignore same) and schema. */
+      call_schema = (calldef_schema) (last_datum & 0xFF);
+      recursed_call_root->age = 0;
+      recursed_call_root->level = 0;
+      recursed_call_root->schema = call_schema;
+      recursed_call_root->callflags1 = saveflags1;
+      recursed_call_root->callflagsf = saveflags2 << 24;    /* Will get "CFLAGH" and "ESCAPE_WORD"
+                                                               bits later. */
+      recursed_call_root->callflagsh = saveflagsh;
+      read_in_call_definition(recursed_call_root, 0);    // Recurse.
+      root_to_use->compound_part = recursed_call_root;
    }
 }
 
@@ -972,12 +1063,10 @@ Private void read_in_call_definition(void)
 
 SDLIB_API void build_database(call_list_mode_t call_list_mode)
 {
-   int i, j, char_count;
-   calldef_schema call_schema;
+   int i, char_count;
    int local_callcount;
-   char *np, c;
    dance_level this_level;
-   callspec_block **local_call_list;
+   call_with_name **local_call_list;
    dance_level acceptable_level = calling_level;
 
    (*the_callback_block.uims_database_tick_max_fn)(10*16);
@@ -987,22 +1076,22 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
 
    for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
       number_of_taggers[i] = 0;
-      tagger_calls[i] = (callspec_block **) 0;
+      tagger_calls[i] = (call_with_name **) 0;
    }
 
    number_of_circcers = 0;
-   circcer_calls = (callspec_block **) 0;
+   circcer_calls = (call_with_name **) 0;
 
    /* This list will be permanent. */
-   base_calls = (callspec_block **) (*the_callback_block.get_mem_fn)(max_base_calls * sizeof(callspec_block *));
+   base_calls = (call_with_name **) (*the_callback_block.get_mem_fn)(max_base_calls * sizeof(call_with_name *));
 
    /* These two will be temporary.  The first lasts through the entire initialization
       process.  The second one only in this procedure. */
-   global_temp_call_list = (callspec_block **) (*the_callback_block.get_mem_fn)(abs_max_calls * sizeof(callspec_block *));
-   local_call_list = (callspec_block **) (*the_callback_block.get_mem_fn)(abs_max_calls * sizeof(callspec_block *));
+   global_temp_call_list = (call_with_name **) (*the_callback_block.get_mem_fn)(abs_max_calls * sizeof(call_with_name *));
+   local_call_list = (call_with_name **) (*the_callback_block.get_mem_fn)(abs_max_calls * sizeof(call_with_name *));
 
    /* Clear the tag list.  Calls will fill this in as they announce themselves. */
-   for (i=0; i < max_base_calls; i++) base_calls[i] = (callspec_block *) 0;
+   for (i=0; i < max_base_calls; i++) base_calls[i] = (call_with_name *) 0;
 
    highest_base_call = 0;
 
@@ -1013,6 +1102,7 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
    for (;;) {
       int savetag;
       uint32 saveflags1, saveflags2, saveflagsh;
+      calldef_schema call_schema;
 
       if ((last_datum & 0xE000) == 0) break;
 
@@ -1044,59 +1134,22 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
       /* Now that we know how long the name is, create the block and fill in the saved stuff. */
       /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
 
-      call_root = (callspec_block *) (*the_callback_block.get_mem_fn)(sizeof(callspec_block) + char_count - 3);
+      call_root = (call_with_name *) (*the_callback_block.get_mem_fn)(sizeof(call_with_name) + char_count - 3);
       call_root->menu_name = (Cstring) 0;
-      np = call_root->name;
 
       if (savetag) {
          check_tag(savetag);
          base_calls[savetag] = call_root;
       }
 
-      call_root->age = 0;
-      call_root->level = (int) this_level;
-      call_root->schema = call_schema;
-      call_root->callflags1 = saveflags1;
-      call_root->callflagsf = saveflags2 << 24;    /* Will get "CFLAGH" and "ESCAPE_WORD"
-                                                      bits later. */
-      call_root->callflagsh = saveflagsh;
-      /* If we are operating at the "all" level, make fractions visible everywhere, to aid in debugging. */
-      if (calling_level == l_dontshow) call_root->callflags1 |= 3*CFLAG1_VISIBLE_FRACTION_BIT;
-
-      /* Now read in the name itself. */
-
-      for (j=0; j<char_count; j++)
-         *np++ = (char) (*the_callback_block.read_8_from_database_fn)();
-
-      *np = '\0';
-
-      /* Scan the name for "@6" or "@e", fill in "needselector" or
-         "left_changes_name" flag if found. */
-
-      np = call_root->name;
-
-      while ((c = *np++)) {
-         if (c == '@') {
-            if ((c = *np++) == '6' || c == 'k')
-               call_root->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
-            else if (c == 'h')
-               call_root->callflagsf |= CFLAGH__REQUIRES_DIRECTION;
-            else if (c == 'D')
-               call_root->callflagsf |= CFLAGH__ODD_NUMBER_ONLY;
-            else if (c == 'v')
-               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*1);
-            else if (c == 'w')
-               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*2);
-            else if (c == 'x')
-               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*3);
-            else if (c == 'y')
-               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*4);
-            else if (c == 'N')
-               call_root->callflagsf |= CFLAGH__CIRC_CALL_RQ_BIT;
-         }
-      }
-
-      read_in_call_definition();
+      call_root->the_defn.age = 0;
+      call_root->the_defn.level = (int) this_level;
+      call_root->the_defn.schema = call_schema;
+      call_root->the_defn.callflags1 = saveflags1;
+      call_root->the_defn.callflagsf = saveflags2 << 24;
+      /* Will get "CFLAGH" and "ESCAPE_WORD" bits later. */
+      call_root->the_defn.callflagsh = saveflagsh;
+      read_in_call_definition(&call_root->the_defn, char_count);
 
       /* We accept a call if:
          (1) we are writing out just this list, and the call matches the desired level exactly, or
@@ -1109,46 +1162,46 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
                (call_list_mode != call_list_mode_writing && this_level <= acceptable_level)) {
 
          /* Process tag base calls specially. */
-         if (call_root->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
-            int tagclass = ((call_root->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) / CFLAG1_BASE_TAG_CALL_BIT) - 1;
+         if (call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
+            int tagclass = ((call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) / CFLAG1_BASE_TAG_CALL_BIT) - 1;
 
             /* All classes go into list 0.  Additionally, the other classes go into their own list. */
             number_of_taggers[tagclass]++;
-            tagger_calls[tagclass] = (callspec_block **) (*the_callback_block.get_more_mem_fn)(tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(callspec_block *));
+            tagger_calls[tagclass] = (call_with_name **) (*the_callback_block.get_more_mem_fn)(tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(call_with_name *));
             tagger_calls[tagclass][number_of_taggers[tagclass]-1] = call_root;
             if (tagclass != 0) {
                number_of_taggers[0]++;
-               tagger_calls[0] = (callspec_block **) (*the_callback_block.get_more_mem_fn)(tagger_calls[0], number_of_taggers[0]*sizeof(callspec_block *));
+               tagger_calls[0] = (call_with_name **) (*the_callback_block.get_more_mem_fn)(tagger_calls[0], number_of_taggers[0]*sizeof(call_with_name *));
                tagger_calls[0][number_of_taggers[0]-1] = call_root;
             }
-            else if (call_root->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
+            else if (call_root->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
                /* But anything that invokes a tagging call goes into each list,
                   inheriting its own class. */
                int xxx;
 
                /* Iterate over all tag classes except class 0. */
                for (xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
-                  callspec_block *new_call =
-                     (callspec_block *) (*the_callback_block.get_mem_fn)(sizeof(callspec_block) + char_count - 3);
-                  (void) memcpy(new_call, call_root, sizeof(callspec_block) + char_count - 3);
+                  call_with_name *new_call =
+                     (call_with_name *) (*the_callback_block.get_mem_fn)(sizeof(call_with_name) + char_count - 3);
+                  (void) memcpy(new_call, call_root, sizeof(call_with_name) + char_count - 3);
                   /* Fix it up. */
-                  new_call->callflagsf =
-                     (new_call->callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) |
+                  new_call->the_defn.callflagsf =
+                     (new_call->the_defn.callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) |
                      CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
                   number_of_taggers[xxx]++;
-                  tagger_calls[xxx] = (callspec_block **)
+                  tagger_calls[xxx] = (call_with_name **)
                      (*the_callback_block.get_more_mem_fn)(tagger_calls[xxx],
-                                  number_of_taggers[xxx]*sizeof(callspec_block *));
+                                  number_of_taggers[xxx]*sizeof(call_with_name *));
                   tagger_calls[xxx][number_of_taggers[xxx]-1] = new_call;
                }
             }
          }
          else {
             /* But circ calls are treated normally, as well as being put on the special list. */
-            if (call_root->callflags1 & CFLAG1_BASE_CIRC_CALL) {
+            if (call_root->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
                number_of_circcers++;
-               circcer_calls = (callspec_block **)
-                  (*the_callback_block.get_more_mem_fn)(circcer_calls, number_of_circcers*sizeof(callspec_block *));
+               circcer_calls = (call_with_name **)
+                  (*the_callback_block.get_more_mem_fn)(circcer_calls, number_of_circcers*sizeof(call_with_name *));
                circcer_calls[number_of_circcers-1] = call_root;
             }
             if (local_callcount >= abs_max_calls)
@@ -1159,7 +1212,7 @@ SDLIB_API void build_database(call_list_mode_t call_list_mode)
    }
 
    number_of_calls[call_list_any] = local_callcount;
-   main_call_lists[call_list_any] = (callspec_block **) (*the_callback_block.get_mem_fn)(local_callcount * sizeof(callspec_block *));
+   main_call_lists[call_list_any] = (call_with_name **) (*the_callback_block.get_mem_fn)(local_callcount * sizeof(call_with_name *));
    for (i=0; i < local_callcount; i++) {
       main_call_lists[call_list_any][i] = local_call_list[i];
    }
@@ -1190,24 +1243,24 @@ SDLIB_API void initialize_menus(call_list_mode_t call_list_mode)
    for (i=0; i<number_of_calls[call_list_any]; i++)
       main_call_lists[call_list_any][i]->menu_name =
          translate_menu_name(main_call_lists[call_list_any][i]->name,
-                             &main_call_lists[call_list_any][i]->callflagsf);
+                             &main_call_lists[call_list_any][i]->the_defn.callflagsf);
 
    for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
       for (uj=0; uj<number_of_taggers[i]; uj++)
          tagger_calls[i][uj]->menu_name =
-            translate_menu_name(tagger_calls[i][uj]->name, &tagger_calls[i][uj]->callflagsf);
+            translate_menu_name(tagger_calls[i][uj]->name, &tagger_calls[i][uj]->the_defn.callflagsf);
    }
 
    for (uj=0; uj<number_of_circcers; uj++)
       circcer_calls[uj]->menu_name =
-         translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->callflagsf);
+         translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->the_defn.callflagsf);
 
    /* Do the base calls (calls that are used in definitions of other calls).  These may have
       already been done, if they were on the level. */
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]->menu_name)
          base_calls[i]->menu_name =
-            translate_menu_name(base_calls[i]->name, &base_calls[i]->callflagsf);
+            translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
    }
 
    for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++)

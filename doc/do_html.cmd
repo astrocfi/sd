@@ -13,6 +13,7 @@ call make_text readings.html html.msg
 call make_text relnotes.html html.msg
 call make_text appnote1.html html.msg
 call make_text appnote2.html html.msg
+call make_text appnote3.html html.msg
 echo cd sessions>> html.msg
 call make_text sessions.html html.msg
 call make_text sessions_toc.html html.msg
@@ -32,5 +33,6 @@ REM               public_html/sd/manual/sd_doc*.html
 REM               public_html/sd/relnotes.html
 REM               public_html/sd/appnote1.html
 REM               public_html/sd/appnote2.html
+REM               public_html/sd/appnote3.html
 REM               public_html/sd/sessions/sessions.html
 REM               public_html/sd/sessions/sessions_toc.html

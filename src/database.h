@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 33. */
+    This is for version 34. */
 
 
 /* We customize the necessary declarations for functions
@@ -82,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 157
+#define DATABASE_FORMAT_VERSION 160
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -103,6 +103,7 @@ typedef enum {
    base_call_lockit,
    base_call_disband1,
    base_call_slither,
+   base_call_two_o_circs,
    /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
    base_call_tagger0,
    base_call_tagger1_noref,
@@ -598,6 +599,7 @@ typedef enum {
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
+   cr_2fl_per_1x4,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
    cr_leads_only,          /* Restriction only. */
@@ -703,7 +705,7 @@ typedef enum {
    schema_maybe_nxn_1331_lines_concentric,
    schema_maybe_nxn_1331_cols_concentric,
    schema_1331_concentric,
-   schema_1313_concentric,       /* Not for public use! */
+   schema_1313_concentric,       // Not for public use!
    schema_concentric_diamond_line,
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
@@ -711,7 +713,9 @@ typedef enum {
    schema_concentric_6_2,
    schema_concentric_2_6,
    schema_concentric_2_4,
-   schema_concentric_big2_6,     /* Not for public use! */
+   schema_concentric_4_2,
+   schema_concentric_4_2_or_normal,
+   schema_concentric_big2_6,     // Not for public use!
    schema_concentric_2_6_or_2_4,
    schema_concentric_6p,
    schema_concentric_6p_or_normal,
@@ -752,6 +756,7 @@ typedef enum {
    schema_select_who_can,
    schema_select_who_did,
    schema_select_who_didnt,
+   schema_select_who_did_and_didnt,
    schema_lateral_6,             /* Not for public use! */
    schema_vertical_6,            /* Not for public use! */
    schema_intlk_lateral_6,       /* Not for public use! */
@@ -866,23 +871,30 @@ static Const uint32 DFM1_SEQ_NORMALIZE                = 0x00000080;
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
 
 /* This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies. */
-static Const uint32 DFM1_CALL_MOD_MASK                = 0x00000700;
-#define             DFM1_CALL_MOD_BIT                   0x00000100
-/* unused:                                = 0x00000800 */
-/* unused:                                = 0x00001000 */
-static Const uint32 DFM1_ENDSCANDO                    = 0x00002000;
-static Const uint32 DFM1_FINISH_THIS                  = 0x00004000;
-static Const uint32 DFM1_ROLL_TRANSPARENT             = 0x00008000;
-static Const uint32 DFM1_PERMIT_TOUCH_OR_REAR_BACK    = 0x00010000;
-static Const uint32 DFM1_CPLS_UNLESS_SINGLE           = 0x00020000;
+static Const uint32 DFM1_CALL_MOD_MASK                = 0x00000700UL;
+#define             DFM1_CALL_MOD_BIT                   0x00000100UL
+/* Here are the codes that can lie inside. */
+static const uint32 DFM1_CALL_MOD_ANYCALL             = 0x00000100UL;
+static const uint32 DFM1_CALL_MOD_MAND_ANYCALL        = 0x00000200UL;
+static const uint32 DFM1_CALL_MOD_ALLOW_PLAIN_MOD     = 0x00000300UL;
+static const uint32 DFM1_CALL_MOD_ALLOW_FORCED_MOD    = 0x00000400UL;
+static const uint32 DFM1_CALL_MOD_OR_SECONDARY        = 0x00000500UL;
+static const uint32 DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL;
+/* unused:                                            = 0x00000800UL */
+/* unused:                                            = 0x00001000UL */
+static const uint32 DFM1_ENDSCANDO                    = 0x00002000UL;
+static const uint32 DFM1_FINISH_THIS                  = 0x00004000UL;
+static const uint32 DFM1_ROLL_TRANSPARENT             = 0x00008000UL;
+static const uint32 DFM1_PERMIT_TOUCH_OR_REAR_BACK    = 0x00010000UL;
+static const uint32 DFM1_CPLS_UNLESS_SINGLE           = 0x00020000UL;
 /* This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies. */
-static Const uint32 DFM1_NUM_SHIFT_MASK               = 0x000C0000;
-static Const uint32 DFM1_NUM_SHIFT_BIT                = 0x00040000;
+static const uint32 DFM1_NUM_SHIFT_MASK               = 0x000C0000UL;
+static const uint32 DFM1_NUM_SHIFT_BIT                = 0x00040000UL;
 /* This is a 3 bit field -- NUM_INSERT_BIT tells where its low bit lies. */
-static Const uint32 DFM1_NUM_INSERT_MASK              = 0x00700000;
-static Const uint32 DFM1_NUM_INSERT_BIT               = 0x00100000;
-static Const uint32 DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000;
-static Const uint32 DFM1_FRACTAL_INSERT               = 0x01000000;
+static const uint32 DFM1_NUM_INSERT_MASK              = 0x00700000UL;
+static const uint32 DFM1_NUM_INSERT_BIT               = 0x00100000UL;
+static const uint32 DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000UL;
+static const uint32 DFM1_FRACTAL_INSERT               = 0x01000000UL;
 
 
 typedef enum {

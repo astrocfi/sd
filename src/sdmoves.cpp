@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -220,16 +220,26 @@ extern long_boolean divide_for_magic(
    uint32 heritflags_to_check,
    setup *result) THROW_DECL
 {
-   static expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0};
-   static expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0};
-   static expand_thing exp13  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0};
-   static expand_thing exp31  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0};
+   static expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 02727};
+   static expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 07272};
+   static expand_thing exp25  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 02525};
+   static expand_thing exp52  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 05252};
+   static expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 03535};
+   static expand_thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 05353};
+   static expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 05656};
+   static expand_thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 06565};
+
+   static expand_thing exp31  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 03131};
+   static expand_thing exp13  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 01313};
+   static expand_thing exp15  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 01515};
+   static expand_thing exp51  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 05151};
+   static expand_thing exp45  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 04545};
+   static expand_thing exp54  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 05454};
+   static expand_thing exp46  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 04646};
+   static expand_thing exp64  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 06464};
+
    static expand_thing expl13 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0};
    static expand_thing expl31 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0};
-   static expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0};
-   static expand_thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0};
-   static expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0};
-   static expand_thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0};
    static expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0};
    static expand_thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
    static expand_thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
@@ -434,22 +444,22 @@ extern long_boolean divide_for_magic(
             /* These are independent of whether we said "1x2" or "2x1". */
             if (directions == 01240 || directions == 04012 ||
                 directions == 03765 || directions == 06537) {
-               expand_setup(&exp13, ss);
+               expand_setup(&exp25, ss);
                goto do_3x3;
             }
             else if (directions == 05002 || directions == 00250 ||
                      directions == 07527 || directions == 02775) {
-               expand_setup(&exp31, ss);
+               expand_setup(&exp52, ss);
                goto do_3x3;
             }
             /* These are specific to "1x2" or "2x1". */
             if (directions == 02577 || directions == 00052) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp13 : &exp31,
+               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp25 : &exp52,
                             ss);
                goto do_3x3;
             }
             else if (directions == 07725 || directions == 05200) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp31 : &exp13,
+               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp52 : &exp25,
                             ss);
                goto do_3x3;
             }
@@ -529,30 +539,23 @@ extern long_boolean divide_for_magic(
    }
 
    if (result->kind == s2x6) {
-      if (livemask == 02525) {
-         compress_setup(&exp13, result);
-      }
-      else if (livemask == 05252) {
-         compress_setup(&exp31, result);
-      }
-      else if (livemask == 02727) {
-         compress_setup(&exp27, result);
-      }
-      else if (livemask == 07272) {
-         compress_setup(&exp72, result);
-      }
-      else if (livemask == 03535) {
-         compress_setup(&exp35, result);
-      }
-      else if (livemask == 05353) {
-         compress_setup(&exp53, result);
-      }
-      else if (livemask == 05656) {
-         compress_setup(&exp56, result);
-      }
-      else if (livemask == 06565) {
-         compress_setup(&exp65, result);
-      }
+      if      (livemask == exp25.biglivemask) compress_setup(&exp25, result);
+      else if (livemask == exp52.biglivemask) compress_setup(&exp52, result);
+      else if (livemask == exp27.biglivemask) compress_setup(&exp27, result);
+      else if (livemask == exp72.biglivemask) compress_setup(&exp72, result);
+      else if (livemask == exp35.biglivemask) compress_setup(&exp35, result);
+      else if (livemask == exp53.biglivemask) compress_setup(&exp53, result);
+      else if (livemask == exp56.biglivemask) compress_setup(&exp56, result);
+      else if (livemask == exp65.biglivemask) compress_setup(&exp65, result);
+
+      else if (livemask == 03131) compress_setup(&exp31, result);
+      else if (livemask == 01313) compress_setup(&exp13, result);
+      else if (livemask == 01515) compress_setup(&exp15, result);
+      else if (livemask == 05151) compress_setup(&exp51, result);
+      else if (livemask == 04545) compress_setup(&exp45, result);
+      else if (livemask == 05454) compress_setup(&exp54, result);
+      else if (livemask == 04646) compress_setup(&exp46, result);
+      else if (livemask == 06464) compress_setup(&exp64, result);
    }
    else if (result->kind == s1x12) {
       if (livemask == 02525) {
@@ -1304,6 +1307,10 @@ static void finish_matrix_call(
       checkptr = setup_attrs[s_qtag].setup_coords;
       goto doit;
    }
+   else if ((ypar == 0x00770055) && ((signature & (~0x01400420)) == 0)) {
+      checkptr = setup_attrs[s_2stars].setup_coords;
+      goto doit;
+   }
    else if ((ypar == 0x00620026) && ((signature & (~0x01008404)) == 0)) {
       /* Fudge this to a 1/4 tag.  Someone did a truck-like operation from a rigger,
          for example, after a sets in motion. */
@@ -1656,7 +1663,7 @@ static void finish_matrix_call(
 
 static void matrixmove(
    setup *ss,
-   Const callspec_block *callspec,
+   const calldefn *callspec,
    setup *result) THROW_DECL
 {
    uint32 datum;
@@ -2117,7 +2124,7 @@ static void process_matrix_chains(
 
 static void partner_matrixmove(
    setup *ss,
-   Const callspec_block *callspec,
+   const calldefn *callspec,
    setup *result) THROW_DECL
 {
    uint32 flags = callspec->stuff.matrix.flags;
@@ -2444,7 +2451,7 @@ extern void anchor_someone_and_move(
 
 static void rollmove(
    setup *ss,
-   Const callspec_block *callspec,
+   const calldefn *callspec,
    setup *result) THROW_DECL
 {
    int i;
@@ -2480,7 +2487,7 @@ static void rollmove(
 
 
 static void do_inheritance(setup_command *cmd,
-   Const callspec_block *parent_call, Const by_def_item *defptr) THROW_DECL
+   const calldefn *parent_call, const by_def_item *defptr) THROW_DECL
 {
    /* Strip out those concepts that do not have the "dfm__xxx" flag set saying that
       they are to be inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT"
@@ -2550,9 +2557,9 @@ extern void process_number_insertion(uint32 mod_word)
 
 static long_boolean get_real_subcall(
    parse_block *parseptr,
-   Const by_def_item *item,
+   const by_def_item *item,
    setup_command *cmd_in,
-   Const callspec_block *parent_call,
+   const calldefn *parent_call,
    setup_command *cmd_out) THROW_DECL         /* We fill in just the parseptr, callspec,
                                       cmd_final_flags fields. */
 {
@@ -2564,7 +2571,7 @@ static long_boolean get_real_subcall(
       Some of these may be inherited to the subcall. */
    uint64 new_final_concepts = cmd_in->cmd_final_flags;
    uint32 mods1 = item->modifiers1;
-   callspec_block *orig_call = base_calls[item_id];
+   call_with_name *orig_call = base_calls[item_id];
    long_boolean this_is_tagger =
       item_id >= base_call_tagger0 && item_id < base_call_tagger0+NUM_TAGGER_CLASSES;
    long_boolean this_is_tagger_circcer = this_is_tagger || item_id == base_call_circcer;
@@ -2587,7 +2594,7 @@ static long_boolean get_real_subcall(
 
    /* Do the substitutions called for by star turn replacements (from "@S" escape codes.) */
 
-   if (current_options.star_turn_option != 0 && orig_call->callflags1 & CFLAG1_IS_STAR_CALL) {
+   if (current_options.star_turn_option != 0 && orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) {
       parse_block *xx = (*the_callback_block.get_parse_block_fn)();
       xx->concept = &marker_concept_mod;
       xx->options = current_options;
@@ -2602,7 +2609,7 @@ static long_boolean get_real_subcall(
          xx->options.number_fields += current_options.star_turn_option;
 
       cmd_out->parseptr = xx;
-      cmd_out->callspec = (callspec_block *) 0;
+      cmd_out->callspec = (call_with_name *) 0;
       goto ret_true;
    }
 
@@ -2662,13 +2669,14 @@ static long_boolean get_real_subcall(
                cmd_out->callspec = subsidiary_ptr->call;
             else {
                /* This makes it pick up the substituted call. */
-               cmd_out->callspec = (callspec_block *) 0;
+               cmd_out->callspec = (call_with_name *) 0;
 
                /* Substitutions are normal, and hence we clear the modifier bits,
                   unless this was a "mandatory_anycall" or "mandatory_secondary_call",
                   in which case we assume that the database tells just what bits
                   to inherit. */
-               if (snumber == 2 || snumber == 6) {
+               if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) ||
+                   snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT)) {
                   if (search->concept->kind == concept_supercall) {
                      cmd_out->cmd_final_flags.her8it = cmd_in->restrained_super8flags;
                      cmd_out->cmd_misc2_flags &= ~CMD_MISC2_RESTRAINED_SUPER;
@@ -2694,7 +2702,7 @@ static long_boolean get_real_subcall(
       goto ret_false;
 
    cmd_out->parseptr = (*newsearch)->subsidiary_root;
-   cmd_out->callspec = (callspec_block *) 0;    /* We THROW AWAY the alternate call, because we want our user to get it from the concept list. */
+   cmd_out->callspec = (call_with_name *) 0;    /* We THROW AWAY the alternate call, because we want our user to get it from the concept list. */
    cmd_out->cmd_final_flags.her8it = 0;
    cmd_out->cmd_final_flags.final = 0;
 
@@ -2720,8 +2728,8 @@ static void divide_diamonds(setup *ss, setup *result) THROW_DECL
 }
 
 
-/* a <= b */
-extern int gcd(int a, int b)
+// a <= b
+static int gcd(int a, int b)
 {
    for (;;) {
       int rem;
@@ -3414,7 +3422,7 @@ extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL
 
 static void do_sequential_call(
    setup *ss,
-   Const callspec_block *callspec,
+   const calldefn *callspec,
    long_boolean qtfudged,
    long_boolean *mirror_p,
    setup *result) THROW_DECL
@@ -3432,7 +3440,7 @@ static void do_sequential_call(
    call_restriction fix_next_assumption = cr_none;
    int fix_next_assump_col = 0;
    int fix_next_assump_both = 0;
-   int realtotal = callspec->stuff.def.howmanyparts;
+   int realtotal = callspec->stuff.seq.howmanyparts;
    int total = realtotal;
    int start_point;    /* Where we start, in the absence of special stuff. */
    int end_point;  /* Where we end, in the absence of special stuff. */
@@ -3462,8 +3470,8 @@ static void do_sequential_call(
    if (distribute) {
       int ii;
       total = 0;
-      for (ii=0 ; ii<callspec->stuff.def.howmanyparts ; ii++) {
-         by_def_item *this_item = &callspec->stuff.def.defarray[ii];
+      for (ii=0 ; ii<callspec->stuff.seq.howmanyparts ; ii++) {
+         by_def_item *this_item = &callspec->stuff.seq.defarray[ii];
          uint32 this_mod1 = this_item->modifiers1;
 
          if ((DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE) & this_mod1) {
@@ -3596,13 +3604,14 @@ static void do_sequential_call(
       end_point = zzz.highlimit-1;
    }
 
+   int use_alternate(0);
+
    for (;;) {
       by_def_item *this_item;
       uint32 this_mod1;
       uint32 remember_elongation;
       setup_command foo1, foo2;
       by_def_item *alt_item;
-      int use_alternate;
       setup_command foobar;
       setup_kind oldk;
       long_boolean recompute_id = FALSE;
@@ -3622,10 +3631,9 @@ static void do_sequential_call(
          that we must perform before we can go on to the next thing. */
 
       if (subpart_count) {
-         subpart_count--;    /* This is now the number of EXTRA repetitions
-                                 of this that we will still have to do after
-                                 we do the repetition that we are about to do. */
-
+         subpart_count--;    // This is now the number of EXTRA repetitions
+                             // of this that we will still have to do after
+                             // we do the repetition that we are about to do.
          use_alternate ^= 1;
          dist_index += zzz.subcall_incr;
          goto do_plain_call;
@@ -3639,8 +3647,9 @@ static void do_sequential_call(
          if (fetch_index >= realtotal) break;
       }
 
-      if (fetch_index >= realtotal || fetch_index < 0) fail("The indicated part number doesn't exist.");
-      this_item = &callspec->stuff.def.defarray[fetch_index];
+      if (fetch_index >= realtotal || fetch_index < 0)
+         fail("The indicated part number doesn't exist.");
+      this_item = &callspec->stuff.seq.defarray[fetch_index];
       this_mod1 = this_item->modifiers1;
 
       if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
@@ -3651,16 +3660,18 @@ static void do_sequential_call(
       dist_index += zzz.subcall_incr;
 
       if (zzz.reverse_order) {
-         if (fetch_index >= 0 && (DFM1_SEQ_REPEAT_N_ALTERNATE & callspec->stuff.def.defarray[fetch_index].modifiers1)) {
+         if (fetch_index >= 0 &&
+             (DFM1_SEQ_REPEAT_N_ALTERNATE &
+              callspec->stuff.seq.defarray[fetch_index].modifiers1)) {
             alt_item = this_item;
-            this_item = &callspec->stuff.def.defarray[fetch_index];
+            this_item = &callspec->stuff.seq.defarray[fetch_index];
             this_mod1 = this_item->modifiers1;
             fetch_index--;
          }
       }
       else {
          if (DFM1_SEQ_REPEAT_N_ALTERNATE & this_mod1) {
-            alt_item = &callspec->stuff.def.defarray[fetch_index];
+            alt_item = &callspec->stuff.seq.defarray[fetch_index];
             fetch_index++;
          }
       }
@@ -4092,167 +4103,10 @@ done_with_big_cycle:
 }
 
 
-// Check for a schema that we weren't sure about, and fix it up, using the specified modifiers.
-static calldef_schema fixup_conc_schema(Const callspec_block *callspec, setup *ss) THROW_DECL
-{
-   calldef_schema the_schema = callspec->schema;
-   uint32 herit_concepts = ss->cmd.cmd_final_flags.her8it;
-
-   switch (the_schema) {
-   case schema_maybe_single_concentric:
-      return (herit_concepts & INHERITFLAG_SINGLE) ?
-         schema_single_concentric : schema_concentric;
-   case schema_maybe_single_cross_concentric:
-      return (herit_concepts & INHERITFLAG_SINGLE) ?
-         schema_single_cross_concentric : schema_cross_concentric;
-   case schema_maybe_grand_single_concentric:
-      if (herit_concepts & INHERITFLAG_GRAND) {
-         if (herit_concepts & INHERITFLAG_SINGLE)
-            return schema_grand_single_concentric;
-         else
-            fail("You must not use \"grand\" without \"single\".");
-      }
-      else {
-         return (herit_concepts & INHERITFLAG_SINGLE) ?
-            schema_single_concentric : schema_concentric;
-      }
-   case schema_maybe_grand_single_cross_concentric:
-      if (herit_concepts & INHERITFLAG_GRAND) {
-         if (herit_concepts & INHERITFLAG_SINGLE)
-            return schema_grand_single_cross_concentric;
-         else
-            fail("You must not use \"grand\" without \"single\".");
-      }
-      else {
-         if (herit_concepts & INHERITFLAG_SINGLE)
-            return schema_single_cross_concentric;
-         else
-            return schema_cross_concentric;
-      }
-   case schema_maybe_special_single_concentric:
-      /* "Single" has the usual meaning for this one.  But "grand single"
-         turns it into a "special concentric", which has the centers working
-         in three pairs. */
-
-      if (herit_concepts & INHERITFLAG_SINGLE) {
-         if (herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK))
-            return schema_concentric_others;
-         else
-            return schema_single_concentric;
-      }
-      else {
-         if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == INHERITFLAG_GRAND)
-            fail("You must not use \"grand\" without \"single\" or \"nxn\".");
-         else if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == 0)
-            return schema_concentric;
-         else if ((herit_concepts &
-                   (INHERITFLAG_NXNMASK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) ==
-                  (INHERITFLAGNXNK_4X4 | INHERITFLAG_16_MATRIX))
-            return schema_4x4_lines_concentric;
-         else if ((herit_concepts &
-                   (INHERITFLAG_NXNMASK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) ==
-                  (INHERITFLAGNXNK_3X3 | INHERITFLAG_12_MATRIX))
-            return schema_3x3_concentric;
-      }
-   case schema_maybe_nxn_lines_concentric:
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
-         return schema_single_concentric;
-      case INHERITFLAGNXNK_3X3:
-         return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
-         return schema_4x4_lines_concentric;
-      case 0:
-         return schema_concentric;
-      }
-   case schema_maybe_nxn_cols_concentric:
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
-         return schema_single_concentric;
-      case INHERITFLAGNXNK_3X3:
-         return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
-         return schema_4x4_cols_concentric;
-      case 0:
-         return schema_concentric;
-      }
-   case schema_maybe_nxn_1331_lines_concentric:
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
-         return schema_single_concentric;
-      case INHERITFLAGNXNK_3X3:
-         return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
-         return schema_4x4_lines_concentric;
-      case INHERITFLAGMXNK_1X3:
-      case INHERITFLAGMXNK_3X1:
-         return schema_1331_concentric;
-      case 0:
-         return schema_concentric;
-      }
-   case schema_maybe_nxn_1331_cols_concentric:
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
-         return schema_single_concentric;
-      case INHERITFLAGNXNK_3X3:
-         return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
-         return schema_4x4_cols_concentric;
-      case INHERITFLAGMXNK_1X3:
-      case INHERITFLAGMXNK_3X1:
-         return schema_1331_concentric;
-      case INHERITFLAGMXNK_1X2:
-      case INHERITFLAGMXNK_2X1:
-         return schema_concentric_6p_or_normal;
-      case 0:
-         return schema_concentric;
-      }
-   case schema_maybe_matrix_single_concentric_together:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
-         return schema_conc_12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
-         return schema_conc_16;
-      else if (herit_concepts & INHERITFLAG_GRAND)
-         return schema_concentric_others;
-      else
-         return schema_single_concentric_together;
-   case schema_maybe_matrix_conc:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
-         return schema_conc_12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
-         return schema_conc_16;
-      else
-         return schema_concentric;
-   case schema_maybe_matrix_conc_star:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
-         return schema_conc_star12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
-         return schema_conc_star16;
-      else
-         return schema_conc_star;
-   case schema_maybe_matrix_conc_bar:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
-         return schema_conc_bar12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
-         return schema_conc_bar16;
-      else
-         return schema_conc_bar;
-   default:
-      return the_schema;
-   }
-
-   fail("Can't use this combination of modifiers.");
-}
-
-
 long_boolean do_misc_schema(
    setup *ss,
    calldef_schema the_schema,
-   callspec_block *callspec,
+   calldefn *callspec,
    uint32 callflags1,
    setup_command *foo1p,
    selector_kind *special_selectorp,
@@ -4261,8 +4115,8 @@ long_boolean do_misc_schema(
    setup *result) THROW_DECL
 {
    setup_command foo2;
-   Const by_def_item *innerdef = &callspec->stuff.conc.innerdef;
-   Const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
+   const by_def_item *innerdef = &callspec->stuff.conc.innerdef;
+   const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
    parse_block *parseptr = ss->cmd.parseptr;
 
    /* Must be some form of concentric, or a "sel_XXX" schema. */
@@ -4434,6 +4288,21 @@ long_boolean do_misc_schema(
                            outerdef->modifiers1,
                            result);
    }
+   else if (the_schema == schema_select_who_did_and_didnt) {
+      uint32 result_mask(0);
+      int i, j;
+
+      for (i=0,j=1; i<=setup_attrs[ss->kind].setup_limits; i++,j<<=1) {
+         if (ss->people[i].id1 & (ROLLBITL | ROLLBITR)) result_mask |= j;
+      }
+
+      inner_selective_move(ss, foo1p, &foo2,
+                           selective_key_plain_no_live_subsets, TRUE, 0, result_mask,
+                           selector_uninitialized,
+                           innerdef->modifiers1,
+                           outerdef->modifiers1,
+                           result);
+   }
    else if (the_schema == schema_select_original_rims) {
       *special_selectorp = selector_ends;
       *special_modifiersp = innerdef->modifiers1;
@@ -4459,6 +4328,7 @@ long_boolean do_misc_schema(
       if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
           (the_schema == schema_concentric ||
            the_schema == schema_cross_concentric ||
+           the_schema == schema_concentric_4_2_or_normal ||
            the_schema == schema_conc_o)) {
 
          if (ss->people[0].id1) {
@@ -4600,681 +4470,203 @@ long_boolean do_misc_schema(
 }
 
 
-
-// This leaves the split axis result bits in absolute orientation.
-
-static void move_with_real_call(
-   setup *ss,
-   long_boolean qtfudged,
-   setup *result) THROW_DECL
+static calldef_schema get_real_callspec_and_schema(setup *ss,
+   uint32 herit_concepts,
+   calldef_schema the_schema) THROW_DECL
 {
-   uint32 tbonetest;
-   uint32 imprecise_rotation_result_flag = 0;
-   uint32 unaccepted_flags;
-   calldef_schema the_schema;
-   setup_command foo1;
-   long_boolean mirror;
-   long_boolean did_4x4_expansion = FALSE;
-   uint32 force_split = 0;      /* 1 means force split,
-                                   2 means this is 1x8 and do not recompute id. */
-   selector_kind special_selector = selector_none;
-   uint32 special_modifiers = 0;
-   selective_key special_indicator = selective_key_plain;
-   callspec_block *callspec = ss->cmd.callspec;
-   uint32 callflags1 = callspec->callflags1;
+   // Check for a schema that we weren't sure about,
+   // and fix it up, using the specified modifiers.
 
-   clear_people(result);
-   result->result_flags = 0;   /* In case we bail out. */
-
-   /* We have a genuine call.  Presumably all serious concepts have been disposed of
-      (that is, nothing interesting will be found in parseptr -- it might be
-      useful to check that someday) and we just have the callspec and the final
-      concepts. */
-
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
-      ss->cmd.cmd_final_flags.her8it |= ss->cmd.restrained_super8flags;
-   }
-
-   if (ss->kind == nothing) {
-      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
-         fail("Can't fractionalize a call if no one is doing it.");
-
-      result->kind = nothing;
-      return;
-   }
-
-   if ((callspec->callflagsf & CFLAG2_YOYO_FRACTAL_NUM)) {
-      if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_FRACTAL))) {
-         if ((current_options.number_fields & 0xD) == 1)
-            current_options.number_fields ^= 2;
-         ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_FRACTAL;
-      }
-      else if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_YOYO))) {
-         if ((current_options.number_fields & 0xF) == 2)
-            current_options.number_fields++;
-         ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_YOYO;
-      }
-   }
-
-
-/* ***** Beware!!!!  There are still some checks for
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
-that probably need to be put in. */
-
-   the_schema = fixup_conc_schema(callspec, ss);
-
-   /* Check for "central" concept and its ilk, and pick up correct definition. */
-
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
-
-      /* If we invert centers and ends parts, we don't raise errors
-         for bad elongation if "suppress_elongation_warnings" was set for the centers part.
-         This allows horrible "ends trade" on "invert acey deucey", for example,
-         since "acey deucey" has that flag set for the trade that the centers do. */
-
-      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__SAID_INVERT) &&
-          (the_schema == schema_concentric ||
-           the_schema == schema_concentric_6p ||
-           the_schema == schema_concentric_6p_or_normal ||
-           the_schema == schema_conc_o) &&
-          (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
-         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-
-      /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the
-         ends part of detour".  But if we say "ends central detour" we mean
-         "ends do the *centers* part of detour". */
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__DOING_ENDS;
-
-      /* Now we demand that, if a concept was given, the call had the appropriate flag
-         set saying that the concept is legal and will be inherited to the children.
-         Unless it is defined by array. */
-
-      if (the_schema != schema_by_array &&
-          (ss->cmd.cmd_final_flags.her8it &
-           (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))))
-         fail("Can't do this call with this concept.");
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
-         /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
-         if (the_schema != schema_sequential &&
-             the_schema != schema_sequential_with_fraction &&
-             the_schema != schema_sequential_with_split_1x8_id) {
-            Const by_def_item *defptr;
-            uint32 inv_bits;
-
-            switch (the_schema) {
-            case schema_concentric:
-            case schema_single_concentric:
-            case schema_single_concentric_together:
-            case schema_conc_o:
-            case schema_concentric_6p:
-            case schema_concentric_6p_or_normal:
-            case schema_concentric_6p_or_sgltogether:
-            case schema_cross_concentric_6p_or_normal:
-               /* Normally, we get the centers' part of the definition.  But if the user said
-                  either "invert central" (the concept that means to get the ends' part)
-                  or "central invert" (the concept that says to get the centers' part
-                  of the inverted call) we get the ends' part.  If BOTH inversion bits are on,
-                  the user said "invert central invert", meaning to get the ends' part of the
-                  inverted call, so we just get the centers' part as usual. */
-
-               inv_bits = ss->cmd.cmd_misc2_flags &
-                  (CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__SAID_INVERT);
-
-               if (inv_bits == CMD_MISC2__INVERT_CENTRAL ||
-                   inv_bits == CMD_MISC2__SAID_INVERT)
-                  defptr = &callspec->stuff.conc.outerdef;
-               else
-                  defptr = &callspec->stuff.conc.innerdef;
-
-               if (ss->cmd.cmd_final_flags.final &
-                   ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
-                  fail("This concept not allowed here.");
-
-               do_inheritance(&ss->cmd, callspec, defptr);
-               callspec = ss->cmd.callspec;
-               callflags1 = callspec->callflags1;
-               the_schema = fixup_conc_schema(callspec, ss);
-
-               process_number_insertion(defptr->modifiers1);
-
-               switch (defptr->modifiers1 & DFM1_CALL_MOD_MASK) {
-               case DFM1_CALL_MOD_BIT*2:
-               case DFM1_CALL_MOD_BIT*6:
-                  fail("You can't select that part of the call.");
-               }
-
-               if (callspec == base_calls[base_call_null_second])
-                  fail("You can't select that part of the call.");
-
-               break;
-            case schema_select_ctr2:
-            case schema_select_ctr4:
-               /* Just leave the definition in place.  We will split the 8-person
-                  setup into two 4-person setups, and then pick out the center 2 from them. */
-               force_split = 1;
-               break;
-            default:
-               fail("Can't do \"central\" with this call.");
-            }
-
-            /* We are done. */
-            ss->cmd.cmd_misc2_flags &=
-               ~(CMD_MISC2__DO_CENTRAL | CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__SAID_INVERT);
-         }
+   switch (the_schema) {
+   case schema_maybe_single_concentric:
+      return (herit_concepts & INHERITFLAG_SINGLE) ?
+         schema_single_concentric : schema_concentric;
+   case schema_maybe_single_cross_concentric:
+      return (herit_concepts & INHERITFLAG_SINGLE) ?
+         schema_single_cross_concentric : schema_cross_concentric;
+   case schema_maybe_grand_single_concentric:
+      if (herit_concepts & INHERITFLAG_GRAND) {
+         if (herit_concepts & INHERITFLAG_SINGLE)
+            return schema_grand_single_concentric;
+         else
+            fail("You must not use \"grand\" without \"single\".");
       }
       else {
-         /* Snag or mystic, or maybe just plain invert, was on. */
-         if (ss->cmd.cmd_final_flags.final) fail("This concept not allowed here.");
+         return (herit_concepts & INHERITFLAG_SINGLE) ?
+            schema_single_concentric : schema_concentric;
       }
-   }
-
-   if (callflags1 & CFLAG1_IMPRECISE_ROTATION)
-      imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
-
-   /* We of course don't allow "mystic" or "snag" for things that are
-      *CROSS* concentrically defined.  That will be taken care of later, in concentric_move. */
-
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
-      switch (the_schema) {
-      case schema_sequential:
-      case schema_sequential_with_fraction:
-      case schema_sequential_with_split_1x8_id:
-      case schema_concentric:
-      case schema_concentric_2_6:
-      case schema_conc_o:
-      case schema_select_ctr2:
-      case schema_select_ctr4:
-      case schema_select_ctr6:
-      case schema_select_who_can:
-      case schema_select_who_did:
-      case schema_select_who_didnt:
-      case schema_single_concentric:
-      case schema_single_concentric_together:
-      case schema_select_original_rims:
-      case schema_select_original_hubs:
-      case schema_cross_concentric:
-      case schema_single_cross_concentric:
-      case schema_concentric_or_diamond_line:
-      case schema_concentric_6p:
-      case schema_concentric_6p_or_sgltogether:
-      case schema_concentric_6p_or_normal:
-      case schema_cross_concentric_6p_or_normal:
-      case schema_by_array:
-         break;
-      default:
-         fail("Can't do \"central/snag/mystic\" with this call.");
-      }
-   }
-
-   /* Do some quick error checking for visible fractions.  For now, any flag is acceptable.  Later, we will
-      distinguish among the various flags. */
-
-   if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
-      switch (the_schema) {
-      case schema_by_array:
-         /* We allow the fractions "1/2" and "last 1/2" to be given.
-            Basic_move will handle them. */
-         if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
-            ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-            ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
-         }
-         else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
-            ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-            ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
-         }
+   case schema_maybe_grand_single_cross_concentric:
+      if (herit_concepts & INHERITFLAG_GRAND) {
+         if (herit_concepts & INHERITFLAG_SINGLE)
+            return schema_grand_single_cross_concentric;
          else
-            fail("This call can't be fractionalized this way.");
-
-         break;
-      case schema_nothing: case schema_matrix:
-      case schema_recenter:
-      case schema_partner_matrix: case schema_roll:
-         fail("This call can't be fractionalized.");
-         break;
-      case schema_sequential:
-      case schema_sequential_with_fraction:
-      case schema_split_sequential:
-      case schema_sequential_with_split_1x8_id:
-         if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) &&
-             !(ss->cmd.cmd_frac_flags & CMD_FRAC_FORCE_VIS))
-            fail("This call can't be fractionalized.");
-         break;
-      default:
-
-         /* Must be some form of concentric.  We allow visible fractions,
-            and take no action in that case.  This means that any fractions
-            will be sent to constituent calls. */
-
-         if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
-
-            /* Otherwise, we allow the fraction "1/2" to be given, if the top-level
-               heritablilty flag allows it.  We turn the fraction into a "final concept". */
-
-            if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
-            }
-            else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
-            }
-            else {
-               fail("This call can't be fractionalized this way.");
-            }
-         }
-
-         break;
-      }
-   }
-
-   /* If the "diamond" concept has been given and the call doesn't want it, we do
-      the "diamond single wheel" variety. */
-
-   if (INHERITFLAG_DIAMOND & ss->cmd.cmd_final_flags.her8it & (~callspec->callflagsh))  {
-      /* If the call is sequentially or concentrically defined, the top level flag is required
-         before the diamond concept can be inherited.  Since that flag is off, it is an error. */
-      if (the_schema != schema_by_array)
-         fail("Can't do this call with the \"diamond\" concept.");
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
-         fail("Can't do \"invert/central/snag/mystic\" with the \"diamond\" concept.");
-
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-
-      if (ss->kind == sdmd) {
-         ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_DIAMOND;
-         new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0), phantest_ok, TRUE, result);
-         return;
+            fail("You must not use \"grand\" without \"single\".");
       }
       else {
-         /* If in a qtag or point-to-points, perhaps we ought to divide
-            into single diamonds and try again.   BUT: if "magic" or "interlocked"
-            is also present, we don't.  We let basic_move deal with
-            it.  It will come back here after it has done what it needs to. */
-
-         if (!(TEST_HERITBITS(ss->cmd.cmd_final_flags,(INHERITFLAG_MAGIC|INHERITFLAG_INTLK)))) {
-            /* Divide into diamonds and try again.  Note that we do not clear the concept. */
-            divide_diamonds(ss, result);
-            return;
-         }
-      }
-   }
-
-   mirror = FALSE;
-
-   /* It may be appropriate to step to a wave or rear back from one.
-      This is only legal if the flag forbidding same is off.
-      Furthermore, if certain modifiers have been given, we don't allow it. */
-
-   if (TEST_HERITBITS(ss->cmd.cmd_final_flags,(INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX | INHERITFLAG_FUNNY)))
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
-
-   /* But, alas, if fractionalization is on, we can't do it yet, because we don't
-      know whether we are starting at the beginning.  In the case of fractionalization,
-      we will do it later.  We also can't do it yet if we are going
-      to split the setup for "central" or "crazy", or if we are doing the call "mystic". */
-
-   if ((!(ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) ||
-        the_schema != schema_by_array) &&
-       (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
-      uint32 frac = ss->cmd.cmd_frac_flags;
-
-      // See if what we are doing includes the first part.
-
-      if (frac == CMD_FRAC_NULL_VALUE ||
-          frac == (CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE) ||
-          (frac & ~CMD_FRAC_PART_MASK) == (CMD_FRAC_CODE_FROMTO | CMD_FRAC_NULL_VALUE)) {
-
-         if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
-                                         CMD_MISC__ALREADY_STEPPED |
-                                         CMD_MISC__MUST_SPLIT_MASK))) {
-            if (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_LEFT)) {
-               mirror_this(ss);
-               mirror = TRUE;
-            }
-      
-            ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
-            touch_or_rear_back(ss, mirror, callflags1);
-      
-            /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left"
-               flag for the purpose of what "touch_or_rear_back" just did.  So, in that case,
-               we turn off the "left" flag and set things back to normal. */
-      
-            if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
-               if (mirror) mirror_this(ss);
-               mirror = FALSE;
-            }
-         }
-   
-         /* Actually, turning off the "left" flag is more global than that. */
-   
-         if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
-            ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
-         }
-      }
-      else if ((frac & ~CMD_FRAC_PART_MASK) ==
-               (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_FROMTOREV) &&
-               (frac & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2)) {
-         /* If we're doing the rest of the call, just turn all that stuff off. */
-         if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
-            ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
-         }
-      }
-   }
-
-   /* Check for a call whose schema is single (cross) concentric.
-      If so, be sure the setup is divided into 1x4's or diamonds.
-      But don't do it if something like "magic" is still unprocessed. */
-
-   if ((ss->cmd.cmd_final_flags.her8it &
-        (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
-      switch (the_schema) {
-      case schema_single_concentric:
-      case schema_single_cross_concentric:
-         force_split = 1;
-         break;
-      case schema_single_concentric_together:
-      case schema_concentric_6p_or_sgltogether:
-         switch (ss->kind) {
-         case s1x8: case s_ptpd:
-            force_split = 1;
-            break;
-         }
-         break;
-      case schema_select_original_rims:
-      case schema_select_original_hubs:
-         switch (ss->kind) {
-         case s1x8: case s_ptpd:
-            force_split = 2;     /* What a crock!!!!! ****** */
-            break;
-         }
-         break;
-      }
-   }
-
-   if (force_split)
-      if (!do_simple_split(ss, force_split, result)) return;
-
-   /* At this point, we may have mirrored the setup and, of course, left the switch "mirror"
-      on.  We did it only as needed for the [touch / rear back / check] stuff.  What we
-      did doesn't actually count.  In particular, if the call is defined concentrically
-      or sequentially, mirroring the setup in response to "left" is *NOT* the right thing
-      to do.  The right thing is to pass the "left" flag to all subparts that have the
-      "inherit_left" invocation flag, and letting events take their course.  So we allow
-      the "INHERITFLAG_LEFT" bit to remain in "cmd_final_flags", because it is still important
-      to know whether we have been invoked with the "left" modifier. */
-
-   /* Check for special case of ends doing a call like "detour" which specifically
-      allows just the ends part to be done.  If the call was "central", this flag will be turned off. */
-
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS) {
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
-         fail("Can't do \"invert/central/snag/mystic\" with a call for the ends only.");
-
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      if ((the_schema == schema_concentric ||
-           the_schema == schema_rev_checkpoint ||
-           the_schema == schema_concentric_6p ||
-           the_schema == schema_concentric_6p_or_normal ||
-           the_schema == schema_conc_o) &&
-            (DFM1_ENDSCANDO & callspec->stuff.conc.outerdef.modifiers1)) {
-
-         /* Copy the concentricity flags from the call definition into the setup.  All the fuss
-            in database.h about concentricity flags co-existing with setupflags refers to this moment. */
-         ss->cmd.cmd_misc_flags |= (callspec->stuff.conc.outerdef.modifiers1 & DFM1_CONCENTRICITY_FLAG_MASK);
-
-         if (the_schema == schema_conc_o) {
-            did_4x4_expansion = TRUE;
-            if (ss->kind != s2x2)
-               fail("Can't find outside 'O' spots.");
-            if (ss->cmd.prior_elongation_bits == 1) {
-               setup temp = *ss;
-               ss->kind = s4x4;
-               clear_people(ss);
-               (void) copy_person(ss, 10, &temp, 0);
-               (void) copy_person(ss, 1, &temp, 1);
-               (void) copy_person(ss, 2, &temp, 2);
-               (void) copy_person(ss, 9, &temp, 3);
-            }
-            else if (ss->cmd.prior_elongation_bits == 2) {
-               setup temp = *ss;
-               ss->kind = s4x4;
-               clear_people(ss);
-               (void) copy_person(ss, 13, &temp, 0);
-               (void) copy_person(ss, 14, &temp, 1);
-               (void) copy_person(ss, 5, &temp, 2);
-               (void) copy_person(ss, 6, &temp, 3);
-            }
-            else
-               fail("Can't find outside 'O' spots.");
-         }
-
-         do_inheritance(&ss->cmd, callspec, &callspec->stuff.conc.outerdef);
-         callspec = ss->cmd.callspec;
-         callflags1 = callspec->callflags1;
-         the_schema = fixup_conc_schema(callspec, ss);
-      }
-   }
-
-   /* ******** We did this before, but maybe that was too early!!!!  Need to do it again
-         after pulling out the "doing ends" stuff. */
-
-
-   /* Do some quick error checking for visible fractions.  For now, any flag is acceptable.  Later, we will
-      distinguish among the various flags. */
-
-   if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
-      switch (the_schema) {
-         case schema_by_array:
-            /* We allow the fractions "1/2" and "last 1/2" to be given.
-               Basic_move will handle them. */
-            if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
-            }
-            else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
-            }
-            else
-               fail("This call can't be fractionalized this way.");
-
-            break;
-      }
-   }
-
-   /* ******** */
-
-
-
-   /* Enforce the restriction that only tagging calls are allowed in certain contexts. */
-
-   if (ss->cmd.cmd_final_flags.final & FINAL__MUST_BE_TAG) {
-      if (!(callflags1 & CFLAG1_BASE_TAG_CALL_MASK))
-         fail("Only a tagging call is allowed here.");
-   }
-
-   ss->cmd.cmd_final_flags.final &= ~FINAL__MUST_BE_TAG;
-
-   /* If the "split" concept has been given and this call uses that concept for a special
-      meaning (split square thru, split dixie style), set the special flag to determine that
-      action, and remove the split concept.  Why remove it?  So that "heads split catch grand
-      mix 3" will work.  If we are doing a "split catch", we don't really want to split the
-      setup into 2x2's that are isolated from each other, or else the "grand mix" won't work. */
-
-   if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
-      long_boolean starting = TRUE;
-
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-
-      /* Check for doing "split square thru" or "split dixie style" stuff.
-         But don't propagate the stuff if we aren't doing the first part of the call. */
-
-      if ((ss->cmd.cmd_frac_flags & 0xFF00) != 0x0100 ||
-          ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
-           (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) > CMD_FRAC_PART_BIT))
-         starting = FALSE;     /* We aren't doing the first part. */
-
-      if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
-         if (starting) ss->cmd.cmd_final_flags.final |= FINAL__SPLIT_SQUARE_APPROVED;
-         ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
-
-         if (current_options.howmanynumbers != 0 && (current_options.number_fields & 0xF) <= 1)
-            fail("Can't split square thru 1.");
-      }
-      else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE) {
-         if (starting) ss->cmd.cmd_final_flags.final |= FINAL__SPLIT_DIXIE_APPROVED;
-         ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
-      }
-
-      if (ss->kind == s4x4) {
-         /* The entire rest of the program expects split calls to be done in
-            a C1 phantom setup rather than a 4x4. */
-
-         int i, j;
-         uint32 mask = 0;
-
-         for (i=0,j=1 ; i<16 ; i++,j<<=1) {
-            if (ss->people[i].id1) mask |= j;
-         }
-
-         if (mask == 0xAAAA || mask == 0xCCCC) {
-            expand_thing *t = (mask & 2) ? &exp_c1phan_4x4_stuff1 : &exp_c1phan_4x4_stuff2;
-            compress_setup(t, ss);
-         }
-      }
-   }
-
-   /* NOTE: We may have mirror-reflected the setup.  "Mirror" is true if so.  We may need to undo this. */
-
-   /* If this is the "split sequential" schema and we have not already done so,
-      cause splitting to take place. */
-
-   if (the_schema == schema_split_sequential) {
-      uint32 nxnflags = ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK;
-      uint32 mxnflags = ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MXNMASK;
-
-      if (setup_attrs[ss->kind].setup_limits == 7) {
-         if (nxnflags != INHERITFLAGNXNK_3X3 &&
-             nxnflags != INHERITFLAGNXNK_4X4 &&
-             !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
-            if (ss->rotation & 1)
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
-            else
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-         }
-      }
-      else if (setup_attrs[ss->kind].setup_limits == 11 &&
-               (mxnflags == INHERITFLAGMXNK_1X3 || mxnflags == INHERITFLAGMXNK_3X1)) {
-         if (!(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
-            if (ss->rotation & 1)
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
-            else
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-         }
-      }
-      else if ((setup_attrs[ss->kind].setup_limits == 11 && nxnflags == INHERITFLAGNXNK_3X3) ||
-               (setup_attrs[ss->kind].setup_limits == 15 && nxnflags == INHERITFLAGNXNK_4X4) ||
-               (setup_attrs[ss->kind].setup_limits == 5 && nxnflags == INHERITFLAGNXNK_3X3))
-         ;    /* No action. */
-
-      // This used to just bypass 3.  It now bypasses 1 in order to get
-      // disband to work in a bone6.
-      else if (setup_attrs[ss->kind].setup_limits != 3 &&
-               setup_attrs[ss->kind].setup_limits != 1) {
-
-         // If this is a 3x4 or 4x4 inhabited in boxes, we allow the splitting into those boxes.
-
-         int i, j;
-         uint32 mask = 0;
-
-         for (i=0, j=1; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
-            if (ss->people[i].id1) mask |= j;
-         }
-
-         if (ss->kind == s3x4) {
-            if (mask == 0xF3C || mask == 0xCF3)
-               // ****** This needs to be looked at.
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-            else
-               fail("Can't split this setup.");
-         }
-         else if (ss->kind == s4x4) {
-            if (mask == 0x4B4B || mask == 0xB4B4)
-               // ****** This needs to be looked at.
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-            else
-               fail("Can't split this setup.");
-         }
+         if (herit_concepts & INHERITFLAG_SINGLE)
+            return schema_single_cross_concentric;
          else
-            fail("Need a 4 or 8 person setup for this.");
+            return schema_cross_concentric;
       }
-   }
+   case schema_maybe_special_single_concentric:
+      // "Single" has the usual meaning for this one.  But "grand single"
+      // turns it into a "special concentric", which has the centers working
+      // in three pairs.
 
-   /* If the split concept is still present, do it. */
-
-   if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
-      uint32 split_map;
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
-         fail("Can't do \"invert/central/snag/mystic\" with the \"split\" concept.");
-
-      ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
-      ss->cmd.cmd_misc_flags |= (CMD_MISC__SAID_SPLIT | CMD_MISC__NO_EXPAND_MATRIX);
-
-      /* We can't handle the mirroring, so undo it. */
-      if (mirror) { mirror_this(ss); mirror = FALSE; }
-
-      if      (ss->kind == s2x4)   split_map = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
-      else if (ss->kind == s1x8)   split_map = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
-      else if (ss->kind == s_ptpd) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
-      else if (ss->kind == s_qtag) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
-      else if (ss->kind == s2x2) {
-         /* "Split" was given while we are already in a 2x2?  The only way that
-            can be legal is if the word "split" was meant as a modifier for "split square thru"
-            etc., rather than as a virtual-setup concept, or if the "split sequential" schema
-            is in use.  In those cases, some "split approved" flag will still be on. */
-
-         if (     !(ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
-                  !(ss->cmd.cmd_frac_flags & CMD_FRAC_BREAKING_UP))   /* If "BREAKING_UP", caller presumably knows what she is doing. */
-            warn(warn__excess_split);
-
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
-            fail("\"Matrix\" concept must be followed by applicable concept.");
-
-         move(ss, qtfudged, result);
-         result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
-         return;
+      if (herit_concepts & INHERITFLAG_SINGLE) {
+         if (herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK))
+            return schema_concentric_others;
+         else
+            return schema_single_concentric;
       }
+      else {
+         if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == INHERITFLAG_GRAND)
+            fail("You must not use \"grand\" without \"single\" or \"nxn\".");
+         else if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == 0)
+            return schema_concentric;
+         else if ((herit_concepts &
+                   (INHERITFLAG_NXNMASK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) ==
+                  (INHERITFLAGNXNK_4X4 | INHERITFLAG_16_MATRIX))
+            return schema_4x4_lines_concentric;
+         else if ((herit_concepts &
+                   (INHERITFLAG_NXNMASK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) ==
+                  (INHERITFLAGNXNK_3X3 | INHERITFLAG_12_MATRIX))
+            return schema_3x3_concentric;
+      }
+   case schema_maybe_nxn_lines_concentric:
+      switch (herit_concepts &
+              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
+      case INHERITFLAG_SINGLE:
+         return schema_single_concentric;
+      case INHERITFLAGNXNK_3X3:
+         return schema_3x3_concentric;
+      case INHERITFLAGNXNK_4X4:
+         return schema_4x4_lines_concentric;
+      case 0:
+         return schema_concentric;
+      }
+   case schema_maybe_nxn_cols_concentric:
+      switch (herit_concepts &
+              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
+      case INHERITFLAG_SINGLE:
+         return schema_single_concentric;
+      case INHERITFLAGNXNK_3X3:
+         return schema_3x3_concentric;
+      case INHERITFLAGNXNK_4X4:
+         return schema_4x4_cols_concentric;
+      case 0:
+         return schema_concentric;
+      }
+   case schema_maybe_nxn_1331_lines_concentric:
+      switch (herit_concepts &
+              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
+      case INHERITFLAG_SINGLE:
+         return schema_single_concentric;
+      case INHERITFLAGNXNK_3X3:
+         return schema_3x3_concentric;
+      case INHERITFLAGNXNK_4X4:
+         return schema_4x4_lines_concentric;
+      case INHERITFLAGMXNK_1X3:
+      case INHERITFLAGMXNK_3X1:
+         return schema_1331_concentric;
+      case 0:
+         return schema_concentric;
+      }
+   case schema_maybe_nxn_1331_cols_concentric:
+      switch (herit_concepts &
+              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
+      case INHERITFLAG_SINGLE:
+         return schema_single_concentric;
+      case INHERITFLAGNXNK_3X3:
+         return schema_3x3_concentric;
+      case INHERITFLAGNXNK_4X4:
+         return schema_4x4_cols_concentric;
+      case INHERITFLAGMXNK_1X3:
+      case INHERITFLAGMXNK_3X1:
+         return schema_1331_concentric;
+      case INHERITFLAGMXNK_1X2:
+      case INHERITFLAGMXNK_2X1:
+         return schema_concentric_6p_or_normal;
+      case 0:
+         return schema_concentric;
+      }
+   case schema_maybe_matrix_single_concentric_together:
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
+         return schema_conc_12;
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         return schema_conc_16;
+      else if (herit_concepts & INHERITFLAG_GRAND)
+         return schema_concentric_others;
       else
-         fail("Can't do split concept in this setup.");
-
-      /* If the user said "matrix split", the "matrix" flag will be on at this point,
-         and the right thing will happen. */
-
-      new_divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
-      return;
+         return schema_single_concentric_together;
+   case schema_maybe_matrix_conc:
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
+         return schema_conc_12;
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         return schema_conc_16;
+      else
+         return schema_concentric;
+   case schema_maybe_matrix_conc_star:
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
+         return schema_conc_star12;
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         return schema_conc_star16;
+      else
+         return schema_conc_star;
+   case schema_maybe_matrix_conc_bar:
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
+         return schema_conc_bar12;
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         return schema_conc_bar16;
+      else
+         return schema_conc_bar;
+   default:
+      return the_schema;
    }
 
-   /* If the "matrix" concept is on and we get here, that is, we haven't acted on a "split" command,
-      it is illegal. */
+   fail("Can't use this combination of modifiers.");
+}
+
+static void really_inner_move(setup *ss,
+                              long_boolean qtfudged,
+                              calldefn *callspec,
+                              calldef_schema the_schema,
+                              uint32 callflags1,
+                              long_boolean did_4x4_expansion,
+                              uint32 imprecise_rotation_result_flag,
+                              long_boolean mirror,
+                              setup *result) THROW_DECL
+{
+   selector_kind special_selector = selector_none;
+   selective_key special_indicator = selective_key_plain;
+   uint32 special_modifiers = 0;
+   uint32 callflagsh = callspec->callflagsh;
+
+   // If the "matrix" concept is on and we get here,
+   // that is, we haven't acted on a "split" command, it is illegal.
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
       fail("\"Matrix\" concept must be followed by applicable concept.");
 
-   /* Look for empty starting setup.  If definition is by array,
-      we go ahead with the call anyway. */
+   // Look for empty starting setup.  If definition is by array,
+   // we go ahead with the call anyway.
 
-   tbonetest = 0;
+   uint32 tbonetest = 0;
    if (setup_attrs[ss->kind].setup_limits >= 0) {
-      int j;
-
-      for (j=0; j<=setup_attrs[ss->kind].setup_limits; j++) tbonetest |= ss->people[j].id1;
+      for (int j=0; j<=setup_attrs[ss->kind].setup_limits; j++) tbonetest |= ss->people[j].id1;
       if (!(tbonetest & 011) && the_schema != schema_by_array) {
          result->kind = nothing;
+
+         // We need to mark the result elongation, even though there aren't any people.
+         switch (ss->kind) {
+         case s2x2: case s_short6:
+            result->result_flags = ss->cmd.prior_elongation_bits & 3;
+            break;
+         case s1x2: case s1x4: case sdmd:
+            result->result_flags = 2 - (ss->rotation & 1);
+            break;
+         }
+
          return;
       }
    }
@@ -5286,11 +4678,14 @@ that probably need to be put in. */
       if (mirror) { mirror_this(ss); mirror = FALSE; }
    }
 
+   setup_command foo1;
+   uint32 unaccepted_flags;
+
    if ((callflags1 & CFLAG1_FUNNY_MEANS_THOSE_FACING) &&
        (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_FUNNY))) {
       ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_FUNNY;
 
-      /* We have to do this -- we need to know who is facing *now*. */
+      // We have to do this -- we need to know who is facing *now*.
       update_id_bits(ss);
       foo1 = ss->cmd;
       special_selector = selector_thosefacing;
@@ -5321,7 +4716,7 @@ that probably need to be put in. */
       /* The "reverse" concept might mean mirror, as in "reverse truck". */
 
       if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) &&
-          (callspec->callflagsh & INHERITFLAG_REVERSE)) {
+          (callflagsh & INHERITFLAG_REVERSE)) {
          mirror_this(ss);
          mirror = TRUE;
          ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_REVERSE;
@@ -5333,10 +4728,7 @@ that probably need to be put in. */
       if ((ss->cmd.cmd_final_flags.her8it & ~(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) |
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-         remove_z_distortion(ss);
-
+      remove_z_distortion(ss);
       matrixmove(ss, callspec, result);
       break;
    case schema_partner_matrix:
@@ -5346,19 +4738,13 @@ that probably need to be put in. */
       if ((ss->cmd.cmd_final_flags.her8it & ~(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) |
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-         remove_z_distortion(ss);
-
+      remove_z_distortion(ss);
       partner_matrixmove(ss, callspec, result);
       break;
    case schema_roll:
       if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-         remove_z_distortion(ss);
-
+      remove_z_distortion(ss);
       rollmove(ss, callspec, result);
       /* This call is a 1-person call, so it can be presumed
          to have split maximally both ways. */
@@ -5372,7 +4758,7 @@ that probably need to be put in. */
 
       if (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_LEFT)) {
          /* ***** why isn't this particular error test taken care of more generally elsewhere? */
-         if (!(callspec->callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
+         if (!(callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
          if (!mirror) mirror_this(ss);
          mirror = TRUE;
          ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
@@ -5381,7 +4767,7 @@ that probably need to be put in. */
       /* The "reverse" concept might mean mirror, or it might be genuine. */
 
       if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) &&
-          (callspec->callflagsh & INHERITFLAG_REVERSE)) {
+          (callflagsh & INHERITFLAG_REVERSE)) {
          /* This "reverse" just means mirror. */
          if (mirror) fail("Can't do this call 'left' and 'reverse'.");
          mirror_this(ss);
@@ -5392,9 +4778,7 @@ that probably need to be put in. */
       /* If the "reverse" flag is still set in cmd_final_flags, it means a genuine
             reverse as in reverse cut/flip the diamond or reverse change-O. */
 
-      ss->cmd.callspec = callspec;
-
-      basic_move(ss, tbonetest, qtfudged, mirror, result);
+      basic_move(ss, callspec, tbonetest, qtfudged, mirror, result);
       break;
    default:
       /* Must be sequential or some form of concentric. */
@@ -5412,7 +4796,7 @@ that probably need to be put in. */
             it is an error unless the concepts are the special ones "magic" and/or "interlocked", which we can dispose
             of by doing the call in the appropriate magic/interlocked setup. */
 
-      unaccepted_flags = ss->cmd.cmd_final_flags.her8it & (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF));    /* The unaccepted flags. */
+      unaccepted_flags = ss->cmd.cmd_final_flags.her8it & (~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF));    /* The unaccepted flags. */
 
       if (unaccepted_flags != 0) {
          if (divide_for_magic(ss, unaccepted_flags, result))
@@ -5606,6 +4990,690 @@ that probably need to be put in. */
 
 
 
+// This leaves the split axis result bits in absolute orientation.
+
+static void move_with_real_call(
+   setup *ss,
+   long_boolean qtfudged,
+   long_boolean did_4x4_expansion,
+   setup *result) THROW_DECL
+{
+   /* We have a genuine call.  Presumably all serious concepts have been disposed of
+      (that is, nothing interesting will be found in parseptr -- it might be
+      useful to check that someday) and we just have the callspec and the final
+      concepts. */
+
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
+      ss->cmd.cmd_final_flags.her8it |= ss->cmd.restrained_super8flags;
+   }
+
+   if (ss->kind == nothing) {
+      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+         fail("Can't fractionalize a call if no one is doing it.");
+
+      result->kind = nothing;
+      result->result_flags = 0;   // Do we need this?
+      return;
+   }
+
+   // If snag or mystic, or maybe just plain invert, was on,
+   // we don't allow any final flags.
+   if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) && ss->cmd.cmd_final_flags.final)
+         fail("This concept not allowed here.");
+
+   uint32 herit_concepts = ss->cmd.cmd_final_flags.her8it;
+   calldefn *this_defn = &ss->cmd.callspec->the_defn;
+   calldefn *deferred_array_defn = (calldefn *) 0;
+   warning_info saved_warnings = history[history_ptr+1].warnings;
+   setup saved_ss = *ss;
+
+ try_next_callspec:
+
+   // Now try doing the call with this call definition.
+
+   try {
+      // Previous attempts may have messed things up.
+      history[history_ptr+1].warnings = saved_warnings;
+      *ss = saved_ss;
+      clear_people(result);
+      result->result_flags = 0;   // In case we bail out.
+      uint32 imprecise_rotation_result_flag = 0;
+      uint32 force_split = 0;      /* 1 means force split,
+                                      2 means this is 1x8 and do not recompute id. */
+      long_boolean mirror = FALSE;
+      uint32 callflags1 = this_defn->callflags1;
+
+      calldef_schema the_schema =
+         get_real_callspec_and_schema(ss, herit_concepts, this_defn->schema);
+
+      // If allowing modifications, the array version isn't what we want.
+      if (the_schema == schema_by_array &&
+          this_defn->compound_part &&
+          allowing_modifications &&
+          !deferred_array_defn) {
+         deferred_array_defn = this_defn;     // Save the array definition for later.
+         this_defn = this_defn->compound_part;
+         goto try_next_callspec;
+      }
+
+      if ((this_defn->callflagsf & CFLAG2_YOYO_FRACTAL_NUM)) {
+         if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_FRACTAL))) {
+            if ((current_options.number_fields & 0xD) == 1)
+               current_options.number_fields ^= 2;
+            ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_FRACTAL;
+         }
+         else if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_YOYO))) {
+            if ((current_options.number_fields & 0xF) == 2)
+               current_options.number_fields++;
+            ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_YOYO;
+         }
+      }
+
+      // Check for "central" concept and its ilk, and pick up correct definition.
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
+
+      /* If we invert centers and ends parts, we don't raise errors
+         for bad elongation if "suppress_elongation_warnings" was set for the centers part.
+         This allows horrible "ends trade" on "invert acey deucey", for example,
+         since "acey deucey" has that flag set for the trade that the centers do. */
+
+         if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__SAID_INVERT) &&
+             (the_schema == schema_concentric ||
+              the_schema == schema_concentric_6p ||
+              the_schema == schema_concentric_6p_or_normal ||
+              the_schema == schema_concentric_4_2 ||
+              the_schema == schema_concentric_4_2_or_normal ||
+              the_schema == schema_conc_o) &&
+             (DFM1_SUPPRESS_ELONGATION_WARNINGS & this_defn->stuff.conc.innerdef.modifiers1))
+            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+
+         /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the
+            ends part of detour".  But if we say "ends central detour" we mean
+            "ends do the *centers* part of detour". */
+         ss->cmd.cmd_misc_flags &= ~CMD_MISC__DOING_ENDS;
+
+         /* Now we demand that, if a concept was given, the call had the appropriate flag
+            set saying that the concept is legal and will be inherited to the children.
+            Unless it is defined by array. */
+
+         if (the_schema != schema_by_array &&
+             (ss->cmd.cmd_final_flags.her8it &
+              (~(this_defn->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))))
+            fail("Can't do this call with this concept.");
+
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
+            /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
+            if (the_schema != schema_sequential &&
+                the_schema != schema_sequential_with_fraction &&
+                the_schema != schema_sequential_with_split_1x8_id) {
+               const by_def_item *defptr;
+               uint32 inv_bits = ss->cmd.cmd_misc2_flags &
+                  (CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__SAID_INVERT);
+
+               ss->cmd.cmd_misc2_flags &=
+                  ~(CMD_MISC2__DO_CENTRAL | CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__SAID_INVERT);
+
+               switch (the_schema) {
+               case schema_concentric:
+               case schema_single_concentric:
+               case schema_single_concentric_together:
+               case schema_conc_o:
+               case schema_concentric_4_2:
+               case schema_concentric_4_2_or_normal:
+               case schema_concentric_6p:
+               case schema_concentric_6p_or_normal:
+               case schema_concentric_6p_or_sgltogether:
+               case schema_cross_concentric_6p_or_normal:
+                  /* Normally, we get the centers' part of the definition.  But if the user said
+                     either "invert central" (the concept that means to get the ends' part)
+                     or "central invert" (the concept that says to get the centers' part
+                     of the inverted call) we get the ends' part.  If BOTH inversion bits are on,
+                     the user said "invert central invert", meaning to get the ends' part of the
+                     inverted call, so we just get the centers' part as usual. */
+
+                  if (inv_bits == CMD_MISC2__INVERT_CENTRAL ||
+                      inv_bits == CMD_MISC2__SAID_INVERT)
+                     defptr = &this_defn->stuff.conc.outerdef;
+                  else
+                     defptr = &this_defn->stuff.conc.innerdef;
+
+                  if (ss->cmd.cmd_final_flags.final &
+                      ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
+                     fail("This concept not allowed here.");
+
+                  do_inheritance(&ss->cmd, this_defn, defptr);
+                  process_number_insertion(defptr->modifiers1);
+
+                  switch (defptr->modifiers1 & DFM1_CALL_MOD_MASK) {
+                  case DFM1_CALL_MOD_MAND_ANYCALL:
+                  case DFM1_CALL_MOD_MAND_SECONDARY:
+                     fail("You can't select that part of the call.");
+                  }
+
+                  if (ss->cmd.callspec == base_calls[base_call_null_second])
+                     fail("You can't select that part of the call.");
+
+                  move_with_real_call(ss, qtfudged, did_4x4_expansion, result);
+                  return;
+               case schema_select_ctr2:
+               case schema_select_ctr4:
+                  /* Just leave the definition in place.  We will split the 8-person
+                  setup into two 4-person setups, and then pick out the center 2 from them. */
+                  force_split = 1;
+                  break;
+               default:
+                  fail("Can't do \"central\" with this call.");
+               }
+            }
+         }
+      }
+
+      /* We of course don't allow "mystic" or "snag" for things that are
+       *CROSS* concentrically defined.  That will be taken care of later, in concentric_move. */
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
+         switch (the_schema) {
+         case schema_sequential:
+         case schema_sequential_with_fraction:
+         case schema_sequential_with_split_1x8_id:
+         case schema_concentric:
+         case schema_concentric_2_6:
+         case schema_conc_o:
+         case schema_select_ctr2:
+         case schema_select_ctr4:
+         case schema_select_ctr6:
+         case schema_select_who_can:
+         case schema_select_who_did:
+         case schema_select_who_didnt:
+         case schema_single_concentric:
+         case schema_single_concentric_together:
+         case schema_select_original_rims:
+         case schema_select_original_hubs:
+         case schema_cross_concentric:
+         case schema_single_cross_concentric:
+         case schema_concentric_or_diamond_line:
+         case schema_concentric_4_2:
+         case schema_concentric_4_2_or_normal:
+         case schema_concentric_6p:
+         case schema_concentric_6p_or_sgltogether:
+         case schema_concentric_6p_or_normal:
+         case schema_cross_concentric_6p_or_normal:
+         case schema_by_array:
+            break;
+         default:
+            fail("Can't do \"central/snag/mystic\" with this call.");
+         }
+      }
+
+      // Do some quick error checking for visible fractions.
+      // For now, any flag is acceptable.  Later, we will
+      // distinguish among the various flags.
+
+      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+         switch (the_schema) {
+         case schema_by_array:
+            /* We allow the fractions "1/2" and "last 1/2" to be given.
+               Basic_move will handle them. */
+            if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
+            }
+            else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
+            }
+            else
+               fail("This call can't be fractionalized this way.");
+
+            break;
+         case schema_nothing: case schema_matrix:
+         case schema_recenter:
+         case schema_partner_matrix: case schema_roll:
+            fail("This call can't be fractionalized.");
+            break;
+         case schema_sequential:
+         case schema_sequential_with_fraction:
+         case schema_split_sequential:
+         case schema_sequential_with_split_1x8_id:
+            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) &&
+                !(ss->cmd.cmd_frac_flags & CMD_FRAC_FORCE_VIS))
+               fail("This call can't be fractionalized.");
+            break;
+         default:
+
+            /* Must be some form of concentric.  We allow visible fractions,
+               and take no action in that case.  This means that any fractions
+               will be sent to constituent calls. */
+
+            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
+
+               /* Otherwise, we allow the fraction "1/2" to be given, if the top-level
+                  heritablilty flag allows it.  We turn the fraction into a "final concept". */
+
+               if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+                  ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+                  ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
+               }
+               else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+                  ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+                  ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
+               }
+               else {
+                  fail("This call can't be fractionalized this way.");
+               }
+            }
+
+            break;
+         }
+      }
+
+      /* If the "diamond" concept has been given and the call doesn't want it, we do
+         the "diamond single wheel" variety. */
+
+      if (INHERITFLAG_DIAMOND & ss->cmd.cmd_final_flags.her8it & (~this_defn->callflagsh))  {
+         /* If the call is sequentially or concentrically defined, the top level flag is required
+         before the diamond concept can be inherited.  Since that flag is off, it is an error. */
+         if (the_schema != schema_by_array)
+            fail("Can't do this call with the \"diamond\" concept.");
+
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+            fail("Can't do \"invert/central/snag/mystic\" with the \"diamond\" concept.");
+
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+         if (ss->kind == sdmd) {
+            ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_DIAMOND;
+            new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
+                                   phantest_ok, TRUE, result);
+            return;
+         }
+         else {
+            /* If in a qtag or point-to-points, perhaps we ought to divide
+               into single diamonds and try again.   BUT: if "magic" or "interlocked"
+               is also present, we don't.  We let basic_move deal with
+               it.  It will come back here after it has done what it needs to. */
+
+            if (!(TEST_HERITBITS(ss->cmd.cmd_final_flags,(INHERITFLAG_MAGIC|INHERITFLAG_INTLK)))) {
+               /* Divide into diamonds and try again.  Note that we do not clear the concept. */
+               divide_diamonds(ss, result);
+               return;
+            }
+         }
+      }
+
+      // It may be appropriate to step to a wave or rear back from one.
+      // This is only legal if the flag forbidding same is off.
+      // Furthermore, if certain modifiers have been given, we don't allow it.
+
+      if (TEST_HERITBITS(ss->cmd.cmd_final_flags,(INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX | INHERITFLAG_FUNNY)))
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
+
+      /* But, alas, if fractionalization is on, we can't do it yet, because we don't
+         know whether we are starting at the beginning.  In the case of fractionalization,
+         we will do it later.  We also can't do it yet if we are going
+         to split the setup for "central" or "crazy", or if we are doing the call "mystic". */
+
+      if ((!(ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) ||
+           the_schema != schema_by_array) &&
+          (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
+         uint32 frac = ss->cmd.cmd_frac_flags;
+
+      // See if what we are doing includes the first part.
+
+         if (frac == CMD_FRAC_NULL_VALUE ||
+             frac == (CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE) ||
+             (frac & ~CMD_FRAC_PART_MASK) == (CMD_FRAC_CODE_FROMTO | CMD_FRAC_NULL_VALUE)) {
+
+            if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
+                                            CMD_MISC__ALREADY_STEPPED |
+                                            CMD_MISC__MUST_SPLIT_MASK))) {
+               if (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_LEFT)) {
+                  mirror_this(ss);
+                  mirror = TRUE;
+               }
+      
+               ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
+               touch_or_rear_back(ss, mirror, callflags1);
+      
+               /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left"
+               flag for the purpose of what "touch_or_rear_back" just did.  So, in that case,
+               we turn off the "left" flag and set things back to normal. */
+      
+               if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
+                  if (mirror) mirror_this(ss);
+                  mirror = FALSE;
+               }
+            }
+   
+            /* Actually, turning off the "left" flag is more global than that. */
+   
+            if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
+               ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
+            }
+         }
+         else if ((frac & ~CMD_FRAC_PART_MASK) ==
+                  (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_FROMTOREV) &&
+                  (frac & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2)) {
+            /* If we're doing the rest of the call, just turn all that stuff off. */
+            if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
+               ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
+            }
+         }
+      }
+
+      if (callflags1 & CFLAG1_IMPRECISE_ROTATION)
+         imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
+
+      /* Check for a call whose schema is single (cross) concentric.
+         If so, be sure the setup is divided into 1x4's or diamonds.
+         But don't do it if something like "magic" is still unprocessed. */
+
+      if ((ss->cmd.cmd_final_flags.her8it &
+           (~(this_defn->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
+         switch (the_schema) {
+         case schema_single_concentric:
+         case schema_single_cross_concentric:
+            force_split = 1;
+            break;
+         case schema_single_concentric_together:
+         case schema_concentric_6p_or_sgltogether:
+            switch (ss->kind) {
+            case s1x8: case s_ptpd:
+               force_split = 1;
+               break;
+            }
+            break;
+         case schema_select_original_rims:
+         case schema_select_original_hubs:
+            switch (ss->kind) {
+            case s1x8: case s_ptpd:
+               force_split = 2;     /* What a crock!!!!! ****** */
+               break;
+            }
+            break;
+         }
+      }
+
+      if (force_split)
+         if (!do_simple_split(ss, force_split, result)) return;
+
+      /* At this point, we may have mirrored the setup and, of course, left the switch "mirror"
+         on.  We did it only as needed for the [touch / rear back / check] stuff.  What we
+         did doesn't actually count.  In particular, if the call is defined concentrically
+         or sequentially, mirroring the setup in response to "left" is *NOT* the right thing
+         to do.  The right thing is to pass the "left" flag to all subparts that have the
+         "inherit_left" invocation flag, and letting events take their course.  So we allow
+         the "INHERITFLAG_LEFT" bit to remain in "cmd_final_flags", because it is still important
+         to know whether we have been invoked with the "left" modifier. */
+
+      /* Check for special case of ends doing a call like "detour" which specifically
+      allows just the ends part to be done.  If the call was "central", this flag will be turned off. */
+
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS) {
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+            fail("Can't do \"invert/central/snag/mystic\" with a call for the ends only.");
+
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+         if ((the_schema == schema_concentric ||
+              the_schema == schema_rev_checkpoint ||
+              the_schema == schema_concentric_4_2 ||
+              the_schema == schema_concentric_4_2_or_normal ||
+              the_schema == schema_concentric_6p ||
+              the_schema == schema_concentric_6p_or_normal ||
+              the_schema == schema_conc_o) &&
+             (DFM1_ENDSCANDO & this_defn->stuff.conc.outerdef.modifiers1)) {
+
+            // Copy the concentricity flags from the call definition into the setup.
+            // All the fuss in database.h about concentricity flags co-existing
+            // with setupflags refers to this moment.
+            ss->cmd.cmd_misc_flags |=
+               (this_defn->stuff.conc.outerdef.modifiers1 & DFM1_CONCENTRICITY_FLAG_MASK);
+
+            long_boolean local_4x4_exp = FALSE;
+
+            if (the_schema == schema_conc_o) {
+               static expand_thing thing1 = {{10, 1, 2, 9},  4, s2x2, s4x4, 0};
+               static expand_thing thing2 = {{13, 14, 5, 6}, 4, s2x2, s4x4, 0};
+
+               if (ss->kind != s2x2) fail("Can't find outside 'O' spots.");
+
+               if (ss->cmd.prior_elongation_bits == 1)
+                  expand_setup(&thing1, ss);
+               else if (ss->cmd.prior_elongation_bits == 2)
+                  expand_setup(&thing2, ss);
+               else
+                  fail("Can't find outside 'O' spots.");
+               local_4x4_exp = TRUE;
+            }
+
+            do_inheritance(&ss->cmd, this_defn, &this_defn->stuff.conc.outerdef);
+            move_with_real_call(ss, qtfudged, local_4x4_exp, result);
+            return;
+         }
+      }
+
+      /* ******** We did this before, but maybe that was too early!!!!  Need to do it again
+         after pulling out the "doing ends" stuff. */
+
+      // Do some quick error checking for visible fractions.  For now,
+      // any flag is acceptable.  Later, we will distinguish among the various flags.
+
+      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+         switch (the_schema) {
+         case schema_by_array:
+            /* We allow the fractions "1/2" and "last 1/2" to be given.
+               Basic_move will handle them. */
+            if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
+            }
+            else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
+            }
+            else
+               fail("This call can't be fractionalized this way.");
+
+            break;
+         }
+      }
+
+
+
+      /* Enforce the restriction that only tagging calls are allowed in certain contexts. */
+
+      if (ss->cmd.cmd_final_flags.final & FINAL__MUST_BE_TAG) {
+         if (!(callflags1 & CFLAG1_BASE_TAG_CALL_MASK))
+            fail("Only a tagging call is allowed here.");
+      }
+
+      ss->cmd.cmd_final_flags.final &= ~FINAL__MUST_BE_TAG;
+
+      /* If the "split" concept has been given and this call uses that concept for a special
+         meaning (split square thru, split dixie style), set the special flag to determine that
+         action, and remove the split concept.  Why remove it?  So that "heads split catch grand
+         mix 3" will work.  If we are doing a "split catch", we don't really want to split the
+         setup into 2x2's that are isolated from each other, or else the "grand mix" won't work. */
+
+      if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
+         long_boolean starting = TRUE;
+
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+         /* Check for doing "split square thru" or "split dixie style" stuff.
+            But don't propagate the stuff if we aren't doing the first part of the call. */
+
+         if ((ss->cmd.cmd_frac_flags & 0xFF00) != 0x0100 ||
+             ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
+              (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) > CMD_FRAC_PART_BIT))
+            starting = FALSE;     /* We aren't doing the first part. */
+
+         if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
+            if (starting) ss->cmd.cmd_final_flags.final |= FINAL__SPLIT_SQUARE_APPROVED;
+            ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
+
+            if (current_options.howmanynumbers != 0 && (current_options.number_fields & 0xF) <= 1)
+               fail("Can't split square thru 1.");
+         }
+         else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE) {
+            if (starting) ss->cmd.cmd_final_flags.final |= FINAL__SPLIT_DIXIE_APPROVED;
+            ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
+         }
+
+         if (ss->kind == s4x4) {
+            /* The entire rest of the program expects split calls to be done in
+               a C1 phantom setup rather than a 4x4. */
+
+            int i, j;
+            uint32 mask = 0;
+
+            for (i=0,j=1 ; i<16 ; i++,j<<=1) {
+               if (ss->people[i].id1) mask |= j;
+            }
+
+            if (mask == 0xAAAA || mask == 0xCCCC) {
+               expand_thing *t = (mask & 2) ? &exp_c1phan_4x4_stuff1 : &exp_c1phan_4x4_stuff2;
+               compress_setup(t, ss);
+            }
+         }
+      }
+
+      /* NOTE: We may have mirror-reflected the setup.  "Mirror" is true if so.  We may need to undo this. */
+
+      /* If this is the "split sequential" schema and we have not already done so,
+      cause splitting to take place. */
+
+      if (the_schema == schema_split_sequential) {
+         uint32 nxnflags = ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK;
+         uint32 mxnflags = ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MXNMASK;
+
+         if (setup_attrs[ss->kind].setup_limits == 7) {
+            if (nxnflags != INHERITFLAGNXNK_3X3 &&
+                nxnflags != INHERITFLAGNXNK_4X4 &&
+                !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
+               if (ss->rotation & 1)
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
+               else
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+            }
+         }
+         else if (setup_attrs[ss->kind].setup_limits == 11 &&
+                  (mxnflags == INHERITFLAGMXNK_1X3 || mxnflags == INHERITFLAGMXNK_3X1)) {
+            if (!(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
+               if (ss->rotation & 1)
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
+               else
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+            }
+         }
+         else if ((setup_attrs[ss->kind].setup_limits == 11 && nxnflags == INHERITFLAGNXNK_3X3) ||
+                  (setup_attrs[ss->kind].setup_limits == 15 && nxnflags == INHERITFLAGNXNK_4X4) ||
+                  (setup_attrs[ss->kind].setup_limits == 5 && nxnflags == INHERITFLAGNXNK_3X3))
+            ;    /* No action. */
+
+         // This used to just bypass 3.  It now bypasses 1 in order to get
+         // disband to work in a bone6.
+         else if (setup_attrs[ss->kind].setup_limits != 3 &&
+                  setup_attrs[ss->kind].setup_limits != 1) {
+
+            // If this is a 3x4 or 4x4 inhabited in boxes, we allow the splitting into those boxes.
+
+            int i, j;
+            uint32 mask = 0;
+
+            for (i=0, j=1; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
+               if (ss->people[i].id1) mask |= j;
+            }
+
+            if (ss->kind == s3x4) {
+               if (mask == 0xF3C || mask == 0xCF3)
+                  // ****** This needs to be looked at.
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+               else
+                  fail("Can't split this setup.");
+            }
+            else if (ss->kind == s4x4) {
+               if (mask == 0x4B4B || mask == 0xB4B4)
+                  // ****** This needs to be looked at.
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+               else
+                  fail("Can't split this setup.");
+            }
+            else
+               fail("Need a 4 or 8 person setup for this.");
+         }
+      }
+
+      /* If the split concept is still present, do it. */
+
+      if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
+         uint32 split_map;
+
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+            fail("Can't do \"invert/central/snag/mystic\" with the \"split\" concept.");
+
+         ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
+         ss->cmd.cmd_misc_flags |= (CMD_MISC__SAID_SPLIT | CMD_MISC__NO_EXPAND_MATRIX);
+
+      /* We can't handle the mirroring, so undo it. */
+         if (mirror) { mirror_this(ss); mirror = FALSE; }
+
+         if      (ss->kind == s2x4)   split_map = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
+         else if (ss->kind == s1x8)   split_map = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
+         else if (ss->kind == s_ptpd) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+         else if (ss->kind == s_qtag) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
+         else if (ss->kind == s2x2) {
+            // "Split" was given while we are already in a 2x2?  The only way that
+            // can be legal is if the word "split" was meant as a modifier for
+            // "split square thru" etc., rather than as a virtual-setup concept,
+            // or if the "split sequential" schema is in use.
+            // In those cases, some "split approved" flag will still be on. */
+
+            if (     !(ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
+                     !(ss->cmd.cmd_frac_flags & CMD_FRAC_BREAKING_UP))   /* If "BREAKING_UP", caller presumably knows what she is doing. */
+               warn(warn__excess_split);
+
+            if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
+               fail("\"Matrix\" concept must be followed by applicable concept.");
+
+            move(ss, qtfudged, result);
+            result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+            return;
+         }
+         else
+            fail("Can't do split concept in this setup.");
+
+         /* If the user said "matrix split", the "matrix" flag will be on at this point,
+         and the right thing will happen. */
+
+         new_divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
+         return;
+      }
+
+      really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1,
+                        did_4x4_expansion, imprecise_rotation_result_flag, mirror, result);
+   }
+   catch(error_flag_type foo) {
+      if (foo != error_flag_no_retry && this_defn != deferred_array_defn) {
+         if (this_defn->compound_part) {
+            this_defn = this_defn->compound_part;
+            goto try_next_callspec;
+         }
+         else if (deferred_array_defn) {
+            this_defn = deferred_array_defn;
+            goto try_next_callspec;
+         }
+      }
+
+      throw(foo);
+   }
+}
+
+
+
 /* The current interpretation of the elongation flags, on input and output, is now
    as follows:
 
@@ -5662,9 +5730,7 @@ extern void move(
    if (ss->cmd.restrained_concept && !(ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS)) {
       parse_block *t = ss->cmd.restrained_concept;
       ss->cmd.restrained_concept = (parse_block *) 0;
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-         remove_z_distortion(ss);
+      remove_z_distortion(ss);
 
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER)
          fail("Can't nest meta-concepts and supercalls.");
@@ -5684,7 +5750,7 @@ extern void move(
          p3.no_check_call_level = 1;
          p3.options = current_options;
          ss->cmd.parseptr = &p1;
-         ss->cmd.callspec = (callspec_block *) 0;
+         ss->cmd.callspec = (call_with_name *) 0;
          ss->cmd.cmd_misc2_flags |= CMD_MISC2_RESTRAINED_SUPER;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.her8it;
          ss->cmd.cmd_final_flags.her8it = 0;
@@ -5694,12 +5760,12 @@ extern void move(
 
          /* We need to find the end of the concept chain, and plug in our
             call, after saving its old contents. */
-         callspec_block *saved_new_call;
-         callspec_block *saved_old_call = ss->cmd.callspec;
+         call_with_name *saved_new_call;
+         call_with_name *saved_old_call = ss->cmd.callspec;
          call_conc_option_state saved_options = ss->cmd.parseptr->options;
          parse_block *z1 = t;
          if (saved_old_call) ss->cmd.parseptr->options = current_options;
-         ss->cmd.callspec = (callspec_block *) 0;
+         ss->cmd.callspec = (call_with_name *) 0;
          while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
 
          if (saved_old_call != base_calls[base_call_basetag0]) {
@@ -5767,7 +5833,7 @@ extern void move(
          return;
       }
 
-      move_with_real_call(ss, qtfudged, result);
+      move_with_real_call(ss, qtfudged, FALSE, result);
       return;
    }
 
@@ -5791,19 +5857,30 @@ extern void move(
 
    save_incoming_final = ss->cmd.cmd_final_flags;   /* In case we need to punt. */
 
+ fuckit:
+
    parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &ss->cmd.cmd_final_flags);
+
+   if (parseptrcopy->concept->kind == concept_fractional &&
+       ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
+      parseptrcopy = parseptrcopy->next;
+      goto fuckit;
+   }
+
    saved_magic_diamond = last_magic_diamond;
 
    if (parseptrcopy->concept->kind <= marker_end_of_list) {
       call_conc_option_state saved_options = current_options;
-      callspec_block *this_call = parseptrcopy->call;
+      call_with_name *this_call = parseptrcopy->call;
 
       /* There are no "big" concepts.  The only concepts are the "little" ones that
          have been encoded into cmd_final_flags. */
 
       if ((ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG))) {
-         switch (this_call->schema) {
+         switch (this_call->the_defn.schema) {
          case schema_concentric:
+         case schema_concentric_4_2:
+         case schema_concentric_4_2_or_normal:
          case schema_concentric_6p:
          case schema_concentric_6p_or_sgltogether:
          case schema_concentric_6p_or_normal:
@@ -5821,10 +5898,12 @@ extern void move(
          if ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) == 0 ||
              (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
               ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV))) {
-            switch (this_call->schema) {
+            switch (this_call->the_defn.schema) {
             case schema_concentric:
             case schema_concentric_6_2:
             case schema_concentric_2_6:
+            case schema_concentric_4_2:
+            case schema_concentric_4_2_or_normal:
             case schema_concentric_6p:
             case schema_concentric_6p_or_sgltogether:
             case schema_concentric_6p_or_normal:
@@ -5855,11 +5934,12 @@ extern void move(
       ss->cmd.callspec = this_call;
       current_options = parseptrcopy->options;
 
-      if (((dance_level) this_call->level) > calling_level &&
+      if (((dance_level) this_call->the_defn.level) > calling_level &&
           !parseptrcopy->no_check_call_level)
          warn(warn__bad_call_level);
 
-      move_with_real_call(ss, qtfudged, result);
+      move_with_real_call(ss, qtfudged, FALSE, result);
+      remove_tgl_distortion(result);
       current_options = saved_options;
    }
    else {
@@ -5898,7 +5978,7 @@ extern void move(
          and have us figure out what concept was really chosen.  To handle
          these, we look through a table of such pairs. */
 
-         /* If "CONCPROP__PERMIT_MODIFIERS" is on, let anything pass. */
+      /* If "CONCPROP__PERMIT_MODIFIERS" is on, let anything pass. */
 
       parse_block artificial_parse_block;
 
@@ -5940,16 +6020,21 @@ extern void move(
       uint32 foobar = 0;
       uint32 fooble = 0;
 
-      if (!(concept_table[ss->cmd.parseptr->concept->kind].concept_prop &
+      concept_descriptor *ddd = ss->cmd.parseptr->concept;
+
+      if (!(concept_table[ddd->kind].concept_prop &
           CONCPROP__PERMIT_MODIFIERS)) {
          foobar = INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_DIAMOND |
             INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_REVERSE;
          fooble = ~0UL;
 
-         if (concept_table[ss->cmd.parseptr->concept->kind].concept_prop &
-             CONCPROP__PERMIT_REVERSE) {
-            foobar &= ~INHERITFLAG_REVERSE;
+         if (ddd->kind == concept_meta) {
+             if (ddd->value.arg1 != meta_key_initially && ddd->value.arg1 != meta_key_finally)
+            foobar &= ~(INHERITFLAG_MAGIC | INHERITFLAG_INTLK);
          }
+
+         if (concept_table[ddd->kind].concept_prop & CONCPROP__PERMIT_REVERSE)
+            foobar &= ~INHERITFLAG_REVERSE;
       }
 
       // If there are no modifier bits that the concept can't accept, do the concept.
@@ -5981,7 +6066,7 @@ extern void move(
          This is what makes "magic transfer" or "split square thru" work. */
 
       ss->cmd.parseptr = parseptrcopy;
-      ss->cmd.callspec = (callspec_block *) 0;
+      ss->cmd.callspec = (call_with_name *) 0;
 
       /* We can tolerate the "matrix" flag if we are going to do "split".
          For anything else, "matrix" is illegal. */

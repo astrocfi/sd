@@ -27,6 +27,7 @@
    initialize_sdlib
    check_for_concept_group
    fail
+   fail_no_retry
    fail2
    failp
    specialfail
@@ -101,8 +102,6 @@ and the following external variables:
    circcer_calls
    number_of_taggers
    number_of_circcers
-   selector_for_initialize
-   number_for_initialize
    diagnostic_mode
    singing_call_mode
    parse_state
@@ -128,6 +127,7 @@ and the following external variables:
    null_options
    verify_options
    verify_used_number
+   verify_used_direction
    verify_used_selector
 */
 
@@ -194,7 +194,7 @@ dance_level higher_acceptable_level[] = {
 
 uint32 the_topcallflags;
 long_boolean there_is_a_call;
-callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
+call_with_name **base_calls;        /* Gets allocated as array of pointers in sdinit. */
 
 ui_option_type ui_options;
 int whole_sequence_low_lim;
@@ -256,12 +256,10 @@ int max_base_calls;
 Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
 Cstring *selector_menu_list;
 Cstring *circcer_menu_list;
-callspec_block **tagger_calls[NUM_TAGGER_CLASSES];
-callspec_block **circcer_calls;
+call_with_name **tagger_calls[NUM_TAGGER_CLASSES];
+call_with_name **circcer_calls;
 uint32 number_of_taggers[NUM_TAGGER_CLASSES];
 uint32 number_of_circcers;
-selector_kind selector_for_initialize;
-int number_for_initialize;
 long_boolean diagnostic_mode = FALSE;
 int singing_call_mode = 0;
 parse_state_type parse_state;
@@ -322,6 +320,7 @@ const call_conc_option_state null_options = {
    0, 0, 0, 0, 0};
 call_conc_option_state verify_options;
 long_boolean verify_used_number;
+long_boolean verify_used_direction;
 long_boolean verify_used_selector;
 
 
@@ -414,6 +413,33 @@ extern void update_id_bits(setup *ss)
       6, d_west, 2, d_east,
       ~0};
 
+   static unsigned short int face_4x4[] = {
+      13, d_west, 12,  d_east,
+      14, d_west, 13,  d_east,
+      0,  d_west, 14,  d_east,
+      15, d_west, 10,  d_east,
+      3,  d_west, 15,  d_east,
+      1,  d_west,  3,  d_east,
+      11, d_west,  9,  d_east,
+      7,  d_west, 11,  d_east,
+      2,  d_west,  7,  d_east,
+      6,  d_west,  8,  d_east,
+      5,  d_west,  6,  d_east,
+      4,  d_west,  5,  d_east,
+      12, d_south, 10, d_north,
+      13, d_south, 15, d_north,
+      14, d_south,  3, d_north,
+      0,  d_south,  1, d_north,
+      10, d_south,  9, d_north,
+      15, d_south, 11, d_north,
+      3,  d_south,  7, d_north,
+      1,  d_south,  2, d_north,
+      9,  d_south,  8, d_north,
+      11, d_south,  6, d_north,
+      7,  d_south,  5, d_north,
+      2,  d_south,  4, d_north,
+      ~0};
+
    static unsigned short int face_4x5[] = {
       1, d_west, 0, d_east,
       2, d_west, 1, d_east,
@@ -466,6 +492,8 @@ extern void update_id_bits(setup *ss)
       face_list = face_2x2; break;
    case s2x3:
       face_list = face_2x3; break;
+   case s4x4:
+      face_list = face_4x4; break;
    case s4x5:
       face_list = face_4x5; break;
    case s1x3:
@@ -700,7 +728,6 @@ extern void touch_or_rear_back(
 {
    int i;
    uint32 directions, livemask;
-   setup stemp;
    const full_expand_thing *tptr;
    const expand_thing *zptr;
 
@@ -716,8 +743,7 @@ extern void touch_or_rear_back(
                        CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)))
       return;
 
-   if (scopy->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-      remove_z_distortion(scopy);
+   remove_z_distortion(scopy);
 
    directions = 0;
    livemask = 0;
@@ -926,7 +952,7 @@ extern void touch_or_rear_back(
 
    zptr = tptr->expand_lists;
    scopy->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   stemp = *scopy;
+   setup stemp = *scopy;
    clear_people(scopy);
 
    if (tptr->forbidden_elongation & 8) {
@@ -1046,6 +1072,8 @@ static restr_initializer restr_init_table0[] = {
    {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},    {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
    {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},          {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
+   {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},             {1, 0}, {1, 2},              FALSE, chk_star},
+   {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},      {2, 3, 6}, {2, 2, 7},         FALSE, chk_star},
    {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},                {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
    {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},                {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
    {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},          {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
@@ -1061,11 +1089,14 @@ static restr_initializer restr_init_table0[] = {
    {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups},
    {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x8, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave},
+
+   {s1x8, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, FALSE,  chk_anti_groups},
+
    {s2x4, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, TRUE,  chk_groups},
    {s1x8, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, TRUE,  chk_groups},
    {s1x8, cr_4x4_2fl_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                           {0}, {0}, {0}, FALSE, chk_wave},
    {s1x8, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, TRUE,  chk_groups},
-   {s1x8, cr_miniwaves, 2, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s1x8, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
    {s1x3, cr_1fl_only, 3, {0, 1, 2},                                              {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x3, cr_3x3couples_only, 3, {0, 1, 2},                                       {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x3, cr_wave_only, 3, {0, 1, 2},                                             {0}, {0}, {0}, TRUE,  chk_wave},
@@ -1075,7 +1106,7 @@ static restr_initializer restr_init_table0[] = {
    {s1x4, cr_4x4couples_only, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x4, cr_couples_only, 2, {0, 2, 1, 3},                                       {2}, {0}, {0}, TRUE,  chk_groups},
-   {s1x4, cr_miniwaves, 2, {0, 2, 1, 3},                                          {2}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s1x4, cr_miniwaves, 1, {0, 2, 1, 3},                                          {2}, {0}, {0}, TRUE,  chk_anti_groups},
    {s1x4, cr_magic_only, 4, {0, 1, 2, 3},                                         {0}, {0}, {0}, TRUE,  chk_wave},
    {s1x4, cr_all_ns, 4, {4, 0, 1, 2, 3}, {0},  {0},  {0},  FALSE, chk_dmd_qtag},
    {s1x4, cr_all_ew, 4, {0}, {4, 0, 1, 2, 3}, {0}, {0}, FALSE, chk_dmd_qtag},
@@ -1083,7 +1114,7 @@ static restr_initializer restr_init_table0[] = {
    {s2x4, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, FALSE, chk_dmd_qtag},
    {s1x8, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, FALSE, chk_dmd_qtag},
    {s1x8, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, FALSE, chk_dmd_qtag},
-   {s1x6, cr_miniwaves, 2, {0, 2, 4, 1, 5, 3},                                    {3}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s1x6, cr_miniwaves, 1, {0, 2, 4, 1, 5, 3},                                    {3}, {0}, {0}, TRUE,  chk_anti_groups},
    {s1x6, cr_wave_only, 6, {0, 1, 2, 5, 4, 3},                                    {0}, {0}, {0}, TRUE,  chk_wave},
    {s1x6, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups},
    {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
@@ -1095,11 +1126,14 @@ static restr_initializer restr_init_table0[] = {
    {s1x14, cr_wave_only, 14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},      {0}, {0}, {0}, TRUE,  chk_wave},
    {s1x16, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave},
    {s1x16, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_groups},
-   {s1x16, cr_miniwaves, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s1x16, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_anti_groups},
    {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
    {s2x3, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups},
    {s2x3, cr_li_lo, 6, {3, 0, 4, 1, 5, 2},                                        {0}, {0}, {0}, TRUE,  chk_wave},
    {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, TRUE,  chk_wave},
+
+   {s2x4, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, FALSE,  chk_anti_groups},
+
    {s2x4, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},                              {0}, {0}, {0}, TRUE,  chk_wave},
    {s2x3, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                    {0}, {0}, {0}, FALSE, chk_wave},
    {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},                                   {0}, {0}, {0}, TRUE,  chk_wave},
@@ -1110,16 +1144,16 @@ static restr_initializer restr_init_table0[] = {
    {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
    {s2x4, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups},
    {s2x4, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, TRUE,  chk_groups},
-   {s2x4, cr_miniwaves, 2, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s2x4, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
    {s_qtag, cr_wave_only, 4, {6, 7, 3, 2},                                        {0}, {0}, {0}, TRUE,  chk_wave},
    {s_qtag, cr_2fl_only, 4, {6, 2, 7, 3},                                         {0}, {0}, {0}, TRUE,  chk_wave},
    {s_qtag, cr_dmd_not_intlk, 4, {6, 7, 3, 2},                                    {0}, {0}, {0}, TRUE,  chk_wave},
    {s_qtag, cr_dmd_intlk, 4, {6, 2, 7, 3},                                        {0}, {0}, {0}, TRUE,  chk_wave},
    {s_ptpd, cr_dmd_not_intlk, 4, {0, 2, 6, 4},                                    {0}, {0}, {0}, TRUE,  chk_wave},
    {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},                                        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_miniwaves, 2, {6, 2, 7, 3},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s_qtag, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
    {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, TRUE,  chk_groups},
-   {s_bone, cr_miniwaves, 2, {6, 2, 7, 3},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
    {s_bone, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, TRUE,  chk_groups},
    {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, TRUE, chk_wave},
    {s2x8, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave},
@@ -1127,7 +1161,7 @@ static restr_initializer restr_init_table0[] = {
    {s1x16, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {4}, {0}, {0}, TRUE, chk_groups},
    {s2x8, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {4}, {0}, {0}, TRUE,  chk_groups},
    {s2x8, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_groups},
-   {s2x8, cr_miniwaves, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, FALSE, chk_anti_groups},
+   {s2x8, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, FALSE, chk_anti_groups},
    {s2x6, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},               {0}, {0}, {0}, TRUE,  chk_wave},
    {s2x6, cr_3x3_2fl_only, 12, {0, 3, 1, 4, 2, 5, 9, 6, 10, 7, 11, 8},            {0}, {0}, {0}, FALSE, chk_wave},
    {s2x6, cr_3x3couples_only, 3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},          {4}, {0}, {0}, TRUE,  chk_groups},
@@ -1136,10 +1170,11 @@ static restr_initializer restr_init_table0[] = {
    {s1x2, cr_2fl_only, 2, {0, 1},                                                 {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x2, cr_couples_only, 2, {0, 1},                                             {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x2, cr_all_facing_same, 2, {0, 1},                                          {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x2, cr_miniwaves, 2, {0, 1},                                                {1}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s1x2, cr_miniwaves, 1, {0, 1},                                                {1}, {0}, {0}, TRUE,  chk_anti_groups},
    {s2x2, cr_couples_only, 0, {1, 0, 3, 2},                              {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl},
    {s2x2, cr_miniwaves, 2, {1, 0, 3, 2},                                 {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl},
    {s2x2, cr_peelable_box, 0, {3, 2, 1, 0},                              {1, 0, 3, 2}, {0}, {0}, FALSE, chk_box_dbl},
+   {s2x4, cr_peelable_box, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, FALSE, chk_groups},
    {s2x4, cr_reg_tbone, 1, { 3, 2, 0, 1, 1, 0, 2, 3},        {0, 3, 1, 2, 2, 1, 3, 0}, {0}, {0}, FALSE, chk_box},
    {s2x2, cr_reg_tbone, 1, {2, 1, 0, 3},                                 {2, 3, 0, 1}, {0}, {0}, FALSE, chk_box},
    {s1x4, cr_reg_tbone, 1, {3, 2, 1, 0},                                 {0, 3, 2, 1}, {0}, {0}, FALSE, chk_box},
@@ -1184,7 +1219,7 @@ static restr_initializer restr_init_table1[] = {
    {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, TRUE,  chk_wave},
    {s2x4, cr_peelable_box, 4, {0, 1, 2, 3},                {4, 5, 6, 7},               {0}, {0}, FALSE, chk_peelable},
    {s2x4, cr_couples_only, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, TRUE,  chk_groups},
-   {s2x4, cr_miniwaves, 2, {0, 1, 2, 3, 7, 6, 5, 4},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s2x4, cr_miniwaves, 1, {0, 1, 2, 3, 7, 6, 5, 4},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
    {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x2, cr_all_facing_same, 2, {0, 1},                                          {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x2, cr_li_lo, 2, {0, 1},                                                    {0}, {0}, {0}, TRUE, chk_wave},
@@ -1204,7 +1239,7 @@ static restr_initializer restr_init_table1[] = {
    {sdmd, cr_wave_only, 2, {1, 3},                                                {0}, {0}, {0}, TRUE,  chk_wave},
    {sdmd, cr_miniwaves, 2, {1, 3},                                                {0}, {0}, {0}, TRUE,  chk_wave},
    {s_ptpd, cr_wave_only, 4, {1, 3, 7, 5},                                        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_miniwaves, 2, {1, 7, 3, 5},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s_ptpd, cr_miniwaves, 1, {1, 7, 3, 5},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
    {nothing}};
 
 static restr_initializer restr_init_table4[] = {
@@ -1733,7 +1768,7 @@ extern long_boolean check_for_concept_group(
 }
 
 
-extern void fail(Const char s[]) THROW_DECL
+extern void fail(const char s[]) THROW_DECL
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -1742,7 +1777,16 @@ extern void fail(Const char s[]) THROW_DECL
 }
 
 
-extern void fail2(Const char s1[], Const char s2[]) THROW_DECL
+extern void fail_no_retry(const char s[]) THROW_DECL
+{
+   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   error_message1[MAX_ERR_LENGTH-1] = '\0';
+   error_message2[0] = '\0';
+   throw error_flag_type(error_flag_no_retry);
+}
+
+
+extern void fail2(const char s1[], const char s2[]) THROW_DECL
 {
    (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -1752,7 +1796,7 @@ extern void fail2(Const char s1[], Const char s2[]) THROW_DECL
 }
 
 
-extern void failp(uint32 id1, Const char s[]) THROW_DECL
+extern void failp(uint32 id1, const char s[]) THROW_DECL
 {
    collision_person1 = id1;
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
@@ -1761,7 +1805,7 @@ extern void failp(uint32 id1, Const char s[]) THROW_DECL
 }
 
 
-extern void specialfail(Const char s[]) THROW_DECL
+extern void specialfail(const char s[]) THROW_DECL
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -1837,6 +1881,9 @@ extern restriction_test_result verify_restriction(
    dirtest[1] = 0;
 
    *failed_to_instantiate = TRUE;
+
+   veryshort *map1item;
+   int szlim;
 
    switch (rr->check) {
    case chk_spec_directions:
@@ -2081,13 +2128,19 @@ extern restriction_test_result verify_restriction(
    case chk_anti_groups:
       limit = rr->map2[0];
 
+      map1item = rr->map1;
+      szlim = rr->size*limit;
+
       for (idx=0; idx<limit; idx++) {
          qa0 = 0; qa1 = 0;
 
-         if ((t = ss->people[rr->map1[idx]].id1) != 0)       { qa0 |= t;   qa1 |= t^2; }
-         else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
-         if ((t = ss->people[rr->map1[idx+limit]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
-         else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
+         for (int jjj=0 ; jjj<rr->size ; jjj++) {
+            if ((t = ss->people[map1item[0]].id1) != 0)     { qa0 |= t;   qa1 |= t^2; }
+            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
+            if ((t = ss->people[map1item[szlim]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
+            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
+            map1item++;
+         }
 
          if ((qa0 & qa1 & 2) != 0) goto bad;
 
@@ -2144,7 +2197,6 @@ extern restriction_test_result verify_restriction(
 
       goto good;
    case chk_qbox:
-
       qa0 = 0;
       qa1 = ~0;
 
@@ -2162,6 +2214,30 @@ extern restriction_test_result verify_restriction(
 
       for (idx=0; idx<rr->map4[0]; idx++) {
          if ((t = ss->people[rr->map4[idx+1]].id1) & 1) qa1 &= ~t;
+      }
+
+      if (qa0 & ~qa1 & 2)
+         goto bad;
+
+      goto good;
+   case chk_star:
+      qa0 = tt.assump_both;
+      qa1 = ~(tt.assump_both << 1);
+
+      for (idx=0; idx<rr->map1[0]; idx++) {
+         if ((t = ss->people[rr->map1[idx+1]].id1) & 1) { qa0 |= t; qa1 &= t; }
+      }
+
+      for (idx=0; idx<rr->map2[0]; idx++) {
+         if ((t = ss->people[rr->map2[idx+1]].id1) & 1) { qa0 |= ~t; qa1 &= ~t; }
+      }
+
+      for (idx=0; idx<rr->map3[0]; idx++) {
+         if ((t = ss->people[rr->map3[idx+1]].id1) & 010) { qa0 |= t; qa1 &= t; }
+      }
+
+      for (idx=0; idx<rr->map4[0]; idx++) {
+         if ((t = ss->people[rr->map4[idx+1]].id1) & 010) { qa0 |= ~t; qa1 &= ~t; }
       }
 
       if (qa0 & ~qa1 & 2)
@@ -2214,7 +2290,10 @@ extern restriction_test_result verify_restriction(
       qaa[1] = tt.assump_both << 1;
 
       for (idx=0; idx<rr->size; idx++) {
-         if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
+         if ((t = ss->people[rr->map1[idx]].id1) != 0) {
+            qaa[idx&1] |=  t;
+            qaa[(idx&1)^1] |= t^2;
+         }
       }
 
       if ((qaa[0] & qaa[1] & 2) != 0)
@@ -2390,6 +2469,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             goto bad;
          }
 
+         switch (ss->kind) {
+         case s2x4:
+         case s1x8:
+            if (key == b_1x4) tt.assumption = cr_miniwaves;
+            break;
+         }
+
          goto fix_col_line_stuff;
       case cr_li_lo: 
          switch (ss->kind) {
@@ -2441,7 +2527,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          }
 
          goto check_tt;
-      case cr_2fl_only:        /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
+      case cr_2fl_only:
          goto do_2fl_stuff;
       case cr_3x3_2fl_only:
          switch (ss->cmd.cmd_assume.assumption) {
@@ -2912,6 +2998,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       }
 
       tt.assumption = cr_2fl_only;
+
+      switch (ss->kind) {
+      case s2x4:
+      case s1x8:
+         if (key == b_1x4) tt.assumption = cr_2fl_per_1x4;
+         break;
+      }
+
       goto fix_col_line_stuff;
 
    do_wave_stuff:
@@ -4179,16 +4273,21 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
        action != normalize_after_triple_squash &&
        (ss->kind == s_hrglass || ss->kind == s_dhrglass)) {
       if (action >= normalize_to_2 && (livemask & 0x77) == 0) {
-         ss->kind = s_hrglass;   // Be sure we match what the map says --
-         // that might get checked someday.
+         // Be sure we match what the map says -- that might get checked someday.
+         ss->kind = s_hrglass;
          compress_setup(&exp_1x2_hrgl_stuff, ss);
          did_something = TRUE;
          goto startover; 
       }
       else if ((livemask & 0x33) == 0)  {
-         ss->kind = s_hrglass;   // Be sure we match what the map says --
-         // that might get checked someday.
-         compress_setup(&exp_dmd_hrgl_stuff, ss);
+         // If normalizing before a merge (which might be from a "disconnected"),
+         // and it is a real hourglass, be sure we leave space.
+         expand_thing *t = (action == normalize_after_disconnected && ss->kind == s_hrglass) ?
+            &exp_dmd_hrgl_disc_stuff : &exp_dmd_hrgl_stuff;
+
+         // Be sure we match what the map says -- that might get checked someday.
+         ss->kind = s_hrglass;
+         compress_setup(t, ss);
          did_something = TRUE;
          goto startover; 
       }
@@ -4253,8 +4352,10 @@ SDLIB_API void toplevelmove(void) THROW_DECL
          finaljunk.final = 0;
 
          // First, skip the fractional concept.  Only simple "M/N".
-         while (concept_scan->concept->kind == concept_fractional &&
-                concept_scan->concept->value.arg1 == 0)
+         // Also skip "stretch".
+         while ((concept_scan->concept->kind == concept_fractional &&
+                 concept_scan->concept->value.arg1 == 0) ||
+                concept_scan->concept->kind == concept_old_stretch)
             concept_scan = concept_scan->next;
 
          (void) process_final_concepts(concept_scan, FALSE, &finaljunk);
@@ -4387,10 +4488,11 @@ SDLIB_API void toplevelmove(void) THROW_DECL
    /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
    update_id_bits(&starting_setup);
    starting_setup.cmd.parseptr = conceptptr;
-   starting_setup.cmd.callspec = (callspec_block *) 0;
+   starting_setup.cmd.callspec = (call_with_name *) 0;
    starting_setup.cmd.cmd_final_flags.final = 0;
    starting_setup.cmd.cmd_final_flags.her8it = 0;
    move(&starting_setup, FALSE, &newhist->state);
+   remove_tgl_distortion(&newhist->state);
 
    if (newhist->state.kind == s1p5x8)
       fail("Can't go into a 50% offset 1x8.");
@@ -4435,7 +4537,8 @@ SDLIB_API long_boolean deposit_call_tree(modifier_block *anythings, parse_block 
       save1->next = tt;
       save1->concept = &marker_concept_mod;
       tt->concept = &marker_concept_mod;
-      tt->call = base_calls[(key == 6) ? base_call_null_second: base_call_null];
+      tt->call = base_calls[(key == DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT) ?
+                           base_call_null_second: base_call_null];
       tt->call_to_print = tt->call;
       tt->replacement_key = key;
       parse_state.concept_write_ptr = &tt->subsidiary_root;
@@ -4456,13 +4559,15 @@ SDLIB_API long_boolean deposit_call_tree(modifier_block *anythings, parse_block 
    else return TRUE;   /* Huh? */
 
    if (anythings->packed_next_conc_or_subcall) {
-      /* key for "mandatory_anycall" */
-      if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1, 2)) return TRUE;
+      if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1,
+                            DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
+         return TRUE;
    }
 
    if (anythings->packed_secondary_subcall) {
-      /* key for "mandatory_secondary_call" */
-      if (deposit_call_tree(anythings->packed_secondary_subcall, save1, 6)) return TRUE;
+      if (deposit_call_tree(anythings->packed_secondary_subcall, save1,
+                            DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
+         return TRUE;
    }
 
    return FALSE;
@@ -4476,14 +4581,15 @@ extern long_boolean do_subcall_query(
    parse_block **newsearch,
    long_boolean this_is_tagger,
    long_boolean this_is_tagger_circcer,
-   callspec_block *orig_call)
+   call_with_name *orig_call)
 {
    char tempstring_text[MAX_TEXT_LINE_LENGTH];
 
    /* Note whether we are using any mandatory substitutions, so that the menu
       initialization will always accept this call. */
 
-   if (snumber == 2 || snumber == 6) {
+   if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) ||
+       snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT)) {
       /* In some types of pick operations, the picker simply doesn't know how
          to choose a mandatory subcall.  In that case, the call requiring the
          mandatory subcall (e.g. "wheel and <anything>") is simply rejected. */
@@ -4528,12 +4634,12 @@ extern long_boolean do_subcall_query(
       level is, we may choose not to query about this subcall, but just return the default. */
 
    switch (snumber) {
-      case 1:   /* or_anycall */
-      case 3:   /* allow_plain_mod */
-      case 5:   /* or_secondary_call */
+      case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
+      case DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT:
+      case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
          if (!allowing_modifications) return TRUE;
          break;
-      case 4:   /* allow_forced_mod */
+      case DFM1_CALL_MOD_ALLOW_FORCED_MOD/DFM1_CALL_MOD_BIT:
          if (allowing_modifications <= 1) return TRUE;
          break;
    }
@@ -4560,9 +4666,9 @@ extern long_boolean do_subcall_query(
 
    else if (interactivity != interactivity_normal)
       ;
-   else if (snumber == 2)
+   else if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
       (void) sprintf (tempstring_text, "SUBSIDIARY CALL");
-   else if (snumber == 6)
+   else if (snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
       (void) sprintf (tempstring_text, "SECOND SUBSIDIARY CALL");
    else {
 
@@ -4574,7 +4680,7 @@ extern long_boolean do_subcall_query(
       /* Star turn calls can have funny names like "nobox". */
 
       unparse_call_name(
-         (orig_call->callflags1 & CFLAG1_IS_STAR_CALL) ?
+         (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
 

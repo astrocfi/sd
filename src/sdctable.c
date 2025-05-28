@@ -92,7 +92,7 @@ concept_descriptor marker_concept_supercall = {">>SUPER<<",          concept_sup
 
 
 
-callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];
+call_with_name **main_call_lists[NUM_CALL_LIST_KINDS];
 int number_of_calls[NUM_CALL_LIST_KINDS];
 dance_level calling_level;
 
@@ -953,7 +953,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"ON YOUR OWN",                           concept_on_your_own,               0, l_c4a},
    {"OWN THE @6",                            concept_some_vs_others,            F, l_c3a,        {0, selective_key_own, 1, 0}},
    {"IGNORE THE @6",                         concept_so_and_so_only,          F+D, l_c1,         {0, selective_key_ignore, 0, 0}},
-   {"@6 WORK",                               concept_so_and_so_only,          L+D, l_c2,         {0, selective_key_work_concept, 1, 0}},
+   {"@6 WORK",                               concept_so_and_so_only,          L+D, l_c1,         {0, selective_key_work_concept, 1, 0}},
    {"@6 LEAD FOR A",                         concept_so_and_so_only,            D, l_mainstream, {0, selective_key_lead_for_a, 0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"two calls in succession",               concept_sequential,                0, l_mainstream},

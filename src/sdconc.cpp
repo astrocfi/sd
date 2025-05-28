@@ -821,6 +821,14 @@ THROW_DECL
       else
          analyzer_result = schema_concentric;
       break;
+   case schema_concentric_4_2_or_normal:
+      if (setup_attrs[ss->kind].setup_limits == 5)
+         analyzer_result = schema_concentric_4_2;
+      else if (setup_attrs[ss->kind].setup_limits == 3)
+         analyzer_result = schema_single_concentric;
+      else
+         analyzer_result = schema_concentric;
+      break;
    case schema_concentric_6p_or_normal:
    case schema_cross_concentric_6p_or_normal:
       if (setup_attrs[ss->kind].setup_limits == 5)
@@ -1098,6 +1106,8 @@ The right way to do this is to have selective_move set the schema to "3x3_lines_
       fail("Can't find 2 centers and 6 ends in this formation.");
    case schema_concentric_2_4:
       fail("Can't find 2 centers and 4 ends in this formation.");
+   case schema_concentric_4_2:
+      fail("Can't find 4 centers and 2 ends in this formation.");
    case schema_concentric_6_2:
       fail("Can't find 6 centers and 2 ends in this formation.");
    case schema_concentric_6p:
@@ -1245,12 +1255,12 @@ warning_index concwarndmdtable[] = {warn__dmdconc_perp, warn__xcdmdconc_perpc, w
 
 static long_boolean fix_empty_outers(
    setup_kind sskind,
-   setup_kind final_outers_start_kind,
-   uint32 *localmods1_p,       // We may write back to this.
+   setup_kind & final_outers_start_kind,
+   uint32 & localmods1,
    int crossing,
    int begin_outer_elongation,
    int center_arity,
-   calldef_schema analyzer,
+   calldef_schema & analyzer,
    setup_command *cmdout,
    setup *begin_outer,
    setup *result_outer,
@@ -1325,15 +1335,26 @@ static long_boolean fix_empty_outers(
 
       if (final_outers_start_kind == s2x2 &&
           result_outer->kind == s2x2 &&
-          (*localmods1_p & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
+          (localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
          ;        /* Take no further action. */
       }
       else if (result_outer->kind == s4x4 && analyzer == schema_conc_o) {
-         ;        /* Take no further action. */
+         if (sskind == s2x4 &&
+             final_outers_start_kind == s4x4 &&
+             cmdout &&
+             cmdout->cmd_frac_flags == CMD_FRAC_NULL_VALUE &&
+             cmdout->callspec == base_calls[base_call_two_o_circs]) {
+            result_outer->kind = s2x2;
+            analyzer = schema_concentric;
+            final_outers_start_kind = s2x2;
+            localmods1 |= DFM1_CONC_FORCE_OTHERWAY;
+         }
+
+         // Otherwise, take no action.
       }
       else if (final_outers_start_kind == s1x4 &&
                result_outer->kind == s1x4 &&
-               (*localmods1_p & DFM1_CONC_FORCE_SPOTS)) {
+               (localmods1 & DFM1_CONC_FORCE_SPOTS)) {
          /* If a call starts in a 1x4 and has "force spots" indicated, it must go to a 2x2
             with same elongation. */
          result_outer->kind = s2x2;    /* Take no further action. */
@@ -1341,7 +1362,7 @@ static long_boolean fix_empty_outers(
       else if (final_outers_start_kind == s1x4 &&
                !crossing &&
                (orig_elong_flags ^ begin_outer_elongation) == 3 &&
-               (*localmods1_p & DFM1_CONC_CONCENTRIC_RULES)) {
+               (localmods1 & DFM1_CONC_CONCENTRIC_RULES)) {
          /* If a call starts in a 1x4 but tries to set the result elongation to the
             opposite of the starting elongation, it must have been trying to go to a 2x2.
             In that case, the "opposite elongation" rule applies. */
@@ -1371,10 +1392,11 @@ static long_boolean fix_empty_outers(
             from columns far apart. */
 
          /* Make sure these people go to the same spots, and remove possibly misleading info. */
-         *localmods1_p |= DFM1_CONC_FORCE_SPOTS;
-         *localmods1_p &= ~(DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS | DFM1_CONC_FORCE_OTHERWAY);
+         localmods1 |= DFM1_CONC_FORCE_SPOTS;
+         localmods1 &= ~(DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS | DFM1_CONC_FORCE_OTHERWAY);
 
-         if (begin_outer->cmd.callspec && (begin_outer->cmd.callspec->schema == schema_nothing))
+         if (begin_outer->cmd.callspec &&
+             (begin_outer->cmd.callspec->the_defn.schema == schema_nothing))
             ;        /* It's OK, the call was "nothing" */
          else if (cmdout && (begin_outer->cmd.callspec == base_calls[base_call_trade]))
             ;        /* It's OK, the call was "trade" */
@@ -1470,7 +1492,7 @@ static long_boolean fix_empty_inners(
       retain their shape. */
    else if (result_outer->kind == s1x4 && center_arity == 1) {
       if (begin_inner->cmd.callspec &&
-          (begin_inner->cmd.callspec->schema == schema_nothing)) {
+          (begin_inner->cmd.callspec->the_defn.schema == schema_nothing)) {
          /* Restore the original bunch of phantoms. */
          *result_inner = *begin_inner;
          result_inner->result_flags = 0;
@@ -1535,7 +1557,9 @@ static void inherit_conc_assumptions(
    int really_doing_ends,
    assumption_thing *this_assumption)
 {
-   if (analyzer == schema_concentric || analyzer == schema_concentric_6p_or_normal) {
+   if (analyzer == schema_concentric ||
+       analyzer == schema_concentric_6p_or_normal ||
+       analyzer == schema_concentric_4_2_or_normal) {
       if (sskind == s2x4 && beginkind == s2x2) {
          switch (this_assumption->assumption) {
          case cr_wave_only:
@@ -2082,20 +2106,37 @@ extern void concentric_move(
             if (!begin_ptr->cmd.callspec)
                fail("No callspec, centers/ends!!!!!!");
 
+            // We are going to alter the list structure while executing
+            // the subject call, and then restore same when finished.
+
             parse_block *z1 = save_skippable;
             while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
             
-            callspec_block *savecall = z1->call;
-            callspec_block *savecall_to_print = z1->call_to_print;
+            call_with_name *savecall = z1->call;
+            call_with_name *savecall_to_print = z1->call_to_print;
             short savelevelcheck = z1->no_check_call_level;
             parse_block *savebeginparse = begin_ptr->cmd.parseptr;
 
             z1->call = begin_ptr->cmd.callspec;
             z1->call_to_print = begin_ptr->cmd.callspec;
             z1->no_check_call_level = 1;
-            begin_ptr->cmd.callspec = (callspec_block *) 0;
+            begin_ptr->cmd.callspec = (call_with_name *) 0;
             begin_ptr->cmd.parseptr = save_skippable;
-            impose_assumption_and_move(begin_ptr, result_ptr);
+
+            try {
+               impose_assumption_and_move(begin_ptr, result_ptr);
+            }
+            catch(error_flag_type foo) {
+               // An error occurred.  We need to resore stuff.
+               begin_ptr->cmd.callspec = z1->call;
+               begin_ptr->cmd.parseptr = savebeginparse;
+               z1->call = savecall;
+               z1->call_to_print = savecall_to_print;
+               z1->no_check_call_level = savelevelcheck;
+               throw(foo);
+            }
+
+            // Restore.
             begin_ptr->cmd.callspec = z1->call;
             begin_ptr->cmd.parseptr = savebeginparse;
             z1->call = savecall;
@@ -2104,6 +2145,8 @@ extern void concentric_move(
          }
          else
             impose_assumption_and_move(begin_ptr, result_ptr);
+
+         remove_tgl_distortion(result_ptr);
 
          if ((save_cmd_misc2_flags & (CMD_MISC2__CENTRAL_MYSTIC | CMD_MISC2__INVERT_MYSTIC)) ==
              mystictest)
@@ -2144,7 +2187,7 @@ extern void concentric_move(
          }
       }
       else {
-         begin_ptr->cmd.callspec = (callspec_block *) 0;
+         begin_ptr->cmd.callspec = (call_with_name *) 0;
          *result_ptr = *begin_ptr;
 
          if (doing_ends) {
@@ -2293,7 +2336,7 @@ extern void concentric_move(
          return;
       }
 
-      if (fix_empty_outers(ss->kind, final_outers_start_kind, &localmods1,
+      if (fix_empty_outers(ss->kind, final_outers_start_kind, localmods1,
                            crossing, begin_outer_elongation, center_arity,
                            analyzer, cmdout, &begin_outer, &result_outer,
                            result_inner, result))
@@ -2622,7 +2665,7 @@ typedef struct {
 
       Additionally, the "10" bit means that action must be merge_without_gaps.
       The "20" bit means that action must NOT be merge_strict_matrix.
-      The "40" bit means only accept it the setups, prior to cutting down,
+      The "40" bit means only accept it if the setups, prior to cutting down,
       were a 2x4 and a 1x8 that were perpendicular to each other. */
 
    C_const unsigned short rotmask;
@@ -2666,6 +2709,10 @@ static concmerge_thing merge_maps[] = {
    {s2x2,       s1x3dmd, 0,     0xAA, 0x1E, 0x0, schema_matrix,         s_rigger,   nothing,  warn__none, 0, 0, {0, 1, 4, 5},                {6, -1, 7, -1, 2, -1, 3, -1}},
    {s1x4,       s1x3dmd, 0,     0xAA, 0x1D, 0x0, schema_matrix,         s_crosswave, nothing, warn__none, 1, 0, {2, 3, 6, 7},                {0, -1, 1, -1, 4, -1, 5, -1}},
    {s1x6,       s1x3dmd, 022,   0xAA, 0x1E, 0x0, schema_matrix,         s1x8,       nothing,  warn__none, 0, 0, {1, -1, 2, 5, -1, 6},        {0, -1, 3, -1, 4, -1, 7, -1}},
+
+   {s1x6,      s_1x2dmd, 044,    022, 0x1E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, -1, 5, 6, -1},        {0, -1, 3, 4, -1, 7}},
+   {s1x6,      s_1x2dmd, 044,    022, 0x1D, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 1, {0, 1, -1, 4, 5, -1},        {7, -1, 2, 3, -1, 6}},
+
    {s1x4,          s3x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
    {s2x4,      s_c1phan, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {4, 6, 11, 9, 12, 14, 3, 1},{0}},
    {s2x4,      s_c1phan, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 2, 7, 5, 8, 10, 15, 13},{0}},
@@ -2731,6 +2778,9 @@ static concmerge_thing merge_maps[] = {
    {s2x2,         s_323, 0,     0xAA, 0x0C, 0x0, schema_matrix,         s4x4,        nothing,  warn__check_butterfly, 0, 0, {15, 3, 7, 11},             {12, -1, 0, -1, 4, -1, 8, -1}},
    {s1x2,         s_323, 0,     0x88, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {7, 3},               {0}},
    {s1x2,         s_323, 0,     0x88, 0x0D, 0x2, schema_concentric,     s1x2,        s2x3,     warn__none, 0, 0, {0, 1},               {0, 1, 2, 4, 5, 6}},
+
+   {s1x2,          s2x3, 0,      022, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 4},               {0}},
+
    {sdmd,         s_525, 0,    04444, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 5, 8, 11},         {0}},
    {s1x4,         s_525, 0,    04444, 0x0D, 0x0, schema_matrix,         sbigdmd,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0, 1, -1, 4, 5, -1, 6, 7, -1, 10, 11, -1}},
    {s1x2,         s_525, 0,    04040, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5},               {0}},
@@ -2745,7 +2795,10 @@ static concmerge_thing merge_maps[] = {
    {s1x6,          s1x6, 044,    022, 0x1E, 0x4, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {1, 3, -1, 5, 7, -1},    {0, -1, 2, 4, -1, 6}},
    {s1x6,          s1x6, 022,    044, 0x1E, 0x4, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {0, -1, 2, 4, -1, 6},    {1, 3, -1, 5, 7, -1}},
 
+   // These two in this order.
+   {s1x6,          s1x8, 066,   0x88, 0x1E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, -1, -1, 7, -1, -1},         {0}},
    {s1x6,          s1x8, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 3, 2, 5, 7, 6},         {0}},
+
 
    // Need both of these because they won't canonicalize.
    {s1x4,          s1x4, 0,      0xA, 0x0D, 0x0, schema_concentric,     s1x4,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2}},
@@ -2863,15 +2916,15 @@ static concmerge_thing merge_maps[] = {
 
 
 
-
-
-
    {s_bone6,       s1x8, 0,     0xAA, 0x0E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {1, 7, 6, 5, 3, 2},         {0, -1, 2, -1, 4, -1, 6, -1}},
    {s1x8,        s_ptpd, 0xAA,     0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1},{0}},
    {s_1x2dmd,   s1x3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7},         {0}},
    {s_1x2dmd, s_spindle, 0,     0x55, 0x2E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7}, {-1, 3, -1, 4, -1, 7, -1, 0}},
    {s_1x2dmd, s1x8,    044,     0xAA, 0x1E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {1, 3, -1, 5, 7, -1}, {0, -1, 2, -1, 4, -1, 6, -1}},
    {s_1x2dmd, s1x8,    022,     0x66, 0x1E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, -1, 3, 5, -1, 7}, {0, -1, -1, 2, 4, -1, -1, 6}},
+
+   {s_1x2dmd, s_2x1dmd,    022,     022, 0x1D, 0x0, schema_matrix,      s_crosswave, nothing,  warn__none, 0, 1, {0, -1, 3, 4, -1, 7}, {6, -1, 1, 2, -1, 5}},
+
    {s1x3dmd,     s_ptpd, 0x66,  0x55, 0x0E, 0x0, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {1, 7, 5, 3}},
    {s1x3dmd,  s_spindle, 0x66,  0xAA, 0x0E, 0x0, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {0, 2, 4, 6}},
 
@@ -2933,6 +2986,11 @@ static concmerge_thing merge_maps[] = {
    /* New */
    {s1x8,          s2x4, 0x11,  0x66, 0x0D, 0x0, schema_concentric,     s1x6,        s2x6,     warn__none, 0, 1, {1, 3, 2, 5, 7, 6},{-1, -1, 3, 4, -1, -1, -1, -1, 7, 0, -1, -1}},
    {s1x4,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
+
+   // Need both of these because they won't canonicalize.
+   {s1x8,          s1x8, 0x33,  0xCC, 0x0D, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, 4, 5}},
+   {s1x8,          s1x8, 0xCC,  0x33, 0x0D, 0x1, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, 4, 5}},
+
    {s1x8,          s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 3, 4, 7}},
    {s1x4,          s2x4, 0,     0x33, 0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
    {s1x4,          s2x4, 0,     0xCC, 0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
@@ -2955,7 +3013,14 @@ static concmerge_thing merge_maps[] = {
    {s2x4,        s_thar, 0x66,  0x33, 0x0E, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 3, 4, 7}},
    {s1x4,      s_galaxy, 0,     0xAA, 0x0C, 0x0, schema_concentric,     s1x4,        sdmd,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
    {sdmd,          s2x3, 0,      022, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
+
+#ifdef SCREW_IT
+   // Another one of the new maps for 1x2dmd leaving space from hourglass.
+   {s2x3,      s_1x2dmd, 022,    022, 0x1C, 0x1, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 2, 3, 5},               {0, 2, 3, 5}},
+#endif
+
    {sdmd,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
+   {s_1x2dmd,      s2x4, 022,   0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 2, 3, 5},               {0, 3, 4, 7}},
    {s_spindle,     s2x4, 0x55,  0x66, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}},
    {s_spindle, s_spindle, 0x55, 0xAA, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
    {s_spindle, s_spindle, 0xAA, 0x55, 0x0D, 0x1, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
@@ -2997,6 +3062,8 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    }
    else if (action == merge_strict_matrix)
       na = normalize_before_isolate_strict;
+   else if (action == merge_without_gaps)
+      na = normalize_after_disconnected;
 
    /* If either incoming setup is big, opt for a 4x4 rather than C1 phantoms.
       The test for this is, from a squared set, everyone phantom column wheel thru.
@@ -3464,8 +3531,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    uint32 denom;
    parse_block *parseptrcopy;
 
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-      remove_z_distortion(ss);
+   remove_z_distortion(ss);
 
    /* Clear the stuff out of the cmd_misc2_flags word. */
 
@@ -3538,9 +3604,9 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    if ((cmd2word & CMD_MISC2__ANY_WORK) &&
        ss->cmd.parseptr->concept->kind == concept_yoyo &&
        ss->cmd.parseptr->next->concept->kind == marker_end_of_list &&
-       ss->cmd.parseptr->next->call->schema == schema_sequential &&
-       (ss->cmd.parseptr->next->call->callflagsh & INHERITFLAG_YOYO) &&
-       (ss->cmd.parseptr->next->call->stuff.def.defarray[0].modifiersh & INHERITFLAG_YOYO) &&
+       ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential &&
+       (ss->cmd.parseptr->next->call->the_defn.callflagsh & INHERITFLAG_YOYO) &&
+       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh & INHERITFLAG_YOYO) &&
        ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
       doing_yoyo = TRUE;
       ss->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE;
@@ -3826,7 +3892,9 @@ extern void inner_selective_move(
    selective_key orig_indicator = indicator;
    normalize_action action = normalize_before_isolated_call;
 
-   if (indicator == selective_key_plain || indicator == selective_key_plain_from_id_bits) {
+   if (indicator == selective_key_plain ||
+       indicator == selective_key_plain_from_id_bits ||
+       indicator == selective_key_plain_no_live_subsets) {
       action = normalize_before_merge;
       if (!others && sizem1 == 3) {
          if (selector_to_use == selector_center2 || selector_to_use == selector_verycenters)
@@ -3875,7 +3943,7 @@ extern void inner_selective_move(
          else if (selectp(ss, i))
             q = 1;
 
-         /* Indicator selective_key_ignore is like selective_key_disc_dist, but inverted. */
+         // Indicator selective_key_ignore is like selective_key_disc_dist, but inverted.
          if (orig_indicator == selective_key_ignore) q ^= 1;
 
          ssmask |= q;
@@ -3896,7 +3964,7 @@ extern void inner_selective_move(
           cmd1->parseptr->concept &&
           cmd1->parseptr->concept->kind == marker_end_of_list &&
           cmd1->parseptr->call &&
-          cmd1->parseptr->call->schema == schema_matrix)
+          cmd1->parseptr->call->the_defn.schema == schema_matrix)
          indicator = selective_key_dyp;
       else
          indicator = selective_key_disc_dist;
@@ -4089,7 +4157,7 @@ extern void inner_selective_move(
       what we would otherwise do. */
 
    if (orig_indicator == selective_key_plain_from_id_bits) {
-      /* With this indicator, we don't require an exact match. */
+      // With this indicator, we don't require an exact match.
       if (sizem1 == 3)
          schema = schema_single_concentric;
       else
@@ -4107,6 +4175,7 @@ extern void inner_selective_move(
       }
    }
    else if (orig_indicator == selective_key_plain ||
+            orig_indicator == selective_key_plain_no_live_subsets ||
             orig_indicator == selective_key_ignore ||
             orig_indicator == selective_key_work_concept ||
             orig_indicator == selective_key_snag_anyone) {
@@ -4158,6 +4227,9 @@ extern void inner_selective_move(
                goto do_concentric_ctrs;
             if (selector_to_use == selector_outer6)
                goto do_concentric_ends;
+            schema = schema_concentric_diamond_line;
+            if (ss->kind == s3x1dmd && selector_to_use == selector_ctr_1x4)
+               goto do_concentric_ctrs;
          }
 
          if ((selector_to_use == selector_center2 || selector_to_use == selector_verycenters) &&
@@ -4583,7 +4655,12 @@ back_here:
                else if (lilresult[0].kind == sdmd)
                   nextfixp = fixp->nextdmd;
                else if (lilresult[0].kind == s2x2) {
-                  if ((lilresult[0].result_flags & 3) == 2)
+                  // If points are counter rotating in an hourglass, preserve
+                  // elongation (by going to a 2x3) so they will go to the outside.
+                  // But if they are doing it disconnected, always go to spots.
+                  // See Application Note 3.
+                  if (indicator != selective_key_disc_dist &&
+                      (lilresult[0].result_flags & 3) == 2)
                      nextfixp = fixp->next2x2v;
                   else
                      nextfixp = fixp->next2x2;
@@ -4696,7 +4773,7 @@ back_here:
       <anyone> or <anyone> do your part". */
    for (i=0 ; i<WARNING_WORDS ; i++) {
       history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
-      if (indicator < selective_key_plain)
+      if (indicator < selective_key_plain_no_live_subsets)
          history[history_ptr+1].warnings.bits[i] &= ~useless_phan_clw_warnings.bits[i];
       history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
    }

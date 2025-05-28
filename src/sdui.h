@@ -159,7 +159,7 @@ typedef struct glozk {
    uims_reply kind;
    long int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
-   callspec_block *call_ptr;
+   call_with_name *call_ptr;
    concept_descriptor *concept_ptr;
    struct glozk *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
    struct glozk *packed_secondary_subcall;     /* points to substitution list for secondary subcall */
@@ -357,9 +357,10 @@ SDLIB_API void create_resolve_menu_title(
 
 /* In SDINIT */
 
-SDLIB_API void start_sel_and_num_iterator();
-SDLIB_API long_boolean iterate_over_sel_and_num(
+SDLIB_API void start_sel_dir_num_iterator();
+SDLIB_API long_boolean iterate_over_sel_dir_num(
    long_boolean enable_selector_iteration,
+   long_boolean enable_direction_iteration,
    long_boolean enable_number_iteration);
 SDLIB_API void build_database(call_list_mode_t call_list_mode);
 SDLIB_API void initialize_menus(call_list_mode_t call_list_mode);
@@ -387,8 +388,8 @@ SDLIB_API void do_circcer_iteration(uint32 *circcp);
 SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
                                            uint32 *tagg,
                                            uint32 numtaggers,
-                                           callspec_block **tagtable);
-SDLIB_API callspec_block *do_pick(void);
+                                           call_with_name **tagtable);
+SDLIB_API call_with_name *do_pick(void);
 SDLIB_API concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
 SDLIB_API resolve_goodness_test get_resolve_goodness_info(void);
 SDLIB_API long_boolean pick_allow_multiple_items(void);
@@ -499,7 +500,7 @@ extern SDLIB_API int begin_sizes[];                                 /* in SDTABL
 extern SDLIB_API startinfo startinfolist[];                         /* in SDTABLES */
 
 extern SDLIB_API concept_descriptor concept_descriptor_table[];     /* in SDCTABLE */
-extern SDLIB_API callspec_block **main_call_lists[NUM_CALL_LIST_KINDS]; /* in SDCTABLE */
+extern SDLIB_API call_with_name **main_call_lists[NUM_CALL_LIST_KINDS]; /* in SDCTABLE */
 extern SDLIB_API int number_of_calls[NUM_CALL_LIST_KINDS];          /* in SDCTABLE */
 extern SDLIB_API dance_level calling_level;                         /* in SDCTABLE */
 
@@ -665,6 +666,7 @@ static const uint32 RESULTFLAG__NO_REEVALUATE        = 0x00080000UL;
 static const uint32 RESULTFLAG__DID_Z_COMPRESSION    = 0x00100000UL;
 static const uint32 RESULTFLAG__VERY_ENDS_ODD        = 0x00200000UL;
 static const uint32 RESULTFLAG__VERY_CTRS_ODD        = 0x00400000UL;
+static const uint32 RESULTFLAG__DID_TGL_EXPANSION    = 0x00800000UL;
 
 typedef struct glonk {
    char txt[MAX_TEXT_LINE_LENGTH];
@@ -819,7 +821,7 @@ typedef struct {
 
 
 /* These bits are used to allocate flag bits
-   that appear in the "callflagsf" word of a top level callspec_block
+   that appear in the "callflagsf" word of a top level calldefn block
    and the "cmd_final_flags.final" of a setup with its command block. */
 
 /* A 3-bit field. */
@@ -981,6 +983,7 @@ typedef enum {
    error_flag_1_line,            /* 1-line error message, text is in error_message1. */
    error_flag_2_line,            /* 2-line error message, text is in error_message1 and
                                     error_message2. */
+   error_flag_no_retry,          /* Like error_flag_1_line, but it is instantly fatal. */
    error_flag_collision,         /* collision error, message is that people collided, they are in
                                     collision_person1 and collision_person2. */
    error_flag_cant_execute,      /* unable-to-execute error, person is in collision_person1,
@@ -1057,7 +1060,7 @@ typedef struct {
    void (*write_to_call_list_file_fn)(Const char name[]);
    long_boolean (*close_call_list_file_fn)(void);
    long_boolean (*sequence_is_resolved_fn)(void);
-   long_boolean (*deposit_call_fn)(callspec_block *call, const call_conc_option_state *options);
+   long_boolean (*deposit_call_fn)(call_with_name *call, const call_conc_option_state *options);
    long_boolean (*deposit_concept_fn)(concept_descriptor *conc);
    int (*uims_do_modifier_popup_fn)(Cstring callname, modify_popup_kind kind);
    void (*create_resolve_menu_title_fn)(
@@ -1087,7 +1090,7 @@ extern SDLIB_API dance_level higher_acceptable_level[];             /* in SDTOP 
 extern SDLIB_API uint32 the_topcallflags;                           /* in SDTOP */
 extern SDLIB_API long_boolean there_is_a_call;                      /* in SDTOP */
 
-extern SDLIB_API callspec_block **base_calls;                       /* in SDTOP */
+extern SDLIB_API call_with_name **base_calls;                       /* in SDTOP */
 extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
 extern SDLIB_API int whole_sequence_low_lim;                        /* in SDTOP */
 extern SDLIB_API long_boolean enable_file_writing;                  /* in SDTOP */
@@ -1113,12 +1116,10 @@ extern SDLIB_API Cstring *selector_menu_list;                       /* in SDTOP 
 extern SDLIB_API Cstring *circcer_menu_list;                        /* in SDTOP */
 
 
-extern SDLIB_API callspec_block **tagger_calls[NUM_TAGGER_CLASSES]; /* in SDTOP */
-extern SDLIB_API callspec_block **circcer_calls;                    /* in SDTOP */
+extern SDLIB_API call_with_name **tagger_calls[NUM_TAGGER_CLASSES]; /* in SDTOP */
+extern SDLIB_API call_with_name **circcer_calls;                    /* in SDTOP */
 extern SDLIB_API uint32 number_of_taggers[NUM_TAGGER_CLASSES];      /* in SDTOP */
 extern SDLIB_API uint32 number_of_circcers;                         /* in SDTOP */
-extern SDLIB_API selector_kind selector_for_initialize;             /* in SDTOP */
-extern SDLIB_API int number_for_initialize;                         /* in SDTOP */
 extern SDLIB_API long_boolean diagnostic_mode;                      /* in SDTOP */
 extern SDLIB_API int singing_call_mode;                             /* in SDTOP */
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */
@@ -1128,6 +1129,7 @@ extern SDLIB_API long_boolean using_active_phantoms;                /* in SDTOP 
 extern SDLIB_API const call_conc_option_state null_options;         /* in SDTOP */
 extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP */
 extern SDLIB_API long_boolean verify_used_number;                   /* in SDTOP */
+extern SDLIB_API long_boolean verify_used_direction;                /* in SDTOP */
 extern SDLIB_API long_boolean verify_used_selector;                 /* in SDTOP */
 extern SDLIB_API int uims_menu_index;                               /* in SDTOP */
 extern SDLIB_API int last_direction_kind;                           /* in SDTOP */
@@ -1137,6 +1139,10 @@ extern SDLIB_API long_boolean testing_fidelity;                     /* in SDTOP 
 extern SDLIB_API dance_level level_threshholds[];                   /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int hashed_randoms;                                /* in SDTOP */
+
+extern SDLIB_API selector_kind selector_for_initialize;             /* in SDINIT */
+extern SDLIB_API direction_kind direction_for_initialize;           /* in SDINIT */
+extern SDLIB_API int number_for_initialize;                         /* in SDINIT */
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
@@ -1184,7 +1190,7 @@ SDLIB_API void run_program();
 /* in SDMAIN */
 
 extern long_boolean sequence_is_resolved(void);
-extern long_boolean deposit_call(callspec_block *call, const call_conc_option_state *options);
+extern long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options);
 extern long_boolean deposit_concept(concept_descriptor *conc);
 extern int sdmain(int argc, char *argv[]);
 /*NORETURN1*/ extern void exit_program(int code) /*NORETURN2*/;
@@ -1251,7 +1257,8 @@ extern void refresh_input(void);
 /* In SDTOP */
 
 SDLIB_API void initialize_sdlib(void);
-NORETURN1 SDLIB_API void fail(Const char s[]) THROW_DECL NORETURN2;
+NORETURN1 SDLIB_API void fail(const char s[]) THROW_DECL NORETURN2;
+NORETURN1 SDLIB_API void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
 NORETURN1 SDLIB_API void specialfail(Const char s[]) THROW_DECL NORETURN2;
 
 inline uint32 rotperson(uint32 n, int amount)

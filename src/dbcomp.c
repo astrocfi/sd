@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -529,6 +529,8 @@ char *schematab[] = {
    "conc6_2",
    "conc2_6",
    "conc2_4",
+   "conc4_2",
+   "conc4_2_or_normal",
    "???",
    "conc2_6_or_2_4",
    "conc6p",
@@ -570,6 +572,7 @@ char *schematab[] = {
    "select_who_can",
    "select_who_did",
    "select_who_didnt",
+   "select_who_did_and_didnt",
    "???",
    "???",
    "???",
@@ -595,6 +598,7 @@ char *qualtab[] = {
    "all_facing_same",
    "1fl_only",
    "2fl_only",
+   "2fl_per_1x4",
    "3x3_2fl_only",
    "4x4_2fl_only",
    "leads_only",
@@ -1124,6 +1128,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "lockit"},
       {0, "disband1"},
       {0, "slither"},
+      {0, "two_o_circs_for_frac"},
       /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
       {0, "tagnullcall0"},
       {0, "tagnullcall1"},
@@ -1359,7 +1364,9 @@ static uint32 tagsearch(int def)
    i = tagtabsize++;
    /* Independently of the way we reallocate memory, the tag field must be able
       to fit into 13 bits in order to be packed into the binary database file. */
-   if (i >= 8192) errexit("Sorry, too many tagged calls");
+   /* Also, we can't allow a tag of 8191, because that would be taken
+      as a compound call definition. */
+   if (i >= 8190) errexit("Sorry, too many tagged calls");
 
    if (i >= tagtabmax) {
       tagtabmax <<= 1;
@@ -1506,11 +1513,11 @@ static void write_defmod_flags(int is_seq)
          else if (is_seq && (i = search(seqmodtab1)) >= 0)
             rr1 |= (1 << i);
          else if (strcmp(tok_str, "allow_plain_mod") == 0)
-            rr1 |= (3*DFM1_CALL_MOD_BIT);
+            rr1 |= (DFM1_CALL_MOD_ALLOW_PLAIN_MOD);
          else if (strcmp(tok_str, "or_secondary_call") == 0)
-            rr1 |= (5*DFM1_CALL_MOD_BIT);
+            rr1 |= (DFM1_CALL_MOD_OR_SECONDARY);
          else if (strcmp(tok_str, "mandatory_secondary_call") == 0)
-            rr1 |= (6*DFM1_CALL_MOD_BIT);
+            rr1 |= (DFM1_CALL_MOD_MAND_SECONDARY);
          else if (strcmp(tok_str, "shift_three_numbers") == 0)
             rr1 |= (3*DFM1_NUM_SHIFT_BIT);
          else if (!strcmp(tok_str, "insert_number")) {
@@ -1704,8 +1711,15 @@ static void write_call_header(calldef_schema schema)
 {
    int j;
 
-   write_halfword(0x2000 | call_tag );
-   write_halfword(call_level | (call_flags2 << 8));
+   if (!call_namelen) {
+      write_halfword(0x3FFF);
+      write_halfword((call_flags2 << 8));
+   }
+   else {
+      write_halfword(0x2000 | call_tag );
+      write_halfword(call_level | (call_flags2 << 8));
+   }
+
    write_fullword(call_flags1);
    write_fullword(call_flagsh);
    write_halfword((call_namelen << 8) | (uint32) schema);
@@ -2091,138 +2105,156 @@ extern void dbcompile(void)
 
    callcount = 0;
    for (;;) {
+      uint32 matrixflags;
+      int bit;
+      calldef_schema ccc;
 
       get_tok_or_eof();
    startagain:
       if (eof) break;
+      else if (tok_kind != tok_symbol) errexit("Missing indicator");
+      else if (strcmp(tok_str, "call")) errexit("Item in illegal context");
 
+      get_tok();
+      if (tok_kind != tok_string) errexit("Improper call name");
+
+      strcpy(call_name, tok_str);
+      call_namelen = char_ct;
+
+      get_tok();
+      if (tok_kind != tok_symbol) errexit("Improper level");
+      if ((call_level = search(leveltab)) < 0) errexit("Unknown level");
+
+      call_tag = 0;
+
+      get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
 
-      if (!strcmp(tok_str, "call")) {
-         uint32 matrixflags;
-         int bit;
-         calldef_schema ccc;
+      /* Get tag, if present. */
 
+      if (!strcmp(tok_str, "tag")) {
          get_tok();
-         if (tok_kind != tok_string) errexit("Improper call name");
-
-         strcpy(call_name, tok_str);
-         call_namelen = char_ct;
-         call_flagsh = 0;
-         call_flags1 = 0;
-         call_flags2 = 0;
-         call_tag = 0;
-
+         if (tok_kind != tok_symbol) errexit("Improper tag");
+         call_tag = tagsearch(1);
          get_tok();
-         if (tok_kind != tok_symbol) errexit("Improper level");
-         if ((call_level = search(leveltab)) < 0) errexit("Unknown level");
+         if (tok_kind != tok_symbol) errexit("Missing indicator");
+      }
 
-         /* Get toplevel options. */
+   restart_compound_call:
 
-         for (;;) {
+      /* Get toplevel options. */
+
+      call_flagsh = 0;
+      call_flags1 = 0;
+      call_flags2 = 0;
+
+      for (;;) {
+         if ((iii = search(flagtab1)) >= 0) {
+            if (iii >= 32) {
+               call_flags2 |= (1 << (iii-32));
+               if (call_flags2 & ~0xFF)
+                  errexit("Too many secondary flags");
+            }
+            else
+               call_flags1 |= (1 << iii);
+         }
+         else if (strcmp(tok_str, "step_to_nonphantom_box") == 0)
+            call_flags1 |= (CFLAG1_STEP_TO_WAVE|CFLAG1_REAR_BACK_FROM_R_WAVE);
+         else if (strcmp(tok_str, "visible_fractions") == 0)
+            call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
+         else if (strcmp(tok_str, "need_three_numbers") == 0)
+            call_flags1 |= (3*CFLAG1_NUMBER_BIT);
+         else if (strcmp(tok_str, "base_tag_call_2") == 0)
+            call_flags1 |= (3*CFLAG1_BASE_TAG_CALL_BIT);
+         else if (strcmp(tok_str, "mxn_is_inherited") == 0)
+            call_flagsh |= INHERITFLAG_MXNMASK;
+         else if (strcmp(tok_str, "nxn_is_inherited") == 0)
+            call_flagsh |= INHERITFLAG_NXNMASK;
+         else if (strcmp(tok_str, "bigmatrix_is_inherited") == 0)
+            call_flagsh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
+         else if (strcmp(tok_str, "revert_is_inherited") == 0)
+            call_flagsh |= INHERITFLAG_REVERTMASK;
+         else if ((iii = search(flagtabh)) >= 0)
+            call_flagsh |= (1 << iii);
+         else
+            break;
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Missing indicator");
+      }
+
+      /* Process the actual definition.  First, check for the "simple_funny" or "lateral_to_selectees" indicator. */
+
+      funnyflag = scan_for_per_array_def_flags();
+
+      /* Find out what kind of call it is. */
+      iii = search(schematab);
+
+      if (iii < 0) errexit("Can't determine call definition type");
+
+      ccc = (calldef_schema) iii;
+
+      if (funnyflag != 0 && ccc != schema_by_array)
+         errexit("Simple_funny or lateral_to_selectees out of place");
+
+      switch (ccc) {
+      case schema_by_array:
+         write_array_def(funnyflag);
+         break;
+      case schema_nothing:
+      case schema_roll:
+      case schema_recenter:
+         write_call_header(ccc);
+         get_tok_or_eof();
+         break;
+      case schema_matrix:
+      case schema_partner_matrix:
+         matrixflags = 0;
+
+         for (;;) {     /* Get matrix call options. */
             get_tok();
-            if (tok_kind != tok_symbol) errexit("Missing indicator");
-            if (!strcmp(tok_str, "tag")) {
-               get_tok();
-               if (tok_kind != tok_symbol) errexit("Improper tag");
-               call_tag = tagsearch(1);
-            }
-            else {
-               if ((iii = search(flagtab1)) >= 0) {
-                  if (iii >= 32) {
-                     call_flags2 |= (1 << (iii-32));
-                     if (call_flags2 & ~0xFF)
-                        errexit("Too many secondary flags");
-                  }
-                  else
-                     call_flags1 |= (1 << iii);
-               }
-               else if (strcmp(tok_str, "step_to_nonphantom_box") == 0)
-                  call_flags1 |= (CFLAG1_STEP_TO_WAVE|CFLAG1_REAR_BACK_FROM_R_WAVE);
-               else if (strcmp(tok_str, "visible_fractions") == 0)
-                  call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
-               else if (strcmp(tok_str, "need_three_numbers") == 0)
-                  call_flags1 |= (3*CFLAG1_NUMBER_BIT);
-               else if (strcmp(tok_str, "base_tag_call_2") == 0)
-                  call_flags1 |= (3*CFLAG1_BASE_TAG_CALL_BIT);
-               else if (strcmp(tok_str, "mxn_is_inherited") == 0)
-                  call_flagsh |= INHERITFLAG_MXNMASK;
-               else if (strcmp(tok_str, "nxn_is_inherited") == 0)
-                  call_flagsh |= INHERITFLAG_NXNMASK;
-               else if (strcmp(tok_str, "bigmatrix_is_inherited") == 0)
-                  call_flagsh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
-               else if (strcmp(tok_str, "revert_is_inherited") == 0)
-                  call_flagsh |= INHERITFLAG_REVERTMASK;
-               else if ((iii = search(flagtabh)) >= 0)
-                  call_flagsh |= (1 << iii);
-               else
-                  break;
-            }
+            if (tok_kind != tok_symbol) break;
+            if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
+            matrixflags |= (1 << bit);
          }
 
-         /* Process the actual definition.  First, check for the "simple_funny" or "lateral_to_selectees" indicator. */
+         write_call_header(ccc);
+         write_fullword(matrixflags);
+         write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
+         get_tok_or_eof();
+         break;
+      case schema_sequential:
+      case schema_sequential_with_fraction:
+      case schema_sequential_with_split_1x8_id:
+      case schema_split_sequential:
+         write_call_header(ccc);
+         write_seq_stuff();
 
-         funnyflag = scan_for_per_array_def_flags();
-
-         /* Find out what kind of call it is. */
-         iii = search(schematab);
-
-         if (iii < 0) errexit("Can't determine call definition type");
-
-         ccc = (calldef_schema) iii;
-
-         if (funnyflag != 0 && ccc != schema_by_array)
-            errexit("Simple_funny or lateral_to_selectees out of place");
-
-         switch (ccc) {
-         case schema_by_array:
-            write_array_def(funnyflag);
-            goto startagain;
-         case schema_nothing:
-         case schema_roll:
-         case schema_recenter:
-            write_call_header(ccc);
-            break;
-         case schema_matrix:
-         case schema_partner_matrix:
-            matrixflags = 0;
-
-            for (;;) {     /* Get matrix call options. */
-               get_tok();
-               if (tok_kind != tok_symbol) break;
-               if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
-               matrixflags |= (1 << bit);
+         for (;;) {               /* Write a level 2 seqdefine group. */
+            get_tok_or_eof();
+            if (eof) goto startagain;
+            else if ((tok_kind == tok_symbol) && (!strcmp(tok_str, "seq"))) {
+               /* Write a level 2 seqdefine group. */
+               write_seq_stuff();
             }
-
-            write_call_header(ccc);
-            write_fullword(matrixflags);
-            write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
-            break;
-         case schema_sequential:
-         case schema_sequential_with_fraction:
-         case schema_sequential_with_split_1x8_id:
-         case schema_split_sequential:
-            write_call_header(ccc);
-            write_seq_stuff();
-
-            for (;;) {               /* Write a level 2 seqdefine group. */
-               get_tok_or_eof();
-               if (eof) break;
-               if ((tok_kind == tok_symbol) && (!strcmp(tok_str, "seq"))) {
-                  /* Write a level 2 seqdefine group. */
-                  write_seq_stuff();
-               }
-               else
-                  break;       /* Must have seen next 'call' indicator. */
-            }
-            goto startagain;
-         default:
-            write_conc_stuff(ccc);
-            break;
+            else break;
          }
+
+         break;
+      default:
+         write_conc_stuff(ccc);
+         get_tok_or_eof();
+         break;
+      }
+
+      /* End of call definition.  See if there is another definition for this call. */
+
+      if ((tok_kind == tok_symbol) && (strcmp(tok_str, "call"))) {
+         /* Yes.  Process the next definition. */
+         call_namelen = 0;
+         goto restart_compound_call;
       }
       else
-         errexit("Item in illegal context");
+         goto startagain;       /* Must have seen next 'call' indicator. */
    }
 
    write_halfword(0);         /* final end mark */

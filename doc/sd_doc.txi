@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: March 14, 2000
-@set sd-version 33.15
+@set Time-stamp: June 10, 2000
+@set sd-version 34.0
 @set full-manual
 @c %**end of header
 @iftex
@@ -212,13 +212,7 @@ Call Notes
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
-* Grand Chain 8::               Grand Chain 8
-* Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
-* Calls with special (matrix) versions:: These have alternate forms in the Database
-* <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
-* Bridge the Gap::              Bridge the Gap
 * Rotate from Columns::         Rotate from Columns
-* Calls with special (parts) versions:: These have alternate forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
@@ -2747,13 +2741,7 @@ This section documents these calls.
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
-* Grand Chain 8::               Grand Chain 8
-* Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
-* Calls with special (matrix) versions:: These have alternate forms in the Database
-* <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
-* Bridge the Gap::              Bridge the Gap
 * Rotate from Columns::         Rotate from Columns
-* Calls with special (parts) versions:: These have alternate forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
@@ -3025,7 +3013,7 @@ This call is a special case of the @samp{<ATC> back to a wave} class
 of calls, and is a recognized C1 call.  You should use this name rather
 than the potentially misleading @samp{flip back to a wave}.
 
-@node Face <DIRECTION>, Grand Chain 8, Flip Back, Call Notes
+@node Face <DIRECTION>, Rotate from Columns, Flip Back, Call Notes
 @section Face DIRECTION
 
 The call @samp{face <DIRECTION>} does not appear to be a genuine
@@ -3037,137 +3025,7 @@ that is commonly expressed as ``tag the line, in.''  Note that
 the A2 designators @samp{zig-zag}, etc., are among the permissible
 directions.
 
-@node Grand Chain 8, Percolate and Cover Up, Face <DIRECTION>, Call Notes
-@section Grand Chain 8
-
-In order to handle all of the nuances of @samp{grand chain 8}, it
-was necessary to make a separate call @samp{grand chain 8 (centers and ends)}.
-Use this call when you want just the centers or ends to do their part,
-or you are using some concept like @samp{central}.  In other circumstances,
-just @samp{grand chain 8} should work.
-
-@node Percolate and Cover Up, Calls with special (matrix) versions, Grand Chain 8, Call Notes
-@section Percolate, Perk Up, and Cover Up
-
-When performed from some formations (but not waves), these calls have the
-property that the centers stay centers and the ends stay ends.
-One can make use of that property, by using concepts like @samp{central}
-when the formation is appropriate.  Unfortunately, @code{Sd} can't figure
-out whether to allow the @samp{central} concept, based on the starting
-formation, without help.  Use the calls @samp{percolate (centers and ends)},
-@samp{perk up (centers and ends)},
-and @samp{cover up (centers and ends)} when using the @samp{central} concept.
-@code{Sd} will, of course, check that the facing directions are such that
-the dancers would have stayed in the center had all 8 people done the call.
-
-@node Calls with special (matrix) versions, <ANYONE> Run the Wheel, Percolate and Cover Up, Call Notes
-@section Calls with special ``(matrix)'' versions
-
-A few calls need to have different versions in the database for various
-reasons.  This is usually because they are sometimes used in ways that use incompatible
-attributes, such as fractionalization and various geometric peculiarities.
-
-The definition that @code{Sd} uses for these calls attempts to be completely
-correct with respect to subtleties in the definition.  For example, fractions
-are observed, and the definition is followed when the call is used from unusual
-starting formations.  These general definitions are not always usable when the
-call is used with certain modifiers such as @samp{single} or @samp{3x3}.  In such cases,
-@code{Sd} has alternate calls with the parenthesized word ``matrix'' after them,
-as in @samp{recoil (matrix)}.  These alternate forms compromise the definition
-as needed to make the call work with the modifier.
-
-@subsection Recoil
-
-The call @samp{recoil (matrix)} sacrifices fractionalization, and
-can only be done when people are facing in, but it can be done with, for
-example, the @samp{3x3} modifier from facing lines of 3.
-
-@subsection Easy Does It
-
-The call @samp{easy does it (matrix)} sacrifices fractionalization and the
-knowledge of the centers' and ends' parts, but it can be done with, for
-example, the @samp{3x3} modifier from suitable 2x6 matrix two-faced lines.
-
-@subsection Walk the Plank
-
-The call @samp{walk the plank (matrix)} sacrifices fractionalization and the
-ability to use the real definition from unusual positions, but it can
-be done with, for example the @samp{3x3} modifier from 2x6 matrix columns.
-
-@subsection Countershake
-
-The call @samp{countershake (matrix)} sacrifices fractionalization and the
-ability to use the real definition from unusual positions, but it can
-be done with the @samp{3x3} modifier from a 2x6 matrix completed
-double-pass-thru formation.
-
-The plain call @samp{countershake} can handle fractions, centers' and
-ends' parts, unusual formations, and even modifiers such as @samp{3x1}
-or @samp{3x3} from quadruple lines of 3.  However, it can't handle
-@samp{3x3 countershake} from a 2x6 matrix completed double-pass-thru
-formation.  The reason for this is that, when done from a 2x6 matrix,
-the fractions are not synchronized with each other, and the definitions
-of the various parts are not consistent.  You need @samp{countershake (matrix)}
-for this.
-
-@subsection Mini Busy
-
-This call is defined with three parts: @samp{1/2 Press Ahead}, @samp{center 2
-hinge while the outer triple lines 1/2 tag}, and @samp{centers flip the diamond
-while the ends roll}.
-
-Sometimes one wants to use this call in a way that violates this definition
-but allows modifiers such as @samp{single} or @samp{3x3}.  Use the call
-@samp{mini busy (matrix)} for this.  It is not fractionalizable.
-
-@subsection Advance to a Column
-
-The calls @samp{finish advance to a column}, @samp{beaus advance to a column},
-and @samp{belles advance to a column} are normally fractionalizable, but can't
-take modifiers like @samp{3x3}, because they cause the setup to go through
-intermediate states which violate the fractional definition.  Use the call names
-with @samp{(matrix)} to get these usages.  Such calls have limited ability to
-be fractionalized.
-
-The @samp{(matrix)} version is not needed for the @samp{single} modifier.
-
-The call @samp{<anyone> advance to a column} designating someone other than
-@samp{beaus} or @samp{belles}, does not need the @samp{(matrix)} modifier,
-because such calls can't be used with modifiers such as @samp{3x3} anyway.
-
-@node <ANYONE> Run the Wheel, Bridge the Gap, Calls with special (matrix) versions, Call Notes
-@section @code{ANYONE} Run the Wheel
-
-As originally defined, this is a rather remarkable ``space invader''
-call which can go into 16 matrix formations under certain
-circumstances.  It is now almost always used in the form of @samp{leads
-run the wheel}, which makes it nothing but a counter rotate 3/4.
-In order to facilitate the more common non-space-invading uses, with
-concepts like @samp{parallelogram}, the original space-invading call
-is called @samp{<anyone> run the wheel (matrix)}.  The non-space-invading
-version is called just @samp{<anyone> run the wheel}.
-
-@node Bridge the Gap, Rotate from Columns, <ANYONE> Run the Wheel, Call Notes
-@section Bridge the Gap
-
-The call @samp{bridge the gap} is defined as a ``space invader'' call.
-That is, the call is defined in terms of matrix operations like
-@samp{press} that do not involve square breathing.
-As such, using it with a concept such as @code{offset columns} is
-problematical---it isn't clear how to put back an arbitrary matrix.
-
-It happens that, when called from a starting double pass
-thru formation, the call goes to a well-behaved 2x4 formation.  In fact, it
-is equivalent to @samp{tandem twosome fan thru to a wave} from that formation.
-If the call had been defined that way, it could be used with concepts
-such as @code{offset columns}.  Callers sometimes use this call with such
-concepts, when the virtual starting formation is a double pass thru.  To
-do this in @code{Sd}, you must use the call @samp{bridge the gap (dpt)}.  It is
-defined as @samp{tandem twosome fan thru to a wave}, and is only legal
-in a (virtual) starting double pass thru.  The call @samp{bridge the gap}
-is the actual space-invader call.
-
-@node Rotate from Columns, Calls with special (parts) versions, Bridge the Gap, Call Notes
+@node Rotate from Columns, Adjust Alamo to Other Pairing, Face <DIRECTION>, Call Notes
 @section Rotate from Columns
 
 Remember that @i{rotate} and @i{single rotate} from columns are legal only
@@ -3175,67 +3033,7 @@ at C3, but from lines they are legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
-@node Calls with special (parts) versions, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
-@section Calls with special ``(parts)'' versions
-
-A few calls need to have different versions in the database for various
-reasons.  This is usually because they are sometimes used in ways that use incompatible
-attributes, such as fractionalization and various geometric peculiarities.
-
-@subsection Recycle
-
-There are two @i{recycle} calls in the database: @samp{recycle} can be done
-from waves, facing couples, right-handed boxes, or a couple facing a
-right-handed mini-wave.  It can take the @samp{cross}, @samp{single}, or
-@samp{diamond} modifiers.  It is the call that dancers will do when told
-to @i{recycle}, and is the call that is used in @i{cover up} and
-@i{counterpoint}.
-
-Unfortunately, there is no mechanism for the program to recognize a call
-as being fractionalizable in some setups but not others, and the
-facing-couples version of recycle is not fractionalizable.
-To permit fractional use of recycle, as with
-@samp{interlace} or @samp{random}, we have provided a call
-@samp{recycle (parts)}, which can be done only from waves.  Use this call
-(but don't read the ``parts'' word) when fractions are required.
-
-@subsection Cross Cycle, Scoot and Weave, Couple Up, Anyone tie
-
-The calls @samp{cross cycle}, @samp{scoot and weave}, @samp{couple up}, and @samp{<anyone> tie}
-have similar problems.  When you want to perform some concept that requires
-dividing them into parts, you must use the version of the call that has the
-word ``(parts)'' after it.  When you do this, certain other aspects of the
-call (such as the ability to to it from all positions) are compromised.
-Hence they should only be used when fractionalization is required.
-
-@subsection Invert the Column
-
-The call @samp{invert the column} is similar.  If you want to interrupt it, for
-example, use the call @samp{invert the column (parts)}.  This call has 4 parts.
-However, if you only want fractional invert the column, just say @samp{invert the
-column 3/4}.  The call @samp{invert the column (parts)} is only needed when
-interruptions or complex meta-concepts are used.
-
-@subsection Hocus Pocus
-
-There is a call @samp{hocus pocus (parts)} in the database.
-It understands the fact that the outsides' part of this call
-has two @samp{O circulates}, and it allows fractionalization concepts
-to be applied.  For example, from diamonds, @code{1/2 hocus pocus (parts)}
-typically creates a 4x4 matrix of some kind.
-
-Unfortunately, this call can't always be used with phantoms.
-There is a common notion that dancers ``know'' that the pair of
-@samp{O circulates} changes the shape of a 2x4.  Callers take advantage of this,
-calling @code{split phantom columns hocus pocus} from waves, knowing that the
-dancers will ``leave room for the phantoms.''  If the number of @samp{O circulates}
-isn't known to be two, this property disappears.  So the call @samp{hocus pocus}
-knows about the shape change, even in the presence of phantoms, and should
-be used with concepts like @samp{split phantom columns}, to get the correct phantom
-behavior.  In the call @samp{hocus pocus (parts)}, all bets are off regarding
-the phantoms' action.
-
-@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Calls with special (parts) versions, Call Notes
+@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Rotate from Columns, Call Notes
 @section Adjust Alamo to Other Pairing
 
 The program's notion of where people are in an alamo ring is rather imprecise.
