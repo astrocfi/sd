@@ -708,6 +708,8 @@ char *qualtab[] = {
    "said_triangle",
    "didnt_say_triangle",
    "occupied_as_stars",
+   "occupied_as_clumps",
+   "occupied_as_blocks",
    "occupied_as_h",
    "occupied_as_qtag",
    "occupied_as_3x1tgl",
@@ -1224,9 +1226,10 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "revert_if_needed"},
       {0, "extend_n"}};
 
-int tagtabsize = num_base_call_indices;  /* Number of items we currently have in tagtab. */
-int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
-tagtabitem *tagtab;               /* The dynamically allocated tag list. */
+int tagtabsize = num_base_call_indices;  // Number of items we currently have in tagtab.
+int tagtabmax = 100;                     // Amount of space allocated for tagtab;
+                                         // must be >= tagtabsize at all times, obviously.
+tagtabitem *tagtab;                      // The dynamically allocated tag list.
 
 
 int errnum1 = -1;   /* These may get set >= when raising a fatal error. */
@@ -2150,7 +2153,7 @@ def2:
 
 
 
-extern void dbcompile(void)
+extern void dbcompile()
 {
    int i, iii;
    uint32 funnyflag;

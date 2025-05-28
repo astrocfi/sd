@@ -254,7 +254,7 @@ extern void ttu_initialize()
 }
 
 
-void iofull::terminate()
+void ttu_terminate()
 {
    if (!sdtty_no_console) {
 

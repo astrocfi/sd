@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.7g"
-#define TIME_STAMP "wba@alum.mit.edu  3 May 2002 $"
+#define VERSION_STRING "34.7h"
+#define TIME_STAMP "wba@alum.mit.edu  15 May 2002 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -32,7 +32,6 @@
    sdmain
    sequence_is_resolved
 and the following external variables:
-   journal_file
    menu_names
    command_menu
    resolve_menu
@@ -83,8 +82,6 @@ extern char *sd_version_string()
 
 
 /* These variables are external. */
-
-FILE *journal_file = (FILE *) 0;
 
 /* BEWARE!!  This list is keyed to the definition of "call_list_kind" in sd.h . */
 Cstring menu_names[] = {
@@ -911,7 +908,7 @@ extern int sdmain(int argc, char *argv[])
       printf("-sequence_num n             use this initial sequence number\n");
 
       gg->display_help(); // Get any others that the UI wants to tell us about.
-      final_exit(0);
+      general_final_exit(0);
    }
 
    enable_file_writing = FALSE;
@@ -942,8 +939,8 @@ extern int sdmain(int argc, char *argv[])
 
    // This does a lot more than just exit.  It updates the init file.
    // If deletion of an item in the init file was called for, "open_session"
-   // returned false, and "final_exit" will do the actual deletion.
-   final_exit(0);
+   // returned false, and "general_final_exit" will do the actual deletion.
+   general_final_exit(0);
 
    /* NOTREACHED */
    return 0;

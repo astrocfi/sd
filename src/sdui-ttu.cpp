@@ -18,22 +18,21 @@
  */
 
 
-/* The "NO_CURSES" compile-time switch will shut off all attempts to use the "curses"
-   system service, including the inclusion of the "curses.h" include file.  (Whew!)
-   In this case, the program will ignore the "-no_cursor" run-time switch, and will
-   always act as though that switch had been given. */
+// The "NO_CURSES" compile-time switch will shut off all attempts to use the "curses"
+// system service, including the inclusion of the "curses.h" include file.
+// In this case, the program will ignore the "-no_cursor" run-time switch, and will
+// always act as though that switch had been given.
 
 
 #ifndef NO_CURSES
 #include <curses.h>
-#else
-#include <stdio.h>
 #endif
+#include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /*    This too. */
-#ifdef	__linux__
-#include <sys/ioctl.h> /*    And this under Linux. */
+#if defined (__linux__) || defined (__CYGWIN__)
+#include <sys/ioctl.h>
 #endif
 #include <signal.h>
 #include <string.h>
@@ -46,47 +45,40 @@ static int curses_initialized = 0;
 
 static int current_tty_mode = 0;
 
-static Cstring person_colors[8] = {
-   // Alternating blue and red.
-   "34", "31",
-   "34", "31",
-   "34", "31",
-   "34", "31"};
+struct colorspec {
+   int curses_index;
+   Cstring vt100_string;
+};
 
-static Cstring pastel_person_colors[8] = {
-   // Alternating bletcherous blue and putrid pink.
-   "36", "35",
-   "36", "35",
-   "36", "35",
-   "36", "35"};
+static colorspec color_translations[8] = {
+   {0, "00"},  // 0 - not used
+   {0, "30"},  // 1 - substitute for yellow against bright background (black)
+   {2, "31"},  // 2 - red
+   {3, "32"},  // 3 - green
+   {4, "33"},  // 4 - yellow
+   {5, "34"},  // 5 - blue
+   {6, "35"},  // 6 - magenta
+   {7, "36"}}; // 7 - cyan
 
-static Cstring couple_colors[9] = {
-   "31", "31",       // red
-   "32", "32",       // green
-   "34", "34",       // blue
-   "30", "30",       // black
-   "31"};            // red for wraparound if coloring by corner
+// Alternating blue and red.
+static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
 
-static Cstring pastel_couple_colors[9] = {
-   "31", "31",       // red
-   "32", "32",       // green
-   "34", "34",       // blue
-   "33", "33",       // yellow
-   "31"};            // red for wraparound if coloring by corner
+// Alternating bletcherous blue and putrid pink.
+static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
 
-static Cstring couple_colors_rgyb[8] = {
-   "31", "31",       // red
-   "32", "32",       // green
-   "30", "30",       // black
-   "34", "34"};      // blue
+// red, green, blue, yellow, red for wraparound if coloring by corner
+static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
 
-static Cstring pastel_couple_colors_rgyb[8] = {
-   "31", "31",       // red
-   "32", "32",       // green
-   "33", "33",       // yellow
-   "34", "34"};      // blue
+// red, green, blue, substitute yellow, red for wraparound if coloring by corner
+static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
 
-static Cstring *color_base;
+// red, green, yellow, blue
+static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
+
+// red, green, substitute yellow, blue
+static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
+
+static int *textcolorlist;
 
 static void csetmode(int mode)             /* 1 means raw, no echo, one character at a time;
                                                 0 means normal. */
@@ -116,15 +108,13 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 
 static void term_handler(int n)
 {
-    gg->terminate();
-
-    if ( n == SIGQUIT ) {
-	abort();
-    }
-    else {
+   if ( n == SIGQUIT ) {
+      abort();
+   }
+   else {
       session_index = 0;  // Prevent attempts to update session file.
-      final_exit(n);
-    }
+      general_final_exit(n);
+   }
 }
 
 
@@ -140,6 +130,10 @@ extern void ttu_set_window_title(char s[]) {}
 
 bool iofull::help_manual() { return false; }
 
+
+#ifndef NO_CURSES
+static int orig_curses_bkgd;
+#endif
 
 extern void ttu_initialize()
 {
@@ -194,23 +188,51 @@ extern void ttu_initialize()
 
       idlok(stdscr, sdtty_no_line_delete ? FALSE : TRUE);
       keypad(stdscr, TRUE);
+
+      if (has_colors()) {
+         start_color();
+         orig_curses_bkgd = getbkgd(stdscr);
+         if (ui_options.reverse_video) {
+            init_pair(1, COLOR_WHITE, COLOR_BLACK);
+            init_pair(2, COLOR_RED, COLOR_BLACK);
+            init_pair(3, COLOR_GREEN, COLOR_BLACK);
+            init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+            init_pair(5, COLOR_BLUE, COLOR_BLACK);
+            init_pair(6, COLOR_MAGENTA, COLOR_BLACK);
+            init_pair(7, COLOR_CYAN, COLOR_BLACK);
+         }
+         else {
+            init_pair(1, COLOR_BLACK, COLOR_WHITE);
+            init_pair(2, COLOR_RED, COLOR_WHITE);
+            init_pair(3, COLOR_GREEN, COLOR_WHITE);
+            init_pair(4, COLOR_YELLOW, COLOR_WHITE);
+            init_pair(5, COLOR_BLUE, COLOR_WHITE);
+            init_pair(6, COLOR_MAGENTA, COLOR_WHITE);
+            init_pair(7, COLOR_CYAN, COLOR_WHITE);
+         }
+         bkgdset(orig_curses_bkgd | A_BOLD | COLOR_PAIR(1));
+         color_set(1, 0);
+         if (!ui_options.no_intensify) attron(A_BOLD);
+      }
    }
 #endif
 }
 
-void iofull::terminate()
+void ttu_terminate()
 {
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       if (curses_initialized) {
+         if (has_colors()) bkgdset(orig_curses_bkgd);
          endwin();
       }
-   }
-   else
-      csetmode(0);   /* Restore normal input mode. */
-#else
-   csetmode(0);   /* Restore normal input mode. */
 #endif
+   }
+   else {
+      csetmode(0);   // Restore normal input mode.
+   }
 }
 
 // If not using curses, query the terminal driver for the
@@ -220,6 +242,9 @@ void iofull::terminate()
 //
 int get_term_lines()
 {
+#ifdef NO_IOCTL
+   return sdtty_screen_height-1;
+#else
    struct winsize w;
 
    if (ioctl(1, TIOCGWINSZ, &w) >= 0) {
@@ -228,22 +253,23 @@ int get_term_lines()
    else {
       return sdtty_screen_height-1;
    }
+#endif
 }
 
 extern int get_lines_for_more()
 {
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       int x, y;
       getmaxyx(stdscr, y, x);		// returns 1 more than desired values
       return y-1;
+#endif
    }
    else {
       return get_term_lines();
    }
-#else
-   return get_term_lines();
-#endif
 }
 
 
@@ -370,44 +396,44 @@ whereas the correct way to document this would have been
 
 extern void clear_line()
 {
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       int y, x;
 
       getyx_correctly(&y, &x);
       move(y, 0);
       clrtoeol();
       refresh();
+#endif
    }
    else {
-      /* We may be on a printing terminal, so we can't erase anything.  Just
-         print "XXX" at the end of the line that we want to erase, and start
-         a new line.  This will happen if the user types "C-U", or after any
-         "--More--" line.  We can't make the "--More--" line go away completely,
-         leaving a seamless transcript.  This is the best we can do. */
+      // We may be on a printing terminal, so we can't erase anything.  Just
+      // print "XXX" at the end of the line that we want to erase, and start
+      // a new line.  This will happen if the user types "C-U", or after any
+      // "--More--" line.  We can't make the "--More--" line go away completely,
+      // leaving a seamless transcript.  This is the best we can do.
       printf(" XXX\n");
    }
-#else
-      printf(" XXX\n");
-#endif
 }
 
 extern void rubout()
 {
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       int y, x;
       getyx_correctly(&y, &x);
       if (x > 0) move(y, x-1);
       clrtoeol();
       refresh();
+#endif
    }
    else {
-      printf("\b \b");    /* We hope that this works. */
+      printf("\b \b");    // We hope that this works.
    }
-#else
-   printf("\b \b");    /* We hope that this works. */
-#endif
 }
 
 extern void erase_last_n(int n)
@@ -436,74 +462,100 @@ extern void erase_last_n(int n)
 #endif
 }
 
-
 extern void put_line(const char the_line[])
 {
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
-      addstr(the_line);
-      refresh();
-   }
-#else
-   if (0) {
-   }
-#endif
-   else if (!sdtty_no_console && sdtty_no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       char c;
-
-      // We need to watch for escape characters denoting people
-      // to be printed in a particularly pretty way.
-
       while ((c = *the_line++)) {
          if (c == '\013') {
             int personidx = (*the_line++) & 7;
             int persondir = (*the_line++) & 0xF;
 
-            put_char(' ');
+            addch(' ');
 
-            if (ui_options.color_scheme != no_color) {
-               (void) fputs("\033[1;", stdout);
-               (void) fputs(color_base[personidx], stdout);
+            if (ui_options.color_scheme != no_color)
+               color_set(color_translations[textcolorlist[personidx]].curses_index, 0);
 
-               if (ui_options.reverse_video)
-                  (void) fputs(";40m", stdout);
-               else
-                  (void) fputs(";47m", stdout);
-            }
+            addch(ui_options.pn1[personidx]);
+            addch(ui_options.pn2[personidx]);
+            addch(ui_options.direc[persondir]);
 
-            put_char(ui_options.pn1[personidx]);
-            put_char(ui_options.pn2[personidx]);
-            put_char(ui_options.direc[persondir]);
-
-            if (ui_options.color_scheme != no_color) {
-               if (ui_options.reverse_video)
-                  (void) fputs("\033[0;37;40m", stdout);
-               else
-                  (void) fputs("\033[0;30;47m", stdout);
-            }
+            if (ui_options.color_scheme != no_color)
+               color_set(1, 0);
          }
-         else
-            (void) put_char(c);
+         else {
+            addch(c);
+         }
       }
+
+      refresh();
+#endif
    }
    else {
-      (void) fputs(the_line, stdout);
+      // Curses is not in use.  But we still might be trying to use colors.
+
+      if (sdtty_no_console) {
+         // No funny stuff at all.
+         // By leaving "use_escapes_for_drawing_people" at zero, we know
+         // that the line will be nothing but ASCII text.
+         (void) fputs(the_line, stdout);
+      }
+      else {
+         // We need to watch for escape characters
+         // denoting people to be printed in color.
+
+         char c;
+         while ((c = *the_line++)) {
+            if (c == '\013') {
+               int personidx = (*the_line++) & 7;
+               int persondir = (*the_line++) & 0xF;
+
+               put_char(' ');
+
+               if (ui_options.color_scheme != no_color) {
+                  (void) fputs("\033[1;", stdout);
+                  (void) fputs(color_translations[textcolorlist[personidx]].vt100_string, stdout);
+
+                  if (ui_options.reverse_video)
+                     (void) fputs(";40m", stdout);
+                  else
+                     (void) fputs(";47m", stdout);
+               }
+
+               put_char(ui_options.pn1[personidx]);
+               put_char(ui_options.pn2[personidx]);
+               put_char(ui_options.direc[persondir]);
+
+               if (ui_options.color_scheme != no_color) {
+                  if (ui_options.reverse_video)
+                     (void) fputs("\033[0;37;40m", stdout);
+                  else
+                     (void) fputs("\033[0;30;47m", stdout);
+               }
+            }
+            else
+               put_char(c);
+         }
+      }
    }
 }
 
 extern void put_char(int c)
 {
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       addch(c);
       refresh();
+#endif
    }
    else {
       (void) putchar(c);
    }
-#else
-   (void) putchar(c);
-#endif
 }
 
 
@@ -511,9 +563,11 @@ extern int get_char()
 {
    int nc;
 
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
-      int c = getch();      /* A "curses" call. */
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
+      int c = getch();      // A "curses" call.
 
       // Fen - Fixed curses support for function keys.
       //	Sys V and ncurses don't support modifiers
@@ -579,15 +633,16 @@ extern int get_char()
       else {				// no match, return 0
          nc = 0;
       }
+#endif
    }
    else {
-      csetmode(1);       /* Raw, no echo, single-character mode. */
-      nc = getchar();    /* A "stdio" call. */
+      csetmode(1);         // Raw, no echo, single-character mode.
+      nc = getchar();      // A "stdio" call.
    }
-#else
-   csetmode(1);         /* Raw, no echo, single-character mode. */
-   nc = getchar();      /* A "stdio" call. */
-#endif
+
+   // Turn control characters (other than ones
+   // that are real genuine control characters)
+   // into our special encoding.
 
    if (nc >= 'A'-0100 && nc <= 'Z'-0100) {
       if (nc != '\b' && nc != '\r' &&
@@ -628,16 +683,16 @@ extern void get_string(char *dest, int max)
 
 extern void ttu_bell()
 {
-#ifndef NO_CURSES
    if (!sdtty_no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       beep();
+#endif
    }
    else {
       (void) putchar('\007');
    }
-#else
-   (void) putchar('\007');
-#endif
 }
 
 /*
@@ -647,20 +702,22 @@ extern void ttu_bell()
 /* ARGSUSED */
 static void stop_handler(int n)
 {
+   if (!sdtty_no_cursor) {
 #ifndef NO_CURSES
-    if (!sdtty_no_cursor && curses_initialized) {
-	def_prog_mode();
-	endwin();
-    }
-    else {
-	csetmode(0);
-    }
-#else
-    csetmode(0);
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
+      if (curses_initialized) {
+         def_prog_mode();
+         endwin();
+      }
 #endif
+   }
+   else {
+      csetmode(0);
+   }
 
-    signal(SIGTSTP, SIG_DFL);
-    raise(SIGTSTP);			// resend the caught SIGTSTP
+   signal(SIGTSTP, SIG_DFL);
+   raise(SIGTSTP);			// resend the caught SIGTSTP
 }
 
 // Need a forward declaration.
@@ -669,17 +726,17 @@ void initialize_signal_handlers();
 /* ARGSUSED */
 static void cont_handler(int n)
 {
-    initialize_signal_handlers();	// restore signal handlers
+   initialize_signal_handlers();	// restore signal handlers
 
 #ifndef NO_CURSES
-    if (!sdtty_no_cursor && isendwin() ) {
-	refresh();
-    }
-    else {
-	refresh_input();
-    }
+   if (!sdtty_no_cursor && isendwin() ) {
+      refresh();
+   }
+   else {
+      refresh_input();
+   }
 #else
-    refresh_input();
+   refresh_input();
 #endif
 }
 
@@ -694,42 +751,33 @@ void initialize_signal_handlers()
 
 void iofull::final_initialize()
 {
-   if (!sdtty_no_console && sdtty_no_cursor)
+   if (!sdtty_no_console)
       ui_options.use_escapes_for_drawing_people = 1;
 
-   if (ui_options.color_scheme != no_color) {
-      if (ui_options.pastel_color) {
-         if (ui_options.color_scheme == color_by_gender)
-            color_base = pastel_person_colors;
-         else if (ui_options.color_scheme == color_by_couple)
-            color_base = pastel_couple_colors;
+   if (ui_options.color_scheme == color_by_gender) {
+      if (ui_options.pastel_color)
+         textcolorlist = pastel_person_colors;
+      else
+         textcolorlist = bold_person_colors;
+   }
+   else if (ui_options.color_scheme != no_color) {
+      if (ui_options.reverse_video) {
+         if (ui_options.color_scheme == color_by_couple)
+            textcolorlist = couple_colors_rgby;
          else if (ui_options.color_scheme == color_by_couple_rgyb)
-            color_base = pastel_couple_colors_rgyb;
+            textcolorlist = couple_colors_rgyb;
          else
-            color_base = pastel_couple_colors+1;
+            textcolorlist = couple_colors_rgby+1;
       }
       else {
-         if (ui_options.color_scheme == color_by_gender)
-            color_base = person_colors;
-         else {
-            if (ui_options.reverse_video) {
-               // If background is black, use yellow anyway.
-               if (ui_options.color_scheme == color_by_couple)
-                  color_base = pastel_couple_colors;
-               else if (ui_options.color_scheme == color_by_couple_rgyb)
-                  color_base = pastel_couple_colors_rgyb;
-               else
-                  color_base = pastel_couple_colors+1;
-            }
-            else {
-               if (ui_options.color_scheme == color_by_couple)
-                  color_base = couple_colors;
-               else if (ui_options.color_scheme == color_by_couple_rgyb)
-                  color_base = couple_colors_rgyb;
-               else
-                  color_base = couple_colors+1;
-            }
-         }
+         // If white background, yellow doesn't show up well.
+         // Substitute black instead.
+         if (ui_options.color_scheme == color_by_couple)
+            textcolorlist = couple_colors_rgbk;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            textcolorlist = couple_colors_rgkb;
+         else
+            textcolorlist = couple_colors_rgbk+1;
       }
    }
 

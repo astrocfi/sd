@@ -39,6 +39,7 @@ SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
 # in pcfiles.lst.
 SDTTY_OBJS = sdui-tty.o sdmatch.o sdui-tpc.o
 
+# pcfiles.lst should have SD_OBJS + SDTTY_OBJS
 SDTTY_LINK_OBJS = @pcfiles.lst
 
 MKCALLS_SRCS = mkcalls.cpp dbcomp.cpp

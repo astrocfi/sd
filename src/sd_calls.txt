@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7g"
+version "34.7h"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -4290,7 +4290,7 @@ call "roll" plus tag roll
    //    1/4 R/L, second half
    //    1/8 R/L
    // Be sure it is replicated properly.
-   setup 4x4 hyperglass plus_eighth_rotation
+   setup 4x4 hyperglass plus_eighth_rotation qualifier occupied_as_blocks
       preds "Direction must be right or left."
          if roll_is_cw  [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
                          CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
@@ -4326,7 +4326,7 @@ call "roll" plus tag roll
    //    1/4 R/L, second half
    //    1/8 R/L
    // Be sure it is replicated properly.
-   setup 4x4 hyperglass plus_eighth_rotation
+   setup 4x4 hyperglass plus_eighth_rotation qualifier occupied_as_blocks
       preds "Direction must be right or left."
          if roll_is_cw  [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
                          CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
@@ -5064,7 +5064,7 @@ call "quarter @h" mainstream tag quarter_dir
    //    1/4 R/L, second half
    //    1/8 R/L
    // Be sure it is replicated properly.
-   setup 4x4 hyperglass plus_eighth_rotation
+   setup 4x4 hyperglass plus_eighth_rotation qualifier occupied_as_blocks
       preds "Direction must be right or left."
          if rightp [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
                    CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
@@ -5100,7 +5100,7 @@ call "quarter @h" mainstream tag quarter_dir
    //    1/4 R/L, second half
    //    1/8 R/L
    // Be sure it is replicated properly.
-   setup 4x4 hyperglass plus_eighth_rotation
+   setup 4x4 hyperglass plus_eighth_rotation qualifier occupied_as_blocks
       preds "Direction must be right or left."
          if rightp [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
                    CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
@@ -5142,7 +5142,7 @@ call "1/8 @h" c1
    //    1/4 R/L, second half
    //    1/8 R/L
    // Be sure it is replicated properly.
-   setup 4x4 hyperglass plus_eighth_rotation
+   setup 4x4 hyperglass plus_eighth_rotation qualifier occupied_as_blocks
       preds "Direction must be right or left."
          if rightp [CR3N CR5N CR5N CR4N CR6N CR8N CR8N CR7N
                    CR9N CR11N CR11N CR10N CR0N CR2N CR2N CR1N]
@@ -12224,10 +12224,12 @@ call "_ @D wheel" dontshow tag oddfracwheel
 
 call "_finish wheel the ocean" dontshow tag finwheelocean
             reverse_means_mirror split_large_setups
-   setup 2x2 2x2
-      /* Note that we allow left miniwaves, so we can have
-         so-and-so start a wheel the ocean. */
+   setup 2x2 2x2 no_cutting_through
+      // Note that we allow left miniwaves, so we can have
+      // so-and-so start a wheel the ocean.
       array [0 ZM1N ZM0N ZM3N]
+   setup 3x2 2x3 qualifier live none
+      array [ZM0N 0 0 0 ZM2N ZM1N]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
       array [ZM0W 0]
@@ -12258,7 +12260,7 @@ call "_finish wheel the ocean" dontshow tag finwheelocean
 
 call "_finish wheel the sea" dontshow tag finwheelsea
             reverse_means_mirror split_large_setups
-   setup 2x2 2x2
+   setup 2x2 2x2 no_cutting_through
       array [0 0 ZM1N ZM2N]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
@@ -12322,14 +12324,16 @@ call "leads wheel to an hourglass" c4
    seq finwheeltohrglass [inherit_reverse]
 
 call "wheel the ocean" c2
-            reverse_means_mirror single_is_inherited nxn_is_inherited mxn_is_inherited bigmatrix_is_inherited visible_fractions
+            reverse_means_mirror single_is_inherited nxn_is_inherited
+            mxn_is_inherited bigmatrix_is_inherited visible_fractions
    seq everyonewheel [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
    seq finwheelocean [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "wheel the sea" c2
-            reverse_means_mirror single_is_inherited nxn_is_inherited mxn_is_inherited bigmatrix_is_inherited visible_fractions
+            reverse_means_mirror single_is_inherited nxn_is_inherited
+            mxn_is_inherited bigmatrix_is_inherited visible_fractions
    seq everyonewheel [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
-   seq finwheelsea [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
+   seq finwheelsea  [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "wheel to a@I diamond" c4
             reverse_means_mirror intlk_is_inherited visible_fractions

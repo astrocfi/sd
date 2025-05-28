@@ -82,9 +82,9 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 195
+#define DATABASE_FORMAT_VERSION 196
 
-/* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
+// BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
 enum base_call_index {
    base_call_unused,
    base_call_null,
@@ -115,9 +115,8 @@ enum base_call_index {
    base_call_turnstar_n,
    base_call_revert_if_needed,
    base_call_extend_n,
-   base_call_cardinality    // Not an actual enumeration item.
+   num_base_call_indices    // Not an actual enumeration item.
 };
-#define num_base_call_indices (((int) base_call_cardinality))
 
 
 // BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -229,45 +228,50 @@ enum {
    CFLAG1_YOYO_FRACTAL_NUM          = 0x80000000UL
 };
 
-/* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
-   They must lie in the top 8 bits for now. */
-static const uint32 CFLAG2_IMPRECISE_ROTATION        = 0x01000000UL;
-static const uint32 CFLAG2_CAN_BE_FAN                = 0x02000000UL;
-static const uint32 CFLAG2_EQUALIZE                  = 0x04000000UL;
-static const uint32 CFLAG2_ONE_PERSON_CALL           = 0x08000000UL;
+// These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
+// They must lie in the top 8 bits for now.
+enum {
+   CFLAG2_IMPRECISE_ROTATION        = 0x01000000UL,
+   CFLAG2_CAN_BE_FAN                = 0x02000000UL,
+   CFLAG2_EQUALIZE                  = 0x04000000UL,
+   CFLAG2_ONE_PERSON_CALL           = 0x08000000UL
+};
 
-/* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
+// Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.cpp .
 
-#define MTX_USE_SELECTOR           0x01
-#define MTX_STOP_AND_WARN_ON_TBONE 0x02
-#define MTX_TBONE_IS_OK            0x04
-#define MTX_IGNORE_NONSELECTEES    0x08
-#define MTX_MUST_FACE_SAME_WAY     0x10
-#define MTX_FIND_JAYWALKERS        0x20
-#define MTX_BOTH_SELECTED_OK       0x40
-#define MTX_FIND_SQUEEZERS         0x80
-#define MTX_FIND_SPREADERS         0x100
-#define MTX_USE_VEER_DATA          0x200
-#define MTX_USE_NUMBER             0x400
+enum {
+   MTX_USE_SELECTOR           = 0x01,
+   MTX_STOP_AND_WARN_ON_TBONE = 0x02,
+   MTX_TBONE_IS_OK            = 0x04,
+   MTX_IGNORE_NONSELECTEES    = 0x08,
+   MTX_MUST_FACE_SAME_WAY     = 0x10,
+   MTX_FIND_JAYWALKERS        = 0x20,
+   MTX_BOTH_SELECTED_OK       = 0x40,
+   MTX_FIND_SQUEEZERS         = 0x80,
+   MTX_FIND_SPREADERS         = 0x100,
+   MTX_USE_VEER_DATA          = 0x200,
+   MTX_USE_NUMBER             = 0x400
+};
 
 
+// These definitions help to encode things in the "qualifierstuff" field
+// of a call definition.  That field is an unsigned 16 bit integer.  The low
+// 7 bits are a cast of the qualifier kind itself (hence we allow 127
+// nontrivial qualifiers).  The high 9 bits are as follows.
 
-/* These definitions help to encode things in the "qualifierstuff" field
-   of a call definition.  That field is an unsigned 16 bit integer.  The low
-   7 bits are a cast of the qualifier kind itself (hence we allow 127
-   nontrivial qualifiers).  The high 9 bits are as follows. */
-
-/* These two must be consecutive for encoding in the "assump_both" field. */
-#define QUALBIT__LEFT           0x8000U
-#define QUALBIT__RIGHT          0x4000U
-#define QUALBIT__LIVE           0x2000U
-#define QUALBIT__TBONE          0x1000U
-#define QUALBIT__NTBONE         0x0800U
-/* A 4 bit field.  If nonzero, there is a number requirement, and the field is that number plus 1. */
-#define QUALBIT__NUM_MASK       0x0780U
-#define QUALBIT__NUM_BIT        0x0080U
-#define QUALBIT__QUAL_CODE      0x007FU
-
+enum {
+   // The next two must be consecutive for encoding in the "assump_both" field.
+   QUALBIT__LEFT           = 0x8000,
+   QUALBIT__RIGHT          = 0x4000,
+   QUALBIT__LIVE           = 0x2000,
+   QUALBIT__TBONE          = 0x1000,
+   QUALBIT__NTBONE         = 0x0800,
+   // A 4 bit field.  If nonzero, there is a number requirement,
+   // and the field is that number plus 1.
+   QUALBIT__NUM_MASK       = 0x0780,
+   QUALBIT__NUM_BIT        = 0x0080,
+   QUALBIT__QUAL_CODE      = 0x007F
+};
 
 
 /* BEWARE!!  This list must track the table "leveltab" in dbcomp.c . */
@@ -594,116 +598,120 @@ enum begin_kind {
    b_pdblspindle
 };
 
-/* These bits are used in the "callarray_flags" field of a "callarray".
-   There is room for 21 of them. */
+// These bits are used in the "callarray_flags" field of a "callarray".
+// There is room for 21 of them.
 
-/* This one must be 1!!!! */
-#define CAF__ROT                     0x1
-#define CAF__FACING_FUNNY            0x2
-/* Next one says this is concentrically defined --- the "end_setup" slot
-   has the centers' end setup, and there is an extra slot with the ends' end setup. */
-#define CAF__CONCEND                 0x4
-/* Next one meaningful only if previous one is set. */
-#define CAF__ROT_OUT                 0x8
-/* This is a 3 bit field. */
-#define CAF__RESTR_MASK             0x70
-/* These next 5 are the nonzero values it can have. */
-#define CAF__RESTR_UNUSUAL          0x10
-#define CAF__RESTR_FORBID           0x20
-#define CAF__RESTR_RESOLVE_OK       0x30
-#define CAF__RESTR_CONTROVERSIAL    0x40
-#define CAF__RESTR_BOGUS            0x50
-#define CAF__PREDS                  0x80
-#define CAF__NO_CUTTING_THROUGH    0x100
-#define CAF__NO_FACING_ENDS        0x200
-#define CAF__LATERAL_TO_SELECTEES  0x400
-#define CAF__VACATE_CENTER         0x800
-#define CAF__OTHER_ELONGATE       0x1000
-#define CAF__SPLIT_TO_BOX         0x2000
-#define CAF__REALLY_WANT_DIAMOND  0x4000
-#define CAF__NO_COMPRESS          0x8000
-#define CAF__PLUSEIGHTH_ROTATION 0x10000
+enum {
+   // This one must be 1!!!!
+   CAF__ROT                     = 0x1,
+   CAF__FACING_FUNNY            = 0x2,
+   // Next one says this is concentrically defined --- the "end_setup" slot
+   // has the centers' end setup, and there is an extra slot with the ends' end setup.
+   CAF__CONCEND                 = 0x4,
+   // Next one meaningful only if previous one is set.
+   CAF__ROT_OUT                 = 0x8,
+   // This is a 3 bit field.
+   CAF__RESTR_MASK             = 0x70,
+   // These next 5 are the nonzero values it can have.
+   CAF__RESTR_UNUSUAL          = 0x10,
+   CAF__RESTR_FORBID           = 0x20,
+   CAF__RESTR_RESOLVE_OK       = 0x30,
+   CAF__RESTR_CONTROVERSIAL    = 0x40,
+   CAF__RESTR_BOGUS            = 0x50,
+   CAF__PREDS                  = 0x80,
+   CAF__NO_CUTTING_THROUGH    = 0x100,
+   CAF__NO_FACING_ENDS        = 0x200,
+   CAF__LATERAL_TO_SELECTEES  = 0x400,
+   CAF__VACATE_CENTER         = 0x800,
+   CAF__OTHER_ELONGATE       = 0x1000,
+   CAF__SPLIT_TO_BOX         = 0x2000,
+   CAF__REALLY_WANT_DIAMOND  = 0x4000,
+   CAF__NO_COMPRESS          = 0x8000,
+   CAF__PLUSEIGHTH_ROTATION = 0x10000
+};
 
 // BEWARE!!  This list must track the array "qualtab" in dbcomp.cpp
 enum call_restriction {
-   cr_none,                /* Qualifier only. */
-   cr_alwaysfail,          /* Restriction only. */
+   cr_none,                // Qualifier only.
+   cr_alwaysfail,          // Restriction only.
    cr_give_fudgy_warn,
    cr_wave_only,
-   cr_wave_unless_say_2faced, /* Not implemented. */
+   cr_wave_unless_say_2faced, // Not implemented.
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
    cr_2fl_per_1x4,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
-   cr_leads_only,          /* Restriction only. */
-   cr_trailers_only,       /* Restriction only. */
+   cr_leads_only,          // Restriction only.
+   cr_trailers_only,       // Restriction only.
    cr_couples_only,
    cr_3x3couples_only,
    cr_4x4couples_only,
-   cr_ckpt_miniwaves,      /* Restriction only. */
-   cr_ctr_miniwaves,       /* Restriction only. */
-   cr_ctr_couples,         /* Restriction only. */
-   cr_awkward_centers,     /* Restriction only. */
-   cr_dmd_same_pt,         /* Qualifier only. */
+   cr_ckpt_miniwaves,      // Restriction only.
+   cr_ctr_miniwaves,       // Restriction only.
+   cr_ctr_couples,         // Restriction only.
+   cr_awkward_centers,     // Restriction only.
+   cr_dmd_same_pt,         // Qualifier only.
    cr_dmd_facing,
    cr_diamond_like,
    cr_qtag_like,
    cr_pu_qtag_like,
    cr_reg_tbone,
-   cr_gen_qbox,            /* Qualifier only. */
+   cr_gen_qbox,            // Qualifier only.
    cr_nice_diamonds,
    cr_nice_wv_triangles,
    cr_nice_tnd_triangles,
    cr_magic_only,
-   cr_li_lo,               /* Qualifier only. */
-   cr_ctrs_in_out,         /* Qualifier only. */
-   cr_indep_in_out,        /* Qualifier only. */
+   cr_li_lo,               // Qualifier only.
+   cr_ctrs_in_out,         // Qualifier only.
+   cr_indep_in_out,        // Qualifier only.
    cr_miniwaves,
-   cr_not_miniwaves,       /* Qualifier only. */
-   cr_tgl_tandbase,        /* Qualifier only. */
-   cr_true_Z_cw,           /* Qualifier only. */
-   cr_true_Z_ccw,          /* Qualifier only. */
-   cr_true_PG_cw,          /* Qualifier only. */
-   cr_true_PG_ccw,         /* Qualifier only. */
-   cr_lateral_cols_empty,  /* Qualifier only. */
-   cr_ctrwv_end2fl,        /* Qualifier only. */
-   cr_ctr2fl_endwv,        /* Qualifier only. */
-   cr_split_dixie,         /* Qualifier only. */
-   cr_not_split_dixie,     /* Qualifier only. */
-   cr_dmd_ctrs_mwv,        /* Qualifier only. */
-   cr_qtag_mwv,            /* Qualifier only. */
-   cr_qtag_mag_mwv,        /* Qualifier only. */
-   cr_dmd_ctrs_1f,         /* Qualifier only. */
+   cr_not_miniwaves,       // Qualifier only.
+   cr_tgl_tandbase,        // Qualifier only.
+   cr_true_Z_cw,           // Qualifier only.
+   cr_true_Z_ccw,          // Qualifier only.
+   cr_true_PG_cw,          // Qualifier only.
+   cr_true_PG_ccw,         // Qualifier only.
+   cr_lateral_cols_empty,  // Qualifier only.
+   cr_ctrwv_end2fl,        // Qualifier only.
+   cr_ctr2fl_endwv,        // Qualifier only.
+   cr_split_dixie,         // Qualifier only.
+   cr_not_split_dixie,     // Qualifier only.
+   cr_dmd_ctrs_mwv,        // Qualifier only.
+   cr_qtag_mwv,            // Qualifier only.
+   cr_qtag_mag_mwv,        // Qualifier only.
+   cr_dmd_ctrs_1f,         // Qualifier only.
    cr_dmd_intlk,
    cr_dmd_not_intlk,
-   cr_tall6,               /* Actually not checked as qualifier or restriction. */
-   cr_ctr_pts_rh,          /* Qualifier only. */
-   cr_ctr_pts_lh,          /* Qualifier only. */
-   cr_said_tgl,            /* Qualifier only. */
-   cr_didnt_say_tgl,       /* Qualifier only. */
-   cr_occupied_as_stars,   /* Qualifier only. */
-   cr_occupied_as_h,       /* Qualifier only. */
-   cr_occupied_as_qtag,    /* Qualifier only. */
-   cr_occupied_as_3x1tgl,  /* Qualifier only. */
-   cr_line_ends_looking_out, /* Qualifier only. */
-   cr_col_ends_lookin_in,  /* Qualifier only. */
-   cr_ripple_one_end,      /* Qualifier only. */
-   cr_ripple_both_ends,    /* Qualifier only. */
-   cr_ripple_both_centers, /* Qualifier only. */
-   cr_ripple_any_centers,  /* Qualifier only. */
-   cr_people_1_and_5_real, /* Qualifier only. */
-   cr_ctrs_sel,            /* Qualifier only. */
-   cr_ends_sel,            /* Qualifier only. */
-   cr_all_sel,             /* Qualifier only. */
-   cr_none_sel,            /* Qualifier only. */
-   cr_nor_unwrap_sel,      /* Qualifier only. */
-   cr_ptp_unwrap_sel,      /* Qualifier only. */
-   cr_explodable,          /* Restriction only. */
-   cr_rev_explodable,      /* Restriction only. */
-   cr_peelable_box,        /* Restriction only. */
-   cr_ends_are_peelable,   /* Restriction only. */
+   cr_tall6,               // Actually not checked as qualifier or restriction.
+   cr_ctr_pts_rh,          // Qualifier only.
+   cr_ctr_pts_lh,          // Qualifier only.
+   cr_said_tgl,            // Qualifier only.
+   cr_didnt_say_tgl,       // Qualifier only.
+   cr_occupied_as_stars,   // Qualifier only.
+   cr_occupied_as_clumps,  // Qualifier only.
+   cr_occupied_as_blocks,  // Qualifier only.
+   cr_occupied_as_h,       // Qualifier only.
+   cr_occupied_as_qtag,    // Qualifier only.
+   cr_occupied_as_3x1tgl,  // Qualifier only.
+   cr_line_ends_looking_out, // Qualifier only.
+   cr_col_ends_lookin_in,  // Qualifier only.
+   cr_ripple_one_end,      // Qualifier only.
+   cr_ripple_both_ends,    // Qualifier only.
+   cr_ripple_both_centers, // Qualifier only.
+   cr_ripple_any_centers,  // Qualifier only.
+   cr_people_1_and_5_real, // Qualifier only.
+   cr_ctrs_sel,            // Qualifier only.
+   cr_ends_sel,            // Qualifier only.
+   cr_all_sel,             // Qualifier only.
+   cr_none_sel,            // Qualifier only.
+   cr_nor_unwrap_sel,      // Qualifier only.
+   cr_ptp_unwrap_sel,      // Qualifier only.
+   cr_explodable,          // Restriction only.
+   cr_rev_explodable,      // Restriction only.
+   cr_peelable_box,        // Restriction only.
+   cr_ends_are_peelable,   // Restriction only.
    cr_siamese_in_quad,
    cr_not_tboned_in_quad,
    cr_inroller_is_cw,
@@ -717,25 +725,25 @@ enum call_restriction {
    cr_levelc2,
    cr_levelc3,
    cr_levelc4,
-   cr_not_tboned,          /* Restriction only. */
-   cr_opposite_sex,        /* Restriction only. */
-   cr_quarterbox_or_col,   /* Restriction only. */
-   cr_quarterbox_or_magic_col, /* Restriction only. */
-   cr_all_ns,              /* Restriction only. */
-   cr_all_ew,              /* Restriction only. */
-   cr_real_1_4_tag,        /* Restriction only. */
-   cr_real_3_4_tag,        /* Restriction only. */
-   cr_real_1_4_line,       /* Restriction only. */
-   cr_real_3_4_line,       /* Restriction only. */
-   cr_jleft,               /* Restriction only. */
-   cr_jright,              /* Restriction only. */
-   cr_ijleft,              /* Restriction only. */
-   cr_ijright,             /* Restriction only. */
+   cr_not_tboned,          // Restriction only.
+   cr_opposite_sex,        // Restriction only.
+   cr_quarterbox_or_col,   // Restriction only.
+   cr_quarterbox_or_magic_col, // Restriction only.
+   cr_all_ns,              // Restriction only.
+   cr_all_ew,              // Restriction only.
+   cr_real_1_4_tag,        // Restriction only.
+   cr_real_3_4_tag,        // Restriction only.
+   cr_real_1_4_line,       // Restriction only.
+   cr_real_3_4_line,       // Restriction only.
+   cr_jleft,               // Restriction only.
+   cr_jright,              // Restriction only.
+   cr_ijleft,              // Restriction only.
+   cr_ijright,             // Restriction only.
    NUM_QUALIFIERS          // Not really in the enumeration.
 };
 
-/* BEWARE!!  This list must track the array "schematab" in dbcomp.c .
-   Also, "schema_sequential" must be the start of all the sequential ones. */
+// BEWARE!!  This list must track the array "schematab" in dbcomp.cpp .
+// Also, "schema_sequential" must be the start of all the sequential ones.
 enum calldef_schema {
    schema_concentric,
    schema_cross_concentric,
@@ -906,83 +914,92 @@ enum calldef_schema {
    must coexist with the CMD_MISC__ flags defined in sd.h .  Note that the bit definitions
    of those flags start where these end.  Keep it that way.  If any flags are added here,
    they must be taken away from the CMD_MISC__ flags. */
-/* Start of concentricity flags.  These go in the "modifiers1" word of a by_def_item. */
 
-static const uint32 DFM1_CONC_DEMAND_LINES            = 0x00000001;
-static const uint32 DFM1_CONC_DEMAND_COLUMNS          = 0x00000002;
-static const uint32 DFM1_CONC_FORCE_LINES             = 0x00000004;
-static const uint32 DFM1_CONC_FORCE_COLUMNS           = 0x00000008;
-static const uint32 DFM1_CONC_FORCE_OTHERWAY          = 0x00000010;
-static const uint32 DFM1_CONC_FORCE_SPOTS             = 0x00000020;
-static const uint32 DFM1_CONC_CONCENTRIC_RULES        = 0x00000040;
-static const uint32 DFM1_SUPPRESS_ELONGATION_WARNINGS = 0x00000080;
+// Start of concentricity flags.  These go in the "modifiers1" word of a by_def_item.
+enum {
+   DFM1_CONC_DEMAND_LINES            = 0x00000001,
+   DFM1_CONC_DEMAND_COLUMNS          = 0x00000002,
+   DFM1_CONC_FORCE_LINES             = 0x00000004,
+   DFM1_CONC_FORCE_COLUMNS           = 0x00000008,
+   DFM1_CONC_FORCE_OTHERWAY          = 0x00000010,
+   DFM1_CONC_FORCE_SPOTS             = 0x00000020,
+   DFM1_CONC_CONCENTRIC_RULES        = 0x00000040,
+   DFM1_SUPPRESS_ELONGATION_WARNINGS = 0x00000080,
+   // End of concentricity flags.  This constant embraces them.
+   DFM1_CONCENTRICITY_FLAG_MASK      = 0x000000FF
+};
 
-/* End of concentricity flags.  This constant embraces them. */
-static const uint32 DFM1_CONCENTRICITY_FLAG_MASK      = 0x000000FF;
+// These are the "seq" flags.  They overlay the "conc" flags.
+// Under normal conditions, we do *not* re-evaluate between parts.  This
+// flag overrides that and makes us re-evaluate.
+ enum {
+   DFM1_SEQ_RE_EVALUATE              = 0x00000001UL,
+   DFM1_SEQ_DO_HALF_MORE             = 0x00000002UL,
+   // But, if we break up a call with something like "random", the convention
+   // is to re-evaluate at the break point.  This flag, used for calls like
+   // "patch the <anyone>" or "rims trade back", says that we *never* re-evaluate,
+   // even if the call is broken up.
+   DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004UL,
+   DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008UL,
+   DFM1_SEQ_REPEAT_N                 = 0x00000010UL,
+   DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000020UL,
+   DFM1_SEQ_REPEAT_NM1               = 0x00000040UL,
+   DFM1_SEQ_NORMALIZE                = 0x00000080UL,
 
-/* These are the "seq" flags.  They overlay the "conc" flags. */
-/* Under normal conditions, we do *not* re-evaluate between parts.  This
-   flag overrides that and makes us re-evaluate. */
-static const uint32 DFM1_SEQ_RE_EVALUATE              = 0x00000001;
-static const uint32 DFM1_SEQ_DO_HALF_MORE             = 0x00000002;
-/* But, if we break up a call with something like "random", the convention
-   is to re-evaluate at the break point.  This flag, used for calls like
-   "patch the <anyone>" or "rims trade back", says that we *never* re-evaluate,
-   even if the call is broken up. */
-static const uint32 DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004;
-static const uint32 DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008;
-static const uint32 DFM1_SEQ_REPEAT_N                 = 0x00000010;
-static const uint32 DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000020;
-static const uint32 DFM1_SEQ_REPEAT_NM1               = 0x00000040;
-static const uint32 DFM1_SEQ_NORMALIZE                = 0x00000080;
+   // BEWARE!!  The following ones must track the table "defmodtab1" in dbcomp.cpp
+   // Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item.
 
-/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
-/* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
+   // This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies.
+   DFM1_CALL_MOD_MASK                = 0x00000700UL,
+   DFM1_CALL_MOD_BIT                 = 0x00000100UL,
+   // Here are the codes that can be inside.
+   DFM1_CALL_MOD_ANYCALL             = 0x00000100UL,
+   DFM1_CALL_MOD_MAND_ANYCALL        = 0x00000200UL,
+   DFM1_CALL_MOD_ALLOW_PLAIN_MOD     = 0x00000300UL,
+   DFM1_CALL_MOD_ALLOW_FORCED_MOD    = 0x00000400UL,
+   DFM1_CALL_MOD_OR_SECONDARY        = 0x00000500UL,
+   DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL,
 
-// This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies.
-static const uint32 DFM1_CALL_MOD_MASK                = 0x00000700UL;
-#define             DFM1_CALL_MOD_BIT                   0x00000100UL
-// Here are the codes that can be inside.
-static const uint32 DFM1_CALL_MOD_ANYCALL             = 0x00000100UL;
-static const uint32 DFM1_CALL_MOD_MAND_ANYCALL        = 0x00000200UL;
-static const uint32 DFM1_CALL_MOD_ALLOW_PLAIN_MOD     = 0x00000300UL;
-static const uint32 DFM1_CALL_MOD_ALLOW_FORCED_MOD    = 0x00000400UL;
-static const uint32 DFM1_CALL_MOD_OR_SECONDARY        = 0x00000500UL;
-static const uint32 DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL;
-
-static const uint32 DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800UL;
-
-// unused:                                            = 0x00001000UL;
-static const uint32 DFM1_ENDSCANDO                    = 0x00002000UL;
-static const uint32 DFM1_FINISH_THIS                  = 0x00004000UL;
-static const uint32 DFM1_ROLL_TRANSPARENT             = 0x00008000UL;
-static const uint32 DFM1_PERMIT_TOUCH_OR_REAR_BACK    = 0x00010000UL;
-static const uint32 DFM1_CPLS_UNLESS_SINGLE           = 0x00020000UL;
-/* This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies. */
-static const uint32 DFM1_NUM_SHIFT_MASK               = 0x000C0000UL;
-static const uint32 DFM1_NUM_SHIFT_BIT                = 0x00040000UL;
-/* This is a 3 bit field -- NUM_INSERT_BIT tells where its low bit lies. */
-static const uint32 DFM1_NUM_INSERT_MASK              = 0x00700000UL;
-static const uint32 DFM1_NUM_INSERT_BIT               = 0x00100000UL;
-static const uint32 DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000UL;
-static const uint32 DFM1_FRACTAL_INSERT               = 0x01000000UL;
-
+   DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800UL,
+   // unused:                        = 0x00001000UL,
+   DFM1_ENDSCANDO                    = 0x00002000UL,
+   DFM1_FINISH_THIS                  = 0x00004000UL,
+   DFM1_ROLL_TRANSPARENT             = 0x00008000UL,
+   DFM1_PERMIT_TOUCH_OR_REAR_BACK    = 0x00010000UL,
+   DFM1_CPLS_UNLESS_SINGLE           = 0x00020000UL,
+   // This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies.
+   DFM1_NUM_SHIFT_MASK               = 0x000C0000UL,
+   DFM1_NUM_SHIFT_BIT                = 0x00040000UL,
+   // This is a 3 bit field -- NUM_INSERT_BIT tells where its low bit lies.
+   DFM1_NUM_INSERT_MASK              = 0x00700000UL,
+   DFM1_NUM_INSERT_BIT               = 0x00100000UL,
+   DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000UL,
+   DFM1_FRACTAL_INSERT               = 0x01000000UL
+};
 
 enum stability {
-   stb_none,      /* unknown */
-   stb_z,         /* "Z" - person does not turn */
-   stb_a,         /* "A" - person turns anticlockwise from 1 to 4 quadrants */
-   stb_c,         /* "C" - person turns clockwise from 1 to 4 quadrants */
-   stb_ac,        /* "AC" - person turns anticlockwise once, then clockwise 1 to 4 quadrants */
-   stb_ca,        /* "CA" - person turns clockwise once, then anticlockwise 1 to 4 quadrants */
-   stb_aac,       /* "AAC" - person turns anticlockwise twice, then clockwise 1 to 4 quadrants */
-   stb_cca,       /* "CCA" - person turns clockwise twice, then anticlockwise 1 to 4 quadrants */
-   stb_aaac,      /* "AAAC" - person turns anticlockwise 3 times, then clockwise 1 to 4 quadrants */
-   stb_ccca,      /* "CCCA" - person turns clockwise 3 times, then anticlockwise 1 to 4 quadrants */
-   stb_aaaac,     /* "AAAAC" - person turns anticlockwise 4 times, then clockwise 1 to 4 quadrants */
-   stb_cccca,     /* "CCCCA" - person turns clockwise 4 times, then anticlockwise 1 to 4 quadrants */
-   stb_aa,        /* "AA" - person turns anticlockwise from 5 to 8 quadrants */
-   stb_cc         /* "CC" - person turns clockwise from 5 to 8 quadrants */
+   stb_none,      // unknown
+   stb_z,         // "Z" - person does not turn
+   stb_a,         // "A" - person turns anticlockwise from 1 to 4 quadrants
+   stb_c,         // "C" - person turns clockwise from 1 to 4 quadrants
+   stb_ac,        // "AC" - person turns anticlockwise once,
+                  //     then clockwise 1 to 4 quadrants
+   stb_ca,        // "CA" - person turns clockwise once,
+                  //     then anticlockwise 1 to 4 quadrants
+   stb_aac,       // "AAC" - person turns anticlockwise twice,
+                  //     then clockwise 1 to 4 quadrants
+   stb_cca,       // "CCA" - person turns clockwise twice,
+                  //     then anticlockwise 1 to 4 quadrants
+   stb_aaac,      // "AAAC" - person turns anticlockwise 3 times,
+                  //     then clockwise 1 to 4 quadrants
+   stb_ccca,      // "CCCA" - person turns clockwise 3 times,
+                  //     then anticlockwise 1 to 4 quadrants
+   stb_aaaac,     // "AAAAC" - person turns anticlockwise 4 times,
+                  //     then clockwise 1 to 4 quadrants
+   stb_cccca,     // "CCCCA" - person turns clockwise 4 times,
+                  //     then anticlockwise 1 to 4 quadrants
+   stb_aa,        // "AA" - person turns anticlockwise from 5 to 8 quadrants
+   stb_cc         // "CC" - person turns clockwise from 5 to 8 quadrants
 };
 
 /* These define the format of the short int (16 bits, presumably) items emitted
@@ -1003,5 +1020,7 @@ enum stability {
    d_north, d_south, d_east, d_west in sd.h are just these numbers
    with the 1000 (octal) bit, which is BIT_PERSON, added. */
 
-#define NDBROLL_BIT 0x200
-#define DBSTAB_BIT 0x1000
+enum {
+   NDBROLL_BIT = 0x0200,
+   DBSTAB_BIT  = 0x1000
+};

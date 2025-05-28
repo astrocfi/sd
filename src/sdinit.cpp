@@ -1165,7 +1165,7 @@ extern void prepare_to_read_menus()
       This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.cpp to
       align stuff from the binary database into the person record. */
 
-   if (NROLL_BIT < NDBROLL_BIT)
+   if ((int) NROLL_BIT < (int) NDBROLL_BIT)
       gg->fatal_error_exit(1, "Constants not consistent",
                            "program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
@@ -1381,11 +1381,8 @@ static int write_back_session_line(FILE *wfile)
 }
 
 
-extern void final_exit(int code)
+extern void general_final_exit(int code)
 {
-   if (journal_file) (void) fclose(journal_file);
-   gg->terminate();
-
    if (session_index != 0) {
       char line[MAX_FILENAME_LENGTH];
       FILE *rfile;
@@ -1461,7 +1458,7 @@ extern void final_exit(int code)
       }
    }
 
-   gg->uims_final_exit(code);
+   gg->terminate(code);
 }
 
 extern long_boolean open_database(char *msg1, char *msg2)
@@ -1613,8 +1610,8 @@ static void build_database(call_list_mode_t call_list_mode)
       /* **** We should only allocate the call root if we are going to use this call,
          either because it is tagged or because it is legal at this level!!!! */
 
-      /* Now that we know how long the name is, create the block and fill in the saved stuff. */
-      /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
+      // Now that we know how long the name is, create the block and fill in the saved stuff.
+      // We subtract 3 because 4 chars are already present, but we need one extra for the pad.
 
       call_root = (call_with_name *) get_mem(sizeof(call_with_name) + char_count - 3);
       call_root->menu_name = (Cstring) 0;
@@ -1629,40 +1626,48 @@ static void build_database(call_list_mode_t call_list_mode)
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
       call_root->the_defn.callflagsf = saveflags2 << 24;
-      /* Will get "CFLAGH" and "ESCAPE_WORD" bits later. */
+      // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
       call_root->the_defn.callflagsh = saveflagsh;
       read_in_call_definition(&call_root->the_defn, char_count);
 
-      /* We accept a call if:
-         (1) we are writing out just this list, and the call matches the desired level exactly, or
-         (2) we are writing out this list and those below, and the call is <= the desired level, or
-         (3) we are running, and the call is <= the desired level or the "higher acceptable level".
-            The latter is c3x if the desired level is c3, or c4x if the desired level is c4.
-            That way, c3x calls will be included.  We will print a warning if they are used. */
+      // We accept a call if:
+      // (1) we are writing out just this list, and the call matches the desired level exactly,
+      //          or
+      // (2) we are writing out this list and those below, and the call is <= the desired level,
+      //          or
+      // (3) we are running, and the call is <= the desired level or the
+      //    "higher acceptable level".
+      //    The latter is c3x if the desired level is c3, or c4x if the desired level is c4.
+      //    That way, c3x calls will be included.  We will print a warning if they are used.
 
-      if (     this_level == calling_level ||
-               (call_list_mode != call_list_mode_writing && this_level <= acceptable_level)) {
+      if (this_level == calling_level ||
+          (call_list_mode != call_list_mode_writing && this_level <= acceptable_level)) {
 
-         /* Process tag base calls specially. */
+         // Process tag base calls specially.
          if (call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
-            int tagclass = ((call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) / CFLAG1_BASE_TAG_CALL_BIT) - 1;
+            int tagclass = ((call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) /
+                            CFLAG1_BASE_TAG_CALL_BIT) - 1;
 
-            /* All classes go into list 0.  Additionally, the other classes go into their own list. */
+            // All classes go into list 0.  Additionally, the other classes
+            // go into their own list.
             number_of_taggers[tagclass]++;
-            tagger_calls[tagclass] = (call_with_name **) get_more_mem(tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(call_with_name *));
+            tagger_calls[tagclass] = (call_with_name **)
+               get_more_mem(tagger_calls[tagclass],
+                            number_of_taggers[tagclass]*sizeof(call_with_name *));
             tagger_calls[tagclass][number_of_taggers[tagclass]-1] = call_root;
             if (tagclass != 0) {
                number_of_taggers[0]++;
-               tagger_calls[0] = (call_with_name **) get_more_mem(tagger_calls[0], number_of_taggers[0]*sizeof(call_with_name *));
+               tagger_calls[0] = (call_with_name **)
+                  get_more_mem(tagger_calls[0],
+                               number_of_taggers[0]*sizeof(call_with_name *));
                tagger_calls[0][number_of_taggers[0]-1] = call_root;
             }
             else if (call_root->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
-               /* But anything that invokes a tagging call goes into each list,
-                  inheriting its own class. */
-               int xxx;
+               // But anything that invokes a tagging call goes into each list,
+               // inheriting its own class.
 
-               /* Iterate over all tag classes except class 0. */
-               for (xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
+               // Iterate over all tag classes except class 0.
+               for (int xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
                   call_with_name *new_call =
                      (call_with_name *) get_mem(sizeof(call_with_name) + char_count - 3);
                   (void) memcpy(new_call, call_root, sizeof(call_with_name) + char_count - 3);
@@ -2111,10 +2116,9 @@ extern long_boolean open_session(int argc, char **argv)
             }
          }
       }
-      else {      /* Writing a list of some kind. */
-         for (i=0; i<number_of_calls[call_list_any]; i++) {
+      else {      // Writing a list of some kind.
+         for (i=0; i<number_of_calls[call_list_any]; i++)
             write_to_call_list_file(main_call_lists[call_list_any][i]->menu_name);
-         }
       }
 
       // Close the file.  Will exit if it fails.

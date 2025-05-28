@@ -882,9 +882,10 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_on_your_own)
                writestuff(" AND");
-            else if (k == concept_interlace ||
-                     k == concept_sandwich)
+            else if (k == concept_interlace)
                writestuff(" WITH");
+            else if (k == concept_sandwich)
+               writestuff(" AROUND");
             else if (k == concept_special_sequential_num) {
                writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ");
                request_final_space = FALSE;

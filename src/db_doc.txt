@@ -3209,9 +3209,12 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    dmd_ctrs_1f,                     dmd, 1x4 - the centers (2 of them) are in a couple
    said_triangle,                   short6/pshort6 - caller said the word "triangle"
    didnt_say_triangle               short6/pshort6 - caller didn't say the word "triangle"
-   occupied_as_h                    3x4/4x3 - live bodies are (a subset of) an "H"
-   occupied_as_qtag                 3x4/4x3 - live bodies are (a subset of) a qtag
-   occupied_as_3x1tgl               3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
+   occupied_as_stars  Q             c1phan - live bodies are in 2 stars
+   occupied_as_clumps Q             4x4 - live bodies are in 2 clumps
+   occupied_as_blocks Q             4x4 - live bodies are in blocks
+   occupied_as_h      Q             3x4/4x3 - live bodies are (a subset of) an "H"
+   occupied_as_qtag   Q             3x4/4x3 - live bodies are (a subset of) a qtag
+   occupied_as_3x1tgl Q             3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
                                     triangles of some sort.  Symmetric only.
    line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads,
                                     and at least one center must be column-like.

@@ -1811,10 +1811,12 @@ struct nice_setup_info_item {
    int number_available_now;
 };
 
-/* Values returned by the various popup routines: */
-#define POPUP_DECLINE 0
-#define POPUP_ACCEPT  1
-#define POPUP_ACCEPT_WITH_STRING 2
+// Values returned by the various popup routines.
+enum {
+   POPUP_DECLINE = 0,
+   POPUP_ACCEPT  = 1,
+   POPUP_ACCEPT_WITH_STRING = 2
+};
 
 
 /* These are the bits that get filled in by "update_id_bits". */
@@ -2907,7 +2909,6 @@ extern SDLIB_API match_result user_match;
 
 extern SDLIB_API command_kind search_goal;                          /* in SDPICK */
 
-extern SDLIB_API FILE *journal_file;                                /* in SDMAIN */
 extern SDLIB_API Cstring menu_names[];                              /* in SDMAIN */
 extern SDLIB_API command_list_menu_item command_menu[];             /* in SDMAIN */
 extern SDLIB_API resolve_list_menu_item resolve_menu[];             /* in SDMAIN */
@@ -2975,8 +2976,7 @@ class iobase {
    virtual uint32 get_number_fields(int nnumbers, long_boolean forbid_zero) = 0;
    virtual long_boolean get_call_command(uims_reply *reply_p) = 0;
    virtual void display_help() = 0;
-   virtual void terminate() = 0;
-   virtual NORETURN1 void uims_final_exit(int code) NORETURN2 = 0;
+   virtual void terminate(int code) = 0;
    virtual void process_command_line(int *argcp, char ***argvp) = 0;
    virtual void bad_argument(Cstring s1, Cstring s2, Cstring s3) = 0;
    virtual void final_initialize() = 0;
@@ -3016,8 +3016,7 @@ class iofull : public iobase {
    uint32 get_number_fields(int nnumbers, long_boolean forbid_zero);
    long_boolean get_call_command(uims_reply *reply_p);
    void display_help();
-   void terminate();
-   NORETURN1 void uims_final_exit(int code) NORETURN2;
+   void terminate(int code);
    void process_command_line(int *argcp, char ***argvp);
    void bad_argument(Cstring s1, Cstring s2, Cstring s3);
    void final_initialize();
@@ -3970,6 +3969,21 @@ void run_program();
 
 /* In SDINIT */
 
+
+SDLIB_API long_boolean install_outfile_string(char newstring[]);
+SDLIB_API long_boolean get_first_session_line();
+SDLIB_API long_boolean get_next_session_line(char *dest);
+SDLIB_API void prepare_to_read_menus();
+SDLIB_API int process_session_info(Cstring *error_msg);
+SDLIB_API void open_call_list_file(char filename[]);
+SDLIB_API long_boolean open_accelerator_region();
+SDLIB_API long_boolean get_accelerator_line(char line[]);
+SDLIB_API void close_init_file();
+SDLIB_API void general_final_exit(int code);
+SDLIB_API long_boolean open_database(char *msg1, char *msg2);
+SDLIB_API uint32 read_8_from_database();
+SDLIB_API uint32 read_16_from_database();
+SDLIB_API void close_database();
 extern long_boolean open_session(int argc, char **argv);
 SDLIB_API void start_sel_dir_num_iterator();
 SDLIB_API long_boolean iterate_over_sel_dir_num(
@@ -4018,8 +4032,11 @@ SDLIB_API long_boolean allow_random_subcall_pick();
 /* Change the title bar (or whatever it's called) on the window. */
 extern void ttu_set_window_title(char s[]);
 
-/* Initialize this package. */
+// Initialize this package.
 extern void ttu_initialize();
+
+// The opposite.
+extern void ttu_terminate();
 
 /* Get number of lines to use for "more" processing.  This number is
    not used for any other purpose -- the rest of the program is not concerned
@@ -4083,20 +4100,6 @@ SDLIB_API long_boolean parse_level(Cstring s, dance_level *levelp);
 SDLIB_API char *read_from_call_list_file(char name[], int n);
 SDLIB_API void write_to_call_list_file(const char name[]);
 SDLIB_API void close_call_list_file();
-SDLIB_API long_boolean install_outfile_string(char newstring[]);
-SDLIB_API long_boolean get_first_session_line();
-SDLIB_API long_boolean get_next_session_line(char *dest);
-SDLIB_API void prepare_to_read_menus();
-SDLIB_API int process_session_info(Cstring *error_msg);
-SDLIB_API void open_call_list_file(char filename[]);
-SDLIB_API long_boolean open_accelerator_region();
-SDLIB_API long_boolean get_accelerator_line(char line[]);
-SDLIB_API void close_init_file();
-SDLIB_API void final_exit(int code);
-SDLIB_API long_boolean open_database(char *msg1, char *msg2);
-SDLIB_API uint32 read_8_from_database();
-SDLIB_API uint32 read_16_from_database();
-SDLIB_API void close_database();
 SDLIB_API void write_file(char line[]);
 
 /* in SDMAIN */

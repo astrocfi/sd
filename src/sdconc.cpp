@@ -2983,7 +2983,9 @@ typedef struct {
       The "40" bit means only accept it if the setups, prior to cutting down,
          were a 2x4 and a 1x8 that were perpendicular to each other.
       The "80" bit means that action must NOT be merge_c1_phantom_real.
-      The "100" bit means that original action must NOT be merge_after_dyp. */
+      The "100" bit means that original action must NOT be merge_after_dyp.
+      The "200" bit means only accept it if the setups, prior to cutting down,
+         were a 2x4 and a ptpd that were perpendicular to each other. */
 
    C_const unsigned short rotmask;
    // 1 bit - swap setups;
@@ -3352,6 +3354,8 @@ static concmerge_thing merge_maps[] = {
    {s1x8,        s_ptpd, 0,     0xAA, 0x2E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1}, {0}},
    {s1x6,        s_ptpd, 0,     0xAA, 0x0E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 3, -1, 5, -1}, {0}},
 
+   {s2x4,        s_ptpd, 0x66,  0x55, 0x2AD,0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 6, -1, 5, -1, 2, -1, 1}, {0}},
+
    {s1x4,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
    {s1x4,       s_bone6, 0,      044, 0x0E, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
    {s2x2,       s_bone6, 0,      044, 0x0C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
@@ -3435,7 +3439,8 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    uint32 mask1, mask2;
    int reinstatement_rotation;
    long_boolean rose_from_dead = FALSE;
-   long_boolean perp_2x4_1x8 = FALSE;
+   bool perp_2x4_1x8 = false;
+   bool perp_2x4_ptp = false;
    normalize_action na = normalize_before_merge;
 
    res2copy = *result;
@@ -3462,10 +3467,14 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       The test for this is, from a squared set, everyone phantom column wheel thru.
       We want a 4x4. */
 
-   if (((res1->rotation ^ res2->rotation) & 1) &&
-       ((res1->kind == s2x4 && res2->kind == s1x8) ||
-        (res1->kind == s1x8 && res2->kind == s2x4)))
-      perp_2x4_1x8 = TRUE;
+   if ((res1->rotation ^ res2->rotation) & 1) {
+      if ((res1->kind == s2x4 && res2->kind == s1x8) ||
+          (res1->kind == s1x8 && res2->kind == s2x4))
+         perp_2x4_1x8 = true;
+      else if ((res1->kind == s2x4 && res2->kind == s_ptpd) ||
+          (res1->kind == s_ptpd && res2->kind == s2x4))
+         perp_2x4_ptp = true;  // Test for this is T-boned right wing follow to a diamond.
+   }
 
    canonicalize_rotation(res1);    /* Do we really need to do this before normalize_setup? */
    normalize_setup(res1, na);
@@ -3566,6 +3575,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    if (action != merge_without_gaps) rotmaskreject |= 0x10;
    if (action == merge_strict_matrix) rotmaskreject |= 0x20;
    if (!perp_2x4_1x8) rotmaskreject |= 0x40;
+   if (!perp_2x4_ptp) rotmaskreject |= 0x200;
    if (action == merge_c1_phantom_real) rotmaskreject |= 0x80;
    if (orig_action == merge_after_dyp) rotmaskreject |= 0x100;
 

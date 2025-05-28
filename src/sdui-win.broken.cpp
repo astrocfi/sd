@@ -759,37 +759,57 @@ LRESULT WINAPI AboutWndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lPara
 }
 
 
-// Alternating blue and red.
-static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
+uint32 peoplecolors[8] = {
+   RGB(0, 0, 255),
+   RGB(255, 0, 0),
+   RGB(0, 0, 255),
+   RGB(255, 0, 0),
+   RGB(0, 0, 255),
+   RGB(255, 0, 0),
+   RGB(0, 0, 255),
+   RGB(255, 0, 0)};
 
-// Alternating bletcherous blue and putrid pink.
-static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
+uint32 pastelpeoplecolors[8] = {
+   RGB(0, 255, 255),
+   RGB(255, 0, 255),
+   RGB(0, 255, 255),
+   RGB(255, 0, 255),
+   RGB(0, 255, 255),
+   RGB(255, 0, 255),
+   RGB(0, 255, 255),
+   RGB(255, 0, 255)};
 
-// red, green, blue, dark yellow/black, red for wraparound if coloring by corner
-static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
+uint32 couplecolors[8] = {
+   RGB(255, 0, 255),
+   RGB(255, 0, 255),
+   RGB(0, 255, 0),
+   RGB(0, 255, 0),
+   RGB(0, 255, 255),
+   RGB(0, 255, 255),
+   RGB(255, 255, 0),
+   RGB(255, 255, 0)};
 
-// red, green, blue, yellow, red for wraparound if coloring by corner
-static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
+uint32 couplecolors_rgyb[8] = {
+   RGB(255, 0, 255),
+   RGB(255, 0, 255),
+   RGB(0, 255, 0),
+   RGB(0, 255, 0),
+   RGB(255, 255, 0),
+   RGB(255, 255, 0),
+   RGB(0, 255, 255),
+   RGB(0, 255, 255)};
 
-// red, green, dark yellow/black, blue
-static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
+uint32 cornercolors[8] = {
+   RGB(255, 0, 255),
+   RGB(0, 255, 0),
+   RGB(0, 255, 0),
+   RGB(0, 255, 255),
+   RGB(0, 255, 255),
+   RGB(255, 255, 0),
+   RGB(255, 255, 0),
+   RGB(255, 0, 255)};
 
-// red, green, yellow, blue
-static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
-
-static uint32 text_color_translate[8] = {
-  RGB(0, 0, 0),      // 0 - not used
-  RGB(128, 128, 0),  // 1 - substitute for yellow against bright background
-  RGB(255, 0, 0),    // 2 - red
-  RGB(0, 255, 0),    // 3 - green
-  RGB(255, 255, 0),  // 4 - yellow
-  RGB(0, 0, 255),    // 5 - blue
-  RGB(255, 0, 255),  // 6 - magenta
-  RGB(0, 255, 255)}; // 7 - cyan
-
-// This is used when "no_graphics" has been selected and we are simply
-// writing out text characters to draw the people.  No DIB or palette is used.
-static int *textcolorlist;
+static uint32 *colorlist;
 
 // Margin, in pixels, around the top, right, and bottom of the transcript.
 // That is, this is the amount of gray space from the edge of the black
@@ -872,8 +892,6 @@ static void Transcript_OnPaint(HWND hwnd)
    for (Y=TVOFFSET-nImageOffTop*TranscriptTextHeight,DisplayPtr=DisplayRoot;
         DisplayPtr && DisplayPtr->Line[0] != -1;
         Y+=DisplayPtr->DeltaToNext,DisplayPtr=DisplayPtr->Next) {
-      int x, xdelta;
-      const char *cp;
 
       // See if we are at the part scrolled off the top of the screen.
       if (Y+DisplayPtr->Height < TVOFFSET) continue;
@@ -881,22 +899,24 @@ static void Transcript_OnPaint(HWND hwnd)
       // Or if we have run off the bottom.
       if (Y > TranscriptClientRect.bottom-TVOFFSET) break;
 
-      for (cp=DisplayPtr->Line,x=THOFFSET;
-           *cp;
-           cp++,x+=xdelta) {
-         int xgoodies, ygoodies, glyph_height, glyph_offset;
-         int the_count = 1;         // Fill in some defaults.
-         const char *the_string = cp;
+      if (DisplayPtr->in_picture & 1) {
+         int x, xdelta;
+         const char *cp;
 
-         if (DisplayPtr->in_picture & 1) {
+         for (cp=DisplayPtr->Line,x=THOFFSET;
+              *cp;
+              cp++,x+=xdelta) {
+            int xgoodies, ygoodies, glyph_height, glyph_offset;
+            int the_count = 1;         // Fill in some defaults.
+            const char *the_string = cp;
+
             if (*cp == '\013') {
-               int personidx = *++cp;
-               int persondir = *++cp;
+               int c1 = *++cp;
+               int c2 = *++cp;
 
                if (ui_options.no_graphics == 0) {
-                  xgoodies = (personidx & 7)*BMP_PERSON_SIZE;
-                  ygoodies = BMP_PERSON_SIZE*(persondir & 3);
-                  goto do_DIB_thing;
+                  xgoodies = (c1 & 7)*BMP_PERSON_SIZE;
+                  ygoodies = BMP_PERSON_SIZE*(c2 & 3);
                }
                else {
                   char cc[3];
@@ -905,11 +925,11 @@ static void Transcript_OnPaint(HWND hwnd)
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 1, 0);
 
                   if (ui_options.color_scheme != no_color)
-                     (void) SetTextColor(PaintDC, text_color_translate[textcolorlist[personidx & 7]]);
+                     (void) SetTextColor(PaintDC, colorlist[c1 & 7]);
 
-                  cc[0] = ui_options.pn1[personidx & 7];
-                  cc[1] = ui_options.pn2[personidx & 7];
-                  cc[2] = ui_options.direc[persondir & 017];
+                  cc[0] = ui_options.pn1[c1 & 7];
+                  cc[1] = ui_options.pn2[c1 & 7];
+                  cc[2] = ui_options.direc[c2 & 017];
 
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 3, 0);
 
@@ -929,12 +949,16 @@ static void Transcript_OnPaint(HWND hwnd)
                if (ui_options.no_graphics == 0) {
                   xgoodies = 0;
                   ygoodies = BMP_PERSON_SIZE*4;
-                  goto do_DIB_thing;
                }
                else {
                   the_string = "  . ";
                   the_count = 4;
                }
+
+               xdelta = TranscriptTextWidth*the_count;
+               ExtTextOut(PaintDC, x, Y, ETO_CLIPPED,
+                          &PaintStruct.rcPaint, the_string, the_count, 0);
+               continue;
             }
             else if (*cp == '6') {
                // 6 means space equivalent to one person size.
@@ -967,43 +991,40 @@ static void Transcript_OnPaint(HWND hwnd)
                   (BMP_PERSON_SPACE/2) : (TranscriptTextWidth);
                continue;
             }
+
+            // Clip this stuff -- be sure we don't go into the top or bottom margin.
+
+            glyph_height = BMP_PERSON_SIZE;
+            glyph_offset = 0;
+
+            if (Y+BMP_PERSON_SIZE > PaintStruct.rcPaint.bottom) {
+               glyph_height -= Y+BMP_PERSON_SIZE-PaintStruct.rcPaint.bottom;
+               ygoodies += Y+BMP_PERSON_SIZE-PaintStruct.rcPaint.bottom;
+            }
+            else if (Y < PaintStruct.rcPaint.top) {
+               glyph_height -= PaintStruct.rcPaint.top-Y;
+               glyph_offset = PaintStruct.rcPaint.top-Y;
+            }
+
+            SetDIBitsToDevice(PaintStruct.hdc,
+                              x, Y+glyph_offset,   // XY coords on screen where we put UL corner
+                              BMP_PERSON_SIZE,     // width of it
+                              glyph_height,        // height of it
+                              xgoodies,            // X of LL corner of DIB
+                              ygoodies,            // Y of LL corner of DIB
+                              0,                   // starting scan line of the DIB
+                              lpBi->bmiHeader.biHeight,  // It needs the rasterization info.
+                              lpBits,     // ptr to actual image in the DIB
+                              lpBi,       // ptr to header and color data
+                              DIB_RGB_COLORS);
+
+            xdelta = BMP_PERSON_SIZE;
          }
-
-         // If we get here, we need to write a plain text string.
-
-         xdelta = TranscriptTextWidth*the_count;
-         ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, the_string, the_count, 0);
-         continue;
-
-      do_DIB_thing:
-
-         // Clip this stuff -- be sure we don't go into the top or bottom margin.
-
-         glyph_height = BMP_PERSON_SIZE;
-         glyph_offset = 0;
-
-         if (Y+BMP_PERSON_SIZE > PaintStruct.rcPaint.bottom) {
-            glyph_height -= Y+BMP_PERSON_SIZE-PaintStruct.rcPaint.bottom;
-            ygoodies += Y+BMP_PERSON_SIZE-PaintStruct.rcPaint.bottom;
-         }
-         else if (Y < PaintStruct.rcPaint.top) {
-            glyph_height -= PaintStruct.rcPaint.top-Y;
-            glyph_offset = PaintStruct.rcPaint.top-Y;
-         }
-
-         SetDIBitsToDevice(PaintStruct.hdc,
-                           x, Y+glyph_offset,   // XY coords on screen where we put UL corner
-                           BMP_PERSON_SIZE,     // width of it
-                           glyph_height,        // height of it
-                           xgoodies,            // X of LL corner of DIB
-                           ygoodies,            // Y of LL corner of DIB
-                           0,                   // starting scan line of the DIB
-                           lpBi->bmiHeader.biHeight,  // It needs the rasterization info.
-                           lpBits,     // ptr to actual image in the DIB
-                           lpBi,       // ptr to header and color data
-                           DIB_RGB_COLORS);
-
-         xdelta = BMP_PERSON_SIZE;
+      }
+      else {
+         // Write a plain text string.
+         ExtTextOut(PaintDC, THOFFSET, Y, ETO_CLIPPED,
+                    &PaintStruct.rcPaint, DisplayPtr->Line, 1, 0);
       }
    }
 
@@ -2166,62 +2187,37 @@ void iofull::final_initialize()
    // Now that we know the coloring options,
    // fudge the color table in the mapped DIB.
 
-   // The standard 4-plane color scheme is:
-   //   0  black
-   //   1  dark red
-   //   2  dark green
-   //   3  dark yellow
-   //   4  dark blue
-   //   5  dark magenta
-   //   6  dark cyan
-   //   7  light gray
-   //   8  dark gray
-   //   9  bright red
-   //   10 bright green
-   //   11 bright yellow
-   //   12 bright blue
-   //   13 bright magenta
-   //   14 bright cyan
-   //   15 white
-   //
-   //   The people are "colored" in the DIB file as:
-   //   1B - 9  - bright red
-   //   1G - 1  - dark red
-   //   2B - 10 - bright green
-   //   2G - 2  - dark green
-   //   3B - 11 - bright yellow
-   //   3G - 3  - dark yellow
-   //   4B - 12 - bright blue
-   //   4G - 4  - dark blue
-   //
-   //   Also, the text showing the person number inside
-   //   each glyph is white (15) on black (0).
+   /* The standard 4-plane color scheme is:
+      0  black
+      1  dark red
+      2  dark green
+      3  dark yellow
+      4  dark blue
+      5  dark magenta
+      6  dark cyan
+      7  dark gray      really??
+      8  light gray     really??
+      9  light red
+      10 light green
+      11 light yellow
+      12 light blue
+      13 light magenta
+      14 light cyan
+      15 white
+      The people are "colored" in the DIB file as:
 
-   if (ui_options.color_scheme == color_by_gender) {
-      if (ui_options.pastel_color) {
-         textcolorlist = pastel_person_colors;
-         lpBi->bmiColors[1]  = lpBi->bmiColors[13];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[14];
-      }
-      else {
-         textcolorlist = bold_person_colors;
-         lpBi->bmiColors[1]  = lpBi->bmiColors[9];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[12];
-      }
+      1B - 9
+      1G - 1
+      2B - 10
+      2G - 2
+      3B - 11
+      3G - 3
+      4B - 12
+      4G - 4
+   */
 
-      lpBi->bmiColors[2]  = lpBi->bmiColors[1];
-      lpBi->bmiColors[3]  = lpBi->bmiColors[1];
-      lpBi->bmiColors[4]  = lpBi->bmiColors[1];
-      lpBi->bmiColors[10] = lpBi->bmiColors[9];
-      lpBi->bmiColors[11] = lpBi->bmiColors[9];
-      lpBi->bmiColors[12] = lpBi->bmiColors[9];
-   }
-   else if (ui_options.color_scheme == color_by_corner) {
-      if (!ui_options.reverse_video)
-         textcolorlist = couple_colors_rgbk+1;
-      else
-         textcolorlist = couple_colors_rgby+1;
-
+   if (ui_options.color_scheme == color_by_corner) {
+      colorlist = cornercolors;
       lpBi->bmiColors[1]  = lpBi->bmiColors[10];    // 1G = GRN
       lpBi->bmiColors[2]  = lpBi->bmiColors[12];    // 2G = BLU
       lpBi->bmiColors[3]  = lpBi->bmiColors[11];    // 3G = YEL
@@ -2233,11 +2229,7 @@ void iofull::final_initialize()
    }
    else if (ui_options.color_scheme == color_by_couple) {
       // couple colors, rgby
-      if (!ui_options.reverse_video)
-         textcolorlist = couple_colors_rgbk;
-      else
-         textcolorlist = couple_colors_rgby;
-
+      colorlist = couplecolors;
       lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
       lpBi->bmiColors[2]  = lpBi->bmiColors[10];    // 2G = GRN
       lpBi->bmiColors[3]  = lpBi->bmiColors[12];    // 3G = BLU
@@ -2249,11 +2241,7 @@ void iofull::final_initialize()
    }
    else if (ui_options.color_scheme == color_by_couple_rgyb) {
       // couple colors, rgyb
-      if (!ui_options.reverse_video)
-         textcolorlist = couple_colors_rgkb;
-      else
-         textcolorlist = couple_colors_rgyb;
-
+      colorlist = couplecolors_rgyb;
       lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
       lpBi->bmiColors[2]  = lpBi->bmiColors[10];    // 2G = GRN
       lpBi->bmiColors[3]  = lpBi->bmiColors[11];    // 3G = YEL
@@ -2263,8 +2251,8 @@ void iofull::final_initialize()
       lpBi->bmiColors[11]  = lpBi->bmiColors[3];    // 3B = YEL
       lpBi->bmiColors[12]  = lpBi->bmiColors[4];    // 4B = BLU
    }
-   else {
-      // monochrome colors (textcolorlist won't be used in this case)
+   else if (ui_options.color_scheme == no_color) {
+      // monochrome colors (colorlist won't be used in this case)
       RGBQUAD t = lpBi->bmiColors[ui_options.reverse_video ?
                                  (ui_options.no_intensify ? 7 : 15) : 0];
 
@@ -2277,8 +2265,28 @@ void iofull::final_initialize()
       lpBi->bmiColors[11] = t;
       lpBi->bmiColors[12] = t;
    }
+   else {
+      // gender colors
+      if (ui_options.pastel_color) {
+         colorlist = pastelpeoplecolors;
+         lpBi->bmiColors[1]  = lpBi->bmiColors[13];
+         lpBi->bmiColors[9]  = lpBi->bmiColors[14];
+      }
+      else {
+         colorlist = peoplecolors;
+         lpBi->bmiColors[1]  = lpBi->bmiColors[9];
+         lpBi->bmiColors[9]  = lpBi->bmiColors[12];
+      }
 
-   if (!ui_options.reverse_video) {
+      lpBi->bmiColors[2]  = lpBi->bmiColors[1];
+      lpBi->bmiColors[3]  = lpBi->bmiColors[1];
+      lpBi->bmiColors[4]  = lpBi->bmiColors[1];
+      lpBi->bmiColors[10] = lpBi->bmiColors[9];
+      lpBi->bmiColors[11] = lpBi->bmiColors[9];
+      lpBi->bmiColors[12] = lpBi->bmiColors[9];
+   }
+
+   if (ui_options.reverse_video == 0) {
       RGBQUAD t = lpBi->bmiColors[0];
       lpBi->bmiColors[0]  = lpBi->bmiColors[15];
       lpBi->bmiColors[15] = t;
@@ -2295,7 +2303,7 @@ void iofull::final_initialize()
 
    UpdateWindow(hwndMain);
 
-   // Initialize the display window linked list.
+   /* Initialize the display window linked list */
 
    DisplayRoot = (DisplayType *) get_mem(sizeof(DisplayType));
    DisplayRoot->Line[0] = -1;

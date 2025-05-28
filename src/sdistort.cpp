@@ -3190,6 +3190,7 @@ extern void do_concept_wing(
    current_options.who = saved_selector;
 
    setup the_results[2];
+   bool normal_was_ok = false;
 
    // It's possible that one or the other setup will have so few people
    // (for example, zero) that it won't be able to do the call.
@@ -3198,26 +3199,39 @@ extern void do_concept_wing(
    try {
       update_id_bits(&normal);
       move(&normal, FALSE, &the_results[0]);
-   }
-   catch(error_flag_type) {
+
       if (all_people == normal_people) {
-         *result = the_results[0];
+         *result = the_results[0];  // We had everyone, and it worked.  That's good enough.
          return;
       }
-      fail("Can't do this.");
+
+      // It worked, but not everyone was present.  Do the other setup and merge.
+      normal_was_ok = true;
    }
+   catch(error_flag_type) {
+   }
+
+   // We need to use the winged people.
 
    try {
       update_id_bits(&winged);
       move(&winged, FALSE, &the_results[1]);
    }
    catch(error_flag_type) {
+      fail("Can't do this.");
+   }
+
+   if (!normal_was_ok) {
+      // The winged people are OK, but, since the normal people failed, the winged
+      // people are all we have.  Be sure thay include everyone.
       if (all_people == winged_people) {
          *result = the_results[1];
          return;
       }
       fail("Can't do this.");
    }
+
+   // The normal and winged people are both OK, and need to be merged.
 
    the_results[1].result_flags = get_multiple_parallel_resultflags(the_results, 2);
 

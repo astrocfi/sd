@@ -109,7 +109,7 @@ extern void ttu_initialize()
    lines_in_buffer = 0;
 }
 
-void iofull::terminate()
+void ttu_terminate()
 {
 #if !defined(DJGPP)
    csetmode(0);   /* Restore normal input mode. */

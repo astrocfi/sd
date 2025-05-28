@@ -2749,7 +2749,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 
       if ((p->qualifierstuff & QUALBIT__NUM_MASK) != 0) {
          number_used = TRUE;
-         if (((p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) !=
+         if (((unsigned int) (p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) !=
              (current_options.number_fields & 0xF)+1)
             continue;
       }
@@ -3215,6 +3215,30 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
               (ss->people[4].id1 | ss->people[5].id1 |
                ss->people[6].id1 | ss->people[7].id1 |
                ss->people[12].id1 | ss->people[13].id1 |
+               ss->people[14].id1 | ss->people[15].id1)))
+            goto bad;
+         goto good;
+      case cr_occupied_as_clumps:
+         if (ss->kind != s4x4 ||
+             ((ss->people[0].id1 | ss->people[1].id1 |
+               ss->people[14].id1 | ss->people[3].id1 |
+               ss->people[8].id1 | ss->people[9].id1 |
+               ss->people[6].id1 | ss->people[11].id1) &&
+              (ss->people[4].id1 | ss->people[5].id1 |
+               ss->people[2].id1 | ss->people[7].id1 |
+               ss->people[12].id1 | ss->people[13].id1 |
+               ss->people[10].id1 | ss->people[15].id1)))
+            goto bad;
+         goto good;
+      case cr_occupied_as_blocks:
+         if (ss->kind != s4x4 ||
+             ((ss->people[0].id1 | ss->people[13].id1 |
+               ss->people[10].id1 | ss->people[3].id1 |
+               ss->people[8].id1 | ss->people[5].id1 |
+               ss->people[2].id1 | ss->people[11].id1) &&
+              (ss->people[4].id1 | ss->people[9].id1 |
+               ss->people[6].id1 | ss->people[7].id1 |
+               ss->people[12].id1 | ss->people[1].id1 |
                ss->people[14].id1 | ss->people[15].id1)))
             goto bad;
          goto good;

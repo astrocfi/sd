@@ -56,10 +56,10 @@ extern void exit(int code);
 #define SEEK_SET 0
 #endif
 
-/* This table is a copy of the one in sdtables.c . */
+// This table is a copy of the one in sdtables.cpp .
 
-/* BEWARE!!  This list is keyed to the definition of "begin_kind" in sd.h . */
-/*   It must also match the similar table in the sdtables.c. */
+// BEWARE!!  This list is keyed to the definition of "begin_kind" in sd.h .
+//   It must also match the similar table in the sdtables.cpp .
 int begin_sizes[] = {
    0,          /* b_nothing */
    1,          /* b_1x1 */
@@ -227,9 +227,9 @@ int begin_sizes[] = {
    16,         /* b_dblspindle */
    16};        /* b_pdblspindle */
 
-extern void do_exit(void)
+extern void do_exit()
 {
-   /* close files here if desired */
+   // Close files here if desired.
    exit(1);
 }
 
@@ -252,10 +252,10 @@ extern int do_printf(char *fmt, ...)
 }
 
 
-extern void dbcompile(void);
+extern void dbcompile();
 
-static void db_input_error(void);
-static void db_output_error(void);
+static void db_input_error();
+static void db_output_error();
 
 static FILE *db_input = NULL;
 static FILE *db_output = NULL;
@@ -399,8 +399,7 @@ db_close_output(void)
  *
  */
 
-static void
-db_input_error(void)
+static void db_input_error()
 {
     fprintf(stderr, "Error reading input file ");
     perror(db_input_filename);
@@ -413,8 +412,7 @@ db_input_error(void)
  *
  */
 
-static void
-db_output_error(void)
+static void db_output_error()
 {
     fprintf(stderr, "Error writing output file ");
     perror(db_output_filename);

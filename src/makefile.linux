@@ -82,6 +82,8 @@ sdtty: $(SD_OBJS) $(SDTTY_OBJS)
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls ./sd_calls.txt
 
+.SUFFIXES: .c .cpp
+
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 

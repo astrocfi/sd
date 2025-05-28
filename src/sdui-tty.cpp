@@ -37,7 +37,6 @@
    except for
 
    iofull::display_help
-   iofull::terminate
    iofull::help_manual
    iofull::final_initialize
 
@@ -78,6 +77,9 @@ static const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  
  * We return the "0.6tty" part.
  */
 
+
+static char journal_name[MAX_TEXT_LINE_LENGTH];
+static FILE *journal_file = (FILE *) 0;
 int sdtty_screen_height = 0;  // The "lines" option may set this to something.
                               // Otherwise, any subsystem that sees the value zero
                               // will initialize it to whatever value it thinks best,
@@ -90,8 +92,6 @@ char *iofull::version_string()
 {
    return UI_VERSION_STRING "tty";
 }
-
-static char journal_name[MAX_TEXT_LINE_LENGTH];
 
 static resolver_display_state resolver_happiness = resolver_display_failed;
 
@@ -208,7 +208,7 @@ void iofull::process_command_line(int *argcp, char ***argvp)
          if (!journal_file) {
             printf("Can't open journal file\n");
             perror(argv[argno+1]);
-            final_exit(1);
+            general_final_exit(1);
          }
 
          goto remove_two;
@@ -608,7 +608,7 @@ static long_boolean get_user_input(char *prompt, int which)
             if (nc == AFKEY+4) {
                if (which_target == match_startup_commands ||
                    gg->do_abort_popup() == POPUP_ACCEPT)
-                  final_exit(0);
+                  general_final_exit(0);
             }
 
             continue;   /* No binding for this key; ignore it. */
@@ -690,7 +690,7 @@ static long_boolean get_user_input(char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         match_lines = get_lines_for_more();
+         match_lines = diagnostic_mode ? 1000000 : get_lines_for_more();
          match_counter = match_lines-1; /* last line used for "--More--" prompt */
          showing_has_stopped = FALSE;
          (void) match_user_input(which, TRUE, c == '?', FALSE);
@@ -804,10 +804,9 @@ static long_boolean get_user_input(char *prompt, int which)
 
    diagnostic_error:
 
-   gg->terminate();
    (void) fputs("\nParsing error during diagnostic.\n", stdout);
    (void) fputs("\nParsing error during diagnostic.\n", stderr);
-   final_exit(1);
+   general_final_exit(1);
    return FALSE;
 }
 
@@ -1068,10 +1067,9 @@ static int confirm(char *question)
       if (c < 128) put_char(c);
 
       if (diagnostic_mode) {
-         gg->terminate();
          (void) fputs("\nParsing error during diagnostic.\n", stdout);
          (void) fputs("\nParsing error during diagnostic.\n", stderr);
-         final_exit(1);
+         general_final_exit(1);
       }
 
       put_line("\n");
@@ -1318,7 +1316,7 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
 
    if (s3) fprintf(stderr, "%s\n", s3);
    fprintf(stderr, "%s", "Use the -help flag for help.\n");
-   final_exit(1);
+   general_final_exit(1);
 }
 
 
@@ -1330,11 +1328,13 @@ void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
       fprintf(stderr, "%s\n", s1);
 
    session_index = 0;  // Prevent attempts to update session file.
-   final_exit(code);
+   general_final_exit(code);
 }
 
 
-void iofull::uims_final_exit(int code)
+void iofull::terminate(int code)
 {
+   if (journal_file) (void) fclose(journal_file);
+   ttu_terminate();
    exit(code);
 }
