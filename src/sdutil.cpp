@@ -1879,29 +1879,29 @@ void display_initial_history(int upper_limit, int num_pics)
 {
    int j, startpoint;
 
-   /* See if we can re-use some of the safely written history. */
-   /* First, cut down overly optimistic estimates. */
+   // See if we can re-use some of the safely written history.
+   // First, cut down overly optimistic estimates.
    if (written_history_items > upper_limit) written_history_items = upper_limit;
-   /* And normalize the "nopic" number. */
+   // And normalize the "nopic" number.
    if (written_history_nopic > written_history_items) written_history_nopic = written_history_items;
 
-   /* Check whether pictures are faithful.  If any item in the written history has its
-      "picture forced" property (as determined by written_history_nopic)
-      different from what we want that property to be (as determined by upper_limit-num_pics),
-      and that item didn't have the draw_pic flag on, that item needs to be rewritten.
-      We cut written_history_items down to below that item if such is the case. */
+   // Check whether pictures are faithful.  If any item in the written history has its
+   // "picture forced" property (as determined by written_history_nopic)
+   // different from what we want that property to be (as determined by upper_limit-num_pics),
+   // and that item didn't have the draw_pic flag on, that item needs to be rewritten.
+   // We cut written_history_items down to below that item if such is the case.
 
    for (j=1; j<=written_history_items; j++) {
-      int compilerbug = ((int) ((unsigned int) (written_history_nopic-j)) ^
+      int t = ((int) ((unsigned int) (written_history_nopic-j)) ^
                  ((unsigned int) (upper_limit-num_pics-j)));
-      if (compilerbug < 0 && !configuration::history[j].draw_pic) {
+      if (t < 0 && !configuration::history[j].draw_pic) {
          written_history_items = j-1;
          break;
       }
    }
 
    if (written_history_items > 0) {
-      /* We win.  Back up the text line count to the right place, and rewrite the rest. */
+      // We win.  Back up the text line count to the right place, and rewrite the rest.
 
       text_line_count = configuration::history[written_history_items].text_line;
       gg->reduce_line_count(text_line_count);
@@ -1909,7 +1909,7 @@ void display_initial_history(int upper_limit, int num_pics)
       startpoint = written_history_items+1;
    }
    else {
-      /* We lose, there is nothing we can use. */
+      // We lose, there is nothing we can use.
       clear_screen();
       write_header_stuff(true, 0);
       newline();
@@ -1926,7 +1926,7 @@ void display_initial_history(int upper_limit, int num_pics)
       if (j >= startpoint) write_history_line(j, true, false, file_write_no);
    }
 
-   written_history_items = upper_limit;   /* This stuff is now safe. */
+   written_history_items = upper_limit;   // This stuff is now safe.
    written_history_nopic = written_history_items-num_pics;
 }
 
@@ -2165,12 +2165,12 @@ static selector_kind translate_selector_permutation2(uint32 x)
 }
 
 
-/* Returned value with "2" bit on means error occurred and counld not translate.
-   Selectors are messed up.  Should only occur if in unsymmetrical formation
-   in which it can't figure out what is going on.
-   Or if we get "end boys" or something like that, that we can't handle yet.
-   Otherwise, "1" bit says at
-   least one selector changed.  Zero means nothing changed. */
+// Returned value with "2" bit on means error occurred and counld not translate.
+// Selectors are messed up.  Should only occur if in unsymmetrical formation
+// in which it can't figure out what is going on.
+// Or if we get "end boys" or something like that, that we can't handle yet.
+// Otherwise, "1" bit says at
+// least one selector changed.  Zero means nothing changed.
 
 static uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 {
@@ -2243,8 +2243,8 @@ static uint32 translate_selector_fields(parse_block *xx, uint32 mask)
       default: goto nofix;
       }
 
-      if (z == selector_uninitialized) retval = 2;   /* Raise error. */
-      if (z != xx->options.who) retval |= 1;         /* Note that we changed something. */
+      if (z == selector_uninitialized) retval = 2;   // Raise error.
+      if (z != xx->options.who) retval |= 1;         // Note that we changed something.
       xx->options.who = z;
 
    nofix:
@@ -2335,7 +2335,7 @@ void run_program()
             configuration::history[0].init_warnings_specific();
          }
          if (global_error_flag == error_flag_wrong_command) {
-            /* Special signal -- user clicked on special thing while trying to get subcall. */
+            // Special signal -- user clicked on special thing while trying to get subcall.
             if ((global_reply == ui_command_select) &&
                 ((uims_menu_index == command_quit) ||
                  (uims_menu_index == command_undo) ||
@@ -2350,11 +2350,11 @@ void run_program()
             goto start_with_pending_reply;
          }
 
-         /* Try to remove the call from the current parse tree, but leave everything else
-            in place.  This will fail if the parse tree, or our place on it, is too
-            complicated.  Also, we do not do it if in diagnostic mode, or if the user
-            did not specify "retain_after_error", or if the special "heads into the middle and ..."
-            operation is in place. */
+         // Try to remove the call from the current parse tree, but leave everything else
+         // in place.  This will fail if the parse tree, or our place on it, is too
+         // complicated.  Also, we do not do it if in diagnostic mode, or if the user
+         // did not specify "retain_after_error", or if the special "heads into the middle and ..."
+         // operation is in place.
 
          if (!ui_options.diagnostic_mode &&
              retain_after_error &&
@@ -2366,7 +2366,7 @@ void run_program()
             configuration::init_warnings();
             goto simple_restart;
          }
-         goto start_cycle;      /* Failed, reinitialize the whole line. */
+         goto start_cycle;      // Failed, reinitialize the whole line.
       }
 
    show_banner:
@@ -2396,7 +2396,7 @@ void run_program()
 
       if (clipboard_size == 0) release_parse_blocks_to_mark((parse_block *) 0);
 
-      /* Update the console window title. */
+      // Update the console window title.
 
       {
          char numstuff[50];
@@ -2417,12 +2417,12 @@ void run_program()
          gg->set_window_title(title);
       }
 
-      /* Query for the starting setup. */
+      // Query for the starting setup.
 
       global_reply = gg->get_startup_command();
 
       if (global_reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
-      if (global_reply != ui_start_select) goto normal_exit;           /* Huh? */
+      if (global_reply != ui_start_select) goto normal_exit;           // Huh?
 
       switch (uims_menu_index) {
       case start_select_toggle_conc:
@@ -2451,13 +2451,13 @@ void run_program()
          goto new_sequence;
       case start_select_toggle_singer:
          if (ui_options.singing_call_mode != 0)
-            ui_options.singing_call_mode = 0;    /* Turn it off. */
+            ui_options.singing_call_mode = 0;    // Turn it off.
          else
-            ui_options.singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
+            ui_options.singing_call_mode = 1;    // 1 for forward progression, 2 for backward.
          goto new_sequence;
       case start_select_toggle_singer_backward:
          if (ui_options.singing_call_mode != 0)
-            ui_options.singing_call_mode = 0;    /* Turn it off. */
+            ui_options.singing_call_mode = 0;    // Turn it off.
          else
             ui_options.singing_call_mode = 2;
          goto new_sequence;
@@ -2562,7 +2562,7 @@ void run_program()
 
       global_error_flag = (error_flag_type) 0;
 
-      /* Come here to read a bunch of concepts and a call and add an item to the history. */
+      // Come here to read a bunch of concepts and a call and add an item to the history.
 
    start_cycle:
 
@@ -2572,18 +2572,18 @@ void run_program()
 
       allowing_modifications = 0;
 
-      /* See if we need to increase the size of the history array.
-         We must have history_allocation at least equal to history_ptr+2,
-         so that history items [0..history_ptr+1] will exist.
-         We also need to allow for MAX_RESOLVE_SIZE extra items, so that the
-         resolver can work.  Why don't we just increase the allocation
-         at the start of the resolver if we are too close?  We tried that once.
-         The resolver uses the current parse state, so we can do "TANDEM <resolve>".
-         This means that things like "parse_state.concept_write_base", which point
-         into the history array, must remain valid.  So the resolver can't reallocate
-         the history array.  There is only one place where it is safe to reallocate,
-         and that is right here.  Note that we are about to call "initialize_parse",
-         which destroys any lingering pointers into the history array. */
+      // See if we need to increase the size of the history array.
+      // We must have history_allocation at least equal to history_ptr+2,
+      // so that history items [0..history_ptr+1] will exist.
+      // We also need to allow for MAX_RESOLVE_SIZE extra items, so that the
+      // resolver can work.  Why don't we just increase the allocation
+      // at the start of the resolver if we are too close?  We tried that once.
+      // The resolver uses the current parse state, so we can do "TANDEM <resolve>".
+      // This means that things like "parse_state.concept_write_base", which point
+      // into the history array, must remain valid.  So the resolver can't reallocate
+      // the history array.  There is only one place where it is safe to reallocate,
+      // and that is right here.  Note that we are about to call "initialize_parse",
+      // which destroys any lingering pointers into the history array.
 
       if (history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
          configuration * t;
@@ -2591,10 +2591,10 @@ void run_program()
          t = (configuration *)
             get_more_mem_gracefully(configuration::history, history_allocation * sizeof(configuration));
          if (!t) {
-            /* Couldn't get memory; we are in serious trouble. */
+            // Couldn't get memory; we are in serious trouble.
             history_allocation >>= 1;
-            /* Bring history_ptr down to safe size.  This will have the effect of
-               throwing away the last call, or part or all of the last resolve. */
+            // Bring history_ptr down to safe size.  This will have the effect of
+            // throwing away the last call, or part or all of the last resolve.
             configuration::history_ptr = history_allocation-MAX_RESOLVE_SIZE-2;
             specialfail("Not enough memory!");
          }
@@ -2619,7 +2619,7 @@ void run_program()
 
          // The call to toplevelmove may make a call to "fail", which will get caught
          // by the cleanup handler above, reset history_ptr, and go to start_cycle
-         // with the error message displayed. */
+         // with the error message displayed.
 
          toplevelmove();
          finish_toplevelmove();

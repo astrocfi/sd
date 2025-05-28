@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 35.0
-@set title2 Database version = 35.0 format = 217
+@set title1 RELEASE NOTES FOR SD VERSION 35.1
+@set title2 Database version = 35.1 format = 221
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 35.1::
 * 35.0::
 * 34.81::
 * 34.8::
@@ -48,7 +49,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 35.0, Top, (dir)
+@node Intro, 35.1, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -56,14 +57,46 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2003 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 35.0::               Changes in the current version
+* 35.1::               Changes in the current version
 @end menu
 
 @c ************
-@node 35.0, 34.81, Intro, Top
+@node 35.1, 35.0, Intro, Top
+@unnumberedsec Version 35.1 changes
+
+The definition of @strong{recycle} has been changed.  The third part is
+@strong{roll}.  I thank the Callerlab Challenge Committee for fixing
+this.
+
+The program can handle @strong{slim down} from arbitrary (legal) 4x4
+setups.
+
+The program can handle @strong{1/2 circulate} (and therefore can handle
+@strong{tally ho}) from C1 phantom setups.  I have no idea why this was
+overlooked for so long.
+
+The program can handle the ``pushy'' cast in @strong{peel chain thru} from
+a left-handed 3/4 tag.
+
+The bug in the @strong{pick 8 person level call} command was fixed.
+
+The concept @strong{twin phantom bones} has been added.  It is the same as
+@strong{twin phantom I's}.
+
+The concepts @strong{twin phantom bats} and @strong{twin phantom riggers}
+have been added.  They are the same.
+
+The program can do @strong{funny square thru} better.  I thank the Tech Squares
+C2 class for making this fix necessary.
+
+Some horrible bugs were fixed.  I thank the Tech Squares C2 class for helping
+me find them.
+
+@c ************
+@node 35.0, 34.81, 35.1, Top
 @unnumberedsec Version 35.0 changes
 
 A bug that may have caused printed files to appear as garbage was fixed.

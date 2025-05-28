@@ -655,6 +655,22 @@ extern bool do_simple_split(
    case s3x4:
       if (split_command == split_command_2x3)
          mapcode = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
+      else if (split_command == split_command_none) {
+         if (ss->people[0].id1 & ss->people[1].id1 &
+             ss->people[4].id1 & ss->people[5].id1 &
+             ss->people[6].id1 & ss->people[7].id1 &
+             ss->people[10].id1 & ss->people[11].id1) {
+            mapcode = MAPCODE(s2x2,2,MPKIND__OFFS_R_HALF,0);
+            break;
+         }
+         else if (ss->people[2].id1 & ss->people[3].id1 &
+                  ss->people[4].id1 & ss->people[5].id1 &
+                  ss->people[8].id1 & ss->people[9].id1 &
+                  ss->people[10].id1 & ss->people[11].id1) {
+            mapcode = MAPCODE(s2x2,2,MPKIND__OFFS_L_HALF,0);
+            break;
+         }
+      }
       else
          return true;
       break;
@@ -1252,6 +1268,8 @@ static const checkitem checktable[] = {
      10, 6, 9, 6, 10, 2, 9, 2, 10, -6, 9, -6, 10, -2, 9, -2}},
    {0x00E20026, 0x01440430, sbigbone, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01620026, 0x4A00A484, sdblbone, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620026, 0x41450430, sdblrig, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01220026, 0x41450430, sdblrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20026, 0x0800A404, sbigrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01220026, 0x4800A404, sbigrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01260055, 0x49002480, sbig3x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -5913,10 +5931,12 @@ static void move_with_real_call(
 
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-         /* Check for doing "split square thru" or "split dixie style" stuff.
-            But don't propagate the stuff if we aren't doing the first part of the call. */
-
+         // Check for doing "split square thru" or "split dixie style" stuff.
+         // But don't propagate the stuff if we aren't doing the first part of the call.
+         // If the code is "ONLYREV", we assume, without checking, that the first part
+         // isn't included.  That may not be right, but we can't check at present.
          if ((ss->cmd.cmd_frac_flags & 0xFF00) != 0x0100 ||
+             (ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV ||
              ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
               (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) > CMD_FRAC_PART_BIT))
             starting = false;     // We aren't doing the first part.
@@ -5993,23 +6013,16 @@ static void move_with_real_call(
             // If this is a 3x4 or 4x4 inhabited in boxes,
             // we allow the splitting into those boxes.
 
-            int i, j;
-            uint32 mask = 0;
-
-            for (i=0, j=1; i<=limits; i++, j<<=1) {
-               if (ss->people[i].id1) mask |= j;
-            }
+            uint32 mask = little_endian_live_mask(ss);
 
             if (ss->kind == s3x4) {
                if (mask == 0xF3C || mask == 0xCF3)
-                  // ****** This needs to be looked at.
                   ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
                else
                   fail("Can't split this setup.");
             }
             else if (ss->kind == s4x4) {
                if (mask == 0x4B4B || mask == 0xB4B4)
-                  // ****** This needs to be looked at.
                   ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
                else
                   fail("Can't split this setup.");

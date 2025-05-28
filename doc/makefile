@@ -7,7 +7,7 @@ TXI2DVI = tex
 TXI2PDF = pdftex
 DVIPS = dvips
 CRFIX = crfix
-TXI2HTML = C:\perl\bin\perl texi2html
+TXI2HTML = makeinfo --html
 
 .SUFFIXES: .dvi .info .txt .txi .pdf .html .ps .pso .all
 
@@ -34,7 +34,7 @@ all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all sample.html re
 	$(MAKE_ASCII) -o $@ -I$(srcdir) $<
 
 .txi.html:
-	$(TXI2HTML) -monolithic $<
+	$(TXI2HTML) --no-split --no-header -o $@ $<
 
 # Special ones:
 
@@ -48,12 +48,6 @@ sd_doc.info: readme.txi
 
 sd_doc.txt: readme.txi
 
-sd_doc_toc.html: sd_doc.txi
-	$(TXI2HTML) -split_node -menu sd_doc.txi
-
-sessions_toc.html: sessions.txi
-	$(TXI2HTML) -split_node -menu sessions.txi
-
 install: install.txi
 	$(MAKE_ASCII) --no-validate -o $@ $(srcdir)/install.txi
 
@@ -64,9 +58,9 @@ readme: readme.txi
 
 demo.all: demo.ps demo.pdf demo.txt demo.html
 
-sessions.all: sessions.ps sessions.pdf sessions.txt sessions.html sessions_toc.html
+sessions.all: sessions.ps sessions.pdf sessions.txt sessions.html
 
-sd_doc.all: sd_doc.ps sd_doc.pdf sd_doc.txt sd_doc.html sd_doc_toc.html
+sd_doc.all: sd_doc.ps sd_doc.pdf sd_doc.txt sd_doc.html
 
 relnotes.all: relnotes.ps relnotes.pdf relnotes.txt relnotes.html
 relnotes98.all: relnotes98.ps relnotes98.pdf relnotes98.txt relnotes98.html
@@ -85,7 +79,7 @@ info.all: demo.info sessions.info sd_doc.info relnotes.info relnotes98.info \
 text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt relnotes98.txt \
           appnote1.txt appnote2.txt appnote3.txt appnote4.txt
 
-html.all: demo.html sessions.html sessions_toc.html sd_doc.html sd_doc_toc.html \
+html.all: demo.html sessions.html sd_doc.html \
           relnotes.html relnotes98.html sample.html faq.html \
 	  appnote1.html appnote2.html appnote3.html appnote4.html
 
@@ -94,12 +88,12 @@ clean::
 	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs
 	-$(RM) *.tp *.tps *.vr *.vrs
 	-$(RM) readme install
+	-$(RM) faq.html appnote*.html
 	-$(RM) sd_doc*.html sd_doc.txt
 	-$(RM) sessions*.html sessions.txt
 	-$(RM) relnotes*.html relnotes.txt
 	-$(RM) relnotes98*.html relnotes98.txt
 	-$(RM) demo*.html demo.txt
-	-$(RM) sample*.html
 
 distclean: clean
 	-$(RM) sequence.*

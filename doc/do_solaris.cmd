@@ -14,9 +14,9 @@ copy ..\sd\sdtty .\sd\sdtty
 copy ..\sd\mkcalls .\sd\mkcalls
 crunfix ..\sd\sd_calls.txt .\sd\sd_calls.txt
 copy ..\sd\sd_calls.dat .\sd\sd_calls.dat
-crunfix sample1.ini .\sd\sample1.ini
-crunfix sample2.ini .\sd\sample2.ini
-crunfix sample3.ini .\sd\sample3.ini
+crunfix ..\sd\sample1.ini .\sd\sample1.ini
+crunfix ..\sd\sample2.ini .\sd\sample2.ini
+crunfix ..\sd\sample3.ini .\sd\sample3.ini
 chmod 755 .\sd\sdtty
 chmod 755 .\sd\mkcalls
 chmod 644 .\sd\sd_calls.txt

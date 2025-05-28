@@ -351,6 +351,9 @@ const expand::thing s_short6_2x3 = {{0, 1, 2, 3, 4, 5}, 6, s2x3, s_short6, 0};
 // This is duplicated in the big table.
 const expand::thing s_bigrig_dblbone = {{6, 7, 3, 2, 1, 12, 14, 15, 11, 10, 9, 4},
                                         12, sbigrig, sdblbone, 0};
+// This is duplicated in the big table.
+const expand::thing s_bigbone_dblrig = {{0, 1, 3, 2, 12, 13, 8, 9, 11, 10, 4, 5},
+                                        12, sbigbone, sdblrig, 0};
 
 // This isn't declared const!  Why not?  Because there are pointers
 // linking the hash chains, that get filled in during initialization.
@@ -1024,20 +1027,24 @@ expand::thing expand::init_table[] = {
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_END_2X2) |
                                               NEEDMASK(CONCPROP__NEEDK_CTR_1X4)},
    {{4, 5, 8, 9, 10, 11, 2, 3},
-    8, s_rigger,sbigrig,0, 0UL, 0303,
+    8, s_rigger, sbigrig, 0, 0UL, 0303,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_2X2) |
                                               NEEDMASK(CONCPROP__NEEDK_END_1X4)},
 
    {{6, 7, 3, 2, 1, 12, 14, 15, 11, 10, 9, 4},
-    12, sbigrig,sdblbone,0, 0UL, 0x2121,
+    12, sbigrig, sdblbone, 0, 0UL, 0x2121,
+    warn__none, warn__none, simple_normalize, 0},
+
+   {{0, 1, 3, 2, 12, 13, 8, 9, 11, 10, 4, 5},
+    12, sbigbone, sdblrig, 0, 0UL, 0xC0C0,
     warn__none, warn__none, simple_normalize, 0},
 
    {{2, 3, 4, 5, 8, 9, 10, 11},
-    8, s3x1dmd,sbig3x1dmd,0, 0UL, 0303,
+    8, s3x1dmd, sbig3x1dmd, 0, 0UL, 0303,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_DMD) |
                                               NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{2, 3, 4, 5, 8, 9, 10, 11},
-    8, s1x3dmd,sbig1x3dmd,0, 0UL, 0303,
+    8, s1x3dmd,sbig1x3dmd, 0, 0UL, 0303,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_DMD) |
                                               NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{1, 2, 3, 4, 7, 8, 9, 10},
@@ -1268,9 +1275,9 @@ map::map_thing map::map_init_table[] = {
     sdmd,4,MPKIND__NONISOTROPIC,0,0,  s_4mptpd, 0x014, 0},
 
    {{0, 4, 5,                          3, 1, 2},
-    s_trngl,2,MPKIND__NONISOTROP1,0,       0,  s_ntrgl6cw, 0x202, 0},
+    s_trngl,2,MPKIND__NONISOTROP1,0,       0,  s_ntrgl6cw, 0x102, 0},
    {{5, 4, 0,                          2, 1, 3},
-    s_trngl,2,MPKIND__NONISOTROP1,1,       0,  s_bone6,  0x207, 0},
+    s_trngl,2,MPKIND__NONISOTROP1,1,       0,  s_bone6,  0x107, 0},
    {{5, 0, 1,                          2, 3, 4},
     s_trngl,2,MPKIND__SPLIT,0,       0,  s_ntrgl6ccw, 0x108, 0},
    // We would like to make this rot field 10D, like the tgl4 case just below,
@@ -1279,9 +1286,9 @@ map::map_thing map::map_init_table[] = {
     s_trngl,2,MPKIND__SPLIT,1,       0,  s_short6, 0x108, 0},
 
    {{1, 3, 15, 13,                     9, 11, 7, 5},
-    s_trngl4,2,MPKIND__NONISOTROP1,0,       0,  s_c1phan, 0x202, 0},
+    s_trngl4,2,MPKIND__NONISOTROP1,0,       0,  s_c1phan, 0x102, 0},
    {{7, 6, 5, 0,                       3, 2, 1, 4},
-    s_trngl4,2,MPKIND__NONISOTROP1,1,       0,  s_bone,  0x207, 0},
+    s_trngl4,2,MPKIND__NONISOTROP1,1,       0,  s_bone,  0x107, 0},
    {{12, 14, 0, 2,                     4, 6, 8, 10},
     s_trngl4,2,MPKIND__SPLIT,0,       0,  s_c1phan, 0x108, 0},
    {{6, 7, 0, 5,                       2, 3, 4, 1},
@@ -1810,9 +1817,9 @@ map::map_thing map::map_init_table[] = {
     s1x4,3,MPKIND__SPEC_TWICEREM,1,0,  s_qtag,      0x000, 0},
 
    {{2, 7, 5, 0,                       6, 3, 1, 4},
-    s_trngl4,2,MPKIND__REMOVED,1, 0,  s_bone,  0x207, 0},
+    s_trngl4,2,MPKIND__REMOVED,1, 0,  s_bone,  0x107, 0},
    {{2, 4, 0,                          5, 1, 3},
-    s_trngl,2,MPKIND__REMOVED,1,  0,  s_bone6,  0x207, 0},
+    s_trngl,2,MPKIND__REMOVED,1,  0,  s_bone6,  0x107, 0},
 
    {{0, 1,     2, 3,        4, 9,      8, 7,       6, 5},
     s1x2,5,MPKIND__SPLIT,0,       0,  s1x10,      0x000, 0},
@@ -1865,6 +1872,9 @@ map::map_thing map::map_init_table[] = {
 
    {{0, 1, 2, 3, 4, 5, 6, 7,           12, 13, 14, 15, 8, 9, 10, 11},
     s_bone,2,MPKIND__SPLIT,0,  0,  sdblbone, 0x000, 0},
+
+   {{0, 1, 2, 3, 4, 5, 6, 7,           12, 13, 14, 15, 8, 9, 10, 11},
+    s_rigger,2,MPKIND__SPLIT,0,  0,  sdblrig, 0x000, 0},
 
    {{5, 0, 4, 9, 7, 8,                 3, 1, 2, 11, 6, 10},
     s_short6,2,MPKIND__SPLIT,0,   0, sdeepqtg,  0x000, 0},
@@ -2143,9 +2153,9 @@ const map::map_thing map::spec_map_table[] = {
    {{0, 2, 4, 6,                       1, 3, 5, 7, (int) sdmd},
     s1x4,2,MPKIND__SPEC_ONCEREM,0,0,  s1x3dmd,   0x000, 0, spcmap_1x3dmd_once_rem},
    {{11, 7, 2, 4,                      3, 15, 10, 12},
-    s_trngl4,2,MPKIND__OFFS_L_HALF,0, 4,  s4x4,  0x00D, 0, spcmap_lh_zzztgl},
+    s_trngl4,2,MPKIND__OFFS_L_HALF,0, 4,  s4x4,  0x10D, 0, spcmap_lh_zzztgl},
    {{7, 11, 8, 9,                      15, 3, 0, 1},
-    s_trngl4,2,MPKIND__OFFS_R_HALF,0, 4,  s4x4,  0x007, 0, spcmap_rh_zzztgl},
+    s_trngl4,2,MPKIND__OFFS_R_HALF,0, 4,  s4x4,  0x107, 0, spcmap_rh_zzztgl},
    {{0, 3,                             1, 2},
     s1x2,2,MPKIND__SPLIT,1,       0,  s2x2,      0x005, 0, spcmap_2x2v},
    {{0, 6, 3, 5,                       7, 1, 4, 2},
@@ -4327,6 +4337,14 @@ static const coordrec thingdblbone = {sdblbone, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1,  0,  6,  7,  3,  2,  1, 12, 10, 11, 15, 14, 13, -1, -1,
       -1, -1,  5, -1, -1, -1, -1,  4,  9, -1, -1, -1, -1,  8, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingdblrig = {sdblrig, 4,
+   {-14, -10,  -2,  -6, -10, -14, -22, -18,  14,  10,   2,   6,  10,  14,  22,  18},
+   {  2,   2,   0,   0,  -2,  -2,   0,   0,  -2,  -2,   0,   0,   2,   2,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  6,  7,  0,  1,  3,  2, 10, 11, 12, 13, 15, 14, -1, -1,
+      -1, -1, -1, -1,  5,  4, -1, -1, -1, -1,  9,  8, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
 static const coordrec thingnptrglcw = {s_nptrglcw, 3,
@@ -7247,6 +7265,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {"a6 6 6 6b m6 6 6 6n@76g h d c6 6k l p o@7f6 6 6 6e j6 6 6 6i",
      "fa@5g@5h@5d@5c@eb@jm@5k@5l@5p@5o@in"}},
+   {15,                     // sdblrig
+    &thingdblrig,
+    &thingdblrig,
+    {0, 0, 0, 0},
+    {b_dblrig, b_pdblrig},
+    {0, 0},
+    false,
+    (const id_bit_table *) 0,
+    {"6 6a b6 6 6 6m n@7g h6 6d c k l6 6p o@76 6f e6 6 6 6j i",
+     "5g@5h@fa@eb@5d@5c@5k@5l@jm@in@5p@5o"}},
    {-1,                     // s_dead_concentric
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -7465,7 +7493,9 @@ int begin_sizes[] = {
    16,         /* b_dblspindle */
    16,         /* b_pdblspindle */
    16,         /* b_dblbone */
-   16};        /* b_pdblbone */
+   16,         /* b_pdblbone */
+   16,         /* b_dblrig */
+   16};        /* b_pdblrig */
 
 
 // The following 8 definitions are taken verbatim from sdinit.c

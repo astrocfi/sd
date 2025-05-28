@@ -587,7 +587,8 @@ static bool inner_search(command_kind goal,
 
       case command_8person_level_call:
          // We demand that no splitting have taken place along either axis.
-         if (ns->result_flags.split_info) goto what_a_loss;
+         if (ns->result_flags.split_info[0] || ns->result_flags.split_info[1])
+            goto what_a_loss;
          break;
 
       default:

@@ -3415,9 +3415,7 @@ const merge_table::concmerge_thing *merge_table::lookup(setup_kind res1k,
 
    const concmerge_thing *result;
 
-   for (result = merge_hash_tables[hash_num] ;
-        result ;
-        result = result->next) {
+   for (result = merge_hash_tables[hash_num] ; result ; result = result->next) {
       if (res1k == result->k1 &&
           res2k == result->k2 &&
           (!(rotreject & result->rotmask)) &&

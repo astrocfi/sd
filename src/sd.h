@@ -3916,6 +3916,7 @@ extern const expand::thing s_1x4_dmd;
 extern const expand::thing s_qtg_3x4;
 extern const expand::thing s_short6_2x3;
 extern const expand::thing s_bigrig_dblbone;
+extern const expand::thing s_bigbone_dblrig;
 
 
 extern full_expand::thing rear_1x2_pair;
@@ -4823,7 +4824,7 @@ extern bool open_session(int argc, char **argv);
 
 /* In SDMATCH */
 
-void do_accelerator_spec(Cstring qq, bool is_accelerator);
+void do_accelerator_spec(Cstring inputline, bool is_accelerator);
 SDLIB_API bool process_accel_or_abbrev(modifier_block & mb, char linebuff[]);
 SDLIB_API void erase_matcher_input();
 SDLIB_API int delete_matcher_word();

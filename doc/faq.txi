@@ -2,17 +2,11 @@
 @setfilename faq.info
 @settitle Sd Frequently Asked Questions
 @c Time-stamp: <18 July 2002 wba>
-@iftex
-@headings off
-@oddheading @| @| @thispage
-@evenheading @thispage @| @|
-@finalout
-@end iftex
-@c %**end of header
 
-@w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2003 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2004 William B. Ackerman
+
+@contents
 
 @unnumberedsec The options for sessions and abridgement files are confusing!
 
@@ -167,7 +161,7 @@ First, read the previous section.  Abbreviations are defined somewhat
 like hot keys, but they don't take effect the instant you press the key.
 You have to press @strong{<ENTER>}, just as for any call or concept.
 Also, they don't involve meta or control modifiers.  They can be multiple
-letters long, just like call names.
+letters long, just like call names, but they must be one word.
 
 Now find the ``[Abbreviations]'' section of sd.ini, with things like
 
@@ -187,11 +181,6 @@ abbreviations are actually there.)  You can add things like
 p       pass thru
 @end group
 @end example
-
-If you define abbreviations that give the parser a hard time, the parser
-will give you a hard time.  For example, the parser recognizes @strong{fe
-w} as @strong{ferris wheel}.  If you define an abbreviation @strong{ferris
-where}, typing @strong{ferris wheel} will become harder.
 
 @unnumberedsec How can I abort a sequence in progress?
 
@@ -328,6 +317,13 @@ wave assumption.
 
 The call @strong{split phantom lines in roll circulate} is illegal from columns
 because the facing direction of the phantom in-roller is unknown.
+
+@unnumberedsec Why can't it do @strong{tandem} or @strong{couples} concepts in large formations?
+
+If you have this problem, try giving the @strong{phantom} concept, as in
+@strong{phantom tandem} or whatever.  The program needs to know exactly
+how to pair people into tandems or couples, which may require the use of
+some concept to specify the matrix or the details of the geometry.
 
 @unnumberedsec Why does it complain about things like magic split circulate?
 
@@ -486,7 +482,8 @@ deduce Roll direction from the Callerlab definition to be misguided.
 
 @unnumberedsec How does @strong{common spot} work?
 
-See ``Sd Application Note 4'' on the web page.
+@c See ``Sd Application Note 4'' on the local disk (C:\Sd\appnote4.html) or on the web page.
+See @uref{appnote4.html,Sd Application Note 4}.
 
 @unnumberedsec How can I make Sd understand @strong{common spot} better?
 

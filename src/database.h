@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2004  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 218
+#define DATABASE_FORMAT_VERSION 221
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -388,6 +388,7 @@ enum setup_kind {
    sdblxwave,
    sdblspindle,
    sdblbone,
+   sdblrig,
    s_dead_concentric,
    s_normal_concentric
 };
@@ -574,7 +575,9 @@ enum begin_kind {
    b_dblspindle,
    b_pdblspindle,
    b_dblbone,
-   b_pdblbone
+   b_pdblbone,
+   b_dblrig,
+   b_pdblrig
 };
 
 // These bits are used in the "callarray_flags" field of a "callarray".

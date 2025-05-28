@@ -687,40 +687,29 @@ static const veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
 
 
 
-static const veryshort octtranslateh[64] = {
+static const veryshort octtranslatev[80] = {
+   0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11,
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12};
 
-static const veryshort octtranslatev[64] = {
-   0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
-   0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11};
-
-static const veryshort octt4x6lateh[64] = {
+static const veryshort octt4x6latev[80] = {
+   0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  0, 11, 10,  9,
    0,  0,  0,  0,  0,  0,  5,  6,  0,  0,  4,  7,  0,  0,  3,  8,
    0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 13, 14,  0, 23, 22, 21,
    0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20};
 
-static const veryshort octt4x6latev[64] = {
-   0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20,
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  0, 11, 10,  9,
-   0,  0,  0,  0,  0,  0,  5,  6,  0,  0,  4,  7,  0,  0,  3,  8,
-   0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 13, 14,  0, 23, 22, 21};
-
-static const veryshort hextranslateh[32] = {
-   0,  1,  2,  3,  4,  5,  6,  7,  0,  0,  0,  0,  0,  0,  0,  0,
-   8,  9, 10, 11, 12, 13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0};
-
-static const veryshort hextranslatev[32] = {
+static const veryshort hextranslatev[40] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,
-   0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11, 12, 13, 14, 15};
+   0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11, 12, 13, 14, 15,
+   0,  0,  0,  0,  0,  0,  0,  0};
 
-
-
+static const veryshort hxwtranslatev[40] = {
+   0,  0,  0,  0,  0,  0,  6,  7,  0,  0,  0,  0,  0,  0,  1,  0,
+   0,  0,  0,  0,  0,  0,  2,  3,  0,  0,  0,  0,  0,  4,  5,  0,
+   0,  0,  0,  0,  0,  0,  6,  7};
 
 static const veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
 static const veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
@@ -1070,6 +1059,9 @@ static void special_4_way_symm(
        0,  1,  2,  3,  4,  5,  6,  7,
       16, 17, 18, 19, 20, 21, 22, 23};
 
+   static const veryshort table_1x16_from_xwv[8] = {
+      5, 6, 14, 15, 21, 22, 30, 31};
+
    static const veryshort table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
       23, 21, 30, 28, 0, 1, 2, 3};
@@ -1126,6 +1118,10 @@ static void special_4_way_symm(
    case s1x16:
       result->kind = sx1x16;
       the_table = table_1x16;
+      break;
+   case s_crosswave:
+      result->kind = sx1x16;
+      the_table = table_1x16_from_xwv;
       break;
    case s4dmd:
       result->kind = sx4dmd;
@@ -4948,14 +4944,14 @@ foobar:
                fail("Call went to improperly-formed setup.");
             break;
          case s8x8:
-            /* See if people landed on 2x8 or 4x6 spots. */
+            // See if people landed on 2x8 or 4x6 spots.
             result->kind = s2x8;
-            permuter = octtranslateh;
+            permuter = octtranslatev+16;
 
             if ((lilresult_mask[0] & 0x333F11FFUL) == 0 &&
                 (lilresult_mask[1] & 0x333F11FFUL) == 0) {
                result->kind = s4x6;
-               permuter = octt4x6lateh;
+               permuter = octt4x6latev+16;
             }
             else if ((lilresult_mask[0] & 0x11FF333FUL) == 0 &&
                      (lilresult_mask[1] & 0x11FF333FUL) == 0) {
@@ -4973,15 +4969,25 @@ foobar:
                fail("Call went to improperly-formed setup.");
             break;
          case sx1x16:
-            /* See if people landed on 1x16 spots. */
-            result->kind = s1x16;
-            permuter = hextranslateh;
-
             if ((lilresult_mask[0] & 0x00FF00FFUL) == 0) {
-               permuter = hextranslatev;
+               permuter = hextranslatev;  // 1x16 spots, vertical.
+               result->kind = s1x16;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xFF00FF00UL) != 0)
+            else if ((lilresult_mask[0] & 0xFF00FF00UL) == 0) {
+               permuter = hextranslatev+8;  // 1x16 spots, horizontal.
+               result->kind = s1x16;
+            }
+            else if ((lilresult_mask[0] & 0x9F3F9F3FUL) == 0) {
+               permuter = hxwtranslatev;  // crosswave spots, vertical.
+               result->kind = s_crosswave;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0x3F9F3F9FUL) == 0) {
+               permuter = hxwtranslatev+8;  // crosswave spots, horizontal.
+               result->kind = s_crosswave;
+            }
+            else
                fail("Call went to improperly-formed setup.");
             break;
          case sx4dmd:

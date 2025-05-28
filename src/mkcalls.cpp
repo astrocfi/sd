@@ -226,7 +226,9 @@ int begin_sizes[] = {
    16,         /* b_dblspindle */
    16,         /* b_pdblspindle */
    16,         /* b_dblbone */
-   16};        /* b_pdblbone */
+   16,         /* b_pdblbone */
+   16,         /* b_dblrig */
+   16};        /* b_pdblrig */
 
 
 
@@ -639,6 +641,8 @@ char *sstab[] = {
    "pdblspindle",
    "dblbone",
    "pdblbone",
+   "dblrig",
+   "pdblrig",
    ""};
 
 /* This table is keyed to "setup_kind". */
@@ -763,6 +767,7 @@ char *estab[] = {
    "dblxwave",
    "dblspindle",
    "dblbone",
+   "dblrig",
    "???",
    "normal_concentric",
    ""};
@@ -1297,12 +1302,14 @@ char *predtab[] = {
    "select_and_roll_is_cw",
    "select_and_roll_is_ccw",
    "always",
-   "x22_miniwave",
-   "x22_couple",
-   "x22_facing_someone",
-   "x22_tandem_with_someone",
-   "x24_facing_someone",
-   "x24_tandem_with_someone",
+   "2x2_miniwave",
+   "2x2_couple",
+   "2x2_tandem_with_someone",
+   "2x2_antitandem",
+   "2x2_facing_someone",
+   "2x4_tandem_with_someone",
+   "2x4_antitandem",
+   "2x4_facing_someone",
    "columns_someone_in_front",
    "x14_once_rem_miniwave",
    "x14_once_rem_couple",
@@ -1385,6 +1392,8 @@ char *predtab[] = {
    "one_cw_person",
    "two_cw_people",
    "three_cw_people",
+   "quad_person_cw",
+   "quad_person_ccw",
    "nexttrnglspot_is_tboned",
    "nextinttrnglspot_is_tboned",
    "next62spot_is_tboned",

@@ -29,9 +29,9 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
-#include <unistd.h>    /*    This too. */
-#if defined (__linux__) || defined (__CYGWIN__)
+#include <termios.h>   // We use this stuff if "-no_cursor" was specified.
+#include <unistd.h>    //    This too.
+#if defined (__linux__) || defined (__CYGWIN__) || defined (__APPLE__)
 #include <sys/ioctl.h>
 #endif
 #include <signal.h>

@@ -35,9 +35,9 @@ bool number_used;
 bool mandatory_call_used;
 
 
-/* If a real person and a person under test are XOR'ed, the result AND'ed with this constant,
-   and the low bits of that result examined, it will tell whether the person under test is real
-   and facing in the same direction (result = 0), the opposite direction (result == 2), or whatever. */
+// If a real person and a person under test are XOR'ed, the result AND'ed with this constant,
+// and the low bits of that result examined, it will tell whether the person under test is real
+// and facing in the same direction (result = 0), the opposite direction (result == 2), or whatever.
 
 #define DIR_MASK (BIT_PERSON | 3)
 
@@ -56,7 +56,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
 
    selector_used = true;
 
-   /* Pull out the cases that do not require the person to be real. */
+   // Pull out the cases that do not require the person to be real.
 
    switch (current_options.who) {
       case selector_all:
@@ -447,12 +447,14 @@ extern bool selectp(setup *ss, int place) THROW_DECL
 
 
 static const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-static const long int dbl_tab01[4] = {0, 1, false, true};
-static const long int x22tabtand[3] = {3, 0, 1};
-static const long int x22tabface[3] = {3, 2, 1};
-static const long int x24tabtand[3] = {7, 0, 1};
-static const long int x24tabface[3] = {7, 2, 1};
-static const long int dbl_tab21[4] = {2, 1, true, false};
+static const long int dbl_tab01[4] = {0, 1, 0, 1};
+static const long int dbl_tab21[4] = {2, 1, 1, 0};
+static const long int x22tabtandem[4]     = {3, 0, 1, 0};
+static const long int x22tabantitandem[4] = {3, 2, 1, 0};
+static const long int x22tabfacing[4]     = {3, 2, 1, 0x1B};
+static const long int x24tabtandem[4]     = {7, 0, 1, 0};
+static const long int x24tabantitandem[4] = {7, 2, 1, 0};
+static const long int x24tabfacing[4]     = {7, 2, 1, 0x1B1B};
 
 static const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
 static const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
@@ -461,7 +463,7 @@ static const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
 static const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
 
 
-/* Here are the predicates.  They will get put into the array "pred_table". */
+// Here are the predicates.  They will get put into the array "pred_table".
 
 /* ARGSUSED */
 static bool someone_selected(setup *real_people, int real_index,
@@ -725,6 +727,14 @@ static bool x22_cpltest(setup *real_people, int real_index,
 static bool facing_test(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
+   // If the "trailer only" word is nonzero, figure out whether person is a trailer.
+   // The word has 2-bit fields in little-endian order, indexed by the person's
+   // position.  That 2-bit field is added to the direction, and the result must
+   // have the "2" bit off.
+   if (extra_stuff[3] &&
+       (((extra_stuff[3] >> (real_index*2)) + real_direction) & 2))
+      return false;
+
    int other_index = real_index ^ extra_stuff[(real_direction << 1) & 2];
    return ((real_people->people[real_index].id1 ^
             real_people->people[other_index].id1) & DIR_MASK) == (uint32) extra_stuff[1];
@@ -769,8 +779,8 @@ static bool x14_once_rem_miniwave(setup *real_people, int real_index,
       return true;
    default:
       if (extra_stuff[0] & 2) {
-         /* This is "intlk_cast_normal_or_warn".  Don't give the warning if person
-            would have known what to do anyway. */
+         // This is "intlk_cast_normal_or_warn".  Don't give the warning if person
+         // would have known what to do anyway.
          if (!(real_index & 1))
             warn(warn__opt_for_normal_cast);
          return true;
@@ -926,8 +936,8 @@ static bool cast_normal_or_whatever(setup *real_people, int real_index,
          return false;
       default:
          if (extra_stuff[0] & 2) {
-            /* This is "cast_normal_or_warn".  Don't give the warning if person
-               would have known what to do anyway. */
+            // This is "cast_normal_or_warn".  Don't give the warning if person
+            // would have known what to do anyway.
             if (     real_people->kind == s1x2
                      ||
                      (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
@@ -1136,8 +1146,8 @@ static bool x12_beau_or_miniwave(setup *real_people, int real_index,
       int other_person = real_people->people[real_index ^ 1 ^ ((real_direction&1) << 1)].id1;
       int direction_diff = other_person ^ real_direction;
 
-      /* This was "1x2_beau_miniwave_or_warn", and the other person is a phantom,
-         we give a warning and assume we had a miniwave. */
+      // This was "1x2_beau_miniwave_or_warn", and the other person is a phantom,
+      // we give a warning and assume we had a miniwave.
 
       if (extra_stuff[0] == 1 && !other_person) {
          warn(warn__opt_for_normal_hinge);
@@ -1200,9 +1210,9 @@ static bool can_swing_left(setup *real_people, int real_index,
 }
 
 
-/* Test for wheel and deal to be done 2FL-style, or beau side of 1FL.  Returns
-   false if belle side of 1FL.  Raises a warning if wheel and deal can't be done,
-   and opts for L2FL. */
+// Test for wheel and deal to be done 2FL-style, or beau side of 1FL.  Returns
+// false if belle side of 1FL.  Raises a warning if wheel and deal can't be done,
+// and opts for L2FL.
 /* ARGSUSED */
 static bool x14_wheel_and_deal(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
@@ -1243,7 +1253,7 @@ static bool x14_wheel_and_deal(setup *real_people, int real_index,
    }
 }
 
-/* Test for 3X3 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
+// Test for 3X3 wheel_and_deal to be done 2FL-style, or beau side of 1FL.
 /* ARGSUSED */
 static bool x16_wheel_and_deal(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
@@ -1274,7 +1284,7 @@ static bool x16_wheel_and_deal(setup *real_people, int real_index,
    }
 }
 
-/* Test for 4X4 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
+// Test for 4X4 wheel_and_deal to be done 2FL-style, or beau side of 1FL.
 /* ARGSUSED */
 static bool x18_wheel_and_deal(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
@@ -1306,10 +1316,10 @@ static bool x18_wheel_and_deal(setup *real_people, int real_index,
    }
 }
 
-/* First test for how to do cycle and wheel.  This always passes the extreme beau,
-   and always fails the extreme belle (causing the belle to go on to the next test.)
-   For centers, it demands an adjacent end (otherwise we wouldn't know whether
-   we were cycling or wheeling) and then returns true if that end is an extreme beau. */
+// First test for how to do cycle and wheel.  This always passes the extreme beau,
+// and always fails the extreme belle (causing the belle to go on to the next test.)
+// For centers, it demands an adjacent end (otherwise we wouldn't know whether
+// we were cycling or wheeling) and then returns true if that end is an extreme beau.
 /* ARGSUSED */
 static bool cycle_and_wheel_1(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
@@ -1321,10 +1331,10 @@ static bool cycle_and_wheel_1(setup *real_people, int real_index,
    else {     /* We are a center.  Find our adjacent end. */
       int other_person;
 
-      /* We think it is rather silly to use an "assume" concept to specify
-         a symmetric kind of line, and then give a call that doesn't do
-         anything interesting with any of the lines that the assumption can
-         make, but we have to do this. */
+      // We think it is rather silly to use an "assume" concept to specify
+      // a symmetric kind of line, and then give a call that doesn't do
+      // anything interesting with any of the lines that the assumption can
+      // make, but we have to do this.
 
       switch (real_people->cmd.cmd_assume.assumption) {
          case cr_1fl_only:  case cr_2fl_only:   return northified_index == 1;
@@ -1453,9 +1463,9 @@ static bool judge_is_right_1x3(setup *real_people, int real_index,
    int f = this_person & 2;
 
    return
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 0)       /* judge exists to my right */
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 0)   // Judge exists to my right.
          &&
-      (((real_people->people[f].id1 ^ this_person) & 013) != 2);         /* we do not have another judge to my left */
+      (((real_people->people[f].id1 ^ this_person) & 013) != 2);      // We do not have another judge to my left.
 }
 
 static bool judge_is_left_1x3(setup *real_people, int real_index,
@@ -1465,9 +1475,9 @@ static bool judge_is_left_1x3(setup *real_people, int real_index,
    int f = this_person & 2;
 
    return
-      (((real_people->people[f].id1 ^ this_person) & 013) == 2)           /* judge exists to my left */
+      (((real_people->people[f].id1 ^ this_person) & 013) == 2)       // Judge exists to my left.
          &&
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 0);     /* we do not have another judge to my right */
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 0);  // We do not have another judge to my right.
 }
 
 static bool socker_is_right_1x3(setup *real_people, int real_index,
@@ -1477,9 +1487,9 @@ static bool socker_is_right_1x3(setup *real_people, int real_index,
    int f = this_person & 2;
 
    return
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 2)       /* socker exists to my right */
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 2)   // Socker exists to my right.
          &&
-      (((real_people->people[f].id1 ^ this_person) & 013) != 0);         /* we do not have another socker to my left */
+      (((real_people->people[f].id1 ^ this_person) & 013) != 0);      // We do not have another socker to my left.
 }
 
 static bool socker_is_left_1x3(setup *real_people, int real_index,
@@ -1489,9 +1499,9 @@ static bool socker_is_left_1x3(setup *real_people, int real_index,
    int f = this_person & 2;
 
    return
-      (((real_people->people[f].id1 ^ this_person) & 013) == 0)           /* socker exists to my left */
+      (((real_people->people[f].id1 ^ this_person) & 013) == 0)       // Socker exists to my left.
          &&
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2);     /* we do not have another socker to my right */
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2);  // We do not have another socker to my right.
 }
 
 static const long int jr1x4[4]  = {1, 0, 0, 2};
@@ -1785,8 +1795,15 @@ static bool count_cw_people(setup *real_people, int real_index,
    return (count == (*extra_stuff));
 }
 
+/* ARGSUSED */
+static bool check_4x4_quad(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff)
+{
+   return real_people->people[(real_index+extra_stuff[0]) & 0xF].id1 != 0;
+}
 
-/* -3 means error, -2 means return false, -1 does not occur, and >= 0 means test that person. */
+
+// -3 means error, -2 means return false, -1 does not occur, and >= 0 means test that person.
 
 /* ARGSUSED */
 static bool check_tbone(setup *real_people, int real_index,
@@ -1875,7 +1892,7 @@ static bool column_double_down(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
    return
-      (northified_index < 3)              /* unless #1 in column, it's easy */
+      (northified_index < 3)              // Unless #1 in column, it's easy.
          ||
       (northified_index > 4)
          ||
@@ -1912,7 +1929,7 @@ static bool apex_test(setup *real_people, int real_index,
 static bool boygirlp(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   /* If this is a slide thru from a miniwave that is not right-handed, raise a warning. */
+   // If this is a slide thru from a miniwave that is not right-handed, raise a warning.
    if (extra_stuff[2] && northified_index != 0)
       warn(warn__tasteless_slide_thru);
 
@@ -2097,16 +2114,16 @@ static bool q_tag_check(setup *real_people, int real_index,
    }
 
    if (real_index & 2) {
-      /* I am in the center line. */
+      // I am in the center line.
       if (actionp->ctr_action == -1) return true;
       else if (actionp->ctr_action == -2) return false;
-      /* This line is executed if there is no assumption.  It attempts to determine whether the physical setup
-         is a wave or a 2FL by checking just the subject and his partner.  Of course, a more thorough check
-         would be a nice idea. */
+      // This line is executed if there is no assumption.  It attempts to determine whether the physical setup
+      // is a wave or a 2FL by checking just the subject and his partner.  Of course, a more thorough check
+      // would be a nice idea.
       else return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == (uint32) actionp->ctr_action;
    }
    else {
-      /* I am on the outside; find the end of the center line nearest me. */
+      // I am on the outside; find the end of the center line nearest me.
 
       if (actionp->end_action < 0) return false;
       else if (actionp->end_action <= 2) {
@@ -2163,14 +2180,14 @@ static bool q_tag_check(setup *real_people, int real_index,
          int z;
          if (real_index & 1) z = real_index ^ 3; else z = real_index ^ 6;
 
-            /* Demand that the indicated line end or diamond point be facing toward
-               or way from this person, as required by the front/back nature of
-               the predicate.
+         // Demand that the indicated line end or diamond point be facing toward
+         // or way from this person, as required by the front/back nature of
+         // the predicate.
 
-               Also, demand that the line in the center consist of miniwaves or couples,
-               as required by the wave/line nature of the predicate.  But if the setup
-               is an hourglass, we waive the second test.  Hence "q_tag_front" and
-               "q_line_front" are indistinguishable in an hourglass. */
+         // Also, demand that the line in the center consist of miniwaves or couples,
+         // as required by the wave/line nature of the predicate.  But if the setup
+         // is an hourglass, we waive the second test.  Hence "q_tag_front" and
+         // "q_line_front" are indistinguishable in an hourglass.
 
          return
             ((real_people->people[z].id1 & 017) == ((uint32) actionp->end_action ^ (real_index >> 1)))
@@ -2185,167 +2202,171 @@ static bool q_tag_check(setup *real_people, int real_index,
 
 // BEWARE!!  This list must track the array "predtab" in mkcalls.cpp
 
-/* The first several of these take a predicate.
-   Any call that uses one of these predicates will have its "need_a_selector"
-   flag set during initialization.  We set the variable "selector_preds" to contain
-   the number of such predicates. */
+// The first several of these take a predicate.
+// Any call that uses one of these predicates will have its "need_a_selector"
+// flag set during initialization.  We set the variable "selector_preds" to contain
+// the number of such predicates.
 
 predicate_descriptor pred_table[] = {
-      {someone_selected,               &iden_tab[0]},            /* "select" */
-      {unselect,                     (const long int *) 0},      /* "unselect" */
-      {select_near_select,           (const long int *) 0},      /* "select_near_select" */
-      {select_near_select_or_phantom,(const long int *) 0},      /* "select_near_select_or_phantom" */
-      {select_near_unselect,         (const long int *) 0},      /* "select_near_unselect" */
-      {unselect_near_select,         (const long int *) 0},      /* "unselect_near_select" */
-      {unselect_near_unselect,       (const long int *) 0},      /* "unselect_near_unselect" */
-      {select_once_rem_from_select,  (const long int *) 0},      /* "select_once_rem_from_select" */
-      {someone_selected,               &iden_tab[2]},            /* "conc_from_select" */
-      {someone_selected,               &iden_tab[3]},            /* "other_spindle_cw_select" */
-      {someone_selected,               &iden_tab[4]},            /* "grand_conc_from_select" */
-      {someone_selected,               &iden_tab[5]},            /* "other_diamond_point_select" */
-      {someone_selected,               &iden_tab[6]},            /* "other_spindle_ckpt_select" */
-      {someone_selected,               &iden_tab[7]},            /* "pair_person_select" */
-      {sum_mod_selected,               &iden_tab[5]},            /* "person_select_sum5" */
-      {sum_mod_selected,               &iden_tab[8]},            /* "person_select_sum8" */
-      {sum_mod_selected,              &iden_tab[11]},            /* "person_select_sum11" */
-      {sum_mod_selected,              &iden_tab[13]},            /* "person_select_sum13" */
-      {sum_mod_selected,              &iden_tab[15]},            /* "person_select_sum15" */
-      {plus_mod_selected,             &iden_tab[4]},             /* "person_select_plus4" */
-      {plus_mod_selected,             &iden_tab[6]},             /* "person_select_plus6" */
-      {plus_mod_selected,             &iden_tab[8]},             /* "person_select_plus8" */
-      {plus_mod_selected,             &iden_tab[12]},            /* "person_select_plus12" */
-      {sum_mod_selected_for_12p,      &iden_tab[15]},            /* "person_select12_sum15" */
-      {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
-      {select_once_rem_from_unselect,(const long int *) 0},      /* "select_once_rem_from_unselect" */
-      {unselect_once_rem_from_select,(const long int *) 0},      /* "unselect_once_rem_from_select" */
-      {select_and_roll_is_cw,        (const long int *) 0},      /* "select_and_roll_is_cw" */
-      {select_and_roll_is_ccw,       (const long int *) 0},      /* "select_and_roll_is_ccw" */
-/* End of predicates that force use of selector. */
+      {someone_selected,               &iden_tab[0]},            // "select"
+      {unselect,                     (const long int *) 0},      // "unselect"
+      {select_near_select,           (const long int *) 0},      // "select_near_select"
+      {select_near_select_or_phantom,(const long int *) 0},      // "select_near_select_or_phantom"
+      {select_near_unselect,         (const long int *) 0},      // "select_near_unselect"
+      {unselect_near_select,         (const long int *) 0},      // "unselect_near_select"
+      {unselect_near_unselect,       (const long int *) 0},      // "unselect_near_unselect"
+      {select_once_rem_from_select,  (const long int *) 0},      // "select_once_rem_from_select"
+      {someone_selected,               &iden_tab[2]},            // "conc_from_select"
+      {someone_selected,               &iden_tab[3]},            // "other_spindle_cw_select"
+      {someone_selected,               &iden_tab[4]},            // "grand_conc_from_select"
+      {someone_selected,               &iden_tab[5]},            // "other_diamond_point_select"
+      {someone_selected,               &iden_tab[6]},            // "other_spindle_ckpt_select"
+      {someone_selected,               &iden_tab[7]},            // "pair_person_select"
+      {sum_mod_selected,               &iden_tab[5]},            // "person_select_sum5"
+      {sum_mod_selected,               &iden_tab[8]},            // "person_select_sum8"
+      {sum_mod_selected,              &iden_tab[11]},            // "person_select_sum11"
+      {sum_mod_selected,              &iden_tab[13]},            // "person_select_sum13"
+      {sum_mod_selected,              &iden_tab[15]},            // "person_select_sum15"
+      {plus_mod_selected,             &iden_tab[4]},             // "person_select_plus4"
+      {plus_mod_selected,             &iden_tab[6]},             // "person_select_plus6"
+      {plus_mod_selected,             &iden_tab[8]},             // "person_select_plus8"
+      {plus_mod_selected,             &iden_tab[12]},            // "person_select_plus12"
+      {sum_mod_selected_for_12p,      &iden_tab[15]},            // "person_select12_sum15"
+      {semi_squeezer_select,       semi_squeeze_tab},            // "semi_squeezer_select"
+      {select_once_rem_from_unselect,(const long int *) 0},      // "select_once_rem_from_unselect"
+      {unselect_once_rem_from_select,(const long int *) 0},      // "unselect_once_rem_from_select"
+      {select_and_roll_is_cw,        (const long int *) 0},      // "select_and_roll_is_cw"
+      {select_and_roll_is_ccw,       (const long int *) 0},      // "select_and_roll_is_ccw"
+// End of predicates that force use of selector.
 #define PREDS_BEFORE_THIS_POINT 23
-      {always,                       (const long int *) 0},      /* "always" */
-      {x22_cpltest,                    dbl_tab21},               /* "x22_miniwave" */
-      {x22_cpltest,                    dbl_tab01},               /* "x22_couple" */
-      {facing_test,                    x22tabface},              /* "x22_facing_someone" */
-      {facing_test,                    x22tabtand},              /* "x22_tandem_with_someone" */
-      {facing_test,                    x24tabface},              /* "x24_facing_someone" */
-      {facing_test,                    x24tabtand},              /* "x24_tandem_with_someone" */
-      {cols_someone_in_front,        (const long int *) 0},      /* "columns_someone_in_front" */
-      {x14_once_rem_miniwave,         &iden_tab[1]},             /* "x14_once_rem_miniwave" */
-      {x14_once_rem_couple,          (const long int *) 0},      /* "x14_once_rem_couple" */
-      {lines_miniwave,               (const long int *) 0},      /* "lines_miniwave" */
-      {lines_couple,                 (const long int *) 0},      /* "lines_couple" */
-      {check_3n1_setup,              tab_mwv_in_3n1},            /* "miniwave_side_of_in_3n1_line" */
-      {check_3n1_setup,              tab_cpl_in_3n1},            /* "couple_side_of_in_3n1_line" */
-      {check_3n1_setup,             tab_mwv_out_3n1},            /* "miniwave_side_of_out_3n1_line" */
-      {check_3n1_setup,             tab_cpl_out_3n1},            /* "couple_side_of_out_3n1_line" */
-      {check_3n1_setup,              tab_mwv_in_3n1},            /* "antitandem_side_of_in_3n1_col" */
-      {check_3n1_setup,              tab_cpl_in_3n1},            /* "tandem_side_of_in_3n1_col" */
-      {check_3n1_setup,             tab_mwv_out_3n1},            /* "antitandem_side_of_out_3n1_col" */
-      {check_3n1_setup,             tab_cpl_out_3n1},            /* "tandem_side_of_out_3n1_col" */
-      {some_side_of_2n1_line,          &iden_tab[0]},            /* "miniwave_side_of_2n1_line" */
-      {some_side_of_2n1_line,          &iden_tab[3]},            /* "couple_side_of_2n1_line" */
-      {some_side_of_2n1_line,          &iden_tab[0]},            /* "antitandem_side_of_2n1_col" */
-      {some_side_of_2n1_line,          &iden_tab[3]},            /* "tandem_side_of_2n1_col" */
-      {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
-      {cast_normal_or_whatever,        &iden_tab[0]},            /* "cast_pushy" */
-      {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */
-      {x14_once_rem_miniwave,          &iden_tab[3]},            /* "intlk_cast_normal_or_warn" */
-      {opp_in_magic,                 (const long int *) 0},      /* "lines_magic_miniwave" */
-      {same_in_magic,                (const long int *) 0},      /* "lines_magic_couple" */
-      {once_rem_test,                  &iden_tab[2]},            /* "lines_once_rem_miniwave" */
-      {once_rem_test,                  &iden_tab[0]},            /* "lines_once_rem_couple" */
-      {same_in_pair,                 (const long int *) 0},      /* "lines_tandem" */
-      {opp_in_pair,                  (const long int *) 0},      /* "lines_antitandem" */
-      {columns_tandem,                 &iden_tab[0]},            /* "columns_tandem" */
-      {columns_tandem,                 &iden_tab[1]},            /* "columns_antitandem" */
-      {same_in_magic,                (const long int *) 0},      /* "columns_magic_tandem" */
-      {opp_in_magic,                 (const long int *) 0},      /* "columns_magic_antitandem" */
-      {once_rem_test,                  &iden_tab[0]},            /* "columns_once_rem_tandem" */
-      {once_rem_test,                  &iden_tab[2]},            /* "columns_once_rem_antitandem" */
-      {same_in_pair,                 (const long int *) 0},      /* "columns_couple" */
-      {opp_in_pair,                  (const long int *) 0},      /* "columns_miniwave" */
-      {x12_beau_or_miniwave,           &iden_tab[0]},            /* "1x2_beau_or_miniwave" */
-      {x12_beau_or_miniwave,           &iden_tab[1]},            /* "1x2_beau_miniwave_or_warn" */
-      {x12_beau_or_miniwave,           &iden_tab[2]},            /* "1x2_beau_miniwave_for_breaker" */
-      {can_swing_left,               (const long int *) 0},      /* "can_swing_left" */
-      {x14_wheel_and_deal,           (const long int *) 0},      /* "1x4_wheel_and_deal" */
-      {x16_wheel_and_deal,           (const long int *) 0},      /* "1x6_wheel_and_deal" */
-      {x18_wheel_and_deal,           (const long int *) 0},      /* "1x8_wheel_and_deal" */
-      {cycle_and_wheel_1,            (const long int *) 0},      /* "cycle_and_wheel_1" */
-      {cycle_and_wheel_2,            (const long int *) 0},      /* "cycle_and_wheel_2" */
-      {vert1,                        (const long int *) 0},      /* "vert1" */
-      {vert2,                        (const long int *) 0},      /* "vert2" */
-      {inner_active_lines,           (const long int *) 0},      /* "inner_active_lines" */
-      {outer_active_lines,           (const long int *) 0},      /* "outer_active_lines" */
-      {judge_check_1x4,                       jr1x4},            /* "judge_is_right" */
-      {judge_check_1x4,                       jl1x4},            /* "judge_is_left" */
-      {judge_check_1x4,                       sr1x4},            /* "socker_is_right" */
-      {judge_check_1x4,                       sl1x4},            /* "socker_is_left" */
-      {judge_is_right_1x3,           (const long int *) 0},      /* "judge_is_right_1x3" */
-      {judge_is_left_1x3,            (const long int *) 0},      /* "judge_is_left_1x3" */
-      {socker_is_right_1x3,          (const long int *) 0},      /* "socker_is_right_1x3" */
-      {socker_is_left_1x3,           (const long int *) 0},      /* "socker_is_left_1x3" */
-      {judge_check_1x6,                       jr1x6},            /* "judge_is_right_1x6" */
-      {judge_check_1x6,                       jl1x6},            /* "judge_is_left_1x6" */
-      {judge_check_1x6,                       sr1x6},            /* "socker_is_right_1x6" */
-      {judge_check_1x6,                       sl1x6},            /* "socker_is_left_1x6" */
-      {judge_check_1x8,                       jr1x8},            /* "judge_is_right_1x8" */
-      {judge_check_1x8,                       jl1x8},            /* "judge_is_left_1x8" */
-      {judge_check_1x8,                       sr1x8},            /* "socker_is_right_1x8" */
-      {judge_check_1x8,                       sl1x8},            /* "socker_is_left_1x8" */
-      {in_out_roll_select, (const long int *) &inroller_cw},     /* "inroller_is_cw" */
-      {in_out_roll_select, (const long int *) &magic_inroller_cw}, /* "magic_inroller_is_cw" */
-      {in_out_roll_select, (const long int *) &outroller_cw},    /* "outroller_is_cw" */
-      {in_out_roll_select, (const long int *) &magic_outroller_cw}, /* "magic_outroller_is_cw" */
-      {in_out_roll_select, (const long int *) &inroller_cw_2x3}, /* "inroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &magic_inroller_cw_2x3}, /* "magic_inroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &outroller_cw_2x3},/* "outroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &magic_outroller_cw_2x3}, /* "magic_outroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &inroller_2x6},   /* "inroller_is_cw_2x6" */
-      {in_out_roll_select, (const long int *) &outroller_2x6},  /* "outroller_is_cw_2x6" */
-      {in_out_roll_select, (const long int *) &inroller_2x8},   /* "inroller_is_cw_2x8" */
-      {in_out_roll_select, (const long int *) &outroller_2x8},  /* "outroller_is_cw_2x8" */
-      {outposter_is_cw,              (const long int *) 0},      /* "outposter_is_cw" */
-      {outposter_is_ccw,             (const long int *) 0},      /* "outposter_is_ccw" */
-      {count_cw_people,                &iden_tab[0]},            /* "zero_cw_people" */
-      {count_cw_people,                &iden_tab[1]},            /* "one_cw_person" */
-      {count_cw_people,                &iden_tab[2]},            /* "two_cw_people" */
-      {count_cw_people,                &iden_tab[3]},            /* "three_cw_people" */
+      {always,                       (const long int *) 0},      // "always"
+      {x22_cpltest,                    dbl_tab21},               // "2x2_miniwave"
+      {x22_cpltest,                    dbl_tab01},               // "2x2_couple"
+      {facing_test,                    x22tabtandem},            // "2x2_tandem_with_someone"
+      {facing_test,                    x22tabantitandem},        // "2x2_antitandem"
+      {facing_test,                    x22tabfacing},            // "2x2_facing_someone"
+      {facing_test,                    x24tabtandem},            // "2x4_tandem_with_someone"
+      {facing_test,                    x24tabantitandem},        // "2x4_antitandem"
+      {facing_test,                    x24tabfacing},            // "2x4_facing_someone"
+      {cols_someone_in_front,        (const long int *) 0},      // "columns_someone_in_front"
+      {x14_once_rem_miniwave,         &iden_tab[1]},             // "x14_once_rem_miniwave"
+      {x14_once_rem_couple,          (const long int *) 0},      // "x14_once_rem_couple"
+      {lines_miniwave,               (const long int *) 0},      // "lines_miniwave"
+      {lines_couple,                 (const long int *) 0},      // "lines_couple"
+      {check_3n1_setup,              tab_mwv_in_3n1},            // "miniwave_side_of_in_3n1_line"
+      {check_3n1_setup,              tab_cpl_in_3n1},            // "couple_side_of_in_3n1_line"
+      {check_3n1_setup,             tab_mwv_out_3n1},            // "miniwave_side_of_out_3n1_line"
+      {check_3n1_setup,             tab_cpl_out_3n1},            // "couple_side_of_out_3n1_line"
+      {check_3n1_setup,              tab_mwv_in_3n1},            // "antitandem_side_of_in_3n1_col"
+      {check_3n1_setup,              tab_cpl_in_3n1},            // "tandem_side_of_in_3n1_col"
+      {check_3n1_setup,             tab_mwv_out_3n1},            // "antitandem_side_of_out_3n1_col"
+      {check_3n1_setup,             tab_cpl_out_3n1},            // "tandem_side_of_out_3n1_col"
+      {some_side_of_2n1_line,          &iden_tab[0]},            // "miniwave_side_of_2n1_line"
+      {some_side_of_2n1_line,          &iden_tab[3]},            // "couple_side_of_2n1_line"
+      {some_side_of_2n1_line,          &iden_tab[0]},            // "antitandem_side_of_2n1_col"
+      {some_side_of_2n1_line,          &iden_tab[3]},            // "tandem_side_of_2n1_col"
+      {cast_normal_or_whatever,        &iden_tab[1]},            // "cast_normal"
+      {cast_normal_or_whatever,        &iden_tab[0]},            // "cast_pushy"
+      {cast_normal_or_whatever,        &iden_tab[3]},            // "cast_normal_or_warn"
+      {x14_once_rem_miniwave,          &iden_tab[3]},            // "intlk_cast_normal_or_warn"
+      {opp_in_magic,                 (const long int *) 0},      // "lines_magic_miniwave"
+      {same_in_magic,                (const long int *) 0},      // "lines_magic_couple"
+      {once_rem_test,                  &iden_tab[2]},            // "lines_once_rem_miniwave"
+      {once_rem_test,                  &iden_tab[0]},            // "lines_once_rem_couple"
+      {same_in_pair,                 (const long int *) 0},      // "lines_tandem"
+      {opp_in_pair,                  (const long int *) 0},      // "lines_antitandem"
+      {columns_tandem,                 &iden_tab[0]},            // "columns_tandem"
+      {columns_tandem,                 &iden_tab[1]},            // "columns_antitandem"
+      {same_in_magic,                (const long int *) 0},      // "columns_magic_tandem"
+      {opp_in_magic,                 (const long int *) 0},      // "columns_magic_antitandem"
+      {once_rem_test,                  &iden_tab[0]},            // "columns_once_rem_tandem"
+      {once_rem_test,                  &iden_tab[2]},            // "columns_once_rem_antitandem"
+      {same_in_pair,                 (const long int *) 0},      // "columns_couple"
+      {opp_in_pair,                  (const long int *) 0},      // "columns_miniwave"
+      {x12_beau_or_miniwave,           &iden_tab[0]},            // "1x2_beau_or_miniwave"
+      {x12_beau_or_miniwave,           &iden_tab[1]},            // "1x2_beau_miniwave_or_warn"
+      {x12_beau_or_miniwave,           &iden_tab[2]},            // "1x2_beau_miniwave_for_breaker"
+      {can_swing_left,               (const long int *) 0},      // "can_swing_left"
+      {x14_wheel_and_deal,           (const long int *) 0},      // "1x4_wheel_and_deal"
+      {x16_wheel_and_deal,           (const long int *) 0},      // "1x6_wheel_and_deal"
+      {x18_wheel_and_deal,           (const long int *) 0},      // "1x8_wheel_and_deal"
+      {cycle_and_wheel_1,            (const long int *) 0},      // "cycle_and_wheel_1"
+      {cycle_and_wheel_2,            (const long int *) 0},      // "cycle_and_wheel_2"
+      {vert1,                        (const long int *) 0},      // "vert1"
+      {vert2,                        (const long int *) 0},      // "vert2"
+      {inner_active_lines,           (const long int *) 0},      // "inner_active_lines"
+      {outer_active_lines,           (const long int *) 0},      // "outer_active_lines"
+      {judge_check_1x4,                       jr1x4},            // "judge_is_right"
+      {judge_check_1x4,                       jl1x4},            // "judge_is_left"
+      {judge_check_1x4,                       sr1x4},            // "socker_is_right"
+      {judge_check_1x4,                       sl1x4},            // "socker_is_left"
+      {judge_is_right_1x3,           (const long int *) 0},      // "judge_is_right_1x3"
+      {judge_is_left_1x3,            (const long int *) 0},      // "judge_is_left_1x3"
+      {socker_is_right_1x3,          (const long int *) 0},      // "socker_is_right_1x3"
+      {socker_is_left_1x3,           (const long int *) 0},      // "socker_is_left_1x3"
+      {judge_check_1x6,                       jr1x6},            // "judge_is_right_1x6"
+      {judge_check_1x6,                       jl1x6},            // "judge_is_left_1x6"
+      {judge_check_1x6,                       sr1x6},            // "socker_is_right_1x6"
+      {judge_check_1x6,                       sl1x6},            // "socker_is_left_1x6"
+      {judge_check_1x8,                       jr1x8},            // "judge_is_right_1x8"
+      {judge_check_1x8,                       jl1x8},            // "judge_is_left_1x8"
+      {judge_check_1x8,                       sr1x8},            // "socker_is_right_1x8"
+      {judge_check_1x8,                       sl1x8},            // "socker_is_left_1x8"
+      {in_out_roll_select, (const long int *) &inroller_cw},     // "inroller_is_cw"
+      {in_out_roll_select, (const long int *) &magic_inroller_cw}, // "magic_inroller_is_cw"
+      {in_out_roll_select, (const long int *) &outroller_cw},    // "outroller_is_cw"
+      {in_out_roll_select, (const long int *) &magic_outroller_cw}, // "magic_outroller_is_cw"
+      {in_out_roll_select, (const long int *) &inroller_cw_2x3}, // "inroller_is_cw_2x3"
+      {in_out_roll_select, (const long int *) &magic_inroller_cw_2x3}, // "magic_inroller_is_cw_2x3"
+      {in_out_roll_select, (const long int *) &outroller_cw_2x3},// "outroller_is_cw_2x3"
+      {in_out_roll_select, (const long int *) &magic_outroller_cw_2x3}, // "magic_outroller_is_cw_2x3"
+      {in_out_roll_select, (const long int *) &inroller_2x6},   // "inroller_is_cw_2x6"
+      {in_out_roll_select, (const long int *) &outroller_2x6},  // "outroller_is_cw_2x6"
+      {in_out_roll_select, (const long int *) &inroller_2x8},   // "inroller_is_cw_2x8"
+      {in_out_roll_select, (const long int *) &outroller_2x8},  // "outroller_is_cw_2x8"
+      {outposter_is_cw,              (const long int *) 0},      // "outposter_is_cw"
+      {outposter_is_ccw,             (const long int *) 0},      // "outposter_is_ccw"
+      {count_cw_people,                &iden_tab[0]},            // "zero_cw_people"
+      {count_cw_people,                &iden_tab[1]},            // "one_cw_person"
+      {count_cw_people,                &iden_tab[2]},            // "two_cw_people"
+      {count_cw_people,                &iden_tab[3]},            // "three_cw_people"
+      {check_4x4_quad,                 &iden_tab[14]},           // "quad_person_cw"
+      {check_4x4_quad,                 &iden_tab[11]},           // "quad_person_ccw"
       {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
       {nextinttrnglspot_is_tboned,   (const long int *) 0},      // "nextinttrnglspot_is_tboned"
       {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"
       {check_tbone,            mag62spot_tboned_tab},            // "next_magic62spot_is_tboned"
       {next_galaxyspot_is_tboned,    (const long int *) 0},      // "next_galaxyspot_is_tboned"
       {column_double_down,           (const long int *) 0},      // "column_double_down"
-      {apex_test,                      &iden_tab[1]},            /* "apex_test_1" */
-      {apex_test,                      &iden_tab[2]},            /* "apex_test_2" */
-      {apex_test,                      &iden_tab[3]},            /* "apex_test_3" */
-      {boygirlp,                     boystuff_no_rh},            /* "boyp" */
-      {boygirlp,                    girlstuff_no_rh},            /* "girlp" */
-      {boygirlp,                        boystuff_rh},            /* "boyp_rh_slide_thru" */
-      {boygirlp,                       girlstuff_rh},            /* "girlp_rh_slide_thru" */
-      {roll_is_cw,                   (const long int *) 0},      /* "roll_is_cw" */
-      {roll_is_ccw,                  (const long int *) 0},      /* "roll_is_ccw" */
-      {x12_with_other_sex,            boystuff_no_rh},           /* "x12_boy_with_girl" */
-      {x12_with_other_sex,           girlstuff_no_rh},           /* "x12_girl_with_boy" */
-      {x22_facing_other_sex,          boystuff_no_rh},           /* "x22_boy_facing_girl" */
-      {x22_facing_other_sex,         girlstuff_no_rh},           /* "x22_girl_facing_boy" */
-      {directionp,                     &iden_tab[0]},            /* "leftp" */
-      {directionp,                     &iden_tab[1]},            /* "rightp" */
-      {directionp,                     &iden_tab[2]},            /* "inp" */
-      {directionp,                     &iden_tab[3]},            /* "outp" */
-      {directionp,                     &iden_tab[4]},            /* "backp" */
-      {directionp,                     &iden_tab[5]},            /* "zigzagp" */
-      {directionp,                     &iden_tab[6]},            /* "zagzigp" */
-      {directionp,                     &iden_tab[7]},            /* "zigzigp" */
-      {directionp,                     &iden_tab[8]},            /* "zagzagp" */
-      {directionp,                     &iden_tab[9]},            /* "no_dir_p" */
-      {dmd_ctrs_rh,                    &iden_tab[0]},            /* "dmd_ctrs_rh" */
-      {dmd_ctrs_rh,                    &iden_tab[1]},            /* "dmd_ctrs_lh" */
-      {trngl_pt_rh,                  (const long int *) 0},      /* "trngl_pt_rh" */
-      {q_tag_check, (const long int *) &q_tag_front_action},     /* "q_tag_front" */
-      {q_tag_check, (const long int *) &q_tag_back_action},      /* "q_tag_back" */
-      {q_tag_check, (const long int *) &q_line_front_action},    /* "q_line_front" */
-      {q_tag_check, (const long int *) &q_line_back_action}};    /* "q_line_back" */
+      {apex_test,                      &iden_tab[1]},            // "apex_test_1"
+      {apex_test,                      &iden_tab[2]},            // "apex_test_2"
+      {apex_test,                      &iden_tab[3]},            // "apex_test_3"
+      {boygirlp,                     boystuff_no_rh},            // "boyp"
+      {boygirlp,                    girlstuff_no_rh},            // "girlp"
+      {boygirlp,                        boystuff_rh},            // "boyp_rh_slide_thru"
+      {boygirlp,                       girlstuff_rh},            // "girlp_rh_slide_thru"
+      {roll_is_cw,                   (const long int *) 0},      // "roll_is_cw"
+      {roll_is_ccw,                  (const long int *) 0},      // "roll_is_ccw"
+      {x12_with_other_sex,            boystuff_no_rh},           // "x12_boy_with_girl"
+      {x12_with_other_sex,           girlstuff_no_rh},           // "x12_girl_with_boy"
+      {x22_facing_other_sex,          boystuff_no_rh},           // "x22_boy_facing_girl"
+      {x22_facing_other_sex,         girlstuff_no_rh},           // "x22_girl_facing_boy"
+      {directionp,                     &iden_tab[0]},            // "leftp"
+      {directionp,                     &iden_tab[1]},            // "rightp"
+      {directionp,                     &iden_tab[2]},            // "inp"
+      {directionp,                     &iden_tab[3]},            // "outp"
+      {directionp,                     &iden_tab[4]},            // "backp"
+      {directionp,                     &iden_tab[5]},            // "zigzagp"
+      {directionp,                     &iden_tab[6]},            // "zagzigp"
+      {directionp,                     &iden_tab[7]},            // "zigzigp"
+      {directionp,                     &iden_tab[8]},            // "zagzagp"
+      {directionp,                     &iden_tab[9]},            // "no_dir_p"
+      {dmd_ctrs_rh,                    &iden_tab[0]},            // "dmd_ctrs_rh"
+      {dmd_ctrs_rh,                    &iden_tab[1]},            // "dmd_ctrs_lh"
+      {trngl_pt_rh,                  (const long int *) 0},      // "trngl_pt_rh"
+      {q_tag_check, (const long int *) &q_tag_front_action},     // "q_tag_front"
+      {q_tag_check, (const long int *) &q_tag_back_action},      // "q_tag_back"
+      {q_tag_check, (const long int *) &q_line_front_action},    // "q_line_front"
+      {q_tag_check, (const long int *) &q_line_back_action}};    // "q_line_back"
 
 int selector_preds = PREDS_BEFORE_THIS_POINT;

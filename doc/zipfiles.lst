@@ -16,9 +16,13 @@
 ..\sd\Faq.lnk
 sd_doc.html
 relnotes.html
+appnote1.html
+appnote2.html
+appnote3.html
+appnote4.html
 faq.html
-sample1.ini
-sample2.ini
-sample3.ini
+..\sd\sample1.ini
+..\sd\sample2.ini
+..\sd\sample3.ini
 readme
 ..\sd\deploy.exe

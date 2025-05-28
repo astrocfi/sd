@@ -299,8 +299,10 @@ static int translate_keybind_spec(char key_name[])
 }
 
 
-void do_accelerator_spec(Cstring qq, bool is_accelerator)
+void do_accelerator_spec(Cstring inputline, bool is_accelerator)
 {
+   if (!inputline[0] || inputline[0] == '#') return;   // This is a blank line or a comment.
+
    char key_name[MAX_FILENAME_LENGTH];
    char *key_org;
    char junk_name[MAX_FILENAME_LENGTH];
@@ -308,9 +310,7 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
    int menu_type = call_list_any;
    int keybindcode = -1;
 
-   if (!qq[0] || qq[0] == '#') return;   /* This is a blank line or a comment. */
-
-   if (sscanf(qq, "%s %n%s", key_name, &ccount, junk_name) == 2) {
+   if (sscanf(inputline, "%s %n%s", key_name, &ccount, junk_name) == 2) {
       key_org = key_name;
 
       if (key_name[0] == '+') {
@@ -329,42 +329,34 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
    }
 
    if (keybindcode < 0)
-      gg->fatal_error_exit(1, "Bad format in key binding", qq);
+      gg->fatal_error_exit(1, "Bad format in key binding", inputline);
 
    user_match.match.kind = ui_call_select;
 
-   if (!strcmp(&qq[ccount], "deleteline")) {
+   Cstring target = inputline+ccount;
+
+   if (!strcmp(target, "deleteline"))
       user_match.match.index = special_index_deleteline;
-   }
-   else if (!strcmp(&qq[ccount], "deleteword")) {
+   else if (!strcmp(target, "deleteword"))
       user_match.match.index = special_index_deleteword;
-   }
-   else if (!strcmp(&qq[ccount], "copytext")) {
+   else if (!strcmp(target, "copytext"))
       user_match.match.index = special_index_copytext;
-   }
-   else if (!strcmp(&qq[ccount], "cuttext")) {
+   else if (!strcmp(target, "cuttext"))
       user_match.match.index = special_index_cuttext;
-   }
-   else if (!strcmp(&qq[ccount], "pastetext")) {
+   else if (!strcmp(target, "pastetext"))
       user_match.match.index = special_index_pastetext;
-   }
-   else if (!strcmp(&qq[ccount], "lineup")) {
+   else if (!strcmp(target, "lineup"))
       user_match.match.index = special_index_lineup;
-   }
-   else if (!strcmp(&qq[ccount], "linedown")) {
+   else if (!strcmp(target, "linedown"))
       user_match.match.index = special_index_linedown;
-   }
-   else if (!strcmp(&qq[ccount], "pageup")) {
+   else if (!strcmp(target, "pageup"))
       user_match.match.index = special_index_pageup;
-   }
-   else if (!strcmp(&qq[ccount], "pagedown")) {
+   else if (!strcmp(target, "pagedown"))
       user_match.match.index = special_index_pagedown;
-   }
-   else if (!strcmp(&qq[ccount], "quoteanything")) {
+   else if (!strcmp(target, "quoteanything"))
       user_match.match.index = special_index_quote_anything;
-   }
    else {
-      strcpy(GLOB_user_input, &qq[ccount]);
+      strcpy(GLOB_user_input, target);
       GLOB_user_input_size = strlen(GLOB_user_input);
       int matches = match_user_input(menu_type, false, false, false);
       user_match = GLOB_match;
@@ -374,7 +366,7 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
          // something could just mean that it was a call off the list.  At C4X, we
          // take it seriously.  So the initialization file should always be tested at C4X.
          if (calling_level >= l_c4x)
-            gg->fatal_error_exit(1, "Didn't find target of accelerator or abbreviation", qq);
+            gg->fatal_error_exit(1, "Didn't find target of accelerator or abbreviation", inputline);
 
          return;
       }
@@ -383,7 +375,7 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
           user_match.match.packed_secondary_subcall) {
          gg->fatal_error_exit(1,
                               "Target of accelerator or abbreviation is too complicated",
-                              qq);
+                              inputline);
       }
    }
 
@@ -402,13 +394,13 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
          table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
       }
       else
-         gg->fatal_error_exit(1, "Anomalous accelerator", qq);
+         gg->fatal_error_exit(1, "Anomalous accelerator", inputline);
 
       modifier_block *newthing = (modifier_block *) get_mem(sizeof(modifier_block));
       *newthing = user_match.match;
 
       if (*table_thing)
-         gg->fatal_error_exit(1, "Redundant accelerator", qq);
+         gg->fatal_error_exit(1, "Redundant accelerator", inputline);
 
       *table_thing = newthing;
    }
@@ -427,7 +419,7 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
          table_thing = &abbrev_table_normal;
       }
       else
-         gg->fatal_error_exit(1, "Anomalous abbreviation", qq);
+         gg->fatal_error_exit(1, "Anomalous abbreviation", inputline);
 
       abbrev_block *newthing = (abbrev_block *) get_mem(sizeof(abbrev_block));
       newthing->key = (char *) get_mem(strlen(key_org)+1);

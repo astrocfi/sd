@@ -2,7 +2,7 @@
 
 /* calls database source for Sd -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2004  William B. Ackerman.
 
     All rights reserved.  Permission is granted to compile this file,
     or a modification thereof, for use with the calling program
@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "35.0"
+version "35.1"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1997,12 +1997,12 @@ call "_peel/trail chain thru part 1" dontshow tag peelchain1
 call "peel chain thru" c3a
             left_means_mirror last_part_visible yoyo_is_inherited fractal_is_inherited
    seq peelchain1 [inherit_left inherit_yoyo]
-   seq linefanthetop [allow_forced_mod inherit_fractal]
+   seq pushyfanthetop [allow_forced_mod inherit_fractal]
 
 call "trail chain thru" c3x
             left_means_mirror last_part_visible yoyo_is_inherited fractal_is_inherited
    seq peelchain1 [inherit_left inherit_yoyo force_cross]
-   seq linefanthetop [allow_forced_mod inherit_fractal]
+   seq pushyfanthetop [allow_forced_mod inherit_fractal]
 
 call "create a diamond" c4a
             left_means_mirror
@@ -3907,8 +3907,8 @@ call "partner tag" a1 tag partnertag
             alternate_definition [funny] c2
    setup 2x2 2x2
       preds "???"
-         if x22_miniwave [CM1E AM0W AM3W CM2E]
-         if x22_couple   [CM1E AM0W AM3W CM2E]
+         if 2x2_miniwave [CM1E AM0W AM3W CM2E]
+         if 2x2_couple   [CM1E AM0W AM3W CM2E]
          if always       [ZM0N ZM1N ZM2N ZM3N]
             alternate_definition [reflect] c4
    setup 1x2 1x2 rotate
@@ -4015,6 +4015,18 @@ call "fan the top (line)" dontshow tag linefanthetop
             alternate_definition [fractal] c4
    setup 1x4 1x4 rotate no_cutting_through
       array [CR0N CR1N AL0S AL1S]
+
+call "fan the top (pushy)" dontshow tag pushyfanthetop
+            ends_take_right_hands
+   setup 1x8 2x4 rotate qualifier dmd_ctrs_mwv
+      array [CR7N CR5S AL7S AL5N AL0S AL2N CR0N CR2S]
+   setup 1x8 2x4 rotate
+      array [CR7N AL6N AL7S AL5N AL0S CR1S CR0N CR2S]
+            alternate_definition [fractal] c4
+   setup 1x8 2x4 rotate qualifier dmd_ctrs_mwv
+      array [CR7N CR6N AL7S AL6S AL0S AL1S CR0N CR1N]
+   setup 1x8 2x4 rotate
+      array [CR7N AL5S AL7S AL6S AL0S CR2N CR0N CR1N]
 
 call "spin the top" mainstream tag spinthetop
             step_to_wave can_be_fan left_means_touch_or_check
@@ -7456,8 +7468,8 @@ call "split recycle" c1 tag splitrecycle
             reverse_means_mirror diamond_is_legal
    setup 2x2 1x4 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL3S CR1S]
-         if x22_couple   [0    0    ZM0N CR1S]
+         if 2x2_miniwave [CR2S AL0S AL3S CR1S]
+         if 2x2_couple   [0    0    ZM0N CR1S]
          if always       [CR2S 0    0    CR1S]
             alternate_definition [singlefile] c3a
    setup 4x1 1x4 rotate
@@ -7471,13 +7483,13 @@ call "split recycle" c1 tag splitrecycle
             alternate_definition [cross] c3
    setup 2x2 1x4 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL1S CR3S]
-         if x22_couple   [0    0    ZM0N CR3S]
+         if 2x2_miniwave [CR2S AL0S AL1S CR3S]
+         if 2x2_couple   [0    0    ZM0N CR3S]
             alternate_definition [diamond] c4
    setup 2x2 dmd restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL1W CR1E]
-         if x22_couple   [0    0    ZM0N CR1E]
+         if 2x2_miniwave [CR2S AL0S AL1W CR1E]
+         if 2x2_couple   [0    0    ZM0N CR1E]
          if always       [CR2S 0    0    CR1E]
 
 call "centers fold" dontshow tag ctrsfold
@@ -7509,8 +7521,8 @@ call "recycle" mainstream tag recycle
       array [0 0 ZM0N CR1S]
    setup 2x2 1x4 no_cutting_through restriction forbidden levelc1
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL3S CR1S]
-         if x22_couple   [0    0    ZM0N CR1S]
+         if 2x2_miniwave [CR2S AL0S AL3S CR1S]
+         if 2x2_couple   [0    0    ZM0N CR1S]
          if always       [CR2S 0    0    CR1S]
             alternate_definition [straight] c4
    setup 2x4 2x4 rotate restriction wave_only
@@ -7523,8 +7535,8 @@ call "recycle" mainstream tag recycle
       array [CR1S CR2N AL0S AL3N]
    setup 2x2 1x4 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL1S CR3S]
-         if x22_couple   [0    0    ZM0N CR3S]
+         if 2x2_miniwave [CR2S AL0S AL1S CR3S]
+         if 2x2_couple   [0    0    ZM0N CR3S]
          if always       [CR2S 0    0    CR3S]
             alternate_definition [single] c4
    setup 1x2 1x2 restriction forbidden wave_only
@@ -7542,8 +7554,8 @@ call "recycle" mainstream tag recycle
       array [0 CR2W 0 AL1E]
    setup 2x2 dmd restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL1W CR1E]
-         if x22_couple   [0    0    ZM0N CR1E]
+         if 2x2_miniwave [CR2S AL0S AL1W CR1E]
+         if 2x2_couple   [0    0    ZM0N CR1E]
          if always       [CR2S 0    0    CR1E]
             alternate_definition [singlefile diamond] c4
    setup 4x1 dmd rotate
@@ -7556,7 +7568,7 @@ call "recycle" mainstream tag recycle
             visible_fractions cross_is_inherited
    seq ctrsfold [inherit_cross]
    seq splitctrrot []
-   seq quarterin []   // Yes, it's quarter in, not roll.  Callerlab C1 definitions, page 5.
+   seq roll []
 
 // We leave this one around so that a comma won't appear in the name.
 // The parser will prefer this one, of course.
@@ -7622,8 +7634,8 @@ call "_natural vertical 1/2 tag" dontshow tag natural_vertical_half_tag
       array [0 AL0S ZM1N 0]
    setup 2x2 2x2 restriction not_tboned
       preds "???"
-         if x22_facing_someone      [CR1S AL1S ZM0N ZM0N]
-         if x22_tandem_with_someone [CR1S AL0S ZM1N ZM0N]
+         if 2x2_antitandem          [CR1S AL1S ZM0N ZM0N]
+         if 2x2_tandem_with_someone [CR1S AL0S ZM1N ZM0N]
          if always                  [CR1S    0    0 ZM0N]
 
 call "_linear cycle 1" dontshow tag linear_cycle_1
@@ -7664,8 +7676,8 @@ call "cycle and wheel" a1 tag cyclewheel
          if always            [0    AL0N AL0S AL1S]
    setup 2x2 1x4 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL3S CR1S]
-         if x22_couple   [0    0    ZM0N CR1S]
+         if 2x2_miniwave [CR2S AL0S AL3S CR1S]
+         if 2x2_couple   [0    0    ZM0N CR1S]
          if always       [CR2S 0    0    CR1S]
             alternate_definition [straight] c4
    setup 2x4 2x4 rotate
@@ -7696,8 +7708,8 @@ call "cross cycle" c3
       array [CR1S CR2N AL0S AL3N]
    setup 2x2 1x4 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2S AL0S AL1S CR3S]
-         if x22_couple   [0    0    ZM0N CR3S]
+         if 2x2_miniwave [CR2S AL0S AL1S CR3S]
+         if 2x2_couple   [0    0    ZM0N CR3S]
          if always       [CR2S 0    0    CR3S]
             visible_fractions
    seq ctrsfold [force_cross]
@@ -8915,7 +8927,7 @@ call "_start dixie style" dontshow tag start_dixie
       array [0 0 ZM1W ZM2W]
    setup 2x2 2x2 qualifier split_dixie
       preds "?"
-         if x22_facing_someone [0 0 AL1W CR0E]
+         if 2x2_antitandem     [0 0 AL1W CR0E]
          if always             [0 0 ZM2N ZM3N]
             alternate_definition [singlefile] mainstream
    setup 4x1 1x4
@@ -9539,6 +9551,13 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [CR0N 0]
    setup 1x2 1x2 rotate qualifier num 3 right wave_only
       array [CR1S 0]
+
+/*   Not yet....
+   setup 1x2 1x2 qualifier num 1 couples_only restriction unusual alwaysfail
+      array [ZM0N ZM1N]
+   setup 1x2 1x2 qualifier num 3 couples_only restriction unusual alwaysfail
+      array [ZM0N ZM1N]
+*/
 
 /*
    setup 3x4 2x6 rotate qualifier num 1 none // right wave_only
@@ -10560,21 +10579,21 @@ call "catch @1@9" c2
    seq slipforcatch [or_anycall inherit_diamond inherit_yoyo]
    seq stepnfold [inherit_cross inherit_diamond]
 
-call "catch @0 @9" c2
+call "catch @0 @9" c3a
             split_like_square_thru cross_is_inherited twisted_is_inherited diamond_is_legal
             left_means_mirror neednumber visible_fractions
    seq square_thru_to_wave [inherit_left inherit_twisted inherit_diamond]
    seq nullcall [mandatory_anycall inherit_diamond]
    seq stepnfold [inherit_cross inherit_diamond]
 
-call "catch lock @9" c2
+call "catch lock @9" c3a
             split_like_square_thru twisted_is_inherited diamond_is_legal
             left_means_mirror neednumber visible_fractions
    seq square_thru_to_wave [inherit_left inherit_twisted inherit_diamond]
    seq lockit []
    seq stepnfold [inherit_diamond]
 
-call "catch top @9" c2
+call "catch top @9" c3a
             split_like_square_thru twisted_is_inherited diamond_is_legal
             left_means_mirror neednumber visible_fractions
    seq square_thru_to_wave [inherit_left inherit_twisted inherit_diamond]
@@ -10585,7 +10604,7 @@ call "_centers step and fold" dontshow tag ctrsstepnfold
             cross_is_inherited
    conc stepnfold [inherit_cross] nullcall []
 
-call "catch @0 @9, only the resulting centers finish" c3
+call "catch @0 @9, only the resulting centers finish" c3a
             split_like_square_thru cross_is_inherited twisted_is_inherited
             left_means_mirror neednumber
    seq touch [inherit_left inherit_twisted]
@@ -10611,11 +10630,11 @@ call "_funny_right_on finish" dontshow tag funnyrightonfinish
             neednumber
    setup 2x2 2x2 qualifier num 1 none
       preds "?"
-         if x22_facing_someone [0    0    1S   0S]
+         if 2x2_facing_someone [0    0    1S   0S]
          if always             [ZM0N ZM1N ZM2N ZM3N]
    setup 2x2 2x2 qualifier num 3 none
       preds "?"
-         if x22_facing_someone [0    0    2N   3N]
+         if 2x2_facing_someone [0    0    2N   3N]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "funny @eright@f on @9" c4a
@@ -10688,19 +10707,19 @@ call "_funny square thru main" dontshow tag funnysquaremain
             left_means_mirror
    setup 2x2 2x2
       preds "?"
-         if x22_facing_someone [0    0    AL1W CR0E]
+         if 2x2_facing_someone [0    0    AL1W CR0E]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "_funny square thru finish" dontshow tag funnysquarefinish
    setup 2x2 2x2
       preds "?"
-         if x22_facing_someone [0    0    ZM1N ZM0N]
+         if 2x2_facing_someone [0    0    ZM1N ZM0N]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "_funny square turn thru finish" dontshow tag funnysquaretnfinish
    setup 2x2 2x2
       preds "?"
-         if x22_facing_someone [0    0    C2S C3S]
+         if 2x2_facing_someone [0    0    C2S C3S]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "funny square thru @9" c2
@@ -10895,7 +10914,7 @@ call "_turn and Q part 1" dontshow tag turn_and_q_1
       array [C0S 0]
    setup 2x2 2x2 qualifier split_dixie
       preds "?"
-         if x22_facing_someone [0 0 CR2S CR3S]
+         if 2x2_facing_someone [0 0 CR2S CR3S]
          if always             [0 0 ZM2N ZM3N]
 
 call "_turn and Q part 2" dontshow tag turn_and_q_2
@@ -10903,10 +10922,10 @@ call "_turn and Q part 2" dontshow tag turn_and_q_2
       /* If we are doing "split turn and Q", we need to be careful, so we place
          a 2x2 definition here that is sensitive to people being T-boned. */
       preds "?"
-         if x22_facing_someone      [CR0E AL1W AL2W CR3E]  /* Back-to-back with them, actually. */
-         if x22_tandem_with_someone [CR0E AL1W AL2W CR3E]  /* This can happen also. */
+         if 2x2_facing_someone      [CR0E AL1W AL2W CR3E]
+         if 2x2_tandem_with_someone [CR0E AL1W AL2W CR3E]  // This can happen also.
          if always                  [CR0E AL1W ZM2N ZM3N]
-   setup 1x2 1x2        /* This is quarter in, of course. */
+   setup 1x2 1x2        // This is quarter in, of course.
       array [CR0E AL1W]
 
 call "turn and Q" c4a
@@ -11406,16 +11425,24 @@ call "centers@C run" mainstream tag ctrrun
    setup 4x1 1x4
       array [ZM1N    0 ZM3N    0]
             alternate_definition [half] mainstream
-   setup 1x4 2x2
+   setup 1x4 2x2 qualifier couples_only
       array [ZM3N AL0W ZM2N CR1E]
+   setup 1x4 2x2 qualifier miniwaves
+      array [ZM0N AL0W ZM1N CR1E]
             alternate_definition [cross] mainstream
    setup 1x4 1x4
       array [ZM1N CR2S ZM3N AL0S]
    setup 4x1 1x4
       array [ZM1N    0 ZM3N    0]
-            alternate_definition [cross half] c1
-   setup 1x4 2x2
+            alternate_definition [cross half] mainstream
+   setup 1x4 2x2 qualifier wave_only
       array [ZM3N CR1E ZM2N AL0W]
+   setup 1x4 2x2 qualifier 1fl_only
+      array [ZM3N CR1E ZM2N AL0W]
+   setup 1x4 2x2 qualifier 2fl_only
+      array [ZM1N CR1E ZM1N AL0W]
+   setup 1x4 2x2 qualifier magic_only
+      array [ZM1N CR1E ZM1N AL0W]
             alternate_definition [cross grand] c3a
    setup 1x6 1x6
       array [ZM1N CR5S AL0S ZM4N AL2S CR3S]
@@ -11430,6 +11457,31 @@ call "centers@C run" mainstream tag ctrrun
       array [ZM5N CR1E AL0W ZM3N AL1W CR2E]
    setup 1x8 2x4
       array [ZM7N CR1E CR2E AL0W ZM4N AL2W AL1W CR3E]
+
+call "ends@C run" mainstream
+   setup 1x4 1x4
+      array [CR1S ZM0N AL3S ZM2N]
+   setup 4x1 1x4
+      array [0    ZM0N 0    ZM2N]
+            alternate_definition [half] mainstream
+   setup 1x4 2x2 qualifier couples_only
+      array [CR0E ZM3N AL1W ZM2N]
+   setup 1x4 2x2 qualifier miniwaves
+      array [CR0E ZM0N AL1W ZM1N]
+            alternate_definition [cross] mainstream
+   setup 1x4 1x4
+      array [CR3S ZM0N AL1S ZM2N]
+   setup 4x1 1x4
+      array [0    ZM0N 0    ZM2N]
+            alternate_definition [cross half] mainstream
+   setup 1x4 2x2 qualifier wave_only
+      array [CR1E ZM3N AL0W ZM2N]
+   setup 1x4 2x2 qualifier 1fl_only
+      array [CR1E ZM3N AL0W ZM2N]
+   setup 1x4 2x2 qualifier 2fl_only
+      array [CR1E ZM0N AL0W ZM1N]
+   setup 1x4 2x2 qualifier magic_only
+      array [CR1E ZM0N AL0W ZM1N]
 
 call "_centers cross run in right wave" dontshow tag ctrxrun_in_rw
             left_means_mirror
@@ -11514,11 +11566,17 @@ call "@6@C kickoff" c2 tag designeeskick
          if select [CR3W CR2W AL1E AL0E]
          if always [CM1E AM0W AM3W CM2E]
 
-call "centers cross kickoff" c2
+call "centers@C kickoff" c2
+   setup 1x4 1x4
+      array [CM1E AL0E AM3W CR2W]
+            alternate_definition [cross] c2
    setup 1x4 1x4
       array [CM1E CR2W AM3W AL0E]
 
-call "ends cross kickoff" c2
+call "ends@C kickoff" c2
+   setup 1x4 1x4
+      array [CR1W AM0W AL3E CM2E]
+            alternate_definition [cross] c2
    setup 1x4 1x4
       array [CR3W AM0W AL1E CM2E]
 
@@ -12631,7 +12689,7 @@ call "_leads wheel" dontshow tag leadswheel
    setup 2x2 2x2
       preds "???"
          // This way, if someone is looking out and is next to a phantom, they wheel.
-         if x22_miniwave [ZM0N ZM1N ZM2N ZM3N]
+         if 2x2_miniwave [ZM0N ZM1N ZM2N ZM3N]
          if always       [AL1S AL0S ZM2N ZM3N]
             alternate_definition [single] c4
    setup 2x1 1x2 restriction all_facing_same
@@ -12995,8 +13053,8 @@ call "@1@7 like a @8recoil" c3a tag recoil
             reverse_means_mirror cross_is_inherited
    setup 2x2 2x2 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
-         if x22_miniwave [CR2N AL3N AM2S CM3S]
-         if x22_couple   [0    0    CR0S CM3S]
+         if 2x2_miniwave [CR2N AL3N AM2S CM3S]
+         if 2x2_couple   [0    0    CR0S CM3S]
          if always       [CR2N 0    0    CM3S]
             alternate_definition [cross] c3a
    setup 2x2 2x2 restriction forbidden not_tboned
@@ -15360,8 +15418,8 @@ call "_finish splash @h" dontshow tag finsplashdir
       preds "Illegal direction."
          if rightp   [0 0 0 CR3E CR4E 0 0 0]
          if leftp    [0 0 0 AL3W AL4W 0 0 0]
-         if inp      [0 0 0 CR3E CR4E 0 0 0]
-         if outp     [0 0 0 AL3W AL4W 0 0 0]
+         if inp      [0 0 0 CR3E AL4W 0 0 0]
+         if outp     [0 0 0 AL3W CR4E 0 0 0]
          if no_dir_p [0 0 0 ZM3N ZM4N 0 0 0]
          if backp    [0 0 0   3S   4S 0 0 0]
             alternate_definition [1x3] c4
@@ -15371,8 +15429,8 @@ call "_finish splash @h" dontshow tag finsplashdir
       preds "Illegal direction."
          if rightp   [0 CR1E CR2E CR3E CR4E CR5E CR6E 0]
          if leftp    [0 AL1W AL2W AL3W AL4W AL5W AL6W 0]
-         if inp      [0 CR1E CR2E CR3E CR4E CR5E CR6E 0]
-         if outp     [0 AL1W AL2W AL3W AL4W AL5W AL6W 0]
+         if inp      [0 CR1E CR2E CR3E AL4W AL5W AL6W 0]
+         if outp     [0 AL1W AL2W AL3W CR4E CR5E CR6E 0]
          if no_dir_p [0 ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N 0]
          if backp    [0   1S   2S   3S   4S   5S   6S 0]
 
@@ -15733,9 +15791,11 @@ call "_finish chain the square" dontshow tag fin_chain_square
 
 call "chain the square" c2
             left_means_mirror first_part_visible bigmatrix_is_inherited
-            twisted_is_inherited magic_is_inherited
-   seq passthru [inherit_twisted inherit_magic inherit_bigmatrix]
-   seq fin_chain_square [inherit_left inherit_bigmatrix]
+            twisted_is_inherited magic_is_inherited funny_is_inherited
+   seq passthru [inherit_left inherit_twisted inherit_magic inherit_funny inherit_bigmatrix]
+   // We do the usual "funny" trick -- inherit it to everything so
+   // it will only be legal if you say "initially funny".
+   seq fin_chain_square [inherit_left inherit_funny inherit_bigmatrix]
 
 call "turn away" c4a
             left_means_mirror
@@ -15886,8 +15946,8 @@ call "rotary @2spin@3" c1
             magic_is_inherited funny_is_inherited single_is_inherited
             grand_is_inherited nxn_is_inherited bigmatrix_is_inherited
    seq passthru [inherit_left inherit_twisted inherit_magic inherit_funny inherit_bigmatrix]
-   /* We do the usual "funny" trick -- inherit it to everything so it will
-      only be legal if you say "initially funny". */
+   // We do the usual "funny" trick -- inherit it to everything so
+   // it will only be legal if you say "initially funny".
    seq fin_rot_spin [inherit_left inherit_funny inherit_single
                      inherit_nxn inherit_bigmatrix inherit_grand]
 
@@ -17245,8 +17305,8 @@ call "_horseshoe centers" dontshow tag partnertag_w_cross
             alternate_definition [funny] c2
    setup 2x2 2x2
       preds "???"
-         if x22_miniwave [CM1E AM0W AM3W CM2E]
-         if x22_couple   [CM1E AM0W AM3W CM2E]
+         if 2x2_miniwave [CM1E AM0W AM3W CM2E]
+         if 2x2_couple   [CM1E AM0W AM3W CM2E]
          if always       [ZM0N ZM1N ZM2N ZM3N]
             alternate_definition [cross] c3x
    setup 2x2 2x2
@@ -17436,6 +17496,11 @@ call "slim down" c4a tag slimdown
       array [ZM6W ZM7W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W]
    setup 4x2 2x4 rotate
       array [ZM6W ZM7W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W]
+   setup 4x4 4x4
+      preds "???"
+         if quad_person_cw  [0 ZM3N ZM7N ZM14N 0 ZM7N ZM11N ZM2N 0 ZM11N ZM15N ZM6N 0 ZM15N ZM3N ZM10N]
+         if quad_person_ccw [0 ZM3N ZM7N ZM1N  0 ZM7N ZM11N ZM5N 0 ZM11N ZM15N ZM9N 0 ZM15N ZM3N ZM13N]
+         if always          [0 ZM3N ZM7N    0  0 ZM7N ZM11N    0 0 ZM11N ZM15N    0 0 ZM15N ZM3N     0]
             alternate_definition [single] c4
    setup dmd dmd rotate
       array [ZM3W ZM0W ZM1W ZM2W]
@@ -17641,6 +17706,8 @@ call "circulate" mainstream tag circulate
       array [0 ZM2N 0 CR4E AL5W 0 ZM7N 0]
    setup 4x2 spindle
       array [ZM0N ZM1N ZM2N CR3E AL3W ZM4N ZM5N ZM6N]
+   setup c1phan crosswave rotate
+      array [CR0N 0 CR1N 0 0 AL0S 0 AL1S ZM2W 0 ZM3W 0 0 ZM6W 0 ZM7W]
    setup 2x3 1x6 qualifier in in_or_out
       array [0 0 0 ZM4N ZM2N ZM0N]
    setup 2x3 1x2dmd rotate qualifier right wave_only
@@ -18066,7 +18133,7 @@ call "split grand chain 8" c2
             sequence_starter left_means_mirror rear_back_from_r_wave
    setup 2x2 2x2 // qualifier live tbone none >> fails vg01t <<
       preds "Can't tell which way my adjacent end is facing."
-         if x22_facing_someone [0 0 AL0S  AL1S]
+         if 2x2_facing_someone [0 0 AL0S  AL1S]
          if always             [0 0 CAL1W AL0E]
             alternate_definition [twisted] c4
    setup trngl4 2x2

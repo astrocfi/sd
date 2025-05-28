@@ -48,14 +48,14 @@ Then choose the poster child.  Do "do_index <number>".
 It is important that this be done before "new_binary" is run, because
 the manual and faq files are now wrapped into the binary distribution file.
 
-LOG OUT OF THE NETWORK ACCOUNT!!!!!   LOG IN IN THE LOCAL DOMAIN!!!!
+WARNING!!!!!  These scripts require "tar".  I have put tar.exe and
+cygwinB19.dll into the \bin directory.  It would probably be good to
+put a better (i.e. real cygwin) version in there.
 
-BE SURE THAT THE "CYGWIN" LIBRARY IS IN THE PATH!!!
-Do "setcygwin" or "setcygnus" as appropriate.
-The "uufix" program requires it.  Not to mention "make".
 
 Go to sddoc directory and do:
 
+    setmingw
     do_plain
     do_ps
     do_pdf
@@ -124,6 +124,8 @@ Go to sddoc directory and do:
    cd ..\sddoc
    new_binary     (this depends on all documentation, binaries, and database)
    del foo*       // be sure not to upload junk
+   REMEMBER TO KEEP THE SDDOC DIRECTORY CLEAR OF SUPERFLUOUS HTML AND TXT FILES!
+   All html and txt files get uploaded.
    do_pack        (this depends on all of the above)
 
 -----------------------------------------------------------------

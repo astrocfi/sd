@@ -22,6 +22,7 @@ del relnotes.html
 del relnotes98.html
 del relnotes.txt
 del relnotes98.txt
+del faq.html
 del appnote*.html
 del appnote*.txt
 del demo.html

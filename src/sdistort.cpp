@@ -224,7 +224,7 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
 
       ss->rotation += rot;
       canonicalize_rotation(ss);
-      /* Now the empty spot is in the lower-left corner. */
+      // Now the empty spot is in the lower-left corner.
       if ((!ss->people[0].id1) || (!ss->people[1].id1) || (!ss->people[2].id1))
          goto losing;
 
@@ -379,7 +379,7 @@ static void innards(
 
    // If this is a special map that flips some setup upside-down, do so.
 
-   if (arity <= 4) {      /* For arity >= 5, real rotation creeps into those bits. */
+   if (arity <= 4) {      // For arity >= 5, real rotation creeps into those bits.
       if (rot & 0x200) {
          z[0].rotation += 2;
          canonicalize_rotation(&z[0]);
@@ -419,10 +419,10 @@ static void innards(
       goto noniso1;
    }
 
-   /* If the starting map is of kind MPKIND__NONE, we will be in serious trouble unless
-      the final setups are of the same kind as those shown in the map.  Fix_n_results
-      has a tendency to try to turn diamonds into 1x4's whenever it can, that is,
-      whenever the centers are empty.  We tell it not to do that if it will cause problems. */
+   // If the starting map is of kind MPKIND__NONE, we will be in serious trouble unless
+   // the final setups are of the same kind as those shown in the map.  Fix_n_results
+   // has a tendency to try to turn diamonds into 1x4's whenever it can, that is,
+   // whenever the centers are empty.  We tell it not to do that if it will cause problems.
 
    if (fix_n_results(arity,
                      (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : -1,
@@ -432,82 +432,87 @@ static void innards(
       return;
    }
 
-   if (!(rotstate & 0xF03) && map_kind == MPKIND__SPLIT) {
-      if (!(rotstate & 0x0F0))
-         fail("Can't do this orientation changer.");
-      if (rotstate == 0x020) z[0].rotation++;
-      map_kind = MPKIND__NONISOTROPIC;
-   }
-   else if (map_kind == MPKIND__NONISOTROPIC) {
-      if (!(rotstate & 0xF30)) {
-         uint32 myrot, zzrot;
+   if (arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4)) {
 
-         if (!(rotstate & 0x00F))
-            fail("Can't do this orientation changer.");
-
-         for (i=0,myrot=rot; i<arity; i++,myrot>>=2) {
-            z[i].rotation += myrot&3;
-            canonicalize_rotation(&z[i]);
-         }
-
-         zzrot = 0;
-
-         for (i=0; i<arity; i++) {
-            zzrot <<= 2;
-            zzrot |= z[i].rotation & 3;
-         }
-
-         if (zzrot == 0) {
-            map_kind = MPKIND__SPLIT;
-            rot = 0;
-            direct_putback = true;
-         }
-         else {
-            /* Put them back. */
-            for (i=0,myrot=rot; i<arity; i++,myrot>>=2) {
-               z[i].rotation -= myrot&3;
-               canonicalize_rotation(&z[i]);
-            }
-         }
-      }
-      else if (!(rotstate & 0xF03)) {
-
-         // Not sure what we need to do here.....
-
+      if (!(rotstate & 0xF03) && map_kind == MPKIND__SPLIT) {
          if (!(rotstate & 0x0F0))
             fail("Can't do this orientation changer.");
+         if (rotstate == 0x020) z[0].rotation++;
+         map_kind = MPKIND__NONISOTROPIC;
+      }
+      else if (map_kind == MPKIND__NONISOTROPIC) {
+         if (!(rotstate & 0xF30)) {
+            uint32 myrot, zzrot;
 
-         map_kind = MPKIND__SPLIT;
+            if (!(rotstate & 0x00F))
+               fail("Can't do this orientation changer.");
 
-         // We need to undo the misrepresentation of the rotation
-         // of the middle setup(s) that took place in the incoming map.
-         // But fix_n_results already did it in a brute-force way, by forcing
-         // rot(1) to be rot(0).  Now, if the map is MPKIND__NONISOTROPIC,
-         // the center setup was rotated CCW at the start.  So it needs to be
-         // rotated CW to fix it.  If rot(0) was 0, rot(1) was 1, so forcing it
-         // to be the same as rot(0) effectively rotated it CCW, which is
-         // wrong.  If rot(0) was 1, rot(1) was 0, so forcing it to be the same
-         // as rot(0) effectively rotated it CW, which is correct.  Therefore,
-         // if rot(0) is 0, setup 1 is off by 180 degrees.
-         if ((z[0].rotation&3) == 0) {
-            z[1].rotation += 2;
-            if (arity == 4) z[2].rotation += 2;
+            for (i=0,myrot=rot; i<arity; i++,myrot>>=2) {
+               z[i].rotation += myrot&3;
+               canonicalize_rotation(&z[i]);
+            }
+
+            zzrot = 0;
+
+            for (i=0; i<arity; i++) {
+               zzrot <<= 2;
+               zzrot |= z[i].rotation & 3;
+            }
+
+            if (zzrot == 0) {
+               map_kind = MPKIND__SPLIT;
+               rot = 0;
+               direct_putback = true;
+            }
+            else {
+               // Put them back.
+               for (i=0,myrot=rot; i<arity; i++,myrot>>=2) {
+                  z[i].rotation -= myrot&3;
+                  canonicalize_rotation(&z[i]);
+               }
+            }
          }
+         else if (!(rotstate & 0xF03)) {
 
-         direct_putback = true;
+            // Not sure what we need to do here.....
+
+            if (!(rotstate & 0x0F0))
+               fail("Can't do this orientation changer.");
+
+            map_kind = MPKIND__SPLIT;
+
+            // We need to undo the misrepresentation of the rotation
+            // of the middle setup(s) that took place in the incoming map.
+            // But fix_n_results already did it in a brute-force way, by forcing
+            // rot(1) to be rot(0).  Now, if the map is MPKIND__NONISOTROPIC,
+            // the center setup was rotated CCW at the start.  So it needs to be
+            // rotated CW to fix it.  If rot(0) was 0, rot(1) was 1, so forcing it
+            // to be the same as rot(0) effectively rotated it CCW, which is
+            // wrong.  If rot(0) was 1, rot(1) was 0, so forcing it to be the same
+            // as rot(0) effectively rotated it CW, which is correct.  Therefore,
+            // if rot(0) is 0, setup 1 is off by 180 degrees.
+            if ((z[0].rotation&3) == 0) {
+               z[1].rotation += 2;
+               if (arity == 4) z[2].rotation += 2;
+            }
+
+            direct_putback = true;
+         }
       }
    }
 
    main_rotation = z[0].rotation;
+   /*
    if (arity == 2 && (z[0].kind == s_trngl || z[0].kind == s_trngl4) && (rot & 0x200))
       main_rotation += 2;
+   */
    main_rotation &= 3;
 
-   /* Set the final result_flags to the OR of everything that happened.
-      The elongation stuff doesn't matter --- if the result is a 2x2
-      being done around the outside, the procedure that called us
-      (basic_move) knows what is happening and will fix that bit.
-      Also, check that the "did_last_part" bits are the same. */
+   // Set the final result_flags to the OR of everything that happened.
+   // The elongation stuff doesn't matter --- if the result is a 2x2
+   // being done around the outside, the procedure that called us
+   // (basic_move) knows what is happening and will fix that bit.
+   // Also, check that the "did_last_part" bits are the same.
 
    result->result_flags = get_multiple_parallel_resultflags(z, arity);
 
@@ -533,17 +538,17 @@ static void innards(
       no_reuse_map = true;
    }
 
-   /* Some maps (the ones used in "triangle peel and trail") do not want the result
-      to be reassembled, so we get out now.  These maps are indicated by arity = 1
-      and warncode = 1. */
+   // Some maps (the ones used in "triangle peel and trail") do not want the result
+   // to be reassembled, so we get out now.  These maps are indicated by arity = 1
+   // and warncode = 1.
 
    if (arity == 1 && maps->warncode == 1) {
       *result = z[0];
       goto getout;
    }
    else if (do_second_only) {
-      /* This was a T-boned "phantom lines" in which people were
-         in the center lines only. */
+      // This was a T-boned "phantom lines" in which people were
+      // in the center lines only.
       *result = z[1];
       goto getout;
    }
@@ -553,6 +558,112 @@ static void innards(
        map_kind == MPKIND__CONCPHAN) {
       if (result->result_flags.split_info[vert & 1])
          warn(warn__did_not_interact);
+   }
+
+   // Triangles are extremely complicated.  Past attempts to handle them "elegantly"
+   // have not been very successful.  So we do things on a case-by-case basis, untl
+   // we can figure out another Grand Unified Theory.
+
+   if (arity == 2 && z[0].kind == s_trngl4 && ((z[0].rotation ^ z[1].rotation) & 3) == 2) {
+      uint32 r = (z[0].rotation + rot) & 3;
+      result->rotation = 0;
+
+      if (r == 2 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0);
+         result->rotation = 1;
+         goto got_map;
+      }
+      else if (r == 0 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__SPLIT,0);
+         goto got_map;
+      }
+      else if (r == 1 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__SPLIT,1);
+         goto got_map;
+      }
+      else if (r == 3 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,1);
+         goto got_map;
+      }
+      else if (r == 1 && vert == 1 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0);
+         goto got_map;
+      }
+      else if (r == 3 && vert == 1 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__SPLIT,0);
+         goto got_map;
+      }
+      else if (r == 1 && vert == 1 && map_kind == MPKIND__OFFS_R_HALF) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,0);
+         result->rotation = 1;
+         goto got_map;
+      }
+      else if (r == 3 && vert == 1 && map_kind == MPKIND__OFFS_L_HALF) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF,0);
+         result->rotation = 1;
+         goto got_map;
+      }
+      else if (r == 3 && vert == 1 && map_kind == MPKIND__OFFS_R_HALF) {
+         final_mapcode = spcmap_rh_zzztgl;
+         result->rotation = 1;
+         goto got_map;
+      }
+      else if (r == 1 && vert == 1 && map_kind == MPKIND__OFFS_L_HALF) {
+         final_mapcode = spcmap_lh_zzztgl;
+         result->rotation = 1;
+         goto got_map;
+      }
+      else if (r == 1 && vert == 0 && map_kind == MPKIND__REMOVED) {
+         final_mapcode = spcmap_p8_tgl4;
+         goto got_map;
+      }
+      else if (r == 3 && vert == 0 && map_kind == MPKIND__REMOVED) {
+         final_mapcode = MAPCODE(s_trngl4,2,MPKIND__REMOVED,1);
+         goto got_map;
+      }
+      else
+         fail("Can't do this orientation changer.");
+   }
+   else if (arity == 2 && z[0].kind == s_trngl && ((z[0].rotation ^ z[1].rotation) & 3) == 2) {
+      uint32 r = (z[0].rotation + rot) & 3;
+      result->rotation = 0;
+
+      if (r == 2 && vert == 1 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,1);
+         goto got_map;
+      }
+      else if (r == 1 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__SPLIT,1);
+         result->rotation = 1;
+         goto got_map;
+      }
+      else if (r == 0 && vert == 1 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__SPLIT,1);
+         result->rotation = 1;
+         goto got_map;
+      }
+      else if (r == 3 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,1);
+         goto got_map;
+      }
+      else if (r == 0 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__SPLIT,0);
+         goto got_map;
+      }
+      else if (r == 2 && vert == 0 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,0);
+         goto got_map;
+      }
+      else if (r == 3 && vert == 1 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__SPLIT,0);
+         goto got_map;
+      }
+      else if (r == 1 && vert == 1 && map_kind == MPKIND__SPLIT) {
+         final_mapcode = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,0);
+         goto got_map;
+      }
+      else
+         fail("Can't do this orientation changer.");
    }
 
    // See if we can put things back with the same map we used before.
@@ -575,19 +686,20 @@ static void innards(
    switch (map_kind) {
       case MPKIND__4_EDGES:
       case MPKIND__4_QUADRANTS:
-         /* These particular maps misrepresent the rotation of subsetups 2 and 4, so
-            we have to repair things when a shape-changer is called. */
+         // These particular maps misrepresent the rotation of subsetups 2 and 4, so
+         // we have to repair things when a shape-changer is called.
          z[1].rotation += 2;
          z[3].rotation += 2;
          break;
       case MPKIND__ALL_8:
       case MPKIND__NONISOTROPIC:
-         /* These particular maps misrepresent the rotation of subsetup 2, so
-            we have to repair things when a shape-changer is called. */
-         /* But we don't do it if the funny nonisotropic stuff is being done. */
+         // These particular maps misrepresent the rotation of subsetup 2, so
+         // we have to repair things when a shape-changer is called.
+         //
+         // But we don't do it if the funny nonisotropic stuff is being done.
          if ((z[0].rotation&3) != 0 && !(rotstate & 0x0F0)) {
             z[1].rotation += 2;
-            /* These misrepresent both setups 2 and 3. */
+            // These misrepresent both setups 2 and 3.
             if (arity == 4 && map_kind == MPKIND__NONISOTROPIC) z[2].rotation += 2;
          }
          break;
@@ -600,7 +712,7 @@ static void innards(
    }
 
    for (i=0; i<arity; i++) {
-      z[i].rotation += (rot & 1) + vert;
+      z[i].rotation += (rot & 3) + vert;
       canonicalize_rotation(&z[i]);
    }
 
@@ -624,13 +736,13 @@ static void innards(
          }
       }
 
-      /* Now "before_distance" is the height of the starting setup in the direction in
-         which the setups are adjoined, taking setup rotation into account.  "After_distance"
-         is the height of the ending setups in that direction. */
+      // Now "before_distance" is the height of the starting setup in the direction in
+      // which the setups are adjoined, taking setup rotation into account.  "After_distance"
+      // is the height of the ending setups in that direction.
 
-      /* Check for special case of matrix stuff going to hourglasses or galaxies.
-         We are not prepared to say how wide these setups are, but, if only the center
-         diamond/box is occupied, we can do it. */
+      // Check for special case of matrix stuff going to hourglasses or galaxies.
+      // We are not prepared to say how wide these setups are, but, if only the center
+      // diamond/box is occupied, we can do it.
 
       if (arity == 2 && map_kind == MPKIND__SPLIT && before_distance == 2) {
          if (z[0].kind == s_hrglass && z[0].rotation == 1) {
@@ -657,25 +769,28 @@ static void innards(
 
       if (before_distance == 0 || after_distance == 0) fail("Can't use matrix with this concept or setup.");
 
-      /* Could this happen?  Could we really be trying to get out with a different
-         setup than that with which we got in, but the setups have the same bounding
-         box (taking rotation into account)?  Won't the test above, that checks for
-         use of the same getout map, always catch this error?  We need the test here
-         for something like, from normal diamonds, "work matrix in each diamond, and
-         drop in".  The 2x2 and diamond setups have the same height. */
+      // Could this happen?  Could we really be trying to get out with a different
+      // setup than that with which we got in, but the setups have the same bounding
+      // box (taking rotation into account)?  Won't the test above, that checks for
+      // use of the same getout map, always catch this error?  We need the test here
+      // for something like, from normal diamonds, "work matrix in each diamond, and
+      // drop in".  The 2x2 and diamond setups have the same height.
 
-      if (before_distance == after_distance && !deadconc) fail("Unnecessary use of matrix concept.");
+      if (before_distance == after_distance && !deadconc)
+         fail("Unnecessary use of matrix concept.");
 
-      /* If the setups are 50% overlapped, make the appropriate adjustment. */
+      // If the setups are 50% overlapped, make the appropriate adjustment.
 
       if (map_kind == MPKIND__OVERLAP) before_distance >>= 1;
       else if (map_kind != MPKIND__SPLIT) fail("Can't use matrix with this concept.");
 
-      /* "Before_distance" is now the distance between flagpole centers of the virtual setups.
-         See what kind of fudging we have to do to get the before and after distances to match.
-         This may involve 50% overlapping of the result setups, or moving them far apart and putting
-         empty setups into the resulting space.  Ideally we would like to have tables of maps indexed
-         by the required distance, so we don't have to do this junky stuff. */
+      // "Before_distance" is now the distance between flagpole centers of the
+      // virtual setups.  See what kind of fudging we have to do to get the
+      // before and after distances to match.  This may involve 50% overlapping
+      // of the result setups, or moving them far apart and putting empty setups
+      // into the resulting space.  Ideally we would like to have tables of maps
+      // indexed by the required distance, so we don't have to do this junky
+      // stuff.
 
       if (before_distance == after_distance) {
          map_kind = MPKIND__SPLIT;
@@ -821,36 +936,6 @@ static void innards(
       goto got_map;
    }
 
-   if (arity == 2 &&
-       z[0].kind == s_trngl4 &&
-       (z[0].rotation & 1) == 0 &&
-       ((z[0].rotation ^ z[1].rotation) & 2)) {
-      if ((z[0].rotation + rot) & 2) {
-         if (map_kind == MPKIND__OFFS_L_HALF) {
-            final_mapcode = spcmap_lh_zzztgl;
-            result->rotation = z[0].rotation-1+(rot&2);
-            goto got_map;
-         }
-         else if (map_kind == MPKIND__OFFS_R_HALF) {
-            final_mapcode = MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,0);
-            result->rotation = z[0].rotation-1+(rot&2);
-            goto got_map;
-         }
-      }
-      else {
-         if (map_kind == MPKIND__OFFS_L_HALF) {
-            final_mapcode = MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF,0);
-            result->rotation = z[0].rotation+1+(rot&2);
-            goto got_map;
-         }
-         else if (map_kind == MPKIND__OFFS_R_HALF) {
-            final_mapcode = spcmap_rh_zzztgl;
-            result->rotation = z[0].rotation+1+(rot&2);
-            goto got_map;
-         }
-      }
-   }
-
    if (arity == 1 && z[0].kind == s_c1phan) {
       uint32 livemask = 0;
 
@@ -885,35 +970,8 @@ static void innards(
       }
    }
 
-   if (map_kind == MPKIND__REMOVED && arity == 2 &&
-       (z[0].rotation & 1) &&
-       (z[0].kind == s_trngl4 ||z[0].kind == s_trngl) == 1) {
-      if (z[0].rotation & 2) {
-         goto get_coded_map;
-      }
-      if ((z[1].rotation & 2) && z[0].kind == s_trngl4) {
-         final_mapcode = spcmap_p8_tgl4;
-         goto got_map;
-      }
-   }
-
-   if (map_kind == MPKIND__SPLIT && (z[0].kind == s_trngl || z[0].kind == s_trngl4)) {
-      if (z[0].rotation & 2)
-         map_kind = MPKIND__NONISOTROP1;
-      else if (z[1].rotation & 2) {
-         ;
-      }
-      else
-         map_kind = MPKIND__NONE;   /* Raise an error. */
-   }
-   else if (arity == 2) {
-      if (z[0].rotation & 2)
-         map_kind = MPKIND__NONE;   /* Raise an error. */
-      else if (z[1].rotation & 2)
-         map_kind = MPKIND__NONE;   /* Raise an error. */
-   }
-
-   get_coded_map:
+   if (arity == 2 && (z[0].rotation | z[1].rotation) & 2)
+      map_kind = MPKIND__NONE;   // Raise an error.
 
    if (map_kind == MPKIND__NONE)
       fail("Can't do this shape-changing call here.");
@@ -931,7 +989,7 @@ static void innards(
       }
       else if (map_kind == MPKIND__OFFS_L_FULL || map_kind == MPKIND__OFFS_R_FULL) {
          if (final_map->outer_kind == s2x8) warn(warn__full_pgram);
-         else final_map = 0;        /* Raise an error. */
+         else final_map = 0;        // Raise an error.
       }
    }
 
@@ -950,8 +1008,8 @@ static void innards(
       }
 
       if (arity == 2 && z[0].kind == s4x4 && map_kind == MPKIND__SPLIT) {
-         /* We allow the special case of appending two 4x4's, if the real people
-            (this includes active phantoms!) can fit inside a 4x4 or 2x8. */
+         // We allow the special case of appending two 4x4's, if the real people
+         // (this includes active phantoms!) can fit inside a 4x4 or 2x8.
          if (z[0].people[0].id1 | z[0].people[4].id1 |
              z[0].people[5].id1 | z[0].people[6].id1 |
              z[0].people[8].id1 | z[0].people[12].id1 |
@@ -992,8 +1050,10 @@ static void innards(
    if (final_mapcode == spcmap_tgl4_2)
       result->rotation += 2;
 
-   if ((z[0].rotation & 1) && (final_map->rot & 1))
-      result->rotation = 0;
+   if ((z[0].rotation & 1) && (final_map->rot & 1)) {
+      if (z[0].kind != s_trngl && z[0].kind != s_trngl4)
+         result->rotation = 0;
+   }
    else if (arity == 2 &&
             z[0].rotation == 2 &&
             z[1].rotation == 0 &&
@@ -1002,8 +1062,8 @@ static void innards(
 
    result->rotation -= vert;
 
-   /* A few maps require that a warning be given. */
-   /* Code 1 is used elsewhere, for "triangle peel and trail". */
+   // A few maps require that a warning be given.
+   // Code 1 is used elsewhere, for "triangle peel and trail".
    if (final_map->warncode == 2) warn(warn__offset_gone);
    if (final_map->warncode == 3) warn(warn__overlap_gone);
    if (final_map->warncode == 4) warn(warn__check_hokey_4x4);
@@ -1189,17 +1249,17 @@ extern void divided_setup_move(
    }
 
    if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
-      /* Pass it through. */
+      // Pass it through.
    }
    else if (recompute_id) {
       t.assumption = cr_none;
    }
    else {
-      /* Fix a few things.  *** This probably needs more work. */
-      /* Is this the right way to do it?  Absolutely not!  Will fix soon. */
+      // Fix a few things.  *** This probably needs more work.
+      // Is this the right way to do it?  Absolutely not!  Will fix soon.
 
       if (ss->kind == s2x2 && kn == s1x2 && t.assumption == cr_magic_only)
-         t.assumption = cr_wave_only;    /* Only really correct if splitting into couples, not if into tandems.  Sigh... */
+         t.assumption = cr_wave_only;    // Only really correct if splitting into couples, not if into tandems.  Sigh...
       else if (ss->kind == s2x2 && kn == s1x2 && t.assumption == cr_li_lo)
          t.assumption = cr_couples_only;
       else if (ss->kind == s2x2 && kn == s1x2 && t.assumption == cr_2fl_only)
@@ -1220,10 +1280,10 @@ extern void divided_setup_move(
       phancontrol == phantest_ctr_phantom_line && !vflags[0],
       x, result);
 
-   /* "Innards" has returned with the splitting info correct for the subcalls, but
-      not taking into account the incoming rotation in "ss->rotation".  We need to
-      add onto that the splitting that we have just done, which also does not take
-      the incoming rotation into account. */
+   // "Innards" has returned with the splitting info correct for the subcalls, but
+   // not taking into account the incoming rotation in "ss->rotation".  We need to
+   // add onto that the splitting that we have just done, which also does not take
+   // the incoming rotation into account.
 
    // But first, if the map rotation was odd, we need to swap the pre-existing
    // split fields.
@@ -1276,13 +1336,13 @@ extern void divided_setup_move(
       }
    }
 
-   /* Now we reinstate the incoming rotation, which we have completely ignored up until
-      now.  This will give the result "absolute" orientation.  (That is, absolute
-      relative to the incoming "ss->rotation".  Some procedure (like a recursive call
-      from ourselves) could have stripped that out.)
+   // Now we reinstate the incoming rotation, which we have completely ignored up until
+   // now.  This will give the result "absolute" orientation.  (That is, absolute
+   // relative to the incoming "ss->rotation".  Some procedure (like a recursive call
+   // from ourselves) could have stripped that out.)
 
-      This call will swap the SPLIT_AXIS fields if necessary, so that those fields
-      will show the splitting in "absolute space". */
+   // This call will swap the SPLIT_AXIS fields if necessary, so that those fields
+   // will show the splitting in "absolute space".
 
    reinstate_rotation(ss, result);
 }
@@ -1358,28 +1418,30 @@ static void phantom_2x4_move(
          vflag |= copy_person(&vpeople, i, ss, i);
    }
 
-   /* For certain types of phantom tests, we turn off the testing that we pass to
-      divided_setup_move.  It could give bogus errors, because it only sees the
-      headliners or sideliners at any one time. */
+   // For certain types of phantom tests, we turn off the testing that we pass to
+   // divided_setup_move.  It could give bogus errors, because it only sees the
+   // headliners or sideliners at any one time.
    switch (phantest) {
-      case phantest_both:           /* This occurs on "phantom bigblock lines", for example,
-                                       and is intended to give error "Don't use phantom concept
-                                       if you don't mean it." if everyone is in one variety of
-                                       bigblock setup.  But, in this procedure, we could have
-                                       headliners entirely in one and sideliners in another, so
-                                       that divided_setup_move could be misled. */
-         newphantest = phantest_ok;
-         break;
-      case phantest_first_or_both:  /* This occurs on "phantom lines", for example, and is
-                                       intended to give the smae error as above if only the center
-                                       phantom lines are occupied.  But the headliners might
-                                       occupy just the center phantom lines while the sideliners
-                                       make full use of the concept, so, once again, we have to
-                                       disable it.  In fact, we do better -- we tell
-                                       divided_setup_move to do the right thing if the outer
-                                       phantom setup is empty. */
-         newphantest = phantest_ctr_phantom_line;
-         break;
+   case phantest_both:
+      // This occurs on "phantom bigblock lines", for example,
+      // and is intended to give error "Don't use phantom concept
+      // if you don't mean it." if everyone is in one variety of
+      // bigblock setup.  But, in this procedure, we could have
+      // headliners entirely in one and sideliners in another, so
+      // that divided_setup_move could be misled.
+      newphantest = phantest_ok;
+      break;
+   case phantest_first_or_both:
+      // This occurs on "phantom lines", for example, and is
+      // intended to give the smae error as above if only the center
+      // phantom lines are occupied.  But the headliners might
+      // occupy just the center phantom lines while the sideliners
+      // make full use of the concept, so, once again, we have to
+      // disable it.  In fact, we do better -- we tell
+      // divided_setup_move to do the right thing if the outer
+      // phantom setup is empty.
+      newphantest = phantest_ctr_phantom_line;
+      break;
    }
 
    // Do the E-W facing people.

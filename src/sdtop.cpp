@@ -1345,6 +1345,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s1x8,      cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},
@@ -1367,7 +1369,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
    {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
     {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
-
+   {s1x8,      cr_dmd_ctrs_1f, 4, {1, 3, 7, 5, -1},
+    {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
    {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},
     {0}, {0}, {0}, true, chk_wave},
    {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
@@ -5579,14 +5582,25 @@ void toplevelmove() THROW_DECL
          // Now skip things.
          // First, skip any fractional concept.  Only simple "M/N".
          // Also skip "stretch" and "once removed", and so on.
-         while ((parse_scan->concept->kind == concept_fractional &&
+         // And "add <call>", which requires tracing the subsidiary_root.
+         for ( ;; ) {
+            if ((parse_scan->concept->kind == concept_fractional &&
                  parse_scan->concept->arg1 == 0) ||
+                parse_scan->concept->kind == concept_meta ||
                 parse_scan->concept->kind == concept_once_removed ||
                 parse_scan->concept->kind == concept_stable ||
                 parse_scan->concept->kind == concept_frac_stable ||
                 parse_scan->concept->kind == concept_new_stretch ||
                 parse_scan->concept->kind == concept_old_stretch) {
-            parse_scan = parse_scan->next;
+               parse_scan = parse_scan->next;
+            }
+            else if ((parse_scan->concept->kind == concept_special_sequential &&
+                      parse_scan->concept->arg1 == 0)) {
+               parse_scan = parse_scan->subsidiary_root;
+            }
+            else
+               break;
+
             did_something = true;
          }
 

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2004  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "35.0"
-#define TIME_STAMP "wba@alum.mit.edu  11 Oct 2003 $"
+#define VERSION_STRING "35.1"
+#define TIME_STAMP "wba@alum.mit.edu  22 Feb 2004 $"
 
 /* This defines the following functions:
    sd_version_string

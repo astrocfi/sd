@@ -8,7 +8,9 @@
 @evenheading @thispage @| @|
 @end iftex
 @c %**end of header
+
 Copyright @copyright{} 1996 William B. Ackerman
+
 @unnumberedsec USING THE SDTTY ``SESSION'' FEATURE
 
 Sdtty has extensive mechanisms for managing your sequences

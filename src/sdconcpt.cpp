@@ -2070,17 +2070,30 @@ static void do_concept_do_divided_bones(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   // We expand, first to a bigrig, and then to a dblbone.
-   // Either or both of these may be unnecessary and may fail.
-
    setup tempsetup = *ss;
 
-   do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_END_1X4, false);
-   if (tempsetup.kind == sbigrig) expand::expand_setup(&s_bigrig_dblbone, &tempsetup);
+   if (parseptr->concept->arg2) {
+      // Expand, first to a bigbone, and then to a dblrig.
+      // Either or both of these may be unnecessary or may fail.
 
-   divided_setup_move(&tempsetup,
-                      MAPCODE(s_bone,2,MPKIND__SPLIT,0),
-                      (phantest_kind) parseptr->concept->arg1, true, result);
+      do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_END_2X2, false);
+      if (tempsetup.kind == sbigbone) expand::expand_setup(&s_bigbone_dblrig, &tempsetup);
+
+      divided_setup_move(&tempsetup,
+                         MAPCODE(s_rigger,2,MPKIND__SPLIT,0),
+                         (phantest_kind) parseptr->concept->arg1, true, result);
+   }
+   else {
+      // Expand, first to a bigrig, and then to a dblbone.
+      // Either or both of these may be unnecessary or may fail.
+
+      do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_END_1X4, false);
+      if (tempsetup.kind == sbigrig) expand::expand_setup(&s_bigrig_dblbone, &tempsetup);
+
+      divided_setup_move(&tempsetup,
+                         MAPCODE(s_bone,2,MPKIND__SPLIT,0),
+                         (phantest_kind) parseptr->concept->arg1, true, result);
+   }
 }
 
 
@@ -7185,13 +7198,9 @@ concept_table_item concept_table[] = {
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__NO_STEP | CONCPROP__GET_MASK |
     Nostandard_matrix_phantom,
     do_concept_do_divided_diamonds},                        // concept_do_divided_diamonds
-
-
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK |
     Nostandard_matrix_phantom,
     do_concept_do_divided_bones},                           // concept_do_divided_bones
-
-
    {CONCPROP__STANDARD,
     do_concept_distorted},                                  // concept_distorted
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,

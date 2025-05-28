@@ -1165,6 +1165,17 @@ dblbone     |_____|  6  |  7  |  3  |  2  |_____|_____| 10  | 11  | 15  | 14  |_
 
 
 
+                         _____ _____                         _____ _____
+             _____ _____|     |     |_____ _____ _____ _____|     |     |_____ _____
+            |     |     |  0  |  1  |     |     |     |     | 12  | 13  |     |     |
+dblrig      |  6  |  7  |_____|_____|  3  |  2  | 10  | 11  |_____|_____| 15  | 14  |
+            |_____|_____|     |     |_____|_____|_____|_____|     |     |_____|_____|
+                        |  5  |  4  |                       |  9  |  8  |
+                        |_____|_____|                       |_____|_____|
+
+
+
+
              _____                   _____
             |     |_____ _____ _____|     |
             |  0  |     |     |     |  4  |
@@ -2274,39 +2285,45 @@ unselect_once_rem_from_select
       selected.  Returns FALSE otherwise.  See the descriptions of "select"
       and "select_near_select" above.
 
-x22_miniwave
+2x2_miniwave
       applies to 2x2 only.  Returns TRUE if the lateral partner of the
       person under test is alive and facing the opposite direction.
       Returns FALSE if the lateral partner is a phantom or faces the
       same way or is T-boned.
 
-x22_couple
+2x2_couple
       applies to 2x2 only.  Returns TRUE if the lateral partner of the
       person under test is alive and facing the same direction.  Returns
       FALSE if the lateral partner is a phantom or faces the opposite way
       or is T-boned.
 
-x22_facing_someone
-      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
-      person under test is alive and facing the opposite direction.
-      Returns FALSE if the vertical partner is a phantom or faces the
-      same way or is T-boned.  The name may be misleading.  It is intended
-      to be used to determine if the person being tested is facing someone
-      else's face, but, if the two people are back-to-back, the predicate
-      will also be satisfied.  To get the effect actually implied by the name,
-      you must require everyone to be a trailer.
-
-x22_tandem_with_someone
+2x2_tandem_with_someone
       Applies to 2x2 only.  Returns TRUE if the vertical partner of the
       person under test is alive and facing the same direction.
       Returns FALSE if the vertical partner is a phantom or faces the
       opposite way or is T-boned.
 
-x24_facing_someone
-x24_tandem_with_someone
-      Applies to 2x4 only (lines or columns).  Equivalent to x22_facing_someone
-      or x22_tandem_with_someone, for 2x4's.  Finds the vertical partner in
-      the person's 2x2 box.
+2x2_antitandem
+      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      person under test is alive and facing the opposite direction.
+      Returns FALSE if the vertical partner is a phantom or faces the
+      same way or is T-boned.  That is, either this person is facing
+      someone who is facing him, or is back-to-back with someone who is
+      back-to-back with him.  If you want just the former case, use
+      2x2_facing_someone.
+
+2x2_facing_someone
+      Applies to 2x2 only.  Returns TRUE if this person is a trailer and
+      is facing someone who is alive and facing back at the person.
+      Returns FALSE otherwise.  This is the trailer-restricted version
+      of 2x2_antitandem.
+
+2x4_tandem_with_someone
+2x4_antitandem
+2x4_facing_someone
+      Applies to 2x4 only (lines or columns).  These three are the 2x4
+      versions of the three predicates listed above.  They apply to the
+      2x2 split box that the person under test is in.
 
 columns_someone_in_front
       applies to 3x2 or 4x2 only.  For a 3x2:  Returns TRUE for any of the
@@ -2430,15 +2447,15 @@ lines_magic_couple
       opposite way or is T-boned.
 
 lines_once_rem_miniwave
-      applies to 2x4 lines only.  This is the same as
+      Applies to 2x4 lines only.  This is the same as
       "x14_once_rem_miniwave", but used in a 2x4 setup.
 
 lines_once_rem_couple
-      applies to 2x4 lines only.  This is the same as
+      Applies to 2x4 lines only.  This is the same as
       "x14_once_rem_couple", but used in a 2x4 setup.
 
 lines_tandem
-      applies to 2x4 lines, or the ends of a bone, only.
+      Applies to 2x4 lines, or the ends of a bone, only.
       Returns TRUE if the vertical partner of the person under test is
       alive and facing the same direction.  Returns FALSE if the
       vertical partner is a phantom or faces the opposite way or is T-boned.
@@ -2898,6 +2915,22 @@ three_cw_people
       person and are live, is exactly equal to the specified number.  Returns
       FALSE otherwise.
 
+quad_person_cw
+      Applies to 4x4 only, and is meaningful only for people in the center 2x2
+      of that 4x4.  Any such person has two "nearby end" positions, one for the
+      imagined 2x4 lines that that person is in, and one for the imagined 2x4
+      columns.  These are distinguished by whether they are slightly clockwise
+      from that person, or slightly counterclockwise.  For example, if a person
+      is a lead belle with respect to the center 2x2 box, the "clockwise quad
+      person" is immediately to his right, and the "counterclockwise quad
+      person" is immediately in front.  This returns TRUE if the clockwise quad
+      person is live, and FALSE if a phantom.  No one's facing direction is
+      involved in the calculation.  If the person under test is not in the
+      center 2x2, it will return a random result, but it will not malfunction.
+
+quad_person_ccw
+      Like quad_person_cw, but tests for the presence of the counterclockwise
+      quad person.
 
 
                            APPENDIX B -- RESTRICTIONS
@@ -2978,8 +3011,6 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     all people in the setup facing the same way.
                                     As a qualifier, this can take the "live" modifier.
 
-   1fl_only                         1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
-                                    NO!!!!  Changed the above to
    1fl_only           R/Q           1x3/1x4/1x6/1x8 - a 1FL of 3 or 4 people.  In a 1x6 or
                                     1x8, this is two of same.  That is, in a 1x8, it is
                                     4 people facing consistently, and another 4 facing
@@ -3264,8 +3295,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    qtag_mag_mwv,                    qtag only -- EVERYONE is in a miniwave, but the centers
                                     have opposite handedness to the ends.  "Right/left"
                                     applies to the ends.
-   dmd_ctrs_mwv,                    dmd, trngl, qtag, wqtag, 3dmd, 4dmd, deep2x1dmd,
-                                    ptpd, short6, bone6, spindle, 1x4, 2x3, 2x4 -
+
+   dmd_ctrs_mwv            Q        dmd, trngl, qtag, wqtag, 3dmd, 4dmd, deep2x1dmd,
+                                    ptpd, short6, bone6, spindle, 1x4, 2x3, 2x4, 1x8 -
                                     the centers or base (2, 4, 6, or 8 of them)
                                     are consistently in consistent-handed miniwaves;
                                     other people not checked at all.
@@ -3275,7 +3307,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     For 2x3, it checks center 2, who are of course in
                                     column-like orientation.
                                     For 2x4, the center 4 must be in line-like orientation.
-                                    Use this with "right/left" keyword.
+                                    For 1x8, it checks the centers of each side.  They must
+                                    be in line-like orientation.
+                                    This may be used this with the "right/left" keyword.
                                     This can also be used in a star.  In such a case, it
                                     should be used with "right" or "left".  It will check
                                     that no one is in a star position of the other handedness.
@@ -3298,6 +3332,12 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                   bone6, both the RH and LH versions will pass, so that splitting will
                   take place.
 
+   dmd_ctrs_1f             Q        dmd, 1x4, 1x8 - the centers (2 or 4 of them) are
+                                    in a couple.  For 1x8, it checks the centers of
+                                    each side, and they must be symmetrical, that is,
+                                    one couple facing north and the other south.
+                                    Or something like that.  It may not be correct.
+
    ctr_pts_rh, ctr_pts_lh  Q        qtag, 2x1dmd, hrglass, dhrglass, bone, bone6,
                                        short6, star - the "points of the centers"
                                        (ends of the center line of 4 in qtag or 2x1dmd;
@@ -3308,8 +3348,6 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        For bone6, it tests the center 2.  For a short6,
                                        it tests the "points".  For a star, the people must
                                        not be T-boned, and it tests the "lateral" people.
-
-   dmd_ctrs_1f             Q        dmd, 1x4 - the centers (2 of them) are in a couple
 
    said_triangle           Q        short6/pshort6 - caller said the word "triangle"
    didnt_say_triangle      Q        short6/pshort6 - caller didn't say the word "triangle"
