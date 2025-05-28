@@ -31,11 +31,6 @@
 
 #include "sd.h"
 
-extern long_boolean move_perhaps_with_active_phantoms(
-   setup *ss,
-   restriction_thing *restr_thing_ptr,
-   setup *result);
-
 
 
 Private void innards(

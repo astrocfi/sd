@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.83"
+#define VERSION_STRING "30.84"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -1232,6 +1232,13 @@ void main(int argc, char *argv[])
       }
       else
          goto bad_level;
+   }
+
+   /* We need to take away the "zig-zag" directions if the pevel is below A2. */
+
+   if (calling_level < zig_zag_level) {
+      last_direction_kind = direction_out;
+      direction_names[direction_out+1] = (Cstring) 0;
    }
 
    /* initialize outfile_string to calling-level-specific default outfile */

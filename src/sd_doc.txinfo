@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set sd-version 30.8
-@set Time-stamp: Oct 29, 1994
+@set sd-version 30.84
+@set Time-stamp: Dec 18, 1994
 @set full-manual
 @c %**end of header
 @iftex
@@ -77,6 +77,7 @@ This is the summary table of contents:
 
 * Intro::                       Introduction
 * Getting Started::             Getting started quickly with Sd
+* The Completing Reader for Sdtty:: The Completing Reader for Sdtty
 * Invoking Sd::                 Invoking Sd via Command Line
 * Macintosh Overview::          Overview of the Macintosh Version
 * Calling::                     Calling
@@ -90,7 +91,6 @@ This is the summary table of contents:
 * Misc Advice::                 Miscellaneous Advice and Warnings
 * Customization::               Customization with X Resources
 * Versions::                    Version Numbers
-* Installation::                Building and Installing the Program
 * Copying::                     The GNU General Public License
 
 This is the complete table of contents:
@@ -125,12 +125,11 @@ Calling
 * 1P2P Lines::                    starting with 1P2P lines
 * Just As They Are::              starting with a squared set
 * Entering Calls::              Entering Calls
+* Call Variations::               how to write Call Variations
 * Call Menus::                    call menus
-* Scrolling::                   the call menu scroll bar
-* Call Variations::             how to write Call Variations
+* Scrolling::                     the call menu scroll bar
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Tag/Scoot::                   Tag/Scoot Call Modifications
 * Single/Cross/Left::           The Single, Cross, and Left Modifiers
 * Asymmetric Selectors::        How to Write Asymmetric Sequences
 
@@ -161,6 +160,9 @@ Call Notes
 * Sweeping Direction::          Sweeping Direction
 * C1 Single Rotate::            C1 Single Rotate
 * Spread::                      Spread
+* Flip Back                     Flip Back
+* Face <DIRECTION>              Face <DIRECTION>
+* Snag Circulate                Snag Circulate
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
@@ -173,6 +175,7 @@ Concept Notes
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
+* Rewind                        Rewind
 * Implied Piecewise::           Implied Piecewise
 * Twice::                       Twice
 * Precede it or Follow it::     Precede it or Follow it
@@ -180,26 +183,24 @@ Concept Notes
 * Finish::                      Finish
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 
-Installation
-
-* Building on Unix::            Building on Unix
-* Building on the Mac::         Building on the Mac with Think C
-* Building on DOS::             Building on DOS with gcc
-* Document Formatting::         How to format the documentation
-* Manifest::                    List of files in the distribution
-
 @end menu
 
 @include readme.txinfo
 
-@node Getting Started, Invoking Sd, Intro, Top
+@node Getting Started, The Completing Reader for Sdtty, Intro, Top
 @chapter Getting Started
 
-@code{Sd} can be run from a shell (on Unix or DOS) by typing its name
+@code{Sd} or @code{Sdtty} can be run from a shell (on Unix or DOS) by typing its name
 and the level you want to write sequences for, e.g.,
 
 @example
 sd c2
+@end example
+
+or
+
+@example
+sdtty c2
 @end example
 
 The Macintosh version of @code{sd} is typically run by double clicking
@@ -215,7 +216,61 @@ With some experimentation, you should be able to use the program without
 reading this document.  The following chapters cover using @code{Sd} in
 detail.
 
-@node Invoking Sd, Macintosh Overview, Getting Started, Top
+@node The Completing Reader for Sdtty, Invoking Sd, Getting Started, Top
+@chapter The Completing Reader for Sdtty
+
+@code{Sdtty} uses a "completing reader" for interpreting the characters that you type.
+This means that you only need to type as much of the word or command as is
+required to be unambiguous.  Whenever you type a space, @code{sdtty} completes
+the word you just typed, if necessary and possible.  Whenever you type
+"return" (or "enter"), @code{sdtty} completes the entire line if necessary and possible.
+
+For example, at mainstream, you can enter a swing thru by typing
+@samp{swing thru <RET>}.  When the space aftter @samp{swing} is typed,
+no completion is required.  When the @samp{<RET>} after @samp{thru} is typed,
+no completion is required either.  If you type @samp{sw thru <RET>} instead,
+@code{sdtty} completes the word @samp{swing}.  As soon as you type the space after
+@samp{sw}, @code{sdtty} prints @samp{ing} on the screen.  If you type @samp{sw th <RET>},
+@code{sdtty} will complete both words.  It prints @samp{ing} as soon as you type the
+space, and it prints @samp{ru} as soon as you type the return.  In fact, you
+could just type @samp{sw <RET>}.  @code{Sdtty} completes the entire line, if necessary
+and possible, when return is typed. so it will print @samp{ing thru} after
+your @samp{sw}.  In each case, the full phrase @samp{swing thru} will appear
+on the screen, and will be printed in the final sequence.
+
+Because of this completion, you can get into the habit of just typing @samp{sw <RET>}
+at mainstream.  However, it will only work if what you type is unambiguous.
+At higher levels, @samp{sw} could also mean @samp{swap around}.  When there is an
+ambiguity, @code{sdtty} will beep at you and complete as much as it can.  You can
+type @kbd{?} (discussed below) to see what the problem is.
+
+With practice, you can get a reasonable feel for how much abbreviation you can
+get away with in a given context.
+
+Typing @key{Escape} (or @key{Alt Mode} on some keyboards) or @key{Tab} will
+complete the entire line, just like @key{RET}, but will not actually process
+the line.  If you like what you see, you can then press @key{RET} to execute
+the call.
+
+At any time, you can type a question mark.  This will make @code{sdtty} print out
+all legal completions of the line that has been entered so far.  If what you
+have typed is unambiguous, that will consist of just one thing.  If you
+have typed nothing, it will ocnsist of every legal thing you could type---typically
+that is every call, every concept, and every special command.
+
+The output from typing a question mark may be quite lengthy.  If it fills
+more than one screenful, @code{sdtty} will stop and display @samp{--More--} at the
+bottom of the screen.  Type a space to go on to the next screenful.  Type
+@key{Return} to see just one more line.  Type a backspace (or @key{Delete})
+to stop.  When the output ends, either because @code{sdtty} printed everything or
+because you typed a backspace, the partially entered line will be redisplayed, just
+as it was before you typed the question mark.
+
+@code{Sdtty}'s completing reader is completely indifferent to the capitalization of
+what you type.  It caplitalizes its output according to its own notions of
+esthetics and ambiguity avaoidance.
+
+@node Invoking Sd, Macintosh Overview, The Completing Reader for Sdtty, Top
 @chapter Invoking Sd via Command Line
 
 @display
@@ -302,11 +357,14 @@ These options are specific to the terminal-based version, @code{sdtty}.
 @table @code
 @item -no_cursor
 dumb terminal mode: do not use cursor motion commands to keep the screen
-up-to-date efficiently
+up-to-date efficiently.  Use this if the cursor motion adn screen manipulation
+operations of your terminal or operating system are not available or are not
+working satisfactorily.
 @item -lines @var{nlines}
 the number of lines on the screen.  Default is 25.
 @item -no_line_delete
-do not use the insert line or delete line cursor control commands
+do not use the insert line or delete line cursor control commands.  Use this
+if these commands are not working satisfactorily on your terminal.
 @end table
 
 
@@ -339,7 +397,7 @@ The third special flag is used to read in a list of calls to be avoided.
 Any call listed in the file, in precisely the same format as it was written
 out, will be removed from the internal database prior to running the program.
 Every sequence written under control of such a file will say @samp{(abridged)}
-after its level.
+on its header line.
 
 To write sequences for a group that is learning C2, for example, run the
 program with
@@ -358,13 +416,14 @@ As the group learns new C2 calls, delete the corresponding lines from
 the file @file{my_group}.  That file always contains the calls that they don't
 yet know.  When the file goes to zero, they know the whole list.
 
+Be aware that the abridgement mechanism works only for calls, not for concepts.
+You must keep track of what concepts not to use.
+
 The lines in the abridgement file must always be in exactly the same format
 as the strings that are written out by the @code{-write_list} or @code{-write_full_list}
 flags.  The program has no tolerance for creative capitalization, stray
 blanks, or other variations.  Any line in the file that does not match a
-call in the menu is simply ignored.  The order is not important, though it
-is possible that leaving it in the original menu order may someday yield
-faster program startup.
+call in the menu is simply ignored.  The order of the lines is not important.
 
 @node Macintosh Overview, Calling, Invoking Sd, Top
 @chapter Overview of the Macintosh Version
@@ -641,7 +700,6 @@ generate a sequence of calls of your choosing.
 * Entering Calls::              Entering Calls
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Tag/Scoot::                   Tag/Scoot Call Modifications
 * Single/Cross/Left::           The Single, Cross, and Left Modifiers
 * Asymmetric Selectors::        How to Write Asymmetric Sequences
 @end menu
@@ -713,15 +771,154 @@ In the Macintosh version, this button is labelled @code{Squared Set}.
 
 The usual thing you do when writing a sequence is to select calls from
 the call menu, perhaps preceded by one or more concepts.  (Concepts are
-discussed in the next section.)
+discussed in the next section.)  In @code{sd}, a call is selected by clicking
+on the desired menu item.  In @code{sdtty}, a call is selected by typing
+its name, followed by a @key{Return}.  The completing reader
+(@xref{The Completing Reader for Sdtty}) lets you abbreviate calls.
+
+A number of calls have limitations or quirks that you should be aware of.
+@xref{Call Notes}.
 
 @menu
+* Call Variations::             How to write variations on calls
 * Call Menus::                  call menus
 * Scrolling::                   The call menu scroll bar
-* Call Variations::             How to write variations on calls
 @end menu
 
-@node Call Menus, Scrolling,  , Entering Calls
+@node Call Variations, Call Menus,  , Entering Calls
+@subsection Call Variations
+
+There are a number of issues that make call entry less than completely
+straightforward.  These have to do with variations that calls have---directions
+(as in @samp{quarter left}), numbers (as in @samp{square thru 3} or @samp{three quarter
+thru}), person designators (as in @samp{sides kickoff}), subcalls (as in @samp{clover
+and quarter thru} or @samp{vertical tag your neighbor} or @samp{shuttle rally} or
+@samp{in roll motivate}), and modifiers (as in @samp{strut left} or @samp{trans cross
+chain reaction}).
+
+To list all possible variations in the menus would be unweildy for a variety
+of reasons.  Because of this, various methods are used to shorten the menus
+and to allow the user to specify the desired variation.  These methods will
+be discussed in detail presently, but in most cases what happens is the following:
+
+In @code{sd}, the menus list only the base calls with special keywords
+as in @samp{quarter <DIRECTION>} or @samp{square thru <N>}.  When you
+click on such a menu item, a popup menu appears listing the possible choices.
+
+In @code{sdtty}, the "menu" (that is, what you see if you type a question
+mark) also has keywords.  You can type the item just as shown, e.g.
+@samp{quarter <DIRECTION>} or @samp{square thru <N>} (you would actually type the
+angle brackets) and then answer the question that @code{sdtty} asks.  But there is
+an easier way---you can type what you want directly.  That is, just type
+@samp{quarter left} or @samp{square thru 3}.  If you want to see the choices,
+type @samp{quarter <DIRECTION>} or whatever, and then type a question mark.
+
+@table @code
+@item Directions
+Calls that take a direction have the keyword @samp{<DIRECTION>} in them in the
+menus, like @samp{pass <DIRECTION>} or @samp{spin a windmill, outsides <DIRECTION>}.
+
+When using @code{sd}, after you click on such a call, a popup will appear listing
+all possible directions.  Click on the one you want.  If you decide you don't
+want that call, just move the mouse away from the popup.  (On the Macintosh, click
+the @code{Cancel} button.)
+
+When using @code{sdtty}, you can either type @samp{pass <DIRECTION>} literally,
+and then answer the question that the program will ask, or just type the actual call,
+for example, @samp{pass in}.
+
+The menu lists all possible directions, including some that may not be possible
+in the given context.
+
+@item Numbers
+Calls that take a number have the keyword @samp{<N>}, @samp{<N/4>}, or @samp{<Nth>}
+in them, like @samp{eight chain <N>}, @samp{invert the column <N/4>}, or
+@samp{square thru, but on the <Nth> hand <ANYTHING>}.
+
+When using @code{sd}, a popup will appear listing the numbers from 1 to 8.  Click
+on the one you want.  If the keyword was @samp{<N/4>}, click on the value of @samp{N}.
+The program will turn it into @samp{N/4} (or, if @samp{N}=2, into @samp{1/2}).
+If you decide you don't
+want that call, just move the mouse away from the popup.  (On the Macintosh, click
+the @code{Cancel} button.)
+
+When using @code{sdtty}, you can either type the keyword literally,
+and then answer the question, or just type the number just as you want it to
+appear in the call.  That is, you can type @samp{invert the column <N/4>} and then
+@samp{3}, or @samp{invert the column 3/4}.  You can type @samp{1/2} or
+@samp{2/4}---the program will print it as @samp{1/2} in all cases.  For @samp{square
+thru but on the <Nth> hand}, you can type the number in @samp{Nth} form,
+as in @samp{square thru but on the 3rd hand}.  Of course, if you just type @samp{3},
+the completing reader will finish it for you.
+
+Not all values of @samp{N} will be meaningful for all calls.  For example, you
+can @samp{eight chain 5}, but you can't @samp{invert the column 5/4}.
+
+Some calls have the words @samp{quarter}, @samp{half}, or @samp{three quarter}
+in their names.  Examples are @samp{quarter thru}, @samp{quarter the deucey},
+@samp{quarter mix}, @samp{quarter the alter}, and @samp{quarter chain and circulate in}.
+These are listed in the Callerlab lists with the words spelled out, though the issue is
+not without controversy.  Some people prefer to write @samp{1/4 thru} and
+@samp{3/4 thru}.  @code{Sd} and @code{sdtty} list the call as @samp{<N/4> thru}
+in the menu.  In @code{sd}, you click on that and then click on a number (only 1 and 3
+are legal, of course).  In @code{sdtty}, you can type @samp{<N/4> thru} and then type
+1 or 3, or you can type the call directly, either in numbers or in words.  That is,
+you can type either @samp{1/4 thru} or @samp{quarter thru}.  No matter how you
+enter one of these calls, it will always be printed out in words, as in
+@samp{three quarter thru} or @samp{half chain and circulate in}.
+
+@item Person designators
+These work like the others in a straightforward way.  The calls appear in the menu
+with the @samp{<ANYONE>} keyword, as in @samp{patch the <ANYONE>}.  In @code{sd},
+you click on that and then make a selection from a popup menu.  In @code{sdtty},
+you can either type the @samp{<ANYONE>} literally and then answer the question,
+or you can type in the desired call directly, as in @samp{patch the sides}.
+
+The gender designators are @samp{boys} and @samp{girls}.  This is the way they
+appear in the Callerlab mainstream list.  The author does not take a position
+on whether the adult terms would be more reasonable words to use in any given context.
+You must use your own judgement in deciding what to say.
+
+Not all designators are legal in all cases, such as @samp{leads run} from a grand
+wave.
+
+The program specifically refuses to recognize the meaning of the word @samp{centers}
+and @samp{ends} while in a 1x8 setup (e.g. a grand wave).  This is because these terms
+can be ambiguous in such a setup.  If you want the centers of each 1x4, you must use
+the @samp{EACH 1X4} or @samp{EACH WAVE} concept in order to make the @samp{centers}
+or @samp{ends} designators work.  Of course, in many cases, other designators,
+such as @samp{boys} or @samp{girls} can identify the same people unambiguously.
+If you want the 4 people in the center of the set, use the @samp{center 4}
+designator.  The @samp{outer pairs} designator specifies the others.
+
+@item Tagging Calls
+Calls that use tagging calls have the keyword @samp{<ATC>} (for Any Tagging Call) in
+them, as in @samp{<ATC> your neighbor} or @samp{<ATC> chain thru and scatter reaction}.
+Specify these in the usual way.  In @code{sdtty} you can type the @samp{<ATC>} directly
+or you can enter the complete call.
+
+At C3 and above, the tagging calls include the calls @samp{revert <ATC>} and
+@samp{reflected <ATC>} that make use of another tagging call.  In @code{sd}, you
+will be presented with another popup.  In @code{sdtty}, you can type in the
+entire call directly, as in @samp{revert cross flip chain thru reactivate}.
+
+@item Subcalls
+Mandatory subcalls appear in the menu as the keyword @samp{<ANYTHING>}, as
+in @samp{clover and <ANYTHING>}.  The handling of these in @code{sdtty} is not as
+nice as for the keywords discussed previously.  It is not possible to type in the call
+just the way you want it to appear.  @i{You must literally type the <ANYTHING>}.
+That is, you type @samp{clover and <ANYTHING>}.  Of course, because of the completing
+reader, you rarely need to type that much.  Just @samp{clover a} is enough, for
+example.  In @code{sd}, click on the menu item in the usual way.  Either way,
+the program will prompt you for a subcall.  This can be any legal call, including
+concepts and modifiers.  Whatever you enter will appear in brackets, as in
+@samp{clover and [TANDEM shazam]}.
+These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
+are just one of many types of modifications.  @xref{Call Modifications},
+for others.
+@end table
+
+@node Call Menus, Scrolling, Call Variations, Entering Calls
 @subsection Call Menus
 
 The call menu is the long menu near the center of the screen.  There are
@@ -736,34 +933,18 @@ appears when the setup is not one of the common ones, or when anything
 complex is going on.  This contains every call that is in the database
 for the chosen level.
 
-The call menus are alphabetized in a way that ignores blanks and @code{<N>},
-@code{<ANYONE>}, @code{<DIRECTION>}, or @code{<ANYTHING>} items.
-Hence, @code{<ANYONE> run} will be found
-under @code{r}.  Digits are listed first, followed by upper case letters,
-followed by lower case letters.
+The call menus are alphabetized in a way that ignores blanks and hyphens.
+Special keywords such as @samp{<N>}, @samp{<ANYONE>}, @samp{<DIRECTION>},
+or @samp{<ANYTHING>} are listed before letters.
+Hence, @samp{<ANYONE> run} and @samp{<ATC> your neighbor}
+will be found near the beginning of the menu.
 
 If you are using the Macintosh version of @code{sd}, the call menu
 is displayed as a utility window.  Calls are selected by double
 clicking.  In addition, calls can be entered by typing their name,
 as described in the next paragraph.
 
-If you are using the keyboard-based interface (@code{sdtty}),
-type the name of the call followed by @key{Return}.
-The program has a @i{completing reader}, which
-means that you need type only as much of each word as will make the word
-unique.  When you type @key{Space}, @code{sdtty} will complete the word for
-you if it can.  When you type @key{Return}, @key{Tab}, or @key{Escape},
-@code{sdtty} will
-complete the entire call.  So, for example, if the setup is waves and the
-level is mainstream, you could type just @code{sw th} and @key{Return} to get a
-@i{swing thru}.  In fact, just @code{sw} is enough.
-When using @code{sdtty}, typing a question mark (@key{?}) will show all
-legal things that you could type at that point.
-
-A number of calls have limitations or quirks that you should be aware of.
-@xref{Call Notes}.
-
-@node Scrolling, Call Variations, Call Menus, Entering Calls
+@node Scrolling,  , Call Menus, Entering Calls
 @subsection Scrolling
 
 The call menu can be scrolled with the scroll bar to its left.  Move the
@@ -779,41 +960,6 @@ middle mouse button is held down, the menu will scroll in real time.
 If you are using the Macintosh version of @code{sd}, the call window
 can be scrolled using the scroll bar at the right of the window.
 
-@node Call Variations,  , Scrolling, Entering Calls
-@subsection Call Variations
-
-Some calls require a numeric designator (e.g., @i{square thru 3}), a people
-designator (e.g., @i{boys run}), a direction (e.g., @i{pass in}),
-or another call (e.g., @i{clover and star thru}).
-Such designators appear in the call menu as @code{<N>}, @code{<ANYONE>},
-@code{<DIRECTION>},
-or @code{<ANYTHING>}.
-
-When you select one of the first three kinds of calls,
-a popup will appear containing numbers, people designators, or directions.
-Click on the chosen item.  Not all items will be legal in all cases, such as
-@code{leads run} from a grand line.  If you made a mistake, just move the mouse
-away from the popup.  (On the Macintosh, click the @code{Cancel} button.)
-When using keyboard input (@code{sdtty} or Macintosh),
-just type the text normally for numbers, people, or directions.
-
-When you select a call that requires a subordinate call, the program
-will prompt you for it.
-When using keyboard input (@code{sdtty} or Macintosh),
-you must literally type the @code{<anything>} in the original call.
-
-Some calls or concepts may require more than one argument.  If
-this is the case, popups will appear more than once.  Enter the
-items in sequence.
-
-Some calls or concepts require a number that is naturally expressed as a
-fraction indicating some number of quarters, such as touch 1/4, 1/2, or 3/4.
-When a popup appears asking for the number, enter it as a number of quarters.
-The program will turn the
-fraction into the appropriate form, e.g., 2/4 becomes 1/2.
-When using keyboard input (@code{sdtty} or Macintosh), you may type it
-as a reduced fraction, as in @samp{circle by 1/2 by 3/4}.
-
 
 @node Entering Concepts, Call Modifications, Entering Calls, Calling
 @section Entering Concepts
@@ -828,19 +974,24 @@ concepts.  Buttons for the other concepts submenus appear above this
 menu.  Clicking on one of these buttons brings up the submenu.  If you
 don't see what you want on a concept submenu, move the mouse away.  Some
 concepts appear in more than one submenu---it doesn't matter which one
-you use.  The submenus are
+you use.  The submenus are listed below.  With practice, you will know
+which submenu to use.
 
 @table @code
-@item phantom concepts
+@item phantom line/col concepts
 those that involve picking out virtual setups, that may include
 phantoms, from a real formation that is larger than eight people.
-Examples: @i{split phantom lines}, @i{triple boxes}, @i{triple lines
-working forward}.
+Examples: @i{split phantom lines}, @i{triple lines working forward}.
+
+@item phantom box/dmd/qtag concepts
+The same, for boxes, diamonds, and generalized quarter-tags.
+Examples: @i{triple boxes}, @i{quadruple diamonds}, @i{triple
+1/4 tags working together}.
 
 @item couples/tandem concepts
 the obvious thing.
 
-@item distorted concepts
+@item distorted setup concepts
 those that involve picking out distorted virtual setups, without
 phantoms, by identifying real people out of a formation that is larger
 than eight people, or the phantom equivalent of same.  Examples:
@@ -889,7 +1040,7 @@ When off-level concepts are enabled,
 their use will cause a warning to be inserted into the transcript.
 
 
-@node Call Modifications, Tag/Scoot, Entering Concepts, Calling
+@node Call Modifications, Single/Cross/Left, Entering Concepts, Calling
 @section Call Modifications
 
 Some calls can be modified in a natural way, such as @samp{in roll motivate}
@@ -947,26 +1098,7 @@ cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
 [2/3 recycle] the difference] cover up} things may be quite difficult.
 How (and whether) you choose to read such a card is up to you.
 
-
-@node Tag/Scoot, Single/Cross/Left, Call Modifications, Calling
-@section Tag/Scoot Call Modifications
-
-To use tagging call modifications, like @samp{tag the star your leader},
-enable modifications, click on @code{tag your leader} (the generic form of all tagging calls is
-@samp{tag @dots{}}) followed by the @samp{1/2} version of the replacement tagging call,
-e.g., @code{tag the star 1/2} or @code{loop and 1/2 tag}.  The program will
-remove the superfluous @samp{1/2}.  You may also choose the @code{revert}
-or @code{reflect} calls here.
-
-To get something like @samp{flip chain thru and scatter reaction}, enable
-modifications and select @code{tag chain thru and scatter reaction} or
-whatever.  Then change the @code{1/2 tag}.
-
-@code{invert the column 1/2} and @code{track 2} are acceptable tagging
-replacements.
-
-
-@node Single/Cross/Left, Asymmetric Selectors, Tag/Scoot, Calling
+@node Single/Cross/Left, Asymmetric Selectors, Call Modifications, Calling
 @section The @i{Single,} @i{Cross,} and @i{Left} Modifiers
 
 There are a number of calls that contain these words in a nonstraightforward
@@ -992,8 +1124,9 @@ to get @i{scoot and cross ramble}.  Click on @code{CROSS} and then
 @end table
 
 Not all calls that have the word @samp{cross} or @samp{single} in them are invoked
-by clicking on the concept.  For example, @samp{cross your neighbor}
-is simply in the database under its full name.
+by clicking on the concept.  For example, @samp{cross your neighbor},
+@samp{cross and turn}, @samp{cross and wheel}, and @samp{single circle
+to a wave} are simply in the database under their full names.
 
 
 @node Asymmetric Selectors,  , Single/Cross/Left, Calling
@@ -1509,6 +1642,9 @@ for abuse.  See @ref{Finish}.
 * Sweeping Direction::          Sweeping Direction
 * C1 Single Rotate::            C1 Single Rotate
 * Spread::                      Spread
+* Flip Back::                   Flip Back
+* Face <DIRECTION>::            Face <DIRECTION>
+* Snag Circulate::              Snag Circulate
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
@@ -1531,7 +1667,7 @@ Of course, you must not say the word @i{reverse} when calling it.
 heads or sides from a squared set.  It performs the common C1 usage of
 this call.  It is nonsensical in other contexts.
 
-@node Spread, Colliding Recycle, C1 Single Rotate, Call Notes
+@node Spread, Flip Back, C1 Single Rotate, Call Notes
 @section Spread
 
 The term @dfn{spread} can mean different things and so is two calls in
@@ -1541,7 +1677,35 @@ Use the call @samp{@dots{} and spread} after @i{wheel and deal},
 or after starting a sequence with something like @samp{heads star thru}.
 You can also use the call @samp{wheel and spread}.
 
-@node Colliding Recycle, Rotate from Columns, Spread, Call Notes
+@node Flip Back, Face <DIRECTION>, Spread, Call Notes
+@section Flip Back
+
+In addition to all of the tagging calls (@xref{Call Variations}),
+which include @samp{<ATC> back to a wave} and hence @samp{flip
+back to a wave}, the menu contains the separate call @samp{flip back},
+which is the usual way of expressing this.
+
+@node Face <DIRECTION>, Snag Circulate, Flip Back, Call Notes
+@section Face <DIRECTION>
+
+The call @samp{face <DIRECTION>} does not appear to be a genuine
+Callerlab-sanctioned call.  It is intended to be used, for example,
+after @samp{tag the line}, to give the direction that you wish to
+have the dancers face.  So, for example, you could enter the calls
+@samp{tag the line} followed by @samp{face in} to get the action
+that is commonly expressed as @samp{tag the line, in}.  Note that
+the A2 designators @samp{zig-zag} etc. are among the permissible
+directions.
+
+@node Snag Circulate, Colliding Recycle, Face <DIRECTION>, Call Notes
+@section Snag Circulate
+
+The @samp{snag} concept, meaning to have the centers do just half of the
+call, does not work with the call @samp{circulate}, because that
+call is not defined in the database as having centers' and ends' parts.
+Hence, the separate call @samp{snag circulate} has been provided.
+
+@node Colliding Recycle, Rotate from Columns, Snag Circulate, Call Notes
 @section Colliding @i{Recycle}
 
 ``Colliding'' @i{recycle}, @i{ah so}, and @i{cycle and wheel} are not implemented.
@@ -1585,6 +1749,7 @@ To permit fractional use of recycle, as with
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
+* Rewind::                      Rewind
 * Implied Piecewise::           Implied Piecewise
 * Twice::                       Twice
 * Precede it or Follow it::     Precede it or Follow it
@@ -1837,7 +2002,7 @@ It is extremely dangerous in terms of what it may require the dancers to do.
 Many dancers find it difficult enough to do the live people's parts of calls
 without having to do the phantoms' parts also.
 
-@node Diamond, Implied Piecewise, Assume Waves, Concept Notes
+@node Diamond, Rewind, Assume Waves, Concept Notes
 @section Diamond
 
 You should not need to click on @code{diamond} except when you actually
@@ -1852,7 +2017,12 @@ diamond, alter the diamond}, and clicking on @code{magic},
 right} will get @samp{magic interlocked diamond, diamond as couples
 quarter right}.
 
-@node Implied Piecewise, Twice, Diamond, Concept Notes
+@node Rewind, Implied Piecewise, Diamond, Concept Notes
+@section Rewind
+
+There is no @samp{rewind} concept in this program.
+
+@node Implied Piecewise, Twice, Rewind, Concept Notes
 @section Implied Piecewise
 
 Some of the replacement/interruption meta-concepts push the
@@ -2300,7 +2470,7 @@ Sd*frame*Label*Translations: #override <Btn3Down>: undo()
 Sd*frame*List*Translations: #override <Btn3Down>: undo()
 @end example
 
-@node Versions, Installation, Customization, Top
+@node Versions, Copying, Customization, Top
 @chapter Versions
 
 The version is a string consisting of parts separated by colons.
@@ -2317,9 +2487,7 @@ The calls database also has a version.
 If you modify the database, we ask that you
 change the version string at the top of the file.
 
-@include install.txinfo
-
-@node Copying, , Installation, Top
+@node Copying, , Versions, Top
 @include gpl.txinfo
 
 @page

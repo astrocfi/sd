@@ -67,6 +67,7 @@ and the following external variables:
    selector_names
    selector_singular
    direction_names
+   last_direction_kind
    warning_strings
 */
 
@@ -113,8 +114,8 @@ uint32 collision_person1;
 uint32 collision_person2;
 long_boolean enable_file_writing;
 
-Cstring cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (char *) 0};
-Cstring ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (char *) 0};
+Cstring cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (Cstring) 0};
+Cstring ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (Cstring) 0};
 
 /* BEWARE!!  These two lists are keyed to the definition of "selector_kind" in sd.h,
    and to the necessary stuff in SDUI. */
@@ -152,7 +153,7 @@ Cstring selector_names[] = {
    "far box",
    "everyone",
    "no one",
-   NULL};         /* The X11 interface uses this when making the popup text. */
+   (Cstring) 0};
 
 Cstring selector_singular[] = {
    "???",
@@ -187,13 +188,16 @@ Cstring selector_singular[] = {
    "near box",
    "far box",
    "everyone",
-   "no one"};
+   "no one",
+   (Cstring) 0};
 
 /* BEWARE!!  This list is keyed to the definition of "direction_kind" in sd.h,
    and to the necessary stuff in SDUI. */
-/* This one is external, so that the user interface can use it for popup text. */
+/* This array, and the variable "last_direction_kind" below, get manipulated
+   at startup in order to remove the "zig-zag" items below A2. */
 Cstring direction_names[] = {
    "???",
+   "(no direction)",
    "left",
    "right",
    "in",
@@ -202,8 +206,9 @@ Cstring direction_names[] = {
    "zag-zig",
    "zig-zig",
    "zag-zag",
-   "(no direction)",
-   NULL};         /* The X11 interface uses this when making the popup text. */
+   (Cstring) 0};
+
+int last_direction_kind = direction_zagzag;
 
 
 /* BEWARE!!  These strings are keyed to the definition of "warning_index" in sd.h . */

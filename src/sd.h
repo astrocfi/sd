@@ -312,6 +312,13 @@ typedef struct {
 
    CMD_MISC__DO_AS_COUPLES means the obvious thing.
 
+   CMD_MISC__INVERT_CENTRAL is only meaningful if the CMD_MISC__CENTRAL_MASK is
+   in use.  It means that the "inverted" version of the concept is in use, e.g.
+   "invert snag".
+
+   CMD_MISC__CENTRAL_MASK, when nonzero, says that one of the "central", "snag",
+   or "mystic" concepts is in use.  They are all closely related.
+
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
@@ -357,11 +364,11 @@ typedef struct {
 #define CMD_MISC__DO_AS_COUPLES      0x00100000
 #define CMD_MISC__RESTRAIN_CRAZINESS 0x00200000
 /* available:                        0x00400000
-                                     0x00800000
-                                     0x01000000
-                                     0x02000000 */
-#define CMD_MISC__MUST_SPLIT         0x04000000
-#define CMD_MISC__CENTRAL            0x08000000
+                                     0x00800000 */
+#define CMD_MISC__INVERT_CENTRAL     0x01000000
+#define CMD_MISC__MUST_SPLIT         0x02000000
+/* This is a 2 bit field.  For codes inside same, see "CMD_MISC__CENTRAL_PLAIN" below. */
+#define CMD_MISC__CENTRAL_MASK       0x0C000000
 #define CMD_MISC__NO_CHK_ELONG       0x10000000
 #define CMD_MISC__PHANTOMS           0x20000000
 #define CMD_MISC__NO_STEP_TO_WAVE    0x40000000
@@ -376,6 +383,12 @@ typedef struct {
 #define CMD_MISC__VERIFY_3_4_TAG     0x00001400
 /* available:                        0x00001800
                                      0x00001C00 */
+
+/* Here are the encodings that can go into the CMD_MISC__CENTRAL_MASK field.
+   Zero means none of these concepts is in use. */
+#define CMD_MISC__CENTRAL_PLAIN      0x04000000
+#define CMD_MISC__CENTRAL_SNAG       0x08000000
+#define CMD_MISC__CENTRAL_MYSTIC     0x0C000000
 
 
 /* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
@@ -439,7 +452,7 @@ typedef struct {
    (split vertically).  3 means that the call was a 1 or 2 person call, that
    could be split either way, so we have no information.
 
-   RESULTFLAG__ACTIVE_PHANTOMS_ON and -OFF tell whether the state of the "active
+   RESULTFLAG__ACTIVE_PHANTOMS_ON and _OFF tell whether the state of the "active
    phantoms" mode flag was used in this sequence.  If it was read and found to
    be on, RESULTFLAG__ACTIVE_PHANTOMS_ON is set.  If it was read and found to
    be off, RESULTFLAG__ACTIVE_PHANTOMS_OFF is set.  It is, of course, read any
@@ -682,6 +695,7 @@ typedef enum {
    concept_active_phantoms,
    concept_mirror,
    concept_central,
+   concept_snag_mystic,
    concept_crazy,
    concept_frac_crazy,
    concept_fan_or_yoyo,
@@ -724,11 +738,11 @@ typedef struct {
    Const dance_level level;
    Const struct {
       Const map_thing *maps;
-      Const int arg1;
-      Const int arg2;
-      Const int arg3;
-      Const int arg4;
-      Const int arg5;
+      Const uint32 arg1;
+      Const uint32 arg2;
+      Const uint32 arg3;
+      Const uint32 arg4;
+      Const uint32 arg5;
    } value;
    Cstring menu_name;
 } concept_descriptor;
@@ -774,8 +788,10 @@ typedef enum {
 
 /* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
    It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
+/* Note also that the "zig-zag" items will get disabled below A2. */
 typedef enum {
    direction_uninitialized,
+   direction_no_direction,
    direction_left,
    direction_right,
    direction_in,
@@ -783,10 +799,8 @@ typedef enum {
    direction_zigzag,
    direction_zagzig,
    direction_zigzig,
-   direction_zagzag,
-   direction_no_direction
+   direction_zagzag
 } direction_kind;
-#define last_direction_kind ((int) direction_no_direction)
 
 typedef struct glock {
    concept_descriptor *concept;   /* the concept or end marker */
@@ -1419,6 +1433,7 @@ typedef struct {
    long_boolean four_way_symmetry;
 } setup_attr;
 
+#define zig_zag_level l_a2
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
 
@@ -1458,6 +1473,7 @@ extern Cstring ordinals[];                                          /* in SDUTIL
 extern Cstring selector_names[];                                    /* in SDUTIL */
 extern Cstring selector_singular[];                                 /* in SDUTIL */
 extern Cstring direction_names[];                                   /* in SDUTIL */
+extern int last_direction_kind;                                     /* in SDUTIL */
 extern Cstring warning_strings[];                                   /* in SDUTIL */
 
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
@@ -1778,7 +1794,7 @@ extern void initialize_getout_tables(void);
 
 extern void mirror_this(setup *s);
 extern void do_stability(uint32 *personp, stability stab, int turning);
-extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, unsigned int flags);
+extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags);
 extern void basic_move(
    setup *ss,
    int tbonetest,
@@ -1796,6 +1812,8 @@ extern long_boolean divide_for_magic(
    uint32 flags_to_use,
    uint32 flags_to_check,
    setup *result);
+
+extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *result);
 
 extern void do_call_in_series(
    setup *sss,
@@ -1861,6 +1879,11 @@ extern void triangle_move(
 /* In SDCONCPT */
 
 extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
+
+extern long_boolean move_perhaps_with_active_phantoms(
+   setup *ss,
+   restriction_thing *restr_thing_ptr,
+   setup *result);
 
 extern long_boolean do_big_concept(
    setup *ss,

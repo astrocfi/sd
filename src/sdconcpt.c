@@ -20,6 +20,7 @@
 
 /* This defines the following functions:
    get_restriction_thing
+   move_perhaps_with_active_phantoms
    do_big_concept
 
 and the following external variables:
@@ -34,13 +35,6 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
-
-extern long_boolean move_perhaps_with_active_phantoms(
-   setup *ss,
-   restriction_thing *restr_thing_ptr,
-   setup *result);
-
-extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *result);
 
 
 
@@ -164,9 +158,7 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &wave_2x4;
          else if (t.assumption == cr_li_lo && t.assump_col != 0)
             restr_thing_ptr = &wave_2x4;
-         else if (t.assumption == cr_2fl_only && t.assump_col == 0)
-            restr_thing_ptr = &two_faced_2x4;
-         else if (t.assumption == cr_2fl_only && t.assump_col != 0)
+         else if (t.assumption == cr_2fl_only)
             restr_thing_ptr = &two_faced_2x4;
          else if (t.assumption == cr_wave_only && t.assump_col != 0)
             restr_thing_ptr = &cwave_2x4;
@@ -635,7 +627,7 @@ Private void do_concept_single_diagonal(
    setup *result)
 {
    int i, rot;
-   unsigned int tbonetest;
+   uint32 tbonetest;
    diag_map *map_ptr;
    setup a1;
    setup res1;
@@ -654,9 +646,9 @@ Private void do_concept_single_diagonal(
 
    if      (global_selectmask == (global_livemask & 0x0909)) map_ptr = map_ptr->other;
    else if (global_selectmask != (global_livemask & 0x9090))
-      tbonetest = -1;   /* Force error. */
+      tbonetest = ~0UL;   /* Force error. */
 
-   if (ss->kind != s4x4) tbonetest = -1;   /* Force error. */
+   if (ss->kind != s4x4) tbonetest = ~0UL;   /* Force error. */
 
    if ((tbonetest & 011) == 011) {
       if (parseptr->concept->value.arg1 & 1)
@@ -721,9 +713,9 @@ Private void do_concept_double_diagonal(
    if      (global_livemask == 0x2A82A8) map_ptr = &map_diag2a;
    else if (global_livemask == 0x505505) map_ptr = &map_diag2b;
    else
-      tbonetest = -1;   /* Force error. */
+      tbonetest = ~0UL;   /* Force error. */
 
-   if (ss->kind != s4x6) tbonetest = -1;   /* Force error. */
+   if (ss->kind != s4x6) tbonetest = ~0UL;   /* Force error. */
 
    if (parseptr->concept->value.arg1 & 1) {
       if (tbonetest & 010) fail("There are no diagonal lines here.");
@@ -1757,7 +1749,7 @@ Private void do_concept_mirror(
    that is an error.  But if we are only doing this because the automatic active phantoms
    switch is on, we will just ignore it. */
 
-extern long_boolean fill_active_phantoms_and_move(
+Private long_boolean fill_active_phantoms_and_move(
    setup *ss,
    restriction_thing *restr_thing_ptr,
    setup *result)
@@ -2141,12 +2133,17 @@ Private void do_concept_central(
    parse_block *parseptr,
    setup *result)
 {
-   if (setup_attrs[ss->kind].setup_limits == 7)
-      ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
-   else if (setup_attrs[ss->kind].setup_limits != 3)
-      fail("Need a 4 or 8 person setup for this.");
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK)
+      fail("Only one of central, snag, and mystic is allowed.");
 
-   ss->cmd.cmd_misc_flags |= CMD_MISC__CENTRAL;
+   if (parseptr->concept->value.arg1 == CMD_MISC__CENTRAL_PLAIN) {
+      if (setup_attrs[ss->kind].setup_limits == 7)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+      else if (setup_attrs[ss->kind].setup_limits != 3)
+         fail("Need a 4 or 8 person setup for this.");
+   }
+
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg1;
    move(ss, FALSE, result);
 }
 
@@ -2876,6 +2873,12 @@ Private void do_concept_do_each_1x4(
 {
    switch (ss->kind) {
       case s2x4: case s1x8:
+         if (parseptr->concept->value.arg1 & global_tbonetest & 1)
+            fail("People are not in a line or wave.");
+
+         if (parseptr->concept->value.arg1 == 3)
+            ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
          (void) do_simple_split(ss, TRUE, result);
          break;
       default:
@@ -3380,11 +3383,11 @@ Private void do_concept_meta(
    final_set new_final_concepts;
    parse_block *parseptrcopy;
    parse_block *parseptrcopycopy;
-   unsigned int finalresultflags = 0;
-   unsigned int index;
-   int key = parseptr->concept->value.arg1;
-   unsigned int subject_props = 0;
-   unsigned int craziness_restraint = 0;
+   uint32 finalresultflags = 0;
+   uint32 index;
+   uint32 key = parseptr->concept->value.arg1;
+   uint32 subject_props = 0;
+   uint32 craziness_restraint = 0;
 
    /* key =
       random <concept>         : 0
@@ -4293,7 +4296,7 @@ concept_table_item concept_table[] = {
    /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},
    /* concept_selbasedtrngl */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        triangle_move},
    /* concept_split */                    {0,                                                                                      0},
-   /* concept_each_1x4 */                 {CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX,                                            do_concept_do_each_1x4},
+   /* concept_each_1x4 */                 {CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK,                       do_concept_do_each_1x4},
    /* concept_diamond */                  {0,                                                                                      0},
    /* concept_triangle */                 {0,                                                                                      0},
    /* concept_do_both_boxes */            {CONCPROP__NO_STEP,                                                                      do_concept_do_both_boxes},
@@ -4337,6 +4340,7 @@ concept_table_item concept_table[] = {
    /* concept_active_phantoms */          {0,                                                                                      do_concept_active_phantoms},
    /* concept_mirror */                   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_mirror},
    /* concept_central */                  {CONCPROP__SHOW_SPLIT,                                                                   do_concept_central},
+   /* concept_snag_mystic */              {0,                                                                                      do_concept_central},
    /* concept_crazy */                    {0,                                                                                      do_concept_crazy},
    /* concept_frac_crazy */               {CONCPROP__USE_NUMBER,                                                                   do_concept_crazy},
    /* concept_fan_or_yoyo */              {0,                                                                                      do_concept_fan_or_yoyo},

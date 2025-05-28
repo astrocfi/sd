@@ -352,6 +352,8 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
    char *n = y->name;
 
    for (;;) {
+      char mc = *m;
+      char nc = *n;
 
       /* First, skip over everything that we need to, in both m and n.  This includes blanks, hyphens, and
          insignificant escape sequences.
@@ -365,54 +367,76 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
          <ANYONE>
          <N> */
 
-      if (*m == ' ' || *m == '-') m++;
-      else if (*n == ' ' || *n == '-') n++;  
-      else if (*m == '@' && m[1] != 'v' && m[1] != '6' && m[1] != 'k' && m[1] != '9') {
+      /* First, skip blanks and hyphens, in both m and n. */
+
+      if (mc == ' ' || mc == '-') { m++; continue; }
+      else if (nc == ' ' || nc == '-') { n++; continue; }
+
+      /* Next, skip elided stuff in the "m" stream. */
+
+      if (*m == '@' && m[1] != 'v' && m[1] != '6' && m[1] != 'k' && m[1] != '9' && m[1] != '0' && m[1] != 'm' && m[1] != 'a' && m[1] != 'b' && m[1] != 'B') {
          /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
          if (m[1] == '7' || m[1] == 'n' || m[1] == 'j' || m[1] == 'J' || m[1] == 'E') {
             while (*++m != '@');
          }
+
          m += 2;
+         continue;
       }
-      else if (*n == '@' && n[1] != 'v' && n[1] != '6' && n[1] != 'k' && n[1] != '9') {
+
+      /* And in the "n" stream. */
+
+      if (*n == '@' && n[1] != 'v' && n[1] != '6' && n[1] != 'k' && n[1] != '9' && n[1] != '0' && n[1] != 'm' && n[1] != 'a' && n[1] != 'b' && n[1] != 'B') {
          if (n[1] == '7' || n[1] == 'n' || n[1] == 'j' || n[1] == 'J' || n[1] == 'E') {
             while (*++n != '@');
          }
          n += 2;
+         continue;
       }
-      else if (*m == '@' && m[1] == 'v') {
-         if (*n == '@' && n[1] == 'v') {
-            m += 2;      /* Comparing two "<ATC>"'s. */
-            n += 2;
+
+      if (*n == '@') {
+         nc = *++n;
+
+         if (nc == 'v') {
+            nc = -6;
          }
-         else return TRUE;     /* Comparing an "<ATC>" with something later. */
+         else if (nc == '6' || nc == 'k') {
+            nc = -5;
+         }
+         else if (nc == '0' || nc == 'm') {
+            nc = -4;
+         }
+         else if (nc == '9') {
+            nc = -3;
+         }
+         else /* we know nc == a/b/B) */  {
+            nc = -2;
+         }
       }
-      else if (*m == '@' && (m[1] == '6' || m[1] == 'k')) {
-         if (*n == '@' && (n[1] == '6' || n[1] == 'k')) {
-            m += 2;      /* Comparing two "<ANYONE>"'s. */
-            n += 2;
+
+      if (*m == '@') {
+         mc = *++m;
+
+         if (mc == 'v') {
+            mc = -6;
          }
-         else if (*n == '@' && n[1] == 'v') {
-            return FALSE;      /* Comparing an "<ANYONE>" with something earlier. */
+         else if (mc == '6' || mc == 'k') {
+            mc = -5;
          }
-         else return TRUE;     /* Comparing an "<ANYONE>" with something later. */
+         else if (mc == '0' || mc == 'm') {
+            mc = -4;
+         }
+         else if (mc == '9') {
+            mc = -3;
+         }
+         else /* we know mc == a/b/B) */  {
+            mc = -2;
+         }
       }
-      else if (*m == '@' && m[1] == '9') {
-         if (*n == '@' && n[1] == '9') {
-            m += 2;      /* Comparing two "<N>"'s. */
-            n += 2;
-         }
-         else if (*n == '@' && (n[1] == 'v' || n[1] == '6' || n[1] == 'k')) {
-            return FALSE;      /* Comparing an "<N>" with something earlier. */
-         }
-         else return TRUE;     /* Comparing an "<N>" with something later. */
-      }
-      else if (*n == '@' && (n[1] == 'v' || n[1] == '6' || n[1] == 'k' || n[1] == '9')) {
-         return FALSE;
-      }
-      else if (!*m) return TRUE;
-      else if (!*n) return FALSE;
-      else if (*m != *n) return (*m < *n);
+
+      if (!mc) return TRUE;
+      else if (!nc) return FALSE;
+      else if (mc != nc) return (mc < nc);
       else
          { m++; n++; }
    }

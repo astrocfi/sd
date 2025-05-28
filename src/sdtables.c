@@ -1326,7 +1326,31 @@ Private map_hunk mm_1x4_4 = {{0, 0},
                     {&map_1x16_1x4, &map_4x4_1x4},
                              {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
 
+/*
+ * The following conditional code is used to turn off the following
+ * error message in the MicroSoft Visual C++ compiler since there
+ * doesn't appear to be any way to cause the compiler to accept the
+ * following table without error.
+ *
+ * Warning # 4048 is:
+ *
+ *	"Compiler Warning (level 1) C4048
+ *	 
+ *	 different declared array subscripts: 'identifier1' and 'identifier2'
+ *
+ *	 An expression involved pointers to arrays of different size.
+ *	 The pointers were used without conversion.
+ *
+ *	 This warning can be avoided by explicitly casting the arrays to the
+ *	 same or equivalent type."
+ *
+ * Unfortunately there doesn't appear to be any way to perform the cast such that
+ * the compiler is happy.  Sigh.
+*/
 
+#ifdef _MSC_VER
+#pragma warning (disable : 4048)
+#endif
 
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h. */
 map_hunk *map_lists[][4] = {

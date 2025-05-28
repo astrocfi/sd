@@ -433,7 +433,7 @@ extern void do_stability(uint32 *personp, stability stab, int turning)
 
 
 
-extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, unsigned int flags)
+extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags)
 {
    unsigned int q0, q1, q2, q3, q4, q5, q6, q7;
    unsigned int i, j, k, z, t;

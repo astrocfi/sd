@@ -22,10 +22,9 @@ often invent the sequences on the fly from the stage.
 
 Sd knows nothing about timing, body flow, or esthetics.
 
-This program is not appropriate for Traditional square dancing.  Designing
-the exquisitely timed and well-phrased sequences that make up Traditional
-squares may or may not be beyond the capability of computer programs,
-but it is definitely beyond the capability of this program.
+This program is not appropriate for Traditional square dancing.  A good
+Traditional square dance sequence requires extremely accurate control
+of timing and phrasing, which are beyond the capability of this program.
 
 Since the emphasis here is on checker pushing, you will find various
 Mainstream staples missing, such as Circle Left, Grand Square, and
@@ -43,61 +42,88 @@ to write material could easily make you a worse caller, or interfere
 with your attempts to improve your calling skills.  While a program may be
 a useful reference at times for calls or concepts that you do not understand,
 this is only a tiny part what you need to learn in order to be a good caller
-or dancer.  For beginning callers in particular, the best thing to do
+or dancer.  To call successfully, you need to master many skills,
+such as timing, flow, judging difficulty, floor interaction, and choosing
+precisely the right words to say.  This last skill becomes increasingly
+important at higher levels.  Subtle differences in the words you choose,
+and their timing and inflection, can have a tremendous influence on the
+success of the dancers.  Sd attempts to print the correct words in all
+cases, but you will only succeed if you have a deep understanding of
+what the words mean and how they should be delivered.  That understanding
+can only be obtained through a great deal of experience calling at that level.
+
+If you do not have a good understanding of a call or concept, such that
+you could explain it to a dancer after the tip is over, you should not use it.
+Do not rely on Sd to provide the necessary insight into challenge dancing.
+
+For beginning callers in particular, the best thing to do
 is to receive instruction from a qualified teacher/coach, and to practice.
 
 @unnumberedsec Variations of the Program
 @end ifset
 
-There are several user interfaces available with Sd.  The standard is
-an X Window System interface.  Also included is a terminal-based user
-interface featuring a completing reader that runs on both Unix systems
-and DOS, and a Macintosh interface.
-Support for Apollo's Domain Dialog is available from the authors, but is
-not part of the distribution.
+Several user interfaces are available.  They come in two general types,
+and the program name is different for these types.
+
+Sd is the name of the program that uses menus and a "graphical" user
+interface.  Calls are selected by clicking with the mouse on the chosen
+menu item.  The principal version of Sd runs on Unix-like systems with
+the X Window System interface.  Sd is also available for Domain/OS on
+Apollo systems, and on the Macintosh.  It is not yet available for PC
+compatibles.
+
+Sdtty is the name of the program that uses a character-oriented keyboard
+interface.  Calls are selected by typing their names.  Sdtty runs on
+Unix-like systems and under DOS on PC compatibles.
 
 @ifset full-manual
-Most of the manual describes the X Window System interface.
-
 The Macintosh interface is basically similar to the X Window System
 interface; details specific to the Macintosh are provided in an overview
 chapter (@pxref{Macintosh Overview}) and in brief
 notes in other chapters.
-
-The terminal interface @code{sdtty} is described in a separate
-chapter.
-@xref{Terminal Interface}.
-
-At present, @code{sdtty} is the only version of the program available for
-PC-compatible computers.
 @end ifset
 
 @menu
 * Documentation::               Documentation
-* Getting Sd::                  Getting Sd
+* Getting Sd or Sdtty::         Getting Sd or Sdtty
 * Contact Info::                How to Contact the Authors
 * Acknowledgements::            Acknowledgements
 @end menu
 
-@node Documentation, Getting Sd,  , Intro
+@node Documentation, Getting Sd or Sdtty,  , Intro
 @unnumberedsec Documentation
 
 The file @file{INSTALL} contains instructions for building and
 installing Sd and for formatting and printing its documentation.
+If you ahve received the program in pre-built form, you shouldn't
+need to read it.
 
-The file @file{sd_doc.txinfo} documents using Sd.  The file
+The files @file{sd_doc.txt} and @file{sd_doc.ps} are this manual,
+in plain text and formatted form, respectively.  The file
 @file{db_doc.txt} gives internal information on the database format,
 useful only to people editing the calls database.
 
 See the file @file{Relnotes} for information about what is new in this
 release.
 
-Printed copies of the manual are available from the authors.
+Printed copies of the manual are available from the authors, or may be
+printed from the file @file{sd_doc.ps}.
 
-@node Getting Sd, Contact Info, Documentation, Intro
-@unnumberedsec Getting Sd
+@node Getting Sd or Sdtty, Contact Info, Documentation, Intro
+@unnumberedsec Getting Sd or Sdtty
 
-Sd is available via anonymous FTP from the directory
+You can obtain Sdtty for DOS on PC-compatible computers, on a 3.5-inch
+HD disk, with printed documentation.  The price is $4 (price valid for 1995).
+@ifset full-manual
+@xref{Contact Info}.
+@end ifset
+If you want sources, or a different format instead, please say so.
+
+To install the program from a floppy disk to a PC compatible, change
+to the desired directory, insert the disk, and type @samp{A:INSTALL}
+or @samp{B:INSTALL} as appropriate.
+
+Sd is also available via anonymous FTP from the directory
 @file{misc/sd/} on host ftp.x.org.
 FTP is the Internet file transfer protocol.
 The file
@@ -107,7 +133,7 @@ The file
 @ifset html
 @file{<A HREF="ftp://ftp.x.org/misc/sd/sd-30.0m.tar.Z">sd-30.0m.tar.Z</A>}
 @end ifset
-is a compressed tar file containing the sources.
+is a compressed Unix-format "tar" file containing the sources.
 The file
 @ifclear html
 @file{sd@i{xxx}bn.exe} (where @code{@i{xxx}} changes with the version)
@@ -115,19 +141,18 @@ The file
 @ifset html
 @file{<A HREF="ftp://ftp.x.org/misc/sd/sd300bn.exe">sd300bn.exe</A>}
 @end ifset
-is a self-extracting DOS archive containing a pre-built executable.
+is a self-extracting DOS archive containing a pre-built executable of
+Sdtty for PC-compatible computers.
+
+You must run FTP in binary mode to obtain these files.
+
+Versions for the Macintosh, and binaries for other systems, may be
+available also.  See the file @file{README} at the FTP site for
+availability,
 
 If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail, and
 it includes support for mailing large binary files.
-
-Lastly, if you cannot get Sd over the net, we will ship a
-floppy and printed documentation for $4 (price valid for 1994).
-Normally we send runnable DOS binaries on a 3.5-inch floppy.
-If you want sources or a different format instead, please say so.
-@ifset full-manual
-@xref{Contact Info}.
-@end ifset
 
 @ifclear html
 If you are on the Internet, you can read Sd documentation using the
@@ -136,7 +161,21 @@ World Wide Web.  Give the locator
 to your WWW program.
 @end ifclear
 
-@node Contact Info, Acknowledgements, Getting Sd, Intro
+Sd and Sdtty are "free" programs, in that they are licensed under the
+GNU General Public License, which is an appendix to this manual.
+In short, this means that it is perfectly legal and ethical to copy
+and redistribute the program and documentation.  For example, you may
+obtain the program by having a friend copy the disk and manual for you.
+(Or just copy the disk, and print your own manual from the the file
+that is on the disk.)
+
+Sd and Sdtty are sometimes also distributed in source form.  The licensing
+terms for distribution of source files, or programs made from modified
+source files, are very strict.  Programs constructed from modified source
+files may never be duplicated or redistributed by anyone, even in binary
+form, without obeying the conditions of the license.  Read the license carefully.
+
+@node Contact Info, Acknowledgements, Getting Sd or Sdtty, Intro
 @unnumberedsec How to Contact the Authors
 
 The Internet mailing list @code{sd@@x.org} is for discussion of Sd
@@ -197,8 +236,8 @@ and the user interface for the Macintosh
 (@pxref{Macintosh Overview})
 were written by
 Alan Snyder.
-The section on building Sd for the Macintosh (@pxref{Building on the
-Mac}) was written by Sue Curtis.
+The section on building Sd for the Macintosh (see the INSTALL file)
+was written by Sue Curtis.
 
 We received helpful feedback and testing from Robert French, Judy
 Anderson, Bill van Melle, Lois Lew, Ron Nicholson, and Dave Decot.

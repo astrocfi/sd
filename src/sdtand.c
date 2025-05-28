@@ -45,13 +45,13 @@ typedef struct {
    int map2[8];
    int map3[8];
    int map4[8];
-   unsigned int sidewaysmask;       /* lateral pairs in inside numbering -- only alternate bits used! */
-   unsigned int outsidemask;
+   uint32 sidewaysmask;       /* lateral pairs in inside numbering -- only alternate bits used! */
+   uint32 outsidemask;
    int limit;
    int rot;
-   unsigned int insinglemask;       /* relative to insetup numbering, those people that are NOT paired -- only alternate bits used! */
-   unsigned int outsinglemask;      /* relative to outsetup numbering, those people that are NOT paired */
-   unsigned int outunusedmask;
+   uint32 insinglemask;       /* relative to insetup numbering, those people that are NOT paired -- only alternate bits used! */
+   uint32 outsinglemask;      /* relative to outsetup numbering, those people that are NOT paired */
+   uint32 outunusedmask;
    setup_kind insetup;
    setup_kind outsetup;
 } tm_thing;
@@ -199,8 +199,8 @@ Private tm_thing maps_isearch_dmdsome[] = {
 
 typedef struct {
    setup_kind testkind;
-   unsigned int testval;
-   unsigned int fixup;
+   uint32 testval;
+   uint32 fixup;
    warning_index warning;
 } siamese_item;
 
@@ -463,8 +463,8 @@ Private void pack_us(
             if (twosome >= 2 && (u1 & STABLE_MASK))
                fail("Sorry, can't nest fractional stable/twosome.");
 
-            vp1 = ~0;
-            vp2 = ~0;
+            vp1 = ~0UL;
+            vp2 = ~0UL;
 
             /* Create the virtual person.  When both people are present, anding
                the real peoples' id2 bits gets the right bits.  For example,
@@ -567,13 +567,13 @@ extern void tandem_couples_move(
    tandrec tandstuff;
    tm_thing *map;
    tm_thing *map_search;
-   unsigned int nsmask, ewmask, allmask;
+   uint32 nsmask, ewmask, allmask;
    int i, np;
-   unsigned int j, jbit;
-   unsigned int hmask;
-   unsigned int orbitmask;
-   unsigned int sglmask;
-   unsigned int livemask;
+   uint32 jbit;
+   uint32 hmask;
+   uint32 orbitmask;
+   uint32 sglmask;
+   uint32 livemask;
    setup saved_originals;
    long_boolean fractional = FALSE;
    tm_thing *our_map_table;
@@ -650,6 +650,8 @@ extern void tandem_couples_move(
 
    if (tnd_cpl_siam == 2) {
       /* Siamese. */
+      uint32 j;
+
       siamese_item *ptr;
 
       for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
@@ -686,7 +688,7 @@ extern void tandem_couples_move(
    }
    else if (tnd_cpl_siam & 1) {
       /* Couples -- swap masks.  Tandem -- do nothing. */
-      j = ewmask;
+      uint32 j = ewmask;
       ewmask = nsmask;
       nsmask = j;
    }

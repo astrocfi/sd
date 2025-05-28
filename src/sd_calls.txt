@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "30.83"
+version "30.84"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -1233,13 +1233,6 @@ call "shazam" c2
    seq armturn_14 [allow_forced_mod]
    seq uturnback [allow_forced_mod]
 
-/* Used only for right-hand-only version of shazam.
-call "right arm turn 1/4" dontshow tag armturn_14_r
-            dont_use_in_resolve left_means_mirror
-   setup 1x2 1x2 rotate restriction forbidden wave_only
-      array [CR0N 0]
-*/
-
 call "arm turn 1/4" dontshow tag armturn_14
             dont_use_in_resolve 12_16_matrix_means_split
    setup 1x2 1x2 rotate restriction forbidden wave_only
@@ -1439,8 +1432,9 @@ call "@6 trade" mainstream
          if unselect_near_unselect [ZM0N ZM1N]
 
 call "trade and roll" plus tag trade_and_roll
-   setup 1x2 1x2
-      array [CR1W AL0E]
+            visible_fractions finish_means_skip_first_part
+   seq trade []
+   seq roll []
 
 call "U-turn back" mainstream tag uturnback
    setup 1x2 1x2
@@ -1584,6 +1578,10 @@ call "_pass out" dontshow tag pass_out
 call "_quarter in" dontshow tag quarterin
    setup 1x2 1x2
       array [CR0E AL1W]
+
+call "_quarter out" dontshow tag quarterout
+   setup 1x2 1x2
+      array [AL0W CR1E]
 
 call "half sashay" mainstream
    setup 1x2 1x2 restriction forbidden couples_only
@@ -2765,12 +2763,7 @@ call "run away" c4
       array [CR3W CR2W ACR1E AL0E]
 
 call "erase" c3x
-   setup 1x4 dmd rotate
-      array [CR0N CR3E AL0S AL1E]
-   setup dmd 1x4 rotate
-      array [CR0N 0 AL0S 0]
-   setup pmd 1x4 rotate
-      array [0 CR1E 0 AL3E]
+   singleconc uturnback [] armturn_14 []
 
 call "zip the top" c4a
    setup 1x4 1x4 rotate
@@ -4104,37 +4097,18 @@ call "box counter rotate" a2 tag boxctrrot
    setup 2x2 2x2
       array [CR1E AL0W AL1W CR0E]
 
+/* Does this need to be a call? */
+call "box counter couple up" c3x
+   simple_funny
+   setup 2x2 2x2
+      array [CR1W AL0E AL1W CR0E]
+
 call "split counter rotate" a2 tag splitctrrot
    /* This does the trick, and does it the RIGHT WAY!  The old way, if we had
       a 2x6, if we did "triple boxes working together split counter rotate",
       the warning about setups not interacting with each other won't be raised,
       because it was an 8 person call. */
    splitseq ctr_rot []
-
-
-/*
-call "split counter rotate" a2 tag splitctrrot
-   simple_funny
-   * Note that there is a bug in this call:  In a 2x6, if we do "triple boxes working
-      together split counter rotate", the warning about setups not interacting with
-      each other won't be raised, because this is an 8 person call.  Sigh.  Maybe the stuff
-      being referred to in the comment immediately below will save us. *
-
-   setup 2x4 2x4  * Need these two to force division into 2x2's instead of
-                     1x4's.  Someday we may be able to force that more gracefully. *
-      array [CR1E AL0W CR3E AL2W AL3W CR2E AL1W CR0E]
-   setup 4x2 2x4
-      array [CR1E CR6E CR3E CR4E AL3W AL4W AL1W AL6W]
-
-   setup 2x2 2x2
-      array [CR1E AL0W AL1W CR0E]
-   setup 1x4 1x4 rotate
-      array [CR0N CR1N AL0S AL1S]
-   setup dmd dmd rotate
-      array [CR0N 0 AL0S 0]
-   setup pmd dmd rotate
-      array [0 CR1N 0 AL1S]
-*/
 
 call "_counter rotate the star" dontshow tag ctrrotstar
    setup dmd dmd rotate
@@ -4144,10 +4118,10 @@ call "_counter rotate the star" dontshow tag ctrrotstar
    setup star star
       array [CR1E 0 AL1W 0]
 
-call "box counter couple up" c3x tag box_ctr_couple_up
-   simple_funny
-   setup 2x2 2x2
-      array [CR1W AL0E AL1W CR0E]
+call "_circulate and quarter in" dontshow tag circ_and_quarter_in
+            visible_fractions finish_means_skip_first_part
+   seq box_circ []
+   seq quarterin []
 
 call "rotate 1/4" c2 tag rot1
             parallel_conc_end       /* This makes it win if we tell the ends only
@@ -4812,8 +4786,7 @@ call "gamut" c3a
    seq cutdiamond [allow_forced_mod]
 
 call "ease off" c3a
-   /* The "box_ctr_couple_up" is a little bit sleazy. */
-   conc box_ctr_couple_up [] zing [conc_demand_lines conc_force_columns]
+   conc circ_and_quarter_in [] zing [conc_demand_lines conc_force_columns]
 
 call "bias circulate" c3a
    setup 2x4 2x4 restriction wave_only
@@ -5024,13 +4997,17 @@ call "regroup" c1
 call "_ends trip the set" dontshow tag etripset
    setup 2x2 2x2     /* This is trade and roll, but they must be leads. */
       array [CR1W AL0E 0 0]
+            alternate_definition [half] c3a
+   setup 2x2 2x2
+      array [CR1S AL0S 0 0]
 
 call "central trip the set" dontshow tag ctripset
-   setup 2x2 2x2     /* This is quarter out and trade. */
-      array [AL3E CR2W CAL1W ACR0E]
+            visible_fractions finish_means_skip_first_part
+   seq quarterout []
+   seq trade []
 
 call "trip the set" c3a
-   conc ctripset [] etripset [conc_demand_lines conc_force_lines endscando]
+   conc ctripset [] etripset [conc_demand_lines conc_force_otherway endscando]
 
 call "siamese breakdown" c4
    setup 1x2 1x2 rotate
@@ -6598,6 +6575,9 @@ call "_box circulate and trade" dontshow tag box_circ_and_trade
             no_cutting_through
    setup 2x2 2x2
       array [CR0N AL1N AL0S CR1S]
+            alternate_definition [half] c1
+   setup 2x2 2x2
+      array [CR1S AL0S ZM1N ZM0N]
 
 call "double down" c3x
    setup 2x4 2x4
@@ -7216,8 +7196,7 @@ call "scatter scoot chain thru" c1 tag scatscootchainthru
       array [CR3S CR2S AL1S AL0S 7S CM2N AM1N 4S]
 
 call "quick change" c4
-   /* The "box_ctr_couple_up" is a little bit sleazy. */
-   conc trade_and_roll [] box_ctr_couple_up [conc_demand_lines conc_force_columns]
+   conc trade_and_roll [] circ_and_quarter_in [conc_demand_lines conc_force_spots]
 
 call "deuces wild" c4
             half_is_inherited
@@ -7915,12 +7894,17 @@ call "explode the top, turn the star @9 more than usual" c3a
 
 call "_central bits and pieces" dontshow tag ctr_bits_pieces
    setup 2x2 2x2 qualifier wave_only
-      array [L2N R3N R0N L1N]
+      array [AL2N CR3N AACR0N CCAL1N]
    setup 2x2 2x2 qualifier in_or_out
-      array [R0N R3N R0N R3N]
+      array [CR0N CR3N AACR0N CR3N]
+            alternate_definition [half] c4a
+   setup 2x2 1x4 qualifier wave_only
+      array [AL0S CR2S AL1S CR3S]
+   setup 2x2 1x4 qualifier in_or_out
+      array [CR1S CR2S AR1S CR2S]
 
 call "bits and pieces" c4a
-   conc ctr_bits_pieces [] box_circ_and_trade [conc_demand_lines conc_force_columns endscando]
+   conc ctr_bits_pieces [] box_circ_and_trade [conc_demand_lines conc_force_otherway endscando]
 
 call "_fascinate part 1" dontshow tag fascinate1
             dont_use_in_resolve
@@ -8096,18 +8080,18 @@ call "_fold to face" dontshow tag foldtoface
       array [CR0S CR1S AL1S AL0S]
 
 call "_ctrs ramble" dontshow tag ctrsramble
-            cross_is_inherited intlk_is_inherited
+            cross_is_inherited intlk_is_inherited visible_fractions finish_means_skip_first_part
    seq foldtoface [inherit_cross inherit_intlk]
    seq slidethru []
 
 call "_ends ramble" dontshow tag endsramble
-            cross_is_inherited
+            cross_is_inherited visible_fractions finish_means_skip_first_part
    seq leads_div_move_along [inherit_cross]
    seq slidethru []
 
 call "ramble" c1 tag ramble
             fudge_to_q_tag cross_is_inherited intlk_is_inherited
-   conc ctrsramble [inherit_cross inherit_intlk] endsramble [inherit_cross conc_demand_columns conc_force_columns endscando]
+   conc ctrsramble [inherit_cross inherit_intlk] endsramble [inherit_cross conc_demand_columns conc_force_otherway endscando]
 
 call "_check ctrs cross counter" dontshow tag check_cross_counter
    setup 1x2 1x2
@@ -8419,16 +8403,19 @@ call "divvy up" c3x
       /* ***** make sure we do a "fudge to 3/4 tag" */
    conc single_wheel [] div_move_along [conc_demand_columns conc_force_lines]
 
-call "lead the way, part 1" dontshow tag leadtheway_1
-   conc peeloff [] trade []
+call "_centers lead the way" dontshow tag clead_way
+            visible_fractions finish_means_skip_first_part
+   seq peeloff []
+   seq bendtheline []
 
-call "lead the way, part 2" dontshow tag leadtheway_2
-   conc bendtheline [] roll []
+call "_ends lead the way" dontshow tag elead_way
+            visible_fractions finish_means_skip_first_part
+   seq trade []
+   seq roll []
 
 call "lead the way" c4
             visible_fractions finish_means_skip_first_part
-   seq leadtheway_1 []
-   seq leadtheway_2 []
+   conc clead_way [] elead_way [conc_demand_columns endscando]
 
 call "6X2 acey deucey" a1
             fudge_to_q_tag

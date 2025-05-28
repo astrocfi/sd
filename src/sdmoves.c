@@ -22,6 +22,7 @@
    canonicalize_rotation
    reinstate_rotation
    divide_for_magic
+   do_simple_split
    do_call_in_series
    move
 */
@@ -39,6 +40,9 @@ extern void canonicalize_rotation(setup *result)
    }
    else if (result->kind == s_normal_concentric) {
       int i;
+
+      if (result->inner.skind == s_normal_concentric || result->outer.skind == s_normal_concentric)
+         fail("Recursive concentric?????.");
 
       result->kind = result->inner.skind;
       result->rotation = result->inner.srotation;
@@ -1167,40 +1171,56 @@ that probably need to be put in. */
 
 
 
-   /* Check for "central" concept, and pick up correct definition. */
+   /* Check for "central" concept and its ilk, and pick up correct definition. */
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL) {
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
       uint32 temp_concepts;
-   
-      if (callspec->schema != schema_concentric)
-         fail("Can't do \"central\" with this call.");
-   
+
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
       /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the ends part of
          detour".  But if we say "ends central detour" we mean "ends do the *centers* part of detour". */
-      ss->cmd.cmd_misc_flags &= ~(CMD_MISC__CENTRAL | CMD_MISC__DOING_ENDS);
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__DOING_ENDS;
    
-      if (final_concepts &
-            ~(FINAL__SPLIT | HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
-         fail("This concept not allowed here.");
-   
-      /* Now we demand that, if the concept was given, the call had the appropriate flag set saying
+      /* Now we demand that, if a concept was given, the call had the appropriate flag set saying
          that the concept is legal and will be inherited to the children. */
    
       if (HERITABLE_FLAG_MASK & final_concepts & (~callspec->callflagsh)) fail("Can't do this call with this concept.");
-   
-      temp_concepts = final_concepts;
-   
-      if (callspec->stuff.conc.innerdef.modifiersh & ~callspec->callflagsh & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
-         if (final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
-            temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+
+      switch (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
+         case CMD_MISC__CENTRAL_PLAIN:
+            if (callspec->schema != schema_concentric)
+               fail("Can't do \"central\" with this call.");
+
+            if (final_concepts &
+                  ~(FINAL__SPLIT | HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
+               fail("This concept not allowed here.");
+
+            temp_concepts = final_concepts;
+
+            if (callspec->stuff.conc.innerdef.modifiersh & ~callspec->callflagsh & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
+               if (final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+                  temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+            }
+
+            temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~callspec->stuff.conc.innerdef.modifiersh);
+            callspec = base_calls[callspec->stuff.conc.innerdef.call_id];
+            final_concepts = temp_concepts;
+            ss->cmd.cmd_final_flags = final_concepts;
+            ss->cmd.callspec = callspec;
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__CENTRAL_MASK;   /* We are done. */
+            break;
+         case CMD_MISC__CENTRAL_SNAG:
+            if (final_concepts & ~HERITABLE_FLAG_MASK)
+               fail("This concept not allowed here.");
+
+            break;
+         case CMD_MISC__CENTRAL_MYSTIC:
+            if (final_concepts & ~HERITABLE_FLAG_MASK)
+               fail("This concept not allowed here.");
+
+            fail("Sorry, can't do mystic.");
+            break;
       }
-   
-      temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~callspec->stuff.conc.innerdef.modifiersh);
-      callspec = base_calls[callspec->stuff.conc.innerdef.call_id];
-      final_concepts = temp_concepts;
-      ss->cmd.cmd_final_flags = final_concepts;
-      ss->cmd.callspec = callspec;
    }
 
    if (callspec->callflags1 & CFLAG1_IMPRECISE_ROTATION)
@@ -1221,6 +1241,17 @@ that probably need to be put in. */
          the_schema = schema_conc_star16;
       else
          the_schema = schema_conc_star;
+   }
+
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
+      switch (the_schema) {
+         case schema_concentric:
+         case schema_single_concentric:
+         case schema_single_concentric_together:
+            break;
+         default:
+            fail("Can't do \"central/snag/mystic\" with this call.");
+      }
    }
 
    /* Do some quick error checking for visible fractions.  For now, either flag is acceptable.  Later, we will
@@ -1266,6 +1297,7 @@ that probably need to be put in. */
    switch (the_schema) {
       case schema_single_concentric:
       case schema_single_cross_concentric:
+         ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
          if (!do_simple_split(ss, TRUE, result))
             return;
 
@@ -1273,6 +1305,7 @@ that probably need to be put in. */
       case schema_single_concentric_together:
          switch (ss->kind) {
             case s1x8: case s_ptpd:
+               ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
                (void) do_simple_split(ss, TRUE, result);
                return;
          }
@@ -2140,8 +2173,8 @@ extern void move(
 
       result->result_flags = 0;
 
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL)
-         fail("Can't do \"central\" followed by another concept.");
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK)
+         fail("Can't do \"central/snag/mystic\" followed by another concept.");
 
       if (check_concepts == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no

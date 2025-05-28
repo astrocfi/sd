@@ -1,6 +1,13 @@
-		   RELEASE NOTES FOR SD VERSION 30.83
-		 Database version = 30.83 format = 51,
+		   RELEASE NOTES FOR SD VERSION 30.84
+		 Database version = 30.84 format = 51,
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 30.84 ******
+
+The directions "zig-zag" etc. disappear when the
+calling level is below A2.
+
+New concepts: SNAG and INVERT SNAG.
 
 ****** Changes as of version 30.83 ******
 
@@ -10,6 +17,12 @@ This is very experimental.  It has a very incomplete version of
 some MAJOR changes in the way tagging calls are done.  If your
 name is Lynette Bellini, you know what they are.  If not, you
 should *NOT* use this program.
+
+The menu alphabetization algorithm has been changed.  Designators
+like <ATC>, <ANYONE>, <DIRECTION>, and <N> appearing in a call name
+are alphabetized before normal letters.  This means that calls
+like "<ATC> your neighbor" will be near the top of the menu,
+as will "<ANYONE> run".
 
 "Magic" and "interlocked" are also handled as described below for
 "cross" and "left".  So you can type in "switch to a magic diamond"
@@ -22,9 +35,8 @@ A long-standing bug in sdtty, causing it to crash when scrolling
 through a large amount of "?" text, was fixed.
 
 A major change was made in the way parsing is done in the "sdtty"
-program.
-
-This information supersedes information in the current manual.
+program.  The following information supersedes information in the
+current manual:
 
 In previous versions of the program, "cross" and "left" versions
 of calls were obtained by typing those concepts in front of the
@@ -116,7 +128,8 @@ You can type in calls such as "quarter thru" to sdtty either in words:
 "quarter thru"/"three quarter thru", or as fractions: "1/4 thru"/"3/4 thru".
 They will always print out in the transcript in words.  In the sd program,
 they appear on the menu as "<N/4> thru", alphabetized under "t" for "thru".
-A popup will appear asking for the number.
+A popup will appear asking for the number.  [Alphabetization superseded
+at version 30.83.  "<N/4> thru" is near the top of the menu.]
 
 The "fractional" concept, as in "3/5 swing the fractions", is now
 entered just as the fraction, for example, "3/5".  The word "(fractional)"
@@ -157,7 +170,7 @@ only be acted upon if the qualifier is satisfied and the number matches.  The qu
 
 ****** Changes as of version 30.77 ******
 
-For users of the X11 window system (sd on Unix), the "parallelogram" concept
+For users of the X11 window system (Sd on Unix), the "parallelogram" concept
 has been moved to the "distorted setup concepts" submenu, at the bottom of
 the second column.
 
@@ -208,6 +221,7 @@ as waves, two-faced lines, magic columns, facing lines, etc.  Also, there
 is a concept "with active phantoms" that can be used after these.  Please
 see the manual for a discussion of what these concepts mean.  The
 implementation of these concepts is in a rather incomplete state at present.
+[This item superseded at version 30.78.]
 
 New calls: [cross] kick by <n>.  Double/triple star thru.  Square thru
 etc. to a wave.  Square thru but on the <Nth> hand (courtesy of Dave
@@ -223,7 +237,7 @@ They will not appear in the printed transcript file.
 It now prints the "1/2" correctly in things like "reflected [1/2 tag]" and
 "[revert [1/2 flip]] motivate".  It used to take the "1/2" out, with
 disastrous results, in the mistaken belief that these calls were like
-"[flip] your neighbor".
+"[flip] your neighbor".  [This item superseded at version 30.83.]
 
 The plural of "beau" is now spelled "beaus", in accordance with the
 Callerlab C1 list (but not the C1 definitions!)
@@ -249,7 +263,7 @@ Briefly, they mean the following:
     "own the <so-and-so>" is like "do your part", except that strict
          matrix positioning is used.
 Please read the section "so-and-so only" in the manual for details.
-         [Superseded as of 30.78.]
+         [Superseded at version 30.78.]
 
 Note that the prior inability to have, for example, the girls hinge from
 a BGGBBGGB grand wave to make point-to-point diamonds, is now fixed.
@@ -305,7 +319,7 @@ a starting DPT or from facing lines is now illegal.
 
 The "allow modifications" icon only needs to be clicked on (or typed)
 once to get the full range of modifications.  There are no longer two
-levels of modifiability.  [Superseded as of 30.79.]
+levels of modifiability.  [Superseded at version 30.79.]
 
 A few function keys have been defined for the PC.  Pressing the following
 keys is equivalent to entering the indicated text.  Future versions of the

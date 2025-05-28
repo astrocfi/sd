@@ -1304,6 +1304,8 @@ extern void concentric_move(
 
    uint32 saved_number_fields = current_number_fields;
 
+   uint32 snagflag = ss->cmd.cmd_misc_flags;
+
    /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
    if (analyzer != schema_conc_triple_lines)    /* Yes!  We allow "quick so-and-so shove off"! */
@@ -1318,10 +1320,25 @@ extern void concentric_move(
    localmodsin1 = modifiersin1;
    localmodsout1 = modifiersout1;
 
+   if ((snagflag & CMD_MISC__CENTRAL_MASK) == CMD_MISC__CENTRAL_SNAG) {
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't do fractional \"snag\".");
+
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__CENTRAL_MASK;
+   }
+
    begin_inner[0].cmd = ss->cmd;
-   begin_inner[1].cmd = ss->cmd;
-   begin_inner[2].cmd = ss->cmd;
    begin_outer.cmd = ss->cmd;
+
+   if ((snagflag & CMD_MISC__CENTRAL_MASK) == CMD_MISC__CENTRAL_SNAG) {
+      if (snagflag & CMD_MISC__INVERT_CENTRAL)
+         begin_outer.cmd.cmd_frac_flags = 0x00200112;
+      else
+         begin_inner[0].cmd.cmd_frac_flags = 0x00200112;
+   }
+
+   begin_inner[1].cmd = begin_inner[0].cmd;
+   begin_inner[2].cmd = begin_inner[0].cmd;
 
    concentrify(ss, analyzer, begin_inner, &begin_outer, &center_arity, &begin_outer_elongation, &begin_xconc_elongation);
 
