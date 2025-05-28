@@ -118,6 +118,12 @@
    rgtglmap1
 */
 
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
 
 
@@ -159,9 +165,6 @@ selector_item selector_list[] = {
    {"center 1x6",   "center 1x6",  "CENTER 1X6",   "CENTER 1X6",  selector_uninitialized},
    {"outer 1x3s",   "outer 1x3s",  "OUTER 1X3s",   "OUTER 1X3s",  selector_uninitialized},
    {"center 4",     "center 4",    "CENTER 4",     "CENTER 4",    selector_outerpairs},
-   {"center wave",  "center wave", "CENTER WAVE",  "CENTER WAVE", selector_outerpairs},
-   {"center line",  "center line", "CENTER LINE",  "CENTER LINE", selector_outerpairs},
-   {"center column","center column","CENTER COLUMN","CENTER COLUMN",selector_outerpairs},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
 #ifdef TGL_SELECTORS
    /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
@@ -275,7 +278,6 @@ Cstring warning_strings[] = {
    /*  warn__diagqtag_feet       */   " Adjust to diagonal 1/4 tag footprints on other diagonal.",
    /*  warn__adjust_to_feet      */   " Adjust back to footprints.",
    /*  warn__some_touch          */   " Some people step to a wave.",
-   /*  warn__some_touch_evil     */   " Some people step to a miniwave -- this may be problematical.",
    /*  warn__split_to_2x4s       */   "=Do the call in each 2x4.",
    /*  warn__split_to_2x3s       */   "=Do the call in each 2x3.",
    /*  warn__split_to_1x8s       */   "=Do the call in each 1x8.",
@@ -1022,14 +1024,10 @@ expand::thing expand::init_table[] = {
     8, s_rigger,sbigrig,0, 0UL, 0303,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_2X2) |
                                               NEEDMASK(CONCPROP__NEEDK_END_1X4)},
-   {{2, 3, 4, 5, 8, 9, 10, 11},
-    8, s3x1dmd,sbig3x1dmd,0, 0UL, 0303,
-    warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_DMD) |
-                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{1, 2, 3, 4, 7, 8, 9, 10},
     8, s2x4, s2x6, 0, 0UL, 04141,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_2X6) |
-                                              NEEDMASK(CONCPROP__NEEDK_CTR_2X2) |
+                                              NEEDMASK(CONCPROP__NEEDK_CTR_2X2) | 
                                               NEEDMASK(CONCPROP__NEEDK_END_2X2)},
    {{11, 5},
     2, s1x2, s3dmd, 0, 0UL, ~0UL,
@@ -1083,7 +1081,7 @@ expand::thing expand::init_table[] = {
 // the code number for it.  The maps themselves are in tables
 // "map_init_table" and "spec_map_table" in this file.
 // The procedure "get_map_from_code" takes the code number and finds
-// the indicated map in the tables.  The principal users of maps are
+// the indicated map in the tables.  The principle users of maps are
 // "divided_setup_move" and "overlapped_setup_move".  They are simply
 // given the map code, and they call "get_map_from_code" to get the
 // map itself.  There are few other places that call "get_map_from_code"
@@ -1855,9 +1853,6 @@ map::map_thing map::map_init_table[] = {
    {{-1, 0, 7, 5, -1, 6,               1, -1, 2, -1, 4, 3},
     s_bone6,2,MPKIND__SPLIT,0,    0,  s_rigger,  0x000, 0},
 
-   {{-1, 0, 7, 6, 5, -1, -1, -1,       1, -1, -1, -1, -1, 4, 3, 2},
-    s_bone,2,MPKIND__SPLIT,0,     0,  s_rigger,  0x000, 0},
-
    {{0, 1, 3, 2, 7, 6, 4, 5,           15, 14, 12, 13, 8, 9, 11, 10},
     s1x8,2,MPKIND__SPLIT,0,       0,  s1x16,      0x000, 0},
    {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},
@@ -2260,11 +2255,7 @@ const map::map_thing map::spec_map_table[] = {
    {{3, 5, 17, 15, 18, 20, 22, 1,         6, 8, 10, 13, 15, 17, 5, 3},
     s2x4,2,MPKIND__NONE,1,        0,  s_bigblob, 0x005, 0, spcmap_wblob_1x4c},
    {{21, 23, 11, 9, 12, 14, 16, 19,       0, 2, 4, 7, 9, 11, 23, 21},
-    s2x4,2,MPKIND__NONE,1,        0,  s_bigblob, 0x005, 0, spcmap_wblob_1x4d},
-   {{0, 1, 2, 3, 9, 8, 7, 6},
-    s1x2,4,MPKIND__NONE,0,        0,  sbigbone, 0x000, 0, spcmap_bigbone_cw},
-   {{11, 10, 2, 3, 9, 8, 4, 5},
-    s1x2,4,MPKIND__NONE,0,        0,  sbigbone, 0x000, 0, spcmap_bigbone_ccw}};
+    s2x4,2,MPKIND__NONE,1,        0,  s_bigblob, 0x005, 0, spcmap_wblob_1x4d}};
 
 
 static expand::thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, s_thar, s4x4, 0};
@@ -2305,12 +2296,9 @@ static expand::thing rear_1x3qtag_stuff = {{9, 10, 0, 11, 3, 4, 6, 5}, 8, nothin
 
 static expand::thing step_8by_stuff = {{6, 7, 0, 1, 2, 3, 4, 5}, 8, s_thar, s_qtag, 0};
 static expand::thing step_sqs_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_thar, s2x4, 0};
-static expand::thing step_sqsctr_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_qtag, s2x4, 1};
-static expand::thing step_qtctr_stuff = {{5, 7, 6, 0, 1, 3, 2, 4}, 8, s2x4, s_qtag, 1};
-static expand::thing step_1x8ctr_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, s_ptpd, s1x8, 0};
-static expand::thing step_ptpctr_stuff = {{0, 3, 2, 1, 4, 7, 6, 5}, 8, s1x8, s_ptpd, 0};
-static expand::thing step_1x4ctr_stuff = {{0, 1, 2, 3}, 4, sdmd, s1x4, 0};
-static expand::thing step_dmdctr_stuff = {{0, 3, 2, 1}, 4, s1x4, sdmd, 0};
+static expand::thing step_sqssemi_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_qtag, s2x4, 1};
+static expand::thing step_1x8semi_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, s_ptpd, s1x8, 0};
+static expand::thing step_tb1x4ctr_stuff = {{0, 1, 2, 3}, 4, sdmd, s1x4, 0};
 
 static expand::thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 0};
 static expand::thing step_qbox_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, 8, s_bone, s2x4, 0};
@@ -2356,6 +2344,7 @@ static expand::thing step_tgl4_stuffb = {{3, 2, 0, 1}, 4, nothing, s2x2, 0};
 static expand::thing step_dmd_stuff   = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
 static expand::thing step_tgl_stuff   = {{2, 0, 1}, 3, nothing, s1x3, 1};
 static expand::thing step_ptpd_stuff  = {{0, 3, 2, 1, 4, 7, 6, 5}, 8, nothing, s1x8, 0};
+static expand::thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s2x4, 1};
 
 full_expand::thing rear_1x2_pair      = {warn__rear_back,  8, &step_1x2_stuff};
 full_expand::thing rear_2x2_pair      = {warn__rear_back,  8, &step_2x2v_stuff};
@@ -2369,7 +2358,7 @@ full_expand::thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
 full_expand::thing step_tgl_pair      = {warn__some_touch, 0, &step_tgl_stuff};
 full_expand::thing step_ptpd_pair     = {warn__some_touch, 0, &step_ptpd_stuff};
 
-full_expand::thing step_qtgctr_pair   = {warn__some_touch, 8, &step_qtctr_stuff};
+full_expand::thing step_qtgctr_pair   = {warn__some_touch, 0, &step_qtgctr_stuff};
 
 full_expand::thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_1x2_stuff,   s1x2,         0xFUL,        0x2UL, ~0UL},      /* Rear back from a miniwave to facing people. */
@@ -2461,85 +2450,82 @@ full_expand::thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_phan3_stuff,   s_c1phan, 0xCCCCCCCCUL, 0x08808008UL, ~0UL},
    {warn__some_touch, 0, &step_phan4_stuff,   s_c1phan, 0x33333333UL, 0x20200202UL, ~0UL},
 
-   // Some people touch from horrible "T"'s.
+   /* Some people touch from horrible "T"'s. */
    {warn__some_touch, 0, &step_bigd_stuff1,   sbigdmd,    0xFF0FF0UL,   0x280820UL, ~0UL},
+
    {warn__some_touch, 0, &step_bigd_stuff2,   sbigdmd,    0x0FF0FFUL,   0x082028UL, ~0UL},
 
-   // Check for stepping to a grand wave from lines facing.
+   /* Check for stepping to a grand wave from lines facing. */
    {warn__none,      16, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},
    {warn__none,      16, &step_li6_stuff,     s2x3,          0xFFFUL,      0xA80UL, ~0UL},
    {warn__none,      16, &step_spindle_stuff, s_spindle,    0xFFFFUL,     0xA802UL, ~0UL},
-   // Same, with missing people.
+
+   /* Same, with missing people. */
    {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},
    {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},
 
-   // Check for stepping to a bone from a squared set or whatever.
+   /* Check for stepping to a bone from a squared set or whatever. */
    {warn__none,      16, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},
 
-   // Check for stepping to a bone6 from a 2x3.
+   /* Check for stepping to a bone6 from a 2x3. */
    {warn__none,       0, &step_bn23_stuff,    s2x3,          07777UL,      03121UL,  03535UL},
 
-   // Check for centers stepping to a column from a bone.
+   /* Check for centers stepping to a column from a bone. */
    {warn__none,       0, &step_24bn_stuff,    s_bone,       0xFFFFUL,     0x5D57UL, 0x5F5FUL},
 
-   // Check for centers stepping to a column of 6 from a bone6.
+   /* Check for centers stepping to a column of 6 from a bone6. */
    {warn__none,       0, &step_23bn_stuff,    s_bone6,       07777UL,      02725UL,  02727UL},
 
-   // Check for stepping to rigger from suitable T-bone.
+   /* Check for stepping to rigger from suitable T-bone. */
    {warn__some_touch,16, &step_2x4_rig_stuff, s2x4,       0xFFFFUL,     0x963CUL, ~0UL},
    {warn__none,       0, &step_offs1_stuff,   s3x4,     0x0FF0FFUL,   0x07D0D7UL, ~0UL},
    {warn__none,       0, &step_offs2_stuff,   s3x4,     0xF0FF0FUL,   0x70DD07UL, ~0UL},
 
-   // Triangle base, who are facing, touch.
+   /* Triangle base, who are facing, touch. */
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0xFFUL,       0xD7UL, ~0UL},
-   // Same, with missing people.
-   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0xF0UL,       0xD0UL, ~0UL},
-   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0x0FUL,       0x07UL, ~0UL},
+   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0xF0UL,       0xD0UL, ~0UL}, /* Same, with missing people. */
+   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0x0FUL,       0x07UL, ~0UL}, /* Same, with missing people. */
 
-   // Triangle apexes, who are facing, touch.
+   /* Triangle apexes, who are facing, touch. */
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xFFUL,       0x22UL, ~0UL},
-   // Same, with missing people.
-   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xF0UL,       0x20UL, ~0UL},
-   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0x0FUL,       0x02UL, ~0UL},
+   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xF0UL,       0x20UL, ~0UL}, /* Same, with missing people. */
+   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0x0FUL,       0x02UL, ~0UL}, /* Same, with missing people. */
 
-   // Ends touch from a "bone" to a grand wave.
+   /* Ends touch from a "bone" to a grand wave. */
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA802UL, 0xFFFFUL},
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA208UL, 0xFFFFUL},
 
-   // All touch from a "bone" to a rigger.
+   /* All touch from a "bone" to a rigger. */
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xFFFFUL,     0xAD07UL, 0xFFFFUL},
-   // Same, with missing people.
-   {warn__none,       0, &step_bone_rigstuff, s_bone,     0xF0F0UL,     0xAD07UL, 0xF0F0UL},
-   {warn__none,       0, &step_bone_rigstuff, s_bone,     0x0F0FUL,     0xAD07UL, 0x0F0FUL},
+   {warn__none,       0, &step_bone_rigstuff, s_bone,     0xF0F0UL,     0xAD07UL, 0xF0F0UL}, /* Same, with missing people. */
+   {warn__none,       0, &step_bone_rigstuff, s_bone,     0x0F0FUL,     0xAD07UL, 0x0F0FUL}, /* Same, with missing people. */
 
-   // Centers touch from a "rigger" to a grand wave.
+   /* Centers touch from a "rigger" to a grand wave. */
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xFFFFUL,     0xA802UL, 0xFFFFUL},
-   // Same, with missing people.
-   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0UL,     0xA802UL, 0xF0F0UL},
-   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FUL,     0xA802UL, 0x0F0FUL},
+   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0UL,     0xA802UL, 0xF0F0UL}, /* Same, with missing people. */
+   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FUL,     0xA802UL, 0x0F0FUL}, /* Same, with missing people. */
 
-   // Check for stepping to a miniwave from people facing.
+   /* Check for stepping to a miniwave from people facing. */
    {warn__none,       0, &step_1x2_stuff,     s1x2,          0xFUL,        0x7UL, 0xFUL},
 
-   // Check for stepping to a box from a 1x4 single 8 chain -- we allow some phantoms.
-   // This is what makes triple columns turn and weave legal in certain interesting cases.
+   /* Check for stepping to a box from a 1x4 single 8 chain -- we allow some phantoms.
+      This is what makes triple columns turn and weave legal in certain interesting cases. */
    {warn__none,       0, &step_1x4_stuff,     s1x4,         0xFFUL,       0x7DUL, 0xFFUL},
    {warn__none,       0, &step_1x4_stuff,     s1x4,         0xF0UL,       0x7DUL, 0xF0UL},
    {warn__none,       0, &step_1x4_stuff,     s1x4,         0x0FUL,       0x7DUL, 0x0FUL},
 
-   // Check for stepping to a single 1/4 tag or 3/4 tag from a single-file DPT or trade-by --
-   // we allow some phantoms, as above.
+   /* Check for stepping to a single 1/4 tag or 3/4 tag from a single-file DPT or trade-by --
+      we allow some phantoms, as above. */
    {warn__none,       0, &step_1x4_side_stuff, s1x4,        0xFFUL,       0xD7UL, 0xFFUL},
    {warn__none,       0, &step_1x4_side_stuff, s1x4,        0xFFUL,       0x5FUL, 0xFFUL},
    {warn__none,       0, &step_1x4_side_stuff, s1x4,        0x33UL,       0x13UL, 0x33UL},
 
-   // Check for stepping to a column from a 1x8 single 8 chain.
+   /* Check for stepping to a column from a 1x8 single 8 chain. */
    {warn__none,       0, &step_1x8_stuff,      s1x8,      0xFFFFUL,     0x7DD7UL, 0xFFFFUL},
-   // Same, with missing people.
-   {warn__none,       0, &step_1x8_stuff,      s1x8,      0xF0F0UL,     0x7DD7UL, 0xF0F0UL},
-   {warn__none,       0, &step_1x8_stuff,      s1x8,      0x0F0FUL,     0x7DD7UL, 0x0F0FUL},
+   {warn__none,       0, &step_1x8_stuff,      s1x8,      0xF0F0UL,     0x7DD7UL, 0xF0F0UL}, /* Same, with missing people. */
+   {warn__none,       0, &step_1x8_stuff,      s1x8,      0x0F0FUL,     0x7DD7UL, 0x0F0FUL}, /* Same, with missing people. */
 
-   // Check for stepping to parallel waves from an 8 chain.
+   /* Check for stepping to parallel waves from an 8 chain. */
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0xFFFFUL,     0x77DDUL, 0xFFFFUL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0xF0F0UL,     0x77DDUL, 0xF0F0UL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0x0F0FUL,     0x77DDUL, 0x0F0FUL},
@@ -2549,22 +2535,17 @@ full_expand::thing touch_init_table3[] = {
    // Ends touch from diamonds to thar.
    {warn__none,       8, &step_8by_stuff,      s_qtag,    0xFFFFUL,     0x78D2UL, ~0UL},
 
-   // Touch from alamo 8-chain to thar.
+   /* Touch from alamo 8-chain to thar. */
    {warn__none,       8, &rear_thar_stuff,     s4x4,  0x3C3C3C3CUL, 0x2034081CUL, ~0UL},
+
 
    // Touch from "general lines with centers 1/4ed in" 2x4 to qtag.
    // Touch from "facing lines with centers 1/4ed in" 2x4 to thar.
    // These two must be in the order shown.
-   {warn__none,    64+8, &step_sqsctr_stuff,   s2x4,      0xFFFFUL,     0x1C34UL, 0x3C3CUL},
+   {warn__none,       8, &step_sqssemi_stuff,  s2x4,      0xFFFFUL,     0x1C34UL, 0x3C3CUL},
    {warn__none,       8, &step_sqs_stuff,      s2x4,      0xFFFFUL,     0x9E34UL, ~0UL},
-   {warn__none,    64+8, &step_1x8ctr_stuff,   s1x8,      0xFFFFUL,     0x1331UL, 0x3333UL},
-   {warn__none,    64+8, &step_1x4ctr_stuff,   s1x4,        0xFFUL,       0x13UL, 0x33UL},
-
-   // Same, with different orientation of centers.
-   // The 32 bit says these are allowed only for fan the top.
-   {warn__some_touch,64+32+8,&step_qtctr_stuff, s_qtag,   0xFFFFUL,     0x0D07UL, 0x0F0FUL},
-   {warn__none,    64+32+8, &step_ptpctr_stuff, s_ptpd,   0xFFFFUL,     0x2002UL, 0x3333UL},
-   {warn__none,    64+32+8, &step_dmdctr_stuff,   sdmd,     0xFFUL,       0x20UL, 0x33UL},
+   {warn__none,       8, &step_1x8semi_stuff,  s1x8,      0xFFFFUL,     0x1331UL, 0x3333UL},
+   {warn__none,       8, &step_tb1x4ctr_stuff, s1x4,        0xFFUL,       0x13UL, 0x33UL},
 
    {warn__none,       0, (expand::thing *) 0, nothing}
 };
@@ -2606,6 +2587,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x2,     s2x2,     0, 1, 1, 2,  0x2FD, schema_concentric_others},
    {s2x6,           schema_concentric, {11, 0, 1, 10, 7, 4, 5, 6,           9, 2, 3, 8},
              s2x2,     s2x2,     1, 1, 2, 2,  0x2FB, schema_in_out_triple},
+   {sbigbone,       schema_concentric, {11, 0, 1, 10, 7, 4, 5, 6,           2, 3, 8, 9},
+             s2x2,     s1x4,     1, 0, 1, 2,  0x2FD, schema_in_out_triple},
    {sbigdmd,        schema_concentric, {0, 1, 10, 11, 4, 5, 6, 7,           8, 9, 2, 3},
              s2x2,     s1x4,     0, 1, 2, 2,  0x2F7, schema_in_out_triple},
    {s_hrglass,      schema_concentric, {5, 0, 1, 4,       6, 3, 2, 7},
@@ -2616,6 +2599,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     sdmd,     1, 0, 1, 2,  0x2FD, schema_in_out_triple},
    {sbighrgl,       schema_concentric, {11, 0, 1, 10, 7, 4, 5, 6,           8, 9, 2, 3},
              s2x2,     sdmd,     1, 1, 1, 2,  0x2FB, schema_in_out_triple},
+   {sbigrig,        schema_concentric, {0, 1, 3, 2, 9, 8, 6, 7,             11, 4, 5, 10},
+             s1x4,     s2x2,     0, 1, 1, 2,  0x2F7, schema_in_out_triple},
    {s4x4,           schema_concentric, {8, 6, 4, 5, 12, 13, 0, 14,          11, 15, 3, 7},
              s1x4,     s2x2,     0, 1, 2, 2,  0x2FD, schema_in_out_triple},
    {s_crosswave,    schema_in_out_triple, {0, 1, 5, 4,      6, 7, 2, 3},
@@ -2646,13 +2631,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     sdmd,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
    {s1x3dmd,         schema_concentric, {-1, -1, 1, 0, 5, 4, -1, -1,        2, 3, 6, 7},
              s1x4,     sdmd,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
-   {s3dmd,          schema_in_out_triple, {8, 9, 0, 10, 6, 4, 2, 3,         7, 11, 1, 5},
+   {s3dmd,          schema_in_out_triple, {8, 9, 0, 10, 6, 4, 2, 3,       7, 11, 1, 5},
              sdmd,     sdmd,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
-
-   // A new one, 13 July 2003.
-   {s_dhrglass,      schema_in_out_triple, {-1, 0, 6, 5, 2, 1, -1, 4,       -1, 7, -1, 3},
-             sdmd,     s1x4,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
-
    {s4dmd,          schema_in_out_quad, {11, 12, 0, 13, 8, 5, 3, 4,
                          1, 2, 6, 7, 9, 10, 14, 15},
              sdmd,     s_qtag,   1, 0, 1, 2,  0x0FD, schema_in_out_quad},
@@ -2701,39 +2681,31 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    // is currently unused.
    {s4x6,           schema_concentric, {17, -1, 0, -1, 12, -1, 5,-1,    10, 9, 8, 7, 22, 21, 20, 19},
              sdmd,     s2x4,     1, 0, 1, 2,  0x2FD, schema_in_out_quad},
-
-   {s4x6,           schema_nothing, {15, 20, 9, 2, 3, 8, 21, 14,
-                                     5, 6, 23, 7, 12, 13, 16, 22,
-                                     17, 18, 11, 19, 0, 1, 4, 10},
-             s2x4,     s4x4,     1, 0, 1, 1,  0x2FD, schema_concentric},
-
-   {sbigrig,        schema_nothing, {0, 1, 3, 2, 9, 8, 6, 7,    -1, 11, 4, -1, -1, 5, 10, -1},
+   {sbigrig,        schema_concentric, {0, 1, 3, 2, 9, 8, 6, 7,    -1, 11, 4, -1, -1, 5, 10, -1},
              s1x4,     s2x4,     0, 1, 1, 2,  0x2F7, schema_in_out_quad},
-   {s4x6,           schema_nothing, {18, 11, 10, 19, 22, 7, 6, 23,
-                                     15, 20, 9, 2, 3, 8, 21, 14},
+   {s4x6,           schema_concentric, {18, 11, 10, 19, 22, 7, 6, 23,    15, 20, 9, 2, 3, 8, 21, 14},
              s2x2,     s2x4,     1, 1, 1, 2,  0x2FB, schema_in_out_quad},
-   {s4x6,           schema_nothing, {11, 10, 19, 18, 7, 6, 23, 22,
-                                     15, 20, 9, 2, 3, 8, 21, 14},
+   {s4x6,           schema_concentric, {11, 10, 19, 18, 7, 6, 23, 22,    15, 20, 9, 2, 3, 8, 21, 14},
              s2x2,     s2x4,     0, 1, 1, 2,  0x2F7, schema_in_out_quad},
-   {s_qtag,         schema_nothing, {6, 7, 2, 3,
+   {s_qtag,         schema_concentric, {6, 7, 2, 3,
                         -1, 0, 1, -1, -1, -1, -1, -1,    -1, 4, 5, -1, -1, -1, -1, -1},
              s1x4,     s4x4,     0, 1, 1, 1,  0x2FD, schema_conc_o},
-   {s_bone,         schema_nothing, {6, 7, 2, 3,
+   {s_bone,         schema_concentric, {6, 7, 2, 3,
                         -1, -1, -1, -1, -1, 1, 4, -1, -1, -1, -1, -1, -1, 5, 0, -1},
              s1x4,     s4x4,     0, 1, 1, 1,  0x2F7, schema_conc_o},
-   {s_hrglass,      schema_nothing, {6, 3, 2, 7,
+   {s_hrglass,      schema_concentric, {6, 3, 2, 7,
                         -1, 0, 1, -1, -1, -1, -1, -1, -1, 4, 5, -1, -1, -1, -1, -1},
              sdmd,     s4x4,     0, 1, 1, 1,  0x2FD, schema_conc_o},
-   {s_dhrglass,     schema_nothing, {6, 3, 2, 7,
+   {s_dhrglass,     schema_concentric, {6, 3, 2, 7,
                         -1, -1, -1, -1, -1, 1, 4, -1, -1, -1, -1, -1, -1, 5, 0, -1},
              sdmd,     s4x4,     0, 1, 1, 1,  0x2F7, schema_conc_o},
-   {s_bone,         schema_nothing, {6, 7, 2, 3,    -1, 0, 1, -1, -1, 4, 5, -1},
+   {s_bone,         schema_concentric, {6, 7, 2, 3,    -1, 0, 1, -1, -1, 4, 5, -1},
              s1x4,     s2x4,      0, 0, 1, 1,  0x2FE, schema_concentric},
-   {sbigdmd,        schema_nothing, {8, 9, 2, 3,    0, 1, 4, 5, 6, 7, 10, 11},
+   {sbigdmd,        schema_concentric, {8, 9, 2, 3,    0, 1, 4, 5, 6, 7, 10, 11},
              s1x4,     s2x4,     1, 0, 1, 1,  0x2FD, schema_concentric},
-   {s3x4,           schema_nothing, {10, 11, 4, 5,    0, 1, 2, 3, 6, 7, 8, 9},
+   {s3x4,           schema_concentric, {10, 11, 4, 5,    0, 1, 2, 3, 6, 7, 8, 9},
              s1x4,     s2x4,     0, 0, 1, 1,  0x2FB, schema_concentric},
-   {s3x6,           schema_nothing, {15, 16, 17, 6, 7, 8,    0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14},
+   {s3x6,           schema_concentric, {15, 16, 17, 6, 7, 8,    0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14},
              s1x6,     s2x6,     0, 0, 1, 1,  0x2FB, schema_concentric},
    {s3x6,           schema_nothing, {12, 17, 2, 3, 8, 11,    15, 16, 6, 7},
              s2x3,     s1x4,     1, 0, 1, 1,  0x2DD, schema_concentric},
@@ -2769,8 +2741,6 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     s1x8,     1, 0, 9, 1,  0x2F5, schema_concentric},
    {sbigrig,        schema_concentric, {4, 5, 10, 11,     0, 1, 3, 2, 6, 7, 9, 8},
              s2x2,     s1x8,     0, 0, 9, 1,  0x2FA, schema_concentric},
-   {sbig3x1dmd,     schema_concentric, {11, 4, 5, 10,     0, 1, 3, 2, 6, 7, 9, 8},
-             sdmd,     s1x8,     1, 0, 9, 1,  0x2F5, schema_concentric},
    {s_bone6,        schema_concentric, {5, 2,    4, 0, 1, 3},
              s1x2,     s2x2,     0, 1, 2, 1,  0x2F7, schema_concentric},
    {s_bone6,        schema_concentric_6p, {5, 2,    0, 1, 3, 4},
@@ -2995,16 +2965,10 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s1x4,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
    {sbigh,          schema_in_out_triple, {3, 2, 0, 1, 6, 7, 9, 8,         4, 5, 10, 11},
              s1x4,     s1x4,     1, 0, 1, 2,  0x0FD, schema_in_out_triple},
-   {sbigbone,       schema_concentric, {11, 0, 1, 10, 7, 4, 5, 6,          2, 3, 8, 9},
-             s2x2,     s1x4,     1, 0, 1, 2,  0x2FD, schema_in_out_triple},
    {sbigbone,       schema_in_out_triple, {0, 1, 10, 11, 4, 5, 6, 7,       2, 3, 8, 9},
              s2x2,     s1x4,     0, 0, 1, 2,  0x0FE, schema_in_out_triple},
    {sbigrig,        schema_in_out_triple, {0, 1, 3, 2, 9, 8, 6, 7,         4, 5, 10, 11},
              s1x4,     s2x2,     0, 0, 1, 2,  0x0FE, schema_in_out_triple},
-   {sbigrig,        schema_concentric, {0, 1, 3, 2, 9, 8, 6, 7,             11, 4, 5, 10},
-             s1x4,     s2x2,     0, 1, 1, 2,  0x2F7, schema_in_out_triple},
-   {sbig3x1dmd,     schema_in_out_triple, {0, 1, 3, 2, 9, 8, 6, 7,         11, 4, 5, 10},
-             s1x4,     sdmd,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
    {sbigdmd,        schema_in_out_triple, {11, 0, 1, 10, 7, 4, 5, 6,       8, 9, 2, 3},
              s2x2,     s1x4,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
    {sbighrgl,       schema_in_out_triple, {0, 1, 10, 11, 4, 5, 6, 7,       8, 9, 2, 3},
@@ -3036,13 +3000,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     s1x4,     1, 0, 2, 1,  0x2F7, schema_in_out_triple},
    {s_bone,         schema_nothing, {0, 1, 4, 5,     6, 7, 2, 3},
              s2x2,     s1x4,     0, 0, 1, 1,  0x2FE, schema_in_out_triple},
-
-   // Next two are duplicate, for multiple analysis.
-   {s4x4,           schema_in_out_triple, {8, 9, 12, 10, 4, 2, 0, 1,     15, 3, 7, 11},
-             s1x4,     s2x2,     1, 0, 1, 2,  0x100, schema_nothing},
    {s4x4,           schema_in_out_triple, {8, 6, 4, 5, 12, 13, 0, 14,     15, 3, 7, 11},
              s1x4,     s2x2,     0, 0, 2, 2,  0x0FB, schema_in_out_triple},
-
    {s1x8,           schema_grand_single_concentric, {2, 6, 3, 7, 1, 5,    0, 4},
              s1x2,     s1x2,     0, 0, 1, 3,  0x0FA, schema_grand_single_concentric},
    {s_spindle,      schema_grand_single_concentric, {5, 1, 6, 0, 4, 2,    7, 3},
@@ -4445,22 +4404,6 @@ static const coordrec thingbigbone = {sbigbone, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigrig = {sbigrig, 4,
-   {-18, -14, -10,  -6,  -2,   2,  18,  14,  10,   6,   2,  -2},
-   {  0,   0,   0,   0,   2,   2,   0,   0,   0,   0,  -2,  -2}, {
-      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1,  0,  1,  2,  3,  4,  5,  9,  8,  7,  6, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, 11, 10, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
-
-static const coordrec thingbig3x1dmd = {sbig3x1dmd, 4,   // Used for both.
-   {-18, -14, -10,  -6,  -2,   0,  18,  14,  10,   6,   2,   0},
-   {  0,   0,   0,   0,   0,   5,   0,   0,   0,   0,   0,  -5}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,  5, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1,  0,  1,  2,  3,  4, 10,  9,  8,  7,  6, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1}};
-
 static const coordrec thingbigx = {sbigx, 4,
    {-17, -13,  -9,  -5,   0,   0,  17,  13,   9,   5,   0,   0},
    {  0,   0,   0,   0,   6,   2,   0,   0,   0,   0,  -6,  -2}, {
@@ -4621,7 +4564,7 @@ static const id_bit_table id_bit_table_dblspindle[] = {
 /* This table is accepted in any circumstances. */
 /* Note that the people marked "ID2_END" won't actually identify
    themselves as ends.  That is just to make "center 4" work. */
-static const id_bit_table id_bit_table_2x6[] = {
+static const id_bit_table id_bit_table_2x6[] = {  
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_CTR4),
@@ -4650,7 +4593,7 @@ id_bit_table id_bit_table_2x6_pg[] = {
    SEBITS(ID2_OUTRPAIRS),
    SWBITS(ID2_OUTRPAIRS)};
 
-static const id_bit_table id_bit_table_2x8[] = {
+static const id_bit_table id_bit_table_2x8[] = {  
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_END),
@@ -4833,7 +4776,7 @@ static const id_bit_table id_bit_table_323[] = {
    WESTBIT(ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3)};
 
 /* If the population is "common spot diamonds", the richer table below is used instead. */
-static const id_bit_table id_bit_table_bigdmd[] = {
+static const id_bit_table id_bit_table_bigdmd[] = {  
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_CTR1X4  | ID2_OUTR6),
@@ -4848,7 +4791,7 @@ static const id_bit_table id_bit_table_bigdmd[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
 /* This table is only accepted if the population is "common spot diamonds". */
-id_bit_table id_bit_table_bigdmd_wings[] = {
+id_bit_table id_bit_table_bigdmd_wings[] = {  
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
@@ -4862,7 +4805,7 @@ id_bit_table id_bit_table_bigdmd_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
 
-static const id_bit_table id_bit_table_bigptpd[] = {
+static const id_bit_table id_bit_table_bigptpd[] = {  
    NOBIT(ID2_OUTR6),
    NOBIT(ID2_OUTR6),
    NOBIT(ID2_OUTR6),
@@ -4877,7 +4820,7 @@ static const id_bit_table id_bit_table_bigptpd[] = {
    NOBIT(ID2_OUTR6)};
 
 /* If the population is a distorted tidal line (2-4-2), the richer table below is used instead. */
-static const id_bit_table id_bit_table_bigbone[] = {
+static const id_bit_table id_bit_table_bigbone[] = {  
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_CTR1X4  | ID2_OUTR6),
@@ -4891,37 +4834,23 @@ static const id_bit_table id_bit_table_bigbone[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
-// This table is only accepted if the population is a distorted tidal line (2-4-2).
-id_bit_table id_bit_table_bigbone_wings[] = {
-   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   WESTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   EASTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   EASTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   WESTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
-
-static const id_bit_table id_bit_table_bigrig[] = {
-   NOBIT(0),
-   NOBIT(0),
-   NOBIT(0),
-   NOBIT(0),
-   NOBIT( ID2_CENTER|ID2_CTR4),
-   NOBIT( ID2_CENTER|ID2_CTR4),
-   NOBIT(0),
-   NOBIT(0),
-   NOBIT(0),
-   NOBIT(0),
-   NOBIT( ID2_CENTER|ID2_CTR4),
-   NOBIT( ID2_CENTER|ID2_CTR4)};
+/* This table is only accepted if the population is a distorted tidal line (2-4-2). */
+id_bit_table id_bit_table_bigbone_wings[] = {  
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
+   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
+   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
 
 /* If the population is a "common spot hourglass", the richer table below is used instead. */
-static const id_bit_table id_bit_table_bighrgl[] = {
+static const id_bit_table id_bit_table_bighrgl[] = {  
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTRDMD  | ID2_OUTR6),
@@ -4936,7 +4865,7 @@ static const id_bit_table id_bit_table_bighrgl[] = {
    NOBIT(ID2_NCTRDMD | ID2_OUTR6)};
 
 /* This table is only accepted if the population is a "common spot hourglass". */
-id_bit_table id_bit_table_bighrgl_wings[] = {
+id_bit_table id_bit_table_bighrgl_wings[] = {  
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTR4      | ID2_CTRDMD  | ID2_OUTR6),
@@ -4951,7 +4880,7 @@ id_bit_table id_bit_table_bighrgl_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6)};
 
 /* If the population is a "common spot distorted hourglass", the richer table below is used instead. */
-static const id_bit_table id_bit_table_bigdhrgl[] = {
+static const id_bit_table id_bit_table_bigdhrgl[] = {  
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTRDMD  | ID2_CTR2),
@@ -4966,7 +4895,7 @@ static const id_bit_table id_bit_table_bigdhrgl[] = {
    NOBIT(ID2_NCTRDMD | ID2_OUTR6)};
 
 /* This table is only accepted if the population is a "common spot distorted hourglass". */
-id_bit_table id_bit_table_bigdhrgl_wings[] = {
+id_bit_table id_bit_table_bigdhrgl_wings[] = {  
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTR4      | ID2_CTRDMD  | ID2_CTR2),
@@ -5543,15 +5472,6 @@ static const id_bit_table id_bit_table_4x5[] = {
    NOBIT(ID2_NCTR1X4)};
 
 
-// The meaning of the special numeric characters in the display strings
-// is as follows:
-//
-// 5 - space equivalent to 1/2 glyph.
-// 6 - space equivalent to 1 full glyph.
-// 8 - Like 5, but one space less if doing ASCII.
-//     (Exactly same as 5 if doing checkers.
-// 9 - space equivalent to 3/4 glyph.
-
 // BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h
 const setup_attr setup_attrs[] = {
    {-1,                       // setup_limits
@@ -5560,7 +5480,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},             // mask_normal, mask_6_2, mask_2_6, mask_ctr_dmd
     {b_nothing, b_nothing},   // keytab
     {0, 0},                   // bounding_box
-    false,                    // four_way_symmetry
+    FALSE,                    // four_way_symmetry
     (const id_bit_table *) 0, // id_bit_table_ptr
     {(Cstring) 0,             // print_strings
      (Cstring) 0}},
@@ -5570,7 +5490,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x1, b_1x1},
     {1, 1},
-    true,
+    TRUE,
     (const id_bit_table *) 0,
     {"a@",
      (Cstring) 0}},
@@ -5580,7 +5500,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x2, b_2x1},
     {2, 1},
-    false,
+    FALSE,
     id_bit_table_1x2,
     {"a  b@",
      "a@b@"}},
@@ -5590,7 +5510,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x3, b_3x1},
     {3, 1},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c@",
      "a@b@c@"}},
@@ -5600,7 +5520,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x2, b_2x2},
     {2, 2},
-    true,
+    TRUE,
     id_bit_table_2x2,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -5610,7 +5530,7 @@ const setup_attr setup_attrs[] = {
     {0x5, 0, 0, 0},
     {b_1x4, b_4x1},
     {4, 1},
-    false,
+    FALSE,
     id_bit_table_1x4,
     {"a  b  d  c@",
      "a@b@d@c@"}},
@@ -5620,7 +5540,7 @@ const setup_attr setup_attrs[] = {
     {0x5, 0, 0, 0},
     {b_dmd, b_pmd},
     {0, 2},
-    false,
+    FALSE,
     id_bit_table_dmd,
     {"6 b@7a 6 c@76 d@",
      " 5a@@ db@@ 5c@"}},
@@ -5630,7 +5550,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_star, b_star},
     {0, 0},
-    true,
+    TRUE,
     (const id_bit_table *) 0,
     {"5 b@a  c@5 d@",
      (Cstring) 0}},
@@ -5640,7 +5560,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_trngl, b_ptrngl},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -5650,7 +5570,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_trngl4, b_ptrngl4},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -5660,7 +5580,7 @@ const setup_attr setup_attrs[] = {
      {0, 0, 0, 0},
      {b_bone6, b_pbone6},
      {0, 0},
-     false,
+     FALSE,
      id_bit_table_bone6,
      {"a6 6b@76f c@7e6 6d@",
       "ea@5f@5c@db@"}},
@@ -5670,7 +5590,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_short6, b_pshort6},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_short6,
     {"5 b@a  c@f  d@5 e@",
      "5 fa@e 6 b@5 dc@"}},
@@ -5680,7 +5600,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x6, b_6x1},
     {6, 1},
-    false,
+    FALSE,
     id_bit_table_1x6,
     {"a  b  c  f  e  d@",
      "a@b@c@f@e@d@"}},
@@ -5690,7 +5610,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x3, b_3x2},
     {3, 2},
-    false,
+    FALSE,
     id_bit_table_2x3,
     {"a  b  c@f  e  d@",
      "f  a@e  b@d  c@"}},
@@ -5700,7 +5620,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x2dmd, b_p1x2dmd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6  6 c@7a  b 6 e  d@76  6 f@",
      "5 a@@5 b@@f  c@@5 e@@5 d@"}},
@@ -5710,7 +5630,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x1dmd, b_p2x1dmd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_2x1dmd,
     {"6  5 c@@a  b  e  d@@6  5 f",
      "6  a@@6  b@7f  6  c@76  e@@6  d"}},
@@ -5720,7 +5640,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0xDD, 0x11, 0},
     {b_qtag, b_pqtag},
     {4, 0},
-    false,
+    FALSE,
     id_bit_table_qtag,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -5730,7 +5650,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0, 0x11, 0},
     {b_bone, b_pbone},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_bone,
     {"a6 6 6 6b@76g h d c@7f6 6 6 6e",
      "fa@5g@5h@5d@5c@eb"}},
@@ -5740,7 +5660,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0x77, 0x22, 0},
     {b_1x8, b_8x1},
     {8, 1},
-    false,
+    FALSE,
     id_bit_table_1x8,
     {"a b d c g h f e",
      "a@b@d@c@g@h@f@e"}},
@@ -5750,7 +5670,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -5760,7 +5680,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2stars, b_p2stars},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_2stars,
     {"  8a6 b@g8hd8c@  8f6 e",
      "9g@f8a@9h@@9d@e8b@9c"}},
@@ -5770,7 +5690,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0x77, 0x11, 0},
     {b_1x3dmd, b_p1x3dmd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_1x3dmd,
     {"6 6 6 d@7a b c 6 g f e@76 6 6 h",
      " 5a@@ 5b@@ 5c@@ hd@@ 5g@@ 5f@@ 5e@"}},
@@ -5780,7 +5700,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0xEE, 0, 0},
     {b_3x1dmd, b_p3x1dmd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_3x1dmd,
     {"6 6 9d@@a b c g f e@@6 6 9h",  // Not quite symmetrical, unfortunately.
      "6  a@@6  b@@6  c@7h  6  d@76  g@@6  f@@6  e"}},
@@ -5790,7 +5710,7 @@ const setup_attr setup_attrs[] = {
     {0, 0xEE, 0x44, 0},
     {b_spindle, b_pspindle},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_spindle,
     {"6a b c@7h6 6 6d@76g f e",
      "5h@ga@fb@ec@5d"}},
@@ -5800,7 +5720,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0xDD, 0x11, 0},
     {b_hrglass, b_phrglass},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_hrglass,
     {"9a5b@56d@7g66c@756h@9f5e",
      "6 g@7f 6 a@5 hd@e 6 b@76 c"}},
@@ -5810,7 +5730,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0, 0x11, 0},
     {b_dhrglass, b_pdhrglass},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_dhrglass,
     {"a 6 d 6 b@6 g 6 c@f 6 h 6 e",
      "f  a@@5 g@@h  d@@5 c@@e  b"}},
@@ -5820,7 +5740,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    true,
+    TRUE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -5830,7 +5750,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0x77, 0x11, 0x55},
     {b_crosswave, b_pcrosswave},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_crosswave,
     {"66  c@66  d@7ab  6  fe@766  h@66  g",
      "65a@65b@@ghdc@@65f@65e"}},
@@ -5840,7 +5760,7 @@ const setup_attr setup_attrs[] = {
     {0x66, 0, 0, 0},
     {b_2x4, b_4x2},
     {4, 2},
-    false,
+    FALSE,
     id_bit_table_2x4,
     {"a  b  c  d@@h  g  f  e",
      "h  a@@g  b@@f  c@@e  d"}},
@@ -5850,7 +5770,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x5, b_5x2},
     {5, 2},
-    false,
+    FALSE,
     id_bit_table_2x5,
     {"a  b  c  d  e@@j  i  h  g  f",
      "j  a@@i  b@@h  c@@g  d@@f  e"}},
@@ -5860,7 +5780,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_d2x5, b_5x2},
     {4, 3},
-    false,
+    FALSE,
     id_bit_table_d2x5,
     {"58c  j@7a6 6g@758d  i@7b6 6f@758e  h",
      "6  b  a@@5 e  d  c@@5 h  i  j@@6  f  g"}},
@@ -5870,7 +5790,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {4, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"9a5   b  c@@f  e5   d",
      "f@76  a@7e@@6  b@7d@76  c"}},
@@ -5880,7 +5800,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {4, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b5   c@@9f5   e  d",
      "6  a@7f@76  b@@e@76  c@7d"}},
@@ -5890,7 +5810,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {5, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"9a5   b  c  d@@h  g  f5   e",
      "h@76  a@7g@@f  b@@6  c@7e@76  d"}},
@@ -5900,7 +5820,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {5, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c5   d@@9h5   g  f  e",
      "6  a@7h@76  b@@g  c@@f@76  d@7e"}},
@@ -5910,7 +5830,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {6, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"9a5   6  6  c  d@7965   b  f@7h  g  65  6   e",
      "h@76a@7g@@5b@@5f@@6c@7e@76d"}},
@@ -5920,7 +5840,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {6, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  65  6   d@7965   c  g@79h5   6  6  f  e",
      "6a@7h@76b@@5c@@5g@@f@76d@7e"}},
@@ -5930,7 +5850,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {6, 2},
-    false,
+    FALSE,
     id_bit_table_nxtrglcw,
     {"6  9a5   b  c@7h  6  656  6  d@76  g  f5   e",  // Not quite symmetrical, unfortunately.
      "5h@@g@76a@7f@@6b@7e@76c@@5d"}},
@@ -5940,7 +5860,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {6, 2},
-    false,
+    FALSE,
     id_bit_table_nxtrglccw,
     {"6  a  b5   c@7h  6  656  6  d@76  9g5   f  e",  // Not quite symmetrical, unfortunately.
      "5h@@6a@7g@76b@@f@76c@7e@@5d"}},
@@ -5950,7 +5870,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {4, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 a@@g h5 b@@5 f5 d c@@5 66 e",
      "66  g@76f  6  a@766  h@@6  d@7e  6  b@76  c"}},
@@ -5960,7 +5880,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {4, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 66 b@@5 a5 d c@@g h5 e@@5 f",
      "6  g@7f  6  a@76  h@@66  d@76e  6  b@766  c"}},
@@ -5970,7 +5890,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_wqtag, b_pwqtag},
     {6, 0},
-    false,
+    FALSE,
     id_bit_table_wqtag,
     {"6 5 a6 b@@h i j e d c@@6 5 g6 f",
      "6  h@@6  i@7g  6  a@76  j@@6  e@7f  6  b@76  d@@6  c"}},
@@ -5980,7 +5900,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_deep2x1dmd, b_pdeep2x1dmd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6  5 c@@a  b  d  e@@j  i  g  f@@6  5 h",
      "6  j a@@6  i b@7h  6 6  c@76  g d@@6  f e"}},
@@ -5990,7 +5910,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_whrglass, b_pwhrglass},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6 9a5b@6 56e@7h i66d c@76 56j@6 9g5f",
      "6 h@6 i@7g 6 a@5 je@f 6 b@76 d@6 c"}},
@@ -6000,7 +5920,7 @@ const setup_attr setup_attrs[] = {
     {0xCC, 0xDD, 0, 0},
     {b_rigger, b_prigger},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_rigger,
     {"66a b@7gh6 6dc@766f e",
      "5g@5h@fa@eb@5d@5c"}},
@@ -6010,7 +5930,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x041, 0},         // Only used if occupied as "H"
     {b_3x4, b_4x3},
     {4, 3},
-    false,
+    FALSE,
     id_bit_table_3x4,
     {"a  b  c  d@@k  l  f  e@@j  i  h  g",
      "j  k  a@@i  l  b@@h  f  c@@g  e  d"}},
@@ -6020,7 +5940,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x6, b_6x2},
     {6, 2},
-    false,
+    FALSE,
     id_bit_table_2x6,
     {"a  b  c  d  e  f@@l  k  j  i  h  g",
      "l  a@@k  b@@j  c@@i  d@@h  e@@g  f"}},
@@ -6030,7 +5950,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x7, b_7x2},
     {7, 2},
-    false,
+    FALSE,
     id_bit_table_2x7,
     {"a  b  c  d  e  f  g@@n  m  l  k  j  i  h",
      "n  a@@m  b@@l  c@@k  d@@j  e@@i  f@@h  g"}},
@@ -6040,7 +5960,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x9, b_9x2},
     {9, 2},
-    false,
+    FALSE,
     id_bit_table_2x9,
     {"a  b  c  d  e  f  g  h  i@@r  q  p  o  n  m  l  k  j",
      "r  a@@q  b@@p  c@@o  d@@n  e@@m  f@@l  g@@k  h@@j  i"}},
@@ -6050,7 +5970,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_d3x4, b_d4x3},
     {5, 3},
-    false,
+    FALSE,
     id_bit_table_d3x4,
     {"a6 6 6e@758b  c  d@7l6 6 6f@758j  i  h@7k6 6 6g",
      "k  l  a@@5 j  b@@5 i  c@@5 h  d@@g  f  e"}},
@@ -6060,7 +5980,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c  d  e  f  g  h@p  o  n  m  l  k  j  i",
      "pa@@ob@@nc@@md@@le@@kf@@jg@@ih"}},
@@ -6070,7 +5990,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c  d@h  g  f  e",
      "ha@@gb@@fc@@ed"}},
@@ -6080,7 +6000,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x8, b_8x2},
     {8, 2},
-    false,
+    FALSE,
     id_bit_table_2x8,
     {"a  b  c  d  e  f  g  h@@p  o  n  m  l  k  j  i",
      "p  a@@o  b@@n  c@@m  d@@l  e@@k  f@@j  g@@i  h"}},
@@ -6090,7 +6010,7 @@ const setup_attr setup_attrs[] = {
     {0x1111, 0, 0, 0},        // Only used if occupied as butterfly.
     {b_4x4, b_4x4},
     {4, 4},
-    true,
+    TRUE,
     id_bit_table_4x4,
     {"m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e",
      (Cstring) 0}},
@@ -6100,7 +6020,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x10, b_10x1},
     {10, 1},
-    false,
+    FALSE,
     id_bit_table_1x10,
     {"a b c d e j i h g f",
      "a@b@c@d@e@j@i@h@g@f"}},
@@ -6110,7 +6030,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x041, 0},
     {b_1x12, b_12x1},
     {12, 1},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a b c d e f l k j i h g",
      "a@b@c@d@e@f@l@k@j@i@h@g"}},
@@ -6120,7 +6040,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x14, b_14x1},
     {14, 1},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"abcdefgnmlkjih",
      "a@b@c@d@e@f@g@n@m@l@k@j@i@h"}},
@@ -6130,7 +6050,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_1x16, b_16x1},
     {16, 1},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"abcdefghponmlkji",
      "a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i"}},
@@ -6140,7 +6060,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_c1phan, b_c1phan},
     {0, 0},
-    true,
+    TRUE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6150,7 +6070,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6160,7 +6080,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    true,
+    TRUE,
     (const id_bit_table *) 0,
     {"6  6  a  b@@6  v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@6  p  o  k  j@@6  6  n  m",
      (Cstring) 0}},
@@ -6170,7 +6090,7 @@ const setup_attr setup_attrs[] = {
     {0, 0x77, 0x22, 0},
     {b_ptpd, b_pptpd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_ptpd,
     {"6b6   6h@7a6c   g6e@76d6   6f",
      "5a@@db@@5c@@5g@@fh@@5e"}},
@@ -6180,7 +6100,7 @@ const setup_attr setup_attrs[] = {
     {00303, 0, 00101, 0},        // Only used for certain occupations.
     {b_3dmd, b_p3dmd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_3dmd,
     {"5 a 6 b 6 c@@j k l f e d@@5 i 6 h 6 g",
      "6  j@7i  6  a@76  k@@6  l@7h  6  b@76  f@@6  e@7g  6  c@76  d"}},
@@ -6190,7 +6110,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_4dmd, b_p4dmd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_4dmd,
     {"5 a 6 b 6 c 6 d@@m n o p h g f e@@5 l 6 k 6 j 6 i",
      "6  m@7l  6  a@76  n@@6  o@7k  6  b@76  p@@6  h@7j  6  c@76  g@@6  f@7i  6  d@76  e"}},
@@ -6200,7 +6120,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_3ptpd, b_p3ptpd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6a696b696c@7j6k9l6f9e6d@76i696h696g",
      "5j@@ia@@5k@@5l@@hb@@5f@@5e@@gc@@5d"}},
@@ -6210,7 +6130,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_4ptpd, b_p4ptpd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6a696b696c696d@7m6n9o6p9h6g9f6e@76l696k696j696i",
      "5m@@la@@5n@@5o@@kb@@5p@@5h@@jc@@5g@@5f@@id@@5e"}},
@@ -6220,7 +6140,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 00101, 00303},
     {b_hsqtag, b_phsqtag},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_shsqtag,
     {"a6 6j@76 5e@7b6 6i@76l f@7c6 6h@76 5k@7d6 6g",
      "dcba@65l@75k6e@765f@ghij"}},
@@ -6230,7 +6150,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_hqtag, b_phqtag},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a6 6 6 6l@76 5e 6 f@7b6 6 6 6k@76o p h g@7c6 6 6 6j@76 5n 6 m@7d6 6 6 6i",
      "dcba@65o@75n6e@765p@65h@75m6f@765g@ijkl"}},
@@ -6240,7 +6160,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0, 0, 0},
     {b_wingedstar, b_pwingedstar},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"665   d@a b c  g f e@665   h",
      "9a@@9b@@9c@h5d@9g@@9f@@9e"}},
@@ -6250,7 +6170,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"665   d6   f@a b c  e k  i h g@665   l6   j",
      "9a@@9b@@9c@l5d@9e@9k@j5f@9i@@9h@@9g"}},
@@ -6260,7 +6180,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"665   d6   h6   m@a b c  f g  o n  k j i@665   e6   p6   l",
      "9a@@9b@@9c@e5d@9f@9g@p5h@9o@9n@l5m@9k@@9j@@9i"}},
@@ -6270,7 +6190,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {" a 66 c@ 65 b@i j  e d@ 65 g@ h 66 f",
      "h  i  a@@6  j@5 g  b@6  e@@f  d  c"}},
@@ -6280,7 +6200,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {" a6  6 6  6d@6 5 b 6  c@l m  n g  f e@6 5 j 6  i@ k6  6 6  6h",
      "k  l  a@6  m@5 j  b@6  n@@6  g@5 i  c@6  f@@h  e  d"}},
@@ -6290,7 +6210,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {" a6  6 6  6 6  6e@6 5 b 6  c 6  d@o p  q r  i h  g f@6 5 m 6  l 6  k@ n6  6 6  6 6  6j",
      "n  o  a@6  p@5 m  b@6  q@6  r@5 l  c@6  i@@6  h@5 k  d@6  g@@j  f  e"}},
@@ -6300,7 +6220,7 @@ const setup_attr setup_attrs[] = {
     {0x55, 0, 0, 0},
     {b_galaxy, b_galaxy},
     {0, 0},
-    true,
+    TRUE,
     id_bit_table_gal,
     {"68c@58bd@7a688e@758hf@68g",
      (Cstring) 0}},
@@ -6310,7 +6230,7 @@ const setup_attr setup_attrs[] = {
     {00303, 0, 00101, 0},        // Only used for certain occupations.
     {b_bigh, b_pbigh},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_bigh,
     {"a6666   j@b6666   i@76e f l k@7c6666   h@d6666   g",
      "dcba@65e@65f@65l@65k@ghij"}},
@@ -6320,7 +6240,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x041, 0},
     {b_bigx, b_pbigx},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6666e@6666f@7abcd6jihg@76666l@6666k",
      "65a@65b@65c@65d@klfe@65j@65i@65h@65g"}},
@@ -6330,7 +6250,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_3x6, b_6x3},
     {6, 3},
-    false,
+    FALSE,
     id_bit_table_3x6,
     {"a  b  c  d  e  f@@p  q  r  i  h  g@@o  n  m  l  k  j",
      "o  p  a@@n  q  b@@m  r  c@@l  i  d@@k  h  e@@j  g  f"}},
@@ -6340,7 +6260,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_3x8, b_8x3},
     {8, 3},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c  d  e  f  g  h@@u  v  w  x  l  k  j  i@@t  s  r  q  p  o  n  m",
      "t  u  a@@s  v  b@@r  w  c@@q  x  d@@p  l  e@@o  k  f@@n  j  g@@m  i  h"}},
@@ -6350,7 +6270,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_4x5, b_5x4},
     {5, 4},
-    false,
+    FALSE,
     id_bit_table_4x5,
     {"a  b  c  d  e@@j  i  h  g  f@@p  q  r  s  t@@o  n  m  l  k",
      "o  p  j  a@@n  q  i  b@@m  r  h  c@@l  s  g  d@@k  t  f  e"}},
@@ -6360,7 +6280,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_4x6, b_6x4},
     {6, 4},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c  d  e  f@@l  k  j  i  h  g@@s  t  u  v  w  x@@r  q  p  o  n  m",
      "r  s  l  a@@q  t  k  b@@p  u  j  c@@o  v  i  d@@n  w  h  e@@m  x  g  f"}},
@@ -6370,7 +6290,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x10, b_10x2},
     {10, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c  d  e  f  g  h  i  j@@t  s  r  q  p  o  n  m  l  k",
      "t  a@@s  b@@r  c@@q  d@@p  e@@o  f@@n  g@@m  h@@l  i@@k  j"}},
@@ -6380,7 +6300,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_2x12, b_12x2},
     {12, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a  b  c  d  e  f  g  h  i  j  k  l@@x  w  v  u  t  s  r  q  p  o  n  m",
      "x  a@@w  b@@v  c@@u  d@@t  e@@s  f@@r  g@@q  h@@p  i@@o  j@@n  k@@m  l"}},
@@ -6390,7 +6310,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_deepqtg, b_pdeepqtg},
     {4, 4},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 a  6  b@f  e  d  c@@i  j  k  l@5 h  6  g",
      "6i  f@7h6  6a@76j  e@@6k  d@7g6  6b@76l  c"}},
@@ -6400,7 +6320,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_deepbigqtg, b_pdeepbigqtg},
     {4, 6},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 a  6  b@5 c  6  d@h  g  f  e@@m  n  o  p@5 l  6  k@5 j  6  i",
      "6 6m  h@7j l6  6c a@76 6n  g@@6 6o  f@7i k6  6d b@6 6p  e"}},
@@ -6410,7 +6330,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_widerigger, b_pwiderigger},
     {8, 2},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"66a b c d@7kl6 6 6 6fe@766j i h g",
      "5k@5l@ja@ib@hc@gd@5f@5e@"}},
@@ -6420,7 +6340,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_deepxwv, b_pdeepxwv},
     {6, 4},
-    false,
+    FALSE,
     id_bit_table_deepxwv,
     {"66c l@@66d k@7ab6 6hg@766e j@@66f i",
      "65a@65b@fedc@ijkl@65h@65g@"}},
@@ -6430,7 +6350,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_3oqtg, b_p3oqtg},
     {7, 4},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6  a  6  b  6  c@@r  s  t  g  f  e  d@@n  o  p  q  j  i  h@@6  m  6  l  6  k",
      "6  n  r@@m  o  s  a@@6  p  t@@l  q  b  g@@6  j  f@@k  i  e  c@@6  h  d"}},
@@ -6440,7 +6360,7 @@ const setup_attr setup_attrs[] = {
     {0x55, 0, 0, 0},
     {b_thar, b_thar},
     {0, 0},
-    true,
+    TRUE,
     (const id_bit_table *) 0,
     {"66c@66d@ab6fe@66h@66g",
      (Cstring) 0}},
@@ -6450,7 +6370,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_alamo, b_alamo},
     {0, 0},
-    true,
+    TRUE,
     (const id_bit_table *) 0,
     {"6ab@h66c@g66d@6fe",
      (Cstring) 0}},
@@ -6460,7 +6380,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6470,7 +6390,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6480,7 +6400,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6490,7 +6410,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6500,7 +6420,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {8, 4},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6510,7 +6430,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {8, 4},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6520,7 +6440,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x11, 0},
     {b_323, b_p323},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_323,
     {"   a  b  c@@   5 h  d@@   g  f  e",
      "g6a@76h@7f6b@76d@7e6c"}},
@@ -6530,7 +6450,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_343, b_p343},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"   5 a  b  c@@   i  j  e  d@@   5 h  g  f",
      "6i@7h6a@76j@7g6b@76e@7f6c@76d"}},
@@ -6540,7 +6460,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_525, b_p525},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"   a  b  c  d  e@@   6  5 l  f@@   k  j  i  h  g",
      "k6a@@j6b@76l@7i6c@76f@7h6d@@g6e"}},
@@ -6550,7 +6470,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_545, b_p545},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"   a  b  c  d  e@@   5 m  n  g  f@@   l  k  j  i  h",
      "l6a@76m@7k6b@76n@7j6c@76g@7i6d@76f@7h6e"}},
@@ -6560,7 +6480,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {bh545, bhp545},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"   a  b  c  d  e@@   m  5 n  g 5  f@@   l  k  j  i  h",
      "lma@@k6b@76n@7j6c@76g@7i6d@@hfe"}},
@@ -6570,7 +6490,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_3mdmd, b_p3mdmd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 a6666     c@7666   b@7j k l6  f e d@7666   h@75 i6666     g",
      "6  j@7i6    a@76  k@@6  l@@5  hb@@6  f@@6  e@7g6    c@76  d"}},
@@ -6580,7 +6500,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_3mptpd, b_p3mptpd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6665    b@76 a6666     c@7j6  k l f e6  d@76 i6666     g@76665    h",
      "6  j@@5  ia@@6  k@@6  l@7h6    b@76  f@@6  e@@5  gc@@6  d"}},
@@ -6590,7 +6510,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_4mdmd, b_p4mdmd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 a6666666       d@7666   b66   c@7m n o 6 p h 6 g f e@7666   k66   j@75 l6666666       i",
      "6  m@7l  6  a@76  n@@6  o@@5  kb@@6  p@@6  h@@5  jc@@6  g@@6  f@7i  6  d@76  e"}},
@@ -6600,7 +6520,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_4mptpd, b_p4mptpd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6 6 6 5 b 6 c@76 a 6 6 6 6 6 6 d@7m 6 n o p h g f 6 e@76 l 6 6 6 6 6 6 i@76 6 6 5 k 6 j",
      "6  m@@5  la@@6  n@@6  o@7k  6  b@76  p@@6  h@7j  6  c@76  g@@6  f@@5  id@@6  e"}},
@@ -6610,7 +6530,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_bigbigh, b_pbigbigh},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"a66666666l@b66666666k@76efghponm@7c66666666j@d66666666i",
      "dcba@65e@65f@65g@65h@65p@65o@65n@65m@ijkl"}},
@@ -6620,18 +6540,18 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_bigbigx, b_pbigbigx},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6666e p@6666f o@abcd6 6lkji@76666g n@6666h m",
      "65a@65b@65c@65d@hgfe@mnop@65l@65k@65j@65i"}},
    {11,                     // sbigrig
-    &thingbigrig,
-    &thingbigrig,
+    (const coordrec *) 0,
+    (const coordrec *) 0,
     {0, 0, 0, 0},
     {b_bigrig, b_pbigrig},
     {0, 0},
-    false,
-    id_bit_table_bigrig,
+    FALSE,
+    (const id_bit_table *) 0,
     {"6666e f@7abcd6 6jihg@76666l k",
      "5a@5b@5c@5d@le@kf@5j@5i@5h@5g"}},
    {11,                     // sbighrgl
@@ -6640,7 +6560,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x104, 0},
     {b_bighrgl, b_pbighrgl},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_bighrgl,
     {"6 6 c@7a b 6 e f@6 5 jd@l k 6 h g@76 6 i",
      "9l5a@@9k5b@56j@7i66c@756d@9h5e@@9g5f"}},
@@ -6650,7 +6570,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x104, 0},
     {b_bigdhrgl, b_pbigdhrgl},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_bigdhrgl,
     {"a  b 6 c 6 e  f@6  6 j 6 d@l  k 6 i 6 h  g",
      "l  a@@k  b@@5 j@@i  c@@5 d@@h  e@@g  f"}},
@@ -6660,7 +6580,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x104, 0},
     {b_bigbone, b_pbigbone},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_bigbone,
     {"a  b6666   e  f@766  c d j i@7l  k6666   h  g",
      "la@kb@5c@5d@5j@5i@he@gf"}},
@@ -6670,7 +6590,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x104, 0},
     {b_bigdmd, b_pbigdmd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_bigdmd,
     {"6 6  c@7a b  6  e f@76 6  d@@6 6  j@7l k  6  h g@76 6  i",
      "5 l6  a@5 k6  b@i j d c@5 h6  e@5 g6  f"}},
@@ -6680,27 +6600,17 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0x104, 0},
     {b_bigptpd, b_pbigptpd},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_bigptpd,
     {"85f 8858 g@85e 8858 h@7c88d j88i@785b 8858 k@85a 8858 l",
      "65c@@abef@@65d@@65j@@lkhg@@65i"}},
-   {11,                     // sbig3x1dmd
-    &thingbig3x1dmd,
-    &thingbig3x1dmd,
-    {0, 0, 0, 0},
-    {b_big3x1dmd, b_pbig3x1dmd},
-    {0, 0},
-    false,
-    (const id_bit_table *) 0,
-    {"6 6 6 6 9f@@a b c d e k j i h g@@6 6 6 6 9l",  // Not quite symmetrical, unfortunately.
-     "6  a@@6  b@@6  c@@6  d@@6  e@7l  6  f@76  k@@6  j@@6  i@@6  h@@6  g"}},
    {17,                     // sbig3dmd
     (const coordrec *) 0,
     (const coordrec *) 0,
     {0, 0, 0, 0},
     {b_big3dmd, b_pbig3dmd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 a 6 b 6 c@@5 f 6 e 6 d@@p q r i h g@@5 m 6 n 6 o@@5 l 6 k 6 j",
      "6 6  p@7l m  6  f a@76 6  q@@6 6  r@7k n  6  e b@76 6  i@@6 6  h@7j o  6  d c@76 6  g"}},
@@ -6710,7 +6620,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_big4dmd, b_pbig4dmd},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"5 a 6 b 6 c 6 d@@5 h 6 g 6 f 6 e@@u v w x l k j i@@5 q 6 r 6 s 6 t@@5 p 6 o 6 n 6 m",
      "6 6  u@7p q  6  h a@76 6  v@@6 6  w@7o r  6  g b@76 6  x@@6 6  l@7n s  6  f c@76 6  k@@6 6  j@7m t  6  e d@76 6  i"}},
@@ -6720,7 +6630,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_dblxwave, b_pdblxwave},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {"6 6c6 6 6 6o@6 6d6 6 6 6p@7a b6f e m n6j i@76 6h6 6 6 6l@6 6g6 6 6 6k",
      "65a@65b@ghdc@65f@65e@65m@65n@klpo@65j@65i"}},
@@ -6730,7 +6640,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_dblspindle, b_pdblspindle},
     {0, 0},
-    false,
+    FALSE,
     id_bit_table_dblspindle,
     {"6a b c6 6m n o@7h6 6 6d l6 6 6p@76g f e6 6k j i",
      "5h@ga@fb@ec@5d@5l@km@jn@io@5p"}},
@@ -6740,7 +6650,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
@@ -6750,7 +6660,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false,
+    FALSE,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}}};
@@ -6939,8 +6849,6 @@ int begin_sizes[] = {
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
-   12,         /* b_big3x1dmd */
-   12,         /* b_pbig3x1dmd */
    18,         /* b_big3dmd */
    18,         /* b_pbig3dmd */
    24,         /* b_big4dmd */
@@ -6967,7 +6875,7 @@ enum {
 startinfo configuration::startinfolist[] = {
    {
       "???",      /* A non-existent setup. */
-      false,                         /* into_the_middle */
+      FALSE,                         /* into_the_middle */
       {
          nothing,                    /* kind */
          1,                          /* rotation */
@@ -6978,7 +6886,7 @@ startinfo configuration::startinfolist[] = {
    },
    {
       "Heads 1P2P",
-      false,                         /* into_the_middle */
+      FALSE,                         /* into_the_middle */
       {
          s2x4,                       /* kind */
          1,                          /* rotation */
@@ -6990,7 +6898,7 @@ startinfo configuration::startinfolist[] = {
    },
    {
       "Sides 1P2P",
-      false,                         /* into_the_middle */
+      FALSE,                         /* into_the_middle */
       {
          s2x4,                       /* kind */
          0,                          /* rotation */
@@ -7002,7 +6910,7 @@ startinfo configuration::startinfolist[] = {
    },
    {
       "HEADS",
-      true,                          /* into_the_middle */
+      TRUE,                          /* into_the_middle */
       {
          s2x4,                       /* kind */
          0,                          /* rotation */
@@ -7014,7 +6922,7 @@ startinfo configuration::startinfolist[] = {
    },
    {
       "SIDES",
-      true,                          /* into_the_middle */
+      TRUE,                          /* into_the_middle */
       {
          s2x4,                       /* kind */
          1,                          /* rotation */
@@ -7026,7 +6934,7 @@ startinfo configuration::startinfolist[] = {
    },
    {
       "From squared set",
-      false,                         /* into_the_middle */
+      FALSE,                         /* into_the_middle */
       {
          s4x4,                       /* kind */
          0,                          /* rotation */
@@ -7329,10 +7237,10 @@ select::fixer select::fixer_init_table[] = {
    {fx_d4x4d2, sdmd, s4x4,        0, 0, 1,       fx0,          fx0,          fx_d4x4l2, fx_d4x4l3, fx_d4x4d2, fx_d4x4d3, fx0,       fx0,          {8, 15, 0, 7}},
    {fx_d4x4d3, sdmd, s4x4,        1, 0, 1,       fx0,          fx0,          fx_d4x4l3, fx_d4x4l2, fx_d4x4d3, fx_d4x4d2, fx0,       fx0,          {12, 3, 4, 11}},
    {fx_d4x4d4, sdmd, s4x4,        0, 0, 1,       fx0,          fx0,          fx_d4x4l4, fx_d4x4l1, fx_d4x4d4, fx_d4x4d1, fx0,       fx0,          {12, 3, 4, 11}},
-   {fx_dqtgdbb1,
+   {fx_dqtgdbb1, 
    s1x4, s2x3,   0x110, 0, 1,          fx0, fx0,                   fx0, fx0,
    fx0, fx0,                      fx0, fx0,          {0, 1, 3, 4}},
-   {fx_dqtgdbb2,
+   {fx_dqtgdbb2, 
    s1x4, s2x3,   0x330, 0, 1,          fx0, fx0,                   fx0, fx0,
    fx0, fx0,                      fx0, fx0,          {5, 4, 2, 1}},
    {fx_hrgminb, s2x3, s_hrglass,  0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 1, 4, 7, 5}},
@@ -7349,25 +7257,25 @@ select::fixer select::fixer_init_table[] = {
    {fx_f3x1ctl, s1x4, s3x1dmd,     0, 0, 1,       fx0,          fx0,          fx_f3x1ctl,   fx0, fx0,          fx0,    fx_fgalctb,   fx_fgalctb,   {1, 2, 5, 6}},
    {fx_f2x2pl,  s2x2, s2x2,        0, 0, 1,         fx0, fx0,             fx_f1x4pl, fx_f1x4pl,
    fx_fdmdpl, fx_fdmdpl,    fx_f2x2pl, fx_f2x2pl,         {0, 1, 2, 3}},
-   {fx_f1x4pl,
+   {fx_f1x4pl, 
    s1x4, s1x4,        0, 0, 1,         fx0, fx0,             fx_f1x4pl, fx_f1x4pl,
    fx_fdmdpl, fx_fdmdpl,    fx_f2x2pl, fx_f2x2pl,         {0, 1, 2, 3}},
-   {fx_fdmdpl,
+   {fx_fdmdpl, 
    sdmd, sdmd,        0, 0, 1,         fx0, fx0,             fx_f1x4pl, fx_f1x4pl,
    fx_fdmdpl, fx_fdmdpl,    fx_f2x2pl, fx_f2x2pl,         {0, 1, 2, 3}},
-   {fx_f1x2pl,
+   {fx_f1x2pl, 
    s1x2, s1x2,        0, 0, 1,   fx_f1x2pl, fx_f1x2pl,             fx0, fx0,
  fx0, fx0,                        fx0, fx0,               {0, 1}},
-   {fx_f3x1d_2,
+   {fx_f3x1d_2, 
    s1x2, s3x1dmd,     1, 0, 1,         fx0, fx0,                   fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {3, 7}},
-   {fx_f1x8_88,
+   {fx_f1x8_88, 
    s1x2, s1x8,        0, 0, 1,  fx_f1x8_88, fx_f3x1d_2,            fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {3, 7}},
-   {fx_f1x8_22,
+   {fx_f1x8_22, 
    s1x2, s1x8,        0, 0, 1,  fx_f1x8_22, fx_f3x1d_2,            fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {1, 5}},
-   {fx_f1x8_11,
+   {fx_f1x8_11, 
    s1x2, s1x8,        0, 0, 1,  fx_f1x8_11, fx_f3x1d_2,            fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {0, 4}},
    {fx_fdqtagzzz, s2x3, s_qtag,      1, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0, {1, 3, 4, 5, 7, 0}},
@@ -7384,22 +7292,22 @@ select::fixer select::fixer_init_table[] = {
    {fx_fxwve, s1x4, s_crosswave, 0, 0, 1,       fx0,          fx0,          fx_fxwve,     fx_f1x8endd, fx0,  fx0,    fx_f2x4endd,  fx_f2x4endd,  {0, 1, 4, 5}},
    {fx_fboneendd, s2x2, s_bone,      0, 1, 1,       fx0,          fx0,          fx_f1x8endd,  fx0, fx0,          fx0,    fx_fboneendd, fx_fqtgend,   {0, 1, 4, 5}},
    {fx_fqtgend, s2x2, s_qtag,      0, 2, 1,       fx0,          fx0,          fx_f1x8endd,  fx0, fx0,          fx0,    fx_fqtgend,   fx_fboneendd, {0, 1, 4, 5}},
-   {fx_f1x6endd,
+   {fx_f1x6endd, 
    s1x4, s1x6,        0, 0, 1,         fx0, fx0,           fx_f1x6endd, fx_f1x2dd,
    fx0, fx0,                      fx0, fx0,          {0, 1, 3, 4}},
-   {fx_f1x2dd,
+   {fx_f1x2dd, 
    s1x4, s_1x2dmd,    0, 0, 1,         fx0, fx0,             fx_f1x2dd, fx_f1x6endd,
    fx0, fx0,                fx_f2x3od, fx_fbn6ndd,   {0, 1, 3, 4}},
-   {fx_fbn6ndd,
+   {fx_fbn6ndd, 
    s2x2, s_bone6,     0, 1, 1,         fx0, fx0,                   fx0, fx0,
    fx0, fx0,               fx_fbn6ndd, fx_f2x3od,    {0, 1, 3, 4}},
-   {fx_f2x3od,
+   {fx_f2x3od, 
    s2x2, s2x3,        0, 1, 1,         fx0, fx0,             fx_f1x2dd, fx_f1x6endd,
    fx0, fx0,                fx_f2x3od, fx_fbn6ndd,   {0, 2, 3, 5}},
-   {fx_fdmded,
+   {fx_fdmded, 
    s1x2, sdmd,        0, 1, 1,   fx0, fx0,                   fx0, fx0,
    fx0, fx0,                fx0, fx0,   {0, 2}},
-   {fx_f1x4ed,
+   {fx_f1x4ed, 
    s1x2, s1x4,        0, 1, 1,   fx_f1x4ed, fx_fdmded,       fx0, fx0,
    fx0, fx0,                fx0, fx0,   {0, 2}},
    {fx_fdrhgl1, s2x2, s_dhrglass,  0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_fdrhgl1,   fx_fqtgend,   {0, 1, 4, 5}},
@@ -7452,14 +7360,12 @@ select::fixer select::fixer_init_table[] = {
    {fx_f2qt1dsc, s_qtag,s3x6,       0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx_f2qt1dsc,  fx0,    fx0,          fx0,          {2, 3, 6, 8, 11, 12, 15, 17}},
    {fx_f2qt1dsd, s_qtag,s3x6,       0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx_f2qt1dsd,  fx0,    fx0,          fx0,          {1, 4, 6, 7, 10, 13, 15, 16}},
    {fx_f2qt2dsc, s_qtag,s3x8,       0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx_f2qt2dsc,  fx0,    fx0,          fx0,          {3, 4, 8, 11, 15, 16, 20, 23}},
-   {fx_f2qt2d99, s_qtag,s3x8,       0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx_f2qt2d99,  fx0,    fx0,          fx0,          {2, 5, 8, 10, 14, 17, 20, 22}},
    {fx_f2x6ndsc, s2x4, s2x6,        0, 0, 1,       fx0,          fx0,          fx0,      fx_f2yyrdsc,fx_f2qt1dsc, fx0,   fx0,          fx_f2zzrdsc,  {0, 2, 3, 5, 6, 8, 9, 11}},
    {fx_f2x6ndsd, s2x4, s2x6,        0, 0, 1,       fx0,          fx0,          fx_f288rdsd,   fx0, fx_f2qt1dsd,  fx0,   fx0,          fx_f2zzrdsd,  {0, 1, 4, 5, 6, 7, 10, 11}},
-   {fx_fdmdndx, s3x4, s3x6,         0, 0, 1,       fx0,          fx0,          fx0,           fx0, fx0,          fx0,   fx0,               fx0,     {0, -1, -1, 5, 6, 8, 9, -1, -1, 14, 15, 17}},
+   {fx_fdmdndx, s3x4, s3x6,          0, 0, 1,       fx0,          fx0,          fx0,           fx0, fx0,          fx0,   fx0,               fx0,     {0, -1, -1, 5, 6, 8, 9, -1, -1, 14, 15, 17}},
    {fx_fdmdnd, s3x4, s4dmd,         0, 0, 1,       fx0,          fx0,          fx0,           fx0, fx0,          fx0,   fx_fdmdndx,        fx0,     {0, -1, -1, 3, 5, 7, 8, -1, -1, 11, 13, 15}},
    {fx_f3x4ndsd, s2x4, s3x4,        0, 0, 1,       fx0,          fx0,          fx0,           fx0, fx0,          fx0,   fx0,          fx_f2x5rdsd,  {0, 1, 2, 3, 6, 7, 8, 9}},
-   {fx_f2x8nd99, s2x4, s2x8,        0, 0, 1,       fx0,          fx0,          fx0,      fx_f2yyrdsc,fx_f2qt2dsc, fx0,   fx0,          fx_f2zzrdsc,  {0, 3, 4, 7, 8, 11, 12, 15}},
-   {fx_f2x8nda5, s2x4, s2x8,        0, 0, 1,       fx0,          fx0,          fx0,      fx0,        fx_f2qt2d99, fx0,   fx0,          fx_f2zzrdsd,  {0, 2, 5, 7, 8, 10, 13, 15}},
+   {fx_f2x8ndsc, s2x4, s2x8,        0, 0, 1,       fx0,          fx0,          fx0,      fx_f2yyrdsc,fx_f2qt2dsc, fx0,   fx0,          fx_f2zzrdsc,  {0, 3, 4, 7, 8, 11, 12, 15}},
    {fx_f4x6ndoo, s4x4, s4x6,        0, 0, 1,       fx0,          fx0,          fx0,      fx0,        fx0,         fx0,   fx0,          fx0,     {5, 6, 23, 8, 12, 14, 15, 21, 17, 18, 11, 20, 0, 2, 3, 9}},
    {fx_f4x6ndxx, s4x4, s4x6,        0, 0, 1,       fx0,          fx0,          fx0,      fx0,        fx0,         fx0,   fx0,          fx0,     {5, 6, 23, 8, 12, 14, 15, 21, 17, 18, 11, 20, 0, 2, 3, 9}},
    {fx_f1x8nd96, s1x4, s1x8,        0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 4, 7}},
@@ -7479,17 +7385,16 @@ select::fixer select::fixer_init_table[] = {
    {fx_fhrgl1, sdmd, s_2x1dmd,   1, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,           fx0,          {2, 3, 5, 0}},
    {fx_fhrgl2, sdmd, s_2x1dmd,   0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,           fx0,          {0, 2, 3, 5}},
    {fx_fhrgle, s2x2, s_hrglass,   0, 2, 1,       fx0,          fx0,          fx_frigendd,  fx_frigendd, fx_fhrgl1, fx_fhrgl2, fx_fhrgle, fx_fqtgend, {0, 1, 4, 5}},
-   {fx_fptpdid,
+   {fx_fptpdid, 
    s_ptpd, s_ptpd,    0, 1, 1,         fx0, fx0,                   fx0, fx0,
    fx0, fx0,                      fx0, fx0,          {0, 1, 2, 3, 4, 5, 6, 7}},
    {fx_f2x477, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x477,    fx0,          {0, 1, 2, 4, 5, 6}},
    {fx_f2x4ee, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x4ee,    fx0,          {1, 2, 3, 5, 6, 7}},
    {fx_f2x4bb, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x4bb,    fx0,          {0, 1, 3, 4, 5, 7}},
    {fx_f2x4dd, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x4dd,    fx0,          {0, 2, 3, 4, 6, 7}},
-   {fx_fdhrgld1, s1x2, s_dhrglass,  0, 1, 2,     fx_fdhrgld1,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 7, 4}},
-   {fx_fdhrgld2, s1x2, s_dhrglass,  0, 1, 2,     fx_fdhrgld2,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 1, 5, 7}},
-   {fx_f2x4endo, s1x2, s2x4,        1, 0, 2,     fx_f2x4endo,  fx_f1x8endo,  fx_f4x4endo,  fx0, fx0,          fx0,    fx0,          fx0,          {0, 7, 3, 4}},
-   {fx_f4x4endo, s1x4, s4x4,        1, 0, 2,     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {12, 10, 8, 9, 0, 1, 4, 2}},
+   {fx_fdhrgld1, s1x2, s_dhrglass,  0, 1, 2,       fx_fdhrgld1,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 7, 4}},
+   {fx_fdhrgld2, s1x2, s_dhrglass,  0, 1, 2,       fx_fdhrgld2,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 1, 5, 7}},
+   {fx_f2x4endo, s1x2, s2x4,        1, 0, 2,       fx_f2x4endo,  fx_f1x8endo,  fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 7, 3, 4}},
    {fx_bar55d, s2x2, s2x4,        0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 5, 6}},
    {fx_fppaad, s1x2, s2x4,        0, 0, 2,       fx_fppaad,    fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 3, 7, 5}},
    {fx_fpp55d, s1x2, s2x4,        0, 0, 2,       fx_fpp55d,    fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 2, 6, 4}},
@@ -7681,8 +7586,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_DISC,                           s2x6,    05555, fx_f2x6ndsc,  fx0, -1},
    {LOOKUP_DISC,                           s2x6,    06363, fx_f2x6ndsd,  fx0, -1},
    {LOOKUP_DISC,                           s3x4,    01717, fx_f3x4ndsd,  fx0, -1},
-   {LOOKUP_DISC,                           s2x8,   0x9999, fx_f2x8nd99,  fx0, -1},
-   {LOOKUP_DISC,                           s2x8,   0xA5A5, fx_f2x8nda5,  fx0, -1},
+   {LOOKUP_DISC,                           s2x8,   0x9999, fx_f2x8ndsc,  fx0, -1},
    {LOOKUP_DISC,                           s4x6, 0x84C84C, fx_f4x6ndoo,  fx0, -1},
    {LOOKUP_DISC,                           s4x6, 0x321321, fx_f4x6ndxx,  fx0, -1},
    {LOOKUP_DISC,                           s1x8,     0x96, fx_f1x8nd96,  fx0, -1},

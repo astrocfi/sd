@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,7 +21,6 @@
    do_matrix_expansion
    initialize_sdlib
    check_for_concept_group
-   crash_print
    fail
    fail_no_retry
    fail2
@@ -89,7 +88,7 @@ and the following external variables:
    resolve_command_values
    number_of_resolve_commands
    resolve_command_strings
-   glob_abridge_mode
+   glob_call_list_mode
    abs_max_calls
    max_base_calls
    tagger_menu_list
@@ -99,6 +98,8 @@ and the following external variables:
    circcer_calls
    number_of_taggers
    number_of_circcers
+   diagnostic_mode
+   singing_call_mode
    parse_state
    current_options
    uims_menu_index
@@ -130,6 +131,12 @@ and the following external variables:
 
 
 #include <string.h>
+
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
 
 #include "sd.h"
 
@@ -185,12 +192,12 @@ dance_level higher_acceptable_level[] = {
 
 
 uint32 the_topcallflags;
-bool there_is_a_call;
+long_boolean there_is_a_call;
 call_with_name **base_calls;        /* Gets allocated as array of pointers in sdinit. */
 
 ui_option_type ui_options;
 int configuration::whole_sequence_low_lim;
-bool enable_file_writing;
+long_boolean enable_file_writing;
 
 Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", (Cstring) 0};
 Cstring ordinals[] = {"0th", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th", "13th", "14th", "15th", (Cstring) 0};
@@ -242,7 +249,7 @@ start_select_kind *startup_command_values;
 int number_of_resolve_commands;
 Cstring *resolve_command_strings;
 resolve_command_kind *resolve_command_values;
-abridge_mode_t glob_abridge_mode;
+call_list_mode_t glob_call_list_mode;
 int abs_max_calls;
 int max_base_calls;
 Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
@@ -252,6 +259,8 @@ call_with_name **tagger_calls[NUM_TAGGER_CLASSES];
 call_with_name **circcer_calls;
 uint32 number_of_taggers[NUM_TAGGER_CLASSES];
 uint32 number_of_circcers;
+long_boolean diagnostic_mode = FALSE;
+int singing_call_mode = 0;
 parse_state_type parse_state;
 call_conc_option_state current_options;
 int uims_menu_index;
@@ -259,13 +268,13 @@ warning_info no_search_warnings;
 warning_info conc_elong_warnings;
 warning_info dyp_each_warnings;
 warning_info useless_phan_clw_warnings;
-bool allowing_all_concepts = false;
-bool allowing_minigrand = false;
-bool using_active_phantoms = false;
+long_boolean allowing_all_concepts = FALSE;
+long_boolean allowing_minigrand = FALSE;
+long_boolean using_active_phantoms = FALSE;
 int last_direction_kind = direction_zagzag;
 interactivity_state interactivity = interactivity_normal;
 char database_version[81];
-bool testing_fidelity = false;
+long_boolean testing_fidelity = FALSE;
 
 /* This list tells what level calls will be accepted for the "pick level call"
    operation.  When doing a "pick level call, we don't actually require calls
@@ -310,9 +319,9 @@ const call_conc_option_state null_options = {
    direction_uninitialized,
    0, 0, 0, 0, 0};
 call_conc_option_state verify_options;
-bool verify_used_number;
-bool verify_used_direction;
-bool verify_used_selector;
+long_boolean verify_used_number;
+long_boolean verify_used_direction;
+long_boolean verify_used_selector;
 
 
 
@@ -581,19 +590,19 @@ extern void update_id_bits(setup *ss)
       if ((livemask & 0600600UL) != 0600600UL) ptr = (id_bit_table *) 0;
       break;
    case sbigdmd:
-      // If this is populated appropriately, we can identify "outer pairs".
+      /* If this is populated appropriately, we can identify "outer pairs". */
       if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigdmd_wings;
       break;
    case sbigbone:
-      // If this is populated appropriately, we can identify "outer pairs".
+      /* If this is populated appropriately, we can identify "outer pairs". */
       if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigbone_wings;
       break;
    case sbigdhrgl:
-      // If this is populated appropriately, we can identify "outer pairs".
+      /* If this is populated appropriately, we can identify "outer pairs". */
       if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigdhrgl_wings;
       break;
    case sbighrgl:
-      // If this is populated appropriately, we can identify "outer pairs".
+      /* If this is populated appropriately, we can identify "outer pairs". */
       if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bighrgl_wings;
       break;
    case sbigh:
@@ -682,10 +691,6 @@ extern void update_id_bits(setup *ss)
          is present, we can do a "triple trade". */
       if (livemask == 06666UL || livemask == 06363UL || livemask == 07272UL)
          ptr = id_bit_table_3ptpd;
-      break;
-   case shsqtag:
-      // Only allow it if outer pairs are together.
-      if (livemask != 0xF3CUL && livemask != 0xCF3UL) ptr = (id_bit_table *) 0;
       break;
    }
 
@@ -792,19 +797,14 @@ full_expand::thing *full_expand::search_table_2(setup_kind kind,
 
 full_expand::thing *full_expand::search_table_3(setup_kind kind,
                                                 uint32 livemask,
-                                                uint32 directions,
-                                                uint32 touchflags)
+                                                uint32 directions)
 {
    uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
    for (thing *tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
-      // If it has the evil "32" bit on, don't allow it except for special
-      // fan-the-top calls, indicated by CFLAG1_STEP_TO_WAVE_4_PEOPLE.
       if (tptr->kind == kind &&
           tptr->live == livemask &&
-          ((tptr->dir ^ directions) & tptr->dirmask) == 0 &&
-          (!(tptr->forbidden_elongation & 32) || touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE))
-         return tptr;
+          ((tptr->dir ^ directions) & tptr->dirmask) == 0) return tptr;
    }
 
    return (thing *) 0;
@@ -816,10 +816,11 @@ extern void get_directions(
    uint32 & directions,
    uint32 & livemask)
 {
+   int i;
    directions = 0;
    livemask = 0;
 
-   for (int i=0; i<=attr::slimit(ss); i++) {
+   for (i=0; i<=attr::slimit(ss); i++) {
       uint32 p = ss->people[i].id1;
       directions = (directions<<2) | (p&3);
       livemask <<= 2;
@@ -843,62 +844,60 @@ extern void touch_or_rear_back(
    // We don't do this if doing the last half of a call.
    if (scopy->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LASTHALF)) return;
 
-   if (!(callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)))
+   if (!(callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|
+                       CFLAG1_STEP_TO_WAVE|
+                       CFLAG1_REAR_BACK_FROM_QTAG|
+                       CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)))
       return;
 
    remove_z_distortion(scopy);
 
    get_directions(scopy, directions, livemask);
 
-   uint32 touchflags = (callflags1 & CFLAG1_STEP_REAR_MASK);
-   call_restriction new_assume = cr_none;
+   // Check first for rearing back from a wave.
 
-   switch (touchflags) {
-   case CFLAG1_REAR_BACK_FROM_QTAG:
-   case CFLAG1_REAR_BACK_FROM_R_WAVE:
-   case CFLAG1_REAR_BACK_FROM_EITHER:
-      if (touchflags != CFLAG1_REAR_BACK_FROM_QTAG) {
-         // Check for rearing back from a wave.
-         tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
-         if (tptr) goto found_tptr;
+   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|CFLAG1_STEP_TO_WAVE)) ==
+       CFLAG1_REAR_BACK_FROM_R_WAVE) {
+      tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
+      if (tptr) goto found_tptr;
 
-         // A few setups are special -- we allow any combination at all in livemask.
+      // A few setups are special -- we allow any combination at all in livemask.
 
-         if (livemask != 0) {
-            switch (scopy->kind) {
-            case s1x2:
-               if (((directions ^ 0x2UL) & livemask) == 0) {
-                  tptr = &rear_1x2_pair;
-                  goto found_tptr;
-               }
-               break;
-            case s1x4:
-               if (((directions ^ 0x28UL) & livemask) == 0) {
-                  tptr = &rear_2x2_pair;
-                  goto found_tptr;
-               }
-               break;
-            case s_bone:
-               if (((directions ^ 0xA802UL) & livemask) == 0) {
-                  tptr = &rear_bone_pair;
-                  goto found_tptr;
-               }
-               break;
+      if (livemask != 0) {
+         switch (scopy->kind) {
+         case s1x2:
+            if (((directions ^ 0x2UL) & livemask) == 0) {
+               tptr = &rear_1x2_pair;
+               goto found_tptr;
             }
+            break;
+         case s1x4:
+            if (((directions ^ 0x28UL) & livemask) == 0) {
+               tptr = &rear_2x2_pair;
+               goto found_tptr;
+            }
+            break;
+         case s_bone:
+            if (((directions ^ 0xA802UL) & livemask) == 0) {
+               tptr = &rear_bone_pair;
+               goto found_tptr;
+            }
+            break;
          }
       }
+   }
 
-      if (touchflags != CFLAG1_REAR_BACK_FROM_R_WAVE) {
-         // Check for rearing back from a 1/4 tag.
-         tptr = full_expand::search_table_2(scopy->kind, livemask, directions);
-         if (tptr) goto found_tptr;
-      }
+   // If we didn't find anything, check for rearing back from a qtag.
 
-      break;
+   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_QTAG|CFLAG1_STEP_TO_WAVE)) ==
+       CFLAG1_REAR_BACK_FROM_QTAG) {
+      tptr = full_expand::search_table_2(scopy->kind, livemask, directions);
+      if (tptr) goto found_tptr;
+   }
 
-   case CFLAG1_STEP_TO_WAVE:
-   case CFLAG1_STEP_TO_NONPHAN_BOX:
-   case CFLAG1_STEP_TO_WAVE_4_PEOPLE:
+   // Finally, try stepping to a wave.
+
+   if (callflags1 & CFLAG1_STEP_TO_WAVE) {
 
       // Special stuff:  If lines facing, but people are incomplete,
       // we honor an "assume facing lines" command.
@@ -908,8 +907,7 @@ extern void touch_or_rear_back(
           scopy->cmd.cmd_assume.assump_both == 1 &&
           scopy->cmd.cmd_assume.assumption == cr_li_lo) {
          if (scopy->kind == s2x4 && directions == (livemask & 0xAA00)) {
-            new_assume = cr_wave_only;  // Turn into "assume right-handed waves" --
-            livemask = 0xFFFF;          // assump_col and assump_both are still OK.
+            livemask = 0xFFFF;
             directions = 0xAA00;
          }
          else if (scopy->kind == s2x3 && directions == (livemask & 0xA80)) {
@@ -926,20 +924,17 @@ extern void touch_or_rear_back(
          }
       }
 
-      tptr = full_expand::search_table_3(scopy->kind, livemask, directions, touchflags);
+      tptr = full_expand::search_table_3(scopy->kind, livemask, directions);
       if (tptr) goto found_tptr;
 
       // A few setups are special -- we allow any combination at all in livemask,
       // though we are careful.
 
-      bool step_ok =
-         touchflags == CFLAG1_STEP_TO_WAVE ||
-         touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE;
-
       switch (scopy->kind) {
       case s2x4:
          if (livemask != 0) {
-            if ((step_ok || livemask == 0xFFFFUL) &&
+            if (((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
+                 livemask == 0xFFFFUL) &&
                 ((directions ^ 0x77DDUL) & livemask) == 0) {
                // Check for stepping to parallel waves from an 8-chain.
                tptr = &step_8ch_pair;
@@ -956,7 +951,8 @@ extern void touch_or_rear_back(
          break;
       case s2x2:
          if (livemask != 0 &&
-             (step_ok || livemask == 0xFF)) {
+             ((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
+              livemask == 0xFF)) {
             if (((directions ^ 0x7DUL) & livemask) == 0) {
                tptr = &step_2x2h_pair;
                goto found_tptr;
@@ -969,7 +965,8 @@ extern void touch_or_rear_back(
          break;
       case s_spindle:
          if (livemask != 0 &&
-             ((step_ok || livemask == 0xFFFFUL) &&
+             (((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
+               livemask == 0xFFFFUL) &&
               ((directions ^ 0xA802UL) & livemask) == 0)) {
             tptr = &step_spindle_pair;
             goto found_tptr;
@@ -1008,33 +1005,31 @@ extern void touch_or_rear_back(
          }
          break;
       }
-
-      break;
    }
 
-   // We didn't find anything.  But we still need to raise an error
+   // We didn't find anything at all.  But we still need to raise an error
    // if the caller said "left spin the top" when we were in a right-hand wave.
 
    if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
       uint32 aa;
       uint32 bb = ~0UL;
-      bool other_test = true;
+      long_boolean other_test = TRUE;
 
       switch (scopy->kind) {
-      case s2x2:
-         other_test = (directions & livemask) != (0x5FUL & livemask);
-         aa = 0x28UL;
-         break;
-      case s2x4:
-         other_test = (directions & livemask) != (0x55FFUL & livemask);
-         aa = 0x2288UL;
-         break;
-      case s_bone:   aa = 0x58F2UL; break;
-      case s_rigger: aa = 0x58F2UL; break;
-      case s1x2:     aa = 0x2UL; break;
-      case s1x4:     aa = 0x28UL; break;
-      case s1x8:     aa = 0x2882UL; break;
-      case s_qtag:   aa = 0x0802UL; bb = 0x0F0F; break;
+         case s2x2:
+            other_test = (directions & livemask) != (0x5FUL & livemask);
+            aa = 0x28UL;
+            break;
+         case s2x4:
+            other_test = (directions & livemask) != (0x55FFUL & livemask);
+            aa = 0x2288UL;
+            break;
+         case s_bone:   aa = 0x58F2UL; break;
+         case s_rigger: aa = 0x58F2UL; break;
+         case s1x2:     aa = 0x2UL; break;
+         case s1x4:     aa = 0x28UL; break;
+         case s1x8:     aa = 0x2882UL; break;
+         case s_qtag:   aa = 0x0802UL; bb = 0x0F0F; break;
       }
       if ((directions & livemask & bb) != (aa & livemask) && other_test)
          fail("Setup is not left-handed.");
@@ -1044,16 +1039,11 @@ extern void touch_or_rear_back(
 
    found_tptr:
 
-   // Make sure we alert the user (Hi, Clark!) if we call "Fan the Top" where only
-   // the centers would touch.  Case is a starting DPT with ends 1/4 left.
-   // People are supposed to step to right hands, but the centers on a Fan the Top
-   // normally step to left hands.  What are the dancers supposed to do?
-   if ((tptr->forbidden_elongation & 64) && touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE)
-      warn(warn__some_touch_evil);
-   else
-      warn(tptr->warning);  // Or give whatever warning the table says, but not both.
+   // Check for things that we must not do if "step_to_box" was specified.
 
-   if ((tptr->forbidden_elongation & 4) && (scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS))
+   warn(tptr->warning);
+
+   if ((tptr->forbidden_elongation & 4) && scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)
       scopy->cmd.prior_elongation_bits =
          (scopy->cmd.prior_elongation_bits & (~3)) | ((scopy->rotation+1) & 3);
 
@@ -1077,8 +1067,6 @@ extern void touch_or_rear_back(
       scopy->kind = zptr->outer_kind;
    }
 
-   // Assumptions are no longer valid, except for a few special cases.
-   scopy->cmd.cmd_assume.assumption = new_assume;
    canonicalize_rotation(scopy);
 }
 
@@ -1112,10 +1100,9 @@ bool expand::expand_from_hash_table(setup *ss,
 extern void do_matrix_expansion(
    setup *ss,
    uint32 concprops,
-   bool recompute_id) THROW_DECL
+   long_boolean recompute_id) THROW_DECL
 {
    uint32 needprops = concprops & CONCPROP__NEED_MASK;
-   if (needprops == 0) return;
    uint32 needpropbits = NEEDMASK(needprops);
 
    for (;;) {
@@ -1149,7 +1136,7 @@ extern void do_matrix_expansion(
                   (NEEDMASK(CONCPROP__NEEDK_TWINDMD) | NEEDMASK(CONCPROP__NEEDK_TWINQTAG))) {
             uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
                ss->people[11].id1 | ss->people[15].id1;
-
+   
             if (ctrs != 0 && (ctrs & 011) != 011) {
                if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
                expand::expand_setup((ctrs & 1) ? &s_4x4_4x6b : &s_4x4_4x6a, ss);
@@ -1178,25 +1165,6 @@ extern void do_matrix_expansion(
 class restriction_tester {
 
 private:
-
-   enum chk_type {
-      chk_none,
-      chk_wave,
-      chk_groups,
-      chk_anti_groups,
-      chk_box,
-      chk_box_dbl,
-      chk_indep_box,
-      chk_star,
-      chk_dmd_qtag,
-      chk_dmd_qtag_new,
-      chk_qtag,
-      chk_qbox,
-      chk_peelable,
-      chk_spec_directions,
-      chk_sex,
-      chk_inroller
-   };
 
    // We make this a struct inside the class, rather than having its
    // fields just comprise the class itself (note that there are no
@@ -1237,8 +1205,8 @@ public:
    friend restriction_test_result verify_restriction(
       setup *ss,
       assumption_thing tt,
-      bool instantiate_phantoms,
-      bool *failed_to_instantiate) THROW_DECL;
+      long_boolean instantiate_phantoms,
+      long_boolean *failed_to_instantiate) THROW_DECL;
 
 };
 
@@ -1279,224 +1247,105 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {003, 001, 003, 001, 001, 003, 0, 0},
     {0}, {0}, false,  chk_inroller},
 
-   {s2x4, cr_judge_is_cw,   0,    {7, 3, 0, 4, 0, 4, 3, 7},
-    {012, 010, 012, 010, 010, 012, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-   {s2x4, cr_judge_is_ccw,   0,    {0, 4, 7, 3, 7, 3, 0, 4},
-    {012, 010, 012, 010, 010, 012, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-   {s2x4, cr_socker_is_cw,   0,    {3, 7, 4, 0, 4, 0, 3, 7},
-    {012, 010, 012, 010, 010, 012, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-   {s2x4, cr_socker_is_ccw,   0,    {4, 0, 3, 7, 3, 7, 4, 0},
-    {012, 010, 012, 010, 010, 012, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-
-   {s_qtag, cr_judge_is_cw,   0,    {0, 4, 1, 5, 1, 5, 0, 4},
-    {003, 001, 003, 001, 001, 003, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-   {s_qtag, cr_judge_is_ccw,   0,    {1, 5, 0, 4, 0, 4, 1, 5},
-    {003, 001, 003, 001, 001, 003, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-   {s_qtag, cr_socker_is_cw,   0,    {4, 0, 5, 1, 5, 1, 0, 4},
-    {003, 001, 003, 001, 001, 003, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-   {s_qtag, cr_socker_is_ccw,   0,    {5, 1, 4, 0, 4, 0, 1, 5},
-    {003, 001, 003, 001, 001, 003, 0, 0},
-    {0}, {0}, false,  chk_inroller},
-
    {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {1}, false, chk_sex},
-   {s4x4,      cr_wave_only,    1,
-    {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
-    {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0}, {0}, {0}, true,  chk_box},
-   {s4x4,      cr_2fl_only,     1,
-    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},
-    {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2}, {0}, {0}, true,  chk_box},
-   {s_qtag,    cr_qtag_mwv,     8, {0, 1, 3, 2, 5, 4, 6, 7, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_qtag,    cr_qtag_mag_mwv, 8, {0, 1, 2, 3, 5, 4, 7, 6, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},
-    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
-    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},
-    {1, 0}, {1, 2},              false, chk_star},
-   {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},
-    {2, 3, 6}, {2, 2, 7},         false, chk_star},
-   {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},
-    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
-   {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},
-    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s4x6,      cr_dmd_ctrs_mwv, 8, {1, 10, 4, 7, 22, 13, 19, 16, -1},
-    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
-   {swqtag,    cr_dmd_ctrs_mwv, 6, {3, 2, 9, 4, 7, 8, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},
-    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
-   {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
-    {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
-   {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
-    {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
+   {s4x4,      cr_wave_only,    1,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
+                                 {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0}, {0}, {0}, true,  chk_box},
+   {s4x4,      cr_2fl_only,     1,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},
+                                 {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2}, {0}, {0}, true,  chk_box},
+   {s_qtag,    cr_qtag_mwv,     8, {0, 1, 3, 2, 5, 4, 6, 7, -1}, {0, 2, 0},       {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_qtag_mag_mwv, 8, {0, 1, 2, 3, 5, 4, 7, 6, -1}, {0, 2, 0},       {0}, {0}, false, chk_spec_directions},
+   {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},    {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},             {1, 0}, {1, 2},              false, chk_star},
+   {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},      {2, 3, 6}, {2, 2, 7},         false, chk_star},
+   {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},          {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},                {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},  {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1}, {0, 2, 0},   {0}, {0}, false, chk_spec_directions},
+   {s4x6,      cr_dmd_ctrs_mwv, 8, {1, 10, 4, 7, 22, 13, 19, 16, -1}, {1, 3, 0},  {0}, {0}, false, chk_spec_directions},
+   {swqtag,    cr_dmd_ctrs_mwv, 6, {3, 2, 9, 4, 7, 8, -1},    {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1}, {0, 2, 0},     {0}, {0}, false, chk_spec_directions},
+   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},          {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {1, 3, 1},          {0}, {0}, false, chk_spec_directions},
+   {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {0, 2, 1},          {0}, {0}, false, chk_spec_directions},
 
-   {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},
-    {0}, {0}, {0}, true, chk_wave},
-   {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x8, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
-    {0}, {0}, {0}, false, chk_wave},
-   {s1x8, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},
-    {2}, {0}, {0}, false,  chk_anti_groups},
-   {s2x4, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s1x8, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s1x8, cr_4x4_2fl_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},
-    {0}, {0}, {0}, false, chk_wave},
-   {s1x8, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},
-    {4}, {0}, {0}, true,  chk_groups},
-   {s1x8, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},
-    {4}, {0}, {0}, true,  chk_anti_groups},
-   {s1x3, cr_1fl_only, 3, {0, 1, 2},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x3, cr_3x3couples_only, 3, {0, 1, 2},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x3, cr_wave_only, 3, {0, 1, 2},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x4, cr_wave_only, 4, {0, 1, 3, 2},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x4, cr_1fl_only, 4, {0, 1, 2, 3},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x4, cr_4x4couples_only, 4, {0, 1, 2, 3},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x4, cr_couples_only, 2, {0, 2, 1, 3},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s1x4, cr_miniwaves, 1, {0, 2, 1, 3},
-    {2}, {0}, {0}, true,  chk_anti_groups},
-   {s1x4, cr_magic_only, 4, {0, 1, 2, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x4, cr_all_ns, 4, {4, 0, 1, 2, 3},
-    {0},  {0},  {0},  false, chk_dmd_qtag},
-   {s1x4, cr_all_ew, 4, {0},
-    {4, 0, 1, 2, 3}, {0}, {0}, false, chk_dmd_qtag},
-   {s2x4, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
-    {0}, {0}, {0}, false, chk_dmd_qtag},
-   {s2x4, cr_all_ew, 4, {0},
-    {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, false, chk_dmd_qtag},
-   {s1x8, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
-    {0}, {0}, {0}, false, chk_dmd_qtag},
-   {s1x8, cr_all_ew, 4, {0},
-    {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, false, chk_dmd_qtag},
-   {s1x6, cr_miniwaves, 1, {0, 2, 4, 1, 5, 3},
-    {3}, {0}, {0}, true,  chk_anti_groups},
-   {s1x6, cr_wave_only, 6, {0, 1, 2, 5, 4, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x6, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x6, cr_3x3_2fl_only, 6, {0, 3, 1, 4, 2, 5},
-    {0}, {0}, {0}, false, chk_wave},
-   {s1x6, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s2x3, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s1x10, cr_wave_only, 10, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-    {0},         {0}, {0}, true, chk_wave},
-   {s1x12, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x14, cr_wave_only, 14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x16, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},
-    {0}, {0}, {0}, true, chk_wave},
-   {s1x16, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
-    {8}, {0}, {0}, true,  chk_groups},
-   {s1x16, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
-    {8}, {0}, {0}, true,  chk_anti_groups},
-   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s2x3, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s2x3, cr_li_lo, 6, {3, 0, 4, 1, 5, 2},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},
-    {2}, {0}, {0}, false,  chk_anti_groups},
-   {s3x4, cr_ctr_2fl_only, 4, {10, 4, 11, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x3, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},
-    {0}, {0}, {0}, false, chk_wave},
-   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_li_lo, 8, {4, 0, 5, 1, 6, 2, 7, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_ctrs_in_out, 4, {5, 1, 6, 2},
-    {0}, {0}, {0}, false, chk_wave},
-   {s2x4, cr_indep_in_out, 0, {3, 2, 3, 2, 1, 0, 1, 0},
-    {0}, {0}, {0}, false, chk_indep_box},
-   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s2x4, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s2x4, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},
-    {4}, {0}, {0}, true,  chk_groups},
-   {s2x4, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},
-    {4}, {0}, {0}, true,  chk_anti_groups},
-   {s_qtag, cr_wave_only, 4, {6, 7, 3, 2},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_qtag, cr_2fl_only, 4, {6, 2, 7, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_qtag, cr_dmd_not_intlk, 4, {6, 7, 3, 2},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_qtag, cr_dmd_intlk, 4, {6, 2, 7, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_ptpd, cr_dmd_not_intlk, 4, {0, 2, 6, 4},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_qtag, cr_miniwaves, 1, {6, 2, 7, 3},
-    {2}, {0}, {0}, true,  chk_anti_groups},
-   {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},
-    {2}, {0}, {0}, true,  chk_groups},
-   {sbigdmd, cr_2fl_only, 4, {3, 9, 2, 8},
-    {8}, {0}, {0}, true,  chk_wave},
-   {s_galaxy, cr_wave_only, 4, {1, 3, 7, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},
-    {2}, {0}, {0}, true,  chk_anti_groups},
-   {s_bone, cr_couples_only, 2, {6, 2, 7, 3},
-    {2}, {0}, {0}, true,  chk_groups},
-   {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},
-    {0}, {0}, {0}, true, chk_wave},
+   {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},                              {0}, {0}, {0}, true, chk_wave},
+   {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, false, chk_wave},
+
+   {s1x8, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, false,  chk_anti_groups},
+
+   {s2x4, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_4x4_2fl_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                           {0}, {0}, {0}, false, chk_wave},
+   {s1x8, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, true,  chk_anti_groups},
+   {s1x3, cr_1fl_only, 3, {0, 1, 2},                                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x3, cr_3x3couples_only, 3, {0, 1, 2},                                       {1}, {0}, {0}, true,  chk_groups},
+   {s1x3, cr_wave_only, 3, {0, 1, 2},                                             {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_wave_only, 4, {0, 1, 3, 2},                                          {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},                                           {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_1fl_only, 4, {0, 1, 2, 3},                                           {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_4x4couples_only, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_couples_only, 2, {0, 2, 1, 3},                                       {2}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_miniwaves, 1, {0, 2, 1, 3},                                          {2}, {0}, {0}, true,  chk_anti_groups},
+   {s1x4, cr_magic_only, 4, {0, 1, 2, 3},                                         {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_all_ns, 4, {4, 0, 1, 2, 3}, {0},  {0},  {0},  false, chk_dmd_qtag},
+   {s1x4, cr_all_ew, 4, {0}, {4, 0, 1, 2, 3}, {0}, {0}, false, chk_dmd_qtag},
+   {s2x4, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, false, chk_dmd_qtag},
+   {s2x4, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, false, chk_dmd_qtag},
+   {s1x8, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, false, chk_dmd_qtag},
+   {s1x8, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, false, chk_dmd_qtag},
+   {s1x6, cr_miniwaves, 1, {0, 2, 4, 1, 5, 3},                                    {3}, {0}, {0}, true,  chk_anti_groups},
+   {s1x6, cr_wave_only, 6, {0, 1, 2, 5, 4, 3},                                    {0}, {0}, {0}, true,  chk_wave},
+   {s1x6, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x6, cr_3x3_2fl_only, 6, {0, 3, 1, 4, 2, 5},                                 {0}, {0}, {0}, false, chk_wave},
+   {s1x6, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},                              {2}, {0}, {0}, true,  chk_groups},
+   {s2x3, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},                              {2}, {0}, {0}, true,  chk_groups},
+   {s1x10, cr_wave_only, 10, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},         {0},         {0}, {0}, true, chk_wave},
+   {s1x12, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},              {0}, {0}, {0}, true,  chk_wave},
+   {s1x14, cr_wave_only, 14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},      {0}, {0}, {0}, true,  chk_wave},
+   {s1x16, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, true, chk_wave},
+   {s1x16, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, true,  chk_groups},
+   {s1x16, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, true,  chk_anti_groups},
+   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s2x3, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s2x3, cr_li_lo, 6, {3, 0, 4, 1, 5, 2},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, true,  chk_wave},
+
+   {s2x4, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, false,  chk_anti_groups},
+
+   {s2x4, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},                              {0}, {0}, {0}, true,  chk_wave},
+   {s2x3, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                    {0}, {0}, {0}, false, chk_wave},
+   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},                                   {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_li_lo, 8, {4, 0, 5, 1, 6, 2, 7, 3},                                  {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_ctrs_in_out, 4, {5, 1, 6, 2},                                        {0}, {0}, {0}, false, chk_wave},
+   {s2x4, cr_indep_in_out, 0, {3, 2, 3, 2, 1, 0, 1, 0},                           {0}, {0}, {0}, false, chk_indep_box},
+   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, true,  chk_anti_groups},
+   {s_qtag, cr_wave_only, 4, {6, 7, 3, 2},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_2fl_only, 4, {6, 2, 7, 3},                                         {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_dmd_not_intlk, 4, {6, 7, 3, 2},                                    {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_dmd_intlk, 4, {6, 2, 7, 3},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_dmd_not_intlk, 4, {0, 2, 6, 4},                                    {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, true,  chk_anti_groups},
+   {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, true,  chk_anti_groups},
+   {s_bone, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, true, chk_wave},
    {s2x8, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},
     {0}, {0}, {0}, true, chk_wave},
    {s2x8, cr_4x4_2fl_only, 16, {0, 4, 1, 5, 2, 6, 3, 7, 12, 8, 13, 9, 14, 10, 15, 11},
@@ -1547,15 +1396,11 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true,  chk_wave},
    {s_thar, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
-   {s_thar, cr_2fl_only, 8, {0, 5, 2, 7, 1, 4, 3, 6},
-    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_thar, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, false, chk_wave},
    {s_thar, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_crosswave, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
-    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
-   {s_crosswave, cr_2fl_only, 8, {0, 5, 2, 7, 1, 4, 3, 6},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_crosswave, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, false, chk_wave},
@@ -1598,181 +1443,115 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {nothing}};
 
 restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = {
-   {s1x2, cr_opposite_sex, 2, {0},
-    {0}, {0}, {0}, false, chk_sex},
-   {s2x4, cr_quarterbox_or_col, 0, {3, 0, 1, 2},
-    {3, 4, 5, 6}, {3, 1, 2, 3}, {3, 5, 6, 7}, false, chk_qbox},
-   {s2x4, cr_quarterbox_or_magic_col, 0, {3, 1, 2, 7},
-    {3, 3, 5, 6}, {3, 1, 2, 4}, {3, 0, 5, 6}, false, chk_qbox},
-   {s2x3, cr_quarterbox_or_col, 0, {2, 0, 1},
-    {2, 3, 4}, {2, 1, 2}, {2, 4, 5}, false, chk_qbox},
-   {s2x3, cr_quarterbox_or_magic_col, 0, {2, 1, 5},
-    {2, 2, 4}, {2, 1, 3}, {2, 0, 4}, false, chk_qbox},
-   {s2x3, cr_wave_only, 6, {0, 3, 1, 4, 2, 5},
-    {0}, {0}, {0}, true, chk_wave},
-   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x3, cr_peelable_box, 3, {0, 1, 2},
-    {3, 4, 5}, {0}, {0}, false, chk_peelable},
-   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x4, cr_li_lo, 4, {0, 1, 3, 2},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s2x4, cr_li_lo, 8, {0, 1, 2, 3, 5, 4, 7, 6},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_ctrs_in_out, 4, {1, 2, 6, 5},
-    {0}, {0}, {0}, false, chk_wave},
-   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_wave_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_galaxy, cr_wave_only, 4, {1, 7, 3, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_peelable_box, 4, {0, 1, 2, 3},
-    {4, 5, 6, 7}, {0}, {0}, false, chk_peelable},
-   {s2x4, cr_couples_only, 2, {0, 1, 2, 3, 7, 6, 5, 4},
-    {4}, {0}, {0}, true,  chk_groups},
-   {s2x4, cr_miniwaves, 1, {0, 1, 2, 3, 7, 6, 5, 4},
-    {4}, {0}, {0}, true,  chk_anti_groups},
-   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x2, cr_all_facing_same, 2, {0, 1},
-    {1}, {0}, {0}, true,  chk_groups},
-   {s1x2, cr_li_lo, 2, {0, 1},
-    {0}, {0}, {0}, true, chk_wave},
-   {s2x4, cr_reg_tbone, 1, {2, 1, 2, 1, 0, 3, 0, 3},
-    {2, 3, 2, 3, 0, 1, 0, 1}, {0}, {0}, false, chk_box},
-   {s2x6, cr_wave_only, 12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},
-    {0}, {0}, {0}, true, chk_wave},
-   {s2x6, cr_peelable_box, 6, {0, 1, 2, 3, 4, 5},
-    {6, 7, 8, 9, 10, 11}, {0}, {0}, false, chk_peelable},
-   {s2x6, cr_couples_only, 3, {0, 1, 2, 3, 4, 5, 11, 10, 9, 8, 7, 6},
-    {4}, {0}, {0}, true,  chk_groups},
-   {s2x5, cr_wave_only, 10, {0, 5, 1, 6, 2, 7, 3, 8, 4, 9},
-    {0}, {0}, {0}, true, chk_wave},
-   {s2x5, cr_peelable_box, 5, {0, 1, 2, 3, 4},
-    {5, 6, 7, 8, 9}, {0}, {0}, false, chk_peelable},
-   {s2x8, cr_wave_only, 16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},
-    {0}, {0}, {0}, true, chk_wave},
-   {s2x8, cr_peelable_box, 8, {0, 1, 2, 3, 4, 5, 6, 7},
-    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, false, chk_peelable},
-   {s2x8, cr_couples_only, 2, {0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8},
-    {8}, {0}, {0}, true,  chk_groups},
-   {s_qtag, cr_wave_only, 4, {2, 3, 7, 6},
-    {0}, {0}, {0}, false, chk_wave},
-   {s_short6, cr_tall6, 6, {4, 0, 2, 3, 5},
-    {2, 1, 4}, {3, 0, 1, 5}, {3, 2, 3, 4}, true,  chk_dmd_qtag},
-   {s_short6, cr_wave_only, 6, {1, 0, 3, 2, 5, 4},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_trngl, cr_wave_only, 2, {1, 2},
-    {0}, {0}, {0}, true,  chk_wave},   // Isn't this bogus?  It checks for TANDEM-BASE.
-   {sdmd, cr_wave_only, 2, {1, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {sdmd, cr_miniwaves, 2, {1, 3},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_ptpd, cr_wave_only, 4, {1, 3, 7, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_ptpd, cr_miniwaves, 1, {1, 7, 3, 5},
-    {2}, {0}, {0}, true,  chk_anti_groups},
+   {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {0}, false, chk_sex},
+   {s2x4, cr_quarterbox_or_col, 0, {3, 0, 1, 2}, {3, 4, 5, 6},       {3, 1, 2, 3}, {3, 5, 6, 7}, false, chk_qbox},
+   {s2x4, cr_quarterbox_or_magic_col, 0, {3, 1, 2, 7}, {3, 3, 5, 6}, {3, 1, 2, 4}, {3, 0, 5, 6}, false, chk_qbox},
+   {s2x3, cr_quarterbox_or_col, 0, {2, 0, 1}, {2, 3, 4}, {2, 1, 2}, {2, 4, 5},                   false, chk_qbox},
+   {s2x3, cr_quarterbox_or_magic_col, 0, {2, 1, 5}, {2, 2, 4}, {2, 1, 3}, {2, 0, 4},             false, chk_qbox},
+   {s2x3, cr_wave_only, 6, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, true, chk_wave},
+   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},                {0},                    {0}, {0}, true,  chk_wave},
+   {s2x3, cr_peelable_box, 3, {0, 1, 2},                   {3, 4, 5},                  {0}, {0}, false, chk_peelable},
+   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},                                           {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_li_lo, 4, {0, 1, 3, 2},                                              {0}, {0}, {0}, true,  chk_wave},
+   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_li_lo, 8, {0, 1, 2, 3, 5, 4, 7, 6},                                  {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_ctrs_in_out, 4, {1, 2, 6, 5},                                        {0}, {0}, {0}, false, chk_wave},
+   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_wave_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                              {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_peelable_box, 4, {0, 1, 2, 3},                {4, 5, 6, 7},               {0}, {0}, false, chk_peelable},
+   {s2x4, cr_couples_only, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_miniwaves, 1, {0, 1, 2, 3, 7, 6, 5, 4},                              {4}, {0}, {0}, true,  chk_anti_groups},
+   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s1x2, cr_all_facing_same, 2, {0, 1},                                          {1}, {0}, {0}, true,  chk_groups},
+   {s1x2, cr_li_lo, 2, {0, 1},                                                    {0}, {0}, {0}, true, chk_wave},
+   {s2x4, cr_reg_tbone, 1, {2, 1, 2, 1, 0, 3, 0, 3},    {2, 3, 2, 3, 0, 1, 0, 1},      {0}, {0}, false, chk_box},
+   {s2x6, cr_wave_only, 12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},               {0}, {0}, {0}, true, chk_wave},
+   {s2x6, cr_peelable_box, 6, {0, 1, 2, 3, 4, 5},          {6, 7, 8, 9, 10, 11},           {0}, {0}, false, chk_peelable},
+   {s2x6, cr_couples_only, 3, {0, 1, 2, 3, 4, 5, 11, 10, 9, 8, 7, 6},                 {4}, {0}, {0}, true,  chk_groups},
+   {s2x5, cr_wave_only, 10, {0, 5, 1, 6, 2, 7, 3, 8, 4, 9},                       {0}, {0}, {0}, true, chk_wave},
+   {s2x5, cr_peelable_box, 5, {0, 1, 2, 3, 4},                        {5, 6, 7, 8, 9}, {0}, {0}, false, chk_peelable},
+   {s2x8, cr_wave_only, 16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},{0}, {0}, {0}, true, chk_wave},
+   {s2x8, cr_peelable_box, 8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, false, chk_peelable},
+   {s2x8, cr_couples_only, 2, {0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8}, {8}, {0}, {0}, true,  chk_groups},
+   {s_qtag, cr_wave_only, 4, {2, 3, 7, 6},                                        {0}, {0}, {0}, false, chk_wave},
+   {s_short6, cr_tall6, 6, {4, 0, 2, 3, 5},         {2, 1, 4},       {3, 0, 1, 5}, {3, 2, 3, 4}, true,  chk_dmd_qtag},
+   {s_short6, cr_wave_only, 6, {1, 0, 3, 2, 5, 4},                                {0}, {0}, {0}, true,  chk_wave},
+   {s_trngl, cr_wave_only, 2, {1, 2},                                             {0}, {0}, {0}, true,  chk_wave},   /* isn't this bogus?  It checks for TANDEM-BASE. */
+   {sdmd, cr_wave_only, 2, {1, 3},                                                {0}, {0}, {0}, true,  chk_wave},
+   {sdmd, cr_miniwaves, 2, {1, 3},                                                {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_wave_only, 4, {1, 3, 7, 5},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_miniwaves, 1, {1, 7, 3, 5},                                        {2}, {0}, {0}, true,  chk_anti_groups},
    {nothing}};
 
 restriction_tester::restr_initializer restriction_tester::restr_init_table4[] = {
    {sdmd, cr_jright, 4, {0, 2, 1, 3},                     {0}, {0}, {0}, true,  chk_wave},
    {sdmd, cr_jleft, 4, {0, 2, 3, 1},                      {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_conc_iosame, 8, {6, 1, 0, 3, 5, 2, 7, 4},    {0}, {0}, {0}, true,  chk_wave},
-   {s2x4, cr_conc_iodiff, 8, {1, 6, 0, 3, 2, 5, 7, 4},    {0}, {0}, {0}, true,  chk_wave},
    {s_ptpd, cr_jright, 8, {0, 2, 1, 3, 6, 4, 7, 5},       {0}, {0}, {0}, true,  chk_wave},
    {s_ptpd, cr_jleft, 8, {0, 2, 3, 1, 6, 4, 5, 7},        {0}, {0}, {0}, true,  chk_wave},
    {nothing}};
 
 restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = {
-   {s_qtag, cr_jleft, 8, {2, 3, 0, 4, 7, 6, 1, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_qtag, cr_jright, 8, {3, 2, 0, 4, 6, 7, 1, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_c1phan,cr_jleft,16, {2, 0, 1, 3, 5, 7, 4, 6, 8, 10, 11, 9, 15, 13, 14, 12},
-    {0}, {0}, {0}, false, chk_wave},
-   {s_c1phan,cr_jright,16,{0, 2, 1, 3, 7, 5, 4, 6, 10, 8, 11, 9, 13, 15, 14, 12},
-    {0}, {0}, {0}, false, chk_wave},
-   {s_qtag, cr_ijleft, 8, {2, 6, 0, 4, 3, 7, 1, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_qtag, cr_ijright, 8, {6, 2, 0, 4, 7, 3, 1, 5},
-    {0}, {0}, {0}, true,  chk_wave},
-   {s_qtag, cr_diamond_like, 4, {4, 2, 3, 6, 7},
-    {4, 0, 1, 4, 5}, {0}, {0}, false, chk_dmd_qtag},
-   {s_qtag, cr_qtag_like, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
-    {0}, {2, 4, 5}, {2, 0, 1}, false, chk_dmd_qtag},
-   {s_qtag, cr_pu_qtag_like, 0, {0},
-    {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 0, 1}, {2, 4, 5}, false, chk_dmd_qtag},
-   {s3dmd, cr_diamond_like, 0, {6, 3, 4, 5, 9, 10, 11},
-    {6, 0, 1, 2, 6, 7, 8}, {0}, {0}, false, chk_dmd_qtag},
-   {s3dmd, cr_qtag_like, 0, {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-    {0}, {3, 6, 7, 8}, {3, 0, 1, 2}, false, chk_dmd_qtag},
-   {s3dmd, cr_pu_qtag_like, 0, {0},
-    {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-    {3, 0, 1, 2}, {3, 6, 7, 8}, false, chk_dmd_qtag},
+   {s_qtag, cr_jleft, 8, {2, 3, 0, 4, 7, 6, 1, 5},        {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_jright, 8, {3, 2, 0, 4, 6, 7, 1, 5},       {0}, {0}, {0}, true,  chk_wave},
+   {s_c1phan,cr_jleft,16, {2, 0, 1, 3, 5, 7, 4, 6,
+                           8, 10, 11, 9, 15, 13, 14, 12}, {0}, {0}, {0}, false, chk_wave},
+   {s_c1phan,cr_jright,16,{0, 2, 1, 3, 7, 5, 4, 6,
+                           10, 8, 11, 9, 13, 15, 14, 12}, {0}, {0}, {0}, false, chk_wave},
+   {s_qtag, cr_ijleft, 8, {2, 6, 0, 4, 3, 7, 1, 5},       {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_ijright, 8, {6, 2, 0, 4, 7, 3, 1, 5},      {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_diamond_like, 4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},
+                                                               {0}, {0}, false, chk_dmd_qtag},
+   {s_qtag, cr_qtag_like, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},
+                                                   {2, 4, 5}, {2, 0, 1}, false, chk_dmd_qtag},
+   {s_qtag, cr_pu_qtag_like, 0, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},
+                                                   {2, 0, 1}, {2, 4, 5}, false, chk_dmd_qtag},
+   {s3dmd, cr_diamond_like, 0, {6, 3, 4, 5, 9, 10, 11}, {6, 0, 1, 2, 6, 7, 8},
+                                                               {0}, {0}, false, chk_dmd_qtag},
+   {s3dmd, cr_qtag_like, 0, {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, {0},
+                                             {3, 6, 7, 8}, {3, 0, 1, 2}, false, chk_dmd_qtag},
+   {s3dmd, cr_pu_qtag_like, 0, {0}, {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
+                                             {3, 0, 1, 2}, {3, 6, 7, 8}, false, chk_dmd_qtag},
    {s4dmd, cr_jleft, 16, {4, 5, 0, 8, 6, 7, 1, 9, 15, 14, 2, 10, 13, 12, 3, 11},
-    {0}, {0}, {0}, true, chk_wave},
+                                                          {0}, {0}, {0}, true, chk_wave},
    {s4dmd, cr_jright, 16, {5, 4, 0, 8, 7, 6, 1, 9, 14, 15, 2, 10, 12, 13, 3, 11},
-    {0}, {0}, {0}, true, chk_wave},
+                                                          {0}, {0}, {0}, true, chk_wave},
    {s4dmd, cr_diamond_like, 8, {8, 4, 5, 6, 7, 12, 13, 14, 15},
-    {8, 0, 1, 2, 3, 8, 9, 10, 11}, {0}, {0}, false, chk_dmd_qtag},
+                                {8, 0, 1, 2, 3, 8, 9, 10, 11}, {0}, {0}, false, chk_dmd_qtag},
    {s4dmd, cr_qtag_like, 4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-    {0}, {4, 8, 9, 10, 11}, {4, 0, 1, 2, 3}, false, chk_dmd_qtag},
-   {s4dmd, cr_pu_qtag_like, 0, {0},
-    {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-    {4, 0, 1, 2, 3}, {4, 8, 9, 10, 11}, false, chk_dmd_qtag},
-   {sdmd, cr_jright, 4, {2, 0, 1, 3},
-    {8}, {0}, {0}, true,  chk_wave},
-   {sdmd, cr_jleft, 4, {2, 0, 3, 1},
-    {8}, {0}, {0}, true,  chk_wave},
-   {sdmd, cr_diamond_like, 4, {2, 0, 2},
-    {2, 1, 3}, {0}, {0}, false, chk_dmd_qtag},
-   {sdmd, cr_qtag_like, 4, {0},
-    {4, 0, 1, 2, 3}, {1, 0}, {1, 2}, false, chk_dmd_qtag},
-   {sdmd, cr_pu_qtag_like, 0, {4, 0, 1, 2, 3},
-    {0}, {1, 0}, {1, 2}, false, chk_dmd_qtag},
-   {s_ptpd, cr_jright, 8, {2, 0, 1, 3, 4, 6, 7, 5},
-    {8}, {0}, {0}, true,  chk_wave},
-   {s_ptpd, cr_jleft, 8, {2, 0, 3, 1, 4, 6, 5, 7},
-    {8}, {0}, {0}, true,  chk_wave},
-   {s_ptpd, cr_diamond_like, 4, {4, 0, 2, 4, 6},
-    {4, 1, 3, 5, 7}, {0}, {0}, false, chk_dmd_qtag},
-   {s_ptpd, cr_qtag_like, 4, {0},
-    {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
-   {s4x6, cr_qtag_like, 8, {0},
-    {16, 11, 1, 9, 10, 8, 4, 6, 7, 23, 13, 21, 22, 20, 16, 19, 18},
-    {4, 11, 8, 18, 21}, {4, 9, 6, 23, 20}, false, chk_dmd_qtag},
-   {s_ptpd, cr_pu_qtag_like, 0, {8, 0, 1, 2, 3, 4, 5, 6, 7},
-    {0}, {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
-   {s2x4, cr_gen_qbox, 4, {0},
-    {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 1, 2}, {2, 5, 6}, false, chk_dmd_qtag},
-   {s2x2, cr_wave_only, 1, {2, 0, 0, 2},
-    {0, 0, 2, 2},         {0}, {0}, true,  chk_box},
-   {s2x2, cr_all_facing_same, 1, {2, 2, 2, 2},
-    {0, 0, 0, 0},   {0}, {0}, true,  chk_box},
-   {s2x2, cr_2fl_only, 1, {2, 2, 2, 2},
-    {0, 0, 0, 0},          {0}, {0}, true,  chk_box},
-   {s2x2, cr_trailers_only, 1, {0, 0, 2, 2},
-    {0, 2, 2, 0},     {0}, {0}, true,  chk_box},
-   {s2x2, cr_leads_only, 1, {0, 0, 2, 2},
-    {0, 2, 2, 0},        {0}, {0}, true,  chk_box},
-   {s2x2, cr_li_lo, 1, {0, 0, 2, 2},
-    {0, 2, 2, 0},             {0}, {0}, true,  chk_box},
-   {s2x2, cr_indep_in_out, 0, {3, 2, 1, 0},
-    {0}, {0}, {0}, false, chk_indep_box},
-   {s2x2, cr_magic_only, 1, {2, 0, 2, 0},
-    {0, 2, 0, 2},        {0}, {0}, true,  chk_box},
+                                {0}, {4, 8, 9, 10, 11}, {4, 0, 1, 2, 3}, false, chk_dmd_qtag},
+   {s4dmd, cr_pu_qtag_like, 0, {0}, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+                                     {4, 0, 1, 2, 3}, {4, 8, 9, 10, 11}, false, chk_dmd_qtag},
+   {sdmd, cr_jright, 4, {2, 0, 1, 3},                     {8}, {0}, {0}, true,  chk_wave},
+   {sdmd, cr_jleft, 4, {2, 0, 3, 1},                      {8}, {0}, {0}, true,  chk_wave},
+   {sdmd, cr_diamond_like, 4, {2, 0, 2}, {2, 1, 3},            {0}, {0}, false, chk_dmd_qtag},
+   {sdmd, cr_qtag_like, 4, {0}, {4, 0, 1, 2, 3},         {1, 0}, {1, 2}, false, chk_dmd_qtag},
+   {sdmd, cr_pu_qtag_like, 0, {4, 0, 1, 2, 3}, {0},      {1, 0}, {1, 2}, false, chk_dmd_qtag},
+   {s_ptpd, cr_jright, 8, {2, 0, 1, 3, 4, 6, 7, 5},       {8}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_jleft, 8, {2, 0, 3, 1, 4, 6, 5, 7},        {8}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_diamond_like, 4, {4, 0, 2, 4, 6}, {4, 1, 3, 5, 7},
+                                                               {0}, {0}, false, chk_dmd_qtag},
+   {s_ptpd, cr_qtag_like, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},
+                                                   {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
+
+   {s4x6, cr_qtag_like, 8, {0}, {16, 11, 1, 9, 10, 8, 4, 6, 7, 23, 13, 21, 22, 20, 16, 19, 18},
+                                  {4, 11, 8, 18, 21}, {4, 9, 6, 23, 20}, false, chk_dmd_qtag},
+
+   {s_ptpd, cr_pu_qtag_like, 0, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},
+                                                   {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
+   {s2x4, cr_gen_qbox, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},
+                                                   {2, 1, 2}, {2, 5, 6}, false, chk_dmd_qtag},
+   {s2x2, cr_wave_only, 1, {2, 0, 0, 2}, {0, 0, 2, 2},         {0}, {0}, true,  chk_box},
+   {s2x2, cr_all_facing_same, 1, {2, 2, 2, 2}, {0, 0, 0, 0},   {0}, {0}, true,  chk_box},
+   {s2x2, cr_2fl_only, 1, {2, 2, 2, 2}, {0, 0, 0, 0},          {0}, {0}, true,  chk_box},
+   {s2x2, cr_trailers_only, 1, {0, 0, 2, 2}, {0, 2, 2, 0},     {0}, {0}, true,  chk_box},
+   {s2x2, cr_leads_only, 1, {0, 0, 2, 2}, {0, 2, 2, 0},        {0}, {0}, true,  chk_box},
+   {s2x2, cr_li_lo, 1, {0, 0, 2, 2}, {0, 2, 2, 0},             {0}, {0}, true,  chk_box},
+   {s2x2, cr_indep_in_out, 0, {3, 2, 1, 0},               {0}, {0}, {0}, false, chk_indep_box},
+   {s2x2, cr_magic_only, 1, {2, 0, 2, 0}, {0, 2, 0, 2},        {0}, {0}, true,  chk_box},
    {nothing}};
 
 
@@ -1864,8 +1643,8 @@ restriction_tester::restr_initializer *restriction_tester::get_restriction_thing
 restriction_test_result verify_restriction(
    setup *ss,
    assumption_thing tt,
-   bool instantiate_phantoms,
-   bool *failed_to_instantiate) THROW_DECL
+   long_boolean instantiate_phantoms,
+   long_boolean *failed_to_instantiate) THROW_DECL
 {
    int idx, limit, i, j, k;
    uint32 t = 0;
@@ -1893,10 +1672,6 @@ restriction_test_result verify_restriction(
       // If it does, can get rid of some special code in assoc.
       // B=1 => pts are right-handed; B=2 => pts are left-handed.
       tt.assumption = cr_jleft;
-      tt.assump_col = 4;
-      break;
-   case cr_conc_iosame:
-   case cr_conc_iodiff:
       tt.assump_col = 4;
       break;
    case cr_leads_only:
@@ -1957,20 +1732,20 @@ restriction_test_result verify_restriction(
    dirtest[0] = 0;
    dirtest[1] = 0;
 
-   *failed_to_instantiate = true;
+   *failed_to_instantiate = TRUE;
 
    veryshort *map1item;
    int szlim;
 
    switch (rr->check) {
-   case restriction_tester::chk_spec_directions:
+   case chk_spec_directions:
       qa1 = 0;
       qa0 = 3 & (~tt.assump_both);
 
       p = rr->map1;
       qa2 = rr->map2[0];
       qa3 = rr->map2[1];
-
+            
       while (*p>=0) {
          uint32 t1 = ss->people[*(p++)].id1;
          uint32 t2 = ss->people[*(p++)].id1;
@@ -1991,7 +1766,7 @@ restriction_test_result verify_restriction(
       }
 
       goto bad;
-   case restriction_tester::chk_wave:
+   case chk_wave:
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 
@@ -2026,7 +1801,7 @@ restriction_test_result verify_restriction(
          if ((qab[0]|qab[2]) & 1) goto bad;
 
          if (instantiate_phantoms) {
-            *failed_to_instantiate = false;
+            *failed_to_instantiate = FALSE;
 
             if (qaa[0] == 0) fail("Need live person to determine handedness.");
 
@@ -2048,14 +1823,14 @@ restriction_test_result verify_restriction(
 
             for (i=0; i<rr->size; i++) {
                int p = rr->map1[i];
-
+   
                if (!ss->people[p].id1) {
                   if (phantom_count >= 16) fail("Too many phantoms.");
-
+   
                   ss->people[p].id1 =           (i&1) ?
                      ((i&2) ? qdirodd : qdir) :
                      ((i&2) ? pdirodd : pdir);
-
+   
                   ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
                   ss->people[p].id2 = 0;
                }
@@ -2066,7 +1841,7 @@ restriction_test_result verify_restriction(
       }
 
       goto good;
-   case restriction_tester::chk_box:
+   case chk_box:
       p = rr->map1;
       q = rr->map2;
 
@@ -2105,11 +1880,11 @@ restriction_test_result verify_restriction(
                if (!ss->people[i].id1) {
                   if (phantom_count >= 16)
                      fail("Too many phantoms.");
-
+      
                   pdir = (qa0&1) ?
                      (d_east ^ ((rr->map2[i] ^ qa2) & 2)) :
                      (d_north ^ ((rr->map1[i] ^ qa0) & 2));
-
+      
                   ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
                   ss->people[i].id2 = 0;
                }
@@ -2117,13 +1892,12 @@ restriction_test_result verify_restriction(
                   fail("Active phantoms may only be used once.");
             }
 
-            *failed_to_instantiate = false;
+            *failed_to_instantiate = FALSE;
          }
       }
 
       goto good;
-   case restriction_tester::chk_box_dbl:
-      // Check everyone's lateral partner, independently of headlinerness.
+   case chk_box_dbl:   // Check everyone's lateral partner, independently of headlinerness.
       for (idx=0 ; idx<=attr::slimit(ss) ; idx++) {
          uint32 u;
 
@@ -2141,7 +1915,7 @@ restriction_test_result verify_restriction(
       }
 
       goto good;
-   case restriction_tester::chk_indep_box:
+   case chk_indep_box:
       qa0 = (tt.assump_both << 1) & 2;
       qa1 = tt.assump_both & 2;
       qa2 = 0;
@@ -2157,9 +1931,9 @@ restriction_test_result verify_restriction(
       if (((qa0 & qa2) | (qa1 & qa3)) != 0) goto bad;
 
       goto good;
-   case restriction_tester::chk_groups:
+   case chk_groups:
       limit = rr->map2[0];
-
+   
       for (idx=0; idx<limit; idx++) {
          qa0 = 0; qa1 = 0;
 
@@ -2190,10 +1964,10 @@ restriction_test_result verify_restriction(
 
                for (i=0,k=0 ; k<rr->size ; i+=limit,k++) {
                   int p = rr->map1[idx+i];
-
+   
                   personrec *pq = &ss->people[p];
                   t = pq->id1;
-
+      
                   if (!t) {
                      if (phantom_count >= 16) fail("Too many phantoms.");
                      pq->id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
@@ -2203,12 +1977,12 @@ restriction_test_result verify_restriction(
                      fail("Active phantoms may only be used once.");
                }
 
-               *failed_to_instantiate = false;
+               *failed_to_instantiate = FALSE;
             }
          }
       }
       goto good;
-   case restriction_tester::chk_anti_groups:
+   case chk_anti_groups:
       limit = rr->map2[0];
 
       map1item = rr->map1;
@@ -2250,7 +2024,7 @@ restriction_test_result verify_restriction(
                   int p = rr->map1[idx+i];
                   personrec *pq = &ss->people[p];
                   t = pq->id1;
-
+      
                   if (!t) {
                      if (phantom_count >= 16) fail("Too many phantoms.");
                      pq->id1 = (i ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
@@ -2260,12 +2034,12 @@ restriction_test_result verify_restriction(
                      fail("Active phantoms may only be used once.");
                }
 
-               *failed_to_instantiate = false;
+               *failed_to_instantiate = FALSE;
             }
          }
       }
       goto good;
-   case restriction_tester::chk_peelable:
+   case chk_peelable:
       qa0 = 3; qa1 = 3;
       qa2 = 3; qa3 = 3;
 
@@ -2279,7 +2053,7 @@ restriction_test_result verify_restriction(
          goto bad;
 
       goto good;
-   case restriction_tester::chk_qbox:
+   case chk_qbox:
       qa0 = 0;
       qa1 = ~0;
 
@@ -2303,7 +2077,7 @@ restriction_test_result verify_restriction(
          goto bad;
 
       goto good;
-   case restriction_tester::chk_star:
+   case chk_star:
       qa0 = tt.assump_both;
       qa1 = ~(tt.assump_both << 1);
 
@@ -2327,8 +2101,8 @@ restriction_test_result verify_restriction(
          goto bad;
 
       goto good;
-   case restriction_tester::chk_dmd_qtag:
-   case restriction_tester::chk_dmd_qtag_new:
+   case chk_dmd_qtag:
+   case chk_dmd_qtag_new:
       qa0 = qa1 = qa2 = qa3 = 0;
 
       for (idx=0; idx<rr->map1[0]; idx++)
@@ -2350,7 +2124,7 @@ restriction_test_result verify_restriction(
       if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
          goto bad;
 
-      if (rr->check == restriction_tester::chk_dmd_qtag) {
+      if (rr->check == chk_dmd_qtag) {
          if (tt.assump_both) {
             // The "live" modifier means that we need a definitive person
             // to distinguish "in" or "out".
@@ -2381,7 +2155,7 @@ restriction_test_result verify_restriction(
       }
 
       goto good;
-   case restriction_tester::chk_qtag:
+   case chk_qtag:
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 
@@ -2413,7 +2187,7 @@ restriction_test_result verify_restriction(
          if ((qab[0]|qab[2]) & 1) goto bad;
 
          if (instantiate_phantoms) {
-            *failed_to_instantiate = false;
+            *failed_to_instantiate = FALSE;
 
             if (qaa[0] == 0) fail("Need live person to determine handedness.");
 
@@ -2425,14 +2199,14 @@ restriction_test_result verify_restriction(
 
             for (i=0; i<rr->size; i++) {
                int p = rr->map1[i];
-
+   
                if (!ss->people[p].id1) {
                   if (phantom_count >= 16) fail("Too many phantoms.");
-
+   
                   ss->people[p].id1 =           (i&1) ?
                      ((i&2) ? qdirodd : qdir) :
                      ((i&2) ? pdirodd : pdir);
-
+   
                   ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
                   ss->people[p].id2 = 0;
                }
@@ -2442,7 +2216,7 @@ restriction_test_result verify_restriction(
 
             for (i=0; i<rr->map2[0]; i++) {
                int p = rr->map2[i+1];
-
+   
                if (!ss->people[p].id1) {
                   if (phantom_count >= 16) fail("Too many phantoms.");
                   ss->people[p].id1 = (i&1) ? d_south : d_north;
@@ -2457,7 +2231,7 @@ restriction_test_result verify_restriction(
 
       goto good;
 
-   case restriction_tester::chk_sex:
+   case chk_sex:
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 
@@ -2479,20 +2253,15 @@ restriction_test_result verify_restriction(
 
       goto good;
 
-   case restriction_tester::chk_inroller:
+   case chk_inroller:
 
-      // This "size" field tells whether this is an inroll/outroll
-      // type (size != 0) or a judge/socker type (size == 0).
-
-      if (ss->kind == s2x4 && rr->size != 0) {
+      if (ss->kind == s2x4) {
          // For these assumptions, finding a single usable person
          // will suffice to determine the outcome.
          // Now it happens that, if assump_both has something,
          // we could determine the handedness, and hence the
          // in/out roll direction, without even one person.
          // But we won't be called if there isn't even one person.
-         // ***** Not so!  We might be called with one person in the
-         // center, but no ends.  Too bad.
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_wave_only:
             if ((ss->people[0].id1 & 013) == (uint32) rr->map2[1] ||
@@ -2573,17 +2342,18 @@ restriction_test_result verify_restriction(
 
 static void initialize_concept_sublists()
 {
+   int all_legal_concepts;
    int test_call_list_kind;
    concept_kind end_marker = concept_diagnose;
 
    // Decide whether we allow the "diagnose" concept, by deciding
    // when we will stop the concept list scan.
-   if (ui_options.diagnostic_mode) end_marker = marker_end_of_list;
+   if (diagnostic_mode) end_marker = marker_end_of_list;
 
    // First, just count up all the available concepts.
 
-   int all_legal_concepts = 0;
-   const conzept::concept_descriptor *p;
+   all_legal_concepts = 0;
+   const concept::concept_descriptor *p;
 
    for (p = concept_descriptor_table ; p->kind != end_marker ; p++) {
       if (p->level <= calling_level) all_legal_concepts++;
@@ -2602,16 +2372,16 @@ static void initialize_concept_sublists()
    for (test_call_list_kind = (int) call_list_qtag;
         test_call_list_kind >= (int)call_list_any;
         test_call_list_kind--) {
-      int concept_index, concepts_in_this_setup, good_concepts_in_this_setup;
+      int concepts_in_this_setup, good_concepts_in_this_setup;
+      int concept_index;
 
       for (concept_index=0,concepts_in_this_setup=0,good_concepts_in_this_setup=0;
            ;
            concept_index++) {
-         uint32 setup_mask = ~0;      // Default is to accept the concept.
-         uint32 good_setup_mask = 0;  // Default for this is not to.
-         const conzept::concept_descriptor *p = &concept_descriptor_table[concept_index];
+         uint32 setup_mask = ~0;      /* Default is to accept the concept. */
+         uint32 good_setup_mask = 0;  /* Default for this is not to. */
+         const concept::concept_descriptor *p = &concept_descriptor_table[concept_index];
          if (p->kind == end_marker) break;
-         if (p->kind == concept_omit) continue;  // Totally stupid concept!!!!
          if (p->level > calling_level) continue;
 
          // This concept is legal at this level.  See if it is appropriate for this setup.
@@ -2645,7 +2415,7 @@ static void initialize_concept_sublists()
 
             break;
          case concept_once_removed:
-            if (p->arg1 == 0)
+            if (p->arg1 == 0) 
                good_setup_mask = MASK_GOODRMVD;
 
             break;
@@ -2738,7 +2508,7 @@ static void initialize_concept_sublists()
       }
    }
 
-   // "Any" is not considered a good setup.
+   /* "Any" is not considered a good setup. */
    good_concept_sublist_sizes[call_list_any] = 0;
 }
 
@@ -2749,13 +2519,12 @@ extern void initialize_sdlib()
    select::initialize();
    conc_tables::initialize();
    tglmap::initialize();
-   initialize_commonspot_tables();
    map::initialize();
    full_expand::initialize_touch_tables();
    expand::initialize();
    initialize_concept_sublists();
 
-   writechar_block.usurping_writechar = false;
+   writechar_block.usurping_writechar = FALSE;
 
    int i;
 
@@ -2815,10 +2584,7 @@ static bool check_for_supercall(parse_block *parseptrcopy)
    concept_kind kk = parseptrcopy->concept->kind;
 
    if (kk <= marker_end_of_list) {
-      // Only calls with "@0" in their name may be supercalls.
-      if (kk == marker_end_of_list &&
-          !parseptrcopy->next &&
-          (parseptrcopy->call->the_defn.callflagsf & CFLAGH__HAS_AT_ZERO)) {
+      if (kk == marker_end_of_list && !parseptrcopy->next) {
          setup_command foo2;
          by_def_item innerdef;
          innerdef.call_id = base_call_null;
@@ -2863,8 +2629,6 @@ extern bool check_for_concept_group(
 
  try_again:
 
-   if (!parseptrcopy) fail("A concept is required.");
-
    parseptr_skip = parseptrcopy->next;
 
    if (parseptrcopy->concept) {
@@ -2880,7 +2644,7 @@ extern bool check_for_concept_group(
       *k_p = k;
 
       if (k == concept_crazy ||
-          k == concept_frac_crazy ||
+          k == concept_frac_crazy || 
           k == concept_n_times_const ||
           k == concept_n_times)
          *need_to_restrain_p |= 2;
@@ -2911,7 +2675,7 @@ extern bool check_for_concept_group(
       junk_concepts.clear_all_herit_and_final_bits();
 
       next_parseptr =
-         process_final_concepts(parseptr_skip, false, &junk_concepts, true, __FILE__, __LINE__);
+         process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
 
       if ((next_parseptr->concept->kind == concept_tandem ||
            next_parseptr->concept->kind == concept_frac_tandem) &&
@@ -2931,7 +2695,7 @@ extern bool check_for_concept_group(
       junk_concepts.clear_all_herit_and_final_bits();
 
       next_parseptr =
-         process_final_concepts(parseptr_skip, false, &junk_concepts, true, __FILE__, __LINE__);
+         process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
 
       if ((next_parseptr->concept->kind == concept_do_phantom_2x4 ||
            next_parseptr->concept->kind == concept_do_phantom_boxes) &&
@@ -2977,44 +2741,6 @@ extern bool check_for_concept_group(
 
    return retval;
 }
-
-
-
-static void debug_print_parse_block(int level, const parse_block *p, char *tempstring_text, int &n)
-{
-   for ( ; p ; p = p->next) {
-      if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
-      if (p->concept) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept->name);
-      if (p->call) n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
-      n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
-             p->options.who,
-             p->options.where,
-             p->options.howmanynumbers,
-             (int) p->options.number_fields,
-             (int) p->options.tagger);
-      if (p->subsidiary_root)
-         debug_print_parse_block(level+1, p->subsidiary_root, tempstring_text, n);
-   }
-}
-
-extern void crash_print(const char *filename, int linenum) THROW_DECL
-{
-   char tempstring_text[10000];  // If this isn't big enough, I guess we lose.
-
-   int n = sprintf(tempstring_text, "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n");
-   n += sprintf(tempstring_text+n, "%s %d\n", filename, linenum);
-
-   int hsize = configuration::history_ptr+1;
-   for (int jjj = 2 ; jjj <= hsize ; jjj++) {
-      debug_print_parse_block(0, configuration::history[jjj].command_root, tempstring_text, n);
-   }
-
-   gg->serious_error_print(tempstring_text);
-   fail("Crash.");
-}
-
-
-
 
 
 extern void fail(const char s[]) THROW_DECL
@@ -3076,14 +2802,15 @@ extern void warn(warning_index w)
    configuration::set_one_warning(w);
 }
 
-
+           
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 {
    for (callarray *p = spec ; p ; p = p->next) {
       uint32 i, k, t, u, w, mask;
       assumption_thing tt;
       int idx, plaini;
-      bool booljunk;
+      call_restriction this_qualifier;
+      long_boolean booljunk;
 
       // First, we demand that the starting setup be correct.
       // Also, if a qualifier number was specified, it must match.
@@ -3103,37 +2830,30 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          4000  right/in only (put 1 into assump_both)
          2000  must be live
          1000  must be T-boned
-         0800  must not be T-boned (both together means explicit assumption)
+         0800  must not be T-boned
          0780  if these 4 bits are nonzero, they must match the number plus 1
          007F  the qualifier itself (we allow 127 qualifiers) */
 
       if ((p->qualifierstuff & QUALBIT__NUM_MASK) != 0) {
-         number_used = true;
+         number_used = TRUE;
          if (((unsigned int) (p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) !=
              (current_options.number_fields & 0xF)+1)
             continue;
       }
 
-      bool require_explicit = false;
-
       if ((p->qualifierstuff & (QUALBIT__TBONE|QUALBIT__NTBONE)) != 0) {
-         if ((p->qualifierstuff & (QUALBIT__TBONE|QUALBIT__NTBONE)) == (QUALBIT__TBONE|QUALBIT__NTBONE)) {
-            require_explicit = true;
+         u = 0;
+
+         for (plaini=0; plaini<=attr::slimit(ss); plaini++)
+            u |= ss->people[plaini].id1;
+
+         if ((u & 011) == 011) {
+            // They are T-boned.  The "QUALBIT__NTBONE" bit says to reject.
+            if ((p->qualifierstuff & QUALBIT__NTBONE) != 0) continue;
          }
          else {
-            u = 0;
-
-            for (plaini=0; plaini<=attr::slimit(ss); plaini++)
-               u |= ss->people[plaini].id1;
-
-            if ((u & 011) == 011) {
-               // They are T-boned.  The "QUALBIT__NTBONE" bit says to reject.
-               if ((p->qualifierstuff & QUALBIT__NTBONE) != 0) continue;
-            }
-            else {
-               // They are not T-boned.  The "QUALBIT__TBONE" bit says to reject.
-               if ((p->qualifierstuff & QUALBIT__TBONE) != 0) continue;
-            }
+            // They are not T-boned.  The "QUALBIT__TBONE" bit says to reject.
+            if ((p->qualifierstuff & QUALBIT__TBONE) != 0) continue;
          }
       }
 
@@ -3141,7 +2861,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       uint32 ssB = ss->cmd.cmd_assume.assump_both;
       setup_kind ssK = ss->kind;
 
-      call_restriction this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
+      this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
 
       if (this_qualifier == cr_none) {
          if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   // All live people were demanded.
@@ -3180,7 +2900,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          case cr_1fl_only:
          case cr_2fl_only:
          case cr_wave_only:
-         case cr_li_lo:
             goto bad;
          }
 
@@ -3191,19 +2910,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          }
 
          goto fix_col_line_stuff;
-      case cr_li_lo:
-         switch (ssA) {
-         case cr_magic_only: case cr_wave_only:
-            goto bad;
-         }
-
+      case cr_li_lo: 
          switch (ssK) {
          case s1x2: case s1x4: case s2x2: case s2x3: case s2x4:
             goto fix_col_line_stuff;
          default:
             goto good;           /* We don't understand the setup -- we'd better accept it. */
          }
-      case cr_opposite_sex:
+      case cr_opposite_sex: 
          switch (ssK) {
          case s1x2:
             goto fix_col_line_stuff;
@@ -3256,26 +2970,16 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          goto check_tt;
       case cr_2fl_only:
          goto do_2fl_stuff;
-
-      case cr_ctr_2fl_only:
-         switch (ssA) {
-         case cr_li_lo: case cr_1fl_only: case cr_wave_only:
-         case cr_miniwaves: case cr_magic_only: goto bad;
-         }
-
-         goto check_tt;
       case cr_3x3_2fl_only:
          switch (ssA) {
-         case cr_1fl_only: case cr_wave_only:
-         case cr_miniwaves: case cr_magic_only: goto bad;
+         case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
          }
 
          tt.assumption = cr_3x3_2fl_only;
          goto fix_col_line_stuff;
       case cr_4x4_2fl_only:
          switch (ssA) {
-         case cr_1fl_only: case cr_wave_only:
-         case cr_miniwaves: case cr_magic_only: goto bad;
+         case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
          }
 
          tt.assumption = cr_4x4_2fl_only;
@@ -3332,7 +3036,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_miniwaves:                    // miniwaves everywhere
          /* **** FELL THROUGH!!!!!! */
          switch (ssA) {
-         case cr_li_lo:
          case cr_1fl_only:
          case cr_2fl_only:
             goto bad;
@@ -3516,8 +3219,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          goto bad;
       case cr_nice_diamonds:
       case cr_dmd_facing:
-      case cr_conc_iosame:
-      case cr_conc_iodiff:
       case cr_nice_wv_triangles:
          goto check_tt;
       case cr_dmd_ctrs_mwv:
@@ -3667,10 +3368,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_inroller_is_ccw:
       case cr_outroller_is_cw:
       case cr_outroller_is_ccw:
-      case cr_judge_is_cw:
-      case cr_judge_is_ccw:
-      case cr_socker_is_cw:
-      case cr_socker_is_ccw:
          /* **** FELL THROUGH!!!!!! */
          goto check_tt;
       case cr_ctr_pts_rh:
@@ -3696,9 +3393,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
                                           what we have. */
             uint32 t1;
             uint32 t2;
-            bool b1 = true;
-            bool b2 = true;
-
+            long_boolean b1 = TRUE;
+            long_boolean b2 = TRUE;
+            
             switch (ssK) {
             case s_qtag:
             case s_hrglass:
@@ -3716,10 +3413,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             t1 = ss->people[t1].id1;
             t2 = ss->people[t2].id1;
 
-            if (t1 && (t1 & d_mask)!=d_north) b1 = false;
-            if (t2 && (t2 & d_mask)!=d_south) b1 = false;
-            if (t1 && (t1 & d_mask)!=d_south) b2 = false;
-            if (t2 && (t2 & d_mask)!=d_north) b2 = false;
+            if (t1 && (t1 & d_mask)!=d_north) b1 = FALSE;
+            if (t2 && (t2 & d_mask)!=d_south) b1 = FALSE;
+            if (t1 && (t1 & d_mask)!=d_south) b2 = FALSE;
+            if (t2 && (t2 & d_mask)!=d_north) b2 = FALSE;
 
             if (b1 == b2) goto bad;
             kkk = b1 ? cr_ctr_pts_rh : cr_ctr_pts_lh;
@@ -3842,12 +3539,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       goto bad;
 
    do_2fl_stuff:
-      tt.assumption = cr_2fl_only;
 
       switch (ssA) {
-      case cr_li_lo: case cr_1fl_only: case cr_wave_only:
-      case cr_miniwaves: case cr_magic_only: goto bad;
+      case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
       }
+
+      tt.assumption = cr_2fl_only;
 
       switch (ssK) {
       case s2x4:
@@ -3861,7 +3558,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
    do_wave_stuff:
       switch (ssA) {
       case cr_1fl_only: case cr_2fl_only: case cr_couples_only: case cr_magic_only: goto bad;
-      case cr_li_lo: goto bad;
       case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line: goto bad;
       case cr_wave_only: case cr_jright:
          if (ssB == 2 && tt.assump_both == 1) goto bad;
@@ -3882,12 +3578,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case s_trngl:
       case s_qtag:
       case s3x1dmd:
-         goto check_tt;
-      case s_galaxy:
-         u = ss->people[1].id1 | ss->people[3].id1 |
-            ss->people[5].id1 | ss->people[7].id1;
-         if (!(u&010)) tt.assump_col = 1;
-         else if (u&001) goto bad;
          goto check_tt;
       case sdmd:
       case s_ptpd:
@@ -3911,7 +3601,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case s1x6: case s1x8: case s1x10:
       case s1x12: case s1x14: case s1x16:
       case s2x2: case s4x4: case s_thar: case s_crosswave: case s_qtag:
-      case s3x1dmd: case s_2x1dmd: case sbigdmd:
+      case s3x1dmd: case s_2x1dmd:
       case s_trngl: case s_bone:
          /* FELL THROUGH!!! */
          goto check_tt;
@@ -3942,11 +3632,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 
    check_tt:
 
-      // If the "explicit" flag was on, we don't accept anything unless an assumption was in place.
-
-      if (require_explicit && ssA == cr_none) goto bad;
-
-      if (verify_restriction(ss, tt, false, &booljunk) == restriction_passes) return p;
+      if (verify_restriction(ss, tt, FALSE, &booljunk) == restriction_passes) return p;
       continue;
 
    bad:
@@ -3971,8 +3657,6 @@ extern uint32 find_calldef(
    int real_direction,
    int northified_index) THROW_DECL
 {
-   if (!tdef) crash_print(__FILE__, __LINE__);
-
    unsigned short *calldef_array;
    uint32 z;
 
@@ -3981,8 +3665,7 @@ extern uint32 find_calldef(
            predlistptr ;
            predlistptr = predlistptr->next) {
          if ((*(predlistptr->pred->predfunc))
-             (scopy, real_index, real_direction,
-              northified_index, predlistptr->pred->extra_stuff)) {
+             (scopy, real_index, real_direction, northified_index, predlistptr->pred->extra_stuff)) {
             calldef_array = predlistptr->arr;
             goto got_it;
          }
@@ -4206,13 +3889,10 @@ static bool do_heritflag_merge(final_and_herit_flags *dest, uint32 source)
 
 extern parse_block *process_final_concepts(
    parse_block *cptr,
-   bool check_errors,
-   final_and_herit_flags *final_concepts,
-   bool forbid_unfinished_parse,
-   const char *filename,
-   int linenum) THROW_DECL
+   long_boolean check_errors,
+   final_and_herit_flags *final_concepts) THROW_DECL
 {
-   for ( ; cptr ; cptr=cptr->next) {
+   while (cptr) {
       finalflags the_final_bit;
       uint32 forbidfinalbit = 0;
       heritflags heritsetbit = (heritflags) 0;
@@ -4220,7 +3900,7 @@ extern parse_block *process_final_concepts(
 
       switch (cptr->concept->kind) {
       case concept_comment:
-         continue;               // Skip comments.
+         goto get_next;               // Skip comments.
       case concept_triangle:
          the_final_bit = FINAL__TRIANGLE;
          forbidfinalbit = FINAL__LEADTRIANGLE;
@@ -4351,9 +4031,11 @@ extern parse_block *process_final_concepts(
 
       if (check_errors && cptr->concept->level > calling_level)
          warn(warn__bad_concept_level);
-   }
 
-   if (forbid_unfinished_parse) fail_no_retry("Incomplete parse.");
+   get_next:
+
+      cptr = cptr->next;
+   }
 
    exit5:
 
@@ -4375,7 +4057,7 @@ extern parse_block *really_skip_one_concept(
 
    junk_concepts.clear_all_herit_and_final_bits();
 
-   parseptrcopy = process_final_concepts(incoming, false, &junk_concepts, true, __FILE__, __LINE__);
+   parseptrcopy = process_final_concepts(incoming, FALSE, &junk_concepts);
 
    // Find out whether the next concept (the one that will be "random" or whatever)
    // is a modifier or a "real" concept.
@@ -4436,9 +4118,9 @@ const expand::thing s_2x4_qtg = {{3, 4, -1, -1, 7, 0, -1, -1}, 8, s_qtag, s2x4, 
 // diamond points, and changes the diamond points to ends of lines.
 // It's not clear that this is the wisest way to do this.
 
-extern bool fix_n_results(int arity, int goal, setup z[],
-                          uint32 & rotstates,
-                          uint32 & pointclip) THROW_DECL
+extern long_boolean fix_n_results(int arity, int goal, setup z[],
+                                  uint32 & rotstates,
+                                  uint32 & pointclip) THROW_DECL
 {
    int i;
 
@@ -4691,16 +4373,20 @@ extern bool fix_n_results(int arity, int goal, setup z[],
 
          expand::expand_setup(&s_2x2_2x4, &z[i]);
       }
+      else {
+         canonicalize_rotation(&z[i]);
+         continue;
+      }
 
       canonicalize_rotation(&z[i]);
    }
-
+  
    if (deadconcindex >= 0) {
       kk = z[deadconcindex].kind;
       rotstates = 0x001;
    }
 
-   if (kk == nothing) return true;
+   if (kk == nothing) return TRUE;
 
    // If something wasn't sure whether it was points of a diamond or
    // ends of a 1x4, that's OK if something else had a clue.
@@ -4739,12 +4425,12 @@ extern bool fix_n_results(int arity, int goal, setup z[],
          z[i].rotation = (rotstates >> 1) & 1;
    }
 
-   return false;
+   return FALSE;
 
    lose:
 
    fail("This is an inconsistent shape or orientation changer.");
-   return false;
+   return FALSE;
 }
 
 
@@ -5087,8 +4773,8 @@ void configuration::calculate_resolve()
    int i;
    uint32 singer_offset = 0;
 
-   if (ui_options.singing_call_mode == 1) singer_offset = 0600;
-   else if (ui_options.singing_call_mode == 2) singer_offset = 0200;
+   if (singing_call_mode == 1) singer_offset = 0600;
+   else if (singing_call_mode == 2) singer_offset = 0200;
 
    switch (state.kind) {
    case s2x4:
@@ -5165,13 +4851,13 @@ void configuration::calculate_resolve()
           !((++testptr)->distance & 0x10) ||
           // Even if it has the mark, do it if this is a singer
           // and it isn't really the end of the table.
-          (ui_options.singing_call_mode != 0 && testptr->k != resolve_none));
+          (singing_call_mode != 0 && testptr->k != resolve_none));
 
    // Too bad.
 
  no_resolve:
 
-   init_resolve();   // Set it to the null resolve.
+   resolve_flag.the_item = &null_resolve;
 }
 
 
@@ -5214,7 +4900,7 @@ bool expand::compress_from_hash_table(setup *ss,
          // Do not compress qtag to 2x3 is switch is on.
          if (noqtagcompress && cptr->outer_kind == s_qtag && cptr->inner_kind == s2x3)
             continue;
-
+         
          warn(cptr->norwarning);
          expand::compress_setup(cptr, ss);
          return true;
@@ -5243,15 +4929,13 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
    THROW_DECL
 {
    int i;
-   uint32 livemask, tbonetest, j;
+   uint32 livemask, j;
    bool did_something = false;
 
  startover:
 
-   for (i=0, j=1, livemask=0, tbonetest=0; i<=attr::slimit(ss); i++, j<<=1) {
-      uint32 t = ss->people[i].id1;
-      tbonetest |= t;
-      if (t) livemask |= j;
+   for (i=0, j=1, livemask=0; i<=attr::slimit(ss); i++, j<<=1) {
+      if (ss->people[i].id1) livemask |= j;
    }
 
    if (ss->kind == sfat2x8)
@@ -5293,7 +4977,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
          }
 
          did_something = true;
-         goto startover;
+         goto startover; 
       }
    }
 
@@ -5312,7 +4996,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
    // If we compressed a "swqtag" to a "q_tag", take no further action.
    // Do not further compress to a 2x3.
    if (oldk == swqtag && ss->kind == s_qtag) goto kinda_done;
-   goto startover;
+   goto startover; 
 
  difficult:
 
@@ -5326,51 +5010,17 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
             ss->people[23].id1 | ss->people[12].id1)) {
          expand::compress_setup(&s_4x4_4x6a, ss);
          did_something = true;
-         goto startover;
+         goto startover; 
       }
    }
 
-   if (!did_something && ss->kind == s4x4 && action == normalize_after_exchange_boxes) {
-      if (!(tbonetest & 0x1)) {
-         if ((livemask & 0x0030) == 0x0010) swap_people(ss, 4, 5);
-         if ((livemask & 0x0140) == 0x0100) swap_people(ss, 6, 8);
-         if ((livemask & 0x0084) == 0x0004) swap_people(ss, 2, 7);
-         if ((livemask & 0x0A00) == 0x0200) swap_people(ss, 11, 9);
-         if ((livemask & 0x000A) == 0x0002) swap_people(ss, 1, 3);
-         if ((livemask & 0x8400) == 0x0400) swap_people(ss, 15, 10);
-         if ((livemask & 0x4001) == 0x0001) swap_people(ss, 0, 14);
-         if ((livemask & 0x3000) == 0x1000) swap_people(ss, 13, 12);
-         action = simple_normalize;
-         goto startover;
-      }
-      else if (!(tbonetest & 0x8)) {
-         if ((livemask & 0x0003) == 0x0001) swap_people(ss, 0, 1);
-         if ((livemask & 0x0014) == 0x0010) swap_people(ss, 2, 4);
-         if ((livemask & 0x4008) == 0x4000) swap_people(ss, 14, 3);
-         if ((livemask & 0x00A0) == 0x0020) swap_people(ss, 7, 5);
-         if ((livemask & 0xA000) == 0x2000) swap_people(ss, 13, 15);
-         if ((livemask & 0x0840) == 0x0040) swap_people(ss, 11, 6);
-         if ((livemask & 0x1400) == 0x1000) swap_people(ss, 12, 10);
-         if ((livemask & 0x0300) == 0x0100) swap_people(ss, 9, 8);
-         action = simple_normalize;
-         goto startover;
-      }
-   }
-   else if (!did_something && ss->kind == s2x6 && action == normalize_after_exchange_boxes) {
-      if ((livemask & 0xC00) == 0x800 && !(ss->people[11].id1 & 0x1)) swap_people(ss, 11, 10);
-      if ((livemask & 0x0C0) == 0x040 && !(ss->people[ 6].id1 & 0x1)) swap_people(ss, 6, 7);
-      if ((livemask & 0x030) == 0x020 && !(ss->people[ 5].id1 & 0x1)) swap_people(ss, 4, 5);
-      if ((livemask & 0x003) == 0x001 && !(ss->people[ 0].id1 & 0x1)) swap_people(ss, 0, 1);
-      action = simple_normalize;
-      goto startover;
-   }
-
-   if (!did_something && ss->kind == s3x4 &&
+   if (!did_something &&
+       ss->kind == s3x4 &&
        !(ss->people[0].id1 | ss->people[3].id1 |
          ss->people[6].id1 | ss->people[9].id1)) {
       expand::compress_setup(&s_qtg_3x4, ss);
       did_something = true;
-      goto startover;
+      goto startover; 
    }
 
    if (action >= normalize_to_4 &&
@@ -5381,7 +5031,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
          ss->kind = s_hrglass;
          expand::compress_setup(&s_1x2_hrgl, ss);
          did_something = true;
-         goto startover;
+         goto startover; 
       }
       else if ((livemask & 0x33) == 0)  {
          // If normalizing before a merge (which might be from a "disconnected"),
@@ -5393,7 +5043,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
          ss->kind = s_hrglass;
          expand::compress_setup(t, ss);
          did_something = true;
-         goto startover;
+         goto startover; 
       }
    }
 
@@ -5459,8 +5109,6 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_super8flags = 0;
-   starting_setup.cmd.restrained_do_as_couples = false;
-   starting_setup.cmd.restrained_super9flags = 0;
    starting_setup.cmd.restrained_fraction = 0;
 
    newhist.init_warnings_specific();
@@ -5497,7 +5145,7 @@ void toplevelmove() THROW_DECL
       // and checks the call.
       while (did_something) {
          did_something = false;
-         if (callflags1_to_examine & (CFLAG1_SEQUENCE_STARTER|CFLAG1_SEQUENCE_STARTER_ONLY)) {
+         if (callflags1_to_examine & CFLAG1_SEQUENCE_STARTER) {
             // The subject call is a sequence starter.
             // Strip the "centers" concept and exit.
             conceptptr = conceptptr->next;
@@ -5514,13 +5162,9 @@ void toplevelmove() THROW_DECL
 
          // Now skip things.
          // First, skip any fractional concept.  Only simple "M/N".
-         // Also skip "stretch" and "once removed", and so on.
+         // Also skip "stretch".
          while ((parse_scan->concept->kind == concept_fractional &&
                  parse_scan->concept->arg1 == 0) ||
-                parse_scan->concept->kind == concept_once_removed ||
-                parse_scan->concept->kind == concept_stable ||
-                parse_scan->concept->kind == concept_frac_stable ||
-                parse_scan->concept->kind == concept_new_stretch ||
                 parse_scan->concept->kind == concept_old_stretch) {
             parse_scan = parse_scan->next;
             did_something = true;
@@ -5528,13 +5172,10 @@ void toplevelmove() THROW_DECL
 
          // Skip all simple modifiers.  If we pass a "split" modifier, remember same.
          finaljunk.clear_all_herit_and_final_bits();
-         parse_block *new_parse_scan = process_final_concepts(parse_scan, false,
-                                                              &finaljunk, true,
-                                                              __FILE__, __LINE__);
+         parse_block *new_parse_scan = process_final_concepts(parse_scan, FALSE, &finaljunk);
          if (parse_scan != new_parse_scan) {
             parse_scan = new_parse_scan;
-            if (parse_scan->call)
-               callflags1_to_examine = parse_scan->call->the_defn.callflags1;
+            callflags1_to_examine = parse_scan->call->the_defn.callflags1;
             did_something = true;
          }
 
@@ -5553,7 +5194,6 @@ void toplevelmove() THROW_DECL
          // a mandatory substitution, replacing the call "nothing".
          if ((parse_scan->concept->kind == concept_another_call_next_mod ||
               parse_scan->concept->kind == marker_end_of_list) &&
-             parse_scan->call &&
              parse_scan->call->the_defn.schema == schema_sequential) {
             calldefn *seqdef = &parse_scan->call->the_defn;
             by_def_item *part0item = &seqdef->stuff.seq.defarray[0];
@@ -5561,7 +5201,7 @@ void toplevelmove() THROW_DECL
 
             if (part0item->call_id == base_call_null &&
                 (part0item->modifiers1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL &&
-                get_real_subcall(parse_scan,
+                get_real_subcall(parse_scan, 
                                  part0item,
                                  &starting_setup.cmd,
                                  seqdef,
@@ -5578,15 +5218,13 @@ void toplevelmove() THROW_DECL
          }
       }
    }
-   else if (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER_ONLY)
-      fail("This call may only be used at the beginning of a sequence.");
 
    // Clear a few things.  We do NOT clear the warnings, because some (namely the
    // "concept not allowed at this level" warning) may have already been logged.
    // Set the selectors to "uninitialized", so that, if we do a call like "run", we
    // will query the user to find out who is selected.
    newhist.init_centersp_specific();
-   newhist.draw_pic = false;
+   newhist.draw_pic = FALSE;
    newhist.init_resolve();
    current_options = null_options;
 
@@ -5706,7 +5344,7 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = (call_with_name *) 0;
    starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
-   move(&starting_setup, false, &newhist.state);
+   move(&starting_setup, FALSE, &newhist.state);
    remove_tgl_distortion(&newhist.state);
 
    if (newhist.state.kind == s1p5x8)
@@ -5742,14 +5380,13 @@ void finish_toplevelmove() THROW_DECL
 
    // Remove outboard phantoms from the resulting setup.
    normalize_setup(&newhist.state, simple_normalize, false);
-
    for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
    newhist.calculate_resolve();
 }
 
 
-// This stuff is duplicated in verify_call in sdmatch.c .
-bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
+/* This stuff is duplicated in verify_call in sdmatch.c . */
+long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
 {
    /* First, if we have already deposited a call, and we see more stuff, it must be
       concepts or calls for an "anything" subcall. */
@@ -5760,8 +5397,8 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
          call takes a tagger -- it could have a search chain before we even see it. */
       while (save1->next) save1 = save1->next;
       save1->next = tt;
-      save1->concept = &conzept::marker_concept_mod;
-      tt->concept = &conzept::marker_concept_mod;
+      save1->concept = &concept::marker_concept_mod;
+      tt->concept = &concept::marker_concept_mod;
       tt->call = base_calls[(key == DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT) ?
                            base_call_null_second: base_call_null];
       tt->call_to_print = tt->call;
@@ -5773,139 +5410,136 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
    user_match.match.call_conc_options = anythings->call_conc_options;
 
    if (anythings->kind == ui_call_select) {
-      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return true;
+      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
       save1 = *parse_state.concept_write_ptr;
       if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
-      there_is_a_call = true;
+      there_is_a_call = TRUE;
    }
    else if (anythings->kind == ui_concept_select) {
-      if (deposit_concept(anythings->concept_ptr)) return true;
+      if (deposit_concept(anythings->concept_ptr)) return TRUE;
    }
-   else return true;   // Huh?
+   else return TRUE;   /* Huh? */
 
    if (anythings->packed_next_conc_or_subcall) {
       if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1,
                             DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
-         return true;
+         return TRUE;
    }
 
    if (anythings->packed_secondary_subcall) {
       if (deposit_call_tree(anythings->packed_secondary_subcall, save1,
                             DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
-         return true;
+         return TRUE;
    }
 
-   return false;
+   return FALSE;
 }
 
 
 
-extern bool do_subcall_query(
+extern long_boolean do_subcall_query(
    int snumber,
    parse_block *parseptr,
    parse_block **newsearch,
-   bool this_is_tagger,
-   bool this_is_tagger_circcer,
+   long_boolean this_is_tagger,
+   long_boolean this_is_tagger_circcer,
    call_with_name *orig_call)
 {
    char tempstring_text[MAX_TEXT_LINE_LENGTH];
 
-   // Note whether we are using any mandatory substitutions, so that the menu
-   // initialization will always accept this call.
+   /* Note whether we are using any mandatory substitutions, so that the menu
+      initialization will always accept this call. */
 
    if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) ||
        snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT)) {
-      // In some types of pick operations, the picker simply doesn't know how
-      // to choose a mandatory subcall.  In that case, the call requiring the
-      // mandatory subcall (e.g. "wheel and <anything>") is simply rejected.
+      /* In some types of pick operations, the picker simply doesn't know how
+         to choose a mandatory subcall.  In that case, the call requiring the
+         mandatory subcall (e.g. "wheel and <anything>") is simply rejected. */
       if (forbid_call_with_mandatory_subcall())
-         fail_no_retry("Mandatory subcall fail.");
-      mandatory_call_used = true;
+         fail("Mandatory subcall fail.");
+      mandatory_call_used = TRUE;
    }
 
-   // Now we know that the list doesn't say anything about this call.  Perhaps we should
-   // query the user for a replacement and add something to the list.  First, decide whether
-   // we should consider doing so.  If we are initializing the database, the answer is
-   // always "no", even for calls that require a replacement call, such as
-   // "clover and anything".  This means that, for the purposes of database initialization,
-   // "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
-   // that appears in the database.
+   /* Now we know that the list doesn't say anything about this call.  Perhaps we should
+      query the user for a replacement and add something to the list.  First, decide whether
+      we should consider doing so.  If we are initializing the database, the answer is
+      always "no", even for calls that require a replacement call, such as
+      "clover and anything".  This means that, for the purposes of database initialization,
+      "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
+      that appears in the database. */
 
-   // Also, when doing pick operations, the picker might not want to do a random pick.
-   // It might just want to leave the default call ("clover and [nothing]") in place.
-   // So we ask the picker.
+   /* Also, when doing pick operations, the picker might not want to do a random pick.
+      It might just want to leave the default call ("clover and [nothing]") in place.
+      So we ask the picker. */
 
-   // Of course, if we are testing the fidelity of later calls during a reconcile
-   // operation, we DO NOT EVER add any modifiers to the list, even if the user
-   // clicked on "allow modification" before clicking on "reconcile".  It is perfectly
-   // legal to click on "allow modification" before clicking on "reconcile".  It means
-   // we want modifications (chosen by random number generator, since we won't be
-   // interactive) for the calls that we randomly choose, but not for the later calls
-   // that we test for fidelity.
+   /* Of course, if we are testing the fidelity of later calls during a reconcile
+      operation, we DO NOT EVER add any modifiers to the list, even if the user
+      clicked on "allow modification" before clicking on "reconcile".  It is perfectly
+      legal to click on "allow modification" before clicking on "reconcile".  It means
+      we want modifications (chosen by random number generator, since we won't be
+      interactive) for the calls that we randomly choose, but not for the later calls
+      that we test for fidelity. */
 
    if (!(interactivity == interactivity_normal ||
          allow_random_subcall_pick()) ||
        testing_fidelity)
-      return true;
+      return TRUE;
 
-   // When we are searching for resolves and the like, the situation
-   // is different.  In this case, the interactivity state is set for
-   // a search.  We do perform mandatory modifications, so we will
-   // generate things like "clover and shakedown".  Of course, no
-   // querying actually takes place.  Instead, get_subcall just uses
-   // the random number generator.  Therefore, whether resolving or in
-   // normal interactive mode, we are guided by the call modifier
-   // flags and the "allowing_modifications" global variable. */
+   /* When we are searching for resolves and the like, the situation is different.  In this case,
+      the interactivity state is set for a search.  We do perform mandatory
+      modifications, so we will generate things like "clover and shakedown".  Of course, no
+      querying actually takes place.  Instead, get_subcall just uses the random number generator.
+      Therefore, whether resolving or in normal interactive mode, we are guided by the
+      call modifier flags and the "allowing_modifications" global variable. */
 
-   // Depending on what type of substitution is involved and what the "allowing modifications"
-   // level is, we may choose not to query about this subcall, but just return the default.
+   /* Depending on what type of substitution is involved and what the "allowing modifications"
+      level is, we may choose not to query about this subcall, but just return the default. */
 
    switch (snumber) {
-   case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
-   case DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT:
-   case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
-      if (!allowing_modifications) return true;
-      break;
-   case DFM1_CALL_MOD_ALLOW_FORCED_MOD/DFM1_CALL_MOD_BIT:
-      if (allowing_modifications <= 1) return true;
-      break;
+      case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
+      case DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT:
+      case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
+         if (!allowing_modifications) return TRUE;
+         break;
+      case DFM1_CALL_MOD_ALLOW_FORCED_MOD/DFM1_CALL_MOD_BIT:
+         if (allowing_modifications <= 1) return TRUE;
+         break;
    }
 
-   // At this point, we know we should query the user about this call.
+   /* At this point, we know we should query the user about this call. */
 
-   // Set ourselves up for modification by making the null modification list
-   // if necessary.  ***** Someday this null list will always be present.
+   /* Set ourselves up for modification by making the null modification list
+      if necessary.  ***** Someday this null list will always be present. */
 
    if (parseptr->concept->kind == marker_end_of_list)
-      parseptr->concept = &conzept::marker_concept_mod;
+      parseptr->concept = &concept::marker_concept_mod;
 
-   // Create a reference on the list.  "search" points to the null item at the end.
+   /* Create a reference on the list.  "search" points to the null item at the end. */
 
-   tempstring_text[0] = '\0';           // Null string, just to be safe.
+   tempstring_text[0] = '\0';           /* Null string, just to be safe. */
 
-   // If doing a tagger, just get the call.
+   /* If doing a tagger, just get the call. */
 
    if (snumber == 0 && this_is_tagger_circcer)
       ;
 
-   // If the replacement is mandatory, or we are not interactive,
-   // don't present the popup.  Just get the replacement call.
+   /* If the replacement is mandatory, or we are not interactive,
+      don't present the popup.  Just get the replacement call. */
 
    else if (interactivity != interactivity_normal)
       ;
    else if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
-      (void) sprintf(tempstring_text, "SUBSIDIARY CALL");
+      (void) sprintf (tempstring_text, "SUBSIDIARY CALL");
    else if (snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
-      (void) sprintf(tempstring_text, "SECOND SUBSIDIARY CALL");
+      (void) sprintf (tempstring_text, "SECOND SUBSIDIARY CALL");
    else {
 
-      // Need to present the popup to the operator
-      // and find out whether modification is desired.
+      /* Need to present the popup to the operator and find out whether modification is desired. */
 
       modify_popup_kind kind;
       char pretty_call_name[MAX_TEXT_LINE_LENGTH];
 
-      // Star turn calls can have funny names like "nobox".
+      /* Star turn calls can have funny names like "nobox". */
 
       unparse_call_name(
          (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
@@ -5917,26 +5551,25 @@ extern bool do_subcall_query(
       else kind = modify_popup_any;
 
       if (gg->do_modifier_popup(pretty_call_name, kind)) {
-         // User accepted the modification.
-         // Set up the prompt and get the concepts and call.
+         /* User accepted the modification.
+            Set up the prompt and get the concepts and call. */
 
-         (void) sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
+         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
-         // User declined the modification.  Create a null entry
-         // so that we don't query again.
+         /* User declined the modification.  Create a null entry so that we don't query again. */
          *newsearch = get_parse_block();
-         (*newsearch)->concept = &conzept::marker_concept_mod;
+         (*newsearch)->concept = &concept::marker_concept_mod;
          (*newsearch)->options = current_options;
          (*newsearch)->replacement_key = snumber;
          (*newsearch)->call = orig_call;
          (*newsearch)->call_to_print = orig_call;
-         return true;
+         return TRUE;
       }
    }
 
    *newsearch = get_parse_block();
-   (*newsearch)->concept = &conzept::marker_concept_mod;
+   (*newsearch)->concept = &concept::marker_concept_mod;
    (*newsearch)->options = current_options;
    (*newsearch)->replacement_key = snumber;
    (*newsearch)->call = orig_call;
@@ -5967,7 +5600,7 @@ extern bool do_subcall_query(
       }
    }
 
-   return false;
+   return FALSE;
 }
 
 

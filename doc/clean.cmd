@@ -26,9 +26,15 @@ del appnote*.html
 del appnote*.txt
 del demo.html
 del demo.txt
-del sample.html
+del sample.html     This is a derived object, but don't delete it just yet
 del *.ps
 del *.pdf
+REM what are these "bin" files?
+REM del html.bin
+REM del ps.bin
+REM del pdf.bin
+REM del dnu.bin
+REM del dnp.bin
 del psdoc.exe
 del textdoc.exe
 del pdfdoc.exe

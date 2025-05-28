@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -36,6 +36,12 @@
    nice_setup_thing_4x6
 */
 
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
 
 
@@ -55,27 +61,27 @@
 #define G CONCPARSE_PARSE_G_TYPE
 
 
-conzept::concept_descriptor conzept::centers_concept = {
+concept::concept_descriptor concept::centers_concept = {
    "centers????",
    concept_centers_or_ends,
-   1,
+   TRUE,
    l_mainstream,
    UC_none,
-   selector_centers, false};
+   selector_centers, FALSE};
 
-conzept::concept_descriptor conzept::special_magic = {
+concept::concept_descriptor concept::special_magic = {
    "MAGIC DIAMOND,",       concept_magic,             L+D, l_c1, UC_none, 1};
-conzept::concept_descriptor conzept::special_interlocked = {
+concept::concept_descriptor concept::special_interlocked = {
    "INTERLOCKED DIAMOND,", concept_interlocked,       L+D, l_c1, UC_none, 1};
-conzept::concept_descriptor conzept::mark_end_of_list = {
-   "(end)",                 marker_end_of_list,            0, l_dontshow, UC_none};
-conzept::concept_descriptor conzept::marker_decline = {
+concept::concept_descriptor concept::mark_end_of_list = {
+   "????",                 marker_end_of_list,            0, l_dontshow, UC_none};
+concept::concept_descriptor concept::marker_decline = {
    "decline???",           concept_mod_declined,          0, l_dontshow, UC_none};
-conzept::concept_descriptor conzept::marker_concept_mod = {
+concept::concept_descriptor concept::marker_concept_mod = {
    ">>MODIFIED BY<<",      concept_another_call_next_mod, 0, l_dontshow, UC_none, 0, 0};
-conzept::concept_descriptor conzept::marker_concept_comment = {
+concept::concept_descriptor concept::marker_concept_comment = {
    ">>COMMENT<<",          concept_comment,               0, l_dontshow, UC_none};
-conzept::concept_descriptor conzept::marker_concept_supercall = {
+concept::concept_descriptor concept::marker_concept_supercall = {
    ">>SUPER<<",          concept_supercall,             0, l_dontshow, UC_none};
 
 
@@ -85,9 +91,9 @@ int number_of_calls[call_list_extent];
 dance_level calling_level;
 
 
-const conzept::concept_descriptor *concept_descriptor_table;
+const concept::concept_descriptor *concept_descriptor_table;
 
-conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
+concept::concept_descriptor concept::unsealed_concept_descriptor_table[] = {
    {"AS COUPLES",                            concept_tandem,                  D, l_a1,
     UC_cpl, 0, 0,                    0x000, tandem_key_cpls},
    {"TANDEM",                                concept_tandem,                  D, l_c1,
@@ -427,43 +433,31 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"TWIN PHANTOM WAVES OF 6",               concept_triple_twin_nomystic,    D, l_c3,
     UC_none, 3, CONCPROP__NEEDK_2X6, 6, phantest_impossible},
    {"TRIPLE COLUMNS",                        concept_triple_lines,            D, l_c2,
-    UC_tc, 2, MPKIND__SPLIT, 0},
+    UC_tc, 2},
    {"TRIPLE LINES",                          concept_triple_lines,            D, l_c2,
-    UC_tl, 1, MPKIND__SPLIT, 0},
+    UC_tl, 1},
    {"TRIPLE WAVES",                          concept_triple_lines,            D, l_c2,
-    UC_none, 3, MPKIND__SPLIT, 0},
+    UC_none, 3},
    {"TRIPLE BOXES",                          concept_triple_boxes,            D, l_c1,
-    UC_tb, 0, MPKIND__SPLIT, 0},
+    UC_tb, MPKIND__SPLIT},
    {"TRIPLE DIAMONDS",                       concept_triple_diamonds,         D, l_c3a,
-    UC_td, 0, MPKIND__SPLIT, CMD_MISC__VERIFY_DMD_LIKE},
+    UC_td, 0, CMD_MISC__VERIFY_DMD_LIKE},
    {"TRIPLE DIAMOND SPOTS",                  concept_triple_diamonds,         D, l_c3a,
-    UC_none, 0, MPKIND__SPLIT, 0},
+    UC_none, 0, 0},
    {"TRIPLE 1/4 TAGS",                       concept_triple_diamonds,         D, l_c3x,
-    UC_none, 0, MPKIND__SPLIT, CMD_MISC__VERIFY_1_4_TAG},
+    UC_none, 0, CMD_MISC__VERIFY_1_4_TAG},
    {"TRIPLE 3/4 TAGS",                       concept_triple_diamonds,         D, l_c3x,
-    UC_none, 0, MPKIND__SPLIT, CMD_MISC__VERIFY_3_4_TAG},
+    UC_none, 0, CMD_MISC__VERIFY_3_4_TAG},
    {"TRIPLE 1/4 LINES",                      concept_triple_diamonds,         D, l_c3x,
-    UC_none, 0, MPKIND__SPLIT, CMD_MISC__VERIFY_REAL_1_4_LINE},
+    UC_none, 0, CMD_MISC__VERIFY_REAL_1_4_LINE},
    {"TRIPLE 3/4 LINES",                      concept_triple_diamonds,         D, l_c3x,
-    UC_none, 0, MPKIND__SPLIT, CMD_MISC__VERIFY_REAL_3_4_LINE},
+    UC_none, 0, CMD_MISC__VERIFY_REAL_3_4_LINE},
    {"TRIPLE GENERAL 1/4 TAGS",               concept_triple_diamonds,         D, l_c3x,
-    UC_none, 0, MPKIND__SPLIT, CMD_MISC__VERIFY_QTAG_LIKE},
-   {"TRIPLE LINES OR BOXES",                 concept_triple_formations,       D, l_c3a,
-    UC_none, 0, MPKIND__SPLIT, 0},
-   {"TRIPLE BOXES OR LINES",                 concept_triple_formations,       D, l_c3a,
-    UC_none, 0, MPKIND__SPLIT, 0},
-   {"TRIPLE LINES OR DIAMONDS",              concept_triple_formations,       D, l_c3a,
-    UC_none, 0, MPKIND__SPLIT, 1},
-   {"TRIPLE DIAMONDS OR LINES",              concept_triple_formations,       D, l_c3a,
-    UC_none, 0, MPKIND__SPLIT, 1},
-   {"TRIPLE BOXES OR DIAMONDS",              concept_triple_formations,       D, l_c3a,
-    UC_none, 0, MPKIND__SPLIT, 2},
-   {"TRIPLE DIAMONDS OR BOXES",              concept_triple_formations,       D, l_c3a,
-    UC_none, 0, MPKIND__SPLIT, 2},
-   {"TRIPLE Z's",                            concept_misc_distort_matrix,     D, l_c4,
+    UC_none, 0, CMD_MISC__VERIFY_QTAG_LIKE},
+   {"TRIPLE Z's",                            concept_misc_distort,            D, l_c4,
     UC_none, 0, CONCPROP__NEEDK_3X6, 0, 3},
    {"TRIPLE 1X4s",                           concept_triple_lines,            D, l_c3,
-    UC_none, 0, MPKIND__SPLIT, 0},
+    UC_none, 0},
    {"TRIPLE COLUMNS OF 6",                   concept_triple_twin_nomystic,    D, l_c3x,
     UC_none, 0, CONCPROP__NEEDK_3X6, 1, phantest_ok},
    {"TRIPLE LINES OF 6",                     concept_triple_twin_nomystic,    D, l_c3x,
@@ -494,8 +488,6 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 1, CONCPROP__NEEDK_3X6, 4, phantest_not_just_centers},
    {"TRIPLE TWIN WAVES OF 3",                concept_triple_twin,             D, l_c4a,
     UC_none, 3, CONCPROP__NEEDK_3X6, 4, phantest_not_just_centers},
-   {"TRIPLE STAGGERED BOXES",                concept_misc_distort,            D, l_c4,
-    UC_none, 7, CONCPROP__NEEDK_2X12, 0},
    {"QUADRUPLE COLUMNS",                     concept_quad_lines,              D, l_c4a,
     UC_none, 0, 0},
    {"QUADRUPLE LINES",                       concept_quad_lines,              D, l_c4a,
@@ -1193,9 +1185,9 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"MAGIC",                                 concept_magic,                 L+D, l_c1,
     UC_magic},
    {"DIAGONAL BOX",                          concept_do_both_boxes,           D, l_c3,
-    UC_none, spcmap_2x4_diagonal, 97, false},
+    UC_none, spcmap_2x4_diagonal, 97, FALSE},
    {"TRAPEZOID",                             concept_do_both_boxes,           D, l_c3,
-    UC_none, spcmap_2x4_trapezoid, 97, false},
+    UC_none, spcmap_2x4_trapezoid, 97, FALSE},
    {"OVERLAPPED DIAMONDS",                   concept_overlapped_diamond,      D, l_c4,
     UC_none, 0},
    {"OVERLAPPED LINES",                      concept_overlapped_diamond,      D, l_c4,
@@ -1203,7 +1195,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"OVERLAPPED WAVES",                      concept_overlapped_diamond,      D, l_c4,
     UC_none, 3},
    {"INTERLOCKED PARALLELOGRAM",             concept_do_both_boxes,           D, l_c3x,
-    UC_none, spcmap_2x4_int_pgram, 97, true},
+    UC_none, spcmap_2x4_int_pgram, 97, TRUE},
    {"INTERLOCKED BOXES",                     concept_misc_distort,            D, l_c3x,
     UC_none, 3, 0, 0},
    {"TWIN PARALLELOGRAMS",                   concept_misc_distort,            D, l_c3x,
@@ -1232,10 +1224,6 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 1, 0, 0,  0x5555},
    {"RIGHT JAY",                             concept_misc_distort,            D, l_c3a,
     UC_none, 1, 0, 0,  0xFFFF},
-   {"CLOCKWISE JAY",                         concept_misc_distort,            D, l_c3a,
-    UC_none, 8, 0, 0,  0},
-   {"COUNTERCLOCKWISE JAY",                  concept_misc_distort,            D, l_c3a,
-    UC_none, 8, 0, 0,  1},
    {"FACING PARALLELOGRAM",                  concept_misc_distort,            D, l_c3a,
     UC_none, 4, 0, 0},
    {"BACK-TO-FRONT PARALLELOGRAM",           concept_misc_distort,            D, l_c3a,
@@ -1387,13 +1375,13 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"@6 ARE STANDARD IN",                    concept_standard,              L+D, l_c4a,
     UC_none, 0},
    {"STABLE",                                concept_stable,                  D, l_c3a,
-    UC_none, false, false},
+    UC_none, FALSE, FALSE},
    {"@6 ARE STABLE",                         concept_so_and_so_stable,      F+D, l_c3a,
-    UC_none, true,  false},
+    UC_none, TRUE,  FALSE},
    {"@b STABLE",                             concept_frac_stable,             D, l_c4,
-    UC_none, false, true},
+    UC_none, FALSE, TRUE},
    {"@6 ARE @b STABLE",                      concept_so_and_so_frac_stable, F+D, l_c4,
-    UC_none, true,  true},
+    UC_none, TRUE,  TRUE},
    {"EMULATE",                               concept_emulate,                 D, l_c4,
     UC_none},
    {"TRACE",                                 concept_trace,                   0, l_c3x,
@@ -1414,26 +1402,24 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 4},
    {"STRETCHED DIAMOND",                     concept_new_stretch,             D, l_c3a,
     UC_none, 19},
-   {"STRETCHED",                             concept_new_stretch,             D, l_c3a,
-    UC_none, 20},
    {"FERRIS",                                concept_ferris,                  D, l_c3x,
     UC_none, 0, 0},
    {"RELEASE",                               concept_ferris,                  D, l_c3a,
     UC_none, 1, /*CONCPROP__NEEDK_3X4*/0},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,        0, l_mainstream,
-    UC_none, selector_centers, false},
+    UC_none, selector_centers, FALSE},
    {"CENTER 6/OUTER 2",                      concept_centers_and_ends,        0, l_mainstream,
-    UC_none, selector_center6, false},
+    UC_none, selector_center6, FALSE},
    {"CENTER 2/OUTER 6",                      concept_centers_and_ends,        0, l_mainstream,
-    UC_none, selector_center2, false},
+    UC_none, selector_center2, FALSE},
    {"ENDS CONCENTRIC",                       concept_centers_or_ends,         D, l_c1,
-    UC_none, selector_ends,    true},
+    UC_none, selector_ends,    TRUE},
    {"OUTER 2 CONCENTRIC",                    concept_centers_or_ends,         D, l_c1,
-    UC_none, selector_outer2,  true},
+    UC_none, selector_outer2,  TRUE},
    {"OUTER 6 CONCENTRIC",                    concept_centers_or_ends,         D, l_c1,
-    UC_none, selector_outer6,  true},
+    UC_none, selector_outer6,  TRUE},
    {"CENTERS AND ENDS CONCENTRIC",           concept_centers_and_ends,        0, l_c1,
-    UC_none, selector_centers, true},
+    UC_none, selector_centers, TRUE},
    {"CHECKPOINT",                            concept_checkpoint,              0, l_c2,
     UC_none, 0},
    {"REVERSE CHECKPOINT",                    concept_checkpoint,              0, l_c3,
@@ -1503,13 +1489,13 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"USE",                                   concept_special_sequential,      0, l_c2,
     UC_none, 4},
    {"CRAZY",                                 concept_crazy,                   D, l_c2,
-    UC_none, 0, false},
+    UC_none, 0, FALSE},
    {"REVERSE CRAZY",                         concept_crazy,                   D, l_c2,
-    UC_none, 1, false},
+    UC_none, 1, FALSE},
    {"@a CRAZY",                              concept_frac_crazy,              D, l_c2,
-    UC_none, 0, true},
+    UC_none, 0, TRUE},
    {"@a REVERSE CRAZY",                      concept_frac_crazy,              D, l_c2,
-    UC_none, 1, true},
+    UC_none, 1, TRUE},
    {"RANDOM",                                concept_meta,                  G+D, l_c3,
     UC_none, meta_key_random},
    {"REVERSE RANDOM",                        concept_meta,                  G+D, l_c3x,
@@ -1570,8 +1556,6 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, meta_key_nth_part_work, 2},
    {"THIRDLY",                               concept_meta,                  L+D, l_c4,
     UC_none, meta_key_nth_part_work, 3},
-   {"FOURTHLY",                              concept_meta,                  L+D, l_c4,
-    UC_none, meta_key_nth_part_work, 4},
    {"FIRST @9/@9",                           concept_meta_two_args,         L+D, l_c1,
     UC_none, meta_key_first_frac_work, 0},
    {"MIDDLE @9/@9",                          concept_meta_two_args,         L+D, l_c1,
@@ -1651,7 +1635,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"GRAND SINGLE CROSS CONCENTRIC",         concept_concentric,              D, l_c4,
     UC_none, schema_grand_single_cross_concentric},
    {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,            D, l_c4a,
-    UC_none, 0, MPKIND__CONCPHAN, 0},
+    UC_none, MPKIND__CONCPHAN},
    {"CONCENTRIC QUADRUPLE BOXES",            concept_quad_boxes,              D, l_c4a,
     UC_none, MPKIND__CONCPHAN},
    {"CONCENTRIC DIAMONDS",                   concept_concentric,              D, l_c1,
@@ -1777,9 +1761,9 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"FAST",                                  concept_fast,                  L+D, l_c4,
     UC_none},
    {"CENTERS",                               concept_centers_or_ends,         D, l_mainstream,
-    UC_none, selector_centers, false},
+    UC_none, selector_centers, FALSE},
    {"ENDS",                                  concept_centers_or_ends,         D, l_mainstream,
-    UC_none, selector_ends, false},
+    UC_none, selector_ends, FALSE},
    {"EACH 1X4",                              concept_each_1x4,                D, l_mainstream,
     UC_none, 0, 0},
    {"EACH LINE",                             concept_each_1x4,                D, l_mainstream,

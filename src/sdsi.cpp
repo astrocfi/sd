@@ -31,9 +31,22 @@
    open_file
    write_file
    close_file
-   read_from_abridge_file
-   write_to_abridge_file
-   close_abridge_file
+   parse_level
+   read_from_call_list_file
+   write_to_call_list_file
+   close_call_list_file
+   install_outfile_string
+   get_next_session_line
+   prepare_to_read_menus
+   initialize_misc_lists
+   open_session
+   process_session_info
+   open_call_list_file
+   close_init_file
+   open_database
+   read_8_from_database
+   read_16_from_database
+   close_database
 
 and the following external variables:
 
@@ -41,7 +54,8 @@ and the following external variables:
    random_number
    database_filename
    new_outfile_string
-   abridge_filename
+   call_list_string
+   call_list_file
 */
 
 /* You should compile this file (and might as well compile all the others
@@ -74,11 +88,102 @@ and the following external variables:
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
 #include <ctype.h>  /* for tolower */
+
+/* We take pity on those poor souls who are compelled to use XOPEN,
+   an otherwise fine standard, that doesn't put prototypes
+   into stdlib.h. */
+
+#if defined(_XOPEN_SOURCE)
+   /* We have taken the liberty of translating the prototypes
+      appearing in the XOPEN manual into ANSI C.  We can't
+      imagine why anyone would ever use the prototypes
+      in the prehistoric nomenclature. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void srand48(long int);
+extern long int lrand48(void);
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+#if defined(_SYS5_SOURCE) || defined(_XOPEN_SOURCE) || defined(_AES_SOURCE) || defined(sun)
+#define HAVE_RAND48
+#endif
+
+/* We also take pity on those poor souls who are compelled to use
+   compilation systems that claim to be POSIX compliant, but
+   aren't really, and do not have unistd.h. */
+
+#if defined(_POSIX_SOURCE) || defined(sun)
+#define POSIX_STYLE
+#endif
+
+#ifdef POSIX_STYLE
+#include <unistd.h>
+#endif
+
+/* Or those who are otherwise compelled to use
+    troglodyte development environments.
+    gcc -traditional doesn't define __STDC__ */
+
+#if __STDC__ || defined(sun)
+#include <stdlib.h>
+#else
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void free(void *ptr);
+extern char *malloc(unsigned int siz);
+extern char *realloc(char *oldp, unsigned int siz);
+extern void srand48(long int);
+extern long int lrand48(void);
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#if defined(WIN32)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void srand(long int);
+extern long int rand(void);
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#if !defined(sun) && (!__STDC__ || defined(MSDOS))
+extern char *strerror(int);
+#endif
+
+/* Despite all our efforts, some systems just can't be bothered ... */
+#ifndef SEEK_SET
+#define SEEK_SET 0
+#endif
+#ifndef SEEK_END
+#define SEEK_END 2
+#endif
+
+/* I think we have everything now.  Isn't portability fun?  Before people
+   started taking these standards as semi-seriously as they do now, it was
+   MUCH HARDER to make a program portable than what you just saw. */
+
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
 
 #include "sd.h"
 #include "paths.h"
@@ -108,8 +213,9 @@ int session_index = 0;        /* If this is nonzero, we have opened a session. *
 int random_number;
 char *database_filename = DATABASE_FILENAME;
 char *new_outfile_string = (char *) 0;
-char abridge_filename[MAX_TEXT_LINE_LENGTH];
-bool outfile_special = false;
+char *call_list_string = (char *) 0;
+FILE *call_list_file;
+long_boolean outfile_special = FALSE;
 
 static bool file_error;
 static FILE *fildes;
@@ -119,21 +225,28 @@ static char fail_message[MAX_ERR_LENGTH];
 
 extern void general_initialize(void)
 {
-   // If doing a resolve test, use a deterministic seed.
-   // But make it depend on something the operator said.
-   // That way, one can run two usefully independent tests
-   // on a multiprocessor, by giving them slightly
-   // different timeouts.
-   unsigned int seed = (ui_options.resolve_test_minutes != 0) ?
-      ui_options.resolve_test_minutes : time((time_t *)0);
-   srand(seed);
+/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
+#ifdef HAVE_RAND48
+   srand48((long int) time((time_t *)0));
+#else
+   srand((unsigned int) time((time_t *)0));
+#endif
 }
 
 
 extern int generate_random_number(int modulus)
 {
+   int j;
+
+/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
+#ifdef HAVE_RAND48
+   random_number = (int) lrand48();
+#else
    random_number = (int) rand();
-   return random_number % modulus;
+#endif
+
+   j = random_number % modulus;
+   return j;
 }
 
 
@@ -253,7 +366,7 @@ void open_file()
    // We need to find out whether there are garbage characters (e.g. ^Z)
    // near the end of the existing file, and remove same.  Such things
    // have been known to be placed in files by some programs running on PC's.
-   //
+   // 
    // Furthermore, some PC print software stops printing when it encounters
    // one, so we have to get rid of it.
 
@@ -429,7 +542,7 @@ void open_file()
       }
 
       this_file_position = ftell(fildes);
-
+   
       if ((last_file_position != -1) && (last_file_position != this_file_position)) {
          writestuff("Warning -- file has been modified since last sequence.");
          newline();
@@ -629,4 +742,66 @@ extern void close_file()
    (void) strncat(foo, fail_errstring, MAX_ERR_LENGTH);
    (void) strncat(foo, " -- try \"change output file\" operation.", MAX_ERR_LENGTH);
    specialfail(foo);
+}
+
+
+
+extern long_boolean parse_level(Cstring s, dance_level *levelp)
+{
+   char first = tolower(s[0]);
+
+   switch (first) {
+      case 'm': *levelp = l_mainstream; return TRUE;
+      case 'p': *levelp = l_plus; return TRUE;
+      case 'a':
+         if (s[1] == '1' && !s[2]) *levelp = l_a1;
+         else if (s[1] == '2' && !s[2]) *levelp = l_a2;
+         else if (s[1] == 'l' && s[2] == 'l' && !s[3]) *levelp = l_dontshow;
+         else return FALSE;
+         return TRUE;
+      case 'c':
+         if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && !s[3])
+            *levelp = l_c3a;
+         else if (s[1] == '3' && (s[2] == 'x' || s[2] == 'X') && !s[3])
+            *levelp = l_c3x;
+         else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && !s[3])
+            *levelp = l_c4a;
+         else if (s[1] == '4' && (s[2] == 'x' || s[2] == 'X') && !s[3])
+            *levelp = l_c4x;
+         else {
+            if (!s[2]) {
+               switch (s[1]) {
+                  case '1': *levelp = l_c1; return TRUE;
+                  case '2': *levelp = l_c2; return TRUE;
+                  case '3': *levelp = l_c3; return TRUE;
+                  case '4': *levelp = l_c4; return TRUE;
+                  default: return FALSE;
+               }
+            }
+            else return FALSE;
+         }
+         return TRUE;
+      default:
+         return FALSE;
+   }
+}
+
+
+extern char *read_from_call_list_file(char name[], int n)
+{
+   return (fgets(name, n, call_list_file));
+}
+
+
+extern void write_to_call_list_file(const char name[])
+{
+   fputs(name, call_list_file);
+   fputs("\n", call_list_file);
+}
+
+
+extern void close_call_list_file(void)
+{
+   if (fclose(call_list_file))
+      gg->fatal_error_exit(1, "Can't close call list file");
 }

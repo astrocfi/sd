@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -19,6 +19,12 @@
    initialize_tandem_tables
 */
 
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
 
 
@@ -29,8 +35,8 @@ typedef struct {
    setup virtual_result;
    int vertical_people[MAX_PEOPLE];    /* 1 if original people were near/far; 0 if lateral */
    uint32 single_mask;
-   bool no_unit_symmetry;
-   bool phantom_pairing_ok;
+   long_boolean no_unit_symmetry;
+   long_boolean phantom_pairing_ok;
    int np;
 } tandrec;
 
@@ -77,7 +83,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{10, 15, 3, -2, 2, 7, 6, -2,     -1, -1, 14, -1, -1, -1, 11, -1},            0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
 
    {{7, 22, 15, 20, 18, 11, 2, 9,    6, 23, 14, 21, 19, 10, 3, 8},               0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
-   {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17,
+   {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17, 
                       0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},                 0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
    {{0, 2, 4, 6, 8, 10, 13, 15, 17, 19, 21, 23,
                       1, 3, 5, 7, 9, 11, 12, 14, 16, 18, 20, 22},         0x555555, 0xFFFFFF,        12, 0,  0,  0, 0,  s2x6,  s2x12},
@@ -103,7 +109,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 2, 6, 8, 10, 12,             -1, -1, 4, -1, -1, 14},                     0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
 
    {{0, 2, 4, 6, 9, 11, 13, 15,      1, 3, 5, 7, 8, 10, 12, 14},            0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
-   {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22,
+   {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22, 
                       1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23},         0x555555, 0xFFFFFF,        12, 0,  0,  0, 0,  s3x4,  s3x8},
    {{2, 3, 5, 6, 7, 0,               -1, -1, 4, -1, -1, 1},                      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_crosswave},
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},                      0,        0,         6, 0,  0,  0, 0,  s_1x2dmd, s_crosswave},
@@ -204,16 +210,13 @@ static tm_thing maps_isearch_twosome[] = {
 
 
    {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},                     0x555,   0x0FFF,         6, 0,  0,  0, 0,  s2x3,  s2x6},
-   // The two maps just below must be after the map just above.
+   /* The two maps just below must be after the map just above. */
    {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},                  02020,  0x18060,         6, 0,  0,  0, 0,  s2x3,  s4x5},
    {{9, 7, -2, 18, 12, -2,           8, 2, -2, 19, 17, -2},                  00101,  0xC0300,         6, 0,  0,  0, 0,  s2x3,  s4x5},
    // And this one must be after it also.
    {{3, 6, 8, 10, 11, 1,             4, 5, 7, 9, 0, 2},                      00404,    03636,         6, 1,  0,  0, 0,  s_short6,  s2x6},
 
    {{10, 7, 8, 5, 0, 3,              11, 6, 9, 4, 1, 2},                     02121,    00303,         6, 1,  0,  0, 0,  s_short6,  sdeepxwv},
-
-   {{-2, 3, 4, -2, 8, 11,           -2, 2, 5, -2, 9, 10},                    02020,  0xC30,         6, 0,  0,  0, 0,  s2x3,  sbigdmd},
-   {{0, 3, -2, 7, 8, -2,           1, 2, -2, 6, 9, -2},                      00101,  0x0C3,         6, 0,  0,  0, 0,  s2x3,  sbigdmd},
 
    {{2, 0,                           3, 1},                                    0x4,      0xC,         2, 1,  0,  0, 0,  s1x2,  s_trngl4},
    {{1, 3,                           0, 2},                                    0x1,      0xC,         2, 3,  0,  0, 0,  s1x2,  s_trngl4},
@@ -465,13 +468,6 @@ siamese_item siamese_table_of_2[] = {
    {s4x5,        0x90E40000UL, 0x21084UL, warn__none},
    {s4x5,        0x13840000UL, 0x21084UL, warn__none},
 
-   {sbigdmd,     0x00000F3CUL, 0x18060UL, warn__none},
-   {sbigdmd,     0x000003CFUL, 0xC0300UL, warn__none},
-   {sbigdmd,     0x0F3C0000UL, 0x0030CUL, warn__none},
-   // ************************** THIS IS THE ONE ************************
-   {sbigdmd,     0x03CF0000UL, 0x0030CUL, warn__none},
-   // ************************** THIS IS THE ONE ************************
-
    {s4x4,        0x30304141UL, 0x80004141UL, warn__none},
    {s4x4,        0x41413030UL, 0x80003030UL, warn__none},
    {s4x4,        0x03031414UL, 0x80000303UL, warn__none},
@@ -606,7 +602,7 @@ static void unpack_us(
             personrec fb[8];
 
             /* Unpack tandem/couples person. */
-
+   
             for (j=0 ; j<tandstuff->np ; j++) {
                fb[j] = tandstuff->real_saved_people[j][ii];
                if (fb[j].id1) fb[j].id1 =
@@ -652,7 +648,7 @@ static bool pack_us(
    personrec *s,
    tm_thing *map_ptr,
    int fraction,
-   int twosome,
+   long_boolean twosome,
    int key,
    tandrec *tandstuff) THROW_DECL
 {
@@ -813,29 +809,23 @@ extern void tandem_couples_move(
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
    uint32 mxn_bits,
-   bool phantom_pairing_ok,
+   long_boolean phantom_pairing_ok,
    setup *result) THROW_DECL
 {
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
-      result->result_flags = 0;
-      result->kind = nothing;
-      return;
-   }
-
    selector_kind saved_selector;
    tandrec tandstuff;
    tm_thing *map;
    tm_thing *map_search;
    int i, np;
    uint32 jbit;
-   bool fractional = false;
-   bool dead_conc = false;
-   bool dead_xconc = false;
+   long_boolean fractional = FALSE;
+   long_boolean dead_conc = FALSE;
+   long_boolean dead_xconc = FALSE;
    tm_thing *our_map_table;
 
    uint32 special_mask = 0;
    tandstuff.single_mask = 0;
-   tandstuff.no_unit_symmetry = false;
+   tandstuff.no_unit_symmetry = FALSE;
    tandstuff.phantom_pairing_ok = phantom_pairing_ok;
    clear_people(result);
    remove_z_distortion(ss);
@@ -905,16 +895,16 @@ extern void tandem_couples_move(
 
                if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directionsr ^ 0x02A) & livemaskr) == 0)
                   special_mask |= 011;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directionsr ^ 0xA80) & livemaskr) == 0)
                   special_mask |= 044;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directionsr ^ 0x02A) & livemaskr) == 0)
                   special_mask |= 044;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directionsr ^ 0xA80) & livemaskr) == 0)
                   special_mask |= 011;
-
+   
                if (special_mask != 011 && special_mask != 044) special_mask = 0;
             }
          }
@@ -927,23 +917,23 @@ extern void tandem_couples_move(
                if (((directionsr ^ 0x02A8) & livemaskr) == 0 ||
                    ((directionsr ^ 0xA802) & livemaskr) == 0)
                   special_mask |= 0x88;
-
+   
                if (((directionsr ^ 0x2A80) & livemaskr) == 0 ||
                    ((directionsr ^ 0x802A) & livemaskr) == 0)
                   special_mask |= 0x11;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x11;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x88;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x88;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x11;
-
+   
                if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
             }
             else if (ss->kind == s3x4 && livemaskr == 0xC3FC3F) {
@@ -982,16 +972,16 @@ extern void tandem_couples_move(
 
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x11;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x44;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x44;
-
+   
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x11;
-
+   
                if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;
             }
             else if (ss->kind == s3x1dmd) {
@@ -1016,17 +1006,17 @@ extern void tandem_couples_move(
    else if (key == tandem_key_ys) {
       np = 4;
       our_map_table = maps_isearch_ysome;
-      tandstuff.no_unit_symmetry = true;
+      tandstuff.no_unit_symmetry = TRUE;
    }
    else if (key == tandem_key_3x1tgls) {
       np = 4;
       our_map_table = maps_isearch_3x1tglsome;
-      tandstuff.no_unit_symmetry = true;
+      tandstuff.no_unit_symmetry = TRUE;
    }
    else if (key >= tandem_key_outpoint_tgls) {
       np = 3;
       our_map_table = maps_isearch_tglsome;
-      tandstuff.no_unit_symmetry = true;
+      tandstuff.no_unit_symmetry = TRUE;
       if (key == tandem_key_outside_tgls)
          selector = selector_outer6;
       else if (key == tandem_key_inside_tgls)
@@ -1193,7 +1183,7 @@ extern void tandem_couples_move(
          }
       }
    }
-
+   
    current_options.who = saved_selector;
 
    if (!allmask) {
@@ -1202,7 +1192,7 @@ extern void tandem_couples_move(
       return;
    }
 
-   if (twosome >= 2) fractional = true;
+   if (twosome >= 2) fractional = TRUE;
 
    if (fractional && fraction > 4)
       fail("Can't do fractional twosome more than 4/4.");
@@ -1210,7 +1200,7 @@ extern void tandem_couples_move(
    uint32 siamese_fixup(0);
    warning_index siamese_warning = warn__none;
    siamese_item *ptr;
-   bool doing_siamese = false;
+   long_boolean doing_siamese(FALSE);
    uint32 saveew, savens;
 
    if (key == tandem_key_box || key == tandem_key_skew) {
@@ -1328,7 +1318,7 @@ extern void tandem_couples_move(
       // siamese" or whatever.  In that case, we will allow a pure
       // couples or tandem separation.
 
-      doing_siamese = true;
+      doing_siamese = TRUE;
       saveew = ewmask;
       savens = nsmask;
 
@@ -1401,13 +1391,13 @@ extern void tandem_couples_move(
 
    ewmask ^= (siamese_fixup & allmask);
    nsmask ^= (siamese_fixup & allmask);
-   if (ptr->fixup & 0x80000000UL) tandstuff.phantom_pairing_ok = true;
+   if (ptr->fixup & 0x80000000UL) tandstuff.phantom_pairing_ok = TRUE;
    goto try_this;
 
  fooy:
 
-   // We also use the subtle aspects of the phantom indicator to tell what kind
-   // of setup we allow, and whether pairings must be parallel to the long axis.
+   /* We also use the subtle aspects of the phantom indicator to tell what kind
+      of setup we allow, and whether pairings must be parallel to the long axis. */
 
    if (phantom == 1) {
       if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s3x4 && ss->kind != s2x6 &&
@@ -1449,7 +1439,7 @@ extern void tandem_couples_move(
             tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_couples_only;
       }
       else if (ss->cmd.cmd_assume.assumption == cr_2fl_only) {
-         if (ss->kind == s1x4 || ss->kind == s2x4 || ss->kind == s1x8)
+         if (ss->kind == s1x4 || ss->kind == s2x4)
             tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_wave_only;
       }
    }
@@ -1507,14 +1497,14 @@ extern void tandem_couples_move(
       to make gluing illegal. */
 
    if (tandstuff.virtual_result.kind == s_dead_concentric) {
-      dead_conc = true;
+      dead_conc = TRUE;
       tandstuff.virtual_result.kind = tandstuff.virtual_result.inner.skind;
       tandstuff.virtual_result.rotation += tandstuff.virtual_result.inner.srotation;
    }
    else if (tandstuff.virtual_result.kind == s_normal_concentric &&
             tandstuff.virtual_result.inner.skind == nothing &&
             tandstuff.virtual_result.outer.skind == s1x2) {
-      dead_xconc = true;
+      dead_xconc = TRUE;
       tandstuff.virtual_result.kind = tandstuff.virtual_result.outer.skind;
       tandstuff.virtual_result.rotation += tandstuff.virtual_result.outer.srotation;
    }
@@ -1608,10 +1598,6 @@ extern void tandem_couples_move(
             result->inner.skind = nothing;
             result->kind = s_normal_concentric;
             for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
-         }
-         else if (ss->kind == s1x4 && result->kind == s2x2) {
-            result->result_flags &= ~3;
-            result->result_flags |= (ss->rotation & 1) + 1;
          }
 
          return;

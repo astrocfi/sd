@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -16,11 +16,19 @@
    write_resolve_text
    full_resolve
    configuration::concepts_in_place
+   reconcile_command_ok
    resolve_command_ok
    nice_setup_command_ok
    create_resolve_menu_title
    initialize_getout_tables
 */
+
+
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
 
 #include <stdio.h>
 #include <time.h>
@@ -192,8 +200,8 @@ static resolve_descriptor resolve_table[] = {
    {2,  first_part_none,  main_part_circ}};    /* resolve_circle */
 
 
-// This assumes that "sequence_is_resolved" passes.
-void write_resolve_text(bool doing_file)
+/* This assumes that "sequence_is_resolved" passes. */
+void write_resolve_text(long_boolean doing_file)
 {
    resolve_indicator & r = configuration::current_resolve();
    int distance = r.distance;
@@ -233,7 +241,7 @@ void write_resolve_text(bool doing_file)
       /* In a singer, "pass thru, allemande left", "trade by, allemande left", or
          "cross by, allemande left" can be just "swing and promenade". */
 
-      if (ui_options.singing_call_mode != 0 &&
+      if (singing_call_mode != 0 &&
           (index == resolve_pth_la ||
            index == resolve_tby_la ||
            index == resolve_xby_la)) {
@@ -251,7 +259,7 @@ void write_resolve_text(bool doing_file)
             writestuff(", ");
       }
 
-      if (ui_options.singing_call_mode != 0 && mainpart == main_part_rlg) {
+      if (singing_call_mode != 0 && mainpart == main_part_rlg) {
          mainpart = main_part_swing;
          distance ^= 4;
       }
@@ -277,10 +285,12 @@ void write_resolve_text(bool doing_file)
 
 
 
-// These variables are actually local to inner_search, but they are
-// expected to be preserved across the throw, so they must be static.
+/* These variables are actually local to inner_search, but they are
+   expected to be preserved across the throw, so they must be static. */
 
 static int perm_indices[8];
+static int attempt_count, little_count;
+static int attempt_start_time;
 static int hashed_random_list[5];
 static parse_block *inner_parse_mark, *outer_parse_mark;
 static int history_insertion_point;    /* Where our resolve should lie in the history.
@@ -297,12 +307,6 @@ static bool inner_search(command_kind goal,
 {
    int i, j;
    uint32 directions, p, q;
-   int CLOCKS_TO_RESOLVE;
-
-   if (ui_options.resolve_test_minutes != 0)
-      CLOCKS_TO_RESOLVE = ui_options.resolve_test_minutes * 60 * CLOCKS_PER_SEC;
-   else
-      CLOCKS_TO_RESOLVE = 5*CLOCKS_PER_SEC;
 
    history_insertion_point = huge_history_ptr;
 
@@ -310,28 +314,22 @@ static bool inner_search(command_kind goal,
       history_insertion_point -= insertion_point;    /* strip away the extra calls */
 
       goal_kind = configuration::history[history_insertion_point].state.kind;
-      if (attr::klimit(goal_kind) != 7) return false;
+      if (attr::klimit(goal_kind) != 7) return(FALSE);
       for (j=0; j<8; j++) goal_directions[j] = configuration::history[history_insertion_point].state.people[j].id1 & d_mask;
 
       for (j=0; j<8; j++) {
          perm_indices[j] = -1;
          for (i=0; i<8; i++)
-            if ((configuration::history[history_insertion_point].state.people[i].id1 &
-                 PID_MASK) ==
-                perm_array[j])
-               perm_indices[j] = i;
-         if (perm_indices[j] < 0) return false;      // didn't find the person????
+            if ((configuration::history[history_insertion_point].state.people[i].id1 & PID_MASK) == perm_array[j]) perm_indices[j] = i;
+         if (perm_indices[j] < 0) return(FALSE);      /* didn't find the person???? */
       }
    }
 
    history_save = history_insertion_point;
 
-   // Since these variables are expected to be preserved
-   // across the throw, they must be volatile.
-   volatile int little_count = 0;
-   volatile int attempt_count = 0;
-
-   int attempt_start_time = clock();
+   little_count = 0;
+   attempt_count = 0;
+   attempt_start_time = clock();
    hashed_random_list[0] = 0;
 
    /* Mark the parse block allocation, so that we throw away the garbage
@@ -355,7 +353,7 @@ static bool inner_search(command_kind goal,
    try {
       /* Throw away garbage from last attempt. */
       release_parse_blocks_to_mark(inner_parse_mark);
-      testing_fidelity = false;
+      testing_fidelity = FALSE;
       configuration::history_ptr = history_save;
       attempt_count++;
 
@@ -365,7 +363,7 @@ static bool inner_search(command_kind goal,
       // every 256 tries, so that we won't waste a lot of time in the "clock" library
       // call.  (We have no idea how long that call takes.)
 
-      if (!(attempt_count & 255) && ((int) (clock()-attempt_start_time)) > CLOCKS_TO_RESOLVE) {
+      if (!(attempt_count & 255) && ((int) (clock()-attempt_start_time)) > 5*CLOCKS_PER_SEC) {
          // Too many tries -- too bad.
          configuration::history_ptr = huge_history_ptr;
 
@@ -388,7 +386,7 @@ static bool inner_search(command_kind goal,
       if (configuration::history_ptr != history_insertion_point || goal == command_reconcile)
          initialize_parse();
       else
-         restore_parse_state();
+         (void) restore_parse_state();
 
       /* Generate the concepts and call. */
 
@@ -454,8 +452,6 @@ static bool inner_search(command_kind goal,
       // of a compiler bug.  We no longer take pity on buggy compilers.
 
       setup *ns = &configuration::next_config().state;
-
-      if (ui_options.resolve_test_minutes != 0) goto what_a_loss;
 
       switch (goal) {
       case command_resolve:
@@ -574,7 +570,7 @@ static bool inner_search(command_kind goal,
 
             // Test for relative phase of boys and girls.
             // "accept_extend" tells how accurate the placement must be.
-            switch (ui_options.singing_call_mode) {
+            switch (singing_call_mode) {
             case 1: p2 -= 0200; break;
             case 2: p2 -= 0600; break;
             }
@@ -714,7 +710,7 @@ static bool inner_search(command_kind goal,
          like "heads" or "boys" it will likely fail this test until we get around to
          doing something clever.  Oh well.) */
 
-      testing_fidelity = true;
+      testing_fidelity = TRUE;
 
       for (j=0; j<new_resolve->insertion_point; j++) {
          int k;
@@ -761,7 +757,7 @@ static bool inner_search(command_kind goal,
          configuration::history_ptr++;
       }
 
-      testing_fidelity = false;
+      testing_fidelity = FALSE;
 
       /* One more check.  If this was a "reconcile", demand that we have an acceptable resolve.
          How could the permutation be acceptable but not lead to an acceptable resolve?  Because,
@@ -842,107 +838,15 @@ static bool inner_search(command_kind goal,
 }
 
 
-static bool reconcile_command_ok()
-{
-   int k;
-   int dirmask = 0;
-   personrec *current_people = configuration::current_config().state.people;
-   setup_kind current_kind = configuration::current_config().state.kind;
-   current_reconciler = (reconcile_descriptor *) 0;
-
-   /* Since we are going to go back 1 call, demand we have at least 3. ***** */
-   /* Also, demand no concepts already in place. */
-   if ((configuration::history_ptr < 3) || configuration::concepts_in_place()) return false;
-
-   for (k=0; k<8; k++)
-      dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
-
-   if (current_kind == s2x4) {
-      if (dirmask == 0xA00A)
-         current_reconciler = &promperm;         /* L2FL, looking for promenade. */
-      else if (dirmask == 0x0AA0)
-         current_reconciler = &rpromperm;        /* R2FL, looking for reverse promenade. */
-      else if (dirmask == 0x6BC1)
-         current_reconciler = &homeperm;         /* pseudo-squared-set, looking for circle left/right. */
-      else if (dirmask == 0xFF55)
-         current_reconciler = &sglperm;          /* Lcol, looking for single file promenade. */
-      else if (dirmask == 0x55FF)
-         current_reconciler = &sglperm;          /* Rcol, looking for reverse single file promenade. */
-      else if (dirmask == 0xBC16)
-         current_reconciler = &sglperm;          /* L Tbone, looking for single file promenade. */
-      else if (dirmask == 0x16BC)
-         current_reconciler = &sglperm;          /* R Tbone, looking for reverse single file promenade. */
-      else if (dirmask == 0x2288)
-         current_reconciler = &rlgperm;          /* Rwave, looking for RLG (with possible extend or circulate). */
-      else if (dirmask == 0x8822)
-         current_reconciler = &laperm;           /* Lwave, looking for LA (with possible extend or circulate). */
-   }
-   else if (current_kind == s_qtag) {
-      if (dirmask == 0x08A2)
-         current_reconciler = &qtagperm;         /* Rqtag, looking for RLG. */
-      else if (dirmask == 0x78D2)
-         current_reconciler = &qtagperm;         /* diamonds with points facing, looking for RLG. */
-   }
-   else if (current_kind == s_crosswave || current_kind == s_thar) {
-      if (dirmask == 0x278D)
-         current_reconciler = &crossplus;        /* crossed waves or thar, looking for RLG, allow slip the clutch. */
-      else if (dirmask == 0x8D27)
-         current_reconciler = &crossplus;        /* crossed waves or thar, looking for LA, allow slip the clutch. */
-      else if (dirmask == 0xAF05)
-         current_reconciler = &crossperm;        /* crossed waves or thar, looking for promenade. */
-   }
-
-   if (current_reconciler)
-      return true;
-   else
-      return false;
-}
-
-extern int resolve_command_ok(void)
-{
-   return attr::klimit(configuration::current_config().state.kind) == 7;
-}
-
-extern int nice_setup_command_ok(void)
-{
-   int i, k;
-   bool setup_ok = false;
-   setup_kind current_kind = configuration::current_config().state.kind;
-
-   // Decide which arrays we will use, depending on the current setting of the
-   // "allow all concepts" flag, and see if we are in one of the known setups
-   // and there are concepts available for that setup.
-
-   for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
-      /* Select the correct concept array. */
-      nice_setup_info[k].array_to_use_now = (allowing_all_concepts) ? nice_setup_info[k].thing->zzzfull_list : nice_setup_info[k].thing->zzzon_level_list;
-
-      // Note how many concepts are in it.  If there are zero in some of them,
-      // we may still be able to proceed, but we must have concepts available
-      // for the current setup.
-
-      for (i=0 ; ; i++) {
-         if (nice_setup_info[k].array_to_use_now[i] == UC_none) break;
-      }
-
-      nice_setup_info[k].number_available_now = i;
-
-      if (nice_setup_info[k].kind == current_kind && nice_setup_info[k].number_available_now != 0) setup_ok = true;
-   }
-
-   return setup_ok || configuration::concepts_in_place();
-}
-
-
-uims_reply full_resolve()
+uims_reply full_resolve(void)
 {
    int j, k;
    uims_reply reply;
    int current_resolve_index, max_resolve_index;
-   bool show_resolve;
+   long_boolean show_resolve;
    personrec *current_people = configuration::current_config().state.people;
    int current_depth = 0;
-   bool find_another_resolve = true;
+   long_boolean find_another_resolve = TRUE;
    resolver_display_state big_state; /* for display to the user */
 
    /* Allocate or reallocate the huge_history_save save array if needed. */
@@ -993,7 +897,7 @@ uims_reply full_resolve()
             perm_array[j] = current_people[current_reconciler->perm[j]].id1 & PID_MASK;
 
          current_depth = 1;
-         find_another_resolve = false;       /* We initially don't look for resolves; we wait for the user
+         find_another_resolve = FALSE;       /* We initially don't look for resolves; we wait for the user
                                                 to set the depth. */
          break;
       case command_normalize:
@@ -1008,13 +912,13 @@ uims_reply full_resolve()
    huge_history_ptr = configuration::history_ptr;
    save_parse_state();
 
-   restore_parse_state();
+   (void) restore_parse_state();
    current_resolve_index = 0;
-   show_resolve = true;
+   show_resolve = TRUE;
    max_resolve_index = 0;
    avoid_list_size = 0;
 
-   if (search_goal == command_reconcile) show_resolve = false;
+   if (search_goal == command_reconcile) show_resolve = FALSE;
 
    start_pick();   /* This sets interactivity, among other stuff. */
 
@@ -1026,7 +930,7 @@ uims_reply full_resolve()
          gg->update_resolve_menu
             (search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
-         restore_parse_state();
+         (void) restore_parse_state();
 
          if (inner_search(search_goal, &all_resolves[max_resolve_index], current_depth)) {
             // Search succeeded, save it.
@@ -1049,7 +953,7 @@ uims_reply full_resolve()
          for (j=0; j<=configuration::history_ptr+1; j++)
             configuration::history[j] = huge_history_save[j];
 
-         find_another_resolve = false;
+         find_another_resolve = FALSE;
       }
       else {
          /* Just display the sequence with the current resolve inserted. */
@@ -1144,7 +1048,7 @@ uims_reply full_resolve()
          newline();
          writestuff("     resolve is:");
          newline();
-         write_resolve_text(false);
+         write_resolve_text(FALSE);
          newline();
          newline();
       }
@@ -1152,7 +1056,7 @@ uims_reply full_resolve()
       gg->update_resolve_menu
          (search_goal, current_resolve_index, max_resolve_index, big_state);
 
-      show_resolve = true;
+      show_resolve = TRUE;
 
       for (;;) {          /* We ignore any "undo" or "erase" clicks. */
          reply = gg->get_resolve_command();
@@ -1173,7 +1077,7 @@ uims_reply full_resolve()
                all_resolves = t;
             }
 
-            find_another_resolve = true;             /* will get it next time around */
+            find_another_resolve = TRUE;             /* will get it next time around */
             break;
          case resolve_command_goto_next:
             if (current_resolve_index < max_resolve_index)
@@ -1186,12 +1090,12 @@ uims_reply full_resolve()
          case resolve_command_raise_rec_point:
             if (current_depth < huge_history_ptr-2)
                current_depth++;
-            show_resolve = false;
+            show_resolve = FALSE;
             break;
          case resolve_command_lower_rec_point:
             if (current_depth > 0)
                current_depth--;
-            show_resolve = false;
+            show_resolve = FALSE;
             break;
          case resolve_command_abort:
             written_history_items = -1;
@@ -1249,6 +1153,97 @@ static void display_reconcile_history(int current_depth, int n)
    gg->add_new_line("", 0);   // Write a blank line.
 }
 
+
+extern int reconcile_command_ok()
+{
+   int k;
+   int dirmask = 0;
+   personrec *current_people = configuration::current_config().state.people;
+   setup_kind current_kind = configuration::current_config().state.kind;
+   current_reconciler = (reconcile_descriptor *) 0;
+
+   /* Since we are going to go back 1 call, demand we have at least 3. ***** */
+   /* Also, demand no concepts already in place. */
+   if ((configuration::history_ptr < 3) || configuration::concepts_in_place()) return FALSE;
+
+   for (k=0; k<8; k++)
+      dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
+
+   if (current_kind == s2x4) {
+      if (dirmask == 0xA00A)
+         current_reconciler = &promperm;         /* L2FL, looking for promenade. */
+      else if (dirmask == 0x0AA0)
+         current_reconciler = &rpromperm;        /* R2FL, looking for reverse promenade. */
+      else if (dirmask == 0x6BC1)
+         current_reconciler = &homeperm;         /* pseudo-squared-set, looking for circle left/right. */
+      else if (dirmask == 0xFF55)
+         current_reconciler = &sglperm;          /* Lcol, looking for single file promenade. */
+      else if (dirmask == 0x55FF)
+         current_reconciler = &sglperm;          /* Rcol, looking for reverse single file promenade. */
+      else if (dirmask == 0xBC16)
+         current_reconciler = &sglperm;          /* L Tbone, looking for single file promenade. */
+      else if (dirmask == 0x16BC)
+         current_reconciler = &sglperm;          /* R Tbone, looking for reverse single file promenade. */
+      else if (dirmask == 0x2288)
+         current_reconciler = &rlgperm;          /* Rwave, looking for RLG (with possible extend or circulate). */
+      else if (dirmask == 0x8822)
+         current_reconciler = &laperm;           /* Lwave, looking for LA (with possible extend or circulate). */
+   }
+   else if (current_kind == s_qtag) {
+      if (dirmask == 0x08A2)
+         current_reconciler = &qtagperm;         /* Rqtag, looking for RLG. */
+      else if (dirmask == 0x78D2)
+         current_reconciler = &qtagperm;         /* diamonds with points facing, looking for RLG. */
+   }
+   else if (current_kind == s_crosswave || current_kind == s_thar) {
+      if (dirmask == 0x278D)
+         current_reconciler = &crossplus;        /* crossed waves or thar, looking for RLG, allow slip the clutch. */
+      else if (dirmask == 0x8D27)
+         current_reconciler = &crossplus;        /* crossed waves or thar, looking for LA, allow slip the clutch. */
+      else if (dirmask == 0xAF05)
+         current_reconciler = &crossperm;        /* crossed waves or thar, looking for promenade. */
+   }
+
+   if (current_reconciler)
+      return TRUE;
+   else
+      return FALSE;
+}
+
+extern int resolve_command_ok(void)
+{
+   return attr::klimit(configuration::current_config().state.kind) == 7;
+}
+
+extern int nice_setup_command_ok(void)
+{
+   int i, k;
+   long_boolean setup_ok = FALSE;
+   setup_kind current_kind = configuration::current_config().state.kind;
+
+   // Decide which arrays we will use, depending on the current setting of the
+   // "allow all concepts" flag, and see if we are in one of the known setups
+   // and there are concepts available for that setup.
+
+   for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+      /* Select the correct concept array. */
+      nice_setup_info[k].array_to_use_now = (allowing_all_concepts) ? nice_setup_info[k].thing->zzzfull_list : nice_setup_info[k].thing->zzzon_level_list;
+
+      // Note how many concepts are in it.  If there are zero in some of them,
+      // we may still be able to proceed, but we must have concepts available
+      // for the current setup.
+
+      for (i=0 ; ; i++) {
+         if (nice_setup_info[k].array_to_use_now[i] == UC_none) break;
+      }
+
+      nice_setup_info[k].number_available_now = i;
+
+      if (nice_setup_info[k].kind == current_kind && nice_setup_info[k].number_available_now != 0) setup_ok = TRUE;
+   }
+
+   return setup_ok || configuration::concepts_in_place();
+}
 
 /*
  * Create a string representing the search state.  Search_goal indicates which user command

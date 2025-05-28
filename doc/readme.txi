@@ -478,6 +478,6 @@ was contributed by Alan Snyder.
 The @code{Sd} interface for Windows was contributed by Robert Cays.
 
 We received helpful feedback and testing from Robert French, Judy
-Anderson, Bill van Melle, Tom Rinker, Lois Lew, Ron Nicholson, Dave Decot,
+Anderson, Bill van Melle, Lois Lew, Ron Nicholson, Dave Decot,
 Kristin Jensen, Larry Dunn, and Nick Martellacci.
 @end ifset

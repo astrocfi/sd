@@ -1,0 +1,182 @@
+# Makefile for Sd/Sdtty for Cygnus gcc.
+
+srcdir = .
+
+# This gives the compiler name and any switches that it needs to make
+# it operate the way we want (ANSI language, standards conformance,
+# target hardware, etc.)
+CC = gcc
+
+# This gives any "-D" switches that we always need to send to the compiler.
+DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
+
+# This gives the optimization and/or debug info.  These flags presumably
+# don't affect the semantics of the language and run-time environment, so you
+# might reasonably want to change them to suit your taste.
+# The options shown here have been chosen to optimize the program for
+# production use.  Depending on your operating system, compiler, and debugger,
+# this may compromise the ability to debug the program.  In this case, you may
+# need to choose different options, typically "-g", for debugging.
+# Consult your system, compiler, and debugger vendor for further information.
+CDEBUGFLAGS = -O2
+
+CFLAGS =$(CDEBUGFLAGS) $(DEFS)
+
+# These are the "-I"  and "-D" flags that we must use for the compilation
+# of the X11 user interface (sdui-x11.c).
+X11_FLAGS = 
+
+# These are the "-I"  and "-D" flags that we must use for the compilation
+# of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
+TTY_FLAGS = 
+
+# These are the library flags that we must use for the final bind of
+# the X11 version of "sd".
+X11_LIBS = 
+
+# These are the library flags that we must use for the final bind of
+# "sdtty".
+TTY_LIBS =
+
+SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
+          sdtables.c sdctable.c sdtop.cpp sdconcpt.cpp sdpreds.cpp \
+          sdgetout.cpp sdmoves.cpp sdtand.cpp sdconc.cpp sdistort.cpp \
+          sdpick.cpp sdsi.cpp
+
+SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
+          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
+          sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
+          sdpick.o sdsi.o
+
+SDX11_SRC = sdui-x11.c
+SDX11_OBJ = sdui-x11.o
+
+# This has all special source files for sdtty and
+# making the distribution.
+SDTTY_SRC = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp sdui-tpc.cpp
+SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
+SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
+# This has the special object files used for building this version of sdtty.
+SDTTY_OBJ = $(SDTTY_OBJ_PC)
+SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_PC)
+
+MKCALLS_SRCS = mkcalls.c dbcomp.c
+MKCALLS_OBJS = mkcalls.o dbcomp.o
+
+SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(MKCALLS_SRCS)
+OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
+
+all: alltty
+allx11: sd.exe sd_calls.dat
+alltty: sdtty.exe sd_calls.dat
+everything: allx11 sdtty.exe
+
+LDPRELIBS = 
+LDPOSTLIBS = lib\crt0.o lib\libc.a
+
+sd.exe: $(SD_OBJS) $(SDX11_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
+
+mkcalls.exe: $(MKCALLS_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
+
+sdtty.exe: $(SD_OBJS) $(SDTTY_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
+
+sd_calls.dat: sd_calls.txt mkcalls.exe
+	./mkcalls $(srcdir)/sd_calls.txt
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+.cpp.o:
+	$(CC) $(CFLAGS) -c $<
+
+sdui-x11.o: sdui-x11.c
+	$(CC) $(CFLAGS) $(X11_FLAGS) -c $(srcdir)/$*.c
+
+sdui-ttu.o: sdui-ttu.cpp
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.cpp
+
+sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui.h
+
+dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
+
+dbcomp.o: database.h
+
+$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sdui.h sd.h database.h
+
+info: sd_doc.info
+dvi: sd_doc.dvi
+ps: sd_doc.ps
+html: sd_doc_toc.html
+
+DOCSRCS = sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
+
+sd_doc.dvi sd_doc.info sd_doc.txt sd_doc_toc.html: $(DOCSRCS)
+
+# additional suffixes used for the documentation
+.SUFFIXES: .dvi .info .txt .txinfo .cpp
+
+RM = del
+
+MAKEINFO = makeinfo --no-split
+MAKE_ASCII = makeinfo --no-split --no-headers
+TXI2DVI = tex
+DVIPS = dvips
+TXI2HTML = texi2html
+MAKE=make
+
+# We do it twice, so cross references will be reconciled.
+.txinfo.dvi:
+	$(TXI2DVI) $<
+	$(TXI2DVI) $<
+
+.txinfo.info:
+	$(MAKEINFO) -I$(srcdir) $<
+
+.txinfo.txt:
+	$(MAKE_ASCII) -o $@ -I$(srcdir) $<
+
+sd_doc.ps: sd_doc.dvi
+	$(DVIPS) -o $@ $?
+
+sessions.ps: sessions.dvi
+	$(DVIPS) -o $@ $?
+
+relnotes.ps: relnotes.dvi
+	$(DVIPS) -o $@ $?
+
+demo.ps: demo.dvi
+	$(DVIPS) -o $@ $?
+
+sd_doc_toc.html:
+	$(TXI2HTML) -split_node -menu sd_doc.txinfo
+
+# Stephen's fancy way of producing a pretty, compact PostScript file.
+# You don't want to know.
+sd_doc.PS: $(DOCSRCS)
+	if [ -r make-ps ]; then make-ps $@ $(DOCSRCS); \
+	else $(MAKE) sd_doc.ps && mv sd_doc.ps sd_doc.PS; fi
+
+INSTALL: install.txinfo
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txinfo
+
+README: readme.txinfo
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/readme.txinfo
+
+
+docclean:
+	-$(RM) *.aux *.log *.toc *.dvi
+	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
+
+clean::
+	-$(RM) *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat
+
+distclean: clean
+	-$(RM) sequence.*
+	-$(RM) *~ core
+	-$(RM) *.tar *.tar.Z
+
+realclean: distclean
+	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps

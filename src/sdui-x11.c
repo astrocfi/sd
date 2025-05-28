@@ -1,5 +1,5 @@
 static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gildea>";
-/*
+/* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
  *
@@ -140,7 +140,7 @@ extern char *uims_version_string(void)
 }
 
 
-static bool ui_task_in_progress = false;
+static long_boolean ui_task_in_progress = FALSE;
 
 /*
  * Since callbacks and actions can't return values, narrow the use of
@@ -152,7 +152,7 @@ static int callback_value_storage; /* used only by two routines below */
 static void
 callback_return(int return_value)
 {
-    ui_task_in_progress = false;
+    ui_task_in_progress = FALSE;
     callback_value_storage = return_value;
 }
 
@@ -179,7 +179,7 @@ read_user_gesture(XtAppContext app)
 {
     XEvent event;
 
-    ui_task_in_progress = true;
+    ui_task_in_progress = TRUE;
 
     /* allow only new user events to generate actions */
     action_event_serial = NextRequest(XtDisplay(toplevel));
@@ -297,7 +297,7 @@ do_popup(Widget popup_shell)
 	XtDispatchEvent(&event);
     } while (event.type != ReparentNotify);
     return value;
-}
+}    
 
 static String empty_string = "";
 static Cstring *concept_popup_list = NULL;
@@ -350,7 +350,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
     unhighlight_lists();        /* do here in case spurious event */
     if (inside_what == inside_get_command) {
         uims_reply local_reply = (uims_reply) client_data;
-
+ 
 	uims_menu_index = item->list_index; /* extern var <- menu item no. */
 
         if (local_reply == ui_command_select) {
@@ -368,7 +368,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
             unsigned int row, col;
             unsigned int maxrow, maxcolumn, entries;
             int value;
-
+      
             menu = uims_menu_index;
 
             /* determine menu size */
@@ -379,10 +379,10 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
                 if (maxrow < concept_size_tables[menu][i])
                     maxrow = concept_size_tables[menu][i];
             entries = maxcolumn*maxrow;
-
+        
             concept_popup_list =
                 get_more_mem(concept_popup_list, entries*sizeof(String *));
-
+        
             /* fill in the entries */
             i=0;
             for (row=0; row<maxrow; row++) {
@@ -395,11 +395,11 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
                     i++;
                 }
             }
-
+        
             XawListChange(conceptlist, (char **) concept_popup_list, entries, 0, TRUE);
             XtVaSetValues(conceptlist, XtNdefaultColumns, maxcolumn, NULL);
             value = do_popup(conceptpopup);
-
+        
             if (value == 0)
                 goto try_again;   /* User moved mouse away. */
 
@@ -427,7 +427,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
 /* undo action timeout proc.  Gets called after the UNDO entry
    has flashed for an appropriate amount of time. */
 /* ARGSUSED */
-static void
+static void 
 cmdmenu_unhighlight(XtPointer client_data, XtIntervalId *intrvl)
 {
     XawListUnhighlight(cmdmenu);
@@ -746,8 +746,8 @@ CONST static char *fallback_resources[] = {
     NULL};
 
 static char *program_name = NULL;	/* argv[0]: our name */
-static bool window_is_mapped = false;
-static bool ui_started = false;
+static long_boolean window_is_mapped = FALSE;
+static long_boolean ui_started = FALSE;
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -787,7 +787,7 @@ uims_process_command_line(int *argcp, char **argvp[])
    program_name = argv[0];
    toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
 			       fallback_resources, NULL, 0);
-   ui_started = true;
+   ui_started = TRUE;
    XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
 			      top_level_resources, XtNumber(top_level_resources),
 			      NULL, 0);
@@ -868,7 +868,7 @@ extern void uims_preinitialize(void)
 
     /* Viewports may have vertical scrollbar, and it must be visible */
     lview =
-         XtVaCreateManagedWidget("lma", viewportWidgetClass, leftarea,
+         XtVaCreateManagedWidget("lma", viewportWidgetClass, leftarea, 
                XtNallowVert, True,
                XtNforceBars, True,
                NULL);
@@ -977,7 +977,7 @@ extern void uims_preinitialize(void)
     /* comment popup */
 
     commentpopup = XtVaCreatePopupShell("commentpopup",
-               transientShellWidgetClass, toplevel,
+               transientShellWidgetClass, toplevel, 
                XtNallowShellResize, True, NULL);
     unmap_no_trans = XtParseTranslationTable(unmap_no_translation);
     XtOverrideTranslations(commentpopup, unmap_no_trans);
@@ -1192,7 +1192,7 @@ widen_viewport(Widget vw, Widget childw)
 	return;
     }
 
-    XtVaGetValues(scrollbar,
+    XtVaGetValues(scrollbar, 
 		  XtNwidth, &scrollwidth,
 		  XtNborderWidth, &scrollborder,
 		  NULL);
@@ -1251,7 +1251,7 @@ extern void uims_postinitialize(void)
     XSetWMProtocols(XtDisplay(toplevel), XtWindow(toplevel), &wm_delete_window, 1);
 
     XtMapWidget(toplevel);
-    window_is_mapped = true;
+    window_is_mapped = TRUE;
 }
 
 
@@ -1367,7 +1367,7 @@ extern uims_reply uims_get_startup_command(void)
 }
 
 
-extern bool uims_get_call_command(uims_reply *reply_p)
+extern long_boolean uims_get_call_command(uims_reply *reply_p)
 {
    int local_reply;
    int banner_mode;
@@ -1453,16 +1453,16 @@ extern bool uims_get_call_command(uims_reply *reply_p)
       /* If user gave a call, deposit same. */
 
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
-      if (deposit_call(save_call, &null_options)) return true;
+      if (deposit_call(save_call, &null_options)) return TRUE;
    }
    else if (*reply_p == ui_concept_select) {
       /* A concept is required.  Its index has been stored in uims_menu_index. */
 
       if (deposit_concept(&concept_descriptor_table[uims_menu_index]))
-         return true;
+         return TRUE;
    }
 
-   return false;
+   return FALSE;
 }
 
 
@@ -1724,7 +1724,7 @@ extern int uims_do_selector_popup(void)
    int t = choose_popup(sd_resources.selector_title, selector_menu_list);
    if (t==0) return POPUP_DECLINE;
    return t;
-}
+}    
 
 extern int uims_do_direction_popup(void)
 {
@@ -1732,7 +1732,7 @@ extern int uims_do_direction_popup(void)
     int t = choose_popup(sd_resources.direction_title, &direction_names[1]);
     if (t==0) return POPUP_DECLINE;
     return t;
-}
+}    
 
 
 extern int uims_do_circcer_popup(void)
@@ -1740,7 +1740,7 @@ extern int uims_do_circcer_popup(void)
     int t = choose_popup(sd_resources.circcer_title, circcer_menu_list);
     if (t==0) return POPUP_DECLINE;
     return t;
-}
+}    
 
 
 extern int uims_do_tagger_popup(int tagger_class)
@@ -1748,10 +1748,10 @@ extern int uims_do_tagger_popup(int tagger_class)
     int t = choose_popup(sd_resources.tagger_title, tagger_menu_list[tagger_class]);
     if (t==0) return POPUP_DECLINE;
     return (tagger_class << 5) | t;
-}
+}    
 
 
-extern uint32 uims_get_number_fields(int nnumbers, bool forbid_zero)
+extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
 {
    int i;
    uint32 number_list = 0;
