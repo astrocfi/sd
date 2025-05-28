@@ -5375,6 +5375,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_qtag,        s2x6, 0x33, 0x30C, 0x0D, 0x0, schema_matrix,         sbigdmd,     nothing,  warn__none, 0, 0, {-1, -1, 8, 9, -1, -1, 2, 3}, {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
    {s_qtag,        s2x6, 0,   0x79E, 0x02D, 0x0, schema_matrix,         sbigdmd,     nothing,  warn__none, 0, 0, {4, 7, 8, 9, 10, 1, 2, 3}, {0, -1, -1, -1, -1, 5, 6, -1, -1, -1, -1, 11}},
    {s2x2,         s4dmd, 0,   0xF0F0, 0x0E, 0x0, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {12, 13, 14, 0, -1, -1, -1, -1, 4, 5, 6, 8, -1, -1, -1, -1}},
+   {s_crosswave, s_rigger,   0xCC,0x0, 0x0E,0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, -1, -1, 2, 3, -1, -1}, {0}},
    {s_crosswave,s_crosswave, 0x99,0x66,0x0D,0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 2, 5, -1, -1, 6, 1, -1}, {0}},
    {s_crosswave,s_crosswave, 0x66,0x99,0x0D,0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 6, 1, -1, -1, 2, 5, -1}, {0}},
    {s_crosswave,s_crosswave, 0x88,0x11,0x0D,0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 1, {0, 1, 3, -1, 4, 5, 7, -1}, {-1, 7, 1, 2, -1, 3, 5, 6}},
@@ -9203,7 +9204,7 @@ const setup_attr setup_attrs[] = {
     {0x33, 0x77, 0x11, 0x55},
     {b_crosswave, b_pcrosswave},
     {0, 0},
-    0U,
+    SPROP_FIND_NEAR_PEOPLE,
     id_bit_table_crosswave,
     {"66  c@66  d@7ab  6  fe@766  h@66  g",
      "65a@65b@@ghdc@@65f@65e"}},
@@ -12093,18 +12094,20 @@ select::fixer select::fixer_init_table[] = {
    {fx_f1x8hidbt4,  s1x2, s1x8,     0, 0, 2, {0, 1, 6, 7},
     fx0, fx_f2x4pos02,          fx0, fx0,                   fx0, fx0,           fx0, fx0},
 
-
-
    {fx_fqtglowf, sdmd, s_qtag,      1, 0, 1, {0, 7, 5, 6},
     fx0, fx0,            fx_f2x4far, fx_f1x8lowf,           fx0, fx_fdmdlowf,           fx0, fxboxdmda},
    {fx_fqtghif,  sdmd, s_qtag,      1, 0, 1, {1, 2, 4, 3},
     fx0, fx0,           fx_f2x4near, fx_f1x8hif,            fx0, fx_fdmdhif,            fx0, fxboxdmdb},
 
+   {fx_fqtgnear,  s2x4, s2x4,        0, 0, 1, {6, 7, 3, 2, -1, 4, 5, -1},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,            fx0, fx_f2x4pos8},
+   {fx_fqtgfar,   s2x4, s2x4,        0, 0, 1, {-1, 0, 1, -1, 2, 3, 7, 6},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,            fx0, fx_f2x4pos5},
+
    {fx_fdmdlowf, sdmd, s_ptpd,      0, 0, 1, {0, 1, 2, 3},
     fx0, fx0,           fx_f1x8lowf, fx_f2x4far,            fx0, fx_fqtglowf,           fx0, fxboxpdmda},
    {fx_fdmdhif,  sdmd, s_ptpd,      0, 0, 1, {6, 7, 4, 5},
     fx0, fx0,            fx_f1x8hif, fx_f2x4near,           fx0, fx_fqtghif,            fx0, fxboxpdmdb},
-
    {fx_fdmdlow3, s_trngl, s_ptpd,   1, 0, 1, {0, 1, 3},
     fx0, fx_f1x8low3,           fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_fdmdhi3,  s_trngl, s_ptpd,   3, 0, 1, {4, 5, 7},
@@ -12137,6 +12140,16 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4pos8, s2x3, s2x4,        0, 0, 1, {0, 1, 2, 5, 6, 7},
     fx0, fx0,                   fx_f1x8low6, fx0,           fx0, fx0,                   fx0, fx0},
+
+   {fx_fxwvpos1,s_crosswave,s_crosswave,0, 0, 1, {-1, -1, 2, 3, 4, 5, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx_fxwvrig1,           fx0, fx0},
+   {fx_fxwvpos2,s_crosswave,s_crosswave,0, 0, 1, {0, 1, 2, 3, -1, -1, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx_fxwvrig2,           fx0, fx0},
+
+   {fx_fxwvrig1, s_rigger, s_rigger,0, 0, 1, {0, 1, 2, 3, 4, 5, -1, -1},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fxwvrig2, s_rigger, s_rigger,0, 0, 1, {0, 1, -1, -1, 4, 5, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_f2x4pos02, s1x2, s2x4,       1, 0, 2, {0, 7, 2, 5},
     fx0, fx_f1x8hidbt4,         fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -12515,6 +12528,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s_bone,   0xCC, fx_fbonectr,  fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s_rigger, 0x33, fx_frigctr,   fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s3x1dmd,  0x66, fx_f3x1ctl,   fx0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE,s_crosswave,0xFC,fx_fxwvpos1,  fx0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE,s_crosswave,0xCF,fx_fxwvpos2,  fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s1x4,     0x0F, fx_f1x4pl,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x66, fx_f2x4ctr,   fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x0F, fx_f2x4far,   fx0, -1},
@@ -12777,6 +12792,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s_qtag,      0x33,   fx_fqtg2x3,    fx0, -1},
    {LOOKUP_NONE,                      s_qtag,      0xE1,   fx_fqtglowf,   fx0, -1},
    {LOOKUP_NONE,                      s_qtag,      0x1E,   fx_fqtghif,    fx0, -1},
+   {LOOKUP_NONE,                      s_qtag,      0xFC,   fx_fqtgnear,   fx0, -1},
+   {LOOKUP_NONE,                      s_qtag,      0xCF,   fx_fqtgfar,    fx0, -1},
    {LOOKUP_NONE,                      s_ptpd,      0x0F,   fx_fdmdlowf,   fx0, -1},
    {LOOKUP_NONE,                      s_ptpd,      0xF0,   fx_fdmdhif,    fx0, -1},
    {LOOKUP_NONE,                      s_ptpd,      0x0B,   fx_fdmdlow3,   fx0, -1},

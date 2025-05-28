@@ -8127,6 +8127,8 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->next1x4rot];
                   else if (lilresult[0].kind == s2x4)
                      nextfixp = select::fixer_ptr_table[fixp->next2x2v];
+                  else if (lilresult[0].kind == s2x3)
+                     nextfixp = select::fixer_ptr_table[fixp->next2x2v];
                }
                else if (attr::klimit(fixp->ink) == 2) {
                   if (lilresult[0].kind == s1x3)
@@ -8222,6 +8224,8 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->next2x2];
                   else if (lilresult[0].kind == s_qtag)
                      nextfixp = select::fixer_ptr_table[fixp->nextdmd];
+                  else if (lilresult[0].kind == s_rigger)
+                     nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                }
                else if (attr::klimit(fixp->ink) == 2) {
                   if (lilresult[0].kind == s1x3)
@@ -8304,7 +8308,11 @@ extern void inner_selective_move(
          if (!fixp)
             goto lose;
 
-         this_result->kind = fixp->outk;
+         if (fixp->mykey == select::fx_fqtgnear || fixp->mykey == select::fx_fqtgfar)
+            this_result->kind = s_qtag;
+         else
+            this_result->kind = fixp->outk;
+
          map_scanner = 0;
          frot = fixp->rot;  // This stays fixed.
          vrot=frot>>2;      // This shifts down.

@@ -217,14 +217,14 @@ from sd or sddoc to the archive subdirectory.
              UPLOADING TO LYNETTE'S WEB SITE, ON WINDOWS 10
 -------------------------------------------------------------------------------
 Start WinSCP.  Choose host www.challengedance.org and
-user name USERNAME  (P=PASSWORD)
+user name USERNAME.
 On right pane, choose public_html/sd (It might already be showing that.)
 On left pane, navigate to C:\Users\wba\sdfullarchive\vnnnn
    or wherever the pack.zip file is.
 Drag pack.zip left to right.  Exit from WinSCP.
 
 Start PuTTY.  Choose host www.challengedance.org, called "chal".
-Login as USERNAME  (P=PASSWORD)
+Login as USERNAME.
   challengedance.org> cd public_html/sd
   challengedance.org> ls -lt
      to check that pack.zip is there.

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <4 Nov 2024 wba>
+@c Time-stamp: <5 Dec 2024 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.69
-@set title2 Database version = 39.69 format = 412
+@set title1 RELEASE NOTES FOR VERSION 39.70
+@set title2 Database version = 39.70 format = 412
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.70::
 * 39.69::
 * 39.68::
 * 39.67::
@@ -169,7 +170,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.69, Top, (dir)
+@node Intro, 39.70, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -180,11 +181,22 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2024 William B. Ackerman
 @sp 3
 @menu
-* 39.69::               Changes in the current version
+* 39.70::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.69, 39.68, Intro, Top
+@node 39.70, 39.69, Intro, Top
+@unnumberedsec Version 39.70 changes
+
+The @strong{checkerboard} concept can be spelled as one word or as two
+words: @strong{checker board}.  The same is true of @strong{checker
+box}, @strong{checker diamond}, @strong{orbit board/box/diamond} and
+@strong{(left/twin) orbit board/box/diamond}.
+@sp 1
+More sophisticated handling of couples and tandem concepts in triangles.
+
+@c ************
+@node 39.69, 39.68, 39.70, Top
 @unnumberedsec Version 39.69 changes
 
 Better handling of @strong{swing the fractions} in quasi-thars.

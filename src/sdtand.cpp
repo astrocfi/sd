@@ -115,12 +115,10 @@ public:
 };
 
 
-
 static tm_thing maps_isearch_twosome[] = {
-   // PUT MAPS HERE
    //       maps                                                      ilatmask3     olatmask  limit rot insetup outsetup
    // "2x4_4" - see below; this must be before the others.
-   {{7, 6, 4, 5,                     0, 1, 3, 2},                         0ULL,     0000,         4, 0,  s1x4,  s2x4},
+   {{7, 6, 4, 5,                     0, 1, 3, 2},                          0ULL,    0000,         4, 0,  s1x4,  s2x4},
    {{0, 2, 5, 7,                     1, 3, 4, 6},                      02222ULL,    0xFF,         4, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0,                     3, 4, 6, 1},                          0ULL,    0xFF,         4, 1,  s2x2,  s2x4},
    {{0, 2, 4, 7, 10, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8}, 0222222222ULL,0x3FFFF,    9, 0,  s3x3,  s3x6},
@@ -129,7 +127,6 @@ static tm_thing maps_isearch_twosome[] = {
    {{7, 6, 2, 5,                     0, 1, 3, 4},                      00022ULL,    0x3C,         4, 1, s_trngl4, s2x4},
    // This one gets h1p, near box star thru, as couples touch
    {{4, 5, 7, 0,                     3, 2, 6, 1},                      00022ULL,    0xC3,         4, 3, s_trngl4, s2x4},
-
    // This one comes back from far box
    {{0, 2, 4, 6,                     1, 3, 5, 7},                         02200ULL, 0xF0,         4, 0, s_trngl4, s_trngl8},
 
@@ -279,12 +276,13 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 1, 3, 5,                     -1, 2, -1, 4},                    02020ULL,    0066,         4, 0,  s1x4,  s1x6},
    {{0, 2, 4, 5,                     1, -1, 3, -1},                    00202ULL,    0033,         4, 0,  s1x4,  s1x6},
 
-   // Next two are for tandem triangles in a 2x3, doing a triangle circulate or some such.
+   // Next six are for couples/tandem triangles in a 2x3 or rigger, doing a triangle circulate or some such.
    {{3, 5, 0,                        2, 4, 1},                         0002ULL,     0063,         3, 3,  s_trngl, s2x3},
    {{5, 1, 4,                        0, 2, 3},                         0002ULL,     0036,         3, 1,  s_trngl, s2x3},
-   // Or a rehape.
    {{6, 0, 2,                        5, 1, 3},                         0222ULL,     0x6F,         3, 0,  s_trngl, s2x4},
    {{1, 5, 7,                        2, 4, 6},                         0222ULL,     0xF6,         3, 2,  s_trngl, s2x4},
+   {{6, 0, 5,                        7, 1, 4},                            0ULL,     0xFF,         3, 1,  s_trngl, s_rigger},
+   {{3, 5, 0,                        2, 4, 1},                            0ULL,     0xFF,         3, 3,  s_trngl, s_rigger},
 
    // Next 4 are for so-and-so in tandem from a column of 6, making a virtual column of
    // 4.  The first two are the real maps, and the other two take care of the
@@ -363,7 +361,12 @@ static tm_thing maps_isearch_twosome[] = {
    // Must be after "2x4_4".
    {{6, 5, 3, 4,                     7, 0, 2, 1},                      00202ULL,    0xCC,         4, 0,  s1x4,  s_rigger},
    {{5, 6, 4, 3,                     0, 7, 1, 2},                      02020ULL,    0xCC,         4, 0,  s1x4,  s_bone},
-   {{0, 3, 5, 6,                     1, 2, 4, 7},                      00202ULL,    0x33,      4, 0,  sdmd,  s_crosswave},
+
+   // Next 2 must precede the third.
+   {{0, 3, 6,                        1, 2, 7},                         00220ULL,    0x33,      3, 1,  s_trngl, s_crosswave},
+   {{5, 6, 3,                        4, 7, 2},                         00220ULL,    0x33,      3, 3,  s_trngl, s_crosswave},
+   {{0, 3, 5, 6,                     1, 2, 4, 7},                      00202ULL,    0x33,      4, 0,  sdmd,    s_crosswave},
+
    {{0, 3, 5, 6,                     1, 2, 4, 7},                      00202ULL,    0x33,         4, 0,  s_star, s_thar},
 
    {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0ULL,     033,         4, 1,  sdmd, s_2x1dmd},
@@ -685,6 +688,7 @@ static tm_thing maps_isearch_zsome_cw[] = {
 
 
 static tm_thing maps_isearch_fudgy2x3[] = {
+   // Two of these are called out by number 0 or 4.  The others are used for unwinding.
    {{1, 2},                                                    02ULL,       006,          1, 0,  s1x1,  s2x3},
    {{4, 3},                                                    00ULL,       030,          1, 1,  s1x1,  s2x3},
    {{5, 4},                                                    02ULL,       060,          1, 0,  s1x1,  s2x3},
@@ -695,7 +699,16 @@ static tm_thing maps_isearch_fudgy2x3[] = {
    {{5, 4},                                                    00ULL,       060,          1, 1,  s1x1,  s2x3},
    {{0}, 0ULL,0, 0, 0,  nothing, nothing}};
 
+static tm_thing maps_isearch_fudgy2x4[] = {
+   // Two of these are called out by number 0 or 1.  The others are used for unwinding.
+   {{6, 0, 2,                        5, 1, 3},                         0222ULL,     0x6F,         3, 0, s_trngl,s2x4},
+   {{1, 5, 7,                        2, 4, 6},                         0222ULL,     0xF6,         3, 2, s_trngl,s2x4},
+   {{3, 5, 0,                        2, 4, 1},                         0002ULL,     0063,         3, 3,  s_trngl, s2x3},
+   {{5, 1, 4,                        0, 2, 3},                         0002ULL,     0036,         3, 1,  s_trngl, s2x3},
+   {{0}, 0ULL,0, 0, 0,  nothing, nothing}};
+
 static tm_thing maps_isearch_fudgy2x6[] = {
+   // Two of these are called out by number 0 or 4.  The others are used for unwinding.
    {{2, 3, 4, 5},                                              02ULL,       00074,          1, 0,  s1x1,  s2x6},
    {{9, 8, 7, 6},                                              00ULL,       01700,          1, 1,  s1x1,  s2x6},
    {{11, 10, 9, 8},                                            02ULL,       07400,          1, 0,  s1x1,  s2x6},
@@ -898,6 +911,7 @@ extern void initialize_tandem_tables()
    initialize_one_table(maps_isearch_mimictwo, 2);
    initialize_one_table(maps_isearch_mimicfour, 2);
    initialize_one_table(maps_isearch_fudgy2x3, 2);
+   initialize_one_table(maps_isearch_fudgy2x4, 2);
    initialize_one_table(maps_isearch_fudgy2x6, 4);
 }
 
@@ -2201,6 +2215,12 @@ extern void tandem_couples_move(
          our_map_table = maps_isearch_fudgy2x6;
          incoming_map = &maps_isearch_fudgy2x6[(allmask == 01717) ? 4 : 0];
          fudgy2x3limit = 1;
+         goto fooy;
+      }
+      else if ((key == tandem_key_cpls || key == tandem_key_tand) && ss->kind == s2x4 &&
+          (allmask == 0x6F || allmask == 0xF6)) {
+         our_map_table = maps_isearch_fudgy2x4;
+         incoming_map = &maps_isearch_fudgy2x4[(allmask == 0xF6) ? 1 : 0];
          goto fooy;
       }
    }
