@@ -196,17 +196,6 @@ static collision_map collision_map_table[] = {
    {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},
     s_thar, s_thar, 0, warn__none, 0},
 
-   // Three collisions after 1/2 circulate from C1 phantoms, going to a collided 1x6 and thence a 1x8 or thar.
-   // ******* These are probably no longer needed, since it goes to an sx1x8.
-   /*
-   {6, 0x000000, 00707, 00202, {0, 1, 2, 6, 7, 8}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
-    sx1x6, s1x8, 0, warn__none, 0},
-   {6, 020207070, 07070, 02020, {3, 4, 5, 9, 10, 11}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
-    sx1x6, s1x8, 1, warn__none, 0},
-   {4, 020202020, 02222, 02222, {1, 4, 7, 10},         {0, 2, 5, 7},          {1, 3, 4, 6},
-    sx1x6, s_thar, 0, warn__none, 0},
-   */
-
    // Collision after circulate from lines all facing same way.
    {4, 0x000000, 0x0F, 0x0F,  {0, 1, 2, 3},         {0, 2, 4, 6},          {1, 3, 5, 7},
     s2x4,        s2x8,        0, warn__none, 0},
@@ -419,6 +408,10 @@ static collision_map collision_map_table[] = {
 
    {6, 022,  077,  055,  {0, 1, 2, 3, 4, 5},       {0, 2, 3, 6, 7, 9},    {1, 2, 4, 5, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0x40000000},
+   {4, 000,  055,  044,  {0, 2, 3, 5},       {1, 2, 5, 7},    {1, 3, 5, 6},
+    s_short6,    s2x4,        0, warn__none, 0x40000000},
+   {4, 000,  055,  011,  {0, 2, 3, 5},       {0, 2, 5, 6},    {1, 2, 4, 6},
+    s_short6,    s2x4,        0, warn__none, 0x40000000},
 
    {5, 022,  073,  001,  {0, 1, 3, 4, 5},          {0, 2, 6, 7, 8},       {1, 2, 6, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
@@ -478,6 +471,16 @@ static collision_map collision_map_table[] = {
     s_hrglass,   sbighrgl,    1, warn__none, 0x40000000},
    {6, 0x011099, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {11, 2, 9, 4, 8, 3},   {10, 2, 9, 5, 8, 3},
     s_hrglass,   sbighrgl,    1, warn__none, 0x40000000},
+
+   // Collisions at the points of a galaxy.
+   {6, 0x0440EE, 0xEE, 0x44, {1, 2, 3, 5, 6, 7},   {5, 6, 0, 1, 3, 4},   {5, 7, 0, 1, 2, 4},
+    s_galaxy,    s_rigger,    1, warn_bad_collision, 0x40000000},
+   {6, 0x044044, 0xEE, 0x44, {1, 2, 3, 5, 6, 7},   {5, 6, 0, 1, 3, 4},   {5, 7, 0, 1, 2, 4},
+    s_galaxy,    s_rigger,    1, warn_bad_collision, 0x40000000},
+   {6, 0x0000AA, 0xBB, 0x11, {0, 1, 3, 4, 5, 7},   {6, 0, 1, 3, 4, 5},   {7, 0, 1, 2, 4, 5},
+    s_galaxy,    s_rigger,    0, warn_bad_collision, 0x40000000},
+   {6, 0x000000, 0xBB, 0x11, {0, 1, 3, 4, 5, 7},   {6, 0, 1, 3, 4, 5},   {7, 0, 1, 2, 4, 5},
+    s_galaxy,    s_rigger,    0, warn_bad_collision, 0x40000000},
 
    {-1}};
 
@@ -866,6 +869,7 @@ static const veryshort ftequalize[8] = {6, 0, 8, 13, 22, 16, 24, 29};
 static const veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
 static const veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
 static const veryshort ftlbigqtg[12] = {28, 7, 10, 11, 12, 23, 26, 27, 28, 7, 10, 11};
+static const veryshort ftlshort6dmd[9] = {4, -1, -1, 1, -1, -1, 4, -1, -1};
 static const veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static const veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 static const veryshort qtlbone2[12] = {0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1, 1};
@@ -4280,8 +4284,12 @@ static uint32 do_actual_array_call(
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
    result->eighth_rotation = 0;
 
-   if ((coldefinition && (coldefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)) ||
-       (linedefinition && (linedefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)))
+   if (coldefinition && (coldefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)) {
+      result->eighth_rotation = 1;
+      if (linedefinition && !(linedefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION))
+         fail("Inconsistent rotation.");
+   }
+   else if (linedefinition && (linedefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION))
       result->eighth_rotation = 1;
 
    if ((callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) ||
@@ -4583,7 +4591,6 @@ static uint32 do_actual_array_call(
                }
                else if (result->kind == s2x4 && other_kind == s_hrglass) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
-                  result->eighth_rotation = 0;
                   result->kind = s_hrglass;
                   tempkind = s_hrglass;
 
@@ -4618,7 +4625,6 @@ static uint32 do_actual_array_call(
                   else {
                      // In this case, line people are right, column people are wrong.
                      result->rotation = linedefinition->callarray_flags & CAF__ROT;
-                     result->eighth_rotation = 0;
                      result->kind = s_qtag;
                      tempkind = s_qtag;
 
@@ -4648,7 +4654,6 @@ static uint32 do_actual_array_call(
                }
                else if (result->kind == s_qtag && other_kind == s_bone) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
-                  result->eighth_rotation = 0;
                   result->kind = sx4dmdbone;
                   tempkind = sx4dmdbone;
                   rotfudge_col = 1;
@@ -4660,6 +4665,18 @@ static uint32 do_actual_array_call(
                   else {
                      final_translatec = &ftlbigqtg[0];
                      rotfudge_line = 2;
+                  }
+               }
+               else if (result->kind == s_short6 && other_kind == s_2x1dmd) {
+                  tempkind = s_short6;
+
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatel = &ftlshort6dmd[0];
+                     rotfudge_line = 3;
+                  }
+                  else {
+                     final_translatel = &ftlshort6dmd[3];
+                     rotfudge_line = 1;
                   }
                }
                else

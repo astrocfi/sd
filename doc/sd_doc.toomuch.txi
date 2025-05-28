@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.42
-@set Time-stamp: November 5, 2011
+@set sd-version 38.41
+@set Time-stamp: May 6, 2011
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -5776,11 +5776,6 @@ When used with two calls, this must be entered by itself, like this:
 @end group
 @end example
 
-This will come out as:
-@example
-   @code{boys hinge while the girls switch to a diamond}
-@end example
-
 If the designated people are centers or ends, the program will do
 the call(s) according to its best judgement of what the calls mean.
 Otherwise, it will find the maximal connected undistorted subsets, and
@@ -5847,11 +5842,6 @@ When used with two calls, this concept and its designator must be entered by its
 @end group
 @end example
 
-This will come out as:
-@example
-   @code{boys disconnected swing thru while the girls switch to a diamond}
-@end example
-
 @subsection @code{ANYONE in your Distorted Setup}
 
 The concepts are
@@ -5901,11 +5891,6 @@ When used with two calls, this concept and its designator must be entered by its
    switch to a diamond @key{ENTER}}
 
 @end group
-@end example
-
-This will come out as:
-@example
-   @code{boys do your part swing thru while the girls switch to a diamond}
 @end example
 
 This means that the non-designated dancers leave the room and re-form their own

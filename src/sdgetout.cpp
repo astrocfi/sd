@@ -1498,7 +1498,7 @@ static bool inner_search(command_kind goal,
          resolve_kind rk = rr.the_item->k;
          if (resolve_table[rk].not_in_reconcile != 0)
             goto cant_consider_this_call;
-         // Fudge the meaning of "at home" if there is a 1/8 reotation.
+         // Fudge the meaning of "at home" if there is a 1/8 rotation.
          if (rk == resolve_circle && rr.distance != (configuration::current_config().state.eighth_rotation ? 7 : 0))
             goto cant_consider_this_call;
       }

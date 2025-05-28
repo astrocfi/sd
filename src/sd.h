@@ -1096,6 +1096,11 @@ struct fraction_command {
    uint32 flags;
    uint32 fraction;  // The fraction info, packed into 4 fields.
 
+   enum includes_first_part_enum {
+      yes,
+      no,
+      notsure};
+
    inline void set_to_null()     { flags = 0; fraction = CMD_FRAC_NULL_VALUE; }
    inline void set_to_firsthalf(){ flags = 0; fraction = CMD_FRAC_HALF_VALUE; }
    inline void set_to_lasthalf() { flags = 0; fraction = CMD_FRAC_LASTHALF_VALUE; }
@@ -1115,6 +1120,8 @@ struct fraction_command {
 
    inline bool is_null_with_masked_flags(uint32 testmask, uint32 testflags)
    { return (flags & testmask) == testflags && fraction == CMD_FRAC_NULL_VALUE; }
+
+   includes_first_part_enum includes_first_part();
 };
 
 class parse_block {
@@ -2083,6 +2090,7 @@ class select {
       fx_f3x1d77,
       fx_f1x8_bb,
       fx_f1x8_dd,
+      fx_f1x10abd,
       fx_foo99d,
       fx_foo66d,
       fx_f1x8ctr,
@@ -2092,6 +2100,8 @@ class select {
       fx_fqtgend,
       fx_f1x6endd,
       fx_f1x2dd,
+      fx_f3ptp,
+      fx_f3dmdln,
       fx_fbn6ndd,
       fx_f2x3od,
       fx_fdmded,
@@ -2754,11 +2764,13 @@ struct writechar_block_type {
 };
 
 
-// Probability (out of 8) that a concept will be placed on a randomly generated call.
-enum { CONCEPT_PROBABILITY = 2 };
-// We use lots more concepts for "standardize", since it is much less likely (though
-// by no means impossible) that a plain call will do the job.
-enum { STANDARDIZE_CONCEPT_PROBABILITY = 6 };
+enum {
+   // Probability (out of 8) that a concept will be placed on a randomly generated call.
+   CONCEPT_PROBABILITY = 2,
+   // We use lots more concepts for "standardize", since it is much less likely (though
+   // by no means impossible) that a plain call will do the job.
+   STANDARDIZE_CONCEPT_PROBABILITY = 6
+};
 
 // Actually, we don't make a resolve bigger than 3.  This is how much space
 // we allocate for things.  Just being careful.

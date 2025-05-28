@@ -1102,7 +1102,7 @@ extern uint32 do_call_in_series(
                   if (qqqq.cmd.cmd_misc_flags & DFM1_CONC_DEMAND_LINES)
                      tb++;
 
-                  if (current_elongation & ((tb & 1) + 1))
+                  if (sss->cmd.prior_elongation_bits & ((tb & 1) + 1))
                      fail("Ends aren't starting in required position.");
                }
 
@@ -6230,6 +6230,31 @@ static bool do_forced_couples_stuff(
 }
 
 
+fraction_command::includes_first_part_enum fraction_command::includes_first_part()
+{
+   uint32 fracflags = flags;
+   uint32 fracfrac = fraction;
+
+   // If doing fractions, we can't (yet) be bothered to figure this out.
+   if (fracfrac != CMD_FRAC_NULL_VALUE)
+      return notsure;
+
+   if (fracflags == 0 ||                              // Whole thing
+       fracflags == FRACS(CMD_FRAC_CODE_ONLY,1,0) ||  // First part
+       (fracflags & ~CMD_FRAC_PART_MASK) == CMD_FRAC_CODE_FROMTO)  // N=any, K=0
+      return yes;
+
+   if (((fracflags & ~CMD_FRAC_PART_MASK) == CMD_FRAC_CODE_FROMTOREV) &&
+       (fracflags & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2))
+      return no;
+
+   // No (we assume call has at least 2 parts)
+   if (fracflags == FRACS(CMD_FRAC_CODE_ONLYREV,1,0))
+      return no;
+
+   return notsure;
+}
+
 
 // This leaves the split axis result bits in absolute orientation.
 
@@ -6603,16 +6628,11 @@ static void move_with_real_call(
       if ((!(ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) ||
            the_schema != schema_by_array) &&
           (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
-         uint32 fracflags = ss->cmd.cmd_fraction.flags;
-         uint32 fracfrac = ss->cmd.cmd_fraction.fraction;
 
          // See if what we are doing includes the first part.
+         fraction_command::includes_first_part_enum foob = ss->cmd.cmd_fraction.fraction_command::includes_first_part();
 
-         if ((fracfrac == CMD_FRAC_NULL_VALUE) &&
-             (fracflags == 0 ||
-              fracflags == FRACS(CMD_FRAC_CODE_ONLY,1,0) ||
-              (fracflags & ~CMD_FRAC_PART_MASK) == CMD_FRAC_CODE_FROMTO)) {
-
+         if (foob == fraction_command::yes) {
             if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
                                             CMD_MISC__ALREADY_STEPPED |
                                             CMD_MISC__MUST_SPLIT_MASK))) {
@@ -6641,10 +6661,8 @@ static void move_with_real_call(
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
             }
          }
-         else if (fracfrac == CMD_FRAC_NULL_VALUE &&
-                  ((fracflags & ~CMD_FRAC_PART_MASK) == CMD_FRAC_CODE_FROMTOREV) &&
-                  (fracflags & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2)) {
-            /* If we're doing the rest of the call, just turn all that stuff off. */
+         else if (foob == fraction_command::no) {
+            // If we're doing the rest of the call, just turn all that stuff off.
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
             }

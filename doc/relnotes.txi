@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <9 Jan 2011 wba>
+@c Time-stamp: <5 Nov 2011 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.41
-@set title2 Database version = 38.41 format = 304
+@set title1 RELEASE NOTES FOR VERSION 38.42
+@set title2 Database version = 38.42 format = 304
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.42::
 * 38.41::
 * 38.40::
 * 38.39::
@@ -80,7 +81,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.41, Top, (dir)
+@node Intro, 38.42, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -91,11 +92,44 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2011 William B. Ackerman
 @sp 3
 @menu
-* 38.41::               Changes in the current version
+* 38.42::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.41, 38.40, Intro, Top
+@node 38.42, 38.41, Intro, Top
+@unnumberedsec Version 38.42 changes
+
+The call @strong{<anyone> run 1-1/2} has been removed.  That particular
+call, entered that way, did not re-evaluate the @strong{<anyone>}, which
+is inconsistent with the way re-evaluation is done in multiple calls.
+To make matters worse, the call @strong{1-1/2 <anyone> run}, entered
+that way because of Sd's convention that concepts always come first,
+would automatically be turned into @strong{<anyone> run 1-1/2} in the
+transcript, since that is the more natural way to call it.  Hence the
+transcript would be ambiguous---one couldn't tell from looking at the
+transcript which interpretation was intended.
+
+If you really want the same person to do both the @strong{run} and the
+@strong{1/2 run}, use a designator that doesn't change, such as @strong{girls}
+or @strong{sides}.
+
+A bug in @strong{bent boxes} was fixed.
+
+It now does a better job with unesthetic cases of @strong{exchange the boxes 1/2} from lines.
+
+It can better handle @strong{1/2 circulate} from T-boned 2x3 setups.
+
+It can handle perverse coordinates better.
+
+It is believed that it will work better with Osamu Kawamura's program "SDReader".
+(See @uref{http://ww52.tiki.ne.jp/~o_kawamura/index.html}.)  That is, after a note about
+the setup being 45 degrees off from the picture, the next line should not get swallowed.
+We thank Osamu, and Alf Berg, for bringing this to our attention.
+
+Numerous other problems were fixed.
+
+@c ************
+@node 38.41, 38.40, 38.42, Top
 @unnumberedsec Version 38.41 changes
 
 Two new calls, both at mainstream:  @strong{step to a wave} is the same as @strong{touch}.

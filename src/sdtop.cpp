@@ -5497,6 +5497,68 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
       action = simple_normalize;
       goto startover;
    }
+   else if (!did_something && ss->kind == s2x8 && action == normalize_after_exchange_boxes) {
+      if ((livemask & 0xE000) == 0x8000 && !(ss->people[15].id1 & 1)) ss->swap_people(15, 13);
+      if ((livemask & 0xE000) == 0x4000 && !(ss->people[14].id1 & 1)) ss->swap_people(14, 13);
+      if ((livemask & 0x0700) == 0x0100 && !(ss->people[ 8].id1 & 1)) ss->swap_people(8, 10);
+      if ((livemask & 0x0700) == 0x0200 && !(ss->people[ 9].id1 & 1)) ss->swap_people(9, 10);
+      if ((livemask & 0x00E0) == 0x0080 && !(ss->people[ 7].id1 & 1)) ss->swap_people(7, 5);
+      if ((livemask & 0x00E0) == 0x0040 && !(ss->people[ 6].id1 & 1)) ss->swap_people(6, 5);
+      if ((livemask & 0x0007) == 0x0001 && !(ss->people[ 0].id1 & 1)) ss->swap_people(0, 2);
+      if ((livemask & 0x0007) == 0x0002 && !(ss->people[ 1].id1 & 1)) ss->swap_people(1, 2);
+
+      livemask = little_endian_live_mask(ss);
+
+      if ((livemask & 0xF000) == 0xA000 && !(ss->people[15].id1 & 1) && !(ss->people[13].id1 & 1)) {
+         ss->swap_people(13, 12); ss->swap_people(15, 13); }
+      if ((livemask & 0x0F00) == 0x0500 && !(ss->people[ 8].id1 & 1) && !(ss->people[10].id1 & 1)) {
+         ss->swap_people(10, 11); ss->swap_people(8, 10); }
+      if ((livemask & 0x00F0) == 0x00A0 && !(ss->people[ 7].id1 & 1) && !(ss->people[ 5].id1 & 1)) {
+         ss->swap_people(5, 4); ss->swap_people(7, 5); }
+      if ((livemask & 0x000F) == 0x0005 && !(ss->people[ 0].id1 & 1) && !(ss->people[ 2].id1 & 1)) {
+         ss->swap_people(2, 3); ss->swap_people(0, 2); }
+
+      if ((livemask & 0xF000) == 0xC000 && !(ss->people[15].id1 & 1) && !(ss->people[14].id1 & 1)) {
+         ss->swap_people(14, 12); ss->swap_people(15, 13); }
+      if ((livemask & 0x0F00) == 0x0300 && !(ss->people[ 8].id1 & 1) && !(ss->people[ 9].id1 & 1)) {
+         ss->swap_people(9, 11); ss->swap_people(8, 10); }
+      if ((livemask & 0x00F0) == 0x00C0 && !(ss->people[ 7].id1 & 1) && !(ss->people[ 6].id1 & 1)) {
+         ss->swap_people(6, 4); ss->swap_people(7, 5); }
+      if ((livemask & 0x000F) == 0x0003 && !(ss->people[ 0].id1 & 1) && !(ss->people[ 1].id1 & 1)) {
+         ss->swap_people(1, 3); ss->swap_people(0, 2); }
+
+      if ((livemask & 0xF000) == 0xD000 && !(ss->people[15].id1 & 1) && !(ss->people[14].id1 & 1)) {
+         ss->swap_people(14, 13); ss->swap_people(15, 14); }
+      if ((livemask & 0x0F00) == 0x0B00 && !(ss->people[ 8].id1 & 1) && !(ss->people[ 9].id1 & 1)) {
+         ss->swap_people(9, 10); ss->swap_people(8, 9); }
+      if ((livemask & 0x00F0) == 0x00D0 && !(ss->people[ 7].id1 & 1) && !(ss->people[ 6].id1 & 1)) {
+         ss->swap_people(6, 5); ss->swap_people(7, 6); }
+      if ((livemask & 0x000F) == 0x000B && !(ss->people[ 0].id1 & 1) && !(ss->people[ 1].id1 & 1)) {
+         ss->swap_people(1, 2); ss->swap_people(0, 1); }
+
+      if ((livemask & 0xF000) == 0xE000 && !(ss->people[15].id1 & 1) && !(ss->people[14].id1 & 1) && !(ss->people[13].id1 & 1)) {
+         ss->swap_people(13, 12); ss->swap_people(14, 13); ss->swap_people(15, 14); }
+      if ((livemask & 0x0F00) == 0x0700 && !(ss->people[ 8].id1 & 1) && !(ss->people[ 9].id1 & 1) && !(ss->people[10].id1 & 1)) {
+         ss->swap_people(10, 11); ss->swap_people(9, 10); ss->swap_people(8, 9); }
+      if ((livemask & 0x00F0) == 0x00E0 && !(ss->people[ 7].id1 & 1) && !(ss->people[ 6].id1 & 1) && !(ss->people[ 5].id1 & 1)) {
+         ss->swap_people(5, 4); ss->swap_people(6, 5); ss->swap_people(7, 6); }
+      if ((livemask & 0x000F) == 0x0007 && !(ss->people[ 0].id1 & 1) && !(ss->people[ 1].id1 & 1) && !(ss->people[ 2].id1 & 1)) {
+         ss->swap_people(2, 3); ss->swap_people(1, 2); ss->swap_people(0, 1); }
+
+      livemask = little_endian_live_mask(ss);
+
+      if ((livemask & 0x7000) == 0x6000 && !(ss->people[14].id1 & 1) && !(ss->people[13].id1 & 1)) {
+         ss->swap_people(13, 12); ss->swap_people(14, 13); }
+      if ((livemask & 0x0E00) == 0x0600 && !(ss->people[ 9].id1 & 1) && !(ss->people[10].id1 & 1)) {
+         ss->swap_people(10, 11); ss->swap_people(9, 10); }
+      if ((livemask & 0x0070) == 0x0060 && !(ss->people[ 6].id1 & 1) && !(ss->people[ 5].id1 & 1)) {
+         ss->swap_people(5, 4); ss->swap_people(6, 5); }
+      if ((livemask & 0x000E) == 0x0006 && !(ss->people[ 1].id1 & 1) && !(ss->people[ 2].id1 & 1)) {
+         ss->swap_people(2, 3); ss->swap_people(1, 2); }
+
+      action = plain_normalize;
+      goto startover;
+   }
    else if (!did_something && ss->kind == s4x6 && action == normalize_after_exchange_boxes) {
       // Any line-like people that were way out get pulled in.
       if ((livemask & 0xC00000) == 0x800000 && !(ss->people[11].id1 & 1)) ss->swap_people(11, 10);

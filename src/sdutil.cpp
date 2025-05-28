@@ -841,8 +841,6 @@ static void printsetup(setup *x)
 }
 
 
-
-
 void write_history_line(int history_index,
                         bool picture,
                         bool leave_missing_calls_blank,
@@ -950,14 +948,14 @@ void write_history_line(int history_index,
       if (this_item->state.eighth_rotation != 0) {
          writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
          newline();
+         if (write_to_file == file_write_double && ui_options.singlespace_mode)
+            doublespace_file();
       }
    }
 
    // Record that this history item has been written to the UI.
    this_item->text_line = text_line_count;
 }
-
-
 
 
 

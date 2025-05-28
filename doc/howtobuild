@@ -12,7 +12,7 @@ Doing so would cause it to be included in the "do_pack" script.
                     UPDATING VERSION NUMBERS
 
 Be sure the version numbers and dates are correct in:
-    [sd]    sdmain.cpp   (version # is visible)
+    [sd]    sdmain.cpp   (version # and date are visible)
     [sd]    sd.rc        (SD & UI version #'s are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
     [sd]       [When rolling the year, fix copyright notices in sd.rc,

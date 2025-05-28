@@ -2496,7 +2496,6 @@ static bool fix_empty_outers(
             // ON YOUR OWN disband & snap the lock" work.  But if we try to glue
             // these setups together, "fix_n_results" will raise an error, since
             // it won't know whether to leave room for the phantoms.
-
             *result = *result_inner;  // This gets all the inner people, and the result_flags.
             result->kind = s_dead_concentric;
             result->inner.skind = result_inner[0].kind;
@@ -3818,15 +3817,21 @@ extern void concentric_move(
    }
 
    if (orig_outers_start_kind == s2x2) {
+      fraction_command::includes_first_part_enum foob = ss->cmd.cmd_fraction.fraction_command::includes_first_part();
+
       switch (localmods1 & (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS)) {
       case DFM1_CONC_DEMAND_LINES:
          // We make use of the fact that the setup, being a 2x2, is canonicalized.
-         if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 || (orig_outers_start_dirs & linesfailbit) != 0)
-            fail("Outsides must be as if in lines at start of this call.");
+         if (foob != fraction_command::no) {
+            if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 || (orig_outers_start_dirs & linesfailbit) != 0)
+               fail("Outsides must be as if in lines at start of this call.");
+         }
          break;
       case DFM1_CONC_DEMAND_COLUMNS:
-         if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 || (orig_outers_start_dirs & columnsfailbit) != 0)
-            fail("Outsides must be as if in columns at start of this call.");
+         if (foob != fraction_command::no) {
+            if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 || (orig_outers_start_dirs & columnsfailbit) != 0)
+               fail("Outsides must be as if in columns at start of this call.");
+         }
          break;
       case DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS:
          if (begin_outer_elongation > 2)
@@ -4364,13 +4369,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    // Canonicalize the setups according to their kind.  This is a bit sleazy, since
    // the enumeration order of setup kinds is supposed to be insignificant.  We depend in
    // general on small setups being before larger ones.  In particular, we seem to require:
-   //    s2x2 < s2x4
-   //    s2x2 < s2x6
+   //    s2x2 < s2x4 < s2x6
    //    s2x2 < s1x8
-   //    s1x4 < s1x8
+   //    s1x4 > s1x6 < s1x8
    //    s1x4 < s2x4
    //    s2x4 < s_c1phan
-   //    s2x4 < s2x6
    // You get the idea.
 
    if (res2->kind < res1->kind) {
@@ -6111,8 +6114,8 @@ extern void inner_selective_move(
       // "boys spread" from a BBGG wave.
 
       if (indicator == selective_key_plain &&
-          kk == s2x4 &&
-          (thislivemask == 0xCC || thislivemask == 0x33)) {
+          ((kk == s2x4 && (thislivemask == 0xCC || thislivemask == 0x33)) ||
+           (kk == s2x6 && (thislivemask == 00303 || thislivemask == 06060)))) {
          const call_with_name *callspec = this_one->cmd.callspec;
          if (!callspec &&
              this_one->cmd.parseptr &&
@@ -6488,7 +6491,7 @@ extern void inner_selective_move(
             }
             else {
                if (attr::klimit(fixp->ink) == 5) {
-                  if (lilresult[0].kind == s1x6)
+                  if (lilresult[0].kind == s1x4 || lilresult[0].kind == s1x6)
                      nextfixp = select::fixer_ptr_table[fixp->next1x4];
                   else if (lilresult[0].kind == s2x3)
                      nextfixp = select::fixer_ptr_table[fixp->next2x2];

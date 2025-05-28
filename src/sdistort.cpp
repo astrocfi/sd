@@ -622,6 +622,10 @@ static bool multiple_move_innards(
                   warn(warn__cant_track_phantoms);
                   if (x[i].kind == s_qtag)
                      z[i] = qtagtemp;
+                  else if (x[i].kind == s2x4 &&
+                           z[i].inner.skind == s1x4 &&
+                           ((x[i].rotation+z[i].rotation+z[i].inner.srotation) & 1) == 1)
+                     z[i] = qtagtemp;   // Try to fix single file dixie diamond.
                   else
                      z[i] = linetemp;
                }
@@ -2229,11 +2233,14 @@ extern void distorted_2x2s_move(
                {16,17, 13, 14, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
                static const veryshort mapj[16] =
                {0, 1, 17, 16, 8, 7, 9, 10, -1, -1, -1, -1, -1, -1, -1, -1};
+               static const veryshort mapk[16] =
+               {1, 2, 16, 15, 7, 6, 10, 11, -1, -1, -1, -1, -1, -1, -1, -1};
 
                if (     livemask == 0426426) map_ptr = mapg;
                else if (livemask == 0216216) map_ptr = maph;
                else if (livemask == 0033033) map_ptr = mapi;
                else if (livemask == 0603603) map_ptr = mapj;
+               else if (livemask == 0306306) map_ptr = mapk;
             }
             break;
          case s2x3:
