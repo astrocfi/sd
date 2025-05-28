@@ -28,14 +28,6 @@
 #include <errno.h>
 #include <string.h>
 
-/* ***  This next test used to be
-    ifdef _POSIX_SOURCE
-   We have taken it out and replaced with what you see below.  If this breaks
-   anything, let us know. */
-#if defined(_POSIX_SOURCE) || defined(sun)
-#include <unistd.h>
-#endif
-
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
 
@@ -164,8 +156,16 @@ int begin_sizes[] = {
    12,         /* b_p3ptpd */
    16,         /* b_4ptpd */
    16,         /* b_p4ptpd */
+   8,          /* b_323 */
+   8,          /* b_p323 */
+   10,         /* b_343 */
+   10,         /* b_p343 */
    12,         /* b_525 */
    12,         /* b_p525 */
+   14,         /* b_545 */
+   14,         /* b_p545 */
+   14,         /* bh545 */
+   14,         /* bhp545 */
    12,         /* b_3mdmd */
    12,         /* b_p3mdmd */
    12,         /* b_3mptpd */

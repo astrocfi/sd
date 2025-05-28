@@ -82,6 +82,7 @@ typedef char veryshort;
 
 typedef unsigned long int uint32;
 typedef unsigned short int uint16;
+typedef unsigned char uint8;
 
 typedef Const char *Cstring;
 
@@ -223,7 +224,8 @@ typedef struct {
 #define ID2_NCTR1X4    0x00040000UL
 #define ID2_CTR1X6     0x00020000UL
 #define ID2_NCTR1X6    0x00010000UL
-/* 2 spares */
+#define ID2_OUTR1X3    0x00008000UL
+#define ID2_NOUTR1X3   0x00004000UL
 #define ID2_FACING     0x00002000UL
 #define ID2_NOTFACING  0x00001000UL
 #define ID2_CENTER     0x00000800UL
@@ -242,8 +244,8 @@ typedef struct {
 /* These are the bits that get filled in by "update_id_bits". */
 #define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE| \
 ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6| \
-ID2_CTRDMD|ID2_NCTRDMD|ID2_CTR1X4|ID2_NCTR1X4| \
-ID2_CTR1X6|ID2_NCTR1X6|ID2_CTR4|ID2_OUTRPAIRS)
+ID2_CTRDMD|ID2_NCTRDMD|ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6| \
+ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS)
 
 
 /* These are the really global position bits.  They get filled in only at the top level. */
@@ -412,6 +414,14 @@ typedef struct {
    CMD_MISC2__ANY_WORK_INVERT is only meaningful if the CMD_MISC2__ANY_WORK is on.
    It says that the ends are doing the concept, instead of the centers. */
 
+/* The following are used for Z's.
+   CMD_MISC2__IN_Z_CW and CMD_MISC2__IN_Z_CCW say that the setup is actually
+   a 2x3, but the "Z" (or "each Z", or "triple Z's") concept has been given,
+   and the setup should probably be turned into a 2x2.  The only exception
+   is if the call takes a 2x3 starting setup but not a 2x2 (that is, the call
+   is "Z axle").  In that case, the call is done directly in the 2x3, and the
+   "Z" distortion is presumed not to have been in place. */
+
 /* The following are used for "mystic" and old "snag".
 
    CMD_MISC2__MYSTIFY_SPLIT tells "divided_setup_move" to perform selective mirroring
@@ -444,6 +454,11 @@ typedef struct {
 /*     The low 16 bits are used for encoding the schema if
        CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on
                                      0x0000FFFFUL */
+
+#define CMD_MISC2__IN_Z_CW           0x00010000UL
+#define CMD_MISC2__IN_Z_CCW          0x00020000UL
+#define CMD_MISC2__DID_Z_COMPRESSION 0x00040000UL
+
 #define CMD_MISC2__MYSTIFY_SPLIT     0x00100000UL
 #define CMD_MISC2__MYSTIFY_INVERT    0x00200000UL
 
@@ -556,7 +571,10 @@ typedef struct {
 #define RESULTFLAG__ACTIVE_PHANTOMS_ON   0x00002000UL
 #define RESULTFLAG__ACTIVE_PHANTOMS_OFF  0x00004000UL
 #define RESULTFLAG__SECONDARY_DONE       0x00008000UL
-
+#define RESULTFLAG__YOYO_FINISHED        0x00010000UL
+#define RESULTFLAG__TWISTED_FINISHED     0x00020000UL
+#define RESULTFLAG__NO_REEVALUATE        0x00040000UL
+#define RESULTFLAG__DID_Z_COMPRESSION    0x00080000UL
 
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
@@ -575,10 +593,10 @@ typedef struct glork {
    uint32 callarray_flags;
    call_restriction restriction;
    uint16 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
-   veryshort start_setup;   /* Must cast to begin_kind! */
-   veryshort end_setup;     /* Must cast to setup_kind! */
-   veryshort end_setup_in;  /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
-   veryshort end_setup_out; /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
+   uint8 start_setup;       /* Must cast to begin_kind! */
+   uint8 end_setup;         /* Must cast to setup_kind! */
+   uint8 end_setup_in;      /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
+   uint8 end_setup_out;     /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
    union {
       /* Dynamically allocated to whatever size is required. */
       uint16 def[4];     /* only if pred = false */
@@ -658,6 +676,9 @@ typedef enum {
    MPKIND__OFFS_R_HALF_SPECIAL,
    MPKIND__OFFS_L_FULL_SPECIAL,
    MPKIND__OFFS_R_FULL_SPECIAL,
+   MPKIND__LILZCCW,
+   MPKIND__LILZCW,
+   MPKIND__LILZCOM,
    MPKIND__O_SPOTS,
    MPKIND__X_SPOTS,
    MPKIND__4_QUADRANTS,
@@ -892,7 +913,7 @@ typedef struct {
    Cstring menu_name;
 } concept_descriptor;
 
-/* BEWARE!!  This list must track the arrays "selector_list" in sdutil.c . */
+/* BEWARE!!  This list must track the array "selector_list" in sdutil.c . */
 typedef enum {
    selector_uninitialized,
    selector_boys,
@@ -916,12 +937,15 @@ typedef enum {
    selector_beaus,
    selector_belles,
    selector_center2,
+   selector_verycenters,
    selector_center6,
    selector_outer2,
+   selector_veryends,
    selector_outer6,
    selector_ctrdmd,
    selector_ctr_1x4,
    selector_ctr_1x6,
+   selector_outer1x3s,
    selector_center4,
    selector_outerpairs,
 #ifdef TGL_SELECTORS
@@ -936,6 +960,7 @@ typedef enum {
    selector_headliners,
    selector_sideliners,
    selector_thosefacing,
+   selector_everyone,
    selector_all,
    selector_none,
    /* Start of unsymmetrical selectors. */
@@ -1241,7 +1266,8 @@ typedef enum {
    warn__opt_for_normal_hinge,
    warn__opt_for_2fl,
    warn__like_linear_action,
-   warn_phantoms_thinner,
+   warn__no_z_action,
+   warn__phantoms_thinner,
    warn__split_1x6,
    warn_interlocked_to_6,
    warn__colocated_once_rem,
@@ -1252,6 +1278,7 @@ typedef enum {
    warn__unusual,
    warn_controversial,
    warn_serious_violation,
+   warn_bogus_yoyo_rims_hubs,
    warn_pg_in_2x6,
    warn__tasteless_com_spot,
    warn__tasteless_slide_thru  /* If this ceases to be last, look 2 lines below! */
@@ -1627,6 +1654,19 @@ typedef enum {    /* These control error messages that arise when we divide a se
 } phantest_kind;
 
 typedef enum {
+   selective_key_dyp,
+   selective_key_own,
+   selective_key_plain,
+   selective_key_disc_dist,
+   selective_key_ignore,
+   selective_key_work_concept,
+   selective_key_lead_for_a,
+   selective_key_work_no_concentric,
+   selective_key_snag_anyone,
+   selective_key_plain_from_id_bits
+} selective_key;
+
+typedef enum {
    disttest_t, disttest_nil, disttest_only_two,
    disttest_any, disttest_offset, disttest_z} disttest_kind;
 
@@ -1657,7 +1697,8 @@ typedef enum {
    chk_indep_box,
    chk_dmd_qtag,
    chk_qtag,
-   chk_peelable
+   chk_peelable,
+   chk_spec_directions
 } chk_type;
 
 typedef struct {
@@ -1669,6 +1710,44 @@ typedef struct {
    long_boolean ok_for_assume;
    chk_type check;
 } restriction_thing;
+
+
+typedef struct fixerjunk {
+   Const setup_kind ink;
+   Const setup_kind outk;
+   Const int rot;
+   Const short prior_elong;
+   Const short numsetups;
+   Const struct fixerjunk *next1x2;
+   Const struct fixerjunk *next1x2rot;
+   Const struct fixerjunk *next1x4;
+   Const struct fixerjunk *next1x4rot;
+   Const struct fixerjunk *nextdmd;
+   Const struct fixerjunk *nextdmdrot;
+   Const struct fixerjunk *next2x2;
+   Const struct fixerjunk *next2x2v;
+   Const veryshort nonrot[24];
+} fixer;
+
+#define LOOKUP_NONE     0x1
+#define LOOKUP_DIST_DMD 0x2
+#define LOOKUP_DIST_BOX 0x4
+#define LOOKUP_DIST_CLW 0x8
+#define LOOKUP_DIAG_CLW 0x10
+#define LOOKUP_DISC     0x20
+#define LOOKUP_IGNORE   0x40
+
+
+typedef struct dirbtek {
+   Const uint32 key;
+   Const setup_kind kk;
+   Const uint32 thislivemask;
+   Const fixer *fixp;
+   Const fixer *fixp2;
+   Const int use_fixp2;
+   struct dirbtek *next;
+} sel_item;
+
 
 /* This allows 96 warnings. */
 /* BEWARE!!  If this is changed, this initializers for things like "no_search_warnings"
@@ -1932,10 +2011,22 @@ extern id_bit_table id_bit_table_bigdhrgl_wings[];                  /* in SDTABL
 extern id_bit_table id_bit_table_3x4_offset[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_ctr6[];                        /* in SDTABLES */
+extern id_bit_table id_bit_table_525_nw[];                          /* in SDTABLES */
+extern id_bit_table id_bit_table_525_ne[];                          /* in SDTABLES */
+extern id_bit_table id_bit_table_343_outr[];                        /* in SDTABLES */
+extern id_bit_table id_bit_table_343_innr[];                        /* in SDTABLES */
+extern id_bit_table id_bit_table_545_outr[];                        /* in SDTABLES */
+extern id_bit_table id_bit_table_545_innr[];                        /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_in_out[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_ctr1x6[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABLES */
+extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
 extern cm_thing conc_init_table[];                                  /* in SDTABLES */
+extern Const fixer f2x4far;                                         /* in SDTABLES */
+extern Const fixer f2x4near;                                        /* in SDTABLES */
+extern Const fixer fdhrgl;                                          /* in SDTABLES */
+extern Const fixer f323;                                            /* in SDTABLES */
+extern sel_item sel_init_table[];                                   /* in SDTABLES */
 extern setup_attr setup_attrs[];                                    /* in SDTABLES */
 extern int begin_sizes[];                                           /* in SDTABLES */
 extern startinfo startinfolist[];                                   /* in SDTABLES */
@@ -2213,7 +2304,7 @@ extern void display_initial_history(int upper_limit, int num_pics);
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
 extern void warn(warning_index w);
 extern call_list_kind find_proper_call_list(setup *s);
-extern Const long int *get_rh_test(setup_kind kind);
+extern Const restriction_thing *get_rh_test(setup_kind kind);
 extern long_boolean verify_restriction(
    setup *ss,
    restriction_thing *rr,
@@ -2243,8 +2334,11 @@ extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
    uint64 *final_concepts);
-extern parse_block *skip_one_concept(parse_block *incoming);
-extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[]);
+extern parse_block *really_skip_one_concept(
+   parse_block *incoming,
+   concept_kind *k_p,
+   parse_block **parseptr_skip_p);
+extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep);
 
 /* In SDGETOUT */
 
@@ -2298,7 +2392,10 @@ extern long_boolean divide_for_magic(
    uint32 heritflags_to_check,
    setup *result);
 
-extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *result);
+extern long_boolean do_simple_split(
+   setup *ss,
+   uint32 prefer_1x4,   /* 1 means prefer 1x4, 2 means this is 1x8 and do not recompute id. */
+   setup *result);
 
 extern void do_call_in_series(
    setup *sss,
@@ -2312,6 +2409,14 @@ extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *res
 extern void process_number_insertion(uint32 mod_word);
 
 extern int gcd(int a, int b);
+
+extern uint32 process_new_fractions(
+   int numer,
+   int denom,
+   uint32 incoming_fracs,
+   uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
+   long_boolean allow_improper,
+   long_boolean *improper_p);
 
 extern void get_fraction_info(
    uint32 frac_flags,
@@ -2330,13 +2435,15 @@ extern void move(
    long_boolean qtfudged,
    setup *result);
 
-/* In SDMISC */
+/* In SDISTORT */
 
 extern void prepare_for_call_in_series(setup *result, setup *ss);
 
 extern void minimize_splitting_info(setup *ss, uint32 other_info);
 
 extern void initialize_map_tables(void);
+
+extern void remove_z_distortion(setup *ss);
 
 extern void new_divided_setup_move(
    setup *ss,
@@ -2473,7 +2580,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result);
 extern void selective_move(
    setup *ss,
    parse_block *parseptr,
-   int indicator,
+   selective_key indicator,
+   long_boolean others,
    int arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
@@ -2484,7 +2592,7 @@ extern void inner_selective_move(
    setup *ss,
    setup_command *cmd1,
    setup_command *cmd2,
-   int indicator,
+   selective_key indicator,
    long_boolean others,
    int arg2,
    uint32 override_selector,

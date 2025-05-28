@@ -1,4 +1,4 @@
-/*-*-mode:C;c-basic-offset:3;indent-tabs-mode:nil;eval:(modify-syntax-entry ?\_ "w");-*-*/
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
 
 /* 
  * sdui-tty.c - SD TTY User Interface

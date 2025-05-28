@@ -10,7 +10,7 @@ MAKE_ASCII = makeinfo --no-split --no-headers
 TXI2DVI = tex
 TXI2PDF = pdftex
 DVIPS = dvips
-CRFIX = .\crfix
+CRFIX = crfix
 TXI2HTML = perl texi2html
 TOCFRONT = perl tocfront
 
@@ -63,6 +63,8 @@ install: install.txi
 readme: readme.txi
 	$(MAKE_ASCII) --no-validate -o $@ $(srcdir)/readme.txi
 
+
+
 demo.all: demo.ps demo.pdf demo.txt demo.html
 
 sessions.all: sessions.ps sessions.pdf sessions.txt sessions.html sessions_toc.html
@@ -70,6 +72,18 @@ sessions.all: sessions.ps sessions.pdf sessions.txt sessions.html sessions_toc.h
 sd_doc.all: sd_doc.ps sd_doc.pdf sd_doc.txt sd_doc.html sd_doc_toc.html
 
 relnotes.all: relnotes.ps relnotes.pdf relnotes.txt relnotes.html
+
+
+
+ps.all: demo.ps sessions.ps sd_doc.ps relnotes.ps
+
+pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf
+
+info.all: demo.info sessions.info sd_doc.info relnotes.info
+
+text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt
+
+html.all: demo.html sessions.html sessions_toc.html sd_doc.html sd_doc_toc.html relnotes.html
 
 clean::
 	-$(RM) *.aux *.log *.toc *.dvi *.ps *.pso *.pdf *.info *.msg

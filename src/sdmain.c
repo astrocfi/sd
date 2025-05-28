@@ -23,8 +23,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.95"
-#define TIME_STAMP "wba@an.hp.com  28 May 98 $"
+#define VERSION_STRING "31.98"
+#define TIME_STAMP "wba@an.hp.com  1 July 98 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -94,7 +94,7 @@ and the following external variables:
 #include "sd.h"
 #include "paths.h"
 
-/* We cause this string (that is, the concatentaion of these strings) to appear
+/* We cause this string (that is, the concatentation of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
    can print the version.
 
@@ -289,7 +289,9 @@ Private void initialize_concept_sublists(void)
                      case selector_center6:
                      case selector_outer6:
                      case selector_center2:
+                     case selector_verycenters:
                      case selector_outer2:
+                     case selector_veryends:
                         setup_mask = MASK_CTR_2;    /* This is a 6 and 2 type of concept. */
                         break;
                      default:
@@ -2226,6 +2228,7 @@ int main(int argc, char *argv[])
    normal_exit:
    
    exit_program(0);
+   /* NOTREACHED */
 }
 
 

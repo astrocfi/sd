@@ -153,10 +153,12 @@ Ignore them.
 
 You can prevent the program from displaying or printing these warning messages
 by giving the @code{toggle nowarn mode} command.  This turns on (or turns
-off if it was already on) the ``no warnings'' mode.  You can also start the
-program with a command-line switch ``-no_warnings'', or place a line
+off if it was already on) the ``no warnings'' mode.  @xref{Changing Modes}.
+You can also start the program with a command-line option
+``-no_warnings'' (@pxref{Command-Line Options}), or place a line
 with just the word ``no_warnings'' (with no leading hyphen) in the
-``options'' section of the @file{sd.ini} initialization file.
+``options'' section of the @file{sd.ini} initialization file
+(@pxref{Option Control}).
 
 @unnumberedsec Variations of the Program
 @end ifset

@@ -156,8 +156,6 @@ extern void mirror_this(setup *s)
             cptr = &tgl3_0;
       }
       else if (s->kind == s_normal_concentric) {
-         int i;
-
          if (     s->inner.skind == s_normal_concentric ||
                   s->outer.skind == s_normal_concentric ||
                   s->inner.skind == s_dead_concentric ||
@@ -602,11 +600,13 @@ static veryshort hextranslatev[32] = {
 
 
 static veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
-static veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
-static veryshort galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
 static veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
+static veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
 static veryshort linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
+static veryshort galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
 static veryshort galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
+static veryshort qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
+static veryshort qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
 static veryshort starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
 static veryshort fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
 static veryshort lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
@@ -1268,6 +1268,7 @@ Private int divide_the_setup(
    uint32 livemask;
    long_boolean recompute_anyway;
    long_boolean temp_for_2x2;
+   long_boolean temp;
    callarray *have_1x2, *have_2x1;
    uint32 division_code = ~0UL;
    mpkind map_kind;
@@ -1320,11 +1321,12 @@ Private int divide_the_setup(
          /* Check whether it has 2x4/4x2/1x8/8x1 definitions, and divide the setup if so,
             or if the caller explicitly said "2x8 matrix". */
 
-         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
-             (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
-            if (
-                  (!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
+         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+            !(ss->cmd.cmd_final_flags.herit & INHERITFLAG_4X4);
+
+         if (temp || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+            if ((!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
                division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
                /* I consider it an abomination to call such a thing as "2x8 matrix
                   swing-o-late" from 2x8 lines, expecting people to do the call
@@ -1334,16 +1336,20 @@ Private int divide_the_setup(
                   12 matrix divided columns.  The correct usage should involve the
                   explicit concepts "split phantom boxes", "phantom tidal lines",
                   or "12 matrix divided columns", as appropriate. */
-               /* If database said to split, don't give warning. */
-               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x4s);
+               /* If database said to split, don't give warning, unless said "4x4". */
+               if (!temp) warn(warn__split_to_2x4s);
                goto divide_us_no_recompute;
             }
-            else if (
-                  (!(newtb & 010) || assoc(b_1x4, ss, calldeflist) || assoc(b_1x8, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_4x1, ss, calldeflist) || assoc(b_8x1, ss, calldeflist))) {
+            else if ((!(newtb & 010) ||
+                      assoc(b_1x4, ss, calldeflist) ||
+                      assoc(b_1x8, ss, calldeflist)) &&
+                     (!(newtb & 001) ||
+                      assoc(b_4x1, ss, calldeflist) ||
+                      assoc(b_8x1, ss, calldeflist))) {
                division_code = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
                /* See comment above about abomination. */
-               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x8s);  /* If database said to split, don't give warning. */
+               /* If database said to split, don't give warning, unless said "4x4". */
+               if (!temp) warn(warn__split_to_1x8s);
                goto divide_us_no_recompute;
             }
          }
@@ -1428,22 +1434,28 @@ Private int divide_the_setup(
             a 2x6 but forbidding "circulate".  We also enable this if the caller explicitly
             said "2x6 matrix". */
 
-         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
-             (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+            !(ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3);
+
+         if (temp || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
             if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
                division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
                /* See comment above about abomination. */
-               /* If database said to split, don't give warning. */
-               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x3s);
+               /* If database said to split, don't give warning, unless said "3x3". */
+               if (!temp) warn(warn__split_to_2x3s);
                goto divide_us_no_recompute;
             }
-            else if (
-                  (!(newtb & 010) || assoc(b_1x3, ss, calldeflist) || assoc(b_1x6, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_3x1, ss, calldeflist) || assoc(b_6x1, ss, calldeflist))) {
+            else if ((!(newtb & 010) ||
+                      assoc(b_1x3, ss, calldeflist) ||
+                      assoc(b_1x6, ss, calldeflist)) &&
+                     (!(newtb & 001) ||
+                      assoc(b_3x1, ss, calldeflist) ||
+                      assoc(b_6x1, ss, calldeflist))) {
                division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
                /* See comment above about abomination. */
-               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x6s);  /* If database said to split, don't give warning. */
+               /* If database said to split, don't give warning, unless said "3x3". */
+               if (!temp) warn(warn__split_to_1x6s);
                goto divide_us_no_recompute;
             }
          }
@@ -1660,19 +1672,22 @@ Private int divide_the_setup(
          /* Check whether it has 2x3/3x2/1x6/6x1 definitions, and divide the setup if so,
             or if the caller explicitly said "3x6 matrix" (not that "3x6 matrix" exists at present.) */
 
-         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+         /* We do *NOT* use the "CFLAG1_SPLIT_LARGE_SETUPS" flag.  We are willing to split to a 12 matrix,
+            but not an 18 matrix. */
+
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
             if (
                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                division_code = MAPCODE(s2x3,3,MPKIND__SPLIT,1);
-               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x3s);  /* If database said to split, don't give warning. */
+               warn(warn__split_to_2x3s);
                goto divide_us_no_recompute;
             }
             else if (
                   (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
                division_code = MAPCODE(s1x6,3,MPKIND__SPLIT,1);
-               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x6s);  /* If database said to split, don't give warning. */
+               warn(warn__split_to_1x6s);
                goto divide_us_no_recompute;
                /* YOW!!  1x3's are hard!  We need a 3x3 formation. */
             }
@@ -2953,7 +2968,8 @@ Private int divide_the_setup(
 #ifdef TRY_NEW_MYSTIC
    update_id_bits(ss);    /* It would be nice if we didn't have to do this. */
 #endif
-   inner_selective_move(ss, &conc_cmd, &conc_cmd, 0, TRUE, 0, 0, selector_centers, 0, 0, result);
+   inner_selective_move(ss, &conc_cmd, &conc_cmd, selective_key_dyp,
+                        TRUE, 0, 0, selector_centers, 0, 0, result);
    return 1;
 }
 
@@ -3084,7 +3100,7 @@ extern void basic_move(
    long_boolean funny_ok2 = FALSE;
    long_boolean other_elongate = FALSE;
    calldef_block *qq;
-   callspec_block *callspec = ss->cmd.callspec;
+   Const callspec_block *callspec = ss->cmd.callspec;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
    long_boolean check_peeloff_migration = FALSE;
 
@@ -3373,7 +3389,8 @@ foobar:
                (ss->kind == s_normal_concentric && ss->outer.skind == nothing)) {
          setup stemp;
          newtb = 0;
-         for (j=0; j<4; j++) newtb |= ss->people[j].id1;
+         for (j=0; j<=setup_attrs[ss->inner.skind].setup_limits; j++)
+            newtb |= ss->people[j].id1;
          stemp = *ss;
          stemp.rotation += ss->inner.srotation;
    
@@ -3411,7 +3428,12 @@ foobar:
                scatter(&stemp, ss, exp_conc_2x2, 3, 033);
             }
             else fail("Setup is bizarre.");
+
             *ss = stemp;
+            newtb = 0;
+
+            for (j=0; j<=setup_attrs[ss->inner.skind].setup_limits; j++)
+               newtb |= ss->people[j].id1;
          }
       }
 
@@ -3430,8 +3452,39 @@ foobar:
             /* If the setup is empty, get whatever definitions we can get, so that
                we can find the "CFLAG1_PARALLEL_CONC_END" bit,
                also known as the "other_elongate" bit. */
-            if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
-            if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+
+            if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW)) {
+               /* See if the call has a 2x3 definition (we know the setup is a 2x3)
+                  that goes to a setup of size 4.  That is, see if this is "Z axle".
+                  If so, turn off the special "Z" flags and forget about it.
+                  Otherwise, change to a 2x2 and try again. */
+               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
+               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+
+               if ((linedefinition &&
+                    (setup_attrs[linedefinition->end_setup].setup_limits == 3 ||
+                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))) ||
+                   (coldefinition &&
+                    (setup_attrs[coldefinition->end_setup].setup_limits == 3 ||
+                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF)))) {
+                  ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW);
+               }
+               else {
+                  remove_z_distortion(ss);
+                  newtb = 0;
+
+                  for (j=0; j<=setup_attrs[ss->kind].setup_limits; j++)
+                     newtb |= ss->people[j].id1;
+
+                  linedefinition = assoc(b_2x2, ss, calldeflist);
+                  coldefinition = linedefinition;
+                  four_way_startsetup = TRUE;
+               }
+            }
+            else {
+               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
+               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+            }
          }
       }
    }
@@ -3549,11 +3602,19 @@ foobar:
       if (!(search_concepts & INHERITFLAG_16_MATRIX) &&
           ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12 || ss->kind == sdeepqtg) ||
            ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+
+                 /* new line: */
+                 !(search_concepts & INHERITFLAG_12_MATRIX) &&
+
             (ss->kind == s2x3 || ss->kind == s1x6))))
          matrix_check_flag = INHERITFLAG_12_MATRIX;
       else if (!(search_concepts & INHERITFLAG_12_MATRIX) &&
                ((ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) ||
                 ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+
+                 /* new line: */
+                 !(search_concepts & INHERITFLAG_16_MATRIX) &&
+
                  (ss->kind == s2x4 || ss->kind == s1x8))))
          matrix_check_flag = INHERITFLAG_16_MATRIX;
 
@@ -4275,14 +4336,31 @@ foobar:
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 01212) == 0) {
-               result->kind = s_hrglass;
+               result->kind = s_hrglass;    /* Setup is an hourglass. */
                permuter = galhyperh;
             }
             else if ((lilresult_mask[0] & 02121) == 0) {
-               result->kind = s_hrglass;
+               result->kind = s_hrglass;    /* Setup is an hourglass. */
                permuter = galhyperv;
                rotator = 1;
             }
+
+
+
+            else if ((lilresult_mask[0] & 03030) == 0) {
+               result->kind = s_qtag;    /* Setup is qtag/diamonds. */
+               permuter = qtghyperh;
+            }
+            else if ((lilresult_mask[0] & 00303) == 0) {
+               result->kind = s_qtag;    /* Setup is qtag/diamonds. */
+               permuter = qtghyperv;
+               rotator = 1;
+            }
+
+
+
+
+
             else if ((lilresult_mask[0] & 05555) == 0) {
                result->kind = s_star;
                permuter = starhyperh;

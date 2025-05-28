@@ -1,7 +1,7 @@
 \input whatever @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <1998-05-28 10:20:00 wba>
+@c Time-stamp: <1998-06-22 10:20:00 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 31.95
-@set title2 Database version = 31.95 format = 125
+@set title1 RELEASE NOTES FOR SD VERSION 31.98
+@set title2 Database version = 31.98 format = 132
 @set title3 X11 UI version 1.17, SDTTY UI version 1.9
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,9 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 31.98::
+* 31.97::
+* 31.96::
 * 31.95::
 * 31.94::
 * 31.93::
@@ -50,7 +53,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 31.95, Top, (dir)
+@node Intro, 31.98, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -61,12 +64,93 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 31.95::               Changes in the current version
+* 31.98::               Changes in the current version
 @end menu
 
 @c ************
-@node 31.95, 31.94, Intro, Top
-@unnumberedsec Changes as of version 31.95
+@node 31.98, 31.97, Intro, Top
+@unnumberedsec Version 31.98 changes
+
+Many minor improvements.  We thank the callers in the C2 hall at the
+47th National Square Dance Convention for calling 3 things that can't
+be done by the program that they used, and for bringing up a number of
+interesting issues.
+
+The @samp{triple Z's} concept was added.
+
+The calls @samp{rims/hubs trade back} and @samp{rims/hubs trade <anything>}
+now follow the definition really correctly.  The @emph{original} rims
+or hubs do the circulate or the other call.  This now works correctly in
+columns, and things like @samp{yoyo rims trade [single shakedown]}
+will work correctly in a tidal inverted line.
+
+More generally, the mechanism for dealing with calls that involve the
+determination of the @emph{original} centers, ends, or whatever (e.g.
+@samp{patch the <anyone>} or @samp{rims trade back}) is much more carefully
+worked out.  For example, from columns, you can do a @samp{random tandem
+patch the centers}.  The original centers, before the @samp{tandem hinge} and
+before the dancers were combined into tandems, will do the @samp{U-turn back}
+at the end of the call.
+
+A bug was fixed involving certain disconnected shape-changers in diamonds.
+For example, from a tidal wave, if the center 2 hinge,
+the program can now have various disconnected diamonds do things
+like @samp{flip the diamond}.
+
+@c ************
+@node 31.97, 31.96, 31.98, Top
+@unnumberedsec Version 31.97 changes
+
+Many minor improvements.  We thank the usual anonymous sources
+for their many suggestions.
+
+The space-invading version of @samp{<anyone> run the wheel} has been
+renamed to @samp{<anyone> run the wheel (matrix)}.  The call
+@samp{<anyone> run the wheel} is a non-space-invading version that
+does not allow the various bizarre effects, but may be used with
+concepts like @samp{parallelogram}
+
+The designators @samp{very centers}, @samp{very ends} and @samp{all}
+have been added.  They are completely equivalent to @samp{center 2},
+@samp{outer 2}, and @samp{everyone}, respectively.  Note that you
+very rarely need to say @samp{all} or @samp{everyone}.  If you want
+everyone to press ahead, just say @samp{press ahead}.
+
+The handling of the @samp{disconnected} concept has been expanded
+to handle the formulation in the Choreo Corner article in the
+June, 1998 issue of Zip Coder.
+
+@c ************
+@node 31.96, 31.95, 31.97, Top
+@unnumberedsec Version 31.96 changes
+
+The program can now do shape-changers in triple formations that
+go to different orientations.  From triple boxes with the center
+box oriented differently from the outer boxes, one can do things
+like @samp{triple boxes reach out} or @samp{triple boxes follow
+to a diamond}.
+
+The program can recognize @samp{<anyone> lead for a <anycall>} from
+a larger number of positions.  Specifically, it recognizes ``C1 phantom''
+setups and suitably populated 4x4 matrices that are in a promenade-like
+arrangement.  You will be presumed to have told the dancers to
+promenade from that setup before the @samp{<anyone> lead}.
+
+New designator: @samp{outer 1x3s}.  This may be used to designate the
+outer lines or columns of 3 in such setups as an `H' or a diamond
+between two couples (@samp{heads circle the tag to a diamond}.)  You
+will often need to use the @samp{disconnected} concept with this.
+
+New call: @samp{plus <N>}.  Like @samp{with the flow}, @samp{sweep 1/4},
+and similar calls, this uses rolling direction from the preceding call
+to tell it what to do.  It might not be correct in all cases.
+
+The @samp{triple columns} concept was moved to C2 in accordance with a
+recent decision of the Callerlab challenge committee.
+
+@c ************
+@node 31.95, 31.94, 31.96, Top
+@unnumberedsec Version 31.95 changes
 
 The program can handle mixed-orientation triple formations.  For
 example, from a tidal wave, you can have the centers @samp{lockit},
@@ -81,7 +165,7 @@ The @samp{snag} concept simply does the right thing.
 
 @c ************
 @node 31.94, 31.93, 31.95, Top
-@unnumberedsec Changes as of version 31.94
+@unnumberedsec Version 31.94 changes
 
 Many of the usual sorts of improvements were put in, in
 response to user requests.  It is not possible to list
@@ -123,7 +207,7 @@ enter this as, for example, @samp{9 times funny slide thru}.
 
 @c ************
 @node 31.93, 31.92, 31.94, Top
-@unnumberedsec Changes as of version 31.93
+@unnumberedsec Version 31.93 changes
 
 The parser is about 15 times faster on very difficult phrases, such as
 @code{[[right and left thru] and roll] coordinate}.
@@ -137,7 +221,7 @@ for use in distorted setups, as in @code{trapezoid left anchor 3/4}.
 
 @c ************
 @node 31.92, 31.91, 31.93, Top
-@unnumberedsec Changes as of version 31.92
+@unnumberedsec Version 31.92 changes
 
 The unpleasantness of the parser in 31.91 has been fixed---you can type
 things like @code{ping pong circulate} directly.
@@ -179,7 +263,7 @@ We apologize for jerking people around, but this makes it consistent with all ot
 
 @c ************
 @node 31.91, 31.90, 31.92, Top
-@unnumberedsec Changes as of version 31.91
+@unnumberedsec Version 31.91 changes
 
 This is an interim release, fixing a few embarrassing bugs.  Major
 functionality improvements that are being worked on are not yet in place.
@@ -222,7 +306,7 @@ Callerlab resolution.
 
 @c ************
 @node 31.90, 31.89, 31.91, Top
-@unnumberedsec Changes as of version 31.90
+@unnumberedsec Version 31.90 changes
 
 An enormous number of improvements were made, far too many to
 list here.  Many are minor, many are significant.  Most of these
@@ -315,7 +399,7 @@ say so.  If you want @samp{N/4 reverse crazy}, say so.
 
 @c ************
 @node 31.89, 31.88, 31.90, Top
-@unnumberedsec Changes as of version 31.89
+@unnumberedsec Version 31.89 changes
 
 The program can do singing call progressions.  There are two new
 commands, available only at the start of a sequence (that is, when
@@ -346,7 +430,7 @@ awareness of where people are, and so on.
 
 @c ************
 @node 31.88, 31.87, 31.89, Top
-@unnumberedsec Changes as of version 31.88
+@unnumberedsec Version 31.88 changes
 
 The changes described below (for version 31.87) for
 @samp{percolate (centers and ends)}
@@ -358,7 +442,7 @@ An error in @samp{sidetrack} from a 1x8 column was fixed.
 
 @c ************
 @node 31.87, 31.85, 31.88, Top
-@unnumberedsec Changes as of version 31.87
+@unnumberedsec Version 31.87 changes
 
 When the @samp{<anyone> work} concept is used, as in @samp{boys work
 tandem swing thru}, the program will put in the word @samp{all}, along
@@ -391,7 +475,7 @@ in a more general way.  It should now handle all 2 and 4 person calls.
 
 @c ************
 @node 31.85, 31.84, 31.87, Top
-@unnumberedsec Changes as of version 31.85
+@unnumberedsec Version 31.85 changes
 
 There is a rudimentary understanding of the "anchor the <anyone>" concept.
 
@@ -419,7 +503,7 @@ been rectified.
 
 @c ************
 @node 31.84, 31.83, 31.85, Top
-@unnumberedsec Changes as of version 31.84
+@unnumberedsec Version 31.84 changes
 
 The mechanism for deciding when to step to a wave or rear back
 from one has been improved, hopefully making it better able
@@ -466,7 +550,7 @@ The above lists are intended to be illustrative, not exhaustive.
 
 @c ************
 @node 31.83, 31.82, 31.84, Top
-@unnumberedsec Changes as of version 31.83
+@unnumberedsec Version 31.83 changes
 
 A number of questionable or controversial calls now print warnings
 when they are used.  For example, @samp{explode the line} from a
@@ -488,7 +572,7 @@ A number of minor bugs and inconveniences were fixed.
 
 @c ************
 @node 31.82, 31.81, 31.83, Top
-@unnumberedsec Changes as of version 31.82
+@unnumberedsec Version 31.82 changes
 
 There is added detail in the manual describing subtleties of @samp{<anyone> start}
 and @samp{initially <anyone>}.  Please see the section ``Anyone Start'', at
@@ -537,7 +621,7 @@ the cross concentric call to move the outsides to the other position.
 
 @c ************
 @node 31.81, 31.80, 31.82, Top
-@unnumberedsec Changes as of version 31.81
+@unnumberedsec Version 31.81 changes
 
 IMPORTANT NOTICE   IMPORTANT NOTICE   IMPORTANT NOTICE
 
@@ -581,7 +665,7 @@ from a parallelogram.
 
 @c ************
 @node 31.80, 31.78, 31.81, Top
-@unnumberedsec Changes as of version 31.80
+@unnumberedsec Version 31.80 changes
 
 The handling of Quarter the Deucey, Spin Chain the Star, and variants thereof
 has been changed.  After the first part, the end looking out has only one
@@ -595,7 +679,7 @@ Dave Hodson and Leon Eskenazi for pointing out this problem.
 
 @c ************
 @node 31.78, 31.77, 31.80, Top
-@unnumberedsec Changes as of version 31.78
+@unnumberedsec Version 31.78 changes
 
 Various problems in the parser changes of version 31.77 were fixed.
 
@@ -617,7 +701,7 @@ such things as the "courtesy turn full around" usage.
 
 @c ************
 @node 31.77, 31.76, 31.78, Top
-@unnumberedsec Changes as of version 31.77
+@unnumberedsec Version 31.77 changes
 
 There is a *MAJOR* improvement in the parser.  (That's the part of the
 program that analyzes the line that you type and figures out the logical
@@ -651,7 +735,7 @@ that we have changed the names to avoid any ambiguity.
 
 @c ************
 @node 31.76, 31.75, 31.77, Top
-@unnumberedsec Changes as of version 31.76
+@unnumberedsec Version 31.76 changes
 
 The "straight" and "twisted" concepts are implemented.  Of course,
 "straight" things have existed on a case-by-case basis for some time,
@@ -660,14 +744,14 @@ but now you can say, for example, "straight yoyo crossfire" instead of
 
 @c ************
 @node 31.75, 31.73, 31.76, Top
-@unnumberedsec Changes as of version 31.75
+@unnumberedsec Version 31.75 changes
 
 The program has a significantly improved notion of how to do
 the call @samp{squeeze}.
 
 @c ************
 @node 31.73, 31.72, 31.75, Top
-@unnumberedsec Changes as of version 31.73
+@unnumberedsec Version 31.73 changes
 
 The program's ability to handle calls in alamo rings is somewhat
 improved.  See the discussion of the call @code{adjust alamo to other pairing}
@@ -684,7 +768,7 @@ adjacent people spread, after, for example, a @i{motivate}.
 
 @c ************
 @node 31.72, Older, 31.73, Top
-@unnumberedsec Changes as of version 31.72
+@unnumberedsec Version 31.72 changes
 
 *********************************************************
 
@@ -747,7 +831,7 @@ but they have no effect.  See the reference manual for further details.
 @node Older, , 31.72, Top
 @unnumberedsec Changes for older versions
 
-****** Changes as of version 31.67 ******
+****** Version 31.67 changes ******
 
 The function key shift-F12 means @code{find another} when resolving
 or searching.
@@ -773,7 +857,7 @@ mix
 @end group
 @end example
 
-****** Changes as of version 31.66 ******
+****** Version 31.66 changes ******
 
 New designators: @code{those facing the caller} and @code{those facing away
 from the caller}.
@@ -781,7 +865,7 @@ from the caller}.
 Fixed an error that could, on some operating systems, cause the
 program to crash.
 
-****** Changes as of version 31.64 ******
+****** Version 31.64 changes ******
 
 The sdtty parser can now optionally accept calls that have been typed
 in without the usual blanks that separate words.  That is, you can type
@@ -796,7 +880,7 @@ automatically use this feature.
 The call @code{(nothing)} has been changed to @code{nothing}.  That is, the
 parentheses have been removed from this call.
 
-****** Changes as of version 31.63 ******
+****** Version 31.63 changes ******
 
 The section of the manual describing concepts has been extensively
 rewritten.  It now contains a complete list of all available concepts.
@@ -867,12 +951,12 @@ set to @file{sequence.C1} or whatever.  After creating the new choice,
 you may use the @code{change output file} command to set it to asterisk
 or plus sign.  Just type an asterisk or plus sign as the new file name.
 
-****** Changes as of version 31.62 ******
+****** Version 31.62 changes ******
 
 New calls: square chain thru, <anyone> to a wave.  Similarly for
 square chain the top, square thru, etc.
 
-****** Changes as of version 31.61 ******
+****** Version 31.61 changes ******
 
 The section of the manual describing concepts has been extensively
 rewritten.  It now contains a complete list of all available concepts.
@@ -889,12 +973,12 @@ hourglasses, and @samp{C1 phantom} setups.
 New concepts: <anyone> preferred for trade,
 checkerboard/checkerbox/checkerdiamond.
 
-****** Changes as of version 31.59 ******
+****** Version 31.59 changes ******
 
 The database has been updated to reflect the 1995 changes in the
 C3A and C3B lists.
 
-****** Changes as of version 31.58 ******
+****** Version 31.58 changes ******
 
 If the name of the file to which sequences are written ends
 with a colon, as in @file{LPT:}, the program will assume that it
@@ -907,7 +991,7 @@ Special file names of this type may be set with the
 @code{change output file} command, and may be placed in the
 filename field of the @file{sd.ini} session file.
 
-****** Changes as of version 31.56 ******
+****** Version 31.56 changes ******
 
 There are now two types of information that get printed at
 the top of a sequence:  the @code{title}, and the @code{comment}.
@@ -949,12 +1033,12 @@ Also, the concepts formerly known as ``two diagonal lines/waves/columns''
 are now just ``diagonal lines/waves/columns''.  These are done in 4x6
 setups.
 
-****** Changes as of version 31.50 ******
+****** Version 31.50 changes ******
 
 The database has been updated to reflect the 1995 changes in the
 Callerlab C1 and C2 lists.  However, @code{like a ripple} is not supported.
 
-****** Changes as of version 31.48 ******
+****** Version 31.48 changes ******
 
 In a @code{rigger} setup, such as obtained after @code{sets in motion}
 from certain setups, it is possible to have the outside people
@@ -1008,7 +1092,7 @@ to make a butterfly, blocks, or whatever:
 @end group
 @end example
 
-****** Changes as of version 31.46 ******
+****** Version 31.46 changes ******
 
 New concepts:  center or outside triple lines/waves/column/boxes,
 and center or outside phantom lines/waves/columns/boxes.
@@ -1029,7 +1113,7 @@ The database has been updated to reflect the 1995 changes in the
 Callerlab A1 and A2 lists.  Arky star thru was moved to C1, pending
 further developments.
 
-****** Changes as of version 31.43 ******
+****** Version 31.43 changes ******
 
 New call:  "catch <anything> <n>, only the resulting centers finish".
 Use it with good taste!
@@ -1079,7 +1163,7 @@ after concepts.
 New concept:  distorted blocks -- This is "C1 blocks" with some people
 out of position.
 
-****** Changes as of version 31.42 ******
+****** Version 31.42 changes ******
 
 New concepts:  <anyone> in your distorted line/wave/column/box/diamond.
 
@@ -1089,12 +1173,12 @@ Various new "search/pick" commands were added, to pick random calls
 with or without a concept, pick random calls on the level, and
 create various named setups.
 
-****** Changes as of version 31.41 ******
+****** Version 31.41 changes ******
 
 It now has an enormously improved notion of "jay walk", as well
 as "jay slide thru" and "jay touch 1/4".
 
-****** Changes as of version 31.4 ******
+****** Version 31.4 changes ******
 
 It is now has a considerably better understanding of how to have
 specified people do a call.  If you say something like "side girls
@@ -1117,14 +1201,14 @@ equivalent things:
 @example
 @group
 reverse random tandem swing thru
- 
+
 reverse random
 tandem
 swing thru
- 
+
 reverse random
 tandem swing thru
- 
+
 reverse
 random
 tandem
@@ -1182,7 +1266,7 @@ when the program is invoked, as in
 @example
 sdtty c1 -discard_after_error
 @end example
-                    
+
 This will cause all entered concepts to be thrown away when an error
 occurs.  If this switch is not used, entered concepts remain.
 For example, if we enter
@@ -1228,7 +1312,7 @@ singlespace
 discard_after_error
 @end group
 @end example
-          
+
 then the printed sequences will be single spaced, and entered
 concepts will be discarded whenever an error occurs.
 
@@ -1250,7 +1334,7 @@ hocus pocus
 @end example
 on three separate lines.
 
-****** Changes as of version 31.3 ******
+****** Version 31.3 changes ******
 
 There is a new feature for keeping track of which dances you
 might be working on, and putting header comments and sequence
@@ -1287,7 +1371,7 @@ be used sensibly in the current setup.
 To get the old behavior, type exclamation point instead of
 question mark.
 
-****** Changes as of version 31.2 ******
+****** Version 31.2 changes ******
 
 The PC version of sdtty now draws its pictures of setups with
 special arrow characters.  Many people think that the arrows look
@@ -1319,7 +1403,7 @@ this call.
 The call "peel the top" can be used after the ends of a wave do either
 kind of fold.
 
-****** Changes as of version 31.01 ******
+****** Version 31.01 changes ******
 
 The sdtty parser can now read the modifiers "grand", "magic",
 "cross", "single", "single file", "interlocked", "yoyo", and "MxN"
@@ -1329,7 +1413,7 @@ You can also type it the old way:
 "grand", <enter>, and "swing thru".  On sd, you still must click on
 the concept "grand" followed by the call "swing thru".
 
-****** Changes as of version 31.0 ******
+****** Version 31.0 changes ******
 
 It can do various complex yoyo scoot reaction types
 of things from appropriate T-bone setups, as in
@@ -1357,7 +1441,7 @@ list and C2 definitions disagreed with each other on the spelling.
 The Callerlab challenge committee has agreed to fix this, using the
 non-hyphenated spelling consistently.
 
-****** Changes as of version 30.88 ******
+****** Version 30.88 changes ******
 
 ****** NOTE ******  Change in user behavior!
 
@@ -1394,7 +1478,7 @@ the old way, as a single concept name, or by entering "reverse" followed by
 The bug involving the simultaneous use of the "-sequence" and "-abridge"
 switched has been fixed.
 
-****** Changes as of version 30.87(experimental) ******
+****** Version 30.87(experimental) changes ******
 
 This is very experimental.  It has a very incomplete version of
 some MAJOR changes in the way tagging calls are done.  It is being
@@ -1420,19 +1504,19 @@ The GRUESOME TWOSOME concept now correctly enforces the restriction
 that the resulting virtual setup be waves, so, for example, GRUESOME
 TWOSOME trade circulate is legal from parallel two-faced lines.
 
-****** Changes as of version 30.86 ******
+****** Version 30.86 changes ******
 
 New concepts: MYSTIC and INVERT MYSTIC.  You can of course
 also use MIRROR MYSTIC or MYSTIC MIRROR if you wish.
 
-****** Changes as of version 30.84 ******
+****** Version 30.84 changes ******
 
 The directions "zig-zag" etc. disappear when the
 calling level is below A2.
 
 New concepts: SNAG and INVERT SNAG.
 
-****** Changes as of version 30.83 ******
+****** Version 30.83 changes ******
 
 +++++++ WARNING!!!!!! +++++++
 
@@ -1450,7 +1534,7 @@ as will "<ANYONE> run".
 directly.  We apologize for the bad grammar in the phrase "switch
 to a interlocked diamond."  No, we aren't going to fix it.
 
-****** Changes as of version 30.82 ******
+****** Version 30.82 changes ******
 
 A long-standing bug in sdtty, causing it to crash when scrolling
 through a large amount of "?" text, was fixed.
@@ -1492,13 +1576,13 @@ the "cross" or "left" modifier before clicking on the call.
 Whichever program you use, the result will be printed out in the
 natural word order.
 
-****** Changes as of version 30.81 ******
+****** Version 30.81 changes ******
 
 An embarrassing bug was fixed.  This could cause the menus for
 grand columns and diamonds/quarter-tags to fail to show as many
 calls as they should.
 
-****** Changes as of version 30.8 ******
+****** Version 30.8 changes ******
 
 New concepts: overlapped diamonds, overlapped lines, and overlapped waves.
 Overlapped waves of course has an implicit "assume waves" in it.
@@ -1514,7 +1598,7 @@ stroll [anything]
 
 New calls: explode the top, turning the star unusual amounts.
 
-****** Changes as of version 30.79 ******
+****** Version 30.79 changes ******
 
 The way the "allow modifications" operation is specified was changed.
 In all cases, there are still two levels of modifications --
@@ -1552,7 +1636,7 @@ column".  The same change was made to "exchange the boxes/diamonds N/4".
 New calls:  [criss-cross] shadow the column, spin chain the star,
 [cross] trade your neighbor <direction>, splash <direction>.
 
-****** Changes as of version 30.78 ******
+****** Version 30.78 changes ******
 
 You can type in calls such as "quarter thru" to sdtty either in words:
 "quarter thru"/"three quarter thru", or as fractions: "1/4 thru"/"3/4 thru".
@@ -1603,13 +1687,13 @@ a combined number test and qualifier are coming next.  The call definition claus
 only be acted upon if the qualifier is satisfied and the number matches.  The qualifier
 "none" is always satisfied.
 
-****** Changes as of version 30.77 ******
+****** Version 30.77 changes ******
 
 For users of the X Window System (Sd on Unix), the "parallelogram" concept
 has been moved to the "distorted setup concepts" submenu, at the bottom of
 the second column.
 
-****** Changes as of version 30.76 ******
+****** Version 30.76 changes ******
 
 New person designators: "headliners" (the people currently facing the head walls)
 and "sideliners" (the people currently facing the side walls).  These are not
@@ -1627,7 +1711,7 @@ is now "exchange the diamonds/boxes <N/4>".  [See also 30.79.]
 An obscure bug in "quadruple boxes working together swing the fractions" was
 fixed.  We thank Ross Howell for finding this, and apologize to the dancers.
 
-****** Changes as of version 30.74 ******
+****** Version 30.74 changes ******
 
 Took out the words "end-to-end" for those versions of concepts like
 triple lines or split phantom columns that place the setups end-to-end.

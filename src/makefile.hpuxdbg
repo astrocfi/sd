@@ -1,6 +1,6 @@
 # Generated automatically from Makefile.in by configure.
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <96/05/05 10:50:56 gildea>
+# Time-stamp: <96/01/19 13:27:26 gildea>
 
 srcdir = .
 # VPATH is for GNU make
@@ -8,10 +8,11 @@ srcdir = .
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
 # target hardware, etc.)
-CC = gcc
+# To get gcc on Athena, "add outland" before running "configure".
+CC = cc -Aa -z +DA1.1 -D_AES_SOURCE +w1
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
+DEFS = 
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you
@@ -21,9 +22,9 @@ DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 # this may compromise the ability to debug the program.  In this case, you may
 # need to choose different options, typically "-g", for debugging.
 # Consult your system, compiler, and debugger vendor for further information.
-CDEBUGFLAGS = -ggdb
+CDEBUGFLAGS = -g
 
-CFLAGS =$(CDEBUGFLAGS) $(DEFS)
+CFLAGS = $(DEFS) $(CDEBUGFLAGS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
@@ -35,18 +36,18 @@ TTY_FLAGS =
 
 # These are the library flags that we must use for the final bind of
 # the X11 version of "sd".
-X11_LIBS = 
+X11_LIBS = -L/usr/lib/X11R5 -lXaw -lXmu -lXt  -lXext -lX11 
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-TTY_LIBS =
+TTY_LIBS = -lcurses
 
-SD_SRCS = sdmain.c sdutil.c sdbasic.c sdinit.c \
+SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
           sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c \
           sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
           sdsi.c
 
-SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
+SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
           sdsi.o
@@ -54,14 +55,15 @@ SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
 
-# This has all special source files for sdtty and
-# making the distribution.
+# This has all special source files for sdtty,
+# for making the distribution and running lint.
 SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
 SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
-SDTTY_OBJ = $(SDTTY_OBJ_PC)
-SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_PC)
+SDTTY_OBJ = $(SDTTY_OBJ_UNIX)
+
+SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ)
 
 MKCALLS_SRCS = mkcalls.c dbcomp.c
 MKCALLS_OBJS = mkcalls.o dbcomp.o
@@ -71,22 +73,28 @@ OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
 
 all: alltty
 allx11: sd sd_calls.dat
-alltty: sdtty.exe sd_calls.dat
-everything: allx11 sdtty.exe
+alltty: sdtty sd_calls.dat
+everything: allx11 sdtty
 
 LDPRELIBS = 
-LDPOSTLIBS = lib\crt0.o lib\libc.a
+LDPOSTLIBS = 
 
 sd: $(SD_OBJS) $(SDX11_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
 
-mkcalls.exe: $(MKCALLS_OBJS)
+mkcalls: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
 
-sdtty.exe: $(SD_OBJS) $(SDTTY_OBJ)
+
+
+# The coff2exe program is for djgpp on DOS
+
+sdtty: $(SD_OBJS) $(SDTTY_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
 
-sd_calls.dat: sd_calls.txt mkcalls.exe
+
+
+sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls $(srcdir)/sd_calls.txt
 
 .c.o:
@@ -129,14 +137,14 @@ sd_doc.dvi sd_doc.info sd_doc.txt sd_doc_toc.html: $(DOCSRCS)
 # additional suffixes used for the documentation
 .SUFFIXES: .dvi .info .txt .txinfo
 
-RM = del
+RM = rm -f
 
 MAKEINFO = makeinfo --no-split
 MAKE_ASCII = makeinfo --no-split --no-headers
 TXI2DVI = tex
 DVIPS = dvips
 TXI2HTML = texi2html
-MAKE=make
+
 
 # We do it twice, so cross references will be reconciled.
 .txinfo.dvi:
@@ -150,15 +158,6 @@ MAKE=make
 	$(MAKE_ASCII) -o $@ -I$(srcdir) $<
 
 sd_doc.ps: sd_doc.dvi
-	$(DVIPS) -o $@ $?
-
-sessions.ps: sessions.dvi
-	$(DVIPS) -o $@ $?
-
-relnotes.ps: relnotes.dvi
-	$(DVIPS) -o $@ $?
-
-demo.ps: demo.dvi
 	$(DVIPS) -o $@ $?
 
 sd_doc_toc.html:
@@ -181,8 +180,10 @@ docclean:
 	-$(RM) *.aux *.log *.toc *.dvi
 	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
 
+clean:: docclean
 clean::
-	-$(RM) *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat
+	-$(RM) *.o sd sdtty mkcalls sd_calls.dat
+	-$(RM) lint.out
 
 distclean: clean
 	-$(RM) sequence.*
@@ -192,21 +193,26 @@ distclean: clean
 realclean: distclean
 	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
 
-DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
-            relnotes.ps relnotes.txt \
+LINT = /usr/lang/alint
+
+lint:
+	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
+
+DISTTXT = README INSTALL Relnotes oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
-            sd_doc.PS sd_doc.txt db_doc.txt
+            db_doc.txt sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
 MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
             macalert.c maccomp.c macdlog.c macevent.c macguts.h maclabel.c \
             macmatch.c macmenu.c macpref.c macrec.c macsel.c macstart.c \
             macstuff.c mactext.c macutil.c macwdef.c macwin.c macwmgr.c \
             sdsi-mac.c sdui-mac.c
+PCFILES = pcfiles.lnk makefile.pc
 DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
 
 TAR = tar
-TARFLAGS = 
-DIST_TARFILE = sd-31.79.tar
+TARFLAGS = cvfh
+DIST_TARFILE = sd-31.66.tar
 COMPRESS = compress
 
 dist: dist-files
@@ -214,38 +220,41 @@ dist: dist-files
 	$(RM) $(DIST_TARFILE).Z
 	$(COMPRESS) $(DIST_TARFILE)
 
-dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS \
-            demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes.txt pc-files
+dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS pc-files
 
 ls:
 	@echo $(DISTFILES)
 
-pcdist: install.exe
+pcdist: sd3166bn
 
-install.exe: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $* sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
-	lha a $* sd_calls.txt sd_calls.dat
-	lha a $* readme oldnotes
-	lha a $* sample1.ini sample2.ini
-	lha s $*
+sd3166bn: sdtty.exe mkcalls.exe sd_calls.dat
+	lha a $@ readme relnotes oldnotes
+	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
+	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps
+	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
+	lha a $@ sd_doc.txt sd_doc.ps
+	lha s $@
 
-BIN_TARFILE = sd-31.79-.tar
+BIN_TARFILE = sd-31.66-unknown.tar
 
 
 
-TARFILES1 = README oldnotes
+TARFILES1 = README Relnotes oldnotes
 TARFILES2 = sd sdtty mkcalls \
 	 sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
-          relnotes.ps relnotes.txt \
-	 sd_calls.txt sd_calls.dat \
+	 sd_calls.txt sd_calls.dat db_doc.txt \
 	 Sd.res sd_doc.txt sd_doc.PS
 
 $(BIN_TARFILE).Z: Makefile $(TARFILES2) $(TARFILES1)
 	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES1) $(TARFILES2)
 	$(RM) $@
-	-$(COMPRESS) < $(BIN_TARFILE) > $@
+	-$(COMPRESS) $(BIN_TARFILE)
 
 pc-files: $(PCFILES)
+
+pcfiles.lnk: Makefile.in
+	rm -f $@
+	for obj in $(SD_OBJS) $(SDTTY_OBJ_PC); do echo $$obj; done >> $@
 
 LN = ln -s
 

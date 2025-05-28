@@ -1,5 +1,6 @@
 REM This uses download-pc.html as a source file.
-echo cd public_html/sd> dnldpc.msg
-call make_text download-pc.html dnldpc.msg
-pgp -s +clearsig=off +armor=on +armorlines=0 dnldpc.msg -u wba
-zip dnldpc dnldpc.asc
+del dnp.msg dnp.txt dnp.zip
+echo cd public_html/sd> dnp.msg
+call make_text download-pc.html dnp.msg
+pgp -sta +clearsig=on +armor=on dnp.msg -u wba -o dnp.txt
+zip dnp dnp.txt

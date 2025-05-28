@@ -43,12 +43,12 @@ X11_LIBS =
 TTY_LIBS = -lpc
 
 SD_SRCS = sdmain.c sdutil.c sdbasic.c sdinit.c \
-          sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c sd12.c sd16.c \
+          sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c \
           sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
           sdsi.c
 
 SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
-          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o sd12.o sd16.o \
+          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
           sdsi.o
 

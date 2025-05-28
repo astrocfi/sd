@@ -1,4 +1,4 @@
-/*-*-mode:C;c-basic-offset:3;indent-tabs-mode:nil;eval:(modify-syntax-entry ?\_ "w");-*-*/
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
 
 /* SD -- square dance caller's helper.
 
@@ -186,9 +186,9 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
                selector_for_initialize = selector_ends;
                goto try_another_selector;
             case selector_ends:
-               selector_for_initialize = selector_all;
+               selector_for_initialize = selector_everyone;
                goto try_another_selector;
-            case selector_all:
+            case selector_everyone:
                selector_for_initialize = selector_none;
                goto try_another_selector;
             case selector_none:
@@ -706,16 +706,16 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       current_call_block = tp;
       tp->callarray_flags = these_flags;
       tp->qualifierstuff = this_qualifierstuff;
-      tp->start_setup = (veryshort) this_start_setup;
+      tp->start_setup = (uint8) this_start_setup;
       tp->restriction = this_restriction;
 
       if (these_flags & CAF__CONCEND) {      /* See if "concendsetup" was used. */
-         tp->end_setup = (veryshort) s_normal_concentric;
-         tp->end_setup_in = (veryshort) end_setup;
-         tp->end_setup_out = (veryshort) end_setup_out;
+         tp->end_setup = (uint8) s_normal_concentric;
+         tp->end_setup_in = (uint8) end_setup;
+         tp->end_setup_out = (uint8) end_setup_out;
       }
       else {
-         tp->end_setup = (veryshort) end_setup;
+         tp->end_setup = (uint8) end_setup;
       }
 
       if (these_flags & CAF__PREDS) {
@@ -813,6 +813,7 @@ Private void read_in_call_definition(void)
          read_halfword();
          call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
          if (call_root->stuff.matrix.flags & MTX_USE_SELECTOR) call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+         if (call_root->stuff.matrix.flags & MTX_USE_NUMBER) call_root->callflags1 |= CFLAG1_NUMBER_BIT;
          read_halfword();
 
          for (j=0; j<lim; j++) {
@@ -848,6 +849,7 @@ Private void read_in_call_definition(void)
       case schema_sequential:
       case schema_split_sequential:
       case schema_sequential_with_fraction:
+      case schema_sequential_with_split_1x8_id:
          {
             by_def_item templist[100];
             int next_definition_index = 0;
@@ -1130,6 +1132,11 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       init_error("insufficient warning bit space -- program has been compiled incorrectly.");
       final_exit(1);
    }
+   else if (NUM_QUALIFIERS > 125) {
+      init_error("insufficient qualifier space -- program has been compiled incorrectly.");
+      final_exit(1);
+   }
+
 
    /* Read in the calls database, then start the user interface package,
       whatever that might be, and finally create all the call menus.

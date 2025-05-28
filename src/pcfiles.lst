@@ -7,8 +7,6 @@ sdctable.o
 sdtop.o
 sdconcpt.o
 sdpreds.o
-sd12.o
-sd16.o
 sdgetout.o
 sdmoves.o
 sdtand.o

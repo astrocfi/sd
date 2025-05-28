@@ -23,7 +23,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 125
+#define DATABASE_FORMAT_VERSION 132
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -149,6 +149,7 @@ typedef enum {
 #define CFLAG1_ENDS_TAKE_RIGHT_HANDS      0x10000000UL
 #define CFLAG1_FUNNY_MEANS_THOSE_FACING   0x20000000UL
 #define CFLAG1_ONE_PERSON_CALL            0x40000000UL
+#define CFLAG1_PRESERVE_Z_STUFF           0x80000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -161,6 +162,8 @@ typedef enum {
 #define MTX_BOTH_SELECTED_OK       0x40
 #define MTX_FIND_SQUEEZERS         0x80
 #define MTX_FIND_SPREADERS         0x100
+#define MTX_USE_VEER_DATA          0x200
+#define MTX_USE_NUMBER             0x400
 
 
 
@@ -286,7 +289,11 @@ typedef enum {
    sx1x16,
    sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
    swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
+   s_323,
+   s_343,
    s_525,
+   s_545,
+   sh545,
    s_3mdmd,
    s_3mptpd,
    sbigh,
@@ -408,8 +415,16 @@ typedef enum {
    b_p3ptpd,
    b_4ptpd,
    b_p4ptpd,
+   b_323,
+   b_p323,
+   b_343,
+   b_p343,
    b_525,
    b_p525,
+   b_545,
+   b_p545,
+   bh545,
+   bhp545,
    b_3mdmd,
    b_p3mdmd,
    b_3mptpd,
@@ -458,124 +473,98 @@ typedef enum {
 #define CAF__OTHER_ELONGATE       0x800
 #define CAF__SPLIT_TO_BOX        0x1000
 
-/* These qualifiers are "overloaded" -- their meaning depends on the starting setup. */
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
-
 typedef enum {
-   sq_none,                /* See db_doc.txt for explanation of these. */
-   sq_wave_only,
-   sq_all_facing_same,
-   sq_1fl_only,
-   sq_2fl_only,
-   sq_3x3_2fl_only,
-   sq_4x4_2fl_only,
-   sq_couples_only,
-   sq_3x3couples_only,
-   sq_4x4couples_only,
-   sq_magic_only,
-   sq_in_or_out,
-   sq_independent_in_or_out,
-   sq_centers_in_or_out,
-   sq_miniwaves,
-   sq_not_miniwaves,
-   sq_as_couples_miniwaves,
-   sq_1_4_tag,
-   sq_3_4_tag,
-   sq_dmd_same_pt,
-   sq_dmd_facing,
-   sq_diamond_like,
-   sq_qtag_like,
-   sq_true_Z_cw,
-   sq_true_Z_ccw,
-   sq_lateral_cols_empty,
-   sq_ctrwv_end2fl,
-   sq_ctr2fl_endwv,
-   sq_split_dixie,
-   sq_not_split_dixie,
-   sq_all_ctrs_rh,
-   sq_all_ctrs_lh,
-   sq_dmd_ctrs_rh,
-   sq_dmd_ctrs_lh,
-   sq_dmd_ctrs_1f,
-   sq_dmd_intlk,
-   sq_dmd_not_intlk,
-   sq_ctr_pts_rh,
-   sq_ctr_pts_lh,
-   sq_said_tgl,
-   sq_didnt_say_tgl,
-   sq_occupied_as_stars,
-   sq_occupied_as_h,
-   sq_occupied_as_qtag,
-   sq_occupied_as_3x1tgl,
-   sq_line_ends_looking_out,
-   sq_col_ends_lookin_in,
-   sq_ripple_one_end,
-   sq_ripple_both_ends,
-   sq_ripple_both_centers,
-   sq_ripple_any_centers,
-   sq_people_1_and_5_real,
-   sq_ctrs_sel,
-   sq_ends_sel,
-   sq_all_sel,
-   sq_none_sel
-} search_qualifier;
-
-/* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
-/* BEWARE!!  This list must track the array "crtab" in dbcomp.c . */
-
-typedef enum {
-   cr_none,                /* See db_doc.txt for explanation of these. */
-   cr_alwaysfail,
+   cr_none,                /* Qualifier only. */
+   cr_alwaysfail,          /* Restriction only. */
    cr_wave_only,
-   cr_wave_unless_say_2faced,
+   cr_wave_unless_say_2faced, /* Qualifier only. */
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
-   cr_leads_only,
-   cr_trailers_only,
+   cr_leads_only,          /* Restriction only. */
+   cr_trailers_only,       /* Restriction only. */
    cr_couples_only,
    cr_3x3couples_only,
    cr_4x4couples_only,
-   cr_ckpt_miniwaves,
-   cr_ctr_miniwaves,
-   cr_ctr_couples,
-   cr_awkward_centers,
+   cr_ckpt_miniwaves,      /* Restriction only. */
+   cr_ctr_miniwaves,       /* Restriction only. */
+   cr_ctr_couples,         /* Restriction only. */
+   cr_awkward_centers,     /* Restriction only. */
+   cr_1_4_tag,             /* Qualifier only. */
+   cr_3_4_tag,             /* Qualifier only. */
+   cr_dmd_same_pt,         /* Qualifier only. */
+   cr_dmd_facing,          /* Qualifier only. */
    cr_diamond_like,
    cr_qtag_like,
-   cr_nice_diamonds,
+   cr_nice_diamonds,       /* Restriction only. */
    cr_magic_only,
+   cr_li_lo,               /* Qualifier only. */
+   cr_ctrs_in_out,         /* Qualifier only. */
+   cr_indep_in_out,        /* Qualifier only. */
    cr_miniwaves,
-   cr_explodable,
-   cr_rev_explodable,
-   cr_peelable_box,
-   cr_ends_are_peelable,
-   cr_siamese_in_quad,
-   cr_not_tboned,
+   cr_not_miniwaves,       /* Qualifier only. */
+   cr_as_couples_miniwaves,/* Qualifier only. */
+   cr_true_Z_cw,           /* Qualifier only. */
+   cr_true_Z_ccw,          /* Qualifier only. */
+   cr_lateral_cols_empty,  /* Qualifier only. */
+   cr_ctrwv_end2fl,        /* Qualifier only. */
+   cr_ctr2fl_endwv,        /* Qualifier only. */
+   cr_split_dixie,         /* Qualifier only. */
+   cr_not_split_dixie,     /* Qualifier only. */
+   cr_dmd_ctrs_mwv,        /* Qualifier only. */
+   cr_qtag_mwv,            /* Qualifier only. */
+   cr_qtag_mag_mwv,        /* Qualifier only. */
+   cr_dmd_ctrs_1f,         /* Qualifier only. */
    cr_dmd_intlk,
    cr_dmd_not_intlk,
-   cr_opposite_sex,
-   cr_quarterbox_or_col,
-   cr_quarterbox_or_magic_col,
-   cr_all_ns,
-   cr_all_ew,
-   cr_gen_1_4_tag,
-   cr_gen_3_4_tag,
-   cr_real_1_4_tag,
-   cr_real_3_4_tag,
-   cr_real_1_4_line,
-   cr_real_3_4_line,
-   cr_jleft,
-   cr_jright,
-   cr_ijleft,
-   cr_ijright,
-   cr_li_lo,
-   cr_ctrs_in_out,
-   cr_indep_in_out
+   cr_ctr_pts_rh,          /* Qualifier only. */
+   cr_ctr_pts_lh,          /* Qualifier only. */
+   cr_said_tgl,            /* Qualifier only. */
+   cr_didnt_say_tgl,       /* Qualifier only. */
+   cr_occupied_as_stars,   /* Qualifier only. */
+   cr_occupied_as_h,       /* Qualifier only. */
+   cr_occupied_as_qtag,    /* Qualifier only. */
+   cr_occupied_as_3x1tgl,  /* Qualifier only. */
+   cr_line_ends_looking_out, /* Qualifier only. */
+   cr_col_ends_lookin_in,  /* Qualifier only. */
+   cr_ripple_one_end,      /* Qualifier only. */
+   cr_ripple_both_ends,    /* Qualifier only. */
+   cr_ripple_both_centers, /* Qualifier only. */
+   cr_ripple_any_centers,  /* Qualifier only. */
+   cr_people_1_and_5_real, /* Qualifier only. */
+   cr_ctrs_sel,            /* Qualifier only. */
+   cr_ends_sel,            /* Qualifier only. */
+   cr_all_sel,             /* Qualifier only. */
+   cr_none_sel,            /* Qualifier only. */
+   cr_explodable,          /* Restriction only. */
+   cr_rev_explodable,      /* Restriction only. */
+   cr_peelable_box,        /* Restriction only. */
+   cr_ends_are_peelable,   /* Restriction only. */
+   cr_siamese_in_quad,     /* Restriction only. */
+   cr_not_tboned,          /* Restriction only. */
+   cr_opposite_sex,        /* Restriction only. */
+   cr_quarterbox_or_col,   /* Restriction only. */
+   cr_quarterbox_or_magic_col, /* Restriction only. */
+   cr_all_ns,              /* Restriction only. */
+   cr_all_ew,              /* Restriction only. */
+   cr_gen_1_4_tag,         /* Restriction only. */
+   cr_gen_3_4_tag,         /* Restriction only. */
+   cr_real_1_4_tag,        /* Restriction only. */
+   cr_real_3_4_tag,        /* Restriction only. */
+   cr_real_1_4_line,       /* Restriction only. */
+   cr_real_3_4_line,       /* Restriction only. */
+   cr_jleft,               /* Restriction only. */
+   cr_jright,              /* Restriction only. */
+   cr_ijleft,              /* Restriction only. */
+   cr_ijright              /* Restriction only. */
 } call_restriction;
+#define NUM_QUALIFIERS (((int) cr_ijright)+1)
 
-/* BEWARE!!  This list must track the array "schematab" in dbcomp.c . */
+/* BEWARE!!  This list must track the array "schematab" in dbcomp.c .
+   Also, "schema_sequential" must be the start of all the sequential ones. */
 typedef enum {
    schema_concentric,
    schema_cross_concentric,
@@ -637,6 +626,8 @@ typedef enum {
    schema_select_leads,
    schema_select_headliners,
    schema_select_sideliners,
+   schema_select_original_rims,
+   schema_select_original_hubs,
    schema_select_ctr2,
    schema_select_ctr4,
    schema_select_ctr6,
@@ -644,14 +635,15 @@ typedef enum {
    schema_vertical_6,            /* Not for public use! */
    schema_intlk_lateral_6,       /* Not for public use! */
    schema_intlk_vertical_6,      /* Not for public use! */
-   schema_sequential,
-   schema_split_sequential,
-   schema_sequential_with_fraction,
    schema_by_array,
    schema_nothing,
    schema_matrix,
    schema_partner_matrix,
-   schema_roll
+   schema_roll,
+   schema_sequential,            /* All after this point are sequential. */
+   schema_split_sequential,
+   schema_sequential_with_fraction,
+   schema_sequential_with_split_1x8_id
 } calldef_schema;
 
 
@@ -712,6 +704,7 @@ typedef enum {
 
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
+/* BEWARE!!  The "SEQ" stuff must track the table "seqmodtab1" in dbcomp.c . */
 /* BEWARE!!  The union of all of these flags, which is encoded in DFM1_CONCENTRICITY_FLAG_MASK,
    must coexist with the CMD_MISC__ flags defined in sd.h .  Note that the bit definitions
    of those flags start where these end.  Keep it that way.  If any flags are added here,
@@ -731,8 +724,18 @@ typedef enum {
 #define DFM1_CONCENTRICITY_FLAG_MASK      0x000000FF
 
 /* These are the "seq" flags.  They overlay the "conc" flags. */
+/* Under normal conditions, we do *not* re-evaluate between parts.  This
+   flag overrides that and makes us re-evaluate. */
 #define DFM1_SEQ_RE_EVALUATE              0x00000001
 #define DFM1_SEQ_DO_HALF_MORE             0x00000002
+/* But, if we break up a call with something like "random", the convention
+   is to re-evaluate at the break point.  This flag, used for calls like
+   "patch the <anyone>" or "rims trade back", says that we *never* re-evaluate,
+   even if the call is broken up. */
+#define DFM1_SEQ_NO_RE_EVALUATE           0x00000004
+#define DFM1_SEQ_REPEAT_N                 0x00000008
+#define DFM1_SEQ_REPEAT_N_ALTERNATE       0x00000010
+#define DFM1_SEQ_REPEAT_NM1               0x00000020
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
@@ -740,10 +743,10 @@ typedef enum {
 /* This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies. */
 #define DFM1_CALL_MOD_MASK                0x00000700
 #define DFM1_CALL_MOD_BIT                 0x00000100
-#define DFM1_REPEAT_N                     0x00000800
-#define DFM1_REPEAT_N_ALTERNATE           0x00001000
+/* unused:                                0x00000800 */
+/* unused:                                0x00001000 */
 #define DFM1_ENDSCANDO                    0x00002000
-#define DFM1_REPEAT_NM1                   0x00004000
+/* unused:                                0x00004000 */
 #define DFM1_ROLL_TRANSPARENT             0x00008000
 #define DFM1_PERMIT_TOUCH_OR_REAR_BACK    0x00010000
 #define DFM1_CPLS_UNLESS_SINGLE           0x00020000

@@ -20,17 +20,9 @@
 
 #define DB_FMT_STR(name) DB_FMT_NUM(name)
 #define DB_FMT_NUM(number) #number
-volatile char *id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@apollo.hp.com  15 Jan 95 $";
+volatile char *id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@an.hp.com  1 Jul 1998 $";
 
 #include "paths.h"
-
-/* ***  This next test used to be
-    ifdef _POSIX_SOURCE
-   We have taken it out and replaced with what you see below.  If this breaks
-   anything, let us know. */
-#if defined(_POSIX_SOURCE) || defined(sun)
-#include <unistd.h>
-#endif
 
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
@@ -359,8 +351,16 @@ char *sstab[] = {
    "p3ptpd",
    "4ptpd",
    "p4ptpd",
+   "3x23",
+   "p3x23",
+   "3x43",
+   "p3x43",
    "5x25",
    "p5x25",
+   "5x45",
+   "p5x45",
+   "5h45",
+   "p5h45",
    "3mdmd",
    "p3mdmd",
    "3mptpd",
@@ -455,7 +455,11 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "3x23",
+   "3x43",
    "5x25",
+   "5x45",
+   "5h45",
    "3mdmd",
    "3mptpd",
    "bigh",
@@ -532,6 +536,8 @@ char *schematab[] = {
    "select_leads",
    "select_headliners",
    "select_sideliners",
+   "select_original_rims",
+   "select_original_hubs",
    "select_center2",
    "select_center4",
    "select_center6",
@@ -539,41 +545,51 @@ char *schematab[] = {
    "???",
    "???",
    "???",
-   "seq",
-   "splitseq",
-   "seq_with_fraction",
    "setup",
    "nulldefine",
    "matrix",
    "partnermatrix",
    "rolldefine",
+   "seq",
+   "splitseq",
+   "seq_with_fraction",
+   "seq_with_split_1x8_id",
    ""};
 
-/* This table is keyed to "search_qualifier". */
+/* This table is keyed to "call_restriction". */
 char *qualtab[] = {
    "none",
+   "alwaysfail",
    "wave_only",
+   "wave_unless_say_2faced",
    "all_facing_same",
    "1fl_only",
    "2fl_only",
    "3x3_2fl_only",
    "4x4_2fl_only",
+   "leads_only",
+   "trailers_only",
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",
-   "magic_only",
-   "in_or_out",
-   "independent_in_or_out",
-   "centers_in_or_out",
-   "miniwaves",
-   "not_miniwaves",
-   "as_couples_miniwaves",
+   "ckpt_miniwaves",
+   "ctr_miniwaves",
+   "ctr_couples",
+   "awkward_centers",
    "1_4_tag",
    "3_4_tag",
    "dmd_same_point",
    "dmd_facing",
    "diamond_like",
    "qtag_like",
+   "nice_diamonds",
+   "magic_only",
+   "in_or_out",
+   "centers_in_or_out",
+   "independent_in_or_out",
+   "miniwaves",
+   "not_miniwaves",
+   "as_couples_miniwaves",
    "true_Z_cw",
    "true_Z_ccw",
    "lateral_columns_empty",
@@ -581,10 +597,9 @@ char *qualtab[] = {
    "ctr2fl_endwv",
    "split_dixie",
    "not_split_dixie",
-   "all_ctrs_rh",
-   "all_ctrs_lh",
-   "dmd_ctrs_rh",
-   "dmd_ctrs_lh",
+   "dmd_ctrs_mwv",
+   "qtag_mwv",
+   "qtag_mag_mwv",
    "dmd_ctrs_1f",
    "dmd_intlk",
    "dmd_not_intlk",
@@ -607,41 +622,12 @@ char *qualtab[] = {
    "ends_sel",
    "all_sel",
    "none_sel",
-   ""};
-
-/* This table is keyed to "call_restriction". */
-char *crtab[] = {
-   "???",
-   "alwaysfail",
-   "wave_only",
-   "wave_unless_say_2faced",
-   "all_facing_same",
-   "1fl_only",
-   "2fl_only",
-   "3x3_2fl_only",
-   "4x4_2fl_only",
-   "leads_only",
-   "trailers_only",
-   "couples_only",
-   "3x3couples_only",
-   "4x4couples_only",
-   "ckpt_miniwaves",
-   "ctr_miniwaves",
-   "ctr_couples",
-   "awkward_centers",
-   "diamond_like",
-   "qtag_like",
-   "nice_diamonds",
-   "magic_only",
-   "miniwaves",
    "explodable",
    "reverse_explodable",
    "peelable_box",
    "ends_are_peelable",
    "siamese_in_quad",
    "not_tboned",
-   "dmd_intlk",
-   "dmd_not_intlk",
    "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
@@ -655,9 +641,6 @@ char *crtab[] = {
    "???",
    "???",
    "???",
-   "???",
-   "???",
-   "in_or_out",
    "???",
    "???",
    ""};
@@ -676,10 +659,10 @@ char *defmodtab1[] = {
    "or_anycall",
    "mandatory_anycall",
    "allow_forced_mod",
-   "repeat_n",
-   "repeat_n_alternate",
+   "???",
+   "???",
    "endscando",
-   "repeat_nm1",
+   "??",
    "roll_transparent",
    "permit_touch_or_rear_back",
    "cpls_unless_single",
@@ -689,6 +672,17 @@ char *defmodtab1[] = {
    "???",
    "???",
    "no_check_mod_level",
+   ""};
+
+/* This table is keyed to the constants "DFM1_***".  These are the general
+   definition-modifier flags.  They go in the "modifiers1" word of a by_def_item. */
+char *seqmodtab1[] = {
+   "seq_re_evaluate",
+   "do_half_more",
+   "seq_never_re_evaluate",
+   "repeat_n",
+   "repeat_n_alternate",
+   "repeat_nm1",
    ""};
 
 /* This table is keyed to the constants "CFLAG1_***".  These are the
@@ -726,6 +720,7 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "one_person_call",
+   "preserve_z_stuff",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -878,6 +873,8 @@ char *matrixcallflagtab[] = {
    "both_selected_ok",
    "find_squeezers",
    "find_spreaders",
+   "use_veer_data",
+   "use_number",
    ""};
 
 /* BEWARE!!  This list must track the array "pred_table" in sdpreds.c . */
@@ -1367,15 +1364,8 @@ static void write_defmod_flags(int is_seq)
 
          if ((i = search(defmodtab1)) >= 0)
             rr1 |= (1 << i);
-
-         /* Here is where we implement the "seq_re_evaluate" flag with the same
-            bit assignment as "conc_demand_lines". */
-
-         else if (is_seq && strcmp(tok_str, "seq_re_evaluate") == 0)
-            rr1 |= DFM1_SEQ_RE_EVALUATE;
-         else if (is_seq && strcmp(tok_str, "do_half_more") == 0)
-            rr1 |= DFM1_SEQ_DO_HALF_MORE;
-
+         else if (is_seq && (i = search(seqmodtab1)) >= 0)
+            rr1 |= (1 << i);
          else if (strcmp(tok_str, "allow_plain_mod") == 0)
             rr1 |= (3*DFM1_CALL_MOD_BIT);
          else if (strcmp(tok_str, "or_secondary_call") == 0)
@@ -1789,7 +1779,7 @@ def2:
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }
 
-         if ((restrstate = search(crtab)) < 0) errexit("Unknown restriction specifier");
+         if ((restrstate = search(qualtab)) < 0) errexit("Unknown restriction specifier");
       }
       else if (!strcmp(tok_str, "rotate")) {
          callarray_flags1 |= CAF__ROT;
@@ -1865,7 +1855,7 @@ def2:
 
       write_halfword(0x4000 | alt_level);
       write_fullword(rrr);
-   
+
       /* Now do another group of arrays. */
 
       get_tok();
@@ -2017,6 +2007,7 @@ extern void dbcompile(void)
                break;
             case schema_sequential:
             case schema_sequential_with_fraction:
+            case schema_sequential_with_split_1x8_id:
             case schema_split_sequential:
                write_call_header(ccc);
                write_seq_stuff();

@@ -57,6 +57,7 @@ extern long_boolean selectp(setup *ss, int place)
 
    switch (current_options.who) {
       case selector_all:
+      case selector_everyone:
          return TRUE;
       case selector_none:
          return FALSE;
@@ -150,11 +151,23 @@ extern long_boolean selectp(setup *ss, int place)
          else if (p2 == ID2_OUTR6) s = selector_outer6;
          else break;
          goto eq_return;
+      case selector_verycenters:    /* Gotta fix this stuff - use fall-through variable. */
+         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+         if      (p2 == ID2_CTR2)  s = selector_verycenters;
+         else if (p2 == ID2_OUTR6) s = selector_outer6;
+         else break;
+         goto eq_return;
       case selector_center6:
       case selector_outer2:
          p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
          if      (p2 == ID2_CTR6)  s = selector_center6;
          else if (p2 == ID2_OUTR2) s = selector_outer2;
+         else break;
+         goto eq_return;
+      case selector_veryends:    /* Gotta fix this stuff - use fall-through variable. */
+         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+         if      (p2 == ID2_CTR6)  s = selector_center6;
+         else if (p2 == ID2_OUTR2) s = selector_veryends;
          else break;
          goto eq_return;
 #ifdef TGL_SELECTORS
@@ -196,6 +209,10 @@ extern long_boolean selectp(setup *ss, int place)
       case selector_ctr_1x6:
          if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return TRUE;
          else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return FALSE;
+         break;
+      case selector_outer1x3s:
+         if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return TRUE;
+         else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return FALSE;
          break;
       case selector_center4:
          if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return TRUE;
@@ -321,6 +338,10 @@ extern long_boolean selectp(setup *ss, int place)
 
 
 static Const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static Const long int dbl_tab01[4] = {0, 1, FALSE, TRUE};
+static Const long int dbl_tab03[2] = {0, 3};
+static Const long int dbl_tab23[2] = {2, 3};
+static Const long int dbl_tab21[4] = {2, 1, TRUE, FALSE};
 
 static Const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
 static Const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
@@ -370,7 +391,8 @@ Private long_boolean select_near_select(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_options.who == selector_all) return TRUE;
+   if (current_options.who == selector_all || current_options.who == selector_everyone)
+      return TRUE;
 
    return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
                selectp(real_people, real_index ^ 1);
@@ -381,7 +403,8 @@ Private long_boolean select_near_select_or_phantom(setup *real_people, int real_
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_options.who == selector_all) return TRUE;
+   if (current_options.who == selector_all || current_options.who == selector_everyone)
+      return TRUE;
 
    return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
                selectp(real_people, real_index ^ 1);
@@ -392,7 +415,8 @@ Private long_boolean select_near_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_options.who == selector_all) return FALSE;
+   if (current_options.who == selector_all || current_options.who == selector_everyone)
+      return FALSE;
 
    return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
                !selectp(real_people, real_index ^ 1);
@@ -425,7 +449,8 @@ Private long_boolean select_once_rem_from_select(setup *real_people, int real_in
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_options.who == selector_all) return TRUE;
+   if (current_options.who == selector_all || current_options.who == selector_everyone)
+      return TRUE;
 
    if (real_people->kind == s2x4)
       return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
@@ -442,7 +467,8 @@ Private long_boolean select_once_rem_from_unselect(setup *real_people, int real_
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_options.who == selector_all) return FALSE;
+   if (current_options.who == selector_all || current_options.who == selector_everyone)
+      return FALSE;
 
    if (real_people->kind == s2x4)
       return   !(real_people->people[real_index ^ 2].id1 & BIT_PERSON) ||
@@ -489,57 +515,28 @@ Private long_boolean always(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean x22_miniwave(setup *real_people, int real_index,
+Private long_boolean x22_cpltest(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   int this_person, other_index, other_person;
+   int other_index;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_wave_only: case cr_miniwaves: return TRUE;
-      case cr_2fl_only: case cr_couples_only: case cr_li_lo: return FALSE;
+   case cr_wave_only: case cr_miniwaves: return extra_stuff[2];
+   case cr_2fl_only: case cr_couples_only: case cr_li_lo: return extra_stuff[3];
    }
 
-   this_person = real_people->people[real_index].id1;
-   other_index = real_index ^ (((real_direction << 1) & 2) ^ 1);
-   other_person = real_people->people[other_index].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 2);
+   other_index = real_index ^ (((real_direction << 1) & 2) ^ extra_stuff[1]);
+   return ((real_people->people[real_index].id1 ^
+            real_people->people[other_index].id1) & DIR_MASK) == (uint32) *extra_stuff;
 }
 
 /* ARGSUSED */
-Private long_boolean x22_couple(setup *real_people, int real_index,
+Private long_boolean x22_facing_test(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   int this_person, other_index, other_person;
-
-   switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_wave_only: case cr_miniwaves: return FALSE;
-      case cr_2fl_only: case cr_couples_only: case cr_li_lo: return TRUE;
-   }
-
-   this_person = real_people->people[real_index].id1;
-   other_index = real_index ^ (((real_direction << 1) & 2) ^ 1);
-   other_person = real_people->people[other_index].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 0);
-}
-
-/* ARGSUSED */
-Private long_boolean x22_facing_someone(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   int this_person = real_people->people[real_index].id1;
-   int other_index = real_index ^ (((real_direction << 1) & 2) ^ 3);
-   int other_person = real_people->people[other_index].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 2);
-}
-
-/* ARGSUSED */
-Private long_boolean x22_tandem_with_someone(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   int this_person = real_people->people[real_index].id1;
-   int other_index = real_index ^ (((real_direction << 1) & 2) ^ 3);
-   int other_person = real_people->people[other_index].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 0);
+   int other_index = real_index ^ (((real_direction << 1) & 2) ^ extra_stuff[1]);
+   return ((real_people->people[real_index].id1 ^
+            real_people->people[other_index].id1) & DIR_MASK) == (uint32) *extra_stuff;
 }
 
 /* ARGSUSED */
@@ -1648,24 +1645,32 @@ Private long_boolean directionp(setup *real_people, int real_index,
 Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   Const long int *p1;
-   uint32 d1, d2;
+   Const restriction_thing *p1;
+   Const veryshort *p;
+   assumption_thing tt;
+   veryshort d1, d2;
    uint32 z = 0;
    long_boolean b1 = TRUE;
    long_boolean b2 = TRUE;
 
-   p1 = get_rh_test(real_people->kind);
-   d1 = *(p1++);
-   d2 = *(p1++);
+   tt.assumption = cr_dmd_ctrs_mwv;
+   tt.assump_col = 0;
 
-   while (*p1>=0) {
-      uint32 t1 = real_people->people[*(p1++)].id1;
-      uint32 t2 = real_people->people[*(p1++)].id1;
+   p1 = get_restriction_thing(real_people->kind, tt);
+   if (!p1) return FALSE;
+
+   p = p1->map1;
+   d1 = p1->map2[0];
+   d2 = p1->map2[1];
+
+   while (*p>=0) {
+      uint32 t1 = real_people->people[*(p++)].id1;
+      uint32 t2 = real_people->people[*(p++)].id1;
       z |= t1 | t2;
-      if (t1 && (t1 & d_mask)!=d1) b1 = FALSE;
-      if (t2 && (t2 & d_mask)!=d2) b1 = FALSE;
-      if (t1 && (t1 & d_mask)!=d2) b2 = FALSE;
-      if (t2 && (t2 & d_mask)!=d1) b2 = FALSE;
+      if (t1 && (t1 & 3)!=(uint32) d1) b1 = FALSE;
+      if (t2 && (t2 & 3)!=(uint32) d2) b1 = FALSE;
+      if (t1 && (t1 & 3)!=(uint32) d2) b2 = FALSE;
+      if (t2 && (t2 & 3)!=(uint32) d1) b2 = FALSE;
    }
 
    if (z) {
@@ -1883,10 +1888,10 @@ predicate_descriptor pred_table[] = {
 /* End of predicates that force use of selector. */
 #define PREDS_BEFORE_THIS_POINT 23
       {always,                       (Const long int *) 0},      /* "always" */
-      {x22_miniwave,                 (Const long int *) 0},      /* "x22_miniwave" */
-      {x22_couple,                   (Const long int *) 0},      /* "x22_couple" */
-      {x22_facing_someone,           (Const long int *) 0},      /* "x22_facing_someone" */
-      {x22_tandem_with_someone,      (Const long int *) 0},      /* "x22_tandem_with_someone" */
+      {x22_cpltest,                    dbl_tab21},               /* "x22_miniwave" */
+      {x22_cpltest,                    dbl_tab01},               /* "x22_couple" */
+      {x22_facing_test,                dbl_tab23},               /* "x22_facing_someone" */
+      {x22_facing_test,                dbl_tab03},               /* "x22_tandem_with_someone" */
       {cols_someone_in_front,        (Const long int *) 0},      /* "columns_someone_in_front" */
       {x14_once_rem_miniwave,        (Const long int *) 0},      /* "x14_once_rem_miniwave" */
       {x14_once_rem_couple,          (Const long int *) 0},      /* "x14_once_rem_couple" */

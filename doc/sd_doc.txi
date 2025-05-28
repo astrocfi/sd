@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: May 30, 1998
-@set sd-version 31.95
+@set Time-stamp: July 18, 1998
+@set sd-version 31.98
 @set full-manual
 @c %**end of header
 @iftex
@@ -160,7 +160,6 @@ Terminal Interface
 
 * Sdtty::                       The @code{Sdtty} program
 * Function Keys in Sdtty::      Function Keys
-* Sdtty on the PC::             The PC version
 * Sdtty on Unix::               The Unix version
 
 Call Notes
@@ -182,6 +181,7 @@ Call Notes
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
+* <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
@@ -1185,7 +1185,8 @@ to enter:
 @noindent (Berkshires C4 weekend, May 1996.)  (As if that weren't complicated enough,
 note that the word ``anything'' in the above call is the literal ``anything'' concept,
 not the @code{<ANYTHING>} mechanism of @code{Sdtty}.)
-This is too complicated to type directly.  We would instead type:
+
+@noindent This is too complicated to type directly.  We would instead type:
 @example
 @group
 <anything> percolate, boys to a wave
@@ -1275,7 +1276,7 @@ Whether the word order is tricky or not, you can always enter the concept
 followed by the call as separate items.
 For example, in @code{Sd}, you can click on @code{left} followed by
 @code{chase right}.  In @code{Sdtty}, you can type in @code{left} and then
-@code{chase right}, on two separate lines.
+@code{chase right}.
 
 In addition, @code{Sdtty} allows more natural text entry.  You can type in
 @code{grand swing thru} or @code{chase left} directly.
@@ -1560,8 +1561,8 @@ all of them at once.
 The @code{toggle retain after error} command toggles
 (turns on or off) the state of this option.
 @xref{Changing Modes}.  It can also be turned on when the program begins,
-either by giving a command-line option (@xref{Command-Line Options}) or
-through the use of the initialization file (@xref{Option Control}).
+either by giving a command-line option (@pxref{Command-Line Options}) or
+through the use of the initialization file (@pxref{Option Control}).
 
 @node Asymmetric Selectors,  , Retaining Concepts After an Error, Calling
 @section Asymmetric Selectors
@@ -2025,7 +2026,6 @@ uses a character-oriented terminal interface.
 @menu
 * Sdtty::                       The @code{Sdtty} program
 * Function Keys in Sdtty::      Function Keys
-* Sdtty on the PC::             The PC version
 * Sdtty on Unix::               The Unix version
 @end menu
 
@@ -2061,7 +2061,7 @@ To deal with different types of display hardware with various screen sizes,
 the @code{-lines @var{n}} switch can be given at program startup, as in
 @code{sdtty -lines 36 a2}.  The default size is 25.
 
-@node Function Keys in Sdtty, Sdtty on the PC, Sdtty, Terminal Interface
+@node Function Keys in Sdtty, Sdtty on Unix, Sdtty, Terminal Interface
 @section Function Keys in Sdtty
 
 On the PC, @code{Sdtty} recognizes a number of function keys.  These
@@ -2093,16 +2093,13 @@ text and then pressing
 The key for @samp{<anything>} is simply equivalent to entering that text without pressing
 @key{ENTER}.
 
-The function key 
+The function key
 @key{F8}
 is present only for compatibility with past usage.  It is almost never necessary
 to type ``<anything>''.  Instead, type the substituted call in
 brackets.  @xref{Call Variations}.
 
-@node Sdtty on the PC, Sdtty on Unix, Function Keys in Sdtty, Terminal Interface
-@section Sdtty on the PC
-
-@node Sdtty on Unix,  , Sdtty on the PC, Terminal Interface
+@node Sdtty on Unix,  , Function Keys in Sdtty, Terminal Interface
 @section Sdtty on Unix
 
 The Unix version normally uses the @i{curses} display access mechanism.  It
@@ -2246,6 +2243,7 @@ This section documents these calls.
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
+* <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
@@ -2449,7 +2447,7 @@ An example of this, in which the designated people are not ends, is:
    heads cloverleaf
 @end group
 @end example
-@noindent 
+@noindent
 @noindent In this example, the sides would step into the center.
 
 The call @code{<ANYONE> cloverleaf while the others <ANYTHING>} is similar,
@@ -2556,7 +2554,7 @@ and @samp{cover up (centers and ends)} when using the @samp{central} concept.
 @code{Sd} will, of course, check that the facing directions are such that
 the dancers would have stayed in the center had all 8 people done the call.
 
-@node Countershake, Bridge the Gap, Percolate and Cover Up, Call Notes
+@node Countershake, <ANYONE> Run the Wheel, Percolate and Cover Up, Call Notes
 @section Countershake
 
 The centers and ends each have 3 parts on this call, but they are
@@ -2572,7 +2570,19 @@ lines of 3.  @code{Sd} has another call, @samp{countershake (matrix)} that
 can handle the occasional uses that violate the definition, such as
 @samp{3x3} in a 2x6 matrix.  It is not fractionalizable.
 
-@node Bridge the Gap, Hocus Pocus, Countershake, Call Notes
+@node <ANYONE> Run the Wheel, Bridge the Gap, Countershake, Call Notes
+@section @code{ANYONE Run the Wheel}
+
+As originally defined, this is a rather remarkable ``space invader''
+call which can go into 16 matrix formations under certain
+circumstances.  It is now almost always used in the form of @samp{leads
+run the wheel}, which makes it nothing but a counter rotate 3/4.
+In order to facilitate the more common non-space-invading uses, with
+concepts like @samp{parallelogram}, the original space-invading call
+is called @samp{<anyone> run the wheel (matrix)}.  The non-space-invading
+version is called just @samp{<anyone> run the wheel}.
+
+@node Bridge the Gap, Hocus Pocus, <ANYONE> Run the Wheel, Call Notes
 @section Bridge the Gap
 
 The call @samp{bridge the gap} is defined as a ``space invader'' call.
@@ -3227,6 +3237,8 @@ A 4-person call must be used.
 @item interlocked Z's
 These two are done from a setup in which there are two identifiable Z's.
 A 4-person call must be used.
+@item triple Z's
+This requires a setup with three Z's.
 @item jay
 @item back-to-front jay
 @item back-to-back jay
@@ -3344,10 +3356,6 @@ These are straightforward.
 @item centers
 @item ends
 @item centers and ends@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item center 6
-@item outer 6
-@item center 2
-@item outer 2
 @item center 6/outer 2@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item center 2/outer 6@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item <ANYONE>
@@ -3367,7 +3375,9 @@ will be done as if in 2-faced lines, with the designated people in the
 lead.  The final promenade distance will be computed as though you had allowed
 the dancers to promenade about halfway around the set before they did the call.
 This concept is somewhat cantankerous.  It puts the dancers into 2-faced lines
-and then has everyone do whatever you say next.  If you enter @code{heads lead for a
+and then has everyone do whatever you say next.
+
+@strong{NOTE:}  If you enter @code{heads lead for a
 wheel around}, it will have @emph{everyone} wheel around.  To get the effect that
 is usually indicated by the words ``promenade, do not stop @dots{}, heads wheel around'',
 you must enter enter @code{heads lead for a heads wheel around}.
@@ -3626,7 +3636,7 @@ These are straightforward.
 @item common center L/W
 @item common spot C/L/W/D
 @item common spot hourglass
-@item common two-faced lines
+@item common spot two-faced lines
 The ``common spot'' concept directs people to do their part of the call
 as though the presumed collision from the previous call had not forced
 them to take right hands, and they are simply occupying the same spot.
@@ -3935,7 +3945,7 @@ Or, from parallel waves, you could select:
 @end example
 
 @node Interruptions and Replacements, Designating Certain People, Assuming a Quarter-Tag, Concept Notes
-@section Interruptions and Replacements 
+@section Interruptions and Replacements
 
 There are a number of ways you can get @code{Sd} to interrupt calls
 or replace parts of calls, just as there are a number of ways to
@@ -4061,7 +4071,82 @@ agreed-upon parts.  Just type it.
 @end group
 @end example
 
-@noindent When in doubt, type a question mark immediately after the call.
+@noindent When in doubt, type a question mark at the tricky part.
+If it shows you a choice with @samp{<ANYTHING>}, you can type in
+another call, in square brackets, in place of the @samp{<ANYTHING>}.
+For example, if we are not sure about the replacement for
+@samp{line to line}, we could type
+
+@example
+@group
+   line to line?
+@end group
+@end example
+
+@noindent and it would offer
+
+@example
+@group
+   line to line
+   line to line but <ANYTHING>
+@end group
+@end example
+
+@noindent The second is the one we want.  It tells us that the
+program takes @samp{line to line but} followed by some call in
+brackets.  So we type
+
+@example
+@group
+   line to line but [catch?
+@end group
+@end example
+
+@noindent and it shows
+
+@example
+@group
+   line to line but [catch <N>]
+   line to line but [catch <ANYTHING> <N>]
+   line to line but [catch <ANYTHING> <N>, only the resulting
+        centers finish]
+@end group
+@end example
+
+@noindent The second is the one we want.  So we know that we can type
+
+@example
+@group
+   line to line but [catch [grand mix] 2]
+@end group
+@end example
+
+@noindent Similarly, if we had typed
+
+@example
+@group
+   slant?
+@end group
+@end example
+
+@noindent the program would offer
+
+@example
+@group
+   slant <ANYTHING> and <ANYTHING>
+   slant <ANYTHING> and wheel
+   slant touch and <ANYTHING>
+   slant touch and wheel
+@end group
+@end example
+
+@noindent The first of those indicates that we can type
+
+@example
+@group
+   slant [swing thru] and [turn and deal]
+@end group
+@end example
 
 @subsubheading Initial Replacements
 
@@ -4126,9 +4211,13 @@ Some of the replacement/interruption meta-concepts push the
 semantics of the language to the limit.  Whenever a call undergoes an
 interruption or enters or leaves a part with an additional concept on it,
 there is an implicit @i{piecewise} at that instant.  That is, concepts and
-setups are re-evaluated.
-This behavior is not always obvious to the dancers.
-Furthermore, in some cases it may be perceived as wrong.  For example, an
+setups are re-evaluated.  This behavior is not always obvious to the dancers.
+(However, the dancers' positions within the setup will not be re-evaluated if
+the call depends on carrying this information from one part to another,
+as in @samp{patch the <anyone>} or @samp{rims trade back}.)
+
+Furthermore, some cases of replacements or interruptions may lead to
+situations that are likely to be perceived as wrong.  For example, an
 implied @i{piecewise} on a concept such as @i{cross concentric} or
 @i{single cross concentric} is very likely to be considered wrong,
 because the centers and ends will switch with each other multiple times.
@@ -4220,31 +4309,78 @@ uses for these concepts is determined by the need to avoid ambiguity, and may
 not be the words that you should use when calling.
 
 Also, the program is very fussy about using the designators correctly.  A large
-number of designators are provided to help you with this.  In addition to the usual
-@code{heads}, @code{sides}, @code{boys}, @code{girls}, @code{head corners},
-@code{centers}, @code{ends}, @code{center 2}, @code{center 6}, @code{outer 2}, and
-@code{outer 6}, there are some that are designed for difficult situations.
+number of designators are provided to help you with this.  Some are quite obvious,
+and some are intended for dealing with difficult situations.
+
+Some of these designators will not be understood by dancers below high
+challenge levels, but the program will allow them at any time.  You will
+need to use your judgement in calling.  For example, you may need to use
+@code{sideliners} to get some particularly tricky effect.  Below C4, you
+would need to read the card as something like @samp{those facing the side
+walls}.
+
+@noindent The available designators are:
 
 @table @code
+@item heads / sides
+@item boys / girls
+@item centers / ends
+@item center 2 / center 6
+@item very centers
+(@code{center 2} and @code{very centers} are the same.)
+
+@item outer 2 / outer 6
+@item very ends
+(@code{outer 2} and @code{very ends} are the same.)
+
+@item leads / trailers
+@item beaus / belles
+@item head corners / side corners
+@item head boys / head girls / side boys / side girls
+@item lead ends / lead centers / trailing ends / trailing centers
+@item headliners / sideliners
+@item those facing
+@item everyone
+@item all
+@code{everyone} and @code{all} are the same.  In practice you should hardly
+ever need to use them to the program, though in some situations you may need
+to use them when calling.
+
+@item no one
+@end table
+
+@noindent The following ones are unsymmetrical:
+
+@table @code
+@item near line / far line
+@item near column / far column
+@item near box / far box
+@item those facing the caller
+@item those facing away from the caller
+@item #1 boy / #2 boy / #3 boy / #4 boy
+@item #1 girl / #2 girl / #3 girl / #4 girl
+@item #1 couple / #2 couple / #3 couple / #4 couple
+@item couples 1 and 2 / couples 2 and 3 / couples 3 and 4 / couples 1 and 4
+@sp 1
 @item center 4
 This is intended for use in a parallelogram or offset lines
 or columns.  It designates the center triple box, or center triple
 line/column, respectively.  Just saying @code{centers} will not be
 effective here.
-
+@sp 1
 @item outer pairs
 This designates the people that are not in the @code{center 4}.
 In a parallelogram, it designates the pairs of people in the outer triple
 boxes (the ``wings'').  In offset lines or columns, it designates
 the the pairs of people in the outer triple lines or columns.
-
+@sp 1
 @item center diamond
 This is intended for use in a setup with a wave between, and
 perpendicular to, two miniwaves.  (This is the setup that results
 from a @code{1/2 circulate} from waves.)  In this setup, @code{centers}
 means the center @emph{wave}.  If you want the center diamond instead, you
 must say so.
-
+@sp 1
 @item center 1x4
 This is intended for use in things like 3x1 diamonds.  (This is the setup
 that results from a @code{1/2 acey deucey} from waves.)  In this setup,
@@ -4252,13 +4388,22 @@ that results from a @code{1/2 acey deucey} from waves.)  In this setup,
 instead, you must say @code{center 1x4}.  The program uses the designator
 @code{center 1x4} as a catch-all for the center line or the center column.
 When reading the card, you probably ought to be more specific.
-
+@sp 1
 @item center 1x6
 This is similar, but refers to a line or column of 6.  It is intended
 for use in things like 3x1 diamonds, when you want the center wave of 6
-to do, for example, a @code{grand swing thru}.  The program will not
-accept @code{centers} or @code{center 6} for this, since those terms are not
-well-defined in this situation.
+to do, for example, a @code{grand swing thru}.  Another situation in which
+this is necessary arises after a @code{sets in motion but hold the column}.
+If you get a column of 6 and you want them to do something, you must identify
+them as the @code{center 1x6}.  The designation @code{center 6} is not
+correct for this---it would include the person not in the column, and
+exclude the ends of the column.
+@sp 1
+@item outer 1x3s
+This may be used to designate the outer lines or columns of 3 in such
+setups as an `H' or a diamond between two couples (@samp{heads circle
+the tag to a diamond}.)  You will often need to use the
+@samp{disconnected} concept with this.
 @end table
 
 @subsection @code{ANYONE}

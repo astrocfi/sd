@@ -1,3 +1,5 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1997  William B. Ackerman.
@@ -182,6 +184,8 @@ Private tm_thing maps_isearch_twosome[] = {
 Private tm_thing maps_isearch_threesome[] = {
 
 /*   map1                  map2                  map3                 map4    ilatmask olatmask    limit rot            insetup outsetup */
+   {{0},                  {1},                  {2},                   {0},    0x1,       07,         1, 0,  0,  0, 0,  s1x1,  s1x3},
+   {{0},                  {1},                  {2},                   {0},    0x0,       07,         1, 1,  0,  0, 0,  s1x1,  s1x3},
    {{0, 5},               {1, 4},               {2, 3},                {0},    0x5,      077,         2, 0,  0,  0, 0,  s1x2,  s1x6},
    {{0, 5},               {1, 4},               {2, 3},                {0},      0,      077,         2, 1,  0,  0, 0,  s1x2,  s2x3},
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
@@ -189,6 +193,7 @@ Private tm_thing maps_isearch_threesome[] = {
    {{0, 3, 6, 7},         {1, -1, 5, -1},       {2, -1, 4, -1},        {0},   0x11,     0x77,         4, 0,  0,  0, 0,  sdmd,  s1x3dmd},
    {{3, 6, 7, 0},         {-1, 5, -1, 1},       {-1, 4, -1, 2},        {0},      0,     0x77,         4, 1,  0,  0, 0,  sdmd,  s3x1dmd},
    {{7, 0, 3, 6},         {-1, 1, -1, 5},       {-1, 2, -1, 4},        {0},   0x44,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_spindle},
+   {{0, 3, 6, 7},         {1, -1, 5, -1},       {2, -1, 4, -1},        {0},      0,     0x77,         4, 1,  0,  0, 0,  sdmd,  s_323},
    {{0, 5, 8, 11},        {1, -1, 7, -1},       {2, -1, 6, -1},        {0},      0,     0707,         4, 1,  0,  0, 0,  sdmd,  s3dmd},
    {{0, 5, 8, 9},         {1, 4, 7, 10},        {2, 3, 6, 11},         {0},      0,    07777,         4, 1,  0,  0, 0,  sdmd,  s3dmd},
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s1x4,  s1x12},
@@ -300,10 +305,10 @@ Private tm_thing maps_isearch_ysome[] = {
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 typedef struct {
-   setup_kind testkind;
-   uint32 testval;
-   uint32 fixup;
-   warning_index warning;
+  setup_kind testkind;
+  uint32 testval;
+  uint32 fixup;   /* High bit means phantom pairing is OK. */
+  warning_index warning;
 } siamese_item;
 
 siamese_item siamese_table[] = {
@@ -333,6 +338,11 @@ siamese_item siamese_table[] = {
    {s4x4,        0x0000CCCCUL, 0x8484UL, warn__none},
    {s4x4,        0xAAAA0000UL, 0xA0A0UL, warn__none},
    {s4x4,        0xCCCC0000UL, 0x4848UL, warn__none},
+
+   {s4x4,        0x30304141UL, 0x80004141UL, warn__none},
+   {s4x4,        0x41413030UL, 0x80003030UL, warn__none},
+   {s4x4,        0x03031414UL, 0x80000303UL, warn__none},
+   {s4x4,        0x14140303UL, 0x80001414UL, warn__none},
 
    {s3x4,        0x09E70000UL, 0x0924UL, warn__none},
    {s3x4,        0x000009E7UL, 0x00C3UL, warn__none},
@@ -725,6 +735,9 @@ extern void tandem_couples_move(
    tandstuff.phantom_pairing_ok = phantom_pairing_ok;
    clear_people(result);
 
+   if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+      remove_z_distortion(ss);
+
    if (key == 44) {
       np = 3;
       our_map_table = maps_isearch_threesome;
@@ -1106,16 +1119,18 @@ extern void tandem_couples_move(
       for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
          if (ptr->testkind == ss->kind && ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
             warn(ptr->warning);
-            j = ptr->fixup;
+            j = ptr->fixup & 0xFFFF;
             goto foox;
          }
       }
 
       fail("Can't do Siamese in this setup.");
 
-      foox:
+   foox:
+
       ewmask ^= (j & allmask);
       nsmask ^= (j & allmask);
+      if (ptr->fixup & 0x80000000UL) tandstuff.phantom_pairing_ok = TRUE;
    }
    else if (key & 1) {
       /* Couples -- swap masks.  Tandem -- do nothing. */
@@ -1149,8 +1164,9 @@ extern void tandem_couples_move(
 
    if (phantom == 1) {
       if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s3x4 && ss->kind != s2x6 &&
-               ss->kind != s4x6 && ss->kind != s1x12 && ss->kind != s1x16 &&
-               ss->kind != s3dmd && ss->kind != s4dmd && ss->kind != s3x8)
+          ss->kind != s4x6 && ss->kind != s1x12 && ss->kind != s1x16 &&
+          ss->kind != s3dmd && ss->kind != s_323 &&
+          ss->kind != s4dmd && ss->kind != s3x8)
          fail("Can't do couples or tandem concepts in this setup.");
    }
    else if (phantom >= 2) {

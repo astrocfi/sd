@@ -191,7 +191,7 @@ Private int get_hash(Cstring string, int *bucket_p)
 
 extern void matcher_initialize(void)
 {
-   int i;
+   int i, j;
    int concept_number;
    concept_descriptor *p;
    int *item, *level_item;
@@ -258,17 +258,11 @@ extern void matcher_initialize(void)
 
    selector_menu_list[last_selector_kind+1] = (Cstring) 0;
 
-
-
-
-
-
    /* Initialize the hash buckets for call names. */
 
    {
-      int i, j, bucket;
+      int bucket;
       uint32 ku;
-      int *item;
 
       /* First, do the selectors.  Before that, be sure "<anyone>" is hashed. */
 
@@ -491,8 +485,6 @@ extern void matcher_initialize(void)
          }
       }
    }
-
-
 }
 
 
@@ -558,9 +550,9 @@ Private long_boolean verify_call(void)
                selector_for_initialize = selector_ends;
                goto try_another_selector;
             case selector_ends:
-               selector_for_initialize = selector_all;
+               selector_for_initialize = selector_everyone;
                goto try_another_selector;
-            case selector_all:
+            case selector_everyone:
                selector_for_initialize = selector_none;
                goto try_another_selector;
          }

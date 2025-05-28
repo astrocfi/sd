@@ -186,6 +186,8 @@ extern void reinstate_rotation(setup *ss, setup *result)
          break;
       case s_dead_concentric:
          result->inner.srotation += globalrotation;
+         if ((globalrotation & 1) && ((result->concsetup_outer_elongation + 1) & 2))
+            result->concsetup_outer_elongation ^= 3;
          break;
       case nothing:
          break;
@@ -450,26 +452,32 @@ divide_us:
 }
 
 
-extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *result)
+extern long_boolean do_simple_split(
+   setup *ss,
+   uint32 prefer_1x4,   /* 1 means prefer 1x4, 2 means this is 1x8 and do not recompute id. */
+   setup *result)
 {
    switch (ss->kind) {
-      case s2x4:
-         if (prefer_1x4)
-            new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
-         else
-            new_divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
-         return FALSE;
-      case s1x8:
+   case s2x4:
+      if (prefer_1x4)
+         new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
+      else
+         new_divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
+      return FALSE;
+   case s1x8:
+      if (prefer_1x4 == 2)
+         new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,0), phantest_ok, FALSE, result);
+      else
          new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
-         return FALSE;
-      case s_qtag:
-         new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
-         return FALSE;
-      case s_ptpd:
-         new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
-         return FALSE;
-      default:
-         return TRUE;
+      return FALSE;
+   case s_qtag:
+      new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
+      return FALSE;
+   case s_ptpd:
+      new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
+      return FALSE;
+   default:
+      return TRUE;
    }
 }
 
@@ -787,8 +795,16 @@ Private int start_matrix_call(
          matrix_info[nump].dir = people->people[nump].id1 & 3;
 
          matrix_info[nump].jbits = 0;
-         matrix_info[nump].girlbit = (people->people[nump].id1 & ID1_PERM_GIRL) ? 1 : 0;
-         matrix_info[nump].boybit = (people->people[nump].id1 & ID1_PERM_BOY) ? 1 : 0;
+
+         if (flags & MTX_USE_VEER_DATA) {
+            matrix_info[nump].girlbit = (people->people[nump].id1 & ROLLBITL) ? 1 : 0;
+            matrix_info[nump].boybit = (people->people[nump].id1 & ROLLBITR) ? 1 : 0;
+         }
+         else {
+            matrix_info[nump].girlbit = (people->people[nump].id1 & ID1_PERM_GIRL) ? 1 : 0;
+            matrix_info[nump].boybit = (people->people[nump].id1 & ID1_PERM_BOY) ? 1 : 0;
+         }
+
          matrix_info[nump].nextse = 0;
          matrix_info[nump].nextnw = 0;
          matrix_info[nump].deltax = 0;
@@ -828,6 +844,18 @@ static coordrec press_4dmd_4x4 = {s4x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1,  8,  6, -1, -1,  5,  4, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec acc_crosswave = {s_crosswave, 3,
+   { -8,  -4,   0,   0,   8,   4,   0,   0},
+   {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1,  0,  1,  3,  5,  4, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
@@ -917,12 +945,13 @@ Private void finish_matrix_call(
       /* Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle. */
 
       for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) {                        matrix_info[i].y =  7; }
-         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) {                        matrix_info[i].y = -7; }
-         else if (matrix_info[i].x ==  8 && matrix_info[i].y ==  0) { matrix_info[i].x =  7;                        }
-         else if (matrix_info[i].x == -8 && matrix_info[i].y ==  0) { matrix_info[i].x = -7;                        }
+         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) { matrix_info[i].y =  7; }
+         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) { matrix_info[i].y = -7; }
+         else if (matrix_info[i].x ==  8 && matrix_info[i].y ==  0) { matrix_info[i].x =  7; }
+         else if (matrix_info[i].x == -8 && matrix_info[i].y ==  0) { matrix_info[i].x = -7; }
          else if (   (matrix_info[i].x == 4 || matrix_info[i].x == -4) &&
-                     (matrix_info[i].y == 2 || matrix_info[i].y == -2)) { matrix_info[i].x >>= 1; }
+                     (matrix_info[i].y == 2 || matrix_info[i].y == -2))
+            { matrix_info[i].x >>= 1; }
       }
 
       warn(warn__check_galaxy);
@@ -977,6 +1006,11 @@ Private void finish_matrix_call(
    else if ((ypar == 0x00950095) && ((signature & (~0x22008080)) == 0)) {
       checkptr = setup_attrs[s_thar].setup_coords;
       goto doit;
+   }
+   else if ((ypar == 0x00660084) && ((signature & (~0x01040420)) == 0)) {
+      /* This is a "crosswave" on precise matrix spots. */
+      checkptr = &acc_crosswave;
+      goto doitrot;
    }
    else if ((ypar == 0x00950066) && ((signature & (~0x28008200)) == 0)) {
       checkptr = setup_attrs[s_crosswave].setup_coords;
@@ -1197,8 +1231,24 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[sbigbone].setup_coords;
       goto doit;
    }
+   else if ((ypar == 0x00460044) && ((signature & (~0x41040010)) == 0)) {
+      checkptr = setup_attrs[s_323].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00660044) && ((signature & (~0x41040410)) == 0)) {
+      checkptr = setup_attrs[s_343].setup_coords;
+      goto doit;
+   }
    else if ((ypar == 0x00860044) && ((signature & (~0x49250010)) == 0)) {
       checkptr = setup_attrs[s_525].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00860044) && ((signature & (~0x41250410)) == 0)) {
+      checkptr = setup_attrs[s_545].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00860044) && ((signature & (~0x41250018)) == 0)) {
+      checkptr = setup_attrs[sh545].setup_coords;
       goto doit;
    }
    /* **** These last ones are sort of a crock.  They are designed to make
@@ -1258,7 +1308,7 @@ doitrot:
 
 Private void matrixmove(
    setup *ss,
-   callspec_block *callspec,
+   Const callspec_block *callspec,
    setup *result)
 {
    uint32 datum;
@@ -1278,14 +1328,27 @@ Private void matrixmove(
          /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
             or if the two data are identical so the sex doesn't matter. */
          if ((this->girlbit | this->boybit) == 0 &&
-                  (callspec->stuff.matrix.stuff[0] != callspec->stuff.matrix.stuff[1]))
-            fail("Can't determine sex of this person.");
+             (callspec->stuff.matrix.stuff[0] != callspec->stuff.matrix.stuff[1])) {
+            if (flags & MTX_USE_VEER_DATA)
+               fail("Can't determine lateral direction of this person.");
+            else
+               fail("Can't determine sex of this person.");
+         }
 
          datum = callspec->stuff.matrix.stuff[this->girlbit];
-         alldelta |= (  this->deltax = ( ((datum >> 7) & 0x1F) - 16) << 1  );
-         alldelta |= (  this->deltay = ( ((datum >> 2) & 0x1F) - 16) << 1  );
+
+         this->deltax = ( ((datum >> 7) & 0x1F) - 16) << 1;
+         this->deltay = ( ((datum >> 2) & 0x1F) - 16) << 1;
+
+         if (flags & MTX_USE_NUMBER) {
+            int count = current_options.number_fields & 0xF;
+            this->deltax *= count;
+            this->deltay *= count;
+         }
+
          this->deltarot = datum & 3;
          this->rollinfo = (datum >> 12) * ROLLBITR;
+         alldelta |= this->deltax | this->deltay;
       }
    }
 
@@ -1307,15 +1370,33 @@ Private void matrixmove(
 
 
 
+Private void do_part_of_pair(matrix_rec *this, int base, Const callspec_block *callspec)
+{
+   int datum;
+
+   /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
+      or if the two data are identical so the sex doesn't matter. */
+   if ((this->girlbit | this->boybit) == 0 &&
+       (callspec->stuff.matrix.stuff[base] != callspec->stuff.matrix.stuff[base+1]))
+      fail("Can't determine sex of this person.");
+
+   datum = callspec->stuff.matrix.stuff[base+this->girlbit];
+   if (datum == 0) failp(this->id1, "can't do this call.");
+   this->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
+   this->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
+   this->deltarot = datum & 3;
+   this->rollinfo = (datum >> 12) * ROLLBITR;
+   this->realdone = TRUE;
+}
+
+
 Private void do_pair(
    matrix_rec *ppp,        /* Selected person */
    matrix_rec *qqq,        /* Unselected person */
-   callspec_block *callspec,
+   Const callspec_block *callspec,
    int flip,
    int filter)             /* 1 to do N/S facers, 0 for E/W facers. */
 {
-   int base;
-   int datum;
    uint32 flags;
 
    flags = callspec->stuff.matrix.flags;
@@ -1326,44 +1407,16 @@ Private void do_pair(
    /* We know that either ppp is actually selected, or we are not using selectors. */
 
    if ((filter ^ ppp->dir) & 1) {
-      base = (ppp->dir & 2) ? 6 : 4;
+      int base = (ppp->dir & 2) ? 6 : 4;
       if (!(flags & MTX_USE_SELECTOR)) base &= 3;
-      base ^= flip;
-
-      /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
-         or if the two data are identical so the sex doesn't matter. */
-      if ((ppp->girlbit | ppp->boybit) == 0 &&
-               (callspec->stuff.matrix.stuff[base] != callspec->stuff.matrix.stuff[base+1]))
-         fail("Can't determine sex of this person.");
-
-      datum = callspec->stuff.matrix.stuff[base+ppp->girlbit];
-      if (datum == 0) failp(ppp->id1, "can't do this call.");
-      ppp->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
-      ppp->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
-      ppp->deltarot = datum & 3;
-      ppp->rollinfo = (datum >> 12) * ROLLBITR;
-      ppp->realdone = TRUE;
+      do_part_of_pair(ppp, base^flip, callspec);
    }
    ppp->done = TRUE;
 
    if ((filter ^ qqq->dir) & 1) {
-      base = (qqq->dir & 2) ? 0 : 2;
+      int base = (qqq->dir & 2) ? 0 : 2;
       if ((flags & MTX_IGNORE_NONSELECTEES) || qqq->sel) base |= 4;
-      base ^= flip;
-
-      /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
-         or if the two data are identical so the sex doesn't matter. */
-      if ((qqq->girlbit | qqq->boybit) == 0 &&
-               (callspec->stuff.matrix.stuff[base] != callspec->stuff.matrix.stuff[base+1]))
-         fail("Can't determine sex of this person.");
-
-      datum = callspec->stuff.matrix.stuff[base+qqq->girlbit];
-      if (datum == 0) failp(qqq->id1, "can't do this call.");
-      qqq->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
-      qqq->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
-      qqq->deltarot = datum & 3;
-      qqq->rollinfo = (datum >> 12) * ROLLBITR;
-      qqq->realdone = TRUE;
+      do_part_of_pair(qqq, base^flip, callspec);
    }
    qqq->done = TRUE;
 }
@@ -1479,7 +1532,7 @@ Private void make_matrix_chains(
 Private void process_matrix_chains(
    matrix_rec matrix_info[],
    int nump,
-   callspec_block *callspec,
+   Const callspec_block *callspec,
    uint32 flags,
    int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
 {
@@ -1663,7 +1716,7 @@ Private void process_matrix_chains(
 
 Private void partner_matrixmove(
    setup *ss,
-   callspec_block *callspec,
+   Const callspec_block *callspec,
    setup *result)
 {
    uint32 flags;
@@ -1861,7 +1914,7 @@ extern void anchor_someone_and_move(
 
 Private void rollmove(
    setup *ss,
-   callspec_block *callspec,
+   Const callspec_block *callspec,
    setup *result)
 {
    int i;
@@ -1896,7 +1949,7 @@ Private void rollmove(
 }
 
 
-Private void do_inheritance(setup_command *cmd, callspec_block *parent_call, by_def_item *defptr)
+Private void do_inheritance(setup_command *cmd, Const callspec_block *parent_call, Const by_def_item *defptr)
 {
    /* Strip out those concepts that do not have the "dfm__xxx" flag set saying that
       they are to be inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT"
@@ -1961,10 +2014,10 @@ extern void process_number_insertion(uint32 mod_word)
 
 Private long_boolean get_real_subcall(
    parse_block *parseptr,
-   by_def_item *item,
+   Const by_def_item *item,
    uint64 new_final_concepts,      /* The flags, heritable and otherwise, with which the parent call was invoked.
                                        Some of these may be inherited to the subcall. */
-   callspec_block *parent_call,
+   Const callspec_block *parent_call,
    setup_command *cmd_out)         /* We fill in just the parseptr, callspec, cmd_final_flags fields. */
 
 /* ****** Comment from long ago:  "Need to send out alternate_concept!!!"  I wonder what that meant? */
@@ -2421,6 +2474,61 @@ extern int gcd(int a, int b)
 */
 
 
+extern uint32 process_new_fractions(
+   int numer,
+   int denom,
+   uint32 incoming_fracs,
+   uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
+   long_boolean allow_improper,
+   long_boolean *improper_p)
+{
+   int s_numer, s_denom, e_numer, e_denom, divisor;
+
+   *improper_p = FALSE;
+
+   s_numer = (incoming_fracs & 0xF000) >> 12;        /* Start point. */
+   s_denom = (incoming_fracs & 0xF00) >> 8;
+   e_numer = (incoming_fracs & 0xF0) >> 4;          /* Stop point. */
+   e_denom = (incoming_fracs & 0xF);
+
+   /* Xor the "reverse" bit with the first/last fraction indicator. */
+   if ((reverse_orderbit ^ (incoming_fracs / CMD_FRAC_REVERSE)) & 1) {
+      /* This is "last fraction". */
+      s_numer = s_numer*numer + s_denom*(denom-numer);
+      e_numer = e_numer*numer + e_denom*(denom-numer);
+   }
+   else {
+      /* This is "fractional". */
+      s_numer *= numer;
+      e_numer *= numer;
+   }
+
+   s_denom *= denom;
+   e_denom *= denom;
+
+   if (allow_improper && e_numer > e_denom) {
+      *improper_p = TRUE;
+      e_numer -= e_denom;
+   }
+
+   if (s_numer < 0 || s_numer >= s_denom || e_numer <= 0 || e_numer > e_denom)
+      fail("Illegal fraction.");
+
+   divisor = gcd(s_numer, s_denom);
+   s_numer /= divisor;
+   s_denom /= divisor;
+
+   divisor = gcd(e_numer, e_denom);
+   e_numer /= divisor;
+   e_denom /= divisor;
+
+   if (s_numer > 15 || s_denom > 15 || e_numer > 15 || e_denom > 15)
+      fail("Fractions are too complicated.");
+
+   return (s_numer<<12) | (s_denom<<8) | (e_numer<<4) | e_denom;
+}
+
+
 extern void get_fraction_info(
    uint32 frac_flags,
    uint32 callflags1,
@@ -2709,7 +2817,7 @@ extern void impose_assumption_and_move(setup *ss, setup *result)
 
 Private void do_sequential_call(
    setup *ss,
-   callspec_block *callspec,
+   Const callspec_block *callspec,
    long_boolean qtfudged,
    long_boolean *mirror_p,
    setup *result)
@@ -2717,6 +2825,7 @@ Private void do_sequential_call(
    long_boolean qtf;
    int fetch_index;
    int dist_index;
+   int i;
    uint64 new_final_concepts = ss->cmd.cmd_final_flags;
    int *test_index = &fetch_index;
    parse_block *parseptr = ss->cmd.parseptr;
@@ -2760,17 +2869,17 @@ Private void do_sequential_call(
          by_def_item *this_item = &callspec->stuff.def.defarray[ii];
          uint32 this_mod1 = this_item->modifiers1;
 
-         if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
+         if ((DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE) & this_mod1) {
             uint32 local_number_fields = current_options.number_fields;
 
             total += local_number_fields & 0xF;
 
-            if (this_mod1 & DFM1_REPEAT_N_ALTERNATE) ii++;
+            if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) ii++;
             if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) {
                total++;
                zzz.do_half_of_last_part = CMD_FRAC_HALF_VALUE;
             }
-            if (this_mod1 & DFM1_REPEAT_NM1) {
+            if (this_mod1 & DFM1_SEQ_REPEAT_NM1) {
                if ((local_number_fields & 0xF) == 0) fail("Can't give number zero.");
                total--;
             }
@@ -2854,6 +2963,12 @@ Private void do_sequential_call(
       touch_or_rear_back(ss, *mirror_p, callflags1);
    }
 
+   if (callspec->schema == schema_sequential_with_split_1x8_id && ss->kind == s1x8) {
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1) ss->people[i].id2 |= (i&1) ? ID2_CENTER : ID2_END;
+      }
+   }
+
    /* See comment earlier about mirroring.  For sequentially or concentrically defined
       calls, the "left" flag does not mean mirror; it is simply passed to subcalls.
       So we must put things into their normal state.  If we did any mirroring, it was
@@ -2923,11 +3038,14 @@ Private void do_sequential_call(
       this_item = &callspec->stuff.def.defarray[fetch_index];
       this_mod1 = this_item->modifiers1;
 
+      if (this_mod1 & DFM1_SEQ_NO_RE_EVALUATE)
+         result->result_flags |= RESULTFLAG__NO_REEVALUATE;
+
       fetch_index += zzz.subcall_incr;
       dist_index += zzz.subcall_incr;
 
       if (zzz.reverse_order) {
-         if (fetch_index >= 0 && (DFM1_REPEAT_N_ALTERNATE & callspec->stuff.def.defarray[fetch_index].modifiers1)) {
+         if (fetch_index >= 0 && (DFM1_SEQ_REPEAT_N_ALTERNATE & callspec->stuff.def.defarray[fetch_index].modifiers1)) {
             alt_item = this_item;
             this_item = &callspec->stuff.def.defarray[fetch_index];
             this_mod1 = this_item->modifiers1;
@@ -2935,7 +3053,7 @@ Private void do_sequential_call(
          }
       }
       else {
-         if (DFM1_REPEAT_N_ALTERNATE & this_mod1) {
+         if (DFM1_SEQ_REPEAT_N_ALTERNATE & this_mod1) {
             alt_item = &callspec->stuff.def.defarray[fetch_index];
             fetch_index++;
          }
@@ -2966,10 +3084,24 @@ Private void do_sequential_call(
 
       recompute_id = get_real_subcall(parseptr, this_item, new_final_concepts, callspec, &foo1);
 
+      if (foo1.cmd_final_flags.herit & INHERITFLAG_TWISTED) {
+         if (result->result_flags & RESULTFLAG__TWISTED_FINISHED)
+            foo1.cmd_final_flags.herit &= ~INHERITFLAG_TWISTED;   /* Already did that. */
+         else
+            result->result_flags |= RESULTFLAG__TWISTED_FINISHED;
+      }
+
+      if (foo1.cmd_final_flags.herit & INHERITFLAG_YOYO) {
+         if (result->result_flags & RESULTFLAG__YOYO_FINISHED)
+            foo1.cmd_final_flags.herit &= ~INHERITFLAG_YOYO;   /* Already did that. */
+         else
+            result->result_flags |= RESULTFLAG__YOYO_FINISHED;
+      }
+
       if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;   /* We allow stepping (or rearing back) again. */
 
-      if (this_mod1 & DFM1_REPEAT_N_ALTERNATE)
+      if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
          (void) get_real_subcall(parseptr, alt_item, new_final_concepts, callspec, &foo2);
 
       /* We also re-evaluate if the invocation flag "seq_re_evaluate" is on. */
@@ -2981,12 +3113,12 @@ Private void do_sequential_call(
       process_number_insertion(this_mod1);
 
       /* Check for special repetition stuff. */
-      if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
+      if ((DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE) & this_mod1) {
          int count_to_use = current_options.number_fields & 0xF;
 
          number_used = TRUE;
          if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) count_to_use++;
-         if (this_mod1 & DFM1_REPEAT_NM1) count_to_use--;
+         if (this_mod1 & DFM1_SEQ_REPEAT_NM1) count_to_use--;
          if (count_to_use < 0) fail("Can't give number zero.");
 
          if (zzz.do_half_of_last_part != 0 && !distribute && fetch_index == zzz.highlimit) {
@@ -3052,6 +3184,7 @@ do_plain_call:
          if (!setup_is_elongated)
             result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;  /* Stop checking unless we are really serious. */
 
+         result->cmd.cmd_misc2_flags &= ~(CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW);
          result->cmd.cmd_assume.assumption = fix_next_assumption;
 
          if (fix_next_assumption != cr_none) {
@@ -3067,7 +3200,7 @@ do_plain_call:
       fix_next_assump_col = 0;
       fix_next_assump_both = 0;
 
-      if ((DFM1_REPEAT_N_ALTERNATE & this_mod1) && use_alternate) {
+      if ((DFM1_SEQ_REPEAT_N_ALTERNATE & this_mod1) && use_alternate) {
          result->cmd.parseptr = foo2.parseptr;
          result->cmd.callspec = foo2.callspec;
          result->cmd.cmd_final_flags = foo2.cmd_final_flags;
@@ -3228,7 +3361,7 @@ done_with_big_cycle:
 
 /* Check for a schema that we weren't sure about, and fix it up. */
 
-Private calldef_schema fixup_conc_schema(callspec_block *callspec, setup *ss)
+Private calldef_schema fixup_conc_schema(Const callspec_block *callspec, setup *ss)
 {
    calldef_schema the_schema = callspec->schema;
    uint32 herit_concepts = ss->cmd.cmd_final_flags.herit;
@@ -3406,14 +3539,19 @@ Private void move_with_real_call(
    long_boolean qtfudged,
    setup *result)
 {
-   warning_info saved_warnings;
    uint32 tbonetest;
    uint32 imprecise_rotation_result_flag = 0;
    uint32 unaccepted_flags;
    calldef_schema the_schema;
+   setup_command foo1;
+   setup_command foo2;
    long_boolean mirror;
    long_boolean did_4x4_expansion = FALSE;
-   long_boolean force_split = FALSE;
+   uint32 force_split = 0;      /* 1 means force split,
+                                   2 means this is 1x8 and do not recompute id. */
+   selector_kind special_selector = selector_none;
+   uint32 special_modifiers = 0;
+   selective_key special_indicator = selective_key_plain;
    callspec_block *callspec = ss->cmd.callspec;
    uint32 callflags1 = callspec->callflags1;
 
@@ -3470,8 +3608,10 @@ that probably need to be put in. */
       switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
       case CMD_MISC2__CENTRAL_PLAIN:
          /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
-         if (the_schema != schema_sequential && the_schema != schema_sequential_with_fraction) {
-            by_def_item *defptr;
+         if (the_schema != schema_sequential &&
+             the_schema != schema_sequential_with_fraction &&
+             the_schema != schema_sequential_with_split_1x8_id) {
+            Const by_def_item *defptr;
             uint32 inv_bits = ss->cmd.cmd_misc2_flags & (CMD_MISC2__CTR_END_INV_CONC | CMD_MISC2__CTR_END_INVERT);
 
             /* Normally, we get the centers' part of the definition.  But if the user said
@@ -3517,7 +3657,7 @@ that probably need to be put in. */
             case schema_select_ctr4:
                /* Just leave the definition in place.  We will split the 8-person
                   setup into two 4-person setups, and then pick out the center 2 from them. */
-               force_split = TRUE;
+               force_split = 1;
                break;
             default:
                fail("Can't do \"central\" with this call.");
@@ -3542,6 +3682,7 @@ that probably need to be put in. */
       switch (the_schema) {
          case schema_sequential:
          case schema_sequential_with_fraction:
+         case schema_sequential_with_split_1x8_id:
          case schema_concentric:
          case schema_concentric_2_6:
          case schema_conc_o:
@@ -3550,6 +3691,8 @@ that probably need to be put in. */
          case schema_select_ctr6:
          case schema_single_concentric:
          case schema_single_concentric_together:
+         case schema_select_original_rims:
+         case schema_select_original_hubs:
          case schema_cross_concentric:
          case schema_single_cross_concentric:
          case schema_concentric_or_diamond_line:
@@ -3587,7 +3730,10 @@ that probably need to be put in. */
          case schema_nothing: case schema_matrix: case schema_partner_matrix: case schema_roll:
             fail("This call can't be fractionalized.");
             break;
-         case schema_sequential: case schema_sequential_with_fraction: case schema_split_sequential:
+         case schema_sequential:
+         case schema_sequential_with_fraction:
+         case schema_split_sequential:
+         case schema_sequential_with_split_1x8_id:
             if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) && !(ss->cmd.cmd_frac_flags & CMD_FRAC_FORCE_VIS))
                fail("This call can't be fractionalized.");
             break;
@@ -3707,26 +3853,35 @@ that probably need to be put in. */
       If so, be sure the setup is divided into 1x4's or diamonds.
       But don't do it if something like "magic" is still unprocessed. */
 
-   if ((ss->cmd.cmd_final_flags.herit & (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
+   if ((ss->cmd.cmd_final_flags.herit &
+        (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
       switch (the_schema) {
-         case schema_single_concentric:
-         case schema_single_cross_concentric:
-               force_split = TRUE;
+      case schema_single_concentric:
+      case schema_single_cross_concentric:
+         force_split = 1;
+         break;
+      case schema_single_concentric_together:
+      case schema_concentric_6p_or_sgltogether:
+         switch (ss->kind) {
+         case s1x8: case s_ptpd:
+            force_split = 1;
             break;
-         case schema_single_concentric_together:
-         case schema_concentric_6p_or_sgltogether:
-            switch (ss->kind) {
-               case s1x8: case s_ptpd:
-                  force_split = TRUE;
-                  break;
-            }
+         }
+         break;
+      case schema_select_original_rims:
+      case schema_select_original_hubs:
+         switch (ss->kind) {
+         case s1x8: case s_ptpd:
+            force_split = 2;     /* What a crock!!!!! ****** */
             break;
+         }
+         break;
       }
    }
 
    if (force_split) {
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
-      if (!do_simple_split(ss, TRUE, result)) return;
+      if (!do_simple_split(ss, force_split, result)) return;
    }
 
    /* At this point, we may have mirrored the setup and, of course, left the switch "mirror"
@@ -3746,7 +3901,11 @@ that probably need to be put in. */
          fail("Can't do \"invert/central/snag/mystic\" with a call for the ends only.");
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      if ((the_schema == schema_concentric || the_schema == schema_rev_checkpoint || the_schema == schema_conc_o) &&
+      if ((the_schema == schema_concentric ||
+           the_schema == schema_rev_checkpoint ||
+           the_schema == schema_concentric_6p ||
+           the_schema == schema_concentric_6p_or_normal ||
+           the_schema == schema_conc_o) &&
             (DFM1_ENDSCANDO & callspec->stuff.conc.outerdef.modifiers1)) {
 
          /* Copy the concentricity flags from the call definition into the setup.  All the fuss
@@ -3981,7 +4140,8 @@ that probably need to be put in. */
       }
    }
 
-   /* We can't handle the mirroring unless the schema is by_array, so undo it. */
+   /* We can't handle the mirroring (or "Z" distortion) unless the schema is by_array,
+      so undo it. */
 
    if (the_schema != schema_by_array) {
       if (mirror) { mirror_this(ss); mirror = FALSE; }
@@ -3990,10 +4150,9 @@ that probably need to be put in. */
    if ((callflags1 & CFLAG1_FUNNY_MEANS_THOSE_FACING) &&
        (ss->cmd.cmd_final_flags.herit & INHERITFLAG_FUNNY)) {
       ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_FUNNY;
-      inner_selective_move(ss, &ss->cmd, (setup_command *) 0,
-                           4, FALSE, 0, 0,
-                           selector_thosefacing, 0, 0, result);
-      goto foobarf;
+      foo1 = ss->cmd;
+      special_selector = selector_thosefacing;
+      goto do_special_select_stuff;
    }
 
    switch (the_schema) {
@@ -4024,6 +4183,9 @@ that probably need to be put in. */
                ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
 
+      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+         remove_z_distortion(ss);
+
       matrixmove(ss, callspec, result);
       break;
    case schema_partner_matrix:
@@ -4034,11 +4196,18 @@ that probably need to be put in. */
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
 
+      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+         remove_z_distortion(ss);
+
       partner_matrixmove(ss, callspec, result);
       break;
    case schema_roll:
       if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
+
+      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+         remove_z_distortion(ss);
+
       rollmove(ss, callspec, result);
       /* This call is a 1-person call, so it can be presumed
          to have split maximally both ways. */
@@ -4073,6 +4242,7 @@ that probably need to be put in. */
             reverse as in reverse cut/flip the diamond or reverse change-O. */
 
       ss->cmd.callspec = callspec;
+
       basic_move(ss, tbonetest, qtfudged, mirror, result);
       break;
    default:
@@ -4098,9 +4268,7 @@ that probably need to be put in. */
             fail("Can't do this call with this concept.");
       }
 
-      if (the_schema == schema_sequential ||
-          the_schema == schema_sequential_with_fraction ||
-          the_schema == schema_split_sequential) {
+      if (the_schema >= schema_sequential) {
          uint32 misc2 = ss->cmd.cmd_misc2_flags;
 
          if ((misc2 & CMD_MISC2__CTR_END_KMASK) == CMD_MISC2__CENTRAL_SNAG) {
@@ -4217,16 +4385,16 @@ that probably need to be put in. */
          }
       }
       else {
-         setup_command foo1;
-         setup_command foo2;
-         by_def_item *innerdef = &callspec->stuff.conc.innerdef;
-         by_def_item *outerdef = &callspec->stuff.conc.outerdef;
+         Const by_def_item *innerdef = &callspec->stuff.conc.innerdef;
+         Const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
          parse_block *parseptr = ss->cmd.parseptr;
 
          /* Must be some form of concentric, or a "sel_XXX" schema. */
 
          switch (the_schema) {
          case schema_single_concentric_together:
+         case schema_select_original_rims:
+         case schema_select_original_hubs:
          case schema_single_concentric:
          case schema_select_ctr2:
          case schema_select_ctr4:
@@ -4251,7 +4419,7 @@ that probably need to be put in. */
          if (the_schema == schema_select_leads) {
             inner_selective_move(
                                  ss, &foo1, &foo2,
-                                 4, TRUE, 0, 0,
+                                 selective_key_plain, TRUE, 0, 0,
                                  selector_leads,
                                  innerdef->modifiers1,
                                  outerdef->modifiers1,
@@ -4260,7 +4428,7 @@ that probably need to be put in. */
          else if (the_schema == schema_select_headliners) {
             inner_selective_move(
                                  ss, &foo1, &foo2,
-                                 4, TRUE, 0, 0x80000008UL,
+                                 selective_key_plain, TRUE, 0, 0x80000008UL,
                                  selector_uninitialized,
                                  innerdef->modifiers1,
                                  outerdef->modifiers1,
@@ -4269,7 +4437,7 @@ that probably need to be put in. */
          else if (the_schema == schema_select_sideliners) {
             inner_selective_move(
                                  ss, &foo1, &foo2,
-                                 4, TRUE, 0, 0x80000001UL,
+                                 selective_key_plain, TRUE, 0, 0x80000001UL,
                                  selector_uninitialized,
                                  innerdef->modifiers1,
                                  outerdef->modifiers1,
@@ -4287,40 +4455,45 @@ that probably need to be put in. */
             else {
                /* We have to do this -- the schema means the *current* centers. */
                update_id_bits(ss);
-               inner_selective_move(
-                                    ss, &foo1, (setup_command *) 0,
-                                    4, FALSE, 0, 0,
-                                    (the_schema == schema_select_ctr2) ?
-                                    selector_center2 : selector_center4,
-                                    innerdef->modifiers1,
-                                    0,
-                                    result);
+               special_selector = (the_schema == schema_select_ctr2) ?
+                                    selector_center2 : selector_center4;
+               special_modifiers = innerdef->modifiers1;
+               goto do_special_select_stuff;
             }
          }
          else if (the_schema == schema_select_ctr6) {
             /* We have to do this -- the schema means the *current* centers. */
             update_id_bits(ss);
-            inner_selective_move(
-                                 ss, &foo1, (setup_command *) 0,
-                                 4, FALSE, 0, 0,
-                                 selector_center6,
-                                 innerdef->modifiers1,
-                                 0,
-                                 result);
+            special_selector = selector_center6;
+            special_modifiers = innerdef->modifiers1;
+            goto do_special_select_stuff;
+         }
+         else if (the_schema == schema_select_original_rims) {
+            special_selector = selector_ends;
+            special_modifiers = innerdef->modifiers1;
+            special_indicator = selective_key_plain_from_id_bits;
+            goto do_special_select_stuff;
+         }
+         else if (the_schema == schema_select_original_hubs) {
+            special_selector = selector_centers;
+            special_modifiers = innerdef->modifiers1;
+            special_indicator = selective_key_plain_from_id_bits;
+            goto do_special_select_stuff;
          }
          else {
             int i;
             int rot = 0;
             long_boolean normalize_strongly = FALSE;
+            warning_info saved_warnings = history[history_ptr+1].warnings;
 
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the
                                                                          right thing to do. */
-            saved_warnings = history[history_ptr+1].warnings;
-
-               /* Fudge a 3x4 into a 1/4-tag if appropriate. */
+            /* Fudge a 3x4 into a 1/4-tag if appropriate. */
 
             if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
-                (the_schema == schema_concentric || the_schema == schema_cross_concentric || the_schema == schema_conc_o)) {
+                (the_schema == schema_concentric ||
+                 the_schema == schema_cross_concentric ||
+                 the_schema == schema_conc_o)) {
 
                if (ss->people[0].id1) {
                   if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
@@ -4460,6 +4633,16 @@ that probably need to be put in. */
       break;
    }
 
+   goto foobarf;
+
+ do_special_select_stuff:
+
+   if (special_selector == selector_none) fail("Can't do this call in this formation.");
+
+   inner_selective_move(ss, &foo1, (setup_command *) 0,
+                        special_indicator, FALSE, 0, 0,
+                        special_selector, special_modifiers, 0, result);
+
  foobarf:
 
    /* The definitions for things like "U-turn back" are sometimes
@@ -4471,6 +4654,9 @@ that probably need to be put in. */
       result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
    result->result_flags |= imprecise_rotation_result_flag;
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DID_Z_COMPRESSION)
+      result->result_flags |= RESULTFLAG__DID_Z_COMPRESSION;
+
    /* Reflect back if necessary. */
    if (mirror) mirror_this(result);
    canonicalize_rotation(result);
@@ -4552,6 +4738,9 @@ extern void move(
       parse_block *t = ss->cmd.restrained_concept;
       ss->cmd.restrained_concept = (parse_block *) 0;
 
+      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+         remove_z_distortion(ss);
+
       if (
                (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK))
                   ||
@@ -4610,6 +4799,7 @@ extern void move(
          punt_centers_use_concept(ss, result);
          return;
       }
+
       move_with_real_call(ss, qtfudged, result);
       return;
    }
@@ -4620,8 +4810,9 @@ extern void move(
    /* But if we have a pending "centers/ends work <concept>" concept, don't. */
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
-      parseptrcopy = skip_one_concept(ss->cmd.parseptr);
-      parseptrcopy = parseptrcopy->next;    /* It is now after the subject concept. */
+      concept_kind kjunk;
+
+      (void) really_skip_one_concept(ss->cmd.parseptr, &kjunk, &parseptrcopy);
    }
    else
       parseptrcopy = parseptr;
@@ -4644,6 +4835,9 @@ extern void move(
       if ((ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG))) {
          switch (this_call->schema) {
          case schema_concentric:
+         case schema_concentric_6p:
+         case schema_concentric_6p_or_sgltogether:
+         case schema_concentric_6p_or_normal:
          case schema_conc_o:
             break;
          default:
@@ -4657,6 +4851,9 @@ extern void move(
          case schema_concentric:
          case schema_concentric_6_2:
          case schema_concentric_2_6:
+         case schema_concentric_6p:
+         case schema_concentric_6p_or_sgltogether:
+         case schema_concentric_6p_or_normal:
          case schema_conc_o:
             break;
          default:
@@ -4735,6 +4932,9 @@ extern void move(
          /* ss->cmd.cmd_final_flags may contain
             FINAL__MUST_BE_TAG and/or one of the modifiers (reverse/left/grand/cross/single)
             listed above.  do_big_concept will take care of the latter. */
+
+         if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+            remove_z_distortion(ss);
 
          if (do_big_concept(ss, result)) {
             canonicalize_rotation(result);

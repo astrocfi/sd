@@ -50,7 +50,7 @@
    scatter
    gather
    process_final_concepts
-   skip_one_concept
+   really_skip_one_concept
    fix_n_results
 
 and the following external variables:
@@ -152,15 +152,19 @@ selector_item selector_list[] = {
    {"beaus",        "beau",        "BEAUS",        "BEAU",        selector_belles},
    {"belles",       "belle",       "BELLES",       "BELLE",       selector_beaus},
    {"center 2",     "center 2",    "CENTER 2",     "CENTER 2",    selector_outer6},
+   {"very centers", "very center", "VERY CENTERS", "VERY CENTER", selector_outer6},
    {"center 6",     "center 6",    "CENTER 6",     "CENTER 6",    selector_outer2},
    {"outer 2",      "outer 2",     "OUTER 2",      "OUTER 2",     selector_center6},
+   {"very ends",    "very end",    "VERY ENDS",    "VERY END",    selector_center6},
    {"outer 6",      "outer 6",     "OUTER 6",      "OUTER 6",     selector_center2},
    {"center diamond", "center diamond", "CENTER DIAMOND", "CENTER DIAMOND",    selector_uninitialized},
    {"center 1x4",   "center 1x4",  "CENTER 1X4",   "CENTER 1X4",  selector_uninitialized},
    {"center 1x6",   "center 1x6",  "CENTER 1X6",   "CENTER 1X6",  selector_uninitialized},
+   {"outer 1x3s",   "outer 1x3s",  "OUTER 1X3s",   "OUTER 1X3s",  selector_uninitialized},
    {"center 4",     "center 4",    "CENTER 4",     "CENTER 4",    selector_outerpairs},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
 #ifdef TGL_SELECTORS
+   /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
    {"wave-based triangles",   "wave-based triangle",   "WAVE-BASED TRIANGLES",   "WAVE-BASED TRIANGLE",   selector_uninitialized},
    {"tandem-based triangles", "tandem-based triangle", "TANDEM-BASED TRIANGLES", "TANDEM-BASED TRIANGLE", selector_uninitialized},
    {"inside triangles",       "inside triangle",       "INSIDE TRIANGLES",       "INSIDE TRIANGLE",       selector_uninitialized},
@@ -172,6 +176,7 @@ selector_item selector_list[] = {
    {"sideliners",   "sideliner",   "SIDELINERS",   "SIDELINER",   selector_headliners},
    {"those facing", "those facing","THOSE FACING", "THOSE FACING",selector_uninitialized},
    {"everyone",     "everyone",    "EVERYONE",     "EVERYONE",    selector_uninitialized},
+   {"all",          "all",         "ALL",          "ALL",         selector_uninitialized},
    {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
    /* Start of unsymmetrical selectors. */
    {"near line",    "near line",   "NEAR LINE",    "NEAR LINE",   selector_uninitialized},
@@ -180,7 +185,6 @@ selector_item selector_list[] = {
    {"far column",   "far column",  "FAR COLUMN",   "FAR COLUMN",  selector_uninitialized},
    {"near box",     "near box",    "NEAR BOX",     "NEAR BOX",    selector_uninitialized},
    {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
-
    {"those facing the caller", "those facing the caller",
    "THOSE FACING THE CALLER", "THOSE FACING THE CALLER",         selector_uninitialized},
 
@@ -300,7 +304,8 @@ Cstring warning_strings[] = {
    /*  warn__opt_for_normal_hinge*/   "*If in doubt, assume a normal hinge.",
    /*  warn__opt_for_2fl         */   "*If in doubt, assume a two-faced line.",
    /*  warn__like_linear_action  */   "*Ends start like a linear action -- this may be controversial.",
-   /*  warn_phantoms_thinner     */   "*Phantoms may have gotten thinner -- go to outer triple boxes.",
+   /*  warn__no_z_action         */   "*The 'Z' concept was not actually used.",
+   /*  warn__phantoms_thinner    */   "*Phantoms may have gotten thinner -- go to outer triple boxes.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
    /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
@@ -311,6 +316,7 @@ Cstring warning_strings[] = {
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
+   /*  warn_bogus_yoyo_rims_hubs */   "*Using incorrect definition of rims/hubs trade.",
    /*  warn_pg_in_2x6            */   "*Offset the resulting 2x6 by 50%, or 3 positions.",
    /*  warn__tasteless_com_spot  */   "*Not all common-spot people had right hands.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial."};
@@ -349,6 +355,8 @@ static restriction_thing wave_dmd      = {2, {1, 3},                         {0}
 static restriction_thing wavectrs_ptpd = {4, {1, 3, 7, 5},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwaves in center of each diamond */
 static restriction_thing wave_tgl      = {2, {1, 2},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave as base of triangle */
 
+static restriction_thing cpl_tgl       = {2, {1, 2},                         {0},                         {0}, {0}, TRUE, chk_groups};          /* check for couple as base of triangle */
+
 static restriction_thing wave_thar     = {8, {0, 1, 2, 3, 5, 4, 7, 6},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave};           /* check for consistent wavy thar */
 static restriction_thing thar_1fl      = {8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave};           /* check for consistent 1-faced thar */
 
@@ -358,7 +366,8 @@ static restriction_thing cwave_2x5     = {10, {0, 5, 1, 6, 2, 7, 3, 8, 4, 9},   
 static restriction_thing cwave_2x6     = {12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},                {0}, {0}, {0}, TRUE, chk_wave};            /* check for real 12-matrix columns */
 static restriction_thing cwave_2x8     = {16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},{0}, {0}, {0}, TRUE, chk_wave};            /* check for real 16-matrix columns */
 static restriction_thing cmagic_2x3    = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns of 3 */
-static restriction_thing cmagic_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
+static restriction_thing cmagic_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns or inverted lines */
+static restriction_thing cmagic_thar     = {8, {0, 1, 3, 2, 5, 4, 6, 7},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave};          /* check for thar of opposite-handedness waves */
 
 static restriction_thing cwave_sh6     = {6, {1, 0, 3, 2, 5, 4},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for centers tandem in wave */
 static restriction_thing bone6_1x4     = {6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for ends tandem in wave */
@@ -431,6 +440,8 @@ static restriction_thing cpls_qtbn     = {2, {6, 2, 7, 3},                      
 static restriction_thing wave_ptpd     = {4, {0, 2, 6, 4},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for disconnected wave across the center */
 static restriction_thing two_faced_ptpd= {4, {0, 6, 2, 4},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for disconnected two-faced line across the center */
 
+static restriction_thing wave_3x1d     = {6, {0, 1, 2, 6, 5, 4},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for center wave of 6 */
+
 static restriction_thing miniwave_ptpd = {2, {1, 7, 3, 5},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for miniwaves in center of each diamond */
 
 static restriction_thing qtag_1        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
@@ -462,6 +473,24 @@ static restriction_thing r3qt          = {4, {6, 7, 3, 2},             {4, 0, 4,
 static restriction_thing r1ql          = {4, {6, 3, 7, 2},             {4, 4, 0, 5, 1},                   {0}, {0}, TRUE, chk_qtag};
 static restriction_thing r3ql          = {4, {6, 3, 7, 2},             {4, 0, 4, 1, 5},                   {0}, {0}, TRUE, chk_qtag};
 
+static restriction_thing spindle1      = {6, {0, 6, 1, 5, 2, 4, -1},    {1, 3, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing short1        = {4, {0, 2, 5, 3, -1},          {0, 2, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing dmd1          = {2, {1, 3, -1},                {1, 3, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing lines2x3      = {2, {1, 4, -1},                {1, 3, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing trgl1         = {2, {1, 2, -1},                {0, 2, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing trgl41        = {6, {2, 3, -1},                {0, 2, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing bone61        = {4, {0, 4, 1, 3, -1},          {1, 3, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing line1         = {2, {1, 3, -1},                {0, 2, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing lines1        = {4, {1, 2, 6, 5, -1},          {0, 2, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing qtag1         = {4, {3, 2, 6, 7, -1},          {0, 2, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing ptpd1         = {4, {1, 3, 7, 5, -1},          {1, 3, 0},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing dmd11         = {2, {1, 3, -1},                {1, 3, 1},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing line11        = {2, {1, 3, -1},                {0, 2, 1},                        {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing qtagmwv       = {8, {0, 1, 3, 2, 5, 4, 6, 7, -1}, {0, 2, 0},                     {0}, {0}, FALSE, chk_spec_directions};
+static restriction_thing qtagmagmwv    = {8, {0, 1, 2, 3, 5, 4, 7, 6, -1}, {0, 2, 0},                     {0}, {0}, FALSE, chk_spec_directions};
+
+
+
 /* Must be a power of 2. */
 #define NUM_RESTR_HASH_BUCKETS 32
 
@@ -474,6 +503,22 @@ typedef struct grilch {
 
 
 static restr_initializer restr_init_table[] = {
+   {s_qtag,    cr_qtag_mwv,     &qtagmwv},
+   {s_qtag,    cr_qtag_mag_mwv, &qtagmagmwv},
+   {s_spindle, cr_dmd_ctrs_mwv, &spindle1},
+   {s_short6,  cr_dmd_ctrs_mwv, &short1},
+   {sdmd,      cr_dmd_ctrs_mwv, &dmd1},
+   {s_trngl,   cr_dmd_ctrs_mwv, &trgl1},
+   {s_trngl4,  cr_dmd_ctrs_mwv, &trgl41},
+   {s_bone6,   cr_dmd_ctrs_mwv, &bone61},
+   {s1x4,      cr_dmd_ctrs_mwv, &line1},
+   {s2x4,      cr_dmd_ctrs_mwv, &lines1},
+   {s2x3,      cr_dmd_ctrs_mwv, &lines2x3},
+   {s_qtag,    cr_dmd_ctrs_mwv, &qtag1},
+   {s_ptpd,    cr_dmd_ctrs_mwv, &ptpd1},
+   {sdmd,      cr_dmd_ctrs_1f, &dmd11},
+   {s1x4,      cr_dmd_ctrs_1f, &line11},
+
    {s1x8, cr_wave_only, &wave_1x8},
    {s1x8, cr_1fl_only, &all_same_8},
    {s1x8, cr_all_facing_same, &all_same_8},
@@ -557,6 +602,11 @@ static restr_initializer restr_init_table[] = {
    {s3x4, cr_2fl_only, &two_faced_3x4},
    {s_thar, cr_wave_only, &wave_thar},
    {s_thar, cr_1fl_only, &thar_1fl},
+   {s_thar, cr_magic_only, &cmagic_thar},
+   {s_crosswave, cr_wave_only, &wave_thar},
+   {s_crosswave, cr_1fl_only, &thar_1fl},
+   {s_crosswave, cr_magic_only, &cmagic_thar},
+   {s3x1dmd, cr_wave_only, &wave_3x1d},
    {s_qtag, cr_real_1_4_tag, &r1qt},
    {s_qtag, cr_real_3_4_tag, &r3qt},
    {s_qtag, cr_real_1_4_line, &r1ql},
@@ -705,110 +755,167 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
    }
 
    switch (k) {
-      case s2x2:
-            switch (t.assumption) {
-               case cr_wave_only:
-                  restr_thing_ptr = &box_wave;
-                  break;
-               case cr_all_facing_same: case cr_2fl_only:
-                  restr_thing_ptr = &box_1face;
-                  break;
-               case cr_trailers_only: case cr_leads_only: case cr_li_lo:
-                  restr_thing_ptr = &box_in_or_out;
-                  break;
-               case cr_indep_in_out:
-                  restr_thing_ptr = &ind_in_out_2x2;
-                  break;
-               case cr_magic_only:
-                  restr_thing_ptr = &box_magic;
-                  break;
-            }
+   case s2x2:
+      switch (t.assumption) {
+      case cr_wave_only:
+         restr_thing_ptr = &box_wave;
          break;
-      case s4x4:
-         if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
-            restr_thing_ptr = &s4x4_wave;
-         if (t.assumption == cr_2fl_only && (t.assump_col & 1) == 0)
-            restr_thing_ptr = &s4x4_2fl;
+      case cr_all_facing_same: case cr_2fl_only:
+         restr_thing_ptr = &box_1face;
          break;
-      case s2x4:
-         if (t.assumption == cr_wave_only && t.assump_col == 2)
-            restr_thing_ptr = &mnwv_2x4;  /* WRONG!!!  This is "assume normal boxes" while in gen'lized lines, but will accept any miniwaves. */
-         else if (t.assumption == cr_magic_only && (t.assump_col & 2) == 2)
-            /* "assume inverted boxes", people are in general lines (col=2) or cols (col=3) */
-            restr_thing_ptr = &cmagic_2x4;   /* This is wrong, need something that allows real mag col or unsymm congruent inv boxes.
-                                                      This is a "check mixed groups" type of thing!!!! */
+      case cr_trailers_only: case cr_leads_only: case cr_li_lo:
+         restr_thing_ptr = &box_in_or_out;
          break;
-      case s1x2:
-         if (t.assumption == cr_wave_only && t.assump_col == 2)
-            restr_thing_ptr = &wave_1x2;
+      case cr_indep_in_out:
+         restr_thing_ptr = &ind_in_out_2x2;
          break;
-      case s_qtag:
-         if (t.assumption == cr_jleft)
-            restr_thing_ptr = &jleft_qtag;
-         else if (t.assumption == cr_jright)
-            restr_thing_ptr = &jright_qtag;
-         else if (t.assumption == cr_ijleft)
-            restr_thing_ptr = &ijleft_qtag;
-         else if (t.assumption == cr_ijright)
-            restr_thing_ptr = &ijright_qtag;
-         else if (t.assumption == cr_diamond_like)
-            restr_thing_ptr = &qtag_d;
-         else if (t.assumption == cr_qtag_like)
-            restr_thing_ptr = &all_8_ns;
-         else if (t.assumption == cr_gen_1_4_tag)
-            restr_thing_ptr = &qtag_1;
-         else if (t.assumption == cr_gen_3_4_tag)
-            restr_thing_ptr = &qtag_3;
+      case cr_magic_only:
+         restr_thing_ptr = &box_magic;
          break;
-      case s4dmd:
-         if (t.assumption == cr_jleft)
-            restr_thing_ptr = &jleft_4dmd;
-         else if (t.assumption == cr_jright)
-            restr_thing_ptr = &jright_4dmd;
-         else if (t.assumption == cr_diamond_like)
-            restr_thing_ptr = &dmd4_d;
-         else if (t.assumption == cr_qtag_like)
-            restr_thing_ptr = &all_16_ns;
-         else if (t.assumption == cr_gen_1_4_tag)
-            restr_thing_ptr = &dmd4_1;
-         else if (t.assumption == cr_gen_3_4_tag)
-            restr_thing_ptr = &dmd4_3;
-         break;
-      case s_trngl:
-         if (t.assumption == cr_miniwaves && t.assump_col == 0)
-            restr_thing_ptr = &wave_tgl;
-         else if (t.assumption == cr_wave_only && t.assump_col == 0)
-            restr_thing_ptr = &wave_tgl;
-         break;
-      case sdmd:
-         if (t.assumption == cr_jright)
-            restr_thing_ptr = &jright_dmd;
-         else if (t.assumption == cr_diamond_like)
-            restr_thing_ptr = &dmd_d;
-         else if (t.assumption == cr_qtag_like)
-            restr_thing_ptr = &dmd_q;
-         else if (t.assumption == cr_gen_1_4_tag)
-            restr_thing_ptr = &dmd_1;
-         else if (t.assumption == cr_gen_3_4_tag)
-            restr_thing_ptr = &dmd_3;
-         break;
-      case s_ptpd:
-         if (t.assumption == cr_jright)
-            restr_thing_ptr = &jright_ptpd;
-         else if (t.assumption == cr_diamond_like)
-            restr_thing_ptr = &ptpd_d;
-         else if (t.assumption == cr_qtag_like)
-            restr_thing_ptr = &all_8_ew;
-         else if (t.assumption == cr_gen_1_4_tag)
-            restr_thing_ptr = &ptpd_1;
-         else if (t.assumption == cr_gen_3_4_tag)
-            restr_thing_ptr = &ptpd_3;
-         break;
+      }
+      break;
+   case s4x4:
+      if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
+         restr_thing_ptr = &s4x4_wave;
+      if (t.assumption == cr_2fl_only && (t.assump_col & 1) == 0)
+         restr_thing_ptr = &s4x4_2fl;
+      break;
+   case s2x4:
+      if (t.assumption == cr_wave_only && t.assump_col == 2)
+         restr_thing_ptr = &mnwv_2x4;  /* WRONG!!!  This is "assume normal boxes" while in gen'lized lines, but will accept any miniwaves. */
+      else if (t.assumption == cr_magic_only && (t.assump_col & 2) == 2)
+         /* "assume inverted boxes", people are in general lines (col=2) or cols (col=3) */
+         restr_thing_ptr = &cmagic_2x4;   /* This is wrong, need something that allows real mag col or unsymm congruent inv boxes.
+                                             This is a "check mixed groups" type of thing!!!! */
+      break;
+   case s1x2:
+      if (t.assumption == cr_wave_only && t.assump_col == 2)
+         restr_thing_ptr = &wave_1x2;
+      break;
+   case s_qtag:
+      if (t.assumption == cr_jleft)
+         restr_thing_ptr = &jleft_qtag;
+      else if (t.assumption == cr_jright)
+         restr_thing_ptr = &jright_qtag;
+      else if (t.assumption == cr_ijleft)
+         restr_thing_ptr = &ijleft_qtag;
+      else if (t.assumption == cr_ijright)
+         restr_thing_ptr = &ijright_qtag;
+      else if (t.assumption == cr_diamond_like)
+         restr_thing_ptr = &qtag_d;
+      else if (t.assumption == cr_qtag_like)
+         restr_thing_ptr = &all_8_ns;
+      else if (t.assumption == cr_gen_1_4_tag)
+         restr_thing_ptr = &qtag_1;
+      else if (t.assumption == cr_gen_3_4_tag)
+         restr_thing_ptr = &qtag_3;
+      break;
+   case s4dmd:
+      if (t.assumption == cr_jleft)
+         restr_thing_ptr = &jleft_4dmd;
+      else if (t.assumption == cr_jright)
+         restr_thing_ptr = &jright_4dmd;
+      else if (t.assumption == cr_diamond_like)
+         restr_thing_ptr = &dmd4_d;
+      else if (t.assumption == cr_qtag_like)
+         restr_thing_ptr = &all_16_ns;
+      else if (t.assumption == cr_gen_1_4_tag)
+         restr_thing_ptr = &dmd4_1;
+      else if (t.assumption == cr_gen_3_4_tag)
+         restr_thing_ptr = &dmd4_3;
+      break;
+   case s_trngl:
+      if (t.assump_col == 0) {
+         switch (t.assumption) {
+         case cr_miniwaves:
+            restr_thing_ptr = &wave_tgl; break;
+         case cr_couples_only:
+            restr_thing_ptr = &cpl_tgl; break;
+         case cr_wave_only:
+            restr_thing_ptr = &wave_tgl; break;
+         }
+      }
+      break;
+   case sdmd:
+      if (t.assumption == cr_jright)
+         restr_thing_ptr = &jright_dmd;
+      else if (t.assumption == cr_diamond_like)
+         restr_thing_ptr = &dmd_d;
+      else if (t.assumption == cr_qtag_like)
+         restr_thing_ptr = &dmd_q;
+      else if (t.assumption == cr_gen_1_4_tag)
+         restr_thing_ptr = &dmd_1;
+      else if (t.assumption == cr_gen_3_4_tag)
+         restr_thing_ptr = &dmd_3;
+      break;
+   case s_ptpd:
+      if (t.assumption == cr_jright)
+         restr_thing_ptr = &jright_ptpd;
+      else if (t.assumption == cr_diamond_like)
+         restr_thing_ptr = &ptpd_d;
+      else if (t.assumption == cr_qtag_like)
+         restr_thing_ptr = &all_8_ew;
+      else if (t.assumption == cr_gen_1_4_tag)
+         restr_thing_ptr = &ptpd_1;
+      else if (t.assumption == cr_gen_3_4_tag)
+         restr_thing_ptr = &ptpd_3;
+      break;
    }
 
    return restr_thing_ptr;
 }
 
+
+
+Private long_boolean check_for_concept_group(Const parse_block *parseptrcopy,
+                                             concept_kind *k_p,
+                                             parse_block **next_parseptr_p)
+{
+   concept_kind k;
+   parse_block *parseptr_skip = parseptrcopy->next;
+
+   if (parseptrcopy->concept)
+      k = parseptrcopy->concept->kind;
+   else
+      k = marker_end_of_list;
+
+   *k_p = k;
+
+   /* If skipping "phantom", maybe it's "phantom tandem", so we need to skip both. */
+
+   if (k == concept_c1_phantom) {
+      uint64 junk_concepts;
+      *next_parseptr_p =
+         process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+
+      if (((*next_parseptr_p)->concept->kind == concept_tandem ||
+           (*next_parseptr_p)->concept->kind == concept_frac_tandem) &&
+          junk_concepts.herit == 0 && junk_concepts.final == 0)
+         return TRUE;
+   }
+   else if (k == concept_meta) {
+      uint64 junk_concepts;
+      uint32 subkey = parseptrcopy->concept->value.arg1;
+
+      if (subkey == 0 || subkey == 1 || subkey == 2 || subkey == 3 ||
+          subkey == 7 || subkey == 8 || subkey == 12) {
+         *next_parseptr_p =
+            process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+         return TRUE;
+      }
+   }
+   else if (k == concept_so_and_so_only) {
+      uint64 junk_concepts;
+
+      if (((selective_key) parseptrcopy->concept->value.arg1) == selective_key_work_concept) {
+         *next_parseptr_p =
+            process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+         return TRUE;
+      }
+   }
+
+   return FALSE;
+}
 
 
 /* These variables are used by the text-packing stuff. */
@@ -1164,7 +1271,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
    local_cptr = thing;
 
    while (local_cptr) {
-      int i;
       concept_kind k;
       concept_descriptor *item;
 
@@ -1232,20 +1338,23 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             parse_block *subsidiary_ptr = local_cptr->subsidiary_root;
 
             if (k == concept_centers_and_ends) {
-               if (item->value.arg1 == selector_center6)
-                  writestuff("CENTER 6 ");
-               else if (item->value.arg1 == selector_center2)
-                  writestuff("CENTER 2 ");
+               if (item->value.arg1 == selector_center6 ||
+                   item->value.arg1 == selector_center2 ||
+                   item->value.arg1 == selector_verycenters)
+                  writestuff(selector_list[item->value.arg1].name_uc);
                else
-                  writestuff("CENTERS ");
+                  writestuff(selector_list[selector_centers].name_uc);
+
+               writestuff(" ");
             }
             else if (k == concept_some_vs_others) {
-               if ((i = item->value.arg1) == 1) {
+               selective_key sk = (selective_key) item->value.arg1;
+
+               if (sk == selective_key_dyp)
                   writestuff_with_decorations(local_cptr, "DO YOUR PART, @6 ");
-               }
-               else if (i == 3)
+               else if (sk == selective_key_own)
                   writestuff_with_decorations(local_cptr, "OWN THE @6, ");
-               else if (i == 5)
+               else if (sk == selective_key_plain)
                   writestuff_with_decorations(local_cptr, "@6 ");
                else
                   writestuff_with_decorations(local_cptr, "@6 DISCONNECTED ");
@@ -1304,7 +1413,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                else
                   writestuff(" WHILE THE ENDS");
             }
-            else if (k == concept_some_vs_others && item->value.arg1 != 3) {
+            else if (k == concept_some_vs_others && (selective_key) item->value.arg1 != selective_key_own) {
+
                selector_kind opp = selector_list[local_cptr->options.who].opposite;
                writestuff(" WHILE THE ");
                writestuff((opp == selector_uninitialized) ? ((Cstring) "OTHERS") : selector_list[opp].name_uc);
@@ -1342,8 +1452,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             if (deferred_concept_paren == 0) deferred_concept_paren = 2;
          }
          else {
-            callspec_block *target_call = (callspec_block *) 0;
-            parse_block *tptr;
+            Const callspec_block *target_call = (callspec_block *) 0;
+            Const parse_block *tptr;
 
             /* Look for special concepts that, in conjunction with calls that have certain escape codes
                in them, get deferred and inserted into the call name. */
@@ -1396,8 +1506,11 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         (k == concept_meta && (item->value.arg1 == 3 || item->value.arg1 == 7))) {   /* INITIALLY/FINALLY. */
                   request_comma_after_next_concept = 1;     /* These concepts require a comma after the following concept. */
                }
-               else if (k == concept_so_and_so_only && item->value.arg1 == 11) {         /* "<ANYONE> WORK" */
-                  request_comma_after_next_concept = 2;     /* This concept requires the word "all" after the following concept. */
+               else if (k == concept_so_and_so_only &&
+                        ((selective_key) item->value.arg1) == selective_key_work_concept) {
+                  /* "<ANYONE> WORK" */
+                  /* This concept requires the word "all" after the following concept. */
+                  request_comma_after_next_concept = 2;
                }
 
                writestuff_with_decorations(local_cptr, (Const char *) 0);
@@ -1411,13 +1524,26 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff(", ALL");
             request_final_space = TRUE;
          }
-         else if (comma_after_next_concept) {
+         else if (comma_after_next_concept == 1) {
             writestuff(",");
             request_final_space = TRUE;
          }
 
          did_comma = comma_after_next_concept;
-         comma_after_next_concept = request_comma_after_next_concept;
+
+         if (comma_after_next_concept == 3)
+            comma_after_next_concept = 2;
+         else
+            comma_after_next_concept = request_comma_after_next_concept;
+
+         if (comma_after_next_concept == 2 && next_cptr) {
+            parse_block *junk2;
+            concept_kind junk_k;
+
+            if (check_for_concept_group(next_cptr, &junk_k, &junk2))
+               comma_after_next_concept = 3;    /* Will try again later. */
+         }
+
          local_cptr = next_cptr;
 
          if (k == concept_sequential) {
@@ -1426,7 +1552,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff(")");
             return;
          }
-         else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
+         else if (k == concept_replace_nth_part ||
+                  k == concept_replace_last_part ||
+                  k == concept_interrupt_at_fraction) {
             if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff("]");
@@ -1731,7 +1859,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             int first_replace = 0;
 
             for (search = save_cptr->next ; search ; search = search->next) {
-               callspec_block *cc;
+               Const callspec_block *cc;
                parse_block *subsidiary_ptr = search->subsidiary_root;
 
                /* If we have a subsidiary_ptr, handle the replacement that is indicated.
@@ -1827,7 +1955,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
    if (deferred_concept) {
       if (deferred_concept_paren & 1) writestuff(/*(*/")");
       writestuff(" ");
-      writestuff_with_decorations(deferred_concept, (Const char *) 0);
+
+      if (deferred_concept->concept->kind == concept_twice &&
+          deferred_concept->concept->value.arg2 == 3)
+         writestuff("3 TIMES");
+      else
+         writestuff_with_decorations(deferred_concept, (Const char *) 0);
       if (deferred_concept_paren & 2) writestuff(/*(*/")");
    }
 
@@ -2320,39 +2453,7 @@ extern call_list_kind find_proper_call_list(setup *s)
 }
 
 
-static Const long int spindle1[] = {d_east, d_west, 0, 6, 1, 5, 2, 4, -1};
-static Const long int short1[] = {d_north, d_south, 0, 2, 5, 3, -1};
-static Const long int dmd1[] = {d_east, d_west, 1, 3, -1};
-static Const long int lines2x3[] = {d_east, d_west, 1, 4, -1};
-static Const long int trgl1[] = {d_north, d_south, 1, 2, -1};
-static Const long int trgl41[] = {d_north, d_south, 2, 3, -1};
-static Const long int bone61[] = {d_east, d_west, 0, 4, 1, 3, -1};
-static Const long int line1[] = {d_north, d_south, 1, 3, -1};
-static Const long int lines1[] = {d_north, d_south, 1, 2, 6, 5, -1};
-static Const long int qtag1[] = {d_north, d_south, 3, 2, 6, 7, -1};
-static Const long int ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
-
             
-
-extern Const long int *get_rh_test(setup_kind kind)
-{
-   switch (kind) {
-   case s_spindle: return spindle1;
-   case s_short6:  return short1;
-   case sdmd:      return dmd1;
-   case s_trngl:   return trgl1;
-   case s_trngl4:  return trgl41;
-   case s_bone6:   return bone61;
-   case s1x4:      return line1;
-   case s2x4:      return lines1;
-   case s2x3:      return lines2x3;
-   case s_qtag:    return qtag1;
-   case s_ptpd:    return ptpd1;
-   default:        return (Const long int *) 0;
-   }
-}
-
-
 
 extern long_boolean verify_restriction(
    setup *ss,
@@ -2367,6 +2468,7 @@ extern long_boolean verify_restriction(
    uint32 qaa[4];
    uint32 pdir, qdir, pdirodd, qdirodd;
    uint32 dirtest[2];
+   Const veryshort *p;
    int phantom_count = 0;
 
    dirtest[0] = 0;
@@ -2375,6 +2477,34 @@ extern long_boolean verify_restriction(
    *failed_to_instantiate = TRUE;
 
    switch (rr->check) {
+      case chk_spec_directions:
+         qa1 = 0;
+         qa0 = 3 & (~tt.assump_both);
+
+         p = rr->map1;
+         qa2 = rr->map2[0];
+         qa3 = rr->map2[1];
+            
+         while (*p>=0) {
+            uint32 t1 = ss->people[*(p++)].id1;
+            uint32 t2 = ss->people[*(p++)].id1;
+            qa1 |= t1 | t2;
+            if (t1 && (t1 & 3)!=qa2) qa0 &= ~2;
+            if (t2 && (t2 & 3)!=qa3) qa0 &= ~2;
+            if (t1 && (t1 & 3)!=qa3) qa0 &= ~1;
+            if (t2 && (t2 & 3)!=qa2) qa0 &= ~1;
+         }
+
+         if (qa1) {
+            if (rr->map2[2]) {
+               if (!qa0) goto good;
+            }
+            else {
+               if (qa0) goto good;
+            }
+         }
+
+         goto bad;
       case chk_wave:
          qaa[0] = tt.assump_both;
          qaa[1] = tt.assump_both << 1;
@@ -2738,7 +2868,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       assumption_thing tt;
       int idx, plaini;
       restriction_thing *rr;
-      search_qualifier this_qualifier;
+      call_restriction this_qualifier;
 
       /* First, we demand that the starting setup be correct.  Also, if a qualifier
          number was specified, it must match. */
@@ -2760,7 +2890,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          1000  must be T-boned
          0800  must not be T-boned
          0780  if these 4 bits are nonzero, they must match the number plus 1
-         007F  the qualifier itsel (we allow 127 qualifiers) */
+         007F  the qualifier itself (we allow 127 qualifiers) */
 
       if ((p->qualifierstuff & QUALBIT__NUM_MASK) != 0) {
          number_used = TRUE;
@@ -2783,9 +2913,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          }
       }
 
-      this_qualifier = (search_qualifier) (p->qualifierstuff & QUALBIT__QUAL_CODE);
+      this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
 
-      if (this_qualifier == sq_none) {
+      if (this_qualifier == cr_none) {
          if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   /* All live people were demanded. */
             for (plaini=0; plaini<=setup_attrs[ss->kind].setup_limits; plaini++) {
                if ((ss->people[plaini].id1) == 0) goto bad;
@@ -2806,16 +2936,18 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          the call "recycle". */
 
       k = 0;   /* Many tests will find these values useful. */
+      mask = 0;
       i = 2;
+      tt.assumption = this_qualifier;
       tt.assump_col = 0;
       tt.assump_cast = 0;
       tt.assump_live = (p->qualifierstuff / QUALBIT__LIVE) & 1;
       tt.assump_both = (p->qualifierstuff / QUALBIT__RIGHT) & 3;
 
       switch (this_qualifier) {
-      case sq_wave_only:
+      case cr_wave_only:
          goto do_wave_stuff;
-      case sq_magic_only:
+      case cr_magic_only:
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_1fl_only:
          case cr_2fl_only:
@@ -2823,368 +2955,374 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             goto bad;
          }
 
-         tt.assumption = cr_magic_only;
          goto fix_col_line_stuff;
-      case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
-            switch (ss->kind) {                /* 2x4 - this means lines in/out or 8ch/tby */
-               case s1x2: case s1x4: case s2x2: case s2x4:
-                  tt.assumption = cr_li_lo;
-                  goto fix_col_line_stuff;
-               default:
-                  goto good;           /* We don't understand the setup -- we'd better accept it. */
-            }
-         case sq_independent_in_or_out:
-            switch (ss->kind) {
-               case s2x2: case s2x4:
-                  tt.assumption = cr_indep_in_out;
-                  goto fix_col_line_stuff;
-               default:
-                  goto good;           /* We don't understand the setup -- we'd better accept it. */
-            }
-         case sq_centers_in_or_out:            /* 2x4 - centers all facing in or all facing out */
-            switch (ss->kind) {
-               case s2x4:
-                  tt.assumption = cr_ctrs_in_out;
-                  if (!((ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1)&010)) tt.assump_col = 1;
-                  goto check_tt;
-               default:
-                  goto good;           /* We don't understand the setup -- we'd better accept it. */
-            }
-         case sq_all_facing_same:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_wave_only:
-               case cr_magic_only:
-                  goto bad;
-            }
-
-            tt.assumption = cr_all_facing_same;
+      case cr_li_lo: 
+         switch (ss->kind) {
+         case s1x2: case s1x4: case s2x2: case s2x4:
             goto fix_col_line_stuff;
-         case sq_1fl_only:        /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only:
-                  goto good;
-               case cr_wave_only:
-               case cr_magic_only:
-                  goto bad;
-            }
-
-            tt.assumption = cr_1fl_only;
+         default:
+            goto good;           /* We don't understand the setup -- we'd better accept it. */
+         }
+      case cr_indep_in_out:
+         switch (ss->kind) {
+         case s2x2: case s2x4:
+            goto fix_col_line_stuff;
+         default:
+            goto good;           /* We don't understand the setup -- we'd better accept it. */
+         }
+      case cr_ctrs_in_out:
+         switch (ss->kind) {
+         case s2x4:
+            if (!((ss->people[1].id1 | ss->people[2].id1 |
+                   ss->people[5].id1 | ss->people[6].id1)&010))
+               tt.assump_col = 1;
             goto check_tt;
-         case sq_2fl_only:        /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
-            goto do_2fl_stuff;
-         case sq_3x3_2fl_only:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
-            }
+         default:
+            goto good;           /* We don't understand the setup -- we'd better accept it. */
+         }
+      case cr_all_facing_same:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_wave_only:
+         case cr_magic_only:
+            goto bad;
+         }
 
-            tt.assumption = cr_3x3_2fl_only;
+         goto fix_col_line_stuff;
+      case cr_1fl_only:        /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
+                                  2x3/2x4 - individual 1FL's */
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only:
+            goto good;
+         case cr_wave_only:
+         case cr_magic_only:
+            goto bad;
+         }
+
+         goto check_tt;
+      case cr_2fl_only:        /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
+         goto do_2fl_stuff;
+      case cr_3x3_2fl_only:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
+         }
+
+         tt.assumption = cr_3x3_2fl_only;
+         goto fix_col_line_stuff;
+      case cr_4x4_2fl_only:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
+         }
+
+         tt.assumption = cr_4x4_2fl_only;
+         goto fix_col_line_stuff;
+      case cr_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns -
+                                       people are in genuine couples, not miniwaves */
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only:
+         case cr_2fl_only:
+            goto good;
+         case cr_wave_only:
+         case cr_miniwaves:
+         case cr_magic_only:
+            goto bad;
+         }
+
+         tt.assumption = cr_couples_only;
+
+         goto fix_col_line_stuff;
+      case cr_3x3couples_only:      /* 1x3/1x6/2x3/2x6/1x12 - each group of 3 people
+                                       are facing the same way */
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only:
+            goto good;
+         case cr_wave_only:
+         case cr_magic_only:
+            goto bad;
+         }
+
+         goto check_tt;
+      case cr_4x4couples_only:      /* 1x4/1x8/2x4/2x8/1x16 - each group of 4 people
+                                       are facing the same way */
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only:
+            goto good;
+         case cr_wave_only:
+         case cr_magic_only:
+            goto bad;
+         }
+
+         goto check_tt;
+      case cr_not_miniwaves:
+         tt.assump_negate = 1;
+         /* **** FALL THROUGH!!!! */
+      case cr_miniwaves:                    /* miniwaves everywhere */
+         /* **** FELL THROUGH!!!!!! */
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only:
+         case cr_2fl_only:
+            goto bad;
+         }
+
+         tt.assumption = cr_miniwaves;
+
+         switch (ss->kind) {
+         case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
+         case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
             goto fix_col_line_stuff;
-         case sq_4x4_2fl_only:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
-            }
-
-            tt.assumption = cr_4x4_2fl_only;
-            goto fix_col_line_stuff;
-         case sq_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only:
-                  goto good;
-               case cr_wave_only:
-               case cr_miniwaves:
-               case cr_magic_only:
-                  goto bad;
-            }
-
-            tt.assumption = cr_couples_only;
-            goto fix_col_line_stuff;
-         case sq_3x3couples_only:      /* 1x3/1x6/2x3/2x6/1x12 - each group of 3 people are facing the same way */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only:
-                  goto good;
-               case cr_wave_only:
-               case cr_magic_only:
-                  goto bad;
-            }
-
-            tt.assumption = cr_3x3couples_only;
-            goto check_tt;
-         case sq_4x4couples_only:      /* 1x4/1x8/2x4/2x8/1x16 - each group of 4 people are facing the same way */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only:
-                  goto good;
-               case cr_wave_only:
-               case cr_magic_only:
-                  goto bad;
-            }
-
-            tt.assumption = cr_4x4couples_only;
-            goto check_tt;
-         case sq_not_miniwaves:
-            tt.assump_negate = 1;
-            /* **** FALL THROUGH!!!! */
-         case sq_miniwaves:                    /* miniwaves everywhere */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only:
-               case cr_2fl_only:
-                  goto bad;
-            }
-
-            tt.assumption = cr_miniwaves;
-
-            switch (ss->kind) {
-               case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
-               case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
-                  goto fix_col_line_stuff;
-               case s2x2:
-                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
-                  k = 1;
-                  i = 2;
-                  if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
-                  if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u; }
-                  if ((i & 2) && (k & 1)) goto good;
-                  goto bad;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
-         case sq_ctrwv_end2fl:
-            /* Note that this qualifier is kind of strict.  We won't permit the call "with
+         case s2x2:
+            if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
+            if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
+            if ((i & 2) && !(k & 1)) goto good;
+            k = 1;
+            i = 2;
+            if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
+            if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u; }
+            if ((i & 2) && (k & 1)) goto good;
+            goto bad;
+         default:
+            goto good;                 /* We don't understand the setup --
+                                          we'd better accept it. */
+         }
+      case cr_ctrwv_end2fl:
+         /* Note that this qualifier is kind of strict.  We won't permit the call "with
+            confidence" do be done unless everyone can trivially determine which
+            part to do. */
+         if (ss->kind == s_crosswave) {
+            if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
+                ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
+                ((ss->people[2].id1 | ss->people[3].id1) == 0 || ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2) &&
+                ((ss->people[6].id1 | ss->people[7].id1) == 0 || ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2))
+               goto good;
+            goto bad;
+         }
+         else if (ss->kind == s1x6) {
+            if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
+                ((ss->people[3].id1 ^ ss->people[4].id1) & d_mask) == 0 &&
+                ((ss->people[1].id1 ^ ss->people[2].id1) & d_mask) == 2 &&
+                ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2)
+               goto good;
+            goto bad;
+         }
+         else if (ss->kind == s1x8) {
+            if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
+                ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
+                ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2 &&
+                ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2)
+               goto good;
+            goto bad;
+         }
+         else
+            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+      case cr_ctr2fl_endwv:
+         /* Note that this qualifier is kind of strict.  We won't permit the call "with
                confidence" do be done unless everyone can trivially determine which
                part to do. */
-            if (ss->kind == s_crosswave) {
-               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
-                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
-                   ((ss->people[2].id1 | ss->people[3].id1) == 0 || ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2) &&
-                   ((ss->people[6].id1 | ss->people[7].id1) == 0 || ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2))
+         if (ss->kind == s_crosswave) {
+            if (((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 0 &&
+                ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0 &&
+                ((ss->people[0].id1 | ss->people[1].id1) == 0 || ((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2) &&
+                ((ss->people[4].id1 | ss->people[5].id1) == 0 || ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2))
                goto good;
-               goto bad;
-            }
-            else if (ss->kind == s1x6) {
-               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
-                   ((ss->people[3].id1 ^ ss->people[4].id1) & d_mask) == 0 &&
-                   ((ss->people[1].id1 ^ ss->people[2].id1) & d_mask) == 2 &&
-                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2)
+            goto bad;
+         }
+         else if (ss->kind == s1x6) {
+            if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2 &&
+                ((ss->people[3].id1 ^ ss->people[4].id1) & d_mask) == 2 &&
+                ((ss->people[1].id1 ^ ss->people[2].id1) & d_mask) == 0 &&
+                ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0)
                goto good;
-               goto bad;
-            }
-            else if (ss->kind == s1x8) {
-               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
-                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
-                   ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2 &&
-                   ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2)
+            goto bad;
+         }
+         else if (ss->kind == s1x8) {
+            if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2 &&
+                ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2 &&
+                ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 0 &&
+                ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0)
                goto good;
-               goto bad;
-            }
-            else
-               goto good;                 /* We don't understand the setup -- we'd better accept it. */
-         case sq_ctr2fl_endwv:
-            /* Note that this qualifier is kind of strict.  We won't permit the call "with
-               confidence" do be done unless everyone can trivially determine which
-               part to do. */
-            if (ss->kind == s_crosswave) {
-               if (((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 0 &&
-                   ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0 &&
-                   ((ss->people[0].id1 | ss->people[1].id1) == 0 || ((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2) &&
-                   ((ss->people[4].id1 | ss->people[5].id1) == 0 || ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s1x6) {
-               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2 &&
-                   ((ss->people[3].id1 ^ ss->people[4].id1) & d_mask) == 2 &&
-                   ((ss->people[1].id1 ^ ss->people[2].id1) & d_mask) == 0 &&
-                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0)
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s1x8) {
-               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2 &&
-                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2 &&
-                   ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 0 &&
-                   ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0)
-               goto good;
-               goto bad;
-            }
-            else
-               goto good;                 /* We don't understand the setup -- we'd better accept it. */
-         case sq_true_Z_cw: case sq_true_Z_ccw:
+            goto bad;
+         }
+         else
+            goto good;         /* We don't understand the setup -- we'd better accept it. */
+      case cr_true_Z_cw:
+         k ^= 033U ^ 066U;
+         mask ^= CMD_MISC2__IN_Z_CCW ^ CMD_MISC2__IN_Z_CW;
+         /* **** FALL THROUGH!!!! */
+      case cr_true_Z_ccw:
+         /* **** FELL THROUGH!!!!!! */
+         k ^= ~033U;
+         mask ^= CMD_MISC2__IN_Z_CCW;
+
+         if (ss->cmd.cmd_misc2_flags & mask)
+             goto good;
+
+         if (ss->kind == s2x3) {
+            /* In this case, we actually check the shear direction of the Z. */
+
             mask = 0;
 
-            for (plaini=0, k=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, k<<=1) {
-               if (ss->people[plaini].id1) mask |= k;
+            for (plaini=0, w=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, w<<=1) {
+               if (ss->people[plaini].id1) mask |= w;
             }
 
-            if (ss->kind == s2x3) {
-               /* In this case, we actually check the shear direction of the Z. */
-               if (mask == ((this_qualifier == sq_true_Z_cw) ? 066U : 033U)) goto good;
-               goto bad;
-            }
-
-/*  This stuff taken out -- being fussy about exact occupation of the 2x3's is not a good idea.
-   It could prevent recognition of unsymmetrical setups.  So we just allow any setup that could be divided into 2x3's.
-            else if (ss->kind == s3x4) {
-               if (mask == 0xEBA || mask == 0xD75) goto good;
-               goto bad;
-            }
-            else if (ss->kind == s2x6) {
-               if (mask == 03333 || mask == 06666) goto good;
-               goto bad;
-            }
-*/
-            else
-               goto good;                 /* We don't understand the setup -- we'd better accept it. */
-         case sq_lateral_cols_empty:
-            mask = 0;
-            t = 0;
-
-            for (plaini=0, k=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, k<<=1) {
-               if (ss->people[plaini].id1) { mask |= k; t |= ss->people[plaini].id1; }
-            }
-
-            if (ss->kind == s3x4 && (t & 1) == 0 &&
-                ((mask & 04646) == 0 ||
-                 (mask & 04532) == 0 || (mask & 03245) == 0 ||
-                 (mask & 02525) == 0 || (mask & 03232) == 0 ||
-                 (mask & 04651) == 0 || (mask & 05146) == 0))
-               goto good;
-            else if (ss->kind == s3x6 && (t & 1) == 0 &&
-                     ((mask & 0222222) == 0))
-               goto good;
-            else if (ss->kind == s4x4 && (t & 1) == 0 &&
-                     ((mask & 0xE8E8) == 0 ||
-                      (mask & 0xA3A3) == 0 || (mask & 0x5C5C) == 0 ||
-                      (mask & 0xA857) == 0 || (mask & 0x57A8) == 0))
-               goto good;
-            else if (ss->kind == s4x4 && (t & 010) == 0 &&
-                     ((mask & 0x8E8E) == 0 ||
-                      (mask & 0x3A3A) == 0 || (mask & 0xC5C5) == 0 ||
-                      (mask & 0x857A) == 0 || (mask & 0x7A85) == 0))
-               goto good;
-            else if (ss->kind == s4x6 && (t & 010) == 0) goto good;
-            else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
+            if ((mask & k) == 0 && (mask & (k^033U^066U)) != 0) goto good;
             goto bad;
-         case sq_1_4_tag:                      /* dmd or qtag - is a 1/4 tag, i.e. points looking in */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
-                  if (tt.assump_both == 2) goto good;
-            }
+         }
+         else
+            goto good;         /* We don't understand the setup -- we'd better accept it. */
+      case cr_lateral_cols_empty:
+         mask = 0;
+         t = 0;
 
-            switch (ss->kind) {
-               case sdmd:
-                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_east) &&  /* We forgive phantoms up to a point. */
-                         (!(u = ss->people[2].id1 & d_mask) || u == d_west) &&
-                         (t | u))               /* But require at least one live person to make the setup definitive. */
-                     goto good;
-                  goto bad;
-               case s_qtag:
-                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                         (!(u = ss->people[1].id1 & d_mask) || u == d_south) &&
-                         (!(v = ss->people[4].id1 & d_mask) || v == d_north) &&
-                         (!(w = ss->people[5].id1 & d_mask) || w == d_north) &&
-                         (t | u | v | w))
-                     goto good;
-                  goto bad;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
-         case sq_3_4_tag:                      /* dmd or qtag - is a 3/4 tag, i.e. points looking out */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
-                  if (tt.assump_both == 1) goto good;
-            }
+         for (plaini=0, k=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, k<<=1) {
+            if (ss->people[plaini].id1) { mask |= k; t |= ss->people[plaini].id1; }
+         }
 
-            switch (ss->kind) {
-               case sdmd:
-                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_west) &&  /* We forgive phantoms up to a point. */
-                         (!(u = ss->people[2].id1 & d_mask) || u == d_east) &&
-                         (t | u))               /* But require at least one live person to make the setup definitive. */
-                     goto good;
-                  goto bad;
-               case s_qtag:
-                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                         (!(u = ss->people[1].id1 & d_mask) || u == d_north) &&
-                         (!(v = ss->people[4].id1 & d_mask) || v == d_south) &&
-                         (!(w = ss->people[5].id1 & d_mask) || w == d_south) &&
-                         (t | u | v | w))
-                     goto good;
-                  goto bad;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
-         case sq_dmd_same_pt:                   /* dmd or pdmd - centers would circulate to same point */
-            if (((ss->people[1].id1 & 01011) == d_east) &&                        /* faces either east or west */
-                (!((ss->people[3].id1 ^ ss->people[1].id1) & d_mask)))   /* and both face same way */
-               goto good;
-            goto bad;
-         case sq_dmd_facing:                    /* dmd or pdmd - diamond is fully occupied and fully facing */
-            if ((ss->people[0].id1 & d_mask) == d_north &&
-                (ss->people[1].id1 & d_mask) == d_west &&
-                (ss->people[2].id1 & d_mask) == d_south &&
-                (ss->people[3].id1 & d_mask) == d_east)
-               goto good;
-            if ((ss->people[0].id1 & d_mask) == d_south &&
-                (ss->people[1].id1 & d_mask) == d_east &&
-                (ss->people[2].id1 & d_mask) == d_north &&
-                (ss->people[3].id1 & d_mask) == d_west)
-               goto good;
-            goto bad;
-         case sq_qtag_like:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_diamond_like:
-                  goto bad;
-            }
-
-            tt.assumption = cr_qtag_like;
-            goto check_tt;
-         case sq_diamond_like:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_qtag_like:
-                  goto bad;
-            }
-
-            tt.assumption = cr_diamond_like;
-            goto check_tt;
-         case sq_dmd_intlk:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line:
-                  goto good;
-               case cr_jright: case cr_jleft: case cr_real_1_4_tag: case cr_real_3_4_tag:
-                  goto bad;
-            }
-
-            tt.assumption = cr_dmd_intlk;
-            goto check_tt;
-
-         case sq_dmd_not_intlk:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line:
-                  goto bad;
-               case cr_jright: case cr_jleft: case cr_real_1_4_tag: case cr_real_3_4_tag:
-                  goto good;
-            }
-
-            tt.assumption = cr_dmd_not_intlk;
-            goto check_tt;
-         case sq_split_dixie:
-            if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED) goto good;
-            goto bad;
-         case sq_not_split_dixie:
-            if (!(ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED)) goto good;
-            goto bad;
-         case sq_said_tgl:
-            if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto good;
-            goto bad;
-         case sq_didnt_say_tgl:
-            if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto bad;
+         if (ss->kind == s3x4 && (t & 1) == 0 &&
+             ((mask & 04646) == 0 ||
+              (mask & 04532) == 0 || (mask & 03245) == 0 ||
+              (mask & 02525) == 0 || (mask & 03232) == 0 ||
+              (mask & 04651) == 0 || (mask & 05146) == 0))
             goto good;
-         case sq_occupied_as_h:
-            if (ss->kind != s3x4 ||
-                (ss->people[1].id1 | ss->people[2].id1 |
-                 ss->people[7].id1 | ss->people[8].id1)) goto bad;
+         else if (ss->kind == s3x6 && (t & 1) == 0 &&
+                  ((mask & 0222222) == 0))
             goto good;
-      case sq_occupied_as_stars:
+         else if (ss->kind == s4x4 && (t & 1) == 0 &&
+                  ((mask & 0xE8E8) == 0 ||
+                   (mask & 0xA3A3) == 0 || (mask & 0x5C5C) == 0 ||
+                   (mask & 0xA857) == 0 || (mask & 0x57A8) == 0))
+            goto good;
+         else if (ss->kind == s4x4 && (t & 010) == 0 &&
+                  ((mask & 0x8E8E) == 0 ||
+                   (mask & 0x3A3A) == 0 || (mask & 0xC5C5) == 0 ||
+                   (mask & 0x857A) == 0 || (mask & 0x7A85) == 0))
+            goto good;
+         else if (ss->kind == s4x6 && (t & 010) == 0) goto good;
+         else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
+         goto bad;
+      case cr_1_4_tag:                      /* dmd or qtag - is a 1/4 tag,
+                                               i.e. points looking in */
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
+            if (tt.assump_both == 2) goto good;
+         }
+
+         switch (ss->kind) {
+         case sdmd:
+            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_east) &&  /* We forgive phantoms up to a point. */
+                   (!(u = ss->people[2].id1 & d_mask) || u == d_west) &&
+                   (t | u))               /* But require at least one live person to make the setup definitive. */
+               goto good;
+            goto bad;
+         case s_qtag:
+            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                   (!(u = ss->people[1].id1 & d_mask) || u == d_south) &&
+                   (!(v = ss->people[4].id1 & d_mask) || v == d_north) &&
+                   (!(w = ss->people[5].id1 & d_mask) || w == d_north) &&
+                   (t | u | v | w))
+               goto good;
+            goto bad;
+         default:
+            goto good;                 /* We don't understand the setup --
+                                          we'd better accept it. */
+         }
+      case cr_3_4_tag:                      /* dmd or qtag - is a 3/4 tag, i.e.
+                                               points looking out */
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
+            if (tt.assump_both == 1) goto good;
+         }
+
+         /* Took out the "one person to be definitive" stuff, so that snag reverse order
+            turn on will work in a 3/4 tag. */
+
+         switch (ss->kind) {
+         case sdmd:
+            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_west) &&  /* We forgive phantoms up to a point. */
+                   (!(u = ss->people[2].id1 & d_mask) || u == d_east) &&
+                   (t | u | 99))               /* But require at least one live person to make the setup definitive. */
+               goto good;
+            goto bad;
+         case s_qtag:
+            if (   (!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                   (!(u = ss->people[1].id1 & d_mask) || u == d_north) &&
+                   (!(v = ss->people[4].id1 & d_mask) || v == d_south) &&
+                   (!(w = ss->people[5].id1 & d_mask) || w == d_south) &&
+                   (t | u | v | w | 99))
+               goto good;
+            goto bad;
+         default:
+            goto good;                 /* We don't understand the setup --
+                                          we'd better accept it. */
+         }
+      case cr_dmd_same_pt:                   /* dmd or pdmd - centers would circulate
+                                                to same point */
+         if (((ss->people[1].id1 & 01011) == d_east) &&         /* faces either east or west */
+             (!((ss->people[3].id1 ^ ss->people[1].id1) & d_mask)))  /* and both face same way */
+            goto good;
+         goto bad;
+      case cr_dmd_facing:                    /* dmd or pdmd - diamond is fully occupied and fully facing */
+         if ((ss->people[0].id1 & d_mask) == d_north &&
+             (ss->people[1].id1 & d_mask) == d_west &&
+             (ss->people[2].id1 & d_mask) == d_south &&
+             (ss->people[3].id1 & d_mask) == d_east)
+            goto good;
+         if ((ss->people[0].id1 & d_mask) == d_south &&
+             (ss->people[1].id1 & d_mask) == d_east &&
+             (ss->people[2].id1 & d_mask) == d_north &&
+             (ss->people[3].id1 & d_mask) == d_west)
+            goto good;
+         goto bad;
+      case cr_qtag_like:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_diamond_like:
+            goto bad;
+         }
+
+         goto check_tt;
+      case cr_diamond_like:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_qtag_like:
+            goto bad;
+         }
+
+         goto check_tt;
+      case cr_dmd_intlk:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line:
+            goto good;
+         case cr_jright: case cr_jleft: case cr_real_1_4_tag: case cr_real_3_4_tag:
+            goto bad;
+         }
+
+         goto check_tt;
+      case cr_dmd_not_intlk:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line:
+            goto bad;
+         case cr_jright: case cr_jleft: case cr_real_1_4_tag: case cr_real_3_4_tag:
+            goto good;
+         }
+         goto check_tt;
+      case cr_not_split_dixie:
+         tt.assump_negate = 1;
+         /* **** FALL THROUGH!!!! */
+      case cr_split_dixie:
+         /* **** FELL THROUGH!!!!!! */
+         if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED) goto good;
+         goto bad;
+      case cr_didnt_say_tgl:
+         tt.assump_negate = 1;
+         /* **** FALL THROUGH!!!! */
+      case cr_said_tgl:
+         /* **** FELL THROUGH!!!!!! */
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto good;
+         goto bad;
+      case cr_occupied_as_h:
+         if (ss->kind != s3x4 ||
+             (ss->people[1].id1 | ss->people[2].id1 |
+              ss->people[7].id1 | ss->people[8].id1)) goto bad;
+         goto good;
+      case cr_occupied_as_stars:
          if (ss->kind != s_c1phan ||
              ((ss->people[0].id1 | ss->people[1].id1 |
                ss->people[2].id1 | ss->people[3].id1 |
@@ -3196,279 +3334,252 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                ss->people[14].id1 | ss->people[15].id1)))
             goto bad;
          goto good;
-      case sq_occupied_as_qtag:
-            if (ss->kind != s3x4 || (ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto bad;
-            goto good;
-         case sq_occupied_as_3x1tgl:
-            if (ss->kind == s_qtag) goto good;
-            if (ss->kind == s3x4 && !(ss->people[1].id1 | ss->people[2].id1 | ss->people[7].id1 | ss->people[8].id1)) goto good;
-            if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto good;
-            if (ss->kind == s3x4 && !(ss->people[1].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[8].id1)) goto good;
-            if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[2].id1 | ss->people[7].id1 | ss->people[9].id1)) goto good;
-            if (ss->kind == s2x6 && !(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1)) goto good;
-            if (ss->kind == s2x6 && !(ss->people[3].id1 | ss->people[5].id1 | ss->people[9].id1 | ss->people[11].id1)) goto good;
-            if (ss->kind == s2x3 && !(ss->people[0].id1 | ss->people[2].id1)) goto good;
-            if (ss->kind == s2x3 && !(ss->people[3].id1 | ss->people[5].id1)) goto good;
-            goto bad;
-         case sq_all_ctrs_rh:
-         case sq_all_ctrs_lh:
-         case sq_dmd_ctrs_rh:
-         case sq_dmd_ctrs_lh:
-         case sq_dmd_ctrs_1f:
-            {
-               Const long int *p1;
-               uint32 d1, d2;
-               uint32 z = 0;
-               long_boolean b1 = TRUE;
-               long_boolean b2 = TRUE;
-
-               p1 = get_rh_test(ss->kind);
-               if (!p1) goto bad;
-
-               d1 = *(p1++);
-               d2 = *(p1++);
+      case cr_occupied_as_qtag:
+         if (ss->kind != s3x4 || (ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto bad;
+         goto good;
+      case cr_occupied_as_3x1tgl:
+         if (ss->kind == s_qtag) goto good;
+         if (ss->kind == s3x4 && !(ss->people[1].id1 | ss->people[2].id1 |
+                                   ss->people[7].id1 | ss->people[8].id1)) goto good;
+         if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[3].id1 |
+                                   ss->people[6].id1 | ss->people[9].id1)) goto good;
+         if (ss->kind == s3x4 && !(ss->people[1].id1 | ss->people[3].id1 |
+                                   ss->people[6].id1 | ss->people[8].id1)) goto good;
+         if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[2].id1 |
+                                   ss->people[7].id1 | ss->people[9].id1)) goto good;
+         if (ss->kind == s2x6 && !(ss->people[0].id1 | ss->people[2].id1 |
+                                   ss->people[6].id1 | ss->people[8].id1)) goto good;
+         if (ss->kind == s2x6 && !(ss->people[3].id1 | ss->people[5].id1 |
+                                   ss->people[9].id1 | ss->people[11].id1)) goto good;
+         if (ss->kind == s2x3 && !(ss->people[0].id1 | ss->people[2].id1)) goto good;
+         if (ss->kind == s2x3 && !(ss->people[3].id1 | ss->people[5].id1)) goto good;
+         goto bad;
+      case cr_dmd_ctrs_mwv:
+      case cr_qtag_mwv:
+      case cr_qtag_mag_mwv:
+      case cr_dmd_ctrs_1f:
+         goto check_tt;
+      case cr_ctr_pts_rh:
+      case cr_ctr_pts_lh:
+         {
+            call_restriction kkk;      /* gets set to the qualifier corresponding to
+                                          what we have. */
+            uint32 t1;
+            uint32 t2;
+            long_boolean b1 = TRUE;
+            long_boolean b2 = TRUE;
             
-               while (*p1>=0) {
-                  uint32 t1 = ss->people[*(p1++)].id1;
-                  uint32 t2 = ss->people[*(p1++)].id1;
-                  z |= t1 | t2;
-                  if (t1 && (t1 & d_mask)!=d1) b1 = FALSE;
-                  if (t2 && (t2 & d_mask)!=d2) b1 = FALSE;
-                  if (t1 && (t1 & d_mask)!=d2) b2 = FALSE;
-                  if (t2 && (t2 & d_mask)!=d1) b2 = FALSE;
-               }
-            
-               if (z) {
-                  if (b1) {
-                     if (this_qualifier == sq_all_ctrs_rh) goto good;
-                     if (this_qualifier == sq_dmd_ctrs_rh) goto good;
-                  }
-                  else if (b2) {
-                     if (this_qualifier == sq_all_ctrs_lh) goto good;
-                     if (this_qualifier == sq_dmd_ctrs_lh) goto good;
-                  }
-                  else {
-                     if (this_qualifier == sq_dmd_ctrs_1f) goto good;
-                  }
-               }
+            switch (ss->kind) {
+            case s_qtag:
+            case s_hrglass:
+               t1 = ss->people[6].id1;
+               t2 = ss->people[2].id1;
+               break;
+            case s_2x1dmd:
+               t1 = ss->people[0].id1;
+               t2 = ss->people[3].id1;
+               break;
+            default:
+               goto bad;
             }
-            goto bad;
-         case sq_ctr_pts_rh:
-         case sq_ctr_pts_lh:
-            {
-               search_qualifier kkk;      /* gets set to the qualifier corresponding to what we have. */
-               uint32 t1;
-               uint32 t2;
-               long_boolean b1 = TRUE;
-               long_boolean b2 = TRUE;
-            
-               switch (ss->kind) {
-                  case s_qtag:
-                  case s_hrglass:
-                     t1 = ss->people[6].id1;
-                     t2 = ss->people[2].id1;
-                     break;
-                  case s_2x1dmd:
-                     t1 = ss->people[0].id1;
-                     t2 = ss->people[3].id1;
-                     break;
-                  default:
-                     goto bad;
-               }
 
-               if (t1 && (t1 & d_mask)!=d_north) b1 = FALSE;
-               if (t2 && (t2 & d_mask)!=d_south) b1 = FALSE;
-               if (t1 && (t1 & d_mask)!=d_south) b2 = FALSE;
-               if (t2 && (t2 & d_mask)!=d_north) b2 = FALSE;
+            if (t1 && (t1 & d_mask)!=d_north) b1 = FALSE;
+            if (t2 && (t2 & d_mask)!=d_south) b1 = FALSE;
+            if (t1 && (t1 & d_mask)!=d_south) b2 = FALSE;
+            if (t2 && (t2 & d_mask)!=d_north) b2 = FALSE;
 
-               if (b1 == b2) goto bad;
-               kkk = b1 ? sq_ctr_pts_rh : sq_ctr_pts_lh;
-               if (this_qualifier == kkk) goto good;
-            }
-            goto bad;
-         case sq_line_ends_looking_out:
-            if (ss->kind != s2x4) goto bad;
+            if (b1 == b2) goto bad;
+            kkk = b1 ? cr_ctr_pts_rh : cr_ctr_pts_lh;
+            if (this_qualifier == kkk) goto good;
+         }
+         goto bad;
+      case cr_line_ends_looking_out:
+         if (ss->kind != s2x4) goto bad;
 
             /* We demand at least one center person T-boned, so that we
                know it has to be an 8-person call. */
 
-            if (!((  ss->people[1].id1 |
-                     ss->people[2].id1 |
-                     ss->people[5].id1 |
-                     ss->people[6].id1) & 1)) goto bad;
+         if (!((  ss->people[1].id1 |
+                  ss->people[2].id1 |
+                  ss->people[5].id1 |
+                  ss->people[6].id1) & 1)) goto bad;
 
-            if ((t = ss->people[0].id1) && (t & d_mask) != d_north) goto bad;
-            if ((t = ss->people[3].id1) && (t & d_mask) != d_north) goto bad;
-            if ((t = ss->people[4].id1) && (t & d_mask) != d_south) goto bad;
-            if ((t = ss->people[7].id1) && (t & d_mask) != d_south) goto bad;
-            goto good;
-         case sq_col_ends_lookin_in:
-            if (ss->kind != s2x4) goto bad;
-            if ((t = ss->people[0].id1) && (t & d_mask) != d_east) goto bad;
-            if ((t = ss->people[3].id1) && (t & d_mask) != d_west) goto bad;
-            if ((t = ss->people[4].id1) && (t & d_mask) != d_west) goto bad;
-            if ((t = ss->people[7].id1) && (t & d_mask) != d_east) goto bad;
-            goto good;
-         case sq_ripple_both_centers:
-            k ^= (0xAAA ^ 0xA82);
-            /* FALL THROUGH!!!!!! */
-         case sq_ripple_any_centers:
-            /* FELL THROUGH!!!!!! */
-            k ^= (0xA82 ^ 0x144);
-            /* FALL THROUGH!!!!!! */
-         case sq_ripple_one_end:
-            /* FELL THROUGH!!!!!! */
-            k ^= (0x144 ^ 0x555);
-            /* FALL THROUGH!!!!!! */
-         case sq_ripple_both_ends:
-            /* FELL THROUGH!!!!!! */
-            if (ss->kind != s1x4) goto good;
-            k ^= 0x555;
-            mask = 0;
+         if ((t = ss->people[0].id1) && (t & d_mask) != d_north) goto bad;
+         if ((t = ss->people[3].id1) && (t & d_mask) != d_north) goto bad;
+         if ((t = ss->people[4].id1) && (t & d_mask) != d_south) goto bad;
+         if ((t = ss->people[7].id1) && (t & d_mask) != d_south) goto bad;
+         goto good;
+      case cr_col_ends_lookin_in:
+         if (ss->kind != s2x4) goto bad;
+         if ((t = ss->people[0].id1) && (t & d_mask) != d_east) goto bad;
+         if ((t = ss->people[3].id1) && (t & d_mask) != d_west) goto bad;
+         if ((t = ss->people[4].id1) && (t & d_mask) != d_west) goto bad;
+         if ((t = ss->people[7].id1) && (t & d_mask) != d_east) goto bad;
+         goto good;
+      case cr_ripple_both_centers:
+         k ^= (0xAAA ^ 0xA82);
+         /* **** FALL THROUGH!!!! */
+      case cr_ripple_any_centers:
+         /* **** FELL THROUGH!!!!!! */
+         k ^= (0xA82 ^ 0x144);
+         /* **** FALL THROUGH!!!! */
+      case cr_ripple_one_end:
+         /* **** FELL THROUGH!!!!!! */
+         k ^= (0x144 ^ 0x555);
+         /* **** FALL THROUGH!!!! */
+      case cr_ripple_both_ends:
+         /* **** FELL THROUGH!!!!!! */
+         if (ss->kind != s1x4) goto good;
+         k ^= 0x555;
+         mask = 0;
 
-            for (i=0, w=1; i<=setup_attrs[ss->kind].setup_limits; i++, w<<=1) {
-               if (selectp(ss, i)) mask |= w;
-            }
+         for (plaini=0, w=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, w<<=1) {
+            if (selectp(ss, plaini)) mask |= w;
+         }
 
-            if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
-            goto bad;
-         case sq_people_1_and_5_real:
-            if (ss->people[1].id1 & ss->people[5].id1) goto good;
-            goto bad;
+         if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
+         goto bad;
+      case cr_people_1_and_5_real:
+         if (ss->people[1].id1 & ss->people[5].id1) goto good;
+         goto bad;
 
          /* Beware!  These next four use cumulative xoring of the variable k, which
             is in all cases initialized to zero. */
 
-         case sq_ends_sel:
-            k = ~k;
-            /* FALL THROUGH!!!!!! */
-         case sq_ctrs_sel:
-            /* FELL THROUGH!!!!!! */
+      case cr_ends_sel:
+         k = ~k;
+         /* FALL THROUGH!!!!!! */
+      case cr_ctrs_sel:
+         /* FELL THROUGH!!!!!! */
 
-            switch (ss->kind) {
-               case s1x4: k ^= 0x5; break;
-               case s2x4: k ^= 0x99; break;
-               case s_qtag: k ^= 0x33; break;
-               default: k = ~1;  /* Will force an error later, unless splitting. */
-            }
-            /* FALL THROUGH!!!!!! */
-         case sq_all_sel:
-            /* FELL THROUGH!!!!!! */
-            k = ~k;
-            /* FALL THROUGH!!!!!! */
-         case sq_none_sel:
-            /* FELL THROUGH!!!!!! */
+         switch (ss->kind) {
+         case s1x4: k ^= 0x5; break;
+         case s2x4: k ^= 0x99; break;
+         case s_qtag: k ^= 0x33; break;
+         default: k = ~1;  /* Will force an error later, unless splitting. */
+         }
+         /* FALL THROUGH!!!!!! */
+      case cr_all_sel:
+         /* FELL THROUGH!!!!!! */
+         k = ~k;
+         /* FALL THROUGH!!!!!! */
+      case cr_none_sel:
+         /* FELL THROUGH!!!!!! */
 
-            /* If we are not looking at the whole setup (that is, we
+         /* If we are not looking at the whole setup (that is, we
                are deciding whether to split the setup into smaller
                ones), let it pass. */
 
-            if (     setup_attrs[ss->kind].keytab[0] != key &&
-                     setup_attrs[ss->kind].keytab[1] != key)
-               goto good;
-
-            if (k == 1) goto bad;
-
-            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++,k>>=1) {
-               if (!ss->people[idx].id1) {
-                  if (tt.assump_live) goto bad;
-               }
-               else if (selectp(ss, idx)) {
-                  if (!(k&1)) goto bad;
-               }
-               else {
-                  if (k&1) goto bad;
-               }
-            }
+         if (     setup_attrs[ss->kind].keytab[0] != key &&
+                  setup_attrs[ss->kind].keytab[1] != key)
             goto good;
-         default:
-            break;
+
+         if (k == 1) goto bad;
+
+         for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++,k>>=1) {
+            if (!ss->people[idx].id1) {
+               if (tt.assump_live) goto bad;
+            }
+            else if (selectp(ss, idx)) {
+               if (!(k&1)) goto bad;
+            }
+            else {
+               if (k&1) goto bad;
+            }
+         }
+         goto good;
+      default:
+         break;
       }
 
       goto bad;
 
-      do_2fl_stuff:
+   do_2fl_stuff:
 
       switch (ss->cmd.cmd_assume.assumption) {
-         case cr_1fl_only: case cr_wave_only: case cr_magic_only: goto bad;
+      case cr_1fl_only: case cr_wave_only: case cr_magic_only: goto bad;
       }
 
       tt.assumption = cr_2fl_only;
       goto fix_col_line_stuff;
 
-      do_wave_stuff:
+   do_wave_stuff:
 
       switch (ss->cmd.cmd_assume.assumption) {
-         case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
-         case cr_ijright: case cr_ijleft: goto bad;
-         case cr_wave_only: case cr_jright:
-            if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1) goto bad;
-            if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 2) goto bad;
-            break;
-         case cr_jleft:
-            if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 2) goto bad;
-            if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 1) goto bad;
-            break;
+      case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
+      case cr_ijright: case cr_ijleft: goto bad;
+      case cr_wave_only: case cr_jright:
+         if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1) goto bad;
+         if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 2) goto bad;
+         break;
+      case cr_jleft:
+         if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 2) goto bad;
+         if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 1) goto bad;
+         break;
       }
 
       tt.assumption = cr_wave_only;
 
       switch (ss->kind) {
-         case s3x4:         /* This only handles lines; not columns -- we couldn't have "wavy" columns that were symmetric. */
-         case s_bone6:
-         case s_trngl:
-         case s_qtag:
-            goto check_tt;
-         case sdmd:
-         case s_ptpd:
-         case s_short6:
-            tt.assump_col = 1;
-            goto check_tt;
+      case s3x4:         /* This only handles lines; not columns --
+                            we couldn't have "wavy" columns that were symmetric. */
+      case s_bone6:
+      case s_trngl:
+      case s_qtag:
+      case s3x1dmd:
+         goto check_tt;
+      case sdmd:
+      case s_ptpd:
+      case s_short6:
+         tt.assump_col = 1;
+         goto check_tt;
       }
 
-      fix_col_line_stuff:
+   fix_col_line_stuff:
 
       switch (ss->kind) {
-         case s1x3:
-            if (tt.assump_both) goto bad;   /* We can't check a 1x3 for right-or-left-handedness. */
-            /* FALL THROUGH!!! */
-         case s1x6: case s1x8: case s1x10:
-         case s1x12: case s1x14: case s1x16:
-         case s2x2: case s4x4: case s_thar: case s_qtag: case s_trngl: case s_bone:
-            /* FELL THROUGH!!! */
-            goto check_tt;
-         case sdmd: case s_ptpd:
-            tt.assump_col = 1;
-            goto check_tt;
-         case s1x4:  /* Note that 1x6, 1x8, etc should be here also.  This will
-                           make "cr_2fl_only" and such things work in 4x1. */
-         case s1x2:
-         case s2x4:
-         case s2x6:
-         case s2x8:
-         case s2x3:
-            for (idx=0,u=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) u |= ss->people[idx].id1;
-            if (!(u&010)) tt.assump_col = 1;
-            else if (tt.assump_both && ss->kind == s2x3) goto bad;   /* We can't check 2x3 lines for right-or-left-handedness. */
-            goto check_tt;
-         default:
-                  /* ****** Try to change this (and other things) to "goto bad". */
-            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+      case s1x3:
+         if (tt.assump_both) goto bad;   /* We can't check a 1x3 for right-or-left-handedness. */
+         /* FALL THROUGH!!! */
+      case s1x6: case s1x8: case s1x10:
+      case s1x12: case s1x14: case s1x16:
+      case s2x2: case s4x4: case s_thar: case s_crosswave: case s_qtag:
+      case s_trngl: case s_bone:
+         /* FELL THROUGH!!! */
+         goto check_tt;
+      case sdmd: case s_ptpd:
+         tt.assump_col = 1;
+         goto check_tt;
+      case s1x4:  /* Note that 1x6, 1x8, etc should be here also.  This will
+                     make "cr_2fl_only" and such things work in 4x1. */
+      case s1x2:
+      case s2x4:
+      case s2x6:
+      case s2x8:
+      case s2x3:
+         for (idx=0,u=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) u |= ss->people[idx].id1;
+         if (!(u&010)) tt.assump_col = 1;
+         else if (tt.assump_both && ss->kind == s2x3) goto bad;   /* We can't check 2x3 lines for right-or-left-handedness. */
+         goto check_tt;
+      default:
+         /* ****** Try to change this (and other things) to "goto bad". */
+         goto good;                 /* We don't understand the setup -- we'd better accept it. */
       }
 
-      check_tt:
+   check_tt:
 
       rr = get_restriction_thing(ss->kind, tt);
-      if (!rr) goto good;                 /* We don't understand the setup -- we'd better accept it. */
+      if (!rr) goto good;                 /* We don't understand the setup --
+                                             we'd better accept it. */
       if (verify_restriction(ss, rr, tt, FALSE, &booljunk)) return p;
       continue;
 
-      bad:
+   bad:
 
       if (tt.assump_negate) return p;
       else continue;
 
-      good:
+   good:
 
       if (!tt.assump_negate) return p;
       else continue;
@@ -3648,12 +3759,10 @@ extern parse_block *process_final_concepts(
    long_boolean check_errors,
    uint64 *final_concepts)
 {
-   parse_block *tptr = cptr;
-
    final_concepts->herit = 0;
    final_concepts->final = 0;
 
-   while (tptr) {
+   while (cptr) {
       uint64 bit_to_set;
       uint64 bit_to_forbid;
       bit_to_set.herit = 0;
@@ -3661,108 +3770,108 @@ extern parse_block *process_final_concepts(
       bit_to_forbid.herit = 0;
       bit_to_forbid.final = 0;
 
-      switch (tptr->concept->kind) {
-         case concept_comment:
-            goto get_next;               /* Need to skip these. */
-         case concept_triangle: bit_to_set.final = FINAL__TRIANGLE; break;
-         case concept_magic:
-            last_magic_diamond = tptr;
-            bit_to_set.herit = INHERITFLAG_MAGIC;
-            bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
-            break;
-         case concept_interlocked:
-            last_magic_diamond = tptr;
-            bit_to_set.herit = INHERITFLAG_INTLK;
-            bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
-            break;
-         case concept_grand:
-            bit_to_set.herit = INHERITFLAG_GRAND;
-            bit_to_forbid.herit = INHERITFLAG_SINGLE;
-            break;
-         case concept_cross: bit_to_set.herit = INHERITFLAG_CROSS; break;
-         case concept_yoyo: bit_to_set.herit = INHERITFLAG_YOYO; break;
-         case concept_straight: bit_to_set.herit = INHERITFLAG_STRAIGHT; break;
-         case concept_twisted: bit_to_set.herit = INHERITFLAG_TWISTED; break;
-         case concept_single:
-            bit_to_set.herit = INHERITFLAG_SINGLE;
-            bit_to_forbid.herit = INHERITFLAG_SINGLEFILE;
-            break;
-         case concept_singlefile:
-            bit_to_set.herit = INHERITFLAG_SINGLEFILE;
-            bit_to_forbid.herit = INHERITFLAG_SINGLE;
-            break;
-         case concept_1x2:
-            bit_to_set.herit = INHERITFLAG_1X2;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_2x1:
-            bit_to_set.herit = INHERITFLAG_2X1;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_2x2:
-            bit_to_set.herit = INHERITFLAG_2X2;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_1x3:
-            bit_to_set.herit = INHERITFLAG_1X3;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_3x1:
-            bit_to_set.herit = INHERITFLAG_3X1;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_3x3:
-            bit_to_set.herit = INHERITFLAG_3X3;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_4x4:
-            bit_to_set.herit = INHERITFLAG_4X4;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_5x5:
-            bit_to_set.herit = INHERITFLAG_5X5;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_6x6:
-            bit_to_set.herit = INHERITFLAG_6X6;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_7x7:
-            bit_to_set.herit = INHERITFLAG_7X7;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_8x8:
-            bit_to_set.herit = INHERITFLAG_8X8;
-            bit_to_forbid.herit = MXN_BITS;
-            break;
-         case concept_split:
-            bit_to_set.final = FINAL__SPLIT; break;
-         case concept_reverse:
-            bit_to_set.herit = INHERITFLAG_REVERSE; break;
-         case concept_left:
-            bit_to_set.herit = INHERITFLAG_LEFT; break;
-         case concept_12_matrix:
-            if (check_errors && (final_concepts->herit | final_concepts->final))
-               fail("Matrix modifier must appear first.");
-            bit_to_set.herit = INHERITFLAG_12_MATRIX;
-            break;
-         case concept_16_matrix:
-            if (check_errors && (final_concepts->herit | final_concepts->final))
-               fail("Matrix modifier must appear first.");
-            bit_to_set.herit = INHERITFLAG_16_MATRIX;
-            break;
-         case concept_diamond:
-            bit_to_set.herit = INHERITFLAG_DIAMOND;
-            bit_to_forbid.herit = INHERITFLAG_SINGLE;
-            break;
-         case concept_funny:
-            bit_to_set.herit = INHERITFLAG_FUNNY; break;
-         default:
-            goto exit5;
+      switch (cptr->concept->kind) {
+      case concept_comment:
+         goto get_next;               /* Need to skip these. */
+      case concept_triangle: bit_to_set.final = FINAL__TRIANGLE; break;
+      case concept_magic:
+         last_magic_diamond = cptr;
+         bit_to_set.herit = INHERITFLAG_MAGIC;
+         bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+         break;
+      case concept_interlocked:
+         last_magic_diamond = cptr;
+         bit_to_set.herit = INHERITFLAG_INTLK;
+         bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+         break;
+      case concept_grand:
+         bit_to_set.herit = INHERITFLAG_GRAND;
+         bit_to_forbid.herit = INHERITFLAG_SINGLE;
+         break;
+      case concept_cross: bit_to_set.herit = INHERITFLAG_CROSS; break;
+      case concept_yoyo: bit_to_set.herit = INHERITFLAG_YOYO; break;
+      case concept_straight: bit_to_set.herit = INHERITFLAG_STRAIGHT; break;
+      case concept_twisted: bit_to_set.herit = INHERITFLAG_TWISTED; break;
+      case concept_single:
+         bit_to_set.herit = INHERITFLAG_SINGLE;
+         bit_to_forbid.herit = INHERITFLAG_SINGLEFILE;
+         break;
+      case concept_singlefile:
+         bit_to_set.herit = INHERITFLAG_SINGLEFILE;
+         bit_to_forbid.herit = INHERITFLAG_SINGLE;
+         break;
+      case concept_1x2:
+         bit_to_set.herit = INHERITFLAG_1X2;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_2x1:
+         bit_to_set.herit = INHERITFLAG_2X1;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_2x2:
+         bit_to_set.herit = INHERITFLAG_2X2;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_1x3:
+         bit_to_set.herit = INHERITFLAG_1X3;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_3x1:
+         bit_to_set.herit = INHERITFLAG_3X1;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_3x3:
+         bit_to_set.herit = INHERITFLAG_3X3;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_4x4:
+         bit_to_set.herit = INHERITFLAG_4X4;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_5x5:
+         bit_to_set.herit = INHERITFLAG_5X5;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_6x6:
+         bit_to_set.herit = INHERITFLAG_6X6;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_7x7:
+         bit_to_set.herit = INHERITFLAG_7X7;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_8x8:
+         bit_to_set.herit = INHERITFLAG_8X8;
+         bit_to_forbid.herit = MXN_BITS;
+         break;
+      case concept_split:
+         bit_to_set.final = FINAL__SPLIT; break;
+      case concept_reverse:
+         bit_to_set.herit = INHERITFLAG_REVERSE; break;
+      case concept_left:
+         bit_to_set.herit = INHERITFLAG_LEFT; break;
+      case concept_12_matrix:
+         if (check_errors && (final_concepts->herit | final_concepts->final))
+            fail("Matrix modifier must appear first.");
+         bit_to_set.herit = INHERITFLAG_12_MATRIX;
+         break;
+      case concept_16_matrix:
+         if (check_errors && (final_concepts->herit | final_concepts->final))
+            fail("Matrix modifier must appear first.");
+         bit_to_set.herit = INHERITFLAG_16_MATRIX;
+         break;
+      case concept_diamond:
+         bit_to_set.herit = INHERITFLAG_DIAMOND;
+         bit_to_forbid.herit = INHERITFLAG_SINGLE;
+         break;
+      case concept_funny:
+         bit_to_set.herit = INHERITFLAG_FUNNY; break;
+      default:
+         goto exit5;
       }
 
       if (check_errors) {
-         if (tptr->concept->level > calling_level) warn(warn__bad_concept_level);
+         if (cptr->concept->level > calling_level) warn(warn__bad_concept_level);
    
          if ((final_concepts->herit & bit_to_set.herit) || (final_concepts->final & bit_to_set.final))
             fail("Redundant call modifier.");
@@ -3776,63 +3885,79 @@ extern parse_block *process_final_concepts(
 
       get_next:
 
-      tptr = tptr->next;
+      cptr = cptr->next;
    }
 
    exit5:
 
-   return tptr;
+   return cptr;
 }
 
 
-extern parse_block *skip_one_concept(parse_block *incoming)
+extern parse_block *really_skip_one_concept(
+   parse_block *incoming,
+   concept_kind *k_p,
+   parse_block **parseptr_skip_p)
 {
    uint64 new_final_concepts;
-   parse_block *retval;
+   parse_block *next_parseptr;
+   parse_block *parseptrcopy;
 
-   if (incoming->concept->kind == concept_comment)
-      fail("Please don't put a comment after a meta-concept.  Sorry.");
+   while (incoming->concept->kind == concept_comment)
+      incoming = incoming->next;
 
-   retval = process_final_concepts(incoming, FALSE, &new_final_concepts);
+   parseptrcopy = process_final_concepts(incoming, FALSE, &new_final_concepts);
 
    /* Find out whether the next concept (the one that will be "random" or whatever)
       is a modifier or a "real" concept. */
 
    if (new_final_concepts.herit | new_final_concepts.final) {
-      retval = incoming; /* Lots of comment-aversion code being punted
-                                          here, but it's just too hairy, and we're
-                                          going to change all that stuff anyway. */
+      parseptrcopy = incoming;
    }
-   else {
-      concept_kind k = retval->concept->kind;
+   else if (parseptrcopy->concept) {
+      concept_kind kk = parseptrcopy->concept->kind;
 
-      if (k <= marker_end_of_list)
+      if (kk <= marker_end_of_list)
          fail("A concept is required.");
 
-      if (concept_table[k].concept_action == 0)
+      if (concept_table[kk].concept_action == 0)
          fail("Sorry, can't do this with this concept.");
 
-      if ((concept_table[k].concept_prop & CONCPROP__SECOND_CALL) && retval->concept->kind != concept_special_sequential)
+      if ((concept_table[kk].concept_prop & CONCPROP__SECOND_CALL) &&
+          parseptrcopy->concept->kind != concept_special_sequential)
          fail("Can't use a concept that takes a second call.");
    }
 
-   return retval;
+   if (check_for_concept_group(parseptrcopy, k_p, &next_parseptr))
+      *parseptr_skip_p = next_parseptr->next;
+   else
+      *parseptr_skip_p = parseptrcopy->next;
+
+   return parseptrcopy;
 }
+
+
 
 
 /* Prepare several setups to be assembled into one, by making them all have
    the same kind and rotation.  If there is a question about what ending
    setup to opt for (because of lots of phantoms), use "goal". */
 
-extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
+extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep)
 {
    int i;
    long_boolean lineflag = FALSE;
    long_boolean dmdflag = FALSE;
+   long_boolean qtflag = FALSE;
    long_boolean miniflag = FALSE;
    int deadconcindex = -1;
    setup_kind kk = nothing;
-   int rr = -1;
+   uint16 rotstates = 0xFFF;
+   static uint16 rotstate_table[16] = {
+      0x111, 0x222, 0x404, 0x808,
+      0x421, 0x812, 0x104, 0x208,
+      0x111, 0x222, 0x404, 0x808,
+      0x421, 0x812, 0x104, 0x208};
 
    /* There are 3 things that make this task nontrivial.  First, some setups could
       be "nothing", in which case we turn them into the same type of setup as
@@ -3878,9 +4003,9 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
       }
 
       if (z[i].kind != nothing) {
-         int zrot;
-
+         int zisrot;
          canonicalize_rotation(&z[i]);
+         zisrot = z[i].rotation & 3;
 
          if (z[i].kind == s1x2)
             miniflag = TRUE;
@@ -3897,78 +4022,72 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
                   Or 1x4's with just the centers present might want
                   to become diamonds. */
 
-               if ((rr ^ z[i].rotation) & 1) {
-                  if (((kk == s2x4 && z[i].kind == s_qtag) ||
-                       (kk == s_qtag && z[i].kind == s2x4))) {
-                     if (kk == s2x4) { kk = s_qtag ; rr ^= 1; }
-                     continue;
-                  }
-                  else if (((kk == s1x4 && z[i].kind == sdmd) ||
-                            (kk == sdmd && z[i].kind == s1x4))) {
-                     dmdflag = TRUE;
-                     continue;
-                  }
+               if (((kk == s2x4 && z[i].kind == s_qtag) ||
+                    (kk == s_qtag && z[i].kind == s2x4))) {
+                  qtflag = TRUE;
+                  zisrot ^= 1;
                }
-
-               goto lose;
+               else if (((kk == s1x4 && z[i].kind == sdmd) ||
+                         (kk == sdmd && z[i].kind == s1x4))) {
+                  dmdflag = TRUE;
+                  zisrot ^= 1;
+               }
+               else
+                  goto lose;
             }
          }
 
          /* If the setups are "trngl" or "trngl4", the rotations have
             to alternate by 180 degrees. */
 
-         zrot = z[i].rotation;
-
          if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
-            zrot ^= (i << 1);
+            rotstates &= 0xF00;
+         else
+            rotstates &= 0x033;
 
-         zrot &= 3;
-
-         if (rr < 0) rr = zrot;
-         if (rr != zrot) goto lose;
+         rotstates &= rotstate_table[((i & 3) << 2) | zisrot];
       }
    }
 
    if (kk == nothing) {
-      /* This next line was, for a short while:
-
-      if (lineflag) {
-         if (goal == sdmd)
-            kk = sdmd;   * Opt for a 1x4 unless the map we are working with says it wants a diamond. *
-         else
-            kk = s1x4;
-      }
-
-      which was intended to be helpful, and was, in fact, the only reason for the
-      addition of the "goal" argument.  Alas, it caused no end of problems,
-      typified by [tidal wave] split phantom diamonds diamond chain thru.  The
-      new behavior created outside triple columns instead of the long-accustomed
-      outside quadruple columns.  While the triple columns might be able to be
-      justified on theoretical grounds, it breaks far too much accepted usage. */
-
-/* Then it was:
-
-      if (lineflag) kk = s1x4;
-which we believe is equivalent to the following.
-*/
-
-      /* If client really needs a diamond, return a diamond.  Otherwise opt for 1x4. */
+      /* If client really needs a diamond, return a diamond.
+         Otherwise opt for 1x4. */
       if (lineflag) kk = (goal == sdmd) ? sdmd : s1x4;
       else if (miniflag) kk = s1x2;
    }
 
+   if (arity == 1) rotstates &= 0x3;
+   if (!rotstates) goto lose;
+
    /* Now deal with any setups that we may have deferred. */
 
-   if (dmdflag) {
-      if (kk == s1x4) { kk = sdmd ; rr ^= 1; }
+   if (dmdflag && kk == s1x4) {
+      rotstates ^= 3;
+      kk = sdmd;
+   }
+   if (qtflag && kk == s2x4) {
+      rotstates ^= 3;
+      kk = s_qtag;
    }
 
    for (i=0; i<arity; i++) {
-      if (     z[i].kind == s_dead_concentric ||
-               (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing)) {
+      if (z[i].kind == s_dead_concentric ||
+          (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing)) {
+         int rr;
+
          if (z[i].inner.skind == s2x2 && kk == s2x4) {
             /* Turn the 2x2 into a 2x4.  Need to make it have same rotation as the others;
                that is, rotation = rr.  (We know that rr has something in it by now.) */
+
+            /* We might have a situation with alternating rotations, or we
+               might have homogeneous rotations.  If the state says we could
+               have both, change it to just homogeneous.  That is, we default
+               to same rotation unless live people force mixed rotation. */
+
+            if (rotstates & 0x0F) rotstates &= 0x03;     /* That does the defaulting. */
+            if (!rotstates) goto lose;
+            rr = (((rotstates & 0x0F0) ? (rotstates >> 4) : rotstates) >> 1) & 1;
+
             z[i].inner.srotation -= rr;
             canonicalize_rotation(&z[i]);
             z[i].kind = kk;
@@ -3983,8 +4102,13 @@ which we believe is equivalent to the following.
             clear_person(&z[i], 3);
             canonicalize_rotation(&z[i]);
          }
-         else if (z[i].inner.skind == s1x4 && kk == s_qtag && z[i].inner.srotation == rr) {
+         else if (z[i].inner.skind == s1x4 && kk == s_qtag) {
             /* Turn the 1x4 into a qtag. */
+            if (rotstates & 0x0F) rotstates &= 0x03;     /* That does the defaulting. */
+            if (!rotstates) goto lose;
+            rr = (((rotstates & 0x0F0) ? (rotstates >> 4) : rotstates) >> 1) & 1;
+            if (z[i].inner.srotation != rr) goto lose;
+
             z[i].kind = kk;
             z[i].rotation = rr;
             swap_people(&z[i], 0, 6);
@@ -4004,7 +4128,7 @@ which we believe is equivalent to the following.
          else
             fail("Can't do this: don't know where the phantoms went.");
       }
-      else if (z[i].kind == s2x4 && kk == s_qtag) {
+      else if (qtflag && z[i].kind == s2x4) {
          /* Turn the 2x4 into a qtag. */
          if (z[i].people[1].id1 | z[i].people[2].id1 |
              z[i].people[5].id1 | z[i].people[6].id1) goto lose;
@@ -4017,7 +4141,6 @@ which we believe is equivalent to the following.
          (void) copy_rot(&z[i], 4, &z[i], 7, 033);
          clear_person(&z[i], 3);
          clear_person(&z[i], 7);
-         canonicalize_rotation(&z[i]);
       }
       else if (dmdflag && z[i].kind == s1x4) {
          /* Turn the 1x4 into a diamond. */
@@ -4027,13 +4150,26 @@ which we believe is equivalent to the following.
          z[i].rotation--;
          (void) copy_rot(&z[i], 1, &z[i], 1, 011);
          (void) copy_rot(&z[i], 3, &z[i], 3, 011);
-         canonicalize_rotation(&z[i]);
       }
+      else {
+         canonicalize_rotation(&z[i]);
+         continue;
+      }
+
+      canonicalize_rotation(&z[i]);
+#ifdef DOESNT_DO
+      /* They're not alternating any more. */
+
+      if (rotstates & 0x0F0) {
+         if (i&1) rotstates ^= 0x030;
+         rotstates >>= 4;
+      }
+#endif
    }
   
    if (deadconcindex >= 0) {
       kk = z[deadconcindex].kind;
-      rr = 0;
+      rotstates = 0x001;
    }
 
    if (kk == nothing) return TRUE;
@@ -4063,12 +4199,18 @@ which we believe is equivalent to the following.
          z[i].inner.srotation = z[deadconcindex].inner.srotation;
       }
 
-      if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
-         z[i].rotation = (rr ^ (i << 1));
+      /* We know rotstates has a nonzero bit in an appropriate field. */
+
+      if (z[i].kind == s_trngl || z[i].kind == s_trngl4) {
+         z[i].rotation = i << 1;
+         if (rotstates & 0xC00) z[i].rotation += 2;
+         if (rotstates & 0xA00) z[i].rotation++;
+      }
       else
-         z[i].rotation = rr;
+         z[i].rotation = (rotstates >> 1) & 1;
    }
 
+   *rotstatep = rotstates;
    return FALSE;
 
    lose:
