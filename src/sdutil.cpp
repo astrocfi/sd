@@ -250,9 +250,8 @@ static Cstring abbreviations_table[] = {
 // Some things fail under Visual C++ version 5 and version 6.  (Under different
 // circumstances for those 2 compilers!)  I complained, and they won't even
 // acknowledge the existence of the bug report unless I pay them money.
-extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp()
-{
-}
+void ThingToTryToKeepTheStupidMicrosoftCompilerFromScrewingUp()
+{}
 
 
 /* Getting blanks into all the right places in the presence of substitions,

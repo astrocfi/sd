@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.61"
+version "39.62"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -2645,7 +2645,8 @@ call "centers swing" dontshow tag ctrsswing
    conc6p_or_normal swing [or_anycall inherit_yoyo inherit_gensting] nullcall []
 
 call "center 4 cast off @b" dontshow tag ctrscastoff_n
-            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited neednumber yoyo_fractal_numbers
+            visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            neednumber yoyo_fractal_numbers
    select_center4 cast_off_n4_with_warn [inherit_yoyo inherit_fractal inherit_gensting allow_forced_mod] nullcall []
 
 call "center 2 cast off @b" dontshow tag ctr2castoff_n
@@ -4823,7 +4824,7 @@ call "_maybe grand slip" dontshow tag maybegrandslip
    setup dmd dmd
       array [ZM0N 0 ZM2N 0]
    setup pmd dmd
-      array [ZM0N CR3S ZM2N AL1N]
+      array [ZM0N CR3S ZM2N AL1S]
             alternate_definition [half] c1
    setup 1x4 dmd
       // We would like to have them do a genuine hinge,

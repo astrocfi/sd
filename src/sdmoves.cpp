@@ -9193,7 +9193,7 @@ void move(
          if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) == 0 ||
              (((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
               ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV))) {
-            FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
+            ThingToTryToKeepTheStupidMicrosoftCompilerFromScrewingUp();
             switch (search_defn->schema) {
             case schema_concentric:
             case schema_concentric_6_2:
@@ -9210,10 +9210,10 @@ void move(
             case schema_concentric_6p_or_normal_or_2x6_2x3:
             case schema_1221_concentric:
             case schema_conc_o:
-               FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
+               ThingToTryToKeepTheStupidMicrosoftCompilerFromScrewingUp();
                break;
             default:
-               FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
+               ThingToTryToKeepTheStupidMicrosoftCompilerFromScrewingUp();
                goto punt;
             }
          }

@@ -6010,7 +6010,7 @@ extern void inner_selective_move(
 
 /* In SDUTIL */
 
-extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
+extern void ThingToTryToKeepTheStupidMicrosoftCompilerFromScrewingUp();
 
 SDLIB_API extern parse_block *copy_parse_tree(parse_block *original_tree);
 SDLIB_API extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
