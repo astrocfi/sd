@@ -19,6 +19,9 @@
    do_simple_split
    do_call_in_series
    get_fraction_info
+   fill_active_phantoms_and_move
+   move_perhaps_with_active_phantoms
+   impose_assumption_and_move
    move
 */
 
@@ -550,6 +553,19 @@ static coordrec squeezefinalglass = {s_hrglass, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static coordrec press_4dmd_4x4 = {s4x4, 3,
+   { 11,   9,   9,   1,  11,   5,  -5,   1, -11,  -9,  -9,  -1, -11,  -5,   5,  -1},
+   {  7,   1,  -1,   1,  -7,  -7,  -7,  -1,  -7,  -1,   1,  -1,   7,   7,   7,   1}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 12, 13, -1, -1, 14,  0, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  8,  6, -1, -1,  5,  4, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
 
 Private void finish_matrix_call(
    matrix_rec matrix_info[],
@@ -645,6 +661,11 @@ Private void finish_matrix_call(
 
       warn(warn__check_galaxy);
       checkptr = setup_attrs[s_galaxy].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00B10071) && ((signature & (~0x01806000)) == 0)) {
+      /* Fudge this to a 4x4.  People 1/2 pressed ahead from quadruple 3/4 tags. */
+      checkptr = &press_4dmd_4x4;
       goto doit;
    }
    else if ((ypar == 0x00260062 || ypar == 0x00660066) && ((signature & (~0x10100600)) == 0)) {
@@ -753,7 +774,7 @@ Private void finish_matrix_call(
    }
    /* If certain far out people are missing, xmax will be different, but we will
        still need to go to a 4dmd. */
-   else if (((ypar == 0x00E30055) || (ypar == 0x00B30055) || (ypar == 0x00A30055)) && ((signature & (~0x0940A422)) == 0)) {
+   else if (((ypar == 0x00E30055) || (ypar == 0x00B30055) || (ypar == 0x00B10051) || (ypar == 0x00A30055)) && ((signature & (~0x0940A422)) == 0)) {
       checkptr = setup_attrs[s4dmd].setup_coords;
       goto doit;
    }
@@ -954,7 +975,7 @@ Private void matrixmove(
    setup people;
    matrix_rec matrix_info[9];
    int i, nump, alldelta;
-    uint32 flags = callspec->stuff.matrix.flags;
+   uint32 flags = callspec->stuff.matrix.flags;
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
       fail("Can't split the setup.");
@@ -1992,6 +2013,94 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
 
 
 
+/* This returns TRUE if it can't do it because the assumption isn't specific enough.
+   In such a case, the call was not executed.  If the user had said "with active phantoms",
+   that is an error.  But if we are only doing this because the automatic active phantoms
+   switch is on, we will just ignore it. */
+
+extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result)
+{
+   int i;
+
+   if (check_restriction(ss, ss->cmd.cmd_assume, TRUE, 99))
+      return TRUE;   /* We couldn't do it -- the assumption is not specific enough, like "general diamonds". */
+
+   ss->cmd.cmd_assume.assumption = cr_none;
+   move(ss, FALSE, result);
+
+   /* Take out the phantoms. */
+
+   for (i=0; i<=setup_attrs[result->kind].setup_limits; i++) {
+      if (result->people[i].id1 & BIT_ACT_PHAN)
+         result->people[i].id1 = 0;
+   }
+
+   return FALSE;
+}
+
+
+
+extern void move_perhaps_with_active_phantoms(setup *ss, setup *result)
+{
+   if (using_active_phantoms) {
+      if (fill_active_phantoms_and_move(ss, result)) {
+         /* Active phantoms couldn't be used.  Just do the call the way it is.
+            This does not count as a use of active phantoms, so don't set the flag. */
+         move(ss, FALSE, result);
+      }
+      else
+         result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
+   }
+   else {
+      (void) check_restriction(ss, ss->cmd.cmd_assume, FALSE, 99);
+      move(ss, FALSE, result);
+      result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
+   }
+}
+
+
+
+extern void impose_assumption_and_move(setup *ss, setup *result)
+{
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
+      assumption_thing t;
+
+      /* **** actually, we want to allow the case of "assume waves" already in place. */
+      if (ss->cmd.cmd_assume.assumption != cr_none)
+         fail("Redundant or conflicting assumptions.");
+
+      t.assump_col = 0;
+      t.assump_both = 0;
+      t.assump_cast = ss->cmd.cmd_assume.assump_cast;
+
+      switch (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
+         case CMD_MISC__VERIFY_WAVES:         t.assumption = cr_wave_only;     break;
+         case CMD_MISC__VERIFY_2FL:           t.assumption = cr_2fl_only;      break;
+         case CMD_MISC__VERIFY_DMD_LIKE:      t.assumption = cr_diamond_like;  break;
+         case CMD_MISC__VERIFY_QTAG_LIKE:     t.assumption = cr_qtag_like;     break;
+         case CMD_MISC__VERIFY_1_4_TAG:       t.assumption = cr_gen_1_4_tag;   break;
+         case CMD_MISC__VERIFY_3_4_TAG:       t.assumption = cr_gen_3_4_tag;   break;
+         case CMD_MISC__VERIFY_REAL_1_4_TAG:  t.assumption = cr_real_1_4_tag;  break;
+         case CMD_MISC__VERIFY_REAL_3_4_TAG:  t.assumption = cr_real_3_4_tag;  break;
+         case CMD_MISC__VERIFY_REAL_1_4_LINE: t.assumption = cr_real_1_4_line; break;
+         case CMD_MISC__VERIFY_REAL_3_4_LINE: t.assumption = cr_real_3_4_line; break;
+         case CMD_MISC__VERIFY_LINES:         t.assumption = cr_all_ns;        break;
+         case CMD_MISC__VERIFY_COLS:          t.assumption = cr_all_ew;        break;
+         default:
+            fail("Unknown assumption verify code.");
+      }
+
+      ss->cmd.cmd_assume = t;
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
+      move_perhaps_with_active_phantoms(ss, result);
+   }
+   else
+      move(ss, FALSE, result);
+}
+
+
+
+
 Private void do_sequential_call(
    setup *ss,
    callspec_block *callspec,
@@ -2012,6 +2121,7 @@ Private void do_sequential_call(
    int subcall_incr = 1;   /* Will be -1 if doing call in reverse order. */
    long_boolean do_half_of_last_part = FALSE;
    long_boolean first_call = TRUE;
+   long_boolean fix_next_assumption = FALSE;
    int realtotal = callspec->stuff.def.howmanyparts;
    int total = realtotal;
    int start_point = 0;    /* Where we start, in the absence of special stuff. */
@@ -2306,8 +2416,18 @@ do_plain_call:
       if (!first_call) {
          if (!setup_is_elongated)
             result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;  /* Stop checking unless we are really serious. */
-         result->cmd.cmd_assume.assumption = cr_none;
+
+         if (fix_next_assumption) {
+            result->cmd.cmd_assume.assumption = cr_magic_only;
+            result->cmd.cmd_assume.assump_col = 1;
+            result->cmd.cmd_assume.assump_both = 0;
+            result->cmd.cmd_assume.assump_cast = 0;
+         }
+         else
+            result->cmd.cmd_assume.assumption = cr_none;
       }
+
+      fix_next_assumption = FALSE;
 
       if ((DFM1_REPEAT_N_ALTERNATE & this_mod1) && use_alternate) {
          result->cmd.parseptr = foo2.parseptr;
@@ -2326,6 +2446,21 @@ do_plain_call:
 
       oldk = result->kind;
       if (oldk == s2x2 && result->cmd.prior_elongation_bits != 0) remembered_2x2_elongation = result->cmd.prior_elongation_bits & 3;
+
+      if (result->cmd.callspec == base_calls[BASE_CALL_CHREACT_1] &&
+               (  ((    result->cmd.cmd_assume.assumption == cr_jleft ||
+                        result->cmd.cmd_assume.assumption == cr_ijleft ||
+                        result->cmd.cmd_assume.assumption == cr_jright ||
+                        result->cmd.cmd_assume.assumption == cr_ijright) &&
+                  result->cmd.cmd_assume.assump_both == 2)
+                           ||
+                  (result->cmd.cmd_assume.assumption == cr_gen_1_4_tag &&
+                  result->cmd.cmd_assume.assump_both == 0)
+                           ||
+                  result->cmd.cmd_assume.assumption == cr_real_1_4_tag
+                           ||
+                  result->cmd.cmd_assume.assumption == cr_real_1_4_line))
+         fix_next_assumption = TRUE;
 
       do_call_in_series(
          result,
@@ -2989,6 +3124,8 @@ that probably need to be put in. */
                   result);
             }
             else {
+               int i;
+
                ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the right thing to do. */
                saved_warnings = history[history_ptr+1].warnings;
    
@@ -3058,11 +3195,11 @@ that probably need to be put in. */
                   result);
    
                if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
-                  history[history_ptr+1].warnings.bits[0] &= ~conc_elong_warnings.bits[0];
-                  history[history_ptr+1].warnings.bits[1] &= ~conc_elong_warnings.bits[1];
+                  for (i=0 ; i<WARNING_WORDS ; i++)
+                     history[history_ptr+1].warnings.bits[i] &= ~conc_elong_warnings.bits[i];
                }
-               history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
-               history[history_ptr+1].warnings.bits[1] |= saved_warnings.bits[1];
+               for (i=0 ; i<WARNING_WORDS ; i++)
+                  history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
             }
          }
          break;

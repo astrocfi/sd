@@ -223,7 +223,7 @@ static call_list_kind savecl;
 
 Private long_boolean verify_call(void)
 {
-   uint32 bits0, bits1;
+   warning_info saved_warnings;
    int old_history_ptr;
    long_boolean resultval;
    real_jmp_buf my_longjmp_buffer;
@@ -234,8 +234,7 @@ Private long_boolean verify_call(void)
    if (!static_ss.verify) return TRUE;
 
    interactivity = interactivity_verify;   /* so deposit_call doesn't ask user for info */
-   bits0 = history[history_ptr+1].warnings.bits[0];
-   bits1 = history[history_ptr+1].warnings.bits[1];
+   saved_warnings = history[history_ptr+1].warnings;
    old_history_ptr = history_ptr;
 
    parse_mark = mark_parse_blocks();
@@ -387,8 +386,7 @@ Private long_boolean verify_call(void)
    release_parse_blocks_to_mark(parse_mark);
 
    history_ptr = old_history_ptr;
-   history[history_ptr+1].warnings.bits[0] = bits0;
-   history[history_ptr+1].warnings.bits[1] = bits1;
+   history[history_ptr+1].warnings = saved_warnings;
    interactivity = interactivity_normal;
 
    return resultval;

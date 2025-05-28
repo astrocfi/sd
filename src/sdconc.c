@@ -1175,10 +1175,17 @@ extern void concentric_move(
                   }
                }
             }
-            else if ((analyzer == schema_concentric_2_6)) {
+            else if (analyzer == schema_concentric_2_6) {
                if (ss->kind == s_qtag && begin_ptr->kind == s_short6 && (doing_ends ^ crossing)) {
                   goto got_new_assumption;    /* We want to preserve "assume diamond" stuff to the outer 6, so 6x2 acey deucey will work. */
                }
+            }
+            else if (      analyzer == schema_ckpt_star &&
+                           doing_ends == 1 &&
+                           ss->kind == s_spindle &&
+                           begin_ptr->cmd.cmd_assume.assumption == cr_magic_only) {
+               begin_ptr->cmd.cmd_assume.assumption = cr_wave_only;       /* The box is a real box.  This makes the hinge win on chain reaction. */
+               goto got_new_assumption;
             }
             else if ((analyzer == schema_single_concentric) || (analyzer == schema_single_cross_concentric)) {
                if (ss->kind == s1x4 && begin_ptr->kind == s1x2 && (begin_ptr->cmd.cmd_assume.assumption == cr_2fl_only || begin_ptr->cmd.cmd_assume.assumption == cr_wave_only)) {
@@ -1538,6 +1545,16 @@ extern void concentric_move(
       }
       /* A similar thing, for single concentric. */
       else if (result_outer.kind == s1x2 && analyzer == schema_single_concentric) {
+         result_inner[0].kind = s1x2;
+         clear_people(&result_inner[0]);
+         result_inner[0].result_flags = 0;
+         result_inner[0].rotation = result_outer.rotation;
+      }
+      /* If the ends are a 1x6, we just set the missing centers to a 1x2,
+         so the entire setup is a 1x8.  Maybe the phantoms went the other way,
+         so the setup is really a 1x3 diamond, but we don't care.  See the comment
+         just above. */
+      else if (result_outer.kind == s1x6 && analyzer == schema_concentric_2_6) {
          result_inner[0].kind = s1x2;
          clear_people(&result_inner[0]);
          result_inner[0].result_flags = 0;
@@ -2602,27 +2619,31 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
             result->people[i].id2 = res1->people[(i+limhalf) % lim1].id2;
             result_mask |= (1 << i);
          }
-         else if (action >= merge_c1_phantom && lim1 <= 12 && result->people[i+12].id1 == 0) {
-            /* Collisions are legal.  Store the person in the overflow area
-               (12 higher than the main area, which is why we only permit
-               this if the result setup size is <= 12) and record the fact
-               in the collision_mask so we can figure out what to do. */
-            result->people[i+12].id1 = newperson;
-            result->people[i+12].id2 = res1->people[(i+limhalf) % lim1].id2;
-            collision_mask |= (1 << i);
-            collision_index = i;        /* In case we need to report a mundane collision. */
-         }
          else {
-            collision_person1 = result->people[i].id1;
+            /* We have a collision. */
+            collision_person1 = result->people[i].id1;   /* Prepare the error message. */
             collision_person2 = newperson;
             error_message1[0] = '\0';
             error_message2[0] = '\0';
-            longjmp(longjmp_ptr->the_buf, 3);
+
+            if (action >= merge_c1_phantom && lim1 <= 12 && result->people[i+12].id1 == 0) {
+               /* Collisions are legal.  Store the person in the overflow area
+                  (12 higher than the main area, which is why we only permit
+                  this if the result setup size is <= 12) and record the fact
+                  in the collision_mask so we can figure out what to do. */
+               result->people[i+12].id1 = newperson;
+               result->people[i+12].id2 = res1->people[(i+limhalf) % lim1].id2;
+               collision_mask |= (1 << i);
+               collision_index = i;        /* In case we need to report a mundane collision. */
+            }
+            else {
+               longjmp(longjmp_ptr->the_buf, 3);
+            }
          }
       }
    }
 
-   if (collision_mask) fix_collision(0, collision_mask, collision_index, result_mask, FALSE, result);
+   if (collision_mask) fix_collision(0, collision_mask, collision_index, result_mask, FALSE, FALSE, result);
 
    return;
 
@@ -2772,10 +2793,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
 
    /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
       the people do the calls in isolation. */
-   history[history_ptr+1].warnings.bits[0] &= ~dyp_each_warnings.bits[0];
-   history[history_ptr+1].warnings.bits[1] &= ~dyp_each_warnings.bits[1];
-   history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
-   history[history_ptr+1].warnings.bits[1] |= saved_warnings.bits[1];
+   for (i=0 ; i<WARNING_WORDS ; i++) {
+      history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
+      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
+   }
 
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
@@ -3689,10 +3710,10 @@ back_here:
 
    /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
       the people do the calls in isolation. */
-   history[history_ptr+1].warnings.bits[0] &= ~dyp_each_warnings.bits[0];
-   history[history_ptr+1].warnings.bits[1] &= ~dyp_each_warnings.bits[1];
-   history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
-   history[history_ptr+1].warnings.bits[1] |= saved_warnings.bits[1];
+   for (i=0 ; i<WARNING_WORDS ; i++) {
+      history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
+      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
+   }
 
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);

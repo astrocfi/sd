@@ -859,6 +859,8 @@ extern long_boolean open_session(int argc, char **argv)
             { retain_after_error = FALSE; continue; }
          else if (strcmp(&args[argno][1], "retain_after_error") == 0)
             { retain_after_error = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "alternate_glyphs_1") == 0)
+            { alternate_person_glyphs = 1; continue; }
          else if (strcmp(&args[argno][1], "sequence") == 0) {
 	     if (argno+1 < nargs) new_outfile_string = args[argno+1];  /* We'll install it later. */
 	}

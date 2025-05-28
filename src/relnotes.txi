@@ -21,10 +21,29 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.82
-         Database version = 31.82 format = 89.
-       X11 UI version 1.17, SDTTY UI version 1.9.
+          RELEASE NOTES FOR SD VERSION 31.83
+         Database version = 31.83 format = 90
+       X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.83 ******
+
+A number of questionable or controversial calls now print warnings
+when they are used.  For example, @samp{explode the line} from a
+2-faced line is marked as a violation of the definition of the call.
+
+New concepts:
+
+@example
+@group
+as couples in a 1/4 tag
+as couples in a 3/4 tag
+as couples in a 1/4 line
+as couples in a 3/4 line
+@end group
+@end example
+
+A number of minor bugs and inconveniences were fixed.
 
 ****** Changes as of version 31.82 ******
 

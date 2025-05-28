@@ -68,7 +68,6 @@ extern void ttu_display_help(void)
 {
    printf("-lines <N>                  assume this many lines on the screen\n");
    printf("-no_cursor                  do not use screen management functions\n");
-   printf("-ignoreblanks               allow user to omit spaces when typing in\n");
    printf("-no_graphics                do not use special characters for showing facing directions\n");
 }
 

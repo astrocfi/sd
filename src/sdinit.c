@@ -1110,6 +1110,10 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
       final_exit(1);
    }
+   else if (NUM_WARNINGS > (WARNING_WORDS << 5)) {
+      init_error("insufficient warning bit space -- program has been compiled incorrectly.");
+      final_exit(1);
+     }
 
    /* Read in the calls database, then start the user interface package,
       whatever that might be, and finally create all the call menus.

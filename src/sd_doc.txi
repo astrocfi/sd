@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: January 5, 1997
+@set Time-stamp: January 18, 1997
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.82
+@set sd-version 31.83
 @set full-manual
 @c %**end of header
 @iftex
@@ -102,7 +102,6 @@ This is the summary table of contents:
 * Concept Notes::               Concept Notes
 * Misc Advice::                 Miscellaneous Advice and Warnings
 * Customization::               Customization with X Resources
-* Versions::                    Version Numbers
 @ifset copyleft
 * Copying::                     The GNU General Public License
 @end ifset
@@ -3109,6 +3108,10 @@ The menu for these is brought up by clicking on the ``couples/tandem concepts'' 
 @item gruesome twosome
 @item gruesome as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome couples twosome
 @item gruesome tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome tandem twosome
+@item as couples in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 tag
+@item as couples in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 tag
+@item as couples in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 line
+@item as couples in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 line
 @item <ANYONE> are as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples twosome
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
 @item <ANYONE> are couples of three@ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
@@ -3125,6 +3128,11 @@ These are straightforward.
 
 Any of the above twosome/threesome/whateversome may also be
 ``<N/4> whateversome'' or ``whateversome <N/4> solid''
+
+The concepts like @samp{as couples in a 1/4 tag} are intended to be used from tidal
+2-faced lines or tidal 1-faced lines.  They cause the live dancers to become the
+centers of the resulting 1/4 tag or 1/4 line.  They may also be used when the live
+people are partially or entirely on the outside.
 
 Any of the above may be used with the @code{phantom} concept in front
 of it.  There are no concepts like @code{phantom tandem} listed
@@ -4471,7 +4479,12 @@ set this X resource:
 Sd*text*font: -misc-fixed-medium-r-normal--13-*-*-*-c-70-iso8859-1
 @end example
 
-@node Customization, Versions, Misc Advice, Top
+@ifset copyleft
+@node Customization, Copying, Misc Advice, Top
+@end ifset
+@ifclear copyleft
+@node Customization, , Misc Advice, Top
+@end ifclear
 @chapter Customization with X Resources
 
 The file @file{Sd.res} is a sample X user resource file for the program.  It
@@ -4513,27 +4526,7 @@ Sd*frame*List*Translations: #override <Btn3Down>: undo()
 @end example
 
 @ifset copyleft
-@node Versions, Copying, Customization, Top
-@end ifset
-@ifclear copyleft
-@node Versions, , Customization, Top
-@end ifclear
-@chapter Versions
-
-The version is a string consisting of parts separated by colons.
-
-If you customize any part of Sd for your own use, or fix bugs, you should
-assign the result a new version by appending to the current version.
-This will help in keeping track of bug reports.  The version string is
-defined near the top of the file @file{sdmain.c}.  For example, you might
-set it to @code{25.6.joe1} for your private version.
-
-The calls database also has a version.
-If you modify the database, you should
-change the version string at the top of the file.
-
-@ifset copyleft
-@node Copying, , Versions, Top
+@node Copying, , Customization, Top
 @include gpl.txi
 @end ifset
 

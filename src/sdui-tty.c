@@ -1020,8 +1020,11 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
          if (save1) {
             parse_block *tt = get_parse_block();
-            save1->concept = &marker_concept_mod;
+            /* Run to the end of any already-deposited things.  This could happen if the
+               call takes a tagger -- it could have a search chain before we even see it. */
+            while (save1->next) save1 = save1->next;
             save1->next = tt;
+            save1->concept = &marker_concept_mod;
             tt->concept = &marker_concept_mod;
             tt->call = base_calls[1];   /* "nothing" */
             tt->replacement_key = 2;    /* "mandatory_anycall" */

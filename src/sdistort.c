@@ -647,7 +647,7 @@ extern void divided_setup_move(
    if (v3flag) x[2].kind = kn;
    if (v4flag) x[3].kind = kn;
 
-   if (t.assumption == cr_couples_only) {
+   if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
       /* Pass it through. */
    }
    else if (recompute_id) {
@@ -1747,7 +1747,9 @@ common_spot_map cmaps[] = {
          {      -1,       1,       2,      -1,      -1,       5,       6,      -1},
          {       0, d_south, d_north,       0,       0, d_north, d_south,       0}, s2x4, s2x4, 0},
 
-   /* common spot lines from a 2x8 -- they become 2-faced lines */
+   /* common spot lines from a 2x8        Occupied as     ^V^V....
+                                                          ....^V^V   (or other way)
+      they become 2-faced lines */
    {8,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
          {       0,       2,      -1,      -1,       8,      10,      -1,      -1},
          { d_north, d_north,       0,       0, d_south, d_south,       0,       0},
@@ -1758,6 +1760,34 @@ common_spot_map cmaps[] = {
          {       0,       0, d_north, d_north,       0,       0, d_south, d_south},
          {      -1,      -1,       5,       7,      -1,      -1,      13,      15},
          {       0,       0, d_south, d_south,       0,       0, d_north, d_north}, s2x8, s2x4, 0},
+
+   /* common spot lines from a 2x8        Occupied as     ^V^V....
+                                                          ....^V^V   (or other way)
+      they become waves */
+   {0x40,{      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {       0,       3,      -1,      -1,       8,      11,      -1,      -1},
+         { d_north, d_south,       0,       0, d_south, d_north,       0,       0},
+         {       1,       2,      -1,      -1,       9,      10,      -1,      -1},
+         { d_south, d_north,       0,       0, d_north, d_south,       0,       0}, s2x8, s2x4, 0},
+   {0x40,{      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {      -1,      -1,       4,       7,      -1,      -1,      12,      15},
+         {       0,       0, d_north, d_south,       0,       0, d_south, d_north},
+         {      -1,      -1,       5,       6,      -1,      -1,      13,      14},
+         {       0,       0, d_south, d_north,       0,       0, d_north, d_south}, s2x8, s2x4, 0},
+
+   /* common spot lines from a 2x8        Occupied as     ^V..^V..
+                                                          ..^V..^V   (or other way)
+      they become waves */
+   {0x40,{      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {       0,      -1,       4,      -1,       8,      -1,      12,      -1},
+         { d_north,       0, d_north,       0, d_south,       0, d_south,       0},
+         {       1,      -1,       5,      -1,       9,      -1,      13,      -1},
+         { d_south,       0, d_south,       0, d_north,       0, d_north,       0}, s2x8, s2x4, 0},
+   {0x40,{      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {      -1,       2,      -1,       6,      -1,      10,      -1,      14},
+         {       0, d_north,       0, d_north,       0, d_south,       0, d_south},
+         {      -1,       3,      -1,       7,      -1,      11,      -1,      15},
+         {       0, d_south,       0, d_south,       0, d_north,       0, d_north}, s2x8, s2x4, 0},
 
    /* common spot columns, facing E-W */
    {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
@@ -1826,12 +1856,14 @@ extern void common_spot_move(
 
    rstuff = parseptr->concept->value.arg1;
    /* rstuff =
-      common point galaxy from rigger          : 1
-      common spot columns (from 4x4)           : 2
-      common point diamonds                    : 4
-      common end lines/waves (from 2x6)        : 8
-      common spot 2-faced lines (from 2x8)     : 8
-      common spot lines/waves (from 2x4 waves) : 8 */
+      common point galaxy from rigger          : 0x1
+      common spot columns (from 4x4)           : 0x2
+      common point diamonds                    : 0x4
+      common end lines/waves (from 2x6)        : 0x10
+      common center lines/waves (from 2x4)     : 0x20
+      common spot 2-faced lines (from 2x8)     : 0x8
+      common spot lines                        : 0x78
+      common spot waves                        : 0x70 */
 
    for (map_ptr = cmaps ; map_ptr->orig_kind != nothing ; map_ptr++) {
       if (ss->kind != map_ptr->orig_kind || !(rstuff & map_ptr->indicator)) goto not_this_map;
@@ -1907,10 +1939,8 @@ extern void common_spot_move(
       if (t >= 0) (void) copy_rot(&a1, i, ss, t, r);
    }
 
-   if (parseptr->concept->value.arg2) {
-      a0.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
-      a1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
-   }
+   a0.cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
+   a1.cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
 
    update_id_bits(&a0);
    impose_assumption_and_move(&a0, &the_results[0]);

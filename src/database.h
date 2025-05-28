@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,20 +21,21 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 89
+#define DATABASE_FORMAT_VERSION 90
 
 
 
 
 /* BEWARE!!  These must track the items in tagtabinit in dbcomp.c . */
-#define BASE_CALL_CAST_3_4   2
+#define BASE_CALL_CAST_3_4    2
 #define BASE_CALL_ENDS_SHADOW 3
+#define BASE_CALL_CHREACT_1   4
 /* These 4 must be consecutive. */
-#define BASE_CALL_TAGGER0    4
-#define BASE_CALL_TAGGER1    5
-#define BASE_CALL_TAGGER2    6
-#define BASE_CALL_TAGGER3    7
-#define BASE_CALL_CIRCCER    8
+#define BASE_CALL_TAGGER0     5
+#define BASE_CALL_TAGGER1     6
+#define BASE_CALL_TAGGER2     7
+#define BASE_CALL_TAGGER3     8
+#define BASE_CALL_CIRCCER     9
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -319,18 +320,19 @@ typedef enum {
 #define CAF__CONCEND                0x4
 /* Next one meaningful only if previous one is set. */
 #define CAF__ROT_OUT                0x8
-/* This is a 2 bit field. */
-#define CAF__RESTR_MASK            0x30
-/* These next 3 are the nonzero values it can have. */
+/* This is a 3 bit field. */
+#define CAF__RESTR_MASK            0x70
+/* These next 5 are the nonzero values it can have. */
 #define CAF__RESTR_UNUSUAL         0x10
 #define CAF__RESTR_FORBID          0x20
 #define CAF__RESTR_RESOLVE_OK      0x30
-#define CAF__PREDS                 0x40
-#define CAF__NO_CUTTING_THROUGH    0x80
-#define CAF__LATERAL_TO_SELECTEES 0x100
-#define CAF__VACATE_CENTER        0x200
-#define CAF__OTHER_ELONGATE       0x400
-/* spare:                         0x800 */
+#define CAF__RESTR_CONTROVERSIAL   0x40
+#define CAF__RESTR_BOGUS           0x50
+#define CAF__PREDS                 0x80
+#define CAF__NO_CUTTING_THROUGH   0x100
+#define CAF__LATERAL_TO_SELECTEES 0x200
+#define CAF__VACATE_CENTER        0x400
+#define CAF__OTHER_ELONGATE       0x800
 
 /* These qualifiers are "overloaded" -- their meaning depends on the starting setup. */
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
@@ -377,6 +379,7 @@ typedef enum {
    sq_ripple_one_end,
    sq_ripple_both_ends,
    sq_ripple_centers,
+   sq_people_1_and_5_real,
    sq_ctrs_sel,
    sq_ends_sel,
    sq_all_sel,
@@ -420,6 +423,10 @@ typedef enum {
    cr_all_ew,
    cr_gen_1_4_tag,
    cr_gen_3_4_tag,
+   cr_real_1_4_tag,
+   cr_real_3_4_tag,
+   cr_real_1_4_line,
+   cr_real_3_4_line,
    cr_jleft,
    cr_jright,
    cr_ijleft,

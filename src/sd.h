@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -32,7 +32,7 @@
 #if __GNUC__ >= 2
 /* GNU C versions 2 or greater recognize volatile procedures. */
 #undef nonreturning
-#define nonreturning volatile
+#define nonreturning __attribute__ ((noreturn))
 #else
 /* GNU C versions less than 2 can't do "const". */
 #define CONST_IS_BROKEN
@@ -116,17 +116,17 @@ typedef struct {
 } personrec;
 
 /* Person bits for "id1" field are:
- 20 000 000 000 -
- 10 000 000 000 - not side girl    **** these 10 bits are "permanent" -- they never change in a person
-  4 000 000 000 - not side boy
-  2 000 000 000 - not head girl
-  1 000 000 000 - not head boy
-    400 000 000 - head corner
-    200 000 000 - side corner
-    100 000 000 - head
-     40 000 000 - side
-     20 000 000 - boy
-     10 000 000 - girl             **** end of permanent bits
+     0x80000000 -
+     0x40000000 - not side girl    **** these 10 bits are "permanent" -- they never change in a person
+     0x20000000 - not side boy
+     0x10000000 - not head girl
+     0x08000000 - not head boy
+     0x04000000 - head corner
+     0x02000000 - side corner
+     0x01000000 - head
+     0x00800000 - side
+     0x00400000 - boy
+     0x00200000 - girl             **** end of permanent bits
       4 000 000 - roll direction is CCW
       2 000 000 - roll direction is neutral
       1 000 000 - roll direction is CW
@@ -147,18 +147,18 @@ typedef struct {
               1 - part of rotation (facing east/west)
 */
 
-#define ID1_PERM_NSG         010000000000UL
-#define ID1_PERM_NSB          04000000000UL
-#define ID1_PERM_NHG          02000000000UL
-#define ID1_PERM_NHB          01000000000UL
-#define ID1_PERM_HCOR          0400000000UL
-#define ID1_PERM_SCOR          0200000000UL
-#define ID1_PERM_HEAD          0100000000UL
-#define ID1_PERM_SIDE           040000000UL
-#define ID1_PERM_BOY            020000000UL
-#define ID1_PERM_GIRL           010000000UL
+#define ID1_PERM_NSG           0x40000000UL
+#define ID1_PERM_NSB           0x20000000UL
+#define ID1_PERM_NHG           0x10000000UL
+#define ID1_PERM_NHB           0x08000000UL
+#define ID1_PERM_HCOR          0x04000000UL
+#define ID1_PERM_SCOR          0x02000000UL
+#define ID1_PERM_HEAD          0x01000000UL
+#define ID1_PERM_SIDE          0x00800000UL
+#define ID1_PERM_BOY           0x00400000UL
+#define ID1_PERM_GIRL          0x00200000UL
 
-#define ID1_PERM_ALLBITS     017770000000UL
+#define ID1_PERM_ALLBITS       0x7FE00000UL
 
 /* These are a 3 bit field -- ROLL_BIT tells where its low bit lies. */
 #define ROLL_MASK   07000000UL
@@ -373,19 +373,18 @@ typedef struct {
 
 #define CMD_MISC__EXPLICIT_MIRROR    0x00000100UL
 #define CMD_MISC__MATRIX_CONCEPT     0x00000200UL
-/* This is a 3 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
-#define CMD_MISC__VERIFY_MASK        0x00001C00UL
-#define CMD_MISC__EXPLICIT_MATRIX    0x00002000UL
-#define CMD_MISC__NO_EXPAND_MATRIX   0x00004000UL
-#define CMD_MISC__DISTORTED          0x00008000UL
-#define CMD_MISC__OFFSET_Z           0x00010000UL
-#define CMD_MISC__SAID_SPLIT         0x00020000UL
-#define CMD_MISC__SAID_TRIANGLE      0x00040000UL
-#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00080000UL
-#define CMD_MISC__DO_AS_COUPLES      0x00100000UL
-#define CMD_MISC__RESTRAIN_CRAZINESS 0x00200000UL
-#define CMD_MISC__NO_CHECK_MOD_LEVEL 0x00400000UL
-/* available:                        0x00800000UL */
+/* This is a 4 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
+#define CMD_MISC__VERIFY_MASK        0x00003C00UL
+#define CMD_MISC__EXPLICIT_MATRIX    0x00004000UL
+#define CMD_MISC__NO_EXPAND_MATRIX   0x00008000UL
+#define CMD_MISC__DISTORTED          0x00010000UL
+#define CMD_MISC__OFFSET_Z           0x00020000UL
+#define CMD_MISC__SAID_SPLIT         0x00040000UL
+#define CMD_MISC__SAID_TRIANGLE      0x00080000UL
+#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00100000UL
+#define CMD_MISC__DO_AS_COUPLES      0x00200000UL
+#define CMD_MISC__RESTRAIN_CRAZINESS 0x00400000UL
+#define CMD_MISC__NO_CHECK_MOD_LEVEL 0x00800000UL
 /* available:                        0x01000000UL */
 #define CMD_MISC__MUST_SPLIT         0x02000000UL
 /* available:                        0x04000000UL */
@@ -397,13 +396,20 @@ typedef struct {
 
 /* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
    Zero means no verification. */
-#define CMD_MISC__VERIFY_WAVES       0x00000400UL
-#define CMD_MISC__VERIFY_DMD_LIKE    0x00000800UL
-#define CMD_MISC__VERIFY_QTAG_LIKE   0x00000C00UL
-#define CMD_MISC__VERIFY_1_4_TAG     0x00001000UL
-#define CMD_MISC__VERIFY_3_4_TAG     0x00001400UL
-#define CMD_MISC__VERIFY_LINES       0x00001800UL
-#define CMD_MISC__VERIFY_COLS        0x00001C00UL
+#define CMD_MISC__VERIFY_WAVES         0x00000400UL
+#define CMD_MISC__VERIFY_2FL           0x00000800UL
+#define CMD_MISC__VERIFY_DMD_LIKE      0x00000C00UL
+#define CMD_MISC__VERIFY_QTAG_LIKE     0x00001000UL
+#define CMD_MISC__VERIFY_1_4_TAG       0x00001400UL
+#define CMD_MISC__VERIFY_3_4_TAG       0x00001800UL
+#define CMD_MISC__VERIFY_REAL_1_4_TAG  0x00001C00UL
+#define CMD_MISC__VERIFY_REAL_3_4_TAG  0x00002000UL
+#define CMD_MISC__VERIFY_REAL_1_4_LINE 0x00002400UL
+#define CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
+#define CMD_MISC__VERIFY_LINES         0x00002C00UL
+#define CMD_MISC__VERIFY_COLS          0x00003000UL
+
+
 
 /* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed. */
 
@@ -1100,10 +1106,9 @@ typedef enum {
    warn__do_your_part,
    warn__tbonephantom,
    warn__awkward_centers,
-   warn__bad_concept_level,  /* This must be in 1st 32, because of some sleaziness in resolver. */
+   warn__bad_concept_level,
    warn__not_funny,
    warn__hard_funny,
-   warn__unusual,
    warn__rear_back,
    warn__awful_rear_back,
    warn__excess_split,
@@ -1137,7 +1142,6 @@ typedef enum {
    warn__check_hokey_4x4,
    warn__check_4x4_start,
    warn__check_pgram,
-   warn__dyp_resolve_ok,
    warn__ctrs_stay_in_ctr,
    warn__check_c1_stars,
    warn__check_gen_c1_stars,
@@ -1156,7 +1160,13 @@ typedef enum {
    warn__bad_modifier_level,
    warn__did_not_interact,
    warn__opt_for_normal_cast,
+   warn__opt_for_normal_hinge,
    warn__split_1x6,
+   warn_bad_collision,
+   warn__dyp_resolve_ok,
+   warn__unusual,
+   warn_controversial,
+   warn_serious_violation,
    warn__tasteless_com_spot,
    warn__tasteless_slide_thru  /* If this ceases to be last, look 2 lines below! */
 } warning_index;
@@ -1564,6 +1574,7 @@ typedef enum {
    chk_anti_groups,
    chk_box,
    chk_dmd_qtag,
+   chk_qtag,
    chk_peelable
 } chk_type;
 
@@ -1577,8 +1588,11 @@ typedef struct {
    chk_type check;
 } restriction_thing;
 
+/* This allows 96 warnings. */
+#define WARNING_WORDS 3
+
 typedef struct {
-   uint32 bits[2];
+   uint32 bits[WARNING_WORDS];
 } warning_info;
 
 typedef struct {           /* This record is one state in the evolving sequence. */
@@ -1742,6 +1756,7 @@ typedef struct {
 #define zig_zag_level l_a2
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
+#define extend_34_level l_plus
 #define phantom_tandem_level l_c4a
 #define intlk_triangle_level l_c2
 
@@ -1967,6 +1982,7 @@ extern long_boolean allowing_all_concepts;                          /* in SDMAIN
 extern long_boolean using_active_phantoms;                          /* in SDMAIN */
 extern long_boolean elide_blanks;                                   /* in SDMAIN */
 extern long_boolean retain_after_error;                             /* in SDMAIN */
+extern int alternate_person_glyphs;                                 /* in SDMAIN */
 extern int singing_call_mode;                                       /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern call_conc_option_state current_options;                      /* in SDMAIN */
@@ -2088,10 +2104,10 @@ extern void writestuff(Const char s[]);
 extern void unparse_call_name(callspec_block *call, char *s, parse_block *pb);
 extern void doublespace_file(void);
 extern void exit_program(int code);
-extern void nonreturning fail(Const char s[]);
-extern void nonreturning fail2(Const char s1[], Const char s2[]);
-extern void nonreturning failp(uint32 id1, Const char s[]);
-extern void nonreturning specialfail(Const char s[]);
+extern void fail(Const char s[]) nonreturning;
+extern void fail2(Const char s1[], Const char s2[]) nonreturning;
+extern void failp(uint32 id1, Const char s[]) nonreturning;
+extern void specialfail(Const char s[]) nonreturning;
 extern Const char *get_escape_string(char c);
 extern void string_copy(char **dest, Cstring src);
 extern void display_initial_history(int upper_limit, int num_pics);
@@ -2099,6 +2115,12 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 extern void warn(warning_index w);
 extern call_list_kind find_proper_call_list(setup *s);
 extern Const long int *get_rh_test(setup_kind kind);
+extern long_boolean verify_restriction(
+   setup *ss,
+   restriction_thing *rr,
+   assumption_thing tt,
+   long_boolean instantiate_phantoms,
+   long_boolean *failed_to_instantiate);
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
 extern uint32 find_calldef(
    callarray *tdef,
@@ -2146,11 +2168,17 @@ extern void fix_collision(
    int collision_mask,
    int collision_index,
    int result_mask,
+   long_boolean appears_illegal,
    long_boolean mirror,
    setup *result);
 
 extern void do_stability(uint32 *personp, stability stab, int turning);
-extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags);
+
+extern long_boolean check_restriction(
+   setup *ss,
+   assumption_thing restr,
+   long_boolean instantiate_phantoms,
+   uint32 flags);
 
 extern void basic_move(
    setup *ss,
@@ -2179,6 +2207,12 @@ extern void do_call_in_series(
    long_boolean qtfudged);
 
 extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int total);
+
+extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result);
+
+extern void move_perhaps_with_active_phantoms(setup *ss, setup *result);
+
+extern void impose_assumption_and_move(setup *ss, setup *result);
 
 extern void move(
    setup *ss,
@@ -2253,8 +2287,6 @@ extern void triangle_move(
    setup *result);
 
 /* In SDCONCPT */
-
-extern void impose_assumption_and_move(setup *ss, setup *result);
 
 extern long_boolean do_big_concept(
    setup *ss,

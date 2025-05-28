@@ -12,8 +12,7 @@
 
     This is for version 31. */
 
-/* This defines the following functions:
-   impose_assumption_and_move
+/* This defines the following function:
    do_big_concept
 
 and the following external variables:
@@ -116,23 +115,27 @@ Private void do_c1_phantom_move(
                "2x8 matrix", or whatever, to get that effect. */
             break;
          default:
-            /* This is plain "phantom tandem", or whatever.  Expansion to 4x4 is required. */
-            what_we_need = CONCPROP__NEEDK_4X4;
+            /* This is plain "phantom tandem", or whatever.  Expand to whatever is in
+               the "arg2" field, or to a 4x4.  The "arg2" check allows the user to say
+               "phantom as couples in a 1/4 tag".  "as couples in a 1/4 tag" would have worked also. */
+            what_we_need = next_parseptr->concept->value.arg2;
+            if (what_we_need == 0) what_we_need = CONCPROP__NEEDK_4X4;
             break;
       }
 
       if (what_we_need != 0)
          do_matrix_expansion(ss, what_we_need, TRUE);
 
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__PHANTOMS;
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__PHANTOMS | next_parseptr->concept->value.arg1;
       ss->cmd.parseptr = next_parseptr->next;
 
-      tandem_couples_move(ss,
-            next_parseptr->concept->value.arg1 ? next_parseptr->options.who : selector_uninitialized,
-            next_parseptr->concept->value.arg2,    /* normal=FALSE, twosome=TRUE */
+      tandem_couples_move(
+            ss,
+            (next_parseptr->concept->value.arg3 & 0x100) ? next_parseptr->options.who : selector_uninitialized,
+            (next_parseptr->concept->value.arg3 & 0xF0) >> 4, /* (fractional) twosome info */
             next_parseptr->options.number_fields,
-            1,                                     /* for phantom */
-            next_parseptr->concept->value.arg4,    /* tandem=0 couples=1 siamese=2 */
+            1,                                                /* for phantom */
+            next_parseptr->concept->value.arg4,               /* tandem=0 couples=1 siamese=2, etc. */
             result);
 
       return;
@@ -1559,7 +1562,7 @@ Private void do_concept_new_stretch(
             (!(linesp&16) && tempsetup.kind != s1x8))
       fail("Not in correct formation for this concept.");
 
-   if ((linesp & 16) == 0) {
+   if (!(linesp & 16)) {
       if (linesp & 1) {
          if (global_tbonetest & 1) fail("There is no line of 8 here.");
       }
@@ -1590,6 +1593,11 @@ Private void do_concept_new_stretch(
    else if (tempsetup.kind == s_ptpd) {
       swap_people(&tempsetup, 2, 6);
       maps = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+   }
+   else if (tempsetup.kind == s_rigger) {
+      swap_people(&tempsetup, 0, 1);
+      swap_people(&tempsetup, 4, 5);
+      maps = MAPCODE(s_trngl4,2,MPKIND__SPLIT,1);
    }
    else
       fail("Stretched setup call didn't start in appropriate setup.");
@@ -1625,295 +1633,6 @@ Private void do_concept_mirror(
 
 
 
-/* This returns TRUE if it can't do it because the assumption isn't specific enough.
-   In such a case, the call was not executed.  If the user had said "with active phantoms",
-   that is an error.  But if we are only doing this because the automatic active phantoms
-   switch is on, we will just ignore it. */
-
-Private long_boolean fill_active_phantoms_and_move(
-   setup *ss,
-   restriction_thing *restr_thing_ptr,
-   setup *result)
-{
-   int phantom_count = 0;
-   int i;
-   int idx;
-   uint32 pdir, qdir, pdirodd, qdirodd;
-   uint32 bothp;
-   uint32 t;
-   uint32 dirtest[2];
-   uint32 dirtest1 = 0;
-   uint32 dirtest2 = 0;
-
-   dirtest[0] = 0;
-   dirtest[1] = 0;
-
-   if (restr_thing_ptr && restr_thing_ptr->ok_for_assume) {
-      switch (restr_thing_ptr->check) {
-         case chk_wave:
-
-            /* Figure out handedness of live people. */
-         
-            for (idx=0; idx<restr_thing_ptr->size; idx++) {
-               if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { dirtest[idx&1] |= t; dirtest[(idx&1)^1] |= (t ^ 2); }
-            }
-         
-            if (dirtest[0] == 0)
-               fail("Need live person to determine handedness.");
-         
-            bothp = ss->cmd.cmd_assume.assump_both;
-         
-            if (ss->cmd.cmd_assume.assump_col & 4) {
-
-
-/* This used to be:
-               if ((dirtest[0] & 077) == 011)
-                  { pdir = d_north; qdir = d_south; }
-               else if ((dirtest[1] & 077) == 011)
-                  { pdir = d_south; qdir = d_north; }
-               else
-                  fail("Live people are not consistent.");
-*/
-
-
-
-               if ((dirtest[0] & 2) == 0 && ((bothp & 2) == 0))
-                  { pdir = d_north; qdir = d_south; }
-               else if ((dirtest[1] & 2) == 0 && ((bothp & 1) == 0))
-                  { pdir = d_south; qdir = d_north; }
-               else
-                  fail("Live people are not consistent.");
-
-               pdirodd = rotcw(pdir); qdirodd = rotcw(qdir);
-            }
-            else if (ss->cmd.cmd_assume.assump_col == 1) {
-               if ((dirtest[0] & 077) == 001 && ((bothp & 2) == 0))
-                  { pdir = d_east; qdir = d_west; }
-               else if ((dirtest[1] & 077) == 001 && ((bothp & 1) == 0))
-                  { pdir = d_west; qdir = d_east; }
-               else
-                  fail("Live people are not consistent.");
-               pdirodd = pdir; qdirodd = qdir;
-            }
-            else {
-               if ((dirtest[0] & 077) == 010 && ((bothp & 2) == 0))
-                  { pdir = d_north; qdir = d_south; }
-               else if ((dirtest[1] & 077) == 010 && ((bothp & 1) == 0))
-                  { pdir = d_south; qdir = d_north; }
-               else
-                  fail("Live people are not consistent.");
-               pdirodd = pdir; qdirodd = qdir;
-            }
-         
-            for (i=0; i<restr_thing_ptr->size; i++) {
-               int p = restr_thing_ptr->map1[i];
-
-               if (!ss->people[p].id1) {
-                  if (phantom_count >= 16) fail("Too many phantoms.");
-
-                  ss->people[p].id1 =           (i&1) ?
-                                       ((i&2) ? qdirodd : qdir) :
-                                       ((i&2) ? pdirodd : pdir);
-
-                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[p].id2 = 0;
-               }
-               else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
-            }
-
-            goto finished_filling_in;
-         case chk_groups:
-            /* Figure out handedness of live people. */
-
-            if (restr_thing_ptr->map2[0] != 1) return TRUE;   /* Huh??  Shouldn't happen. */
-
-            for (i=0; i<restr_thing_ptr->size; i++) {
-               int p = restr_thing_ptr->map1[i];
-               uint32 pp = ss->people[p].id1;
-
-               if (pp) { dirtest1 |= pp; dirtest2 |= (pp ^ 2); }
-            }
-
-            if (dirtest1 == 0)
-               fail("Need live person to determine handedness.");
-
-            if ((dirtest1 & 077) == 010)
-               { pdir = d_north; }
-            else if ((dirtest2 & 077) == 010)
-               { pdir = d_south; }
-            else
-               fail("Live people are not consistent.");
-
-            for (i=0; i<restr_thing_ptr->size; i++) {
-               int p = restr_thing_ptr->map1[i];
-
-               if (!ss->people[p].id1) {
-                  if (phantom_count >= 16)
-                     fail("Too many phantoms.");
-                  ss->people[p].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[p].id2 = 0;
-               }
-               else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
-            }
-            goto finished_filling_in;
-         case chk_anti_groups:
-            /* Figure out handedness of live people. */
-
-            if (restr_thing_ptr->map2[0] != 1 || restr_thing_ptr->size != 2) return TRUE;   /* Huh??  Shouldn't happen. */
-
-            {
-               uint32 pp;
-
-               pp = ss->people[restr_thing_ptr->map1[0]].id1;
-               if (pp) { dirtest1 |= pp; dirtest2 |= (pp ^ 2); }
-
-               pp = ss->people[restr_thing_ptr->map1[1]].id1;
-               if (pp) { dirtest1 |= (pp ^ 2); dirtest2 |= pp; }
-            }
-
-            if (dirtest1 == 0)
-               fail("Need live person to determine handedness.");
-
-            if ((dirtest1 & 077) == 010)
-               { pdir = d_north; qdir = d_south; }
-            else if ((dirtest2 & 077) == 010)
-               { pdir = d_south; qdir = d_north; }
-            else
-               fail("Live people are not consistent.");
-
-            for (i=0 ; i<2 ; i++) {
-               int p = restr_thing_ptr->map1[i];
-               uint32 pp = ss->people[p].id1;
-
-               if (!pp) {
-                  if (phantom_count >= 16)
-                     fail("Too many phantoms.");
-                  ss->people[p].id1 = (i&1 ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[p].id2 = 0;
-               }
-               else if (pp & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
-            }
-
-            goto finished_filling_in;
-         case chk_box:
-            {
-               uint32 j, k, m, z, t;
-      
-               j = 0; k = 0; m = 0; z = 0;
-      
-               for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
-                  if ((t = ss->people[i].id1) != 0) {
-                     j |= (t^restr_thing_ptr->map1[i]);
-                     k |= (t^restr_thing_ptr->map1[i]^2);
-                     m |= (t^restr_thing_ptr->map2[i]^3);
-                     z |= (t^restr_thing_ptr->map2[i]^1);
-                  }
-               }
-      
-               if ((j | k | m | z) == 0)
-                  fail("Need live person to determine handedness.");
-      
-               if ((k&3) && (j&3) && (m&3) && (z&3))
-                  fail("Live people are not consistent.");
-      
-               for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
-                  if (!ss->people[i].id1) {
-                     if (phantom_count >= 16)
-                        fail("Too many phantoms.");
-      
-                     pdir = (j&1) ?
-                           (d_east ^ ((restr_thing_ptr->map2[i] ^ z) & 2)) :
-                           (d_north ^ ((restr_thing_ptr->map1[i] ^ j) & 2));
-      
-                     ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                     ss->people[i].id2 = 0;
-                  }
-                  else if (ss->people[i].id1 & BIT_ACT_PHAN)
-                     fail("Active phantoms may only be used once.");
-               }
-            }
-            goto finished_filling_in;
-      }
-   }
-
-   return TRUE;   /* We couldn't do it -- the assumption is not specific enough, like "general diamonds". */
-
-   finished_filling_in:
-
-   ss->cmd.cmd_assume.assumption = cr_none;
-   move(ss, FALSE, result);
-
-   /* Take out the phantoms. */
-
-   for (i=0; i<=setup_attrs[result->kind].setup_limits; i++) {
-      if (result->people[i].id1 & BIT_ACT_PHAN)
-         result->people[i].id1 = 0;
-   }
-
-   return FALSE;
-}
-
-
-
-Private void move_perhaps_with_active_phantoms(
-   setup *ss,
-   restriction_thing *restr_thing_ptr,
-   setup *result)
-{
-   if (using_active_phantoms) {
-      if (fill_active_phantoms_and_move(ss, restr_thing_ptr, result)) {
-         /* Active phantoms couldn't be used.  Just do the call the way it is.
-            This does not count as a use of active phantoms, so don't set the flag. */
-         move(ss, FALSE, result);
-      }
-      else
-         result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
-   }
-   else {
-      move(ss, FALSE, result);
-      result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
-   }
-}
-
-
-
-
-extern void impose_assumption_and_move(setup *ss, setup *result)
-{
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
-      assumption_thing t;
-
-      /* **** actually, we want to allow the case of "assume waves" already in place. */
-      if (ss->cmd.cmd_assume.assumption != cr_none)
-         fail("Redundant or conflicting assumptions.");
-
-      t.assump_col = 0;
-      t.assump_both = 0;
-      t.assump_cast = ss->cmd.cmd_assume.assump_cast;
-
-      switch (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
-         case CMD_MISC__VERIFY_WAVES:     t.assumption = cr_wave_only;    break;
-         case CMD_MISC__VERIFY_DMD_LIKE:  t.assumption = cr_diamond_like; break;
-         case CMD_MISC__VERIFY_QTAG_LIKE: t.assumption = cr_qtag_like;    break;
-         case CMD_MISC__VERIFY_1_4_TAG:   t.assumption = cr_gen_1_4_tag;  break;
-         case CMD_MISC__VERIFY_3_4_TAG:   t.assumption = cr_gen_3_4_tag;  break;
-         case CMD_MISC__VERIFY_LINES:     t.assumption = cr_all_ns;       break;
-         case CMD_MISC__VERIFY_COLS:      t.assumption = cr_all_ew;       break;
-         default:
-            fail("Unknown assumption verify code.");
-      }
-
-      ss->cmd.cmd_assume = t;
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
-      move_perhaps_with_active_phantoms(ss, check_restriction(ss, t, 99), result);
-   }
-   else
-      move(ss, FALSE, result);
-}
-
 
 
 
@@ -1923,7 +1642,6 @@ Private void do_concept_assume_waves(
    setup *result)
 {
    assumption_thing t;
-   restriction_thing *restr_thing_ptr;
    long_boolean no_phan_error = FALSE;
    setup sss;
    int i;
@@ -1969,16 +1687,40 @@ Private void do_concept_assume_waves(
       /* We also allow certain tightenings of existing assumptions. */
 
       else if (     (t.assumption == cr_jleft ||
-                     t.assumption == cr_jright ||
-                     t.assumption == cr_ijleft ||
+                     t.assumption == cr_jright)
+                                 &&
+                    ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
+                     (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0) ||
+                     (ss->cmd.cmd_assume.assumption == cr_real_1_4_tag && t.assump_both == 2) ||
+                     (ss->cmd.cmd_assume.assumption == cr_real_3_4_tag && t.assump_both == 1) ||
+                     (ss->cmd.cmd_assume.assumption == cr_gen_1_4_tag && t.assump_both == 2) ||
+                     (ss->cmd.cmd_assume.assumption == cr_gen_3_4_tag && t.assump_both == 1))) ;
+      else if (     (t.assumption == cr_ijleft ||
                      t.assumption == cr_ijright)
                                  &&
                     ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
                      (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0) ||
+                     (ss->cmd.cmd_assume.assumption == cr_real_1_4_line && t.assump_both == 2) ||
+                     (ss->cmd.cmd_assume.assumption == cr_real_3_4_line && t.assump_both == 1) ||
                      (ss->cmd.cmd_assume.assumption == cr_gen_1_4_tag && t.assump_both == 2) ||
                      (ss->cmd.cmd_assume.assumption == cr_gen_3_4_tag && t.assump_both == 1))) ;
       else
          fail("Redundant or conflicting assumptions.");
+   }
+
+   if (     t.assumption == cr_miniwaves || t.assumption == cr_couples_only ||
+            ((t.assumption == cr_magic_only || t.assumption == cr_wave_only) && t.assump_col == 2)) {
+      uint32 u;
+      int idx;
+
+      switch (ss->kind) {
+         case s2x4:
+         case s2x6:
+         case s2x8:
+         case s2x3:
+            for (idx=0,u=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) u |= ss->people[idx].id1;
+            if (!(u&010)) t.assump_col++;
+      }
    }
 
    ss->cmd.cmd_assume = t;
@@ -2003,7 +1745,7 @@ Private void do_concept_assume_waves(
          case s_qtag: goto check_it;
       }
    }
-   else if (t.assump_col == 2) {
+   else if ((t.assump_col & 2) == 2) {
       /* This is a special assumption -- "assume normal boxes", or "assume inverted boxes". */
 
       if (t.assumption == cr_wave_only || t.assumption == cr_magic_only) {
@@ -2029,6 +1771,11 @@ Private void do_concept_assume_waves(
       else if (t.assumption == cr_2fl_only) {
          switch (ss->kind) {     /* "assume DPT/CDPT" */
             case s2x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
+         switch (ss->kind) {     /* "assume couples" or "assume miniwaves" */
+            case s2x8: case s2x4: case s2x3: case s2x6: goto check_it;
          }
       }
       else if (t.assumption == cr_li_lo) {
@@ -2140,9 +1887,7 @@ Private void do_concept_assume_waves(
 
    if (no_phan_error) fail("Don't know where the phantoms should be assumed to be.");
 
-   restr_thing_ptr = check_restriction(ss, ss->cmd.cmd_assume, 99);
-
-   move_perhaps_with_active_phantoms(ss, restr_thing_ptr, result);
+   move_perhaps_with_active_phantoms(ss, result);
 }
 
 
@@ -2153,14 +1898,10 @@ Private void do_concept_active_phantoms(
    parse_block *parseptr,
    setup *result)
 {
-   restriction_thing *restr_thing_ptr;
-
    if (ss->cmd.cmd_assume.assump_cast)
       fail("Don't use \"active phantoms\" with \"assume normal casts\".");
 
-   restr_thing_ptr = get_restriction_thing(ss->kind, ss->cmd.cmd_assume);
-
-   if (fill_active_phantoms_and_move(ss, restr_thing_ptr, result))
+   if (fill_active_phantoms_and_move(ss, result))
       fail("This assumption is not specific enough to fill in active phantoms.");
 }
 
@@ -2575,7 +2316,7 @@ Private void do_concept_emulate(
                goto did_it;
             }
          }
-         fail("Lost someone else during common-spot call.");
+         fail("Lost someone else during emulate call.");
          did_it: ;
       }
    }
@@ -4643,12 +4384,23 @@ Private void do_concept_tandem(
    parse_block *parseptr,
    setup *result)
 {
-   tandem_couples_move(ss,
-         parseptr->concept->value.arg1 ? parseptr->options.who : selector_uninitialized,
-         parseptr->concept->value.arg2,    /* normal=FALSE, twosome=TRUE */
+   /* The "arg3" field of the concept descriptor contains bit fields as follows:
+      "100" bit:  this takes a selector
+      "F0" field: (fractional) twosome info -- 0=solid / 1=twosome / 2=solid-frac-twosome / 3=twosome-frac-solid
+      "0F" field: 0=normal / 2=plain-gruesome / 3=gruesome-with-wave-assumption */
+
+   if (parseptr->concept->value.arg2 == CONCPROP__NEEDK_4DMD)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg1;
+
+   tandem_couples_move(
+         ss,
+         (parseptr->concept->value.arg3 & 0x100) ? parseptr->options.who : selector_uninitialized,
+         (parseptr->concept->value.arg3 & 0xF0) >> 4, /* (fractional) twosome info */
          parseptr->options.number_fields,
-         parseptr->concept->value.arg3,    /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
-         parseptr->concept->value.arg4,    /* tandem=0 couples=1 siamese=2, etc. */
+         parseptr->concept->value.arg3 & 0xF,         /* 0=normal / 1=phantom / 2=plain-gruesome / 3=gruesome-with-wave-assumption */
+         parseptr->concept->value.arg4,               /* tandem=0 couples=1 siamese=2, etc. */
          result);
 }
 
@@ -4978,12 +4730,12 @@ concept_table_item concept_table[] = {
    /* marker_end_of_list */               {0,                                                                                      0},
    /* concept_comment */                  {0,                                                                                      0},
    /* concept_concentric */               {CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,                                        do_concept_concentric},
-   /* concept_tandem */                   {CONCPROP__SHOW_SPLIT,                                                                   do_concept_tandem},
-   /* concept_some_are_tandem */          {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                                          do_concept_tandem},
-   /* concept_frac_tandem */              {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_tandem},
-   /* concept_some_are_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                   do_concept_tandem},
-   /* concept_gruesome_tandem */          {CONCPROP__NEEDK_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT,                    do_concept_tandem},
-   /* concept_gruesome_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__NEEDK_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT, do_concept_tandem},
+   /* concept_tandem */                   {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SHOW_SPLIT,                                      do_concept_tandem},
+   /* concept_some_are_tandem */          {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SHOW_SPLIT | CONCPROP__USE_SELECTOR,             do_concept_tandem},
+   /* concept_frac_tandem */              {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SHOW_SPLIT | CONCPROP__USE_NUMBER,               do_concept_tandem},
+   /* concept_some_are_frac_tandem */     {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SHOW_SPLIT | CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR, do_concept_tandem},
+   /* concept_gruesome_tandem */          {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SHOW_SPLIT | CONCPROP__SET_PHANTOMS,             do_concept_tandem},
+   /* concept_gruesome_frac_tandem */     {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SHOW_SPLIT | CONCPROP__SET_PHANTOMS | CONCPROP__USE_NUMBER, do_concept_tandem},
    /* concept_checkerboard */             {0,                                                                                      do_concept_checkerboard},
    /* concept_sel_checkerboard */         {CONCPROP__USE_SELECTOR | CONCPROP__GET_MASK,                                            do_concept_checkerboard},
    /* concept_reverse */                  {0,                                                                                      0},

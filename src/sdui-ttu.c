@@ -113,7 +113,6 @@ extern void ttu_display_help(void)
 {
    printf("-no_line_delete             do not use the \"line delete\" function for screen management\n");
    printf("-no_cursor                  do not use screen management functions at all\n");
-   printf("-ignoreblanks               allow user to omit spaces when typing in\n");
 }
 
 extern void ttu_initialize(void)

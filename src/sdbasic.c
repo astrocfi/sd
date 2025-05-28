@@ -257,8 +257,13 @@ static collision_map collision_map_table[] = {
    {2, 0x000000, 0xC0, 0xC0, {7, 6},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, warn__none},
 */
 
-   {4, 0x000000, 0xAA, 0x0AA, {1, 3, 5, 7},        {2, 6, 11, 15},        {3, 7, 10, 14},         s2x4,        s2x8,        0, warn__none},
-   {4, 0x000000, 0x55, 0x055, {0, 2, 4, 6},        {0, 4, 9, 13},         {1, 5, 8, 12},          s2x4,        s2x8,        0, warn__none},
+                  /* The warning "warn_bad_collision" in the warning field is special -- it means give that warning if it appears illegal.
+                           If it doesn't appear illegal, don't say anything at all (other than the usual "take right hands".)
+                           If anything appears illegal but does not have "warn_bad_collision" in this field, it is an ERROR. */
+   {4, 0x000000, 0xAA, 0x0AA, {1, 3, 5, 7},        {2, 6, 11, 15},        {3, 7, 10, 14},         s2x4,        s2x8,        0, warn_bad_collision},
+   {4, 0x000000, 0x55, 0x055, {0, 2, 4, 6},        {0, 4, 9, 13},         {1, 5, 8, 12},          s2x4,        s2x8,        0, warn_bad_collision},
+   {4, 0x000000, 0x33, 0x033, {0, 1, 4, 5},        {0, 2, 9, 11},         {1, 3, 8, 10},          s2x4,        s2x8,        0, warn_bad_collision},
+   {4, 0x000000, 0xCC, 0x0CC, {2, 3, 6, 7},        {4, 6, 13, 15},        {5, 7, 12, 14},         s2x4,        s2x8,        0, warn_bad_collision},
 
    /* These items handle various types of "1/2 circulate" calls from 2x2's. */
    {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, warn__none},   /* from couples out if it went to diamond */
@@ -275,14 +280,14 @@ static collision_map collision_map_table[] = {
    {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn__none},
    {3, 0x002002, 0x07, 0x02, {0, 2, 1},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn__none},
    /* These items handle various types of "circulate" calls from 2x2's. */
-   {2, 0x009009, 0x09, 0x09, {0, 3},               {7, 5},                {6, 4},                 s2x2,        s2x4,        1, warn__none},   /* from box facing all one way */
-   {2, 0x006006, 0x06, 0x06, {1, 2},               {0, 2},                {1, 3},                 s2x2,        s2x4,        1, warn__none},   /* we need all four cases */
-   {2, 0x000000, 0x0C, 0x0C, {3, 2},               {7, 5},                {6, 4},                 s2x2,        s2x4,        0, warn__none},   /* sigh */
-   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x2,        s2x4,        0, warn__none},   /* sigh */
-   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 7},                {1, 6},                 s2x2,        s2x4,        0, warn__none},   /* from "inverted" box */
-   {2, 0x000000, 0x06, 0x06, {1, 2},               {2, 5},                {3, 4},                 s2x2,        s2x4,        0, warn__none},   /* we need all four cases */
-   {2, 0x003003, 0x03, 0x03, {1, 0},               {0, 7},                {1, 6},                 s2x2,        s2x4,        1, warn__none},   /* sigh */
-   {2, 0x00C00C, 0x0C, 0x0C, {2, 3},               {2, 5},                {3, 4},                 s2x2,        s2x4,        1, warn__none},   /* sigh */
+   {2, 0x009009, 0x09, 0x09, {0, 3},               {7, 5},                {6, 4},                 s2x2,        s2x4,        1, warn_bad_collision},   /* from box facing all one way */
+   {2, 0x006006, 0x06, 0x06, {1, 2},               {0, 2},                {1, 3},                 s2x2,        s2x4,        1, warn_bad_collision},   /* we need all four cases */
+   {2, 0x000000, 0x0C, 0x0C, {3, 2},               {7, 5},                {6, 4},                 s2x2,        s2x4,        0, warn_bad_collision},   /* sigh */
+   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x2,        s2x4,        0, warn_bad_collision},   /* sigh */
+   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 7},                {1, 6},                 s2x2,        s2x4,        0, warn_bad_collision},   /* from "inverted" box */
+   {2, 0x000000, 0x06, 0x06, {1, 2},               {2, 5},                {3, 4},                 s2x2,        s2x4,        0, warn_bad_collision},   /* we need all four cases */
+   {2, 0x003003, 0x03, 0x03, {1, 0},               {0, 7},                {1, 6},                 s2x2,        s2x4,        1, warn_bad_collision},   /* sigh */
+   {2, 0x00C00C, 0x0C, 0x0C, {2, 3},               {2, 5},                {3, 4},                 s2x2,        s2x4,        1, warn_bad_collision},   /* sigh */
 
    /* These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey. */
    {4, 0x12, 0x1B, 0x09, {0, 1, 3, 4},             {0, 2, 7, 8},           {1, 2, 6, 8},          s_short6,    sbigdmd,     0, warn__none},
@@ -304,21 +309,19 @@ extern void fix_collision(
    int collision_mask,
    int collision_index,
    int result_mask,
+   long_boolean appears_illegal,
    long_boolean mirror,
    setup *result)
 {
    uint32 lowbitmask, flip;
    int i, temprot;
    collision_map *c_map_ptr;
-   setup spare_setup;
+   setup spare_setup = *result;
 
-   spare_setup = *result;
    clear_people(result);
 
    lowbitmask = 0;
-   for (i=0; i<MAX_PEOPLE; i++) {
-      lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
-   }
+   for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
    for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
       if ((result->kind == c_map_ptr->initial_kind) && ((lowbitmask == c_map_ptr->lmask)) && (result_mask == c_map_ptr->rmask) && (collision_mask == c_map_ptr->cmask))
@@ -326,10 +329,6 @@ extern void fix_collision(
    }
 
    /* Don't recognize the pattern, report this as normal collision. */
-   collision_person1 = spare_setup.people[collision_index].id1;
-   collision_person2 = spare_setup.people[collision_index+12].id1;
-   error_message1[0] = '\0';
-   error_message2[0] = '\0';
    longjmp(longjmp_ptr->the_buf, 3);
 
    win:
@@ -339,7 +338,14 @@ extern void fix_collision(
    else
       warn(warn__take_right_hands);
 
-   warn(c_map_ptr->warning);
+   if (c_map_ptr->warning == warn_bad_collision) {
+      if (appears_illegal) warn(c_map_ptr->warning);
+   }
+   else {
+      if (appears_illegal) longjmp(longjmp_ptr->the_buf, 3);
+      warn(c_map_ptr->warning);
+   }
+
    temprot = ((-c_map_ptr->rot) & 3) * 011;
    result->kind = c_map_ptr->final_kind;
    result->rotation += c_map_ptr->rot;
@@ -547,15 +553,19 @@ extern void do_stability(uint32 *personp, stability stab, int turning)
 
 
 
-extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags)
+extern long_boolean check_restriction(
+   setup *ss,
+   assumption_thing restr,
+   long_boolean instantiate_phantoms,
+   uint32 flags)
 {
    uint32 q0, q1, q2, q3, q4, q5, q6, q7;
-   uint32 qa0, qa1, qa2, qa3;
-   uint32 qaa[4];
-   uint32 i, j, k, z, t;
-   int idx, limit;
+   uint32 i, k, z, t;
+   int idx;
    Const veryshort *mp;
-   restriction_thing *restr_thing_ptr = (restriction_thing *) 0;
+   restriction_thing *restr_thing_ptr;
+   long_boolean retval = TRUE;   /* TRUE means we were not able to instantiate phantoms.
+                                    It is only meaningful if instantiation was requested. */
 
    if (restr.assumption == cr_alwaysfail) goto restr_failed;
 
@@ -574,7 +584,13 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    restr_thing_ptr = get_restriction_thing(ss->kind, restr);
 
-   if (restr_thing_ptr) goto check_gen_restr;
+   if (restr_thing_ptr) {
+      /* If this finds the restriction satisfied AND successfully instantiates
+         phantoms, it will clear retval. */
+
+      if (verify_restriction(ss, restr_thing_ptr, restr, instantiate_phantoms, &retval)) goto getout;
+      goto restr_failed;
+   }
 
    /* Now check all the other stuff. */
 
@@ -595,44 +611,6 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
       switch (ss->kind) {
          case s2x4:
             switch (restr.assumption) {
-               case cr_couples_only:
-                  /* check for everyone as a couple */
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[7].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[1].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[6].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[2].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[5].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[3].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[4].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  break;
-               case cr_miniwaves:
-                  /* check for everyone in miniwaves */
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[7].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[1].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[6].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[2].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[5].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  q0 = 0; q1 = 0;
-                  if ((t = ss->people[3].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[4].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
-                  if ((q0&3) && (q1&3)) goto restr_failed;
-                  break;
                case cr_quarterbox_or_col:
                   k = 0;         /* check for a reasonable "triple cross" setup */
                   i = 2;
@@ -777,13 +755,91 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                break;
          }
       }
+      else if (ss->kind == s_qtag) {
+         switch (restr.assumption) {
+            case cr_real_1_4_tag:
+               q0 = 0; q4 = 0; q5 = 0;
+               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
+
+               if ((t = ss->people[0].id1) != 0) { q0 |= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); }
+               if ((t = ss->people[4].id1) != 0) { q0 |= t; }
+               if ((t = ss->people[5].id1) != 0) { q0 |= t; }
+               if (q0 & 2) goto restr_failed;
+
+               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q4 |= (t^2); q5 |= t;     }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q4 |= t;     }
+
+               if ((q5&2) && (q4&2))
+                  goto restr_failed;
+
+               break;
+            case cr_real_3_4_tag:
+               q0 = 0; q4 = 0; q5 = 0;
+               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
+
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; }
+               if ((t = ss->people[4].id1) != 0) { q0 |= (t^2); }
+               if ((t = ss->people[5].id1) != 0) { q0 |= (t^2); }
+               if (q0 & 2) goto restr_failed;
+
+               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q4 |= (t^2); q5 |= t;     }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q4 |= t;     }
+
+               if ((q5&2) && (q4&2))
+                  goto restr_failed;
+
+               break;
+            case cr_real_1_4_line:
+               q0 = 0; q4 = 0; q5 = 0;
+               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
+
+               if ((t = ss->people[0].id1) != 0) { q0 |= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); }
+               if ((t = ss->people[4].id1) != 0) { q0 |= t; }
+               if ((t = ss->people[5].id1) != 0) { q0 |= t; }
+               if (q0 & 2) goto restr_failed;
+
+               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q4 |= (t^2); q5 |= t;     }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q5 |= (t^2); q4 |= t;     }
+
+               if ((q5&2) && (q4&2))
+                  goto restr_failed;
+
+               break;
+            case cr_real_3_4_line:
+               q0 = 0; q4 = 0; q5 = 0;
+               for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto restr_failed; }
+
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; }
+               if ((t = ss->people[4].id1) != 0) { q0 |= (t^2); }
+               if ((t = ss->people[5].id1) != 0) { q0 |= (t^2); }
+               if (q0 & 2) goto restr_failed;
+
+               if ((t = ss->people[6].id1) != 0) { q4 |= t;     q5 |= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q4 |= (t^2); q5 |= t;     }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q4 |= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q5 |= (t^2); q4 |= t;     }
+
+               if ((q5&2) && (q4&2))
+                  goto restr_failed;
+
+               break;
+         }
+      }
    }
 
    goto getout;
 
    check_wk:   /* check the "awkward_centers" restriction. */
-
-
 
    t = ss->people[mp[0]].id1;
    z = ss->people[mp[1]].id1;
@@ -791,130 +847,20 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    goto getout;
 
-   check_gen_restr:
-
-   switch (restr_thing_ptr->check) {
-      case chk_wave:
-         qaa[0] = restr.assump_both;
-         qaa[1] = restr.assump_both << 1;
-
-         for (idx=0; idx<restr_thing_ptr->size; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= ~t; }
-         }
-
-         if ((qaa[0] & qaa[1] & 2) != 0)
-            goto restr_failed;
-
-         if (restr_thing_ptr->ok_for_assume) {
-            qaa[0] = 0;
-            qaa[2] = 0;
-
-            for (idx=0; idx<restr_thing_ptr->size; idx++)
-               qaa[idx&2] |= ss->people[restr_thing_ptr->map1[idx]].id1;
-
-            if ((restr.assump_col | restr_thing_ptr->map2[0]) & 4) {
-               qaa[2] >>= 3;
-            }
-            else if (restr.assump_col == 1) {
-               qaa[0] >>= 3;
-               qaa[2] >>= 3;
-            }
-      
-            if ((qaa[0]|qaa[2]) & 1) goto restr_failed;
-         }
-
-         goto getout;
-      case chk_groups:
-         limit = restr_thing_ptr->map2[0];
-
-         for (idx=0; idx<limit; idx++) {
-            q0 = 0; q1 = 0;
-
-            for (i=0,j=idx; i<restr_thing_ptr->size; i++,j+=limit) {
-               if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { q0 |= t; q1 |= ~t; }
-            }
-
-            if (q0&q1&2) goto restr_failed;
-         }
-
-         goto getout;
-      case chk_anti_groups:
-         limit = restr_thing_ptr->map2[0];
-
-         for (idx=0; idx<limit; idx++) {
-            q0 = 0; q1 = 0;
-
-            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0)       { q0 |= t; q1 |= ~t; }
-            if ((t = ss->people[restr_thing_ptr->map1[idx+limit]].id1) != 0) { q0 |= ~t; q1 |= t; }
-
-            if (q0&q1&2) goto restr_failed;
-         }
-         goto getout;
-      case chk_box:
-         qa0 = (restr.assump_both << 1) & 2;
-         qa1 = restr.assump_both & 2;
-         qa2 = qa1;
-         qa3 = qa0;
-
-         for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
-            if ((t = ss->people[idx].id1) != 0) {
-               qa0 |= (t^restr_thing_ptr->map1[idx]^0);
-               qa1 |= (t^restr_thing_ptr->map1[idx]^2);
-               qa2 |= (t^restr_thing_ptr->map2[idx]^1);
-               qa3 |= (t^restr_thing_ptr->map2[idx]^3);
-            }
-         }
-
-         if (!(qa0 & 3) || !(qa1 & 3) || !(qa2 & 3) || !(qa3 & 3)) goto getout;
-
-         break;
-      case chk_peelable:
-         q2 = 3; q3 = 3;
-         q7 = 3; q6 = 3;
-
-         for (j=0; j<restr_thing_ptr->size; j++) {
-            if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0)  { q2 &= t; q3 &= (t^2); }
-            if ((t = ss->people[restr_thing_ptr->map2[j]].id1) != 0)  { q7 &= t; q6 &= (t^2); }
-         }
-
-         if ((((~q2)&3) == 0 || ((~q3)&3) == 0) && (((~q7)&3) == 0 || ((~q6)&3) == 0))
-            goto getout;
-
-         break;
-      case chk_dmd_qtag:
-         k = 0;
-         i = 0;
-
-         for (idx=0; idx<restr_thing_ptr->map1[0]; idx++)
-            k |= ss->people[restr_thing_ptr->map1[idx+1]].id1;
-
-         for (idx=0; idx<restr_thing_ptr->map2[0]; idx++)
-            i |= ss->people[restr_thing_ptr->map2[idx+1]].id1;
-
-         for (idx=0; idx<restr_thing_ptr->map3[0]; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map3[idx+1]].id1) != 0 && (t & 2) != 0)
-               goto restr_failed;
-         }
-
-         for (idx=0; idx<restr_thing_ptr->map4[0]; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map4[idx+1]].id1) != 0 && (t & 2) != 2)
-               goto restr_failed;
-         }
-
-         if ((k & 001) != 0 || (i & 010) != 0)
-            goto restr_failed;
-
-         goto getout;
-   }
-
    restr_failed:
 
    switch (flags) {
+      case CAF__RESTR_RESOLVE_OK:
+         warn(warn__dyp_resolve_ok);
+         break;
       case CAF__RESTR_UNUSUAL:
          warn(warn__unusual);
          break;
-      case CAF__RESTR_RESOLVE_OK:
-         warn(warn__dyp_resolve_ok);
+      case CAF__RESTR_CONTROVERSIAL:
+         warn(warn_controversial);
+         break;
+      case CAF__RESTR_BOGUS:
+         warn(warn_serious_violation);
          break;
       case CAF__RESTR_FORBID:
          fail("This call is not legal from this formation.");
@@ -972,7 +918,7 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
          break;
    }
 
-   return restr_thing_ptr;
+   return retval;
 }
 
 
@@ -2557,6 +2503,7 @@ extern void basic_move(
    int num, halfnum, final_numout;
    uint32 collision_mask;
    int collision_index;
+   long_boolean collision_appears_illegal;
    uint32 result_mask;
    personrec newpersonlist[24];
    int newplacelist[24];
@@ -3121,7 +3068,7 @@ foobar:
          t.assump_col = 4;
       }
 
-      if (t.assumption != cr_none) (void) check_restriction(ss, t, linedefinition->callarray_flags & CAF__RESTR_MASK);
+      if (t.assumption != cr_none) (void) check_restriction(ss, t, FALSE, linedefinition->callarray_flags & CAF__RESTR_MASK);
       goodies = linedefinition;
    }
 
@@ -3162,7 +3109,7 @@ foobar:
       t.assump_both = 0;
       t.assump_cast = 0;
 
-      if (t.assumption != cr_none) (void) check_restriction(ss, t, coldefinition->callarray_flags & CAF__RESTR_MASK);
+      if (t.assumption != cr_none) (void) check_restriction(ss, t, FALSE, coldefinition->callarray_flags & CAF__RESTR_MASK);
 
       /* If we have linedefinition also, check for consistency. */
 
@@ -3230,8 +3177,6 @@ foobar:
       uint32 vacate = 0;
 
       result->rotation = goodies->callarray_flags & CAF__ROT;
-      collision_mask = 0;
-      result_mask = 0;
       num = setup_attrs[ss->kind].setup_limits+1;
       halfnum = num >> 1;
       tempkind = result->kind;
@@ -3499,6 +3444,9 @@ foobar:
             }
             else if (vacate && (lilresult_mask[0] & 03030) == 0 && (lilresult_mask[0] & 00404) == 00404) {
                /* Check for star in the middle that can be disambiguated by having someone vacate it. */
+               /* We have to mark this as controversial -- the center star is actually isotropic, and
+                  we are fudging it so that T-boned coordinate will work. */
+               warn(warn_controversial);
                result->kind = s1x3dmd;
                permuter = s_vacate_star;
             }
@@ -3530,10 +3478,6 @@ foobar:
             else if ((lilresult_mask[0] & 0x77770FFFUL) != 0 || (lilresult_mask[1] & 0x77770FFFUL) != 0)
                fail("Call went to improperly-formed setup.");
          }
-
-
-
-
          else if (result->kind == sx1x16) {
             /* See if people landed on 1x16 spots. */
             result->kind = s1x16;
@@ -3546,9 +3490,6 @@ foobar:
             else if ((lilresult_mask[0] & 0xFF00FF00UL) != 0)
                fail("Call went to improperly-formed setup.");
          }
-
-
-
          else if (result->kind == sx4dmd) {
             /* See if people landed on quad diamond spots. */
 
@@ -3728,6 +3669,9 @@ foobar:
 
    /* Install all the people. */
 
+   collision_mask = 0;
+   collision_appears_illegal = FALSE;
+   result_mask = 0;
    final_numout = setup_attrs[result->kind].setup_limits+1;
 
    for (real_index=0; real_index<num; real_index++) {
@@ -3785,24 +3729,37 @@ foobar:
                result->people[k] = newperson;
                result_mask |= (1 << k);
             }
-            else if (   (final_numout <= 12) &&
-                        (result->people[k+12].id1 == 0) &&
-                        (callspec->callflags1 & (CFLAG1_TAKE_RIGHT_HANDS|CFLAG1_ENDS_TAKE_RIGHT_HANDS)) &&
-                        ((callspec->callflags1 & CFLAG1_TAKE_RIGHT_HANDS) || (result->kind == s1x4 && !(k&1)))) {
-               /* Collisions are legal.  Store the person in the overflow area
-                  (12 higher than the main area, which is why we only permit
-                  this if the result setup size is <= 12) and record the fact
-                  in the collision_mask so we can figure out what to do. */
-               result->people[k+12] = newperson;
-               collision_mask |= (1 << k);
-               collision_index = k;        /* In case we need to report a mundane collision. */
-            }
             else {
-               collision_person1 = result->people[k].id1;
+               /* We have a collision.  This may result in an error being raised. */
+
+               collision_person1 = result->people[k].id1;   /* Prepare the error message. */
                collision_person2 = newperson.id1;
                error_message1[0] = '\0';
                error_message2[0] = '\0';
-               longjmp(longjmp_ptr->the_buf, 3);
+
+               if (final_numout > 12 || result->people[k+12].id1 != 0)
+                  longjmp(longjmp_ptr->the_buf, 3);    /* We can't handle it at all -- just raise the error. */
+
+               /* Store the person in the overflow area
+                  (12 higher than the main area, which is why we only permit
+                  this if the result setup size is <= 12) and record the fact
+                  in the collision_mask so we can figure out what to do. */
+
+               result->people[k+12] = newperson;
+               collision_mask |= (1 << k);
+               collision_index = k;        /* In case we need to report a mundane collision. */
+
+               if (  (callspec->callflags1 & CFLAG1_TAKE_RIGHT_HANDS) ||
+                     (  (callspec->callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
+                        result->kind == s1x4 &&
+                        !(k&1)
+                     )
+                  ) {
+               /* Collisions are legal. */
+            }
+               else {
+                  collision_appears_illegal = TRUE;
+               }
             }
          }
       }
@@ -3811,8 +3768,8 @@ foobar:
    if (funny) {
       if (!funny_ok1 || !funny_ok2) warn(warn__not_funny);
    }
-   else {
-      if (collision_mask) fix_collision(ss->cmd.cmd_misc_flags, collision_mask, collision_index, result_mask, mirror, result);
+   else if (collision_mask)  {
+      fix_collision(ss->cmd.cmd_misc_flags, collision_mask, collision_index, result_mask, collision_appears_illegal, mirror, result);
    }
 
    fixup:

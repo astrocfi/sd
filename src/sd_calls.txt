@@ -30,7 +30,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.82"
+version "31.83"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -2502,7 +2502,15 @@ call "hinge" mainstream tag hinge
    setup 1x2 1x2 rotate
       preds "???"
          if 1x2_beau_or_miniwave [CR0N AL0S]
-         if always [0 AL1S]
+         if always               [0    AL1S]
+
+/* This may come in useful some day. */
+call "hinge, opt for normal" dontshow tag hinge_with_warn
+            left_means_mirror
+   setup 1x2 1x2 rotate
+      preds "???"
+         if 1x2_beau_miniwave_or_warn [CR0N AL0S]
+         if always                    [0    AL1S]
 
 call "shazam" c2
             visible_fractions
@@ -2802,6 +2810,30 @@ call "trade" mainstream tag trade
       preds "Need to be in miniwave or line of 4."
          if cast_normal  [CR1S AL1N]
    setup 1x4 2x2
+      preds "?"
+         if cast_normal  [CR3W AL3E AL2E CR2W]
+         if cast_pushy   [AL0E AL3E CR1W CR2W]
+         if always       [0    AL3E 0    CR2W]
+
+call "_trade with bogus yoyo" dontshow tag trade_w_bogus_yoyo
+            parallel_conc_end left_means_mirror 12_16_matrix_means_split
+            /* Need "left" for "half trade", and "parallel_conc_end" for "yoyo trade" */
+   setup 1x2 1x2
+      array [CR1S AL0S]
+            alternate_definition [half] mainstream
+   setup 1x2 1x2 rotate restriction serious_violation alwaysfail
+      preds "???"
+         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if always [0 AL1S]
+            alternate_definition [yoyo] c4
+   /* We use a sleazy definition of "rims/hubs trade back/anything", that involves
+      the centers or ends AFTER the trade.  Because of this, anything we do with
+      "yoyo rims/hubs trade back/anything" will be bogus.  Nevertheless, some people
+      might like to use it. */
+   setup 1x2 1x2 rotate restriction serious_violation alwaysfail
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal  [CR1S AL1N]
+   setup 1x4 2x2 restriction serious_violation alwaysfail
       preds "?"
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
@@ -4615,6 +4647,11 @@ call "cycle and wheel" a1 tag cyclewheel
          if cycle_and_wheel_1 [CR1S CR0S 0    CR2N]
          if cycle_and_wheel_2 [0    AL3N AL3S AL2S]
          if always            [0    AL0N AL0S AL1S]
+   setup 2x2 1x4 restriction not_tboned
+      preds "Can't do this with phantoms or T-boned people."
+         if x22_miniwave [CR2S AL0S AL3S CR1S]
+         if x22_couple   [0    0    ZM0N CR1S]
+         if always       [CR2S 0    0    CR1S]
 
 call "cycle and turn and deal" c2
    setup 1x4 2x2 no_cutting_through qualifier wave_only
@@ -4658,14 +4695,14 @@ call "explode" plus tag explode
       Not happy about it, but it seems to be the way people construe this call. */
    setup 1x4 2x2 qualifier miniwaves
       array [CR0E CR0E AL1W AL1W]
-   setup 1x4 2x2 restriction unusual explodable
+   setup 1x4 2x2 restriction serious_violation explodable
       preds "Can't explode from this line."
          if lines_miniwave [CR0E CR0E AL1W AL1W]
          if lines_couple   [CR3E CR0E AL2W AL1W]
             alternate_definition [reverse] c1
    setup 1x4 2x2 qualifier miniwaves                      /* See above. */
       array [AL0W AL0W CR1E CR1E]
-   setup 1x4 2x2 restriction unusual reverse_explodable
+   setup 1x4 2x2 restriction serious_violation reverse_explodable
       preds "Can't explode from this line."
          if lines_miniwave [AL0W AL0W CR1E CR1E]
          if lines_couple   [AL0W AL3W CR1E CR2E]
@@ -4673,7 +4710,7 @@ call "explode" plus tag explode
 call "explode the line" a1 tag explodeline
    setup 1x4 2x2 no_cutting_through qualifier miniwaves   /* See above. */
       array [CM1E CM1E AM0W AM0W]
-   setup 1x4 2x2 no_cutting_through restriction unusual explodable
+   setup 1x4 2x2 no_cutting_through restriction serious_violation explodable
       preds "Can't explode from this line."
          if lines_miniwave [CM1E CM1E AM0W AM0W]
          if lines_couple   [C2E C1E A3W A0W]
@@ -6624,12 +6661,23 @@ call "ladies chain to the right" mainstream
             sequence_starter
    setup 4x2 4x4
       preds "Must be normal couples."
-         if boyp  [AL10N 0 0 0 0 0  0 0]
-         if girlp [0 0 0 0 0 0  0 AL13E]
+         if boyp  [L10N 0 0 0 0 0 0 0]
+         if girlp [0 0 0 0 0 0 0 L13E]
    setup 2x4 4x4
       preds "Must be normal couples."
-         if boyp  [0 0 0 0 0 0  AL6N 0]
-         if girlp [0 0 0 0 0 AL1W 0 0]
+         if boyp  [0 0 0 0 0 0 L6N 0]
+         if girlp [0 0 0 0 0 L1W 0 0]
+
+call "ladies chain to the left" mainstream
+            sequence_starter
+   setup 4x2 4x4
+      preds "Must be normal couples."
+         if boyp  [L10N 0 0 0 0 0 0 0]
+         if girlp [0 0 0 0 0 0 0 L5W]
+   setup 2x4 4x4
+      preds "Must be normal couples."
+         if boyp  [0 0 0 0 0 0 L6N 0]
+         if girlp [0 0 0 0 0 L9E 0 0]
 
 call "ladies chain 3/4" mainstream
             sequence_starter
@@ -7265,10 +7313,10 @@ call "mesh" c4
          if columns_tandem [M1W M0W]
          if always         [M1W 0]
             alternate_definition [3x3] c4
-   setup 3x1 1x3 rotate qualifier 3x3couples_only
+   setup 3x1 1x3 rotate restriction forbidden all_facing_same
       array [M2W M1W M0W]
             alternate_definition [4x4] c4
-   setup 4x1 1x4 rotate qualifier 4x4couples_only
+   setup 4x1 1x4 rotate restriction forbidden all_facing_same
       array [M2W M3W M0W M1W]
 
 call "curlique" c3x tag curlique
@@ -8906,8 +8954,10 @@ call "_sets in motion 2" dontshow tag setnmotion2
 call "_sets in motion 3" dontshow tag setnmotion3
    setup p3x1dmd qtag rotate
       array [ZM7W CR1E AL0E ZM6W 0 0 0 ZM2W]
-   setup 8x1 2x4
+   setup 8x1 2x4 qualifier people_1_and_5_real
       array [ZM1N ZM2N AL3S CR4S 0 0 0 0]
+   setup 8x1 qtag rotate
+      array [ZM7W 0 AL0E CR1E 0 0 0 0]
    setup crosswave rigger
       array [ZM6N ZM7N 0 0 ZM2N ZM3N CR1S AL0S]
 
@@ -10666,12 +10716,12 @@ call "_check line" dontshow tag checkline
    setup 1x4 1x4
       array [ZM0N ZM1N ZM2N ZM3N]
 
-call "_check line (usually)" dontshow tag checklineusually
+call "_check line carefully" dontshow tag checklinecarefully
    setup 1x4 1x4
       array [ZM0N ZM1N ZM2N ZM3N]
-   setup 2x2 2x2 restriction unusual alwaysfail
+   setup 2x2 2x2 restriction serious_violation alwaysfail
       array [ZM0N ZM1N ZM2N ZM3N]
-   setup 1x2 1x2 restriction unusual alwaysfail
+   setup 1x2 1x2 restriction serious_violation alwaysfail
       array [ZM0N ZM1N]
 
 call "_check parallel lines" dontshow tag checkparlines
@@ -10679,7 +10729,7 @@ call "_check parallel lines" dontshow tag checkparlines
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    /* This will allow "spin chain the gears" from a grand wave, for those who
       think it's legal, but will give a serious warning. */
-   setup 1x4 1x4 restriction unusual alwaysfail
+   setup 1x4 1x4 restriction controversial alwaysfail
       array [ZM0N ZM1N ZM2N ZM3N]
             alternate_definition [12matrix] c3a
    setup 3x4 3x4
@@ -10693,10 +10743,10 @@ call "_trade and check line" dontshow tag tradencheckline
    seq trade [inherit_yoyo inherit_12_matrix inherit_16_matrix]
    seq checkline [roll_transparent inherit_12_matrix inherit_16_matrix]
 
-call "_trade and check line (usually)" dontshow tag tradenchecklineusually
+call "_trade and check line carefully" dontshow tag tradenchecklinecarefully
             yoyo_is_inherited
-   seq trade [inherit_yoyo]
-   seq checklineusually [roll_transparent]
+   seq trade_w_bogus_yoyo [inherit_yoyo]
+   seq checklinecarefully [roll_transparent]
 
 call "_trade and check par lines" dontshow tag tradencheckparlines
             yoyo_is_inherited 12_matrix_is_inherited 16_matrix_is_inherited
@@ -10726,22 +10776,22 @@ call "_hubs trade @0 part 2" dontshow tag hubs_trade_2_any
 
 call "rims trade @2back@3" c2
             visible_fractions yoyo_is_inherited
-   seq tradenchecklineusually [inherit_yoyo]
+   seq tradenchecklinecarefully [inherit_yoyo]
    seq rims_trade_2 []
 
 call "hubs trade @2back@3" c2
             visible_fractions yoyo_is_inherited
-   seq tradenchecklineusually [inherit_yoyo]
+   seq tradenchecklinecarefully [inherit_yoyo]
    seq hubs_trade_2 []
 
 call "rims trade @0" c2
             visible_fractions yoyo_is_inherited dont_use_in_resolve
-   seq tradenchecklineusually [inherit_yoyo]
+   seq tradenchecklinecarefully [inherit_yoyo]
    seq rims_trade_2_any []
 
 call "hubs trade @0" c2
             visible_fractions yoyo_is_inherited dont_use_in_resolve
-   seq tradenchecklineusually [inherit_yoyo]
+   seq tradenchecklinecarefully [inherit_yoyo]
    seq hubs_trade_2_any []
 
 call "round off" c4
@@ -13079,7 +13129,7 @@ call "_finish it with plain modify" dontshow tag finishwithplainmod
 
 call "_finish it" dontshow tag finish
             12_matrix_is_inherited 16_matrix_is_inherited
-   conc_diamond_line cast_off_34 [allow_forced_mod] spec_drop_in [inherit_12_matrix inherit_16_matrix conc_force_otherway suppress_elongation_warnings]
+   conc_diamond_line cast_off_34_with_warn [allow_forced_mod] spec_drop_in [inherit_12_matrix inherit_16_matrix conc_force_otherway suppress_elongation_warnings]
 
 /* This one forbids modify, for relay the top and motivate.  There are two instances of cast off 3/4 in those calls.
    It also assumes an arm turn if the cast is ambiguous.  It prints a warning in this case.

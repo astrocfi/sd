@@ -1672,6 +1672,13 @@ cast_pushy
       whether the "assume normal casts" concept has been given, and
       returns FALSE if so.
 
+cast_normal_or_warn
+      applies to 1x2, 1x4, or 1x6 lines only.
+      This is the same as "cast_normal", except that, if it can't
+      decide what kind of cast to use (no assumption, other person
+      is phantom, and this person is an end) it issues the warning
+      "If in doubt, assume a normal cast." and returns TRUE.
+
 lines_magic_miniwave
       applies to 2x4 lines only.  Returns TRUE if the magic partner
       of the person under test (the person in the opposite corner of
@@ -1761,6 +1768,12 @@ columns_miniwave
       or else this belle is in a miniwave with the other person.
       Returns FALSE if this belle is in a couple with the other person.
       Raises an error if this belle can't tell.
+
+1x2_beau_miniwave_or_warn
+      This is the same as "1x2_beau_or_miniwave", except that, if it can't
+      decide what to do (no assumption, this person is a belle, and other
+      person is a phantom) it issues the warning
+      "If in doubt, assume a normal hinge." and returns TRUE.
 
 1x4_wheel_and_deal
       applies to 1x4 lines only.  This implements the decision necessary
@@ -2145,9 +2158,13 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        2x2 - real RH or LH box;
                                        3x2/4x2/6x2/8x2 - column;
                                        qtag/pqtag - wave in center
+                                       ptpd/pptpd - miniwaves in centers of each diamond
+                                       dmd, trngl - people are paired in miniwaves.
+                                          For diamonds, this applies just to the centers.
+                                          For triangles, it applies just to the base.
                                        thar - same handedness waves
    wave_unless_say_2faced,
-   all_facing_same,              /* 1x2/2x1/2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
+   all_facing_same,              /* 1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1 - all people in the setup facing the same way */
    1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
                                        thar - crossed 2FL's of opposite handedness, ready to move along
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center;
@@ -2157,9 +2174,14 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
    trailers_only,                /* 2x2 - all people are trailers, and not T-boned */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   miniwaves,                    /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in miniwaves of various handedness */
-   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way.  UNDEFINED IF T-BONED
-   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way.  UNDEFINED IF T-BONED
+   miniwaves,                    /* 1x2/1x4/1x6/1x8, 2x4 (lines/cols), 2x2, dmd, qtag, ptpd, trngl - people
+                                    are paired in miniwaves of various handedness.
+                                    For diamonds and qtags, this applies just to the centers.
+                                    For triangles, it applies just to the base.
+                                    So this includes waves, inverted lines, columns,
+                                    magic columns, diamonds, wave-based triangles... */
+   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way and are line-like,
+   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way and are line-like,
    awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
    diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
    qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
@@ -2183,17 +2205,21 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        4x4 - consistent waves either way, but not T-boned;
                                        3x2/4x2/6x2/8x2 - columns;
                                        qtag/pqtag - wave in center
+                                       ptpd/pptpd - miniwaves in centers of each diamond
+                                       dmd, trngl - people are paired in miniwaves.
+                                          For diamonds, this applies just to the centers.
+                                          For triangles, it applies just to the base.
                                        thar - same handedness waves
    1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
                                        thar - crossed 2FL's of opposite handedness, ready to move along
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 4x4 - consistent 2FL's; 1x8 - a grand 2FL;
                                     4x1 - single DPT or single CDPT; 4x2 - DPT or CDPT; qtag - 2FL in center */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way ; 3x1 columns - same.  UNDEFINED IF T-BONED
-   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way ; 4x1 columns - same.  UNDEFINED IF T-BONED
+   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way and are line-like,
+   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way and are line-like,
    magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
    in_or_out,                    /* 1x2/2x2 - all facing in or all facing out */
-   miniwaves,                    /* 1x2, 1x4, 1x6, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
+   miniwaves,                    /* 1x2/1x4/1x6/1x8, 2x4 (lines/cols), 2x2, dmd, qtag, ptpd, trngl - people
                                     are paired in miniwaves of various handedness.
                                     For diamonds and qtags, this applies just to the centers.
                                     For triangles, it applies just to the base.
@@ -2206,6 +2232,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        4x4 - consistent right waves either way, but not T-boned;
                                        3x2/4x2/6x2/8x2 - right columns;
                                        qtag/pqtag - right wave in center
+                                       ptpd/pptpd - right miniwaves in centers of each diamond
                                        dmd, trngl - people are paired in right miniwaves.
                                           For diamonds, this applies just to the centers.
                                           For triangles, it applies just to the base.
@@ -2244,6 +2271,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
    ends_looking_out              /* 2x4 lines - the ends are leads */
    ripple stuff .......
+   people_1_and_5_real           /* 1x8 (or any applicable setup) people #1 and #5 are real */
    centers_sel                   /* 2x4/qtag - the centers are selected and the ends are not. */
    ends_sel                      /* 2x4/qtag - the ends are selected and the centers are not. */
    all_sel                       /* 1x1/1x2 - everyone in the setup is selected */

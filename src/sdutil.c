@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -228,7 +228,6 @@ Cstring warning_strings[] = {
    /*  warn__bad_concept_level   */   "*This concept is not allowed at this level.",
    /*  warn__not_funny           */   "*That wasn't funny.",
    /*  warn__hard_funny          */   "*Very difficult funny concept.",
-   /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn__rear_back           */   "*Rear back from the handhold.",
    /*  warn__awful_rear_back     */   "*Rear back from the handhold -- this is very unusual.",
    /*  warn__excess_split        */   "*Split concept seems to be superfluous here.",
@@ -262,7 +261,6 @@ Cstring warning_strings[] = {
    /*  warn__check_hokey_4x4     */   "*Check a center box and outer lines/columns.",
    /*  warn__check_4x4_start     */   "*Check a 4x4 setup at the start of this call.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
-   /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
    /*  warn__check_c1_stars      */   " Check 'stars'.",
    /*  warn__check_gen_c1_stars  */   " Check a generalized 'star' setup.",
@@ -281,7 +279,13 @@ Cstring warning_strings[] = {
    /*  warn__bad_modifier_level  */   "*Use of this modifier on this call is not allowed at this level.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast.",
+   /*  warn__opt_for_normal_hinge */  "*If in doubt, assume a normal hinge.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
+   /*  warn_bad_collision        */   "*This collision may be controversial.",
+   /*  warn__dyp_resolve_ok      */   " Do your part.",
+   /*  warn__unusual             */   "*This is an unusual setup for this call.",
+   /*  warn_controversial        */   "*This may be controversial.",
+   /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
    /*  warn__tasteless_com_spot  */   "*Common-spot people have left hands.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave is questionable."};
 
@@ -314,23 +318,22 @@ static restriction_thing wave_1x14     = {14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 static restriction_thing wave_1x16     = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 16 */
 static restriction_thing wave_2x8      = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave};            /* check for parallel 2x8 waves */
 
-static restriction_thing cwave_dmd     = {2, {1, 3},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave in center of diamond */
+static restriction_thing wave_dmd      = {2, {1, 3},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave in center of diamond */
+static restriction_thing wave_ptpd     = {4, {1, 3, 7, 5},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwaves in center of each diamond */
 static restriction_thing wave_tgl      = {2, {1, 2},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave as base of triangle */
 
-static restriction_thing wave_thar     = {8, {0, 1, 2, 3, 5, 4, 7, 6},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE, chk_wave};            /* check for consistent wavy thar */
+static restriction_thing wave_thar     = {8, {0, 1, 2, 3, 5, 4, 7, 6},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave};           /* check for consistent wavy thar */
 static restriction_thing thar_1fl      = {8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave};           /* check for consistent 1-faced thar */
 
 static restriction_thing cwave_2x4     = {8, {0, 4, 1, 5, 2, 6, 3, 7},                               {0}, {0}, {0}, TRUE, chk_wave};            /* check for real columns */
 static restriction_thing cwave_2x3     = {6, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for real columns of 6 */
 static restriction_thing cwave_2x6     = {12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},                {0}, {0}, {0}, TRUE, chk_wave};            /* check for real 12-matrix columns */
 static restriction_thing cwave_2x8     = {16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},{0}, {0}, {0}, TRUE, chk_wave};            /* check for real 16-matrix columns */
-static restriction_thing cmagic_2x3    = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
+static restriction_thing cmagic_2x3    = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns of 3 */
 static restriction_thing cmagic_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
 
 static restriction_thing lio_2x4       = {8, {4, 0, 5, 1, 6, 2, 7, 3},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for lines in or lines out */
-static restriction_thing invert_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for inverted lines or magic columns */
 static restriction_thing invert_1x4    = {4, {0, 1, 2, 3},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for single inverted line */
-static restriction_thing invert_2x3    = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns of 3 */
 
 static restriction_thing peelable_3x2  = {3, {0, 1, 2},                   {3, 4, 5},                      {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x3 column */
 static restriction_thing peelable_4x2  = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x4 column */
@@ -339,49 +342,55 @@ static restriction_thing peelable_8x2  = {8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9,
 
 static restriction_thing all_same_2    = {2, {0, 1},                                                 {1}, {0}, {0}, TRUE,  chk_groups};         /* check for a couple */
 static restriction_thing all_same_4    = {4, {0, 1, 2, 3},                                           {1}, {0}, {0}, TRUE,  chk_groups};         /* check for a 1-faced line */
-static restriction_thing all_same_6    = {6, {0, 1, 2, 3, 4, 5},                                     {1}, {0}, {0}, FALSE, chk_groups};         /* check for a 1-faced line */
-static restriction_thing all_same_8    = {8, {0, 1, 2, 3, 4, 5, 6, 7},                               {1}, {0}, {0}, FALSE, chk_groups};         /* check for all 8 people same way in 2x4 *OR* 1x8. */
+static restriction_thing all_same_6    = {6, {0, 1, 2, 3, 4, 5},                                     {1}, {0}, {0}, TRUE,  chk_groups};         /* check for a 1-faced line */
+static restriction_thing all_same_8    = {8, {0, 1, 2, 3, 4, 5, 6, 7},                               {1}, {0}, {0}, TRUE,  chk_groups};         /* check for all 8 people same way in 2x4 *OR* 1x8. */
 static restriction_thing all_diff_2    = {2, {0, 1},                                                 {1}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for a miniwave */
 
 
 static restriction_thing two_faced_1x6 = {6, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, FALSE, chk_wave};           /* check for 3x3 two-faced line -- 3 up and 3 down */
 static restriction_thing two_faced_1x8 = {8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave};           /* check for grand two-faced line */
-static restriction_thing one_faced_2x3 = {3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, FALSE, chk_groups};         /* check for parallel one-faced lines of 3 */
-static restriction_thing one_faced_2x4 = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, FALSE, chk_groups};         /* check for parallel one-faced lines */
-static restriction_thing cpls_2x4      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, FALSE, chk_groups};         /* check for everyone as a couple */
-static restriction_thing cpls_4x2      = {2, {0, 1, 2, 3, 7, 6, 5, 4},                               {4}, {0}, {0}, FALSE, chk_groups};         /* check for everyone as a couple */
-static restriction_thing cpls_1x4      = {2, {0, 2, 1, 3},                                           {2}, {0}, {0}, FALSE, chk_groups};         /* check for everyone as a couple */
-static restriction_thing cpls_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, FALSE, chk_groups};         /* check for everyone as a couple */
-static restriction_thing cpls_2x8      = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, FALSE, chk_groups};         /* check for everyone as a couple */
-static restriction_thing cpls_1x16     = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, FALSE, chk_groups};         /* check for everyone as a couple */
-static restriction_thing cpls_2x6      = {3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},                 {4}, {0}, {0}, FALSE, chk_groups};         /* check for each three people facing same way */
-static restriction_thing cplsof4_2x8   = {4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {4}, {0}, {0}, FALSE, chk_groups};         /* check for each four people facing same way */
-static restriction_thing cpls_1x3      = {3, {0, 1, 2},                                              {1}, {0}, {0}, FALSE, chk_groups};         /* check for three people facing same way */
-static restriction_thing cpls_3x3_1x6  = {3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, FALSE, chk_groups};         /* check for each three people facing same way */
-static restriction_thing cpls_4x4_1x8  = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, FALSE, chk_groups};         /* check for each four people facing same way */
+static restriction_thing one_faced_2x3 = {3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups};         /* check for parallel one-faced lines of 3 */
+static restriction_thing one_faced_2x4 = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups};         /* check for parallel one-faced lines */
+static restriction_thing cpls_2x4      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, TRUE,  chk_groups};         /* check for everyone as a couple */
+static restriction_thing cpls_4x2      = {2, {0, 1, 2, 3, 7, 6, 5, 4},                               {4}, {0}, {0}, TRUE,  chk_groups};         /* check for everyone as a couple */
+static restriction_thing cpls_1x4      = {2, {0, 2, 1, 3},                                           {2}, {0}, {0}, TRUE,  chk_groups};         /* check for everyone as a couple */
+static restriction_thing cpls_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, TRUE,  chk_groups};         /* check for everyone as a couple */
+static restriction_thing cpls_2x8      = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_groups};         /* check for everyone as a couple */
+static restriction_thing cpls_8x2      = {2, {0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8}, {8}, {0}, {0}, TRUE,  chk_groups};         /* check for everyone as a couple */
+static restriction_thing cpls_1x16     = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_groups};         /* check for everyone as a couple */
+static restriction_thing cpls_2x6      = {3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},                 {4}, {0}, {0}, TRUE,  chk_groups};         /* check for each three people facing same way */
+static restriction_thing cpls_6x2      = {3, {0, 1, 2, 3, 4, 5, 11, 10, 9, 8, 7, 6},                 {4}, {0}, {0}, TRUE,  chk_groups};         /* check for each three people facing same way */
+static restriction_thing cplsof4_2x8   = {4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {4}, {0}, {0}, TRUE,  chk_groups};         /* check for each four people facing same way */
+static restriction_thing cpls_1x3      = {3, {0, 1, 2},                                              {1}, {0}, {0}, TRUE,  chk_groups};         /* check for three people facing same way */
+static restriction_thing cpls_3x3_1x6  = {3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups};         /* check for each three people facing same way */
+static restriction_thing cpls_4x4_1x8  = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups};         /* check for each four people facing same way */
 static restriction_thing two_faced_4x4_1x8 = {8, {0, 4, 1, 5, 2, 6, 3, 7},                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for 4x4 two-faced line -- 4 up and 4 down */
 static restriction_thing two_faced_1x4 = {4, {0, 2, 1, 3},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for 2-faced lines */
 static restriction_thing two_faced_2x6 = {12, {0, 3, 1, 4, 2, 5, 9, 6, 10, 7, 11, 8},                {0}, {0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 3x3 two-faced lines */
 static restriction_thing two_faced_4x4_2x8 = {16, {0, 4, 1, 5, 2, 6, 3, 7, 12, 8, 13, 9, 14, 10, 15, 11},{0},{0},{0},FALSE,chk_wave};           /* check for parallel consistent 4x4 two-faced lines */
-static restriction_thing mnwv_2x4      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, FALSE, chk_anti_groups};    /* check for everyone in a miniwave */
-static restriction_thing mnwv_4x2      = {2, {0, 1, 2, 3, 7, 6, 5, 4},                               {4}, {0}, {0}, FALSE, chk_anti_groups};    /* check for everyone in a miniwave */
+static restriction_thing mnwv_2x4      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
+static restriction_thing mnwv_4x2      = {2, {0, 1, 2, 3, 7, 6, 5, 4},                               {4}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
 static restriction_thing mnwv_2x8      = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, FALSE, chk_anti_groups};    /* check for everyone in a miniwave */
-static restriction_thing mnwv_1x16     = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, FALSE, chk_anti_groups};    /* check for everyone in a miniwave */
-static restriction_thing mnwv_1x4      = {2, {0, 2, 1, 3},                                           {2}, {0}, {0}, FALSE, chk_anti_groups};    /* check for everyone in a miniwave */
-static restriction_thing mnwv_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, FALSE, chk_anti_groups};    /* check for everyone in a miniwave */
+static restriction_thing mnwv_1x16     = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
+static restriction_thing mnwv_1x4      = {2, {0, 2, 1, 3},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
+static restriction_thing mnwv_1x6      = {2, {0, 2, 4, 1, 5, 3},                                     {3}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
+static restriction_thing mnwv_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
 
 static restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
 static restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
 static restriction_thing box_in_or_out = {0, {0, 0, 2, 2},                {0, 2, 2, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for facing couples or back-to-back couples */
 static restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
 static restriction_thing s4x4_wave     = {0,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
-                                                {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+                                               {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 static restriction_thing s4x4_2fl     = {0,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},  
-                                                {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+                                               {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 static restriction_thing cwave_qtg     = {4, {2, 3, 7, 6},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 static restriction_thing wave_qtag     = {4, {6, 7, 3, 2},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for wave across the center */
+static restriction_thing miniwave_qtg  = {2, {6, 2, 7, 3},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for center people in miniwaves */
+static restriction_thing miniwave_ptpd = {2, {1, 7, 3, 5},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for miniwaves in center of each diamond */
+
 static restriction_thing two_faced_qtag= {4, {6, 2, 7, 3},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for two-faced line across the center */
 
 static restriction_thing qtag_1        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
@@ -448,6 +457,7 @@ static restr_initializer restr_init_table[] = {
    {s2x4, cr_all_ew, &all_8_ew},
    {s1x8, cr_all_ns, &all_8_ns},
    {s1x8, cr_all_ew, &all_8_ew},
+   {s1x6, cr_miniwaves, &mnwv_1x6},
    {s1x6, cr_wave_only, &wave_1x6},
    {s1x6, cr_1fl_only, &all_same_6},
    {s1x6, cr_all_facing_same, &all_same_6},
@@ -465,14 +475,15 @@ static restr_initializer restr_init_table[] = {
    {s2x4, cr_2fl_only, &two_faced_2x4},
    {s2x4, cr_wave_only, &wave_2x4},
    {s2x3, cr_wave_only, &wave_2x3},
-   {s2x3, cr_magic_only, &invert_2x3},
-   {s2x4, cr_magic_only, &invert_2x4},
+   {s2x3, cr_magic_only, &cmagic_2x3},
+   {s2x4, cr_magic_only, &cmagic_2x4},
    {s2x4, cr_li_lo, &lio_2x4},
    {s2x4, cr_all_facing_same, &all_same_8},
    {s2x4, cr_1fl_only, &one_faced_2x4},
    {s2x4, cr_couples_only, &cpls_2x4},
    {s2x4, cr_miniwaves, &mnwv_2x4},
    {s_qtag, cr_wave_only, &wave_qtag},
+   {s_qtag, cr_miniwaves, &miniwave_qtg},
    {s_qtag, cr_2fl_only, &two_faced_qtag},
    {s2x8, cr_wave_only, &wave_2x8},
    {s2x8, cr_4x4_2fl_only, &two_faced_4x4_2x8},
@@ -534,7 +545,9 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
 
    switch (k) {
       case s2x2:
-         if ((t.assump_col & 1) == 0) {
+/* try this
+         if (t.assump_col != 0) {
+*/
             switch (t.assumption) {
                case cr_wave_only:
                   restr_thing_ptr = &box_wave;
@@ -549,7 +562,9 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
                   restr_thing_ptr = &box_magic;
                   break;
             }
+/*
          }
+*/
          break;
       case s4x4:
          if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
@@ -564,36 +579,49 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &cmagic_2x3;
          else if (t.assumption == cr_peelable_box && t.assump_col != 0)
             restr_thing_ptr = &peelable_3x2;
+         else if (t.assumption == cr_all_facing_same && t.assump_col != 0)
+            restr_thing_ptr = &all_same_6;
          break;
-/*     try it without this
       case s1x4:
-         if (t.assumption == cr_2fl_only && t.assump_col != 0)
-            restr_thing_ptr = &two_faced_1x4;
-*/
+         if (t.assumption == cr_all_facing_same && t.assump_col != 0)
+            restr_thing_ptr = &all_same_4;
+         break;
+      case s1x6:
+         if (t.assumption == cr_all_facing_same && t.assump_col != 0)
+            restr_thing_ptr = &all_same_6;
+         break;
+      case s1x8:
+         if (t.assumption == cr_all_facing_same && t.assump_col != 0)
+            restr_thing_ptr = &all_same_8;
+         break;
       case s2x4:
          if (t.assumption == cr_li_lo && t.assump_col != 0)
             restr_thing_ptr = &wave_2x4;
          else if (t.assumption == cr_2fl_only && t.assump_col != 0)
             restr_thing_ptr = &two_faced_2x4;
-         /* This is the stupid special case for "assume miniwaves" in a 2x4. */
-/* **** shouldn't use it any more.  miniwave/col=0 will get same thing. */
          else if (t.assumption == cr_wave_only && t.assump_col == 2)
-            restr_thing_ptr = &mnwv_2x4;
+            restr_thing_ptr = &mnwv_2x4;  /* WRONG!!!  This is "assume normal boxes" while in gen'lized lines, but will accept any miniwaves. */
          else if (t.assumption == cr_wave_only && t.assump_col != 0)
             restr_thing_ptr = &cwave_2x4;
-         else if (t.assumption == cr_magic_only && t.assump_col != 0)
+         else if (t.assumption == cr_magic_only && t.assump_col == 1)
             restr_thing_ptr = &cmagic_2x4;
+         else if (t.assumption == cr_magic_only && (t.assump_col & 2) == 2)
+            /* "assume inverted boxes", people are in general lines (col=2) or cols (col=3) */
+            restr_thing_ptr = &cmagic_2x4;   /* This is wrong, need something that allows real mag col or unsymm congruent inv boxes.
+                                                      This is a "check mixed groups" type of thing!!!! */
          else if (t.assumption == cr_peelable_box && t.assump_col != 0)
             restr_thing_ptr = &peelable_4x2;
          else if (t.assumption == cr_couples_only && t.assump_col == 1)
             restr_thing_ptr = &cpls_4x2;
          else if (t.assumption == cr_miniwaves && t.assump_col == 1)
             restr_thing_ptr = &mnwv_4x2;
+         else if (t.assumption == cr_all_facing_same && t.assump_col != 0)
+            restr_thing_ptr = &all_same_8;
          break;
       case s1x2:
          if (t.assumption == cr_wave_only && t.assump_col == 2)
             restr_thing_ptr = &wave_1x2;
-         else if (t.assumption == cr_all_facing_same)
+         else if (t.assumption == cr_all_facing_same && t.assump_col != 0)
             restr_thing_ptr = &all_same_2;
          break;
       case s2x6:
@@ -601,12 +629,16 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &cwave_2x6;
          else if (t.assumption == cr_peelable_box && t.assump_col != 0)
             restr_thing_ptr = &peelable_6x2;
+         else if (t.assumption == cr_couples_only && t.assump_col == 1)
+            restr_thing_ptr = &cpls_6x2;
          break;
       case s2x8:
          if (t.assumption == cr_wave_only && t.assump_col != 0)
             restr_thing_ptr = &cwave_2x8;
          else if (t.assumption == cr_peelable_box && t.assump_col != 0)
             restr_thing_ptr = &peelable_8x2;
+         else if (t.assumption == cr_couples_only && t.assump_col == 1)
+            restr_thing_ptr = &cpls_8x2;
          break;
       case s_qtag:
          if (t.assumption == cr_wave_only && t.assump_col == 1)
@@ -642,8 +674,20 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          else if (t.assumption == cr_gen_3_4_tag)
             restr_thing_ptr = &dmd4_3;
          break;
+      case s_trngl:
+         if (t.assumption == cr_wave_only && t.assump_col == 1)
+            restr_thing_ptr = &wave_tgl;   /* isn't this bogus?  It checks for TANDEM-BASE. */
+         else if (t.assumption == cr_miniwaves && t.assump_col == 0)
+            restr_thing_ptr = &wave_tgl;
+         else if (t.assumption == cr_wave_only && t.assump_col == 0)
+            restr_thing_ptr = &wave_tgl;
+         break;
       case sdmd:
-         if (t.assumption == cr_jright)
+         if (t.assumption == cr_wave_only && t.assump_col == 1)
+            restr_thing_ptr = &wave_dmd;
+         else if (t.assumption == cr_miniwaves && t.assump_col == 1)
+            restr_thing_ptr = &wave_dmd;
+         else if (t.assumption == cr_jright)
             restr_thing_ptr = &jright_dmd;
          else if (t.assumption == cr_diamond_like)
             restr_thing_ptr = &dmd_d;
@@ -655,7 +699,11 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &dmd_3;
          break;
       case s_ptpd:
-         if (t.assumption == cr_jright)
+         if (t.assumption == cr_wave_only && t.assump_col == 1)
+            restr_thing_ptr = &wave_ptpd;
+         else if (t.assumption == cr_miniwaves && t.assump_col == 1)
+            restr_thing_ptr = &miniwave_ptpd;
+         else if (t.assumption == cr_jright)
             restr_thing_ptr = &jright_ptpd;
          else if (t.assumption == cr_diamond_like)
             restr_thing_ptr = &ptpd_d;
@@ -911,7 +959,7 @@ extern void exit_program(int code)
 }
 
 
-extern void nonreturning fail(Const char s[])
+extern void fail(Const char s[])
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -920,7 +968,7 @@ extern void nonreturning fail(Const char s[])
 }
 
 
-extern void nonreturning fail2(Const char s1[], Const char s2[])
+extern void fail2(Const char s1[], Const char s2[])
 {
    (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -930,7 +978,7 @@ extern void nonreturning fail2(Const char s1[], Const char s2[])
 }
 
 
-extern void nonreturning failp(uint32 id1, Const char s[])
+extern void failp(uint32 id1, Const char s[])
 {
    collision_person1 = id1;
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
@@ -939,7 +987,7 @@ extern void nonreturning failp(uint32 id1, Const char s[])
 }
 
 
-extern void nonreturning specialfail(Const char s[])
+extern void specialfail(Const char s[])
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -1729,29 +1777,28 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
 /* These static variables are used by printperson. */
 
-static char peoplenames[] = "1234";
+static char peoplenames1[] = "11223344";
+static char peoplenames2[] = "BGBGBGBG";
+static char alt1_names1[] = "        ";
+static char alt1_names2[] = "1P2R3O4C";
 static char directions[] = "?>?<????^?V?????";
-static char personbuffer[] = " ZZZ";
 
-/* This could get changed if a user interface for sdtty wishes to use pretty graphics characters. */
+/* This could get changed if a user interface for Sdtty wishes to use pretty graphics characters. */
 char *ui_directions = directions;
+
+/* These could get changed if the user requests special naming. */
+static char *pn1 = peoplenames1;
+static char *pn2 = peoplenames2;
 
 
 Private void printperson(unsigned int x)
 {
    if (x & BIT_PERSON) {
-      int i = (x & 017);
-
-      personbuffer[1] = peoplenames[(x >> 7) & 3];
-      personbuffer[2] = (x & 0100) ? 'G' : 'B';
-
-      if (enable_file_writing) {
-         personbuffer[3] = directions[i];
-      }
-      else {
-         personbuffer[3] = ui_directions[i];
-      }
-
+      static char personbuffer[] = " ZZZ";
+      personbuffer[1] = pn1[(x >> 6) & 7];
+      personbuffer[2] = pn2[(x >> 6) & 7];
+      /* But we never write anything other than standard ASCII to the transcript file. */
+      personbuffer[3] = (enable_file_writing ? directions : ui_directions)[x & 017];
       writestuff(personbuffer);
    }
    else
@@ -2023,6 +2070,11 @@ extern void write_history_line(int history_index, Const char *header, long_boole
    }
 
    if (picture || this_item->draw_pic) {
+      if (alternate_person_glyphs == 1) {
+         pn1 = alt1_names1;
+         pn2 = alt1_names2;
+      }
+
       printsetup(&this_item->state);
    }
 
@@ -2038,10 +2090,14 @@ extern void warn(warning_index w)
    /* If this is an "each 1x4" type of warning, and we already have
       such a warning, don't enter the new one.  The first one takes precedence. */
 
-   if ((dyp_each_warnings.bits[w>>5] & (1 << (w & 0x1F))) &&
-         ((dyp_each_warnings.bits[0] & history[history_ptr+1].warnings.bits[0]) ||
-          (dyp_each_warnings.bits[1] & history[history_ptr+1].warnings.bits[1])))
-      return;
+   if (dyp_each_warnings.bits[w>>5] & (1 << (w & 0x1F))) {
+      int i;
+
+      for (i=0 ; i<WARNING_WORDS ; i++) {
+         if (dyp_each_warnings.bits[i] & history[history_ptr+1].warnings.bits[i])
+            return;
+      }
+   }
 
    if (w != warn__none) history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1F);
 }
@@ -2221,16 +2277,293 @@ extern Const long int *get_rh_test(setup_kind kind)
 
 
 
+extern long_boolean verify_restriction(
+   setup *ss,
+   restriction_thing *rr,
+   assumption_thing tt,
+   long_boolean instantiate_phantoms,
+   long_boolean *failed_to_instantiate)
+{
+   int idx, limit, i, j, k;
+   uint32 t;
+   uint32 qa0, qa1, qa2, qa3;
+   uint32 qaa[4], qab[4];
+   uint32 pdir, qdir, pdirodd, qdirodd;
+   uint32 dirtest[2];
+   int phantom_count = 0;
+
+   dirtest[0] = 0;
+   dirtest[1] = 0;
+
+   *failed_to_instantiate = TRUE;
+
+   switch (rr->check) {
+      case chk_wave:
+         qaa[0] = tt.assump_both;
+         qaa[1] = tt.assump_both << 1;
+         qab[0] = 0;
+         qab[2] = 0;
+
+         for (idx=0; idx<rr->size; idx++) {
+            if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
+         }
+
+         if ((qaa[0] & qaa[1] & 2) != 0)
+            goto bad;
+
+         if (rr->ok_for_assume) {
+            for (idx=0; idx<rr->size; idx++)
+               qab[idx&2] |= ss->people[rr->map1[idx]].id1;
+
+            if ((tt.assump_col | rr->map2[0]) & 4) {
+               qab[2] >>= 3;
+            }
+            else if (tt.assump_col == 1) {
+               qab[0] >>= 3;
+               qab[2] >>= 3;
+            }
+
+            if ((qab[0]|qab[2]) & 1) goto bad;
+
+            if (instantiate_phantoms) {
+               *failed_to_instantiate = FALSE;
+
+               if (qaa[0] == 0) fail("Need live person to determine handedness.");
+
+               if ((tt.assump_col | rr->map2[0]) & 4) {
+                  if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
+                  else                   { pdir = d_south; qdir = d_north; }
+                  pdirodd = rotcw(pdir); qdirodd = rotcw(qdir);
+               }
+               else if (tt.assump_col == 1) {
+                  if ((qaa[0] & 2) == 0) { pdir = d_east; qdir = d_west; }
+                  else                   { pdir = d_west; qdir = d_east; }
+                  pdirodd = pdir; qdirodd = qdir;
+               }
+               else {
+                  if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
+                  else                   { pdir = d_south; qdir = d_north; }
+                  pdirodd = pdir; qdirodd = qdir;
+               }
+
+               for (i=0; i<rr->size; i++) {
+                  int p = rr->map1[i];
+   
+                  if (!ss->people[p].id1) {
+                     if (phantom_count >= 16) fail("Too many phantoms.");
+   
+                     ss->people[p].id1 =           (i&1) ?
+                                          ((i&2) ? qdirodd : qdir) :
+                                          ((i&2) ? pdirodd : pdir);
+   
+                     ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
+                     ss->people[p].id2 = 0;
+                  }
+                  else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                     fail("Active phantoms may only be used once.");
+               }
+            }
+         }
+
+         goto good;
+      case chk_box:
+         qa0 = (tt.assump_both << 1) & 2;
+         qa1 = tt.assump_both & 2;
+         qa2 = qa1;
+         qa3 = qa0;
+
+         for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+            if ((t = ss->people[idx].id1) != 0) {
+               qa0 |= t^rr->map1[idx]^0;
+               qa1 |= t^rr->map1[idx]^2;
+               qa2 |= t^rr->map2[idx]^1;
+               qa3 |= t^rr->map2[idx]^3;
+            }
+         }
+
+         if ((qa1&3) && (qa0&3) && (qa3&3) && (qa2&3)) goto bad;
+
+         if (rr->ok_for_assume) {
+            if (instantiate_phantoms) {
+               if ((qa0 | qa1 | qa3 | qa2) == 0)
+                  fail("Need live person to determine handedness.");
+
+               for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
+                  if (!ss->people[i].id1) {
+                     if (phantom_count >= 16)
+                        fail("Too many phantoms.");
+      
+                     pdir = (qa0&1) ?
+                           (d_east ^ ((rr->map2[i] ^ qa2) & 2)) :
+                           (d_north ^ ((rr->map1[i] ^ qa0) & 2));
+      
+                     ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                     ss->people[i].id2 = 0;
+                  }
+                  else if (ss->people[i].id1 & BIT_ACT_PHAN)
+                     fail("Active phantoms may only be used once.");
+               }
+
+               *failed_to_instantiate = FALSE;
+            }
+         }
+
+         goto good;
+      case chk_groups:
+         limit = rr->map2[0];
+   
+         for (idx=0; idx<limit; idx++) {
+            qa0 = 0; qa1 = 0;
+
+            for (i=0,j=idx; i<rr->size; i++,j+=limit) {
+               if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= t^2; }
+            }
+
+            if ((qa0 & qa1 & 2) != 0) goto bad;
+
+            if (rr->ok_for_assume) {
+               if (tt.assump_col == 1) {
+                  if ((qa0 & 2) == 0) { pdir = d_east; }
+                  else                { pdir = d_west; }
+
+                  qa0 >>= 3;
+                  qa1 >>= 3;
+               }
+               else {
+                  if ((qa0 & 2) == 0) { pdir = d_north; }
+                  else                { pdir = d_south; }
+               }
+
+               if ((qa0|qa1)&1) goto bad;
+
+               if (instantiate_phantoms) {
+                  if (qa0 == 0) fail("Need live person to determine handedness.");
+
+                  for (i=0,k=0 ; k<rr->size ; i+=limit,k++) {
+                     int p = rr->map1[idx+i];
+   
+                     personrec *pq = &ss->people[p];
+                     t = pq->id1;
+      
+                     if (!t) {
+                        if (phantom_count >= 16) fail("Too many phantoms.");
+                        pq->id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                        pq->id2 = 0;
+                     }
+                     else if (t & BIT_ACT_PHAN)
+                        fail("Active phantoms may only be used once.");
+                  }
+
+                  *failed_to_instantiate = FALSE;
+               }
+            }
+         }
+         goto good;
+      case chk_anti_groups:
+         limit = rr->map2[0];
+
+         for (idx=0; idx<limit; idx++) {
+            qa0 = 0; qa1 = 0;
+
+            if ((t = ss->people[rr->map1[idx]].id1) != 0)       { qa0 |= t;   qa1 |= t^2; }
+            if ((t = ss->people[rr->map1[idx+limit]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
+
+            if ((qa0 & qa1 & 2) != 0) goto bad;
+
+            if (rr->ok_for_assume) {
+               if (tt.assump_col == 1) {
+                  if ((qa0 & 2) == 0) { pdir = d_east; qdir = d_west; }
+                  else                { pdir = d_west; qdir = d_east; }
+
+                  qa0 >>= 3;
+                  qa1 >>= 3;
+               }
+               else {
+                  if ((qa0 & 2) == 0) { pdir = d_north; qdir = d_south; }
+                  else                { pdir = d_south; qdir = d_north; }
+               }
+
+               if ((qa0|qa1)&1) goto bad;
+
+               if (instantiate_phantoms) {
+                  if (qa0 == 0)
+                     fail("Need live person to determine handedness.");
+
+                  for (i=0 ; i<=limit ; i += limit) {
+                     int p = rr->map1[idx+i];
+                     personrec *pq = &ss->people[p];
+                     t = pq->id1;
+      
+                     if (!t) {
+                        if (phantom_count >= 16) fail("Too many phantoms.");
+                        pq->id1 = (i ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                        pq->id2 = 0;
+                     }
+                     else if (t & BIT_ACT_PHAN)
+                        fail("Active phantoms may only be used once.");
+                  }
+
+                  *failed_to_instantiate = FALSE;
+               }
+            }
+         }
+         goto good;
+      case chk_peelable:
+         qa0 = 3; qa1 = 3;
+         qa2 = 3; qa3 = 3;
+
+         for (j=0; j<rr->size; j++) {
+            if ((t = ss->people[rr->map1[j]].id1) != 0)  { qa0 &= t; qa1 &= t^2; }
+            if ((t = ss->people[rr->map2[j]].id1) != 0)  { qa2 &= t; qa3 &= t^2; }
+         }
+
+         if ((((~qa0)&3) == 0 || ((~qa1)&3) == 0) && (((~qa2)&3) == 0 || ((~qa3)&3) == 0))
+            goto good;
+
+         goto bad;
+      case chk_dmd_qtag:
+         qa1 = 0;
+         qa0 = 0;
+
+         for (idx=0; idx<rr->map1[0]; idx++)
+            qa1 |= ss->people[rr->map1[idx+1]].id1;
+
+         for (idx=0; idx<rr->map2[0]; idx++)
+            qa0 |= ss->people[rr->map2[idx+1]].id1;
+
+         for (idx=0; idx<rr->map3[0]; idx++) {
+            if ((t = ss->people[rr->map3[idx+1]].id1) != 0 && (t & 2) != 0)
+               goto bad;
+         }
+
+         for (idx=0; idx<rr->map4[0]; idx++) {
+            if ((t = ss->people[rr->map4[idx+1]].id1) != 0 && (t & 2) != 2)
+               goto bad;
+         }
+
+         if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
+            goto bad;
+
+         goto good;
+      default:
+         goto bad;    /* Shouldn't happen. */
+   }
+
+   good: return TRUE;
+
+   bad: return FALSE;
+}
+
+
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 {
    callarray *p;
+   long_boolean booljunk;
 
    for (p = spec; p; p = p->next) {
       uint32 i, k, t, u, v, w, mask;
       assumption_thing tt;
-      int idx, limit, j;
-      uint32 qa0, qa1, qa2, qa3;
-      uint32 qaa[4];
+      int idx, j;
       restriction_thing *rr;
 
       /* First, we demand that the starting setup be correct.  Also, if a qualifier
@@ -2342,7 +2675,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_2fl_only;
-            goto do_general_stuff;
+            goto fix_col_line_stuff;
          case sq_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2354,7 +2687,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_couples_only;
-            goto check_tt;
+            goto fix_col_line_stuff;
          case sq_3x3couples_only:      /* 1x3/1x6/2x3/2x6/1x12 - each group of 3 people are facing the same way */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2384,43 +2717,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto bad;
             }
 
+            tt.assumption = cr_miniwaves;
+
             switch (ss->kind) {
-               case s1x2:
-                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
-                  goto bad;
-               case s1x4:
-                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
-                  goto bad;
-               case s1x6:
-                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[2].id1) & (u = ss->people[5].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[4].id1) & (u = ss->people[3].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
-                  goto bad;
-               case s1x8:
-                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[6].id1) & (u = ss->people[7].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[5].id1) & (u = ss->people[4].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
-                  goto bad;
-               case s2x4:
-                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[2].id1) & (u = ss->people[3].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[5].id1) & (u = ss->people[4].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[7].id1) & (u = ss->people[6].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
-                  k = 1;
-                  i = 2;
-                  if ((t = ss->people[0].id1) & (u = ss->people[7].id1)) { k &= t&u; i &= t^u; }
-                  if ((t = ss->people[1].id1) & (u = ss->people[6].id1)) { k &= t&u; i &= t^u; }
-                  if ((t = ss->people[2].id1) & (u = ss->people[5].id1)) { k &= t&u; i &= t^u; }
-                  if ((t = ss->people[3].id1) & (u = ss->people[4].id1)) { k &= t&u; i &= t^u; }
-                  if ((i & 2) && (k & 1)) goto good;
-                  goto bad;
+               case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
+               case sdmd: case s_trngl: case s_qtag: case s_ptpd:
+                  goto fix_col_line_stuff;
                case s2x2:
                   if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
                   if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
@@ -2430,21 +2732,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
                   if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u; }
                   if ((i & 2) && (k & 1)) goto good;
-                  goto bad;
-               case sdmd:
-                  k = 1;
-                  i = 2;
-                  if ((t = ss->people[1].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
-                  if ((i & 2) && (k & 1)) goto good;
-                  goto bad;
-               case s_trngl:
-                  if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
-                  goto bad;
-               case s_qtag:
-                  if ((t = ss->people[6].id1) & (u = ss->people[7].id1)) { k |= t|u; i &= t^u; }
-                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                  if ((i & 2) && !(k & 1)) goto good;
                   goto bad;
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
@@ -2525,6 +2812,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
             goto bad;
          case sq_1_4_tag:                      /* dmd or qtag - is a 1/4 tag, i.e. points looking in */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
+                  if (tt.assump_both == 2) goto good;
+            }
+
             switch (ss->kind) {
                case sdmd:
                   if (   (!(t = ss->people[0].id1 & d_mask) || t == d_east) &&  /* We forgive phantoms up to a point. */
@@ -2544,6 +2836,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
          case sq_3_4_tag:                      /* dmd or qtag - is a 3/4 tag, i.e. points looking out */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
+                  if (tt.assump_both == 1) goto good;
+            }
+
             switch (ss->kind) {
                case sdmd:
                   if (   (!(t = ss->people[0].id1 & d_mask) || t == d_west) &&  /* We forgive phantoms up to a point. */
@@ -2717,6 +3014,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
             goto bad;
+         case sq_people_1_and_5_real:
+            if (ss->people[1].id1 & ss->people[5].id1) goto good;
+            goto bad;
          case sq_ctrs_sel:
             k = 0xFF;     /* K was initialized to zero. */
             /* FALL THROUGH!!!!!! */
@@ -2765,11 +3065,31 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       switch (ss->cmd.cmd_assume.assumption) {
          case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
+         case cr_ijright: case cr_ijleft: goto bad;
+         case cr_wave_only: case cr_jright:
+            if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1) goto bad;
+            if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 2) goto bad;
+            break;
+         case cr_jleft:
+            if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 2) goto bad;
+            if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 1) goto bad;
+            break;
       }
 
       tt.assumption = cr_wave_only;
 
-      do_general_stuff:
+      switch (ss->kind) {
+         case s3x4:         /* This only handles lines; not columns -- we couldn't have "wavy" columns that were symmetric. */
+         case s_trngl:
+         case s_qtag:
+            goto check_tt;
+         case sdmd:
+         case s_ptpd:
+            tt.assump_col = 1;
+            goto check_tt;
+      }
+
+      fix_col_line_stuff:
 
       switch (ss->kind) {
          case s1x3:
@@ -2777,37 +3097,22 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             /* FALL THROUGH!!! */
          case s1x2: case s1x4: case s1x6: case s1x8: case s1x10:
          case s1x12: case s1x14: case s1x16:
-         case s2x2: case s4x4: case s_thar: case s_qtag:
+         case s2x2: case s4x4: case s_thar: case s_qtag: case s_trngl:
             /* FELL THROUGH!!! */
             goto check_tt;
-         case s2x4:
-            for (idx=0,u=0 ; idx<8 ; idx++) u |= ss->people[idx].id1;
-            if (!(u&010)) tt.assump_col = 1;
-            goto check_tt;
-         case s2x3:
-            for (idx=0,u=0 ; idx<6 ; idx++) u |= ss->people[idx].id1;
-            if (!(u&010)) tt.assump_col = 1;
-            else if (tt.assump_both) goto bad;   /* We can't check 2x3 lines for right-or-left-handedness. */
-            goto check_tt;
-         case s2x6:
-            for (idx=0,u=0 ; idx<12 ; idx++) u |= ss->people[idx].id1;
-            if (!(u&010)) tt.assump_col = 1;
-            goto check_tt;
-         case s2x8:
-            for (idx=0,u=0 ; idx<16 ; idx++) u |= ss->people[idx].id1;
-            if (!(u&010)) tt.assump_col = 1;
-            goto check_tt;
-         case s3x4:
-            /* This only handles lines; not columns -- we couldn't have "wavy" columns that were symmetric. */
-            goto check_tt;
-         case sdmd:
+         case sdmd: case s_ptpd:
             tt.assump_col = 1;
-            rr = &cwave_dmd;
-            goto check_stuff;
-         case s_trngl:
-            rr = &wave_tgl;
-            goto check_stuff;
+            goto check_tt;
+         case s2x4:
+         case s2x6:
+         case s2x8:
+         case s2x3:
+            for (idx=0,u=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) u |= ss->people[idx].id1;
+            if (!(u&010)) tt.assump_col = 1;
+            else if (tt.assump_both && ss->kind == s2x3) goto bad;   /* We can't check 2x3 lines for right-or-left-handedness. */
+            goto check_tt;
          default:
+                  /* ****** Try to change this (and other things) to "goto bad". */
             goto good;                 /* We don't understand the setup -- we'd better accept it. */
       }
 
@@ -2818,82 +3123,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       check_stuff:
 
-      switch (rr->check) {
-         case chk_wave:
-            qaa[0] = 0; qaa[1] = 0;
-
-            for (idx=0; idx<rr->size; idx++) {
-               if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= ~t; }
-            }
-
-            if (((qaa[0] | tt.assump_both) & (qaa[1] | (tt.assump_both << 1)) & 2) != 0)
-               goto bad;
-
-            if (rr->ok_for_assume) {
-               qaa[0] = 0;
-               qaa[2] = 0;
-
-               for (idx=0; idx<rr->size; idx++)
-                  qaa[idx&2] |= ss->people[rr->map1[idx]].id1;
-
-               if ((tt.assump_col | rr->map2[0]) & 4) {
-                  qaa[2] >>= 3;
-               }
-               else if (tt.assump_col == 1) {
-                  qaa[0] >>= 3;
-                  qaa[2] >>= 3;
-               }
-
-               if ((qaa[0]|qaa[2]) & 1) goto bad;
-            }
-
-            goto good;
-         case chk_box:
-            qa0 = (tt.assump_both << 1) & 2;
-            qa1 = tt.assump_both & 2;
-            qa2 = qa1;
-            qa3 = qa0;
-
-            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
-               if ((t = ss->people[idx].id1) != 0) {
-                  qa0 |= t^rr->map1[idx]^0;
-                  qa1 |= t^rr->map1[idx]^2;
-                  qa2 |= t^rr->map2[idx]^1;
-                  qa3 |= t^rr->map2[idx]^3;
-               }
-            }
-
-            if (!(qa0 & 3) || !(qa1 & 3) || !(qa2 & 3) || !(qa3 & 3)) goto good;
-
-            goto bad;
-         case chk_groups:
-            limit = rr->map2[0];
-      
-            for (idx=0; idx<limit; idx++) {
-               qa0 = 0; qa1 = 0;
-
-               for (i=0,j=idx; i<rr->size; i++,j+=limit) {
-                  if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= ~t; }
-               }
-
-               if ((qa0 & qa1 & 2) != 0) goto bad;
-            }
-            goto good;
-         case chk_anti_groups:
-            limit = rr->map2[0];
-
-            for (idx=0; idx<limit; idx++) {
-               qa0 = 0; qa1 = 0;
-
-               if ((t = ss->people[rr->map1[idx]].id1) != 0)       { qa0 |= t; qa1 |= ~t; }
-               if ((t = ss->people[rr->map1[idx+limit]].id1) != 0) { qa0 |= ~t; qa1 |= t; }
-
-               if ((qa0 & qa1 & 2) != 0) goto bad;
-            }
-            goto good;
-         default:
-            goto bad;    /* Shouldn't happen. */
-      }
+      if (verify_restriction(ss, rr, tt, FALSE, &booljunk)) goto good;
 
       bad: ;
    }
@@ -3049,9 +3279,13 @@ extern void scatter(setup *resultpeople, setup *sourcepeople, Const veryshort *r
 
 extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount)
 {
-   int k;
-   for (k=0; k<=countminus1; k++)
-      (void) copy_rot(resultpeople, k, sourcepeople, resultplace[k], rotamount);
+   int k, idx;
+   for (k=0; k<=countminus1; k++) {
+      idx = resultplace[k];
+
+      if (idx >= 0)
+         (void) copy_rot(resultpeople, k, sourcepeople, idx, rotamount);
+   }
 }
 
 
@@ -3257,7 +3491,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
             this by creating a "concentric" setup with "nothing" for the outer setup.  So we raise
             an error that is somewhat descriptive. */
          if (z[i].outer.skind == nothing)
-            fail("Can't do this: don't know where the phantoms went.");
+            continue;      /* Defer this until later; we may be able to figure something out. */
          else if (z[i].inner.skind == nothing && z[i].outer.skind == s1x2) {
             /* We can fix this up.  Just turn it into a 1x4 with the ends missing.
             (If a diamond is actually required, that will get fixed up below.)
@@ -3296,9 +3530,36 @@ extern long_boolean fix_n_results(int arity, setup z[])
    if (kk == nothing) {
       if (lineflag) kk = s1x4;
       else if (miniflag) kk = s1x2;
-      else return TRUE;
    }
-   
+
+   /* Now deal with any setups that we may have deferred. */
+
+   for (i=0; i<arity; i++) {
+      if (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing) {
+         if (z[i].inner.skind == s2x2 && kk == s2x4) {
+            /* Turn the 2x2 into a 2x4.  Need to make it have same rotation as the others;
+               that is, rotation = rr.  (We know that rr has something in it by now.) */
+            z[i].inner.srotation -= rr;
+            canonicalize_rotation(&z[i]);
+            z[i].kind = s2x4;
+            z[i].rotation = rr;
+            clear_person(&z[i], 4);
+            clear_person(&z[i], 7);
+            z[i].people[6] = z[i].people[3];
+            z[i].people[5] = z[i].people[2];
+            z[i].people[2] = z[i].people[1];
+            z[i].people[1] = z[i].people[0];
+            clear_person(&z[i], 0);
+            clear_person(&z[i], 3);
+            canonicalize_rotation(&z[i]);
+         }
+         else
+            fail("Can't do this: don't know where the phantoms went.");
+      }
+   }
+  
+   if (kk == nothing) return TRUE;
+
    /* If something wasn't sure whether it was points of a diamond or
       ends of a 1x4, that's OK if something else had a clue. */
    if (lineflag && kk != s1x4 && kk != sdmd) goto lose;

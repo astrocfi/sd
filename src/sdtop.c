@@ -49,6 +49,7 @@ typedef struct grilch {
 } full_expand_thing;
 
 Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
+Private expand_thing exp_3x4_4dm_stuff     = {{0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, 12, s3x4, s4dmd, 0};
 Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, s_qtag, s4dmd, 0};
 Private expand_thing exp_3x1d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
 Private expand_thing exp_1x2_3d_stuff      = {{11, 5}, 2, s1x2, s3dmd, 0};
@@ -88,6 +89,7 @@ Private void compress_setup(expand_thing *thing, setup *stuff)
    setup temp = *stuff;
 
    stuff->kind = thing->inner_kind;
+   clear_people(stuff);
    gather(stuff, &temp, thing->source_indices, thing->size-1, thing->rot * 011);
    stuff->rotation -= thing->rot;
    canonicalize_rotation(stuff);
@@ -579,6 +581,11 @@ extern void do_matrix_expansion(
                eptr = &exp_1x8_4dm_stuff; goto expand_me;
             case s_qtag:
                eptr = &exp_qtg_4dm_stuff; goto expand_me;
+            case s3x4:
+               if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[10].id1 | ss->people[11].id1)) {
+                  eptr = &exp_3x4_4dm_stuff; goto expand_me;
+               }
+               break;
             case s4x4:
                for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
                   if (ss->people[i].id1) livemask |= j;
@@ -590,6 +597,7 @@ extern void do_matrix_expansion(
                else if (livemask == 0x7171UL) {
                   eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
                }
+               break;
          }
       }
       else if (needprops == CONCPROP__NEEDK_3DMD) {
@@ -904,6 +912,12 @@ Private void normalize_4dmd(setup *stuff)
             stuff->people[8].id1 | stuff->people[9].id1 | stuff->people[10].id1 | stuff->people[11].id1)) {
       compress_setup(&exp_1x8_4dm_stuff, stuff);
    }
+   /*   NO!!  Want to leave this as quad diamonds.  User might say "quadruple lines ....".  Cf. test t33t.
+   else if (!(stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[7].id1 |
+            stuff->people[12].id1 | stuff->people[13].id1 | stuff->people[14].id1 | stuff->people[15].id1)) {
+      compress_setup(&exp_3x4_4dm_stuff, stuff);
+   }
+   */
 }
 
 
@@ -1343,8 +1357,7 @@ extern void toplevelmove(void)
    starting_setup.cmd.cmd_assume.assump_cast = 0;
    starting_setup.cmd.prior_elongation_bits = 0;
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
-   newhist->warnings.bits[0] = 0;
-   newhist->warnings.bits[1] = 0;
+   for (i=0 ; i<WARNING_WORDS ; i++) newhist->warnings.bits[i] = 0;
 
    /* If we are starting a sequence with the "so-and-so into the center and do whatever"
       flag on, and this call is a "sequence starter", take special action. */

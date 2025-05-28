@@ -674,12 +674,15 @@ Private long_boolean couple_side_of_out_3n1_line(setup *real_people, int real_in
    }
 }
 
+/* the "extra_stuff" argument is:
+     0 for "miniwave_side_of_2n1_line"
+     3 for "couple_side_of_2n1_line" */
 /* ARGSUSED */
-Private long_boolean miniwave_side_of_2n1_line(setup *real_people, int real_index,
+Private long_boolean some_side_of_2n1_line(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   int k = 0;
-   if (real_index == 0 || real_index == 3) k = 3;
+   int k = extra_stuff[0];
+   if (real_index == 0 || real_index == 3) k ^= 3;
 
    return
       ((real_people->people[0].id1 ^ real_people->people[2].id1) & DIR_MASK) == 2      &&
@@ -689,79 +692,41 @@ Private long_boolean miniwave_side_of_2n1_line(setup *real_people, int real_inde
       ((real_people->people[2].id1 ^ real_people->people[4-k].id1) & DIR_MASK) == 0;
 }
 
+/* the "extra_stuff" argument is:
+     0 for "cast_pushy"
+     1 for "cast_normal"
+     3 for "cast_normal_or_warn" */
 /* ARGSUSED */
-Private long_boolean couple_side_of_2n1_line(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   int k = 3;
-   if (real_index == 0 || real_index == 3) k = 0;
-
-   return
-      ((real_people->people[0].id1 ^ real_people->people[2].id1) & DIR_MASK) == 2      &&
-      ((real_people->people[0].id1 ^ real_people->people[5].id1) & DIR_MASK) == 0      &&
-      ((real_people->people[2].id1 ^ real_people->people[3].id1) & DIR_MASK) == 0      &&
-      ((real_people->people[0].id1 ^ real_people->people[k+1].id1) & DIR_MASK) == 0    &&
-      ((real_people->people[2].id1 ^ real_people->people[4-k].id1) & DIR_MASK) == 0;
-}
-
-/* ARGSUSED */
-Private long_boolean cast_normal(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
-         real_people->cmd.cmd_assume.assump_cast)
-      return TRUE;
-   else {
-      int this_person = real_people->people[real_index].id1;
-      int other_person = real_people->people[real_index ^ 1].id1;
-      if (real_people->kind == s1x6 && real_index >= 2)
-         other_person = real_people->people[7 - real_index].id1;
-      return ((this_person ^ other_person) & DIR_MASK) == 2;
-   }
-}
-
-/* ARGSUSED */
-Private long_boolean cast_pushy(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
-         real_people->cmd.cmd_assume.assump_cast)
-      return FALSE;
-   else {
-      int this_person = real_people->people[real_index].id1;
-      int other_person = real_people->people[real_index ^ 1].id1;
-      if (real_people->kind == s1x6 && real_index >= 2)
-         other_person = real_people->people[7 - real_index].id1;
-      return ((this_person ^ other_person) & DIR_MASK) == 0;
-   }
-}
-
-/* ARGSUSED */
-Private long_boolean cast_normal_or_warn(setup *real_people, int real_index,
+Private long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
          real_people->cmd.cmd_assume.assump_cast)
-      return TRUE;
+      return extra_stuff[0] & 1;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
-      return FALSE;
+      return (extra_stuff[0] & 1) ^ 1;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;
       if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
 
-      switch ((this_person ^ other_person) & DIR_MASK) {
-         case 2:
-            return TRUE;
+      switch (((this_person ^ other_person) & DIR_MASK) ^ ((extra_stuff[0] & 1) << 1)) {
          case 0:
+            return TRUE;
+         case 2:
             return FALSE;
          default:
-            /* Don't give the warning if person would have known what to do anyway. */
-            if (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3))
-               warn(warn__opt_for_normal_cast);
-            return TRUE;
+            if (extra_stuff[0] & 2) {
+               /* This is "cast_normal_or_warn".  Don't give the warning if person
+                  would have known what to do anyway. */
+               if (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3))
+                  warn(warn__opt_for_normal_cast);
+               return TRUE;
+            }
+            else
+               return FALSE;
       }
    }
 }
@@ -916,8 +881,18 @@ Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    else {
       int other_person = real_people->people[real_index ^ 1].id1;
       int direction_diff = other_person ^ real_direction;
+
+      /* This was "1x2_beau_miniwave_or_warn", and the other person is a phantom,
+         we give a warning and assume we had a miniwave. */
+
+      if ((*extra_stuff) != 0 && !other_person) {
+         warn(warn__opt_for_normal_hinge);
+         return TRUE;
+      }
+
       if (!other_person || (direction_diff & 1))
          fail("Need a real, not T-boned, person to work with."); 
+
       return ((direction_diff & 2) == 2);
    }
 }
@@ -1730,12 +1705,12 @@ Private long_boolean q_tag_check(setup *real_people, int real_index,
    else {
       /* I am on the outside; find the end of the center line nearest me. */
 
-      if (actionp->end_action == -1) return FALSE;
+      if (actionp->end_action < 0) return FALSE;
       else if (actionp->end_action <= 1) {
          if (real_people->cmd.cmd_assume.assump_col == 4) {
             if (actionp->end_action == 0)
                return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) == 0;
-            else if (actionp->end_action == 1)
+            else
                return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) != 0;
          }
          else {
@@ -1802,11 +1777,11 @@ predicate_descriptor pred_table[] = {
       {couple_side_of_in_3n1_line,   (Const long int *) 0},      /* "tandem_side_of_in_3n1_col" */
       {miniwave_side_of_out_3n1_line,(Const long int *) 0},      /* "antitandem_side_of_out_3n1_col" */
       {couple_side_of_out_3n1_line,  (Const long int *) 0},      /* "tandem_side_of_out_3n1_col" */
-      {miniwave_side_of_2n1_line,    (Const long int *) 0},      /* "miniwave_side_of_2n1_line" */
-      {couple_side_of_2n1_line,      (Const long int *) 0},      /* "couple_side_of_2n1_line" */
-      {cast_normal,                  (Const long int *) 0},      /* "cast_normal" */
-      {cast_pushy,                   (Const long int *) 0},      /* "cast_pushy" */
-      {cast_normal_or_warn,          (Const long int *) 0},      /* "cast_normal_or_warn" */
+      {some_side_of_2n1_line,          &iden_tab[0]},            /* "miniwave_side_of_2n1_line" */
+      {some_side_of_2n1_line,          &iden_tab[3]},            /* "couple_side_of_2n1_line" */
+      {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
+      {cast_normal_or_whatever,        &iden_tab[0]},            /* "cast_pushy" */
+      {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */
       {opp_in_magic,                 (Const long int *) 0},      /* "lines_magic_miniwave" */
       {same_in_magic,                (Const long int *) 0},      /* "lines_magic_couple" */
       {lines_once_rem_miniwave,      (Const long int *) 0},      /* "lines_once_rem_miniwave" */
@@ -1821,7 +1796,8 @@ predicate_descriptor pred_table[] = {
       {lines_once_rem_miniwave,      (Const long int *) 0},      /* "columns_once_rem_antitandem" */
       {same_in_pair,                 (Const long int *) 0},      /* "columns_couple" */
       {opp_in_pair,                  (Const long int *) 0},      /* "columns_miniwave" */
-      {x12_beau_or_miniwave,         (Const long int *) 0},      /* "1x2_beau_or_miniwave" */
+      {x12_beau_or_miniwave,           &iden_tab[0]},            /* "1x2_beau_or_miniwave" */
+      {x12_beau_or_miniwave,           &iden_tab[1]},            /* "1x2_beau_miniwave_or_warn" */
       {x14_wheel_and_deal,           (Const long int *) 0},      /* "1x4_wheel_and_deal" */
       {x16_wheel_and_deal,           (Const long int *) 0},      /* "1x6_wheel_and_deal" */
       {x18_wheel_and_deal,           (Const long int *) 0},      /* "1x8_wheel_and_deal" */

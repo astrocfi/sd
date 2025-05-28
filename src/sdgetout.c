@@ -32,8 +32,6 @@
 
 #include "sd.h"
 
-/* bits that we need to manipulate, segregated by word number in the personrec */
-#define ID1_PERM_ALLBITS     017770000000UL
 
 
 typedef struct {
@@ -160,11 +158,11 @@ static resolve_tester test_revsglfile  = {0176, 0700, 0200, 0202, 0700, 0700, l_
 static resolve_tester test_sglfilex    = {0207, 0705, 0173, 0207, 0671, 0711, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from T-bone */
 static resolve_tester test_revsglfilex = {0207, 0711, 0167, 0207, 0671, 0705, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from T-bone */
 static resolve_tester test_wv_la       = {0076, 0676, 0300, 0102, 0076, 0702, l_mainstream,      resolve_la, 6};               /* LA from waves. */
-static resolve_tester test_wv_extla    = {0276, 0076, 0100, 0302, 0676, 0102, l_mainstream,      resolve_ext_la, 7};           /* ext-LA from waves. */
+static resolve_tester test_wv_extla    = {0276, 0076, 0100, 0302, 0676, 0102, extend_34_level,   resolve_ext_la, 7};           /* ext-LA from waves. */
 static resolve_tester test_wv_crcla    = {0476, 0276, 0700, 0502, 0476, 0302, l_mainstream,      resolve_circ_la, 0};          /* circulate-LA from waves. */
 static resolve_tester test_2x4_xby_la  = {0102, 0702, 0300, 0076, 0102, 0676, cross_by_level,    resolve_xby_la, 6};           /* cross-by-LA from waves. */
 static resolve_tester test_wv_rg       = {0302, 0102, 0100, 0276, 0702, 0076, l_mainstream,      resolve_rlg, 3};              /* RLG from waves. */
-static resolve_tester test_wv_extrg    = {0102, 0702, 0300, 0076, 0102, 0676, l_mainstream,      resolve_ext_rlg, 2};          /* extend-RLG from waves. */
+static resolve_tester test_wv_extrg    = {0102, 0702, 0300, 0076, 0102, 0676, extend_34_level,   resolve_ext_rlg, 2};          /* extend-RLG from waves. */
 static resolve_tester test_wv_crcrg    = {0702, 0502, 0500, 0676, 0302, 0476, l_mainstream,      resolve_circ_rlg, 1};         /* circulate-RLG from waves. */
 static resolve_tester test_wv_xbyrg    = {0276, 0076, 0100, 0302, 0676, 0102, cross_by_level,    resolve_xby_rlg, 3};          /* cross-by-RLG from waves. */
 static resolve_tester test_2fl_prom    = {0300, 0100, 0102, 0300, 0700, 0100, l_mainstream,      resolve_prom, 7};             /* promenade from 2FL. */
@@ -533,8 +531,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    long_boolean retval;
    int i, j;
    setup *ns;
-   uint32 directions, p, q;
-   warning_info bad_warnings;
+   uint32 directions, p, q, w, ww;
    real_jmp_buf my_longjmp_buffer;
 
    history_insertion_point = huge_history_ptr;
@@ -665,14 +662,21 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
    /* We don't like certain warnings either. */
 
-   bad_warnings.bits[0] = history[history_ptr+1].warnings.bits[0] & no_search_warnings.bits[0];
-   bad_warnings.bits[1] = history[history_ptr+1].warnings.bits[1] & no_search_warnings.bits[1];
+   w = 0;     /* Will become nonzero if any bad warning other than "warn__bad_concept_level" appears. */
+   ww = 0;    /* Will become nonzero if any bad warning appears. */
 
-   if (bad_warnings.bits[0] | bad_warnings.bits[1]) {
-      /* But if "allow all concepts" was given, and that's the only bad warning,
-         we let it pass. */
-      if (!allowing_all_concepts || bad_warnings.bits[0] != (1 << ((int) warn__bad_concept_level)) || bad_warnings.bits[1] != 0)
-         goto try_again;
+   for (i=0 ; i<WARNING_WORDS ; i++) {
+      uint32 warn_word = history[history_ptr+1].warnings.bits[i] & no_search_warnings.bits[i];
+      ww |= warn_word;
+      if (i == (warn__bad_concept_level > 5))
+         w |= warn_word & ~(1 << (warn__bad_concept_level & 0x1F));
+      else
+         w |= warn_word;
+   }
+
+   if (ww) {
+      /* But if "allow all concepts" was given, and that's the only bad warning, we let it pass. */
+      if (!allowing_all_concepts || w != 0) goto try_again;
    }
    
    /* See if we have already seen this sequence. */
@@ -920,10 +924,11 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
       if (this_state.state.rotation != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.rotation)
          goto try_again;
-      if (this_state.warnings.bits[0] != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings.bits[0])
-         goto try_again;
-      if (this_state.warnings.bits[1] != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings.bits[1])
-         goto try_again;
+
+      for (k=0 ; k<WARNING_WORDS ; k++) {
+         if (this_state.warnings.bits[k] != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings.bits[k])
+            goto try_again;
+      }
 
       for (k=0; k<=setup_attrs[this_state.state.kind].setup_limits; k++) {
          personrec t = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.people[k];

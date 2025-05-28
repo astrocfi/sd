@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1996  William B. Ackerman.
+    Copyright (C) 1990-1997  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.82"
-#define TIME_STAMP "wba@apollo.hp.com  19 Dec 95 $"
+#define VERSION_STRING "31.83"
+#define TIME_STAMP "wba@apollo.hp.com  11 Jan 97 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -70,6 +70,7 @@ and the following external variables:
    using_active_phantoms
    elide_blanks
    retain_after_error
+   alternate_person_glyphs
    singing_call_mode
    diagnostic_mode
    current_options
@@ -119,7 +120,8 @@ Private void display_help(void)
    printf("-write_full_list filename   write this list and all lower\n");
    printf("-abridge filename           do not use calls in this file\n");
    printf("-singlespace                single space the output file\n");
-   printf("-discard_after_error        discard pending concepts after error\n");
+   printf("-retain_after_error         retain pending concepts after error\n");
+   printf("-ignoreblanks               allow user to omit spaces when typing in\n");
    printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
    printf("-sequence filename          base name for sequence output (def \"%s\")\n",
           SEQUENCE_FILENAME);
@@ -163,12 +165,13 @@ long_boolean allowing_all_concepts = FALSE;
 long_boolean using_active_phantoms = FALSE;
 long_boolean elide_blanks = FALSE;
 long_boolean retain_after_error = FALSE;
+int alternate_person_glyphs = 0;
 int singing_call_mode = 0;
 long_boolean diagnostic_mode = FALSE;
 call_conc_option_state current_options;
-warning_info no_search_warnings = {{0, 0}};
-warning_info conc_elong_warnings = {{0, 0}};
-warning_info dyp_each_warnings = {{0, 0}};
+warning_info no_search_warnings = {{0, 0, 0}};
+warning_info conc_elong_warnings = {{0, 0, 0}};
+warning_info dyp_each_warnings = {{0, 0, 0}};
 
 /* These variables are are global to this file. */
 
@@ -383,13 +386,14 @@ extern parse_block *get_parse_block(void)
 
 extern void initialize_parse(void)
 {
+   int i;
+
    parse_state.concept_write_base = &history[history_ptr+1].command_root;
    parse_state.concept_write_ptr = parse_state.concept_write_base;
    *parse_state.concept_write_ptr = (parse_block *) 0;
    parse_state.call_list_to_use = find_proper_call_list(&history[history_ptr].state);
    history[history_ptr+1].centersp = 0;
-   history[history_ptr+1].warnings.bits[0] = 0;
-   history[history_ptr+1].warnings.bits[1] = 0;
+   for (i=0 ; i<WARNING_WORDS ; i++) history[history_ptr+1].warnings.bits[i] = 0;
    history[history_ptr+1].draw_pic = FALSE;
 
    if (written_history_items > history_ptr)
@@ -1409,7 +1413,6 @@ void main(int argc, char *argv[])
 
    enable_file_writing = FALSE;
    singlespace_mode = FALSE;
-   retain_after_error = FALSE;
    interactivity = interactivity_database_init;
    testing_fidelity = FALSE;
    parse_active_list = (parse_block *) 0;
@@ -1492,8 +1495,8 @@ void main(int argc, char *argv[])
 
       history[0] = history[history_ptr+1];     /* So failing call will get printed. */
       history[0].command_root = copy_parse_tree(history[0].command_root);  /* But copy the parse tree, since we are going to clip it. */
-      history[0].warnings.bits[0] = 0;         /* But without any warnings we may have collected. */
-      history[0].warnings.bits[1] = 0;
+      for (i=0 ; i<WARNING_WORDS ; i++)
+         history[0].warnings.bits[i] = 0;         /* But without any warnings we may have collected. */
    
       if (error_flag == 5) {
          /* Special signal -- user clicked on special thing while trying to get subcall. */
@@ -1517,8 +1520,8 @@ void main(int argc, char *argv[])
                ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
                backup_one_item()) {
          reply_pending = FALSE;
-         history[history_ptr+1].warnings.bits[0] = 0;         /* Take out warnings that arose from the failed call, */
-         history[history_ptr+1].warnings.bits[1] = 0;         /* since we aren't going to do that call. */
+         for (i=0 ; i<WARNING_WORDS ; i++)                    /* Take out warnings that arose from the failed call, */
+            history[history_ptr+1].warnings.bits[i] = 0;      /* since we aren't going to do that call. */
          goto simple_restart;
       }
       goto start_cycle;      /* Failed, reinitialize the whole line. */
@@ -1625,8 +1628,7 @@ void main(int argc, char *argv[])
    whole_sequence_low_lim = 2;
    if (!startinfolist[uims_menu_index].into_the_middle) whole_sequence_low_lim = 1;
 
-   history[1].warnings.bits[0] = 0;
-   history[1].warnings.bits[1] = 0;
+   for (i=0 ; i<WARNING_WORDS ; i++) history[1].warnings.bits[i] = 0;
    history[1].draw_pic = FALSE;
    history[1].centersp = uims_menu_index;
    history[1].resolve_flag.kind = resolve_none;

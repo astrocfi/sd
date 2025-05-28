@@ -498,6 +498,7 @@ char *qualtab[] = {
    "ripple_one_end",
    "ripple_both_ends",
    "ripple_centers",
+   "people_1_and_5_real",
    "centers_sel",
    "ends_sel",
    "all_sel",
@@ -535,6 +536,10 @@ char *crtab[] = {
    "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
+   "???",
+   "???",
+   "???",
+   "???",
    "???",
    "???",
    "???",
@@ -803,6 +808,7 @@ char *predtab[] = {
    "columns_couple",
    "columns_miniwave",
    "1x2_beau_or_miniwave",
+   "1x2_beau_miniwave_or_warn",
    "1x4_wheel_and_deal",
    "1x6_wheel_and_deal",
    "1x8_wheel_and_deal",
@@ -895,12 +901,13 @@ tagtabitem tagtabinit[] = {
                                     "clover and [call #1]". */
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
+      {0, "chreact_1"},      /* This is used for propagating the hinge info for part 2 of chain reaction. */
       {0, "tagnullcall0"},   /* These 4 must be consecutive. */
       {0, "tagnullcall1"},
       {0, "tagnullcall2"},
       {0, "tagnullcall3"},
       {0, "circnullcall"}};
-#define N_INITIAL_TAGS 9
+#define N_INITIAL_TAGS 10
 
 int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
 int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
@@ -1542,6 +1549,16 @@ def2:
          }
          else if (!strcmp(tok_str, "resolve_ok")) {
             callarray_flags2 |= CAF__RESTR_RESOLVE_OK;
+            get_tok();
+            if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
+         }
+         else if (!strcmp(tok_str, "controversial")) {
+            callarray_flags2 |= CAF__RESTR_CONTROVERSIAL;
+            get_tok();
+            if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
+         }
+         else if (!strcmp(tok_str, "serious_violation")) {
+            callarray_flags2 |= CAF__RESTR_BOGUS;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }
