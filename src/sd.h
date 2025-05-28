@@ -1360,6 +1360,6 @@ extern void touch_or_rear_back(
 
 extern void do_matrix_expansion(setup *ss, concept_kind ckind);
 
-extern void normalize_setup(setup *ss, normalize_level nlevel);
+extern void normalize_setup(setup *ss, normalize_level level);
 
 extern void toplevelmove(void);

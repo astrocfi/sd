@@ -693,7 +693,7 @@ static void check_line_restriction(setup *ss, call_restriction restr, unsigned i
 static void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags)
 {
    int q0, q1, q2, q3, q4, q5, q6, q7;
-   int i, j, k, z, t;
+   int i, k, t;
 
    if (restr == cr_alwaysfail) goto cdef_failed;
 
@@ -833,6 +833,7 @@ static void check_column_restriction(setup *ss, call_restriction restr, unsigned
                   goto cdef_failed;
                break;
          }
+         break;
       case s_qtag:
          switch (restr) {
             case cr_wave_only:

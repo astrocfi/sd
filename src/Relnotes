@@ -1,14 +1,11 @@
-		    RELEASE NOTES FOR VERSION 27.6
+		    RELEASE NOTES FOR VERSION 27.8
        Database version = 27.7, format = 31, X11 UI version 1.11.
 
 Finally fixed (????) stuff like "centers [2/3 recycle] the difference"
 from a grand wave.  This also makes the evil example in the documentation,
 [CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY [2/3 recycle]
-the difference] cover up, work.  (I recently called that example to a
-C4 group.  They got through it, but did not seem very happy about it.)
-
-Fixed an error in the "wave_only" restriction from 2x3 columns, so
-3x3 couple up should work.
+the difference] cover up, work.  I recently called that example to a
+C4 group.  They got through it, but did not seem very happy about it.
 
 Fixed a bug in the table directing the transformation of a 4x4 into
 quadruple diamonds.  This would only occur if people were all in the outer
