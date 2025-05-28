@@ -165,6 +165,9 @@ selector_item selector_list[] = {
    {"center 1x6",   "center 1x6",  "CENTER 1X6",   "CENTER 1X6",  selector_uninitialized},
    {"outer 1x3s",   "outer 1x3s",  "OUTER 1X3s",   "OUTER 1X3s",  selector_uninitialized},
    {"center 4",     "center 4",    "CENTER 4",     "CENTER 4",    selector_outerpairs},
+   {"center wave",  "center wave", "CENTER WAVE",  "CENTER WAVE", selector_outerpairs},
+   {"center line",  "center line", "CENTER LINE",  "CENTER LINE", selector_outerpairs},
+   {"center column","center column","CENTER COLUMN","CENTER COLUMN",selector_outerpairs},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
 #ifdef TGL_SELECTORS
    /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
@@ -278,6 +281,7 @@ Cstring warning_strings[] = {
    /*  warn__diagqtag_feet       */   " Adjust to diagonal 1/4 tag footprints on other diagonal.",
    /*  warn__adjust_to_feet      */   " Adjust back to footprints.",
    /*  warn__some_touch          */   " Some people step to a wave.",
+   /*  warn__some_touch_evil     */   " Some people step to a miniwave -- this may be problematical.",
    /*  warn__split_to_2x4s       */   "=Do the call in each 2x4.",
    /*  warn__split_to_2x3s       */   "=Do the call in each 2x3.",
    /*  warn__split_to_1x8s       */   "=Do the call in each 1x8.",
@@ -2296,9 +2300,12 @@ static expand::thing rear_1x3qtag_stuff = {{9, 10, 0, 11, 3, 4, 6, 5}, 8, nothin
 
 static expand::thing step_8by_stuff = {{6, 7, 0, 1, 2, 3, 4, 5}, 8, s_thar, s_qtag, 0};
 static expand::thing step_sqs_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_thar, s2x4, 0};
-static expand::thing step_sqssemi_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_qtag, s2x4, 1};
-static expand::thing step_1x8semi_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, s_ptpd, s1x8, 0};
-static expand::thing step_tb1x4ctr_stuff = {{0, 1, 2, 3}, 4, sdmd, s1x4, 0};
+static expand::thing step_sqsctr_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_qtag, s2x4, 1};
+static expand::thing step_qtctr_stuff = {{5, 7, 6, 0, 1, 3, 2, 4}, 8, s2x4, s_qtag, 1};
+static expand::thing step_1x8ctr_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, s_ptpd, s1x8, 0};
+static expand::thing step_ptpctr_stuff = {{0, 3, 2, 1, 4, 7, 6, 5}, 8, s1x8, s_ptpd, 0};
+static expand::thing step_1x4ctr_stuff = {{0, 1, 2, 3}, 4, sdmd, s1x4, 0};
+static expand::thing step_dmdctr_stuff = {{0, 3, 2, 1}, 4, s1x4, sdmd, 0};
 
 static expand::thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 0};
 static expand::thing step_qbox_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, 8, s_bone, s2x4, 0};
@@ -2344,7 +2351,6 @@ static expand::thing step_tgl4_stuffb = {{3, 2, 0, 1}, 4, nothing, s2x2, 0};
 static expand::thing step_dmd_stuff   = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
 static expand::thing step_tgl_stuff   = {{2, 0, 1}, 3, nothing, s1x3, 1};
 static expand::thing step_ptpd_stuff  = {{0, 3, 2, 1, 4, 7, 6, 5}, 8, nothing, s1x8, 0};
-static expand::thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s2x4, 1};
 
 full_expand::thing rear_1x2_pair      = {warn__rear_back,  8, &step_1x2_stuff};
 full_expand::thing rear_2x2_pair      = {warn__rear_back,  8, &step_2x2v_stuff};
@@ -2358,7 +2364,7 @@ full_expand::thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
 full_expand::thing step_tgl_pair      = {warn__some_touch, 0, &step_tgl_stuff};
 full_expand::thing step_ptpd_pair     = {warn__some_touch, 0, &step_ptpd_stuff};
 
-full_expand::thing step_qtgctr_pair   = {warn__some_touch, 0, &step_qtgctr_stuff};
+full_expand::thing step_qtgctr_pair   = {warn__some_touch, 8, &step_qtctr_stuff};
 
 full_expand::thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_1x2_stuff,   s1x2,         0xFUL,        0x2UL, ~0UL},      /* Rear back from a miniwave to facing people. */
@@ -2450,82 +2456,85 @@ full_expand::thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_phan3_stuff,   s_c1phan, 0xCCCCCCCCUL, 0x08808008UL, ~0UL},
    {warn__some_touch, 0, &step_phan4_stuff,   s_c1phan, 0x33333333UL, 0x20200202UL, ~0UL},
 
-   /* Some people touch from horrible "T"'s. */
+   // Some people touch from horrible "T"'s.
    {warn__some_touch, 0, &step_bigd_stuff1,   sbigdmd,    0xFF0FF0UL,   0x280820UL, ~0UL},
-
    {warn__some_touch, 0, &step_bigd_stuff2,   sbigdmd,    0x0FF0FFUL,   0x082028UL, ~0UL},
 
-   /* Check for stepping to a grand wave from lines facing. */
+   // Check for stepping to a grand wave from lines facing.
    {warn__none,      16, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},
    {warn__none,      16, &step_li6_stuff,     s2x3,          0xFFFUL,      0xA80UL, ~0UL},
    {warn__none,      16, &step_spindle_stuff, s_spindle,    0xFFFFUL,     0xA802UL, ~0UL},
-
-   /* Same, with missing people. */
+   // Same, with missing people.
    {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},
    {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},
 
-   /* Check for stepping to a bone from a squared set or whatever. */
+   // Check for stepping to a bone from a squared set or whatever.
    {warn__none,      16, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},
 
-   /* Check for stepping to a bone6 from a 2x3. */
+   // Check for stepping to a bone6 from a 2x3.
    {warn__none,       0, &step_bn23_stuff,    s2x3,          07777UL,      03121UL,  03535UL},
 
-   /* Check for centers stepping to a column from a bone. */
+   // Check for centers stepping to a column from a bone.
    {warn__none,       0, &step_24bn_stuff,    s_bone,       0xFFFFUL,     0x5D57UL, 0x5F5FUL},
 
-   /* Check for centers stepping to a column of 6 from a bone6. */
+   // Check for centers stepping to a column of 6 from a bone6.
    {warn__none,       0, &step_23bn_stuff,    s_bone6,       07777UL,      02725UL,  02727UL},
 
-   /* Check for stepping to rigger from suitable T-bone. */
+   // Check for stepping to rigger from suitable T-bone.
    {warn__some_touch,16, &step_2x4_rig_stuff, s2x4,       0xFFFFUL,     0x963CUL, ~0UL},
    {warn__none,       0, &step_offs1_stuff,   s3x4,     0x0FF0FFUL,   0x07D0D7UL, ~0UL},
    {warn__none,       0, &step_offs2_stuff,   s3x4,     0xF0FF0FUL,   0x70DD07UL, ~0UL},
 
-   /* Triangle base, who are facing, touch. */
+   // Triangle base, who are facing, touch.
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0xFFUL,       0xD7UL, ~0UL},
-   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0xF0UL,       0xD0UL, ~0UL}, /* Same, with missing people. */
-   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0x0FUL,       0x07UL, ~0UL}, /* Same, with missing people. */
+   // Same, with missing people.
+   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0xF0UL,       0xD0UL, ~0UL},
+   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,     0x0FUL,       0x07UL, ~0UL},
 
-   /* Triangle apexes, who are facing, touch. */
+   // Triangle apexes, who are facing, touch.
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xFFUL,       0x22UL, ~0UL},
-   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xF0UL,       0x20UL, ~0UL}, /* Same, with missing people. */
-   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0x0FUL,       0x02UL, ~0UL}, /* Same, with missing people. */
+   // Same, with missing people.
+   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xF0UL,       0x20UL, ~0UL},
+   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0x0FUL,       0x02UL, ~0UL},
 
-   /* Ends touch from a "bone" to a grand wave. */
+   // Ends touch from a "bone" to a grand wave.
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA802UL, 0xFFFFUL},
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA208UL, 0xFFFFUL},
 
-   /* All touch from a "bone" to a rigger. */
+   // All touch from a "bone" to a rigger.
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xFFFFUL,     0xAD07UL, 0xFFFFUL},
-   {warn__none,       0, &step_bone_rigstuff, s_bone,     0xF0F0UL,     0xAD07UL, 0xF0F0UL}, /* Same, with missing people. */
-   {warn__none,       0, &step_bone_rigstuff, s_bone,     0x0F0FUL,     0xAD07UL, 0x0F0FUL}, /* Same, with missing people. */
+   // Same, with missing people.
+   {warn__none,       0, &step_bone_rigstuff, s_bone,     0xF0F0UL,     0xAD07UL, 0xF0F0UL},
+   {warn__none,       0, &step_bone_rigstuff, s_bone,     0x0F0FUL,     0xAD07UL, 0x0F0FUL},
 
-   /* Centers touch from a "rigger" to a grand wave. */
+   // Centers touch from a "rigger" to a grand wave.
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xFFFFUL,     0xA802UL, 0xFFFFUL},
-   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0UL,     0xA802UL, 0xF0F0UL}, /* Same, with missing people. */
-   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FUL,     0xA802UL, 0x0F0FUL}, /* Same, with missing people. */
+   // Same, with missing people.
+   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0UL,     0xA802UL, 0xF0F0UL},
+   {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FUL,     0xA802UL, 0x0F0FUL},
 
-   /* Check for stepping to a miniwave from people facing. */
+   // Check for stepping to a miniwave from people facing.
    {warn__none,       0, &step_1x2_stuff,     s1x2,          0xFUL,        0x7UL, 0xFUL},
 
-   /* Check for stepping to a box from a 1x4 single 8 chain -- we allow some phantoms.
-      This is what makes triple columns turn and weave legal in certain interesting cases. */
+   // Check for stepping to a box from a 1x4 single 8 chain -- we allow some phantoms.
+   // This is what makes triple columns turn and weave legal in certain interesting cases.
    {warn__none,       0, &step_1x4_stuff,     s1x4,         0xFFUL,       0x7DUL, 0xFFUL},
    {warn__none,       0, &step_1x4_stuff,     s1x4,         0xF0UL,       0x7DUL, 0xF0UL},
    {warn__none,       0, &step_1x4_stuff,     s1x4,         0x0FUL,       0x7DUL, 0x0FUL},
 
-   /* Check for stepping to a single 1/4 tag or 3/4 tag from a single-file DPT or trade-by --
-      we allow some phantoms, as above. */
+   // Check for stepping to a single 1/4 tag or 3/4 tag from a single-file DPT or trade-by --
+   // we allow some phantoms, as above.
    {warn__none,       0, &step_1x4_side_stuff, s1x4,        0xFFUL,       0xD7UL, 0xFFUL},
    {warn__none,       0, &step_1x4_side_stuff, s1x4,        0xFFUL,       0x5FUL, 0xFFUL},
    {warn__none,       0, &step_1x4_side_stuff, s1x4,        0x33UL,       0x13UL, 0x33UL},
 
-   /* Check for stepping to a column from a 1x8 single 8 chain. */
+   // Check for stepping to a column from a 1x8 single 8 chain.
    {warn__none,       0, &step_1x8_stuff,      s1x8,      0xFFFFUL,     0x7DD7UL, 0xFFFFUL},
-   {warn__none,       0, &step_1x8_stuff,      s1x8,      0xF0F0UL,     0x7DD7UL, 0xF0F0UL}, /* Same, with missing people. */
-   {warn__none,       0, &step_1x8_stuff,      s1x8,      0x0F0FUL,     0x7DD7UL, 0x0F0FUL}, /* Same, with missing people. */
+   // Same, with missing people.
+   {warn__none,       0, &step_1x8_stuff,      s1x8,      0xF0F0UL,     0x7DD7UL, 0xF0F0UL},
+   {warn__none,       0, &step_1x8_stuff,      s1x8,      0x0F0FUL,     0x7DD7UL, 0x0F0FUL},
 
-   /* Check for stepping to parallel waves from an 8 chain. */
+   // Check for stepping to parallel waves from an 8 chain.
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0xFFFFUL,     0x77DDUL, 0xFFFFUL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0xF0F0UL,     0x77DDUL, 0xF0F0UL},
    {warn__none,       0, &step_8ch_stuff,      s2x4,      0x0F0FUL,     0x77DDUL, 0x0F0FUL},
@@ -2535,17 +2544,22 @@ full_expand::thing touch_init_table3[] = {
    // Ends touch from diamonds to thar.
    {warn__none,       8, &step_8by_stuff,      s_qtag,    0xFFFFUL,     0x78D2UL, ~0UL},
 
-   /* Touch from alamo 8-chain to thar. */
+   // Touch from alamo 8-chain to thar.
    {warn__none,       8, &rear_thar_stuff,     s4x4,  0x3C3C3C3CUL, 0x2034081CUL, ~0UL},
-
 
    // Touch from "general lines with centers 1/4ed in" 2x4 to qtag.
    // Touch from "facing lines with centers 1/4ed in" 2x4 to thar.
    // These two must be in the order shown.
-   {warn__none,       8, &step_sqssemi_stuff,  s2x4,      0xFFFFUL,     0x1C34UL, 0x3C3CUL},
+   {warn__none,    64+8, &step_sqsctr_stuff,   s2x4,      0xFFFFUL,     0x1C34UL, 0x3C3CUL},
    {warn__none,       8, &step_sqs_stuff,      s2x4,      0xFFFFUL,     0x9E34UL, ~0UL},
-   {warn__none,       8, &step_1x8semi_stuff,  s1x8,      0xFFFFUL,     0x1331UL, 0x3333UL},
-   {warn__none,       8, &step_tb1x4ctr_stuff, s1x4,        0xFFUL,       0x13UL, 0x33UL},
+   {warn__none,    64+8, &step_1x8ctr_stuff,   s1x8,      0xFFFFUL,     0x1331UL, 0x3333UL},
+   {warn__none,    64+8, &step_1x4ctr_stuff,   s1x4,        0xFFUL,       0x13UL, 0x33UL},
+
+   // Same, with different orientation of centers.
+   // The 32 bit says these are allowed only for fan the top.
+   {warn__some_touch,64+32+8,&step_qtctr_stuff, s_qtag,   0xFFFFUL,     0x0D07UL, 0x0F0FUL},
+   {warn__none,    64+32+8, &step_ptpctr_stuff, s_ptpd,   0xFFFFUL,     0x2002UL, 0x3333UL},
+   {warn__none,    64+32+8, &step_dmdctr_stuff,   sdmd,     0xFFUL,       0x20UL, 0x33UL},
 
    {warn__none,       0, (expand::thing *) 0, nothing}
 };

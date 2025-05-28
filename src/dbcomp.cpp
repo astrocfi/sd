@@ -2268,12 +2268,32 @@ extern void dbcompile()
                if (call_flags2 & ~0xFF)
                   errexit("Too many secondary flags");
             }
-            else
-               call_flags1 |= (1 << iii);
+            else {
+               uint32 bit = 1 << iii;
+               if ((call_flags1 & CFLAG1_STEP_REAR_MASK) &&
+                   (bit & CFLAG1_STEP_REAR_MASK))
+                  errexit("Too many touch/rear flags");
+               call_flags1 |= bit;
+            }
          }
-         else if (strcmp(tok_str, "step_to_nonphantom_box") == 0)
-            call_flags1 |= (CFLAG1_STEP_TO_WAVE|CFLAG1_REAR_BACK_FROM_R_WAVE);
+         else if (strcmp(tok_str, "step_to_nonphantom_box") == 0) {
+            if (call_flags1 & CFLAG1_STEP_REAR_MASK)
+               errexit("Too many touch/rear flags");
+            call_flags1 |= CFLAG1_STEP_TO_NONPHAN_BOX;
+         }
+         else if (strcmp(tok_str, "step_to_wave_4_people") == 0) {
+            if (call_flags1 & CFLAG1_STEP_REAR_MASK)
+               errexit("Too many touch/rear flags");
+            call_flags1 |= CFLAG1_STEP_TO_WAVE_4_PEOPLE;
+         }
+         else if (strcmp(tok_str, "rear_back_from_wave_or_qtag") == 0) {
+            if (call_flags1 & CFLAG1_STEP_REAR_MASK)
+               errexit("Too many touch/rear flags");
+            call_flags1 |= CFLAG1_REAR_BACK_FROM_EITHER;
+         }
          else if (strcmp(tok_str, "visible_fractions") == 0)
+            call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
+         else if (strcmp(tok_str, "last_part_visible") == 0)  // Do this right someday.
             call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
          else if (strcmp(tok_str, "need_three_numbers") == 0)
             call_flags1 |= (3*CFLAG1_NUMBER_BIT);

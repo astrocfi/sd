@@ -493,12 +493,17 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 
 void mirror_this(setup *s) THROW_DECL
 {
-   uint32 z, n, t;
-   int i, x, y, limit;
+   uint32 n, t;
+   int i, x, y;
 
-   setup temp = *s;
+   if (s->cmd.cmd_misc2_flags & (CMD_MISC2__IN_AZ_CW|CMD_MISC2__IN_AZ_CCW))
+      s->cmd.cmd_misc2_flags ^= (CMD_MISC2__IN_AZ_CW ^ CMD_MISC2__IN_AZ_CCW);
+   if (s->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+      s->cmd.cmd_misc2_flags ^= (CMD_MISC2__IN_Z_CW ^ CMD_MISC2__IN_Z_CCW);
 
    if (s->kind == nothing) return;
+
+   setup temp = *s;
 
    const coordrec *cptr = setup_attrs[s->kind].nice_setup_coords;
 
@@ -579,7 +584,7 @@ void mirror_this(setup *s) THROW_DECL
 
    }
 
-   limit = attr::slimit(s);
+   int limit = attr::slimit(s);
 
    int doffset = 32 - (1 << (cptr->xfactor-1));
 
@@ -594,7 +599,7 @@ void mirror_this(setup *s) THROW_DECL
 
          n = temp.people[i].id1;
          t = (0 - (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
-         z = (n & ~(STABLE_VBIT*3)) | t;
+         int z = (n & ~(STABLE_VBIT*3)) | t;
 
          // Switch the roll bits.
          z &= ~(3*NROLL_BIT);
@@ -615,7 +620,7 @@ void mirror_this(setup *s) THROW_DECL
 
          n = temp.people[i].id1;
          t = (0 - (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
-         z = (n & ~(STABLE_VBIT*3)) | t;
+         int z = (n & ~(STABLE_VBIT*3)) | t;
 
          // Switch the roll bits.
          z &= ~(3*NROLL_BIT);

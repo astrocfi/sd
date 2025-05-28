@@ -11,7 +11,7 @@
 @c %**end of header
 
 @set title1 RELEASE NOTES FOR SD VERSION 34.8
-@set title2 Database version = 34.8 format = 200
+@set title2 Database version = 34.8 format = 203
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -54,7 +54,7 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2002 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2003 William B. Ackerman
 @sp 3
 @menu
 * 34.8::               Changes in the current version
@@ -68,9 +68,13 @@ The bug in parsing @kbd{cross over circulate} has been fixed.  We thank the
 person who pointed it out recently, and apologize to the person who
 pointed it out many months ago, whom we did not believe.
 
+A bug in @kbd{reverse cut/flip the 3x1 triangle} was fixed.  We
+apologize to the dancers at a recent C3 weekend who were inconvenienced
+by this.
+
 The resolver now uses the actual clock to determine when to give up
 while searching.  It will give up after 5 seconds.  It used to be
-set to 15000 calls, a number that has crrept upward as computers got
+set to 15000 calls, a number that has crept upward as computers got
 faster.
 
 The program can now handle the setup consisting of a diamond between
@@ -86,7 +90,21 @@ current command.  When no characters have been typed, the number of
 possible commands that need to be listed is huge.  It used to take a
 long time to do this.  Modern computers are fast enough that this is
 no longer a problem.  This change does not affect Sdtty--Sdtty has always
-acted on "?" and "!" even when no charactetrs have been typed.
+acted on "?" and "!" even when no characters have been typed.
+
+The program can handle obscure and problematical case of just the centers
+stepping to a miniwave on the call @kbd{fan the top}, and it prints an
+appropriate warning.  An example of this would be from a starting DPT
+with the ends quartered left.  The centers would step to right hands
+(even though they normally step to left hands on @kbd{fan the top}),
+and do the call in each diamond.
+
+New concept: triple staggered boxes.  Used in a 2x12 "zipper" setup.
+
+New concept: stretched, followed by a triangle concept, as in
+@kbd{stretched tandem-based triangles} from an hourglass.
+
+New concepts: clockwise jay, counterclockwise jay.
 
 @c ************
 @node 34.7, 34.6, 34.8, Top

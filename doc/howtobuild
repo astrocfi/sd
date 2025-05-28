@@ -81,7 +81,8 @@ Go to sddoc directory and do:
 30 Apr 02  -  15 May 02  #12
 15 May 02  -  15 Jul 02  #16
 15 Jul 02  -  1  Sep 02  #17
-1  Sep 02  -             #18
+1  Sep 02  -  16 Jan 03  #18
+16 Jan 03  -             #19
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - DJGPP
@@ -280,6 +281,37 @@ install                                  *
 install3                                 *
 
 
+cd sddoc
+ftp atlas
+            (user=wba)
+            (pass=x464pq)
+            (directory should be OK)
+   bin
+   # send file to atlas, in /atlas/users/wba/pack.zip
+   put pack.zip
+quit
+
+telnet atlas
+            (user=wba)
+            (pass=x464pq)
+            (directory should be OK)
+   # send file to goblin, in /home/wba
+   scp pack.zip wba@goblin.jaws.umn.edu:pack.zip
+            (pass=wba;sd)
+   # ssh to goblin
+   ssh goblin.jaws.umn.edu
+            (pass=wba;sd)
+#      sftp slowlaris.tobkin.com
+#            (pass=12b0z0s)
+#      put pack.zip
+
+      scp pack.zip wba@slowlaris.tobkin.com:pack.zip
+            (pass=12b0z0s)
+   # ssh to slowlaris
+   ssh slowlaris.tobkin.com
+            (pass=12b0z0s)
+
+OBSOLETE OLD PROCEDURE
 Run the program "winscp2".
 Highlight the saved session "goblin", and press "login".
 Copy pack.zip (or whatever) from \wba\sddoc to remote host,

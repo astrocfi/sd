@@ -15,6 +15,21 @@
 /* This defines the following functions:
    start_sel_dir_num_iterator
    iterate_over_sel_dir_num
+   install_outfile_string
+   get_first_session_line
+   get_next_session_line
+   prepare_to_read_menus
+   process_session_info
+   open_call_list_file
+   close_init_file
+   just_close_init_file
+   general_final_exit
+   open_database
+   read_8_from_database
+   read_16_from_database
+   close_database
+   concept::translate_concept_names
+   open_session
 and the following external variables:
    selector_for_initialize
    direction_for_initialize
@@ -542,7 +557,7 @@ static void create_misc_call_lists(call_list_kind cl)
 
          callarray *deflist = callp->the_defn.stuff.arr.def_list->callarray_list;
 
-         if (callp->the_defn.callflags1 & CFLAG1_STEP_TO_WAVE) {
+         if ((callp->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
             if (assoc(b_4x2, (setup *) 0, deflist) ||
                 assoc(b_4x1, (setup *) 0, deflist) ||
                 assoc(b_2x2, (setup *) 0, deflist) ||
@@ -564,14 +579,20 @@ static void create_misc_call_lists(call_list_kind cl)
             goto accept;    // We don't understand it.
 
          callarray *deflist = callq->the_defn.stuff.arr.def_list->callarray_list;
+         uint32 touch_flags = callq->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK;
 
-         if (callq->the_defn.callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
+         switch (touch_flags) {
+         case CFLAG1_REAR_BACK_FROM_QTAG:
+         case CFLAG1_REAR_BACK_FROM_EITHER:
             if (assoc(b_4x2, (setup *) 0, deflist) ||
                 assoc(b_4x1, (setup *) 0, deflist))
                goto accept;
+            break;
          }
 
-         if ((callq->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
+         switch (touch_flags) {
+         case CFLAG1_STEP_TO_WAVE:
+         case CFLAG1_REAR_BACK_FROM_EITHER:
             if (assoc(b_thar, (setup *) 0, deflist))
                goto accept;
          }
@@ -1377,7 +1398,7 @@ static int write_back_session_line(FILE *wfile)
 }
 
 
-extern void general_final_exit(int code)
+void just_close_init_file()
 {
    if (session_index != 0) {
       char line[MAX_FILENAME_LENGTH];
@@ -1453,7 +1474,12 @@ extern void general_final_exit(int code)
          }
       }
    }
+}
 
+
+extern void general_final_exit(int code)
+{
+   just_close_init_file();
    gg->terminate(code);
 }
 

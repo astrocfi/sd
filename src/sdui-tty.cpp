@@ -213,6 +213,11 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 
          goto remove_two;
       }
+      else if (strcmp(argv[argno], "-maximize") == 0)
+         {}
+      else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp)) {
+         goto remove_two;
+      }
       else {
          argno++;
          continue;

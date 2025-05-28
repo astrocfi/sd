@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.8a
-@set Time-stamp: October 21, 2002
+@set sd-version 34.8c
+@set Time-stamp: January 16, 2003
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -44,7 +44,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-2002 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-2003 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX or other text
@@ -3432,6 +3432,8 @@ You can use @samp{mystic} and @samp{invert mystic} with them.
 This is done from a 3x6 setup.  Three parallel 2x3 setups are
 formed, and the call is done independently in each of them.
 You can use @samp{mystic} and @samp{invert mystic} with them.
+@item triple staggered boxes
+This is done from a 2x12 ``zipper'' setup.
 @item concentric triple boxes
 @item concentric quadruple boxes
 These are done from a 2x6 or 2x8 respectively.  The concentric boxes
@@ -3743,6 +3745,8 @@ do a diamond call and then go back to footprints.
 @item back-to-back jay
 @item front jay
 @item back jay
+@item clockwise jay
+@item counterclockwise jay
 These include the cases of a 2-faced line in the center.
 In that case the shapes of the resultant 4-person boxes are
 different, and the concepts are equivalent to the ``parallelogram''
@@ -3855,6 +3859,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item stretch
 @item stretched setup
 @item stretched C/L/W/B/D
+@item stretched <any triangle concept>
 These are straightforward.
 @item centers
 @item ends
@@ -4015,6 +4020,7 @@ such as ``twice,'' ``circulate two positions,'' or whatever.
 @item initially
 @item secondly
 @item thirdly
+@item fourthly
 @item finally
 @item initially and finally
 @item piecewise

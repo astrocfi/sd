@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 202
+#define DATABASE_FORMAT_VERSION 203
 
 // BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
 enum base_call_index {
@@ -218,10 +218,17 @@ enum {
    CFLAG1_IS_STAR_CALL              = 0x00000080UL,
    CFLAG1_YOYO_FRACTAL_NUM          = 0x00000100UL,
    CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL,
-   CFLAG1_STEP_REAR_MASK            = 0x00001C00UL, // 3 bit field
-   CFLAG1_STEP_TO_WAVE              = 0x00000400UL, // its low bit
-   CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL, // its middle bit
-   CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL, // its high bit
+
+   // This is a three bit field.
+   CFLAG1_STEP_REAR_MASK            = 0x00001C00UL,
+   // Here are the encodings that can be inside:
+   CFLAG1_STEP_TO_WAVE              = 0x00000400UL,
+   CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL,
+   CFLAG1_STEP_TO_NONPHAN_BOX       = 0x00000C00UL,
+   CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL,
+   CFLAG1_STEP_TO_WAVE_4_PEOPLE     = 0x00001400UL,
+   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001800UL,
+
    CFLAG1_SEQUENCE_STARTER          = 0x00002000UL,
    CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
    CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit

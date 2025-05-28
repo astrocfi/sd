@@ -797,14 +797,19 @@ full_expand::thing *full_expand::search_table_2(setup_kind kind,
 
 full_expand::thing *full_expand::search_table_3(setup_kind kind,
                                                 uint32 livemask,
-                                                uint32 directions)
+                                                uint32 directions,
+                                                uint32 touchflags)
 {
    uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
    for (thing *tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
+      // If it has the evil "32" bit on, don't allow it except for special
+      // fan-the-top calls, indicated by CFLAG1_STEP_TO_WAVE_4_PEOPLE.
       if (tptr->kind == kind &&
           tptr->live == livemask &&
-          ((tptr->dir ^ directions) & tptr->dirmask) == 0) return tptr;
+          ((tptr->dir ^ directions) & tptr->dirmask) == 0 &&
+          (!(tptr->forbidden_elongation & 32) || touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE))
+         return tptr;
    }
 
    return (thing *) 0;
@@ -816,11 +821,10 @@ extern void get_directions(
    uint32 & directions,
    uint32 & livemask)
 {
-   int i;
    directions = 0;
    livemask = 0;
 
-   for (i=0; i<=attr::slimit(ss); i++) {
+   for (int i=0; i<=attr::slimit(ss); i++) {
       uint32 p = ss->people[i].id1;
       directions = (directions<<2) | (p&3);
       livemask <<= 2;
@@ -844,60 +848,61 @@ extern void touch_or_rear_back(
    // We don't do this if doing the last half of a call.
    if (scopy->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LASTHALF)) return;
 
-   if (!(callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|
-                       CFLAG1_STEP_TO_WAVE|
-                       CFLAG1_REAR_BACK_FROM_QTAG|
-                       CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)))
+   if (!(callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)))
       return;
 
    remove_z_distortion(scopy);
 
    get_directions(scopy, directions, livemask);
 
-   // Check first for rearing back from a wave.
+   uint32 touchflags = (callflags1 & CFLAG1_STEP_REAR_MASK);
 
-   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|CFLAG1_STEP_TO_WAVE)) ==
-       CFLAG1_REAR_BACK_FROM_R_WAVE) {
-      tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
-      if (tptr) goto found_tptr;
+   switch (touchflags) {
+   case CFLAG1_REAR_BACK_FROM_QTAG:
+   case CFLAG1_REAR_BACK_FROM_R_WAVE:
+   case CFLAG1_REAR_BACK_FROM_EITHER:
+      if (touchflags != CFLAG1_REAR_BACK_FROM_QTAG) {
+         // Check for rearing back from a wave.
+         tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
+         if (tptr) goto found_tptr;
 
-      // A few setups are special -- we allow any combination at all in livemask.
+         // A few setups are special -- we allow any combination at all in livemask.
 
-      if (livemask != 0) {
-         switch (scopy->kind) {
-         case s1x2:
-            if (((directions ^ 0x2UL) & livemask) == 0) {
-               tptr = &rear_1x2_pair;
-               goto found_tptr;
+         if (livemask != 0) {
+            switch (scopy->kind) {
+            case s1x2:
+               if (((directions ^ 0x2UL) & livemask) == 0) {
+                  tptr = &rear_1x2_pair;
+                  goto found_tptr;
+               }
+               break;
+            case s1x4:
+               if (((directions ^ 0x28UL) & livemask) == 0) {
+                  tptr = &rear_2x2_pair;
+                  goto found_tptr;
+               }
+               break;
+            case s_bone:
+               if (((directions ^ 0xA802UL) & livemask) == 0) {
+                  tptr = &rear_bone_pair;
+                  goto found_tptr;
+               }
+               break;
             }
-            break;
-         case s1x4:
-            if (((directions ^ 0x28UL) & livemask) == 0) {
-               tptr = &rear_2x2_pair;
-               goto found_tptr;
-            }
-            break;
-         case s_bone:
-            if (((directions ^ 0xA802UL) & livemask) == 0) {
-               tptr = &rear_bone_pair;
-               goto found_tptr;
-            }
-            break;
          }
       }
-   }
 
-   // If we didn't find anything, check for rearing back from a qtag.
+      if (touchflags != CFLAG1_REAR_BACK_FROM_R_WAVE) {
+         // Check for rearing back from a 1/4 tag.
+         tptr = full_expand::search_table_2(scopy->kind, livemask, directions);
+         if (tptr) goto found_tptr;
+      }
 
-   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_QTAG|CFLAG1_STEP_TO_WAVE)) ==
-       CFLAG1_REAR_BACK_FROM_QTAG) {
-      tptr = full_expand::search_table_2(scopy->kind, livemask, directions);
-      if (tptr) goto found_tptr;
-   }
+      break;
 
-   // Finally, try stepping to a wave.
-
-   if (callflags1 & CFLAG1_STEP_TO_WAVE) {
+   case CFLAG1_STEP_TO_WAVE:
+   case CFLAG1_STEP_TO_NONPHAN_BOX:
+   case CFLAG1_STEP_TO_WAVE_4_PEOPLE:
 
       // Special stuff:  If lines facing, but people are incomplete,
       // we honor an "assume facing lines" command.
@@ -924,17 +929,20 @@ extern void touch_or_rear_back(
          }
       }
 
-      tptr = full_expand::search_table_3(scopy->kind, livemask, directions);
+      tptr = full_expand::search_table_3(scopy->kind, livemask, directions, touchflags);
       if (tptr) goto found_tptr;
 
       // A few setups are special -- we allow any combination at all in livemask,
       // though we are careful.
 
+      bool step_ok =
+         touchflags == CFLAG1_STEP_TO_WAVE ||
+         touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE;
+
       switch (scopy->kind) {
       case s2x4:
          if (livemask != 0) {
-            if (((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
-                 livemask == 0xFFFFUL) &&
+            if ((step_ok || livemask == 0xFFFFUL) &&
                 ((directions ^ 0x77DDUL) & livemask) == 0) {
                // Check for stepping to parallel waves from an 8-chain.
                tptr = &step_8ch_pair;
@@ -951,8 +959,7 @@ extern void touch_or_rear_back(
          break;
       case s2x2:
          if (livemask != 0 &&
-             ((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
-              livemask == 0xFF)) {
+             (step_ok || livemask == 0xFF)) {
             if (((directions ^ 0x7DUL) & livemask) == 0) {
                tptr = &step_2x2h_pair;
                goto found_tptr;
@@ -965,8 +972,7 @@ extern void touch_or_rear_back(
          break;
       case s_spindle:
          if (livemask != 0 &&
-             (((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
-               livemask == 0xFFFFUL) &&
+             ((step_ok || livemask == 0xFFFFUL) &&
               ((directions ^ 0xA802UL) & livemask) == 0)) {
             tptr = &step_spindle_pair;
             goto found_tptr;
@@ -1005,9 +1011,11 @@ extern void touch_or_rear_back(
          }
          break;
       }
+
+      break;
    }
 
-   // We didn't find anything at all.  But we still need to raise an error
+   // We didn't find anything.  But we still need to raise an error
    // if the caller said "left spin the top" when we were in a right-hand wave.
 
    if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
@@ -1039,11 +1047,16 @@ extern void touch_or_rear_back(
 
    found_tptr:
 
-   // Check for things that we must not do if "step_to_box" was specified.
+   // Make sure we alert the user (Hi, Clark!) if we call "Fan the Top" where only
+   // the centers would touch.  Case is a starting DPT with ends 1/4 left.
+   // People are supposed to step to right hands, but the centers on a Fan the Top
+   // normally step to left hands.  What are the dancers supposed to do?
+   if ((tptr->forbidden_elongation & 64) && touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE)
+      warn(warn__some_touch_evil);
+   else
+      warn(tptr->warning);  // Or give whatever warning the table says, but not both.
 
-   warn(tptr->warning);
-
-   if ((tptr->forbidden_elongation & 4) && scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)
+   if ((tptr->forbidden_elongation & 4) && (scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS))
       scopy->cmd.prior_elongation_bits =
          (scopy->cmd.prior_elongation_bits & (~3)) | ((scopy->rotation+1) & 3);
 
@@ -1343,6 +1356,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},                                        {0}, {0}, {0}, true,  chk_wave},
    {s_qtag, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, true,  chk_anti_groups},
    {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s_galaxy, cr_wave_only, 4, {1, 3, 7, 5},                                      {0}, {0}, {0}, true,  chk_wave},
    {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, true,  chk_anti_groups},
    {s_bone, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, true,  chk_groups},
    {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, true, chk_wave},
@@ -1461,6 +1475,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = 
    {s2x4, cr_ctrs_in_out, 4, {1, 2, 6, 5},                                        {0}, {0}, {0}, false, chk_wave},
    {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, true,  chk_wave},
    {s2x4, cr_wave_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                              {0}, {0}, {0}, true,  chk_wave},
+   {s_galaxy, cr_wave_only, 4, {1, 7, 3, 5},                                      {0}, {0}, {0}, true,  chk_wave},
    {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, true,  chk_wave},
    {s2x4, cr_peelable_box, 4, {0, 1, 2, 3},                {4, 5, 6, 7},               {0}, {0}, false, chk_peelable},
    {s2x4, cr_couples_only, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, true,  chk_groups},
@@ -3592,6 +3607,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case s_trngl:
       case s_qtag:
       case s3x1dmd:
+         goto check_tt;
+      case s_galaxy:
+         u = ss->people[1].id1 | ss->people[3].id1 |
+            ss->people[5].id1 | ss->people[7].id1;
+         if (!(u&010)) tt.assump_col = 1;
+         else if (u&001) goto bad;
          goto check_tt;
       case sdmd:
       case s_ptpd:

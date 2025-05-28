@@ -505,6 +505,9 @@ enum selector_kind {
    selector_ctr_1x6,
    selector_outer1x3s,
    selector_center4,
+   selector_center_wave,
+   selector_center_line,
+   selector_center_col,
    selector_outerpairs,
 #ifdef TGL_SELECTORS
    /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
@@ -1798,6 +1801,7 @@ enum warning_index {
    warn__diagqtag_feet,
    warn__adjust_to_feet,
    warn__some_touch,
+   warn__some_touch_evil,
    warn__split_to_2x4s,
    warn__split_to_2x3s,
    warn__split_to_1x8s,
@@ -3229,6 +3233,8 @@ class full_expand {
       // "4" bit = must set elongation.
       // Also, the "8" bit means to use "gather" and do this the other way.
       // Also, the "16" bit means allow only step to a box, not step to a full wave.
+      // Also, the "32" bit means to give "some people touch" warning if this is
+      //     a "step_to_wave_4_people" call.
       int forbidden_elongation;
       expand::thing *expand_lists;
       setup_kind kind;
@@ -3241,7 +3247,8 @@ class full_expand {
    static void initialize_touch_tables();
    static thing *search_table_1(setup_kind kind, uint32 livemask, uint32 directions);
    static thing *search_table_2(setup_kind kind, uint32 livemask, uint32 directions);
-   static thing *search_table_3(setup_kind kind, uint32 livemask, uint32 directions);
+   static thing *search_table_3(setup_kind kind,
+                                uint32 livemask, uint32 directions, uint32 touchflags);
 
  private:
 
@@ -4574,6 +4581,7 @@ SDLIB_API long_boolean get_next_session_line(char *dest);
 void prepare_to_read_menus();
 SDLIB_API int process_session_info(Cstring *error_msg);
 SDLIB_API void open_call_list_file(char filename[]);
+void just_close_init_file();
 void close_init_file();
 SDLIB_API void general_final_exit(int code);
 long_boolean open_database(char *msg1, char *msg2);

@@ -2904,6 +2904,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     2x2 - real RH or LH box
                                     3x2/4x2/5x2/6x2/8x2 - columns
                                     qtag/pqtag - wave in center
+                                    galaxy - nice box in center
                                     2x1dmd/3x1dmd - wave (of 6) in center
                                     ptpd/pptpd - miniwaves in centers of each diamond
                                     pshort6 (note that this means the short6 is

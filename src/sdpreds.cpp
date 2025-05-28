@@ -107,6 +107,9 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
             case selector_ctr_1x6:
             case selector_outer1x3s:
             case selector_center4:
+            case selector_center_wave:
+            case selector_center_line:
+            case selector_center_col:
             case selector_outerpairs:
                pid2 = ptr[place][0] &
                   BITS_TO_CLEAR &
@@ -309,6 +312,9 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
          else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return FALSE;
          break;
       case selector_center4:
+      case selector_center_wave:
+      case selector_center_line:
+      case selector_center_col:
          if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return TRUE;
          else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return FALSE;
          else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return TRUE;

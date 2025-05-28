@@ -2,7 +2,7 @@
 
 /* calls database source for Sd -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     All rights reserved.  Permission is granted to compile this file,
     or a modification thereof, for use with the calling program
@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8b"
+version "34.8c"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1962,12 +1962,12 @@ call "_peel/trail chain thru part 1" dontshow tag peelchain1
    conc waveswingslip [inherit_left inherit_yoyo] epeelchainthru [inherit_left inherit_yoyo inherit_cross conc_demand_columns]
 
 call "peel chain thru" c3a
-            left_means_mirror yoyo_is_inherited fractal_is_inherited
+            left_means_mirror last_part_visible yoyo_is_inherited fractal_is_inherited
    seq peelchain1 [inherit_left inherit_yoyo]
    seq linefanthetop [allow_forced_mod inherit_fractal]
 
 call "trail chain thru" c3x
-            left_means_mirror yoyo_is_inherited fractal_is_inherited
+            left_means_mirror last_part_visible yoyo_is_inherited fractal_is_inherited
    seq peelchain1 [inherit_left inherit_yoyo force_cross]
    seq linefanthetop [allow_forced_mod inherit_fractal]
 
@@ -2080,7 +2080,7 @@ call "cut the 3x1 triangle" c4a
       preds "???"
          if zero_cw_people [   0 CM2E CR3E    0 AM0E ZM3W]
          if one_cw_person  [   0 CM2E    0    0 AM0E    0]
-         if always         [ZM1W    0    0 AL1W    0    0]
+         if always         [ZM1W    0    0 AL1E    0    0]
 
 call "flip the 3x1 triangle" c4a
             split_large_setups
@@ -2091,7 +2091,7 @@ call "flip the 3x1 triangle" c4a
       preds "???"
          if zero_cw_people [   0 AL0E CR3E    0 CR2E ZM3W]
          if one_cw_person  [   0 AL0E    0    0 CR2E    0]
-         if always         [ZM1W    0    0 AL1W    0    0]
+         if always         [ZM1W    0    0 AL1E    0    0]
 
 call "flip the Z" c4
             split_large_setups
@@ -3886,7 +3886,7 @@ call "_cross lockit" dontshow tag crosslockit
       array [CR1N CR0N AL1S AL0S]
 
 call "fan the top" plus tag fanthetop
-            step_to_wave left_means_touch_or_check ends_take_right_hands
+            step_to_wave_4_people left_means_touch_or_check ends_take_right_hands
    setup 1x4 1x4 rotate no_cutting_through
       array [CR0N CR3S AL0S AL3N]
    setup dmd dmd rotate
@@ -8728,7 +8728,7 @@ call "_start dixie style" dontshow tag start_dixie
 
 call "dixie style to a wave" mainstream tag full_dixie
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             single_is_inherited singlefile_is_inherited twisted_is_inherited nxn_is_inherited
             fractal_is_inherited left_means_mirror reverse_means_mirror
    seq start_dixie [inherit_left inherit_reverse inherit_singlefile
@@ -8737,7 +8737,7 @@ call "dixie style to a wave" mainstream tag full_dixie
 
 call "dixie diamond" c1
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited magic_is_inherited
             fractal_is_inherited left_means_mirror reverse_means_mirror
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
@@ -8746,7 +8746,7 @@ call "dixie diamond" c1
 
 call "dixie sashay" c1
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited magic_is_inherited
             nxn_is_inherited fractal_is_inherited left_means_mirror
             reverse_means_mirror
@@ -8755,7 +8755,7 @@ call "dixie sashay" c1
    seq slither [inherit_nxn]
 
 call "dixie derby" c3x
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited nxn_is_inherited
             yoyo_is_inherited fractal_is_inherited left_means_mirror reverse_means_mirror
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
@@ -8764,7 +8764,7 @@ call "dixie derby" c3x
 
 call "dixie spin" c4a
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited
             fractal_is_inherited left_means_mirror reverse_means_mirror
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
@@ -8779,7 +8779,7 @@ call "_ctrs pass thru" dontshow tag ctrs_pass_thru
 
 call "dixie chain" c4
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited
             left_means_mirror reverse_means_mirror
    seq start_dixie [inherit_left inherit_reverse inherit_singlefile inherit_twisted]
@@ -8788,7 +8788,7 @@ call "dixie chain" c4
 
 call "dixie chain to a wave" c4x
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited
             left_means_mirror reverse_means_mirror
    seq start_dixie [inherit_left inherit_reverse inherit_singlefile inherit_twisted]
@@ -8797,7 +8797,7 @@ call "dixie chain to a wave" c4x
 
 call "dixie daisy" c4
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited yoyo_is_inherited
             left_means_mirror reverse_means_mirror
    seq start_dixie [inherit_left inherit_reverse inherit_singlefile inherit_twisted inherit_yoyo]
@@ -8806,7 +8806,7 @@ call "dixie daisy" c4
 
 call "dixie daisy to a wave" c4
             visible_fractions
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited yoyo_is_inherited
             left_means_mirror reverse_means_mirror
    seq start_dixie [inherit_left inherit_reverse inherit_singlefile inherit_twisted inherit_yoyo]
@@ -8814,7 +8814,7 @@ call "dixie daisy to a wave" c4
    seq ctrs_pass_thru [force_half inherit_left inherit_reverse inherit_twisted inherit_yoyo]
 
 call "dixie grand" plus
-            rear_back_from_r_wave rear_back_from_qtag left_means_mirror
+            rear_back_from_wave_or_qtag left_means_mirror
    setup 4x2 4x4 qualifier 2fl_only
       array [14N  2E 2E 6S 13S 1W 1W 5N]
    setup 4x2 4x4 qualifier magic_only
@@ -8841,7 +8841,7 @@ call "dixie grand" plus
       array [ 6N   0  5S   0   0 9W  0 2W]
 
 call "dixie grand, but on the 3rd hand" plus
-            dont_use_in_resolve rear_back_from_r_wave rear_back_from_qtag
+            dont_use_in_resolve rear_back_from_wave_or_qtag
             imprecise_rotation left_means_mirror
    setup 4x2 thar qualifier 2fl_only
       array [2N 4E 0 0 0 0  5W 7N]
@@ -9261,6 +9261,11 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
    setup pqtag 2x4 rotate qualifier num 3 right wave_only
       array [ZM7W ZM0W 0 0 ZM3W ZM4W 0 0]
 
+   setup galaxy 3x1dmd rotate qualifier num 1 right wave_only
+      array [ZM7W CR1N ZM0W 0 ZM3W 0 ZM4W CR6N]
+   setup galaxy 3x1dmd rotate qualifier num 3 right wave_only
+      array [ZM7W CR2S ZM0W 0 ZM3W 0 ZM4W CR5S]
+
    setup dmd 1x4 qualifier num 1 right wave_only
       array [ZM0N 0 ZM2N 0]
    setup dmd 1x4 qualifier num 3 right wave_only
@@ -9339,6 +9344,15 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
    setup qtag 3x1dmd rotate qualifier num 3 right qtag_mag_mwv
       array [CR1S 0 ZM3W 0 0 CR4S 0 CR6S]
 
+   setup qtag hrglass qualifier num 1 left wave_only
+      array [ZM0N ZM1N ZM2N 0 ZM4N ZM5N 0 CR3E]
+   setup qtag hrglass qualifier num 3 left wave_only
+      array [ZM0N ZM1N ZM2N 0 ZM4N ZM5N 0 CR7W]
+   setup pqtag hrglass qualifier num 1 left wave_only
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
+   setup pqtag hrglass qualifier num 3 left wave_only
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
+
    setup crosswave hrglass rotate qualifier num 1 right magic_only
       array [CR5N 0 0 0 0 CR0N 0 0]
    setup crosswave hrglass rotate qualifier num 3 right magic_only
@@ -9363,21 +9377,27 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [CR0E 0 0 0 CR2E 0]
    setup 2x1dmd short6 qualifier num 3 right wave_only
       array [CR5W 0 0 0 CR3W 0]
-
    setup p2x1dmd short6 qualifier num 1 right wave_only
       array [0 0 ZM1N 0 0 ZM4N]
    setup p2x1dmd short6 qualifier num 3 right wave_only
       array [0 0 ZM1N 0 0 ZM4N]
-
    setup 2x1dmd 2x1dmd rotate qualifier num 1 left wave_only
       array [ZM5W CR1N 0 CR2W 0 0]
    setup 2x1dmd 2x1dmd rotate qualifier num 3 left wave_only
       array [ZM5W CR4S 0 CR2W 0 0]
-
    setup p2x1dmd 2x1dmd rotate qualifier num 1 left wave_only
       array [0 0 ZM0W 0 0 ZM3W]
    setup p2x1dmd 2x1dmd rotate qualifier num 3 left wave_only
       array [0 0 ZM0W 0 0 ZM3W]
+
+   setup hrglass qtag qualifier num 1 none
+      array [ZM0N ZM1N ZM2N 0 ZM4N ZM5N ZM6N 0]
+   setup hrglass qtag qualifier num 3 none
+      array [ZM0N ZM1N ZM2N 0 ZM4N ZM5N ZM6N 0]
+   setup phrglass qtag qualifier num 1 none
+      array [ZM0N ZM1N ZM2N CR3E ZM4N ZM5N ZM6N 0]
+   setup phrglass qtag qualifier num 3 none
+      array [ZM0N ZM1N ZM2N CR7W ZM4N ZM5N ZM6N 0]
 
    setup pdhrglass 1x3dmd qualifier num 1 none
       array [CR1E CR4E 0 0 0 0 0 0]
@@ -10631,7 +10651,7 @@ call "cross trail thru" a1 tag crosstrail
       array [0 0 0 0 ZM0N ZM1N ZM2N ZM3N]
 
 call "_turn and Q part 1" dontshow tag turn_and_q_1
-            split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
+            split_like_dixie_style rear_back_from_wave_or_qtag
             left_means_mirror
    setup 2x1 1x2 qualifier not_split_dixie   /* This is turn thru, of course. */
       array [C0S 0]
@@ -15023,7 +15043,7 @@ call "swing to a column" c4a
    seq swingtocol2 [inherit_left inherit_mxn]
 
 call "_grand chain 8 part 1" dontshow tag gc8p1
-            rear_back_from_r_wave rear_back_from_qtag left_means_mirror
+            rear_back_from_wave_or_qtag left_means_mirror
             funny_means_those_facing
    setup 2x1 1x2
       array [ZM1N 0]
@@ -15287,17 +15307,17 @@ call "the plank" c4 tag plank
 
 call "@2walk @3the plank" c4
    setup 4x2 2x4 restriction wave_only
-      array [ZM2N ZM5N CR4S CR3S AL4S AL3S ZM2N ZM5N]
+      array [ZM2N ZM5N CR4S CM3S AM4S AL3S ZM2N ZM5N]
             alternate_definition [single] c4
    setup 2x2 1x4 rotate restriction wave_only
-      array [CR0E AL0E ZM1W ZM1W]
+      array [C0E A0E ZM1W ZM1W]
             alternate_definition [3x3 12matrix] c4
    setup 6x2 3x4 restriction wave_only
-      array [ZM2N ZM5N ZM7N CR6S CR4S CR3S AL6S AL4S AL3S ZM2N ZM5N ZM7N]
+      array [ZM2N ZM5N ZM7N C6S C4S C3S A6S A4S A3S ZM2N ZM5N ZM7N]
             alternate_definition [4x4 16matrix] c4
    setup 8x2 4x4 restriction wave_only
-      array [ZM14N ZM3N ZM7N ZM5N CR4S CR2S CR1S CR0S
-            AL4S AL2S AL1S AL0S ZM14N ZM3N ZM7N ZM5N]
+      array [ZM14N ZM3N ZM7N ZM5N C4S C2S C1S C0S
+            A4S A2S A1S A0S ZM14N ZM3N ZM7N ZM5N]
             visible_fractions magic_is_inherited funny_is_inherited
    seq colcirc [or_anycall inherit_magic inherit_funny]
    seq plank []
@@ -16192,9 +16212,19 @@ call "_ends push off" dontshow tag ends_pushoff
    seq fanthetop [allow_forced_mod inherit_left inherit_fractal]
    seq hinge [allow_forced_mod inherit_left inherit_fractal]
 
+call "_ends push off but @0" dontshow tag ends_pushoff_but
+            left_means_mirror fractal_is_inherited
+   seq fanthetop [allow_forced_mod inherit_left inherit_fractal]
+   seq nullcall [mandatory_anycall]
+
 call "push off" c4a
             left_means_mirror
    crossconc ends_pushoff [inherit_left]
+             ctrs_pushoff [conc_demand_columns conc_force_columns conc_force_spots]
+
+call "push off but @0" c4a
+            left_means_mirror
+   crossconc ends_pushoff_but [inherit_left]
              ctrs_pushoff [conc_demand_columns conc_force_columns conc_force_spots]
 
 call "centers go as you are, push off" c4a
@@ -16963,24 +16993,13 @@ call "circulate" mainstream tag circulate
              AL7S ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N]
             alternate_definition [half] mainstream
    simple_funny
-   // If consistent with waves or 2-faced lines, give preference
-   // to the "usual" interpretation.  But if user said
-   // "assume facing lines" or "assume back-to-back lines",
-   // these will be rejected ...
-/*
-   setup 2x4 crosswave qualifier miniwaves rotate
-      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
-   setup 2x4 crosswave qualifier 2fl_only rotate
-      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
-   setup 2x4 crosswave qualifier magic_only rotate
-      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
-*/
-   // ... and one of these used instead.
+   // If user said "assume facing lines" or
+   // "assume back-to-back lines", use these:
    setup 2x4 1x8 rotate qualifier explicit out in_or_out
       array [CR0N CR3N AL2S AL1S 0 0 0 0]
    setup 2x4 1x8 qualifier explicit in in_or_out
       array [0 0 0 0 ZM5N ZM6N ZM3N ZM0N]
-   // Otherwise, use the "usual" interpretation.
+   // Otherwise, use the usual interpretation.
    setup 2x4 crosswave rotate
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
    setup 2x2 dmd rotate no_cutting_through

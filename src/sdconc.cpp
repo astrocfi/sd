@@ -4576,10 +4576,18 @@ extern void inner_selective_move(
        indicator == selective_key_plain_no_live_subsets) {
       action = normalize_before_merge;
       if (!others && sizem1 == 3) {
-         if (selector_to_use == selector_center2 || selector_to_use == selector_verycenters)
+         switch (selector_to_use) {
+         case selector_center2:
+         case selector_verycenters:
             selector_to_use = selector_centers;
-         else if (selector_to_use == selector_center4)
+            break;
+         case selector_center4:
+         case selector_center_wave:
+         case selector_center_line:
+         case selector_center_col:
             selector_to_use = selector_everyone;
+            break;
+         }
       }
    }
 
@@ -4996,6 +5004,9 @@ extern void inner_selective_move(
             action = normalize_to_2;
             goto back_here;
          case selector_center4:
+         case selector_center_wave:
+         case selector_center_line:
+         case selector_center_col:
             schema = schema_select_ctr4;
             action = normalize_to_4;
             goto back_here;

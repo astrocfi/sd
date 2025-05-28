@@ -2471,6 +2471,7 @@ static void do_concept_new_stretch(
    //  4  : column
    //  18 : box
    //  19 : diamond
+   //  20 : just "stretched", to be used with triangles.
 
    if ((linesp == 18 && tempsetup.kind != s2x4) ||
        (linesp == 19 && tempsetup.kind != s_qtag && tempsetup.kind != s_ptpd) ||
@@ -2490,6 +2491,38 @@ static void do_concept_new_stretch(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    tempsetup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+
+   if (linesp == 20) {
+      // This was just "stretched".  Demand that the next concept
+      // be some kind of triangle designation.
+      // Search ahead, skipping comments of course.  This means we
+      // must skip modifiers too, so we check that there weren't any.
+
+      final_and_herit_flags junk_concepts;
+      junk_concepts.clear_all_herit_and_final_bits();
+      parse_block *next_parseptr = process_final_concepts(parseptr->next, FALSE,
+                                                          &junk_concepts);
+
+      if ((next_parseptr->concept->kind != concept_randomtrngl &&
+          next_parseptr->concept->kind != concept_selbasedtrngl) ||
+          junk_concepts.test_herit_and_final_bits())
+         fail("\"Stretched\" concept must be followed by triangle concept.");
+
+      if (tempsetup.kind == s_hrglass) {
+         swap_people(&tempsetup, 3, 7);
+      }
+      else if (tempsetup.kind == s_ptpd &&
+               next_parseptr->concept->kind == concept_randomtrngl &&
+               next_parseptr->concept->arg1 == 2) {
+         // We require "inside triangles".
+         swap_people(&tempsetup, 2, 6);
+      }
+      else
+         fail("Stretched setup call didn't start in appropriate setup.");
+
+      move(&tempsetup, false, result);
+      return;
+   }
 
    if (tempsetup.kind == s2x4) {
       swap_people(&tempsetup, 1, 2);
@@ -3220,20 +3253,20 @@ static void do_concept_fan(
    if (!callspec || !(callspec->the_defn.callflagsf & CFLAG2_CAN_BE_FAN))
       fail("Can't do \"fan\" with this call.");
 
-   /* Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
-      The "fan" concept could take care of itself later.  However, we do them both here. */
+   // Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
+   // The "fan" concept could take care of itself later.  However, we do them both here.
 
-   if (     !(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
-            (callspec->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
-      ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
+   if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
+       (callspec->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
+      ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
       touch_or_rear_back(ss, FALSE, callspec->the_defn.callflags1);
    }
 
    tempsetup = *ss;
 
-   /* Normally, set the fractionalize field to start with the second part.
-      But if we have been requested to do a specific part number of "fan <call>",
-      just add one to the part number and do the call. */
+   // Normally, set the fractionalize field to start with the second part.
+   // But if we have been requested to do a specific part number of "fan <call>",
+   // just add one to the part number and do the call.
 
    tempsetup.cmd = ss->cmd;
 

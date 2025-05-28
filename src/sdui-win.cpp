@@ -45,6 +45,8 @@
 #include "sd.h"
 #include "paths.h"
 
+static int window_size_args[4] = {10, 20, 780, 560};
+
 extern void windows_init_printer_font(HWND hwnd, HDC hdc);
 extern void windows_choose_font();
 extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance,
@@ -2086,7 +2088,10 @@ bool iofull::init_step(init_callback_state s, int n)
       hwndMain = CreateWindow(
          szMainWindowName, "Sd",
          WS_OVERLAPPEDWINDOW,
-         10, 20, 780, 560,
+         window_size_args[0],
+         window_size_args[1],
+         window_size_args[2],
+         window_size_args[3],
          NULL, NULL, GLOBhInstance, NULL);
 
       if (!hwndMain) {
@@ -2361,12 +2366,30 @@ void iofull::process_command_line(int *argcp, char ***argvp)
          {}
       else if (strcmp(argv[argno], "-no_console") == 0)
          {}
-      else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
-      }
+      else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0)
+         {}
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
          goto remove_two;
       }
       else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
+         goto remove_two;
+      }
+      else if (strcmp(argv[argno], "-maximize") == 0) {
+         GLOBiCmdShow = SW_SHOWMAXIMIZED;
+      }
+      else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp)) {
+         if (sscanf(argv[argno+1], "%dx%dx%dx%d",
+                    &window_size_args[0],
+                    &window_size_args[1],
+                    &window_size_args[2],
+                    &window_size_args[3]) != 4) {
+
+            gg->fatal_error_exit(1,
+                                 "Bad size argument - try 10x20x780x560",
+                                 argv[argno+1]);
+         }
+
+
          goto remove_two;
       }
       else {

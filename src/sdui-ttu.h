@@ -18,10 +18,6 @@
    which way a person is facing.  It must point to a string in stable storage. */
 extern char *ui_directions;
 
-/* Process any command line arguments that we need.
-   Returns nonzero if it failed -- error message has already been printed. */
-extern int ttu_process_command_line(int *argcp, char **argv);
-
 /* Print the help message appropriate for the switches that we support. */
 extern void ttu_display_help(void);
 

@@ -1779,6 +1779,12 @@ extern void distorted_2x2s_move(
                5, 4, 2, 3, 6, 7, 1, 0,
                0, 1, 2, 3, 6, 7, 4, 5};
 
+   static const veryshort map3stag1[48] = {
+      1, 3, 21, 23, 5, 7, 17, 19, 9, 11, 13, 15};
+
+   static const veryshort map3stag2[48] = {
+      0, 2, 20, 22, 4, 6, 16, 18, 8, 10, 12, 14};
+
    int table_offset, arity, misc_indicator, i;
    setup inputs[4];
    setup results[4];
@@ -1807,6 +1813,8 @@ extern void distorted_2x2s_move(
    //      4       some kind of parallelogram (as from "heads travel thru")
    //      5       distorted blocks
    //      6       Z diamond(s)
+   //      7       triple staggered boxes
+   //      8       clockwise or counterclockwise jay
 
    // Table_offset is 0, 8, or 12.  It selects the appropriate part of the maps.
    // For "Z"      :   0 == normal, 8 == interlocked.
@@ -1834,6 +1842,21 @@ extern void distorted_2x2s_move(
    setup_kind inner_kind = s2x2;
 
    switch (misc_indicator) {
+   case 7:
+      if (ss->kind != s2x12)
+         fail("Must have a 2x12 for this concept.");
+
+      arity = 3;
+      if ((livemask & 0xAAAAAA) == 0) {
+         map_ptr = map3stag1;
+      }
+      else if ((livemask & 0x555555) == 0) {
+         if ((livemask & 0xAAAAAA) == 0)
+            fail("Can't figure thi out.");  // Could only happen if setup is empty.
+         map_ptr = map3stag2;
+      }
+
+      break;
    case 0:
       // The concept is some variety of "Z".
       arity = this_concept->arg4;
@@ -1863,7 +1886,7 @@ extern void distorted_2x2s_move(
             }
             else goto lose;
          default:
-            fail("Must have 3x6 for this concept.");
+            fail("Must have a 3x6 for this concept.");
          }
       }
       else {
@@ -2128,8 +2151,13 @@ extern void distorted_2x2s_move(
       }
 
       break;
+   case 8:
+      // The concept is CW or CCW jay.  Arg4 tells which.
+      if (this_concept->arg4) map_ptr = mapk2;
+      else map_ptr = mapk1;
+      break;
    case 1:
-      /* The concept is some variety of jay */
+      // The concept is some variety of jay.
 
       if (ss->kind != s_qtag) fail("Must have quarter-tag setup for this concept.");
 
@@ -2284,7 +2312,7 @@ extern void distorted_2x2s_move(
       if (results[i].kind != inner_kind || results[i].rotation != 0) {
          if (results[i].kind != s1x4 ||
              results[i].rotation != 1 ||
-             (misc_indicator != 1 && misc_indicator != 4))
+             (misc_indicator != 1 && misc_indicator != 8 && misc_indicator != 4))
             fail("Can't do shape-changer with this concept.");
          scatter(result, &results[i], &map_ptr[24], 3, 0);
       }
@@ -2297,14 +2325,15 @@ extern void distorted_2x2s_move(
    result->kind = ss->kind;
    result->rotation = 0;
 
-   if (misc_indicator == 1 || misc_indicator == 4) {
+   if (misc_indicator == 1 || misc_indicator == 8 || misc_indicator == 4) {
       if (results[0].kind == s1x4 && results[1].kind == s1x4) {
          result->kind = s_rigger;
          result->rotation = 1;
-         if (misc_indicator == 1) warn(warn__hokey_jay_shapechanger);
+         if (misc_indicator == 1 || misc_indicator == 8)
+            warn(warn__hokey_jay_shapechanger);
       }
       else if (results[0].kind != s2x2 || results[1].kind != s2x2)
-         fail("Can't do this shape-changer with this concept.");  /* Yow!  They're different! */
+         fail("Can't do this shape-changer with this concept.");  // Yow!  They're different!
    }
 
    result->result_flags = get_multiple_parallel_resultflags(results, arity);
@@ -3200,6 +3229,7 @@ void do_concept_wing(
    selector_kind saved_selector = current_options.who;
    current_options.who = parseptr->concept->arg1 ? selector_beaus : selector_belles;
    int shift = parseptr->concept->arg1 ? 4 : -4;
+   update_id_bits(ss);
 
    setup normal = *ss;
    setup winged = *ss;
@@ -3372,8 +3402,7 @@ struct common_spot_map {
 
 common_spot_map cmaps[] = {
 
-   /* Common point galaxy */
-
+   // Common point galaxy.
    {1, s_rigger, s_galaxy, 0, 0,
          {      -1,       0,      -1,       1,      -1,       4,      -1,       5},
          {       6,      -1,      -1,      -1,       2,      -1,      -1,      -1},
@@ -3381,9 +3410,8 @@ common_spot_map cmaps[] = {
          {       7,      -1,      -1,      -1,       3,      -1,      -1,      -1},
          { d_south,       0,       0,       0, d_north,       0,       0,       0}},
 
-   /* Common point diamonds */
-   /* We currently have no defense against unchecked spots being occupied! */
-
+   // Common point diamonds.
+   // We currently have no defense against unchecked spots being occupied!
    {4, sbigdmd, s_qtag, 0, 1,
          {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
          {       5,      -1,      -1,      -1,      11,      -1,      -1,      -1},
@@ -3396,7 +3424,6 @@ common_spot_map cmaps[] = {
          {       0, d_south,       0,       0,       0, d_north,       0,       0},
          {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
          {       0, d_north,       0,       0,       0, d_south,       0,       0}},
-
 
    // Common spot point-to-point diamonds.
    {0x400, sbigptpd, s_ptpd, 0, 0,
@@ -3411,9 +3438,14 @@ common_spot_map cmaps[] = {
          {       0,       0,       0,  d_east,       0,       0,       0,  d_west},
          {      -1,      -1,      -1,       0,      -1,      -1,      -1,       6},
          {       0,       0,       0,  d_west,       0,       0,       0,  d_east}},
+   {0x400, s_bone, s_ptpd, 0, 0,
+         {      -1,       0,      -1,       5,      -1,       4,      -1,       1},
+         {      -1,      -1,       7,      -1,      -1,      -1,       3,      -1},
+         {       0,       0, d_south,       0,       0,       0, d_north,       0},
+         {      -1,      -1,       6,      -1,      -1,      -1,       2,      -1},
+         {       0,       0, d_north,       0,       0,       0, d_south,       0}},
 
-   /* Common point hourglass */
-
+   // Common point hourglass.
    {0x80, sbighrgl, s_hrglass, 0, 1,
          {      -1,      -1,       8,       3,      -1,      -1,       2,       9},
          {       5,      -1,      -1,      -1,      11,      -1,      -1,      -1},

@@ -3731,6 +3731,12 @@ static void do_sequential_call(
       if ((zzz.do_half_of_last_part | zzz.do_last_half_of_first_part) != 0)
          fail("Sorry, can't fractionalize this.");
 
+      // If we are not doing the whole call, then any "force_lines",
+      // "demand_lines", "force_otherway", etc. flags are not used.
+      // The starting and/or ending setups are not what the flags
+      // are referring to.
+      ss->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
+
       uint32 revertflags = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERTMASK);
 
       // Watch for "revert flip the line 1/2" stuff.
@@ -3830,7 +3836,7 @@ static void do_sequential_call(
          *mirror_p = true;
       }
 
-      ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
+      ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
       touch_or_rear_back(ss, *mirror_p, callflags1);
    }
 
