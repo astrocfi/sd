@@ -119,7 +119,7 @@
 // produce a result that is of a 16 bit type.  But some other compilers demand a 16 bit
 // type in struct initializers of 16 bit type.
 //
-// But since the usual behavior of the INT16_C and UINT16_C macros is so close to what we wbat
+// But since the usual behavior of the INT16_C and UINT16_C macros is so close to what we want
 // that we have decided, rather than using other names (which would just make the code more
 // confusing) to tweak the definitions of those macros.  That makes it possible for someone
 // reading the code not to have to worry about these subtle problems.
@@ -128,7 +128,7 @@
 // they are only defined if __STDC_CONSTANT_MACROS is set.  But, once again, compliant compilers
 // are *not required* to obey this, and some include files in fact do not.
 //
-// Therefore, we forcibly undefine these macros after including stdint.h, and give out own
+// Therefore, we forcibly undefine these macros after including stdint.h, and give our own
 // definitions.
 
 // For those systems that don't have a stdint.h file at all (Visual C++ version 6), we

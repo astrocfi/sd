@@ -12,7 +12,7 @@ Both Sd and Sdtty are available for PC compatibles running Windows.&nbsp;
 (Note: <a href="intro.html">summary of availability</a>.)&nbsp;
 They run under Windows 95, 98, ME, 2000, NT, XP, Vista, Windows 7, Windows 3.1, or DOS.  They may run under Windows 8.
 <p>
-Sdtty (but not Sd) is available for Linux.
+Sdtty (but not Sd) is available for Linux on 64-bit hardware.
 <p>
 For Windows, you can download the file "<code>install.exe</code>" from this web page
 onto your computer.  It contains both Sd and Sdtty, and a copy of the
@@ -34,14 +34,11 @@ correct shortcut icons costs $250.)  If you have a different calling
 program in that directory (e.g. SRC Sd), the installation program will
 offer to save that program elsewhere.
 Users wishing to have both Sd/Sdtty and SRC Sd installed
-on their computer will need to ensure that SRC Sd is in some folder other
+on their Windows computer will need to ensure that SRC Sd is in some folder other
 than "<code>C:\Sd</code>".  I do not know how serious or widespread
 this problem will be.  If this creates difficulties for you, please
 let me (wba@alum.mit.edu) know.  Do not download this program if you want
 to keep SRC Sd and you do not understand this issue or its workaround.
-<p>
-If you are running Linux, Windows 3.1, or DOS, you must download a different
-file.  Choose the correct one from the list below.
 <p>
 The program is no longer maintained for Windows 3.1 or DOS.
 If you must download install3.exe below, you will get version 34.6.
@@ -51,10 +48,34 @@ If you must download install3.exe below, you will get version 34.6.
 <ul>
 <li>Modern Windows: download <a href="install.exe">install.exe</a>
 which has Sd and Sdtty for PC compatibles running Windows.
-<li>Windows 3.1 or DOS: download <a href="install3.exe">install3.exe</a>
-which has Sdtty version 34.6 for PC compatibles running Windows 3.1 or DOS.
+<p>
+After downloading, you should have a file named <code>install.exe</code>.
+Do the actual installation by launching that file.
+On Windows 95, 98, ME, NT, 2000, or XP, launching <code>install.exe</code> will
+unpack and install the program and database into the folder C:\sd.
+It will overwrite the previous program, but will not affect other files,
+such as written sequences or your <code>sd.ini</code> file.
+<p>
+An explorer will appear, containing useful shortcuts.  You can copy
+any or all of them to the Desktop and/or Start Menu.  Use the right mouse button
+for the copy, and click on "Copy Here" when asked.
 <li>Linux: download <a href="linux.tgz">linux.tgz</a>
 which has Sdtty for PC compatibles (Intel or AMD) running Linux.
+<p>
+After downloading, you should have a file named <code>linux.tgz</code>,which
+is a gzipped Unix archive.
+Unpack it (that is, <code>tar -zxvf linux.tgz</code>) into the chosen directory.
+It will create the "sdtty" executable, along with the calls database.
+It will overwrite the previous program, but will not affect other files,
+such as written sequences or your <code>sd.ini</code> file.  If this program
+does not work for you, download the source files and compile.
+<li>Windows 3.1 or DOS: download <a href="install3.exe">install3.exe</a>
+which has Sdtty version 34.6 for PC compatibles running Windows 3.1 or DOS.
+<p>
+After downloading, you should have a file named <code>install3.exe</code>.
+Do the actual installation by launching that file.  It will
+unpack and install the program and database into the current folder.
+We recommend doing this in folder C:\sd.
 </ul>
 <hr>
 You can also download the documentation files in "bulk" form to your computer.
@@ -79,28 +100,6 @@ which has all of the above documents in postscript form.
 which has all of the above documents in Acrobat form.
 </ul>
 <hr>
-<li>
-After downloading, you should have a file named <code>install.exe</code>
-or <code>install3.exe</code>
-(and whatever documentation files you downloaded).
-Do the actual installation by launching that file.
-On Windows 95, 98, ME, NT, 2000, or XP, launching <code>install.exe</code> will
-unpack and install the program and database into the folder C:\sd.
-It will overwrite the previous program, but will not affect other files, such as written sequences.
-On Windows 3.1 or DOS, launching <code>install3.exe</code> will
-unpack and install the program and database into the current folder.
-We recommend doing this in folder C:\sd.
-<p>
-On Linux, the file <code>linux.tgz</code> is a gzipped Unix archive.
-Unpack it (that is, <code>tar -zxvf linux.tgz</code>) into the chosen directory.
-It will create the "sdtty" executable, along with the calls database.
-It will overwrite the previous program, but will not affect other files, such as written sequences.
-<p>
-<li>
-On Windows, an explorer will appear, containing useful shortcuts.  You can copy
-any or all of them to the Desktop and/or Start Menu.  Use the right mouse button
-for the copy, and click on "Copy Here" when asked.
-<p>
 <li>
 Launching any or all of these:
 <pre>

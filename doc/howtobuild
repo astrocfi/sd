@@ -1,15 +1,6 @@
-
-
-
-Do this in makefile, instead of texi2html
-.txi.html
-makeinfo --no_split --html -o $@ $<
-
-
-
 ===============================================================
 *********** DO NOT RENAME THIS TO HOWTOBUILD.TXT **************
-Doing so would cause it to be included in the "do_pack" script.
+Doing so might cause it to be included in the "do_pack" script.
 ===============================================================
           HOW TO RELEASE A NEW VERSION OF SD
 
@@ -187,75 +178,39 @@ Copy these into an appropriate directory:
 
 -----------------------------------------------------------------
 
-               PRODUCTION BUILD AND TESTING - Linux
+               PRODUCTION BUILD, TESTING, AND UPLOAD - Linux
+
+copy sd_vnnnn.zip, r_vnnnn.zip, and doc_vnnnn.zip onto a thumb drive.
 
 On Linux:
 
-Get the source files.
-make -f makefile.linux32 all
-// This should have created sdtty, mkcalls, etc.
-make -f makefile.linux32 tarball
-// This should have created linux.tgz
+Copy the above files into ~.
+
+cd ~
+rm sd/*
+rm sd/regress/*
+rm sddoc/*
+rm staging/*
+
+(The first of these will complain about the subdirectory "regress".)
+
+cd staging
+unzip -a ../sd_vnnnn
+mv * ../sd
+unzip -a r_vnnnn
+mv * ../sd/regress
+unzip -a doc_vnnnn
+mv * ../sddoc
+cd ~/sd
+make -f makefile.linux64 clean
+make -f makefile.linux64 all
+cd regress
+chmod 775 *.sh
+./doit.sh
+
+make -f makefile.linux64 tarball
 scp linux.tgz USERNAME@www.challengedance.org:public_html/sd
-(pw=USERNAME)
-
-
-This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd\regress directory.
-
-****** BE SURE SOURCE FILES IN THE CURRENT DIRECTORY ARE UP TO DATE!
-****** THE "SAVELINUXSOURCE" SCRIPT USES THOSE FILES!
-
-windows> cd sd
-windows> del *~
-windows> savelinuxsource
-windows> pscp -l wba -pw And15user linuxsource.tar.gz an-cs1:linuxsource.tar.gz
-windows> pscp -l wba -pw And15user r_XXXXX.zip an-cs1:r.zip
-         (whatever the zip name is.  Just leave the destination as r.zip.)
-windows> use reflection garbage to connect to an-cs1
-   an-cs1> scp linuxsource.tar.gz wba@goblin.jaws.umn.edu:linuxsource.tar.gz
-            (pass=wba;sd)
-   an-cs1> scp r.zip wba@goblin.jaws.umn.edu:r.zip
-            (pass=wba;sd)
-   an-cs1> ssh goblin.jaws.umn.edu
-            (pass=wba;sd)
-      goblin> # Check that the "sd" directory does not exist.
-      goblin> # Check that the "regress" directory does not exist.
-      goblin> gzip -d linuxsource.tar.gz
-      goblin> tar xovf linuxsource.tar
-      goblin> cd sd
-      goblin> make -f makefile.linux
-      goblin> rm *.o *.c *.h *.cpp *.a
-      goblin> rm *cache
-      goblin> rm makef*
-      goblin> rm db_doc.txt
-      goblin> ls -l
-          ## Only the files mkcalls, sd_calls.dat, sd_calls.txt, and sdtty should exist.
-          ## This is important, because everything here will be put into the distribution.
-      goblin> cp * ..
-      goblin> cd ..
-      goblin> mkdir regress
-      goblin> cd regress
-      goblin> ../unzip -a ../r.zip
-      goblin> chmod 777 *.sh
-      goblin> ./doit.sh
-      goblin> rm *
-      goblin> cd ..
-      goblin> rmdir regress
-      goblin> rm r.zip
-      goblin> rm linuxsource.tar
-      goblin> rm linux.tar
-      goblin> rm linux.tar.gz
-      goblin> ls -l
-          ## Only the files mkcalls, sd_calls.dat, sd_calls.txt, sdtty, and zip stuff should exist.
-      goblin> tar cvf linux.tar sd
-      goblin> gzip linux.tar
-      goblin> rm sd/*
-      goblin> rmdir sd
-      goblin> scp linux.tgz USERNAME@challengedance.org:public_html/sd
-            (pass=And15user)
-      goblin> exit
-   an-cs1> exit
-windows> exit
+(U=USERNAME, P=PASSWORD)
 
 -----------------------------------------------------------------
 

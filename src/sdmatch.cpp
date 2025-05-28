@@ -1461,7 +1461,10 @@ void matcher_class::scan_concepts_and_calls(
          matches_as_seen_by_me = m_match_count;
 
          p2b.car = get_call_name(this_call);
-         m_current_result->yield_depth = ((get_yield_if_ambiguous_flag(this_call)) ? new_depth+1 : new_depth);
+         // By pushing the yield depth up by 2, we make it yield to things that are actually bettter by 1.
+         // This means "6x2 acey deucey", while it is a single call that can be clicked from the menu,
+         // will yield to "6x2" + "acey deucey", making it possible to parse "echo 6x2 acey deucey".
+         m_current_result->yield_depth = ((get_yield_if_ambiguous_flag(this_call)) ? new_depth+2 : new_depth);
          local_result.match.call_conc_options = null_options;
 
          if (spiffy_parser && get_call_name(this_call)[0] == '@' &&
