@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.64
-@set Time-stamp: February 7, 2006
+@set sd-version 36.81
+@set Time-stamp: August 29, 2006
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4718,6 +4718,11 @@ These are followed by the concept to which they apply.
 @item echo
 @item reverse echo
 These are straightforward.
+@item double/triple/quadruple echo
+The @code{double echo} meta-concept is followed by two concepts.  It applies both
+concepts first, then skips the first concept and applies the second only, and finally
+skips both concepts and just does the call.  @code{triple echo} and @code{quadruple echo} are
+similar.
 @item finish
 @item like a
 @item like an
@@ -4874,6 +4879,10 @@ and/or @samp{magic}.
 @item grand single cross concentric
 @item concentric diamonds
 @item cross concentric diamonds
+@item 3x3 concentric
+@item 3x3 cross concentric
+@item 4x4 concentric
+@item 4x4 cross concentric
 See @ref{Concentric}.
 @item grand working forward/backward
 @item grand working right/left

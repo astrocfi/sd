@@ -60,18 +60,20 @@ Go to sddoc directory and do:
 19 Feb 01  -  12 Mar 01  #10
 12 Mar 01  -  27 May 01  #11
 27 May 01  -  16 Sep 01  # 5
-16 Sep 01  -  7  Apr 02  #14
-7  Apr 02  -  30 Apr 02  #15
+16 Sep 01  -   7 Apr 02  #14
+ 7 Apr 02  -  30 Apr 02  #15
 30 Apr 02  -  15 May 02  #12
 15 May 02  -  15 Jul 02  #16
-15 Jul 02  -  1  Sep 02  #17
-1  Sep 02  -  16 Jan 03  #18
-16 Jan 03  -  1  May 03  #19
-1  May 03  -  11 Oct 03  #20
+15 Jul 02  -   1 Sep 02  #17
+ 1 Sep 02  -  16 Jan 03  #18
+16 Jan 03  -   1 May 03  #19
+ 1 May 03  -  11 Oct 03  #20
 11 Oct 03  -  27 Feb 05  #21
 27 Feb 05  -   8 Oct 05  #22
-8  Oct 05  -  20 Nov 05  #23
-20 Nov 05  -             #24
+ 8 Oct 05  -  20 Nov 05  #23
+20 Nov 05  -   7 Jul 06  #24
+ 7 Jul 06  -             #27
+(#25 and #26 are also available.)
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++
@@ -234,6 +236,7 @@ sd_doc          *      *     *    *
 sessions        *      *     *    *
 relnotes        *      *     *    *
 relnotes98      *      *     *    *
+relnotes03      *      *     *    *
 readings        *
 download-pc     *
 index           *

@@ -471,6 +471,18 @@ galaxy      |  0  |_____|_____|  4  |     (4 way symmetry)
                      |     |
                      |  6  |
                      |_____|
+
+
+                   _____ _____ _____
+                  |     |     |     |
+                  |  0  |  1  |  2  |
+                  |_____|_____|_____|
+                  |     |     |     |
+3x3               |  7  |  8  |  3  |     (4 way symmetry)
+                  |_____|_____|_____|
+                  |     |     |     |
+                  |  6  |  5  |  4  |
+                  |_____|_____|_____|
 
                    _____             _____
              _____|     |_____ _____|     |_____
@@ -489,6 +501,19 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
             |_____|     |_____|_____|     |_____|_____|     |_____|
                   |  8  |           |  7  |           |  6  |
                   |_____|           |_____|           |_____|
+
+
+
+                _____                                           _____
+               |     |                                         |     |
+               |  0  |         _____             _____         |  3  |
+             __|__ __|__ _____|     |_____ _____|     |_____ __|__ __|__
+            |     |     |     |  1  |     |     |  2  |     |     |     |
+4mdmd       | 12  | 13  | 14  |_____| 15  |  7  |_____|  6  |  5  |  4  |
+            |_____|_____|_____|     |_____|_____|     |_____|_____|_____|
+               |     |        | 10  |           |  9  |        |     |
+               | 11  |        |_____|           |_____|        |  8  |
+               |_____|                                         |_____|
 
 
                                   _____       _____
@@ -3324,6 +3349,10 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        "make magic".  This ignores any people in line-like
                                        orientation.
 
+   levelplus          R/Q           The current calling level is at least the indicated level.
+                                    There are also a1, a2, c1, c2, c3, and c4.
+
+
                            APPENDIX C -- QUALIFIERS
 
    none,                            any setup - this always passes (presumably to
@@ -3385,8 +3414,10 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     and that person is an end.  In a 2x4, exactly two
                                     ends, who are opposites, are selected.
 
-   ripple_both_ends        Q        1x4, 1x6 - both ends of the 1x4 or 1x6, and only
+   ripple_both_ends        Q        1x4, 1x6, 1x8 - both ends of the 1x4, 1x6, or 1x8, and only
                                     those people, are selected.
+
+   ripple_both_ends_1x4_only Q      1x4 - as above, but fails on 1x6 or 1x8.
 
    ripple_both_centers     Q        1x4 - both centers of the 1x4, and only those two
                                     people, are selected.
@@ -3550,6 +3581,17 @@ sequence_starter_only
 
 split_like_square_thru
 split_like_dixie_style
+
+distribute_repetitions
+      This is used on a call that is sequentially defined (seq or splitseq)
+      in which some part of the definition has "repeat_n", "repeat_nm1", or
+      "repeat_n_alternate".  Without the "distribute_repetitions" flag, the
+      parts of the call are determined strictly by the items in the "seq"
+      list.  Any item in the list that has "repeat_n" still counts as only
+      one part, even though its subject call is executed multiple times.
+      When the "distribute_repetitions" flag is on, the individual instances
+      of a subcall executed with "repeat_n" count as separate parts in the
+      overall part count.
 
 parallel_conc_end
       In general, this means to elongate the setup opposite what it would
@@ -3801,6 +3843,14 @@ mandatory_anycall
 repeat_n
 repeat_nm1
 repeat_n_alternate
+repeat_nm1_remainder
+   The call with which this is used must have "distribute_repetitions" on.  It must
+   be sequentially defined with just two parts appearing in the definition.  The first
+   of those parts has this flag set.  The call will be done with N parts, of which the
+   first will be the part defined as first in the database, and the others will each be
+   the part defined as second in the database.  If the call is executed in reverse order,
+   the parts will still be done as A, B, B, B, ...  If the call is interrupted, part A
+   will be done at the beginning of the resumed part.
 endscando
 allow_forced_mod
 roll_transparent
@@ -3861,6 +3911,7 @@ inherit_single
 @I          equivalent to "@Einterlocked @F".
 @G        - put the word "grand" here if this call has "grand" modifier.
 @k        - put selector here, but use singular name, as in "beau tie".
+@K        - put selector here, and allow "some" in parse expand.  (@6 and @k don't expand "some".)
 @u        - put ordinal number (1st, 2nd, ...) here.
 @v        - put tagging call here.
 @w        - put tagging call here.

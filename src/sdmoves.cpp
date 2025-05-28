@@ -103,6 +103,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
       if (rot == 0) return;
       rot11 = rot * 011;
       bigd = attr::slimit(result) + 1;
+      if (result->kind == s3x3) bigd = 8;
       delta = bigd >> 2;
 
       i0 = 1;
@@ -139,6 +140,8 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
          result->people[j3].id2 = x3.id2;
          result->people[j3].id3 = x3.id3;
       }
+
+      if (result->kind == s3x3) result->people[8].id1 = rotperson(result->people[8].id1, rot11);
 
       result->rotation = 0;
    }
@@ -437,7 +440,7 @@ extern bool divide_for_magic(
        heritflags_to_check == INHERITFLAGMXNK_1X3 ||
        heritflags_to_check == INHERITFLAGMXNK_2X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X2) {
-      get_directions(ss, directions, dblbitlivemask);
+      big_endian_get_directions(ss, directions, dblbitlivemask);
 
       if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
           heritflags_to_check == INHERITFLAGMXNK_1X3) {
@@ -1184,7 +1187,7 @@ struct checkitem {
    uint32 ypar;
    uint32 sigcheck;
    setup_kind new_setup;
-   int new_rot;
+   uint32 new_rot;     // 0x100 bit means this fudgine is severe.
    warning_index warning;
    const coordrec *new_checkptr;
    veryshort fixer[32];
@@ -1299,13 +1302,17 @@ static const checkitem checktable[] = {
    {0x00770055, 0x01400420, s_2stars, 0, warn__none, (const coordrec *) 0, {127}},
 
    // Inner wing did a tow-truck-like operation from a rigger, for example,
-   // after a sets in motion.  Fudge to a 1/4 tag.
-   {0x00620026, 0x01008404, s_qtag, 0, warn__none, (const coordrec *) 0,
+   // after a sets in motion.  Fudge to a 1/4 tag.  This is serious fudging, and marked as such with the "0x100".
+   {0x00620026, 0x01008404, s_qtag, 0x100, warn__none, (const coordrec *) 0,
     {-2, 2, -4, 5, 2, 2, 5, 5, 2, -2, 4, -5, -2, -2, -5, -5, 127}},
 
    // Similar to the above, but truck was from a deepxwv.
    {0x00620066, 0x11100400, s_qtag, 0, warn__none, (const coordrec *) 0,
     {-2, 6, -4, 5, 2, 6, 5, 5, 2, -6, 4, -5, -2, -6, -5, -5, 127}},
+
+   // Inner people did a 1/2 E.R.A. from a deepxwv.
+   {0x00A60066, 0x08000600, s_crosswave, 0, warn__none, (const coordrec *) 0,
+    {10, 0, 9, 0, 6, 0, 5, 0, -10, 0, -9, 0, -6, 0, -5, 0, 127}},
 
    // Inner wing did a 1/2 tow truck from a crosswave.  We want a thar.
    {0x00750066, 0x08400220, s_thar, 0, warn__none, (const coordrec *) 0,
@@ -1461,6 +1468,7 @@ static void finish_matrix_call(
    int nump,
    bool do_roll_stability,
    bool allow_collisions,
+   bool allow_fudging,
    setup *people,
    setup *result) THROW_DECL
 {
@@ -1553,6 +1561,9 @@ static void finish_matrix_call(
    // sending them to be placed in the final setup.  That final
    // setup placement can be very picky.
    if (p->fixer[0] != 127) {
+      if ((p->new_rot & 0x100) && !allow_fudging)
+         fail("Can't figure out result setup.");
+
       for (i=0; i<nump; i++) {
          for (k=0; k<32 && p->fixer[k]!=127; k+=4) {
             if (matrix_info[i].x == p->fixer[k] && matrix_info[i].y == p->fixer[k+1]) {
@@ -1571,7 +1582,7 @@ static void finish_matrix_call(
    else
       checkptr = setup_attrs[p->new_setup].setup_coords;
 
-   result->rotation = p->new_rot;
+   result->rotation = p->new_rot & 3;
    result->kind = checkptr->result_kind;
 
    int doffset = 32 - (1 << (checkptr->xfactor-1));
@@ -1687,7 +1698,7 @@ static void matrixmove(
       // This call split the setup in every possible way.
       result->result_flags.maximize_split_info();
 
-   finish_matrix_call(matrix_info, nump, true, false, &people, result);
+   finish_matrix_call(matrix_info, nump, true, false, true, &people, result);
 
    reinstate_rotation(ss, result);
    clear_result_flags(result);
@@ -1749,6 +1760,38 @@ static void do_pair(
          int base = (qqq->dir & 2) ? 0 : 2;
          if ((flags & MTX_IGNORE_NONSELECTEES) || qqq->sel) base |= 4;
          do_part_of_pair(qqq, base^flip, callstuff);
+      }
+
+      if (flags & MTX_MIRROR_IF_RIGHT_OF_CTR) {
+         int relative_ppp_x = (ppp->dir & 1) ? ppp->nicey : ppp->nicex;
+         if ((ppp->dir+1) & 2) relative_ppp_x = -relative_ppp_x;
+         int relative_qqq_x = (qqq->dir & 1) ? qqq->nicey : qqq->nicex;
+         if ((qqq->dir+1) & 2) relative_qqq_x = -relative_qqq_x;
+
+         if (relative_ppp_x > 0 && relative_qqq_x > 0) {
+            ppp->mirror_this_op = true;
+            qqq->mirror_this_op = true;
+            // Make this pair of people anchor in the other direction, by
+            // negating their rotation, swapping their Y motions, and swapping
+            // and negating their X motions.
+            ppp->deltarot = (-ppp->deltarot) & 3;
+            qqq->deltarot = (-qqq->deltarot) & 3;
+            int ttt = ppp->deltax;
+            ppp->deltax = -qqq->deltax;
+            qqq->deltax = -ttt;
+            ttt = ppp->deltay;
+            ppp->deltay = qqq->deltay;
+            qqq->deltay = ttt;
+            // Switch the roll direction.
+            ppp->roll_stability_info ^=
+               (((ppp->roll_stability_info+NDBROLL_BIT) >> 1) & NDBROLL_BIT) * 3;
+            qqq->roll_stability_info ^=
+               (((qqq->roll_stability_info+NDBROLL_BIT) >> 1) & NDBROLL_BIT) * 3;
+            // The stability info is too hard to fix at this point.
+            // It will be handled later.
+         }
+         else if (relative_ppp_x >= 0 || relative_qqq_x >= 0)
+            fail("People are not anchoring consistently.");
       }
    }
    else {    // Doing "drag" concept.
@@ -2252,10 +2295,10 @@ static void partner_matrixmove(
       }
    }
 
-   finish_matrix_call(matrix_info, nump, true, false, &people, result);
+   finish_matrix_call(matrix_info, nump, true, false, true, &people, result);
    reinstate_rotation(ss, result);
 
-   // Take out any active phantoms that we placed..
+   // Take out any active phantoms that we placed.
 
    if (did_active_phantoms) {
       for (i=0; i<=attr::slimit(result); i++) {
@@ -2271,10 +2314,11 @@ static void partner_matrixmove(
 // This treats res2 as though it had rotation zero.
 // Res1 is allowed to have rotation.
 extern void brute_force_merge(const setup *res1, const setup *res2,
-                              bool allow_collisions, setup *result) THROW_DECL
+                              merge_action action, setup *result) THROW_DECL
 {
    int i;
    int r = res1->rotation & 3;
+   bool allow_collisions = action >= merge_strict_matrix_but_colliding_merge;
 
    // First, check if the setups are nice enough for the matrix stuff,
    // as indicated by having both "setup_coords" and "nice_setup_coords".
@@ -2312,7 +2356,8 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
       // Note that, because we set deltarot above, we must NOT turn on the
       // "do_roll_stability" argument here.  It would treat the rotation
       // as though the person had actually done a call.
-      finish_matrix_call(matrix_info, nump, false, allow_collisions, &people, result);
+      finish_matrix_call(matrix_info, nump, false, allow_collisions,
+                         action > merge_strict_matrix_but_colliding_merge, &people, result);
       return;
    }
 
@@ -2452,7 +2497,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    }
 
    ss->rotation += result->rotation;
-   finish_matrix_call(second_matrix_info, final_2nd_nump, true, false, &second_people, result);
+   finish_matrix_call(second_matrix_info, final_2nd_nump, true, false, true, &second_people, result);
    reinstate_rotation(ss, result);
    clear_result_flags(result);
 }
@@ -2464,8 +2509,8 @@ extern void anchor_someone_and_move(
    parse_block *parseptr,
    setup *result)  THROW_DECL
 {
+   enum { MAX_GROUPS = 12 };
    setup people;
-   const int MAX_GROUPS = 12;
    matrix_rec before_matrix_info[9];
    matrix_rec after_matrix_info[9];
    int i, j, k, nump, numgroups;
@@ -2661,7 +2706,7 @@ extern void anchor_someone_and_move(
       after_matrix_info[i].dir = 0;
    }
 
-   finish_matrix_call(after_matrix_info, nump, false, false, &people, result);
+   finish_matrix_call(after_matrix_info, nump, false, false, true, &people, result);
    reinstate_rotation(&saved_start_people, result);
    clear_result_flags(result);
 }
@@ -4095,12 +4140,15 @@ static void do_sequential_call(
    final_and_herit_flags new_final_concepts = ss->cmd.cmd_final_flags;
    parse_block *parseptr = ss->cmd.parseptr;
    uint32 callflags1 = callspec->callflags1;
+   calldef_schema this_schema = callspec->schema;
+   bool this_schema_is_rem_or_alt =
+      this_schema == schema_sequential_remainder ||
+      this_schema == schema_sequential_alternate;
    bool first_call = true;    // First call in logical definition.
    bool first_time = true;    // First thing we are doing, in temporal sequence.
    call_restriction fix_next_assumption = cr_none;
    int fix_next_assump_col = 0;
    int fix_next_assump_both = 0;
-   bool distribute = false;
    // This tells whether the setup was genuinely elongated when it came in.
    // We keep track of pseudo-elongation during the call even when it wasn't,
    // but sometimes we really need to know.
@@ -4128,9 +4176,13 @@ static void do_sequential_call(
 
    ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
 
-   if (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) distribute = true;
+   bool distribute = (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) != 0;
 
    fraction_info zzz(callspec->stuff.seq.howmanyparts);
+
+   // These control the "repeat_n_alternate" and "repeat_n_remainder" things.
+   bool fetch_other_call_for_this_cycle = false;
+   bool fetching_remainder_for_this_cycle = false;
 
    if (distribute) {
       int ii;
@@ -4140,15 +4192,14 @@ static void do_sequential_call(
          by_def_item *this_item = &callspec->stuff.seq.defarray[ii];
          uint32 this_mod1 = this_item->modifiers1;
 
-         if (this_mod1 &
-             (DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE)) {
+         if (this_mod1 & (DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1)) {
             uint32 this_count = current_options.number_fields & NUMBER_FIELD_MASK;
 
             delta += this_count-1;  // Why -1?  Because we're counting *extra* parts.
 
-            if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) {
-               ii++;
+            if ((this_mod1 & DFM1_SEQ_REPEAT_NM1) || this_schema == schema_sequential_alternate) {
                delta--;
+               if (this_count == 0) fail("Can't give number zero.");
             }
 
             if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) {
@@ -4156,10 +4207,8 @@ static void do_sequential_call(
                zzz.m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
             }
 
-            if (this_mod1 & DFM1_SEQ_REPEAT_NM1) {
-               if (this_count == 0) fail("Can't give number zero.");
-               delta--;
-            }
+            if (this_schema_is_rem_or_alt)
+               break;
          }
       }
 
@@ -4168,7 +4217,7 @@ static void do_sequential_call(
 
    // Check for special behavior of "sequential_with_fraction".
 
-   if (callspec->schema == schema_sequential_with_fraction) {
+   if (this_schema == schema_sequential_with_fraction) {
       if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
          fail("Fractions have been specified in two places.");
 
@@ -4265,7 +4314,6 @@ static void do_sequential_call(
       if (zzz.m_reverse_order && zzz.m_instant_stop == 99) first_call = false;
    }
 
-
    /* We will let "zzz.m_fetch_index" scan the actual call definition:
          forward - from 0 to zzz.m_fetch_total-1 inclusive
          reverse - from zzz.m_fetch_total-1 down to 0 inclusive.
@@ -4304,7 +4352,7 @@ static void do_sequential_call(
       touch_or_rear_back(ss, *mirror_p, callflags1);
    }
 
-   if (callspec->schema == schema_sequential_with_split_1x8_id) {
+   if (this_schema == schema_sequential_with_split_1x8_id) {
       if (ss->kind == s1x8) {
          for (i=0; i<8; i++) {
             if (ss->people[i].id1) ss->people[i].id2 |= (i&1) ? ID2_CENTER : ID2_END;
@@ -4329,7 +4377,6 @@ static void do_sequential_call(
 
    prepare_for_call_in_series(result, ss);
 
-   int use_alternate = 0;
    uint32 remember_elongation = 0;
    int remembered_2x2_elongation = 0;
    int subpart_count = 0;
@@ -4343,6 +4390,7 @@ static void do_sequential_call(
       bool recompute_id = false;
       uint32 saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
+      uint32 herit_bits_to_clear = 0;
 
       /* Now the "index" values (zzz.m_fetch_index and zzz.m_client_index) contain the
          number of parts we have completed.  That is, they point (in 0-based
@@ -4354,7 +4402,12 @@ static void do_sequential_call(
          subpart_count--;    // This is now the number of EXTRA repetitions
                              // of this that we will still have to do after
                              // we do the repetition that we are about to do.
-         use_alternate ^= 1;
+
+         fetch_other_call_for_this_cycle =
+            (this_schema == schema_sequential_remainder) ?
+            fetching_remainder_for_this_cycle :
+            !fetch_other_call_for_this_cycle;
+
          if (!distribute) zzz.m_client_index -= zzz.m_subcall_incr;
 
          // The client index moves forward, but the fetch index does not.
@@ -4383,8 +4436,7 @@ static void do_sequential_call(
          result->result_flags.misc |= RESULTFLAG__NO_REEVALUATE;
 
       if (zzz.m_reverse_order) {
-         if (zzz.m_fetch_index >= 1 &&
-             (callspec->stuff.seq.defarray[zzz.m_fetch_index-1].modifiers1 & DFM1_SEQ_REPEAT_N_ALTERNATE)) {
+         if (this_schema_is_rem_or_alt && zzz.m_fetch_index >= 1) {
             alt_item = this_item;
             this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index-1];
             zzz.m_fetch_index--;     // BTW, we require (in the database) that "distribute" be on.
@@ -4392,7 +4444,7 @@ static void do_sequential_call(
          }
       }
       else {
-         if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) {
+         if (this_schema_is_rem_or_alt) {
             alt_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index+1];
             zzz.m_fetch_index++;     // BTW, we require (in the database) that "distribute" be on.
          }
@@ -4436,7 +4488,7 @@ static void do_sequential_call(
       if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
 
-      if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
+      if (this_schema_is_rem_or_alt)
          get_real_subcall(parseptr, alt_item, &foobar,
                           callspec, false, extra_heritmask_bits, &foo2);
 
@@ -4444,29 +4496,46 @@ static void do_sequential_call(
 
       if (recompute_id || (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
 
-      /* If this subcall invocation involves inserting or shifting the numbers, do so. */
+      // If this subcall invocation involves inserting or shifting the numbers, do so.
 
       if (!(new_final_concepts.test_heritbit(INHERITFLAG_FRACTAL)))
          this_mod1 &= ~DFM1_FRACTAL_INSERT;
 
       process_number_insertion(this_mod1);
 
-      /* Check for special repetition stuff. */
-      if ((DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE) & this_mod1) {
+      // Check for special repetition stuff.
+      if (this_schema_is_rem_or_alt || (this_mod1 & (DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1))) {
          int count_to_use = current_options.number_fields & NUMBER_FIELD_MASK;
 
          number_used = true;
          if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) count_to_use++;
-         if (this_mod1 & DFM1_SEQ_REPEAT_NM1) count_to_use--;
+         if (this_schema != schema_sequential_remainder && (this_mod1 & DFM1_SEQ_REPEAT_NM1)) count_to_use--;
          if (count_to_use < 0) fail("Can't give number zero.");
+
+         bool just_use_half_of_count = false;
 
          if (zzz.m_do_half_of_last_part != 0 && !distribute &&
              zzz.m_fetch_index+zzz.m_subcall_incr == zzz.m_highlimit) {
+            just_use_half_of_count = true;
+         }
+         else if (new_final_concepts.test_heritbit(INHERITFLAG_HALF)) {
+            herit_bits_to_clear = INHERITFLAG_HALF;
+            just_use_half_of_count = true;
+         }
+         else if (new_final_concepts.test_heritbit(INHERITFLAG_LASTHALF)) {
+            herit_bits_to_clear = INHERITFLAG_LASTHALF;
+            just_use_half_of_count = true;
+         }
+
+         if (just_use_half_of_count) {
             if (count_to_use & 1) fail("Can't fractionalize this call this way.");
             count_to_use >>= 1;
          }
 
-         use_alternate = zzz.m_reverse_order && !(count_to_use & 1);
+         fetch_other_call_for_this_cycle = this_schema == schema_sequential_remainder ?
+            fetching_remainder_for_this_cycle :
+            zzz.m_reverse_order && (count_to_use & 1) == 0;
+
          subpart_count = count_to_use;
          if (subpart_count == 0) {
             goto done_with_big_cycle;
@@ -4497,11 +4566,14 @@ static void do_sequential_call(
       }
 
       // If doing an explicit substitution, we allow another act of rearing
-      // back or touching.
+      // back or touching.  Also, clear the "can't do cross concentric" flag.  See rf02t.
       if ((this_mod1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL ||
-          (this_mod1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_SECONDARY)
+          (this_mod1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_SECONDARY) {
          result->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
+         result->cmd.cmd_misc3_flags &= ~CMD_MISC3__META_NOCMD;
+      }
 
+      result->cmd.cmd_misc3_flags |= CMD_MISC3__NO_CHECK_LEVEL;
       result->cmd.prior_elongation_bits = remember_elongation;
 
       // If we are feeding fractions through, either "inherit_half" or "inherit_lasthalf"
@@ -4528,15 +4600,12 @@ static void do_sequential_call(
       }
 
       setup_command *fooptr;
-
-      if ((this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) && use_alternate)
-         fooptr = &foo2;
-      else
-         fooptr = &foo1;
+      fooptr = (this_schema_is_rem_or_alt && fetch_other_call_for_this_cycle) ? &foo2 : &foo1;
 
       result->cmd.parseptr = fooptr->parseptr;
       result->cmd.callspec = fooptr->callspec;
       result->cmd.cmd_final_flags = fooptr->cmd_final_flags;
+      result->cmd.cmd_final_flags.clear_heritbits(herit_bits_to_clear);
 
       do_stuff_inside_sequential_call(
          result, this_mod1, first_call, first_time,
@@ -4575,6 +4644,7 @@ static void do_sequential_call(
       current_options.howmanynumbers = saved_num_numbers;
 
       qtfudged = false;
+      fetching_remainder_for_this_cycle = true;
 
       new_final_concepts.clear_finalbits(
          FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
@@ -4633,6 +4703,7 @@ static bool do_misc_schema(
 
    foo1p->cmd_fraction = ss->cmd.cmd_fraction;
    foo2.cmd_fraction = ss->cmd.cmd_fraction;
+   ss->cmd.cmd_misc3_flags |= CMD_MISC3__NO_CHECK_LEVEL|CMD_MISC3__DOING_YOUR_PART;
 
    if (the_schema == schema_select_leads) {
       inner_selective_move(ss, foo1p, &foo2,
@@ -4943,7 +5014,7 @@ static bool do_misc_schema(
       concentric_move(ss, foo1p, &foo2, the_schema,
                       innerdef->modifiers1,
                       outerdef->modifiers1,
-                      the_schema != schema_rev_checkpoint, ~0UL, result);
+                      the_schema != schema_rev_checkpoint, true, ~0UL, result);
 
       result->rotation -= rot;   /* Flip the setup back. */
 
@@ -5963,9 +6034,11 @@ static void move_with_real_call(
             fail("This call can't be fractionalized.");
             break;
          case schema_sequential:
-         case schema_sequential_with_fraction:
          case schema_split_sequential:
+         case schema_sequential_with_fraction:
          case schema_sequential_with_split_1x8_id:
+         case schema_sequential_alternate:
+         case schema_sequential_remainder:
             // These will be thoroughly checked later.
             break;
          default:
@@ -6589,14 +6662,18 @@ extern void move(
             ss->cmd.parseptr = *z0;
          }
 
+         setup foo = *ss;
+         parse_block ppp = *t;
+         ppp.next = foo.cmd.parseptr;
+         foo.cmd.parseptr = &ppp;
          // Preserved across a throw; must be volatile.
          volatile error_flag_type maybe_throw_this = error_flag_none;
 
          try {
-            (concept_table[t->concept->kind].concept_action)(ss, t, result);
+            do_big_concept(&foo, t, false, result);
          }
          catch(error_flag_type foo) {
-            // An error occurred.  We need to restore stuff.
+            // An error occurred.  We need to restore stuff, and then throw the saved error code.
             maybe_throw_this = foo;
          }
 
@@ -6918,7 +6995,7 @@ extern void move(
       // If there are no modifier bits that the concept can't accept, do the concept.
 
       if (((check_concepts.test_heritbits(foobar)) | (check_concepts.test_finalbits(fooble))) == 0) {
-         if (do_big_concept(ss, result)) {
+         if (do_big_concept(ss, ss->cmd.parseptr, true, result)) {
             canonicalize_rotation(result);
             saved_magic_diamond = (parse_block *) 0;
             goto getout;

@@ -239,6 +239,7 @@ selector_item selector_list[] = {
                                                                   selector_uninitialized},
    {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4",
                                                                   selector_uninitialized},
+   {"some",         "some",        "SOME",         "SOME",        selector_uninitialized},
    {"Mbeaus???",    "Mbeaus???",   "MBEAUS???",    "MBEAUS???",   selector_uninitialized},
    {"Mbelles???",   "Mbelles???",  "MBELLES???",   "MBELLES???",  selector_uninitialized},
    {"notctr dmd???", "notctr dmd???", "NOTCTR DMD???", "NOTCTR DMD???",  selector_uninitialized},
@@ -276,7 +277,6 @@ Cstring warning_strings[] = {
    /*  warn__each1x2             */   "=Each 1x2.",
    /*  warn__eachdmd             */   "=Each diamond.",
    /*  warn__take_right_hands    */   " Take right hands.",
-   /*  warn__ctrs_are_dmd        */   " The centers are the diamond.",
    /*  warn__1_4_pgram           */   " 25% offset parallelogram.",
    /*  warn__full_pgram          */   " Completely offset parallelogram.",
    /*  warn__3_4_pgram           */   " 75% offset parallelogram.",
@@ -303,6 +303,7 @@ Cstring warning_strings[] = {
    /*  warn__check_centered_qtag */   "*Each 8-person twin general 1/4 tag is centered, with the outsides directly adjacent.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
+   /*  warn__meta_on_xconc       */   "*Misleading meta-concept combination.",
    /*  warn__check_c1_stars      */   " Check 'stars'.",
    /*  warn__check_gen_c1_stars  */   " Check a generalized 'star' setup.",
    /*  warn__bigblock_feet       */   " Bigblock/stagger shapechanger -- go to footprints.",
@@ -352,6 +353,7 @@ Cstring warning_strings[] = {
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
    /*  warn__assume_dpt          */   "*Assume a starting DPT.",
    /*  warn_bogus_yoyo_rims_hubs */   "*Using incorrect definition of rims/hubs trade.",
+   /*  warn__centers_are_diamond */   "*The centers are the diamond.",
    /*  warn_pg_in_2x6            */   "*Offset the resulting 2x6 by 50%, or 3 positions.",
    /*  warn_real_people_spots    */   "*The distorted setup is formed by the real people.",
    /*  warn__tasteless_com_spot  */   "*Not all common-spot people had right hands.",
@@ -1237,6 +1239,8 @@ map::map_thing map::map_init_table[] = {
     s1x4,2,MPKIND__OFFS_BOTH_SINGLEV,1, 0, s2x4, 0x000, 0},
    {{0, 1, 4, 5,        2, 3, 6, 7},
     s2x2,2,MPKIND__OFFS_BOTH_SINGLEV,0, 0, s2x4, 0x000, 0},
+   {{1, 4, 5, 0,        3, 6, 7, 2},
+    s2x2,2,MPKIND__OFFS_BOTH_SINGLEV,1, 0, s2x4, 0x005, 0},
    {{9, 13, 15, 8,      7, 0, 1, 5,        12, 11, 6, 10,       14, 2, 4, 3},
     s2x2,4,MPKIND__OFFS_BOTH_SINGLEV,0, 0, s4x4, 0x000, 0},
    {{2, 3, 14, 15,      6, 7, 10, 11,      0, 1, 12, 13,        4, 5, 8, 9},
@@ -1342,13 +1346,20 @@ map::map_thing map::map_init_table[] = {
     sdmd,3,MPKIND__NONISOTROPIC,0,0,  s_3mptpd,  0x004, 0},
 
    {{0, 1, 3, 2,        4, 5, 7, 6,        15, 14, 12, 13,      11, 10, 8, 9},
-    s1x4,4,MPKIND__NONISOTROPIC,1,0,  sbigbigh,  0x041, 0},
+    s1x4,4,MPKIND__NONISOTROP2,1,  0, sbigbigh,  0x041, 0},
    {{0, 1, 3, 2,        4, 5, 7, 6,        15, 14, 12, 13,      11, 10, 8, 9},
-    s1x4,4,MPKIND__NONISOTROPIC,0,0,  sbigbigx,  0x014, 0},
+    s1x4,4,MPKIND__NONISOTROP2,0,  0, sbigbigx,  0x014, 0},
    {{0, 13, 11, 12,     14, 1, 15, 10,     7, 2, 6, 9,          3, 4, 8, 5},
-    sdmd,4,MPKIND__NONISOTROPIC,1,0,  s_4mdmd,   0x041, 0},
+    sdmd,4,MPKIND__NONISOTROP2,1,  0, s_4mdmd,   0x041, 0},
    {{12, 0, 13, 11,     1, 15, 10, 14,     2, 6, 9, 7,          5, 3, 4, 8},
-    sdmd,4,MPKIND__NONISOTROPIC,0,0,  s_4mptpd,  0x014, 0},
+    sdmd,4,MPKIND__NONISOTROP2,0,  0, s_4mptpd,  0x014, 0},
+
+   {{1, 0,                             2, 3},
+    s1x2,2,MPKIND__NONISOTROP2,0,   0, s_trngl4, 0x001, 0},
+   // "1000" bit says that the order of the setups is reversed -- if v=1 (which it does
+   // in this case), maps run from top to bottom instead of bottom to top.
+   {{2, 3,                             1, 0},
+    s1x2,2,MPKIND__NONISOTROP2,1,   0, s_trngl4, 0x1004, 0},
 
    {{4, 5, 3,                          1, 2, 0},
     s_trngl,2,MPKIND__SPLIT,1,      0, s_short6, 0x108, 0},
@@ -1366,7 +1377,7 @@ map::map_thing map::map_init_table[] = {
    {{12, 14, 0, 2,                     4, 6, 8, 10},
     s_trngl4,2,MPKIND__SPLIT,0,     0, s_c1phan, 0x108, 0},
    {{1, 3, 15, 13,                     9, 11, 7, 5},
-    s_trngl4,2,MPKIND__NONISOTROP1,0, 0,s_c1phan,0x102, 0},
+    s_trngl4,2,MPKIND__NONISOTROP1,0, 0,s_c1phan,0x002, 0},
 
    {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},
     s2x4,2,MPKIND__STAG,0,        0,  s4x4,      0x000, 0},
@@ -1398,25 +1409,24 @@ map::map_thing map::map_init_table[] = {
     s_1x2dmd,2,MPKIND__MAGICINTLKDMD,1,0,sbigdmd,0x000, 0},
 
    {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x104, 0},
+    sdmd,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},   // Changed.
    {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x004, 0},
+    sdmd,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},   // Changed, darn it.
    {{0, 2,                 1, 3},
     s1x2,2,MPKIND__DMD_STUFF,0,   0,  sdmd,      0x004, 0},
    {{1, 3,                 0, 2},
     s1x2,2,MPKIND__DMD_STUFF,1,   0,  sdmd,      0x001, 0},
-   {{0, 1, 2, 3, 1, 2, 3, 0},
-    s2x2,2,MPKIND__DMD_STUFF,0,   0,  s2x2,      0x104, 0},
+   {{0, 1, 2, 3, 0, 1, 2, 3},
+    s2x2,2,MPKIND__DMD_STUFF,0,   0,  s2x2,      0x000, 0},
    {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x104, 0},
+    s1x4,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},   // Changed.
    {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x004, 0},
+    s1x4,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},   // Changed, darn it.
 
-   {{13, 14, 5, 6,         1, 2, 9, 10},
-    s2x2,2,MPKIND__ALL_8,0,       0,  s4x4,      0x004, 0},
-
-   {{1, 2, 9, 10,          13, 14, 5, 6},
-    s2x2,2,MPKIND__ALL_8,1,       0,  s4x4,      0x001, 0},
+   {{13, 14, 5, 6,         10, 1, 2, 9},
+    s2x2,2,MPKIND__ALL_8,0,       0,  s4x4,      0x000, 0},
+   {{10, 1, 2, 9,          13, 14, 5, 6},
+    s2x2,2,MPKIND__ALL_8,1,       0,  s4x4,      0x000, 0},
    {{0, 3, 4, 7,           2, 5, 6, 1},
     sdmd,2,MPKIND__ALL_8,0,       0,  s_thar,    0x004, 0},
    {{2, 5, 6, 1,           0, 3, 4, 7},
@@ -1468,94 +1478,104 @@ map::map_thing map::map_init_table[] = {
     s1x4,3,MPKIND__OFFS_R_HALF_SPECIAL,1, 0,s4x4,0x015, 0},
 
    {{0, 1, 2, 3, 6, 7, 8, 9},
-    s2x4,1,MPKIND__OFFS_L_HALF,0, 0,  s2x6,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_HALF,1, 0,  s2x6,      0x000, 0},
    {{2, 3, 4, 5, 8, 9, 10, 11},
-    s2x4,1,MPKIND__OFFS_R_HALF,0, 0,  s2x6,      0x000, 0},
-
-   {{0, 1, 2, 3, 4, 5, 6, 7},
-    s_qtag,1,MPKIND__OFFS_L_HALF,1, 0, spgdmdccw,0x000, 0},
-   {{0, 1, 2, 3, 4, 5, 6, 7},
-    s_qtag,1,MPKIND__OFFS_R_HALF,1, 0, spgdmdcw, 0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_HALF,1, 0,  s2x6,      0x000, 0},
 
    {{0, 1, 2, 3, 5, 6, 7, 8},
-    s2x4,1,MPKIND__OFFS_L_ONEQ,0, 0,  s2x5,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_ONEQ,1, 0,  s2x5,      0x000, 0},
    {{1, 2, 3, 4, 6, 7, 8, 9},
-    s2x4,1,MPKIND__OFFS_R_ONEQ,0, 0,  s2x5,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_ONEQ,1, 0,  s2x5,      0x000, 0},
 
    {{0, 1, 2, 3, 7, 8, 9, 10},
-    s2x4,1,MPKIND__OFFS_L_THRQ,0, 0,  s2x7,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_THRQ,1, 0,  s2x7,      0x000, 0},
    {{3, 4, 5, 6, 10, 11, 12, 13},
-    s2x4,1,MPKIND__OFFS_R_THRQ,0, 0,  s2x7,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_THRQ,1, 0,  s2x7,      0x000, 0},
 
    {{0, 1, 2, 3, 8, 9, 10, 11},
-    s2x4,1,MPKIND__OFFS_L_FULL,0, 0,  s2x8,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_FULL,1, 0,  s2x8,      0x000, 0},
    {{4, 5, 6, 7, 12, 13, 14, 15},
-    s2x4,1,MPKIND__OFFS_R_FULL,0, 0,  s2x8,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_FULL,1, 0,  s2x8,      0x000, 0},
 
    {{0, 1, 2, 3, 7, 8, 9, 10, 11, 12, 16, 17},
-    s3x4,1,MPKIND__OFFS_L_HALF,0, 7,  s3x6,      0x000, 0},
+    s3x4,1,MPKIND__OFFS_L_HALF,1, 7,  s3x6,      0x000, 0},
    {{2, 3, 4, 5, 7, 8, 11, 12, 13, 14, 16, 17},
-    s3x4,1,MPKIND__OFFS_R_HALF,0, 7,  s3x6,      0x000, 0},
+    s3x4,1,MPKIND__OFFS_R_HALF,1, 7,  s3x6,      0x000, 0},
+
+   // Shouldn't these two go to a 3x4 instead of a 3x6???
+   /*
    {{1, 2, 7, 8, 10, 11, 16, 17},
-    s_qtag,1,MPKIND__OFFS_L_HALF,0, 7,  s3x6,    0x000, 0},
+    s_qtag,1,MPKIND__OFFS_L_HALF,1, 7,  s3x6,    0x000, 0},
    {{3, 4, 7, 8, 12, 13, 16, 17},
-    s_qtag,1,MPKIND__OFFS_R_HALF,0, 7,  s3x6,    0x000, 0},
+    s_qtag,1,MPKIND__OFFS_R_HALF,1, 7,  s3x6,    0x000, 0},
+   */
+   // Try it:
+   {{0, 1, 4, 5, 6, 7, 10, 11},
+    s_qtag,1,MPKIND__OFFS_L_HALF,1, 7,  s3x4,    0x000, 0},
+   {{2, 3, 4, 5, 8, 9, 10, 11},
+    s_qtag,1,MPKIND__OFFS_R_HALF,1, 7,  s3x4,    0x000, 0},
+
+
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s_qtag,1,MPKIND__OFFS_L_HALF,0, 0, spgdmdccw,0x000, 0},
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s_qtag,1,MPKIND__OFFS_R_HALF,0, 0, spgdmdcw, 0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14},
-    s2x6,1,MPKIND__OFFS_L_HALF,0, 5,  s2x9,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_L_HALF,1, 5,  s2x9,      0x000, 0},
    {{3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17},
-    s2x6,1,MPKIND__OFFS_R_HALF,0, 5,  s2x9,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_R_HALF,1, 5,  s2x9,      0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_L_HALF,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_L_HALF,1, 2,  s1x8,      0x000, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_R_HALF,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_R_HALF,1, 2,  s1x8,      0x000, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_L_FULL,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_L_FULL,1, 2,  s1x8,      0x000, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    s1x8,1,MPKIND__OFFS_R_FULL,0, 2,  s1x8,      0x000, 0},
+    s1x8,1,MPKIND__OFFS_R_FULL,1, 2,  s1x8,      0x000, 0},
 
    {{10, 11, 2, 3, 4, 5, 8, 9},
-    s2x4,1,MPKIND__OFFS_L_HALF,1, 0,  s3x4,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_L_HALF,0, 0,  s3x4,      0x000, 0},
    {{0, 1, 5, 4, 6, 7, 11, 10},
-    s2x4,1,MPKIND__OFFS_R_HALF,1, 0,  s3x4,      0x000, 0},
+    s2x4,1,MPKIND__OFFS_R_HALF,0, 0,  s3x4,      0x000, 0},
 
    {{15, 16, 17, 3, 4, 5, 6, 7, 8, 12, 13, 14},
-    s2x6,1,MPKIND__OFFS_L_HALF,1, 0,  s3x6,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_L_HALF,0, 0,  s3x6,      0x000, 0},
    {{0, 1, 2, 8, 7, 6, 9, 10, 11, 17, 16, 15},
-    s2x6,1,MPKIND__OFFS_R_HALF,1, 0,  s3x6,      0x000, 0},
+    s2x6,1,MPKIND__OFFS_R_HALF,0, 0,  s3x6,      0x000, 0},
    {{13, 15, 2, 4, 5, 7, 10, 12},
-    s2x4,1,MPKIND__OFFS_L_FULL,1, 0,  s4x4,      0x001, 0},
+    s2x4,1,MPKIND__OFFS_L_FULL,0, 0,  s4x4,      0x001, 0},
    {{0, 1, 11, 6, 8, 9, 3, 14},
-    s2x4,1,MPKIND__OFFS_R_FULL,1, 0,  s4x4,      0x001, 0},
+    s2x4,1,MPKIND__OFFS_R_FULL,0, 0,  s4x4,      0x001, 0},
 
    {{9, 11, 14, 0, 1, 3, 6, 8,         12, 13, 7, 2, 4, 5, 15, 10},
-    s2x4,2,MPKIND__OFFS_BOTH_FULL,1, 0, s4x4,    0x000, 0},
+    s2x4,2,MPKIND__OFFS_BOTH_FULL,0, 0, s4x4,    0x000, 0},
    {{0, 1, 2, 3, 8, 9, 10, 11,         4, 5, 6, 7, 12, 13, 14, 15},
-    s2x4,2,MPKIND__OFFS_BOTH_FULL,0, 0, s2x8,    0x000, 0},
+    s2x4,2,MPKIND__OFFS_BOTH_FULL,1, 0, s2x8,    0x000, 0},
 
    {{10, 11, 8, 9,                     2, 3, 4, 5},
     s2x2,2,MPKIND__OFFS_L_HALF,0, 0,  s3x4,      0x000, 0},
    {{0, 1, 11, 10,                     5, 4, 6, 7},
     s2x2,2,MPKIND__OFFS_R_HALF,0, 0,  s3x4,      0x000, 0},
-   {{9, 11, 6, 8,                      14, 0, 1, 3},
-    s2x2,2,MPKIND__OFFS_L_FULL,0, 0,  s4x4,      0x000, 0},
-   {{12, 13, 15, 10,                   7, 2, 4, 5},
-    s2x2,2,MPKIND__OFFS_R_FULL,0, 0,  s4x4,      0x000, 0},
-
    {{11, 8, 9, 10,                     3, 4, 5, 2},
     s2x2,2,MPKIND__OFFS_L_HALF,1, 0,  s3x4,      0x005, 0},
    {{1, 11, 10, 0,                     4, 6, 7, 5},
     s2x2,2,MPKIND__OFFS_R_HALF,1, 0,  s3x4,      0x005, 0},
+
+   {{9, 11, 6, 8,                      14, 0, 1, 3},
+    s2x2,2,MPKIND__OFFS_L_FULL,0, 0,  s4x4,      0x000, 0},
+   {{12, 13, 15, 10,                   7, 2, 4, 5},
+    s2x2,2,MPKIND__OFFS_R_FULL,0, 0,  s4x4,      0x000, 0},
    {{11, 6, 8, 9,                      0, 1, 3, 14},
     s2x2,2,MPKIND__OFFS_L_FULL,1, 0,  s4x4,      0x005, 0},
    {{13, 15, 10, 12,                   2, 4, 5, 7},
     s2x2,2,MPKIND__OFFS_R_FULL,1, 0,  s4x4,      0x005, 0},
 
-   {{0, 4, 5,                     3, 1, 2},
-    s_trngl,2,MPKIND__OFFS_R_HALF,0, 0,s_nftrgl6cw,0x102, 0},
    {{5, 0, 1,                     2, 3, 4},
     s_trngl,2,MPKIND__OFFS_L_HALF,0, 0,s_nftrgl6ccw,0x108, 0},
+   {{0, 4, 5,                     3, 1, 2},
+    s_trngl,2,MPKIND__OFFS_R_HALF,0, 0,s_nftrgl6cw,0x102, 0},
 
    {{15, 14, 12, 13,                   4, 5, 7, 6},
     s1x4,2,MPKIND__OFFS_L_HALF,0, 0,  s1p5x8,    0x000, 0},
@@ -1572,14 +1592,20 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 3, 2,                       11, 10, 8, 9},
     s1x4,2,MPKIND__OFFS_R_FULL,0, 0,  s2x8,      0x000, 0},
 
-   {{0, 1, 4, 5},
-    s1x4,1,MPKIND__OFFS_L_FULL,1, 0,  s2x4,      0x000, 0},
    {{7, 6, 3, 2},
-    s1x4,1,MPKIND__OFFS_R_FULL,1, 0,  s2x4,      0x000, 0},
-   {{2, 3, 6, 7},
-    s2x2,1,MPKIND__OFFS_L_FULL,0, 0,  s2x4,      0x000, 0},
+    s1x4,1,MPKIND__OFFS_L_FULL,0, 0,  s2x4,      0x000, 0},
    {{0, 1, 4, 5},
-    s2x2,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x000, 0},
+    s1x4,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x000, 0},
+
+   {{0, 1, 4, 5},
+    s2x2,1,MPKIND__OFFS_L_FULL,1, 0,  s2x4,      0x000, 0},
+   {{2, 3, 6, 7},
+    s2x2,1,MPKIND__OFFS_R_FULL,1, 0,  s2x4,      0x000, 0},
+
+   {{1, 4, 5, 0},
+    s2x2,1,MPKIND__OFFS_L_FULL,0, 0,  s2x4,      0x001, 0},
+   {{3, 6, 7, 2},
+    s2x2,1,MPKIND__OFFS_R_FULL,0, 0,  s2x4,      0x001, 0},
 
    {{9, 8, 6, 7,                       0, 1, 3, 2},
     s1x4,2,MPKIND__OFFS_L_HALF,1, 0,  s2x6,      0x000, 0},
@@ -1625,10 +1651,11 @@ map::map_thing map::map_init_table[] = {
     s_trngl4,2,MPKIND__OFFS_L_HALF,0, 0, sbigdmd,0x107, 0},
    {{11, 10, 9, 8,                     5, 4, 3, 2},
     s_trngl4,2,MPKIND__OFFS_R_HALF,0, 0, sbigdmd,0x10D, 0},
-   {{7, 3, 14, 0,                      15, 11, 6, 8},
-    s_trngl4,2,MPKIND__OFFS_L_HALF_NONISO,0,4,s4x4,0x108, 0},
+
+   {{15, 11, 6, 8,                      7, 3, 14, 0},
+    s_trngl4,2,MPKIND__OFFS_L_HALF_NONISO,0,4,s4x4,0x002, 0},
    {{11, 15, 12, 13,                      3, 7, 4, 5},
-    s_trngl4,2,MPKIND__OFFS_R_HALF_NONISO,0,4,s4x4,0x108, 0},
+    s_trngl4,2,MPKIND__OFFS_R_HALF_NONISO,0,4,s4x4,0x008, 0},
 
    {{15, 16, 17, 12, 13, 14,           3, 4, 5, 6, 7, 8},
     s2x3,2,MPKIND__OFFS_L_HALF,0, 0,  s3x6,      0x000, 0},
@@ -1641,6 +1668,12 @@ map::map_thing map::map_init_table[] = {
    {{-1, 2, 9, 1, 20, 19, 18, 10, -1, -1, -1, 11, -1, -1, -1, 0,
      -1, -1, -1, 23, -1, -1, -1, 12, -1, 14, 21, 13, 8, 7, 6, 22},
     s4x4,2,MPKIND__OFFS_R_HALF,0, 0,  s4x6,      0x000, 0},
+   {{23, 12, -1, 13, -1, -1, -1, -1, -1, -1, 15, -1, 20, 21, 22, 14,
+     -1, -1, 3, -1, 8, 9, 10, 2, 11, 0, -1, 1, -1, -1, -1, -1},
+    s4x4,2,MPKIND__OFFS_L_HALF,1, 0,  s4x6,      0x000, 0},
+   {{21, 14, -1, 15, -1, -1, -1, -1, -1, -1, 17, -1, 18, 19, 20, 16,
+     -1, -1, 5, -1, 6, 7, 8, 4, 9, 2, -1, 3, -1, -1, -1, -1},
+    s4x4,2,MPKIND__OFFS_R_HALF,1, 0,  s4x6,      0x000, 0},
 
    {{20, 21, 22, 23, 16, 17, 18, 19,   4, 5, 6, 7, 8, 9, 10, 11},
     s2x4,2,MPKIND__OFFS_L_HALF,0, 0,  s3x8,      0x000, 0},
@@ -1759,8 +1792,19 @@ map::map_thing map::map_init_table[] = {
     s4x4,2,MPKIND__OVERLAP,0,     0,  s4x6,      0x000, 0},
    {{0, 1, 5, 11, 7, 8, 9, 10,         1, 2, 3, 4, 6, 7, 11, 5},
     s_qtag,2,MPKIND__OVERLAP,0,   0,  s3dmd,     0x000, 0},
+
+   // This helps with things like triple boxes working together rotary spin.
+   // We may have been confused about what "step to a left-handed wave and cast off 3/4"
+   // meant for the absent centers, so we may have gone to 1/4 tags with absent centers,
+   // rather than 2x4's with absent centers.  This makes it work anyway.
+   {{3, 8, -1, -1, 11, 0, -1, -1,         5, 6, -1, -1, 9, 2, -1, -1},
+    s_qtag,2,MPKIND__OVERLAP,1,   0,  s2x6,      0x005, 0},
+
    {{9, 0, 10, 8, 5, 7, 11, 1,         11, 1, 5, 7, 3, 6, 4, 2},
     s_ptpd,2,MPKIND__OVERLAP,0,   0,  s3ptpd,    0x000, 0},
+   {{15, 16, 17, 8, 7, 6, 9, 10, 11, 12, 13, 14,
+     0, 1, 2, 3, 4, 5, 6, 7, 8, 17, 16, 15},
+    s2x6,2,MPKIND__OVERLAP,1,     0,  s3x6,      0x000, 0},
    {{20, 21, 22, 23, 11, 10, 9, 8, 12, 13, 14, 15, 16, 17, 18, 19,
      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 23, 22, 21, 20},
     s2x8,2,MPKIND__OVERLAP,1,     0,  s3x8,      0x000, 0},
@@ -1798,17 +1842,31 @@ map::map_thing map::map_init_table[] = {
     s2x2,2,MPKIND__OVERLAP,0,     0,  s2x3,      0x000, 0},
    {{1, 4, 5, 0,                       2, 3, 4, 1},
     s2x2,2,MPKIND__OVERLAP,1,     0,  s2x3,      0x005, 0},
+
    {{0, 1, 6, 7,            1, 2, 5, 6,            2, 3, 4, 5},
     s2x2,3,MPKIND__OVERLAP,0,     0,  s2x4,      0x000, 0},
+   {{1, 6, 7, 0,            2, 5, 6, 1,            3, 4, 5, 2},
+    s2x2,3,MPKIND__OVERLAP,1,     0,  s2x4,      0x015, 0},
+
    {{0, 1, 8, 9,       1, 2, 7, 8,       2, 3, 6, 7,      3, 4, 5, 6},
     s2x2,4,MPKIND__OVERLAP,0,     0,  s2x5,      0x000, 0},
+   {{1, 8, 9, 0,       2, 7, 8, 1,       3, 6, 7, 2,      4, 5, 6, 3},
+    s2x2,4,MPKIND__OVERLAP,1,     0,  s2x5,      0x055, 0},
+
    {{0, 1, 10, 11,  1, 2, 9, 10,  2, 3, 8, 9,  3, 4, 7, 8,  4, 5, 6, 7},
     s2x2,5,MPKIND__OVERLAP,0,     0,  s2x6,      0x000, 0},
+   {{1, 10, 11, 0,  2, 9, 10, 1,  3, 8, 9, 2,  4, 7, 8, 3,  5, 6, 7, 4},
+    s2x2,5,MPKIND__OVERLAP,1,     0,  s2x6,      0x155, 0},
+
    {{0, 1, 12, 13,  1, 2, 11, 12,  2, 3, 10, 11,  3, 4, 9, 10,  4, 5, 8, 9,  5, 6, 7, 8},
     s2x2,6,MPKIND__OVERLAP,0,     0,  s2x7,      0x000, 0},
-   {{0, 1, 14, 15,  1, 2, 13, 14,  2, 3, 12, 13,  3, 4, 11, 12,
-     4, 5, 10, 11,  5, 6, 9, 10,   6, 7, 8, 9},
+   {{1, 12, 13, 0,  2, 11, 12, 1,  3, 10, 11, 2,  4, 9, 10, 3,  5, 8, 9, 4,  6, 7, 8, 5},
+    s2x2,6,MPKIND__OVERLAP,1,     0,  s2x7,      0x555, 0},
+
+   {{0, 1, 14, 15,  1, 2, 13, 14,  2, 3, 12, 13,  3, 4, 11, 12,  4, 5, 10, 11,  5, 6, 9, 10,   6, 7, 8, 9},
     s2x2,7,MPKIND__OVERLAP,0,     0,  s2x8,      0x000, 0},
+   {{1, 14, 15, 0,  2, 13, 14, 1,  3, 12, 13, 2,  4, 11, 12, 3,  5, 10, 11, 4,  6, 9, 10, 5,   7, 8, 9, 6},
+    s2x2,7,MPKIND__OVERLAP,1,     0,  s2x8,      0x1555, 0},
 
    {{0, 1, 15, 14, 10, 11, 12, 13,     1, 2, 6, 7, 9, 10, 14, 15,
      2, 3, 4, 5, 8, 9, 7, 6},
@@ -1853,6 +1911,15 @@ map::map_thing map::map_init_table[] = {
      5, 6, 23, 12, 13, 22, 7, 4},
     s2x4,5,MPKIND__OVERLAP,1,     0,  s4x6,      0x155, 0},
 
+   {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},
+    s_hrglass,2,MPKIND__SPEC_MATRIX_OVERLAP,1,0,  s_qtag,    0x005, 0},
+   {{-1, 1, -1, 6, -1, 7, -1, 0,       -1, 3, -1, 4, -1, 5, -1, 2},
+    s_galaxy,2,MPKIND__SPEC_MATRIX_OVERLAP,1, 0,  s2x4,      0x005, 0},
+   {{19, 15, 12, 14, 13, 17, 0, 18,
+     5, 9, 11, 16, 15, 19, 1, 6,
+     3, 7, 10, 8, 9, 5, 2, 4},
+    s_qtag,3,MPKIND__SPEC_MATRIX_OVERLAP,1,   0,  s3oqtg,    0x015, 0},
+
    {{0, 3,                             1, 2},
     s1x2,2,MPKIND__REMOVED,0,     0,  s1x4,      0x000, 0},
 
@@ -1866,6 +1933,8 @@ map::map_thing map::map_init_table[] = {
     s1x3,2,MPKIND__REMOVED,1,     0,  s2x3,      0x000, 0},
    {{0, 2, 4, 7, 9, 11,                1, 3, 5, 6, 8, 10},
     s2x3,2,MPKIND__REMOVED,0,     0,  s2x6,      0x000, 0},
+   {{2, 5, 7, 9, 10, 0,                3, 4, 6, 8, 11, 1},
+    s2x3,2,MPKIND__REMOVED,1,     0,  s3x4,      0x005, 0},
    {{0, 3, 5, 6,                       1, 2, 4, 7},
     s1x4,2,MPKIND__REMOVED,0,     0,  s1x8,      0x000, 0},
    {{7, 6, 4, 5,                       0, 1, 3, 2},
@@ -1874,6 +1943,9 @@ map::map_thing map::map_init_table[] = {
     s1x8,2,MPKIND__REMOVED,0,     0,  s1x16,      0x000, 0},
    {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},
     s1x8,2,MPKIND__REMOVED,1,     0,  s2x8,      0x000, 0},
+
+   {{0, 2, 4, 7, 11, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8},
+    s3x3,2,MPKIND__REMOVED,0,     0,  s3x6,      0x000, 0},
 
    {{0, 5,                  1, 4,                  2, 3},
     s1x2,3,MPKIND__TWICE_REMOVED,0,0,  s1x6,     0x000, 0},
@@ -1920,6 +1992,11 @@ map::map_thing map::map_init_table[] = {
    {{7, 22, 15, 20, 18, 11, 2, 9,
      6, 23, 14, 21, 19, 10, 3, 8},
     s_qtag,2,MPKIND__REMOVED,1,   0,  s4x6,      0x005, 0},
+
+   {{7, 1, 3, 5,             0, 2, 4, 6, (veryshort) s2x2},
+    sdmd,2,MPKIND__SPEC_ONCEREM,0, 0, s_spindle, 0x000, 0},
+   {{0, 2, 4, 6,                       1, 3, 5, 7, (veryshort) sdmd},
+    s1x4,2,MPKIND__SPEC_ONCEREM,0, 0, s1x3dmd,   0x000, 0},
 
    {{1, 7, 5, 3,                 (veryshort) s1x2, 0, 6, 2, 4},
     s2x2,3,MPKIND__SPEC_TWICEREM,0,   0,  s_ptpd,0x000, 0},
@@ -2096,6 +2173,11 @@ map::map_thing map::map_init_table[] = {
    {{1, 6, 7, 0,                       3, 4, 5, 2},
     s2x2,2,MPKIND__SPLIT,1,       0,  s2x4,      0x005, 0},
 
+   {{0, 1, 2, 17, 12, 13, 14, 15, 16,     3, 4, 5, 6, 9, 10, 11, 8, 7},
+    s3x3,2,MPKIND__SPLIT,0,       0,  s3x6,      0x000, 0},
+   {{2, 17, 12, 13, 14, 15, 0, 1, 16,     5, 6, 9, 10, 11, 8, 3, 4, 7},
+    s3x3,2,MPKIND__SPLIT,1,       0,  s3x6,      0x005, 0},
+
    {{0, 1, 10, 11,          2, 3, 8, 9,            4, 5, 6, 7},
     s2x2,3,MPKIND__SPLIT,0,       0,  s2x6,      0x000, 0},
    {{1, 10, 11, 0,          3, 8, 9, 2,            5, 6, 7, 4},
@@ -2202,32 +2284,32 @@ const map::map_thing map::spec_map_table[] = {
    {{2, 3, 4, 5, 10, 11, 12, 13},
     s2x4,1,MPKIND__NONE,0,        0,  s2x8,      0x000, 0, spcmap_inner_box},
    {{0, 10, 2, 8, 12, 22, 14, 20,        11, 1, 9, 3, 23, 13, 21, 15},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6,      0x000, 0, spcmap_lh_stag},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_lh_stag},
    {{2, 8, 4, 6, 14, 20, 16, 18,          9, 3, 7, 5, 21, 15, 19, 17},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6,      0x000, 0, spcmap_rh_stag},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_rh_stag},
    {{0, 8, 2, 6, 10, 18, 12, 16,          9, 1, 7, 3, 19, 11, 17, 13},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x5,      0x000, 0, spcmap_lh_stag_1_4},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x5,      0x000, 0, spcmap_lh_stag_1_4},
    {{1, 7, 3, 5, 11, 17, 13, 15,          8, 2, 6, 4, 18, 12, 16, 14},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x5,      0x000, 0, spcmap_rh_stag_1_4},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x5,      0x000, 0, spcmap_rh_stag_1_4},
    {{11, 1, 2, 8, 23, 13, 14, 20,         0, 10, 9, 3, 12, 22, 21, 15},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6,      0x000, 0, spcmap_lh_ox},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_lh_ox},
    {{9, 3, 4, 6, 21, 15, 16, 18,          2, 8, 7, 5, 14, 20, 19, 17},
-    s2x4,2,MPKIND__NONE,0,        0,  s4x6,      0x000, 0, spcmap_rh_ox},
+    s2x4,2,MPKIND__NONE,1,        0,  s4x6,      0x000, 0, spcmap_rh_ox},
    {{0, -1, 1, -1, 2, -1, 3, -1, 6, -1, 7, -1, 8, -1, 9, -1},
-    s_c1phan,1,MPKIND__OFFS_L_HALF,0, 0, sbigdmd,0x000, 0, spcmap_lh_c1phana},
-   {{-1, 12, -1, 10, -1, 3, -1, 15, -1, 4, -1, 2, -1, 11, -1, 7},
-    s_c1phan,1,MPKIND__OFFS_L_HALF,0, 4,  s4x4,  0x000, 0, spcmap_lh_c1phanb},
+    s_c1phan,1,MPKIND__OFFS_L_HALF,1, 0, sbigdmd,0x000, 0, spcmap_lh_c1phana},
    {{-1, 2, -1, 3, -1, 5, -1, 4, -1, 8, -1, 9, -1, 11, -1, 10},
-    s_c1phan,1,MPKIND__OFFS_R_HALF,0, 0, sbigdmd,0x000, 0, spcmap_rh_c1phana},
+    s_c1phan,1,MPKIND__OFFS_R_HALF,1, 0, sbigdmd,0x000, 0, spcmap_rh_c1phana},
+   {{-1, 12, -1, 10, -1, 3, -1, 15, -1, 4, -1, 2, -1, 11, -1, 7},
+    s_c1phan,1,MPKIND__OFFS_L_HALF,1, 4,  s4x4,  0x000, 0, spcmap_lh_c1phanb},
    {{15, -1, 3, -1, 0, -1, 1, -1, 7, -1, 11, -1, 8, -1, 9, -1},
-    s_c1phan,1,MPKIND__OFFS_R_HALF,0, 4,  s4x4,  0x000, 0, spcmap_rh_c1phanb},
-   {{15, 11, 6, 8, 9, 10,              0, 1, 2, 7, 3, 14},
+    s_c1phan,1,MPKIND__OFFS_R_HALF,1, 4,  s4x4,  0x000, 0, spcmap_rh_c1phanb},
+   {{15, 11, 6, 8, 9, 10,              0, 1, 2, 7, 3, 14},    // ****** This is actually offset 1/3
     s2x3,2,MPKIND__OFFS_L_HALF,1, 0,  s4x4,      0x005, 0, spcmap_lh_s2x3_3},
-   {{11, 7, 2, 4, 5, 6,                12, 13, 14, 3, 15, 10},
-    s2x3,2,MPKIND__OFFS_L_HALF,1, 0,  s4x4,      0x000, 0, spcmap_lh_s2x3_2},
-   {{13, 15, 11, 9, 10, 12,            1, 2, 4, 5, 7, 3},
+   {{13, 15, 11, 9, 10, 12,            1, 2, 4, 5, 7, 3},     // ****** This is actually offset 1/3
     s2x3,2,MPKIND__OFFS_R_HALF,1, 0,  s4x4,      0x005, 0, spcmap_rh_s2x3_3},
-   {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},
+   {{11, 7, 2, 4, 5, 6,                12, 13, 14, 3, 15, 10}, // ****** This is actually offset 1/3
+    s2x3,2,MPKIND__OFFS_L_HALF,1, 0,  s4x4,      0x000, 0, spcmap_lh_s2x3_2},
+   {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},   // ****** This is actually offset 1/3
     s2x3,2,MPKIND__OFFS_R_HALF,1, 0,  s4x4,      0x000, 0, spcmap_rh_s2x3_2},
    {{10, 19, 16, 17, 18, 11,           5, 6, 23, 22, 7, 4},
     s2x3,2,MPKIND__OFFS_L_FULL,1, 0,  s4x6,      0x005, 0, spcmap_lh_s2x3_7},
@@ -2265,15 +2347,24 @@ const map::map_thing map::spec_map_table[] = {
     s2x3,1,MPKIND__NONE,0,        0,  s4x4,      0x000, 0, spcmap_diag23c},
    {{1, 7, 6, 9, 15, 14},
     s2x3,1,MPKIND__NONE,1,        0,  s4x4,      0x001, 0, spcmap_diag23d},
+   {{-1, -1, -1, 13, -1, 15, 0, 14, -1, -1, -1, 1, -1, 3, 12, 2,
+     -1, -1, -1,  9, -1, 11, 4, 10, -1, -1, -1, 5, -1, 7,  8, 6},
+    s4x4,2,MPKIND__SPLIT,1,       0,  sfat2x8,   0x005, 0, spcmap_f2x8_4x4},
    {{-1, 3, 12, 2, -1, -1, -1, 13, -1, 15, 0, 14, -1, -1, -1, 1,
      -1, 7,  8, 6, -1, -1, -1,  9, -1, 11, 4, 10, -1, -1, -1, 5},
-    s4x4,2,MPKIND__SPLIT,0,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_4x4},
+    s4x4,2,MPKIND__SPLIT,0,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_4x4h},
+   {{6, 8, -1, 9, -1, -1, -1, -1, -1, -1, 12, -1, 13, 15, 11, 10,
+     -1, -1, 4, -1, 5, 7, 3, 2, 14, 0, -1, 1, -1, -1, -1, -1},
+    s4x4,2,MPKIND__SPLIT,1,       0,  swide4x4,  0x005, 0, spcmap_w4x4_4x4},
    {{13, 15, 11, 10, 6, 8, -1, 9, -1, -1, -1, -1, -1, -1, 12, -1,
      -1, -1, -1, -1, -1, -1, 4, -1, 5, 7, 3, 2, 14, 0, -1, 1},
-    s4x4,2,MPKIND__SPLIT,0,       0,  swide4x4,  0x000, 0, spcmap_w4x4_4x4},
-   {{15, 14, 13, 12, 11, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1, -1
+    s4x4,2,MPKIND__SPLIT,0,       0,  swide4x4,  0x000, 0, spcmap_w4x4_4x4h},
+   {{15, 14, 13, 12, 11, 10, 9, 8, -1, -1, -1, -1, -1, -1, -1, -1,
      -1, -1, -1, -1, -1, -1, -1, -1, 7, 6, 5, 4, 3, 2, 1, 0},
     s2x8,2,MPKIND__SPLIT,1,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_2x8},
+   {{-1, -1, -1, -1, 0, 1, 2, 3, 12, 13, 14, 15, -1, -1, -1, -1,
+     4, 5, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1, 8, 9, 10, 11},
+    s2x8,2,MPKIND__SPLIT,0,       0,  sfat2x8,   0x000, 0, spcmap_f2x8_2x8h},
    {{-1, -1, 9, 11, 7, 2, -1, -1, -1, -1,  4, 5, 6, 8, -1, -1,
      -1, -1, 12, 13, 14, 0, -1, -1, -1, -1, 1, 3, 15, 10, -1, -1},
     s2x8,2,MPKIND__SPLIT,1,       0,  swide4x4,  0x000, 0, spcmap_w4x4_2x8},
@@ -2283,10 +2374,6 @@ const map::map_thing map::spec_map_table[] = {
     s2x4,2,MPKIND__OFFS_R_THRQ,1, 0,  s4x5,      0x000, 0, spcmap_emergency2},
    {{-1, 0, 6, 5, -1, 3, -1, 7, 2, 1, -1, 4},
     sdmd,3,MPKIND__SPLIT, 0, 0,  s_dhrglass,     0x000, 0, spcmap_fix_triple_turnstyle},
-   {{7, 1, 3, 5,             0, 2, 4, 6, (int) s2x2},
-    sdmd,2,MPKIND__SPEC_ONCEREM,0,0,  s_spindle, 0x000, 0, spcmap_spndle_once_rem},
-   {{0, 2, 4, 6,                       1, 3, 5, 7, (int) sdmd},
-    s1x4,2,MPKIND__SPEC_ONCEREM,0,0,  s1x3dmd,   0x000, 0, spcmap_1x3dmd_once_rem},
    {{0, 3,                             1, 2},
     s1x2,2,MPKIND__SPLIT,1,       0,  s2x2,      0x005, 0, spcmap_2x2v},
    {{0, 6, 3, 5,                       7, 1, 4, 2},
@@ -2343,24 +2430,8 @@ const map::map_thing map::spec_map_table[] = {
    {{6, 7, 0, -1, -1, 5,               -1, -1, 1, 2, 3, 4},
     s_1x2dmd,2,MPKIND__NONE,0,    0,  s_rigger,  0x000, 0, spcmap_rig_1x6},
 
-   {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},
-    s_hrglass,2,MPKIND__OVERLAP,1,0,  s_qtag,    0x005, 0, spcmap_ov_hrg_1},
-   {{-1, 0, -1, 1, -1, 6, -1, 7,       -1, 2, -1, 3, -1, 4, -1, 5},
-    s_galaxy,2,MPKIND__OVERLAP,0, 0,  s2x4,      0x000, 0, spcmap_ov_gal_1},
-   {{19, 15, 12, 14, 13, 17, 0, 18,
-     5, 9, 11, 16, 15, 19, 1, 6,
-     3, 7, 10, 8, 9, 5, 2, 4},
-    s_qtag,3,MPKIND__OVERLAP,1,   0,  s3oqtg,    0x015, 0, spcmap_3o_qtag_1},
-   {{1, 0,                             2, 3},
-    s1x2,2,MPKIND__NONE,0,        0,  s_trngl4,  0x001, 0, spcmap_tgl4_1},
-   {{3, 2,                             1, 0},
-    s1x2,2,MPKIND__NONE,1,        0,  s_trngl4,  0x006, 0, spcmap_tgl4_2},
    {{0, 7, 5, -1, 6, -1,               -1, 2, -1, 4, 3, 1},
     s2x3,2,MPKIND__SPLIT,1,       0,  s_qtag,    0x005, 0, spcmap_qtag_2x3},
-   {{2, 5, 7, 9, 10, 0,                3, 4, 6, 8, 11, 1},
-    s2x3,2,MPKIND__REMOVED,1,     0,  s3x4,      0x005, 0, spcmap_2x3_rmvr},
-   {{1, 3, 4, -1, 6, -1,               -1, 2, -1, 5, 7, 0},
-    s2x3,2,MPKIND__REMOVED,1,     0,  s_qtag,    0x005, 0, spcmap_2x3_rmvs},
    {{0, 1, 3, 2, 4, 5, 7, 6},
     s_qtag,1,MPKIND__NONE,0,      0,  s2x4,      0x000, 0, spcmap_dbloff1},
    {{2, 3, 4, 5, 6, 7, 0, 1},
@@ -2525,6 +2596,8 @@ static expand::thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_q
 static expand::thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s_rigger, 0};
 static expand::thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, s_bone, s1x8, 0};
 static expand::thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, s_bone, s_rigger, 0};
+static expand::thing step_qtag_rigstuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, s_qtag, s_rigger, 1};
+static expand::thing step_rig_bonestuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, s_rigger, s_bone, 0};
 static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, s_rigger, s1x8, 0};
 static expand::thing step_2x1d_stuff = {{0, 1, 5, 3, 4, 2}, 6, s_1x2dmd, s1x6, 0};
 
@@ -2695,18 +2768,30 @@ full_expand::thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xF0UL,       0x20UL, ~0UL},
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0x0FUL,       0x02UL, ~0UL},
 
-   // Ends touch from a "bone" to a tidal wave.
+   // Ends touch from a bone to a tidal wave.
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA802UL, 0xFFFFUL},
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA208UL, 0xFFFFUL},
    // Same, but we get a 3&1 or inverted line, from which fan the top is legal.
    {warn__some_touch, 32, &step_bone_stuff,   s_bone,     0xFFFFUL,     0xAA00UL, 0xFFFFUL},
    {warn__some_touch, 32, &step_bone_stuff,   s_bone,     0xFFFFUL,     0xA00AUL, 0xFFFFUL},
 
-   // All touch from a "bone" to a rigger.
+   // All touch from a bone to a rigger.
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xFFFFUL,     0xAD07UL, 0xFFFFUL},
    // Same, with missing people.
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xF0F0UL,     0xAD07UL, 0xF0F0UL},
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0x0F0FUL,     0xAD07UL, 0x0F0FUL},
+
+   // All touch from a suitable qtag to a rigger.
+   {warn__none,       0, &step_qtag_rigstuff, s_qtag,     0xFFFFUL,     0x7DD7UL, 0xFFFFUL},
+   // Same, with missing people.
+   {warn__none,       0, &step_qtag_rigstuff, s_qtag,     0xF0F0UL,     0x7DD7UL, 0xF0F0UL},
+   {warn__none,       0, &step_qtag_rigstuff, s_qtag,     0x0F0FUL,     0x7DD7UL, 0x0F0FUL},
+
+   // All touch from a rigger to a bone.
+   {warn__none,       0, &step_rig_bonestuff, s_rigger,   0xFFFFUL,     0xAD07UL, 0xFFFFUL},
+   // Same, with missing people.
+   {warn__none,       0, &step_rig_bonestuff, s_rigger,   0xF0F0UL,     0xAD07UL, 0xF0F0UL},
+   {warn__none,       0, &step_rig_bonestuff, s_rigger,   0x0F0FUL,     0xAD07UL, 0x0F0FUL},
 
    // Centers touch from a "rigger" to a tidal wave.
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xFFFFUL,     0xA802UL, 0xFFFFUL},
@@ -2772,6 +2857,8 @@ full_expand::thing touch_init_table3[] = {
 };
 
 
+// 100 bit: don't allow for synthesize; that is, you can go in, but you can't come out.
+// 200 bit: don't allow for analyze; that is, you can come out, but you can't go in.
 
 // First line:
 //   bigsetup    lyzer      ... maps .............
@@ -2996,11 +3083,13 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s1x6,           schema_nothing, {2, 5,    0, 1, 3, 4},
              s1x2,     s1x4,     0, 0, 1, 1,  0x2FA, schema_concentric},
    {s1x6,           schema_concentric_4_2, {1, 2, 4, 5,    0, 3},
-             s1x4,     s1x2,     0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_2x1dmd,       schema_concentric_4_2, {0, 1, 3, 4,    5, 2},
-             s1x4,     s1x2,     0, 1, 1, 1,  0x0F5, schema_concentric},
-   {s_2x1dmd,       schema_nothing, {5, 1, 2, 4,    0, 3},
-             sdmd,     s1x2,     1, 0, 1, 1,  0x2F5, schema_concentric},
+    s1x4,     s1x2,     0, 0, 1, 1,  0x0FA, schema_concentric},
+
+   {s_2x1dmd,       schema_concentric_4_2_prefer_1x4, {0, 1, 3, 4,    5, 2},
+    s1x4,     s1x2,     0, 1, 1, 1,  0x0F5, schema_concentric},
+   {s_2x1dmd,       schema_concentric_4_2, {5, 1, 2, 4,    0, 3},
+    sdmd,     s1x2,     1, 0, 1, 1,  0x0F5, schema_concentric},
+
    // Next two are duplicate.
    {s_wingedstar,   schema_nothing, {7, 2, 3, 6,    0, 1, 4, 5},
              s_star,   s1x4,     1, 0, 1, 1,  0x2F5, schema_conc_star},
@@ -3069,6 +3158,20 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s_star,   0, 0, 1, 1,  0x2FA, schema_concentric},
    {sbigh,          schema_concentric, {4, 5, 10, 11,    0, 9, 6, 3},
              s1x4,     s2x2,     0, 0, 3, 1,  0x0EF, schema_concentric},
+
+   {s2x6,           schema_3x3k_concentric, {2, 3, 8, 9,   1, 4, 7, 10,  0, 5, 6, 11},
+             s2x2,     s2x2,     0, 0, 1, 2,  0x0FE, schema_3x3k_concentric},
+   {s2x6,           schema_3x3k_concentric, {9, 2, 3, 8,   10, 1, 4, 7,  11, 0, 5, 6},
+             s2x2,     s2x2,     1, 1, 9, 2,  0x2FB, schema_3x3k_concentric},
+   {s1x12,          schema_3x3k_concentric, {4, 5, 10, 11,   2, 3, 8, 9,   0, 1, 6, 7},
+             s1x4,     s1x4,     0, 0, 1, 2,  0x0FA, schema_3x3k_concentric},
+
+   {s2x8,           schema_4x4k_concentric, {3, 4, 11, 12,   2, 5, 10, 13,    1, 6, 9, 14,    0, 7, 8, 15},
+             s2x2,     s2x2,     0, 0, 1, 3,  0x0FE, schema_4x4k_concentric},
+   {s2x8,           schema_4x4k_concentric, {12, 3, 4, 11,   13, 2, 5, 10,    14, 1, 6, 9,    15, 0, 7, 8},
+             s2x2,     s2x2,     1, 1, 9, 3,  0x2FB, schema_4x4k_concentric},
+   {s1x16,          schema_4x4k_concentric, {6, 7, 14, 15,   4, 5, 12, 13,   2, 3, 10, 11,   0, 1, 8, 9},
+             s1x4,     s1x4,     0, 0, 1, 3,  0x0FA, schema_4x4k_concentric},
 
    // The 3x4 items appear after the 3dmd items.  Since the search order is reversed,
    // the 3x4 will be preferred when putting together a 1x4 and 2x2.
@@ -3436,7 +3539,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s_wingedstar,   schema_concentric, {2, 3, 6, 7,    0, 1, 4, 5},
              s_star,   s1x4,     0, 0, 1, 1,  0x0FA, schema_concentric},
    {s3x1dmd,        schema_concentric, {7, 2, 3, 6,    0, 1, 4, 5},
-             sdmd,     s1x4,     1, 0, 1, 1,  0x0F5, schema_concentric},
+    sdmd,     s1x4,     1, 0, 1, 1,  0x0F5, schema_concentric},
    {s1x3dmd,        schema_concentric, {2, 3, 6, 7,    0, 1, 4, 5},
              sdmd,     s1x4,     0, 0, 1, 1,  0x0FA, schema_concentric},
    {s_crosswave,    schema_concentric, {6, 7, 2, 3,    0, 1, 4, 5},
@@ -3458,12 +3561,41 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 };
 
 
+// Rotmask is the mask of things that we will reject.  The low 4 bits are rotations
+// that we will reject.  It is ANDed with "1 << r".  R is the rotation of res1,
+// after localizing so that res2 has rotation zero.  Hence r=0 if the two setups
+// have the same orientation, and, except in the case of things like triangles,
+// r=1 if they are orthogonal.  Common values of the low hex digit of "rotmask"
+// are therefore:
+//    E demand same orientation
+//    D demand orthogonal
+//    C either way.
+//
+// Additionally:
+//    The "10" bit means that action must be merge_without_gaps.
+//    The "20" bit means that action must NOT be merge_strict_matrix.
+//    The "40" bit means only accept it if the setups, prior to cutting down,
+//       were a 2x4 and a 1x8 that were perpendicular to each other.
+//    The "80" bit means that action must NOT be merge_c1_phantom_real.
+//    The "100" bit means that original action must NOT be merge_after_dyp.
+//    The "200" bit means only accept it if the setups, prior to cutting down,
+//       were a 2x4 and a ptpd that were perpendicular to each other. */
+
+// swap_setups
+//    1 bit - swap setups;
+//    2 bit - change elongation;
+//    4 bit - no take right hands
+//    8 bit - force outer_elong to 3, so people will go to corners of 4x4
+
+
+//                             rotmask |     | swap_setups
 merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_spindle, s_spindle, 0xAA, 0x55, 0x0D, 0x1, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
    {s_spindle, s_spindle, 0x55, 0xAA, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
    {s_spindle,     s2x4, 0x55,  0x66, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}},
    {s_ptpd,     sbigptpd, 0,  0, 0x0E, 0x0, schema_nothing,             nothing,     nothing,  warn__none, 0, 0, {2, 4, 3, 1, 8, 10, 9, 7}, {0}},
-   {s_1x2dmd,      s1x8, 022,   0x66, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, -1, 3, 5, -1, 7}, {0, -1, -1, 2, 4, -1, -1, 6}},
+   {s_1x2dmd,      s1x8, 0,     0x44, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7}, {0, 1, -1, 2, 4, 5, -1, 6}},
+   {s_1x2dmd,      s1x8, 044,   0,    0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {1, 3, -1, 5, 7, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
    {s_1x2dmd,  s_galaxy, 022,   0xAA, 0x1E, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {0, -1, 3, 4, -1, 7}, {1, -1, 2, -1, 5, -1, 6, -1}},
    {s_1x2dmd,      s2x4, 022,   0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 2, 3, 5},               {0, 3, 4, 7}},
    {sdmd,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
@@ -3473,6 +3605,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x4,        s_thar, 0x66,  0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 3, 4, 7}},
    {s2x3,        s_thar, 022,   0x33, 0x0E, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 2, 3, 5}},
    {s2x3,        s_thar, 022,   0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 2, 3, 5}},
+   {s1x2,       s1x3dmd, 0,     0x88, 0x0C, 0x0, schema_concentric_2_6, s1x2,        s1x6,     warn__none, 0, 0, {0, 1}, {0, 1, 2, 4, 5, 6}},
    {s1x2,        s_hrglass, 0,  0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
    {s1x2,        s_qtag, 0,     0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
    {s_qtag,        s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}},
@@ -4436,6 +4569,18 @@ static const coordrec thingrigger = {s_rigger, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1,  6,  7,  0,  1,  3,  2, -1,
       -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thing3x3 = {s3x3, 3,
+   { -4,   0,   4,   4,   4,   0,  -4,  -4,   0},
+   {  4,   4,   4,   0,  -4,  -4,  -4,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1, -1, -1,  7,  8,  3, -1, -1,
+      -1, -1, -1,  6,  5,  4, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
@@ -6875,6 +7020,16 @@ const setup_attr setup_attrs[] = {
     id_bit_table_rigger,
     {"66a b@7gh6 6dc@766f e",
      "5g@5h@fa@eb@5d@5c"}},
+   {8,                      // s3x3
+    &thing3x3,
+    &thing3x3,
+    {0, 0, 0, 0},
+    {b_3x3, b_3x3},
+    {3, 3},
+    true,
+    (const id_bit_table *) 0,
+    {"a  b  c@h  i  d@g  f  e",
+     (Cstring) 0}},
    {11,                     // s3x4
     &thing3x4,
     &thing3x4,
@@ -6927,7 +7082,7 @@ const setup_attr setup_attrs[] = {
      "k  l  a@@5 j  b@@5 i  c@@5 h  d@@g  f  e"}},
    {15,                     // s1p5x8
     (const coordrec *) 0,   // Code in anchor_someone_and_move requires that this
-    (const coordrec *) 0,   // setup look a lot like a 2x8.
+    (const coordrec *) 0,   // setup looks a lot like a 2x8.
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
@@ -6937,7 +7092,7 @@ const setup_attr setup_attrs[] = {
      "pa@@ob@@nc@@md@@le@@kf@@jg@@ih"}},
    {7,                      // s1p5x4
     (const coordrec *) 0,   // Code in anchor_someone_and_move requires that this
-    (const coordrec *) 0,   // setup look a lot like a 2x4.
+    (const coordrec *) 0,   // setup looks a lot like a 2x4.
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
@@ -7355,6 +7510,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
+   {31,                     // sxequlize
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {31,                     // sx1x16
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -7723,6 +7888,14 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric
    {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
     schema_concentric},                  // schema_cross_concentric
+   {0,
+    schema_nothing},                     // schema_3x3k_concentric
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_3x3k_concentric},             // schema_3x3k_cross_concentric
+   {0,
+    schema_nothing},                     // schema_4x4k_concentric
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_4x4k_concentric},             // schema_4x4k_cross_concentric
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK,
     schema_nothing},                     // schema_single_concentric
    {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
@@ -7805,6 +7978,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_2_4_or_normal
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_4_2
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_4_2_prefer_1x4
    {SCA_CENTRALCONC | SCA_CROSS,
     schema_concentric_4_2},              // schema_cross_concentric_4_2
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
@@ -7840,6 +8015,8 @@ const schema_attr schema_attrs[] = {
    {0,
     schema_nothing},                     // schema_concentric_to_outer_diamond
    {0,
+    schema_nothing},                     // schema_concentric_no31dwarn
+   {0,
     schema_nothing},                     // schema_conc_12
    {0,
     schema_nothing},                     // schema_conc_16
@@ -7865,6 +8042,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_maybe_matrix_conc_bar
    {0,
     schema_nothing},                     // schema_checkpoint
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_checkpoint_mystic_ok
    {SCA_CROSS | SCA_COPY_LYZER,
     schema_checkpoint},                  // schema_cross_checkpoint
    {SCA_DETOUR,
@@ -7951,13 +8130,17 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_sequential_with_fraction
    {SCA_SNAGOK,
     schema_nothing},                     // schema_sequential_with_split_1x8_id
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_sequential_alternate
+   {SCA_SNAGOK,
+    schema_nothing}                      // schema_sequential_remainder
 };
 
 
 // BEWARE!!  This list is keyed to the definition of "meta_key_kind" in sd.h .
 const uint32 meta_key_props[] = {
-   MKP_RESTRAIN_2,                    // meta_key_random
-   MKP_RESTRAIN_2,                    // meta_key_rev_random
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_random
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_piecewise
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially
    MKP_RESTRAIN_1,                    // meta_key_finish
@@ -8022,6 +8205,7 @@ int begin_sizes[] = {
    8,          /* b_pbone */
    8,          /* b_rigger */
    8,          /* b_prigger */
+   9,          /* b_3x3 */
    8,          /* b_2stars */
    8,          /* b_p2stars */
    8,          /* b_spindle */

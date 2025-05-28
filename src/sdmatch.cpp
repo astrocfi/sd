@@ -558,16 +558,16 @@ void matcher_initialize()
    short int *item, *level_item;
    concept_kind end_marker = concept_diagnose;
 
-   /* Decide whether we allow the "diagnose" concept, by deciding
-      when we will stop the concept list scan. */
+   // Decide whether we allow the "diagnose" concept, by deciding
+   // when we will stop the concept list scan.
    if (ui_options.diagnostic_mode) end_marker = marker_end_of_list;
 
-   (void) memset(fcn_key_table_normal, 0,
-                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   (void) memset(fcn_key_table_start, 0,
-                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   (void) memset(fcn_key_table_resolve, 0,
-                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   memset(fcn_key_table_normal, 0,
+          sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   memset(fcn_key_table_start, 0,
+          sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   memset(fcn_key_table_resolve, 0,
+          sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
 
    // Count the number of concepts to put in the lists.
 
@@ -711,7 +711,7 @@ void matcher_initialize()
 
          if (name[0] == '@') {
             switch (name[1]) {
-            case '6': case 'k':
+            case '6': case 'k': case 'K':
                // This is a call like "<anyone> run".  Put it into every bucket
                // that could match a selector.
 
@@ -766,7 +766,7 @@ void matcher_initialize()
       for (i=0; i<concept_list_length; i++,item++) {
          Cstring name = concept_descriptor_table[*item].name;
 
-         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k')) {
+         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
             // This is a call like "<anyone> run".  Put it into every bucket
             // that could match a selector.
 
@@ -807,7 +807,7 @@ void matcher_initialize()
       for (i=0; i<level_concept_list_length; i++,item++) {
          Cstring name = concept_descriptor_table[*item].name;
 
-         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k')) {
+         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
             // This is a call like "<anyone> run".  Put it into every bucket
             // that could match a selector.
 
@@ -1729,21 +1729,21 @@ static void match_wildcard(
    pat2_block p2b(pat, pat2);
    p2b.special_concept = special;
 
-   /* if we are just listing the matching commands, there
-      is no point in expanding wildcards that are past the
-      part that matches the user input.  That is why we test
-      "(user == 0)". */
+   // If we are just listing the matching commands, there is no point in expanding
+   // wildcards that are past the part that matches the user input.  That is why we test
+   // that "user" is not null.
 
    if (user) {
       switch (key) {
-      case '6': case 'k':
+      case '6': case 'k': case 'K':
          if (current_result->match.call_conc_options.who == selector_uninitialized) {
             selector_kind save_who = current_result->match.call_conc_options.who;
 
             for (i=1; i<selector_INVISIBLE_START; i++) {
+               if (((selector_kind) i) == selector_some && key != 'K') continue;
                current_result->match.call_conc_options.who = (selector_kind) i;
                match_suffix_2(user,
-                              (key == '6') ? selector_list[i].name : selector_list[i].sing_name,
+                              (key == 'k') ? selector_list[i].sing_name : selector_list[i].name,
                               &p2b, patxi);
             }
 

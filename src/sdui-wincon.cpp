@@ -85,10 +85,10 @@ void iofull::display_help()
 
 BOOL WINAPI control_c_handler(DWORD ControlInfo)
 {
-   if (ControlInfo == CTRL_C_EVENT) {
-      DWORD numRead;
-      INPUT_RECORD inputRecord;
+   DWORD numRead;
+   INPUT_RECORD inputRecord;
 
+   if (ControlInfo == CTRL_C_EVENT) {
       inputRecord.EventType = KEY_EVENT;
       inputRecord.Event.KeyEvent.bKeyDown = TRUE;
       inputRecord.Event.KeyEvent.wRepeatCount = 1;
@@ -96,6 +96,17 @@ BOOL WINAPI control_c_handler(DWORD ControlInfo)
       inputRecord.Event.KeyEvent.wVirtualScanCode = 46;
       inputRecord.Event.KeyEvent.uChar.AsciiChar = 'c';
       inputRecord.Event.KeyEvent.dwControlKeyState = LEFT_CTRL_PRESSED;
+      WriteConsoleInput(consoleStdin, &inputRecord, 1, &numRead);
+      return TRUE;
+   }
+   else if (ControlInfo == CTRL_CLOSE_EVENT) {
+      inputRecord.EventType = KEY_EVENT;
+      inputRecord.Event.KeyEvent.bKeyDown = TRUE;
+      inputRecord.Event.KeyEvent.wRepeatCount = 1;
+      inputRecord.Event.KeyEvent.wVirtualKeyCode = VK_NONAME;
+      inputRecord.Event.KeyEvent.wVirtualScanCode = 0;
+      inputRecord.Event.KeyEvent.uChar.AsciiChar = 'Q';
+      inputRecord.Event.KeyEvent.dwControlKeyState = 0;
       WriteConsoleInput(consoleStdin, &inputRecord, 1, &numRead);
       return TRUE;
    }
@@ -454,6 +465,7 @@ extern int get_char()
 
       if (inputRecord.EventType == KEY_EVENT && inputRecord.Event.KeyEvent.bKeyDown) {
          DWORD ctlbits = inputRecord.Event.KeyEvent.dwControlKeyState & (~NUMLOCK_ON | SCROLLLOCK_ON);
+
          unsigned int c = inputRecord.Event.KeyEvent.uChar.AsciiChar;
          int key = inputRecord.Event.KeyEvent.wVirtualKeyCode;
          int npdigit;
@@ -490,13 +502,13 @@ extern int get_char()
             else
                continue;   // Don't know what it is.
          }
-         else if (key == 0x10 || key == 0x11 || key == 0x12 || key == 0x14)
-            continue;      // Just an actual shift/control/alt key.
-         else if (key >= 0x70 && key <= 0x7B) {    // Function key.
-            if (ctlbits == 0)                      return key-0x6F+FKEY;
-            else if (ctlbits == SHIFT_PRESSED)     return key-0x6F+SFKEY;
-            else if (ctlbits == LEFT_CTRL_PRESSED) return key-0x6F+CFKEY;
-            else if (ctlbits == LEFT_ALT_PRESSED)  return key-0x6F+AFKEY;
+         else if (key == VK_SHIFT || key == VK_CONTROL || key == VK_MENU || key == VK_CAPITAL)
+            continue;      // Just an actual shift/control/alt key ("MENU" means ALT.)
+         else if (key >= VK_F1 && key <= VK_F12) {    // Function key.
+            if (ctlbits == 0)                      return key-VK_F1+FKEY+1;
+            else if (ctlbits == SHIFT_PRESSED)     return key-VK_F1+SFKEY+1;
+            else if (ctlbits == LEFT_CTRL_PRESSED) return key-VK_F1+CFKEY+1;
+            else if (ctlbits == LEFT_ALT_PRESSED)  return key-VK_F1+AFKEY+1;
             else if (ctlbits == (LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED)) return key-0x6F+CAFKEY;
             else
                continue;   // Don't know what it is.
@@ -511,28 +523,34 @@ extern int get_char()
             else
                continue;   // Don't know what it is.
          }
+         else if (key == VK_NONAME && c == 'Q')  // User clicked the "X" in the upper-right corner.
+            return CLOSEPROGRAMKEY;
          else if ((key >= 0xBA && key <= 0xBF) ||     // Random other keys ...
-                  (key == 0x20) ||                    // Space.
-                  (key == 0x09) ||                    // Tab.
-                  (key == 0x08) ||                    // Backspace.
-                  (key == 0x0D) ||                    // Enter (CR).
-                  (key == 0x1B) ||                    // Escape.
+                  (key == VK_SPACE) ||
+                  (key == VK_TAB) ||
+                  (key == VK_BACK) ||
+                  (key == VK_RETURN) ||
+                  (key == VK_ESCAPE) ||
+                  (key == 0xE2) ||                    // Underscore on Japanese keyboards.
                   (key == 0xC0) ||                    // Random other keys ...
                   (key >= 0xDB && key <= 0xDE)) {     // Random other keys ...
             ctlbits &= ~SHIFT_PRESSED;
             if (ctlbits == 0) return c;
             else continue;
          }
-         else if (key == 0x23) npdigit = '1';    // Numeric keypad --
-         else if (key == 0x28) npdigit = '2';    // just treat as normal digits.
-         else if (key == 0x22) npdigit = '3';
-         else if (key == 0x25) npdigit = '4';
-         else if (key == 0x0C) npdigit = '5';
-         else if (key == 0x27) npdigit = '6';
-         else if (key == 0x24) npdigit = '7';
-         else if (key == 0x26) npdigit = '8';
-         else if (key == 0x21) npdigit = '9';
-         else if (key == 0x2D) npdigit = '0';
+         else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {    // Numeric keypad with NUMLOCK on.
+            npdigit = key - VK_NUMPAD0;
+         }
+         else if (key == 0x2D) npdigit = 0;    // Numeric keypad with NUMLOCK off.
+         else if (key == 0x23) npdigit = 1;
+         else if (key == 0x28) npdigit = 2;
+         else if (key == 0x22) npdigit = 3;
+         else if (key == 0x25) npdigit = 4;
+         else if (key == 0x0C) npdigit = 5;
+         else if (key == 0x27) npdigit = 6;
+         else if (key == 0x24) npdigit = 7;
+         else if (key == 0x26) npdigit = 8;
+         else if (key == 0x21) npdigit = 9;
          else if (ctlbits == 0 && isprint(c))
             return c;
          else
@@ -541,13 +559,13 @@ extern int get_char()
          // If we get here, this is a numeric keypad press.
 
          ctlbits &= ~SHIFT_PRESSED;
-         if (ctlbits == 0) return npdigit;
+         if (ctlbits == 0) return npdigit+'0';   // Just return the plain digit.
          else if (ctlbits == LEFT_CTRL_PRESSED)
-            return npdigit-'0'+CTLNKP;
+            return npdigit+CTLNKP;
          else if (ctlbits == LEFT_ALT_PRESSED)
-            return npdigit-'0'+ALTNKP;
+            return npdigit+ALTNKP;
          else if (ctlbits == (LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED))
-            return npdigit-'0'+CTLALTNKP;
+            return npdigit+CTLALTNKP;
          else
             continue;   // Don't know what it is.
       }

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <7 Jan 2006 wba>
+@c Time-stamp: <29 Aug 2006 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.64
-@set title2 Database version = 36.64 format = 243
+@set title1 RELEASE NOTES FOR VERSION 36.81
+@set title2 Database version = 36.81 format = 252
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,9 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.81::
+* 36.8::
+* 36.7::
 * 36.64::
 * 36.63::
 * 36.62::
@@ -43,31 +46,12 @@ Changes as of the following versions:
 * 36.0::
 * 35.1::
 * 35.0::
-* 34.81::
-* 34.8::
-* 34.7::
-* 34.6::
-* 34.5::
-* 34.4::
-* 34.31::
-* 34.3::
-* 34.21::
-* 34.2::
-* 34.0::
-* 33.15::
-* 33.0::
-* 32.95::
-* 32.9::
-* 32.81::
-* 32.67::
-* 32.65::
-* 32.6::
 
-The files @file{relnotes98.txi} and @file{oldnotes} have
+The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.64, Top, (dir)
+@node Intro, 36.81, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -78,11 +62,166 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2006 William B. Ackerman
 @sp 3
 @menu
-* 36.64::               Changes in the current version
+* 36.81::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.64, 36.63, Intro, Top
+@node 36.81, 36.8, Intro, Top
+@unnumberedsec Version 36.81 changes
+
+The call @strong{invert} as a tagging call (as in @strong{invert your neighbor})
+was moved from C2 to C3X.  At had been at C2 for over 11 years.  I have no idea why.
+
+Certain cases of @strong{phantom tandem strut right} were fixed.
+
+The @strong{phantom tandem} family of calls expands to a 4x4 if
+possible, or a 2x8 if that fails, or a 1x16 if that fails.  It used
+to accept a 2x6 without expanding to a 2x8.  For example it used to be possible
+to call a @strong{phantom tandem double play} in a 2x6.  You must now say
+@strong{2x6 matrix phantom tandem double play}.
+
+The @strong{who's on 1st} family of calls was renamed to
+@strong{who's on 1st}, @strong{who's on 2nd}, @strong{who's on 3rd}, and @strong{who's on 4th}.
+The last of these may also be called @strong{who's at home}.  The old spellings
+such as @strong{who's on 1st, #1 couple go} are no longer supported.  The action of this
+call is based on location in the square, not original couple number, so a designation
+such as "#1 couple" is not appropriate.
+
+Below the C1 level, the call @strong{cycle and wheel} won't allow the @strong{split recycle} variety
+of recycle.
+
+The tagging call @strong{chase the tag} was added, so you can say either
+@strong{chase your leader} or @strong{chase the tag your leader}.
+There were already the plain calls @strong{chase the tag} and @strong{chase the tag N/4}.
+What was added is the use of @strong{chase the tag} as an <ATC> call.
+
+A bug in certain cases of @strong{checkpoint} was fixed.
+
+@c ************
+@node 36.8, 36.7, 36.81, Top
+@unnumberedsec Version 36.8 changes
+
+New meta-concepts: @strong{double echo}, @strong{triple echo}, and
+@strong{quadruple echo}.
+
+New concepts: @strong{3x3 concentric}, @strong{4x4 concentric}, 
+@strong{3x3 cross concentric}, @strong{4x4 cross concentric}.
+
+The designator @strong{some} may be used with concepts of the
+@strong{<anyone> are as couples} variety, if the facing directions make
+it clear who are involved.  For example, one can use @strong{some are
+couples threesome, swing thru} from a suitable tidal line.
+
+The calls @strong{1/2 here comes the judge} and @strong{1/2 sock it to me}
+now leave the 3 non-active people on a column that is congruent to their
+starting line.  When done from a tidal one-faced line, these will leave
+a column of 6 in the center.
+
+The resolver should produce far fewer @strong{dixie grand} getouts from waves or
+8-chains.  The reconciler will not add @strong{circulate}, @strong{extend},
+or similar things to the end of the sequence.  Also, if the ending position
+of a reconcile is a squared set, it will be at home.
+
+When a @strong{cast off N/4} is interrupted for any reason (for example, an explicit
+interruption, or some part of it is done with a concept such as @strong{as couples}),
+the casting direction will be re-evaluated when the call is resumed.  That is, if
+the cast is "pushy", the centers will be re-evaluated for the push.
+
+Concepts such as @strong{cross concentric} should not be used with
+meta-concepts that cause it to be applied multiple times, as in
+@strong{initially stable cross concentric mix}.  Doing so causes the
+dancers to do the centers vs. ends change multiple times, which is
+controversial and confusing.  The program will give a warning in such a
+case.
+
+More combinations of phantom concepts are permitted.  Either of split
+phantom CLW or triple CLW working, may be followed by either
+of multiple boxes or split phantom boxes.  Either of split phantom boxes
+or multiple boxes working, may be followed by split phantom CLW.
+
+The legal combinations are now:
+
+@example
+@group
+split phantom C/L/W, split phantom boxes
+split phantom C/L/W, triple/quadruple boxes
+triple C/L/W working, split phantom boxes
+triple C/L/W working, triple/quadruple boxes
+split phantom boxes, split phantom C/L/W
+multiple boxes working, split phantom C/L/W
+@end group
+@end example
+
+The program will issue a warning whenever it has to determine who the
+@strong{centers} in a 3x1 diamond are.  They are the center diamond.
+If those people are designated in some other way, such as @strong{girls},
+the warning is not issued.
+
+A bug in @strong{sidetrack} in unusual setups has been fixed.
+We apologize to the caller and dancers who were inconvenienced by this.
+
+The inability to do @strong{initially oddly once removed [turn the key]
+motivate} has been fixed.
+
+It is now possible to have designated people @strong{pass in}, or similar
+things, without saying @strong{do your part}.
+
+The @strong{roll} action after @strong{by golly} has been fixed.
+
+The printing of transcript files (on paper, for those who use this
+technology) has been improved.  Some printers can print all the way to the
+edge of the page, though most cannot.  On such printers, transcripts used
+to be printed all the way to the left edge of the page.  The program now
+uses the printer driver's properties to place margins in a sensible way.
+
+Sdtty will now resist being shut down by the system if a sequence is in
+progress.  Sd and Sdtty have both interrogated the user ("Do you really
+want to abort this sequence?") when the "quit" command is given.
+Furthermore, Sd interrogates the user when the "X" is clicked in the
+upper-right corner of the window (or the "close" command from the system
+menu obtained by clicking the interlocking squares icon in the extreme
+upper left), rather than just letting the program be terminated.  Sdtty
+now does the same.  Be aware that the Windows (a registered trademark, I
+believe) operating system is much less patient with "console
+applications" (such as Sdtty) resisting a shutdown than with "windows
+applications" (such as Sd) doing so.  If you accidentally click the "X"
+in the upper-right corner while a sequence is in progress, Sdtty will
+ask "Do you really want to abort this sequence?"  Type "n".  Also, the
+system will complain "Windows cannot end this program".  Click "cancel",
+and Sdtty will continue.
+
+Sdtty now handles the underscore character correctly on Japanese keyboards.
+I thank Sue Curtis and Kiyoshi Kikuchi for tracking this problem down.
+
+@c ************
+@node 36.7, 36.64, 36.8, Top
+@unnumberedsec Version 36.7 changes
+
+There was a major overhaul in the inner workings of the program, relating
+to the handling of "maps" in sdistort.cpp.  A lot of ugly special-case code
+was removed.
+
+It is now legal to stack certain combinations of phantom-creating concepts:
+
+@example
+@group
+split phantom boxes, split phantom C/L/W
+split phantom C/L/W, split phantom boxes
+split phantom C/L/W, triple/quadruple boxes
+@end group
+@end example
+
+@strong{once removed turn the key} is illegal in point-to-point diamonds.
+The second part, @strong{counter rotate}, is not legal in that setup.
+
+The program can handle meta-concept combinations involving mystic formations,
+as in @strong{initially mystic triple boxes}.
+
+New calls: @kbd{in anchor} and @kbd{out anchor}, analogous to
+@kbd{left anchor} and @kbd{right anchor}.
+
+@c ************
+@node 36.64, 36.63, 36.7, Top
 @unnumberedsec Version 36.64 changes
 
 The way numbers are handled was modified.  Numbers can be as high as 36.
@@ -682,7 +821,7 @@ Some horrible bugs were fixed.  I thank the Tech Squares C2 class for helping
 me find them.
 
 @c ************
-@node 35.0, 34.81, 35.1, Top
+@node 35.0, , 35.1, Top
 @unnumberedsec Version 35.0 changes
 
 A bug that may have caused printed files to appear as garbage was fixed.
@@ -692,1229 +831,5 @@ would have worked.
 A bug in the @kbd{anchor} concept was fixed.
 
 The program is now compiled with Gcc.
-
-@c ************
-@node 34.81, 34.8, 35.0, Top
-@unnumberedsec Version 34.81 changes
-
-The program has a better understanding of the ability of people to @kbd{roll}
-after @kbd{swing and circle} and @kbd{dixie sashay}.  People can roll depending
-on the last thing @i{that they did}.  After a @kbd{swing and circle}, the center
-2 people did not participate in the @kbd{and circle}, so they can still roll
-from the @kbd{swing}.  Similar reasoning applies to the ends after
-@kbd{dixie sashay}.
-
-New concept: Twin phantom I's.  This is two ``I's'' (sometimes called ``dogbones'')
-end-to-end.
-
-The calls @kbd{catch lock N} and @kbd{catch top N} have been added as calls
-in their own right, so that it is not necessary to use brackets or @kbd{<anything>}
-when typing them in.
-
-@c ************
-@node 34.8, 34.7, 34.81, Top
-@unnumberedsec Version 34.8 changes
-
-In accordance with a recent Callerlab vote, ``eight chain N'' has been moved
-back to the Mainstream list.  You should not use this at Mainstream prior to
-September, 2003.
-
-A bug causing occasional crashes while resolving has been fixed.  We thank
-Justin Legakis for helping track this down.
-
-The startup dialog screen for @code{Sd} now has a lot of context help messages.
-It is recommended that new users, or users who are confused about how to use
-sessions or abridgement files, use @code{Sd} instead of @code{Sdtty}, at least
-until they have these things working properly.  Click on the question mark in
-the upper right corner and then click on whatever you are curious about.
-
-The program now starts ``instantly''.  The action that made startup so
-slow was the creation of the various call menus.  Those menus are now
-stored in ``cache'' files.  These files have names like @file{sd_calls.C1cache}.
-Whenever the database changes, the cache files will be recreated (which
-takes some time.)  If the cache file is up-to-date, it will be used,
-and startup will be very fast.
-
-The program can now keep abridgement files associated with sessions.
-For details about using abridge lists with sessions, see new information
-in the manual.  Briefly, if you have been using an abridge list and want
-to add it to a session, you can check the ``Use abridged list''
-checkbox, and fill in the abridgement file name, when @code{Sd} starts,
-before selecting the session.  The abridgement file will now be
-associated with that session.  The association will be permanent---this
-step will not be required again.
-
-The program now recognizes that @kbd{all 8 recycle} can mean either the
-C1 call done from a 1/4 tag, or the A2 @kbd{all 8} concept applied to
-@kbd{recycle}, which is done from a thar.  Similarly for @kbd{all 8  cross cycle}.
-
-The program is now more robust in its error message when a meta-concept
-(like @kbd{initially}) is used without a following concept.
-
-A bug in the Microsoft Visual C++ compiler, version 5, has been
-discovered, similar to the bug found in version 6.  The version 6 bug
-had caused that compiler to be disqualified for compiling Sd, and all Sd
-compilations to be performed on version 5 instead.  I have run out of
-Microsoft compilers.  Microsoft quality is simply unacceptable.  (Of course,
-anyone who has dealt with the dozens of recent viruses and worms, and the
-security patches for them, already knows this.)  The
-current version of Sd is being compiled with version 5, with a software
-patch to prevent the bug from arising.  Non-Microsoft compilers are
-being investigated.  (By the way, very little Microsoft software, other
-than the operating system itself, is used in the preparation of Sd, for
-just these reasons.)
-
-The use of the ``gcc'' compiler, which is free, open-source software,
-is being investigated.  Initial results appear very promising.
-
-The program handles @kbd{clover and <anything>} more robustly.
-
-The bug in parsing @kbd{cross over circulate} has been fixed.  We thank the
-person who pointed it out recently, and apologize to the person who
-pointed it out many months previously, whom we did not believe.
-
-A bug in @kbd{reverse cut/flip the 3x1 triangle} was fixed.  We
-apologize to the dancers at a C4 weekend in March 2002 in Northern
-California who were inconvenienced by this.
-
-The program can now do @kbd{1/2 squeeze}.
-
-The program can now do @kbd{spin the windmill} directing the outsides
-to circulate N-1/2 positions, as in @kbd{spin the windmill, outsides
-left and go 2-1/2 positions}.
-
-The resolver now uses the actual clock to determine when to give up
-while searching.  It will give up after 5 seconds.  It used to be
-set to 15000 calls, a number that has crept upward as computers got
-faster.
-
-The program can now handle the setup consisting of a diamond between
-2 lines, as would result from having the center wave switch to a diamond
-from triple waves.
-
-The program is better at figuring out how to do the call @kbd{extend}
-in the presence of phantoms.
-
-The calls @kbd{flip back, to a wave} and @kbd{<ATC> back to a wave, to
-a wave} have had the word ``centers'' added, as in @kbd{vertical tag
-back to a wave, centers to a wave}.
-
-The behavior of Sd when "?" or "!" is typed has been improved.  It used
-to ignore these operations when no characters have been typed in the
-current command.  When no characters have been typed, the number of
-possible commands that need to be listed is huge.  It used to take a
-long time to do this.  Modern computers are fast enough that this is
-no longer a problem.  This change does not affect Sdtty---Sdtty has always
-acted on "?" and "!" even when no characters have been typed.
-
-The program can handle obscure and problematical cases of just the centers
-stepping to a miniwave on the call @kbd{fan the top}, and it prints an
-appropriate warning.  An example of this would be from a starting DPT
-with the ends quartered left.  The centers would step to right hands
-(even though they normally step to left hands on @kbd{fan the top}),
-and then the call would be done in each diamond.
-
-The program can now keep a picture (that is, write it into the
-transcript file) after every call, as though the ``keep picture''
-command had been given each time.  Use the ``toggle keep all pictures''
-command while the program is running, or give the
-command-line argument ``-keep_all_pictures'', when the program is
-started, or place the item ``keep_all_pictures'' in the ``[options]''
-section of the initialization file.
-
-New program-level options have been added for use with @code{Sd}.
-The ``-maximize'' argument will cause the program to set its window
-to the full screen.  The ``-window_size'' argument, followed by something
-like ``750x450'' will set the window size to the indicated number of
-pixels.  These options can be specified in the command line (typically
-by editing the startup icon) or placed in the ``[options]'' section of
-the initialization file.  These options do not affect @code{Sdtty}.
-@code{Sdtty} runs as a ``command prompt'' program and cannot set its
-window size.
-
-New concept: triple staggered boxes.  Used in a 2x12 "zipper" setup.
-
-New concepts: triple boxes or lines, triple lines or boxes,
-triple diamonds or lines, triple lines or diamonds.  For mixed
-boxes/diamonds and 1x4's.  The outer two formations must be the same.
-
-New concept: stretched, followed by a triangle concept, as in
-@kbd{stretched tandem-based triangles} from an hourglass.
-
-New concepts: clockwise jay, counterclockwise jay.
-
-New selector names: center column, center line, center wave.  These
-are essentially synonyms for ``center 4''.  They sometimes check for
-legality, but not always.  Use with care.
-
-Hundreds of bug fixes and enhancements have been made, relating,
-among other things, to @kbd{emulate}, @kbd{tandem}, @kbd{<anyone> truck
-while the others reverse truck},
-@kbd{split square thru} with large numbers of phantoms,
-@kbd{finish long trip} with large numbers of phantoms,
-@kbd{jay walk} with large numbers of phantoms, @kbd{turnstyle}, @kbd{common spot}, 
-@kbd{in roll to a diamond}, @kbd{cross to a diamond}, @kbd{3x3 right and left by by by},
-@kbd{right/left anchor}, @kbd{ends sidetrack}, @kbd{heads single rotate 1/4 while the
-others swing thru}, etc, etc, etc.  You may recognize your bug in that list.
-
-@c ************
-@node 34.7, 34.6, 34.8, Top
-@unnumberedsec Version 34.7 changes
-
-The program can write the output file with extension @file{.txt}
-if it is given the command line argument ``-new_style_filename''.
-Such files will have names like @file{sequence_C1.txt} or
-@file{01sep02_C1.txt}.  You can also get this behavior by adding
-the line ''new_style_filename'' to the ``[options]'' section of
-the sd.ini file, so that it looks like this:
-
-@example
-@group
-[Options]
-new_style_filename
-@end group
-@end example
-
-Having a file name of this form should make the output files
-able to be read and printed by common text editors and word processors,
-and sent as email attachments.
-
-The command line argument ``-old_style_filename'' will force the
-old behavior, in which the file name is @file{sequence.C1} or
-@file{01sep02.C1}.  The default behavior is presently old style,
-and hence ``-old_style_filename'' is not needed.  The default may
-change in the future.
-
-New style file names do not operate with the version of Sdtty
-that runs on DOS or Windows 3.1.  These operating systems
-can't handle names longer than 12 characters.  In fact,
-the version of Sdtty that runs on DOS or Windows 3.1 is
-not supported after version 34.6.
-
-The program can now recognize ``abbreviations'', in addition to
-``accelerator keys''.  An accelerator key is a single function key
-(or control or meta key) that causes an action to take place.  An
-abbreviation is a made of normal letters.  For example, one can
-make ``pth'' an abbreviation for ``pass thru''.
-
-Abbreviations are defined in the initialization file, in a manner
-very similar to accelerators.  Create an ``[Abbreviations]'' section
-in your initialization file, looking something like this:
-
-@example
-@group
-[Abbreviations]
-utb     U-turn back
-pth     pass thru
-@end group
-@end example
-
-The lines of the abbreviations section are very similar to those of the
-accelerators section, except that the first item on the line is an
-arbitrary word instead of an encoding for a special key press.  Whenever
-that word is typed in as the only thing on its line, the call or concept
-will be activated.  The word typed in must be by itself on the line, and
-may not be further abbreviated.  That is, the normal action of the
-parser, to figure out what call or concept is wanted based on the
-smallest possible initial part of the call or concept, does not operate
-here.  You must type the abbreviation exactly as it appears in the
-initialization file.  You can't type ``ut'' for ``utb'' with the above
-example.  But you could have defined
-
-@example
-@group
-[Abbreviations]
-u     U-turn back
-p     pass thru
-@end group
-@end example
-
-to get these calls with a single letter.
-
-You can't type @kbd{boys u}, because the abbreviation must be the only
-thing on the line that you type.  But you could define abbreviations
-
-@example
-@group
-bu    boys U-turn back
-gu    girls U-turn back
-@end group
-@end example
-
-The transcript file will always show the fully expanded text,
-not the abbreviation.
-
-We thank Rich Reel for pointing out how useful abbreviations
-are, and how simple they are to implement.
-
-The ability to display colors has been improved.  When a color scheme
-involving yellow is selected, and the background is white, it uses a
-dark yellow for better contrast.  As a result of this, the standard
-shortcut icons for Sd were changed to use a white background (normal
-video) by default.  They had previously used a black background (reverse
-video) whenever yellow was involved.
-
-This changes the default behavior for the startup shortcuts such as ``Sd
-Couple''.  If you have been using such a shortcut and prefer the black
-background, you can edit the shortcut (right-click it, and select
-``properties'') to add ``-reverse_video'' to the command line.  If there
-are problems, please let me know.
-
-Typing ``undo'' when at the start of a sequence (or pressing an appropriate
-accelerator key, such as @key{F9}) will erase the ``heads start'' or
-whatever startup command had been issued.
-
-New concept: @kbd{add}, which is a synonym for @kbd{follow it by}.
-
-New meta-concepts: @kbd{first M/N}, @kbd{middle M/N} and @kbd{last M/N}.
-These are followed by a concept, and cause the indicated fraction of
-the call to be performed with the concept, and the rest to be executed
-normally.  For example, @kbd{middle 1/3 tandem remake the wave} does
-the first part normally, the second part tandem, and the last part normally.
-Whether these are precisely the words you should use is up to you.
-
-New meta-concept: @kbd{initially and finally}.  This causes the following
-concept to be applied to both the first and laast parts of the call,
-as in @kbd{initially and finally tandem remake the wave}.
-
-The syntax of the ``anythinger's'' mechanism has been reworked.
-The program now considers the ``er's'' word to be properly
-part of the call name.  Hence it will print out things like
-@kbd{[remake the wave] er's motivate} instead of just
-@kbd{[remake the wave] motivate}.  You may type in
-the ``er's'' word or not, as you choose.  If you type it,
-the apostrophe is of course optional.
-
-The syntax of the @kbd{use} concept has been reworked.
-Its name is simply @kbd{use}.  Since it takes two calls,
-you must press
-@key{ENTER}
-after typing it, to separate it from the two calls.
-@example
-@group
-   @kbd{thirdly use               @key{ENTER}
-   ah so                     @key{ENTER}
-   swing the fractions       @key{ENTER}}
-@end group
-@end example
-
-There is also a concept @kbd{use for the <Nth> part}.  It is entered
-thusly:
-@example
-@group
-   @kbd{use for the 3rd part      @key{ENTER}
-   ah so                     @key{ENTER}
-   swing the fractions       @key{ENTER}}
-@end group
-@end example
-
-It will appear in the transcript as ``use ah so for the 3rd part:
-swing the fractions''.
-
-The concepts @kbd{right wing} and @kbd{left wing} have been added.
-They are at level c3x.  These may not be really correct.  Use them with care.
-
-The calls @kbd{eight chain <N>}, @kbd{spin chain thru}, and
-@kbd{fan the top} are now in the Plus program, in
-accordance with a recent Callerlab vote.
-
-The calls @kbd{triple scoot} and @kbd{grand follow your neighbor} are
-now in the A1 program, in accordance with a recent Callerlab vote.
-
-The call @kbd{press} has been on Mainstream for quite some time,
-for purely pragmatic reasons.  It is going to stay there, notwithstanding
-a recent Callerlab vote moving it down from C2 to to C1.
-
-The call @kbd{relocate}, for general setups, and the concept
-@kbd{reverse crazy} have been moved from C3A to C2, in accordance with
-a recent Callerlab vote.
-
-The program now recognizes that, at Mainstream, the call @kbd{extend}
-is restricted.
-
-The call @kbd{turn and flip} was removed from the C4 level and moved
-to C4X.  We apologize to a certain caller.
-
-The call @kbd{[anything] and circle <N/4>} can now take either a
-4-person or an 8-person call.
-
-The program now recognizes the extension @kbd{link up but [anything]},
-analogous to @kbd{busy [anything]}.  Its level is c3x.
-
-It can correctly roll after @kbd{hinge by}.
-
-Fractional @kbd{exchange the boxes} in columns handles
-collisions properly now.
-
-The identities of the dancers are re-evaluated during the call
-@kbd{tap the <anyone>}.  This may have an effect if there are
-interruptions or other interesting things.  There is a call
-@kbd{tap the original <anyone>} that you may use when you don't
-want identities to be re-evaluated.
-
-The roll direction after @kbd{cross chain thru} is now set so that, if
-one rolls, the result is the same as if @kbd{cross chain and roll} had
-been called.  This is dictated by Callerlab.  We take no responsibility
-for the fact that it makes no sense in terms of any plausible turning
-motion the dancers would have been going through as they did the call.
-
-Users are reminded that the roll direction after @kbd{spin chain and
-exchange the gears} does not strictly follow the Callerlab definition.
-This is discussed further in the ``call notes'' section of the manual.
-
-The program now understands the handedness rules regarding @kbd{scoot
-and little}, @kbd{scoot and plenty}, and @kbd{scoot and rally}.  It is
-not necessary to say ``left'' when calling these from a left-handed
-setup, though you may.  On the plain calls @kbd{little}, @kbd{plenty},
-and @kbd{rally}, the outsides will always quarter right, regardless of
-the handeness of the wave behind them, unless you say ``left'', or say
-``go as you are'', or give some other direction.
-
-The program can have people @kbd{cross fold} from a parallelogram.
-For example, from parallelogram lines back-to-back, you can have the
-people in the outer triple boxes do a cross fold, creating an 8-chain
-formation.  The designator to use for these people is ``outer pairs'',
-if simpler things like ``girls'' won't work.  We don't recommend actually
-saying ``outer pairs''---it is simply the notation that the program uses.
-
-The program handles @kbd{triple waves switch to a Z} correctly.
-
-New calls: @kbd{square around}, @kbd{right and left by}, and
-@kbd{<anything> by}.  These of course include ``by by'' and ``by by by''.
-
-New concepts: @kbd{concentric Z's}, @kbd{cross concentric Z's}.
-Of course, you never need to type the apostrophe.
-
-A bug in the listing of possible calls and concepts when ``!'' or ``?''
-is typed has been fixed.  It should now list lots of things.
-
-A compilation of Sd using Microsoft Visual C++ version 6, service pack 5,
-has failed the regression tests.  (Specifically, it crashes on "snag bits
-and pieces" from parallel waves.)
-
-This bug was reported to Microsoft on 17 December 2001.
-
-C++ Version 6 has been involved in incorrect compilations before.
-(See the release notes for Sd version 32.65.)  The
-resolve command of Sd behaved incorrectly at one point, using Visual C++
-version 6, service pack 2.  The bug was reported to Microsoft.  Service
-Pack 3 was subsequently distributed, and appeared to fix the resolver
-bug.  This incident nevertheless resulted in a decision to continue
-using Visual C++ version 5, even though Microsoft considers it
-obsolete, apparently because it does not support the ``robust component
-development'' of version 6.  Why they believe that component development
-is more robust with a broken compiler is a mystery.
-
-No compilation of Sd or Sdtty with any version of gcc is known to have
-generated incorrect code.
-
-It is certainly true that Visual C++ version 5 has a number of glaring bugs,
-such as
-@itemize @bullet
-@item
-inability to terminate properly when the computer is shut down
-@item
-inability to place breakpoints in an incremental debug build after
-a release build
-@item
-inability to step over stack-checking code in a procedure prologue
-@item
-frequent inability to display enumeration data symbolically when debugging
-@end itemize
-
-but these are just inconveniences to me.  The compiled code under
-version 5 appears to run correctly.
-
-Users may take comfort from the fact that all Windows releases of Sd
-and Sdtty have been compiled with Visual C++ version 5.  No released
-version has ever been compiled with C++ version 6, and none ever will be.
-
-It took several hours to find the bug.  Here it is:
-
-@sp 1
-@example
-@group
- switch (this_call->the_defn.schema) @{
-
-     mov   edi, DWORD PTR [eax+16]
-     cmp   edi, 64       ; 00000040H
-     ja    $punt$7186
-     xor   ecx, ecx    // Using ECX as the switch index.
-                       // It should be restored from [ESP+220].
-     // Load 0 or 1 from switch table.
-     mov   cl, BYTE PTR $L7773[edi]
-     // Indirect jump to one of two places.
-     jmp   DWORD PTR $L7774[ecx*4]
-$L7756:
-     // Restore never happened!
-     mov   ecx, DWORD PTR _parseptrcopy$[esp+220]
-     // Because it jumped here!
-$L7196:
-
- case schema_concentric:
- case schema_concentric_6_2:
- case schema_concentric_2_6:
-    etc......
- @}
-
-// Jump table created for the "switch" statement.
-$L7774:
-     DD    $L7196     // Wrong place!  Doesn't restore ECX!
-     DD    $punt$7186
-// Index table created for the "switch" statement.
-$L7773:
-     DB    0
-     DB    1
-     DB    1          // etc.  there are 64 items.
-@end group
-@end example
-
-@c ************
-@node 34.6, 34.5, 34.7, Top
-@unnumberedsec Version 34.6 changes
-
-New concepts: @kbd{offset 1/4 tag} and @kbd{offset 3/4 tag}.
-These are done from a suitably populated 4x4.  The offset amount is presumed to be 50%.
-The ``shear line'' of the setup lies between the two single 1/4 tags.
-
-New concept: @kbd{use (call) for the <Nth> part}.
-
-New concept: @kbd{use (call) in}.  This is intended to be used in
-applications like @kbd{reverse random use acey deucey in swing the fractions}.
-
-The preceding two concepts are actually entered that way, with the word
-``call'' in parentheses.  Command completion makes the typing easier
-than it might seem.  After entering the concept, follow the prompts.
-The concept will be printed in the transcript in a more sensible way.
-
-The @kbd{magic} concept is now permitted only for simple magic
-columns at C1.  Other applications of @kbd{magic} (magic lines,
-magic diamonds, etc.) are legal only at C3B.  We thank the dancers
-at the 2001 National Square Dance Convention C3A hall for pointing
-this out, and apologize for the bug.
-
-New calls: @kbd{unwrap the boxes/stars/diamonds to a normal column,
-follow the <anyone>}.  These are used from fully offset formations,
-such as 16-matrix ``clumps''.
-
-The program can handle simple cases of setups tilted at a 45 degree
-angle.  For example, it is possible to do a @kbd{swing the fractions}
-interrupted at the half way point with a @kbd{6x2 acey deucey}.
-Please be careful with this; it is not very robust.
-
-@c ************
-@node 34.5, 34.4, 34.6, Top
-@unnumberedsec Version 34.5 changes
-
-New concepts: @code{twin phantom point-to-point diamonds} and
-@code{twin phantom point-to-point diamond spots}.
-
-New concept: @code{offset split phantom boxes}.
-
-New concept: @code{parallelogram triple boxes}.
-
-As usual, we do not take a position on the tastefulness of
-various new concepts or their applications.
-
-New concepts: @code{center tidal C/L/W}.
-These may be useful for things like @code{own the <anyone>,
-center tidal wave grand swing thru by 3x1 triangle circulate}.
-
-The program can now do a better job of having people coming to
-the same spot after fractional @code{exchange the triangles}.
-
-The program now does a better job of telling when the outsides
-can circulate or half circulate.
-
-New calls:  @code{flip back, to a wave} and @code{<ATC> back to a wave, to a wave}.
-The program will insert commas as shown, to make the meaning clear.
-We do not take a position on whether @code{flip back to a wave} is ambiguous,
-or what it means.
-
-@c ************
-@node 34.4, 34.31, 34.5, Top
-@unnumberedsec Version 34.4 changes
-
-New concepts: @code{twin phantom point-to-point diamonds} and
-@code{twin phantom point-to-point diamond spots}.
-
-New concept: @code{common spot point-to-point diamonds}.
-This is done from the setup that would be obtained after
-certain fractional exchanges from point-to-point diamonds.
-Note that @code{switch to a diamond} and @code{diamond circulate}
-never produce this setup---the Callerlab C1 definitions specifically
-state that the colliding people center themselves.
-
-The program can now handle parallelogram diamonds.  That is,
-from parallelogram waves, you can do @code{switch to a diamond}.
-
-New concept: @code{parallelogram diamonds}.  This is used no matter
-what the facing directions are.
-
-The program can now handle "nonisotropic triangles".  For example,
-from columns, ignore the last person and have the other 6 1/2 press ahead.
-
-The program can now do @code{counter rotate} in triangles correctly.
-For example, from point-to-point diamonds, @code{outside triangles
-counter rotate} will do the right thing.
-
-The program can now do @code{convert the triangle} from tandem-based
-triangles.
-
-The program has an improved ability to go to arbitrarily occupied
-stars as the result of phantom calls.
-
-@c ************
-@node 34.31, 34.3, 34.4, Top
-@unnumberedsec Version 34.31 changes
-
-A serious defect in processing menu clicks in @code{Sd} version 34.3
-was fixed.  It did not affect @code{Sdtty}.
-
-@c ************
-@node 34.3, 34.21, 34.31, Top
-@unnumberedsec Version 34.3 changes
-
-Improved the ``crazy offset C/L/W'' concept.  It can handle shape-changers,
-under reasonable circumstances, up to a point.  The program can also do
-``crazy diaagonal boxes''.
-
-The program can handle ``equalizing'' cases of @samp{transfer and <anything>},
-@samp{busy <anything>}, and @samp{open up and <anything>},
-as per the article by Linda Kendall in the December, 2000 issue of Zip Coder.
-
-New concepts:  staggered C/L/W of 3.  Use this with ``ignore''.
-
-New concepts:  bent C/L/W/B (plural), from suitable formations.
-
-New concepts:  <anyone> in your double bent C/L/W.
-
-We allow "mini-grand" getouts, if the ``toggle minigrand getouts'' command
-has been given, or the command-line switch ``-minigrand_getouts'' was given,
-or the command ``minigrand_getouts '' appeared in the initialization file.
-When this has been done, the resolver will include such getouts in its
-search.  A ``mini-grand'' is ``right and left grand, but on the third hand,
-promenade home.''  We do not take a position on the tastefulness of these
-getouts.
-
-The ``funny'' concept is handled better internally, giving greater power
-in the database language.
-
-Fixed a bug in jay walk ``around the corner'' in C1 phantom setups.  For example,
-after Heads Spin the Top, Extend, Girls Hinge, one can now do Heads Jay Walk in a
-completely natural way.
-
-Fixed a bug in phantom 1/2 circulate.  We thank the contributors to the
-``challenge-sd'' mailing list for raising this issue.
-
-@c ************
-@node 34.21, 34.2, 34.3, Top
-@unnumberedsec Version 34.21 changes
-
-A serious defect in version 34.2 was fixed.
-
-In the final transcript file, the sequence number no longer has a ``#'' character
-in front of it.  Some post-processing text formatters are confused by the
-presence of this character.
-
-@c ************
-@node 34.2, 34.0, 34.21, Top
-@unnumberedsec Version 34.2 changes
-
-The call and concept lists have been updated to reflect the recent changes
-to the C3B list.
-
-@example
-@group
-Dropped:    shove off
-            kick by
-            in style
-            revert
-@end group
-@end example
-@example
-@group
-Added:      track <N>
-            cross extend
-            change lanes
-            various split phantom diamonds and 1/4 tags, so all
-                 split phantom formations are now legal at C3B
-            chase the <N/4> tag
-            <ATC> (chain thru) (and scatter) (cross) nuclear reaction
-@end group
-@end example
-
-The program now recognizes that the legality of some calls in some formations
-depends on the level.  For example, the facing version of recycle is legal only
-at A2 and above, and split recycle is legal only at C1 and above.
-
-The manner in which concepts like @samp{yoyo} and @samp{twisted} are handled
-was reworked.  Things like @samp{interlace finally yoyo swing thru with yoyo mix}
-will now work properly.
-
-The usual several dozen other improvements were made in the program's
-power and flexibility.  For example, it now recognizes about 100 formations
-and about 150 resolves.
-
-Two new Windows shortcuts were created, called ``SD plain'' and ``SDTTY plain''.
-You can, as usual, copy these to the start menu and/or desktop.
-
-These shortcuts run the respective programs with no color or special graphics of
-any kind.  When ``SDTTY plain'' is used, it is possible to copy text and diagrams into
-the Windows clipboard, from which it can be pasted into email messages or other
-documents.  To do this, right-click the icon at the left of the window title bar.
-This will bring up the system menu.  Choose ``Edit'' and ``Mark''.
-
-It is now possible to specify the initial sequence number that is
-printed at the top of each card.  This can even be done when not using a
-session from the initialization file.  In @code{Sdtty}, give the
-command-line argument ``-sequence_num'' followed by the number.  In
-@code{Sd}, it can be done this way, or it can be specified in the
-startup screen.  If a sequence number is specified when using a session,
-that number permanently overrides the number in the initialization file.
-
-The documentation is now available at all times when running @code{Sd}.  Typing
-``help manual'', from either @code{Sdtty} or @code{Sd}, will bring up the
-manual under the default Web browser.
-
-We thank a famous C4 caller for providing a wealth of new, creative, and
-different research material.
-
-@c ************
-@node 34.0, 33.15, 34.2, Top
-@unnumberedsec Version 34.0 changes
-
-A major redesign of the internal workings has been completed.  The database
-can now provide multiple definitions for a call.  As a result, all of the former
-``(parts)'' or ``(matrix)'' calls, and others like them, have been removed.
-In particular, the following calls have been removed:
-
-@example
-@group
-   recycle (parts)
-   cross cycle (parts)
-   scoot and weave (parts)
-   <anyone> tie (parts)
-   invert the column (parts)
-   couple up (parts)
-   hocus pocus (parts)
-   countershake (matrix)
-   sashay thru (matrix)
-   mini busy (matrix)
-   walk the plank (matrix)
-   recoil (matrix)
-   easy does it (matrix)
-   beaus advance to a column (matrix)
-   belles advance to a column (matrix)
-   <anyone> run the wheel (matrix)
-   bridge the gap (dpt)
-   grand chain 8 (centers and ends)
-   cover up (centers and ends)
-   percolate (centers and ends)
-   perk up (centers and ends)
-@end group
-@end example
-
-Wherever you would have used those calls in the past, just use the plain
-call.  For example, the call @code{recycle} can do the facing-couples
-version, or the split version, the fractionalizable wave version, or the
-3x3 version.
-
-The calls @samp{twist the line} and @samp{twist and <anything>} have been
-improved to handle the front-to-back ``space invader'' property.  For example,
-when called from a tidal wave, @samp{twist the line} goes to Z's.
-You can also call, from an as-couples 2-faced line, things like
-@samp{twist and [pass and roll your neighbor]}.
-
-In light of Miscrosoft's inability to make its email software adhere to
-the most basic common-sense principles of safety, the security on the
-computer from which versions of @code{Sd} are uploaded has been tightened.
-The computer on which @code{Sd} is developed has never had any email or
-internet connections, nor any Microsoft mail software.  The computer
-from which @code{Sd} is uploaded to the web previously had Microsoft
-Outlook installed, but not used.  In light of recent events, Microsoft
-Outlook and the ``Visual Basic Script'' mechanism have now been removed
-completely.  (These programs are all Trademarks of Microsoft Corporation,
-Redmond, Washington.)
-
-@c ************
-@node 33.15, 33.0, 34.0, Top
-@unnumberedsec Version 33.15 changes
-
-The function key control-F11 has been set to perform the @samp{standardize} operation.
-
-The @code{Sd} Windows menu has been reorganized.  (That's the menu across the top of the
-screen, that you probably don't use.)  The various types of search commands
-are now popups under the @samp{Command} menu.  The actual @code{Sd} call menu is not
-changed.
-
-Some obscure cases of color choice in @code{Sdtty} on Windows were improved.
-
-The programs have been tested on a pre-release version of Windows 2000.
-
-The program can now do calls in magic (and magic interlocked) in point and out point
-triangles.  We thank Bill Haynes for bringing this to our attention.
-
-The level for @samp{<ATC> chain thru reactivate} has been lowered to C3.  We thank
-Neil Heather for bringing this to our attention.
-
-The @samp{distorted <CLW>} concepts can operate in 2x6, 2x8, and similar matrices.
-The real people are identified and made into a virtual 2x4.
-
-Calls and concepts were moved on and off the C3A list in accordance with a
-recent vote of the Callerlab challenge committee.  The calls @samp{rolling ripple}
-and @samp{shove off} were moved to C3.  The name @samp{single checkmate} was added.
-The concepts @samp{finally} and @samp{reverse crazy} were added.
-
-The definition of @samp{split swap} was changed, in accordance with a decision by
-the Callerlab challenge committee, to allow everyone to roll.
-
-The program recognizes more Dixie Grand getouts.
-
-The call @samp{hinge by} was improved.  It is unforunate that this versatile
-call is not recognized below C4.
-
-New concepts:  @samp{as couples in point-to-point diamonds}, @samp{as couples
-in a tall 6}, @samp{as couples in a tidal line}, and @samp{as couples in a tidal column}.
-These may also be used with tandem, twosome, etc.  We thank various
-C4 callers for bringing these, and many other things, to our attention.
-
-A few extremely embarrassing bugs were fixed.  We thank Rob French and Shinichi
-Mochizuki for pointing these out.
-
-Internal implementation note:  The program now uses modern C++ exceptions
-rather than the archaic setjmp/longjmp mechanism.
-
-@c ************
-@node 33.0, 32.95, 33.15, Top
-@unnumberedsec Version 33.0 changes
-
-The call previously known as just @samp{mixed up} has been changed to
-@samp{mixed up square thru}.
-
-New concept:  @samp{offset column/line/wave} (singular).  This is done in a 2x4 which
-is occupied as a single offset 1x4.  This is typically done in split phantom boxes
-or split phantom column/line/wave.
-
-New concept:  @samp{columns/lines/waves of 3}.  This doesn't work in all setups.
-
-The program can do shapechangers in phantom offset columns/lines/waves,
-such as @samp{phantom offset columns walk out to a wave} in a 4x4 occupied
-as columns far apart.
-
-The program can do nonuniform shapechangers in a greater number of setups,
-such as @samp{centers pass the ocean} in a butterfly, or @samp{center 1x4 lockit}
-or @samp{center 1x4 recycle} in offset waves.
-
-And the program recognizes more getouts, of course.
-
-@c ************
-@node 32.95, 32.9, 33.0, Top
-@unnumberedsec Version 32.95 changes
-
-The program has been tested successfully for year 2000 compliance.
-
-When @code{Sd} is installed for Windows 95/98/NT, two new shortcut icons are
-made available, called ``SD nocheckers'' and "SD couple''.  The first runs
-@code{Sd} in such a way that the display looks like the default color scheme
-for @code{Sdtty}.  The second runs @code{Sd} with the ``color_by_couple''
-color scheme.  You can copy these icons to the desktop or start menu in the usual way.
-
-@code{Sd} (but not @code{Sdtty}) can now print the sequence file.  At the end of
-a session, it will ask whether you want to print the file.  The files are still
-written to disk in the usual way, and you can print them later.  See the manual
-for further details.
-
-New concept:  @samp{fast}.  This applies to @samp{<ATC> back to a wave},
-@samp{<ATC> reaction}, and similar things.  It directs the @emph{first} people
-on the tagging call to do the trade, rather than the last people.
-
-New concept:  @samp{drag the <anyone>}.  Ths designated people, rather than doing
-their part of the call, simply stay rigidly attached to their current partner.
-
-New concepts:  @samp{[fractional] [reverse] crazy offset C/L/W}.  Use these
-in a 4x4 matrix occupied as ``stairsteps''.
-
-@code{Sd} now attempts to adhere to the convention that ``but'' modifiers refer
-to whatever is last done by the centers.  This is already commonly recognized for
-calls such as @samp{chain reaction} and @samp{tally ho}.  @code{Sd} now applies
-it to calls like @samp{load the boat} and @samp{square the bases}
-(replace the final centers' @samp{pass thru}) and @samp{percolate} (replace
-the final centers' hinge and cross).
-
-This convention does not apply universally.  There are a number of existing uses in
-which the ``but'' call is done by everyone, or is not just the very last thing:
-@samp{spin the pulley}, @samp{line to line}, @samp{lift off}, @samp{cast an anchor}, etc.
-@code{Sd} of course preserves those cases.
-
-The ``but'' ending modifiers can be used in the usual way with calls that also have
-an ``anything'' starting modifier.  For example, you can type
-@samp{[swap around] the boat but [swap around]}.
-
-I do not know how widely accepted this usage is, or is likely to become,
-with dancers and callers.
-
-The program can now do @samp{yoyo scoot chain thru to a wave} from T-boned boxes
-(as after @samp{split circulate and roll}).
-
-The program can now do calls like @samp{swing the fractions} from more setups,
-such as 2x1 diamonds.
-
-The interaction between @samp{shifty} and other concepts
-was improved.  One can now say, for example @samp{finally tandem shifty tap the beaus}
-or @samp{initially tandem shifty tap the beaus}.
-
-Added @samp{spin the windmill} variants that allow you to change the
-number of circulates for the ends.  That is, you can say things like
-@samp{spin the windmill, outsides left and go 3 positions}.
-You can also do @samp{spin the windmill, outsides <anything>} or
-@samp{<anything> the windmill, outsides <anything>},
-in which the final @samp{<anything>} replaces both the turning direction and
-the circulates.
-
-The program can handle parallelograms, and parallelogram split phantom
-setups, when the amount of offset is 25% or 75%.
-
-Fixed bug in fractional @samp{eight chain N} (centers came to wrong hand.)
-Fixed bug in @samp{triple star thru}.
-I thank Dave Clay for bringing the last two items to my attention.
-
-One can now do, for example,
-@samp{sandwich eight chain 3 with cross concentric zip the top}.
-
-Improved the ability to recognize triangles.  For example, from a suitable
-rigger or "dog-bone", you can say things like
-@samp{tandem-based triangles are solid swing thru}, in addition to naming
-the inside or outside triangles.
-
-The usual dozens of other improvements were made.
-
-The database compiler now recognizes C++ style comments.
-
-I thank the organizers of the 1999 National Advanced and Challenge
-Convention for producing tapes.  I thank various C4 callers for pointing out
-how important 75% offset parallelograms, T-boned yoyo scoot chain thru
-to a wave, common spot hourglasses, crazy offsets, complex interactions of
-meta-concepts, and so on, are in modern C4 calling.
-
-@c ************
-@node 32.9, 32.81, 32.95, Top
-@unnumberedsec Version 32.9 changes
-
-The installation program was improved.  If a previous version of @code{Sd} is
-found in the folder @file{C:\Sd}, you are asked whether to save that version,
-and you are allowed to choose the folder in which to place the saved copy.
-
-The program was migrated from C to C++.  Not because of any
-liking for ``object-oriented programming'', but because C++ is,
-in a great many ways, a better language than C.
-
-The programs now use Dynamically Linked Libraries (DLLs) on Windows 95/98/NT.
-
-The @samp{little more} fractionalization issue was addressed.  New calls,
-@samp{little more (nonstandard)} and @samp{little more, ends face <direction> (nonstandard)}
-were added.  The first part of these calls has the ends quarter right (or a
-specified direction) while the centers step and fold.  In the second part, the
-ends counter rotate while the ends circulate.  Callers are reminded that this
-nonstandard usage is not correct according to the Callerlab C2 definitions, the Big Five,
-the Ceder Chest, and the Ben Rubright Pocket Reference.
-
-The "everyone disconnected" concept was improved.  It is now
-possible to do "everyone disconnected mini busy" from a suitable 2x6 or 2x8.
-
-The calls @samp{finish advance to a column}, @samp{beaus advance to a column},
-and @samp{belles advance to a column} have versions with the suffix @samp{(matrix)},
-as in @samp{beaus advance to a column (matrix)}.  Use these versions when
-modifiers such as @samp{3x3} are desired.  These versions are not fully fractionalizable.
-The normal versions are fully fractionalizable, as before.
-You do not need these versions with the @samp{single} modifier.
-
-The program can see a few more resolves than before.
-
-A number of rather useless warning messages were removed.
-
-A careless bug in the handling of @code{<anyone> work <meta-concept>
-<concept>} was fixed.  It is now possible, for example, to do
-@code{centers work initially tandem, nice and easy}.
-
-The program can see 3x1 triangles in a larger variety of setups than before.
-In suitably occupied 4x6, 3x8, or 2x12 matrices, it can see
-a 1x4 or 2x2 virtual setup of 3x1 triangles.  Only 2 of those triangles
-are occupied, of course.
-
-A rather serious bug involving complex interactions of
-meta-concepts with modifiers like @code{cross} or @code{reflected},
-and calls that use such modifiers in their definitions, was fixed.
-It is surprising that this bug was never revealed by any of the
-hundreds of tips at C4 conventions and weekends that the program
-is routinely ``trained'' on.
-
-Fixed a bug in @samp{roll} after certain calls such as @code{remake}.
-I thank Andy Shore for bringing this to my attention.
-
-Fixed a bug in menu operation in the presence of partly typed-in
-calls to Sd.  I thank Uwe Themann for bringing this to my attention.
-
-Fixed a bug in multi-part calls in which an early part is defined
-as-couples and a later part is a space-invader.
-
-Fixed a difficult problem with concepts like @code{piecewise}, @code{twisted},
-and @code{yoyo}.  It is now possible to do things like @samp{piecewise yoyo swing thru}
-correctly.
-
-Fixed a bug in @samp{finally cover up but [chisel thru]}.
-
-The usual dozens of minor changes and improvements were made.
-
-In @code{Sd}, the confirmation popup that appears when you attempt
-to exit the program while a sequence is in progress no longer has ``OK''
-set as the default button.  This will prevent accidental deletion
-of a sequence through careless typing of @key{alt-F4} and @key{ENTER}.
-You must either explicitly click on ``OK'' or type @key{TAB}
-to select that button and then press @key{ENTER}.
-
-We thank the callers at a C4 weekend earlier this year for allowing
-taping.
-
-@c ************
-@node 32.81, 32.67, 32.9, Top
-@unnumberedsec Version 32.81 changes
-
-A bug was fixed in the definition of @samp{little more}.  This is a two-part
-call.  The first part is just a @samp{little}, which has the centers
-step and fold while the ends both 1/4 right and counter rotate.
-The second part has the centers circulate while the ends do nothing.
-While people might prefer a different apportioning of the centers'
-and ends' parts for various reasons, this is the way it is defined in
-the Callerlab C2 definitions, the Ceder Chest, and the Ben Rubright
-Pocket Reference.
-
-
-This release contains @code{Sd} as well as @code{Sdtty} for Windows.
-The installation procedure has been radically revised to be more
-user-friendly, particularly with respect to placing shortcut icons
-in the appropriate places.
-
-As a consequence of this, the programs are always installed to the
-folder @file{C:\Sd}.
-
-
-There are many more options to control the appearance of the dancer
-display in @code{Sdtty} or the transcript window of @code{Sd}.
-They are:
-@example
-@group
-   pastel_color
-   bold_color
-   reverse_video
-   normal_video
-   color_by_couple
-   color_by_corner
-   no_checkers
-@end group
-@end example
-
-@noindent See the manual for details.
-
-
-The resolver was redesigned.  It now makes a much more serious
-attempt to find short resolves, even if they contain concepts.
-At C2 and above, it also attempts to show resolves with short promenade
-distances before those with long distances.
-
-Because of this, it silently defers many ``low quality'' resolves early in
-the search, saving them for later.  It may report failure several times
-before finding a resolve.  Just keep typing ``find another'' (or pressing
-function key @key{F12}).  It is simply rejecting the resolves that you
-would have rejected explicitly.  If it can't find what it
-considers really good resolves, it will go back to the ones that it
-threw away and show them to you.
-
-@c ************
-@node 32.67, 32.65, 32.81, Top
-@unnumberedsec Version 32.67 changes
-
-A bug that caused a failure in tip #8 in the C4 hall at the 1999 National
-Advanced and Challenge Convention was fixed.  We apologize for any
-inconvenience that this may have caused.
-
-A bug that caused certain types of 3x1 and 1x3 calls to fail to
-``compress'' was fixed.
-
-When an unresolved sequence is written out, a final picture is drawn,
-whether the ``keep picture'' command had been given or not.
-
-The call "hocus pocus (fractions)" has been changed to "hocus pocus
-(parts)".  Sorry, but it makes it consistent with all other similar
-calls.
-
-The syntax of the names of ``accelerator'' keys in the initialization
-file has been relaxed.  You can use either ``m'' (for meta) or ``a''
-(for alt) to mean the same thing.  This modifier key is called meta on
-some keyboards and alt on others.  It's the same thing.  Also, you may
-put hyphens into the key name, and put it in upper or lower case.  The
-command value (the rest of the line) must be in lower case.  Also, if a
-key is both meta/alt and control, you may list them in either order.
-
-@noindent Hence
-@example
-@group
-   C-M-B     phantom boxes
-   C-A-B     phantom boxes
-   M-C-B     phantom boxes
-   A-C-B     phantom boxes
-@end group
-@end example
-@noindent mean the same thing.
-
-@c ************
-@node 32.65, 32.6, 32.67, Top
-@unnumberedsec Version 32.65 changes
-
-There were no profound changes in the ``dancing'' behavior of the
-program, but there were, as usual, numerous minor changes.  Most of the
-significant changes were in the internal organization, to prepare for
-the upcoming release of @code{Sd} for Windows.
-
-The menus were reordered to put @code{<anything>}, @code{<anyone>}, and
-similar things at the end rather than the beginning.  The menu (that is,
-what you see when you type a question mark to @code{Sdtty}, or what you
-see on the screen in @code{Sd}) should look a lot more sensible now.
-
-The ``deleteword'' function has been moved from ``cv'' to ``cw''.
-Sorry.  This was done to make accelerator keys more in line with Windows
-conventions.
-
-If you have an ``[Accelerators]'' section in your initialization file, you
-will need the lines
-@example
-@group
-   cu     deleteline
-   cw     deleteword
-   f8     quoteanything
-@end group
-@end example
-
-@noindent to get the default behavior.  This file ``sample3.ini'' has been modified
-to contain this.  When in doubt, refer to that file.  You should copy
-the new bindings from that file if you have your own initialization file
-with an ``[Accelerators]'' section.  You can, of course, bind keys
-any way that you want.
-
-I recommend not binding anything to Alt-F4, Alt-F, the up/down arrow
-keys, or the page up/page down keys.  Alt-F4 is generally used to exit
-from programs, and Alt-F is an accelerator used to bring down the
-``file'' menu without using the mouse.  The up/down arrow keys and page
-up/down keys (``e6'', ``e8'', ``e1'' and ``e2'' in the sd.ini file) will
-scroll the menu.
-
-I also recommend not binding anything to the left or right cursor keys,
-or the ``home'' or ``end'' keys when in normal calling operation, since
-they facilitate editing of the input text.  When in startup or resolve
-(search) mode, binding these keys is not a problem, since input usually
-does not come from type-in.  For example, in resolve mode, right arrow
-means find another resolve, which is probably more useful than
-anything one could do in the type-in window.
-
-If you do not have an initialization file, or it does not have
-an ``[Accelerators]'' section, you do not need to do anything.
-
-The compiler used for development and manufacture of @code{Sd} and
-@code{Sdtty} was upgraded to Microsoft Visual C++ version 6.  This
-proved to be a mistake.  Version 6 has an optimizer bug that causes it
-to fail to generate the exit code for a loop in the resolver.  Compilers
-that generate incorrect code are not acceptable, so Visual C++ version 6
-was removed and version 5 was reinstalled.  Microsoft has been informed
-of the bug, as have all of my colleagues in the software development
-field.  Until this bug is fixed, I recommend that software developers
-refrain from using version 6.
-
-@c ************
-@node 32.6, , 32.65, Top
-@unnumberedsec Version 32.6 changes
-
-The last few versions wrote out their transcript files in "Unix" format,
-with just line-feeds separating lines.  This has now been corrected to
-"Windows" format, with carriage-return line-feed sequences.  Most
-file-handling software is impervious to the difference, but some is not.
-We apologize for any unprintable cards that may have been generated.
-
-The program can use a different color scheme when displaying the dancers
-on the computer screen.  If the line ``color_by_couple'' is given in the
-``[Options]'' section of the initialization file, each of the four couples
-will be displayed in a different color.  You can of course turn the colors
-off completely with the line ``no_color''.
-
-The programmable keys have been made more general.  The behavior of
-control-U, to mean ``delete the input line'', is now programmable.  Also,
-function key @key{F8}, meaning to insert the literal text @code{<anything>},
-is programmable.  (Note:  You almost never need the latter function.)
-
-The programmable key control-V has been added, meaning to delete the last word.
-
-If you have an ``[Accelerators]'' section in your initialization file, you
-will need to add the lines
-@example
-@group
-   cu     deleteline
-   cv     deleteword
-   f8     quoteanything
-@end group
-@end example
-@noindent to get this behavior.  This file ``sample3.ini'' has been modified
-to contain these 3 lines.  You should copy the new bindings from that
-file if you have your own initialization file with an ``[Accelerators]''
-section.  You can, of course, bind other keys to the @code{deleteline},
-@code{deleteword}, and @code{quoteanything} commands.
-
-If you do not have an initialization file, or it does not have
-an ``[Accelerators]'' section, you do not need to do anything.
-
-The program recognizes a few more resolves.
-
-New concept: @samp{leading triangle}.  In this concept, the apex of the
-triangle steps forward to become the lead of a 2x2 box.  As with all calls
-and concepts, we do not take a position for or against the use of this concept.
-
-The spelling of the concepts @samp{couples of three}, @samp{tandems of four},
-and so on, were changed to use the digits @samp{3} or @samp{4} instead of
-spelling the numbers out.  The only places where numbers continue to be
-spelled out is in words like @samp{twosome} or @samp{threesome}.
-
-There is a fractionalizable version of @samp{invert the column}, called
-@samp{invert the column (parts)}.  Use this if you want to use concepts
-like @samp{sandwich}, @samp{random}, or @samp{interrupt}.  If you only need
-to do some fraction (say 3/4) of an @samp{invert the column}, just use call
-@samp{invert the column 3/4}.  The latter call is better able to handle
-concepts like @samp{single} or @samp{3x3}.
-
-The program now expects dancers to work together more closely during
-@samp{snag the <anyone>} or @samp{<anyone> work <concept>}.
-Specifically, it requires that it would have been legal for everyone to
-begin the call normally.  Previously, the two groups of dancers ignored
-each other so completely that things like @samp{snag the ends, cross and
-wheel} were considered legal in waves---each group of people worked in
-their own imagined 2-faced lines.
-
-An error in @samp{roll} after @samp{mini chase} has been fixed.
-
-An error in the definition of @samp{dixie diamond}, @samp{dixie sashay},
-@samp{dixie derby}, and @samp{dixie spin} was fixed.  These calls now have
-just two parts.  The first of those is a @samp{dixie style to a wave}, which in
-turn has two parts---@samp{belles/centers pull by} and @samp{left touch 1/4}.
-
-The interpretation of things like @samp{initially twice} or @samp{random twice}
-has been changed again.  The ``emerging consensus'' of the preceding version
-was a figment of my imagination.  @samp{Initially twice mix}
-has two parts.  The first of these is @samp{centers cross run}, done twice.
-The philosophical point here is that ``parts don't subdivide''.  If a concept
-effectively goes inside a call, to apply just to a certain part or parts,
-the overall number of parts is not changed.  @samp{Mix} is a two part call, even if
-a concept is applied to one of its parts.  This is true even if that concept
-is @samp{twice}.
-
-An obscure bug was fixed in deeply nested (3 or more levels) meta-concepts.  It
-is now possible to call, for example, @samp{initially initially echo tandem settle back}
-or @samp{finally finally reverse echo busy [hot foot spin]}.
 
 @bye

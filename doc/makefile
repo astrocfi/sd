@@ -11,7 +11,7 @@ TXI2HTML = makeinfo --html
 
 .SUFFIXES: .dvi .info .txt .txi .pdf .html .ps .pso .all
 
-all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all sample.html install
+all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all relnotes03.all sample.html install
 
 .txi.dvi:
 	$(TXI2DVI) $<
@@ -51,23 +51,24 @@ sd_doc.all: sd_doc.ps sd_doc.pdf sd_doc.txt sd_doc.html
 
 relnotes.all: relnotes.ps relnotes.pdf relnotes.txt relnotes.html
 relnotes98.all: relnotes98.ps relnotes98.pdf relnotes98.txt relnotes98.html
+relnotes03.all: relnotes03.ps relnotes03.pdf relnotes03.txt relnotes03.html
 
 
 
-ps.all: demo.ps sessions.ps sd_doc.ps relnotes.ps relnotes98.ps \
+ps.all: demo.ps sessions.ps sd_doc.ps relnotes.ps relnotes98.ps relnotes03.ps \
         appnote1.ps appnote2.ps appnote3.ps appnote4.ps
 
-pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf relnotes98.pdf \
+pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf relnotes98.pdf relnotes03.pdf \
          appnote1.pdf appnote2.pdf appnote3.pdf appnote4.pdf
 
-info.all: demo.info sessions.info sd_doc.info relnotes.info relnotes98.info \
+info.all: demo.info sessions.info sd_doc.info relnotes.info relnotes98.info relnotes03.info \
           appnote1.info appnote2.info appnote3.info appnote4.info
 
-text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt relnotes98.txt \
+text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt relnotes98.txt relnotes03.txt \
           appnote1.txt appnote2.txt appnote3.txt appnote4.txt
 
 html.all: demo.html sessions.html sd_doc.html \
-          relnotes.html relnotes98.html sample.html faq.html \
+          relnotes.html relnotes98.html relnotes03.html sample.html faq.html \
 	  appnote1.html appnote2.html appnote3.html appnote4.html
 
 clean::
@@ -80,6 +81,7 @@ clean::
 	-$(RM) sessions*.html sessions.txt
 	-$(RM) relnotes*.html relnotes.txt
 	-$(RM) relnotes98*.html relnotes98.txt
+	-$(RM) relnotes03*.html relnotes03.txt
 	-$(RM) demo*.html demo.txt
 
 distclean: clean

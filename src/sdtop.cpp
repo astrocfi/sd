@@ -24,7 +24,7 @@
    compress_setup
    expand_setup
    update_id_bits
-   get_directions
+   big_endian_get_directions
    touch_or_rear_back
    do_matrix_expansion
    initialize_sdlib
@@ -853,7 +853,7 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
-extern void get_directions(
+extern void big_endian_get_directions(
    setup *ss,
    uint32 & directions,
    uint32 & livemask)
@@ -890,7 +890,7 @@ extern void touch_or_rear_back(
 
    remove_z_distortion(scopy);
 
-   get_directions(scopy, directions, livemask);
+   big_endian_get_directions(scopy, directions, livemask);
 
    uint32 touchflags = (callflags1 & CFLAG1_STEP_REAR_MASK);
    call_restriction new_assume = cr_none;
@@ -899,8 +899,9 @@ extern void touch_or_rear_back(
    case CFLAG1_REAR_BACK_FROM_QTAG:
    case CFLAG1_REAR_BACK_FROM_R_WAVE:
    case CFLAG1_REAR_BACK_FROM_EITHER:
-      if (touchflags != CFLAG1_REAR_BACK_FROM_QTAG &&
-          !scopy->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK)) {
+      if (scopy->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED) ||
+          (touchflags != CFLAG1_REAR_BACK_FROM_QTAG &&
+           !scopy->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK))) {
          // Check for rearing back from a wave.
          tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
          if (tptr) goto found_tptr;
@@ -991,9 +992,11 @@ extern void touch_or_rear_back(
                goto found_tptr;
             }
             else if (((0x003C & ~livemask) == 0 || (0x3C00 & ~livemask) == 0) &&
+                     (livemask & 0xC3C3) != 0 &&
                      ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
                // Check for stepping to some kind of 1/4 tag
                // from a DPT or trade-by or whatever.
+               // But we require at least one person on the outside.  See test t57.
                tptr = &step_qtag_pair;
                goto found_tptr;
             }
@@ -1139,6 +1142,67 @@ extern void touch_or_rear_back(
       scatter(scopy, &stemp, zptr->source_indices, zptr->size-1, zptr->rot * 033);
       scopy->rotation += zptr->rot;
       scopy->kind = zptr->outer_kind;
+   }
+
+   // Check for doing this under the "mystic" concept.
+   if ((scopy->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) && touchflags == CFLAG1_STEP_TO_WAVE) {
+      if (scopy->kind == s1x8 && livemask == 0xFFFF && directions == 0xAA00) {
+         // We stepped to a tidal wave.
+         if (scopy->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC) {
+            scopy->swap_people(0, 1);
+            scopy->swap_people(4, 5);
+         }
+         else {
+            scopy->swap_people(2, 3);
+            scopy->swap_people(6, 7);
+         }
+      }
+      else if (scopy->kind == s2x4 && livemask == 0xFFFF && directions == 0x7DD7) {
+         // We stepped to columns.
+         if (scopy->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC) {
+            scopy->swap_people(0, 7);
+            scopy->swap_people(3, 4);
+         }
+         else {
+            scopy->swap_people(2, 5);
+            scopy->swap_people(1, 6);
+         }
+      }
+      else if (scopy->kind == s_bone && livemask == 0xFFFF && directions == 0xAD07) {
+         // We stepped to a bone.
+         if (scopy->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC) {
+            scopy->swap_people(0, 5);
+            scopy->swap_people(1, 4);
+         }
+         else {
+            scopy->swap_people(2, 3);
+            scopy->swap_people(6, 7);
+         }
+      }
+      else if (scopy->kind == s_rigger && livemask == 0xFFFF && directions == 0xAD07) {
+         // We stepped to a rigger from a bone.
+         if (scopy->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC) {
+            scopy->swap_people(2, 3);
+            scopy->swap_people(6, 7);
+         }
+         else {
+            scopy->swap_people(0, 5);
+            scopy->swap_people(1, 4);
+         }
+      }
+      else if (scopy->kind == s_rigger && livemask == 0xFFFF && directions == 0x7DD7) {
+         // We stepped to a rigger from a suitable qtag.
+         if (scopy->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC) {
+            scopy->swap_people(2, 3);
+            scopy->swap_people(6, 7);
+         }
+         else {
+            scopy->swap_people(0, 1);
+            scopy->swap_people(4, 5);
+         }
+      }
+
+      update_id_bits(scopy);    // Centers and ends are meaningful now.
    }
 
    // Assumptions are no longer valid, except for a few special cases.
@@ -2879,7 +2943,10 @@ static void initialize_concept_sublists()
             // Test for quadruple C/L/W working.
             if (p->arg4 == 4) setup_mask = MASK_2X4;
             break;
-         case concept_quad_diamonds:
+         case concept_multiple_diamonds:
+            // Test for quadruple diamonds.
+            if (p->arg4 == 4) setup_mask = MASK_QUAD_D;
+            break;
          case concept_quad_diamonds_together:
          case concept_do_phantom_diamonds:
             setup_mask = MASK_QUAD_D;
@@ -3022,7 +3089,6 @@ static bool check_for_supercall(parse_block *parseptrcopy)
             (CFLAGH__HAS_AT_ZERO|CFLAGH__HAS_AT_M)) == CFLAGH__HAS_AT_ZERO ||
            (parseptrcopy->call->the_defn.callflagsf &
             (CFLAGH__HAS_AT_ZERO|CFLAGH__HAS_AT_M)) == CFLAGH__HAS_AT_M)) {
-         setup_command foo2;
          by_def_item innerdef;
 
          if (parseptrcopy->call->the_defn.callflagsf & CFLAGH__HAS_AT_ZERO) {
@@ -3038,6 +3104,7 @@ static bool check_for_supercall(parse_block *parseptrcopy)
          setup_command bar;
          bar.cmd_final_flags.clear_all_herit_and_final_bits();
          calldefn this_defn = base_calls[innerdef.call_id]->the_defn;
+         setup_command foo2;
          get_real_subcall(parseptrcopy, &innerdef, &bar, &this_defn, false, 0, &foo2);
       }
 
@@ -3113,20 +3180,31 @@ bool check_for_concept_group(
    // Similarly with "parallelogram split phantom C/L/W/B" or
    // "offset C/L/W split phantom C/L/W/B".     <-- this one not done.
 
+   final_and_herit_flags junk_concepts;
+   junk_concepts.clear_all_herit_and_final_bits();
+   bool skip_a_pair = false;
+
    if (k == concept_c1_phantom) {
-      final_and_herit_flags junk_concepts;
-
-      junk_concepts.clear_all_herit_and_final_bits();
-
-      next_parseptr =
-         process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
+      // Look for combinations like "phantom tandem".
+      next_parseptr = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
 
       if ((next_parseptr->concept->kind == concept_tandem ||
            next_parseptr->concept->kind == concept_frac_tandem) &&
           (junk_concepts.test_herit_and_final_bits()) == 0) {
-         parseptrcopy = next_parseptr;
-         retval = true;
-         goto try_again;
+         skip_a_pair = true;
+      }
+   }
+   else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
+      // Look for combinations like "mystic triple boxes".
+      next_parseptr = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
+
+      if ((next_parseptr->concept->kind == concept_multiple_lines ||
+           next_parseptr->concept->kind == concept_multiple_diamonds ||
+           next_parseptr->concept->kind == concept_multiple_formations ||
+           next_parseptr->concept->kind == concept_multiple_boxes) &&
+          next_parseptr->concept->arg4 == 3 &&
+          (junk_concepts.test_herit_and_final_bits()) == 0) {
+         skip_a_pair = true;
       }
    }
    else if (k == concept_parallelogram ||
@@ -3134,10 +3212,7 @@ bool check_for_concept_group(
              parseptrcopy->concept->arg1 == disttest_offset &&
              parseptrcopy->concept->arg3 == 0 &&
              parseptrcopy->concept->arg4 == 0)) {
-      final_and_herit_flags junk_concepts;
-
-      junk_concepts.clear_all_herit_and_final_bits();
-
+      // Look for combinations like "parallelogram split phantom waves".
       next_parseptr =
          process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
 
@@ -3145,20 +3220,22 @@ bool check_for_concept_group(
            next_parseptr->concept->kind == concept_do_phantom_boxes) &&
           next_parseptr->concept->arg3 == MPKIND__SPLIT &&
           (junk_concepts.test_herit_and_final_bits()) == 0) {
-         parseptrcopy = next_parseptr;
-         retval = true;
-         goto try_again;
+         skip_a_pair = true;
       }
    }
    else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
+      // Look for combinations like "random/initially/echo/nth-part-work <concept>".
       next_parseptr = parseptr_skip;
-      parseptrcopy = next_parseptr;
-      retval = true;
-      goto try_again;
+      skip_a_pair = true;
    }
    else if (k == concept_so_and_so_only &&
             ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
+      // Look for combinations like "<anyone> work <concept>".
       next_parseptr = parseptr_skip;
+      skip_a_pair = true;
+   }
+
+   if (skip_a_pair) {
       parseptrcopy = next_parseptr;
       retval = true;
       goto try_again;
@@ -3328,12 +3405,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             require_explicit = true;
          }
          else {
-            u = 0;
-
-            for (plaini=0; plaini<=attr::slimit(ss); plaini++)
-               u |= ss->people[plaini].id1;
-
-            if ((u & 011) == 011) {
+            if ((or_all_people(ss) & 011) == 011) {
                // They are T-boned.  The "QUALBIT__NTBONE" bit says to reject.
                if ((p->qualifierstuff & QUALBIT__NTBONE) != 0) continue;
             }
@@ -3986,10 +4058,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          k ^= (0x144 ^ 0x555);
          /* **** FALL THROUGH!!!! */
       case cr_ripple_both_ends:
+      case cr_ripple_both_ends_1x4_only:
          /* **** FELL THROUGH!!!!!! */
-         k ^= 0x090555;
-         mask = 0;
+         k ^= 0x11090555;
 
+         // Make a little-endian mask of the selected people.
+         mask = 0;
          for (plaini=0, w=1; plaini<=attr::slimit(ss); plaini++, w<<=1) {
             if (selectp(ss, plaini)) mask |= w;
          }
@@ -4008,9 +4082,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
                goto good;
             goto bad;
          }
-         else if (ssK == s1x6) {
-            // Only "cr_ripple_both_ends" is supported.
+         else if (ssK == s1x6 && this_qualifier == cr_ripple_both_ends) {
             if (mask == ((k>>16) & 0x3F)) goto good;
+            goto bad;
+         }
+         else if (ssK == s1x8 && this_qualifier == cr_ripple_both_ends) {
+            if (mask == ((k>>24) & 0xFF)) goto good;
             goto bad;
          }
 
@@ -4039,6 +4116,16 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             goto good;
 
          goto check_tt;
+
+      case cr_levelplus:
+      case cr_levela1:
+      case cr_levela2:
+      case cr_levelc1:
+      case cr_levelc2:
+      case cr_levelc3:
+      case cr_levelc4:
+         goto check_tt;
+
       default:
          break;
       }
@@ -4288,11 +4375,11 @@ extern void scatter(setup *resultpeople, const setup *sourcepeople,
       idx = resultplace[k];
 
       if (idx < 0) {
-         /* This could happen in "touch_or_rear_back". */
-         if (sourcepeople->people[k].id1) fail("Don't understand this setup at all.");
+         // This could happen in "touch_or_rear_back".
+         if (sourcepeople->people[k].id1) fail("Don't understand this setup.");
       }
       else
-         (void) copy_rot(resultpeople, idx, sourcepeople, k, rotamount);
+         copy_rot(resultpeople, idx, sourcepeople, k, rotamount);
    }
 }
 
@@ -4305,7 +4392,7 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
       idx = resultplace[k];
 
       if (idx >= 0)
-         (void) copy_rot(resultpeople, k, sourcepeople, idx, rotamount);
+         copy_rot(resultpeople, k, sourcepeople, idx, rotamount);
    }
 }
 
@@ -4314,8 +4401,35 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
                             const setup *sourcepeople, int rot) THROW_DECL
 {
    for (int j=0; j<num; j++)
-      (void) install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
+      install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
 }
+
+extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout)
+{
+   lineout = ss;
+   lineout.rotation += lineout.inner.srotation;
+   qtagout = ss;
+   qtagout.rotation += qtagout.inner.srotation;
+
+   if (ss.inner.skind == s1x4) {
+      static expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
+      expand::expand_setup(&exp_conc_1x8, &lineout);
+      static expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
+      expand::expand_setup(&exp_conc_qtg, &qtagout);
+   }
+   else if (ss.inner.skind == s2x2) {
+      static expand::thing exp_conc_2x2a = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
+      static expand::thing exp_conc_2x2b = {{6, 1, 2, 5}, 4, s2x2, s2x4, 1};
+      if (ss.concsetup_outer_elongation == 1)
+         expand::expand_setup(&exp_conc_2x2a, &lineout);
+      else if (ss.concsetup_outer_elongation == 2)
+         expand::expand_setup(&exp_conc_2x2b, &lineout);
+      else fail("Setup is bizarre.");
+   }
+
+   return ss.inner.skind;
+}
+
 
 
 /* WARNING!!!!  This procedure appears verbatim in sdtop.c and dbcomp.c . */
@@ -4655,28 +4769,27 @@ const expand::thing s_2x4_qtg = {{3, 4, -1, -1, 7, 0, -1, -1}, 8, s_qtag, s2x4, 
 // the same kind and rotation.  If there is a question about what ending
 // setup to opt for (because of lots of phantoms), use "goal".
 
-// Goal of -1 means opt for 1x4.
 // Goal of +9 means opt for dmd.
-// Goal of -2 means preserve the internal setups.
+// Goal of +7 means make the rotations alternate.
 
-// No external client actually uses -2.  We change -1 to -2 here.
-// The program used to work much harder (too hard, in fact) at
-// opting for a 1x4 rather than a diamond.  It's much smarter
-// now, but the old "-1" code is left in for reference.
 // One of the hard test cases is, from a tidal wave,
-// Split Phantom Diamonds Diamond Chain Thru.
+// Split Phantom Diamonds Diamond Chain Thru.  It's in t13t.
 // There is no code to track the phantoms through the cast off 3/4.
 // Instead, merge_setups notices that it is merging "nothing" with
 // diamond points, and changes the diamond points to ends of lines.
 // It's not clear that this is the wisest way to do this.
 
-extern bool fix_n_results(int arity, int goal, setup z[],
+// "fudgystupidthing" defaults to null.
+
+extern bool fix_n_results(int arity,
+                          int goal,
+                          bool reorder_setups_2_and_3,
+                          setup z[],
                           uint32 & rotstates,
-                          uint32 & pointclip) THROW_DECL
+                          uint32 & pointclip,
+                          uint32 fudgystupidrot) THROW_DECL
 {
    int i;
-
-   if (goal == -1) goal = -2;
 
    int lineflag = 0;
    bool dmdflag = false;
@@ -4686,10 +4799,9 @@ extern bool fix_n_results(int arity, int goal, setup z[],
    int deadconcindex = -1;
    setup_kind kk = nothing;
    rotstates = 0xFFF;
+   if (goal == 7) rotstates = 0x030;
    pointclip = 0;
-   static uint16 rotstate_table[16] = {
-      0x111, 0x222, 0x404, 0x808,
-      0x421, 0x812, 0x104, 0x208,
+   static uint16 rotstate_table[8] = {
       0x111, 0x222, 0x404, 0x808,
       0x421, 0x812, 0x104, 0x208};
 
@@ -4706,13 +4818,25 @@ extern bool fix_n_results(int arity, int goal, setup z[],
    // to 1x4's.
 
    for (i=0; i<arity; i++) {
-
       // First, check that all setups have the same "eighth rotation" stuff,
       // and don't have any "imprecise rotation".
 
       if ((z[i].result_flags.misc & RESULTFLAG__IMPRECISE_ROT) ||
           (i > 0 && (z[0].result_flags.misc ^ z[i].result_flags.misc) & RESULTFLAG__PLUSEIGHTH_ROT))
          goto lose;
+
+      // This guides us in following differing rotations from one subsetup to the
+      // next.  (The whole point of the rotstates and the rotstate_table is to track this.)
+      // But, if rotations change from one subsetup to the next and there are 4 or more
+      // of them, we don't expect them to rotate uniformly from left to right.
+      // We want to track a rotation set of {0, 1, 1, 0}, which would happen if we did
+      // a quadruple boxes reach out in a 2x8 with the center boxes T-boned to the outer
+      // ones.  So we swap the last two subsetups.  This is tested in t46t.
+      // If the number is higher than that, we have no effective way of dealing with
+      // nonuniform rotations.
+
+      int suggested_incremental_rotation_parity = i & 1;
+      if (reorder_setups_2_and_3 && (i&2)) suggested_incremental_rotation_parity ^= 1;
 
       if (z[i].kind == s_normal_concentric) {
 
@@ -4751,9 +4875,24 @@ extern bool fix_n_results(int arity, int goal, setup z[],
       }
 
       if (z[i].kind != nothing) {
-         int zisrot;
          canonicalize_rotation(&z[i]);
-         zisrot = z[i].rotation & 3;
+         uint32 dmdqtagfudge = 0;
+
+         // Unfortunately, this code wants all setups to be oriented the
+         // same way, so that it will know how to make empty setups look like their brethren.
+         // For example, if we are in an alamo ring that somehow is missing one of its
+         // miniwaves, and the call is "hinge", "fix_n_results" wants to see all resulting
+         // miniwaves have rotation = 1.  That way, it can fill in the missing miniwave to
+         // look like the others, resulting in a thar.
+
+         // So, until I figure out how to do this correctly, we need to undo the rotation
+         // that we put in above, making it look like the old code, which forced each subsetup
+         // x[i] to have rotation zero before doing the call.
+
+         // Except for the 3 maps noted in the next sentence, all maps with the "100" bit on
+         // have inner kind = s_trngl/s_trngl4 and rotation = 102, 108, 107, or 10D,
+         // and no maps have just 02, 08, 07, or 0D.
+         // The 3 exceptions have MPKIND__DMD_STUFF and rot = 104.
 
          if (z[i].kind == s1x2)
             miniflag = true;
@@ -4774,7 +4913,7 @@ extern bool fix_n_results(int arity, int goal, setup z[],
                if (((kk == s2x4 && z[i].kind == s_qtag) ||
                     (kk == s_qtag && z[i].kind == s2x4))) {
                   qtflag = true;
-                  zisrot ^= 1;
+                  dmdqtagfudge = 1;
                }
                else if (((kk == s2x4 && z[i].kind == s2x2) ||
                          (kk == s2x2 && z[i].kind == s2x4))) {
@@ -4783,7 +4922,7 @@ extern bool fix_n_results(int arity, int goal, setup z[],
                else if (((kk == s1x4 && z[i].kind == sdmd) ||
                          (kk == sdmd && z[i].kind == s1x4))) {
                   dmdflag = true;
-                  zisrot ^= 1;
+                  dmdqtagfudge = 1;
                }
                else
                   goto lose;
@@ -4793,19 +4932,14 @@ extern bool fix_n_results(int arity, int goal, setup z[],
          // If the setups are "trngl" or "trngl4", the rotations have
          // to alternate by 180 degrees.
 
-         if (z[i].kind == s2x2)
-            rotstates &= 0x0FF;
-         else {
-            int shit = i;
-            if (arity == 4 && (i&2)) shit ^= 1;
+         if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
+            rotstates &= 0xF00;
+         else
+            rotstates &= 0x033;
 
-            if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
-               rotstates &= 0xF00;
-            else
-               rotstates &= 0x033;
-
-            rotstates &= rotstate_table[((shit & 3) << 2) | zisrot];
-         }
+         canonicalize_rotation(&z[i]);
+         rotstates &= rotstate_table[(suggested_incremental_rotation_parity << 2) |
+                                    ((z[i].rotation^dmdqtagfudge) & 3)];
       }
    }
 
@@ -4813,11 +4947,9 @@ extern bool fix_n_results(int arity, int goal, setup z[],
 
    if (kk == nothing) {
       // If client really needs a diamond, return a diamond.
-      // Otherwise opt for 1x4.
       if (lineflag != 0) {
          if (goal == 9) kk = sdmd;
-         else if (goal == -1) kk = s1x4;
-         else if (lineflag == 1)  // But a goal of -2 means use whatever the setups were.
+         else if (lineflag == 1)
             kk = s1x4;
          else if (lineflag == 2)
             kk = sdmd;
@@ -4919,7 +5051,7 @@ extern bool fix_n_results(int arity, int goal, setup z[],
       }
       else if (boxrectflag && z[i].kind == s2x2) {
          if (rotstates & 2) {
-            z[i].rotation--;
+            //            z[i].rotation--;
             canonicalize_rotation(&z[i]);
          }
 
@@ -4943,14 +5075,45 @@ extern bool fix_n_results(int arity, int goal, setup z[],
    // If something was a 1x2, that's OK if something else was a 1x4.
    if (miniflag && kk != s1x4 && kk != s1x2) goto lose;
 
+   // We know rotstates has a nonzero bit in an appropriate field.
+   // This will guide us in setting the rotations of empty setups.
+
    for (i=0; i<arity; i++) {
-      if (z[i].kind == nothing)
+      if (z[i].kind == nothing) {
+         z[i].kind = kk;
          z[i].clear_people();
+
+         int suggested_incremental_rotation_parity = i & 1;
+         if (reorder_setups_2_and_3 && (i&2)) suggested_incremental_rotation_parity ^= 1;
+
+         if (rotstates & 0x1)
+            z[i].rotation = 0;
+         else if (rotstates & 0x2)
+            z[i].rotation = 1;
+         else if (rotstates & 0x4)
+            z[i].rotation = 2;
+         else if (rotstates & 0x8)
+            z[i].rotation = 3;
+         else if (rotstates & 0x10)
+            z[i].rotation = suggested_incremental_rotation_parity;
+         else if (rotstates & 0x20)
+            z[i].rotation = suggested_incremental_rotation_parity ^ 1;
+         else if (rotstates & 0x100)
+            z[i].rotation = 2*suggested_incremental_rotation_parity;
+         else if (rotstates & 0x200)
+            z[i].rotation = 1+2*suggested_incremental_rotation_parity;
+         else if (rotstates & 0x400)
+            z[i].rotation = 2-2*suggested_incremental_rotation_parity;
+         else if (rotstates & 0x800)
+            z[i].rotation = 3-2*suggested_incremental_rotation_parity;
+         else
+            fail("Don't recognize ending setup for this call.");
+      }
       else if (z[i].kind == s1x2 && kk == s1x4) {
          // We have to expand a 1x2 to the center spots of a 1x4.
-         (void) copy_person(&z[i], 3, &z[i], 1);
+         copy_person(&z[i], 3, &z[i], 1);
          z[i].clear_person(2);
-         (void) copy_person(&z[i], 1, &z[i], 0);
+         copy_person(&z[i], 1, &z[i], 0);
          z[i].clear_person(0);
       }
 
@@ -4961,8 +5124,7 @@ extern bool fix_n_results(int arity, int goal, setup z[],
          z[i].inner.srotation = z[deadconcindex].inner.srotation;
       }
 
-      // We know rotstates has a nonzero bit in an appropriate field.
-
+      /*
       if (z[i].kind == s_trngl || z[i].kind == s_trngl4) {
          z[i].rotation = i << 1;
          if (rotstates & 0xC00) z[i].rotation += 2;
@@ -4971,6 +5133,7 @@ extern bool fix_n_results(int arity, int goal, setup z[],
       }
       else
          z[i].rotation = (rotstates >> 1) & 1;
+      */
    }
 
    return false;

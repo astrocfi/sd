@@ -46,8 +46,9 @@ this whenever it starts up:
 @end group
 @end example
 
-Do that.  Then exit from the program and start it again.  Some sample
-sessions will now be active.
+Do that.  This is a command to @code{Sd/Sdtty} itself -- do not give this
+command at a command (DOS) window.  Then exit from @code{Sd/Sdtty} and
+start it again.  Some sample sessions will now be active.
 
 Once sessions are active and are presented during startup, you can use
 them by clicking on the desired session in @code{Sd}, or typing its
@@ -78,7 +79,7 @@ Then double-click "no session" and double-click the level that you want.
 
 Start Sd again.  Click "use abridged list", and fill in the
 same file name (again! sorry!)  Then double-click "create
-new session" and double-click the lavel.  A popup will appear,
+new session" and double-click the level.  A popup will appear,
 for the output file name.  Change it to a single "+" sign,
 unless you are a masochist.  (Or a "*" sign if you prefer,
 and if you know the difference.)  Click "accept".  A new
@@ -380,7 +381,7 @@ Just like that: @strong{boys start quarter thru}, or @strong{boys start 1/4
 thru} (either spelling is accepted.)  The @strong{<ANYONE> start} concept
 has the indicated people do their own part of the first part of the
 call, after which the others join them.  You give a person indicator
-like @strong{boys} in place of the @strong{<ANYONE>}.  Or, if like, you may
+like @strong{boys} in place of the @strong{<ANYONE>}.  Or, if you like, you may
 literally type the @strong{<ANYONE>}, complete with angle brackets.  The
 program will then ask for the person indicator.
 
@@ -665,6 +666,19 @@ typed first.  Hence @strong{[anything] and roll} always uses brackets.
 
 So, if you are having trouble of this sort, try adding brackets
 or leaving them out.
+
+@unnumberedsec How can I get a ``boys work cross, concentric recycle''?
+
+The program thinks it's a``boys work cross concentric''.  Would typing the
+comma help?
+
+No, don't type a comma.  The program simply doesn't understand them.
+Instead, separate the @strong{cross} from the @strong{concentric} by
+pressing @strong{<ENTER>} after the @strong{cross}.  Or, if using @code{Sd},
+select the two concepts from the menu separately.  The program will put
+in the comma, along with the word @strong{ALL}.
+
+In general, this is the way to resolve ambiguous combinations.
 
 @unnumberedsec In a parallelogram, how can I specify the ``wings''?
 

@@ -260,7 +260,7 @@ const char *get_escape_string(char c)
       return "<ANYTHING>";
    case 'N':
       return "<ANYCIRC>";
-   case '6': case 'k':
+   case '6': case 'k': case 'K':
       return "<ANYONE>";
    case 'h':
       return "<DIRECTION>";
@@ -337,7 +337,7 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
             index >>= BITS_PER_NUMBER_FIELD;
             howmany--;
             break;
-         case '6':
+         case '6': case 'K':
             writestuff(selector_list[cptr->who].name_uc);
             break;
          case 'k':
@@ -1201,12 +1201,12 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   char savec = *np++;
 
                   switch (savec) {
-                  case '6': case 'k':
+                  case '6': case 'k': case 'K':
                      write_blank_if_needed();
-                     if (savec == '6')
-                        writestuff(selector_list[i16junk].name);
-                     else
+                     if (savec == 'k')
                         writestuff(selector_list[i16junk].sing_name);
+                     else
+                        writestuff(selector_list[i16junk].name);
                      if (np[0] && np[0] != ' ' && np[0] != ']')
                         writestuff(" ");
                      break;
