@@ -7608,7 +7608,6 @@ void really_inner_move(
          // Fix special case of yoyo/generous/stingy.
          heritflags hhhh = callflagsh;
          fix_gensting_weirdness(&ss->cmd, hhhh);
-         hhhh |= INHERITFLAG_RECTIFY;  // This one doesn't count.
          heritflags unaccepted_flags = ss->cmd.cmd_final_flags.herit & ~hhhh;
 
          // Special case:  Some calls do not specify "magic" inherited
@@ -7941,13 +7940,17 @@ static void move_with_real_call(
           ss->cmd.callspec == base_calls[base_call_couples_circ] ||
           ss->cmd.callspec == base_calls[base_call_circ_for_coord] ||
           ss->cmd.callspec == base_calls[base_call_colcirc] ||
+          ss->cmd.callspec == base_calls[base_call_circulateforacey] ||
+          ss->cmd.callspec == base_calls[base_call_box_circulate_maybe_diamond] ||
           ss->cmd.callspec == base_calls[base_call_circulate_for_tally_ho]) {
          ss->cmd.callspec = base_calls[base_call_ctrrot];
       }
-      else if (ss->cmd.callspec == base_calls[base_call_ctrrot]) {
+      else if (ss->cmd.callspec == base_calls[base_call_ctrrot] ||
+               ss->cmd.callspec == base_calls[base_call_ctr_rot_for_sidetrack]) {
          ss->cmd.callspec = base_calls[base_call_circulate];
       }
-      else if (ss->cmd.callspec == base_calls[base_call_splctrrot]) {
+      else if (ss->cmd.callspec == base_calls[base_call_splctrrot] ||
+               ss->cmd.callspec == base_calls[base_call_ctr_rot_for_splitsidetrack]) {
          ss->cmd.callspec = base_calls[base_call_boxcirc];
       }
       else if (ss->cmd.callspec == base_calls[base_call_splitcirc] ||

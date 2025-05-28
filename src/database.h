@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 403
+#define DATABASE_FORMAT_VERSION 407
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -205,6 +205,10 @@ enum base_call_index {
    base_call_tradethewave,
    base_call_ctrrot,
    base_call_splctrrot,
+   base_call_ctr_rot_for_sidetrack,
+   base_call_ctr_rot_for_splitsidetrack,
+   base_call_ctrrot_roll,
+   base_call_circ_and_quarter_in,
    base_call_backemup,
    base_call_circulate,
    base_call_motcirc,
@@ -213,6 +217,7 @@ enum base_call_index {
    base_call_colcirc,
    base_call_circulate_for_tally_ho,
    base_call_circulateforacey,
+   base_call_box_circulate_maybe_diamond,
    base_call_trade,
    base_call_splitcirc,
    base_call_boxcirc,

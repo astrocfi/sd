@@ -49,7 +49,7 @@ SD_OBJS = sdprint.o sdui-win.o
 
 MKCALLS_OBJS = mkcalls.o common.o
 
-all: sdtty.exe sd.exe mkcalls.exe deploy.exe sd_calls.dat
+all: sdtty.exe sd.exe mkcalls.exe sd_calls.dat
 
 libsdlib.a: sdlib.dll $(SDLIB_OBJS)
 
@@ -60,8 +60,8 @@ sdlib.dll: $(SDLIB_OBJS)
 sdres.o: sd.rc
 	windres sd.rc sdres.o
 
-deployres.o: deploy.rc
-	windres deploy.rc deployres.o
+# deployres.o: deploy.rc
+# 	windres deploy.rc deployres.o
 
 sdttyres.o: sdtty.rc
 	windres sdtty.rc sdttyres.o
@@ -78,9 +78,9 @@ sd.exe: libsdlib.a sdlib.dll $(SD_OBJS) sdres.o
 	$(CC) -mwindows -o $@ $(SD_OBJS) sdres.o $(SD_LIBS)
 	strip sd.exe
 
-deploy.exe:  deploy.o deployres.o
-	$(CC) -mwindows -o $@ deploy.o deployres.o
-	strip deploy.exe
+# deploy.exe:  deploy.o deployres.o
+# 	$(CC) -mwindows -o $@ deploy.o deployres.o
+# 	strip deploy.exe
 
 sd_calls.dat: sd_calls.txt mkcalls.exe
 	mkcalls
@@ -103,8 +103,8 @@ mkcalls.o: mkcalls.cpp
 common.o: common.cpp
 	$(CC) $(CFLAGS) -c $<
 
-deploy.o: deploy.cpp
-	$(CC) $(CFLAGS) -c $<
+# deploy.o: deploy.cpp
+# 	$(CC) $(CFLAGS) -c $<
 
 sdui-tty.o: sdui-tty.cpp
 	$(CC) $(CFLAGS) -c $<
@@ -138,7 +138,7 @@ sdprint.o: sdprint.h
 $(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h sdchars.h sdmatch.h database.h paths.h
 
 clean::
-	-del *.o deploy.exe sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
+	-del *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
                libsdlib.a sdlib.dll ..\sddoc\sd_source.zip
 
 cleanup::

@@ -20,7 +20,7 @@ Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # and date are visible)
     [sd]    sd.rc        (SD & UI version #'s, and the year, are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
-    [sddoc] title.lst    (version # is visible)
+    [sd]    install.sed  (version # and date, with year, visible around line 24.
     [sddoc] about.lst    (version # and year are visible)
     [sddoc] sd_doc.txi         (version # and date, with year (two places!), are visible)
     [sddoc] relnotes.txi       (version #, database format version #,
@@ -56,7 +56,6 @@ Go to the sddoc directory and do:
     setmingw64
     clean clean
     do_plain
-    do_ps
     do_pdf
     do_index <poster-child-number>
             (It is important that a poster child number
@@ -126,7 +125,8 @@ Go to the sddoc directory and do:
 30 Dec 21  -  25 Apr 22  #67  // thirdly split 5 times grand chain 8
 25 Apr 22  -   4 Sep 23  #72  // funny split trade circulate 20 TIMES
  4 Sep 23  -  30 Sep 23  #65  // middle half tandem slide thru
-30 Sep 23  -             #73  // rectify coordinate
+30 Sep 23  -  10 Dec 23  #73  // rectify coordinate
+10 Dec 23                #74  // rectify clear the centers for a [trade]
                          #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption
@@ -182,10 +182,11 @@ Stress tests to try:
    preparation, and the source files from a source save, are needed
    by this step.
 
-   cd sddoc
+   in sddoc:
    new_binary     (this depends on all documentation, binaries, and database)
    # REMEMBER TO KEEP THE SDDOC DIRECTORY CLEAR OF SUPERFLUOUS HTML AND TXT FILES!
    # All html and txt files get uploaded.
+   in sddoc:
    do_pack        (this depends on all of the above, and the result of "savesource")
 
 DO A VIRUS SCAN ON INSTALL.EXE and PACK.ZIP!
@@ -246,3 +247,30 @@ Login as USERNAME  (P=PASSWORD)
   challengedance.org> exit
 
 The c4 books (book1.pdf etc.) go into the same directory.
+
+*************** ONE-TIME CREATION OF SED FILE
+
+   In directory sd:
+   iexpress
+Page 1:  Create new   Next
+Page 2:  Extract files only   Next
+Page 3:  Title = Sd   Next
+Page 4:  Prommpt: This is Sd version 39.58, released Dec. 5 2023.  Do you wish to install it?   Next
+Page 5:  Do NOT show license file.   Next
+Page 6:  Grab all the files, from the list below.  That is, for each line in the list,
+         click "Add", then past the line into the popup and click "Open".
+----------
+"sd.exe" "sdtty.exe" "mkcalls.exe" "sdlib.dll" "sd_calls.txt" "sd_calls.dat" "COPYING.txt" "libwinpthread-1.dll"
+"SD.lnk" "SD plain.lnk" "SDTTY.lnk" "SDTTY plain.lnk" "SD nocheckers.lnk" "SD couple.lnk" "SD hidecouple.lnk"
+"Edit sd.ini.lnk" "Sd manual.lnk" "Release Notes.lnk" "Faq.lnk"
+"..\sddoc\sd_doc.html" "..\sddoc\relnotes.html" "..\sddoc\faq.html"
+----------
+        Next
+Page 8:  Default   Next
+Page 9:  Message = Done!   Next
+Page 10: Enter install.exe  Hide off, Long Names on.   Next
+Page 12: Save it.  Filename should be filled in, as install.SED.   Next
+Page 13: Do it.   Next
+Page 14: Finish.
+
+*************** END OF ONE-TIME CREATION OF SED FILE

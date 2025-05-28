@@ -1673,6 +1673,10 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "tradethewave"},
    {0, "ctr_rot"},
    {0, "splitctrrot"},
+   {0, "ctr_rot_for_sidetrack"},
+   {0, "ctr_rot_for_splitsidetrack"},
+   {0, "ctr_rot_roll"},
+   {0, "circ_and_quarter_in"},
    {0, "backemup"},       // This is used for remembering the handedness.
    {0, "circulate"},
    {0, "motcirc"},
@@ -1681,6 +1685,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "colcirc"},
    {0, "circulate_for_tally_ho"},
    {0, "circulateforacey"},
+   {0, "box_circulate_maybe_diamond"},
    {0, "trade"},
    {0, "split_circ"},
    {0, "box_circ"},

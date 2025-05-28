@@ -5,4 +5,4 @@
 -win32
 -le
 -st "Sd Setup"
--c deploy.exe
+-c deployclean3906.exe

@@ -4222,14 +4222,35 @@ extern void concentric_move(
    localmodsout1 |= (begin_outer.cmd.cmd_misc_flags & DFM1_CONCENTRICITY_FLAG_MASK);
 
    // If doing half of an acey deucey, don't force spots--it messes up short6 orientation.
-   if (analyzer == schema_concentric_6p_or_normal_or_2x6_2x3 ||
+   if (analyzer == schema_concentric_6p_or_normal ||
+       analyzer == schema_concentric_6p_or_normal_or_2x6_2x3 ||
        analyzer == schema_concentric_or_diamond_line ||
        analyzer == schema_concentric) {
       if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))
          localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
       else if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY)) {
          localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
-         localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
+
+         if (outer_inners[0].result_flags.misc & RESULTFLAG__RECTIFY_EXPIRED) {
+            // The ends responded to a RECTIFY operation.
+
+            // Look at begin_outer.cmd.callspec
+
+            call_with_name *foocall = begin_outer.cmd.callspec;
+
+            // If this is "counter rotate" or "counter rotate and roll", it got
+            // changed to a circulate.  Do *NOT* set DFM1_CONC_CONCENTRIC_RULES in that case.
+
+            if (foocall == base_calls[base_call_ctrrot] ||
+                foocall == base_calls[base_call_ctrrot_roll] ||
+                foocall == base_calls[base_call_circ_and_quarter_in] ||  // This one counts too.
+                foocall == base_calls[base_call_splctrrot]) {
+            }
+            else if (foocall == base_calls[base_call_circulate])
+               localmodsout1 = DFM1_CONC_CONCENTRIC_RULES;
+            else
+               localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
+         }
       }
    }
 
