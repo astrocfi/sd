@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set sd-version 30.78
-@set Time-stamp: Aug 28, 1994
+@set sd-version 30.8
+@set Time-stamp: Oct 29, 1994
 @set full-manual
 @c %**end of header
 @iftex
@@ -240,8 +240,9 @@ These will be described later.
 
 The call definitions will be read in from the encoded database file
 @file{sd_calls.dat}.  The program will then ponder the database for a few
-seconds while it determines what calls to put on what menus.  This
-takes about (200/MIPS) seconds at C4, correspondingly less at lower levels.
+seconds while it determines what calls to put on what menus.  Depending
+on the speed of your computer and the level you selected, this could take
+from a few seconds to over a minute.
 
 @menu
 * Command-Line Options::        Command-Line Options
@@ -895,17 +896,19 @@ Some calls can be modified in a natural way, such as @samp{in roll motivate}
 and @samp{vertical tag your neighbor}, or in unnatural ways, such as @samp{trade
 the diamond but replace the diamond circulate with explode the diamond}.
 To form such a call, you must first enable call modifications
-by clicking on @code{allow modifications} before choosing the
-call.
+by clicking on @code{simple modifications} or @code{allow modifications}
+before choosing the call.
 
-There are two levels of this feature.  If you click on @code{allow
-modifications} just once, you get the simple version, which only prompts
+There are two levels of this feature.  If you click on @code{simple
+modifications}, you get the simple version, which only prompts
 you for @dfn{natural} modifications.  Natural modifications have been somewhat
 arbitrarily defined as those for which there is an accepted way of fitting
 the words in without using the phrase ``but replace the <whatever> with
-<whatever>.''  If you click on @code{allow modifications} a second time, you allow
+<whatever>.''  If you click on @code{allow modifications}, you allow
 a potentially large number of modification possibilities, sometimes several
 in the same call.
+
+In most cases, @code{simple modifications} is probably the right thing.
 
 If you are using the Macintosh version, call modification is enabled
 using the @code{Modify Next Call} submenu of the @code{Sequence} menu.
@@ -951,7 +954,7 @@ How (and whether) you choose to read such a card is up to you.
 To use tagging call modifications, like @samp{tag the star your leader},
 enable modifications, click on @code{tag your leader} (the generic form of all tagging calls is
 @samp{tag @dots{}}) followed by the @samp{1/2} version of the replacement tagging call,
-e.g., @code{1/2 tag the star} or @code{loop and 1/2 tag}.  The program will
+e.g., @code{tag the star 1/2} or @code{loop and 1/2 tag}.  The program will
 remove the superfluous @samp{1/2}.  You may also choose the @code{revert}
 or @code{reflect} calls here.
 
@@ -959,7 +962,8 @@ To get something like @samp{flip chain thru and scatter reaction}, enable
 modifications and select @code{tag chain thru and scatter reaction} or
 whatever.  Then change the @code{1/2 tag}.
 
-@code{1/2 invert} and @code{track 2} are acceptable tagging replacements.
+@code{invert the column 1/2} and @code{track 2} are acceptable tagging
+replacements.
 
 
 @node Single/Cross/Left, Asymmetric Selectors, Tag/Scoot, Calling
@@ -1898,10 +1902,9 @@ you should not use it.
 The @code{twice} concept simply causes the subject call to be executed
 twice.  This is a notion familiar at all levels from Mainstream
 (@samp{spin chain thru, the girls double circulate}) to C4 (@samp{piecewise
-twice, recoil}).
-No universally recognized words for this exist, so the program
-uses the generic phrase @code{twice}.  When calling, use whatever words
-you think are appropriate.
+twice, recoil}).  No universally recognized words for this exist,
+so the program uses the generic phrase @code{twice}.  When calling,
+use whatever words you think are appropriate.
 
 @node Precede it or Follow it, So-And-So, Twice, Concept Notes
 @section Precede it or Follow it

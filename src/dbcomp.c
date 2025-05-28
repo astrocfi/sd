@@ -49,6 +49,17 @@ extern void exit(int code);
 #include "database.h"
 #include "paths.h"
 
+/* We would like to think that we will always be able to count on compilers to do the
+   right thing with "int" and "long int" and so on.  What we would really like is
+   for compilers to be counted on to make "int" at least 32 bits, because we need
+   32 bits in many places.  However, some compilers don't, so we have to use
+   "long int" or "unsigned long int".  We think that all compilers we deal with
+   will do the right thing with that, but, just in case, we use a typedef.
+
+   The type "uint32" must be an unsigned integer of at least 32 bits. */
+
+typedef unsigned long int uint32;
+
 /* These things come from mkcalls.c for the standalone compiler, or from
    sdtables.c or sdui-mac.c for the built-in compiler. */
 extern int begin_sizes[];
@@ -261,6 +272,8 @@ char *sstab[] = {
    "pspindle",
    "hrglass",
    "phrglass",
+   "dhrglass",
+   "pdhrglass",
    "crosswave",
    "pcrosswave",
    "1x4",
@@ -324,6 +337,7 @@ char *estab[] = {
    "rigger",
    "spindle",
    "hrglass",
+   "dhrglass",
    "hyperglass",
    "crosswave",
    "1x8",
@@ -380,6 +394,7 @@ char *schematab[] = {
    "checkpoint",
    "reverse_checkpoint",
    "ckpt_star",
+   "conc_triple_lines",
    "???",
    "???",
    "seq",
@@ -408,6 +423,8 @@ char *qualtab[] = {
    "ctr2fl_endwv",
    "split_dixie",
    "not_split_dixie",
+   "8_chain",
+   "trade_by",
    ""};
 
 /* This table is keyed to "call_restriction". */
@@ -465,7 +482,6 @@ char *defmodtab1[] = {
    "repeat_nm1",
    "roll_transparent",
    "must_be_tag_call",
-   "must_be_scoot_call",
    "cpls_unless_single",
    "shift_one_number",
    "shift_two_numbers",     /* The constant "shift_three_numbers" is elsewhere. */
@@ -483,7 +499,6 @@ char *flagtab1[] = {
    "parallel_conc_end",
    "take_right_hands",
    "is_tag_call",
-   "is_scoot_call",
    "is_star_call",
    "split_large_setups",
    "fudge_to_q_tag",
@@ -503,6 +518,8 @@ char *flagtab1[] = {
    "can_be_fan_or_yoyo",
    "no_cutting_through",
    "no_elongation_allowed",
+   "need_tag_call",        /* This actually never appears in the text -- it is automatically added. */
+   "base_tag_call",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -558,7 +575,7 @@ char *altdeftabh[] = {
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
-   definition-modifier flags.  They go in the "modifiers" word of a by_def_item.
+   definition-modifier flags.  They go in the "modifiersh" word of a by_def_item.
    Notice that it looks like flagtabh. */
 char *defmodtabh[] = {
    "inherit_diamond",
@@ -582,6 +599,36 @@ char *defmodtabh[] = {
    "inherit_singlefile",
    "inherit_half",
    ""};
+
+/* This table is keyed to the constants "dfm_***".  These are the heritable
+   definition-modifier force flags.  They go in the "modifiersh" word of a by_def_item.
+   These are the words that one uses if the top-level enabling bit is OFF.  The
+   bit in the "modifiersh" is the same in either case -- the different interpretation
+   simply depends on whether the top level bit is on or off.
+   Notice that it looks like flagtabh. */
+char *forcetabh[] = {
+   "force_diamond",
+   "???",    /* We don't allow "reverse" or "left" -- the bits move around during inheritance. */
+   "???",
+   "force_funny",
+   "force_intlk",
+   "force_magic",
+   "force_grand",
+   "force_12_matrix",
+   "force_16_matrix",
+   "force_cross",
+   "force_single",
+   "force_1x2",
+   "force_2x1",
+   "force_2x2",
+   "force_1x3",
+   "force_3x1",
+   "force_3x3",
+   "force_4x4",
+   "force_singlefile",
+   "force_half",
+   ""};
+
 
 /* This table is keyed to the constants "MTX_???". */
 char *matrixcallflagtab[] = {
@@ -989,8 +1036,8 @@ static void write_fullword(unsigned int n)
 static void write_defmod_flags(void)
 {
    int i;
-   unsigned int rr1 = 0;
-   unsigned int rrh = 0;
+   uint32 rr1 = 0;
+   uint32 rrh = 0;
 
    get_tok();
    if (tok_kind != tok_lbkt)
@@ -1012,8 +1059,24 @@ static void write_defmod_flags(void)
             rr1 |= (6*DFM1_CALL_MOD_BIT);
          else if (strcmp(tok_str, "shift_three_numbers") == 0)
             rr1 |= (3*DFM1_NUM_SHIFT_BIT);
-         else if ((i = search(defmodtabh)) >= 0)
-            rrh |= (1 << i);
+         else if ((i = search(defmodtabh)) >= 0) {
+            uint32 bit = 1 << i;
+
+            /* Don't check that left/reverse flags -- they are complicated, so there is no "force" word for them. */
+            if (bit & ~(call_flags | INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+               errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
+
+            rrh |= bit;
+         }
+         else if ((i = search(forcetabh)) >= 0) {
+            uint32 bit = 1 << i;
+
+            /* Don't check that left/reverse flags -- they are complicated, so there is no "force" word for them. */
+            if (bit & call_flags & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+               errexit("Can't use a \"force\" flag unless corresponding top level flag is off");
+
+            rrh |= bit;
+         }
          else
             errexit("Unknown defmod key");
 

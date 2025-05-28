@@ -94,8 +94,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
    {"DIVIDED LINES",                         concept_divided_2x4,           FALSE, l_c4, {&map_hv_2x4_2, phantest_impossible, 1}},
    {"12 MATRIX DIVIDED LINES",               concept_divided_2x3,           FALSE, l_c4, {&map_2x6_2x3, phantest_impossible, 1}},
-   {"TWO PHANTOM TIDAL LINES",               concept_do_phantom_1x8,        FALSE, l_c3, {0, phantest_impossible, TRUE, 1}},
-   {"TWO PHANTOM LINES OF 6",                concept_do_phantom_1x6,        FALSE, l_c3, {0, phantest_impossible, TRUE, 1}},
+   {"TWIN PHANTOM TIDAL LINES",              concept_do_phantom_1x8,        FALSE, l_c3, {0, phantest_impossible, TRUE, 1}},
+   {"TWIN PHANTOM LINES OF 6",               concept_do_phantom_1x6,        FALSE, l_c3, {0, phantest_impossible, TRUE, 1}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE LINES",                          concept_triple_lines,          FALSE, l_c2, {0, 1}},
    {"TRIPLE LINES WORKING TOGETHER",         concept_triple_lines_tog_std,  FALSE, l_c3, {0, 10, 1}},
@@ -130,8 +130,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
    {"DIVIDED WAVES",                         concept_divided_2x4,           FALSE, l_c4, {&map_hv_2x4_2, phantest_impossible, 3}},
    {"12 MATRIX DIVIDED WAVES",               concept_divided_2x3,           FALSE, l_c4, {&map_2x6_2x3, phantest_impossible, 3}},
-   {"TWO PHANTOM TIDAL WAVES",               concept_do_phantom_1x8,        FALSE, l_c3, {0, phantest_impossible, TRUE, 3}},
-   {"TWO PHANTOM WAVES OF 6",                concept_do_phantom_1x6,        FALSE, l_c3, {0, phantest_impossible, TRUE, 3}},
+   {"TWIN PHANTOM TIDAL WAVES",              concept_do_phantom_1x8,        FALSE, l_c3, {0, phantest_impossible, TRUE, 3}},
+   {"TWIN PHANTOM WAVES OF 6",               concept_do_phantom_1x6,        FALSE, l_c3, {0, phantest_impossible, TRUE, 3}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE WAVES",                          concept_triple_lines,          FALSE, l_c2, {0, 3}},
    {"TRIPLE WAVES WORKING TOGETHER",         concept_triple_lines_tog_std,  FALSE, l_c3, {0, 10, 3}},
@@ -180,8 +180,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
    {"DIVIDED COLUMNS",                       concept_divided_2x4,           FALSE, l_c4, {&map_hv_2x4_2, phantest_impossible, 0}},
    {"12 MATRIX DIVIDED COLUMNS",             concept_divided_2x3,           FALSE, l_c4, {&map_2x6_2x3, phantest_impossible, 0}},
-   {"TWO PHANTOM TIDAL COLUMNS",             concept_do_phantom_1x8,        FALSE, l_c3, {0, phantest_impossible, TRUE, 0}},
-   {"TWO PHANTOM COLUMNS OF 6",              concept_do_phantom_1x6,        FALSE, l_c3, {0, phantest_impossible, TRUE, 0}},
+   {"TWIN PHANTOM TIDAL COLUMNS",            concept_do_phantom_1x8,        FALSE, l_c3, {0, phantest_impossible, TRUE, 0}},
+   {"TWIN PHANTOM COLUMNS OF 6",             concept_do_phantom_1x6,        FALSE, l_c3, {0, phantest_impossible, TRUE, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE COLUMNS",                        concept_triple_lines,          FALSE, l_c3, {0, 0}},
    {"TRIPLE COLUMNS WORKING TOGETHER",       concept_triple_lines_tog_std,  FALSE, l_c3, {0, 10, 0}},
@@ -455,13 +455,16 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* 4-person distorted concepts */
 
-#define d4__1_size 6
+#define d4__1_size 9
    {"SPLIT",                                 concept_split,                 FALSE, l_mainstream},
    {"ONCE REMOVED",                          concept_once_removed,          FALSE, l_c2,         {0, 0}},
    {"ONCE REMOVED DIAMONDS",                 concept_once_removed,          FALSE, l_c3,         {0, 1}},
    {"MAGIC",                                 concept_magic,                 FALSE, l_c1},
    {"DIAGONAL",                              concept_do_both_boxes,         FALSE, l_c3a,        {&map_2x4_diagonal, 97, FALSE}},
    {"TRAPEZOID",                             concept_do_both_boxes,         FALSE, l_c3,         {&map_2x4_trapezoid, 97, FALSE}},
+   {"OVERLAPPED DIAMONDS",                   concept_overlapped_diamond,    FALSE, l_c4,         {0, 0}},
+   {"OVERLAPPED LINES",                      concept_overlapped_diamond,    FALSE, l_c4,         {0, 1}},
+   {"OVERLAPPED WAVES",                      concept_overlapped_diamond,    FALSE, l_c4,         {0, 3}},
 /* -------- column break -------- */
 #define d4__2_size 5
    {"INTERLOCKED PARALLELOGRAM",             concept_do_both_boxes,         FALSE, l_c3x,        {&map_2x4_int_pgram, 97, TRUE}},
@@ -487,7 +490,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 58
+#define mm__1_size 59
 #define mm__1_phan 12
    {"LEFT",                                  concept_left,                  FALSE, l_mainstream},
    {"REVERSE",                               concept_reverse,               FALSE, l_mainstream},
@@ -509,6 +512,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"ASSUME TWO-FACED LINES",                concept_assume_waves,          FALSE, l_c3,        {0, cr_2fl_only,   0, 0}},
    {"ASSUME ONE-FACED LINES",                concept_assume_waves,          FALSE, l_c3,        {0, cr_1fl_only,   0, 0}},
    {"ASSUME INVERTED LINES",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_magic_only, 0, 0}},
+   {"ASSUME NORMAL BOXES",                   concept_assume_waves,          FALSE, l_c3,        {0, cr_wave_only,  2, 0}},
    {"ASSUME INVERTED BOXES",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_magic_only, 2, 0}},
    {"ASSUME NORMAL COLUMNS",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_wave_only,  1, 0}},
    {"ASSUME MAGIC COLUMNS",                  concept_assume_waves,          FALSE, l_c3,        {0, cr_magic_only, 1, 0}},
@@ -520,7 +524,6 @@ concept_descriptor concept_descriptor_table[] = {
    {"ASSUME BACK-TO-BACK LINES",             concept_assume_waves,          FALSE, l_c3,        {0, cr_li_lo,      0, 1}},
    {"ASSUME GENERAL DIAMONDS",               concept_assume_waves,          FALSE, l_c3,        {0, cr_diamond_like,0, 0}},
    {"ASSUME GENERAL 1/4 TAGS",               concept_assume_waves,          FALSE, l_c3,        {0, cr_qtag_like,  0, 0}},
-
    {"ASSUME RIGHT 1/4 TAGS",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_jleft,      0, 2}},
    {"ASSUME LEFT 1/4 TAGS",                  concept_assume_waves,          FALSE, l_c3,        {0, cr_jright,     0, 2}},
    {"ASSUME LEFT 3/4 TAGS",                  concept_assume_waves,          FALSE, l_c3,        {0, cr_jleft,      0, 1}},
@@ -529,12 +532,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"ASSUME LEFT 1/4 LINES",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_ijright,    0, 2}},
    {"ASSUME LEFT 3/4 LINES",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_ijleft,     0, 1}},
    {"ASSUME RIGHT 3/4 LINES",                concept_assume_waves,          FALSE, l_c3,        {0, cr_ijright,    0, 1}},
-
    {"ASSUME NORMAL DIAMONDS",                concept_assume_waves,          FALSE, l_c3,        {0, cr_jright,     4, 0}},
    {"ASSUME FACING DIAMONDS",                concept_assume_waves,          FALSE, l_c3,        {0, cr_jleft,      4, 0}},
    {"ASSUME NORMAL INTERLOCKED DIAMONDS",    concept_assume_waves,          FALSE, l_c3,        {0, cr_ijright,    4, 0}},
    {"ASSUME FACING INTERLOCKED DIAMONDS",    concept_assume_waves,          FALSE, l_c3,        {0, cr_ijleft,     4, 0}},
-
    {"ASSUME NORMAL CASTS",                   concept_assume_waves,          FALSE, l_c3,        {0, cr_alwaysfail, 0, 0}},
    {"WITH ACTIVE PHANTOMS",                  concept_active_phantoms,       FALSE, l_c3},
    {"CENTRAL",                               concept_central,               FALSE, l_c3},

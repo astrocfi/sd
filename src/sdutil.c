@@ -61,6 +61,8 @@ and the following external variables:
    collision_person1
    collision_person2
    enable_file_writing
+   cardinals
+   ordinals
    selector_names
    direction_names
    warning_strings
@@ -109,217 +111,8 @@ uint32 collision_person1;
 uint32 collision_person2;
 long_boolean enable_file_writing;
 
-Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"};
-
-/* These variables are used by the text-packing stuff. */
-
-Private char *destcurr;
-Private char lastchar;
-Private char *lastblank;
-Private char current_line[MAX_TEXT_LINE_LENGTH];
-Private int text_line_count = 0;
-
-
-
-Private void open_text_line(void)
-{
-   destcurr = current_line;
-   lastchar = ' ';
-   lastblank = (char *) 0;
-}
-
-
-extern void clear_screen(void)
-{
-   written_history_items = -1;
-   text_line_count = 0;
-   uims_reduce_line_count(0);
-   open_text_line();
-}
-
-
-Private void writechar(char src)
-{
-   *destcurr = (lastchar = src);
-   if (src == ' ' && destcurr != current_line) lastblank = destcurr;
-
-   if (destcurr < &current_line[MAX_PRINT_LENGTH])
-      destcurr++;
-   else {
-      /* Line overflow.  Try to write everything up to the last
-         blank, then fill next line with everything since that blank. */
-
-      char save_buffer[MAX_TEXT_LINE_LENGTH];
-      char *q = save_buffer;
-
-      if (lastblank) {
-         char *p = lastblank+1;
-         while (p <= destcurr) *q++ = *p++;
-         destcurr = lastblank;
-      }
-      else {
-         /* Must break a word. */
-         *q++ = *destcurr;
-      }
-
-      *q = '\0';
-
-      newline();            /* End the current buffer and write it out. */
-      writestuff("   ");    /* Make a new line, copying saved stuff into it. */
-      writestuff(save_buffer);
-   }
-}
-
-
-/* Getting blanks into all the right places in the presence of substitions,
-   insertions, and elisions is way too complicated to do in the database or
-   to test.  For example, consider calls like "@4keep @5busy@1",
-   "fascinat@pe@q@ning@o@t", or "spin the pulley@7 but @8".  So we try to
-   help by never putting two blanks together, always putting blanks adjacent
-   to the outside of brackets, and never putting blanks adjacent to the
-   inside of brackets.  This procedure is part of that mechanism. */
-Private void write_blank_if_needed(void)
-{
-   if (lastchar != ' ' && lastchar != '[' && lastchar != '(' && lastchar != '-') writestuff(" ");
-}
-
-
-
-extern void newline(void)
-{
-   /* Erase any trailing blanks.  Failure to do so can lead to some
-      incredibly obscure bugs when some editors on PC's try to "fix"
-      the file, ultimately leading to apparent loss of entire sequences.
-      The problem was that the editor took out the trailing blanks
-      and moved the rest of the text downward, but didn't reduce the
-      file's byte count.  Control Z's were thereby introduced at the
-      end of the file.  Subsequent runs of Sd appended new sequences
-      to the file, leaving the ^Z's intact.  (Making Sd look for ^Z's
-      at the end of a file it is about to append to, and remove same,
-      is very hard.)  It turns out that some printing software stops,
-      as though it reached the end of the file, when it encounters a
-      ^Z, so the appended sequences were effectively lost. */
-   while (destcurr != current_line && destcurr[-1] == ' ') destcurr--;
-
-   *destcurr = '\0';
-
-   if (enable_file_writing)
-      write_file(current_line);
-
-   text_line_count++;
-   uims_add_new_line(current_line);
-   open_text_line();
-}
-
-
-
-extern void writestuff(Const char s[])
-{
-   Const char *f = s;
-   while (*f) writechar(*f++);
-}
-
-
-
-Private void writestuff_with_decorations(Const char s[], long_boolean do_number, long_boolean do_selector, int *num_ptr, char *selname)
-{
-   Const char *f = s;
-
-   while (*f) {
-      if (f[0] == '<') {
-         if (do_number && f[1] == 'N') {
-            if (f[2] == '/' && f[3] == '4' && f[4] == '>') {
-               if ((*num_ptr & 0xF) == 2)
-                  writestuff("1/2");
-               else {
-                  writechar('0' + (*num_ptr & 0xF));
-                  writestuff("/4");
-               }
-               f += 5;
-               *num_ptr >>= 4;
-               continue;
-            }
-            else if (f[2] == 't' && f[3] == 'h' && f[4] == '>') {
-               writestuff(ordinals[(*num_ptr & 0xF)-1]);
-               f += 5;
-               *num_ptr >>= 4;
-               continue;
-            }
-            else if (f[2] == '>') {
-               writechar('0' + (*num_ptr & 0xF));
-               f += 3;
-               *num_ptr >>= 4;
-               continue;
-            }
-         }
-         else if (do_selector && f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' && f[7] == '>') {
-            writestuff(selname);
-            f += 8;
-            continue;
-         }
-         else if (f[1] == 'c' && f[2] == 'o' && f[3] == 'n' && f[4] == 'c' && f[5] == 'e' && f[6] == 'p' && f[7] == 't' && f[8] == '>') {
-            f += 9;
-            continue;
-         }
-      }
-
-      writechar(*f++);
-   }
-}
-
-
-
-extern void doublespace_file(void)
-{
-   write_file("");
-}
-
-
-
-extern void exit_program(int code)
-{
-   uims_terminate();
-   final_exit(code);
-}
-
-
-extern void nonreturning fail(Const char s[])
-{
-   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
-   longjmp(longjmp_ptr->the_buf, 1);
-}
-
-
-extern void nonreturning fail2(Const char s1[], Const char s2[])
-{
-   (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   (void) strncpy(error_message2, s2, MAX_ERR_LENGTH);
-   error_message2[MAX_ERR_LENGTH-1] = '\0';
-   longjmp(longjmp_ptr->the_buf, 2);
-}
-
-
-extern void nonreturning specialfail(Const char s[])
-{
-   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
-   longjmp(longjmp_ptr->the_buf, 4);
-}
-
-
-extern void string_copy(char **dest, char src[])
-{
-   char *f = src;
-   char *t = *dest;
-
-   while (*t++ = *f++);
-   *dest = t-1;
-}
-
+char *cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (char *) 0};
+char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (char *) 0};
 
 /* BEWARE!!  These two lists are keyed to the definition of "selector_kind" in sd.h,
    and to the necessary stuff in SDUI. */
@@ -468,12 +261,226 @@ char *warning_strings[] = {
    /*  warn__split_phan_in_pgram */   " The split phantom setups are directly adjacent to the real people.",
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
-   /*  warn__canonicalize_bug    */   " There is a bug in 4 way canonicalization -- please report this sequence.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other."};
 
-/* There are 3 (and only 3) bits that are meaningful in the argument to "print_recurse":
+/* These variables are used by the text-packing stuff. */
+
+Private char *destcurr;
+Private char lastchar;
+Private char *lastblank;
+Private char current_line[MAX_TEXT_LINE_LENGTH];
+Private int text_line_count = 0;
+
+
+
+Private void open_text_line(void)
+{
+   destcurr = current_line;
+   lastchar = ' ';
+   lastblank = (char *) 0;
+}
+
+
+extern void clear_screen(void)
+{
+   written_history_items = -1;
+   text_line_count = 0;
+   uims_reduce_line_count(0);
+   open_text_line();
+}
+
+
+Private void writechar(char src)
+{
+   *destcurr = (lastchar = src);
+   if (src == ' ' && destcurr != current_line) lastblank = destcurr;
+
+   if (destcurr < &current_line[MAX_PRINT_LENGTH])
+      destcurr++;
+   else {
+      /* Line overflow.  Try to write everything up to the last
+         blank, then fill next line with everything since that blank. */
+
+      char save_buffer[MAX_TEXT_LINE_LENGTH];
+      char *q = save_buffer;
+
+      if (lastblank) {
+         char *p = lastblank+1;
+         while (p <= destcurr) *q++ = *p++;
+         destcurr = lastblank;
+      }
+      else {
+         /* Must break a word. */
+         *q++ = *destcurr;
+      }
+
+      *q = '\0';
+
+      newline();            /* End the current buffer and write it out. */
+      writestuff("   ");    /* Make a new line, copying saved stuff into it. */
+      writestuff(save_buffer);
+   }
+}
+
+
+/* Getting blanks into all the right places in the presence of substitions,
+   insertions, and elisions is way too complicated to do in the database or
+   to test.  For example, consider calls like "@4keep @5busy@1",
+   "fascinat@pe@q@ning@o@t", or "spin the pulley@7 but @8".  So we try to
+   help by never putting two blanks together, always putting blanks adjacent
+   to the outside of brackets, and never putting blanks adjacent to the
+   inside of brackets.  This procedure is part of that mechanism. */
+Private void write_blank_if_needed(void)
+{
+   if (lastchar != ' ' && lastchar != '[' && lastchar != '(' && lastchar != '-') writestuff(" ");
+}
+
+
+
+extern void newline(void)
+{
+   /* Erase any trailing blanks.  Failure to do so can lead to some
+      incredibly obscure bugs when some editors on PC's try to "fix"
+      the file, ultimately leading to apparent loss of entire sequences.
+      The problem was that the editor took out the trailing blanks
+      and moved the rest of the text downward, but didn't reduce the
+      file's byte count.  Control Z's were thereby introduced at the
+      end of the file.  Subsequent runs of Sd appended new sequences
+      to the file, leaving the ^Z's intact.  (Making Sd look for ^Z's
+      at the end of a file it is about to append to, and remove same,
+      is very hard.)  It turns out that some printing software stops,
+      as though it reached the end of the file, when it encounters a
+      ^Z, so the appended sequences were effectively lost. */
+   while (destcurr != current_line && destcurr[-1] == ' ') destcurr--;
+
+   *destcurr = '\0';
+
+   if (enable_file_writing)
+      write_file(current_line);
+
+   text_line_count++;
+   uims_add_new_line(current_line);
+   open_text_line();
+}
+
+
+
+extern void writestuff(Const char s[])
+{
+   Const char *f = s;
+   while (*f) writechar(*f++);
+}
+
+
+
+Private void writestuff_with_decorations(parse_block *cptr, Const char *s, long_boolean singular)
+{
+   int index = cptr->number;
+   selector_kind sel = cptr->selector;
+   char *selname = singular ? selector_singular[sel] : selector_names[sel];
+   Const char *f;
+
+   f = s;     /* Argument "s", if non-null, overrides the concept name in the table. */
+   if (!f) f = cptr->concept->name;
+
+   while (*f) {
+      if (f[0] == '<') {
+         if ((concept_table[cptr->concept->kind].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) && f[1] == 'N') {
+            if (f[2] == '/' && f[3] == '4' && f[4] == '>') {
+               if ((index & 0xF) == 2)
+                  writestuff("1/2");
+               else {
+                  writechar('0' + (index & 0xF));
+                  writestuff("/4");
+               }
+               f += 5;
+               index >>= 4;
+               continue;
+            }
+            else if (f[2] == 't' && f[3] == 'h' && f[4] == '>') {
+               writestuff(ordinals[(index & 0xF)-1]);
+               f += 5;
+               index >>= 4;
+               continue;
+            }
+            else if (f[2] == '>') {
+               writechar('0' + (index & 0xF));
+               f += 3;
+               index >>= 4;
+               continue;
+            }
+         }
+         else if ((concept_table[cptr->concept->kind].concept_prop & CONCPROP__USE_SELECTOR) &&
+                  f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' && f[7] == '>') {
+            writestuff(selname);
+            f += 8;
+            continue;
+         }
+         else if (f[1] == 'c' && f[2] == 'o' && f[3] == 'n' && f[4] == 'c' && f[5] == 'e' && f[6] == 'p' && f[7] == 't' && f[8] == '>') {
+            f += 9;
+            continue;
+         }
+      }
+
+      writechar(*f++);
+   }
+}
+
+
+
+extern void doublespace_file(void)
+{
+   write_file("");
+}
+
+
+
+extern void exit_program(int code)
+{
+   uims_terminate();
+   final_exit(code);
+}
+
+
+extern void nonreturning fail(Const char s[])
+{
+   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   error_message1[MAX_ERR_LENGTH-1] = '\0';
+   error_message2[0] = '\0';
+   longjmp(longjmp_ptr->the_buf, 1);
+}
+
+
+extern void nonreturning fail2(Const char s1[], Const char s2[])
+{
+   (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
+   error_message1[MAX_ERR_LENGTH-1] = '\0';
+   (void) strncpy(error_message2, s2, MAX_ERR_LENGTH);
+   error_message2[MAX_ERR_LENGTH-1] = '\0';
+   longjmp(longjmp_ptr->the_buf, 2);
+}
+
+
+extern void nonreturning specialfail(Const char s[])
+{
+   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   error_message1[MAX_ERR_LENGTH-1] = '\0';
+   error_message2[0] = '\0';
+   longjmp(longjmp_ptr->the_buf, 4);
+}
+
+
+extern void string_copy(char **dest, char src[])
+{
+   char *f = src;
+   char *t = *dest;
+
+   while (*t++ = *f++);
+   *dest = t-1;
+}
+
+/* There are 2 (and only 2) bits that are meaningful in the argument to "print_recurse":
          PRINT_RECURSE_STAR
-         DFM1_MUST_BE_SCOOT_CALL
          DFM1_MUST_BE_TAG_CALL
    The first of these means to print an asterisk for a call that is missing in the
    current type-in state.  The other two mean that we are printing a subcall, and
@@ -517,11 +524,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
       else if (k > marker_end_of_list) {
          /* This is a concept. */
 
-         int index = static_cptr->number;
-         selector_kind selector = static_cptr->selector;
          long_boolean request_final_space = FALSE;
-         long_boolean you_owe_me_a_number = FALSE;
-         long_boolean you_owe_me_a_selector = FALSE;
          long_boolean request_comma_after_next_concept = FALSE;
          concept_kind kk = k;
          parse_block *cc = static_cptr;
@@ -535,19 +538,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                break;
             }
             else if (kk != concept_left && kk != concept_cross) {
-               print_recurse_arg &= ~(DFM1_MUST_BE_SCOOT_CALL | DFM1_MUST_BE_TAG_CALL);
+               print_recurse_arg &= ~DFM1_MUST_BE_TAG_CALL;
                break;
             }
             cc = cc->next;
             if (!cc) break;
             kk = cc->concept->kind;
-         }
-
-         if (concept_table[k].concept_prop & CONCPROP__USE_SELECTOR)
-            you_owe_me_a_selector = TRUE;
-
-         if (concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) {
-            you_owe_me_a_number = TRUE;
          }
 
          next_cptr = static_cptr->next;    /* Now it points to the thing after this concept. */
@@ -565,13 +561,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_some_vs_others) {
                if ((i = item->value.arg1) == 1)
-                  writestuff_with_decorations("<ANYONE> DO YOUR PART, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+                  writestuff_with_decorations(static_cptr, "<ANYONE> DO YOUR PART, ", FALSE);
                else if (i == 3)
-                  writestuff_with_decorations("OWN THE <ANYONE>, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+                  writestuff_with_decorations(static_cptr, "OWN THE <ANYONE>, ", FALSE);
                else if (i == 5)
-                  writestuff_with_decorations("<ANYONE>, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+                  writestuff_with_decorations(static_cptr, "<ANYONE>, ", FALSE);
                else
-                  writestuff_with_decorations("<ANYONE> DISCONNECTED ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+                  writestuff_with_decorations(static_cptr, "<ANYONE> DISCONNECTED ", FALSE);
             }
             else if (k == concept_sequential) {
                writestuff("(");
@@ -583,7 +579,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                      writestuff("(interrupting after the ");
                   else
                      writestuff("(replacing the ");
-                  writestuff(ordinals[index-1]);
+                  writestuff(ordinals[static_cptr->number-1]);
                   writestuff(" part) ");
                }
             }
@@ -608,7 +604,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" WITH");
             else if (k == concept_replace_nth_part) {
                writestuff(" BUT ");
-               writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+               writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
                writestuff(" WITH A [");
                request_final_space = FALSE;
             }
@@ -622,13 +618,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             next_cptr = subsidiary_ptr;
          }
          else if (k == concept_selbasedtrngl) {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_singular[selector]);
+            writestuff_with_decorations(static_cptr, (Const char *) 0, TRUE);
             request_final_space = TRUE;
          }
          else if (k == concept_so_and_so_stable || k == concept_so_and_so_frac_stable ||
                   k == concept_so_and_so_begin || k == concept_some_are_frac_tandem ||
                   k == concept_some_are_tandem) {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+            writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
             writestuff(",");
             request_final_space = TRUE;
          }
@@ -688,7 +684,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             else
                request_comma_after_next_concept = TRUE;   /* "DO THE <Nth> PART <concept>" */
 
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+            writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
          }
          else if ((k == concept_meta) && static_cptr->concept->value.arg1 == 3) {
             writestuff("START");
@@ -696,7 +692,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = TRUE;
          }
          else {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+            writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
             request_final_space = TRUE;
          }
 
@@ -735,6 +731,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          long_boolean pending_subst2, subst2_in_use, this_is_subst2;
 
          selector_kind i16junk = static_cptr->selector;
+         int tagjunk = static_cptr->tagger;
          direction_kind idirjunk = static_cptr->direction;
          int number_list = static_cptr->number;
          unsigned int next_recurse1_arg = 0;
@@ -755,7 +752,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
                      case 1:
                      case 2:
-                        /* Pick up the MUST_BE_SCOOT and MUST_BE_TAG bits.  This might also
+                        /* Pick up the MUST_BE_TAG bit.  This might also
                            inadvertently pick up the PRINT_RECURSE_STAR bit, but it
                            doesn't matter, since we are going to set that bit anyway. */
                         next_recurse1_arg = search->number;
@@ -898,7 +895,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         np += 2;
                         break;
                      case 'c':
-                        if (print_recurse_arg & (DFM1_MUST_BE_SCOOT_CALL | DFM1_MUST_BE_TAG_CALL)) {
+                        if (print_recurse_arg & DFM1_MUST_BE_TAG_CALL) {
                            np += 2;
                            while (*np != '@') np++;
                         }
@@ -994,7 +991,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         /* This is a natural replacement.  It may already have been taken care of. */
                         if (pending_subst1 || ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 3) {
                            write_blank_if_needed();
-                           writestuff("[modification: ");
+                           if (((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 3)
+                              writestuff("but [");
+                           else
+                              writestuff("[modification: ");
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                            writestuff("]");
                         }
@@ -1111,6 +1111,7 @@ static char *printing_tables[][2] = {
    {"        a b@gh         dc@        f e",                                  "  g@  h@fa@eb@  d@  c"},                                                                                          /* s_rigger */
    {"    a b c@h              d@    g f e",                                   "  h@ga@fb@ec@  d"},                                                                                               /* s_spindle */
    {"   a  b@      d@g        c@      h@   f  e",                             "     g@f      a@   hd@e      b@     c"},                                                                          /* s_hrglass */
+   {"a      d      b@     g      c@f      h      e",                          "f  a@@   g@@h  d@@   c@@e  b"},                                                                                  /* s_dhrglass */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_hyperglass */
    {"          c@          d@ab        fe@          h@          g",           "      a@      b@@ghdc@@      f@      e"},                                                                         /* s_crosswave */
    {"a b d c g h f e",                                                        "a@b@d@c@g@h@f@e"},                                                                                                /* s1x8 */
@@ -1158,29 +1159,16 @@ Private void print_4_person_setup(int ps, small_setup *s, int elong)
    switch (s->skind) {
       case s2x2:
          newline();
-         if (roti & 1) {
-            if (elong < 0)
-               do_write("da@cb@");
-            else if ((roti+elong) & 1)
-               do_write("da@@@cb@");
-            else
-               do_write("d    a@c    b@");
-         }
-         else {
-            if (elong < 0)
-               do_write("ab@dc@");
-            else if ((roti+elong) & 1)
-               do_write("ab@@@dc@");
-            else
-               do_write("a    b@d    c@");
-         }
+         if (elong < 0)
+            do_write("ab@dc@");
+         else if (elong & 1)
+            do_write("ab@@@dc@");
+         else
+            do_write("a    b@d    c@");
          break;
       case s_star:
          newline();
-         if (roti & 1)
-            do_write("   a@d  b@   c@");
-         else
-            do_write("   b@a  c@   d@");
+         do_write("   b@a  c@   d@");
          break;
       case s1x4: case sdmd: case s2x4: case s2x3: case s1x6: case s_short6: case s_bone6: case s1x2:
          newline();
@@ -1304,7 +1292,7 @@ extern void display_initial_history(int upper_limit, int num_pics)
       /* We lose, there is nothing we can use. */
       clear_screen();
 #ifndef THINK_C			/* Mac interface provides "About Sd" popup instead */
-      write_header_stuff(TRUE);
+      write_header_stuff(TRUE, 0);
       newline();
 #endif
       startpoint = 1;
@@ -1418,7 +1406,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 010 &&
                (s->people[6].id1 & 017) == 010 &&
                (s->people[7].id1 & 017) == 012)
-         return(call_list_1x8);
+         return call_list_1x8;
       else if ((s->people[0].id1 & 017) == 012 &&
                (s->people[1].id1 & 017) == 010 &&
                (s->people[2].id1 & 017) == 010 &&
@@ -1427,7 +1415,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 012 &&
                (s->people[6].id1 & 017) == 012 &&
                (s->people[7].id1 & 017) == 010)
-         return(call_list_l1x8);
+         return call_list_l1x8;
       else if ((s->people[0].id1 & 015) == 1 &&
                (s->people[1].id1 & 015) == 1 &&
                (s->people[2].id1 & 015) == 1 &&
@@ -1436,7 +1424,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 015) == 1 &&
                (s->people[6].id1 & 015) == 1 &&
                (s->people[7].id1 & 015) == 1)
-         return(call_list_gcol);
+         return call_list_gcol;
    }
    else if (s->kind == s2x4) {
       if      ((s->people[0].id1 & 017) == 1 &&
@@ -1447,7 +1435,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 3 &&
                (s->people[6].id1 & 017) == 1 &&
                (s->people[7].id1 & 017) == 1)
-         return(call_list_dpt);
+         return call_list_dpt;
       else if ((s->people[0].id1 & 017) == 3 &&
                (s->people[1].id1 & 017) == 3 &&
                (s->people[2].id1 & 017) == 1 &&
@@ -1456,7 +1444,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 1 &&
                (s->people[6].id1 & 017) == 3 &&
                (s->people[7].id1 & 017) == 3)
-         return(call_list_cdpt);
+         return call_list_cdpt;
       else if ((s->people[0].id1 & 017) == 1 &&
                (s->people[1].id1 & 017) == 1 &&
                (s->people[2].id1 & 017) == 1 &&
@@ -1465,7 +1453,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 3 &&
                (s->people[6].id1 & 017) == 3 &&
                (s->people[7].id1 & 017) == 3)
-         return(call_list_rcol);
+         return call_list_rcol;
       else if ((s->people[0].id1 & 017) == 3 &&
                (s->people[1].id1 & 017) == 3 &&
                (s->people[2].id1 & 017) == 3 &&
@@ -1474,7 +1462,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 1 &&
                (s->people[6].id1 & 017) == 1 &&
                (s->people[7].id1 & 017) == 1)
-         return(call_list_lcol);
+         return call_list_lcol;
       else if ((s->people[0].id1 & 017) == 1 &&
                (s->people[1].id1 & 017) == 3 &&
                (s->people[2].id1 & 017) == 1 &&
@@ -1483,7 +1471,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 1 &&
                (s->people[6].id1 & 017) == 3 &&
                (s->people[7].id1 & 017) == 1)
-         return(call_list_8ch);
+         return call_list_8ch;
       else if ((s->people[0].id1 & 017) == 3 &&
                (s->people[1].id1 & 017) == 1 &&
                (s->people[2].id1 & 017) == 3 &&
@@ -1492,7 +1480,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 3 &&
                (s->people[6].id1 & 017) == 1 &&
                (s->people[7].id1 & 017) == 3)
-         return(call_list_tby);
+         return call_list_tby;
       else if ((s->people[0].id1 & 017) == 012 &&
                (s->people[1].id1 & 017) == 012 &&
                (s->people[2].id1 & 017) == 012 &&
@@ -1501,7 +1489,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 010 &&
                (s->people[6].id1 & 017) == 010 &&
                (s->people[7].id1 & 017) == 010)
-         return(call_list_lin);
+         return call_list_lin;
       else if ((s->people[0].id1 & 017) == 010 &&
                (s->people[1].id1 & 017) == 010 &&
                (s->people[2].id1 & 017) == 010 &&
@@ -1510,7 +1498,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 012 &&
                (s->people[6].id1 & 017) == 012 &&
                (s->people[7].id1 & 017) == 012)
-         return(call_list_lout);
+         return call_list_lout;
       else if ((s->people[0].id1 & 017) == 010 &&
                (s->people[1].id1 & 017) == 012 &&
                (s->people[2].id1 & 017) == 010 &&
@@ -1519,7 +1507,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 010 &&
                (s->people[6].id1 & 017) == 012 &&
                (s->people[7].id1 & 017) == 010)
-         return(call_list_rwv);
+         return call_list_rwv;
       else if ((s->people[0].id1 & 017) == 012 &&
                (s->people[1].id1 & 017) == 010 &&
                (s->people[2].id1 & 017) == 012 &&
@@ -1528,7 +1516,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 012 &&
                (s->people[6].id1 & 017) == 010 &&
                (s->people[7].id1 & 017) == 012)
-         return(call_list_lwv);
+         return call_list_lwv;
       else if ((s->people[0].id1 & 017) == 010 &&
                (s->people[1].id1 & 017) == 010 &&
                (s->people[2].id1 & 017) == 012 &&
@@ -1537,7 +1525,7 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 012 &&
                (s->people[6].id1 & 017) == 010 &&
                (s->people[7].id1 & 017) == 010)
-         return(call_list_r2fl);
+         return call_list_r2fl;
       else if ((s->people[0].id1 & 017) == 012 &&
                (s->people[1].id1 & 017) == 012 &&
                (s->people[2].id1 & 017) == 010 &&
@@ -1546,12 +1534,12 @@ extern call_list_kind find_proper_call_list(setup *s)
                (s->people[5].id1 & 017) == 010 &&
                (s->people[6].id1 & 017) == 012 &&
                (s->people[7].id1 & 017) == 012)
-         return(call_list_l2fl);
+         return call_list_l2fl;
    }
    else if (s->kind == s_qtag)
-      return(call_list_qtag);
+      return call_list_qtag;
 
-   return(call_list_any);
+   return call_list_any;
 }
 
 
@@ -1560,18 +1548,22 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
    callarray *p;
    int t, u, i, k, mask;
 
-   /* Can't be bothered to figure out what setup to create when
-      calling this during initialization, so it sends nil.
-      Therefore, we always accept such a thing. */
-   if (!ss) goto good;
-
    for (p = spec; p; p = p->next) {
 
       /* First, we demand that the starting setup be correct.  Also, if a qualifier
          number was specified, it must match. */
 
       if ((begin_kind) p->start_setup != key) continue;
-      if (p->qual_num != 0 && p->qual_num != (current_number_fields & 0xF)+1) continue;
+
+      /* During initialization, we will be called with a null pointer for ss.
+         We need to be careful, and err on the side of acceptance. */
+
+      if (!ss) goto good;
+
+      if (p->qual_num != 0) {
+         number_used = TRUE;
+         if (p->qual_num != (current_number_fields & 0xF)+1) continue;
+      }
 
       if ((search_qualifier) p->qualifier == sq_none) goto good;
 
@@ -1590,6 +1582,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       switch ((search_qualifier) p->qualifier) {
          case sq_wave_only:                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only:
+               case cr_2fl_only:
+               case cr_magic_only:
+                  goto bad;
+            }
+
             switch (ss->kind) {
                case s1x4:
                   if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
@@ -1656,6 +1655,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
          case sq_2fl_only:                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only:
+               case cr_wave_only:
+               case cr_magic_only:
+                  goto bad;
+            }
+
             switch (ss->kind) {
                case s1x4:
                   if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
@@ -1679,6 +1685,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
          case sq_miniwaves:                    /* miniwaves everywhere */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only:
+               case cr_2fl_only:
+                  goto bad;
+            }
+
             switch (ss->kind) {
                case s1x2:
                   if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
@@ -1992,6 +2004,42 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                 (ss->people[3].id1 & d_mask) == d_west)
                goto good;
             goto bad;
+         case sq_8_chain:                   /* 4x1/4x2 - setup is (single) 8-chain */
+            switch (ss->kind) {
+               case s1x4:
+                  if (  !((ss->people[0].id1 | ss->people[3].id1) & 2) &&
+                        (!ss->people[1].id1 || (ss->people[1].id1 & 2)) &&
+                        (!ss->people[2].id1 || (ss->people[2].id1 & 2)))
+                     goto good;
+                  break;
+               case s2x4:
+                  if (  !((ss->people[0].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[7].id1) & 2) &&
+                        (!ss->people[1].id1 || (ss->people[1].id1 & 2)) &&
+                        (!ss->people[3].id1 || (ss->people[3].id1 & 2)) &&
+                        (!ss->people[4].id1 || (ss->people[4].id1 & 2)) &&
+                        (!ss->people[6].id1 || (ss->people[6].id1 & 2)))
+                     goto good;
+                  break;
+            }
+            goto bad;
+         case sq_trade_by:                  /* 4x1/4x2 - setup is (single) trade-by */
+            switch (ss->kind) {
+               case s1x4:
+                  if (  !((ss->people[1].id1 | ss->people[2].id1) & 2) &&
+                        (!ss->people[0].id1 || (ss->people[0].id1 & 2)) &&
+                        (!ss->people[3].id1 || (ss->people[3].id1 & 2)))
+                     goto good;
+                  break;
+               case s2x4:
+                  if (  !((ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[6].id1) & 2) &&
+                        (!ss->people[0].id1 || (ss->people[0].id1 & 2)) &&
+                        (!ss->people[2].id1 || (ss->people[2].id1 & 2)) &&
+                        (!ss->people[5].id1 || (ss->people[5].id1 & 2)) &&
+                        (!ss->people[7].id1 || (ss->people[7].id1 & 2)))
+                     goto good;
+                  break;
+            }
+            goto bad;
          case sq_split_dixie:
             if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto good;
             goto bad;
@@ -2004,7 +2052,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
    }
 
    good:
-   return(p);
+   return p;
 }
 
 
@@ -2043,36 +2091,31 @@ got_it:
       longjmp(longjmp_ptr->the_buf, 6);
    }
 
-   return(z);
+   return z;
 }
 
 
 extern void clear_people(setup *z)
 {
-   int i;
-
-   for (i=0; i<MAX_PEOPLE; i++) {
-      z->people[i].id1 = 0;
-      z->people[i].id2 = 0;
-   }
+   (void) memset(z->people, 0, sizeof(personrec)*MAX_PEOPLE);
 }
 
 
 extern uint32 rotperson(uint32 n, int amount)
 {
-   if (n == 0) return(0); else return((n + amount) & ~064);
+   if (n == 0) return 0; else return (n + amount) & ~064;
 }
 
 
 extern uint32 rotcw(uint32 n)
 {
-   if (n == 0) return(0); else return((n + 011) & ~064);
+   if (n == 0) return 0; else return (n + 011) & ~064;
 }
 
 
 extern uint32 rotccw(uint32 n)
 {
-   if (n == 0) return(0); else return((n + 033) & ~064);
+   if (n == 0) return 0; else return (n + 033) & ~064;
 }
 
 
@@ -2086,7 +2129,7 @@ extern void clear_person(setup *resultpeople, int resultplace)
 extern uint32 copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace)
 {
    resultpeople->people[resultplace] = sourcepeople->people[sourceplace];
-   return(resultpeople->people[resultplace].id1);
+   return resultpeople->people[resultplace].id1;
 }
 
 
@@ -2096,7 +2139,7 @@ extern uint32 copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople
 
    if (newperson) newperson = (newperson + rotamount) & ~064;
    resultpeople->people[resultplace].id2 = sourcepeople->people[sourceplace].id2;
-   return(resultpeople->people[resultplace].id1 = newperson);
+   return resultpeople->people[resultplace].id1 = newperson;
 }
 
 
@@ -2342,7 +2385,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
    if (kk == nothing) {
       if (lineflag) kk = s1x4;
       else if (miniflag) kk = s1x2;
-      else return(TRUE);
+      else return TRUE;
    }
    
    /* If something wasn't sure whether it was points of a diamond or
@@ -2367,7 +2410,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
       z[i].rotation = rr;
    }
 
-   return(FALSE);
+   return FALSE;
 
    lose:
 

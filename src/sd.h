@@ -60,9 +60,14 @@
 /* We use "Private" on procedures and "static" on variables.  It makes things clearer. */
 #define Private static
 
-/* We would like this to be a signed char, but not all compilers are fully ANSI compliant. */
-/* The IBM AIX compiler, for example, considers char to be unsigned. */
+/* We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
+   The IBM AIX compiler, for example, considers char to be unsigned.  The switch "NO_SIGNED_CHAR"
+   alerts us to that fact.  The configure script has checked this for us. */
+#ifdef NO_SIGNED_CHAR
 typedef short veryshort;
+#else
+typedef char veryshort;
+#endif
 
 /* We would like to think that we will always be able to count on compilers to do the
    right thing with "int" and "long int" and so on.  What we would really like is
@@ -71,8 +76,7 @@ typedef short veryshort;
    "long int" or "unsigned long int".  We think that all compilers we deal with
    will do the right thing with that, but, just in case, we use a typedef.
 
-   The type "uint32" must be an unsigned (shifts don't propagate sign bits)
-   datum on which we can do bitwise operations for at least the lowest 32 bits. */
+   The type "uint32" must be an unsigned integer of at least 32 bits. */
 
 typedef unsigned long int uint32;
 
@@ -306,11 +310,6 @@ typedef struct {
 
    CMD_MISC__DO_AS_COUPLES means the obvious thing.
 
-   CMD_FRAC__FRACTIONALIZE_MASK is a 9 bit field that is nonzero when some form
-   of fractionalization control is in use.  These bits are set up by concepts like
-   "random" and "fractional", and are used in sdmoves.c to control sequentially
-   defined calls.  See the comments there for details.
-
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
@@ -376,13 +375,6 @@ typedef struct {
 /* available:                        0x00001800
                                      0x00001C00 */
 
-/* Flags that reside in the "cmd_frac_flags" word of a setup BEFORE a call is executed. */
-
-/* This is a 9 bit field -- FRACTIONALIZE_BIT tells where its low bit lies. */
-#define CMD_FRAC__FRACTIONALIZE_MASK 0x3FE00000
-#define CMD_FRAC__FRACTIONALIZE_BIT  0x00200000
-
-
 
 /* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
 
@@ -407,7 +399,7 @@ typedef struct {
    field.
 
    RESULTFLAG__DID_LAST_PART means that, when a sequentially defined call was executed
-   with the CMD_FRAC__FRACTIONALIZE_MASK nonzero, so that just one part was done,
+   with the "cmd_frac_flags" word nonzero, so that just one part was done,
    that part was the last part.  Hence, if we are doing a call with some "piecewise"
    or "random" concept, we do that parts of the call one at a time, with appropriate
    concepts on each part, until it comes back with this flag set.  This is used with
@@ -444,17 +436,32 @@ typedef struct {
    was done in 1x4's (split horizontally) and 2 means it was done in 2x2's
    (split vertically).  3 means that the call was a 1 or 2 person call, that
    could be split either way, so we have no information.
+
+   RESULTFLAG__ACTIVE_PHANTOMS_ON and -OFF tell whether the state of the "active
+   phantoms" mode flag was used in this sequence.  If it was read and found to
+   be on, RESULTFLAG__ACTIVE_PHANTOMS_ON is set.  If it was read and found to
+   be off, RESULTFLAG__ACTIVE_PHANTOMS_OFF is set.  It is, of course, read any
+   time an "assume <whatever> concept is invoked.  This information is used to
+   tell what kind of annotation to place in the transcript file to tell what
+   assumptions were made.  The reason for having both bits is that the state
+   of the active phantoms mode can be toggled at arbitrary times, so a single
+   card might have both usages.  In that unusual case, we want to so indicate
+   on the card.
 */
 
 /* The two low bits are used for result elongation, so we start with 0x00000004. */
-#define RESULTFLAG__DID_LAST_PART   0x00000004
-#define RESULTFLAG__PARTS_ARE_KNOWN 0x00000008
-#define RESULTFLAG__EXPAND_TO_2X3   0x00000010
-#define RESULTFLAG__NEED_DIAMOND    0x00000020
-#define RESULTFLAG__IMPRECISE_ROT   0x00000040
+#define RESULTFLAG__DID_LAST_PART       0x00000004
+#define RESULTFLAG__PARTS_ARE_KNOWN     0x00000008
+#define RESULTFLAG__EXPAND_TO_2X3       0x00000010
+#define RESULTFLAG__NEED_DIAMOND        0x00000020
+#define RESULTFLAG__IMPRECISE_ROT       0x00000040
 /* This is a two-bit field. */
-#define RESULTFLAG__SPLIT_AXIS_MASK 0x00000180
-#define RESULTFLAG__SPLIT_AXIS_BIT  0x00000080
+#define RESULTFLAG__SPLIT_AXIS_MASK     0x00000180
+#define RESULTFLAG__SPLIT_AXIS_BIT      0x00000080
+#define RESULTFLAG__ACTIVE_PHANTOMS_ON  0x00000200
+#define RESULTFLAG__ACTIVE_PHANTOMS_OFF 0x00000400
+
+
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
    nothing to do with each other.  It is not intended that
@@ -521,7 +528,7 @@ typedef struct {
       struct {
          by_def_item innerdef;
          by_def_item outerdef;
-      } conc;           /* if schema = schema_concentric, schema_concentric_6_2, schema_concentric_2_6, schema_cross_concentric, schema_concentric_diamond_line */
+      } conc;           /* if schema = any of the concentric ones. */
    } stuff;
    /* Dynamically allocated to whatever size is required, will have trailing null. */
    char name[4];
@@ -557,6 +564,20 @@ typedef struct {
    Const int rot;
    Const int vert;
 } map_thing;
+
+typedef struct {
+   veryshort mapin[8];
+   veryshort mapout[8];
+   short inlimit;
+   short outlimit;
+   setup_kind bigsetup;
+   setup_kind insetup;
+   setup_kind outsetup;
+   int bigsize;
+   int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
+   int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
+   int mapelong;
+} cm_thing;
 
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
 typedef enum {
@@ -673,6 +694,7 @@ typedef enum {
    concept_on_your_own,
    concept_trace,
    concept_ferris,
+   concept_overlapped_diamond,
    concept_all_8,
    concept_centers_and_ends,
    concept_twice,
@@ -703,11 +725,8 @@ typedef struct {
    } value;
 } concept_descriptor;
 
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "selector_names" and "selector_singular" in sdutil.c, and also necessary stuff in the
-   user interfaces.  The latter includes the definition of "task$selector_menu" in sd.dps
-   in the Domain/Dialog system, and the DITL "Select Dancers" in *.rsrc in
-   the Macintosh system. */
+/* BEWARE!!  This list must track the arrays "selector_names" and "selector_singular" in sdutil.c .
+   It must also track the DITL "Select Dancers" in *.rsrc in the Macintosh system. */
 typedef enum {
    selector_uninitialized,
    selector_boys,
@@ -745,11 +764,8 @@ typedef enum {
 } selector_kind;
 #define last_selector_kind ((int) selector_none)
 
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "direction_names" in sdutil.c, and also necessary stuff in the user interfaces.
-   The latter includes the definition of "task$direction_menu" in sd.dps in the
-   Domain/Dialog system, and the DITL "which direction" in *.rsrc in the Macintosh
-   system. */
+/* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
+   It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
 typedef enum {
    direction_uninitialized,
    direction_left,
@@ -773,6 +789,7 @@ typedef struct glock {
    selector_kind selector;        /* selector, if any, used by concept or call */
    direction_kind direction;      /* direction, if any, used by concept or call */
    uint32 number;                 /* number, if any, used by concept or call */
+   int tagger;                    /* tagging call index, if any, used by call */
 } parse_block;
 
 /* The following items are not actually part of the setup description,
@@ -790,31 +807,97 @@ typedef struct {
 } assumption_thing;
 
 
-typedef struct {
-   parse_block *parseptr;        /* The full parse tree for the concept(s)/call(s) we are trying to do.
-                                    While we traverse the big concepts in this tree, the "callspec" and
-                                    "cmd_final_flags" are typically zero.  They only come into use when
-                                    we reach the end of a subtree of big concepts, at which point we read
-                                    the remaining "small" (or "final") concepts and the call name out of
-                                    the end of the concept parse tree. */
-   callspec_block *callspec;     /* The call, after we reach the end of the parse tree. */
-   uint32 cmd_final_flags;       /* The various "final concept" flags with names INHERITFLAG_??? and FINAL__???.
-                                    The INHERITFLAG_??? bits contain the final concepts like "single" that
-                                    can be inherited from one part of a call definition to another.  The
-                                    FINAL__??? bits contain other miscellaneous final concepts. */
-   uint32 cmd_misc_flags;        /* Other miscellaneous info controlling the execution of the call,
-                                    with names like CMD_MISC__???. */
-   uint32 cmd_frac_flags;        /* Fractionalization info controlling the execution of the call. */
-   assumption_thing cmd_assume;  /* Any "assume waves" type command. */
-/*
-   This field tells, for a 2x2 setup prior to having a call executed, how that
-   2x2 is elongated (due to these people being the outsides) in the east-west
-   or north-south direction.  Since 2x2's are always totally canonical, the
-   interpretation of the elongation direction is always absolute.  A 1 means
-   the elongation is east-west.  A 2 means the elongation is north-south.
-   A zero means the elongation is unknown.
-*/
+/* Meanings of the items in a "setup_command" structure:
 
+   parseptr
+      The full parse tree for the concept(s)/call(s) we are trying to do.
+      While we traverse the big concepts in this tree, the "callspec" and
+      "cmd_final_flags" are typically zero.  They only come into use when
+      we reach the end of a subtree of big concepts, at which point we read
+      the remaining "small" (or "final") concepts and the call name out of
+      the end of the concept parse tree.
+
+   callspec
+      The call, after we reach the end of the parse tree.
+
+   cmd_final_flags
+      The various "final concept" flags with names INHERITFLAG_??? and FINAL__???.
+      The INHERITFLAG_??? bits contain the final concepts like "single" that
+      can be inherited from one part of a call definition to another.  The
+      FINAL__??? bits contain other miscellaneous final concepts.
+
+   cmd_misc_flags
+      Other miscellaneous info controlling the execution of the call,
+      with names like CMD_MISC__???.
+
+   cmd_frac_flags
+      In nonzero, fractionalization info controlling the execution of the call.
+      This can be in either of two forms, depending on the 0x00200000 bit.
+
+      If that bit is off, we have the old regime, which is used for miscellaneous
+      concepts like "replace the Nth part".  The "new regime" is used for more
+      systematic and straightforward concepts like "fractional" and "reverse order".
+      It is more sophisticated in the way it operates, and allows the concepts to
+      which it applies to be nested, but it can't do obscure things yet.
+
+      Old regime:
+
+          0700 bits     070 bits         07 bits
+            "key"       "denom"          "numer"
+
+              0            0             nonzero       Do first <numer> parts of the call.
+
+              1/3          0             nonzero       Do stuff strictly after first <numer> parts of the call.
+                                                       If key=3, demand that "finish_means_skip_first_part" is on.
+
+              0         nonzero          nonzero       Do first <numer>/<denom> of the call.
+
+              1         nonzero          nonzero       Do stuff strictly after first <numer>/<denom> of the call.
+
+              2            0             nonzero       Do just the part <numer>, set
+                                                           RESULTFLAG__DID_LAST_PART if it was last part.
+
+              2            1             nonzero       Do just the part size-<numer>, that is, N=1 means do
+                                                           last part, N=2 means do next-to-last, etc. set
+                                                           RESULTFLAG__DID_LAST_PART if it was first part.
+
+      New regime:
+         3rd digit -
+            0x00200000 bit always on
+            0x00100000 bit = reverse order
+         4th digit (0x000F0000 bits) = if nonzero, pick out just this specific part (1-based)
+                  of whatever portion of the call the remaining digits say
+         5th digit (0x0000F000 bits) = numerator of start point
+         6th digit (0x00000F00 bits) = denominator of start point
+         7th digit (0x000000F0 bits) = numerator of stop point
+         8th digit (0x0000000F bits) = denominator of stop point
+
+      The null encoding in the new regime is 0x00200111, that is, do not reverse,
+      do not pick out single part, start at 0.0 (fraction 0/1), end at 1.0
+      (fraction 1/1).  We do not actually use this encoding as the default state,
+      because it would preclude use of the old regime.  Instead, we let the word be
+      zero when fractionalization is not in use, and then encode some nonzero value
+      whenever new or old regime fractionalization is required.
+
+   cmd_assume
+      Any "assume waves" type command.
+
+   prior_elongation_bits;
+      This tells, for a 2x2 setup prior to having a call executed, how that
+      2x2 is elongated (due to these people being the outsides) in the east-west
+      or north-south direction.  Since 2x2's are always totally canonical, the
+      interpretation of the elongation direction is always absolute.  A 1 means
+      the elongation is east-west.  A 2 means the elongation is north-south.
+      A zero means there was no elongation. */
+
+
+typedef struct {
+   parse_block *parseptr;
+   callspec_block *callspec;
+   uint32 cmd_final_flags;
+   uint32 cmd_misc_flags;
+   uint32 cmd_frac_flags;
+   assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
 } setup_command;
 
@@ -906,12 +989,11 @@ typedef enum {
    warn__split_phan_in_pgram,
    warn__bad_interlace_match,
    warn__not_on_block_spots,
-   warn__canonicalize_bug,
    warn__did_not_interact
 } warning_index;
 #define NUM_WARNINGS (((int) warn__did_not_interact)+1)
 
-/* BEWARE!!  This list must track the definition of "resolve_table" in sdgetout.c . */
+/* BEWARE!!  This list must track the array "resolve_table" in sdgetout.c . */
 typedef enum {
    resolve_none,
    resolve_rlg, resolve_la,
@@ -1046,13 +1128,12 @@ typedef enum {
 #define FINAL__SPLIT_SQUARE_APPROVED      INHERITSPARE_2
 #define FINAL__SPLIT_DIXIE_APPROVED       INHERITSPARE_3
 #define FINAL__MUST_BE_TAG                INHERITSPARE_4
-#define FINAL__MUST_BE_SCOOT              INHERITSPARE_5
-#define FINAL__TRIANGLE                   INHERITSPARE_6
+#define FINAL__TRIANGLE                   INHERITSPARE_5
 
 typedef uint32 final_set;
 
 typedef struct glonk {
-   char txt[80];
+   char txt[MAX_TEXT_LINE_LENGTH];
    struct glonk *nxt;
 } comment_block;
 
@@ -1064,6 +1145,7 @@ typedef struct flonk {
 typedef uint32 defmodset;
 
 typedef map_thing *map_hunk[][2];
+typedef cm_thing *cm_hunk[];
 
 
 /* These flags go into the "concept_prop" field of a "concept_table_item".
@@ -1224,6 +1306,16 @@ typedef enum {
    file_write_double
 } file_write_flag;
 
+/* Warning!  Do not move these around without checking carefully.  Values are changed
+   by simple incrementing, so order is important. */
+typedef enum {
+   interactivity_database_init,
+   interactivity_normal,
+   interactivity_starting_first_scan,
+   interactivity_in_first_scan,
+   interactivity_in_random_search
+} interactivity_state;
+
 typedef enum {
    call_list_mode_none,
    call_list_mode_writing,
@@ -1285,6 +1377,9 @@ typedef struct {
       This is the table that is used for mirror reversal.  Most of the items in
       it are the same as those in the table above. */
    coordrec *nice_setup_coords;
+   /* This gives the table to be used for analyzing this setup under
+      concentric-type operations. */
+   cm_hunk *conctab;
    begin_kind keytab[2];
    /* In the bounding boxes, we do not fill in the "length" of a diamond, nor
       the "height" of a qtag.  Everyone knows that the number must be 3, but it
@@ -1335,6 +1430,8 @@ extern char error_message2[MAX_ERR_LENGTH];                         /* in SDUTIL
 extern uint32 collision_person1;                                    /* in SDUTIL */
 extern uint32 collision_person2;                                    /* in SDUTIL */
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
+extern char *cardinals[];                                           /* in SDUTIL */
+extern char *ordinals[];                                            /* in SDUTIL */
 extern char *selector_names[];                                      /* in SDUTIL */
 extern char *direction_names[];                                     /* in SDUTIL */
 extern char *warning_strings[];                                     /* in SDUTIL */
@@ -1461,6 +1558,8 @@ extern comment_block *comment_last;
 extern int abs_max_calls;                                           /* in SDMAIN */
 extern int max_base_calls;                                          /* in SDMAIN */
 extern callspec_block **base_calls;                                 /* in SDMAIN */
+extern int number_of_taggers;                                       /* in SDMAIN */
+extern callspec_block **tagger_calls;                               /* in SDMAIN */
 extern char outfile_string[];                                       /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
@@ -1468,15 +1567,17 @@ extern parse_state_type parse_state;                                /* in SDMAIN
 extern int uims_menu_index;                                         /* in SDMAIN */
 extern char database_version[81];                                   /* in SDMAIN */
 extern int whole_sequence_low_lim;                                  /* in SDMAIN */
-extern long_boolean not_interactive;                                /* in SDMAIN */
-extern long_boolean initializing_database;                          /* in SDMAIN */
+extern interactivity_state interactivity;                           /* in SDMAIN */
 extern long_boolean testing_fidelity;                               /* in SDMAIN */
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
+extern int number_for_initialize;                                   /* in SDMAIN */
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
+extern long_boolean using_active_phantoms;                          /* in SDMAIN */
 extern long_boolean resolver_is_unwieldy;                           /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern selector_kind current_selector;                              /* in SDMAIN */
+extern int current_tagger;                                          /* in SDMAIN */
 extern direction_kind current_direction;                            /* in SDMAIN */
 extern uint32 current_number_fields;                                /* in SDMAIN */
 extern warning_info no_search_warnings;                             /* in SDMAIN */
@@ -1488,6 +1589,7 @@ extern int hashed_randoms;                                          /* in SDSI *
 extern char *database_filename;                                     /* in SDSI */
 
 extern long_boolean selector_used;                                  /* in PREDS */
+extern long_boolean number_used;                                    /* in PREDS */
 extern long_boolean (*pred_table[])(                                /* in PREDS */
    setup *real_people,
    int real_index,
@@ -1506,7 +1608,7 @@ extern long_boolean restore_parse_state(void);
 extern long_boolean deposit_call(callspec_block *call);
 extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fields);
 extern long_boolean query_for_call(void);
-extern void write_header_stuff(long_boolean with_ui_version);
+extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
 extern void get_real_subcall(
    parse_block *parseptr,
    by_def_item *item,
@@ -1529,6 +1631,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode);
 
 extern void general_initialize(void);
 extern int generate_random_number(int modulus);
+extern void hash_nonrandom_number(int number);
 extern long_boolean generate_random_concept_p(void);
 extern void *get_mem(unsigned int siz);
 extern void *get_mem_gracefully(unsigned int siz);
@@ -1571,6 +1674,7 @@ extern int uims_do_abort_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
+extern int uims_do_tagger_popup(void);
 extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind);
 extern uint32 uims_get_number_fields(int nnumbers);
 extern void uims_reduce_line_count(int n);

@@ -147,8 +147,6 @@ int random_number;
 int hashed_randoms;
 
 
-static int last_hashed_randoms;
-
 extern void general_initialize(void)
 {
 /* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
@@ -172,31 +170,28 @@ extern int generate_random_number(int modulus)
 #endif
 
    j = random_number % modulus;
-   last_hashed_randoms = hashed_randoms;       /* save in case we need to undo it */
-   hashed_randoms = hashed_randoms*37+j;
-   return(j);
+   return j;
+}
+
+
+extern void hash_nonrandom_number(int number)
+{
+   hashed_randoms = hashed_randoms*37+number;
 }
 
 
 extern long_boolean generate_random_concept_p(void)
 {
-   int i = generate_random_number(8);
+   int i = generate_random_number(8) < CONCEPT_PROBABILITY;
 
    /* Since we are not going to use the random number in a one-to-one way, we run the risk
       of not having hashed_randoms uniquely represent what is happening.  To remedy
-      the problem, we undo the transformation that was just made to hashed_randoms,
-      and redo it with just the information we intend to use. */
+      the problem, we hash just the yes-no result of our decision. */
 
-   hashed_randoms = last_hashed_randoms*37;       /* Now just need to add something. */
-
-   if (i < CONCEPT_PROBABILITY) {
-      hashed_randoms++;          /* This should do the trick. */
-      return (TRUE);
-   }
-   else {
-      return (FALSE);
-   }
+   hash_nonrandom_number(i);
+   return i;
 }
+
 
 extern void *get_mem(unsigned int siz)
 {

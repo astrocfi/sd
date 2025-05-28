@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* This defines the following functions:
    resolve_p
@@ -137,7 +137,7 @@ static void display_reconcile_history(int current_depth, int n);
 
 
 typedef struct {
-   int d35, d32, d13, d71, d10, d76;
+   uint32 d35, d32, d13, d71, d10, d76;
    dance_level level_needed;
    resolve_kind k;
    int distance;
@@ -408,33 +408,34 @@ static char *resolve_distances[] = {
    "0"};
 
 typedef struct {
-   int how_bad;  /* 0 means nice, 1 means throw away half, 2 means don't use with sdtty. */
+   int how_bad;  /* 0 means accept all such resolves.
+                  Otherwise, this is (2**N)-1, and accepts only one out of 2**N of them. */
    char *name;
 } resolve_descriptor;
 
 /* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */
 static resolve_descriptor resolve_table[] = {
-   {2, "???"},
-   {0, "right and left grand"},
-   {0, "left allemande"},
-   {0, "extend, right and left grand"},
-   {1, "extend, left allemande"},
-   {1, "slip the clutch, right and left grand"},
-   {1, "slip the clutch, left allemande"},
-   {2, "circulate, right and left grand"},
-   {2, "circulate, left allemande"},
-   {2, "pass thru, right and left grand"},
-   {2, "pass thru, left allemande"},
-   {2, "trade by, right and left grand"},
-   {2, "trade by, left allemande"},
-   {1, "cross by, right and left grand"},
-   {0, "cross by, left allemande"},
-   {0, "dixie grand, left allemande"},
-   {0, "promenade"},
-   {1, "reverse promenade"},
-   {1, "single file promenade"},
-   {1, "reverse single file promenade"},
-   {0, "circle right"}};
+   {3,  "???"},
+   {0,  "right and left grand"},
+   {0,  "left allemande"},
+   {0,  "extend, right and left grand"},
+   {1,  "extend, left allemande"},
+   {1,  "slip the clutch, right and left grand"},
+   {1,  "slip the clutch, left allemande"},
+   {3,  "circulate, right and left grand"},
+   {3,  "circulate, left allemande"},
+   {3,  "pass thru, right and left grand"},
+   {3,  "pass thru, left allemande"},
+   {3,  "trade by, right and left grand"},
+   {3,  "trade by, left allemande"},
+   {1,  "cross by, right and left grand"},
+   {0,  "cross by, left allemande"},
+   {0,  "dixie grand, left allemande"},
+   {0,  "promenade"},
+   {1,  "reverse promenade"},
+   {15, "single file promenade"},
+   {15, "reverse single file promenade"},
+   {0,  "circle right"}};
 
 
 /* This assumes that "sequence_is_resolved" passes. */
@@ -526,7 +527,19 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    little_count = 0;
    attempt_count = 0;
    hashed_random_list[0] = 0;
-   not_interactive = TRUE;
+
+   /* Following a suggestion of Eric Brosius, we initially scan the entire database once,
+      looking for one-call resolves, before we start the complex search.  This way, we
+      will never show a multiple-call resolve if a single-call one exists.  Of course,
+      it's not really that simple -- if a call takes a number, direction, or person,
+      we will only use one canned value for it, so we could miss a single call resolve
+      on this first pass if that call involves an interesting number, etc. */
+
+   if (goal == search_resolve || goal == search_reconcile)
+      interactivity = interactivity_starting_first_scan;
+   else
+      interactivity = interactivity_in_random_search;
+
    /* Mark the parse block allocation, so that we throw away the garbage
       created by failing attempts. */
    inner_parse_mark = outer_parse_mark = mark_parse_blocks();
@@ -591,6 +604,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       found_k_and_l:
 
       l = generate_random_number(l);
+      hash_nonrandom_number(l);
 
       /* If the concept is a tandem or as couples type, we really want "phantom" in front of it. */
       if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]].kind == concept_tandem)
@@ -603,7 +617,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    /* This may, of course, add more concepts. */
    
    (void) query_for_call();
-   
+
    /* Do the call.  An error will signal and go to try_again. */
    
    toplevelmove();
@@ -638,19 +652,17 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       /* Here we bias the search against resolves with circulates (which we
          consider to be of lower quality) by only sometimes accepting them.
 
+         As more bits are set in the "how_bad" indicator, we ignore a
+         larger fraction of the resolves.  We bias the search VERY HEAVILY
+         against single file promenades, accepting only 1 in 16,
+
          We also take pity on people using a user interface for which the resolver
-         is known to be difficult to use,and  assume that such people want more time
+         is known to be difficult to use, and assume that such people want more time
          spent finding quality resolves and less time spent showing mediocre
          resolves.  This means sdtty, which is known to be beastly.  Hopefully
          we can take this out someday. */
 
-      if (r == resolve_none ||
-
-         /* Make these never appear. */
-         (resolver_is_unwieldy && resolve_table[r].how_bad >= 2) ||
-
-         /* Make these appear only half the time. */
-         ((attempt_count & 1) && resolve_table[r].how_bad >= 1))
+      if (r == resolve_none || (attempt_count & resolve_table[r].how_bad))
          goto what_a_loss;
    }
    else if (goal == search_nice_setup) {
@@ -818,6 +830,8 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    
    what_a_loss:
    
+   if (interactivity == interactivity_in_first_scan) goto try_again;
+
    if (++little_count == 60) {
       /* Revert back to beginning. */
       history_save = history_insertion_point;
@@ -860,7 +874,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    /* Restore the global error handler. */
 
    longjmp_ptr = &longjmp_buffer;
-   not_interactive = FALSE;
+   interactivity = interactivity_normal;
    return(retval);
 }
 
@@ -1069,10 +1083,10 @@ extern uims_reply full_resolve(search_kind goal)
          switch ((resolve_command_kind) uims_menu_index) {
             case resolve_command_find_another:
                if (resolve_allocation <= max_resolve_index) {   /* Increase allocation if necessary. */
-                  resolve_rec *t;
-                  resolve_allocation <<= 1;
-                  t = (resolve_rec *) get_more_mem_gracefully(all_resolves, resolve_allocation * sizeof(resolve_rec));
+                  int new_allocation = resolve_allocation << 1;
+                  resolve_rec *t = (resolve_rec *) get_more_mem_gracefully(all_resolves, new_allocation * sizeof(resolve_rec));
                   if (!t) break;   /* By not turning on "find_another_resolve", we will take no action. */
+                  resolve_allocation = new_allocation;
                   all_resolves = t;
                }
 

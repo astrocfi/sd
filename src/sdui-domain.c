@@ -101,6 +101,7 @@
 #include "/usr/apollo/include/error.h"
 #include "/usr/apollo/include/gpr.h"
 #include "/usr/apollo/include/dialog.h"
+#include <stdio.h>
 #include <string.h>
 #include "sd.h"
 #include "sd_dialog.ins.c"
@@ -182,7 +183,7 @@ static int call_list_menu_signal_keys[] = {
 
 static char search_title_text[80];
 static dp_$string_desc_t search_title;
-static int visible_modifications = -1;
+static int last_banner = -1;
 static dp_$string_desc_t main_title;
 static status_$t status;
 static dp_$string_desc_t menu_things[200];
@@ -484,6 +485,72 @@ extern void uims_postinitialize(void)
 
    set_concept_activation();
 
+   /* Set up the selector popup. */
+
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(last_selector_kind * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<last_selector_kind; k++) {
+         p = selector_names[k+1];
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$selector_menu, 1, (short) last_selector_kind, popup_list, true, &status);
+      status_error_check("selector popup - 1: ");
+   }
+
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(last_direction_kind * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<last_direction_kind; k++) {
+         p = direction_names[k+1];
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$direction_menu, 1, (short) last_direction_kind, popup_list, true, &status);
+      status_error_check("direction popup - 1: ");
+   }
+
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(8 * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<8; k++) {
+         p = cardinals[k];
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$quantifier_menu, 1, (short) 8, popup_list, true, &status);
+      status_error_check("quantifier popup - 1: ");
+   }
+
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(number_of_taggers * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<number_of_taggers; k++) {
+         p = tagger_calls[k]->name;
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$tagger_menu, 1, (short) number_of_taggers, popup_list, true, &status);
+      status_error_check("tagger popup - 1: ");
+   }
+
    /* Now activate the windows. */
 
    dp_$task_activate(dp_$all_task_group, &status);
@@ -631,6 +698,21 @@ extern void uims_finish_call_menu(call_list_kind cl, char menu_name[])
 }
 
 
+static char *banner_prompts[] = {
+    (char *) 0,
+    "[AP] ",
+    "[all concepts] ",
+    "[all concepts,AP] ",
+    "[simple modifications] ",
+    "[AP,simple modifications] ",
+    "[all concepts,simple modifications] ",
+    "[all concepts,AP,simple modifications] ",
+    "[all modifications] ",
+    "[AP,all modifications] ",
+    "[all concepts,all modifications] ",
+    "[all concepts,AP,all modifications] "};
+
+
 
 /* BEWARE!!  The numbers deposited into "uims_menu_index" when this is invoked in
    startup mode must correspond to the data in the array "startinfolist"
@@ -639,6 +721,8 @@ extern void uims_finish_call_menu(call_list_kind cl, char menu_name[])
 extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
 {
    int my_task, index;
+   int banner_mode;
+   char prompt_buffer[200];
 
    /* Check for mode changes. */
 
@@ -710,23 +794,23 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
 
    /* See if the modifications banner needs to be updated. */
 
-   if (visible_modifications != allowing_modifications) {
-      if (allowing_modifications == 2) {
-         main_title.chars_p = "[all modifications enabled]   M1 -> select ; M3 -> undo";
-         main_title.cur_len = sizeof("[all modifications enabled]   M1 -> select ; M3 -> undo")-1;
+   banner_mode = (allowing_modifications << 2) |
+                 (allowing_all_concepts ? 2 : 0) |
+                 (using_active_phantoms ? 1 : 0);
+
+   if (last_banner != banner_mode) {
+
+      if (banner_mode != 0) {
+         (void) sprintf(prompt_buffer, "%s  %s", banner_prompts[banner_mode], "M1 -> select ; M3 -> undo");
+         main_title.chars_p = prompt_buffer;
       }
-      else if (allowing_modifications) {
-         main_title.chars_p = "[simple modifications enabled]   M1 -> select ; M3 -> undo";
-         main_title.cur_len = sizeof("[simple modifications enabled]   M1 -> select ; M3 -> undo")-1;
-      }
-      else {
+      else
          main_title.chars_p = "M1 -> select ; M3 -> undo";
-         main_title.cur_len = sizeof("M1 -> select ; M3 -> undo")-1;
-      }
-   
+
+      main_title.cur_len = strlen(main_title.chars_p);
       main_title.max_len = 80;
       dialog_setmsg(main_title_task, &main_title);
-      visible_modifications = allowing_modifications;
+      last_banner = banner_mode;
    }
 
    getcmd:
@@ -742,14 +826,19 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
       case task$quit:
          uims_menu_index = command_quit;
          return(ui_command_select);
-      case allow_modification_task:
+      case simple_modifications_task:
          /* Increment "allowing_modifications" up to a maximum of 2. */
-         /* Actually, we just set it to 2.  Having two grades of modifiability
-            is very unwieldy. */
-         if (allowing_modifications != 2) allowing_modifications = 2;
+         if (allowing_modifications != 2) allowing_modifications++;
+         goto check_menu;
+      case all_modifications_task:
+         allowing_modifications = 2;
          goto check_menu;
       case allow_all_concept_task:
          allowing_all_concepts = !allowing_all_concepts;
+         set_concept_activation();
+         goto check_menu;
+      case active_phantoms_task:
+         using_active_phantoms = !using_active_phantoms;
          set_concept_activation();
          goto check_menu;
 #ifdef NEGLECT
@@ -1038,6 +1127,24 @@ extern int uims_do_direction_popup(void)
 
    if (task == task$direction_menu) {
       dialog_get_menu_item(task$direction_menu, &num);
+      return(num);
+   }
+   else
+      return(0);
+}
+
+
+extern int uims_do_tagger_popup(void)
+{
+   int task;
+   int num;
+
+   dialog_signal(tagger_enabler);
+   dialog_read(&task);
+   dialog_signal(tagger_disabler);
+
+   if (task == task$tagger_menu) {
+      dialog_get_menu_item(task$tagger_menu, &num);
       return(num);
    }
    else

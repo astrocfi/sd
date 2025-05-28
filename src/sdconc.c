@@ -30,7 +30,7 @@
 #include "sd.h"
 
 
-/* BEWARE!!  This list must track the array "bigconctab" . */
+/* BEWARE!!  This list must track the "concthing" arrays . */
 /* BEWARE!!  This list must track the array "conc_error_messages" . */
 typedef enum {
    analyzer_NORMAL,
@@ -41,24 +41,11 @@ typedef enum {
    analyzer_STAR12,
    analyzer_STAR16,
    analyzer_SINGLE,
+   analyzer_TRIPLE_LINE,
    analyzer_VERTICAL6,
    analyzer_LATERAL6,
    analyzer_DIAMOND_LINE } analyzer_kind;
 
-
-typedef struct {
-   veryshort mapin[8];
-   veryshort mapout[8];
-   short inlimit;
-   short outlimit;
-   setup_kind bigsetup;
-   setup_kind insetup;
-   setup_kind outsetup;
-   int bigsize;
-   int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
-   int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
-   int mapelong;
-   } cm_thing;
 
 /*                                                                                                          mapelong --------|
                                                                                                            outer_rot -----|  |
@@ -66,6 +53,12 @@ typedef struct {
                                                               outlimit -----|                          bigsize ----|   |  |  |
                                    mapin           mapout       inlimit -|  |  bigsetup      insetup  outsetup     |   |  |  |   */
 
+Private cm_thing map_3line =  {{0, 1, 3, 2}, {10, 11, 4, 5},             4, 4, s3x4,           s1x4,     s1x4,     12, 0, 0, 1};
+
+Private cm_thing map1x4_2x4 =        {{10, 11, 4, 5},
+                                             {0, 1, 2, 3, 6, 7, 8, 9},   4, 8, s3x4,           s1x4,     s2x4,     12, 0, 0, 0};
+Private cm_thing oddmap1x4_2x4 =     {{0, 9, 6, 3},
+                                             {10, 11, 2, 1, 4, 5, 8, 7}, 4, 8, sbigdmd,        s1x4,     s2x4,     12, 0, 1, 0};
 Private cm_thing map1x2_1x2 =        {{1, 3},       {0, 2},              2, 2, s1x4,           s1x2,     s1x2,     4,  0, 0, 0};
 Private cm_thing oddmap1x2_1x2 =     {{3, 1},       {0, 2},              2, 2, sdmd,           s1x2,     s1x2,     4,  1, 0, 0};
 /* The map "oddmapdmd_dmd", with its loss of elongation information for the outer diamond, is necessary to make the call
@@ -101,7 +94,9 @@ Private cm_thing map1x6_1x2 = {{2, 6}, {0, 1, 3, 4, 5, 7},               2, 6, s
 Private cm_thing mapbone6_1x2 = {{7, 3}, {0, 1, 2, 4, 5, 6},             2, 6, s_bone,         s1x2,     s_bone6,  8,  0, 0, 0};
 Private cm_thing map1x4_1x4_rc = {{0, 2, 4, 6}, {1, 3, 5, 7},            4, 4, s1x8,           s1x4,     s1x4,     8,  0, 0, 0};
 Private cm_thing map1x2_bone6_rc = {{0, 1, 3, 4, 5, 7}, {6, 2},          6, 2, s_bone,         s_bone6,  s1x2,     8,  0, 0, 0};
+Private cm_thing map1x2_2x3_rc =   {{0, 3, 1, 4, 7, 5}, {6, 2},          6, 2, s_dhrglass,     s2x3,     s1x2,     8,  0, 0, 0};
 Private cm_thing map2x2_dmd_rc = {{7, 1, 3, 5}, {0, 2, 4, 6},            4, 4, s_spindle,      sdmd,     s2x2,     8,  0, 0, 0};
+Private cm_thing oddmap2x2_dmd_rc = {{7, 1, 3, 5}, {6, 0, 2, 4},         4, 4, s_spindle,      sdmd,     s2x2,     8,  0, 1, 0};
 Private cm_thing map2x2_1x4_rc = {{0, 2, 4, 6}, {1, 7, 5, 3},            4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 0, 0};
 Private cm_thing oddmap2x2_1x4_rc = {{0, 2, 4, 6}, {3, 1, 7, 5},         4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 1, 9};
 Private cm_thing map1x2_2x3 = {{0, 1, 2, 4, 5, 6}, {7, 3},               6, 2, s_spindle,      s2x3,     s1x2,     8,  0, 0, 0};
@@ -109,6 +104,7 @@ Private cm_thing map1x2_short6 = {{1, 2, 3, 5, 6, 7}, {0, 4},            6, 2, s
 Private cm_thing map1x2_intgl = {{0, 1, 3, 4, 5, 7}, {6, 2},             6, 2, s_qtag,         s_bone6,  s1x2,     8,  0, 0, 0};
 Private cm_thing mapshort6_1x2h = {{5, 1}, {6, 7, 0, 2, 3, 4},           2, 6, s_spindle,      s1x2,     s_short6, 8,  1, 1, 1};
 Private cm_thing mapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},           2, 6, s_hrglass,      s1x2,     s_short6, 8,  1, 1, 0};
+Private cm_thing mapbone6_1x2v =  {{7, 3}, {0, 1, 2, 4, 5, 6},           2, 6, s_dhrglass,     s1x2,     s_bone6,  8,  1, 0, 0};
 Private cm_thing mapstar_2x2 = {{1, 3, 5, 7}, {0, 2, 4, 6},              4, 4, s_galaxy,       s2x2,     s_star,   8,  0, 0, 0};
 Private cm_thing mapstar_star = {{1, 3, 5, 7}, {0, 2, 4, 6},             4, 4, s_thar,         s_star,   s_star,   8,  0, 0, 0};
 Private cm_thing map1x2_1x6 = {{1, 3, 2, 5, 7, 6}, {0, 4},               6, 2, s1x8,           s1x6,     s1x2,     8,  0, 0, 0};
@@ -118,7 +114,9 @@ Private cm_thing oddmap1x4_2x2 = {{5, 0, 1, 4}, {6, 7, 2, 3},            4, 4, s
 Private cm_thing map1x4_star = {{2, 3, 6, 7}, {0, 1, 4, 5},              4, 4, s_wingedstar,   s_star,   s1x4,     8,  0, 0, 0};
 Private cm_thing oddmap1x4_star = {{7, 2, 3, 6}, {0, 1, 4, 5},           4, 4, s_wingedstar,   s_star,   s1x4,     8,  1, 0, 0};
 Private cm_thing map2x2_dmd = {{6, 3, 2, 7}, {0, 1, 4, 5},               4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 0, 1};
+Private cm_thing map2x2_dmdv = {{6, 3, 2, 7}, {0, 1, 4, 5},              4, 4, s_dhrglass,     sdmd,     s2x2,     8,  0, 0, 0};
 Private cm_thing oddmap2x2_dmd = {{6, 3, 2, 7}, {5, 0, 1, 4},            4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 1, 9};
+Private cm_thing oddmap2x2_dmdv = {{6, 3, 2, 7}, {5, 0, 1, 4},           4, 4, s_dhrglass,     sdmd,     s2x2,     8,  0, 1, 9};
 Private cm_thing map2x2_1x4h = {{6, 7, 2, 3}, {0, 1, 4, 5},              4, 4, s_qtag,         s1x4,     s2x2,     8,  0, 0, 1};
 Private cm_thing oddmap2x2_1x4h = {{6, 7, 2, 3}, {5, 0, 1, 4},           4, 4, s_bone,         s1x4,     s2x2,     8,  0, 1, 9};
 Private cm_thing mapstar_1x4 =    {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s3x1dmd,        s1x4,     s_star,   12, 0, 0, 9};
@@ -142,12 +140,16 @@ Private cm_thing oddmap2x3_1x2 = {{11, 5}, {9, 10, 0, 3, 4, 6},          2, 6, s
 Private cm_thing oddmapshort6_1x2h = {{2, 6}, {3, 0, 1, 7, 4, 5},        2, 6, s_ptpd,         s1x2,     s_short6, 8,  0, 1, 1};
 Private cm_thing oddmapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},        2, 6, s_qtag,         s1x2,     s_short6, 8,  0, 1, 0};
 Private cm_thing oddmap1x2_short6_rc = {{5, 6, 0, 1, 2, 4}, {7, 3},      6, 2, s_rigger,       s_short6, s1x2,     8,  1, 0, 0};
-Private cm_thing map2x4_2x2 = {{2, 3, 8, 9}, {0, 1, 4, 5, 6, 7, 10, 11}, 4, 8, s2x6,           s2x2,     s2x4,     12, 0, 0, 9};
+Private cm_thing map2x4_2x2 = {{2, 3, 8, 9},
+                                        {0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 0, 0, 9};
 Private cm_thing oddmap2x4_2x2 = {{9, 2, 3, 8},
                                         {0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 1, 0, 9};
+Private cm_thing map2x4_2x2v = {{15, 3, 7, 11},
+                                        {12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s4x4,           s2x2,     s2x4,     16, 0, 0, 9};
+Private cm_thing oddmap2x4_2x2v = {{11, 15, 3, 7},
+                                        {12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s4x4,           s2x2,     s2x4,     16, 1, 0, 9};
 Private cm_thing mapdmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},              4, 4, s3x1dmd,        s1x4,     sdmd,     8,  0, 0, 0};
 Private cm_thing map_s_dmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 0};
-
 
 Private cm_thing *concmap1x2_1x2[4]       = {&map1x2_1x2,          &oddmap1x2_1x2,       &map1x2_1x2,      &oddmap1x2_1x2};
 Private cm_thing *concmapdmd_dmd[4]       = {&mapdmd_dmd,          &oddmapdmd_dmd,       &mapdmd_dmd,      &oddmapdmd_dmd};
@@ -160,14 +162,14 @@ Private cm_thing *concmap_s_spindle_1x8[4] = {0,                   0,           
 Private cm_thing *concmapdmd_2x2[4]       = {&mapdmd_2x2h,         &mapdmd_2x2v,         &mapdmd_2x2h,     &mapdmd_2x2v};
 Private cm_thing *concmap2x2_2x2[4]       = {&map2x2_2x2v,         &oddmap2x2_2x2v,      &map2x2_2x2h,     &oddmap2x2_2x2h};
 Private cm_thing *concmap2x2_1x4[4]       = {&map2x2_1x4v,         &oddmap2x2_1x4v,      &map2x2_1x4h,     &oddmap2x2_1x4h};
-Private cm_thing *concmap2x2_dmd[4]       = {0,                    &oddmap2x2_dmd,       &map2x2_dmd,      0};
+Private cm_thing *concmap2x2_dmd[4]       = {&map2x2_dmdv,         &oddmap2x2_dmd,       &map2x2_dmd,      &oddmap2x2_dmdv};
 Private cm_thing *concmapshort6_1x2[4]    = {&mapshort6_1x2v,      &oddmapshort6_1x2v,   &mapshort6_1x2h,  &oddmapshort6_1x2h};
 Private cm_thing *concmapminrig_1x2[4]    = {&mapminrig_1x2,       &oddmapminrig_1x2,    &mapminrig_1x2,   &oddmapminrig_1x2};
 Private cm_thing *concmap1x2_1x6[4]       = {&map1x2_1x6,          &oddmap1x2_1x6,       &map1x2_1x6,      &oddmap1x2_1x6};
 Private cm_thing *concmap1x2_bone6[4]     = {&map1x2_bone6,        &oddmap1x2_bone6,     &map1x2_bone6,    &oddmap1x2_bone6};
 Private cm_thing *concmap1x2_2x3[4]       = {&map1x2_2x3,          &oddmap1x2_2x3,       &map1x2_2x3,      &oddmap1x2_2x3};
 Private cm_thing *concmap1x2_short6[4]    = {&map1x2_short6,       &oddmap1x2_short6,    &map1x2_short6,   &oddmap1x2_short6};
-Private cm_thing *concmap2x4_2x2[4]       = {&map2x4_2x2,          &oddmap2x4_2x2,       &map2x4_2x2,      &oddmap2x4_2x2};
+Private cm_thing *concmap2x4_2x2[4]       = {&map2x4_2x2,          &oddmap2x4_2x2,       &map2x4_2x2v,     &oddmap2x4_2x2v};
 Private cm_thing *concmap2x4_2x4[4]       = {&map2x4_2x4,          0,                    &map2x4_2x4,      0};
 Private cm_thing *concmap1x4_2x2[4]       = {&map1x4_2x2,          &oddmap1x4_2x2,       &map1x4_2x2,      &oddmap1x4_2x2};
 Private cm_thing *concmap1x4_star[4]      = {&map1x4_star,         &oddmap1x4_star,      &map1x4_star,     &oddmap1x4_star};
@@ -179,12 +181,15 @@ Private cm_thing *concmapstar_1x4[4]      = {&mapstar_1x4,         &oddmapstar_1
 Private cm_thing *concmapstar_dmd[4]      = {&mapstar_dmd,         &oddmapstar_dmd,      &mapstar_dmd,     &oddmapstar_dmd};
 Private cm_thing *concmap2x3_1x2[4]       = {&map2x3_1x2,          &oddmap2x3_1x2,       &map2x3_1x2,      &oddmap2x3_1x2};
 Private cm_thing *concmap2x3_2x3[4]       = {&map2x3_2x3,          0,                    &map2x3_2x3,      0};
-Private cm_thing *concmapbone6_1x2[4]     = {&mapbone6_1x2,        0,                    &mapbone6_1x2,    0};
+Private cm_thing *concmapbone6_1x2[4]     = {&mapbone6_1x2,        &mapbone6_1x2v,       &mapbone6_1x2,    &mapbone6_1x2v};
 Private cm_thing *concmap1x6_1x2[4]       = {&map1x6_1x2,          0,                    &map1x6_1x2,      0};
 Private cm_thing *concmap1x4_1x4_rc[4]    = {&map1x4_1x4_rc,       0,                    &map1x4_1x4_rc,   0};
-Private cm_thing *concmap2x2_dmd_rc[4]    = {&map2x2_dmd_rc,       0,                    &map2x2_dmd_rc,   0};
+Private cm_thing *concmap2x2_dmd_rc[4]    = {&map2x2_dmd_rc,       &oddmap2x2_dmd_rc,    &map2x2_dmd_rc,   &oddmap2x2_dmd_rc};
 Private cm_thing *concmap2x2_1x4_rc[4]    = {&map2x2_1x4_rc,       &oddmap2x2_1x4_rc,    &map2x2_1x4_rc,   &oddmap2x2_1x4_rc};
 Private cm_thing *concmapspecintgl[4]     = {&map1x2_intgl,        0,                    &map1x2_intgl,    0};
+
+Private cm_thing *concmap_1x4_2x4[4]      = {0,                    &oddmap1x4_2x4,       &map1x4_2x4,      0};
+
 
 
 extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number)
@@ -243,7 +248,7 @@ extern void normalize_concentric(
 
    map_ptr = 0;
 
-   if (center_arity == 2) {
+   if (center_arity == 2 && synthesizer != schema_conc_triple_lines) {
       /* Fix up nonexistent stars, in a rather inept way. */
       if (inners[0].kind == nothing) {
          inners[0].kind = s_star;
@@ -302,6 +307,63 @@ extern void normalize_concentric(
 
       goto gotit;
    }
+
+   /* Do special stuff to put setups back properly for triple_lines schema. */
+
+   if (synthesizer == schema_conc_triple_lines) {
+      setup temp;
+
+      temp = *outers;
+
+      if (inners[0].kind == s2x2) {
+         /* Move people down to the closer parts of 2x2 setups. */
+         if (!(inners[0].people[2].id1 | inners[0].people[3].id1)) {
+            swap_people(&inners[0], 0, 3);
+            swap_people(&inners[0], 1, 2);
+         }
+         if (!(inners[1].people[0].id1 | inners[1].people[1].id1)) {
+            swap_people(&inners[1], 0, 3);
+            swap_people(&inners[1], 1, 2);
+         }
+
+         (void) copy_rot(outers, 0, &inners[0], 1, 033);
+         (void) copy_rot(outers, 1, &inners[0], 2, 033);
+         (void) copy_rot(outers, 2, &inners[1], 1, 033);
+         (void) copy_rot(outers, 3, &inners[1], 2, 033);
+         (void) copy_rot(outers, 4, &inners[1], 3, 033);
+         (void) copy_rot(outers, 5, &inners[1], 0, 033);
+         (void) copy_rot(outers, 6, &inners[0], 3, 033);
+         (void) copy_rot(outers, 7, &inners[0], 0, 033);
+         outers->rotation = 1;
+         outers->kind = s2x4;
+      }
+      else if (inners[0].kind == s1x4 && inners[0].rotation == 0) {
+         (void) copy_person(outers, 0, &inners[0], 0);
+         (void) copy_person(outers, 1, &inners[0], 1);
+         (void) copy_person(outers, 2, &inners[0], 3);
+         (void) copy_person(outers, 3, &inners[0], 2);
+         (void) copy_person(outers, 4, &inners[1], 2);
+         (void) copy_person(outers, 5, &inners[1], 3);
+         (void) copy_person(outers, 6, &inners[1], 1);
+         (void) copy_person(outers, 7, &inners[1], 0);
+         outers->rotation = 0;
+         outers->kind = s2x4;
+      }
+      else if (inners[0].kind == s1x2 && inners[0].rotation == 0) {
+         (void) copy_person(outers, 0, &inners[0], 0);
+         (void) copy_person(outers, 1, &inners[0], 1);
+         (void) copy_person(outers, 2, &inners[1], 1);
+         (void) copy_person(outers, 3, &inners[1], 0);
+         outers->rotation = 0;
+         outers->kind = s2x2;
+      }
+      else
+         fail("Can't figure out what to do.");
+
+      inners[0] = temp;
+      i = (inners[0].rotation - outers->rotation) & 3;
+   }
+
 
    if (synthesizer == schema_rev_checkpoint) {
       /* Fix up nonexistent centers or ends, in a rather inept way. */
@@ -514,6 +576,7 @@ extern void normalize_concentric(
             break;
          case s2x4:
             switch (inners[0].kind) {
+               case s1x4: map_ptr = concmap_1x4_2x4; break;
                case s2x2: map_ptr = concmap2x4_2x2; break;
                case s2x4: map_ptr = concmap2x4_2x4; break;
             }
@@ -685,6 +748,7 @@ gotit:
       case schema_conc_star:
       case schema_conc_star12:
       case schema_conc_star16:
+      case schema_conc_triple_lines:
          fail("Can't figure out this concentric result.");
    }
 
@@ -710,66 +774,127 @@ gotit:
 
 
 
-/* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
-/* BEWARE!!  The horizontal structure is keyed to the enumeration "analyzer_kind" :
-analyzer_NORMAL  analyzer_CHECKPT    analyzer_2X6        analyzer_6X2    analyzer_6X2_TGL    analyzer_STAR12   analyzer_STAR16 analyzer_SINGLE analyzer_VERTICAL6 analyzer_LATERAL6 analyzer_DIAMOND_LINE */
-                                                                                                                     
-Private cm_thing *bigconctab[][11] = {
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* nothing */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_1x1 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x2 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_1x3 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x2 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                &map1x2_1x2,    0,                0,          0},               /* s1x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                &oddmap1x2_1x2, 0,                0,          0},               /* sdmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_star */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_trngl */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_trngl4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bone6 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_short6 */
-   {&map2x2_1x4h,   0,                    &oddmapshort6_1x2v, &oddmap1x2_2x3,    &map1x2_intgl,    0,                0,                0,              0,                0,          0},               /* s_qtag */
-   {&map2x2_1x4v,   &map1x2_bone6_rc,     &mapbone6_1x2,      0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bone */
-   {&map1x4_2x2,    &oddmap1x2_short6_rc, 0,                  &oddmap1x2_short6, 0,                0,                0,                0,              0,                0,          0},               /* s_rigger */
-   {0,              &map2x2_dmd_rc,       &mapshort6_1x2h,    &map1x2_2x3,       0,                0,                0,                0,              0,                0,          0},               /* s_spindle */
-   {&map2x2_dmd,    0,                    &mapshort6_1x2v,    0,                 0,                0,                0,                0,              &oddmap1x2_bone6, 0,          0},               /* s_hrglass */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_hyperglass */
-   {&oddmap1x4_1x4, 0,                    &oddmapminrig_1x2,  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_crosswave */
-   {&map1x4_1x4,    &map1x4_1x4_rc,       &map1x6_1x2,        &map1x2_1x6,       0,                0,                0,                0,              0,                0,          0},               /* s1x8 */
-   {&map2x2_2x2v,   0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x3 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x6 */
-   {0,              0,                    &oddmap2x3_1x2,     0,                 0,                &map2x3_2x3,      0,                0,              0,                0,          0},               /* s3x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x6 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x8 */
-   {0,              0,                    0,                  0,                 0,                0,                &map2x4_2x4v,     0,              0,                0,          0},               /* s4x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_x1x6 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x10 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x12 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x14 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x16 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_c1phan */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bigblob */
-   {0,              &map2x2_1x4_rc,       &oddmapshort6_1x2h, &map1x2_bone6,     0,                0,                0,                0,              0,                0,          0},               /* s_ptpd */
-   {&oddmap1x4_dmd, 0,                    &mapminrig_1x2,     &oddmap1x2_1x6,    0,                0,                0,                0,              0,                0,          &mapdmd_line},    /* s3x1dmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s3dmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_4dmd */
-   {&map1x4_star,   0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          &map_s_dmd_line}, /* s_wingedstar */
-   {0,              0,                    0,                  0,                 0,                &map_spec_star12, 0,                0,              0,                0,          &oddmap_s_short_1x6},/* s_wingedstar12 */
-   {0,              0,                    0,                  0,                 0,                0,                &map_spec_star16, 0,              0,                0,          &map_s_spindle_1x8},/* s_wingedstar16 */
-   {&mapstar_2x2,   0,                    0,                  0,                 0,                0,                0,                0,              &map1x2_short6,   &maplatgal, 0},               /* s_galaxy */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s4x6 */
-   {&mapstar_star,  0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_thar */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_x4dmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_8x8 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* sfat2x8 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* swide4x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* sbigdiamonds */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* sminirigger */
-   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0}};              /* s_normal_concentric */
 
+/* BEWARE!!  These lists are keyed to the enumeration "analyzer_kind" :
 
+    analyzer_NORMAL
+    |       analyzer_CHECKPT
+    |       |       analyzer_2X6
+    |       |       |       analyzer_6X2
+    |       |       |       |       analyzer_6X2_TGL
+    |       |       |       |       |       analyzer_STAR12
+    |       |       |       |       |       |       analyzer_STAR16
+    |       |       |       |       |       |       |       analyzer_SINGLE
+    |       |       |       |       |       |       |       |       analyzer_TRIPLE_LINE
+    |       |       |       |       |       |       |       |       |       analyzer_VERTICAL6
+    |       |       |       |       |       |       |       |       |       |       analyzer_LATERAL6
+    |       |       |       |       |       |       |       |       |       |       |       analyzer_DIAMOND_LINE */
 
+extern cm_hunk concthing_1x4 =
+   {0,      0,      0,      0,      0,      0,      0,      &map1x2_1x2,
+                                                                    0,      0,      0,      0};
 
+extern cm_hunk concthing_dmd =
+   {0,      0,      0,      0,      0,      0,      0,      &oddmap1x2_1x2,
+                                                                    0,      0,      0,      0};
+
+extern cm_hunk concthing_qtag =
+   {&map2x2_1x4h,
+            0,      &oddmapshort6_1x2v,
+                            &oddmap1x2_2x3,
+                                     &map1x2_intgl,
+                                            0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_bone =
+   {&map2x2_1x4v,
+            &map1x2_bone6_rc,
+                    &mapbone6_1x2,
+                            0,      0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_rigger =
+   {&map1x4_2x2,
+            &oddmap1x2_short6_rc,
+                    0,      &oddmap1x2_short6,
+                                    0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_spindle =
+   {0,      &map2x2_dmd_rc,
+                    &mapshort6_1x2h,
+                            &map1x2_2x3,
+                                    0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_hrglass =
+   {&map2x2_dmd,
+            0,      &mapshort6_1x2v,
+                            0,      0,      0,      0,      0,      0,      &oddmap1x2_bone6,
+                                                                                    0,
+                                                                                            0};
+
+extern cm_hunk concthing_dhrglass =
+   {&map2x2_dmdv,
+            &map1x2_2x3_rc,
+                    &mapbone6_1x2v,
+                            0,      0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_xwave =
+   {&oddmap1x4_1x4,
+            0,      &oddmapminrig_1x2,
+                            0,      0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_1x8 =
+   {&map1x4_1x4,
+            &map1x4_1x4_rc,
+                    &map1x6_1x2,
+                            &map1x2_1x6,
+                                    0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_2x4 =
+   {&map2x2_2x2v,
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_3x4 =
+   {0,      0,      &oddmap2x3_1x2,
+                            0,      0,      &map2x3_2x3,
+                                                    0,      0,      &map_3line,
+                                                                            0,      0,      0};
+
+extern cm_hunk concthing_4x4 =
+   {0,      0,      0,      0,      0,      0,      &map2x4_2x4v,
+                                                            0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_ptpd =
+   {0,      &map2x2_1x4_rc,
+                    &oddmapshort6_1x2h,
+                            &map1x2_bone6,
+                                    0,      0,      0,      0,      0,      0,      0,      0};
+
+extern cm_hunk concthing_3x1dmd =
+   {&oddmap1x4_dmd,
+            0,      &mapminrig_1x2,
+                            &oddmap1x2_1x6,
+                                    0,      0,      0,      0,      0,      0,      0,      &mapdmd_line};
+
+extern cm_hunk concthing_wstar =
+   {&map1x4_star,
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_s_dmd_line};
+
+extern cm_hunk concthing_wstar12 =
+   {0,      0,      0,      0,      0,      &map_spec_star12,
+                                                    0,      0,      0,      0,      0,      &oddmap_s_short_1x6};
+
+extern cm_hunk concthing_wstar16 =
+   {0,      0,      0,      0,      0,      0,      &map_spec_star16,
+                                                            0,      0,      0,      0,      &map_s_spindle_1x8};
+
+extern cm_hunk concthing_gal =
+   {&mapstar_2x2,
+            0,      0,      0,      0,      0,      0,      0,      0,      &map1x2_short6,
+                                                                                    &maplatgal,
+                                                                                            0};
+
+extern cm_hunk concthing_thar =
+   {&mapstar_star,
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0};
 
 /* BEWARE!!  This is keyed to the enumeration "analyzer_kind". */
 Private char *conc_error_messages[] = {
@@ -781,6 +906,7 @@ Private char *conc_error_messages[] = {
    "Can't find 12 matrix centers and ends in this formation.",         /* analyzer_STAR12 */
    "Can't find 16 matrix centers and ends in this formation.",         /* analyzer_STAR16 */
    "Can't find single concentric centers and ends in this formation.", /* analyzer_SINGLE */
+   "Can't find triple lines in this formation.",                       /* analyzer_TRIPLE_LINE */
    "Wrong formation.",                                                 /* analyzer_VERTICAL6 */
    "Wrong formation.",                                                 /* analyzer_LATERAL6 */
    "Can't find center line and outer diamond."                         /* analyzer_DIAMOND_LINE */
@@ -827,6 +953,7 @@ Private void concentrify(
 
 {
    int i, rot, analyzer_index;
+   cm_hunk *chunk;
    cm_thing *lmap_ptr;   
 
    clear_people(outers);
@@ -864,6 +991,12 @@ Private void concentrify(
             fail("Can't find centers and ends in this formation.");
          analyzer_index = analyzer_2X6;
          break;
+      case schema_conc_triple_lines:
+         if (     ss->kind != s3x4 ||
+                  (((ss->people[0].id1 | ss->people[1].id1) != 0) && ((ss->people[2].id1 | ss->people[3].id1) != 0)) ||
+                  (((ss->people[6].id1 | ss->people[7].id1) != 0) && ((ss->people[8].id1 | ss->people[9].id1) != 0)))
+            fail("Illegal setup for this call.");
+         analyzer_index = analyzer_TRIPLE_LINE; break;
       case schema_rev_checkpoint:
       case schema_concentric:
       case schema_conc_star:
@@ -893,7 +1026,7 @@ Private void concentrify(
       had been consistent, the setup would have been normalized to crossed lines,
       and we wouldn't be here.)
       If we don't take action here and the setup is normal_concentric, an error will
-      be raised, since the "bigconctab" entries are zero. */
+      be raised, since the "concthing" entries are zero. */
 
    if (ss->kind == s_normal_concentric) {
       outers->rotation = ss->outer.srotation;
@@ -968,9 +1101,9 @@ Private void concentrify(
 
    if (analyzer_index == analyzer_NORMAL && ss->kind == s3x4) {
       inners[0].kind = s1x4;
-      inners[0].rotation = ss->rotation;
+      inners[0].rotation = 0;
       outers->kind = s2x2;
-      outers->rotation = ss->rotation;
+      outers->rotation = 0;
       *outer_elongation = (outers->rotation^1) & 1;
       (void) copy_person(&inners[0], 0, ss, 10);
       (void) copy_person(&inners[0], 1, ss, 11);
@@ -1003,7 +1136,9 @@ Private void concentrify(
       goto finish;
    }
 
-   lmap_ptr = bigconctab[ss->kind][analyzer_index];
+   chunk = setup_attrs[ss->kind].conctab;
+   if (!chunk) fail(conc_error_messages[analyzer_index]);
+   lmap_ptr = (*chunk)[analyzer_index];
    if (!lmap_ptr) fail(conc_error_messages[analyzer_index]);
 
    if (lmap_ptr == &map2x4_2x4v) {
@@ -1013,11 +1148,10 @@ Private void concentrify(
       }
    }
 
-
    inners[0].kind = lmap_ptr->insetup;
-   inners[0].rotation = ss->rotation;
+   inners[0].rotation = 0;
    outers->kind = lmap_ptr->outsetup;
-   outers->rotation = ss->rotation;
+   outers->rotation = 0;
 
    rot = 0;
 
@@ -1041,7 +1175,7 @@ Private void concentrify(
       *center_arity = 2;
       clear_people(&inners[1]);
       inners[1].kind = lmap_ptr->insetup;
-      inners[1].rotation = ss->rotation;
+      inners[1].rotation = 0;
       (void) copy_person(&inners[1], 0, ss, 10);
       (void) copy_person(&inners[1], 1, ss, 5);
       (void) copy_person(&inners[1], 2, ss, 8);
@@ -1053,8 +1187,8 @@ Private void concentrify(
       clear_people(&inners[2]);
       inners[1].kind = lmap_ptr->insetup;
       inners[2].kind = lmap_ptr->insetup;
-      inners[1].rotation = ss->rotation;
-      inners[2].rotation = ss->rotation;
+      inners[1].rotation = 0;
+      inners[2].rotation = 0;
       (void) copy_person(&inners[1], 0, ss, 6);
       (void) copy_person(&inners[1], 1, ss, 7);
       (void) copy_person(&inners[1], 2, ss, 14);
@@ -1063,6 +1197,16 @@ Private void concentrify(
       (void) copy_person(&inners[2], 1, ss, 12);
       (void) copy_person(&inners[2], 2, ss, 10);
       (void) copy_person(&inners[2], 3, ss, 11);
+   }
+   if (lmap_ptr == &map_3line) {
+      *center_arity = 2;
+      clear_people(&inners[1]);
+      inners[1].kind = lmap_ptr->insetup;
+      inners[1].rotation = 0;
+      (void) copy_person(&inners[1], 0, ss, 9);
+      (void) copy_person(&inners[1], 1, ss, 8);
+      (void) copy_person(&inners[1], 2, ss, 6);
+      (void) copy_person(&inners[1], 3, ss, 7);
    }
 
    /* Set the outer elongation to whatever elongation the outsides really had, as indicated
@@ -1161,7 +1305,9 @@ extern void concentric_move(
    uint32 saved_number_fields = current_number_fields;
 
    /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
-   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+   if (analyzer != schema_conc_triple_lines)    /* Yes!  We allow "quick so-and-so shove off"! */
+      ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
    for (i=0; i<32; i++) {
       orig_inners_start_directions[i] =
@@ -1316,6 +1462,9 @@ extern void concentric_move(
          result_inner[k].result_flags |= result_outer.result_flags & (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
    }
 
+   if (analyzer == schema_conc_triple_lines && fix_n_results(2, result_inner))
+      fail("Illegal result for this call.");
+
    /* If the call was something like "ends detour", the concentricity info was left in the
       cmd_misc_flags during the execution of the call, so we have to pick it up to make sure
       that the necessary "demand" and "force" bits are honored. */
@@ -1408,7 +1557,7 @@ extern void concentric_move(
          result_outer.kind = s1x4;
          clear_people(&result_outer);
          result_outer.result_flags = 0;
-         result_outer.rotation = ss->rotation;
+         result_outer.rotation = 0;
       }
       else if (analyzer == schema_concentric_diamond_line) {
          if (ss->kind == s_wingedstar || ss->kind == s_wingedstar12 || ss->kind == s_wingedstar16) {
@@ -1419,50 +1568,60 @@ extern void concentric_move(
                The test for this is 1P2P; touch 1/4; column circ; boys truck; split phantom
                lines tag chain thru reaction.  They should finish in outer triple boxes,
                not a 2x4. */
-            result_outer.result_flags = (result_inner[0].result_flags & ~3) | ((~ss->rotation & 1) + 1);
+            result_outer.result_flags = (result_inner[0].result_flags & ~3) | 2;
          }
          else
             goto no_end_err;
       }
       else {
          /* We may be in serious trouble -- we have to figure out what setup the ends
-            finish in, and they are all phantoms.  We can save the day only if we
-            can convince ourselves that they did the call "nothing".  We make use
-            of the fact that "concentrify" did NOT flush them, so we still know
-            what their starting setup was.
-         This is what makes split phantom diamonds diamond chain through work
-            from columns far apart. */
+            finish in, and they are all phantoms. */
    
          result_outer = begin_outer;               /* Restore the original bunch of phantoms. */
          result_outer.result_flags = 0;
-         /* Make sure these people go to the same spots, and remove possibly misleading info. */
-         localmods1 |= DFM1_CONC_FORCE_SPOTS;
-         localmods1 &= ~(DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS | DFM1_CONC_FORCE_OTHERWAY);
-   
-         if (cmdout && cmdout->callspec && (cmdout->callspec->schema == schema_nothing))
-            ;        /* It's OK. */
-         else if (center_arity > 1)
-            ;        /* It's OK. */
-         else {
-            /* We simply have no idea where the outsides should be.  We
-               simply contract the setup to a 4-person setup (or whatever),
-               throwing away the outsides completely.  If this was an
-               "on your own", it may be possible to put things back together.
-               This is what makes "1P2P; pass thru; ENDS leads latch on;
-               ON YOUR OWN disband & snap the lock" work.  But if we try to glue
-               these setups together, "fix_n_results" will raise an error, since
-               it won't know whether to leave room for the phantoms. */
 
-            *result = result_inner[0];   /* This gets all the inner people, and the result_flags. */
-            result->kind = s_normal_concentric;
-            result->inner.skind = result_inner[0].kind;
-            result->inner.srotation = result_inner[0].rotation;
-            result->outer.skind = nothing;
-            result->outer.srotation = 0;
-            result->outer_elongation = 0;
-            canonicalize_rotation(result);
-            result->result_flags = 0;
-            return;
+         /* If setup is 2x2 and a command "force spots" or "force otherway" was given, we can
+            honor it, even though there are no people present in the outer setup. */
+
+         if (     final_outers_start_kind != s2x2 ||
+                  result_outer.kind != s2x2 ||
+                  !(localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
+
+            /* Otherwise, we can save the day only if we
+               can convince ourselves that they did the call "nothing".  We make use
+               of the fact that "concentrify" did NOT flush them, so we still know
+               what their starting setup was.
+            This is what makes split phantom diamonds diamond chain through work
+               from columns far apart. */
+
+            /* Make sure these people go to the same spots, and remove possibly misleading info. */
+            localmods1 |= DFM1_CONC_FORCE_SPOTS;
+            localmods1 &= ~(DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS | DFM1_CONC_FORCE_OTHERWAY);
+      
+            if (cmdout && cmdout->callspec && (cmdout->callspec->schema == schema_nothing))
+               ;        /* It's OK. */
+            else if (center_arity > 1)
+               ;        /* It's OK. */
+            else {
+               /* We simply have no idea where the outsides should be.  We
+                  simply contract the setup to a 4-person setup (or whatever),
+                  throwing away the outsides completely.  If this was an
+                  "on your own", it may be possible to put things back together.
+                  This is what makes "1P2P; pass thru; ENDS leads latch on;
+                  ON YOUR OWN disband & snap the lock" work.  But if we try to glue
+                  these setups together, "fix_n_results" will raise an error, since
+                  it won't know whether to leave room for the phantoms. */
+   
+               *result = result_inner[0];   /* This gets all the inner people, and the result_flags. */
+               result->kind = s_normal_concentric;
+               result->inner.skind = result_inner[0].kind;
+               result->inner.srotation = result_inner[0].rotation;
+               result->outer.skind = nothing;
+               result->outer.srotation = 0;
+               result->outer_elongation = 0;
+               result->result_flags = 0;
+               goto getout;
+            }
          }
       }
    }
@@ -1514,9 +1673,8 @@ extern void concentric_move(
          result->outer_elongation = 0;
 
          for (j=0; j<12; j++) (void) copy_person(result, j+12, &result_outer, j);
-         canonicalize_rotation(result);
          result->result_flags = 0;
-         return;
+         goto getout;
       }
    }
 
@@ -1576,137 +1734,143 @@ extern void concentric_move(
       When we are done, our final judgement will be put back into the variable
       "final_elongation". */
 
-   if (result_outer.kind == s2x2) {
-      warning_index *concwarntable = (final_outers_start_kind == s1x4) ? concwarn1x4table : concwarndmdtable;
-
-      switch (final_outers_start_kind) {
-         case s1x4: case sdmd:
-
-            /* Outers' call has gone from a 1x4 or diamond to a 2x2.  The rules are:
-               (1) The "force_columns" or "force_lines" flag in the invocation takes precedence
-                  over anything else.
-               (2) If the "concentric rules" flag is on (that flag is a euphemism for "the
-                  concentric or checkpoint concept is explicitly in use here"), we set the
-                  elongation perpendicular to the original 1x4 or diamond.
-               (3) If the "force_otherway" invocation flag is on, meaning the database
-                  really wants us to, we set the elongation perpendicular to the original
-                  1x4 or diamond.
-               (4) If the "force_spots" invocation flag is on, meaning the database
-                  really wants us to, we set the elongation parallel to the original
-                  1x4 or diamond.
-               (5) Otherwise, we set the elongation to the natural elongation that the people
-                  went to.  This uses the result of the "par_conc_end" flag for 1x4/dmd -> 2x2
-                  calls, or the manner in which the setup was divided for calls that were put
-                  together from 2-person calls, or whatever.  (For 1x4->2x2 calls, the "par_conc_end"
-                  flag means the call prefers the SAME elongation in the resulting 2x2.)  The default,
-                  absent this flag, is to change the elongation.  In any case, the result of all that
-                  has been encoded into the elongation of the 2x2 setup that the people went to;
-                  we just have to obey. */
-
-            if (DFM1_CONC_FORCE_LINES & localmods1) {
-               if ((final_outers_finish_dirs & 011) == 011)
-                  fail("Can't force ends to be as in lines - they are T-boned.");
-               final_elongation = final_outers_finish_dirs & 1;
-            }
-            else if (DFM1_CONC_FORCE_COLUMNS & localmods1) {
-               if ((final_outers_finish_dirs & 011) == 011)
-                  fail("Can't force ends to be as in columns - they are T-boned.");
-               final_elongation = (final_outers_finish_dirs+1) & 1;
-            }
-            else if ((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_FORCE_OTHERWAY) & localmods1) {
-               if (analyzer == schema_cross_concentric)
-                  warn(concwarntable[0]);
-               else
-                  warn(concwarntable[1]);
-
-               final_elongation ^= 1;
-            }
-            else if (DFM1_CONC_FORCE_SPOTS & localmods1)
-               ;           /* It's OK the way it is. */
-            else {
-               /* Get the elongation from the result setup, if possible. */
-               unsigned long int newelong = (result_outer.result_flags & 3) - 1;
-
-               if (result_outer.result_flags & 3) {
-                  if (final_elongation == newelong) {
-                     warn(concwarntable[2]);
-                  }
-                  else {
-                     if (analyzer == schema_cross_concentric)
-                        warn(concwarntable[0]);
-                     else
-                        warn(concwarntable[1]);
-                  }
+   if (analyzer == schema_conc_triple_lines)
+      /* This is ALWAYS vertically oriented.  In any case, we can't do any of the other calculations,
+         because the centers and ends have been reversed. */
+      final_elongation = 1;
+   else {
+      if (result_outer.kind == s2x2 || result_outer.kind == s2x4) {
+         warning_index *concwarntable = (final_outers_start_kind == s1x4) ? concwarn1x4table : concwarndmdtable;
+   
+         switch (final_outers_start_kind) {
+            case s1x4: case sdmd:
+   
+               /* Outers' call has gone from a 1x4 or diamond to a 2x2.  The rules are:
+                  (1) The "force_columns" or "force_lines" flag in the invocation takes precedence
+                     over anything else.
+                  (2) If the "concentric rules" flag is on (that flag is a euphemism for "the
+                     concentric or checkpoint concept is explicitly in use here"), we set the
+                     elongation perpendicular to the original 1x4 or diamond.
+                  (3) If the "force_otherway" invocation flag is on, meaning the database
+                     really wants us to, we set the elongation perpendicular to the original
+                     1x4 or diamond.
+                  (4) If the "force_spots" invocation flag is on, meaning the database
+                     really wants us to, we set the elongation parallel to the original
+                     1x4 or diamond.
+                  (5) Otherwise, we set the elongation to the natural elongation that the people
+                     went to.  This uses the result of the "par_conc_end" flag for 1x4/dmd -> 2x2
+                     calls, or the manner in which the setup was divided for calls that were put
+                     together from 2-person calls, or whatever.  (For 1x4->2x2 calls, the "par_conc_end"
+                     flag means the call prefers the SAME elongation in the resulting 2x2.)  The default,
+                     absent this flag, is to change the elongation.  In any case, the result of all that
+                     has been encoded into the elongation of the 2x2 setup that the people went to;
+                     we just have to obey. */
+   
+               if (DFM1_CONC_FORCE_LINES & localmods1) {
+                  if ((final_outers_finish_dirs & 011) == 011)
+                     fail("Can't force ends to be as in lines - they are T-boned.");
+                  final_elongation = final_outers_finish_dirs & 1;
                }
-
-               final_elongation = newelong;
-            }
-
-            break;
-         case s2x2:
-            /* If call went from 2x2 to 2x2, the rules are:
-               First, check for "force_columns" or "force_lines" in the invocation.  This is not
-                  a property of the call that we did, but of the way its parent (or the concept) invoked it.
-               Second, check for "force_spots" or "force_otherway" in the invocation.  This is not
-                  a property of the call that we did, but of the way its parent (or the concept) invoked it.
-               Third, check for "lines_lines" in the invocation.  This is not
-                  a property of the call that we did, but of the way its parent (or the concept) invoked it.
-                  If the concept was "concentric", it will be on, of course.
-               Finally, check the elongation bits in the result flags left over from the call.  These tell
-                  whether to work to spots, or antispots, or whatever, based what the call was, and whether
-                  it, or various sequential parts of it, had the "parallel_conc_end" flag on.
-               If there are no elongation bits, we simply don't know what to do.
-
-               Note that the "ends do thus-and-so" concept does NOT set the lines_lines flag in the
-                  invocation, so we work to spots unless the call says "parallel_conc_end".  Counter-rotate,
-                  for example, says "parallel_conc_end", so it works to antispots. */
-
-            if (DFM1_CONC_FORCE_LINES & localmods1) {
-               if ((final_outers_finish_dirs & 011) == 011)
-                  fail("Can't force ends to be as in lines - they are T-boned.");
-               final_elongation = final_outers_finish_dirs & 1;
-            }
-            else if (DFM1_CONC_FORCE_COLUMNS & localmods1) {
-               if ((final_outers_finish_dirs & 011) == 011)
-                  fail("Can't force ends to be as in columns - they are T-boned.");
-               final_elongation = (final_outers_finish_dirs+1) & 1;
-            }
-            else if (DFM1_CONC_FORCE_OTHERWAY & localmods1)
-               final_elongation ^= 1;
-            else if (DFM1_CONC_FORCE_SPOTS & localmods1)
-               ;           /* It's OK the way it is. */
-            else if (DFM1_CONC_CONCENTRIC_RULES & localmods1) {       /* do "lines-to-lines / columns-to-columns" */
-               int new_elongation = -1;
-
-               if (final_elongation < 0)
-                  fail("People who finish on the outside can't tell whether they started in line-like or column-like orientation.");
-
-               for (i=0; i<32; i++) {     /* Search among all possible people, including virtuals and phantoms. */
-                  if (final_outers_finish_directions[i]) {
-                     int t = (final_outers_start_directions[i] ^ final_outers_finish_directions[i] ^ final_elongation) & 1;
-                     if (t != new_elongation) {
-                        if (new_elongation >= 0)
-                           fail("Sorry, outsides would have to go to a 'pinwheel', can't handle that.");
-                        new_elongation = t;
+               else if (DFM1_CONC_FORCE_COLUMNS & localmods1) {
+                  if ((final_outers_finish_dirs & 011) == 011)
+                     fail("Can't force ends to be as in columns - they are T-boned.");
+                  final_elongation = (final_outers_finish_dirs+1) & 1;
+               }
+               else if ((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_FORCE_OTHERWAY) & localmods1) {
+                  if (analyzer == schema_cross_concentric)
+                     warn(concwarntable[0]);
+                  else
+                     warn(concwarntable[1]);
+   
+                  final_elongation ^= 1;
+               }
+               else if (DFM1_CONC_FORCE_SPOTS & localmods1)
+                  ;           /* It's OK the way it is. */
+               else {
+                  /* Get the elongation from the result setup, if possible. */
+                  int newelong = (result_outer.result_flags & 3) - 1;
+   
+                  if (result_outer.result_flags & 3) {
+                     if (final_elongation == newelong) {
+                        warn(concwarntable[2]);
+                     }
+                     else {
+                        if (analyzer == schema_cross_concentric)
+                           warn(concwarntable[0]);
+                        else
+                           warn(concwarntable[1]);
                      }
                   }
+   
+                  final_elongation = newelong;
                }
-
-               final_elongation = new_elongation;
-            }
-            else
-               final_elongation = (result_outer.result_flags & 3) - 1;
-
-            break;
-         default:
-            fail("Don't recognize starting setup.");
+   
+               break;
+            case s2x2:
+               /* If call went from 2x2 to 2x2, the rules are:
+                  First, check for "force_columns" or "force_lines" in the invocation.  This is not
+                     a property of the call that we did, but of the way its parent (or the concept) invoked it.
+                  Second, check for "force_spots" or "force_otherway" in the invocation.  This is not
+                     a property of the call that we did, but of the way its parent (or the concept) invoked it.
+                  Third, check for "lines_lines" in the invocation.  This is not
+                     a property of the call that we did, but of the way its parent (or the concept) invoked it.
+                     If the concept was "concentric", it will be on, of course.
+                  Finally, check the elongation bits in the result flags left over from the call.  These tell
+                     whether to work to spots, or antispots, or whatever, based what the call was, and whether
+                     it, or various sequential parts of it, had the "parallel_conc_end" flag on.
+                  If there are no elongation bits, we simply don't know what to do.
+   
+                  Note that the "ends do thus-and-so" concept does NOT set the lines_lines flag in the
+                     invocation, so we work to spots unless the call says "parallel_conc_end".  Counter-rotate,
+                     for example, says "parallel_conc_end", so it works to antispots. */
+   
+               if (DFM1_CONC_FORCE_LINES & localmods1) {
+                  if ((final_outers_finish_dirs & 011) == 011)
+                     fail("Can't force ends to be as in lines - they are T-boned.");
+                  final_elongation = final_outers_finish_dirs & 1;
+               }
+               else if (DFM1_CONC_FORCE_COLUMNS & localmods1) {
+                  if ((final_outers_finish_dirs & 011) == 011)
+                     fail("Can't force ends to be as in columns - they are T-boned.");
+                  final_elongation = (final_outers_finish_dirs+1) & 1;
+               }
+               else if (DFM1_CONC_FORCE_OTHERWAY & localmods1)
+                  final_elongation ^= 1;
+               else if (DFM1_CONC_FORCE_SPOTS & localmods1)
+                  ;           /* It's OK the way it is. */
+               else if (DFM1_CONC_CONCENTRIC_RULES & localmods1) {       /* do "lines-to-lines / columns-to-columns" */
+                  int new_elongation = -1;
+   
+                  if (final_elongation < 0)
+                     fail("People who finish on the outside can't tell whether they started in line-like or column-like orientation.");
+   
+                  for (i=0; i<32; i++) {     /* Search among all possible people, including virtuals and phantoms. */
+                     if (final_outers_finish_directions[i]) {
+                        int t = (final_outers_start_directions[i] ^ final_outers_finish_directions[i] ^ final_elongation) & 1;
+                        if (t != new_elongation) {
+                           if (new_elongation >= 0)
+                              fail("Sorry, outsides would have to go to a 'pinwheel', can't handle that.");
+                           new_elongation = t;
+                        }
+                     }
+                  }
+   
+                  final_elongation = new_elongation;
+               }
+               else
+                  final_elongation = (result_outer.result_flags & 3) - 1;
+   
+               break;
+            default:
+               fail("Don't recognize starting setup.");
+         }
       }
-   }
-   else if (result_outer.kind == s_short6) {
-      /* If it both started and ended in a short6, take the info from the way the call was executed.
-         Otherwise, take it from the way concentrify thought the ends were initially elongated. */
-      if (final_outers_start_kind == s_short6)
-         final_elongation = (result_outer.result_flags & 3) - 1;
+      else if (result_outer.kind == s_short6) {
+         /* If it both started and ended in a short6, take the info from the way the call was executed.
+            Otherwise, take it from the way concentrify thought the ends were initially elongated. */
+         if (final_outers_start_kind == s_short6)
+            final_elongation = (result_outer.result_flags & 3) - 1;
+      }
    }
 
    /* Now lossage in "final_elongation" may have been repaired.  If it is still
@@ -1716,8 +1880,13 @@ extern void concentric_move(
    outer_inners[1] = result_inner[0];
    outer_inners[2] = result_inner[1];
    outer_inners[3] = result_inner[2];
+
    normalize_concentric(analyzer, center_arity, outer_inners, final_elongation, result);
+
+   getout:
+
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+   reinstate_rotation(ss, result);
    return;
 
    no_end_err:
@@ -2675,7 +2844,9 @@ extern void so_and_so_only_move(
    warning_info saved_warnings;
    setup the_setups[2], the_results[2];
 
+#ifdef dontneedthisnomore
    uint32 nonempty_setups = 0;
+#endif
    int indicator = parseptr->concept->value.arg1;
    long_boolean others = indicator & 1;
    indicator &= ~1;
@@ -2715,7 +2886,9 @@ extern void so_and_so_only_move(
          else if (selectp(ss, i))
             q = 1;
 
+#ifdef dontneedthisnomore
          nonempty_setups |= 2-q;
+#endif
          clear_person(&the_setups[q], i);
       }
    }

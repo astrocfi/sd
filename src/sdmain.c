@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.78"
+#define VERSION_STRING "30.81"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -46,7 +46,7 @@
    not by any utility.  Furthermore, we do not believe that it is proper for
    source control utilities to alter the text in a source file. */
 
-static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  10 Dec 93 $";
+static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  29 Oct 94 $";
 
 /* This defines the following functions:
    sd_version_string
@@ -69,6 +69,8 @@ and the following external variables:
    abs_max_calls
    max_base_calls
    base_calls
+   number_of_taggers
+   tagger_calls
    outfile_string
    last_file_position
    global_age
@@ -76,14 +78,16 @@ and the following external variables:
    uims_menu_index
    database_version
    whole_sequence_low_lim
-   not_interactive
-   initializing_database
+   interactivity
    testing_fidelity
    selector_for_initialize
+   number_for_initialize
    allowing_modifications
    allowing_all_concepts
+   using_active_phantoms
    resolver_is_unwieldy
    current_selector
+   current_tagger
    current_direction
    current_number_fields
    no_search_warnings
@@ -97,6 +101,7 @@ and the following external variables:
 #include "sd.h"
 #include "paths.h"
    
+
 extern char *sd_version_string(void)
 {
    return VERSION_STRING;
@@ -125,6 +130,8 @@ Private void display_help(void)
 int abs_max_calls;
 int max_base_calls;
 callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
+int number_of_taggers = 0;
+callspec_block **tagger_calls = (callspec_block **) 0;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 int last_file_position = -1;
 int global_age;
@@ -132,15 +139,17 @@ parse_state_type parse_state;
 int uims_menu_index;
 char database_version[81];
 int whole_sequence_low_lim;
-long_boolean not_interactive = FALSE;
-long_boolean initializing_database = FALSE;
+interactivity_state interactivity = interactivity_normal;
 long_boolean testing_fidelity = FALSE;
 selector_kind selector_for_initialize;
+int number_for_initialize;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
+long_boolean using_active_phantoms = FALSE;
 long_boolean resolver_is_unwieldy = FALSE;
 long_boolean diagnostic_mode = FALSE;
 selector_kind current_selector;
+int current_tagger;
 direction_kind current_direction;
 uint32 current_number_fields;
 warning_info no_search_warnings = {{0, 0}};
@@ -156,6 +165,8 @@ Private parse_block *parse_active_list;
 Private parse_block *parse_inactive_list;
 Private int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
 Private short int *concept_sublists[NUM_CALL_LIST_KINDS];
+Private int resolve_scan_start_point;
+Private int resolve_scan_current_point;
 
 /* Stuff for saving parse state while we resolve. */
 
@@ -318,6 +329,7 @@ Private parse_block *get_parse_block(void)
    item->selector = selector_uninitialized;
    item->direction = direction_uninitialized;
    item->number = 0;
+   item->tagger = -1;
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
 
@@ -366,6 +378,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->selector = old_item->selector;
+      new_item->tagger = old_item->tagger;
       new_item->direction = old_item->direction;
       new_item->number = old_item->number;
 
@@ -406,6 +419,7 @@ Private void reset_parse_tree(
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->selector = old_item->selector;
+      new_item->tagger = old_item->tagger;
       new_item->direction = old_item->direction;
       new_item->number = old_item->number;
 
@@ -467,12 +481,18 @@ extern long_boolean deposit_call(callspec_block *call)
    if (call->callflags1 & CFLAG1_REQUIRES_SELECTOR) {
       int j;
 
-      if (initializing_database)
+      if (interactivity == interactivity_database_init)
          sel = selector_for_initialize;
-      else if (not_interactive)
+      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
+         sel = selector_centers;
+         hash_nonrandom_number(((int) sel) - 1);
+      }
+      else if (interactivity != interactivity_normal) {
          sel = (selector_kind) generate_random_number(last_selector_kind)+1;
+         hash_nonrandom_number(((int) sel) - 1);
+      }
       else if ((j = uims_do_selector_popup()) == 0)
-         return(TRUE);
+         return TRUE;
       else
          sel = (selector_kind) j;
    }
@@ -480,33 +500,44 @@ extern long_boolean deposit_call(callspec_block *call)
    if (call->callflags1 & CFLAG1_REQUIRES_DIRECTION) {
       int j;
 
-      if (initializing_database)
+      if (interactivity == interactivity_database_init)
          dir = direction_right;   /* This may not be right. */
-      else if (not_interactive)
+      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
+         dir = direction_right;
+         hash_nonrandom_number(((int) dir) - 1);
+      }
+      else if (interactivity != interactivity_normal) {
          dir = (direction_kind) generate_random_number(last_direction_kind)+1;
+         hash_nonrandom_number(((int) dir) - 1);
+      }
       else if ((j = uims_do_direction_popup()) == 0)
-         return(TRUE);
+         return TRUE;
       else
          dir = (direction_kind) j;
    }
 
    if (howmanynums != 0) {
-      if (not_interactive) {
+      if (interactivity != interactivity_normal) {
          for (i=0 ; i<howmanynums ; i++) {
             int this_num;
       
-            if (initializing_database)
-               /* If this wants a number, give it 1.  0 won't work for the call 1/4 the alter. */
+            if (interactivity == interactivity_database_init)
+               this_num = number_for_initialize;
+            else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
                this_num = 1;
-            else
+               hash_nonrandom_number(this_num-1);
+            }
+            else {
                this_num = generate_random_number(4)+1;
+               hash_nonrandom_number(this_num-1);
+            }
       
             number_list |= (this_num << (i*4));
          }
       }
       else {
          number_list = uims_get_number_fields(howmanynums);
-         if (number_list == 0) return(TRUE);     /* User waved the mouse away. */
+         if (number_list == 0) return TRUE;     /* User waved the mouse away. */
       }
    }
 
@@ -528,7 +559,7 @@ extern long_boolean deposit_call(callspec_block *call)
 /* Deposit a concept into the parse state.  A returned value of TRUE
    means that the user refused to click on a required number or selector,
    and so we have taken no action.  This can only occur if interactive.
-   If "not_interactive" is on, the "number_fields" argument is ignored, and
+   If the interactivity is special, the "number_fields" argument is ignored, and
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
@@ -542,8 +573,10 @@ extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fiel
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
       int j;
 
-      if (not_interactive)
+      if (interactivity != interactivity_normal) {
          sel = (selector_kind) generate_random_number(last_selector_kind)+1;
+         hash_nonrandom_number(((int) sel) - 1);
+      }
       else if ((j = uims_do_selector_popup()) != 0)
          sel = (selector_kind) j;
       else
@@ -555,10 +588,15 @@ extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fiel
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_TWO_NUMBERS)
       howmanynumbers = 2;
 
-   if (not_interactive && howmanynumbers != 0) {
+   if (interactivity != interactivity_normal && howmanynumbers != 0) {
       number_list = generate_random_number(4)+1;
-      if (howmanynumbers == 2)
-         number_list |= (generate_random_number(4)+1) << 4;
+      hash_nonrandom_number(number_list-1);
+
+      if (howmanynumbers == 2) {
+         int j = generate_random_number(4)+1;
+         hash_nonrandom_number(j-1);
+         number_list |= j << 4;
+      }
    }
 
    new_block = get_parse_block();
@@ -633,7 +671,7 @@ extern long_boolean query_for_call(void)
 
    concept_number_fields = 0;
 
-   if (!not_interactive) {
+   if (interactivity == interactivity_normal) {
       /* We are operating in interactive mode.  Update the
          display and query the user. */
 
@@ -778,11 +816,14 @@ extern long_boolean query_for_call(void)
    else {
 
       /* We are operating in automatic mode.
-         We must insert a concept or a call.  Decide which. */
+         We must insert a concept or a call.  Decide which.
+         We only insert a comment if in random search, and then only occasionally. */
 
-      if (generate_random_concept_p()) {
+      if (interactivity == interactivity_in_random_search && generate_random_concept_p()) {
+         int j = generate_random_number(concept_sublist_sizes[parse_state.call_list_to_use]);
+         hash_nonrandom_number(j);
          local_reply = ui_concept_select;
-         uims_menu_index = concept_sublists[parse_state.call_list_to_use][generate_random_number(concept_sublist_sizes[parse_state.call_list_to_use])];
+         uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
       }
       else {
          local_reply = ui_call_select;
@@ -839,11 +880,31 @@ extern long_boolean query_for_call(void)
 
    /* We have a call.  Get the actual call and deposit it into the concept list. */
 
-   if (not_interactive) {
-      if (initializing_database)
+   if (interactivity == interactivity_starting_first_scan) {
+      /* Note that this random number will NOT be hashed. */
+      resolve_scan_start_point = generate_random_number(number_of_calls[parse_state.call_list_to_use]);
+      resolve_scan_current_point = resolve_scan_start_point;
+      interactivity = interactivity_in_first_scan;
+   }
+
+   if (interactivity != interactivity_normal) {
+      if (interactivity == interactivity_database_init)
          result = base_calls[1];     /* Get "nothing". */
-      else {
+      else if (interactivity == interactivity_in_first_scan) {
+         result = main_call_lists[parse_state.call_list_to_use][resolve_scan_current_point];
+
+         /* Fix up the "hashed randoms" stuff as though we had generated this number through the random number generator. */
+
+         hash_nonrandom_number(resolve_scan_current_point);
+
+         resolve_scan_current_point = (resolve_scan_current_point == 0) ?
+                                          number_of_calls[parse_state.call_list_to_use]-1 :
+                                          resolve_scan_current_point-1;
+         if (resolve_scan_current_point == resolve_scan_start_point) interactivity = interactivity_in_random_search;
+      }
+      else {    /* In random search. */
          int i = generate_random_number(number_of_calls[parse_state.call_list_to_use]);
+         hash_nonrandom_number(i);
          result = main_call_lists[parse_state.call_list_to_use][i];
       }
 
@@ -986,7 +1047,7 @@ Private int mark_aged_calls(
 Private call_list_mode_t call_list_mode;
 
 
-extern void write_header_stuff(long_boolean with_ui_version)
+extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
 {
    if (!diagnostic_mode) {
       /* log creation version info */
@@ -1006,12 +1067,20 @@ extern void write_header_stuff(long_boolean with_ui_version)
       }
    }
 
+   if (act_phan_flags & RESULTFLAG__ACTIVE_PHANTOMS_ON) {
+      if (act_phan_flags & RESULTFLAG__ACTIVE_PHANTOMS_OFF)
+         writestuff(" (AP-)");
+      else
+         writestuff(" (AP)");
+   }
+
    writestuff("     ");
 
    /* log level info */
    writestuff(getout_strings[calling_level]);
+
    if (call_list_mode == call_list_mode_abridging)
-       writestuff(" (abridged)");
+      writestuff(" (abridged)");
 
    newline();
 }
@@ -1110,9 +1179,8 @@ void main(int argc, char *argv[])
 
    (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
 
-   initializing_database = TRUE;
+   interactivity = interactivity_database_init;
    testing_fidelity = FALSE;
-   not_interactive = TRUE;
    parse_active_list = (parse_block *) 0;
    parse_inactive_list = (parse_block *) 0;
 
@@ -1151,7 +1219,7 @@ void main(int argc, char *argv[])
 
       /* The call we were trying to do has failed.  Abort it and display the error message. */
    
-      if (initializing_database) {
+      if (interactivity == interactivity_database_init) {
          init_error(error_message1);
          goto normal_exit;
       }
@@ -1178,8 +1246,7 @@ void main(int argc, char *argv[])
    initialize_tandem_tables();
    initialize_getout_tables();
    
-   initializing_database = FALSE;
-   not_interactive = FALSE;
+   interactivity = interactivity_normal;
 
    /* HERE IS (APPROXIMATELY) WHERE THE PROGRAM STARTS. */
    
@@ -1207,7 +1274,7 @@ void main(int argc, char *argv[])
    show_banner:
 
    writestuff("Version ");
-   write_header_stuff(TRUE);
+   write_header_stuff(TRUE, 0);
    writestuff("Output file is \"");
    writestuff(outfile_string);
    writestuff("\"");
@@ -1558,7 +1625,7 @@ extern long_boolean write_sequence_to_file(void)
    get_date(date);
    writestuff(date);
    writestuff("     ");
-   write_header_stuff(FALSE);
+   write_header_stuff(FALSE, history[history_ptr].state.result_flags);
 
    if (getout_ind == POPUP_ACCEPT_WITH_STRING) {
       writestuff("             ");
@@ -1687,10 +1754,10 @@ extern void get_real_subcall(
       interactive) for the calls that we randomly choose, but not for the later calls
       that we test for fidelity. */
 
-   if (initializing_database | testing_fidelity) return;
+   if (interactivity == interactivity_database_init | testing_fidelity) return;
 
    /* When we are searching for resolves and the like, the situation is different.  In this case,
-      "initializing_database" is off but "not_interactive" is on.  We do perform mandatory
+      the interactivity state is set for a search.  We do perform mandatory
       modifications, so we will generate things like "clover and shakedown".  Of course, no
       querying actually takes place.  Instead, get_subcall just uses the random number generator.
       Therefore, whether resolving or in normal interactive mode, we are guided by the
@@ -1733,7 +1800,7 @@ extern void get_real_subcall(
    /* If the replacement is mandatory, or we are not interactive,
       don't present the popup.  Just get the replacement call. */
 
-   if (not_interactive)
+   if (interactivity != interactivity_normal)
       ;
    else if (snumber == 2 || snumber == 6) {
       string_copy(&tempstringptr, "SUBSIDIARY CALL");
@@ -1766,7 +1833,6 @@ extern void get_real_subcall(
       }
 
       if (number & DFM1_MUST_BE_TAG_CALL) kind = modify_popup_only_tag;
-      else if (number & DFM1_MUST_BE_SCOOT_CALL) kind = modify_popup_only_scoot;
       else kind = modify_popup_any;
 
       if (debug_popup || uims_do_modifier_popup(nice_call_name, kind)) {

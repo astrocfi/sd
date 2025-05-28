@@ -1,6 +1,56 @@
-		   RELEASE NOTES FOR SD VERSION 30.78
-		 Database version = 30.78 format = 48,
-    X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
+		   RELEASE NOTES FOR SD VERSION 30.8
+		 Database version = 30.8 format = 51,
+    X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 30.8 ******
+
+New concepts: overlapped diamonds, overlapped lines, and overlapped waves.
+Overlapped waves of course has an implicit "assume waves" in it.
+
+Calls done correctly (I hope):
+   straight away but [anything]
+   quick [anything]
+   stroll [anything]
+
+New calls: explode the top, turning the star unusual amounts.
+
+****** Changes as of version 30.79 ******
+
+The way the "allow modifications" operation is specified was changed.
+In all cases, there are still two levels of modifications --
+"simple modifications" and "all modifications".  In the "sd" program,
+you select them by clicking on the "simple modifications" or "allow
+modifications" buttons, respectively.  In "sdtty", the respective commands
+are the typed commands "simple modifications" and "allow modifications",
+respectively.  That is, type "simple modifications" when you want things
+like "trade percolate", and "allow modifications" when you want things
+like "the axle but replace the cast 1/2 with a split trade circulate".
+
+The "1/2" fraction can be given to calls for which there is an established
+notion of doing the first half, even if there is no established notion of
+doing the second half, for example, circulate, hinge, and zoom.  This
+property works for compound calls as well, so "1/2 acey deucey" and
+"1/2 deuces wild" now work naturally.
+
+It is possible to do fractions of fractions in the case where the fraction
+being applied to a subcall is 1/2.  That is, it is possible to give a fraction
+to a call such that it causes N+1/2 parts of that call to be done.  This
+means that things like "3/4, run wild" and "5/6, hot foot spin" are legal.
+
+"Outlet" is a lot smarter.
+
+Following a suggestion made some time ago by Eric Brosius, the resolver
+performs an exhaustive search for one-call getouts before searching for
+any getouts of two or more calls.
+
+Resolves involving single file promenades have been made extremely rare.
+
+The wording of fractional invert the column has been changed from "N/4 invert
+the column" to "invert the column N/4".  You can also say just "invert the
+column".  The same change was made to "exchange the boxes/diamonds N/4".
+
+New calls:  [criss-cross] shadow the column, spin chain the star,
+   [cross] trade your neighbor <direction>, splash <direction>.
 
 ****** Changes as of version 30.78 ******
 
@@ -40,30 +90,6 @@ There is now an extensive collection of "assume" concepts, such as
 to carry such concepts, unlike "split phantom lines" and "Split phantom
 diamond spots".  See the section "assume waves" in the manual for more details.
 
-The following is an inconsistency between the program and the manual, that
-has not been fixed pending resolution of this issue.  As such, it is
-important that you know about this.  An erratum sheet is being shipped
-with all printed manuals.
-      
-      A recent change was made in the way the "allow modifications"
-      operation works.  Because this change is tentative, the
-      manual was not changed to reflect it.  This affects both the
-      mouse click in the "sd" program and the typed command in the
-      "sdtty" program.
-
-      As described in the manual, there are two levels of this
-      feature.  If the command is given just once, only simple
-      modifications, such as "catch lockit 4" and "in roll motivate"
-      will be enabled.  If the command is given a second time,
-      additional substitutions, such as "trade the diamond but
-      replace the diamond circulate with a flip the diamond"
-      are enabled.
-
-      In the present program, there is only one level of this
-      feature.  Hence, typing the "allow modifications" command just
-      once, or clicking on the icon just once, enables all modifications
-      and substitutions.
-
 A change was made in the database file format.  Unless you write your own database,
 this will not affect you.  The qualifiers "n_is_1" etc., have been removed.  Instead
 of "qualifier n_is_1", use "nqualifier 1 none".  The "nqualifier" keyword says that
@@ -90,7 +116,7 @@ generally than before.
 Exchange the diamonds 1/4 and 1/2, with people colliding, is now supported.
 
 The wording of some calls has been changed.  "<N/4> exchange the diamonds/boxes"
-is now "exchange the diamonds/boxes <N/4>".
+is now "exchange the diamonds/boxes <N/4>".  [See also 30.79.]
 
 An obscure bug in "quadruple boxes working together swing the fractions" was
 fixed.  We thank Ross Howell for finding this, and apologize to the dancers.
@@ -165,6 +191,7 @@ Briefly, they mean the following:
     "own the <so-and-so>" is like "do your part", except that strict
          matrix positioning is used.
 Please read the section "so-and-so only" in the manual for details.
+         [Superseded as of 30.78.]
 
 Note that the prior inability to have, for example, the girls hinge from
 a BGGBBGGB grand wave to make point-to-point diamonds, is now fixed.
@@ -220,7 +247,7 @@ a starting DPT or from facing lines is now illegal.
 
 The "allow modifications" icon only needs to be clicked on (or typed)
 once to get the full range of modifications.  There are no longer two
-levels of modifiability.
+levels of modifiability.  [Superseded as of 30.79.]
 
 A few function keys have been defined for the PC.  Pressing the following
 keys is equivalent to entering the indicated text.  Future versions of the

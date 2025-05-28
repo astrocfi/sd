@@ -48,11 +48,19 @@ APPLICATION_INTERFACE sd_dialog
       COMP => <RETURN>
       END
 
-   allow_modification_task := NULL:
+   simple_modifications_task := NULL:
+      COMP => <RETURN>
+      END
+
+   all_modifications_task := NULL:
       COMP => <RETURN>
       END
 
    allow_all_concept_task := NULL:
+      COMP => <RETURN>
+      END
+
+   active_phantoms_task := NULL:
       COMP => <RETURN>
       END
 
@@ -167,77 +175,13 @@ APPLICATION_INTERFACE sd_dialog
       CHOICES = (start$h1p2p start$s1p2p start$hstart start$sstart start$as_they_are)
       END
 
-   { ********** WARNING!!!!!  this list must be keyed to the tables
-      "selector_names" and "selector_singular" in sdutil.c and to
-      the definition of "selector_kind" in sd.h . }
+   task$selector_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
 
-   task$selector_menu := ENUM:
-      COMP => <RETURN> ;
-      CHANGES_ONLY = false ;
-      CHOICES = (
-         selector_menu$boys
-         selector_menu$girls
-         selector_menu$heads
-         selector_menu$sides
-         selector_menu$headcorners
-         selector_menu$sidecorners
-         selector_menu$headboys
-         selector_menu$headgirls
-         selector_menu$sideboys
-         selector_menu$sidegirls
-         selector_menu$centers
-         selector_menu$ends
-         selector_menu$leads
-         selector_menu$trailers
-         selector_menu$beaux
-         selector_menu$belles
-         selector_menu$center2
-         selector_menu$center6
-         selector_menu$outer2
-         selector_menu$outer6
-         selector_menu$center4
-         selector_menu$outerpair
-         selector_menu$headliners
-         selector_menu$sideliners
-         selector_menu$nearline
-         selector_menu$farline
-         selector_menu$nearcolumn
-         selector_menu$farcolumn
-         selector_menu$nearbox
-         selector_menu$farbox
-         selector_menu$all
-         selector_menu$none)
-      END
+   task$direction_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
 
-   { ********** WARNING!!!!!  this list must be keyed to the tables
-      "direction_names" in sdutil.c and to
-      the definition of "direction_kind" in sd.h . }
+   task$quantifier_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
 
-   task$direction_menu := ENUM:
-      COMP => <RETURN> ;
-      CHANGES_ONLY = false ;
-      CHOICES = (
-         direction_menu$left
-         direction_menu$right
-         direction_menu$in
-         direction_menu$out
-         direction_menu$zigzag
-         direction_menu$zagzig
-         direction_menu$zigzig
-         direction_menu$zagzag
-         direction_menu$no_direction)
-      END
-
-   task$quantifier_menu := ENUM:
-      COMP => <RETURN> ;
-      CHANGES_ONLY = false ;
-      CHOICES = (
-         quantifier_menu$1
-         quantifier_menu$2
-         quantifier_menu$3
-         quantifier_menu$4
-         quantifier_menu$5)
-      END
+   task$tagger_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
 
    task$general_concept_menu := ENUM:
       COMP => <RETURN> ;
@@ -418,6 +362,9 @@ APPLICATION_INTERFACE sd_dialog
    quantifier_enabler := task_group: END
    quantifier_disabler := task_group: END
 
+   tagger_enabler := task_group: END
+   tagger_disabler := task_group: END
+
    phantoml_concepts_enabler := task_group: END
    phantoml_concepts_disabler := task_group: END
 
@@ -531,6 +478,9 @@ USER_INTERFACE sd_dialog
 
    quantifier_enabler activate => <quantifier_popup show>
    quantifier_disabler activate => <quantifier_popup popdown>
+
+   tagger_enabler activate => <tagger_popup show>
+   tagger_disabler activate => <tagger_popup popdown>
 
    phantoml_concepts_enabler activate => <phantoml_concepts_popup show>
    phantoml_concepts_disabler activate => <phantoml_concepts_popup popdown>
@@ -696,18 +646,28 @@ USER_INTERFACE sd_dialog
                   HELP_TEXT = "Select ABORT to abort this whole sequence." ;
                   END
                NICE_ICON:
-                  TASK = allow_modification_task ;
-                  STRING = "Allow modifications" ;
-                  HELP_TEXT = "Select ALLOW MODIFICATION to allow the next call to be modified"
-                             &"in a simple way or to take some other call as an argument."
-                             &"Select it a second time to allow parts of the call to be"
-                             &"replaced in unusual ways." ;
+                  TASK = simple_modifications_task ;
+                  STRING = "Simple modifications" ;
+                  HELP_TEXT = "Select SIMPLE MODIFICATIONS to allow the next call to be modified"
+                             &"in a simple way or to take some other call as an argument." ;
+                  END
+               NICE_ICON:
+                  TASK = all_modifications_task ;
+                  STRING = "All modifications" ;
+                  HELP_TEXT = "Select ALL MODIFICATIONS to allow partds of the next call"
+                             &"to be replaced in unusual ways." ;
                   END
                NICE_ICON:
                   TASK = allow_all_concept_task ;
                   STRING = "Toggle concept levels" ;
                   HELP_TEXT = "Select TOGGLE CONCEPT LEVELS to allow concepts that are not"
                              &"legal at the current level to be possible nevertheless." ;
+                  END
+               NICE_ICON:
+                  TASK = active_phantoms_task ;
+                  STRING = "Toggle active phantoms" ;
+                  HELP_TEXT = "Select TOGGLE ACTIVE PHANTOMS to cause active phantoms"
+                             &"to be used whenever a setup is assumed." ;
                   END
                comment_icon := NICE_ICON:
                   TASK = task$create_comment ;
@@ -955,39 +915,6 @@ USER_INTERFACE sd_dialog
             TITLE_FONT = "/sys/dm/fonts/f5x9" ;
             TITLE_BAR = on ;
             TITLE_STRING = "WHO?" ;
-            ENTRIES =
-              ("boys"          => selector_menu$boys
-               "girls"         => selector_menu$girls
-               "heads"         => selector_menu$heads
-               "sides"         => selector_menu$sides
-               "head corners"  => selector_menu$headcorners
-               "side corners"  => selector_menu$sidecorners
-               "head boys"     => selector_menu$headboys
-               "head girls"    => selector_menu$headgirls
-               "side boys"     => selector_menu$sideboys
-               "side girls"    => selector_menu$sidegirls
-               "centers"       => selector_menu$centers
-               "ends"          => selector_menu$ends
-               "leads"         => selector_menu$leads
-               "trailers"      => selector_menu$trailers
-               "beaux"         => selector_menu$beaux
-               "belles"        => selector_menu$belles
-               "center 2"      => selector_menu$center2
-               "center 6"      => selector_menu$center6
-               "outer 2"       => selector_menu$outer2
-               "outer 6"       => selector_menu$outer6
-               "center 4"      => selector_menu$center4
-               "outer pairs"   => selector_menu$outerpair
-               "headliners"    => selector_menu$headliners
-               "sideliners"    => selector_menu$sideliners
-               "near line"     => selector_menu$nearline
-               "far line"      => selector_menu$farline
-               "near column"   => selector_menu$nearcolumn
-               "far column"    => selector_menu$farcolumn
-               "near box"      => selector_menu$nearbox
-               "far box"       => selector_menu$farbox
-               "everyone"      => selector_menu$all
-               "no one"        => selector_menu$none);
             END
       END
 
@@ -1002,16 +929,6 @@ USER_INTERFACE sd_dialog
             TITLE_FONT = "/sys/dm/fonts/f5x9" ;
             TITLE_BAR = on ;
             TITLE_STRING = "WHICH WAY?" ;
-            ENTRIES =
-              ("left"          => direction_menu$left
-               "right"         => direction_menu$right
-               "in"            => direction_menu$in
-               "out"           => direction_menu$out
-               "zig-zag"       => direction_menu$zigzag
-               "zag-zig"       => direction_menu$zagzig
-               "zig-zig"       => direction_menu$zigzig
-               "zag-zag"       => direction_menu$zagzag
-               "(no direction)"=> direction_menu$no_direction);
             END
       END
 
@@ -1026,12 +943,20 @@ USER_INTERFACE sd_dialog
             TITLE_FONT = "/sys/dm/fonts/f5x9" ;
             TITLE_BAR = on ;
             TITLE_STRING = "HOW MANY?" ;
-            ENTRIES =
-              ("1"        => quantifier_menu$1
-               "2"        => quantifier_menu$2
-               "3"        => quantifier_menu$3
-               "4"        => quantifier_menu$4
-               "5"        => quantifier_menu$5);
+            END
+      END
+
+   tagger_popup := POPUP:
+      leave => <popup_abort_task comp> ;
+      HELP_TEXT = "This call requires a tagging call." ;
+      CONTENTS =
+         NICE_MENU:
+            [m1] => <* select> ;
+            TASK = task$tagger_menu ;
+            BORDER_WIDTH = 50 ;
+            TITLE_FONT = "/sys/dm/fonts/f5x9" ;
+            TITLE_BAR = on ;
+            TITLE_STRING = "SELECT A TAGGING CALL" ;
             END
       END
 
@@ -1244,7 +1169,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$dist4_concept_menu_1 ;
-                     SIZE = ((5 6) (32 6) (100 6)) chars ;
+                     SIZE = ((5 9) (32 9) (100 9)) chars ;
                      END )
                END
             ROW:
@@ -1255,7 +1180,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$dist4_concept_menu_2 ;
-                     SIZE = ((5 6) (32 6) (100 6)) chars ;
+                     SIZE = ((5 9) (32 9) (100 9)) chars ;
                      END )
                END
             ROW:
@@ -1266,7 +1191,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$dist4_concept_menu_3 ;
-                     SIZE = ((5 6) (32 6) (100 6)) chars ;
+                     SIZE = ((5 9) (32 9) (100 9)) chars ;
                      END )
                END
             ROW:
@@ -1277,7 +1202,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$dist4_concept_menu_4 ;
-                     SIZE = ((5 6) (32 6) (100 6)) chars ;
+                     SIZE = ((5 9) (32 9) (100 9)) chars ;
                      END )
                END )
          END

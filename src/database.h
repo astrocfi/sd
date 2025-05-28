@@ -27,16 +27,16 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 48
+#define DATABASE_FORMAT_VERSION 51
 
 
 
 
-/* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh", and
-   "altdeftabh" in dbcomp.c .  These are the infamous "heritable flags".
-   They are used in generally corresponding ways in the "callflagsh" word
-   of a top level callspec_block, the "modifiersh" word of a "by_def_item",
-   and the "modifier_seth" word of a "calldef_block".
+/* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
+   "forcetabh", and "altdeftabh" in dbcomp.c .  These are the infamous
+   "heritable flags".  They are used in generally corresponding ways in
+   the "callflagsh" word of a top level callspec_block, the "modifiersh"
+   word of a "by_def_item", and the "modifier_seth" word of a "calldef_block".
    The constant HERITABLE_FLAG_MASK embraces them.
 */
 
@@ -96,26 +96,27 @@
 #define CFLAG1_PARALLEL_CONC_END          0x00000020
 #define CFLAG1_TAKE_RIGHT_HANDS           0x00000040
 #define CFLAG1_IS_TAG_CALL                0x00000080
-#define CFLAG1_IS_SCOOT_CALL              0x00000100
-#define CFLAG1_IS_STAR_CALL               0x00000200
-#define CFLAG1_SPLIT_LARGE_SETUPS         0x00000400
-#define CFLAG1_FUDGE_TO_Q_TAG             0x00000800
-#define CFLAG1_STEP_TO_WAVE               0x00001000
-#define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00002000
-#define CFLAG1_REAR_BACK_FROM_QTAG        0x00004000
-#define CFLAG1_DONT_USE_IN_RESOLVE        0x00008000
-#define CFLAG1_REQUIRES_SELECTOR          0x00010000
+#define CFLAG1_IS_STAR_CALL               0x00000100
+#define CFLAG1_SPLIT_LARGE_SETUPS         0x00000200
+#define CFLAG1_FUDGE_TO_Q_TAG             0x00000400
+#define CFLAG1_STEP_TO_WAVE               0x00000800
+#define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00001000
+#define CFLAG1_REAR_BACK_FROM_QTAG        0x00002000
+#define CFLAG1_DONT_USE_IN_RESOLVE        0x00004000
+#define CFLAG1_REQUIRES_SELECTOR          0x00008000
 /* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
-#define CFLAG1_NUMBER_MASK                0x000E0000
-#define CFLAG1_NUMBER_BIT                 0x00020000
-#define CFLAG1_SEQUENCE_STARTER           0x00100000
-#define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00200000
-#define CFLAG1_FINISH_MEANS_SKIP_FIRST    0x00400000
-#define CFLAG1_REQUIRES_DIRECTION         0x00800000
-#define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x01000000
-#define CFLAG1_CAN_BE_FAN_OR_YOYO         0x02000000
-#define CFLAG1_NO_CUTTING_THROUGH         0x04000000
-#define CFLAG1_NO_ELONGATION_ALLOWED      0x08000000
+#define CFLAG1_NUMBER_MASK                0x00070000
+#define CFLAG1_NUMBER_BIT                 0x00010000
+#define CFLAG1_SEQUENCE_STARTER           0x00080000
+#define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00100000
+#define CFLAG1_FINISH_MEANS_SKIP_FIRST    0x00200000
+#define CFLAG1_REQUIRES_DIRECTION         0x00400000
+#define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00800000
+#define CFLAG1_CAN_BE_FAN_OR_YOYO         0x01000000
+#define CFLAG1_NO_CUTTING_THROUGH         0x02000000
+#define CFLAG1_NO_ELONGATION_ALLOWED      0x04000000
+#define CFLAG1_REQUIRES_TAG_CALL          0x08000000
+#define CFLAG1_IS_BASE_TAG_CALL           0x10000000
 
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
@@ -143,7 +144,6 @@ typedef enum {
 /* BEWARE!!  This list must track the array "estab" in dbcomp.c . */
 /* BEWARE!!  This list must track the array "setup_attrs" in sdtables.c . */
 /* BEWARE!!  This list must track the array "map_lists" in sdtables.c . */
-/* BEWARE!!  This list must track the array "bigconctab" in sdconc.c . */
 /* BEWARE!!  This list must track the array "printing_tables" in sdutil.c . */
 /* BEWARE!!  The procedure "merge_setups" canonicalizes pairs of setups by their
    order in this list, and will break if it is re-ordered randomly.  See the comments
@@ -168,6 +168,7 @@ typedef enum {
    s_rigger,
    s_spindle,
    s_hrglass,
+   s_dhrglass,
    s_hyperglass,
    s_crosswave,
    s1x8,
@@ -238,6 +239,8 @@ typedef enum {
    b_pspindle,
    b_hrglass,
    b_phrglass,
+   b_dhrglass,
+   b_pdhrglass,
    b_crosswave,
    b_pcrosswave,
    b_1x4,
@@ -323,7 +326,9 @@ typedef enum {
    sq_ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl */
    sq_ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
    sq_split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
-   sq_not_split_dixie               /* 2x2 - invoked without "split" for dixie style */
+   sq_not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
+   sq_8_chain,                      /* 4x1 - setup is single 8 chain */
+   sq_trade_by                      /* 4x1 - setup is single trade by */
 } search_qualifier;
 
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
@@ -386,6 +391,7 @@ typedef enum {
    schema_checkpoint,
    schema_rev_checkpoint,
    schema_ckpt_star,
+   schema_conc_triple_lines,
    schema_lateral_6,       /* Not for public use! */
    schema_vertical_6,      /* Not for public use! */
    schema_sequential,
@@ -435,7 +441,6 @@ typedef enum {
    dfm1_repeat_nm1                    --  seqdefine: take a numeric argument and replicate this part N-1 times
    dfm1_roll_transparent              --  seqdefine: any person who is marked roll-neutral after this call has his previous roll status restored
    dfm1_must_be_tag_call              --  seqdefine: the subject call (or any replacement for it) must be a tagging call
-   dfm1_must_be_scoot_call            --  seqdefine: the subject call (or any replacement for it) must be a scoot-back-type call
    dfm1_cpls_unless_single            --  seqdefine: the do this part as couples, unless this call is being done "single"
                                                                and "single_is_inherited" was set
    INHERITFLAG_DIAMOND               --  concdefine/seqdefine: if original call said "diamond" apply it to this part
@@ -482,11 +487,10 @@ typedef enum {
 #define DFM1_REPEAT_NM1                   0x00004000
 #define DFM1_ROLL_TRANSPARENT             0x00008000
 #define DFM1_MUST_BE_TAG_CALL             0x00010000
-#define DFM1_MUST_BE_SCOOT_CALL           0x00020000
-#define DFM1_CPLS_UNLESS_SINGLE           0x00040000
+#define DFM1_CPLS_UNLESS_SINGLE           0x00020000
 /* This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies. */
-#define DFM1_NUM_SHIFT_MASK               0x00180000
-#define DFM1_NUM_SHIFT_BIT                0x00080000
+#define DFM1_NUM_SHIFT_MASK               0x000C0000
+#define DFM1_NUM_SHIFT_BIT                0x00040000
 
 /* The first 10 predicates (in "pred_table" in preds.c and "predtab" in dbcomp.c)
    take selectors.  The following constant indicates that. */

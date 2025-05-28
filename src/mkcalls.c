@@ -89,6 +89,8 @@ int begin_sizes[] = {
    8,          /* b_pspindle */
    8,          /* b_hrglass */
    8,          /* b_phrglass */
+   8,          /* b_dhrglass */
+   8,          /* b_pdhrglass */
    8,          /* b_crosswave */
    8,          /* b_pcrosswave */
    4,          /* b_1x4 */

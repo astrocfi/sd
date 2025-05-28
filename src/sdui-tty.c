@@ -158,7 +158,7 @@ get_char_input(void)
    else if (c == 130)
       function_key_expansion = "split phantom columns\n";
    else if (c == 131)
-      function_key_expansion = "allow modifications\n";
+      function_key_expansion = "simple modifications\n";
    else if (c == 132)
       function_key_expansion = "<anything>";
    else if (c == 161)
@@ -437,13 +437,17 @@ static char *command_list[] = {
     "keep picture",
     "refresh display",
 /* The following items are the special ones. */
+    "simple modifications",
     "allow modifications",
-    "toggle concept levels"
+    "toggle concept levels",
+    "toggle active phantoms"
 };
 
-#define NUM_SPECIAL_COMMANDS 2
-#define SPECIAL_COMMAND_ALLOW_MODS 0
-#define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 1
+#define NUM_SPECIAL_COMMANDS 4
+#define SPECIAL_COMMAND_SIMPLE_MODS 0
+#define SPECIAL_COMMAND_ALLOW_MODS 1
+#define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
+#define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
 
 
 
@@ -510,6 +514,8 @@ get_user_input(char *prompt, int which)
             }
             else if (user_match.space_ok && matches > 1)
                 pack_and_echo_character(c);
+            else if (diagnostic_mode)
+                goto diagnostic_error;
             else
                 bell();
         }
@@ -525,8 +531,12 @@ get_user_input(char *prompt, int which)
                 current_text_line++;
                 return;
             }
+
+            if (diagnostic_mode)
+                goto diagnostic_error;
+
             /* Tell how bad it is, then redisplay current line. */
-	    if (matches > 0) {
+	   if (matches > 0) {
                 char tempstuff[200];
 
                 (void) sprintf(tempstuff, "  (%d matches, type ? for list)\n", matches);
@@ -546,6 +556,8 @@ get_user_input(char *prompt, int which)
                 while (*p)
                     pack_and_echo_character(*p++);
             }
+            else if (diagnostic_mode)
+                goto diagnostic_error;
             else
                 bell();
         }
@@ -559,18 +571,37 @@ get_user_input(char *prompt, int which)
         else if (isprint(c)) {
             pack_and_echo_character(c);
         }
+        else if (diagnostic_mode) {
+            goto diagnostic_error;
+        }
         else {
             bell();
         }
     }
+
+    diagnostic_error:
+
+    uims_terminate();
+    (void) fputs("\nParsing error during diagnostic.\n", stdout);
+    (void) fputs("\nParsing error during diagnostic.\n", stderr);
+    final_exit(1);
 }
 
 Private call_list_kind current_call_menu;
 
-static char *modifications_prompts[] = {
+static char *banner_prompts[] = {
     (char *) 0,
+    "[AP] ",
+    "[all concepts] ",
+    "[all concepts,AP] ",
     "[simple modifications] ",
-    "[all modifications] "};
+    "[AP,simple modifications] ",
+    "[all concepts,simple modifications] ",
+    "[all concepts,AP,simple modifications] ",
+    "[all modifications] ",
+    "[AP,all modifications] ",
+    "[all concepts,all modifications] ",
+    "[all concepts,AP,all modifications] "};
 
 extern uims_reply
 uims_get_command(mode_kind mode, call_list_kind *call_menu)
@@ -586,6 +617,7 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
     else {
         char prompt_buffer[200];
         char *prompt_ptr;
+        int banner_mode;
 
         check_menu:
 
@@ -597,33 +629,34 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
 
         /* Put any necessary special things into the prompt. */
 
-        if (allowing_all_concepts) {
-            if (allowing_modifications != 0)
-                (void) sprintf(prompt_ptr, "[all concepts]%s%s", modifications_prompts[allowing_modifications], call_menu_prompts[current_call_menu]);
-            else
-                (void) sprintf(prompt_ptr, "[all concepts]%s", call_menu_prompts[current_call_menu]);
-        }
-        else {
-            if (allowing_modifications != 0)
-                (void) sprintf(prompt_ptr, "%s%s", modifications_prompts[allowing_modifications], call_menu_prompts[current_call_menu]);
-            else
-                prompt_ptr = call_menu_prompts[current_call_menu];
-        }
+        banner_mode = (allowing_modifications << 2) |
+                      (allowing_all_concepts ? 2 : 0) |
+                      (using_active_phantoms ? 1 : 0);
+
+        if (banner_mode != 0)
+            (void) sprintf(prompt_ptr, "%s%s", banner_prompts[banner_mode], call_menu_prompts[current_call_menu]);
+        else
+            prompt_ptr = call_menu_prompts[current_call_menu];
 
         get_user_input(prompt_ptr, (int) current_call_menu);
 
         uims_menu_index = user_match.index;
 
         if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
-            if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
+            if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_SIMPLE_MODS) {
                 /* Increment "allowing_modifications" up to a maximum of 2. */
-                /* Actually, we just set it to 2.  Having two grades of modifiability
-                   is very unwieldy. */
-                if (allowing_modifications != 2) allowing_modifications = 2;
+                if (allowing_modifications != 2) allowing_modifications++;
             }
-            else {   /* Must be SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS. */
+            else if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
+                allowing_modifications = 2;
+            }
+            else if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS) {
                 allowing_all_concepts = !allowing_all_concepts;
             }
+            else {   /* Must be SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS. */
+                using_active_phantoms = !using_active_phantoms;
+            }
+
             goto check_menu;
         }
     }
@@ -696,6 +729,14 @@ confirm(char *question)
             return POPUP_ACCEPT;
         }
         put_char(c);
+
+        if (diagnostic_mode) {
+            uims_terminate();
+            (void) fputs("\nParsing error during diagnostic.\n", stdout);
+            (void) fputs("\nParsing error during diagnostic.\n", stderr);
+            final_exit(1);
+        }
+
         put_line("\n");
         put_line("Answer y or n\n");
         current_text_line += 2;

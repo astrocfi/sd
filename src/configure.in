@@ -67,6 +67,12 @@ fi
 
 AC_VERBOSE(got compiler type)
 
+AC_CHECKING(for signed chars)
+
+AC_TEST_PROGRAM([main(){char c; c = 0xFF; if (c<0) exit(0); else exit(1);}],
+,[echo "the char data type on your system is unsigned; my condolences"
+ DEFS="$DEFS -DNO_SIGNED_CHAR"])
+
 AC_CHECKING(whether -I$srcdir is needed)
 AC_TEST_CPP([#include "sd.h"], , DEFS="$DEFS -I$srcdir")
 

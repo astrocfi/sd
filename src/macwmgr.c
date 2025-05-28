@@ -808,10 +808,8 @@ deactivate_front_window(void)
     Window *wp;
 
     wp = active_window();
-    if (wp != NULL) {
+    if (wp != NULL)
         window_activate(wp, FALSE);
-        display_update(); /* refresh sooner */
-    }
 }
 
 /*

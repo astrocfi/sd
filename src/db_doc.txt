@@ -204,6 +204,15 @@ hrglass     |  6  |_____|  2  |
                |_____|_____|
 
 
+             _____       _____       _____
+            |     |_____|     |_____|     |
+            |  0  |     |  3  |     |  1  |
+dhrglass    |_____|  6  |_____|  2  |_____|
+            |     |_____|     |_____|     |
+            |  5  |     |  7  |     |  4  |
+            |_____|     |_____|     |_____|
+
+
                               _____
                              |     |
                              |  2  |
@@ -2116,3 +2125,4 @@ inherit_single
 @r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
 @t        - put optional secondary call substitution here.
 @u        - put ordinal number (1st, 2nd, ...) here.
+@v        - put tagging call here.

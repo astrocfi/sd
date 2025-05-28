@@ -116,9 +116,9 @@ extern void mirror_this(setup *s)
 
 typedef struct {
    int size;                 /* how many people in the maps */
-   int lmask;                /* which people are facing E-W in original double-length setup */
-   int rmask;                /* where in original setup can people be found */
-   int cmask;                /* where in original setup have people collided */
+   uint32 lmask;             /* which people are facing E-W in original double-length setup */
+   uint32 rmask;             /* where in original setup can people be found */
+   uint32 cmask;             /* where in original setup have people collided */
    int source[12];           /* where to get the people */
    int map0[12];             /* where to put the north (or east)-facer */
    int map1[12];             /* where to put the south (or west)-facer */
@@ -675,10 +675,30 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
             if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { q0 |= ~t; q1 |=  t; }
          }
 
-         if (((q0 | restr.assump_both) & (q1 | (restr.assump_both << 1)) & 2) == 0)
-            goto getout;
+         if (((q0 | restr.assump_both) & (q1 | (restr.assump_both << 1)) & 2) != 0)
+            goto restr_failed;
 
-         break;
+         if (restr_thing_ptr->ok_for_assume) {
+            uint32 q0 = 0;
+            uint32 q1 = 0;
+      
+            for (i=0; i<restr_thing_ptr->size; i+=2) {
+               q0 |= ss->people[restr_thing_ptr->map1[i]].id1 | ss->people[restr_thing_ptr->map2[i]].id1;
+               q1 |= ss->people[restr_thing_ptr->map1[i+1]].id1 | ss->people[restr_thing_ptr->map2[i+1]].id1;
+            }
+      
+            if (restr.assump_col & 4) {
+               q1 >>= 3;
+            }
+            else if (restr.assump_col == 1) {
+               q0 >>= 3;
+               q1 >>= 3;
+            }
+      
+            if ((q0|q1) & 1) goto restr_failed;
+         }
+
+         goto getout;
       case chk_1_group:
          q0 = 0; q1 = 0;
 
@@ -2225,18 +2245,17 @@ extern void basic_move(
             if (((p1 & (BIT_PERSON | 3)) != (i1 ^ (BIT_PERSON | 2))) || ((p2 ^ p1) & d_mask))
                fail("People are not in correct position for split call.");
 
-            /* Now do the required transformation.  Due to a minor miracle, the transformations
-               are nearly identical for split square thru and split dixie style.  The only
-               difference is in the numbers we put in "i1" and "i2". */
+            /* Now do the required transformation, if it is a "split square thru" type.
+               For "split dixie style" stuff, do nothing -- the database knows what to do. */
 
-            if (final_concepts & FINAL__SPLIT_DIXIE_APPROVED) { i1 ^= 2; i2 ^= 2; }
-
-            swap_people(ss, i1, i2);
-            copy_rot(ss, i1, ss, i1, 033);
-            copy_rot(ss, i2, ss, i2, 011);
-
-            /* Repair the damage. */
-            newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+            if (!(final_concepts & FINAL__SPLIT_DIXIE_APPROVED)) {
+               swap_people(ss, i1, i2);
+               copy_rot(ss, i1, ss, i1, 033);
+               copy_rot(ss, i2, ss, i2, 011);
+   
+               /* Repair the damage. */
+               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+            }
          }
          break;
       case s_qtag:
@@ -2542,6 +2561,7 @@ extern void basic_move(
       t.assumption = linedefinition->restriction;
       t.assump_col = 0;
       t.assump_both = 0;
+      t.assump_cast = 0;
       if (linedefinition->restriction != cr_none) (void) check_restriction(ss, t, linedefinition->callarray_flags & CAF__RESTR_MASK);
       goodies = linedefinition;
    }
@@ -2581,6 +2601,7 @@ extern void basic_move(
       t.assumption = coldefinition->restriction;
       t.assump_col = 1;
       t.assump_both = 0;
+      t.assump_cast = 0;
       if (coldefinition->restriction != cr_none) (void) check_restriction(ss, t, coldefinition->callarray_flags & CAF__RESTR_MASK);
 
       /* If we have linedefinition also, check for consistency. */

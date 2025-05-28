@@ -35,6 +35,12 @@ and the following external variables:
 
 #include "sd.h"
 
+extern long_boolean move_perhaps_with_active_phantoms(
+   setup *ss,
+   restriction_thing *restr_thing_ptr,
+   setup *result);
+
+extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *result);
 
 
 
@@ -94,9 +100,9 @@ Private restriction_thing two_faced_1x4 = {2, {0, 1},                      {2, 3
 Private restriction_thing two_faced_2x6 = {6, {0, 1, 2, 9, 10, 11},        {3, 4, 5, 6, 7, 8},             {0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 3x3 two-faced lines */
 Private restriction_thing two_faced_4x4_2x8 = {8, {0, 1, 2, 3, 12, 13, 14, 15}, {4, 5, 6, 7, 8, 9, 10, 11},{0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 4x4 two-faced lines */
 
-Private restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, FALSE, chk_box};            /* check for a "real" (walk-and-dodge type) box */
+Private restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
 Private restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
-Private restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE, chk_box};             /* check for a "magic" (split-trade-circulate type) box */
+Private restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
 Private restriction_thing s4x4_wave     = {0,   {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},
                                                 {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
@@ -1566,19 +1572,34 @@ Private void do_concept_do_phantom_1x8(
    than through global_tbonetest. */
 
 {
-   if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
+   if (ss->kind == s2x8) {
+      if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-   if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+      if (parseptr->concept->value.arg3 == 3)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-   if (parseptr->concept->value.arg3 == 3)
-      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+      if (!((parseptr->concept->value.arg3 ^ global_tbonetest) & 1)) {
+         if (global_tbonetest & 1) fail("There are no grand lines here.");
+         else                      fail("There are no grand columns here.");
+      }
 
-   if (!((parseptr->concept->value.arg3 ^ global_tbonetest) & 1)) {
-      if (global_tbonetest & 1) fail("There are no grand lines here.");
-      else                      fail("There are no grand columns here.");
+      divided_setup_move(ss, (*map_lists[s1x8][1])[MPKIND__SPLIT][1], (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
    }
+   else if (ss->kind == s1x16) {
+      if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-   divided_setup_move(ss, (*map_lists[s1x8][1])[MPKIND__SPLIT][1], (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+      if (parseptr->concept->value.arg3 == 3)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+      if (!((parseptr->concept->value.arg3 ^ global_tbonetest) & 1)) {
+         if (global_tbonetest & 1) fail("There are no grand lines here.");
+         else                      fail("There are no grand columns here.");
+      }
+
+      divided_setup_move(ss, (*map_lists[s1x8][1])[MPKIND__SPLIT][0], (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+   }
+   else
+      fail("Must have a 2x8 or 1x16 setup for this concept.");
 }
 
 
@@ -1730,208 +1751,23 @@ Private void do_concept_mirror(
 }
 
 
-Private void do_concept_assume_waves(
+
+/* This returns TRUE if it can't do it because the assumption isn't specific enough.
+   In such a case, the call was not executed.  If the user had said "with active phantoms",
+   that is an error.  But if we are only doing this because the automatic active phantoms
+   switch is on, we will just ignore it. */
+
+extern long_boolean fill_active_phantoms_and_move(
    setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   assumption_thing t;
-   restriction_thing *restr_thing_ptr;
-   int i;
-
-   /* "Assume normal casts" is special. */
-
-   if (parseptr->concept->value.arg1 == cr_alwaysfail) {
-      if (ss->cmd.cmd_assume.assump_cast)
-         fail("Redundant or conflicting assumptions.");
-      ss->cmd.cmd_assume.assump_cast = 1;
-      goto dont_check_it;
-   }
-
-   /* Check that there actually are some phantoms needing to be filled in.
-      If user specifically said there are phantoms, we believe it. */
-
-   if (!(ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
-      for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
-         if (!ss->people[i].id1) goto found_phan;
-      }
-   
-      fail("Don't know where the phantoms should be assumed to be.");
-   }
-
-   found_phan:
-
-   /* We wish it were possible to encode this entire word neatly in the concept
-      table, but, unfortunately, the way C struct and union initializers work
-      makes it impossible. */
-
-   t.assumption = (call_restriction) parseptr->concept->value.arg1;
-   t.assump_col = parseptr->concept->value.arg2;
-   t.assump_both = parseptr->concept->value.arg3;
-   t.assump_cast = ss->cmd.cmd_assume.assump_cast;
-
-   /* Need to check any pre-existing assumption. */
-
-   if (ss->cmd.cmd_assume.assumption == cr_none) ;   /* If no pre-existing assumption, OK. */
-   else {     /* We have something, and must check carefully. */
-      /* First, an exact match is allowed. */
-      if (         ss->cmd.cmd_assume.assumption == t.assumption &&
-                   ss->cmd.cmd_assume.assump_col == t.assump_col &&
-                   ss->cmd.cmd_assume.assump_both == t.assump_both) ;
-      /* We also allow certain tightenings of existing assumptions. */
-      else if (  ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
-                  (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0))
-                           &&
-                   (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright)) ;
-      else
-         fail("Redundant or conflicting assumptions.");
-   }
-
-   ss->cmd.cmd_assume = t;
-
-   /* The restrictions mean different things in different setups.  In some setups, they
-      mean things that are unsuitable for the "assume" concept.  In some setups they
-      take no action at all.  So we must check the setups on a case-by-case basis. */
-
-   if (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright) {
-      /* These assumptions work independently of the "assump_col" number. */
-      switch (ss->kind) {
-         case s_qtag: goto check_it;
-      }
-   }
-   else if (t.assump_col == 2) {
-      /* This is a special assumption -- "assume miniwaves" or "assume inverted boxes". */
-
-      if (t.assumption == cr_wave_only) {
-         switch (ss->kind) {     /* "assume miniwaves" */
-            case s1x2: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_magic_only) {
-         switch (ss->kind) {     /* "assume inverted boxes" */
-            case s2x2: goto check_it;
-         }
-      }
-   }
-   else if (t.assump_col == 1) {
-      /* This is a "column-like" assumption. */
-
-      if (t.assumption == cr_wave_only) {
-         switch (ss->kind) {     /* "assume normal columns" */
-            case s2x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_magic_only) {
-         switch (ss->kind) {     /* "assume magic columns" */
-            case s2x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_2fl_only) {
-         switch (ss->kind) {     /* "assume DPT/CDPT" */
-            case s2x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_li_lo) {
-         switch (ss->kind) {     /* "assume 8 chain" or "assume trade by" */
-            case s2x4: goto check_it;
-         }
-      }
-   }
-   else {
-      /* This is a "line-like" assumption. */
-
-      if (t.assumption == cr_wave_only) {
-         switch (ss->kind) {     /* "assume waves" */
-            case s2x4: case s3x4:  case s2x8:  case s2x6:
-            case s1x8: case s1x10: case s1x12: case s1x14: case s1x16:
-            case s1x6: case s1x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_2fl_only) {
-         switch (ss->kind) {     /* "assume two-faced lines" */
-            case s2x4:  case s3x4:  case s1x8:  case s1x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_magic_only) {
-         switch (ss->kind) {     /* "assume inverted lines" */
-            case s2x4:  case s1x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_1fl_only) {
-         switch (ss->kind) {     /* "assume one-faced lines" */
-            case s1x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_li_lo) {
-         switch (ss->kind) {     /* "assume lines in" or "assume lines out" */
-            case s2x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_diamond_like) {
-         switch (ss->kind) {
-            case s_qtag: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_qtag_like) {
-         switch (ss->kind) {
-            case s_qtag: goto check_it;
-         }
-      }
-   }
-
-   fail("This assumption is not legal from this formation.");
-
-   check_it:
-
-   restr_thing_ptr = check_restriction(ss, t, 99);
-
-   if (restr_thing_ptr && restr_thing_ptr->ok_for_assume) {
-      uint32 q0 = 0;
-      uint32 q1 = 0;
-
-      switch (restr_thing_ptr->check) {
-         case chk_wave:
-            for (i=0; i<restr_thing_ptr->size; i+=2)
-               q0 |= ss->people[restr_thing_ptr->map1[i]].id1 | ss->people[restr_thing_ptr->map2[i]].id1;
-               q1 |= ss->people[restr_thing_ptr->map1[i+1]].id1 | ss->people[restr_thing_ptr->map2[i+1]].id1;
-
-            if (ss->cmd.cmd_assume.assump_col & 4) {
-               q1 >>= 3;
-            }
-            else if (ss->cmd.cmd_assume.assump_col == 1) {
-               q0 >>= 3;
-               q1 >>= 3;
-            }
-
-            if ((q0|q1) & 1) fail("The people do not satisfy the assumption.");
-      }
-   }
-
-   dont_check_it:
-
-   move(ss, FALSE, result);
-}
-
-
-
-
-Private void do_concept_active_phantoms(
-   setup *ss,
-   parse_block *parseptr,
+   restriction_thing *restr_thing_ptr,
    setup *result)
 {
    int phantom_count = 0;
    int i;
    uint32 pdir, qdir, pdirodd, qdirodd;
    unsigned int bothp;
-   restriction_thing *restr_thing_ptr;
    uint32 dirtest1 = 0;
    uint32 dirtest2 = 0;
-
-   if (ss->cmd.cmd_assume.assump_cast)
-      fail("Don't use \"active phantoms\" with \"assume normal casts\".");
-
-   restr_thing_ptr = get_restriction_thing(ss->kind, ss->cmd.cmd_assume);
 
    if (restr_thing_ptr && restr_thing_ptr->ok_for_assume) {
       switch (restr_thing_ptr->check) {
@@ -2078,7 +1914,7 @@ Private void do_concept_active_phantoms(
       }
    }
 
-   fail("Sorry, this type of assumption and setup not supported.");
+   return TRUE;   /* We couldn't do it -- the assumption is not specific enough, like "general diamonds". */
 
    finished_filling_in:
 
@@ -2091,6 +1927,212 @@ Private void do_concept_active_phantoms(
       if (result->people[i].id1 & BIT_ACT_PHAN)
          result->people[i].id1 = 0;
    }
+
+   return FALSE;
+}
+
+
+
+extern long_boolean move_perhaps_with_active_phantoms(
+   setup *ss,
+   restriction_thing *restr_thing_ptr,
+   setup *result)
+{
+   if (using_active_phantoms) {
+      if (fill_active_phantoms_and_move(ss, restr_thing_ptr, result)) {
+         /* Active phantoms couldn't be used.  Just do the call the way it is.
+            This does not count as a use of active phantoms, so don't set the flag. */
+         move(ss, FALSE, result);
+      }
+      else
+         result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
+   }
+   else {
+      move(ss, FALSE, result);
+      result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
+   }
+}
+
+
+
+
+Private void do_concept_assume_waves(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   assumption_thing t;
+   restriction_thing *restr_thing_ptr;
+   int i;
+
+   /* "Assume normal casts" is special. */
+
+   if (parseptr->concept->value.arg1 == cr_alwaysfail) {
+      if (ss->cmd.cmd_assume.assump_cast)
+         fail("Redundant or conflicting assumptions.");
+      ss->cmd.cmd_assume.assump_cast = 1;
+      move(ss, FALSE, result);
+      return;
+   }
+
+   /* Check that there actually are some phantoms needing to be filled in.
+      If user specifically said there are phantoms, we believe it. */
+
+   if (!(ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
+      for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
+         if (!ss->people[i].id1) goto found_phan;
+      }
+   
+      fail("Don't know where the phantoms should be assumed to be.");
+   }
+
+   found_phan:
+
+   /* We wish it were possible to encode this entire word neatly in the concept
+      table, but, unfortunately, the way C struct and union initializers work
+      makes it impossible. */
+
+   t.assumption = (call_restriction) parseptr->concept->value.arg1;
+   t.assump_col = parseptr->concept->value.arg2;
+   t.assump_both = parseptr->concept->value.arg3;
+   t.assump_cast = ss->cmd.cmd_assume.assump_cast;
+
+   /* Need to check any pre-existing assumption. */
+
+   if (ss->cmd.cmd_assume.assumption == cr_none) ;   /* If no pre-existing assumption, OK. */
+   else {     /* We have something, and must check carefully. */
+      /* First, an exact match is allowed. */
+      if (         ss->cmd.cmd_assume.assumption == t.assumption &&
+                   ss->cmd.cmd_assume.assump_col == t.assump_col &&
+                   ss->cmd.cmd_assume.assump_both == t.assump_both) ;
+      /* We also allow certain tightenings of existing assumptions. */
+      else if (  ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
+                  (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0))
+                           &&
+                   (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright)) ;
+      else
+         fail("Redundant or conflicting assumptions.");
+   }
+
+   ss->cmd.cmd_assume = t;
+
+   /* The restrictions mean different things in different setups.  In some setups, they
+      mean things that are unsuitable for the "assume" concept.  In some setups they
+      take no action at all.  So we must check the setups on a case-by-case basis. */
+
+   if (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright) {
+      /* These assumptions work independently of the "assump_col" number. */
+      switch (ss->kind) {
+         case s_qtag: goto check_it;
+      }
+   }
+   else if (t.assump_col == 2) {
+      /* This is a special assumption -- "assume miniwaves", "assume normal boxes", or "assume inverted boxes". */
+
+      if (t.assumption == cr_wave_only) {
+         switch (ss->kind) {     /* "assume miniwaves" or "assume normal boxes" */
+            case s1x2: goto check_it;
+            case s2x2: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_magic_only) {
+         switch (ss->kind) {     /* "assume inverted boxes" */
+            case s2x2: goto check_it;
+         }
+      }
+   }
+   else if (t.assump_col == 1) {
+      /* This is a "column-like" assumption. */
+
+      if (t.assumption == cr_wave_only) {
+         switch (ss->kind) {     /* "assume normal columns" */
+            case s2x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_magic_only) {
+         switch (ss->kind) {     /* "assume magic columns" */
+            case s2x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_2fl_only) {
+         switch (ss->kind) {     /* "assume DPT/CDPT" */
+            case s2x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_li_lo) {
+         switch (ss->kind) {     /* "assume 8 chain" or "assume trade by" */
+            case s2x4: goto check_it;
+         }
+      }
+   }
+   else {
+      /* This is a "line-like" assumption. */
+
+      if (t.assumption == cr_wave_only) {
+         switch (ss->kind) {     /* "assume waves" */
+            case s2x4: case s3x4:  case s2x8:  case s2x6:
+            case s1x8: case s1x10: case s1x12: case s1x14: case s1x16:
+            case s1x6: case s1x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_2fl_only) {
+         switch (ss->kind) {     /* "assume two-faced lines" */
+            case s2x4:  case s3x4:  case s1x8:  case s1x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_magic_only) {
+         switch (ss->kind) {     /* "assume inverted lines" */
+            case s2x4:  case s1x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_1fl_only) {
+         switch (ss->kind) {     /* "assume one-faced lines" */
+            case s1x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_li_lo) {
+         switch (ss->kind) {     /* "assume lines in" or "assume lines out" */
+            case s2x4: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_diamond_like) {
+         switch (ss->kind) {
+            case s_qtag: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_qtag_like) {
+         switch (ss->kind) {
+            case s_qtag: goto check_it;
+         }
+      }
+   }
+
+   fail("This assumption is not legal from this formation.");
+
+   check_it:
+
+   restr_thing_ptr = check_restriction(ss, ss->cmd.cmd_assume, 99);
+
+   move_perhaps_with_active_phantoms(ss, restr_thing_ptr, result);
+}
+
+
+
+
+Private void do_concept_active_phantoms(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   restriction_thing *restr_thing_ptr;
+
+   if (ss->cmd.cmd_assume.assump_cast)
+      fail("Don't use \"active phantoms\" with \"assume normal casts\".");
+
+   restr_thing_ptr = get_restriction_thing(ss->kind, ss->cmd.cmd_assume);
+
+   if (fill_active_phantoms_and_move(ss, restr_thing_ptr, result))
+      fail("This assumption is not specific enough to fill in active phantoms.");
 }
 
 
@@ -2148,13 +2190,13 @@ Private void do_concept_crazy(
    if (cmd.cmd_frac_flags != 0 && (cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
       /* The fractions were meant for us, not the subject call. */
 
-      if (cmd.cmd_frac_flags & 0200000) {
+      if (cmd.cmd_frac_flags & 0x00200000) {
          /* New regime. */
 
-         if ((cmd.cmd_frac_flags & 0307777) != 0200111)  /* Demand that only "N" be present. */
+         if ((cmd.cmd_frac_flags & 0x0030FFFF) != 0x00200111)  /* Demand that only "N" be present. */
             fail("\"crazy\" is not allowed with fractional or reverse-order concepts.");
    
-         i = ((cmd.cmd_frac_flags >> 12) & 7) - 1;
+         i = ((cmd.cmd_frac_flags >> 16) & 15) - 1;
    
          if (i < 0)
             i = 0;     /* We aren't doing parts after all. */
@@ -2170,11 +2212,11 @@ Private void do_concept_crazy(
          /* We handle a few things in the old regime, pending switchover to the new regime.
             This is to allow things like "do the 3rd part stable, crazy mix". */
 
-         if ((cmd.cmd_frac_flags & (CMD_FRAC__FRACTIONALIZE_BIT*0770)) == 0) {
-            highlimit = (cmd.cmd_frac_flags / CMD_FRAC__FRACTIONALIZE_BIT) & 7;  /* Do first N parts. */
+         if ((cmd.cmd_frac_flags & 0770) == 0) {
+            highlimit = cmd.cmd_frac_flags & 7;  /* Do first N parts. */
          }
-         else if ((cmd.cmd_frac_flags & (CMD_FRAC__FRACTIONALIZE_BIT*0770)) == CMD_FRAC__FRACTIONALIZE_BIT*0100) {
-            i = (cmd.cmd_frac_flags / CMD_FRAC__FRACTIONALIZE_BIT) & 7;  /* Do stuff after part N. */
+         else if ((cmd.cmd_frac_flags & 0770) == 0100) {
+            i = cmd.cmd_frac_flags & 7;  /* Do stuff after part N. */
          }
          else
             fail("Sorry, can't do \"crazy\" with this fractionalization concept.");
@@ -2250,11 +2292,13 @@ Private void do_concept_fan_or_yoyo(
 
    /* If this is "yoyo", do an "arm turn 3/4". */
    if (parseptr->concept->value.arg1 != 0) {
-      selector_kind saved_selector = current_selector;
-      direction_kind saved_direction = current_direction;
       uint32 saved_number_fields = current_number_fields;
+      selector_kind saved_selector = current_selector;
+      int saved_tagger = current_tagger;
+      direction_kind saved_direction = current_direction;
 
       current_selector = parseptrcopy->selector;
+      current_tagger = parseptrcopy->tagger;
       current_direction = parseptrcopy->direction;
       current_number_fields = parseptrcopy->number;
 
@@ -2268,6 +2312,7 @@ Private void do_concept_fan_or_yoyo(
       tempsetup = *result;
 
       current_selector = saved_selector;
+      current_tagger = saved_tagger;
       current_direction = saved_direction;
       current_number_fields = saved_number_fields;
    }
@@ -2275,7 +2320,7 @@ Private void do_concept_fan_or_yoyo(
    /* Now just skip the first part of the call. */
    /* Set the fractionalize field to [1 0 1]. */
    tempsetup.cmd = ss->cmd;
-   tempsetup.cmd.cmd_frac_flags |= ((64 | 1)*CMD_FRAC__FRACTIONALIZE_BIT);
+   tempsetup.cmd.cmd_frac_flags |= (64 | 1);
    tempsetup.cmd.prior_elongation_bits = 0;
    move(&tempsetup, FALSE, result);
    finalresultflags |= result->result_flags;
@@ -2832,14 +2877,13 @@ Private void do_concept_do_each_1x4(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind == s2x4) {
-      divided_setup_move(ss, (*map_lists[s1x4][1])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+   switch (ss->kind) {
+      case s2x4: case s1x8:
+         (void) do_simple_split(ss, TRUE, result);
+         break;
+      default:
+         fail("Need a 2x4 or 1x8 setup for this concept.");
    }
-   else if (ss->kind == s1x8) {
-      divided_setup_move(ss, (*map_lists[s1x4][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
-   }
-   else
-      fail("Need a 2x4 or 1x8 setup for this concept.");
 }
 
 
@@ -3080,6 +3124,100 @@ Private void do_concept_ferris(
 }
 
 
+Private void do_concept_overlapped_diamond(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   setup temp;
+   map_thing *map;
+
+   /* Split an 8 person setup. */
+   if (setup_attrs[ss->kind].setup_limits == 7) {
+      ss->cmd.parseptr = parseptr;    /* Reset it to execute this same concept again, until it doesn't have to split any more. */
+      if (do_simple_split(ss, TRUE, result))
+         fail("Not in correct setup for overlapped diamond/line concept.");
+      return;
+   }
+
+   switch (ss->kind) {
+      case s1x4:
+         if (parseptr->concept->value.arg1 & 1)
+            fail("Must be in a diamond.");
+
+         temp = *ss;
+         (void) copy_person(&temp, 4, ss, 2);
+         (void) copy_person(&temp, 5, ss, 3);
+         clear_person(&temp, 2);
+         clear_person(&temp, 3);
+         clear_person(&temp, 6);
+         clear_person(&temp, 7);
+         map = (*map_lists[sdmd][1])[MPKIND__DMD_STUFF][0];
+         goto fixup;
+      case sdmd:
+         if (!(parseptr->concept->value.arg1 & 1))
+            fail("Must be in a line.");
+         if (parseptr->concept->value.arg1 == 3)
+            ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+         temp = *ss;
+         (void) copy_person(&temp, 3, ss, 1);
+         (void) copy_person(&temp, 4, ss, 2);
+         (void) copy_person(&temp, 7, ss, 3);
+         clear_person(&temp, 1);
+         clear_person(&temp, 2);
+         clear_person(&temp, 5);
+         clear_person(&temp, 6);
+         map = (*map_lists[s1x4][1])[MPKIND__DMD_STUFF][0];
+         goto fixup;
+   }
+
+   fail("Not in correct setup for overlapped diamond/line concept.");
+
+   fixup:
+
+   temp.kind = s_thar;
+   canonicalize_rotation(&temp);
+   divided_setup_move(&temp, map, phantest_ok, TRUE, result);
+
+   if (result->kind == s2x2)
+      return;
+   else if (result->kind != s_thar)
+      fail("Something horrible happened during overlapped diamond call.");
+
+   if ((result->people[2].id1 | result->people[3].id1 | result->people[6].id1 | result->people[7].id1) == 0) {
+      result->kind = s1x4;
+      (void) copy_person(result, 2, result, 4);
+      (void) copy_person(result, 3, result, 5);
+   }
+   else if ((result->people[0].id1 | result->people[1].id1 | result->people[4].id1 | result->people[5].id1) == 0) {
+      result->kind = s1x4;
+      result->rotation++;    /* Set it to 1, this is canonical. */
+      (void) copy_rot(result, 0, result, 2, 033);
+      (void) copy_rot(result, 1, result, 3, 033);
+      (void) copy_rot(result, 2, result, 6, 033);
+      (void) copy_rot(result, 3, result, 7, 033);
+   }
+   else if ((result->people[1].id1 | result->people[2].id1 | result->people[5].id1 | result->people[6].id1) == 0) {
+      result->kind = sdmd;
+      (void) copy_person(result, 1, result, 3);
+      (void) copy_person(result, 2, result, 4);
+      (void) copy_person(result, 3, result, 7);
+   }
+   else if ((result->people[0].id1 | result->people[3].id1 | result->people[4].id1 | result->people[7].id1) == 0) {
+      result->kind = sdmd;
+      result->rotation++;    /* Set it to 1, this is canonical. */
+      (void) copy_rot(result, 0, result, 2, 033);
+      (void) copy_rot(result, 3, result, 1, 033);
+      (void) copy_rot(result, 1, result, 5, 033);
+      (void) copy_rot(result, 2, result, 6, 033);
+   }
+   else
+      fail("Can't put the setups back together.");
+}
+
+
+
 Private void do_concept_all_8(
    setup *ss,
    parse_block *parseptr,
@@ -3098,8 +3236,8 @@ Private void do_concept_all_8(
 
       if (
             ss->kind != s4x4 ||
-            (  ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
-               ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1 != 0) ||
+            (( ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
+               ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1) != 0) ||
             (ss->people[ 1].id1 != 0 && ((ss->people[ 1].id1 ^ d_west) & d_mask) != 0) ||
             (ss->people[ 2].id1 != 0 && ((ss->people[ 2].id1 ^ d_west) & d_mask) != 0) ||
             (ss->people[ 5].id1 != 0 && ((ss->people[ 5].id1 ^ d_north) & d_mask) != 0) ||
@@ -3262,14 +3400,15 @@ Private void do_concept_meta(
    if (key == 5) {
       /* This is "reverse order". */
 
-      /* We don't allow stacking with the old regime. */
-      if (ss->cmd.cmd_frac_flags & CMD_FRAC__FRACTIONALIZE_MASK)
-         fail("Can't stack meta or fractional concepts.");
+      if (!(ss->cmd.cmd_frac_flags & 0x00200000)) {
+         /* We don't allow stacking with the old regime. */
+         if (ss->cmd.cmd_frac_flags)
+            fail("Can't stack meta or fractional concepts.");
+   
+         ss->cmd.cmd_frac_flags = 0x00200111;
+      }
 
-      if ((ss->cmd.cmd_frac_flags & 0200000) == 0)
-         ss->cmd.cmd_frac_flags = 0200111;
-
-      ss->cmd.cmd_frac_flags ^= 0100000;
+      ss->cmd.cmd_frac_flags ^= 0x00100000;
       move(ss, FALSE, result);
       return;
    }
@@ -3280,7 +3419,7 @@ Private void do_concept_meta(
       if (ss->cmd.cmd_frac_flags)
          fail("Can't stack meta or fractional concepts.");
       /* Set the fractionalize field to [3 0 1]. */
-      ss->cmd.cmd_frac_flags |= ((192|1)*CMD_FRAC__FRACTIONALIZE_BIT);
+      ss->cmd.cmd_frac_flags |= (192|1);
       move(ss, FALSE, result);
       normalize_setup(result, simple_normalize);
       return;
@@ -3342,7 +3481,7 @@ Private void do_concept_meta(
       /* Do the call with the concept. */
       /* Set the fractionalize field to [0 0 1].  This will execute the first part of the call. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= CMD_FRAC__FRACTIONALIZE_BIT;
+      tttt.cmd.cmd_frac_flags |= 1;
       tttt.cmd.cmd_misc_flags |= craziness_restraint;
       tttt.cmd.parseptr = parseptrcopy;
       move(&tttt, FALSE, result);
@@ -3353,7 +3492,7 @@ Private void do_concept_meta(
       /* Do the call without the concept. */
       /* Set the fractionalize field to [1 0 1].  This will execute the rest of the call. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= (65*CMD_FRAC__FRACTIONALIZE_BIT);
+      tttt.cmd.cmd_frac_flags |= 65;
       tttt.cmd.parseptr = parseptrcopy->next;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
@@ -3372,8 +3511,8 @@ Private void do_concept_meta(
          fail("Can't stack meta or fractional concepts.");
 
       /* Initialize. */
-      if ((ss->cmd.cmd_frac_flags & 0200000) == 0)
-         ss->cmd.cmd_frac_flags = 0200111;
+      if ((ss->cmd.cmd_frac_flags & 0x00200000) == 0)
+         ss->cmd.cmd_frac_flags = 0x00200111;
    
       index = 0;
 
@@ -3406,7 +3545,7 @@ Private void do_concept_meta(
             (if that is the subject concept) that fractions are allowed, and they
             are to be applied to the first call only. */
          tttt.cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
-         tttt.cmd.cmd_frac_flags |= index << 12;
+         tttt.cmd.cmd_frac_flags |= index << 16;
          tttt.cmd.parseptr = parseptrcopycopy;
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
@@ -3456,7 +3595,7 @@ Private void do_concept_nth_part(
          tttt = *result;
          /* Set the fractionalize field to [0 0 parts-to-do-first]. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags |= ((parseptr->number-1)*CMD_FRAC__FRACTIONALIZE_BIT);
+         tttt.cmd.cmd_frac_flags |= (parseptr->number-1);
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
@@ -3466,7 +3605,7 @@ Private void do_concept_nth_part(
       tttt = *result;
       /* Set the fractionalize field to [1 0 parts-to-do-first+1]. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= ((64|parseptr->number)*CMD_FRAC__FRACTIONALIZE_BIT);
+      tttt.cmd.cmd_frac_flags |= (64|parseptr->number);
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3497,7 +3636,7 @@ Private void do_concept_nth_part(
          /* Skip over the concept. */
          /* Set the fractionalize field to [0 0 parts-to-do-normally]. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags |= ((parseptr->number-1)*CMD_FRAC__FRACTIONALIZE_BIT);
+         tttt.cmd.cmd_frac_flags |= (parseptr->number-1);
          tttt.cmd.parseptr = parseptrcopy->next;
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
@@ -3511,7 +3650,7 @@ Private void do_concept_nth_part(
       /* Set the fractionalize field to do the Nth part, using the new regime. */
       tttt.cmd = ss->cmd;
       tttt.cmd.parseptr = parseptrcopy;
-      tttt.cmd.cmd_frac_flags = 0200111 | (parseptr->number << 12);
+      tttt.cmd.cmd_frac_flags = 0x00200111 | (parseptr->number << 16);
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3527,7 +3666,7 @@ Private void do_concept_nth_part(
          /* Set the fractionalize field to [1 0 parts-to-do-normally+1]. */
          tttt.cmd = ss->cmd;
          tttt.cmd.parseptr = parseptrcopy->next;
-         tttt.cmd.cmd_frac_flags |= ((64|parseptr->number)*CMD_FRAC__FRACTIONALIZE_BIT);
+         tttt.cmd.cmd_frac_flags |= (64|parseptr->number);
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
@@ -3547,6 +3686,9 @@ Private void do_concept_replace_nth_part(
    unsigned int finalresultflags = 0;
    int stopindex;
 
+   if (ss->cmd.cmd_frac_flags)
+      fail("Can't stack meta or fractional concepts.");
+
    *result = *ss;
 
    /* Do the initial part, if any. */
@@ -3561,7 +3703,7 @@ Private void do_concept_replace_nth_part(
       /* Skip over the concept. */
       /* Set the fractionalize field to [0 0 parts-to-do-normally]. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= ((stopindex)*CMD_FRAC__FRACTIONALIZE_BIT);
+      tttt.cmd.cmd_frac_flags |= stopindex;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3583,7 +3725,7 @@ Private void do_concept_replace_nth_part(
    /* Skip over the concept. */
    /* Set the fractionalize field to [1 0 parts-to-do-normally+1]. */
    tttt.cmd = ss->cmd;
-   tttt.cmd.cmd_frac_flags |= ((64|parseptr->number)*CMD_FRAC__FRACTIONALIZE_BIT);
+   tttt.cmd.cmd_frac_flags |= (64|parseptr->number);
    move(&tttt, FALSE, result);
    finalresultflags |= result->result_flags;
    normalize_setup(result, simple_normalize);
@@ -3609,8 +3751,8 @@ Private void do_concept_interlace(
       fail("Can't stack meta or fractional concepts.");
 
    /* Initialize. */
-   if ((ss->cmd.cmd_frac_flags & 0200000) == 0)
-      ss->cmd.cmd_frac_flags = 0200111;
+   if ((ss->cmd.cmd_frac_flags & 0x00200000) == 0)
+      ss->cmd.cmd_frac_flags = 0x00200111;
 
    *result = *ss;
    result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
@@ -3622,7 +3764,7 @@ Private void do_concept_interlace(
          /* Do the indicated part of the first call. */
          save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
          result->cmd = ss->cmd;
-         result->cmd.cmd_frac_flags |= index << 12;
+         result->cmd.cmd_frac_flags |= index << 16;
          result->cmd.prior_elongation_bits = save_elongation;
          do_call_in_series(result, FALSE, TRUE, FALSE);
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
@@ -3636,7 +3778,7 @@ Private void do_concept_interlace(
          save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
          /* Do the indicated part of the second call. */
          result->cmd = ss->cmd;
-         result->cmd.cmd_frac_flags |= index << 12;
+         result->cmd.cmd_frac_flags |= index << 16;
          result->cmd.parseptr = parseptr->subsidiary_root;
          result->cmd.prior_elongation_bits = save_elongation;
          do_call_in_series(result, FALSE, TRUE, FALSE);
@@ -3696,24 +3838,25 @@ Private void do_concept_fractional(
       do_call_in_series(result, FALSE, TRUE, FALSE);
    }
 
-   /* We don't allow stacking with the old regime. */
-   if (ss->cmd.cmd_frac_flags & CMD_FRAC__FRACTIONALIZE_MASK)
-      fail("Can't stack meta or fractional concepts.");
+   if (!(ss->cmd.cmd_frac_flags & 0x00200000)) {
+      /* We don't allow stacking with the old regime. */
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't stack meta or fractional concepts.");
 
-   if ((ss->cmd.cmd_frac_flags & 0200000) == 0)
-      ss->cmd.cmd_frac_flags = 0200111;
+      ss->cmd.cmd_frac_flags = 0x00200111;
+   }
 
    /* Check that user isn't doing something stupid. */
    if (numer <= 0 || numer >= denom)
       fail("Illegal fraction.");
 
-   s_numer = (ss->cmd.cmd_frac_flags & 07000) >> 9;        /* Start point. */
-   s_denom = (ss->cmd.cmd_frac_flags & 0700) >> 6;
-   e_numer = (ss->cmd.cmd_frac_flags & 070) >> 3;          /* Stop point. */
-   e_denom = (ss->cmd.cmd_frac_flags & 07);
+   s_numer = (ss->cmd.cmd_frac_flags & 0xF000) >> 12;        /* Start point. */
+   s_denom = (ss->cmd.cmd_frac_flags & 0xF00) >> 8;
+   e_numer = (ss->cmd.cmd_frac_flags & 0xF0) >> 4;          /* Stop point. */
+   e_denom = (ss->cmd.cmd_frac_flags & 0xF);
 
    /* Xor the "reverse" bit with the first/last fraction indicator. */
-   if ((parseptr->concept->value.arg1 ^ (ss->cmd.cmd_frac_flags >> 15)) & 1) {
+   if ((parseptr->concept->value.arg1 ^ (ss->cmd.cmd_frac_flags >> 20)) & 1) {
       /* This is "last fraction". */
 
       s_numer = s_numer*numer + s_denom*(denom-numer);
@@ -3740,10 +3883,10 @@ Private void do_concept_fractional(
    e_numer /= divisor;
    e_denom /= divisor;
 
-   if (s_numer > 7 || s_denom > 7 || e_numer > 7 || e_denom > 7)
+   if (s_numer > 15 || s_denom > 15 || e_numer > 15 || e_denom > 15)
       fail("Fractions are too complicated.");
 
-   ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~07777) | (s_numer<<9) | (s_denom<<6) | (e_numer<<3) | e_denom;
+   ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | (s_numer<<12) | (s_denom<<8) | (e_numer<<4) | e_denom;
    ss->cmd.parseptr = parseptr->next;
    ss->cmd.callspec = NULLCALLSPEC;
    ss->cmd.cmd_final_flags = 0;
@@ -3794,7 +3937,7 @@ Private void do_concept_so_and_so_begin(
    normalize_setup(&setup1, normalize_before_isolated_call);
    normalize_setup(&setup2, normalize_before_isolated_call);
    /* Set the fractionalize field to [0 0 1].  This will execute the first part of the call. */
-   setup1.cmd.cmd_frac_flags |= CMD_FRAC__FRACTIONALIZE_BIT;
+   setup1.cmd.cmd_frac_flags |= 1;
 
    /* The selected people execute the first part of the call. */
 
@@ -3813,7 +3956,7 @@ Private void do_concept_so_and_so_begin(
    the_setups[1].cmd = ss->cmd;   /* Just in case it got messed up, which shouldn't have happened. */
 
    /* Set the fractionalize field to [1 0 1].  This will execute the rest of the call. */
-   the_setups[1].cmd.cmd_frac_flags |= (65*CMD_FRAC__FRACTIONALIZE_BIT);
+   the_setups[1].cmd.cmd_frac_flags |= 65;
    move(&the_setups[1], FALSE, result);
    finalresultflags |= result->result_flags;
    normalize_setup(result, simple_normalize);
@@ -3934,8 +4077,8 @@ extern long_boolean do_big_concept(
       ss->cmd.parseptr has the stuff, including the concept we are going to try to do.
       ss->cmd.callspec is null.
       ss->cmd.cmd_misc_flags has lots of stuff.
-      ss->cmd.cmd_final_flags is nearly null.  However, it may contain FINAL__MUST_BE_TAG
-         or FINAL__MUST_BE_SCOOT.  The rest of this file used to just ignore those,
+      ss->cmd.cmd_final_flags is nearly null.  However, it may contain FINAL__MUST_BE_TAG.
+         The rest of this file used to just ignore those,
          passing zero for the final commands.   This may be a bug.  In any case, we
          have now preserved even those two flags in cmd_final_flags, so things can
          possibly get better. */
@@ -4201,7 +4344,7 @@ concept_table_item concept_table[] = {
    /* concept_frac_crazy */               {CONCPROP__USE_NUMBER,                                                                   do_concept_crazy},
    /* concept_fan_or_yoyo */              {0,                                                                                      do_concept_fan_or_yoyo},
    /* concept_c1_phantom */               {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_c1_phantom_move},
-   /* concept_grand_working */            {CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                   do_concept_grand_working},
+   /* concept_grand_working */            {CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                                       do_concept_grand_working},
    /* concept_centers_or_ends */          {0,                                                                                      do_concept_centers_or_ends},
    /* concept_so_and_so_only */           {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP,                                             so_and_so_only_move},
    /* concept_some_vs_others */           {CONCPROP__USE_SELECTOR | CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                     so_and_so_only_move},
@@ -4216,6 +4359,7 @@ concept_table_item concept_table[] = {
    /* concept_on_your_own */              {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              on_your_own_move},
    /* concept_trace */                    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_trace},
    /* concept_ferris */                   {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_ferris},
+   /* concept_overlapped_diamond */       {CONCPROP__NO_STEP,                                                                      do_concept_overlapped_diamond},
    /* concept_all_8 */                    {0,                                                                                      do_concept_all_8},
    /* concept_centers_and_ends */         {CONCPROP__SECOND_CALL,                                                                  do_concept_centers_and_ends},
    /* concept_twice */                    {CONCPROP__SHOW_SPLIT,                                                                   do_concept_twice},

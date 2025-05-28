@@ -1,4 +1,4 @@
-static char *time_stamp = "sdui-x11.c Time-stamp: <94/08/23 12:28:19 gildea>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <94/09/03 20:22:00 wba>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -93,8 +93,10 @@ typedef enum {
    cmd_button_quit,
    cmd_button_undo,
    cmd_button_abort,
+   cmd_button_simple_mods,
    cmd_button_allow_mods,
    cmd_button_allow_concepts,
+   cmd_button_active_phantoms,
    cmd_button_create_comment,
    cmd_button_change_outfile,
    cmd_button_getout,
@@ -289,8 +291,10 @@ Private String empty_string = "";
 Private Cstring *concept_popup_list = NULL;
 
 #define USER_GESTURE_NULL -1
-#define SPECIAL_ALLOW_MODS -2
-#define SPECIAL_ALLOW_ALL_CONCEPTS -3
+#define SPECIAL_SIMPLE_MODS -2
+#define SPECIAL_ALLOW_MODS -3
+#define SPECIAL_ALLOW_ALL_CONCEPTS -4
+#define SPECIAL_ALLOW_ACT_PHANTOMS -5
 
 
 /* Beware:  This table must track the enumeration "cmd_button_kind". */
@@ -298,8 +302,10 @@ static int button_translations[] = {
    command_quit,                          /* cmd_button_quit */
    command_undo,                          /* cmd_button_undo */
    command_abort,                         /* cmd_button_abort */
+   SPECIAL_SIMPLE_MODS,                    /* cmd_button_simple_mods */
    SPECIAL_ALLOW_MODS,                    /* cmd_button_allow_mods */
    SPECIAL_ALLOW_ALL_CONCEPTS,            /* cmd_button_allow_concepts */
+   SPECIAL_ALLOW_ACT_PHANTOMS,            /* cmd_button_active_phantoms */
    command_create_comment,                /* cmd_button_create_comment */
    command_change_outfile,                /* cmd_button_change_outfile */
    command_getout,                        /* cmd_button_getout */
@@ -578,8 +584,10 @@ Private XtResource command_resources[] = {
     MENU("exit", cmd_list[cmd_button_quit], "Exit the program"),
     MENU("undo", cmd_list[cmd_button_undo], "Undo last call"),
     MENU("abort", cmd_list[cmd_button_abort], "Abort this sequence"),
+    MENU("simplemods", cmd_list[cmd_button_simple_mods], "Simple modifications"),
     MENU("allowmods", cmd_list[cmd_button_allow_mods], "Allow modifications"),
     MENU("allowconcepts", cmd_list[cmd_button_allow_concepts], "Toggle concept levels"),
+    MENU("activephantoms", cmd_list[cmd_button_active_phantoms], "Toggle active phantoms"),
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
     MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file"),
     MENU("getout", cmd_list[cmd_button_getout], "End this sequence"),
@@ -1239,16 +1247,22 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         if (local_reply == USER_GESTURE_NULL)
             goto try_again;
         else if (local_reply == ui_command_select) {
-            if (uims_menu_index == SPECIAL_ALLOW_MODS) {
+            if (uims_menu_index == SPECIAL_SIMPLE_MODS) {
                 /* Increment "allowing_modifications" up to a maximum of 2. */
-                /* Actually, we just set it to 2.  Having two grades of modifiability
-                   is very unwieldy. */
-                if (allowing_modifications != 2) allowing_modifications = 2;
+                if (allowing_modifications != 2) allowing_modifications++;
+                goto try_again;
+            }
+            else if (uims_menu_index == SPECIAL_ALLOW_MODS) {
+                allowing_modifications = 2;
                 goto try_again;
             }
             else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
                 allowing_all_concepts = !allowing_all_concepts;
                 /* ***** Maybe we should change visibility of off-level concepts at this point. */
+                goto try_again;
+            }
+            else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
+                using_active_phantoms = !using_active_phantoms;
                 goto try_again;
             }
         }
@@ -1482,16 +1496,13 @@ uims_do_direction_popup(void)
 }    
 
 
-Private String quantifier_names[] = {
-    " 1 ", " 2 ", " 3 ", " 4 ", " 5 ", NULL};
-
 extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
    unsigned int number_list = 0;
 
    for (i=0 ; i<nnumbers ; i++) {
-      unsigned int this_num = choose_popup(sd_resources.quantifier_title, quantifier_names);
+      unsigned int this_num = choose_popup(sd_resources.quantifier_title, cardinals);
       if (this_num == 0) return 0;    /* User waved the mouse away. */
       number_list |= (this_num << (i*4));
    }

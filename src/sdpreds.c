@@ -23,14 +23,16 @@
 
 and the following external variables:
    selector_used
+   number_used
    pred_table     which is filled with pointers to the predicate functions
 */
 
 #include "sd.h"
 
-/* This variable is external. */
+/* These variables are external. */
 
 long_boolean selector_used;
+long_boolean number_used;
 
 
 /* If a real person and a person under test are XOR'ed, the result AND'ed with this constant,
@@ -282,9 +284,16 @@ Private long_boolean always(setup *real_people, int real_index,
 Private long_boolean x22_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_index = real_index ^ (((real_direction << 1) & 2) ^ 1);
-   int other_person = real_people->people[other_index].id1;
+   int this_person, other_index, other_person;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: return TRUE;
+      case cr_2fl_only: case cr_couples_only: return FALSE;
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_index = real_index ^ (((real_direction << 1) & 2) ^ 1);
+   other_person = real_people->people[other_index].id1;
    return(((this_person ^ other_person) & DIR_MASK) == 2);
 }
 
@@ -292,9 +301,16 @@ Private long_boolean x22_miniwave(setup *real_people, int real_index,
 Private long_boolean x22_couple(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_index = real_index ^ (((real_direction << 1) & 2) ^ 1);
-   int other_person = real_people->people[other_index].id1;
+   int this_person, other_index, other_person;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: return FALSE;
+      case cr_2fl_only: case cr_couples_only: return TRUE;
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_index = real_index ^ (((real_direction << 1) & 2) ^ 1);
+   other_person = real_people->people[other_index].id1;
    return(((this_person ^ other_person) & DIR_MASK) == 0);
 }
 
@@ -635,9 +651,15 @@ Private long_boolean inner_active_lines(setup *real_people, int real_index,
 {
    if ((real_index+3) & 2)
       return(northified_index >= 4);     /* I am an end */
-   else
-      return(                            /* I am a center */
+   else if (real_people->people[real_index ^ 1].id1)
+      return(                            /* I am a center, with a live partner */
          (012 - ((real_index & 4) >> 1)) == (real_people->people[real_index ^ 1].id1 & 017));
+   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+      return(northified_index < 4);
+   else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return(northified_index >= 4);
+   else
+      return FALSE;
 }
 
 /* ARGSUSED */
@@ -646,9 +668,15 @@ Private long_boolean outer_active_lines(setup *real_people, int real_index,
 {
    if ((real_index+3) & 2)
       return(northified_index < 4);      /* I am an end */
-   else
-      return(                            /* I am a center */
+   else if (real_people->people[real_index ^ 1].id1)
+      return(                            /* I am a center, with a live partner */
          (010 + ((real_index & 4) >> 1)) == (real_people->people[real_index ^ 1].id1 & 017));
+   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+      return(northified_index >= 4);
+   else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return(northified_index < 4);
+   else
+      return FALSE;
 }
 
 /* ARGSUSED */

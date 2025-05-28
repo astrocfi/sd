@@ -114,20 +114,6 @@ static char *resolve_commands[] = {
     "lower reconcile point"
 };
 
-static char *n_patterns[] = {
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    (char *) 0
-};
-
-Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (char *) 0};
-
 static char *n_4_patterns[] = {
     "1/4",
     "2/4",
@@ -648,7 +634,7 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, Const match_
 
         for (i=1;; ++i) {
             new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-            prefix = n_patterns[i-1];
+            prefix = cardinals[i-1];
             if (prefix == NULL) {
                 break;
             }
@@ -832,8 +818,7 @@ verify_call_with_selector(callspec_block *call, selector_kind sel)
     history[history_ptr+1].warnings.bits[0] = bits0;
     history[history_ptr+1].warnings.bits[1] = bits1;
     longjmp_ptr = &longjmp_buffer;    /* restore the global error handler */
-    initializing_database = FALSE;
-    not_interactive = FALSE;
+    interactivity = interactivity_normal;
     return result;
 }
 
@@ -849,8 +834,7 @@ try_call_with_selector(callspec_block *call, selector_kind sel)
         return FALSE;
     }
 
-    initializing_database = TRUE; /* so deposit_call doesn't ask user for info */
-    not_interactive = TRUE;
+    interactivity = interactivity_database_init;   /* so deposit_call doesn't ask user for info */
     selector_for_initialize = sel; /* if selector needed, use this one */
     (void) deposit_call(call);
     if (parse_state.parse_stack_index != 0) {

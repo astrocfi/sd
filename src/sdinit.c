@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -209,7 +209,8 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    longjmp_ptr = &my_longjmp_buffer;          /* point the global pointer at it. */
    if (setjmp(my_longjmp_buffer.the_buf)) {
 
-      /* A call failed.  A bad choice of selector may be the cause. */
+      /* A call failed.  A bad choice of selector or number may be the cause.
+         Try different selectors first. */
 
       if (selector_used) {
          /* This call used a selector and didn't like it.  Try again with
@@ -226,6 +227,21 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
                goto try_another_selector;
          }
       }
+
+      /* Now try a different number. */
+
+      if (number_used) {
+         /* This call used a number and didn't like it.  Try again with
+            a different number, until we run out of ideas. */
+
+         if (number_for_initialize < 4) {
+            /* We try all numbers from 1 to 4.  We need to do this to get
+               "exchange the boxes N/4" on the waves menu". */
+            number_for_initialize++;
+            goto try_another_number;
+         }
+      }
+
       /* Otherwise fall through and go on to the next call. */
    }
 
@@ -241,6 +257,10 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
       "no one advance to a column" are illegal.  If "beaus" doesn't work, we will
       try "ends" (for the call "fold"), "all", and finally "none" (for the call
       "run"), before giving up. */
+   number_for_initialize = 1;
+
+   try_another_number:
+
    selector_for_initialize = selector_beaus;
 
    try_another_selector:
@@ -248,6 +268,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    /* Do the call.  An error will signal and go to try_again. */
 
    selector_used = FALSE;
+   number_used = FALSE;
 
    history_ptr = 1;
 

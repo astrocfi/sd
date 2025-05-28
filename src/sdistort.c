@@ -31,6 +31,11 @@
 
 #include "sd.h"
 
+extern long_boolean move_perhaps_with_active_phantoms(
+   setup *ss,
+   restriction_thing *restr_thing_ptr,
+   setup *result);
+
 
 
 Private void innards(
@@ -65,6 +70,7 @@ Private void innards(
 
          if (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
             assumption_thing t;
+            restriction_thing *restr_thing_ptr;
 
             /* **** actually, we want to allow the case of "assume waves" already in place. */
             if (x[i].cmd.cmd_assume.assumption != cr_none)
@@ -85,11 +91,12 @@ Private void innards(
             }
 
             x[i].cmd.cmd_assume = t;
-            (void) check_restriction(&x[i], t, 99);
+            restr_thing_ptr = check_restriction(&x[i], t, 99);
             x[i].cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
+            move_perhaps_with_active_phantoms(&x[i], restr_thing_ptr, &z[i]);
          }
-
-         move(&x[i], FALSE, &z[i]);
+         else
+            move(&x[i], FALSE, &z[i]);
       }
       else {
          z[i].kind = nothing;
@@ -642,8 +649,8 @@ extern void do_phantom_2x4_concept(
                else                      fail("There are no split phantom columns here.");
             }
 
-            if (global_livemask == 07474) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_L_HALF][0];
-            else if (global_livemask == 01717) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_R_HALF][0];
+            if (global_livemask == 07474) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_R_HALF][1];
+            else if (global_livemask == 01717) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_L_HALF][1];
             else fail("Must have a parallelogram for this.");
 
             warn(warn__split_phan_in_pgram);

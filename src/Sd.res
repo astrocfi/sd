@@ -33,8 +33,10 @@
 *command.exit: Exit the program
 *command.undo: Undo last call
 *command.abort: Abort this sequence
+*command.simplemods: Simple modifications
 *command.allowmods: Allow modifications
 *command.allowconcepts: Toggle concept levels
+*command.activephantoms: Toggle active phantoms
 *command.comment: Insert a comment
 *command.outfile: Change output file
 *command.getout: End this sequence

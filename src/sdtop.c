@@ -42,23 +42,24 @@ typedef struct {
    expand_thing *expand_lists;
    } full_expand_thing;
 
-Private expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
-Private expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s4dmd, 0};
-Private expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
-Private expand_thing exp_4x4_4dm_stuff_a = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
-Private expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
-Private expand_thing exp_2x4_2x6_stuff   = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
-Private expand_thing exp_qtg_3x4_stuff   = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
-Private expand_thing exp_2x6_2x8_stuff   = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
-Private expand_thing exp_1x8_1x12_stuff  = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
-Private expand_thing exp_1x10_1x12_stuff = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
-Private expand_thing exp_1x12_1x14_stuff = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
-Private expand_thing exp_1x14_1x16_stuff = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
-Private expand_thing exp_1x8_1x10_stuff = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
-Private expand_thing exp_2x6_4x6_stuff   = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, nothing, s4x6, 0};
-Private expand_thing exp_2x4_2x8_stuff   = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
-Private expand_thing exp_2x4_4x4_stuff   = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
-Private expand_thing exp_4x4_blob_stuff  = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
+Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
+Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s4dmd, 0};
+Private expand_thing exp_3x1d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
+Private expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
+Private expand_thing exp_4x4_4dm_stuff_b   = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
+Private expand_thing exp_2x4_2x6_stuff     = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
+Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
+Private expand_thing exp_2x6_2x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
+Private expand_thing exp_1x8_1x12_stuff    = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
+Private expand_thing exp_qtag_bigdmd_stuff = {{2, 5, 6, 3, 8, 11, 0, 9}, 8, s_qtag, sbigdmd, 0};
+Private expand_thing exp_1x10_1x12_stuff   = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
+Private expand_thing exp_1x12_1x14_stuff   = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
+Private expand_thing exp_1x14_1x16_stuff   = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
+Private expand_thing exp_1x8_1x10_stuff    = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
+Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, nothing, s4x6, 0};
+Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
+Private expand_thing exp_2x4_4x4_stuff     = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
+Private expand_thing exp_4x4_blob_stuff    = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
 
 
 
@@ -160,6 +161,16 @@ Private uint32 bit_table_hrglass[][4] = {
    {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
    {ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2}};
 
+Private uint32 bit_table_dhrglass[][4] = {
+   {ID2_END|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTR6|ID2_BEAU,    ID2_END|ID2_OUTR6|ID2_TRAILER,    ID2_END|ID2_OUTR6|ID2_BELLE},
+   {ID2_END|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTR6|ID2_BEAU,    ID2_END|ID2_OUTR6|ID2_TRAILER,    ID2_END|ID2_OUTR6|ID2_BELLE},
+   {ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,             ID2_CENTER|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR2|ID2_LEAD,  ID2_CENTER|ID2_CTR2|ID2_BEAU,  ID2_CENTER|ID2_CTR2|ID2_TRAILER,  ID2_CENTER|ID2_CTR2|ID2_BELLE},
+   {ID2_END|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTR6|ID2_BELLE,   ID2_END|ID2_OUTR6|ID2_LEAD,       ID2_END|ID2_OUTR6|ID2_BEAU},
+   {ID2_END|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTR6|ID2_BELLE,   ID2_END|ID2_OUTR6|ID2_LEAD,       ID2_END|ID2_OUTR6|ID2_BEAU},
+   {ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,             ID2_CENTER|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR2|ID2_TRAILER,ID2_CENTER|ID2_CTR2|ID2_BELLE,ID2_CENTER|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR2|ID2_BEAU}};
+
 Private uint32 bit_table_bigdmd[][4] = {
    {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
@@ -258,6 +269,8 @@ extern void update_id_bits(setup *ss)
          ptr = bit_table_crosswave; break;
       case s_hrglass:
          ptr = bit_table_hrglass; break;
+      case s_dhrglass:
+         ptr = bit_table_dhrglass; break;
       case s_spindle:
          ptr = bit_table_spindle; break;
       case sbigdmd:
@@ -301,6 +314,7 @@ Private expand_thing rear_vrbox_stuff = {{1, 0, 3, 2}, 4, nothing, s1x4, 1};
 Private expand_thing rear_hrbox_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
 Private expand_thing rear_gwave_stuff = {{7, 0, 1, 6, 3, 4, 5, 2}, 8, nothing, s2x4, 0};
 Private expand_thing rear_qtag_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s2x4, 1};
+Private expand_thing rear_ptpd_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, nothing, s1x8, 0};
 Private expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
 
 Private full_expand_thing rear_wave_pair     = {warn__rear_back,       0, &rear_wave_stuff};
@@ -325,6 +339,7 @@ Private full_expand_thing rear_vrbox_pair    = {warn__awful_rear_back, 0, &rear_
 Private full_expand_thing rear_hrbox_pair    = {warn__awful_rear_back, 0, &rear_hrbox_stuff};
 Private full_expand_thing rear_gwave_pair    = {warn__rear_back,       0, &rear_gwave_stuff};
 Private full_expand_thing rear_qtag_pair     = {warn__rear_back,       0, &rear_qtag_stuff};
+Private full_expand_thing rear_ptpd_pair     = {warn__rear_back,       0, &rear_ptpd_stuff};
 Private full_expand_thing rear_sqtag_pair    = {warn__awful_rear_back, 0, &rear_sqtag_stuff};
 
 Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, nothing, s2x4, 0};
@@ -469,6 +484,9 @@ extern void touch_or_rear_back(
       if (scopy->kind == s_qtag && livemask == 0xFFFF && ((directions == 0x08A2) || (directions == 0xA802))) {
          tptr = &rear_qtag_pair;         /* Have the centers rear back from a 1/4 tag or 3/4 tag. */
       }
+      else if (scopy->kind == s_ptpd && livemask == 0xFFFF && ((directions == 0x5FF5) || (directions == 0xD77D))) {
+         tptr = &rear_ptpd_pair;         /* Have the centers rear back from point-to-point 1/4 tags or 3/4 tags. */
+      }
       else if (scopy->kind == sdmd && livemask == 0xFF && ((directions == 0x5F) || (directions == 0xD7))) {
          tptr = &rear_sqtag_pair;         /* Have the centers rear back from a single 1/4 tag or 3/4 tag. */
       }
@@ -482,12 +500,10 @@ extern void touch_or_rear_back(
 
       switch (scopy->kind) {
          case s2x2:
-            if ((livemask == 0xFF) && (directions == 0x7D)) {
+            if (((directions ^ 0x7D) & livemask) == 0 && livemask != 0)
                tptr = &step_2x2h_pair;
-            }
-            else if ((livemask == 0xFF) && (directions == 0xA0)) {
+            else if (((directions ^ 0xA0) & livemask) == 0 && livemask != 0)
                tptr = &step_2x2v_pair;
-            }
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask) != (0x28 & livemask) && (directions & livemask) != (0x5F & livemask))
                   fail("Setup is not left-handed.");
@@ -1032,6 +1048,12 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
    }
 
+   if (ss->kind == sbigdmd) {         /* This might leave a qtag, which might be reduced further. */
+      if (!(ss->people[1].id1 | ss->people[4].id1 | ss->people[7].id1 | ss->people[10].id1)) {
+         compress_setup(&exp_qtag_bigdmd_stuff, ss);
+      }
+   }
+
    if (ss->kind == s_bigblob)
       normalize_blob(ss);           /* This might leave a 4x6, which might be reduced further. */
 
@@ -1398,7 +1420,8 @@ extern void toplevelmove(void)
    normalize_setup(&new_setup, simple_normalize);
    for (i=0; i<MAX_PEOPLE; i++) new_setup.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
    newhist->state = new_setup;
-   /* Once rotation is imprecise, it is always imprecise. */
-   newhist->state.result_flags |= starting_setup.result_flags & RESULTFLAG__IMPRECISE_ROT;
+   /* Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here. */
+   newhist->state.result_flags |= starting_setup.result_flags &
+         (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
    newhist->resolve_flag = resolve_p(&newhist->state);
 }

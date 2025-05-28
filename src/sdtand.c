@@ -84,7 +84,6 @@ Private tm_thing maps_isearch_twosome[] = {
 */
    {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s2x3,  s3x4},
    {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
-
    /* Next one is for centers in tandem in lines, making a virtual bone6. */
    {{0, 3, 5, 4, 7, 6},             {-1, -1, 2, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_bone6, s2x4},
    /* Next two are for certain ends in tandem in an H, making a virtual bone6. */
@@ -107,7 +106,7 @@ Private tm_thing maps_isearch_twosome[] = {
    {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_rigger},
    {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_ptpd},
    {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_bone},
-
+   {{0, 2, 5, 7, 9, 11, 12, 14},    {1, 3, 4, 6, 8, 10, 13, 15},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s_qtag,s4dmd},
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
 
    {{3, 7, 9, 13},                  {1, 5, 11, 15},               {0}, {0},   0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
@@ -651,7 +650,7 @@ extern void tandem_couples_move(
       siamese_item *ptr;
 
       for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
-         if (ptr->testkind == ss->kind && ((ewmask << 16) | nsmask) == ptr->testval) {
+         if (ptr->testkind == ss->kind && ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
             warn(ptr->warning);
             j = ptr->fixup;
             goto foox;
@@ -661,8 +660,8 @@ extern void tandem_couples_move(
       fail("Can't do Siamese in this setup.");
 
       foox:
-      ewmask ^= j;
-      nsmask ^= j;
+      ewmask ^= (j & allmask);
+      nsmask ^= (j & allmask);
    }
    else if (tnd_cpl_siam == 3) {
       ewmask = allmask;
@@ -714,7 +713,8 @@ extern void tandem_couples_move(
 
    if (phantom == 1) {
       if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s3x4 && ss->kind != s2x6 &&
-               ss->kind != s4x6 && ss->kind != s1x12 && ss->kind != s1x16)
+               ss->kind != s4x6 && ss->kind != s1x12 && ss->kind != s1x16 &&
+               ss->kind != s3dmd && ss->kind != s4dmd)
          fail("Can't do couples or tandem concepts in this setup.");
    }
    else if (phantom == 2) {
