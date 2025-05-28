@@ -621,9 +621,6 @@ Private XtResource startup_resources[] = {
     MENU("toggleSinger", start_list[start_select_toggle_singer], "Toggle singing call"),
     MENU("toggleReverseSinger", start_list[start_select_toggle_singer_backward], "Toggle singing call with backward progression"),
     MENU("initSessionFile", start_list[start_select_init_session_file], "Initialize session file"),
-#ifdef THIS_MESSES_UP_HEADS_START
-    MENU("help", start_list[start_select_help], "Help"),
-#endif
     MENU("changeOutputFile", start_list[start_select_change_outfile], "Change output file"),
     MENU("changeTitle", start_list[start_select_change_header_comment], "Change title")
 };

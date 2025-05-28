@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.0b
-@set title2 Database version = 32.0b format = 133
+@set title1 RELEASE NOTES FOR SD VERSION 32.0c
+@set title2 Database version = 32.0c format = 134
 @set title3 X11 UI version 1.17, SDTTY UI version 1.9
 
 @node Top, Intro, (dir), (dir)
@@ -23,7 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
-* 32.0b::
+* 32.0c::
 * 31.98::
 * 31.97::
 * 31.96::
@@ -54,7 +54,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.0b, Top, (dir)
+@node Intro, 32.0c, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -65,12 +65,12 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 32.0b::               Changes in the current version
+* 32.0c::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.0b, 31.98, Intro, Top
-@unnumberedsec Version 32.0b changes
+@node 32.0c, 31.98, Intro, Top
+@unnumberedsec Version 32.0c changes
 
 There is a major new feature.  It is now possible to ``edit'' sequences at any point.
 The way this is accomplished is through a ``clipboard''.  If you want to change your
@@ -110,7 +110,7 @@ The @samp{[beau hop] an anchor but [[reflected flip your neighbor] and spread]}
 bug was fixed.
 
 The program has a vastly improved ability to handle differently oriented triple
-and quadruple diamonds.
+and quadruple columns, lines, waves, and diamonds.
 
 The program has a vastly improved ability to handle Z's.
 
@@ -118,7 +118,7 @@ Many other minor improvements.  We thank the callers at the
 2nd USA West Convention for bringing up several interesting issues.
 
 @c ************
-@node 31.98, 31.97, 32.0b, Top
+@node 31.98, 31.97, 32.0c, Top
 @unnumberedsec Version 31.98 changes
 
 Many minor improvements.  We thank the callers in the C2 hall at the

@@ -11,7 +11,7 @@ REM         cwsdpmi.exe, sdtty.pif, sd.ico, sample1.ini, sample2.ini
 del install.lzh
 lha a install ..\sd\sdtty.exe ..\sd\mkcalls.exe
 lha a install ..\sd\sd_calls.txt ..\sd\sd_calls.dat
-lha a install ..\sd\cwsdpmi.exe ..\sd\sdtty.pif ..\sd\sd.ico
+lha a install ..\sd\cwsdpmi.exe ..\sd\sdtty.pif ..\sd\sdtty.ico
 lha a install sample1.ini sample2.ini readme
 lha s install
 del bin.msg bin.txt bin.zip

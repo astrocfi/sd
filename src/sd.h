@@ -358,45 +358,45 @@ typedef struct {
 
 /* Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100. */
 
-#define CMD_MISC__EXPLICIT_MIRROR    0x00000100UL
-#define CMD_MISC__MATRIX_CONCEPT     0x00000200UL
+static Const uint32 CMD_MISC__EXPLICIT_MIRROR    = 0x00000100UL;
+static Const uint32 CMD_MISC__MATRIX_CONCEPT     = 0x00000200UL;
 /* This is a 4 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
-#define CMD_MISC__VERIFY_MASK        0x00003C00UL
-#define CMD_MISC__EXPLICIT_MATRIX    0x00004000UL
-#define CMD_MISC__NO_EXPAND_MATRIX   0x00008000UL
-#define CMD_MISC__DISTORTED          0x00010000UL
-#define CMD_MISC__OFFSET_Z           0x00020000UL
-#define CMD_MISC__SAID_SPLIT         0x00040000UL
-#define CMD_MISC__SAID_TRIANGLE      0x00080000UL
-#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00100000UL
-#define CMD_MISC__DO_AS_COUPLES      0x00200000UL
-#define CMD_MISC__RESTRAIN_CRAZINESS 0x00400000UL
-#define CMD_MISC__RESTRAIN_MODIFIERS 0x00800000UL
-#define CMD_MISC__NO_CHECK_MOD_LEVEL 0x01000000UL
-#define CMD_MISC__MUST_SPLIT_HORIZ   0x02000000UL
-#define CMD_MISC__MUST_SPLIT_VERT    0x04000000UL
-#define CMD_MISC__NO_CHK_ELONG       0x08000000UL
-#define CMD_MISC__PHANTOMS           0x10000000UL
-#define CMD_MISC__NO_STEP_TO_WAVE    0x20000000UL
-#define CMD_MISC__ALREADY_STEPPED    0x40000000UL
-#define CMD_MISC__DOING_ENDS         0x80000000UL
+static Const uint32 CMD_MISC__VERIFY_MASK        = 0x00003C00UL;
+static Const uint32 CMD_MISC__EXPLICIT_MATRIX    = 0x00004000UL;
+static Const uint32 CMD_MISC__NO_EXPAND_MATRIX   = 0x00008000UL;
+static Const uint32 CMD_MISC__DISTORTED          = 0x00010000UL;
+static Const uint32 CMD_MISC__OFFSET_Z           = 0x00020000UL;
+static Const uint32 CMD_MISC__SAID_SPLIT         = 0x00040000UL;
+static Const uint32 CMD_MISC__SAID_TRIANGLE      = 0x00080000UL;
+static Const uint32 CMD_MISC__PUT_FRAC_ON_FIRST  = 0x00100000UL;
+static Const uint32 CMD_MISC__DO_AS_COUPLES      = 0x00200000UL;
+static Const uint32 CMD_MISC__RESTRAIN_CRAZINESS = 0x00400000UL;
+static Const uint32 CMD_MISC__RESTRAIN_MODIFIERS = 0x00800000UL;
+static Const uint32 CMD_MISC__NO_CHECK_MOD_LEVEL = 0x01000000UL;
+#define             CMD_MISC__MUST_SPLIT_HORIZ     0x02000000UL
+#define             CMD_MISC__MUST_SPLIT_VERT      0x04000000UL
+static Const uint32 CMD_MISC__NO_CHK_ELONG       = 0x08000000UL;
+static Const uint32 CMD_MISC__PHANTOMS           = 0x10000000UL;
+static Const uint32 CMD_MISC__NO_STEP_TO_WAVE    = 0x20000000UL;
+static Const uint32 CMD_MISC__ALREADY_STEPPED    = 0x40000000UL;
+static Const uint32 CMD_MISC__DOING_ENDS         = 0x80000000UL;
 
-#define CMD_MISC__MUST_SPLIT_MASK    (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
+static Const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
 
 /* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
    Zero means no verification. */
-#define CMD_MISC__VERIFY_WAVES         0x00000400UL
-#define CMD_MISC__VERIFY_2FL           0x00000800UL
-#define CMD_MISC__VERIFY_DMD_LIKE      0x00000C00UL
-#define CMD_MISC__VERIFY_QTAG_LIKE     0x00001000UL
-#define CMD_MISC__VERIFY_1_4_TAG       0x00001400UL
-#define CMD_MISC__VERIFY_3_4_TAG       0x00001800UL
-#define CMD_MISC__VERIFY_REAL_1_4_TAG  0x00001C00UL
-#define CMD_MISC__VERIFY_REAL_3_4_TAG  0x00002000UL
-#define CMD_MISC__VERIFY_REAL_1_4_LINE 0x00002400UL
-#define CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
-#define CMD_MISC__VERIFY_LINES         0x00002C00UL
-#define CMD_MISC__VERIFY_COLS          0x00003000UL
+#define             CMD_MISC__VERIFY_WAVES         0x00000400UL
+#define             CMD_MISC__VERIFY_2FL           0x00000800UL
+#define             CMD_MISC__VERIFY_DMD_LIKE      0x00000C00UL
+#define             CMD_MISC__VERIFY_QTAG_LIKE     0x00001000UL
+#define             CMD_MISC__VERIFY_1_4_TAG       0x00001400UL
+#define             CMD_MISC__VERIFY_3_4_TAG       0x00001800UL
+#define             CMD_MISC__VERIFY_REAL_1_4_TAG  0x00001C00UL
+#define             CMD_MISC__VERIFY_REAL_3_4_TAG  0x00002000UL
+#define             CMD_MISC__VERIFY_REAL_1_4_LINE 0x00002400UL
+#define             CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
+#define             CMD_MISC__VERIFY_LINES         0x00002C00UL
+#define             CMD_MISC__VERIFY_COLS          0x00003000UL
 
 
 
@@ -455,32 +455,32 @@ typedef struct {
        CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on
                                      0x0000FFFFUL */
 
-#define CMD_MISC2__IN_Z_CW           0x00010000UL
-#define CMD_MISC2__IN_Z_CCW          0x00020000UL
-#define CMD_MISC2__IN_AZ_CW          0x00040000UL
-#define CMD_MISC2__IN_AZ_CCW         0x00080000UL
-#define CMD_MISC2__IN_Z_MASK         0x000F0000UL
-#define CMD_MISC2__DID_Z_COMPRESSION 0x00100000UL
+static Const uint32 CMD_MISC2__IN_Z_CW           = 0x00010000UL;
+static Const uint32 CMD_MISC2__IN_Z_CCW          = 0x00020000UL;
+static Const uint32 CMD_MISC2__IN_AZ_CW          = 0x00040000UL;
+static Const uint32 CMD_MISC2__IN_AZ_CCW         = 0x00080000UL;
+static Const uint32 CMD_MISC2__IN_Z_MASK         = 0x000F0000UL;
+static Const uint32 CMD_MISC2__DID_Z_COMPRESSION = 0x00100000UL;
 
-#define CMD_MISC2__MYSTIFY_SPLIT     0x00200000UL
-#define CMD_MISC2__MYSTIFY_INVERT    0x00400000UL
+static Const uint32 CMD_MISC2__MYSTIFY_SPLIT     = 0x00200000UL;
+static Const uint32 CMD_MISC2__MYSTIFY_INVERT    = 0x00400000UL;
 
-#define CMD_MISC2__ANY_WORK          0x10000000UL
-#define CMD_MISC2__ANY_SNAG          0x20000000UL
-#define CMD_MISC2__ANY_WORK_INVERT   0x40000000UL
+static Const uint32 CMD_MISC2__ANY_WORK          = 0x10000000UL;
+static Const uint32 CMD_MISC2__ANY_SNAG          = 0x20000000UL;
+static Const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x40000000UL;
 
 
-#define CMD_MISC2__CTR_END_INV_CONC  0x01000000UL
+#define             CMD_MISC2__CTR_END_INV_CONC    0x01000000UL
 /* This is a 2 bit field.  For codes inside same, see "CMD_MISC2__CENTRAL_PLAIN" below. */
-#define CMD_MISC2__CTR_END_KMASK     0x06000000UL
-#define CMD_MISC2__CTR_END_INVERT    0x08000000UL
-#define CMD_MISC2__CTR_END_MASK      0x0F000000UL
+#define             CMD_MISC2__CTR_END_KMASK       0x06000000UL
+#define             CMD_MISC2__CTR_END_INVERT      0x08000000UL
+#define             CMD_MISC2__CTR_END_MASK        0x0F000000UL
 
 /* Here are the encodings that can go into the CMD_MISC2__CTR_END_KMASK field.
    Zero means none of these concepts is in use. */
-#define CMD_MISC2__CENTRAL_PLAIN     0x02000000UL
-#define CMD_MISC2__CENTRAL_SNAG      0x04000000UL
-#define CMD_MISC2__CENTRAL_MYSTIC    0x06000000UL
+#define             CMD_MISC2__CENTRAL_PLAIN       0x02000000UL
+#define             CMD_MISC2__CENTRAL_SNAG        0x04000000UL
+#define             CMD_MISC2__CENTRAL_MYSTIC      0x06000000UL
 
 
 
@@ -571,14 +571,14 @@ typedef struct {
 #define RESULTFLAG__SPLIT_AXIS_YBIT      0x00000400UL
 #define RESULTFLAG__SPLIT_AXIS_SEPARATION  3
 
-#define RESULTFLAG__ACTIVE_PHANTOMS_ON   0x00002000UL
-#define RESULTFLAG__ACTIVE_PHANTOMS_OFF  0x00004000UL
-#define RESULTFLAG__SECONDARY_DONE       0x00008000UL
-#define RESULTFLAG__YOYO_FINISHED        0x00010000UL
-#define RESULTFLAG__TWISTED_FINISHED     0x00020000UL
-#define RESULTFLAG__SPLIT_FINISHED       0x00040000UL
-#define RESULTFLAG__NO_REEVALUATE        0x00080000UL
-#define RESULTFLAG__DID_Z_COMPRESSION    0x00100000UL
+static Const uint32 RESULTFLAG__ACTIVE_PHANTOMS_ON  = 0x00002000UL;
+static Const uint32 RESULTFLAG__ACTIVE_PHANTOMS_OFF = 0x00004000UL;
+static Const uint32 RESULTFLAG__SECONDARY_DONE      = 0x00008000UL;
+static Const uint32 RESULTFLAG__YOYO_FINISHED       = 0x00010000UL;
+static Const uint32 RESULTFLAG__TWISTED_FINISHED    = 0x00020000UL;
+static Const uint32 RESULTFLAG__SPLIT_FINISHED      = 0x00040000UL;
+static Const uint32 RESULTFLAG__NO_REEVALUATE       = 0x00080000UL;
+static Const uint32 RESULTFLAG__DID_Z_COMPRESSION   = 0x00100000UL;
 
 #define EXPIRATION_STATE_BITS (RESULTFLAG__YOYO_FINISHED|RESULTFLAG__TWISTED_FINISHED|RESULTFLAG__SPLIT_FINISHED)
 
@@ -866,6 +866,7 @@ typedef enum {
    concept_checkpoint,
    concept_on_your_own,
    concept_trace,
+   concept_outeracting,
    concept_ferris,
    concept_overlapped_diamond,
    concept_all_8,
@@ -1289,6 +1290,7 @@ typedef enum {
    warn__like_linear_action,
    warn__no_z_action,
    warn__phantoms_thinner,
+   warn__hokey_jay_shapechanger,
    warn__split_1x6,
    warn_interlocked_to_6,
    warn__colocated_once_rem,
@@ -1389,9 +1391,6 @@ typedef enum {
    start_select_toggle_singer,
    start_select_toggle_singer_backward,
    start_select_init_session_file,
-#ifdef THIS_MESSES_UP_HEADS_START
-   start_select_help,
-#endif
    start_select_change_outfile,
    start_select_change_header_comment
 } start_select_kind;
@@ -1617,7 +1616,7 @@ typedef uint32 defmodset;
 #define CONCPROP__NEEDK_1X12       0x000000A0UL
 #define CONCPROP__NEEDK_3X4        0x000000B0UL
 #define CONCPROP__NEEDK_1X16       0x000000C0UL
-#define CONCPROP__NEEDK_4X4_1X16   0x000000D0UL
+#define CONCPROP__NEEDK_QUAD_1X4   0x000000D0UL
 #define CONCPROP__NEEDK_TWINDMD    0x000000E0UL
 #define CONCPROP__NEEDK_TWINQTAG   0x000000F0UL
 #define CONCPROP__NEEDK_CTR_DMD    0x00000100UL
@@ -2124,6 +2123,8 @@ extern map_thing map_dbgbn1;                                        /* in SDTABL
 extern map_thing map_dbgbn2;                                        /* in SDTABLES */
 extern map_thing map_off1x81;                                       /* in SDTABLES */
 extern map_thing map_off1x82;                                       /* in SDTABLES */
+extern map_thing map_dqtag1;                                        /* in SDTABLES */
+extern map_thing map_dqtag2;                                        /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
 extern map_thing map_inner_box;                                     /* in SDTABLES */

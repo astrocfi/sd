@@ -315,6 +315,7 @@ Cstring warning_strings[] = {
    /*  warn__like_linear_action  */   "*Ends start like a linear action -- this may be controversial.",
    /*  warn__no_z_action         */   "*The 'Z' concept was not actually used.",
    /*  warn__phantoms_thinner    */   "*Phantoms may have gotten thinner -- go to outer triple boxes.",
+   /*  warn__hokey_jay_shapechanger */"*This shapechanger in a jay may be controversial.",
    /*  warn__split_1x6           */   "=Do the call in each 1x3 setup.",
    /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
@@ -3992,6 +3993,8 @@ extern parse_block *really_skip_one_concept(
 
    if (check_for_concept_group(parseptrcopy, k_p, &next_parseptr))
       *parseptr_skip_p = next_parseptr->next;
+   else if (parseptrcopy->concept->kind == concept_special_sequential)
+      *parseptr_skip_p = parseptrcopy->subsidiary_root;
    else
       *parseptr_skip_p = parseptrcopy->next;
 
@@ -4107,7 +4110,13 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
          else
             rotstates &= 0x033;
 
-         rotstates &= rotstate_table[((i & 3) << 2) | zisrot];
+         {
+            int shit = i;
+
+            if (arity == 4 && (i&2)) shit ^= 1;
+
+            rotstates &= rotstate_table[((shit & 3) << 2) | zisrot];
+         }
       }
    }
 

@@ -128,7 +128,7 @@ extern void mirror_this(setup *s)
 {
    uint32 l, r, z, n, t;
    coordrec *cptr;
-   int i, x, y, place, limit;
+   int i, x, y, place, limit, doffset;
 
    setup temp = *s;
 
@@ -197,11 +197,13 @@ extern void mirror_this(setup *s)
 
    limit = setup_attrs[s->kind].setup_limits;
 
+   doffset = 32 - (1 << (cptr->xfactor-1));
+
    if (s->rotation & 1) {
       for (i=0; i<=limit; i++) {
          x = cptr->xca[i];
          y = - cptr->yca[i];
-         place = cptr->diagram[28 - ((y >> 2) << cptr->xfactor) + (x >> 2)];
+         place = cptr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
          if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
             fail("Don't recognize ending setup for this call; not able to do it mirror.");
@@ -219,7 +221,7 @@ extern void mirror_this(setup *s)
       for (i=0; i<=limit; i++) {
          x = - cptr->xca[i];
          y = cptr->yca[i];
-         place = cptr->diagram[28 - ((y >> 2) << cptr->xfactor) + (x >> 2)];
+         place = cptr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
          if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
             fail("Don't recognize ending setup for this call; not able to do it mirror.");

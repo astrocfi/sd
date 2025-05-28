@@ -235,8 +235,10 @@ extern long_boolean selectp(setup *ss, int place)
          else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return FALSE;
          break;
       case selector_outerpairs:
-         if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
-         else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
+         if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+         else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
+         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return FALSE;
          break;
       case selector_headliners:
          if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return TRUE;
@@ -592,8 +594,23 @@ Private long_boolean x14_once_rem_miniwave(setup *real_people, int real_index,
    case cr_2fl_only: case cr_magic_only: return TRUE;
    }
 
-   return ((real_people->people[real_index].id1 ^
-            real_people->people[real_index ^ 3].id1) & DIR_MASK) == 2;
+   switch ((real_people->people[real_index].id1 ^
+            real_people->people[real_index ^ 3].id1) & DIR_MASK) {
+   case 0:
+      return FALSE;
+   case 2:
+      return TRUE;
+   default:
+      if (extra_stuff[0] & 2) {
+         /* This is "intlk_cast_normal_or_warn".  Don't give the warning if person
+            would have known what to do anyway. */
+         if (!(real_index & 1))
+            warn(warn__opt_for_normal_cast);
+         return TRUE;
+      }
+      else
+         return FALSE;
+   }
 }
 
 /* ARGSUSED */
@@ -734,22 +751,22 @@ Private long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
          other_person = real_people->people[7 - real_index].id1;
 
       switch (((this_person ^ other_person) & DIR_MASK) ^ ((extra_stuff[0] & 1) << 1)) {
-         case 0:
+      case 0:
+         return TRUE;
+      case 2:
+         return FALSE;
+      default:
+         if (extra_stuff[0] & 2) {
+            /* This is "cast_normal_or_warn".  Don't give the warning if person
+               would have known what to do anyway. */
+            if (     real_people->kind == s1x2
+                     ||
+                     (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
+               warn(warn__opt_for_normal_cast);
             return TRUE;
-         case 2:
+         }
+         else
             return FALSE;
-         default:
-            if (extra_stuff[0] & 2) {
-               /* This is "cast_normal_or_warn".  Don't give the warning if person
-                  would have known what to do anyway. */
-               if (     real_people->kind == s1x2
-                                    ||
-                        (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
-                  warn(warn__opt_for_normal_cast);
-               return TRUE;
-            }
-            else
-               return FALSE;
       }
    }
 }
@@ -1939,7 +1956,7 @@ predicate_descriptor pred_table[] = {
       {x22_facing_test,                dbl_tab23},               /* "x22_facing_someone" */
       {x22_facing_test,                dbl_tab03},               /* "x22_tandem_with_someone" */
       {cols_someone_in_front,        (Const long int *) 0},      /* "columns_someone_in_front" */
-      {x14_once_rem_miniwave,        (Const long int *) 0},      /* "x14_once_rem_miniwave" */
+      {x14_once_rem_miniwave,         &iden_tab[1]},             /* "x14_once_rem_miniwave" */
       {x14_once_rem_couple,          (Const long int *) 0},      /* "x14_once_rem_couple" */
       {lines_miniwave,               (Const long int *) 0},      /* "lines_miniwave" */
       {lines_couple,                 (Const long int *) 0},      /* "lines_couple" */
@@ -1958,6 +1975,9 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
       {cast_normal_or_whatever,        &iden_tab[0]},            /* "cast_pushy" */
       {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */
+
+      {x14_once_rem_miniwave,          &iden_tab[3]},            /* "intlk_cast_normal_or_warn" */
+
       {opp_in_magic,                 (Const long int *) 0},      /* "lines_magic_miniwave" */
       {same_in_magic,                (Const long int *) 0},      /* "lines_magic_couple" */
       {once_rem_test,                  &iden_tab[2]},            /* "lines_once_rem_miniwave" */

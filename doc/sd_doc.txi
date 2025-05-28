@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: September 7, 1998
-@set sd-version 32.0b
+@set Time-stamp: September 20, 1998
+@set sd-version 32.0c
 @set full-manual
 @c %**end of header
 @iftex
@@ -3340,6 +3340,8 @@ These are done from a center diamond with offset pairs of people on the outside.
 @item stagger D/1T/3T/1L/3L/GT
 @item diagonal D/1T/3T/1L/3L/GT
 These are done from ``blocks.''
+@item distorted D/1T/3T/1L/3L/DS/GT
+These are done from triple diamonds in which the points are offset.
 @item double bent tidal C/L/W @r{(singular)}
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
@@ -3516,6 +3518,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item <ANYONE> are <N/4> stable
 @item emulate
 @item trace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item outeracting
 @item ferris
 @item release
 @item stretch

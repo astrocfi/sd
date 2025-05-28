@@ -123,9 +123,6 @@ static Cstring startup_commands[] = {
    "toggle singing call",
    "toggle reverse singing call",
    "initialize session file",
-#ifdef THIS_MESSES_UP_HEADS_START
-   "help",
-#endif
    "change output file",
    "change title",
    (Cstring) 0
@@ -1777,10 +1774,19 @@ Private void search_menu(uims_reply kind)
 
       for (i = 0; i < menu_length; i++) {
          everyones_real_result.match.index = i;
-         everyones_real_result.yield_depth =
-            (kind == ui_command_select && 
+
+         if (kind == ui_command_select &&
              static_call_menu != match_resolve_extra_commands &&
-             command_command_values[i] == command_help) ? 1 : 0;
+             command_command_values[i] == command_help)
+            everyones_real_result.yield_depth = 1;
+#ifdef THIS_MESSES_UP_HEADS_START
+         else if (kind == ui_start_select &&
+             i == (int) start_select_help)
+            everyones_real_result.yield_depth = 1;
+#endif
+         else
+            everyones_real_result.yield_depth = 0;
+
          match_pattern(menu[i], (concept_descriptor *) 0);
       }
    }

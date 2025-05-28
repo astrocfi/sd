@@ -964,7 +964,7 @@ Private void finish_matrix_call(
    setup *result)
 {
    int i, place;
-   int xmax, xpar, ymax, ypar, x, y, k;
+   int xmax, xpar, ymax, ypar, x, y, k, doffset;
    uint32 signature;
    coordrec *checkptr;
 
@@ -1052,6 +1052,40 @@ Private void finish_matrix_call(
 
       warn(warn__check_galaxy);
       checkptr = setup_attrs[s_galaxy].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00930044) && ((signature & (~0x21018800)) == 0))) {
+      /* Fudge this to a 3x6.  The centers did a 1/2 truck from point-to-point diamonds. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x == -9)
+            { matrix_info[i].x = -10; }
+         else if (matrix_info[i].x == 9)
+            { matrix_info[i].x = 10; }
+         else if (matrix_info[i].x == -5)
+            { matrix_info[i].x = -6; }
+         else if (matrix_info[i].x == 5)
+            { matrix_info[i].x = 6; }
+      }
+
+      checkptr = setup_attrs[s3x6].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00A20026) && ((signature & (~0x09080002)) == 0))) {
+      /* Fudge this to point-to-point diamonds.  The centers did a 1/2 truck from a 3x6. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x == -10)
+            { matrix_info[i].x = -9; }
+         else if (matrix_info[i].x == 10)
+            { matrix_info[i].x = 9; }
+         else if (matrix_info[i].x == -6)
+            { matrix_info[i].x = -5; }
+         else if (matrix_info[i].x == 6)
+            { matrix_info[i].x = 5; }
+      }
+
+      checkptr = setup_attrs[s_ptpd].setup_coords;
       goto doit;
    }
    else if ((ypar == 0x00660066) && ((signature & (~0x08008404)) == 0)) {
@@ -1217,13 +1251,44 @@ Private void finish_matrix_call(
    }
    /* If certain far out people are missing, xmax will be different, but we will
        still need to go to a 4dmd. */
-   else if (((ypar == 0x00E30055) || (ypar == 0x00B30055) || (ypar == 0x00B10051) || (ypar == 0x00A30055)) && ((signature & (~0x0940A422)) == 0)) {
+   else if (((ypar == 0x00E30055) ||
+             (ypar == 0x00B30055) ||
+             (ypar == 0x00B10051) ||
+             (ypar == 0x00A30055)) &&
+            ((signature & (~0x0940A422)) == 0)) {
       checkptr = setup_attrs[s4dmd].setup_coords;
       goto doit;
    }
    /* Similarly. */
-   else if (((ypar == 0x00D50066) || (ypar == 0x01150066)) && ((signature & (~0x28048202)) == 0)) {
+   else if (((ypar == 0x00D50057) ||
+             (ypar == 0x00B50057)) &&
+            ((signature & (~0x20008202)) == 0)) {
+      checkptr = setup_attrs[s_3mdmd].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00B70057) ||
+             (ypar == 0x00E70057)) &&
+            ((signature & (~0x41022480)) == 0)) {
+      checkptr = setup_attrs[s_3mptpd].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00D50066) || (ypar == 0x01150066)) &&
+            ((signature & (~0x28048202)) == 0)) {
       checkptr = setup_attrs[sbigx].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00B30066) && ((signature & (~0x10508104)) == 0)) {
+      checkptr = setup_attrs[sdeepxwv].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00F30066) || (ypar == 0x01130066) || (ypar == 0x01330066)) &&
+            ((signature & (~0x12148904)) == 0)) {
+      checkptr = setup_attrs[sbigbigx].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x01130066) || (ypar == 0x01130026)) &&
+            ((signature & (~0x09406600)) == 0)) {
+      checkptr = setup_attrs[sbigbigh].setup_coords;
       goto doit;
    }
    else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
@@ -1250,7 +1315,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_dhrglass].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00930035) && ((signature & (~0x05200100)) == 0)) {
+   else if ((ypar == 0x00930026) && ((signature & (~0x01108080)) == 0)) {
       checkptr = setup_attrs[s_ptpd].setup_coords;
       goto doit;
    }
@@ -1411,10 +1476,12 @@ Private void finish_matrix_call(
 
    fail("Can't handle this result matrix.");
 
-doit:
+ doit:
+      doffset = 32 - (1 << (checkptr->xfactor-1));
+
       result->kind = checkptr->result_kind;
       for (i=0; i<nump; i++) {
-         place = checkptr->diagram[28 - ((matrix_info[i].y >> 2) << checkptr->xfactor) + (matrix_info[i].x >> 2)];
+         place = checkptr->diagram[doffset - ((matrix_info[i].y >> 2) << checkptr->xfactor) + (matrix_info[i].x >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
          if ((checkptr->xca[place] != matrix_info[i].x) || (checkptr->yca[place] != matrix_info[i].y))
             fail("Person has moved into a slightly ill-defined location.");
@@ -1424,11 +1491,14 @@ doit:
 
       return;
 
-doitrot:
+ doitrot:
       result->kind = checkptr->result_kind;
       result->rotation = 1;
+
+      doffset = 32 - (1 << (checkptr->xfactor-1));
+
       for (i=0; i<nump; i++) {
-         place = checkptr->diagram[28 - ((matrix_info[i].x >> 2) << checkptr->xfactor) + ((-matrix_info[i].y) >> 2)];
+         place = checkptr->diagram[doffset - ((matrix_info[i].x >> 2) << checkptr->xfactor) + ((-matrix_info[i].y) >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
          if ((checkptr->xca[place] != -matrix_info[i].y) || (checkptr->yca[place] != matrix_info[i].x))
             fail("Person has moved into a slightly ill-defined location.");
@@ -3163,6 +3233,11 @@ Private void do_sequential_call(
       int saved_num_numbers = current_options.howmanynumbers;
       uint32 resultflags_to_put_in = 0;
 
+      ss->cmd.prior_expire_bits |=
+         result->result_flags & (RESULTFLAG__YOYO_FINISHED |
+                                 RESULTFLAG__TWISTED_FINISHED |
+                                 RESULTFLAG__SPLIT_FINISHED);
+
       /* Now the "index" values (fetch_index and dist_index) contain the
          number of parts we have completed.  That is, they point (in 0-based
          numbering) to what we are about to do.  Also, if "subpart_count" is
@@ -3229,17 +3304,13 @@ Private void do_sequential_call(
          }
       }
 
-      /* If an explicit substitution was made, we will recompute the ID bits for the setup.  Normally, we don't,
-         which is why "patch the <anyone>" works.  The original evaluation of the designees is retained after
-         the first part of the call.  But if the user does something like "circle by 1/4 x [leads run]", we
+      /* If an explicit substitution was made, we will recompute the ID bits for the setup.
+         Normally, we don't, which is why "patch the <anyone>" works.  The original
+         evaluation of the designees is retained after the first part of the call.
+         But if the user does something like "circle by 1/4 x [leads run]", we
          want to re-evaluate who the leads are. */
 
       recompute_id = get_real_subcall(parseptr, this_item, new_final_concepts, callspec, &foo1);
-
-      ss->cmd.prior_expire_bits |=
-         result->result_flags & (RESULTFLAG__YOYO_FINISHED |
-                                 RESULTFLAG__TWISTED_FINISHED |
-                                 RESULTFLAG__SPLIT_FINISHED);
 
       if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;   /* We allow stepping (or rearing back) again. */
@@ -3461,6 +3532,12 @@ Private void do_sequential_call(
                fix_next_assumption = cr_miniwaves;
                break;
             }
+         }
+         else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
+            /* Just pass everything directly -- this call does nothing. */
+            fix_next_assumption = result->cmd.cmd_assume.assumption;
+            fix_next_assump_col = result->cmd.cmd_assume.assump_col;
+            fix_next_assump_both = result->cmd.cmd_assume.assump_both;
          }
       }
 

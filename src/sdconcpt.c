@@ -472,37 +472,48 @@ Private void do_concept_quad_lines(
    than through global_tbonetest. */
 
 {
-   int rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
+   uint32 the_map;
+   int arg1 = parseptr->concept->value.arg1;
+   int rot = 0;
+
+   if (ss->kind == s4x4) {
+      rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
+      if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+      ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+      canonicalize_rotation(ss);
+      the_map = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
+   }
+   else if (ss->kind == s1x16) {
+      if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+      if (!((arg1 ^ global_tbonetest) & 1)) {
+         if (global_tbonetest & 1) fail("There are no lines of 4 here.");
+         else                      fail("There are no columns of 4 here.");
+      }
+   
+      the_map = MAPCODE(s1x4,4,MPKIND__SPLIT,0);
+   }
+   else if (ss->kind == sbigbigh)
+      the_map = MAPCODE(s1x4,4,MPKIND__NONISOTROPIC,1);
+   else if (ss->kind == sbigbigx)
+      the_map = MAPCODE(s1x4,4,MPKIND__NONISOTROPIC,0);
+   else
+      fail("Must have quadruple 1x4's for this concept.");
 
    /* If this was quadruple columns, we allow stepping to a wave.  This makes it
       possible to do interesting cases of turn and weave, when one column
       is a single 8 chain and another is a single DPT.  But if it was quadruple
       lines, we forbid it. */
 
-   if (parseptr->concept->value.arg1 & 1)
+   if (arg1 & 1)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 
-   if (parseptr->concept->value.arg1 == 3)
+   if (arg1 == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-   if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
-
-   if (ss->kind == s4x4) {
-      ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
-      canonicalize_rotation(ss);
-      new_divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
-      result->rotation -= rot;   /* Flip the setup back. */
-   }
-   else if (ss->kind == s1x16) {
-      if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
-         if (global_tbonetest & 1) fail("There are no lines of 4 here.");
-         else                      fail("There are no columns of 4 here.");
-      }
-   
-      new_divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
-   }
-   else
-      fail("Must have a 4x4 or 1x16 setup for this concept.");
+   new_divided_setup_move(ss, the_map, phantest_ok, TRUE, result);
+   result->rotation -= rot;   /* Flip the setup back. */
 }
 
 
@@ -1182,7 +1193,7 @@ Private void do_concept_triple_lines(
    else if (ss->kind == sbigx)
       the_map = MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,0);
    else
-      fail("Must have triple lines for this concept.");
+      fail("Must have triple 1x4's for this concept.");
 
    /* If this was triple columns, we allow stepping to a wave.  This makes it
       possible to do interesting cases of turn and weave, when one column
@@ -3488,6 +3499,37 @@ Private void do_concept_trace(
 }
 
 
+Private void do_concept_outeracting(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   setup temp;
+
+   static Const veryshort mapo1[8] = {7, 0, 2, 5, 3, 4, 6, 1};
+   static Const veryshort mapo2[8] = {7, 0, 1, 6, 3, 4, 5, 2};
+
+   temp = *ss;
+   temp.kind = s2x4;
+   temp.rotation++;
+   clear_people(&temp);
+
+   if (ss->kind != s_qtag)
+      fail("Must have 1/4 tag to do this concept.");
+
+   if ((((ss->people[2].id1 ^ d_south) | (ss->people[6].id1 ^ d_north)) & d_mask) == 0) {
+      scatter(&temp, ss, mapo1, 7, 033);
+   }
+   else if ((((ss->people[2].id1 ^ d_north) | (ss->people[6].id1 ^ d_south)) & d_mask) == 0) {
+      scatter(&temp, ss, mapo2, 7, 033);
+   }
+   else
+      fail("Incorrect facing directions.");
+
+   new_divided_setup_move(&temp, MAPCODE(s2x2,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
+}
+
+
 Private void do_concept_quad_boxes(
    setup *ss,
    parse_block *parseptr,
@@ -3615,7 +3657,7 @@ Private void do_concept_inner_outer(
          ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
          canonicalize_rotation(ss);
       }
-      else if (ss->kind == s1x16) {
+      else if (ss->kind == s1x16 || ss->kind == sbigbigh || ss->kind == sbigbigx) {
          /* Shouldn't we do this for 4x4 also?  It seems that one ought to say
             "standard in outside phantom 1x4's" rather than "... in lines"
             if they are T-boned.  There is something in t34t that would break, however. */
@@ -3625,7 +3667,7 @@ Private void do_concept_inner_outer(
          }
       }
       else
-         fail("Need a 1x16 or 4x4 setup for this.");
+         fail("Need quadruple 1x4's for this.");
 
       break;
    case 4:
@@ -4539,7 +4581,11 @@ Private void do_concept_meta(
 
       tttt = *result;
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = CMD_FRAC_CODE_BEYOND | (shiftynum * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
+      tttt.cmd.cmd_frac_flags =
+         CMD_FRAC_BREAKING_UP |
+         CMD_FRAC_CODE_BEYOND |
+         (shiftynum * CMD_FRAC_PART_BIT) |
+         CMD_FRAC_NULL_VALUE;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -4548,7 +4594,11 @@ Private void do_concept_meta(
 
       tttt = *result;
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = (shiftynum * CMD_FRAC_PART_BIT) | CMD_FRAC_CODE_UPTO | CMD_FRAC_NULL_VALUE;
+      tttt.cmd.cmd_frac_flags =
+         CMD_FRAC_BREAKING_UP |
+         CMD_FRAC_CODE_UPTO |
+         (shiftynum * CMD_FRAC_PART_BIT) |
+         CMD_FRAC_NULL_VALUE;
       goto do_stuff;
    }
    else if (key == 12) {
@@ -4663,11 +4713,18 @@ Private void do_concept_meta(
          tttt.cmd.parseptr = parseptr_skip;
          goto do_stuff;
       }
-      else if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_UPTOREV | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE)) {
+      else if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP |
+                                          CMD_FRAC_CODE_UPTOREV |
+                                          CMD_FRAC_PART_BIT*1 |
+                                          CMD_FRAC_NULL_VALUE)) {
          /* We are being asked to do all but the last part.  Do the first part with the concept,
             then all but first and last without it. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
+         tttt.cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP |
+            CMD_FRAC_CODE_ONLY |
+            CMD_FRAC_PART_BIT*1 |
+            CMD_FRAC_NULL_VALUE;
 
          if (craziness_restraint) {
             tttt.cmd.cmd_misc_flags |= craziness_restraint;
@@ -4684,20 +4741,72 @@ Private void do_concept_meta(
 
          tttt.cmd = ss->cmd;
          tttt.cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
-         tttt.cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FINUPTOREV | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
+         tttt.cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP |
+            CMD_FRAC_CODE_FINUPTOREV |
+            CMD_FRAC_PART_BIT*1 |
+            CMD_FRAC_NULL_VALUE;
          tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
          goto do_stuff;
       }
-      else if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FINUPTOREV | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE)) {
-         /* We are being asked to do just the inner parts, presumably because of an "initially" and "finally".  Just pass it through. */
+      else if (ss->cmd.cmd_frac_flags ==
+               (CMD_FRAC_BREAKING_UP |
+                CMD_FRAC_CODE_FINUPTOREV |
+                CMD_FRAC_PART_BIT*1 |
+                CMD_FRAC_NULL_VALUE)) {
+         /* We are being asked to do just the inner parts, presumably because of an
+            "initially" and "finally".  Just pass it through. */
          tttt.cmd = ss->cmd;
          tttt.cmd.parseptr = parseptr_skip;
+         goto do_stuff;
+      }
+      else if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) ==
+               (CMD_FRAC_BREAKING_UP |
+                CMD_FRAC_CODE_UPTO |
+                CMD_FRAC_NULL_VALUE)) {
+
+         /* We are being asked to do an initial subset that includes the first part.
+            Do the first part, then do the rest of the subset. */
+
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP |
+            CMD_FRAC_CODE_ONLY |
+            CMD_FRAC_PART_BIT*1 |
+            CMD_FRAC_NULL_VALUE;
+
+         if (craziness_restraint) {
+            tttt.cmd.cmd_misc_flags |= craziness_restraint;
+            tttt.cmd.restrained_concept = &fudgyblock;
+            tttt.cmd.parseptr = parseptr_skip;
+         }
+         else
+            tttt.cmd.parseptr = parseptrcopy;
+
+         move(&tttt, FALSE, result);     /* The first part, with the concept. */
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+         tttt = *result;
+
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
+         tttt.cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP |
+            CMD_FRAC_CODE_FROMTO |
+            (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) |    /* Incoming end point. */
+            CMD_FRAC_PART2_BIT |                 /* Skip one at start. */
+            CMD_FRAC_NULL_VALUE;
+         tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
          goto do_stuff;
       }
       else if (ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
          /* Do the first part with the concept. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
+         tttt.cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP |
+            CMD_FRAC_CODE_ONLY |
+            CMD_FRAC_PART_BIT*1 |
+            CMD_FRAC_NULL_VALUE;
 
          if (craziness_restraint) {
             tttt.cmd.cmd_misc_flags |= craziness_restraint;
@@ -4895,6 +5004,8 @@ Private void do_concept_meta(
          if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
             update_id_bits(result);
 
+         result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
+
          do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
             fail("Can't have 'no one' do a call.");
@@ -4993,6 +5104,7 @@ Private void do_concept_replace_nth_part(
    tttt.cmd.parseptr = parseptr->subsidiary_root;
    if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
       update_id_bits(&tttt);           /* So you can interrupt with "leads run", etc. */
+   tttt.cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
    move(&tttt, FALSE, result);
    finalresultflags |= result->result_flags;
    normalize_setup(result, simple_normalize);
@@ -5066,6 +5178,7 @@ Private void do_concept_interlace(
          result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | (indexa * CMD_FRAC_PART_BIT) | a_frac_flags;
          if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
             update_id_bits(result);
+         result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
          do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
 
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
@@ -5798,7 +5911,7 @@ concept_table_item concept_table[] = {
    /* concept_do_phantom_triple_1x6 */    {CONCPROP__NEEDK_3X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_triple_1x6},
    /* concept_do_phantom_1x8 */           {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_1x8},
    /* concept_do_phantom_triple_1x8 */    {CONCPROP__NEEDK_3X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_triple_1x8},
-   /* concept_do_phantom_2x4 */           {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,           do_phantom_2x4_concept},
+   /* concept_do_phantom_2x4 */           {CONCPROP__NEEDK_QUAD_1X4 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,           do_phantom_2x4_concept},
    /* concept_do_phantom_stag_qtg */      {CONCPROP__NEEDK_4X4 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_phantom_stag_qtg_concept},
    /* concept_do_phantom_diag_qtg */      {CONCPROP__NEEDK_4X4 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_phantom_diag_qtg_concept},
    /* concept_do_phantom_2x3 */           {CONCPROP__NEEDK_3X4 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_2x3},
@@ -5813,7 +5926,7 @@ concept_table_item concept_table[] = {
    /* concept_multiple_lines_tog */       {CONCPROP__NEED_ARG2_MATRIX | Nostandard_matrix_phantom,                                 do_concept_multiple_lines_tog},
    /* concept_multiple_lines_tog_std */   {CONCPROP__NEED_ARG2_MATRIX | Standard_matrix_phantom,                                   do_concept_multiple_lines_tog},
    /* concept_triple_1x8_tog */           {CONCPROP__NEEDK_3X8 | Nostandard_matrix_phantom,                                        do_concept_triple_1x8_tog},
-   /* concept_quad_lines */               {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom,                                     do_concept_quad_lines},
+   /* concept_quad_lines */               {CONCPROP__NEEDK_QUAD_1X4 | Standard_matrix_phantom,                                     do_concept_quad_lines},
    /* concept_quad_boxes */               {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_boxes},
    /* concept_quad_boxes_together */      {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_boxes_tog},
    /* concept_triple_boxes */             {CONCPROP__NEEDK_2X6 | Nostandard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,              do_concept_triple_boxes},
@@ -5856,6 +5969,7 @@ concept_table_item concept_table[] = {
    /* concept_checkpoint */               {CONCPROP__SECOND_CALL | CONCPROP__PERMIT_REVERSE,                                       do_concept_checkpoint},
    /* concept_on_your_own */              {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              on_your_own_move},
    /* concept_trace */                    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_trace},
+   /* concept_outeracting */              {CONCPROP__NO_STEP,                                                                      do_concept_outeracting},
    /* concept_ferris */                   {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_ferris},
    /* concept_overlapped_diamond */       {CONCPROP__NO_STEP,                                                                      do_concept_overlapped_diamond},
    /* concept_all_8 */                    {0,                                                                                      do_concept_all_8},

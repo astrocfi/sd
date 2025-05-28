@@ -271,7 +271,7 @@ Private void innards(
       if (rotstate == 0x020) z[0].rotation++;
       map_kind = MPKIND__NONISOTROPIC;
    }
-   else if (!(rotstate & 0xF30) && map_kind == MPKIND__NONISOTROPIC && arity == 3) {
+   else if (!(rotstate & 0xF30) && map_kind == MPKIND__NONISOTROPIC) {
       uint32 myrot, zzrot;
 
       if (!(rotstate & 0x00F))
@@ -282,9 +282,12 @@ Private void innards(
          canonicalize_rotation(&z[i]);
       }
 
-      zzrot = ((z[0].rotation & 3) << 4) |
-         ((z[1].rotation & 3) << 2) |
-         ((z[2].rotation & 3));
+      zzrot = 0;
+
+      for (i=0; i<arity; i++) {
+         zzrot <<= 2;
+         zzrot |= z[i].rotation & 3;
+      }
 
       if (zzrot == 0) {
          map_kind = MPKIND__SPLIT;
@@ -1074,86 +1077,89 @@ extern void do_phantom_2x4_concept(
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 #endif
 
-   if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) && parseptr->concept->value.arg3 != MPKIND__CONCPHAN)
+   if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) &&
+       parseptr->concept->value.arg3 != MPKIND__CONCPHAN)
       fail("Mystic not allowed with this concept.");
 
    if (parseptr->concept->value.arg2 == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    switch (ss->kind) {
-      case s1x16:
-         if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup, try using \"standard\".");
+   case s1x16:
+      if ((global_tbonetest & 011) == 011)
+         fail("Can't do this from T-bone setup, try using \"standard\".");
 
-         if (linesp) {
-            if (global_tbonetest & 1) fail("There are no lines of 4 here.");
-         }
-         else {
-            if (global_tbonetest & 010) fail("There are no columns of 4 here.");
-         }
+      if (linesp) {
+         if (global_tbonetest & 1) fail("There are no lines of 4 here.");
+      }
+      else {
+         if (global_tbonetest & 010) fail("There are no columns of 4 here.");
+      }
 
-         rot = 0;
-         maps = get_map_from_code(MAPCODE(s1x8,2,parseptr->concept->value.arg3,0));
-         break;
-      case s4x4:
+      rot = 0;
+      maps = get_map_from_code(MAPCODE(s1x8,2,parseptr->concept->value.arg3,0));
+      break;
+   case s4x4:
 
-         if (parseptr->concept->value.arg3 != MPKIND__NONE)
-            maps = get_map_from_code(MAPCODE(s2x4,2,parseptr->concept->value.arg3,1));
-         else
-            maps = parseptr->concept->value.maps;
+      if (parseptr->concept->value.arg3 != MPKIND__NONE)
+         maps = get_map_from_code(MAPCODE(s2x4,2,parseptr->concept->value.arg3,1));
+      else
+         maps = parseptr->concept->value.maps;
 
          /* Check for special case of "stagger" or "bigblock", without the word "phantom",
             when people are not actually on block spots. */
 
-         if (parseptr->concept->value.arg3 == MPKIND__STAG && parseptr->concept->value.arg1 == phantest_only_one) {
-            if (global_livemask != 0x2D2D && global_livemask != 0xD2D2) {
-               warn(warn__not_on_block_spots);
-               distorted_move(ss, parseptr, disttest_any, result);
-               return;
-            }
-         }
-
-         if ((global_tbonetest & 011) == 011) {
-            /* People are T-boned!  This is messy. */
-            phantom_2x4_move(
-               ss,
-               linesp,
-               (phantest_kind) parseptr->concept->value.arg1,
-               maps,
-               result);
+      if (parseptr->concept->value.arg3 == MPKIND__STAG &&
+          parseptr->concept->value.arg1 == phantest_only_one) {
+         if (global_livemask != 0x2D2D && global_livemask != 0xD2D2) {
+            warn(warn__not_on_block_spots);
+            distorted_move(ss, parseptr, disttest_any, result);
             return;
          }
+      }
 
-         break;
-      case s2x6:
-         /* Check for special case of split phantom lines/columns in a parallelogram. */
+      if ((global_tbonetest & 011) == 011) {
+         /* People are T-boned!  This is messy. */
+         phantom_2x4_move(
+                          ss,
+                          linesp,
+                          (phantest_kind) parseptr->concept->value.arg1,
+                          maps,
+                          result);
+         return;
+      }
 
-         if (parseptr->concept->value.arg3 == MPKIND__SPLIT) {
-            setup stemp;
+      break;
+   case s2x6:
+      /* Check for special case of split phantom lines/columns in a parallelogram. */
 
-            if (rot) {
-               if (global_tbonetest & 1) fail("There are no split phantom lines here.");
-               else                      fail("There are no split phantom columns here.");
-            }
+      if (parseptr->concept->value.arg3 == MPKIND__SPLIT) {
+         setup stemp;
 
-            if      (global_livemask == 07474) maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,1));
-            else if (global_livemask == 01717) maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,1));
-            else fail("Must have a parallelogram for this.");
-
-            warn(warn__split_phan_in_pgram);
-
-            /* Change the setup to a 4x6. */
-
-            stemp = *ss;
-            ss->kind = s4x6;
-            clear_people(ss);
-            scatter(ss, &stemp, indices_for_2x6_4x6, 11, 0);
-            break;              /* Note that rot is zero. */
+         if (rot) {
+            if (global_tbonetest & 1) fail("There are no split phantom lines here.");
+            else                      fail("There are no split phantom columns here.");
          }
-         /* Otherwise fall through to error message!!! */
-         /* FALL THROUGH!!! */
-      default:
-         /* FELL THROUGH!!! */
-         fail("Need a 4x4 setup to do this concept.");
+
+         if      (global_livemask == 07474) maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,1));
+         else if (global_livemask == 01717) maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,1));
+         else fail("Must have a parallelogram for this.");
+
+         warn(warn__split_phan_in_pgram);
+
+         /* Change the setup to a 4x6. */
+
+         stemp = *ss;
+         ss->kind = s4x6;
+         clear_people(ss);
+         scatter(ss, &stemp, indices_for_2x6_4x6, 11, 0);
+         break;              /* Note that rot is zero. */
+      }
+      /* Otherwise fall through to error message!!! */
+      /* FALL THROUGH!!! */
+   default:
+      /* FELL THROUGH!!! */
+      fail("Need a 4x4 setup to do this concept.");
    }
 
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
@@ -1221,7 +1227,8 @@ extern void do_phantom_diag_qtg_concept(
 
    rot = (rot ^ parseptr->concept->value.arg2) & 1;
 
-   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;  /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+   /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
 
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
@@ -1323,43 +1330,73 @@ extern void distorted_2x2s_move(
    static Const veryshort map_b1[16] = {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
    static Const veryshort map_b2[16] = {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
 
-   /* maps for jays */
+   /* Maps for jays.
+      These have the extra 24 to handle going to 1x4's. */
 
-   static Const veryshort mapj1[24] = {
+   static Const veryshort mapj1[48] = {
                7, 2, 4, 5, 0, 1, 3, 6,
                6, 3, 4, 5, 0, 1, 2, 7,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               0, 1, 2, 3, 6, 7, 4, 5,
+               5, 4, 2, 3, 6, 7, 1, 0,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort mapj2[24] = {
+
+   static Const veryshort mapj2[48] = {
                6, 3, 4, 5, 0, 1, 2, 7,
                7, 2, 4, 5, 0, 1, 3, 6,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               5, 4, 2, 3, 6, 7, 1, 0,
+               0, 1, 2, 3, 6, 7, 4, 5,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort mapj3[24] = {
+
+   static Const veryshort mapj3[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                7, 2, 4, 5, 0, 1, 3, 6,
-               6, 3, 4, 5, 0, 1, 2, 7};
-   static Const veryshort mapj4[24] = {
+               6, 3, 4, 5, 0, 1, 2, 7,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               0, 1, 2, 3, 6, 7, 4, 5,
+               5, 4, 2, 3, 6, 7, 1, 0};
+
+   static Const veryshort mapj4[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 3, 4, 5, 0, 1, 2, 7,
-               7, 2, 4, 5, 0, 1, 3, 6};
+               7, 2, 4, 5, 0, 1, 3, 6,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               5, 4, 2, 3, 6, 7, 1, 0,
+               0, 1, 2, 3, 6, 7, 4, 5};
 
-   /* maps for facing/back-to-front/back-to-back parallelograms */
+   /* Maps for facing/back-to-front/back-to-back parallelograms.
+      These have the extra 24 to handle going to 1x4's. */
 
-   static Const veryshort mapk1[24] = {
+   static Const veryshort mapk1[48] = {
                3, 2, 4, 5, 0, 1, 7, 6,
                6, 7, 4, 5, 0, 1, 2, 3,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               0, 1, 2, 3, 6, 7, 4, 5,
+               5, 4, 2, 3, 6, 7, 1, 0,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort mapk2[24] = {
+   static Const veryshort mapk2[48] = {
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               5, 4, 2, 3, 6, 7, 1, 0,
+               0, 1, 2, 3, 6, 7, 4, 5,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort mapk3[24] = {
+   static Const veryshort mapk3[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                3, 2, 4, 5, 0, 1, 7, 6,
-               6, 7, 4, 5, 0, 1, 2, 3};
-   static Const veryshort mapk4[24] = {
+               6, 7, 4, 5, 0, 1, 2, 3,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               0, 1, 2, 3, 6, 7, 4, 5,
+               5, 4, 2, 3, 6, 7, 1, 0};
+
+   static Const veryshort mapk4[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 7, 4, 5, 0, 1, 2, 3,
-               3, 2, 4, 5, 0, 1, 7, 6};
+               3, 2, 4, 5, 0, 1, 7, 6,
+               -1, -1, -1, -1, -1, -1, -1, -1,
+               5, 4, 2, 3, 6, 7, 1, 0,
+               0, 1, 2, 3, 6, 7, 4, 5};
 
    int table_offset, arity, misc_indicator, i;
    setup inputs[4];
@@ -1599,7 +1636,8 @@ extern void distorted_2x2s_move(
             inputs[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             update_id_bits(&inputs[i]);
             move(&inputs[i], FALSE, &results[i]);
-            if (results[i].kind != s2x2 || (results[i].rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
+            if (results[i].kind != s2x2 || (results[i].rotation & 1))
+               fail("Can only do non-shape-changing calls in Z or distorted setups.");
             scatter(result, &results[i], &map_ptr[i*4], 3, 033);
          }
 
@@ -1630,13 +1668,33 @@ extern void distorted_2x2s_move(
       inputs[i].cmd.cmd_assume.assumption = cr_none;
       update_id_bits(&inputs[i]);
       move(&inputs[i], FALSE, &results[i]);
-      if (results[i].kind != s2x2) fail("Can't do shape-changer with this concept.");
-      scatter(result, &results[i], map_ptr, 3, 0);
+
+      if (results[i].kind != s2x2) {
+         if (results[i].kind != s1x4 ||
+             results[i].rotation != 1 ||
+             (misc_indicator != 1 && misc_indicator != 4))
+            fail("Can't do shape-changer with this concept.");
+         scatter(result, &results[i], &map_ptr[24], 3, 0);
+      }
+      else
+         scatter(result, &results[i], map_ptr, 3, 0);
+
       map_ptr += 4;
    }
 
    result->kind = ss->kind;
    result->rotation = 0;
+
+   if (misc_indicator == 1 || misc_indicator == 4) {
+      if (results[0].kind == s1x4 && results[0].kind == s1x4) {
+         result->kind = s_rigger;
+         result->rotation = 1;
+         if (misc_indicator == 1) warn(warn__hokey_jay_shapechanger);
+      }
+      else if (results[0].kind != s2x2 || results[0].kind != s2x2)
+         fail("Can't do this shape-changer with this concept.");  /* Yow!  They're different! */
+   }
+
    result->result_flags = get_multiple_parallel_resultflags(results, arity);
    reinstate_rotation(ss, result);
    return;
@@ -1673,7 +1731,7 @@ extern void distorted_move(
    linesp & 8 != 0:
       user claims this is a single tidal (grand) setup
    linesp & 16 != 0:
-      user claims this is a single 6-person setup (legal only in bighrgl)
+      user claims this is distorted 1/4 tags or diamonds or whatever
 
    Global_tbonetest has the OR of all the people, or all the standard people if
       this is "standard", so it is what we look at to interpret the
@@ -1750,19 +1808,18 @@ extern void distorted_move(
       }
    }
    else if (linesp & 16) {
-      if (ss->kind == sbighrgl) {
-         if (linesp & 1) {
-            if (global_tbonetest & 1) fail("There is no line of 6 here.");
-         }
-         else {
-            if (global_tbonetest & 010) fail("There is no column of 6 here.");
-         }
-         
-         if (livemask == 0x3CF) { map_ptr = &map_dhrgl1; goto do_divided_call; }
-         if (livemask == 0xF3C) { map_ptr = &map_dhrgl2; goto do_divided_call; }
-      }
+      /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+      ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
 
-      fail("Can't find distorted 1x6.");
+      if (ss->kind == s3dmd) {
+         if (global_livemask == 06363) { map_ptr = &map_dqtag1; }
+         else if (global_livemask == 06666) { map_ptr = &map_dqtag2; }
+         else fail("Can't find offset diamonds.");
+
+         goto do_divided_nocheck;
+      }
+      else
+         fail("Must have triple diamond setup for this concept.");
    }
    else {
       k = s2x4;
@@ -1937,6 +1994,8 @@ extern void distorted_move(
 
    if ((linesp & 7) == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   do_divided_nocheck:
 
    if (mapcode == ~0UL)
       divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);

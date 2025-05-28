@@ -12,9 +12,16 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* dbcomp.c */
+
+typedef unsigned long int uint32;
+typedef unsigned short int uint16;
+typedef unsigned char uint8;
+#define Const const
+
+typedef Const char *Cstring;
 
 #include "database.h"
 
@@ -50,8 +57,6 @@ extern void exit(int code);
    will do the right thing with that, but, just in case, we use a typedef.
 
    The type "uint32" must be an unsigned integer of at least 32 bits. */
-
-typedef unsigned long int uint32;
 
 /* These things come from mkcalls.c for the standalone compiler, or from
    sdtables.c or sdui-mac.c for the built-in compiler. */
@@ -333,6 +338,8 @@ char *sstab[] = {
    "12x2",
    "deepqtg",
    "pdeepqtg",
+   "deepxwv",
+   "pdeepxwv",
    "3oqtg",
    "p3oqtg",
    "thar",
@@ -373,6 +380,10 @@ char *sstab[] = {
    "pbigh",
    "bigx",
    "pbigx",
+   "bigbigh",
+   "pbigbigh",
+   "bigbigx",
+   "pbigbigx",
    "bigrig",
    "pbigrig",
    "bighrgl",
@@ -452,6 +463,7 @@ char *estab[] = {
    "2x10",
    "2x12",
    "deepqtg",
+   "deepxwv",
    "3oqtg",
    "thar",
    "alamo",
@@ -471,6 +483,8 @@ char *estab[] = {
    "4mptpd",
    "bigh",
    "bigx",
+   "bigbigh",
+   "bigbigx",
    "bigrig",
    "bighrgl",
    "bigdhrgl",
@@ -939,6 +953,7 @@ char *predtab[] = {
    "cast_normal",
    "cast_pushy",
    "cast_normal_or_warn",
+   "intlk_cast_normal_or_warn",
    "lines_magic_miniwave",
    "lines_magic_couple",
    "lines_once_rem_miniwave",
@@ -1069,6 +1084,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "trade"},
+      {0, "check_cross_counter"},
       {0, "slither"},
       /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
       {0, "tagnullcall0"},
