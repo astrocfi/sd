@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.67
-@set title2 Database version = 39.67 format = 412
+@set title1 RELEASE NOTES FOR VERSION 39.68
+@set title2 Database version = 39.68 format = 412
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.68::
 * 39.67::
 * 39.66::
 * 39.65::
@@ -167,7 +168,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.67, Top, (dir)
+@node Intro, 39.68, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -178,11 +179,26 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2024 William B. Ackerman
 @sp 3
 @menu
-* 39.67::               Changes in the current version
+* 39.68::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.67, 39.66, Intro, Top
+@node 39.68, 39.67, Intro, Top
+@unnumberedsec Version 39.68 changes
+
+The program was brought up to date with the 2024 changes to the
+Callerlab lists and definitions.
+@sp 1
+The handling of the @strong{courtesy turns} in @strong{grand chain 8}
+and @strong{8 by} was updated to the "left touch 1/4 like a couple up"
+formulation.  (Of course one can't use that phrase when teaching below
+C3A.)  There are a number of formulations---Callerlab lists two of
+them.  They are all equivalent.
+@sp 1
+A bug in the handling of the @strong{matrix} concept was fixed
+
+@c ************
+@node 39.67, 39.66, 39.68, Top
 @unnumberedsec Version 39.67 changes
 
 The obsolete concept @strong{halfway} was removed.  Use @strong{first

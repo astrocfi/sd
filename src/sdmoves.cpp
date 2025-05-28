@@ -5324,7 +5324,7 @@ fracfrac fraction_info::get_fracs_for_this_part()
       if (m_do_half_of_last_part != 0 && m_client_index == m_start_point)
          return m_do_half_of_last_part;
       else if (m_do_last_half_of_first_part != 0 && m_client_index == m_end_point)
-         return (fracfrac) m_do_last_half_of_first_part;
+         return m_do_last_half_of_first_part;
       else
          return FRAC_FRAC_NULL_VALUE;
    }
@@ -5949,6 +5949,9 @@ static void do_sequential_call(
       int SD = ss->cmd.cmd_fraction.start_denom();
       int EN = ss->cmd.cmd_fraction.end_numer();
       int ED = ss->cmd.cmd_fraction.end_denom();
+      if (SN != 0 && (ss->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP) != 0)
+         cast_didnt_start_at_beginning = true;   // Record the fact that we need to get 2nd clause.
+
       ss->cmd.cmd_fraction.set_to_null();    // Won't need this any more.
 
       // Now we need to push the fraction down to bottom, so can do "middle 1/2 of ..."
@@ -5956,7 +5959,6 @@ static void do_sequential_call(
       int NNN = EN*SD - SN*ED;
       int DDD = ED * SD;
       reduce_fraction(NNN, DDD);
-      if (SN != 0) cast_didnt_start_at_beginning = true;   // Record the fact that we pushed.
 
       // We want number_fields * NNN / DDD, calibrated in quarters, or
       // number_fields * NNN * 2 / DDD, calibrated in eighths, and that
@@ -6246,8 +6248,6 @@ static void do_sequential_call(
          setup_command foobar = ss->cmd;
          this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index];
          // Fetch the "continue_cast" instead of the "cast_off_14" if there was an earlier part.
-         // Is this the right thing?  Do people actually want this behavior?  Who knows?  But
-         // it used to be done this way.  Tradition.
          if (zzz.m_fetch_index == 0 && zzz.m_highlimit == 1 &&
              this_schema == schema_sequential_remainder && cast_didnt_start_at_beginning)
             this_item = &callspec->stuff.seq.defarray[1];

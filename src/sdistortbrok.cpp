@@ -1133,20 +1133,10 @@ static void multiple_move_innards(
             map_kind = MPKIND__OVERLAP34;
          }
          else if (before_distance == after_distance*2 && arity == 2) {
-            /* This used to be
             if (map_kind == MPKIND__SPLIT && z[0].kind == s2x3 && z[0].rotation == 1) {
                z[0].do_matrix_expansion(CONCPROP__NEEDK_3X4, false);
                z[1].do_matrix_expansion(CONCPROP__NEEDK_3X4, false);
             }
-            As usual, there are multiple ways to get the desired effect.
-            */
-
-            if (map_kind == MPKIND__SPLIT && z[0].kind == s2x3 && z[0].rotation == 1)
-               result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
-            map_kind = MPKIND__SPLIT;
-            z[2] = z[1];
-            z[1].clear_people();
-            arity = 3;
          }
          else if (before_distance == after_distance*2 && arity == 3) {
             map_kind = MPKIND__SPLIT;

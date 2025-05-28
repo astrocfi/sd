@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.67"
+version "39.68"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -14102,6 +14102,22 @@ call "chase your neighbor" c1
                           inherit_nxn inherit_bigmatrix inherit_revert]
    seq neighbor [inherit_nxn]
 
+//Ths "chase" and "neighbor" variants are all over the map.  Sorry.
+call "chase your cross neighbor" c1
+            visible_fractions left_means_mirror singlefile_is_inherited nxn_is_inherited
+            bigmatrix_is_inherited revert_is_inherited
+   seq chase_the_half_tag [inherit_left inherit_singlefile
+                          inherit_nxn inherit_bigmatrix inherit_revert]
+   seq xneighbor [inherit_nxn]
+
+//Ths "chase" and "neighbor" variants are all over the map.  Sorry.
+call "chase your criss cross neighbor" c2
+            visible_fractions left_means_mirror singlefile_is_inherited nxn_is_inherited
+            bigmatrix_is_inherited revert_is_inherited
+   seq chase_the_half_tag [inherit_left inherit_singlefile
+                          inherit_nxn inherit_bigmatrix inherit_revert]
+   seq xxneighbor [inherit_nxn]
+
 call "_swap the top 1" dontshow tag swaptop1
             reverse_means_mirror left_means_mirror
    setup 2x2 dmd rotate
@@ -15010,7 +15026,7 @@ call "turn and flip" c4x
 /* This is what gets used by other calls.  The use of courtesy turn
    in other calls is presumed to be "correct", so we don't complain
    if some concept or variation caused it not to be correct. */
-call "_courtesy turn 1/2" dontshow tag courtesy
+call "_courtesy turn" dontshow tag courtesy
             reverse_means_mirror
    setup 1x2 1x2 restriction forbidden couples_only
       array [AL1S AL0S]
@@ -15110,11 +15126,11 @@ call "courtesy turn" mainstream
          if boyp  [0    0 AAL2W 0]
          if girlp [0 AL3E     0 0]
 
-call "courtesy turn and roll" dontshow tag courtesy_and_roll
+call "courtesy turn and roll" dontshow tag fin_8by
             dont_use_in_nice_resolve
             reverse_means_mirror yoyo_is_inherited single_is_inherited
             twisted_is_inherited nxn_is_inherited
-   seq courtesy [inherit_reverse inherit_yoyo inherit_twisted inherit_single inherit_nxn]
+   seq endfingc8 [inherit_reverse inherit_yoyo inherit_twisted inherit_single inherit_nxn]
    seq roll []
 
 call "right and left thru" mainstream
@@ -20769,7 +20785,7 @@ call "_finish grand chain 8" dontshow tag gc8p2
    setup 2x2 2x2
       array [0 0 AL1W AL0E]
    setup 2x4 2x4 rotate qualifier ntbone out in_or_out
-      array [L0E L1W L6W L7E 0 0 0 0]
+      array [CAL0E CAL1W AL6W AL7E 0 0 0 0]
    setup 4x2 2x4 qualifier ntbone in in_or_out
       array [AL1E    0 AL3E    0    0 CAL4W     0 CAL6W]
    setup 4x2 2x4 qualifier ntbone out in_or_out
@@ -20795,8 +20811,9 @@ call "_centers grand chain 8" dontshow tag ctrgc8
    seq ctrfingc8 [inherit_left]
 
 call "_ends finish grand chain 8" dontshow tag endfingc8
+            left_means_mirror reverse_means_mirror
    setup 2x2 2x2
-      array [L1S L0S 0 0]
+      array [CAL1S AL0S 0 0]
 
 call "_ends grand chain 8" dontshow tag endgc8
             first_part_visible left_means_mirror twisted_is_inherited
@@ -22896,7 +22913,7 @@ call "step and flip" c1
    setup 1x3 1x2 rotate qualifier wave_only restriction unusual alwaysfail
       array [CR0E ZM0W AL0E]
 
-call "step and squeeze" c2
+call "step and squeeze" c1
    setup 1x4 2x3 rotate
       array [CR1E ZM5W AL4E ZM0W]
 
@@ -23967,7 +23984,7 @@ call "_wheel and" dontshow tag wheel
 call "_8by" dontshow tag 8by
             visible_fractions left_means_mirror twisted_is_inherited
    seq passthru [inherit_left inherit_twisted]
-   seq courtesy_and_roll [inherit_reverse inherit_twisted]
+   seq fin_8by [inherit_reverse inherit_twisted]
 
 call "_final wheel and @0" dontshow tag final_wheel_and_anything
             dont_use_in_resolve reverse_means_mirror
@@ -28222,7 +28239,7 @@ call "little" c1 tag little
                                 only_force_elong_if_empty endscando]
             left_means_mirror intlk_is_inherited
    setup 2x1dmd short6
-      array [0 0 0 0 0 0]  // Mist have interlocked
+      array [0 0 0 0 0 0]  // Must have interlocked
             alternate_definition [interlocked] c3a
    setup 2x1dmd short6 rotate
       array [CR0E ZM5W CR1E AL5E ZM0W CAL1W]

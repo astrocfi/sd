@@ -1308,22 +1308,23 @@ expand::thing expand::expand_init_table[] = {
     s2x3, sd2x7, 1, 0U, 0x31E3U, false,
     warn__none, warn__none, simple_normalize, 0},
 
+   {{8, 11, 1, 2, 5, 7},
+    s2x3, s3x4, 1, 0U, 03131, false,
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_3X4)},
+
    {{12, 14, 3, 1, 4, 6, 11, 9},
     s2x4, s_c1phan, 1, 0U, 0xA5A5, false,
     warn__none, warn__none, simple_normalize, 0},
-
    {{0, 2, 7, 5, 8, 10, 15, 13},
     s2x4, s_c1phan, 0, 0U, 0x5A5A, false,
     warn__none, warn__none, simple_normalize, 0},
-
    {{6, 11, 15, 13, 14, 3, 7, 5},
     s2x4, s4x4, 1, 0U, 0x1717, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{8, 11, 1, 2, 5, 7},
     s2x3, s3x4, 1, 0U, 03131, false,
-    warn__none, warn__none, simple_normalize,
-    NB(CONCPROP__NEEDK_3X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_TRIPLE_1X4)},
 
    {{10, 15, 3, 1, 2, 7, 11, 9},
     s2x4, s4x4, 0, 0U, 0x7171, false,

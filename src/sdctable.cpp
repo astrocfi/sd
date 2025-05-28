@@ -1520,7 +1520,7 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none},  // Not C3?  No, mainstream, for dixie style.
    {"GRAND",                                 concept_grand,                 L+D, l_plus,
     UC_grand},
-   {"MIRROR",                                concept_mirror,                  D, l_c3,
+   {"MIRROR",                                concept_mirror,                  D, l_c3a,
     UC_none},
    {"TRIANGLE",                              concept_triangle,                D, l_c1,
     UC_none},
