@@ -34,14 +34,14 @@ Be sure the version numbers and dates are correct in:
 It is important that this be done before "new_binary" is run, because
 the manual and faq files are now wrapped into the binary distribution file.
 
-WARNING!!!!!  These scripts require "tar".  I have put tar.exe and
-cygwinB19.dll into the \bin directory.
-
+WARNING!!!!!  These scripts require "tar".  I have put tar.exe,
+cygwin1.dll, and cygwinB19.dll into the \bin directory.
 
 Go to sddoc directory and do:
 
+THIS STILL NEEDS MORE WORK BEFORE IT CAN BE DONE ON WINDOWS 10.
+
     setmingw64
-    settex
     clean clean
     do_plain
     do_ps
@@ -107,10 +107,10 @@ Go to sddoc directory and do:
 21 Jan 19  -  30 Jun 20  #62  // hairy interrupted swing the fractions
 30 Jun 20  -  14 Aug 20  #67  // thirdly split 5 times grand chain 8
 14 Aug 20  -  26 Dec 20  #63  // hairy interrupted scoot and plenty
-26 Dec 20                #69  // initially as couples regroup
- 8 Apr 21                #70  // triangles
+26 Dec 20  -   8 Apr 21  #69  // initially as couples regroup
+ 8 Apr 21  -  20 Jul 21  #70  // triangles
+20 Jul 21                #65  // middle half tandem, slide thru
                          #64  // hairy [boys trade] and circle 1/2
-                         #65  // middle half tandem, slide thru
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption
                          #68  // echo split grand chain 8

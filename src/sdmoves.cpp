@@ -7043,6 +7043,14 @@ static void matrixmovewrapper(setup *ss,
                               bool mirror_this_one,
                               setup *result)
 {
+   // If two-couple calling and in a 1/4 tag with outsides missing, the
+   // user can't possibly want two diamonds or two single 1/4 tags.
+   if (ss->kind == s_qtag && two_couple_calling &&
+       (ss->people[2].id1 || ss->people[6].id1) == 0 &&
+       (ss->people[3].id1 || ss->people[7].id1) != 0) {
+      expand::compress_setup(s_qtg_2x3, ss);
+   }
+
    int alldelta = (the_schema == schema_partner_matrix || the_schema == schema_partner_partial_matrix) ?
       partner_matrixmove(ss, the_schema, flags, callstuff, result) :
       matrixmove(ss, the_schema, flags, callstuff, result);

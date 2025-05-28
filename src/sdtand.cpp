@@ -3060,6 +3060,10 @@ static void small_mimic_move(setup *ss,
       uint32_t p = ss->people[k].id1;
       int the_real_index = ((p+MI.lateral+(MI.fwd<<1)) >> 1) & 1;
 
+      if (MI.setup_hint == MIMIC_SETUP_TIDAL_SETUP) {
+         the_real_index = MI.fwd;
+      }
+
       // Set the person number fields to the identity map.
       ttt.virtual_result.people[k].id1 = (p & ~0700) | (k<<6);
       ilatmask3 |= (p & 1) << 1;
@@ -3068,18 +3072,27 @@ static void small_mimic_move(setup *ss,
       ttt.m_real_saved_people[the_real_index^1].clear_person(k);
    }
 
+   static tm_thing special_1x8_map =
+      {{3, 2, 7, 6,    0, 1, 4, 5}, 0ULL, 0000, 4, 0,  s1x4,  s1x8};
+
    tm_thing *map_search =
       (MI.groupsize == 4) ? maps_isearch_mimicfour :
       (MI.groupsize == 2) ? maps_isearch_mimictwo :
       maps_isearch_twosome;
 
-   while (map_search->outsetup != nothing) {
-      if ((map_search->insetup == ss->kind) &&
-          map_search->insinglemask == 0ULL &&
-          (map_search->ilatmask3) == ilatmask3)
-         break;
+   if (MI.setup_hint == MIMIC_SETUP_TIDAL_SETUP) {
+      map_search = &special_1x8_map;
+      ilatmask3 = 0ULL;
+   }
+   else {
+      while (map_search->outsetup != nothing) {
+         if ((map_search->insetup == ss->kind) &&
+             map_search->insinglemask == 0ULL &&
+             (map_search->ilatmask3) == ilatmask3)
+            break;
 
-      map_search++;
+         map_search++;
+      }
    }
 
    if (map_search->outsetup == nothing)
@@ -3296,6 +3309,8 @@ void mimic_move(
       MI.lateral = 1;
    case selector_leads:
    case selector_trailers:
+   case selector_center4:
+   case selector_outerpairs:
       break;
    case selector_leftmosttwo:
    case selector_rightmosttwo:
@@ -3322,6 +3337,7 @@ void mimic_move(
    case selector_firsttwo:
    case selector_rightmostfour:
    case selector_firstfour:
+   case selector_outerpairs:
       MI.fwd = 1;
       break;
    }

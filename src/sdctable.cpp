@@ -1730,6 +1730,8 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, MIMIC_SETUP_WAVES},
    {"MIMIC @6 OF BOXES",                     concept_mimic,                 F+D, l_c4,
     UC_none, MIMIC_SETUP_BOXES},
+   {"MIMIC @6 OF A TIDAL SETUP",             concept_mimic,                 F+D, l_c4,
+    UC_none, MIMIC_SETUP_TIDAL_SETUP},
    {"TRACE",                                 concept_trace,                   0, l_c4,
     UC_none},
    {"OUTERACTING",                           concept_outeracting,             D, l_c4,

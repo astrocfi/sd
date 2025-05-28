@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.37"
+version "39.38"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -8036,42 +8036,43 @@ call "left pitch @h" c4a
          if outp     [AL3E AL2E CR1E AL0W]
          if no_dir_p [AL3E AL2E ZM1N ZM0N]
 
-// The consensus seems to be that the leaders can roll, because they did it
-// as one smooth motion.  Or something.  I'm tired of hearing about that.
+// Someone once said that the leaders can roll, because they did it as one
+// smooth motion.  Or something.  I need to stop listening to fake news.
+// Checked against Callerlab definition, 0248UTC, 27 Aug 2021 CE.
 call "leads roll @eright@f to a wave" a1
             left_means_mirror
    setup 2x1 1x2 rotate qualifier all_facing_same
-      array [ZM0W CR1E]
+      array [ZM0W CM1E]
    setup 2x1 1x2 rotate
-      array [0 CR1E]
+      array [0 CM1E]
 
 call "roll @eright@f to a wave" a1
             left_means_mirror
    setup 2x1 1x2 rotate qualifier all_facing_same
-      array [ZM0W CR1E]
+      array [ZM0W CM1E]
    setup 2x1 1x2 rotate
-      array [0 CR1E]
+      array [0 CM1E]
 
 // The "official" spellings.
 call "leads @eright@f roll to a wave" a1
             left_means_mirror
    setup 2x1 1x2 rotate qualifier all_facing_same
-      array [ZM0W CR1E]
+      array [ZM0W CM1E]
    setup 2x1 1x2 rotate
-      array [0 CR1E]
+      array [0 CM1E]
 
 call "@eright@f roll to a wave" a1
             left_means_mirror
    setup 2x1 1x2 rotate qualifier all_facing_same
-      array [ZM0W CR1E]
+      array [ZM0W CM1E]
    setup 2x1 1x2 rotate
-      array [0 CR1E]
+      array [0 CM1E]
 
 // Latch on is legal even if both people are facing.
 call "permissive leads roll @eright@f to a wave" dontshow tag permissiveleadsrollright
             left_means_mirror
    setup 2x1 1x2 rotate
-      array [ZM0W CR1E]
+      array [ZM0W CM1E]
 
 call "leads @e@f latch on" c3a
             left_means_mirror visible_fractions
@@ -21282,6 +21283,7 @@ call "turn by" c4 tag turnby
    // In fact, we are now using the definition "pass thru if you can, otherwise UTB
    // to the right".  Well, actually, we do something a little more sleazy than that --
    // we do a press ahead without looking at whether someone is facing us.
+            rear_back_from_qtag
    setup 4x1 1x4
       array [ZM1N ZM3N CR2S ZM2N]
             alternate_definition [twisted] c4
