@@ -6438,6 +6438,17 @@ static void do_sequential_call(
          }
       }
 
+      // The call "_revert if needed" doesn't allow plain fractal without revert.
+      // This shows up in "fractal tag reaction", where both fractal and revert
+      // are sent to the "_real @v tag base", since the tag base might have needed
+      // revert.  So, if that happens and we have plain fractal, remove same.
+
+      if (this_item->call_id == base_call_revert_if_needed &&
+          (ss->cmd.callspec == base_calls[base_call_basetag0] ||
+           ss->cmd.callspec == base_calls[base_call_basetag0_noflip]) &&
+          (result->cmd.cmd_final_flags.herit & (INHERITFLAG_FRACTAL | INHERITFLAG_REVERTMASK)) == INHERITFLAG_FRACTAL)
+         result->cmd.cmd_final_flags.herit &= ~INHERITFLAG_FRACTAL;
+
       do_stuff_inside_sequential_call(
          result, this_mod1,
          &fix_next_assumption,

@@ -655,7 +655,7 @@ followed by the concept (@strong{7/8}) that you want them to obey.
 Notwithstanding contemporary social and political sensibilities,
 @code{Sd} considers the boys' part of this call to be a press back.  We
 apologize to, and sympathize with, the dancers at a recent C4 weekend
-who believed that everyone should should press ahead on this call.
+who believed that everyone should press ahead on this call.
 
 @code{Sd} also considers the boys' part of M.C.P. to be a press ahead.  Sorry.
 
@@ -1354,22 +1354,24 @@ to fix this bug.
 
 The bug was subsequently observed with version 5 also, creating a
 serious problem, since those are the only Microsoft compilers that I
-have.  As of Sd version
-35, Gcc is used for the compilation of Sd/Sdtty for Windows.  It has
-always been used for the Linux release, of course.
+have.  (I also use Microsoft Visual Studio 2015, but not for
+productiono builds.)  As of Sd version 35, Gcc is used for the
+compilation of Sd/Sdtty for Windows.  It has always been used for the
+Linux release, of course.
 
 No version of Sd or Sdtty suffering from this Microsoft compiler bug was
 ever released---the code was modified to avoid the bug.  But that is not
 a workable solution in the long run, since I don't know what other parts
-of the program could be getting compiled incorrectly.
+of the program could be getting compiled incorrectly.  So productiono builds
+use Gcc.
 
 @unnumberedsec So what software is used in the preparation of Sd and Sdtty?
 
 @example
-  computer:             HP/Compaq Presario V3000
-  OS:                   Windows XP                   commercial
-  editor:               GNU Emacs 20.7.1             free
-  development system:   MingW 5.1.4                  free
+  computer:             HP/Compaq Pavillion 15z-ab100
+  OS:                   Windows XP 10                commercial
+  editor:               GNU Emacs 21.1.1             free
+  development system:   MingW 4.2.1                  free
   compiler/linker:      GCC 3.4.5                    free
   compress utilities:   Winzip 8.1                   commercial
                         Winzip Self Extractor 2.2    commercial
@@ -1389,7 +1391,7 @@ products or services".
 @unnumberedsec Is free software actually that much higher in quality than commercial software?
 
 It sure is, in many cases.  A worldwide network of hobby programmers who take pride in
-their work make vastly better products than big companies that are
+their work often make vastly better products than big companies that are
 managed by a philosophy of getting the most possible money from the least
 possible work.
 

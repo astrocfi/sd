@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.52"
+version "39.53"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -3739,8 +3739,8 @@ call "_turn the center star @b@S" dontshow tag turnstarn_endsnothing
    maybematrix_conc_star turndmdn [or_secondary_call inherit_fractal] nullcall []
 
 call "_turn the center star @b for qd@S" dontshow tag newturnstarn_endsnothing
-            neednumber bigmatrix_is_inherited
-   maybematrix_conc_bar turndmdn [or_secondary_call] nullcall []
+            neednumber bigmatrix_is_inherited fractal_is_inherited
+   maybematrix_conc_bar turndmdn [or_secondary_call inherit_fractal] nullcall []
 
 call "_diamond ends isolate" dontshow tag diamond_ends_isolate
    setup dmd 1x4 rotate
@@ -9433,6 +9433,26 @@ call "@6 rolling ripple 3 x @9" c4
          array                     [L1S AAL0S R3S CCR2S]
    setup 1x4 1x4 restriction unusual wave_only qualifier num 3 ripple_both_ends_1x4_only
          array                     [R0N AAL1N L2N CCR3N]
+
+call "@6 rolling ripple @9 x 1/2" c4
+            neednumber
+   setup 1x4 2stars restriction unusual wave_only qualifier num 2 ripple_one_end
+      preds "These people can't ripple."
+         if select                 [AL3N 0  CR7N    0]
+         if unselect_near_select   [0    AL5E    0 CR4W]
+         if unselect_near_unselect [ZM6N AL4E ZM2N CR5W]
+
+   setup 1x4 2x2 restriction unusual wave_only qualifier num 2 ripple_both_ends_1x4_only
+         array [CR1E AL3E AL0W CR2W]
+
+   setup 1x4 2stars restriction unusual wave_only qualifier num 3 ripple_one_end
+      preds "These people can't ripple."
+         if select                 [R2S     0  L6S    0]
+         if unselect_near_select   [0    AL5E    0 CR4W]
+         if unselect_near_unselect [CR7S AL4E AL3S CR5W]
+
+   setup 1x4 2x2 restriction unusual wave_only qualifier num 3 ripple_both_ends_1x4_only
+         array [CR2W AL0W AL3E CR1E]
 
 call "@6 rolling ripple 3 x @9-1/2" c4
             neednumber
@@ -18969,13 +18989,13 @@ call "@B the deucey@S" c3a
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_gensting inherit_fractal]
    seq newquarterdeucey2 [inherit_bigmatrix inherit_yoyo inherit_gensting inherit_fractal]
-   seq newturnstarn_endsnothing [inherit_bigmatrix]
+   seq newturnstarn_endsnothing [inherit_bigmatrix inherit_fractal]
    seq newquarterdeucey4 [inherit_bigmatrix inherit_yoyo inherit_gensting inherit_fractal]
 
 call "@9-@9-@9-@9 quarter the deucey" c4a
             step_to_wave left_means_touch_or_check visible_fractions need_four_numbers bigmatrix_is_inherited
-            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_gensting inherit_fractal]
+            yoyo_is_inherited gen_sting_is_inherited
+   seq armturn_n4 [inherit_bigmatrix inherit_yoyo inherit_gensting]
    seq newquarterdeucey2 [inherit_bigmatrix shift_one_number]
    seq newturnstarn_endsnothing [inherit_bigmatrix shift_two_numbers]
    seq newquarterdeucey4 [inherit_bigmatrix shift_three_numbers]
@@ -26349,7 +26369,7 @@ call "@v@C reaction@S but @m" c3a
    seq strictboxyscootback [inherit_fast]
    seq wvchreact_1 [inherit_cross]
    seq wvchreact_2 [inherit_fractal inherit_gensting]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
 call "@v and scatter@C reaction@S" c3
@@ -26369,7 +26389,7 @@ call "@v and scatter@C reaction@S but @m" c3
    seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
    seq wvchreact_1 [inherit_cross]
    seq wvchreact_2 [inherit_fractal inherit_gensting]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
 call "@v chain thru@C reaction@S" c3a
@@ -26393,7 +26413,7 @@ call "@v chain thru@C reaction@S but @m" c3a
    seq fixscootchainthru [inherit_fast]
    seq wvchreact_1 [inherit_cross]
    seq wvchreact_2 [inherit_fractal inherit_gensting]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
 call "@v chain thru and scatter@C reaction@S" c3
@@ -26413,7 +26433,7 @@ call "@v chain thru and scatter@C reaction@S but @m" c3
    seq scootchainthru [force_scatter]
    seq wvchreact_1 [inherit_cross]
    seq wvchreact_2 [inherit_fractal inherit_gensting]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
 call "_trans_nothing" dontshow tag trans_nothing
@@ -26490,7 +26510,7 @@ call "open up @jcross @lreaction@S but @m" c3a
    seq openup [inherit_magic]
    seq wvchreact_1 [inherit_cross]
    seq wvchreact_2 [inherit_fractal inherit_gensting]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
 call "triple play @jcross @lreaction@S" c3a
@@ -26506,7 +26526,7 @@ call "triple play @jcross @lreaction@S but @m" c3a
    seq tripleplay [inherit_magic]
    seq wvchreact_1 [inherit_cross]
    seq wvchreact_2 [inherit_fractal inherit_gensting]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
 call "reactivate" c3
@@ -29291,14 +29311,14 @@ call "the action@S" c4a
             last_part_visible left_means_mirror
             fractal_is_inherited gen_sting_is_inherited
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmod []
 
 call "the action@S but @m" c4a
             last_part_visible left_means_mirror
             fractal_is_inherited gen_sting_is_inherited
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal insert_number 1]
    seq finishwithmodbut2nd []
 
 call "barge the action@S" c4a
@@ -29306,7 +29326,7 @@ call "barge the action@S" c4a
             fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 2]
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [inherit_gensting insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithmod [inherit_gensting]
 
 call "barge the action@S but @m" c4a
@@ -29314,7 +29334,7 @@ call "barge the action@S but @m" c4a
             fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 2]
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [inherit_gensting insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithmodbut2nd [inherit_gensting]
 
 call "square the barge the action@S" c4
@@ -29322,7 +29342,7 @@ call "square the barge the action@S" c4
             fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 4]
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [inherit_gensting insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithmod [inherit_gensting]
 
 call "square the barge the action@S but @m" c4
@@ -29330,7 +29350,7 @@ call "square the barge the action@S but @m" c4
             fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 4]
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [inherit_gensting insert_number 1]
+   seq turndmdn_endstrade [inherit_fractal inherit_gensting insert_number 1]
    seq finishwithmodbut2nd [inherit_gensting]
 
 call "_fudge to parallel diamonds" dontshow tag fudge_to_parallel_diamonds
