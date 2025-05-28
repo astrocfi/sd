@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.7
-@set title2 Database version = 36.7 format = 243
+@set title1 RELEASE NOTES FOR VERSION 36.8
+@set title2 Database version = 36.8 format = 250
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.8::
 * 36.7::
 * 36.64::
 * 36.63::
@@ -49,7 +50,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.7, Top, (dir)
+@node Intro, 36.8, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -60,11 +61,107 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2006 William B. Ackerman
 @sp 3
 @menu
-* 36.7::               Changes in the current version
+* 36.8::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.7, 36.64, Intro, Top
+@node 36.8, 36.7, Intro, Top
+@unnumberedsec Version 36.8 changes
+
+New meta-concepts: @strong{double echo}, @strong{triple echo}, and
+@strong{quadruple echo}.
+
+New concepts: @strong{3x3 concentric}, @strong{4x4 concentric}, 
+@strong{3x3 cross concentric}, @strong{4x4 cross concentric}.
+
+The designator @strong{some} may be used with concepts of the
+@strong{<anyone> are as couples} variety, if the facing directions make
+it clear who are involved.  For example, one can use @strong{some are
+couples threesome, swing thru} from a suitable tidal line.
+
+The calls @strong{1/2 here comes the judge} and @strong{1/2 sock it to me}
+now leave the 3 non-active people on a column that is congruent to their
+starting line.  When done from a tidal one-faced line, these will leave
+a column of 6 in the center.
+
+The resolver should produce far fewer @strong{dixie grand} getouts from waves or
+8-chains.  The reconciler will not add @strong{circulate}, @strong{extend},
+or similar things to the end of the sequence.  Also, if the ending position
+of a reconcile is a squared set, it will be at home.
+
+When a @strong{cast off N/4} is interrupted for any reason (for example, an explicit
+interruption, or some part of it is done with a concept such as @strong{as couples}),
+the casting direction will be re-evaluated when the call is resumed.  That is, if
+the cast is "pushy", the centers will be re-evaluated for the push.
+
+Concepts such as @strong{cross concentric} should not be used with
+meta-concepts that cause it to be applied multiple times, as in
+@strong{initially stable cross concentric mix}.  Doing so causes the
+dancers to do the centers vs. ends change multiple times, which is
+controversial and confusing.  The program will give a warning in such a
+case.
+
+More combinations of phantom concepts are permitted.  Either of split
+phantom CLW or triple CLW working, may be followed by either
+of multiple boxes or split phantom boxes.  Either of split phantom boxes
+or multiple boxes working, may be followed by split phantom CLW.
+
+The legal combinations are now:
+
+@example
+@group
+split phantom C/L/W, split phantom boxes
+split phantom C/L/W, triple/quadruple boxes
+triple C/L/W working, split phantom boxes
+triple C/L/W working, triple/quadruple boxes
+split phantom boxes, split phantom C/L/W
+multiple boxes working, split phantom C/L/W
+@end group
+@end example
+
+The program will issue a warning whenever it has to determine who the
+@strong{centers} in a 3x1 diamond are.  They are the center diamond.
+If those people are designated in some other way, such as @strong{girls},
+the warning is not issued.
+
+A bug in @strong{sidetrack} in unusual setups has been fixed.
+We apologize to the caller and dancers who were inconvenienced by this.
+
+The inability to do @strong{initially oddly once removed [turn the key]
+motivate} has been fixed.
+
+It is now possible to have designated people @strong{pass in}, or similar
+things, without saying @strong{do your part}.
+
+The @strong{roll} action after @strong{by golly} has been fixed.
+
+The printing of transcript files (on paper, for those who use this
+technology) has been improved.  Some printers can print all the way to the
+edge of the page, though most cannot.  On such printers, transcripts used
+to be printed all the way to the left edge of the page.  The program now
+uses the printer driver's properties to place margins in a sensible way.
+
+Sdtty will now resist being shut down by the system if a sequence is in
+progress.  Sd and Sdtty have both interrogated the user ("Do you really
+want to abort this sequence?") when the "quit" command is given.
+Furthermore, Sd interrogates the user when the "X" is clicked in the
+upper-right corner of the window (or the "close" command from the system
+menu obtained by clicking the interlocking squares icon in the extreme
+upper left), rather than just letting the program be terminated.  Sdtty
+now does the same.  Be aware that the Windows (a registered trademark, I
+believe) operating system is much less patient with "console
+applications" (such as Sdtty) resisting a shutdown than with "windows
+applications" (such as Sd) doing so.  If you accidentally click the "X"
+in the upper-right corner while a sequence is in progress, Sdtty will
+ask "Do you really want to abort this sequence?"  Type "n".  Also, the
+system will complain "Windows cannot end this program".  Click "cancel",
+and Sdtty will continue.
+
+Sdtty now handles the underscore character correctly on Japanese keyboards.
+I thank Sue Curtis and Kiyoshi Kikuchi for tracking this problem down.
+
+@c ************
+@node 36.7, 36.64, 36.8, Top
 @unnumberedsec Version 36.7 changes
 
 There was a major overhaul in the inner workings of the program, relating

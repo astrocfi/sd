@@ -445,6 +445,25 @@ static void innards(
          return;
       }
 
+      // We still might have all setups dead concentric.  Try to fix that.
+      for (i=0; i<arity; i++) {
+         if (map_kind == MPKIND__SPLIT &&
+             ((z[i].kind == s_dead_concentric) ||
+              (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing))) {
+            setup linetemp;
+            setup qtagtemp;
+            setup_kind k = try_to_expand_dead_conc(z[i], linetemp, qtagtemp);
+            if (k == s1x4) {
+               if (x[i].kind == s_qtag)
+                  z[i] = qtagtemp;
+               else
+                  z[i] = linetemp;
+            }
+            if (k == s2x2)
+               z[i] = linetemp;
+         }
+      }
+
       if (arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4)) {
          if (!(rotstate & 0xF03) && map_kind == MPKIND__SPLIT) {
             if (!(rotstate & 0x0F0))
@@ -1234,7 +1253,9 @@ extern void divided_setup_move(
 extern void overlapped_setup_move(
    setup *ss,
    uint32 map_encoding,
-   uint32 *masks, setup *result) THROW_DECL
+   uint32 *masks,
+   setup *result,
+   unsigned int noexpand_bits_to_set /* = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2 */ ) THROW_DECL
 {
    int i, j, rot;
    uint32 k;
@@ -1264,7 +1285,7 @@ extern void overlapped_setup_move(
 
    t.assumption = cr_none;
    innards(&ss->cmd, map_encoding, maps, true, t,
-           CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2, false, x, result);
+           noexpand_bits_to_set, false, x, result);
    reinstate_rotation(ss, result);
    result->result_flags.clear_split_info();
 }
@@ -1452,7 +1473,8 @@ extern void do_phantom_2x4_concept(
       }
 
       // Allow split phantom CLW, triple boxes.
-      noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1;
+      if (parseptr->concept->arg3 == MPKIND__SPLIT)
+         noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1;
       break;
    case s2x6:
       // Check for special case of split phantom lines/columns in a parallelogram.
@@ -3195,6 +3217,9 @@ void do_concept_wing(
    // 3 - invert mystic wing
    // 4 - other wing
 
+   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__META_NOCMD)
+      warn(warn__meta_on_xconc);
+
    int i;
    update_id_bits(ss);
 
@@ -4156,7 +4181,7 @@ static void wv_tand_base_move(
       if (s->kind == s_bone) {
          if (indicator & 0100) fail("Can't do this concept in this setup.");
          concentric_move(s, (setup_command *) 0, &s->cmd, schema_concentric_2_6,
-                         0, 0, true, ~0UL, result);
+                         0, 0, true, false, ~0UL, result);
          return;
       }
       else {
@@ -4255,7 +4280,7 @@ static void wv_tand_base_move(
       fail("Can't do this concept in this setup.");
    }
 
-   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, true, ~0UL, result);
+   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0UL, result);
    return;
 
  losing:
@@ -4332,7 +4357,7 @@ extern void triangle_move(
 
       // For galaxies, the schema is now in terms of the absolute orientation.
 
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0UL, result);
    }
    else {
       // Set this so we can do "peel and trail" without saying "triangle" again.
@@ -4423,7 +4448,7 @@ extern void triangle_move(
             }
 
             concentric_move(ss, &ss->cmd, (setup_command *) 0, schema,
-                            0, 0, true, ~0UL, result);
+                            0, 0, true, false, ~0UL, result);
          }
          else {
             switch (ss->kind) {
@@ -4444,7 +4469,7 @@ extern void triangle_move(
             }
 
             concentric_move(ss, (setup_command *) 0, &ss->cmd, schema,
-                            0, 0, true, ~0UL, result);
+                            0, 0, true, false, ~0UL, result);
          }
       }
    }

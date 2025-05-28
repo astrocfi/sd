@@ -173,7 +173,8 @@ struct resolve_descriptor {
    // This is for really bad ones (LA from lines facing out) that we want
    // to display when they arise while calling, but we don't want to find
    // in a resolve command.
-   int how_bad;
+   short int how_bad;
+   short int not_in_reconcile;   // Nonzero => do not accept in a reconcile.
    first_part_kind first_part;
    main_part_kind main_part;
 };
@@ -185,6 +186,7 @@ enum resolve_kind {
    resolve_la,
    resolve_ext_rlg,
    resolve_ext_la,
+   resolve_bad_ext_la,
    resolve_slipclutch_rlg,
    resolve_slipclutch_la,
    resolve_circ_rlg,
@@ -196,6 +198,7 @@ enum resolve_kind {
    resolve_xby_rlg,
    resolve_xby_la,
    resolve_dixie_grand,
+   resolve_bad_dixie_grand,
    resolve_minigrand,
    resolve_prom,
    resolve_revprom,
@@ -206,28 +209,30 @@ enum resolve_kind {
 
 // BEWARE!!  This list is keyed to the definition of "resolve_kind".
 static const resolve_descriptor resolve_table[] = {
-   {2,  first_part_none,  main_part_none},     // resolve_none
-   {0,  first_part_none,  main_part_rlg},      // resolve_rlg
-   {0,  first_part_none,  main_part_la},       // resolve_la
-   {1,  first_part_ext,   main_part_rlg},      // resolve_ext_rlg
-   {1,  first_part_ext,   main_part_la},       // resolve_ext_la
-   {2,  first_part_slcl,  main_part_rlg},      // resolve_slipclutch_rlg
-   {2,  first_part_slcl,  main_part_la},       // resolve_slipclutch_la
-   {3,  first_part_circ,  main_part_rlg},      // resolve_circ_rlg
-   {3,  first_part_circ,  main_part_la},       // resolve_circ_la
-   {3,  first_part_pthru, main_part_rlg},      // resolve_pth_rlg
-   {3,  first_part_pthru, main_part_la},       // resolve_pth_la
-   {4,  first_part_trby,  main_part_rlg},      // resolve_tby_rlg
-   {4,  first_part_trby,  main_part_la},       // resolve_tby_la
-   {1,  first_part_xby,   main_part_rlg},      // resolve_xby_rlg
-   {1,  first_part_xby,   main_part_la},       // resolve_xby_la
-   {1,  first_part_none,  main_part_dixgnd},   // resolve_dixie_grand
-   {2,  first_part_none,  main_part_minigrand},// resolve_minigrand
-   {0,  first_part_none,  main_part_prom},     // resolve_prom
-   {1,  first_part_none,  main_part_revprom},  // resolve_revprom
-   {3,  first_part_none,  main_part_sglprom},  // resolve_sglfileprom
-   {4,  first_part_none,  main_part_rsglprom}, // resolve_revsglfileprom
-   {2,  first_part_none,  main_part_circ}};    // resolve_circle
+   {2, 1, first_part_none,  main_part_none},     // resolve_none
+   {0, 0, first_part_none,  main_part_rlg},      // resolve_rlg
+   {0, 0, first_part_none,  main_part_la},       // resolve_la
+   {1, 1, first_part_ext,   main_part_rlg},      // resolve_ext_rlg
+   {1, 1, first_part_ext,   main_part_la},       // resolve_ext_la
+   {3, 1, first_part_ext,   main_part_la},       // resolve_bad_ext_la
+   {2, 1, first_part_slcl,  main_part_rlg},      // resolve_slipclutch_rlg
+   {2, 1, first_part_slcl,  main_part_la},       // resolve_slipclutch_la
+   {3, 1, first_part_circ,  main_part_rlg},      // resolve_circ_rlg
+   {3, 1, first_part_circ,  main_part_la},       // resolve_circ_la
+   {3, 1, first_part_pthru, main_part_rlg},      // resolve_pth_rlg
+   {3, 1, first_part_pthru, main_part_la},       // resolve_pth_la
+   {4, 1, first_part_trby,  main_part_rlg},      // resolve_tby_rlg
+   {4, 1, first_part_trby,  main_part_la},       // resolve_tby_la
+   {1, 1, first_part_xby,   main_part_rlg},      // resolve_xby_rlg
+   {1, 1, first_part_xby,   main_part_la},       // resolve_xby_la
+   {1, 0, first_part_none,  main_part_dixgnd},   // resolve_dixie_grand
+   {4, 1, first_part_none,  main_part_dixgnd},   // resolve_bad_dixie_grand
+   {2, 1, first_part_none,  main_part_minigrand},// resolve_minigrand
+   {0, 0, first_part_none,  main_part_prom},     // resolve_prom
+   {1, 0, first_part_none,  main_part_revprom},  // resolve_revprom
+   {3, 0, first_part_none,  main_part_sglprom},  // resolve_sglfileprom
+   {4, 0, first_part_none,  main_part_rsglprom}, // resolve_revsglfileprom
+   {2, 0, first_part_none,  main_part_circ}};    // resolve_circle
 
 
 // Some resolves are only legal at certain levels, so there is a "level" field
@@ -281,14 +286,14 @@ static const resolve_tester test_thar_stuff[] = {
    {resolve_xby_rlg,        XB, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8138A31A},
    {resolve_revprom,        MS, 4,   {2, 3, 0, 1, 6, 7, 4, 5},     0x118833AA},
    {resolve_xby_la,         XB, 4,   {2, 3, 0, 1, 6, 7, 4, 5},     0x138A31A8},
-   {resolve_dixie_grand,    DX, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xAA118833},
+   {resolve_bad_dixie_grand,DX, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xAA118833},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_rigger_stuff[] = {
    {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},     0x8A31A813},
    {resolve_minigrand,      MS, 4,   {3, 6, 1, 4, 7, 2, 5, 0},     0x8833AA11},
    {resolve_la,             MS, 5,   {3, 1, 0, 6, 7, 5, 4, 2},     0xA31A8138},
-   {resolve_dixie_grand,    DX, 0,   {2, 7, 0, 5, 6, 3, 4, 1},     0xAA118833},
+   {resolve_bad_dixie_grand,DX, 0,   {2, 7, 0, 5, 6, 3, 4, 1},     0xAA118833},
 
    // From a strange  rigger.  This rates about
    // 500 milli-Tersoffs, on a scale named after Mike Tersoff, a devotee
@@ -533,7 +538,7 @@ static const resolve_tester test_2x4_stuff[] = {
    {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
    {resolve_pth_rlg,        MS, 2,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},
    {resolve_pth_la,         MS, 5,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
-   {resolve_dixie_grand,    DX, 1,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},
+   {resolve_bad_dixie_grand,DX, 1,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},
 
    // Trade-by.
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
@@ -547,17 +552,17 @@ static const resolve_tester test_2x4_stuff[] = {
    {resolve_minigrand,      MS, 5,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
    {resolve_la,             MS, 6,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
    {resolve_ext_rlg,        EX, 2,   {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},
-   {resolve_ext_la,         EX, 7,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},
+   {resolve_bad_ext_la,     EX, 7,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},
    {resolve_circ_rlg,       MS, 1,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
    {resolve_circ_la,        MS, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},
    {resolve_xby_rlg,        XB, 2,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},
    {resolve_xby_la,         XB, 5,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
-   {resolve_dixie_grand,    DX, 0x27,{3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},
+   {resolve_bad_dixie_grand,DX, 0x27,{3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},
 
    // From T-bone setup, ends facing.
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
    {resolve_la,             MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},
-   {resolve_dixie_grand,    DX, 2,   {5, 2, 3, 0, 1, 6, 7, 4},     0x33AA1188},
+   {resolve_bad_dixie_grand,DX, 2,   {5, 2, 3, 0, 1, 6, 7, 4},     0x33AA1188},
 
    // RLG from centers facing and ends in miniwaves.
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},
@@ -965,9 +970,9 @@ static bool inner_search(command_kind goal,
       // will signal and go to try_again.
       // This may, of course, add more concepts.
 
-      (void) query_for_call();
+      query_for_call();
 
-      /* Do the call.  An error will signal and go to try_again. */
+      // Do the call.  An error will signal and go to try_again.
 
       toplevelmove();
       finish_toplevelmove();
@@ -1013,7 +1018,7 @@ static bool inner_search(command_kind goal,
             // Here we bias the search against resolves with circulates (which we
             // consider to be of lower quality) by only sometimes accepting them.
             //
-            //  As the "how_bad" indicator gets higher, we ignore a larger
+            // As the "how_bad" indicator gets higher, we ignore a larger
             // fraction of the resolves.  For example, we bias the search VERY HEAVILY
             // against reverse single file promenades, accepting only 1 in 16.
 
@@ -1077,7 +1082,6 @@ static bool inner_search(command_kind goal,
          break;
 
       case command_reconcile:
-
          {
             if (ns->kind != goal_kind) goto what_a_loss;
             for (j=0; j<8; j++)
@@ -1104,24 +1108,13 @@ static bool inner_search(command_kind goal,
             p1 = (p1 - p0) & PID_MASK;
 
             // Test each sex individually for uniformity of offset around the ring.
-            if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
-               goto what_a_loss;
+            if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6) goto what_a_loss;
 
-            if (((p1 + p2) & PID_MASK) != 0200) // Test for each sex in sequence.
-               goto what_a_loss;
+            // Test for each sex in sequence.
+            if (((p1 + p2) & PID_MASK) != 0200) goto what_a_loss;
 
-            if ((p2 & 0100) == 0)               // Test for alternating sex.
-               goto what_a_loss;
-
-            // Test for relative phase of boys and girls.
-            // "accept_extend" tells how accurate the placement must be.
-            switch (ui_options.singing_call_mode) {
-            case 1: p2 -= 0200; break;
-            case 2: p2 -= 0600; break;
-            }
-
-            // We demand zero promenade distance for reconciles.
-            if ((p2 >> 7) & 3) goto what_a_loss;
+            // Test for alternating sex.
+            if ((p2 & 0100) == 0) goto what_a_loss;
          }
 
          break;
@@ -1310,20 +1303,19 @@ static bool inner_search(command_kind goal,
       testing_fidelity = false;
 
       // One more check.  If this was a "reconcile", demand that we
-      // have an acceptable resolve.  How could the permutation be
-      // acceptable but not lead to an acceptable resolve?  Because,
-      // if the resolve is "at home", we demand that the promenade
-      // distance be zero.  Our previous tests were impervious to
-      // promenade distance, because it usually doesn't matter.  But
-      // for "at home", resolve_p will only show a resolve if the
-      // distance is zero.  Note that the above comment is obsolete,
-      // because we now allow circling a nonzero amount.  However, it
-      // does little harm to leave this test in place, and it might
-      // avoid future problems if rotation-sensitive resolves are ever
-      // re-introduced.
+      // have an acceptable resolve.  Specifically, we reject anything
+      // with "circulate", "extend", etc.  Why?  Because reconcile endings
+      // are supposed to be "clever" RLG's or LA's.  Also, if the ending
+      // is a "circle left", we demand that the circling distance be zero.
+      // Why?  Because squared-set reconcile endings are supposed to be
+      // clever "you're home" types of things.
 
-      if (goal == command_reconcile && !configuration::sequence_is_resolved())
-         goto try_again;
+     if (goal == command_reconcile) {
+        resolve_indicator & rr = configuration::current_resolve();
+        resolve_kind rk = rr.the_item->k;
+        if (resolve_table[rk].not_in_reconcile != 0) goto try_again;
+        if (rk == resolve_circle && rr.distance != 0) goto try_again;
+     }
 
       // We win.  Really save it and exit.  History_ptr has been clobbered.
 

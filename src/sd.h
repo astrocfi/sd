@@ -690,8 +690,9 @@ enum selector_kind {
    selector_everyone,
    selector_all,
    selector_none,
-   // Start of unsymmetrical selectors.
-   unsymm_SELECTOR_START,    selector_nearline = unsymm_SELECTOR_START,
+   // Selectors below this point will not be used in random generation.
+   // They are mostly unsymmetrical ones.
+   noresolve_SELECTOR_START,    selector_nearline = noresolve_SELECTOR_START,
    selector_farline,
    selector_nearcolumn,
    selector_farcolumn,
@@ -715,6 +716,7 @@ enum selector_kind {
    selector_cpls2_3,
    selector_cpls3_4,
    selector_cpls4_1,
+   selector_some,   // Used only in "some are tandem" operations.
    // Start of invisible selectors.
    selector_INVISIBLE_START,   selector_mysticbeaus = selector_INVISIBLE_START,
    selector_mysticbelles,
@@ -1393,10 +1395,10 @@ enum {
    CMD_FRAC_PART2_BIT       = 00100UL,  // This is "k".
    CMD_FRAC_PART2_MASK      = 07700UL,
 
-   CMD_FRAC_IMPROPER_BIT    = 0x00400000UL,
-   CMD_FRAC_THISISLAST      = 0x00800000UL,
-   CMD_FRAC_REVERSE         = 0x01000000UL,
-   CMD_FRAC_CODE_MASK       = 0x0E000000UL,    // This is a 3 bit field.
+   CMD_FRAC_IMPROPER_BIT    = 0x00200000UL,
+   CMD_FRAC_THISISLAST      = 0x00400000UL,
+   CMD_FRAC_REVERSE         = 0x00800000UL,
+   CMD_FRAC_CODE_MASK       = 0x07000000UL,    // This is a 3 bit field.
 
    // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
    // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
@@ -1404,12 +1406,12 @@ enum {
    // (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
 
    CMD_FRAC_CODE_ONLY           = 0x00000000UL,
-   CMD_FRAC_CODE_ONLYREV        = 0x02000000UL,
-   CMD_FRAC_CODE_FROMTO         = 0x04000000UL,
-   CMD_FRAC_CODE_FROMTOREV      = 0x06000000UL,
-   CMD_FRAC_CODE_FROMTOREVREV   = 0x08000000UL,
-   CMD_FRAC_CODE_FROMTOMOST     = 0x0A000000UL,
-   CMD_FRAC_CODE_LATEFROMTOREV  = 0x0C000000UL,
+   CMD_FRAC_CODE_ONLYREV        = 0x01000000UL,
+   CMD_FRAC_CODE_FROMTO         = 0x02000000UL,
+   CMD_FRAC_CODE_FROMTOREV      = 0x03000000UL,
+   CMD_FRAC_CODE_FROMTOREVREV   = 0x04000000UL,
+   CMD_FRAC_CODE_FROMTOMOST     = 0x05000000UL,
+   CMD_FRAC_CODE_LATEFROMTOREV  = 0x06000000UL,
 
    CMD_FRAC_BREAKING_UP     = 0x10000000UL,
    CMD_FRAC_FORCE_VIS       = 0x20000000UL,
@@ -2202,7 +2204,6 @@ enum warning_index {
    warn__each1x2,
    warn__eachdmd,
    warn__take_right_hands,
-   warn__ctrs_are_dmd,
    warn__1_4_pgram,
    warn__full_pgram,
    warn__3_4_pgram,
@@ -2229,6 +2230,7 @@ enum warning_index {
    warn__check_centered_qtag,
    warn__check_pgram,
    warn__ctrs_stay_in_ctr,
+   warn__meta_on_xconc,
    warn__check_c1_stars,
    warn__check_gen_c1_stars,
    warn__bigblock_feet,
@@ -2278,6 +2280,7 @@ enum warning_index {
    warn_serious_violation,
    warn__assume_dpt,
    warn_bogus_yoyo_rims_hubs,
+   warn__centers_are_diamond,
    warn_pg_in_2x6,
    warn_real_people_spots,
    warn__tasteless_com_spot,
@@ -2311,31 +2314,9 @@ class merge_table {
       setup_kind k2;
       uint32 m1;
       uint32 m2;
-      /* This is the mask of things that we will reject.  The low 4 bits are rotations
-         that we will reject.  It is ANDed with "1 << r".  R is the rotation of res1,
-         after localizing so that res2 has rotation zero.  Hence r=0 if the two setups
-         have the same orientation, and, except in the case of things like triangles,
-         r=1 if they are orthogonal.  Common values of the low hex digit of "rotmask"
-         are therefore:
-         E demand same orientation
-         D demand orthogonal
-         C either way.
-
-         Additionally:
-         The "10" bit means that action must be merge_without_gaps.
-         The "20" bit means that action must NOT be merge_strict_matrix.
-         The "40" bit means only accept it if the setups, prior to cutting down,
-         were a 2x4 and a 1x8 that were perpendicular to each other.
-         The "80" bit means that action must NOT be merge_c1_phantom_real.
-         The "100" bit means that original action must NOT be merge_after_dyp.
-         The "200" bit means only accept it if the setups, prior to cutting down,
-         were a 2x4 and a ptpd that were perpendicular to each other. */
-
+      // See comments in sdtables.cpp at definition of merge_table::merge_init_table
+      // for explanation of these next two fields.
       unsigned short rotmask;
-      // 1 bit - swap setups;
-      // 2 bit - change elongation;
-      // 4 bit - no take right hands
-      // 8 bit - force outer_elong to 3, so people will go to corners of 4x4
       unsigned short swap_setups;
       calldef_schema conc_type;
       setup_kind innerk;
@@ -2351,7 +2332,7 @@ class merge_table {
  private:
 
    // Must be a power of 2.
-   enum { NUM_MERGE_HASH_BUCKETS = 32 };
+   enum { NUM_MERGE_HASH_BUCKETS = 64 };
 
    // The big initialization table, in sdtables.
    static concmerge_thing merge_init_table[];
@@ -2522,54 +2503,58 @@ struct writechar_block_type {
 #define MAX_TEXT_LINE_LENGTH 200
 
 
-/* Codes for special accelerator keystrokes. */
+// Codes for special accelerator keystrokes.
 
-/* Function keys can be plain, shifted, control, alt, or control-alt. */
+// Function keys can be plain, shifted, control, alt, or control-alt.
 
-#define FKEY 128
-#define SFKEY 144
-#define CFKEY 160
-#define AFKEY 176
-#define CAFKEY 192
+enum {
+   FKEY = 128,
+   SFKEY = 144,
+   CFKEY = 160,
+   AFKEY = 176,
+   CAFKEY = 192,
 
-/* "Enhanced" keys can be plain, shifted, control, alt, or control-alt. */
-/* e1 = page up
-   e2 = page down
-   e3 = end
-   e4 = home
-   e5 = left arrow
-   e6 = up arrow
-   e7 = right arrow
-   e8 = down arrow
-   e13 = insert
-   e14 = delete */
+   // "Enhanced" keys can be plain, shifted, control, alt, or control-alt.
+   // e1 = page up
+   // e2 = page down
+   // e3 = end
+   // e4 = home
+   // e5 = left arrow
+   // e6 = up arrow
+   // e7 = right arrow
+   // e8 = down arrow
+   // e13 = insert
+   // e14 = delete
 
-#define EKEY 208
-#define SEKEY 224
-#define CEKEY 240
-#define AEKEY 256
-#define CAEKEY 272
+   EKEY = 208,
+   SEKEY = 224,
+   CEKEY = 240,
+   AEKEY = 256,
+   CAEKEY = 272,
 
-/* Digits can be control, alt, or control-alt. */
+   // Digits can be control, alt, or control-alt.
 
-#define CTLDIG 288
-#define ALTDIG 298
-#define CTLALTDIG 308
+   CTLDIG = 288,
+   ALTDIG = 298,
+   CTLALTDIG = 308,
 
-/* Numeric keypad can be control, alt, or control-alt. */
+   // Numeric keypad can be control, alt, or control-alt.
 
-#define CTLNKP 318
-#define ALTNKP 328
-#define CTLALTNKP 338
+   CTLNKP = 318,
+   ALTNKP = 328,
+   CTLALTNKP = 338,
 
-/* Letters can be control, alt, or control-alt. */
+   // Letters can be control, alt, or control-alt.
 
-#define CTLLET (348-'A')
-#define ALTLET (374-'A')
-#define CTLALTLET (400-'A')
+   CTLLET = (348-'A'),
+   ALTLET = (374-'A'),
+   CTLALTLET = (400-'A'),
 
-#define FCN_KEY_TAB_LOW (FKEY+1)
-#define FCN_KEY_TAB_LAST (CTLALTLET+'Z')
+   CLOSEPROGRAMKEY = 426,
+
+   FCN_KEY_TAB_LOW = (FKEY+1),
+   FCN_KEY_TAB_LAST = CLOSEPROGRAMKEY
+};
 
 // This allows numbers from 0 to 36, inclusive.
 enum {
@@ -3406,11 +3391,14 @@ struct concept_table_item{
    makes "ends detour" work.
 */
 
+// Beware!  These flags must be disjoint from DFM1_CONCENTRICITY_FLAG_MASK, in database.h .
+// If that changes, these flags need to be chacked.
 // Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100 hex.
 
 enum {
    CMD_MISC__EXPLICIT_MIRROR      = 0x00000100UL,
    CMD_MISC__MATRIX_CONCEPT       = 0x00000200UL,
+
    // This is a 4 bit field.
    CMD_MISC__VERIFY_MASK          = 0x00003C00UL,
    // Here are the encodings that can go into same.
@@ -3434,14 +3422,13 @@ enum {
    CMD_MISC__NO_EXPAND_2          = 0x00010000UL,  // Allow only one split phantom C/L/W expansion.
    CMD_MISC__NO_EXPAND_AT_ALL     = 0x00020000UL,  // Positively no expansion.
    CMD_MISC__NO_EXPAND_MATRIX = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2 | CMD_MISC__NO_EXPAND_AT_ALL,
+
    CMD_MISC__DISTORTED            = 0x00040000UL,
    CMD_MISC__OFFSET_Z             = 0x00080000UL,
    CMD_MISC__SAID_SPLIT           = 0x00100000UL,
    CMD_MISC__SAID_TRIANGLE        = 0x00200000UL,
    CMD_MISC__DO_AS_COUPLES        = 0x00400000UL,
-
-   // spare:                        0x00800000UL,
-
+   // spare:                      = 0x00800000UL,
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000UL,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000UL,
    CMD_MISC__MUST_SPLIT_VERT      = 0x04000000UL,
@@ -3460,6 +3447,8 @@ enum {
    CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002UL,
    CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
    CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
+   CMD_MISC3__META_NOCMD           = 0x00000010UL,
+   CMD_MISC3__NO_CHECK_LEVEL       = 0x00000020UL
 };
 
 
@@ -4441,7 +4430,7 @@ extern const clw3_thing clw3_table[];                               /* in SDTABL
 
 /* In SDPREDS */
 
-extern bool selectp(setup *ss, int place) THROW_DECL;
+extern bool selectp(setup *ss, int place, int allow_some = 0) THROW_DECL;
 
 /* In SDGETOUT */
 
@@ -4634,7 +4623,9 @@ extern void divided_setup_move(
 extern void overlapped_setup_move(
    setup *ss,
    uint32 map_encoding,
-   uint32 *masks, setup *result) THROW_DECL;
+   uint32 *masks,
+   setup *result,
+   unsigned int noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2) THROW_DECL;
 
 extern void do_phantom_2x4_concept(
    setup *ss,
@@ -4699,6 +4690,8 @@ extern void triangle_move(
 
 extern bool do_big_concept(
    setup *ss,
+   parse_block *the_concept_parse_block,
+   bool handle_concept_details,
    setup *result) THROW_DECL;
 
 void stable_move(
@@ -4734,6 +4727,7 @@ extern void concentric_move(
    uint32 modifiersin1,
    uint32 modifiersout1,
    bool recompute_id,
+   bool enable_3x1_warn,
    uint32 specialoffsetmapcode,
    setup *result) THROW_DECL;
 
@@ -4794,7 +4788,7 @@ extern void update_id_bits(setup *ss);
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
-extern void get_directions(
+extern void big_endian_get_directions(
    setup *ss,
    uint32 & directions,
    uint32 & livemask);
@@ -4934,6 +4928,8 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 
 extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL;
+
+extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout);
 
 extern parse_block *process_final_concepts(
    parse_block *cptr,

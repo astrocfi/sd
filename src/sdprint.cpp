@@ -220,12 +220,18 @@ void printer::print_this(const char *szFileName, char *szMainTitle, bool pagenum
    GetTextMetrics(hdcPrn, &tm);
    int iPixelLineHeight = tm.tmHeight + tm.tmExternalLeading;
 
+   int iPixelLeftOfPage = tm.tmAveCharWidth*2-GetDeviceCaps(hdcPrn, PHYSICALOFFSETX);
+
    // This is where we choose to start printing.  If it were zero,
    // we would start right at the top (less whatever margin the system
    // provides.)  We set it to iPixelLineHeight to give us an effective
-   // blank line at the top of the page, in addition to the margin the
-   // system provides.  That seems to look right.
-   int iPixelTopOfPage = iPixelLineHeight;
+   // blank line at the top of the page, taking into account the page margin
+   // for common printers, which seems to be 108.  That seems to look right.
+   int iPixelTopOfPage = iPixelLineHeight + 108 - GetDeviceCaps(hdcPrn, PHYSICALOFFSETY );
+
+   // If printer can't print as close to the edge of the page as we would like, do the best we can.
+   if (iPixelLeftOfPage < 0) iPixelLeftOfPage = 0;
+   if (iPixelTopOfPage < 0) iPixelTopOfPage = 0;
 
    // This is where we choose to stop printing.  It must not be greater than
    // "GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight", that is, we must subtract
@@ -358,14 +364,14 @@ void printer::print_this(const char *szFileName, char *szMainTitle, bool pagenum
                      bPageIsOpen = true;
                   }
 
-                  TextOut (hdcPrn, 0, iRasterPos, pstrBuffer, strlen(pstrBuffer));
+                  TextOut (hdcPrn, iPixelLeftOfPage, iRasterPos, pstrBuffer, strlen(pstrBuffer));
                }
 
                // If doing page numbers, we have two more lines of space at the bottom.
 
                if (pagenums && bPageIsOpen) {
                   wsprintf(pstrBuffer, "                   %s   Page %d", szFileName, pagenum);
-                  TextOut (hdcPrn, 0, iPixelBottomOfPage + 2*iPixelLineHeight, pstrBuffer, strlen(pstrBuffer));
+                  TextOut (hdcPrn, iPixelLeftOfPage, iPixelBottomOfPage + 2*iPixelLineHeight, pstrBuffer, strlen(pstrBuffer));
                }
 
                if (bPageIsOpen) {

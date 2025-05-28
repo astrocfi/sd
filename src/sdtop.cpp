@@ -24,7 +24,7 @@
    compress_setup
    expand_setup
    update_id_bits
-   get_directions
+   big_endian_get_directions
    touch_or_rear_back
    do_matrix_expansion
    initialize_sdlib
@@ -853,7 +853,7 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
-extern void get_directions(
+extern void big_endian_get_directions(
    setup *ss,
    uint32 & directions,
    uint32 & livemask)
@@ -890,7 +890,7 @@ extern void touch_or_rear_back(
 
    remove_z_distortion(scopy);
 
-   get_directions(scopy, directions, livemask);
+   big_endian_get_directions(scopy, directions, livemask);
 
    uint32 touchflags = (callflags1 & CFLAG1_STEP_REAR_MASK);
    call_restriction new_assume = cr_none;
@@ -992,9 +992,11 @@ extern void touch_or_rear_back(
                goto found_tptr;
             }
             else if (((0x003C & ~livemask) == 0 || (0x3C00 & ~livemask) == 0) &&
+                     (livemask & 0xC3C3) != 0 &&
                      ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
                // Check for stepping to some kind of 1/4 tag
                // from a DPT or trade-by or whatever.
+               // But we require at least one person on the outside.  See test t57.
                tptr = &step_qtag_pair;
                goto found_tptr;
             }
@@ -3026,7 +3028,6 @@ static bool check_for_supercall(parse_block *parseptrcopy)
             (CFLAGH__HAS_AT_ZERO|CFLAGH__HAS_AT_M)) == CFLAGH__HAS_AT_ZERO ||
            (parseptrcopy->call->the_defn.callflagsf &
             (CFLAGH__HAS_AT_ZERO|CFLAGH__HAS_AT_M)) == CFLAGH__HAS_AT_M)) {
-         setup_command foo2;
          by_def_item innerdef;
 
          if (parseptrcopy->call->the_defn.callflagsf & CFLAGH__HAS_AT_ZERO) {
@@ -3042,6 +3043,7 @@ static bool check_for_supercall(parse_block *parseptrcopy)
          setup_command bar;
          bar.cmd_final_flags.clear_all_herit_and_final_bits();
          calldefn this_defn = base_calls[innerdef.call_id]->the_defn;
+         setup_command foo2;
          get_real_subcall(parseptrcopy, &innerdef, &bar, &this_defn, false, 0, &foo2);
       }
 
@@ -4000,10 +4002,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          k ^= (0x144 ^ 0x555);
          /* **** FALL THROUGH!!!! */
       case cr_ripple_both_ends:
+      case cr_ripple_both_ends_1x4_only:
          /* **** FELL THROUGH!!!!!! */
-         k ^= 0x090555;
-         mask = 0;
+         k ^= 0x11090555;
 
+         // Make a little-endian mask of the selected people.
+         mask = 0;
          for (plaini=0, w=1; plaini<=attr::slimit(ss); plaini++, w<<=1) {
             if (selectp(ss, plaini)) mask |= w;
          }
@@ -4022,9 +4026,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
                goto good;
             goto bad;
          }
-         else if (ssK == s1x6) {
-            // Only "cr_ripple_both_ends" is supported.
+         else if (ssK == s1x6 && this_qualifier == cr_ripple_both_ends) {
             if (mask == ((k>>16) & 0x3F)) goto good;
+            goto bad;
+         }
+         else if (ssK == s1x8 && this_qualifier == cr_ripple_both_ends) {
+            if (mask == ((k>>24) & 0xFF)) goto good;
             goto bad;
          }
 
@@ -4302,11 +4309,11 @@ extern void scatter(setup *resultpeople, const setup *sourcepeople,
       idx = resultplace[k];
 
       if (idx < 0) {
-         /* This could happen in "touch_or_rear_back". */
-         if (sourcepeople->people[k].id1) fail("Don't understand this setup at all.");
+         // This could happen in "touch_or_rear_back".
+         if (sourcepeople->people[k].id1) fail("Don't understand this setup.");
       }
       else
-         (void) copy_rot(resultpeople, idx, sourcepeople, k, rotamount);
+         copy_rot(resultpeople, idx, sourcepeople, k, rotamount);
    }
 }
 
@@ -4319,7 +4326,7 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
       idx = resultplace[k];
 
       if (idx >= 0)
-         (void) copy_rot(resultpeople, k, sourcepeople, idx, rotamount);
+         copy_rot(resultpeople, k, sourcepeople, idx, rotamount);
    }
 }
 
@@ -4328,8 +4335,35 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
                             const setup *sourcepeople, int rot) THROW_DECL
 {
    for (int j=0; j<num; j++)
-      (void) install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
+      install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
 }
+
+extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout)
+{
+   lineout = ss;
+   lineout.rotation += lineout.inner.srotation;
+   qtagout = ss;
+   qtagout.rotation += qtagout.inner.srotation;
+
+   if (ss.inner.skind == s1x4) {
+      static expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
+      expand::expand_setup(&exp_conc_1x8, &lineout);
+      static expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
+      expand::expand_setup(&exp_conc_qtg, &qtagout);
+   }
+   else if (ss.inner.skind == s2x2) {
+      static expand::thing exp_conc_2x2a = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
+      static expand::thing exp_conc_2x2b = {{6, 1, 2, 5}, 4, s2x2, s2x4, 1};
+      if (ss.concsetup_outer_elongation == 1)
+         expand::expand_setup(&exp_conc_2x2a, &lineout);
+      else if (ss.concsetup_outer_elongation == 2)
+         expand::expand_setup(&exp_conc_2x2b, &lineout);
+      else fail("Setup is bizarre.");
+   }
+
+   return ss.inner.skind;
+}
+
 
 
 /* WARNING!!!!  This procedure appears verbatim in sdtop.c and dbcomp.c . */

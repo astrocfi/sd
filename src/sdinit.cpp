@@ -459,7 +459,7 @@ static int canonicalize(char * & cp)
             return 500;   // <ATC>
          case 'h':
             return 501;   // <DIRECTION>
-         case '6': case 'k':
+         case '6': case 'k': case 'K':
             return 502;   // <ANYONE>
          case 'N':
             return 503;   // <ANYCIRC>
@@ -872,7 +872,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       while ((c = *np++)) {
          if (c == '@') {
             switch ((c = *np++)) {
-            case '6': case 'k':
+            case '6': case 'k': case 'K':
                root_to_use->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
                break;
             case 'h':
@@ -1013,6 +1013,8 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    case schema_split_sequential:
    case schema_sequential_with_fraction:
    case schema_sequential_with_split_1x8_id:
+   case schema_sequential_alternate:
+   case schema_sequential_remainder:
       {
          by_def_item templist[100];
          int next_definition_index = 0;

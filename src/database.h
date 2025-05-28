@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 243
+#define DATABASE_FORMAT_VERSION 250
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -344,6 +344,7 @@ enum setup_kind {
    sdeep2x1dmd,
    swhrglass,
    s_rigger,
+   s3x3,
    s3x4,
    s2x6,
    s2x7,
@@ -392,6 +393,7 @@ enum setup_kind {
    s_alamo,
    sx4dmd,    // These are too big to actually represent --
    s8x8,      // we don't let them out of their cage.
+   sxequlize, // Ditto.
    sx1x16,    // Ditto.
    shypergal, // Ditto.
    shyper4x8a,// Ditto.
@@ -464,6 +466,7 @@ enum begin_kind {
    b_pbone,
    b_rigger,
    b_prigger,
+   b_3x3,
    b_2stars,
    b_p2stars,
    b_spindle,
@@ -729,6 +732,7 @@ enum call_restriction {
    cr_col_ends_lookin_in,  // Qualifier only.
    cr_ripple_one_end,      // Qualifier only.
    cr_ripple_both_ends,    // Qualifier only.
+   cr_ripple_both_ends_1x4_only, // Qualifier only.
    cr_ripple_both_centers, // Qualifier only.
    cr_ripple_any_centers,  // Qualifier only.
    cr_people_1_and_5_real, // Qualifier only.
@@ -798,6 +802,10 @@ enum call_restriction {
 enum calldef_schema {
    schema_concentric,
    schema_cross_concentric,
+   schema_3x3k_concentric,
+   schema_3x3k_cross_concentric,
+   schema_4x4k_concentric,
+   schema_4x4k_cross_concentric,
    schema_single_concentric,
    schema_single_cross_concentric,
    schema_grand_single_concentric,
@@ -839,6 +847,7 @@ enum calldef_schema {
    schema_cross_concentric_2_4,
    schema_concentric_2_4_or_normal,
    schema_concentric_4_2,
+   schema_concentric_4_2_prefer_1x4,
    schema_cross_concentric_4_2,
    schema_concentric_4_2_or_normal,
    schema_concentric_8_4,        // Not for public use!
@@ -856,6 +865,7 @@ enum calldef_schema {
    schema_concentric_others,
    schema_concentric_6_2_tgl,
    schema_concentric_to_outer_diamond,
+   schema_concentric_no31dwarn,
    schema_conc_12,
    schema_conc_16,
    schema_conc_star,
@@ -912,6 +922,8 @@ enum calldef_schema {
    schema_split_sequential,
    schema_sequential_with_fraction,
    schema_sequential_with_split_1x8_id,
+   schema_sequential_alternate,
+   schema_sequential_remainder,
    schema_alias                  // Not a schema once the program is running.
 };
 
@@ -973,15 +985,17 @@ enum calldef_schema {
 */
 
 
-/* BEWARE!!  This list must track the table "defmodtab1" in mkcalls.cpp . */
-/* BEWARE!!  The "SEQ" stuff must track the table "seqmodtab1" in mkcalls.cpp . */
-/* BEWARE!!  The union of all of these flags, which is encoded in DFM1_CONCENTRICITY_FLAG_MASK,
-   must coexist with the CMD_MISC__ flags defined in sd.h .  Note that the bit definitions
-   of those flags start where these end.  Keep it that way.  If any flags are added here,
-   they must be taken away from the CMD_MISC__ flags. */
+// These are the call modifiers bits.  They go in the "modifiers1" word of a by_def_item.
+// BEWARE!!  The "CONC" stuff, and all the later stuff, must track the table "defmodtab1" in mkcalls.cpp .
+// BEWARE!!  The "SEQ" stuff must track the table "seqmodtab1" in mkcalls.cpp .
+// BEWARE!!  The union of all of these flags, which is encoded in DFM1_CONCENTRICITY_FLAG_MASK,
+// must coexist with the CMD_MISC__ flags defined in sd.h .  Note that the bit definitions
+// of those flags start where these end.  Keep it that way.  If any flags are added here,
+// they must be taken away from the CMD_MISC__ flags.
 
-// Start of concentricity flags.  These go in the "modifiers1" word of a by_def_item.
 enum {
+   // These are the "conc" flags.  They overlay the "seq" flags.
+
    DFM1_CONC_DEMAND_LINES            = 0x00000001,
    DFM1_CONC_DEMAND_COLUMNS          = 0x00000002,
    DFM1_CONC_FORCE_LINES             = 0x00000004,
@@ -990,14 +1004,12 @@ enum {
    DFM1_CONC_FORCE_SPOTS             = 0x00000020,
    DFM1_CONC_CONCENTRIC_RULES        = 0x00000040,
    DFM1_SUPPRESS_ELONGATION_WARNINGS = 0x00000080,
-   // End of concentricity flags.  This constant embraces them.
-   DFM1_CONCENTRICITY_FLAG_MASK      = 0x000000FF
-};
+   // Beware!!  The above "conc" flags must all lie within DFM1_CONCENTRICITY_FLAG_MASK.
 
-// These are the "seq" flags.  They overlay the "conc" flags.
-// Under normal conditions, we do *not* re-evaluate between parts.  This
-// flag overrides that and makes us re-evaluate.
- enum {
+   // These are the "seq" flags.  They overlay the "conc" flags.
+
+   // Under normal conditions, we do *not* re-evaluate between parts.  This
+   // flag overrides that and makes us re-evaluate.
    DFM1_SEQ_RE_EVALUATE              = 0x00000001UL,
    DFM1_SEQ_DO_HALF_MORE             = 0x00000002UL,
    // But, if we break up a call with something like "random", the convention
@@ -1007,12 +1019,20 @@ enum {
    DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004UL,
    DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008UL,
    DFM1_SEQ_REPEAT_N                 = 0x00000010UL,
-   DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000020UL,
-   DFM1_SEQ_REPEAT_NM1               = 0x00000040UL,
-   DFM1_SEQ_NORMALIZE                = 0x00000080UL,
+   DFM1_SEQ_REPEAT_NM1               = 0x00000020UL,
+   DFM1_SEQ_NORMALIZE                = 0x00000040UL,
+   // Beware!!  The above "seq" flags must all lie within DFM1_CONCENTRICITY_FLAG_MASK.
+
+   // End of the separate conc/seq flags.  This constant embraces them.
+   // Beware!!  The above "conc" and "seq" flags must lie within this.
+   // Beware also!!  The CMD_MISC__ flags must be disjoint from this.
+   // If this mask is made bigger, be sure the CMD_MISC__ flags (in sd.h)
+   // are moved out of the way.  If it is made smaller (to accommodate CMD_MISC__)
+   // be sure the conc/seq flags stay inside it.
+   DFM1_CONCENTRICITY_FLAG_MASK      = 0x000000FF,
 
    // BEWARE!!  The following ones must track the table "defmodtab1" in mkcalls.cpp
-   // Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item.
+   // Start of miscellaneous flags.
 
    // This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies.
    DFM1_CALL_MOD_MASK                = 0x00000700UL,
@@ -1026,7 +1046,7 @@ enum {
    DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL,
 
    DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800UL,
-   // unused:                        = 0x00001000UL,
+   // spare:                         = 0x00001000UL,
    DFM1_ENDSCANDO                    = 0x00002000UL,
    DFM1_FINISH_THIS                  = 0x00004000UL,
    DFM1_ROLL_TRANSPARENT             = 0x00008000UL,

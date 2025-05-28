@@ -528,7 +528,7 @@ static void do_concept_double_offset(
 
    uint32 topmask, botmask, ctrmask;
    uint32 directions, livemask, map_code;
-   get_directions(ss, directions, livemask);  // Get big-endian bit-pair masks.
+   big_endian_get_directions(ss, directions, livemask);  // Get big-endian bit-pair masks.
 
    if (global_selectmask == (global_livemask & 0xCC)) {
       topmask = 0xF000 & livemask;
@@ -932,8 +932,11 @@ static void do_concept_multiple_lines_tog(
       }
    }
 
-   overlapped_setup_move(ss, MAPCODE(base_setup,parseptr->concept->arg4-1,MPKIND__OVERLAP,base_vert),
-      masks, result);
+   overlapped_setup_move(ss,
+                         MAPCODE(base_setup,parseptr->concept->arg4-1,MPKIND__OVERLAP,base_vert),
+                         masks,
+                         result,
+                         CMD_MISC__NO_EXPAND_1);
    result->rotation -= rotfix;   // Flip the setup back.
 }
 
@@ -1257,7 +1260,7 @@ static void do_concept_quad_boxes_tog(
       masks[0] = 0xC3 ; masks[1] = 0xFF; masks[2] = 0x3C;
    }
 
-   overlapped_setup_move(ss, MAPCODE(s2x4,3,MPKIND__OVERLAP,0), masks, result);
+   overlapped_setup_move(ss, MAPCODE(s2x4,3,MPKIND__OVERLAP,0), masks, result, CMD_MISC__NO_EXPAND_2);
 }
 
 
@@ -1423,7 +1426,7 @@ static void do_concept_triple_boxes_tog(
    }
 
    masks[0] = m1; masks[1] = m2;
-   overlapped_setup_move(ss, MAPCODE(s2x4,2,MPKIND__OVERLAP,0), masks, result);
+   overlapped_setup_move(ss, MAPCODE(s2x4,2,MPKIND__OVERLAP,0), masks, result, CMD_MISC__NO_EXPAND_2);
 }
 
 
@@ -1468,7 +1471,7 @@ static void do_triple_formation(
        !(ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT))
       concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple,
                       0, DFM1_CONC_CONCENTRIC_RULES,
-                      true, ~0UL, result);
+                      true, false, ~0UL, result);
    else {
       // Gotta do this by hand.  Sigh.
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) {
@@ -2127,8 +2130,12 @@ static void do_concept_do_phantom_boxes(
    if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
 
    // We specify the CMD_MISC__NO_EXPAND_2 bit, to allow split phantom boxes split phantom CLW.
+   // But only if this is split phantom, not interlocked phantom or plain phantom.
    divided_setup_move(ss, MAPCODE(s2x4,2,parseptr->concept->arg3,0),
-                      (phantest_kind) parseptr->concept->arg1, true, result, CMD_MISC__NO_EXPAND_2);
+                      (phantest_kind) parseptr->concept->arg1, true, result,
+                      parseptr->concept->arg3 == MPKIND__SPLIT ?
+                      CMD_MISC__NO_EXPAND_2 :
+                      CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2);
 }
 
 
@@ -3453,7 +3460,7 @@ static void do_concept_phan_crazy(
              tempsetup.kind != s2x8 && tempsetup.kind != s4x4)
             fail("Can't do crazy offset with this shape-changer.");
          concentric_move(&tempsetup, (setup_command *) 0, &tempsetup.cmd,
-                         schema_in_out_quad, 0, 0, true, specialmapcode, result);
+                         schema_in_out_quad, 0, 0, true, false, specialmapcode, result);
          result->rotation -= spec_conc_rot;
       }
       else                              // Do it on each side.
@@ -3731,6 +3738,9 @@ static void do_concept_checkerboard(
    int offset = -1;
    setup_kind kn = (setup_kind) parseptr->concept->arg1;
 
+   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__META_NOCMD)
+      warn(warn__meta_on_xconc);
+
    result->clear_people();
 
    if (parseptr->concept->arg2 == 1) {
@@ -3749,7 +3759,7 @@ static void do_concept_checkerboard(
       subsid_cmd.cmd_fraction.set_to_null();
       subsid_cmd.cmd_final_flags.clear_all_herit_and_final_bits();
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0,
-                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, true, ~0UL, result);
+                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, true, false, ~0UL, result);
       return;
    }
 
@@ -3785,7 +3795,7 @@ static void do_concept_checkerboard(
    }
    else {
       uint32 D, L;
-      get_directions(ss, D, L);
+      big_endian_get_directions(ss, D, L);
 
       for (i=0; CKBDtable[i].K != nothing ; i++) {
          if (CKBDtable[i].K != ss->kind ||
@@ -4010,6 +4020,9 @@ static void do_concept_checkpoint(
    if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
       fail("Illegal modifier before \"checkpoint\".");
 
+   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__META_NOCMD)
+      warn(warn__meta_on_xconc);
+
    setup_command this_cmd = ss->cmd;
 
    if ((this_cmd.cmd_misc3_flags &
@@ -4041,10 +4054,10 @@ static void do_concept_checkpoint(
 
    if (reverseness)
       concentric_move(ss, &this_cmd, &subsid_cmd, schema_rev_checkpoint,
-                      0, 0, true, ~0UL, result);
+                      0, 0, true, false, ~0UL, result);
    else
       concentric_move(ss, &subsid_cmd, &this_cmd, schema_checkpoint,
-                      0, DFM1_CONC_FORCE_OTHERWAY, true, ~0UL, result);
+                      0, DFM1_CONC_FORCE_OTHERWAY, true, false, ~0UL, result);
 }
 
 
@@ -4722,7 +4735,7 @@ static void do_concept_move_in_and(
 
    if (check_for_centers_concept(0, ss->cmd.parseptr, &ss->cmd)) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      concentric_move(ss, &ss->cmd, 0, schema_concentric, 0, 0, true, ~0UL, result);
+      concentric_move(ss, &ss->cmd, 0, schema_concentric, 0, 0, true, false, ~0UL, result);
    }
    else {
       move(ss, false, result);
@@ -5114,9 +5127,9 @@ static void do_concept_inner_outer(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (arg1 & 8)
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, true, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, true, false, ~0UL, result);
    else
-      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, true, ~0UL, result);
+      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, true, false, ~0UL, result);
 
    result->rotation -= rot;   // Flip the setup back.
    return;
@@ -5543,7 +5556,7 @@ static void do_concept_ferris(
       fail("Illegal modifier before \"ferris\" or \"release\".");
 
    expand::expand_setup(map_ptr, ss);
-   concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, ~0UL, result);
+   concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, false, ~0UL, result);
 }
 
 
@@ -5804,7 +5817,8 @@ static void do_concept_meta(
 
    if ((key == meta_key_random || key == meta_key_echo) &&
        ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE)) {
-      /* "reverse" and "random"  ==>  "reverse random" */
+      // "reverse" and "random"  ==>  "reverse random".
+      // "reverse" and "echo"  ==>  "reverse echo".
       key = (meta_key_kind) ((int) key+1);
       ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_REVERSE);
    }
@@ -5813,8 +5827,11 @@ static void do_concept_meta(
    if (ss->cmd.cmd_final_flags.final)
       fail("Illegal modifier for this concept.");
 
-   setup_command nocmd = ss->cmd;
    setup_command yescmd = ss->cmd;
+   setup_command nocmd = ss->cmd;
+
+   // This makes it complain about things like "initially stable cross concentric mix".
+   nocmd.cmd_misc3_flags |= CMD_MISC3__META_NOCMD;
 
    // The CMD_MISC3__PUT_FRAC_ON_FIRST bit tells the "special_sequential" concept
    // (if that is the subject concept) that fractions are allowed, and they
@@ -5949,12 +5966,16 @@ static void do_concept_meta(
          expirations_to_clearmisc = RESULTFLAG__TWISTED_EXPIRED;
    }
 
-   // Some concepts take a number, which might be wired into the concept ("shifty"),
+   // Some meta-concepts take a number, which might be wired into the concept ("shifty"),
    // or might be entered explicitly by the user ("shift <N>").
 
    uint32 shiftynum =
       (concept_table[parseptr->concept->kind].concept_prop & CONCPROP__USE_NUMBER) ?
       parseptr->options.number_fields : parseptr->concept->arg2;
+
+   // Some meta-concepts have a numeric parameter, such as "multiple echo",
+   // or "do the first/last/middle M/N <concept>".
+   int concept_option_code = parseptr->concept->arg2;
 
    switch (key) {
       fraction_command frac_stuff;
@@ -6126,16 +6147,27 @@ static void do_concept_meta(
 
       // Do the call with the concept.
       result->cmd = yescmd;
-      do_call_in_series_simple(result);
 
-      // And then again without it.
-      result->cmd = nocmd;
+      for (;;) {
+         do_call_in_series_simple(result);
 
-      if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
-         update_id_bits(result);
+         // Set up so that next round will be without the concept.
+         result->cmd = nocmd;
 
-      // Assumptions don't carry through.
-      result->cmd.cmd_assume.assumption = cr_none;
+         if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
+            update_id_bits(result);
+
+         // Assumptions don't carry through.
+         result->cmd.cmd_assume.assumption = cr_none;
+
+         if (--concept_option_code <= 0) break;   // Do it, the last time.
+
+         // There will be future rounds; set nocmd so that the following round will be correct.
+         skipped_concept_info foo;
+         really_skip_one_concept(nocmd.parseptr, foo);
+         nocmd.parseptr = (foo.heritflag != 0) ? foo.concept_with_root : foo.result_of_skip;
+      }
+
       goto do_less;
 
    case meta_key_rev_echo:
@@ -6173,9 +6205,7 @@ static void do_concept_meta(
          if (!corefracs.is_null())
             fail("Can't stack meta or fractional concepts.");
 
-         int code = parseptr->concept->arg2;
-
-         uint32 stuff = (code == 3) ? NUMBER_FIELDS_2_1 : parseptr->options.number_fields;
+         uint32 stuff = (concept_option_code == 3) ? NUMBER_FIELDS_2_1 : parseptr->options.number_fields;
          int numer = stuff & NUMBER_FIELD_MASK;
          int denom = (stuff >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
 
@@ -6187,7 +6217,7 @@ static void do_concept_meta(
          uint32 bfracs = ~0UL;
          uint32 cfracs = ~0UL;
 
-         if (code == 2) {
+         if (concept_option_code == 2) {
             // This is "middle M/N".
             uint32 middlestuff = stuff + denom*((1<<BITS_PER_NUMBER_FIELD)+1);
             afracs = process_stupendously_new_fractions(NUMBER_FIELDS_1_0, middlestuff,
@@ -6197,7 +6227,7 @@ static void do_concept_meta(
             cfracs = process_stupendously_new_fractions(middlestuff, NUMBER_FIELDS_1_1,
                                                         FRAC_INVERT_NONE, corefracs);
          }
-         else if (code) {
+         else if (concept_option_code) {
             // This is "last M/N".
             afracs = process_stupendously_new_fractions(NUMBER_FIELDS_1_0, stuff,
                                                         FRAC_INVERT_END, corefracs);
@@ -7208,63 +7238,28 @@ static void do_concept_concentric(
 {
    calldef_schema schema = (calldef_schema) parseptr->concept->arg1;
 
-   if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_CROSS)) {
-      switch (schema) {
-      case schema_concentric:
-         schema = schema_cross_concentric;
-         break;
-      case schema_single_concentric:
-         schema = schema_single_cross_concentric;
-         break;
-      case schema_grand_single_concentric:
-         schema = schema_grand_single_cross_concentric;
-         break;
-      case schema_concentric_diamonds:
-         schema = schema_cross_concentric_diamonds;
-         break;
-      case schema_concentric_zs:
-         schema = schema_cross_concentric_zs;
-         break;
-      default:
-         fail("Redundant 'CROSS' modifiers.");
-      }
+   if ((schema == schema_3x3k_concentric || schema == schema_3x3k_cross_concentric) &&
+       !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
+      if (ss->kind == s2x4)
+         do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, false);
+      else if (ss->kind == s1x8 || ss->kind == s1x10)
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, false);
 
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_SINGLE)) {
-         switch (schema) {
-            case schema_concentric:
-               schema = schema_single_concentric;
-               break;
-            case schema_cross_concentric:
-               schema = schema_single_cross_concentric;
-               break;
-            default:
-               fail("Redundant 'SINGLE' modifiers.");
-         }
-      }
-
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_GRAND)) {
-         switch (schema) {
-            case schema_single_concentric:
-               schema = schema_grand_single_concentric;
-               break;
-            case schema_single_cross_concentric:
-               schema = schema_grand_single_cross_concentric;
-               break;
-            default:
-               fail("Redundant 'GRAND' modifiers.");
-         }
-      }
-
-      ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_CROSS |
-                                              INHERITFLAG_SINGLE |
-                                              INHERITFLAG_GRAND);
-
-      // We don't allow other flags, like "left", though we do allow "half".
-
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF | INHERITFLAG_LASTHALF))) |
-          ss->cmd.cmd_final_flags.final)
-         fail("Illegal modifier before \"concentric\".");
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
    }
+   else if ((schema == schema_4x4k_concentric || schema == schema_4x4k_cross_concentric) &&
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
+      if (ss->kind == s2x4 || ss->kind == s2x6)
+         do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
+      else if (ss->kind == s1x8 || ss->kind == s1x10 || ss->kind == s1x12 || ss->kind == s1x14)
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, false);
+
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+   }
+
+   if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__META_NOCMD) &&
+       (schema_attrs[schema].attrs & SCA_CROSS))
+      warn(warn__meta_on_xconc);
 
    switch (schema) {
       uint32 map_code;
@@ -7277,7 +7272,7 @@ static void do_concept_concentric(
       case s_ptpd: map_code = MAPCODE(sdmd,2,MPKIND__SPLIT,0); break;
       case s1x4: case sdmd:
          concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
-                         DFM1_CONC_CONCENTRIC_RULES, true, ~0UL, result);
+                         DFM1_CONC_CONCENTRIC_RULES, true, false, ~0UL, result);
          return;
       default:
          fail("Can't figure out how to do single concentric here.");
@@ -7289,7 +7284,7 @@ static void do_concept_concentric(
       break;
    default:
       concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
-                      DFM1_CONC_CONCENTRIC_RULES, true, ~0UL, result);
+                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0UL, result);
 
       // 8-person concentric operations do not show the split.
       result->result_flags.clear_split_info();
@@ -7333,15 +7328,37 @@ static void do_concept_matrix(
 }
 
 
+static bool ok_for_expand_1(const conzept::concept_descriptor *this_concept)
+{
+   concept_kind this_kind = this_concept->kind;
+
+   return
+      (this_kind == concept_do_phantom_boxes && this_concept->arg3 == MPKIND__SPLIT) ||
+      this_kind == concept_multiple_boxes ||
+      this_kind == concept_triple_boxes_together ||
+      this_kind == concept_quad_boxes_together;
+}
+static bool ok_for_expand_2(const conzept::concept_descriptor *this_concept)
+{
+   concept_kind this_kind = this_concept->kind;
+
+   return
+      (this_kind == concept_do_phantom_2x4 && this_concept->arg3 == MPKIND__SPLIT) ||
+      this_kind == concept_multiple_lines_tog ||
+      this_kind == concept_multiple_lines_tog_std;
+}
+
+
 extern bool do_big_concept(
    setup *ss,
+   parse_block *the_concept_parse_block,
+   bool handle_concept_details,
    setup *result) THROW_DECL
 {
    remove_z_distortion(ss);
 
    void (*concept_func)(setup *, parse_block *, setup *);
-   parse_block *orig_concept_parse_block = ss->cmd.parseptr;
-   parse_block *this_concept_parse_block = orig_concept_parse_block;
+   parse_block *this_concept_parse_block = the_concept_parse_block;
    const conzept::concept_descriptor *this_concept = this_concept_parse_block->concept;
    concept_kind this_kind = this_concept->kind;
    const concept_table_item *this_table_item = &concept_table[this_kind];
@@ -7349,66 +7366,68 @@ extern bool do_big_concept(
 
    // Take care of combinations like "mystic triple waves".
 
-   if (prop_bits & CONCPROP__PERMIT_MYSTIC &&
-       ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) {
+   if (handle_concept_details) {
+      if (prop_bits & CONCPROP__PERMIT_MYSTIC &&
+          ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) {
 
-      // Turn on the good bits.
-      ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_SPLIT;
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC)
-         ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_INVERT;
+         // Turn on the good bits.
+         ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_SPLIT;
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC)
+            ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_INVERT;
 
-      // And turn off the old ones.
-      ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__CENTRAL_MYSTIC|CMD_MISC2__INVERT_MYSTIC);
-   }
-
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
-
-      // If we have an "invert", "central", "mystic" or "snag" concept in place,
-      // we have to check whether the current concept can deal with it.
-
-      // The following concepts are always acceptable with invert/snag/etc in place.
-
-      if (this_kind == concept_snag_mystic ||
-          this_kind == concept_central ||
-          this_kind == concept_fractional ||
-          this_kind == concept_concentric ||
-          this_kind == concept_some_vs_others ||
-          (this_kind == concept_meta &&
-           (this_concept->arg1 == meta_key_finish ||
-            this_concept->arg1 == meta_key_revorder)))
-         goto this_is_ok;
-
-      // Otherwise, if "central" is selected, it must be one of the following ones.
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
-         if (this_kind != concept_fractional &&
-             this_kind != concept_fan &&
-             (this_kind != concept_meta ||
-              (this_concept->arg1 != meta_key_like_a &&
-               this_concept->arg1 != meta_key_shift_n)) &&
-             (this_kind != concept_meta_one_arg ||
-              (this_concept->arg1 != meta_key_skip_nth_part &&
-               this_concept->arg1 != meta_key_shift_n)))
-            goto this_is_bad;
+         // And turn off the old ones.
+         ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__CENTRAL_MYSTIC|CMD_MISC2__INVERT_MYSTIC);
       }
 
-      /* But if "snag" is selected, we lose. */
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
 
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG)
-         goto this_is_bad;
+         // If we have an "invert", "central", "mystic" or "snag" concept in place,
+         // we have to check whether the current concept can deal with it.
 
-      goto this_is_ok;
+         // The following concepts are always acceptable with invert/snag/etc in place.
 
-   this_is_bad:
+         if (this_kind == concept_snag_mystic ||
+             this_kind == concept_central ||
+             this_kind == concept_fractional ||
+             this_kind == concept_concentric ||
+             this_kind == concept_some_vs_others ||
+             (this_kind == concept_meta &&
+              (this_concept->arg1 == meta_key_finish ||
+               this_concept->arg1 == meta_key_revorder)))
+            goto this_is_ok;
 
-      fail("Can't do \"invert/central/snag/mystic\" followed by this concept or modifier.");
+         // Otherwise, if "central" is selected, it must be one of the following ones.
 
-   this_is_ok: ;
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
+            if (this_kind != concept_fractional &&
+                this_kind != concept_fan &&
+                (this_kind != concept_meta ||
+                 (this_concept->arg1 != meta_key_like_a &&
+                  this_concept->arg1 != meta_key_shift_n)) &&
+                (this_kind != concept_meta_one_arg ||
+                 (this_concept->arg1 != meta_key_skip_nth_part &&
+                  this_concept->arg1 != meta_key_shift_n)))
+               goto this_is_bad;
+         }
+
+         // But if "snag" is selected, we lose.
+
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG)
+            goto this_is_bad;
+
+         goto this_is_ok;
+
+      this_is_bad:
+
+         fail("Can't do \"invert/central/snag/mystic\" followed by this concept or modifier.");
+
+      this_is_ok: ;
+      }
+
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) &&
+          !(prop_bits & CONCPROP__PERMIT_MATRIX))
+         fail("\"Matrix\" concept must be followed by applicable concept.");
    }
-
-   if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) &&
-       !(prop_bits & CONCPROP__PERMIT_MATRIX))
-      fail("\"Matrix\" concept must be followed by applicable concept.");
 
    concept_func = this_table_item->concept_action;
    ss->cmd.parseptr = ss->cmd.parseptr->next;
@@ -7447,7 +7466,7 @@ extern bool do_big_concept(
       // by going over the "standard" and skipping comments.
 
       junk_concepts.clear_all_herit_and_final_bits();
-      substandard_concptptr = process_final_concepts(orig_concept_parse_block->next,
+      substandard_concptptr = process_final_concepts(the_concept_parse_block->next,
                                                      true, &junk_concepts,
                                                      true, false);
 
@@ -7527,18 +7546,13 @@ extern bool do_big_concept(
 
    // If matrix expansion has already occurred, don't do it again,
    // except for the special cases: only the CMD_MISC__NO_EXPAND_1 bit is set,
-   // and this concept is some kind of "triple boxes".
+   // and this concept is some kind of "triple boxes" or "split phantom boxes".
    // Also, only the CMD_MISC__NO_EXPAND_2 bit is set,
    // and this concept is split phantom CLW.
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_AT_ALL)) {
-      if ((!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_1) ||
-           (this_kind == concept_do_phantom_boxes && this_concept->arg3 == MPKIND__SPLIT) ||
-           this_kind == concept_multiple_boxes ||
-           this_kind == concept_triple_boxes_together ||
-           this_kind == concept_quad_boxes_together) &&
-          (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_2) ||
-           (this_kind == concept_do_phantom_2x4 && this_concept->arg3 == MPKIND__SPLIT)))
+      if ((!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_1) || ok_for_expand_1(this_concept)) &&
+          (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_2) || ok_for_expand_2(this_concept)))
          do_matrix_expansion(ss, prop_bits_for_expansion, false);
    }
 
@@ -7562,9 +7576,9 @@ extern bool do_big_concept(
    // followed by split phantom C/L/W.  We turn on CMD_MISC__NO_EXPAND_2.
 
    if (!(prop_bits & CONCPROP__MATRIX_OBLIVIOUS)) {
-      if (this_kind == concept_do_phantom_2x4 && this_concept->arg3 == MPKIND__SPLIT)
+      if (ok_for_expand_2(this_concept))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_1;
-      else if (this_kind == concept_do_phantom_boxes && this_concept->arg3 == MPKIND__SPLIT)
+      else if (ok_for_expand_1(this_concept))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_2;
       else
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_AT_ALL;
@@ -7635,7 +7649,7 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_mod_declined
    {0, 0},                                                  // marker_end_of_list
    {0, 0},                                                  // concept_comment
-   {CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_MODIFIERS,
+   {CONCPROP__SHOW_SPLIT | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__PERMIT_MODIFIERS,
     do_concept_concentric},                                 // concept_concentric
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_tandem},                                     // concept_tandem

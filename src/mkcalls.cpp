@@ -89,6 +89,7 @@ int begin_sizes[] = {
    8,          /* b_pbone */
    8,          /* b_rigger */
    8,          /* b_prigger */
+   9,          /* b_3x3 */
    8,          /* b_2stars */
    8,          /* b_p2stars */
    8,          /* b_spindle */
@@ -408,9 +409,8 @@ is meaningful only in a "seq" definition, not in a "conc" definition.
 Full documentation of these doesn't exist (and, when it does, it will belong elsewhere),
 but the following notes need to be written down.
 
-When "repeat_n_alternate" is used on a part of a "seq" definition, there MUST be
-another part following.  No flags in that part are meaningful -- it gets its flags
-from the first part.
+When "seq_alternate" is used to start of a "seq" definition, there MUST be two parts.
+The only meaningful flags are those on the first part.
 
 When "roll_transparent" is used on a part of a "seq" definition, that call must
 have the property that anyone who is marked roll-neutral (that is, with an "M" roll
@@ -477,6 +477,7 @@ char *sstab[] = {
    "pbone",
    "rigger",
    "prigger",
+   "3x3",
    "2stars",
    "p2stars",
    "spindle",
@@ -681,6 +682,7 @@ char *estab[] = {
    "deep2x1dmd",
    "whrglass",
    "rigger",
+   "3x3",
    "3x4",
    "2x6",
    "2x7",
@@ -737,6 +739,7 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "???",
    "3x23",
    "3x43",
    "5x25",
@@ -767,10 +770,14 @@ char *estab[] = {
    "normal_concentric",
    ""};
 
-/* This table is keyed to "calldef_schema". */
+// This table is keyed to "calldef_schema".
 char *schematab[] = {
    "conc",
    "crossconc",
+   "3x3kconc",
+   "3x3kcrossconc",
+   "4x4kconc",
+   "4x4kcrossconc",
    "singleconc",
    "singlecrossconc",
    "grandsingleconc",
@@ -812,6 +819,7 @@ char *schematab[] = {
    "crossconc2_4",
    "conc2_4_or_normal",
    "conc4_2",
+   "conc4_2_prefer_1x4",
    "crossconc4_2",
    "conc4_2_or_normal",
    "???",
@@ -829,6 +837,7 @@ char *schematab[] = {
    "conc_others",
    "conc6_2_tgl",
    "conc_to_outer_dmd",
+   "conc_no31dwarn",
    "conc_12",
    "conc_16",
    "conc_star",
@@ -885,6 +894,8 @@ char *schematab[] = {
    "splitseq",
    "seq_with_fraction",
    "seq_with_split_1x8_id",
+   "seq_alternate",
+   "seq_remainder",
    "alias",
    ""};
 
@@ -965,6 +976,7 @@ char *qualtab[] = {
    "col_ends_looking_in",
    "ripple_one_end",
    "ripple_both_ends",
+   "ripple_both_ends_1x4_only",
    "ripple_both_centers",
    "ripple_any_centers",
    "people_1_and_5_real",
@@ -1013,8 +1025,8 @@ char *qualtab[] = {
    "???",
    ""};
 
-/* This table is keyed to the constants "DFM1_***".  These are the general
-   definition-modifier flags.  They go in the "modifiers1" word of a by_def_item. */
+// This table is keyed to the constants "DFM1_***".  These are the general
+// definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
 char *defmodtab1[] = {
    "conc_demand_lines",
    "conc_demand_columns",
@@ -1042,15 +1054,14 @@ char *defmodtab1[] = {
    "no_check_mod_level",
    ""};
 
-/* This table is keyed to the constants "DFM1_SEQ***".  These are the general
-   definition-modifier flags.  They go in the "modifiers1" word of a by_def_item. */
+// This table is keyed to the constants "DFM1_SEQ***".  These are the general
+// definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
 char *seqmodtab1[] = {
    "seq_re_evaluate",
    "do_half_more",
    "seq_never_re_evaluate",
    "seq_re_enable_elongation_check",
    "repeat_n",
-   "repeat_n_alternate",
    "repeat_nm1",
    "normalize",
    ""};
@@ -2724,9 +2735,11 @@ int main(int argc, char *argv[])
 
          break;
       case schema_sequential:
+      case schema_split_sequential:
       case schema_sequential_with_fraction:
       case schema_sequential_with_split_1x8_id:
-      case schema_split_sequential:
+      case schema_sequential_alternate:
+      case schema_sequential_remainder:
          write_seq_stuff();
 
          for (;;) {               /* Write a level 2 seqdefine group. */

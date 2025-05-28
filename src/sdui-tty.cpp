@@ -576,11 +576,19 @@ static bool get_user_input(char *prompt, int which)
          if (nc < FCN_KEY_TAB_LOW || nc > FCN_KEY_TAB_LAST)
             continue;      /* Ignore this key. */
 
+         if (nc == CLOSEPROGRAMKEY) {
+            // User clicked the "X" in the upper-right corner, or used the system menu
+            // to close the program, or perhaps used the task manager.  In any case,
+            // don't close without querying the user.
+            if (which_target == match_startup_commands || gg->do_abort_popup() == POPUP_ACCEPT)
+               general_final_exit(0);
+         }
+
          keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
 
-         /* Check for special bindings.
-            These always come from the main binding table, even if
-            we are doing something else, like a resolve. */
+         // Check for special bindings.
+         // These always come from the main binding table, even if
+         // we are doing something else, like a resolve.
 
          if (keyptr && keyptr->index < 0) {
             switch (keyptr->index) {
@@ -588,8 +596,8 @@ static bool get_user_input(char *prompt, int which)
                erase_matcher_input();
                strcpy(user_input, GLOB_user_input);
                function_key_expansion = (char *) 0;
-               clear_line();           /* Clear the current line */
-               put_line(user_input_prompt);    /* Redisplay the prompt. */
+               clear_line();                   // Clear the current line.
+               put_line(user_input_prompt);    // Redisplay the prompt.
                continue;
             case special_index_deleteword:
                chars_deleted = delete_matcher_word();
@@ -601,7 +609,7 @@ static bool get_user_input(char *prompt, int which)
                function_key_expansion = "<anything>";
                goto do_character;
             default:
-               continue;    /* Ignore all others. */
+               continue;    // Ignore all others.
             }
          }
 
@@ -615,12 +623,11 @@ static bool get_user_input(char *prompt, int which)
             continue;
 
          if (!keyptr) {
-            /* If user hits alt-F4 and there is no binding for it, we handle it in
-               the usual way anyway.  This makes the behavior similar to Sd, where
-               the system automatically provides that action. */
+            // If user hits alt-F4 and there is no binding for it, we handle it in
+            // the usual way anyway.  This makes the behavior similar to Sd, where
+            // the system automatically provides that action.
             if (nc == AFKEY+4) {
-               if (which_target == match_startup_commands ||
-                   gg->do_abort_popup() == POPUP_ACCEPT)
+               if (which_target == match_startup_commands || gg->do_abort_popup() == POPUP_ACCEPT)
                   general_final_exit(0);
             }
 

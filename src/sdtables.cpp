@@ -239,6 +239,7 @@ selector_item selector_list[] = {
                                                                   selector_uninitialized},
    {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4",
                                                                   selector_uninitialized},
+   {"some",         "some",        "SOME",         "SOME",        selector_uninitialized},
    {"Mbeaus???",    "Mbeaus???",   "MBEAUS???",    "MBEAUS???",   selector_uninitialized},
    {"Mbelles???",   "Mbelles???",  "MBELLES???",   "MBELLES???",  selector_uninitialized},
    {"notctr dmd???", "notctr dmd???", "NOTCTR DMD???", "NOTCTR DMD???",  selector_uninitialized},
@@ -276,7 +277,6 @@ Cstring warning_strings[] = {
    /*  warn__each1x2             */   "=Each 1x2.",
    /*  warn__eachdmd             */   "=Each diamond.",
    /*  warn__take_right_hands    */   " Take right hands.",
-   /*  warn__ctrs_are_dmd        */   " The centers are the diamond.",
    /*  warn__1_4_pgram           */   " 25% offset parallelogram.",
    /*  warn__full_pgram          */   " Completely offset parallelogram.",
    /*  warn__3_4_pgram           */   " 75% offset parallelogram.",
@@ -303,6 +303,7 @@ Cstring warning_strings[] = {
    /*  warn__check_centered_qtag */   "*Each 8-person twin general 1/4 tag is centered, with the outsides directly adjacent.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
+   /*  warn__meta_on_xconc       */   "*Misleading meta-concept combination.",
    /*  warn__check_c1_stars      */   " Check 'stars'.",
    /*  warn__check_gen_c1_stars  */   " Check a generalized 'star' setup.",
    /*  warn__bigblock_feet       */   " Bigblock/stagger shapechanger -- go to footprints.",
@@ -352,6 +353,7 @@ Cstring warning_strings[] = {
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
    /*  warn__assume_dpt          */   "*Assume a starting DPT.",
    /*  warn_bogus_yoyo_rims_hubs */   "*Using incorrect definition of rims/hubs trade.",
+   /*  warn__centers_are_diamond */   "*The centers are the diamond.",
    /*  warn_pg_in_2x6            */   "*Offset the resulting 2x6 by 50%, or 3 positions.",
    /*  warn_real_people_spots    */   "*The distorted setup is formed by the real people.",
    /*  warn__tasteless_com_spot  */   "*Not all common-spot people had right hands.",
@@ -1792,6 +1794,9 @@ map::map_thing map::map_init_table[] = {
     s_qtag,2,MPKIND__OVERLAP,0,   0,  s3dmd,     0x000, 0},
    {{9, 0, 10, 8, 5, 7, 11, 1,         11, 1, 5, 7, 3, 6, 4, 2},
     s_ptpd,2,MPKIND__OVERLAP,0,   0,  s3ptpd,    0x000, 0},
+   {{15, 16, 17, 8, 7, 6, 9, 10, 11, 12, 13, 14,
+     0, 1, 2, 3, 4, 5, 6, 7, 8, 17, 16, 15},
+    s2x6,2,MPKIND__OVERLAP,1,     0,  s3x6,      0x000, 0},
    {{20, 21, 22, 23, 11, 10, 9, 8, 12, 13, 14, 15, 16, 17, 18, 19,
      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 23, 22, 21, 20},
     s2x8,2,MPKIND__OVERLAP,1,     0,  s3x8,      0x000, 0},
@@ -1930,6 +1935,9 @@ map::map_thing map::map_init_table[] = {
     s1x8,2,MPKIND__REMOVED,0,     0,  s1x16,      0x000, 0},
    {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},
     s1x8,2,MPKIND__REMOVED,1,     0,  s2x8,      0x000, 0},
+
+   {{0, 2, 4, 7, 11, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8},
+    s3x3,2,MPKIND__REMOVED,0,     0,  s3x6,      0x000, 0},
 
    {{0, 5,                  1, 4,                  2, 3},
     s1x2,3,MPKIND__TWICE_REMOVED,0,0,  s1x6,     0x000, 0},
@@ -2156,6 +2164,11 @@ map::map_thing map::map_init_table[] = {
     s2x2,2,MPKIND__SPLIT,0,       0,  s2x4,      0x000, 0},
    {{1, 6, 7, 0,                       3, 4, 5, 2},
     s2x2,2,MPKIND__SPLIT,1,       0,  s2x4,      0x005, 0},
+
+   {{0, 1, 2, 17, 12, 13, 14, 15, 16,     3, 4, 5, 6, 9, 10, 11, 8, 7},
+    s3x3,2,MPKIND__SPLIT,0,       0,  s3x6,      0x000, 0},
+   {{2, 17, 12, 13, 14, 15, 0, 1, 16,     5, 6, 9, 10, 11, 8, 3, 4, 7},
+    s3x3,2,MPKIND__SPLIT,1,       0,  s3x6,      0x005, 0},
 
    {{0, 1, 10, 11,          2, 3, 8, 9,            4, 5, 6, 7},
     s2x2,3,MPKIND__SPLIT,0,       0,  s2x6,      0x000, 0},
@@ -2822,6 +2835,8 @@ full_expand::thing touch_init_table3[] = {
 };
 
 
+// 100 bit: don't allow for synthesize; that is, you can go in, but you can't come out.
+// 200 bit: don't allow for analyze; that is, you can come out, but you can't go in.
 
 // First line:
 //   bigsetup    lyzer      ... maps .............
@@ -3046,11 +3061,13 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s1x6,           schema_nothing, {2, 5,    0, 1, 3, 4},
              s1x2,     s1x4,     0, 0, 1, 1,  0x2FA, schema_concentric},
    {s1x6,           schema_concentric_4_2, {1, 2, 4, 5,    0, 3},
-             s1x4,     s1x2,     0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_2x1dmd,       schema_concentric_4_2, {0, 1, 3, 4,    5, 2},
-             s1x4,     s1x2,     0, 1, 1, 1,  0x0F5, schema_concentric},
-   {s_2x1dmd,       schema_nothing, {5, 1, 2, 4,    0, 3},
-             sdmd,     s1x2,     1, 0, 1, 1,  0x2F5, schema_concentric},
+    s1x4,     s1x2,     0, 0, 1, 1,  0x0FA, schema_concentric},
+
+   {s_2x1dmd,       schema_concentric_4_2_prefer_1x4, {0, 1, 3, 4,    5, 2},
+    s1x4,     s1x2,     0, 1, 1, 1,  0x0F5, schema_concentric},
+   {s_2x1dmd,       schema_concentric_4_2, {5, 1, 2, 4,    0, 3},
+    sdmd,     s1x2,     1, 0, 1, 1,  0x0F5, schema_concentric},
+
    // Next two are duplicate.
    {s_wingedstar,   schema_nothing, {7, 2, 3, 6,    0, 1, 4, 5},
              s_star,   s1x4,     1, 0, 1, 1,  0x2F5, schema_conc_star},
@@ -3119,6 +3136,20 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s_star,   0, 0, 1, 1,  0x2FA, schema_concentric},
    {sbigh,          schema_concentric, {4, 5, 10, 11,    0, 9, 6, 3},
              s1x4,     s2x2,     0, 0, 3, 1,  0x0EF, schema_concentric},
+
+   {s2x6,           schema_3x3k_concentric, {2, 3, 8, 9,   1, 4, 7, 10,  0, 5, 6, 11},
+             s2x2,     s2x2,     0, 0, 1, 2,  0x0FE, schema_3x3k_concentric},
+   {s2x6,           schema_3x3k_concentric, {9, 2, 3, 8,   10, 1, 4, 7,  11, 0, 5, 6},
+             s2x2,     s2x2,     1, 1, 9, 2,  0x2FB, schema_3x3k_concentric},
+   {s1x12,          schema_3x3k_concentric, {4, 5, 10, 11,   2, 3, 8, 9,   0, 1, 6, 7},
+             s1x4,     s1x4,     0, 0, 1, 2,  0x0FA, schema_3x3k_concentric},
+
+   {s2x8,           schema_4x4k_concentric, {3, 4, 11, 12,   2, 5, 10, 13,    1, 6, 9, 14,    0, 7, 8, 15},
+             s2x2,     s2x2,     0, 0, 1, 3,  0x0FE, schema_4x4k_concentric},
+   {s2x8,           schema_4x4k_concentric, {12, 3, 4, 11,   13, 2, 5, 10,    14, 1, 6, 9,    15, 0, 7, 8},
+             s2x2,     s2x2,     1, 1, 9, 3,  0x2FB, schema_4x4k_concentric},
+   {s1x16,          schema_4x4k_concentric, {6, 7, 14, 15,   4, 5, 12, 13,   2, 3, 10, 11,   0, 1, 8, 9},
+             s1x4,     s1x4,     0, 0, 1, 3,  0x0FA, schema_4x4k_concentric},
 
    // The 3x4 items appear after the 3dmd items.  Since the search order is reversed,
    // the 3x4 will be preferred when putting together a 1x4 and 2x2.
@@ -3486,7 +3517,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s_wingedstar,   schema_concentric, {2, 3, 6, 7,    0, 1, 4, 5},
              s_star,   s1x4,     0, 0, 1, 1,  0x0FA, schema_concentric},
    {s3x1dmd,        schema_concentric, {7, 2, 3, 6,    0, 1, 4, 5},
-             sdmd,     s1x4,     1, 0, 1, 1,  0x0F5, schema_concentric},
+    sdmd,     s1x4,     1, 0, 1, 1,  0x0F5, schema_concentric},
    {s1x3dmd,        schema_concentric, {2, 3, 6, 7,    0, 1, 4, 5},
              sdmd,     s1x4,     0, 0, 1, 1,  0x0FA, schema_concentric},
    {s_crosswave,    schema_concentric, {6, 7, 2, 3,    0, 1, 4, 5},
@@ -3508,12 +3539,41 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 };
 
 
+// Rotmask is the mask of things that we will reject.  The low 4 bits are rotations
+// that we will reject.  It is ANDed with "1 << r".  R is the rotation of res1,
+// after localizing so that res2 has rotation zero.  Hence r=0 if the two setups
+// have the same orientation, and, except in the case of things like triangles,
+// r=1 if they are orthogonal.  Common values of the low hex digit of "rotmask"
+// are therefore:
+//    E demand same orientation
+//    D demand orthogonal
+//    C either way.
+//
+// Additionally:
+//    The "10" bit means that action must be merge_without_gaps.
+//    The "20" bit means that action must NOT be merge_strict_matrix.
+//    The "40" bit means only accept it if the setups, prior to cutting down,
+//       were a 2x4 and a 1x8 that were perpendicular to each other.
+//    The "80" bit means that action must NOT be merge_c1_phantom_real.
+//    The "100" bit means that original action must NOT be merge_after_dyp.
+//    The "200" bit means only accept it if the setups, prior to cutting down,
+//       were a 2x4 and a ptpd that were perpendicular to each other. */
+
+// swap_setups
+//    1 bit - swap setups;
+//    2 bit - change elongation;
+//    4 bit - no take right hands
+//    8 bit - force outer_elong to 3, so people will go to corners of 4x4
+
+
+//                             rotmask |     | swap_setups
 merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_spindle, s_spindle, 0xAA, 0x55, 0x0D, 0x1, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
    {s_spindle, s_spindle, 0x55, 0xAA, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}},
    {s_spindle,     s2x4, 0x55,  0x66, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}},
    {s_ptpd,     sbigptpd, 0,  0, 0x0E, 0x0, schema_nothing,             nothing,     nothing,  warn__none, 0, 0, {2, 4, 3, 1, 8, 10, 9, 7}, {0}},
-   {s_1x2dmd,      s1x8, 022,   0x66, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, -1, 3, 5, -1, 7}, {0, -1, -1, 2, 4, -1, -1, 6}},
+   {s_1x2dmd,      s1x8, 0,     0x44, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7}, {0, 1, -1, 2, 4, 5, -1, 6}},
+   {s_1x2dmd,      s1x8, 044,   0,    0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {1, 3, -1, 5, 7, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
    {s_1x2dmd,  s_galaxy, 022,   0xAA, 0x1E, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {0, -1, 3, 4, -1, 7}, {1, -1, 2, -1, 5, -1, 6, -1}},
    {s_1x2dmd,      s2x4, 022,   0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 2, 3, 5},               {0, 3, 4, 7}},
    {sdmd,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
@@ -3523,6 +3583,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x4,        s_thar, 0x66,  0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 3, 4, 7}},
    {s2x3,        s_thar, 022,   0x33, 0x0E, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 2, 3, 5}},
    {s2x3,        s_thar, 022,   0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 2, 3, 5}},
+   {s1x2,       s1x3dmd, 0,     0x88, 0x0C, 0x0, schema_concentric_2_6, s1x2,        s1x6,     warn__none, 0, 0, {0, 1}, {0, 1, 2, 4, 5, 6}},
    {s1x2,        s_hrglass, 0,  0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
    {s1x2,        s_qtag, 0,     0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
    {s_qtag,        s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}},
@@ -4486,6 +4547,18 @@ static const coordrec thingrigger = {s_rigger, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1,  6,  7,  0,  1,  3,  2, -1,
       -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thing3x3 = {s3x3, 3,
+   { -4,   0,   4,   4,   4,   0,  -4,  -4,   0},
+   {  4,   4,   4,   0,  -4,  -4,  -4,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1, -1, -1,  7,  8,  3, -1, -1,
+      -1, -1, -1,  6,  5,  4, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
@@ -6925,6 +6998,16 @@ const setup_attr setup_attrs[] = {
     id_bit_table_rigger,
     {"66a b@7gh6 6dc@766f e",
      "5g@5h@fa@eb@5d@5c"}},
+   {8,                      // s3x3
+    &thing3x3,
+    &thing3x3,
+    {0, 0, 0, 0},
+    {b_3x3, b_3x3},
+    {3, 3},
+    true,
+    (const id_bit_table *) 0,
+    {"a  b  c@h  i  d@g  f  e",
+     (Cstring) 0}},
    {11,                     // s3x4
     &thing3x4,
     &thing3x4,
@@ -6977,7 +7060,7 @@ const setup_attr setup_attrs[] = {
      "k  l  a@@5 j  b@@5 i  c@@5 h  d@@g  f  e"}},
    {15,                     // s1p5x8
     (const coordrec *) 0,   // Code in anchor_someone_and_move requires that this
-    (const coordrec *) 0,   // setup look a lot like a 2x8.
+    (const coordrec *) 0,   // setup looks a lot like a 2x8.
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
@@ -6987,7 +7070,7 @@ const setup_attr setup_attrs[] = {
      "pa@@ob@@nc@@md@@le@@kf@@jg@@ih"}},
    {7,                      // s1p5x4
     (const coordrec *) 0,   // Code in anchor_someone_and_move requires that this
-    (const coordrec *) 0,   // setup look a lot like a 2x4.
+    (const coordrec *) 0,   // setup looks a lot like a 2x4.
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
@@ -7405,6 +7488,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
+   {31,                     // sxequlize
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {31,                     // sx1x16
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -7773,6 +7866,14 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric
    {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
     schema_concentric},                  // schema_cross_concentric
+   {0,
+    schema_nothing},                     // schema_3x3k_concentric
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_3x3k_concentric},             // schema_3x3k_cross_concentric
+   {0,
+    schema_nothing},                     // schema_4x4k_concentric
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_4x4k_concentric},             // schema_4x4k_cross_concentric
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK,
     schema_nothing},                     // schema_single_concentric
    {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
@@ -7855,6 +7956,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_2_4_or_normal
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_4_2
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_4_2_prefer_1x4
    {SCA_CENTRALCONC | SCA_CROSS,
     schema_concentric_4_2},              // schema_cross_concentric_4_2
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
@@ -7889,6 +7992,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_6_2_tgl
    {0,
     schema_nothing},                     // schema_concentric_to_outer_diamond
+   {0,
+    schema_nothing},                     // schema_concentric_no31dwarn
    {0,
     schema_nothing},                     // schema_conc_12
    {0,
@@ -8001,13 +8106,17 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_sequential_with_fraction
    {SCA_SNAGOK,
     schema_nothing},                     // schema_sequential_with_split_1x8_id
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_sequential_alternate
+   {SCA_SNAGOK,
+    schema_nothing}                      // schema_sequential_remainder
 };
 
 
 // BEWARE!!  This list is keyed to the definition of "meta_key_kind" in sd.h .
 const uint32 meta_key_props[] = {
-   MKP_RESTRAIN_2,                    // meta_key_random
-   MKP_RESTRAIN_2,                    // meta_key_rev_random
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_random
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_piecewise
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially
    MKP_RESTRAIN_1,                    // meta_key_finish
@@ -8072,6 +8181,7 @@ int begin_sizes[] = {
    8,          /* b_pbone */
    8,          /* b_rigger */
    8,          /* b_prigger */
+   9,          /* b_3x3 */
    8,          /* b_2stars */
    8,          /* b_p2stars */
    8,          /* b_spindle */

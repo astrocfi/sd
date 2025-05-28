@@ -1,0 +1,60 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename appnote1.info
+@settitle Sd Application Note 1
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@end iftex
+@c %**end of header
+@ifclear html
+@center @strong{SD APPLICATION NOTE 1}
+@sp 1
+@end ifclear
+Copyright @copyright{} 1998 William B. Ackerman
+@sp 1
+@center RIMS / HUBS TRADE BACK
+@center and
+@center RIMS / HUBS TRADE ANYTHING
+@sp 1
+@example
+@group
+
+               3G>   3B>    .     .                 4G<   2B<
+
+                .    2G<   2B<    .                 3B>   1G>
+
+                .    4B>   4G>    .                 3G<   1B<
+
+                .     .    1B<   1G<                4B>   2G>
+
+          TRIPLE ECHO SPLIT PHANTOM WAVES tally ho but [1/2, shazam]
+
+
+
+
+               3G>   3B>    .     .
+
+                .    2G<   2B<    .           3BV   4G^   1GV   2B^
+
+                .    4B>   4G>    .           4BV   3G^   2GV   1B^
+
+                .     .    1B<   1G<
+
+     QUADRUPLE ECHO SPLIT PHANTOM WAVES tally ho but [1/2, 1/4 STABLE, shazam]
+
+
+
+
+                     3G>   1B>                      4G>   4B>
+
+                     4B<   2G<                      1G<   3B<
+
+                     4G>   2B>                      1B>   3G>
+
+                     3B<   1G<                      2B<   2G<
+
+          INITIALLY ODDLY, ONCE REMOVED [turn the key] er's motivate
+@end group
+@end example
+@bye
