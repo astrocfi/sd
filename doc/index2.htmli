@@ -6,32 +6,17 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>sophisticated</strong>, <strong>accurate</strong> and
 <strong>reliable</strong>.
 </p>
-<br>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 34.7</strong>, released on September 1, 2002.
-<p align="center">
-<strong>COMPILER BUG ALERT!!!!!</strong>
-<p>
-Microsoft Visual C++, professional edition, version 6.0, service pack 5, has a
-bug that renders it unfit for compiling Sd or Sdtty.  See the release notes for
-version 34.7 for details.  This bug does not affect users, because this compiler
-has never been used, and never will be used, for compiling Sd.
-</p>
+<strong>The current version of Sd/Sdtty is 34.8</strong>, released on August 16, 2003.
 <br>
 <p>
-The program is now able to write the output file with a "new style" name.
-These names end in ".txt", as in "sequence_C1.txt" or "01sep02_C1.txt".
-Files with these names are expected to behave better when read into word
-processors, printed, or sent as email attachments.
-The simplest way to get this new behavior is to add the following line
-to the "[options]" section of the sd.ini file:
+<strong>A bug causing occasional crashes during resolving
+has been fixed.  You should download this version.</strong>
 <p>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new_style_filename
+The program is now able to associate abridgement files with sessions.
+See the release notes and manual.
 <p>
-The program now allows you to define call or concept abbreviations
-in the sd.ini file.  See the release notes.
-<p>
-The resolver has been modified to improve its behavior at high levels.
+The program should start up much faster than before.
 <p>
 <dl>
 <dt>
@@ -43,7 +28,7 @@ A sample of fun things Sd can do.
 <dt>
 <font size="+1"><a href="intro.html">Background</a></font></dt>
 <dd>
-Background and availability info.
+Background and availability info, and information about Microsoft compiler bugs.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>

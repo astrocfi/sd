@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 19 May 2002.
+        Last modified 1 May 2003.
 
 -----------------------------------------------------------------
 
@@ -68,33 +68,28 @@ Go to sddoc directory and do:
 
 -----------------------------------------------------------------
                 POSTER CHILD LOG
-10 Jun 00  -  21 Aug 00   #4
-21 Aug 00  -  14 Sep 00   #5
-14 Sep 00  -  09 Oct 00   #8
-09 Oct 00  -  11 Dec 00   #9
-11 Dec 00  -  19 Feb 01   #7
+10 Jun 00  -  21 Aug 00  # 4
+21 Aug 00  -  14 Sep 00  # 5
+14 Sep 00  -  09 Oct 00  # 8
+09 Oct 00  -  11 Dec 00  # 9
+11 Dec 00  -  19 Feb 01  # 7
 19 Feb 01  -  12 Mar 01  #10
 12 Mar 01  -  27 May 01  #11
-27 May 01  -  16 Sep 01   #5
+27 May 01  -  16 Sep 01  # 5
 16 Sep 01  -  7  Apr 02  #14
 7  Apr 02  -  30 Apr 02  #15
 30 Apr 02  -  15 May 02  #12
 15 May 02  -  15 Jul 02  #16
 15 Jul 02  -  1  Sep 02  #17
-1  Sep 02  -             #18
+1  Sep 02  -  16 Jan 03  #18
+16 Jan 03  -  1  May 03  #19
+1  May 03  -             #20
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - DJGPP
 
 This is not done any more .....
-###   Build and test the optimized version from GCC:
-###       setopt
-###       [del *.o if necessary to force build]
-###       make
-###       cd regress
-###       del *.tmp
-###       doit
-If this is done, do not distribute this.  It stinks.
+If it is done, do not distribute it.  It stinks.
 
 Build and test the optimized version from DJGPP.
 This should be done on Windows NT4.0, not Windows 2000 or any similar
@@ -165,13 +160,52 @@ release at home, just continue.
 
                TESTING AND PRODUCTION BUILD - Linux
 
-On Atlas, create directories sd and sd\regress under /users/wba.
-FTP (in binary mode) the zipfiles for sources and regression tests
-into those directories.
+windows> del *~
+windows> savelinuxsource
+windows> ftp atlas
+            (user=wba)
+            (pass=x464pq)
+windows> bin
+windows> put linuxsource.tar.gz
+windows> quit
+windows> telnet atlas
+            (user=wba)
+            (pass=x464pq)
+   atlas> scp linuxsource.tar.gz wba@goblin.jaws.umn.edu:linuxsource.tar.gz
+            (pass=wba;sd)
+   atlas> ssh goblin.jaws.umn.edu
+            (pass=wba;sd)
+      goblin> # Check that "sd" directory does not exist.
+      goblin> gzip -d linuxsource.tar.gz
+      goblin> tar xovf linuxsource.tar
+      goblin> cd sd
+      goblin> make -f makefile.linux
+          Test the program.
+      goblin> rm *.o
+      goblin> rm *.c
+      goblin> rm *.h
+      goblin> rm *.cpp
+      goblin> rm *.a
+      goblin> rm *cache
+      goblin> rm makef*
+      goblin> rm db_doc.txt
+      goblin> ls -l
+          Only the files mkcalls, sd_calls.dat, sd_calls.txt, and sdtty should exist.
+      goblin> cd ..
+      goblin> rm linux.tar
+      goblin> rm linux.tar.gz
+      goblin> tar cvf linux.tar sd
+      goblin> gzip linux.tar
+      goblin> cp sd/* .
+      goblin> rm sd/*
+      goblin> rmdir sd
+      goblin> scp linux.tar.gz ackerman@scotch.ics.uci.edu:linux.tar.gz
+            (pass=12b0z0s)
+      goblin> exit
+   atlas> exit
+windows> exit
 
-It seems best, because atlas and hpanjph don't recognize the same
-users and groups, to do all accesses through hpanjph.
-On hpanjph, cd to /atlas/users/wba/sd.
+===============================
 
 Telnet to hpanjph, unzip (with "-a" option) those two zipfiles.
 In sd, do
@@ -277,9 +311,59 @@ pdfdoc                      *      *
 psdoc                       *      *
 textdoc                     *      *
 install                                  *
-install3                                 *
 
 
+cd sddoc
+ftp atlas
+            (user=wba)
+            (pass=x464pq)
+   bin
+   # send file from hpaniou to atlas, in /atlas/users/wba/pack.zip
+   put pack.zip
+   quit
+
+telnet atlas
+            (user=wba)
+            (pass=x464pq)
+
+
+
+***** NEW stuff:   server is scotch.ics.uci.edu
+
+From atlas, can do
+   ssh -l ackerman scotch.ics.uci.edu
+   (pw = 12b0z0s)
+   dir will appear to be /home/ackerman,
+   is actually /home/lynette/public-html/sd, which is where the web pages are.
+
+Or, presumably, from atlas:
+   scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
+            (pass=12b0z0s)
+
+
+   # send file from atlas to goblin, in /home/wba
+   scp pack.zip wba@goblin.jaws.umn.edu:pack.zip
+            (pass=wba;sd)
+   # ssh from atlas to goblin
+   ssh goblin.jaws.umn.edu
+            (pass=wba;sd)
+      # send file from goblin to slowlaris, in /home/lynette/public-html/sd
+      scp pack.zip wba@slowlaris.tobkin.com:pack.zip
+            (pass=12b0z0s)
+      # ssh from goblin to slowlaris
+      ssh slowlaris.tobkin.com
+            (pass=12b0z0s)
+         rm sd_doc*.html
+         unzip pack
+         rm pack.zip
+         exit
+      rm pack.zip
+      exit
+   rm pack.zip
+   exit
+
+
+OBSOLETE OLD PROCEDURE
 Run the program "winscp2".
 Highlight the saved session "goblin", and press "login".
 Copy pack.zip (or whatever) from \wba\sddoc to remote host,

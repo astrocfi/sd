@@ -22,7 +22,7 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
-X11_FLAGS = 
+X11_FLAGS =
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
@@ -30,7 +30,7 @@ TTY_FLAGS = -DNO_CURSES -DNO_IOCTL
 
 # These are the library flags that we must use for the final bind of
 # the X11 version of "sd".
-X11_LIBS = 
+X11_LIBS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
@@ -54,7 +54,7 @@ allx11: sd.exe sd_calls.dat
 alltty: sdtty.exe sd_calls.dat
 everything: allx11 sdtty.exe
 
-LDPRELIBS = 
+LDPRELIBS =
 LDPOSTLIBS = lib\crt0.o lib\libc.a
 
 sd.exe: $(SD_OBJS) $(SDX11_OBJ)

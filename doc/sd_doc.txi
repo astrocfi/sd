@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.7
-@set Time-stamp: September 1, 2002
+@set sd-version 34.8
+@set Time-stamp: August 16, 2003
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -44,7 +44,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-2002 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-2003 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX or other text
@@ -1074,7 +1074,7 @@ The resolver checks all eight people, so it should work.
 If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
-@node The Completing Reader, Resolving and Searching, Calling, Top
+@node The Completing Reader, Abridgement, Calling, Top
 @chapter The Completing Reader
 
 @code{Sd} and @code{Sdtty} use a @dfn{completing reader} for interpreting the
@@ -1282,7 +1282,125 @@ You can omit apostrophes when typing in call and concept names.  For example,
 you can type @code{lockers choice} instead of @code{locker's choice}.
 The calls will always be printed out with the apostrophe.
 
-@node Resolving and Searching, Editing, The Completing Reader, Top
+@node Abridgement, Resolving and Searching, The Completing Reader, Top
+@chapter Abridgement
+
+The program recognizes four operations which allow use of an abridged
+list of calls:
+
+@table @code
+@item Write list (with a filename)
+write out the call list for the indicated level and exit
+@item Write full list (with a filename)
+write out the call list for the indicated level and all lower levels
+and then exit the program.
+@item Use abridged list (with a filename)
+read in the file, strike all the calls contained therein off the menus,
+and proceed.
+@item Delete abridgement
+only meaningful with a session.  It permanently removes the association
+of an abridge list with that session.
+@end table
+
+These may be invoked by checking the appropriate box in the @code{Sd}
+startup dialog, and filling in the file name if required.
+They may also be invoked by starting the program with command-line options:
+@example
+   -write_list @var{filename}
+   -write_full_list @var{filename}
+   -abridge @var{filename}
+   -delete_abridge
+@end example
+The first two operations are used to prepare a call list.  The call list
+for the indicated level, exactly as the calls appear in the menu, will
+be written to the named file.  If @code{-write_list} is used, only the
+calls exactly on that level will be written.  If @code{-write_full_list}
+is used, the lower level calls will be written as well, so the file will
+look exactly like the main call menu.  After performing either of these
+operations, the program exits.
+
+The third special flag is used to read in a list of calls to be avoided.
+Any call listed in the file, in precisely the same format as it was written
+out, will be removed from the internal database prior to running the program.
+Every sequence written under control of such a file will say @samp{(abridged)}
+on its header line.
+
+To write sequences for a group that is learning C2, for example, start
+Sd from the Start Menu and then check the box marked ``Write list'',
+enter the desired filename, click ``accept'', and choose the C2 level.
+
+Or, if you prefer command-line operation, do (with either @code{Sd} or @code{Sdtty}):
+@example
+        sd -write_list mondayC2.txt c2
+@end example
+In all cases, this will write out its C2 list into the file @file{mondayC2.txt}.
+
+Then delete from that file those calls that the group has
+learned, i.e., those calls not to be avoided.  Use a plain text editor,
+such as Emacs or Notepad, for this.
+
+When writing sequences, start Sd from the Start Menu and then check the
+box marked ``Use abridged list'',
+enter the desired filename, click ``accept'', and choose the C2 level.
+
+Or you can do:
+@example
+        sd -abridge mondayC2.txt c2
+@end example
+
+As the group learns new C2 calls, delete the corresponding lines from
+the file @file{mondayC2.txt}.  That file always contains the calls that they don't
+yet know.  When the file goes to zero, they (presumably) know the whole list.
+
+Be aware that the abridgement mechanism works only for calls, not for concepts.
+You must keep track of what concepts not to use.
+
+The lines in the abridgement file must always be in exactly the same format
+as the strings that are written out by the list creation operation.
+The program has no tolerance for creative capitalization, stray
+blanks, or other variations.  Any line in the file that does not match a
+call in the menu is simply ignored.  The order of the lines is not important.
+We recommend using the file exactly as it is written out with the
+``write list'' or ``write full list'' operation, and using an editor
+only for the purpose of deleting lines from it.
+
+The abridgement mechanism, and the session mechanism, work interchangeably
+between @code{Sd} and @code{Sdtty}.  You can use one program to create or
+manipulate abridgement files or sessions, and then use the other program
+to use them.
+
+@section Associating an abridgement file with a session
+
+You can associate abridgement lists with sessions.  To create a new
+session with a given abridgement file, start Sd from the Start Menu and
+then check the box marked ``Use abridged list'', enter the desired
+filename, select the session labeled ``create a new session'', select
+the desired level, and enter the session number when prompted.
+
+Or you can do:
+@example
+        sd -abridge mondayC2.txt c2
+@end example
+and create the session from there.
+
+If you want to associate an abridgement file with an already existing session,
+do the same thing, but select the existing session.  Once the association
+is made, it is permanent--this step will not be required again.  Simply
+selecting the session will get the abridgement list.
+
+@section Deleting an association
+
+You might want to do this after the class has finished learning the
+list, and you want to continue writing material for that session.
+Start Sd from the Start Menu and
+then check the box marked ``Delete abridgement'', and select the desired session.
+
+Or you can do:
+@example
+        sd -delete_abridge
+@end example
+
+@node Resolving and Searching, Editing, Abridgement, Top
 @chapter Resolving and Searching
 
 This chapter describes how to have the program find calls for you to
@@ -1847,7 +1965,10 @@ will not appear in the sequence written to a file.  If you want the
 current position to have its picture written in a file (say, because the
 sequence is very difficult and you believe it may be necessary to say
 something helpful then like ``check a parallelogram with boys in the center
-box'') select the command @code{keep picture}.
+box'') select the command @code{keep picture}.  You may also cause the
+program to keep pictures in the output file for the entire sequence
+by issuing the @code{toggle keep all pictures} command or by placing the
+@code{keep_all_pictures} option in your initialization file.
 
 @node Singing Call Progressions, Changing Modes, Keeping Pictures, Miscellaneous Commands
 @section Singing Call Progressions
@@ -1884,6 +2005,7 @@ or @code{Sdtty} runs.  They are:
    toggle active phantoms
    toggle retain after error
    toggle nowarn mode
+   toggle keep all pictures
    toggle singleclick mode
    toggle minigrand getouts
    toggle singing call
@@ -1921,6 +2043,10 @@ program retains the concepts that you had typed when an error occurs.
 The @code{toggle nowarn mode} command changes the suppression
 of warning messages.
 
+The @code{toggle keep all pictures} changes the mode that keeps
+all pictures.  This mode effectively puts a ``keep picture'' command
+at every point in the sequence.
+
 The @code{toggle singleclick mode} changes the acceptance of single
 mouse clicks on menu items.
 
@@ -1950,6 +2076,7 @@ Such a file might look like this:
 [Options]
 reverse_video
 no_warnings
+window_size 850x650
 singlespace
 
 [Sessions]
@@ -2137,22 +2264,53 @@ This is the opposite of @code{retain_after_error}.
 Since this is the usual behavior, you don't need this option.
 It is present only for compatibility with older versions.
 If it is in your @file{sd.ini} file, take it out.
+@item keep_all_pictures
+This keeps a picture after every call, as if the ``keep picture''
+command had been given each time.
+It is the same as giving the @code{toggle keep all pictures}
+command while the program is running.
 @item single_click
 This makes @code{Sd} respond immediately to a single mouse click
 in a menu.  Normally, a double click, or pressing the @samp{Accept} button,
 is required.  This option is meaningless in @code{Sdtty}.
 It is the same as giving the @code{toggle singleclick mode}
 command while the program is running.
+@item maximize
+This tells @code{Sd} to ``maximize'' its window, that is, to use the full
+screen.  It is the same thing that would happen if you clicked the open
+box button in the upper right corner.  This has no effect on @code{Sdtty}.
+@code{Sdtty} runs as a ``command prompt'' program and cannot set its
+window size.
+@item window_size @var{size-designator}
+This argument is followed by a designator like ``750x450''.  It will set
+the window size to the indicated number of pixels.  There is enormous
+variation in the screen size of various displays and graphics cards, and
+in people's preferences, so you may find the standard default size
+(780x560 pixels) not to your liking.  The two size numbers are separated
+by the letter ``x'', with no space.
+
+You can also adjust the screen position by giving 4 numbers, as in
+``window_size 750x450x20x20''.  The arguments are the X and Y size, and the
+X and Y position of the upper left corner, all in pixels.
+
+These options do not affect @code{Sdtty}.  @code{Sdtty} runs as a
+``command prompt'' program and cannot set its own window size.
+However, you can usually control this either by editing the icon that
+starts the program (right click the icon, select ``properties'', and,
+on the ``shortcut'' tab, select ``maximized'') or by changing the general
+layout of command prompt programs (start, control panel, console, and
+use the ``options'' and/or ``layout'' tabs.)
 @item no_checkers
 @code{Sd} normally draws the formation on the screen with icons that are
 intended to look like callers' ``checkers''.  This option disables that,
 and displays dancers by more normal means.  Pictures drawn in the output
 file never use these icons.  This option is meaningless in @code{Sdtty}.
 @item no_graphics
-This suppresses the use of special PC graphics characters (``triangles'') when drawing pictures
-on the screen.  These characters are not standard on all PC's.  Pictures
-drawn in the output file will never use the special graphics characters.
-This is not meaningful in @code{Sd} unless @code{no_checkers} is also given.
+This suppresses the use of special PC graphics characters
+(``triangles'') when drawing pictures on the screen.  These characters
+are not standard on all PC's.  Pictures drawn in the output file will
+never use the special graphics characters.  This is not meaningful in
+@code{Sd} unless @code{no_checkers} is also given.
 @item no_color
 @code{Sdtty} and @code{Sd} normally color-code
 the dancers shown on the screen, according to various color schemes that
@@ -2412,7 +2570,7 @@ from a few seconds to over a minute.
 * Abridgement::                 Abridgement
 @end menu
 
-@node Command-Line Options, Abridgement,  , Invoking Sd
+@node Command-Line Options,  ,  , Invoking Sd
 @section Command-Line Options
 
 Any of the option keywords that can be placed
@@ -2424,7 +2582,7 @@ Each keyword has a hyphen in front of it when used on the command line.
 Examples:
 
 @display
-@t{sd -singlespace plus}
+@t{sd -singlespace -maximize plus}
 @t{sdtty -no_warnings -active_phantoms}
 @end display
 
@@ -2470,67 +2628,10 @@ name to look up resources under.  default: program name.
 an X resource manager string.
 @end table
 
-@node Abridgement,  , Command-Line Options, Invoking Sd
-@subsection Abridgement
-
-The program recognizes three flags which allow use of an abridged
-list of calls:
-
-@table @code
-@item -write_list @var{filename}
-write out the call list for the indicated level and exit
-@item -write_full_list @var{filename}
-write out the call list for the indicated level and all lower levels
-and then exit the program.
-@item -abridge @var{filename}
-read in the file, strike all the calls contained therein off the menus,
-and proceed.
-@end table
-
-The first two are used to prepare a call list.  The call list for the
-indicated level, exactly as the calls appear in the menu, will be written
-to the named file.  If @code{-write_list} is used, only the calls exactly on
-that level will be written.  If @code{-write_full_list} is used, the lower level
-calls will be written as well, so the file will look exactly like the
-main call menu.  After performing either of these operations, the program
-exits.
-
-The third special flag is used to read in a list of calls to be avoided.
-Any call listed in the file, in precisely the same format as it was written
-out, will be removed from the internal database prior to running the program.
-Every sequence written under control of such a file will say @samp{(abridged)}
-on its header line.
-
-To write sequences for a group that is learning C2, for example, run the
-program with
-@example
-        sd -write_list my_group c2
-@end example
-
-Then delete from the file @file{my_group} those calls that the group has
-learned, i.e., those calls not to be avoided.
-When writing sequences, use the command
-@example
-        sd -abridge my_group c2
-@end example
-
-As the group learns new C2 calls, delete the corresponding lines from
-the file @file{my_group}.  That file always contains the calls that they don't
-yet know.  When the file goes to zero, they know the whole list.
-
-Be aware that the abridgement mechanism works only for calls, not for concepts.
-You must keep track of what concepts not to use.
-
-The lines in the abridgement file must always be in exactly the same format
-as the strings that are written out by the @code{-write_list} or @code{-write_full_list}
-flags.  The program has no tolerance for creative capitalization, stray
-blanks, or other variations.  Any line in the file that does not match a
-call in the menu is simply ignored.  The order of the lines is not important.
-
 @node Terminal Interface, Linguistic Idiosyncrasies, Invoking Sd, Top
 @chapter Terminal Interface
 
-One version of the program, called @code{sdtty},
+One version of the program, called @code{Sdtty},
 uses a character-oriented terminal interface.
 
 @menu
@@ -3349,8 +3450,15 @@ in each of which the call is done independently.
 These are done from a 4x6.
 @item triple C/L/W/B/D/1T/3T/1L/3L/DS/GT
 @item triple 1x4s
+@item triple lines or boxes
+@item triple boxes or lines
+@item triple lines or diamonds
+@item triple diamonds or lines
 @item quadruple C/L/W/B/D/1T/3T/1L/3L/DS/GT
-These are straightforward.
+These are straightforward.  In the concepts that name two setups, such as
+``triple lines or boxes'', the outer two formations
+must be the same.  In these concept, ``lines'' means any 1x4.  Use the correct
+term when calling.  You may name the two formations in either order.
 @item center triple C/L/W/B/D @r{(singular)}
 @item outside triple C/L/W/B/D
 These are done from a setup that can be construed as having a center
@@ -3432,6 +3540,8 @@ You can use @samp{mystic} and @samp{invert mystic} with them.
 This is done from a 3x6 setup.  Three parallel 2x3 setups are
 formed, and the call is done independently in each of them.
 You can use @samp{mystic} and @samp{invert mystic} with them.
+@item triple staggered boxes
+This is done from a 2x12 ``zipper'' setup.
 @item concentric triple boxes
 @item concentric quadruple boxes
 These are done from a 2x6 or 2x8 respectively.  The concentric boxes
@@ -3743,6 +3853,8 @@ do a diamond call and then go back to footprints.
 @item back-to-back jay
 @item front jay
 @item back jay
+@item clockwise jay
+@item counterclockwise jay
 These include the cases of a 2-faced line in the center.
 In that case the shapes of the resultant 4-person boxes are
 different, and the concepts are equivalent to the ``parallelogram''
@@ -3855,6 +3967,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item stretch
 @item stretched setup
 @item stretched C/L/W/B/D
+@item stretched <any triangle concept>
 These are straightforward.
 @item centers
 @item ends
@@ -4015,6 +4128,7 @@ such as ``twice,'' ``circulate two positions,'' or whatever.
 @item initially
 @item secondly
 @item thirdly
+@item fourthly
 @item finally
 @item initially and finally
 @item piecewise
@@ -4952,12 +5066,18 @@ means the center @emph{wave}.  If you want the center diamond instead, you
 must say so.
 @sp 1
 @item center 1x4
-This is intended for use in things like 3x1 diamonds.  (This is the setup
-that results from a @code{1/2 acey deucey} from waves.)  In this setup,
-@code{centers} means the center @emph{diamond}.  If you want the center wave
-instead, you must say @code{center 1x4}.  The program uses the designator
-@code{center 1x4} as a catch-all for the center line or the center column.
-When reading the card, you probably ought to be more specific.
+@item center column
+@item center line
+@item center wave
+These are intended for use in things like 3x1 diamonds.  (This is the
+setup that results from a @code{1/2 acey deucey} from waves.)  In this
+setup, @code{centers} means the center @emph{diamond}.  If you want the
+center wave instead, you must say @code{center 1x4}.  These can also be
+used in a tidal setup to disambiguate the ``who are the centers?''
+issue.  The program uses the designator @code{center 1x4} as a catch-all
+term.  In most cases, you can use one of the other designators to be
+more specific.  The program often checks that the more specific designator
+is being used properly, but it doesn't always check.  Use them with care.
 @sp 1
 @item center 1x6
 This is similar, but refers to a line or column of 6.  It is intended

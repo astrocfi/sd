@@ -31,22 +31,9 @@
    open_file
    write_file
    close_file
-   parse_level
-   read_from_call_list_file
-   write_to_call_list_file
-   close_call_list_file
-   install_outfile_string
-   get_next_session_line
-   prepare_to_read_menus
-   initialize_misc_lists
-   open_session
-   process_session_info
-   open_call_list_file
-   close_init_file
-   open_database
-   read_8_from_database
-   read_16_from_database
-   close_database
+   read_from_abridge_file
+   write_to_abridge_file
+   close_abridge_file
 
 and the following external variables:
 
@@ -54,8 +41,7 @@ and the following external variables:
    random_number
    database_filename
    new_outfile_string
-   call_list_string
-   call_list_file
+   abridge_filename
 */
 
 /* You should compile this file (and might as well compile all the others
@@ -88,102 +74,11 @@ and the following external variables:
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
 #include <ctype.h>  /* for tolower */
-
-/* We take pity on those poor souls who are compelled to use XOPEN,
-   an otherwise fine standard, that doesn't put prototypes
-   into stdlib.h. */
-
-#if defined(_XOPEN_SOURCE)
-   /* We have taken the liberty of translating the prototypes
-      appearing in the XOPEN manual into ANSI C.  We can't
-      imagine why anyone would ever use the prototypes
-      in the prehistoric nomenclature. */
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void srand48(long int);
-extern long int lrand48(void);
-#ifdef __cplusplus
-}
-#endif
-#endif
-
-#if defined(_SYS5_SOURCE) || defined(_XOPEN_SOURCE) || defined(_AES_SOURCE) || defined(sun)
-#define HAVE_RAND48
-#endif
-
-/* We also take pity on those poor souls who are compelled to use
-   compilation systems that claim to be POSIX compliant, but
-   aren't really, and do not have unistd.h. */
-
-#if defined(_POSIX_SOURCE) || defined(sun)
-#define POSIX_STYLE
-#endif
-
-#ifdef POSIX_STYLE
-#include <unistd.h>
-#endif
-
-/* Or those who are otherwise compelled to use
-    troglodyte development environments.
-    gcc -traditional doesn't define __STDC__ */
-
-#if __STDC__ || defined(sun)
-#include <stdlib.h>
-#else
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void free(void *ptr);
-extern char *malloc(unsigned int siz);
-extern char *realloc(char *oldp, unsigned int siz);
-extern void srand48(long int);
-extern long int lrand48(void);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#if defined(WIN32)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void srand(long int);
-extern long int rand(void);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#if !defined(sun) && (!__STDC__ || defined(MSDOS))
-extern char *strerror(int);
-#endif
-
-/* Despite all our efforts, some systems just can't be bothered ... */
-#ifndef SEEK_SET
-#define SEEK_SET 0
-#endif
-#ifndef SEEK_END
-#define SEEK_END 2
-#endif
-
-/* I think we have everything now.  Isn't portability fun?  Before people
-   started taking these standards as semi-seriously as they do now, it was
-   MUCH HARDER to make a program portable than what you just saw. */
-
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
 
 #include "sd.h"
 #include "paths.h"
@@ -213,11 +108,10 @@ int session_index = 0;        /* If this is nonzero, we have opened a session. *
 int random_number;
 char *database_filename = DATABASE_FILENAME;
 char *new_outfile_string = (char *) 0;
-char *call_list_string = (char *) 0;
-FILE *call_list_file;
-long_boolean outfile_special = FALSE;
+char abridge_filename[MAX_TEXT_LINE_LENGTH];
+bool outfile_special = false;
 
-static long_boolean file_error;
+static bool file_error;
 static FILE *fildes;
 static char fail_errstring[MAX_ERR_LENGTH];
 static char fail_message[MAX_ERR_LENGTH];
@@ -225,28 +119,21 @@ static char fail_message[MAX_ERR_LENGTH];
 
 extern void general_initialize(void)
 {
-/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
-#ifdef HAVE_RAND48
-   srand48((long int) time((time_t *)0));
-#else
-   srand((unsigned int) time((time_t *)0));
-#endif
+   // If doing a resolve test, use a deterministic seed.
+   // But make it depend on something the operator said.
+   // That way, one can run two usefully independent tests
+   // on a multiprocessor, by giving them slightly
+   // different timeouts.
+   unsigned int seed = (ui_options.resolve_test_minutes != 0) ?
+      ui_options.resolve_test_minutes : time((time_t *)0);
+   srand(seed);
 }
 
 
 extern int generate_random_number(int modulus)
 {
-   int j;
-
-/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
-#ifdef HAVE_RAND48
-   random_number = (int) lrand48();
-#else
    random_number = (int) rand();
-#endif
-
-   j = random_number % modulus;
-   return j;
+   return random_number % modulus;
 }
 
 
@@ -342,12 +229,9 @@ char *get_errstring()
 void open_file()
 {
    int this_file_position;
-#if defined(WIN32) || (!defined(MSDOS) && !defined(__i386))
-   struct stat statbuf;
-#endif
    int i;
 
-   file_error = FALSE;
+   file_error = false;
 
    /* If this is a "special" file (indicated by ending with a colon),
       we simply open it and write. */
@@ -356,7 +240,7 @@ void open_file()
       if (!(fildes = fopen(outfile_string, "w"))) {
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
-         file_error = TRUE;
+         file_error = true;
          return;
       }
 
@@ -366,34 +250,61 @@ void open_file()
       return;
    }
 
+   // We need to find out whether there are garbage characters (e.g. ^Z)
+   // near the end of the existing file, and remove same.  Such things
+   // have been known to be placed in files by some programs running on PC's.
+   //
+   // Furthermore, some PC print software stops printing when it encounters
+   // one, so we have to get rid of it.
 
-/* If not on a DJGPP or PC/GCC, things are fairly simple.  We open the file in
-   "append" mode, thankful that we have escaped one of the most monumentally stupid
-   pieces of OS system design ever to plague the universe, and only need to
-   deal with Un*x, which is merely one of the most monumentally stupid
-   pieces of OS system design ever to plague this galaxy.  Or maybe we're running
-   on Windows or NT, operating systems that have sometimes been observed to do
-   the right thing. */
+   // On a number of operating systems, things are fairly simple.  We open the file in
+   // "append" mode, thankful that we have escaped one of the most monumentally stupid
+   // pieces of OS design ever to plague the universe, and only need to
+   // deal with Un*x, which is merely one of the most monumentally stupid
+   // pieces of OS design ever to plague this galaxy.  Or maybe we're running
+   // on Windows or NT, operating systems that have sometimes been observed to do
+   // the right thing.
 
-#if defined(WIN32) || (!defined(MSDOS) && !defined(__i386))
+   // Actually, we no longer have any idea whether Cygnus/Cygwin fits into this
+   // category or the next.  The Cygwin compiler, for all its being touted as
+   // a working implementation of the GNU tools on Windows, crashes ignominiously:
+   //
+   // C:\wba\sd>bash
+   // bash-2.05a$ make
+   // gcc -O2 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts -c sdmain.cpp
+   // make: *** [sdmain.o] Aborted (core dumped)
+   //
+   // The Cygnus compiler generates a program, that then silently disappears while
+   // reading in the database.
+   //
+   // I simply have no patience with broken software.
+
+#if defined(WIN32) || defined(__linux__) || defined(__CYGWIN__) || (!defined(MSDOS) && !defined(__i386))
+
+   struct stat statbuf;
 
    if (stat(outfile_string, &statbuf))
       this_file_position = 0;   /* File doesn't exist. */
    else
       this_file_position = statbuf.st_size;
 
-   /* First, open it in "create/append/read-write" mode.  This allows
-      reading or writing, but always writes at the end of the file --
-      seeks will not affect the write position.  Since we want to
-      remove control-Z's by seeking to the spot before them, that
-      isn't good enough.  But "r" mode won't create the file if it
-      didn't exist, and "w" mode won't let us write.  So we just have
-      to do this. */
+   // This is still a little tricky.  We want a file mode that:
+   // (1) creates a new file if non exists,
+   // (2) allows us to read, so we can look around for control-Z,
+   // (3) allows us to write at an arbitrary position, that is,
+   //     not at the end of the file, so we can seek to just before
+   //     the existing control-Z and then start writing at that point.
+   // There is no mode that does all of these things.
+   //
+   // So we first open it in "create/append" mode.  This would
+   // allow reading or writing, but would always write at the end
+   // of the file -- seeks do not affect the write position.
+   // But it will create the file if it doesn't exist.
 
-   if (!(fildes = fopen(outfile_string, "ab+"))) {
+   if (!(fildes = fopen(outfile_string, "a"))) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
-      file_error = TRUE;
+      file_error = true;
       return;
    }
 
@@ -403,51 +314,58 @@ void open_file()
       newline();
    }
 
-   /* Now that we know that the file exists, open it in binary read-write mode. */
+   // Now that we know that the file exists, open it in read-write mode.
+   // This will let us seek to the spot where we wish to write.
+
+   // On Windows, opening in "r+" mode will also erase the control-Z for us.
+   // They finally did something right!  (Well, they compensated for something
+   // extremely stupid.)  But we go through the control-Z search anyway,
+   // just in case.  Observation made on Windows 2000, don't know about
+   // other versions.
 
    (void) fclose(fildes);
 
-   if (!(fildes = fopen(outfile_string, "rb+"))) {
+   if (!(fildes = fopen(outfile_string, "r+"))) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
-      file_error = TRUE;
+      file_error = true;
       return;
    }
 
    if (this_file_position != 0) {
-      /* The file exists, and we have opened it in "rb+" mode.  Look at its end. */
+      // The file exists, and we have opened it in "r+" mode.  Look at its end.
 
       if (fseek(fildes, -4, SEEK_END)) {
-         /* It isn't 4 characters long -- forget it.  But first, position at the end. */
+         // It isn't 4 characters long -- forget it.  But first, position at the end.
          if (fseek(fildes, 0, SEEK_END)) {
-            (void) fclose(fildes);     /* What happened????? */
+            (void) fclose(fildes);     // What happened?????
             (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
             (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
-            file_error = TRUE;
+            file_error = true;
             return;
          }
          goto really_just_append;
       }
 
-      /* We are now 4 before the end.  Look at those last 4 characters. */
+      // We are now 4 before the end.  Look at those last 4 characters.
 
       for (i=0 ; i<4 ; i++) {
          if (fgetc(fildes) == 0x1A) {
             writestuff("Warning -- file contains spurious control character -- removing same.");
             newline();
             newline();
-            last_file_position = -1;   /* Suppress the other error. */
+            last_file_position = -1;   // Suppress the other error.
             break;
          }
       }
 
-      /* Now seek to the end, or to the point just before the offending character. */
+      // Now seek to the end, or to the point just before the offending character.
 
       if (fseek(fildes, i-4, SEEK_END)) {
-         (void) fclose(fildes);     /* What happened????? */
+         (void) fclose(fildes);     // What happened?????
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
-         file_error = TRUE;
+         file_error = true;
          return;
       }
 
@@ -456,14 +374,22 @@ void open_file()
 
 #else
 
-   /* We need to find out whether there are garbage characters (e.g. ^Z)
-      near the end of the existing file, and remove same.  Such things
-      have been known to be placed in files by some programs running on PC's.
-      
-      Furthermore, some PC print software stops printing when it encounters
-      one, so we have to get rid of it.
+   // This comment written in 2002.
+   // We are in big trouble.  This is legacy code.  It appears to have
+   // been required when running on DOS.  Or maybe Windows 3.1 or something.
+   // But no modern systems.  Well, actually, DJGPP requires this,
+   // because the previous code, opening the files in text mode,
+   // doesn't do the right thing with DJGPP.  I could change the previous
+   // code to do things in binary mode (the way they did prior to August
+   // 2002) and then it would work with DJGPP, but I won't.  These are
+   // text files.  If DJGPP doesn't understand that, that's too bad.
+   //
+   // It was a lot of fun figuring out how to do this,
+   // as you can tell from the comments below.
 
-      But wait!  The OS is so convinced that it knows better than we what
+   // Following comments written in early 1990's, most likely.
+
+   /* Wait!  The OS is so convinced that it knows better than we what
       should be in a file, that, in addition to silently putting in this
       character and making the print software silently ignore everything
       in the file that occurs after it, IT MAKES IT INVISIBLE TO US!!!!!
@@ -483,9 +409,6 @@ void open_file()
 
       So we open in "rb+" mode, and look around for ^Z characters. */
 
-
-
-
    /* But first, it is an observed fact that, if we open a file in binary
       mode, and the file gets created because of that, some garbage header
       bytes get written to it.  So, we don't open it in binary mode until
@@ -501,12 +424,12 @@ void open_file()
       if (!(fildes = fopen(outfile_string, "a"))) {
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
-         file_error = TRUE;
+         file_error = true;
          return;
       }
 
       this_file_position = ftell(fildes);
-   
+
       if ((last_file_position != -1) && (last_file_position != this_file_position)) {
          writestuff("Warning -- file has been modified since last sequence.");
          newline();
@@ -524,7 +447,7 @@ void open_file()
    if (!(fildes = fopen(outfile_string, "rb+"))) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
-      file_error = TRUE;
+      file_error = true;
       return;
    }
 
@@ -536,7 +459,7 @@ void open_file()
          (void) fclose(fildes);     /* What happened????? */
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
-         file_error = TRUE;
+         file_error = true;
          return;
       }
       goto just_append;
@@ -560,7 +483,7 @@ void open_file()
       (void) fclose(fildes);     /* What happened????? */
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
-      file_error = TRUE;
+      file_error = true;
       return;
    }
 
@@ -586,7 +509,7 @@ void open_file()
    if (!(fildes = fopen(outfile_string, "r+"))) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
-      file_error = TRUE;
+      file_error = true;
       return;
    }
 
@@ -594,7 +517,7 @@ void open_file()
       (void) fclose(fildes);     /* What happened????? */
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
-      file_error = TRUE;
+      file_error = true;
       return;
    }
 
@@ -625,7 +548,7 @@ void open_file()
       if ((fwrite("\f", 1, 1, fildes) != 1) || ferror(fildes)) {
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "write formfeed", MAX_ERR_LENGTH);
-         file_error = TRUE;      /* Indicate that sequence will not get written. */
+         file_error = true;
          return;
       }
    }
@@ -636,10 +559,19 @@ extern void write_file(char line[])
 {
    uint32 size;
 
-#if defined(WIN32)
+#if defined(__CYGWIN__)
+   // Yes.  Cygwin, even though it is are Unix-like, recognizes
+   // that it is running on a PC-like file system, and tries to obey
+   // the newline conventions of same.  So we write PC-style newlines.
+   // Actually, as noted above, Cygwin is broken, and I have no idea
+   // how to write line breaks.
    char nl[] = "\r\n";
 #define NLSIZE 2
 #else
+   // Windows and Linux (and even DJGPP) know how the convention for
+   // writing line breaks -- if the file has been opened in text mode,
+   // write a "newline" (which is literally what Unix file systems
+   // want), and the right thing will happen.
    char nl[] = "\n";
 #define NLSIZE 1
 #endif
@@ -651,7 +583,7 @@ extern void write_file(char line[])
       if ((fwrite(line, 1, size, fildes) != size) || ferror(fildes)) {
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
-         file_error = TRUE;      /* Indicate that sequence will not get written. */
+         file_error = true;      // Indicate that sequence will not get written.
          return;
       }
    }
@@ -659,7 +591,7 @@ extern void write_file(char line[])
    if ((fwrite(nl, 1, NLSIZE, fildes) != NLSIZE) || ferror(fildes)) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
-      file_error = TRUE;      /* Indicate that sequence will not get written. */
+      file_error = true;      // Indicate that sequence will not get written.
    }
 }
 
@@ -697,66 +629,4 @@ extern void close_file()
    (void) strncat(foo, fail_errstring, MAX_ERR_LENGTH);
    (void) strncat(foo, " -- try \"change output file\" operation.", MAX_ERR_LENGTH);
    specialfail(foo);
-}
-
-
-
-extern long_boolean parse_level(Cstring s, dance_level *levelp)
-{
-   char first = tolower(s[0]);
-
-   switch (first) {
-      case 'm': *levelp = l_mainstream; return TRUE;
-      case 'p': *levelp = l_plus; return TRUE;
-      case 'a':
-         if (s[1] == '1' && !s[2]) *levelp = l_a1;
-         else if (s[1] == '2' && !s[2]) *levelp = l_a2;
-         else if (s[1] == 'l' && s[2] == 'l' && !s[3]) *levelp = l_dontshow;
-         else return FALSE;
-         return TRUE;
-      case 'c':
-         if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && !s[3])
-            *levelp = l_c3a;
-         else if (s[1] == '3' && (s[2] == 'x' || s[2] == 'X') && !s[3])
-            *levelp = l_c3x;
-         else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && !s[3])
-            *levelp = l_c4a;
-         else if (s[1] == '4' && (s[2] == 'x' || s[2] == 'X') && !s[3])
-            *levelp = l_c4x;
-         else {
-            if (!s[2]) {
-               switch (s[1]) {
-                  case '1': *levelp = l_c1; return TRUE;
-                  case '2': *levelp = l_c2; return TRUE;
-                  case '3': *levelp = l_c3; return TRUE;
-                  case '4': *levelp = l_c4; return TRUE;
-                  default: return FALSE;
-               }
-            }
-            else return FALSE;
-         }
-         return TRUE;
-      default:
-         return FALSE;
-   }
-}
-
-
-extern char *read_from_call_list_file(char name[], int n)
-{
-   return (fgets(name, n, call_list_file));
-}
-
-
-extern void write_to_call_list_file(const char name[])
-{
-   fputs(name, call_list_file);
-   fputs("\n", call_list_file);
-}
-
-
-extern void close_call_list_file(void)
-{
-   if (fclose(call_list_file))
-      gg->fatal_error_exit(1, "Can't close call list file");
 }

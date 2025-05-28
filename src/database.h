@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -12,67 +12,6 @@
 
     This is for version 34. */
 
-
-/* We customize the necessary declarations for functions
-   that don't return.  Alas, this requires something in front
-   and something in back. */
-
-#if defined(__GNUC__)
-#define NORETURN1
-#define NORETURN2 __attribute__ ((noreturn))
-#elif defined(WIN32)
-// This declspec only works for VC++ version 6.
-#define NORETURN1 /*__declspec(noreturn)*/
-#define NORETURN2
-#else
-#define NORETURN1
-#define NORETURN2
-#endif
-
-/* We used to do some stuff to cater to compiler vendors
-   (e.g. Sun Microsystems) that couldn't be bothered to
-   do the "const" attribute correctly.  We no longer have
-   any patience with such things. */
-
-// So we used to have a line that said "#define Const const".
-// If your compiler doesn't handle "const" correctly (or any
-// other aspect of ANSI C++, for that matter, that's too bad.
-
-
-
-// We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
-// The IBM AIX compiler, for example, considers char to be unsigned.  The switch "NO_SIGNED_CHAR"
-// alerts us to that fact.  The configure script has checked this for us.
-#ifdef NO_SIGNED_CHAR
-typedef short veryshort;
-#else
-typedef char veryshort;
-#endif
-
-/* We would like to think that we will always be able to count on compilers to do the
-   right thing with "int" and "long int" and so on.  What we would really like is
-   for compilers to be counted on to make "int" at least 32 bits, because we need
-   32 bits in many places.  However, some compilers don't, so we have to use
-   "long int" or "unsigned long int".  We think that all compilers we deal with
-   will do the right thing with that, but, just in case, we use a typedef.
-
-   The type "uint32" must be an unsigned integer of at least 32 bits.
-   The type "uint16" must be an unsigned integer of at least 16 bits.
-
-   Note also:  There are many places in the program (not just in database.h and sd.h)
-   where the suffix "UL" is put on constants that are intended to be of type "uint32".
-   If "uint32" is changed to anything other than "unsigned long int", it may be
-   necessary to change all of those. */
-
-typedef unsigned long int uint32;
-typedef unsigned short int uint16;
-typedef unsigned char uint8;
-typedef int long_boolean;
-typedef const char *Cstring;
-
-#define TRUE 1
-#define FALSE 0
-
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
    It is used only to make sure that the "mkcalls" program that compiled
@@ -82,14 +21,16 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 199
+#define DATABASE_FORMAT_VERSION 212
 
-// BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
+// BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
    base_call_unused,
    base_call_null,
    base_call_null_second,
    base_call_basetag0,
+   base_call_basetag0_noflip,
+   base_call_flip,
    base_call_armturn_34,
    base_call_ends_shadow,
    base_call_chreact_1,
@@ -119,17 +60,18 @@ enum base_call_index {
 };
 
 
+
 // BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
-// "forcetabh", and "altdeftabh" in dbcomp.c .  The "K" items also track
+// "forcetabh", and "altdeftabh" in mkcalls.cpp .  The "K" items also track
 // the tables "mxntabforce", "nxntabforce", "nxntabplain", "mxntabplain",
-// "reverttabplain", and "reverttabforce" in dbcomp.c .
+// "reverttabplain", and "reverttabforce" in mkcalls.cpp .
 //
 // These are the infamous "heritable flags".  They are used in generally
 // corresponding ways in the "callflagsh" word of a top level callspec_block,
 // the "modifiersh" word of a "by_def_item", and the "modifier_seth" word of a
 // "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
 
-enum {
+enum heritflags {
    INHERITFLAG_DIAMOND    = 0x00000001UL,
    INHERITFLAG_REVERSE    = 0x00000002UL,
    INHERITFLAG_LEFT       = 0x00000004UL,
@@ -190,9 +132,19 @@ enum {
    INHERITFLAGRVRTK_RFF   = 0x0E000000UL
 };
 
-/* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
-   These flags go into the "callflags1" word of a callspec_block,
-   and the "topcallflags1" word of the parse_state. */
+
+// CFLAG1_FUDGE_TO_Q_TAG means three things, the main one being that the
+// setup is to fudged from a suitably populated 3x4 into a 1/4 tag.
+// The intention is that one can do "plenty" after doing a "1/2 press ahead"
+// (as opposed to the more natural "extend") from waves.  It also means
+// that we can fudge the other way if the schema is schema_in_out_triple
+// or schema_in_out_triple_squash.  See the call "quick step part 2".
+// It also means that a short6 is to be fudged to a 2x3.  See the call
+// "quick step part 1".
+
+// BEWARE!!  This list must track the table "flagtab1" in mkcalls.c .
+// These flags go into the "callflags1" word of a callspec_block,
+// and the "topcallflags1" word of the parse_state.
 
 enum {
    CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL, // 2 bit field
@@ -206,39 +158,44 @@ enum {
    CFLAG1_YOYO_FRACTAL_NUM          = 0x00000100UL,
    CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL,
    CFLAG1_STEP_REAR_MASK            = 0x00001C00UL, // 3 bit field
-   CFLAG1_STEP_TO_WAVE              = 0x00000400UL, // its low bit
-   CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL, // its middle bit
-   CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL, // its high bit
-   CFLAG1_SEQUENCE_STARTER          = 0x00002000UL,
+   CFLAG1_STEP_TO_WAVE              = 0x00000400UL, // the encodings inside
+   CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL,
+   CFLAG1_STEP_TO_NONPHAN_BOX       = 0x00000C00UL,
+   CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL,
+   CFLAG1_STEP_TO_WAVE_4_PEOPLE     = 0x00001400UL,
+   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001800UL,
+   CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00002000UL,
    CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
    CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit
    CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000UL,
    CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000UL,
-   CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL,
-   CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL,
-   CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL,
-   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00400000UL,
-   CFLAG1_SPLIT_IF_Z                = 0x00800000UL,
-   CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL, // 3 bit field
-   CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL, // its low bit
-   CFLAG1_BASE_CIRC_CALL            = 0x08000000UL,
-   CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL,
-   CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL,
-   CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x40000000UL,
-   CFLAG1_NO_ELONGATION_ALLOWED     = 0x80000000UL
+   CFLAG1_SEQUENCE_STARTER          = 0x00080000UL,
+   CFLAG1_SEQUENCE_STARTER_ONLY     = 0x00100000UL,
+   CFLAG1_DONT_USE_IN_RESOLVE       = 0x00200000UL,
+   CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00400000UL,
+   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00800000UL,
+   CFLAG1_SPLIT_IF_Z                = 0x01000000UL,
+   CFLAG1_BASE_TAG_CALL_MASK        = 0x0E000000UL, // 3 bit field
+   CFLAG1_BASE_TAG_CALL_BIT         = 0x02000000UL, // its low bit
+   CFLAG1_BASE_CIRC_CALL            = 0x10000000UL,
+   CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x20000000UL,
+   CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x40000000UL,
+   CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x80000000UL
 };
 
 // These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
 // They must lie in the top 8 bits for now.
 enum {
-   CFLAG2_IMPRECISE_ROTATION        = 0x01000000UL,
-   CFLAG2_CAN_BE_FAN                = 0x02000000UL,
-   CFLAG2_EQUALIZE                  = 0x04000000UL,
-   CFLAG2_ONE_PERSON_CALL           = 0x08000000UL,
-   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x10000000UL
+   CFLAG2_NO_ELONGATION_ALLOWED     = 0x01000000UL,
+   CFLAG2_IMPRECISE_ROTATION        = 0x02000000UL,
+   CFLAG2_CAN_BE_FAN                = 0x04000000UL,
+   CFLAG2_EQUALIZE                  = 0x08000000UL,
+   CFLAG2_ONE_PERSON_CALL           = 0x10000000UL,
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x20000000UL,
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x40000000UL
 };
 
-// Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.cpp .
+// Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
 
 enum {
    MTX_USE_SELECTOR           = 0x01,
@@ -265,7 +222,7 @@ enum {
    QUALBIT__LEFT           = 0x8000,
    QUALBIT__RIGHT          = 0x4000,
    QUALBIT__LIVE           = 0x2000,
-   QUALBIT__TBONE          = 0x1000,
+   QUALBIT__TBONE          = 0x1000,  // TBONE and NTBONE together mean "explicit assumption"
    QUALBIT__NTBONE         = 0x0800,
    // A 4 bit field.  If nonzero, there is a number requirement,
    // and the field is that number plus 1.
@@ -275,8 +232,9 @@ enum {
 };
 
 
-/* BEWARE!!  This list must track the table "leveltab" in dbcomp.c . */
+/* BEWARE!!  This list must track the table "leveltab" in mkcalls.c . */
 /* BEWARE!!  This list must track the table "getout_strings" in sdtables.c . */
+/* BEWARE!!  This list must track the table "old_filename_strings" in sdtables.c . */
 /* BEWARE!!  This list must track the table "filename_strings" in sdtables.c . */
 /* BEWARE!!  This list must track the table "level_threshholds" in sdtables.c . */
 /* BEWARE!!  This list must track the table "higher_acceptable_level" in sdtables.c . */
@@ -300,7 +258,7 @@ enum dance_level {
 
 /* These are the states that people can be in, and the "ending setups" that can appear
    in the call data base. */
-/* BEWARE!!  This list must track the array "estab" in dbcomp.cpp . */
+/* BEWARE!!  This list must track the array "estab" in mkcalls.cpp . */
 /* BEWARE!!  This list must track the array "setup_attrs" in sdtables.cpp . */
 /* BEWARE!!  The procedure "merge_setups" canonicalizes pairs of setups by their
    order in this list, and will break if it is re-ordered randomly.  See the comments
@@ -374,6 +332,7 @@ enum setup_kind {
    s4dmd,
    s3ptpd,
    s4ptpd,
+   shsqtag,
    shqtag,
    s_wingedstar,
    s_wingedstar12,
@@ -420,6 +379,7 @@ enum setup_kind {
    sbigbone,
    sbigdmd,
    sbigptpd,
+   sbig3x1dmd,
    sbig3dmd,
    sbig4dmd,
    sdblxwave,
@@ -429,7 +389,7 @@ enum setup_kind {
 };
 
 /* These are the "beginning setups" that can appear in the call data base. */
-/* BEWARE!!  This list must track the array "sstab" in dbcomp.cpp . */
+/* BEWARE!!  This list must track the array "sstab" in mkcalls.cpp . */
 /* BEWARE!!  This list must track the array "begin_sizes" in mkcalls.cpp . */
 /* BEWARE!!  This list must track the array "begin_sizes" in sdtables.cpp . */
 
@@ -555,6 +515,8 @@ enum begin_kind {
    b_p4ptpd,
    b_hqtag,
    b_phqtag,
+   b_hsqtag,
+   b_phsqtag,
    b_wingedstar,
    b_pwingedstar,
    b_323,
@@ -595,6 +557,8 @@ enum begin_kind {
    b_pbigdmd,
    b_bigptpd,
    b_pbigptpd,
+   b_big3x1dmd,
+   b_pbig3x1dmd,
    b_big3dmd,
    b_pbig3dmd,
    b_big4dmd,
@@ -637,7 +601,7 @@ enum {
    CAF__PLUSEIGHTH_ROTATION = 0x10000
 };
 
-// BEWARE!!  This list must track the array "qualtab" in dbcomp.cpp
+// BEWARE!!  This list must track the array "qualtab" in mkcalls.cpp
 enum call_restriction {
    cr_none,                // Qualifier only.
    cr_alwaysfail,          // Restriction only.
@@ -648,6 +612,7 @@ enum call_restriction {
    cr_1fl_only,
    cr_2fl_only,
    cr_2fl_per_1x4,
+   cr_ctr_2fl_only,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
    cr_leads_only,          // Restriction only.
@@ -664,6 +629,8 @@ enum call_restriction {
    cr_diamond_like,
    cr_qtag_like,
    cr_pu_qtag_like,
+   cr_conc_iosame,
+   cr_conc_iodiff,
    cr_reg_tbone,
    cr_gen_qbox,            // Qualifier only.
    cr_nice_diamonds,
@@ -725,6 +692,10 @@ enum call_restriction {
    cr_inroller_is_ccw,
    cr_outroller_is_cw,
    cr_outroller_is_ccw,
+   cr_judge_is_cw,
+   cr_judge_is_ccw,
+   cr_socker_is_cw,
+   cr_socker_is_ccw,
    cr_levelplus,
    cr_levela1,
    cr_levela2,
@@ -749,7 +720,7 @@ enum call_restriction {
    NUM_QUALIFIERS          // Not really in the enumeration.
 };
 
-// BEWARE!!  This list must track the array "schematab" in dbcomp.cpp .
+// BEWARE!!  This list must track the array "schematab" in mkcalls.cpp .
 // Also, "schema_sequential" must be the start of all the sequential ones.
 enum calldef_schema {
    schema_concentric,
@@ -776,6 +747,7 @@ enum calldef_schema {
    schema_maybe_nxn_1331_cols_concentric,
    schema_1331_concentric,
    schema_1313_concentric,       // Not for public use!
+   schema_1221_concentric,
    schema_concentric_diamond_line,
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
@@ -841,6 +813,7 @@ enum calldef_schema {
    schema_select_sideliners,
    schema_select_original_rims,
    schema_select_original_hubs,
+   schema_select_those_facing_both_live,
    schema_select_ctr2,
    schema_select_ctr4,
    schema_select_ctr6,
@@ -922,8 +895,8 @@ enum calldef_schema {
 */
 
 
-/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
-/* BEWARE!!  The "SEQ" stuff must track the table "seqmodtab1" in dbcomp.c . */
+/* BEWARE!!  This list must track the table "defmodtab1" in mkcalls.cpp . */
+/* BEWARE!!  The "SEQ" stuff must track the table "seqmodtab1" in mkcalls.cpp . */
 /* BEWARE!!  The union of all of these flags, which is encoded in DFM1_CONCENTRICITY_FLAG_MASK,
    must coexist with the CMD_MISC__ flags defined in sd.h .  Note that the bit definitions
    of those flags start where these end.  Keep it that way.  If any flags are added here,
@@ -960,7 +933,7 @@ enum {
    DFM1_SEQ_REPEAT_NM1               = 0x00000040UL,
    DFM1_SEQ_NORMALIZE                = 0x00000080UL,
 
-   // BEWARE!!  The following ones must track the table "defmodtab1" in dbcomp.cpp
+   // BEWARE!!  The following ones must track the table "defmodtab1" in mkcalls.cpp
    // Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item.
 
    // This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies.

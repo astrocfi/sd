@@ -1,0 +1,519 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename faq.info
+@settitle Sd Frequently Asked Questions
+@c Time-stamp: <18 July 2002 wba>
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@finalout
+@end iftex
+@c %**end of header
+
+@set title1 FREQUENTLY ASKED QUESTIONS
+@set title2 WHUZZIS SECOND LINE FOR?
+
+@center @titlefont{@value{title1}}@*
+@center @value{title2}@*
+
+@w{ }@c the @* above makes the @sp below fail without this line  1998-05
+@sp 2
+@noindent Copyright @copyright{} 1996-2003 William B. Ackerman
+@sp 3
+I really liked the choice @kbd{no one do your part, bend the line} -- Justin Legakis
+
+@unnumberedsec How do I change the Sd window size?
+
+Users have different preferences about how big they want the
+@code{Sd} window size to be.  Furthermore, graphics resolution
+settings can vary significantly.  By default, @code{Sd} makes an
+arbitrary decision about this, which is generally 780 x 560 pixels.
+If this doesn't suit you or your graphics hardware, you can change
+it with the ``window_size'' option.  Follow the option with
+2 numbers separated by a lower case ``x'' but no whitespace,
+as in
+
+@example
+@group
+   window_size 1000x720
+@end group
+@end example
+
+You can put that line into the ``options'' section of your initialization
+file, which is C:\sd\sd.ini, so that section might look like
+
+@example
+@group
+[Options]
+new_style_filename
+window_size 1000x720
+@end group
+@end example
+
+Doing so will affect every copy of Sd on your computer.  If you want to
+have different icons to start Sd, and you want to control the window
+size separately for each icon, follow the instructions in the
+``command-line options'' section of the manual.
+
+@unnumberedsec How do I change the star turns on Chain Reaction?
+
+The short answer to the question is that you type ``chain
+reaction, turn the star 1/2'', or ``motivate, don't turn the star'',
+or something similar.
+
+But the more important question is: ``How do you know that?''.  There
+are many common ways of modifying calls, and many ways of expressing
+those modifications in words.  Sd is not known for its deep
+understanding of colloquial English.  How do you know what the required
+words are?
+
+Type part of the call, immediately followed by a question mark.
+If you type ``motiv?'' you will see
+@example
+@group
+   motivate, don't turn the star
+   motivate, turn the star 1/4
+   motivate, turn the star 1/2
+   motivate, turn the star 3/4
+motivate
+   motivate, don't turn the star but <ANYTHING>
+   motivate, turn the star 1/4 but <ANYTHING>
+   motivate, turn the star 1/2 but <ANYTHING>
+   motivate, turn the star 3/4 but <ANYTHING>
+motivate but <ANYTHING>
+@end group
+@end example
+
+This should tell you what you need to know.  At that point you can type
+``ate, don't turn the star''.  (Remember, you already typed ``motiv''.)
+
+Suppose the ``<ANYTHING>'' piques your curiosity.  This is a
+modification for the final centers' cast off 3/4.  Try it.  Issue the
+call ``motivate but <anything>''.  The upper case is optional.  You will
+be prompted for a subsidiary call.  Type ``2/3 recycle''.  You will then
+see ``motivate but [2/3 recycle]''.  You could also have entered the
+call exactly that way.  Whenever the ``?''  printout shows
+``<ANYTHING>'', you can type a subcall instead, in square brackets.  Not
+angle brackets.
+
+You can also experiment with things by giving the ``allow modifications''
+command and then trying the call, but this method is somewhat unwieldy.
+If you type
+
+@example
+@group
+allow modifications
+motivate
+@end group
+@end example
+
+You will be asked about modifying the initial circulate, the star turn,
+and the final cast off 3/4.
+
+By the way, if you don't want to type commas or apostrophes, that's OK.
+They're optional.  Capitalization is also optional.  But subsidiary calls
+must be in square brackets.
+
+@unnumberedsec How do I type all 8 recycle and circle 1/4?
+
+How do I type in things like @code{all 8 recycle and circle 1/4}?
+How about @code{flip the diamond and circle 1/4}?  How do I tell
+the program whether it's a 4 person or an 8 person call?
+
+The program recognizes a call ``@code{[anything] and circle N/4}''.
+It tries the ``anything'' call first with just the centers, and
+with all 8 people if that fails, so it should work in either case.
+You can type the fraction as 1/4, 1/2, 3/4, 2/4, or ``full''.
+
+As with all calls of this sort, the ``official'' name of the call
+uses angle brackets to indicate something that gets filled in:
+@code{<ANYTHING> and circle <N/4>}.  You can literally enter the call
+that way.  (If using @code{Sd} and the menu, that's the way you have
+to enter it.  Calls starting with things in angle brackets are
+alphabetized at the end of the call menu, but before the concepts.)
+If you enter the call that way, the program will ask you about the
+things that need to be filled in.
+
+@example
+@group
+   <anything> and circle <n/4>
+   how many?
+   2
+   subsidiary call
+   switch the line
+@end group
+@end example
+
+But a much easier way is to type everything directly.  Remember
+that, while angle brackets are used in the ``official'' name of the
+call, you use square brackets when you type subcalls.  And you
+just type numbers and similar things directly.
+
+@example
+@group
+   [switch the line] and circle 1/2
+@end group
+@end example
+
+How do you know that that call is available?  @code{Sd} has many calls
+with tricky syntax like that.  It will usually accept what you want to
+type.  But there are many tricky areas.  If you are confused, the right
+thing is to type part of the call, followed by a question mark.
+
+@unnumberedsec How do I do a shadow box couple up?
+
+Sometimes the following confusing thing happens.  You want to
+do a @kbd{shadow box couple up}, so you type:
+
+@example
+@group
+   shadow box [couple up]
+@end group
+@end example
+
+and all you get is
+
+@example
+@group
+   shadow box [couple up]  (129 matches, type ! or ? for list)
+@end group
+@end example
+
+so you do so, and get
+
+@example
+@group
+shadow box [couple up] and a quarter more
+shadow box [couple up] and cross
+shadow box [couple up] and roll
+shadow box [couple up] and sweep <N/4>
+shadow box [couple up] and the <ANYONE> roll
+shadow box [couple up] and <N/4> more
+shadow box [couple up] by golly
+shadow box [couple up] er's cover up but <ANYTHING>
+shadow box [couple up] like a couple up
+shadow box [couple up] the k but <ANYTHING>
+shadow box [couple up] the key
+shadow box [couple up] the windmill, outsides <ANYTHING>
+shadow box [couple up] with the flow
+@end group
+@end example
+
+and you wonder ``Why won't it let me do a normal one?''
+
+The issue is whether @kbd{shadow box} is a concept, or
+a call with a subcall.  If it's a concept, you should just
+type @kbd{shadow box couple up}.  But if it's a call that takes
+a subcall, you should use brackets.  How do you know?
+
+That isn't easy to answer.  Where to draw the line isn't well
+established, so @kbd{Sd} makes decisions that may seem arbitrary.
+There is no way to avoid this.  Most things are obvious, of
+course, like the @kbd{as couples} concept.  And it should be fairly
+obvious from usage that @kbd{breaker [2/3 recycle]} is a call with
+a modifier.  Why is that obvious?  Because @kbd{breaker N} is a call,
+and it is obvious that @kbd{breaker [anything]} just has the
+@kbd{anything} replace some pre-existing part of the call.
+
+Of course, anything that takes the modifier other than at the
+end, must be a call with a modifier, since concepts are always
+typed first.  Hence @kbd{[anything] and roll} always uses brackets.
+
+So, if you are having trouble of this sort, try adding brackets
+or leaving them out.
+
+@unnumberedsec Why is the Roll direction wrong after Spin Chain and Exchange the Gears?
+
+@code{Sd} defines this call in terms of 3/4 Exchange the Diamonds and Interlocked
+Flip the Diamond, and sets the Roll direction accordingly.  We consider the
+Callerlab definition to be a pathetic attempt to give precision do a definition
+that was never intended to be precise.  Accordingly, we consider attempts to
+deduce Roll direction from the Callerlab definition to be misguided.
+
+@unnumberedsec How can I make Sd doesn't seem to understand ``common spot'' better?
+
+Try saying (to the program, not necessarily to the dancers) ``initially common
+spot''.  This tells @code{Sd} to reassemble the different groups of people
+after the first part of the call.  Otherwise, it keeps the groups separate
+through the whole call, which makes it much harder to figure out what is
+happening.
+
+@unnumberedsec Sd doesn't allow something.  Does that mean it's bogus?
+
+No, no, 1000 times, no!  @code{Sd}, like many other computer programs,
+is an attempt at approximating human knowledge and judgement.  It really
+doesn't come close.
+
+@unnumberedsec Sd allows something.  Does that mean it's legal?
+
+No, no, 1000 times, no!  While we attempt to enforce the ``rules'' of square
+dancing accurately, there are many things that @code{Sd} allows that are not
+legal or appropriate.  You should not use @code{Sd}, or any other choreography
+program, if you do not understand the level that you are calling.  If you
+call beyond your knowledge and ability, the dancers will notice.
+
+@unnumberedsec Why is @code{Sd} so fussy with apostrophes?  Why can't I just type @kbd{lockers choice}?
+
+You can.  You never need to type apostrophes or hyphens.  You can type
+either @kbd{lockers choice} or @kbd{locker's choice}.  You can type either
+@kbd{tandem based triangles} or @kbd{tandem-based triangles}.
+
+@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Why can't I just type @kbd{inroll circulate}?
+
+Sorry.  The parser (the part of the program that interprets your keystrokes as
+call and concept names) has a very hard job to do when it completes your
+input.  That is, it lets you type @kbd{fe w} at Mainstream, and figures out that
+you meant @kbd{ferris wheel}.  In order to do this, it must take clues from
+the spaces that you typed.  Unlike apostrophes and hyphens, it can't make
+spaces optional.
+
+We are aware that there are programs that spell some calls with shorter names,
+such as @kbd{inroll circulate}.  We believe that spelling the calls the way they
+are spelled in the Callerlab lists and other commonly accepted literature is
+more important.  You can always define your own ``hot keys'' (accelerator keys)
+or abbreviations for any calls.
+
+@unnumberedsec When I say @kbd{patch the centers}, is it the original centers that do the U-turn back?
+
+Yes.  People's positions are not re-evaluated after the hinge.  We
+believe that this the right way of handling this sort of
+thing in general.  There are exceptions, such as @kbd{tap the
+centers}, but those are best left as exceptions rooted in history.
+
+Actually, this is all screwed up.  I need to check Lynette and Rob's email.
+
+@unnumberedsec How do I do 3x1 triangles circulate?
+
+You try to circulate in 3x1 triangles, by typing @kbd{3x1
+triangles circulate}.  It doesn't allow it.
+
+So you try leaving off the @code{circulate} and typing a question
+mark.  You get
+
+@example
+@group
+3x1 triangles?
+3x1 triangles are solid
+3x1 triangles are solid <N/4> trianglesome
+3x1 triangles are trianglesome
+3x1 triangles are trianglesome <N/4> solid
+@end group
+@end example
+
+What happened to plain 3x1 triangles?
+
+The reason is that the call is known to @code{Sd} as @kbd{3x1 triangle
+circulate}, without the s.  That is, it is the @kbd{3x1} variant of the
+call @kbd{triangle circulate}.
+
+Now this fussiness about spelling, some of which you may not agree with
+at all, can be extremely annoying.  When you run into problems like
+this, try typing a little less, followed by a question mark.  Most of
+the annoying spelling habits of @code{Sd} occur at the ends of words.
+So if you tried just @code{triang}, you might get
+
+@example
+@group
+3x1 triang?
+3x1 triangles are solid
+3x1 triangles are solid <N/4> trianglesome
+3x1 triangles are trianglesome
+3x1 triangles are trianglesome <N/4> solid
+3x1 triangular boxes
+3x1 triangle
+3x1 triangle circulate
+@end group
+@end example
+
+@unnumberedsec How do I do @kbd{line to line but replace the last part with <anything>}?
+
+@code{Sd} recognizes the call @kbd{line to line but <anything>}.  The <anything>
+replaces the final @kbd{pass in}.  (Note that this is an exception to the general
+principle the @kbd{but} calls replace the last thing done in the center.  This
+is one of a handful of exceptions that are justified by longstanding usage.)
+
+Suppose you didn't know that.  You do the usual thing---type something like
+@kbd{line to l?}.  It will list
+
+@example
+@group
+line to line
+line to line but <ANYTHING>
+@end group
+@end example
+
+Of course, when you see the ``<ANYTHING>'', you know that you can type
+square brackets with a call inside.
+
+@unnumberedsec What is the difference between ``initially centers'' and ``centers start''?
+
+A very profound question.  A lot of discussion went on among challenge callers
+over how these should be used.  Of course, before computers were in common use,
+these sorts of things were used in an imprecise way, only in situations in which
+the meaning would be simple and obvious.  As challenge choreography became more
+complex, it became necessary to work out a really precise meaning.
+
+@kbd{Initially <concept>} always means to apply the concept to the first part.
+When you apply the @kbd{centers} concept to something, it means only the centers do
+it, as though they are the only people present.  For example, on @kbd{centers trade}
+from waves, the centers trade with each other.  The ends do not enter into their
+thinking.  So @kbd{initially centers recycle} applies the @kbd{centers} concept
+to the first part or recycle.  As such, the very center 2 are the ones who fold.
+
+@example
+@group
+ 2G^                    3BV         1B>   2G>   1G>   4B>
+     2BV  3G^  1GV  4B^
+ 1B^                    4GV         2B<   3G<   4G<   3B<
+
+                 initially centers, 2/3 recycle
+@end group
+@end example
+
+@kbd{Anyone start} means that the designated people do the first part of the
+call, while the others wait.  Then the ohers join in for the rest of the call.
+When doing the first part, they are aware of the whole setup.
+For example, from C1 phantoms, one could call @kbd{girls start, 1/4 thru}.
+The girls are aware of the rest of the setup (even though the boys aren't precisely
+where they need to be for a 1/4 thru) when they start the call.  Everyone
+joins in after the first part.
+
+@example
+@group
+    3G>
+             2B^   3BV
+    2G<                             2G^   2BV   3G^   3BV
+
+                4G>                 1B^   1GV   4B^   4GV
+ 1B^   4BV
+                1G<
+
+                  girls start 1/4 thru
+@end group
+@end example
+
+So, on @kbd{centers start, recycle}, the centers are aware of the ends, and of
+the general setup that the ends make part of.  The person in the center wave that
+is closer to the ends considers herself to be the ``center'' of the 4-person
+formation doing the recycle.
+
+@example
+@group
+ 2G^                    3BV         1B>   2G>   3G>   2B>
+     1G^  4BV  2B^  3GV
+ 1B^                    4GV         4B<   1G<   4G<   3B<
+
+                 centers start, 2/3 recycle
+@end group
+@end example
+
+@unnumberedsec How do I say something like ``initially use ah so in spin chain the gears''?
+
+Just like that.  Finish writing this.
+
+@unnumberedsec How do I start a sequence with all 4 ladies chain?
+
+This, of course, needs to be written.....
+
+@code{Sd} is very strongly oriented toward the ``heads pass the ocean''
+style of sequence openings.  That is, you start with the heads or sides
+doing some call, either by themselves in the center, or something like
+@kbd{split square thru 4}.
+
+When calling, you will presumably say something like
+"heads move in and pass the ocean".  To get Sd to do
+that, issue the separate call "heads press ahead".
+Then have the heads (or the centers) pass the ocean
+or whatever.
+
+So the sequence will look like
+
+just as they are
+all 4 ladies chain
+head press ahead
+heads pass the ocean
+etc...
+
+The call "press ahead" is actually a Challenge call, but
+Sd recognizes it at Mainstream, just for the purpose of
+dealing with this issue, and other similar issues of
+brute-force moving people around.
+
+If you had the ladies chain 3/4, "heads" won't do.  In that
+case, use the designator "headliners" or "sideliners".  These
+are also Challenge terms that Sd recognizes at Mainstream.
+They mean "whoever is facing head/side walls right now".
+When calling, you would presumably say [emphasis added]
+"All 4 ladies chain 3/4, *AT* the heads, square thru ...."
+or whatever terminology you like to use.
+
+@unnumberedsec Why are Sd and Sdtty no longer compiled with Microsoft Visual C++?
+
+I'm glad you asked.  The Microsoft compiler is not of acceptably high
+quality for the compilation of Sd and Sdtty.  Microsoft may know how to
+write software that propagates email viruses, and they may know how to
+write software that deletes competitors' products, and they may know how
+to write software that makes competing web browsers look defective, but
+they don't know how to write compilers.  Compilations of Sd and Sdtty
+have been observed to crash on ``snag bits and pieces'' from waves.  At
+first this was believed to occur only with Visual C++ version 6, service
+pack 3, which caused me to revert to version 5.
+
+The bug was eventually tracked down to incorrect restoration of the ECX
+register upon exit from a ``switch'' statement.  Bugs of this type, in
+which the compiler generates incorrect object code without giving any
+warning or error message, are inexcusable.  The bug was reported to
+Microsoft in detail on 17 December 2001.  No reply or fix was
+forthcoming.  Over a year later a followup message was sent to Microsoft
+management asking about it.  They gave me their customer support website
+(http://support.microsoft.com) and phone number (800-936-5800).  Both contact
+points want me to pay them money before I can even find out whether they intend
+to fix this bug.
+
+The bug was subsequently observed with version 5 also, creating a
+serious problem.  (No version of Sd or Sdtty exhibiting this bug was
+ever released.)  As of version 35, Gcc is used for the compilation of
+Sd/Sdtty for Windows.  It has always been used for the Linux release, of
+course.
+
+@unnumberedsec So what software is used in the preparation of Sd and Sdtty?
+
+@example
+  computer:            Compaq Armada 7710MT
+  OS:                  Windows NT4.0 Workstation    commercial
+  editor:              GNU Emacs 20.7               free
+  development system:  MingW 2.0.0-3                free
+  compiler/linker:     GCC 3.2                      free
+  compress utilities:  Winzip 8.0                   commercial
+                       Winzip Self Extractor 2.1    commercial
+                       gzip 1.2.4                   free
+  document preprocessor: texinfo 1999-03-26.17      free
+  document formatter:  MiKTeX 1.20d                 free
+  HTML formatter:      Perl 5.004-02                free
+                       Texi2html 1.51               free
+  postscript viewer:   GSView 2.7                   free
+                       Ghostscript 5.50             free
+  PDF viewer:          Acrobat 4.0                  free
+  HTML viewer:         Netscape 4.76                free
+  Zip disk software:   Iomega 2.8.0.2               commercial
+  mailer for upload:   Netscape 4.76                free
+@end example
+
+Microsoft Frontpage is not used at any point in the preparation, so there
+is no danger of running afoul of Microsoft's licensing restrictions against
+making web pages that "disparage Microsoft, MSN, MSNBC, Expedia, or their
+products or services".  We don't want to damage Bill Gates' ego.  He'd have to
+buy a new one.
+
+The Compaq Armada on which Sd is developed has no internet connections,
+and runs no mail or internet software, Microsoft or otherwise.  The released
+files are written onto a Zip disk and transferred to another computer for upload.
+
+@unnumberedsec Is free software actually that much higher in quality than commercial software?
+
+It sure is.  A worldwide network of hobby programmers who take pride in
+their work make vastly better products than big companies that are
+managed by people who want to get the most possible money from the least
+possible work.
+
+@bye

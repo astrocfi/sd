@@ -186,7 +186,7 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 34.8:   Copyright © 1990-2003 All rights reserved.",
+    CTEXT           "SD Version 34.8j:   Copyright © 1990-2003 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8
@@ -202,7 +202,7 @@ BEGIN
 END
 
 IDD_START_DIALOG DIALOG DISCARDABLE  5, 5, 373, 286
-STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Sd startup"
 FONT 10, "Courier"
@@ -233,10 +233,10 @@ BEGIN
                     BS_CENTER
     CONTROL         "Normal operation",IDC_NORMAL,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,263,178,80,10
-    CONTROL         "Write list",IDC_WRITE_LIST,"Button",BS_AUTORADIOBUTTON,
-                    263,193,56,10
-    CONTROL         "Write full list",IDC_WRITE_FULL_LIST,"Button",
-                    BS_AUTORADIOBUTTON,263,208,76,10
+    CONTROL         "Save list",IDC_WRITE_LIST,"Button",BS_AUTORADIOBUTTON,
+                    263,193,52,10
+    CONTROL         "Save full list",IDC_WRITE_FULL_LIST,"Button",
+                    BS_AUTORADIOBUTTON,263,208,72,10
     CONTROL         "Use abridged list",IDC_ABRIDGE,"Button",
                     BS_AUTORADIOBUTTON,263,223,84,10
     CONTROL         "Delete abridgement",IDC_CANCEL_ABRIDGE,"Button",
@@ -249,16 +249,15 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,143,183,92,10
 END
 
-IDD_TEXT_ENTRY_DIALOG DIALOG DISCARDABLE  86, 105, 208, 92
+IDD_TEXT_ENTRY_DIALOG DIALOG DISCARDABLE  86, 105, 208, 83
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Text entry"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "",IDC_FILE_TEXT1,9,14,190,12
-    LTEXT           "",IDC_FILE_TEXT2,9,26,190,12
-    EDITTEXT        IDC_FILE_EDIT,9,40,190,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Cancel",IDC_FILE_CANCEL,141,72,50,14
-    DEFPUSHBUTTON   "Accept",IDC_FILE_ACCEPT,76,72,50,14
+    EDITTEXT        IDC_FILE_EDIT,9,31,190,12,ES_AUTOHSCROLL
+    LTEXT           "",IDC_FILE_TEXT,9,14,190,9
+    PUSHBUTTON      "Cancel",IDC_FILE_CANCEL,141,63,50,14
+    DEFPUSHBUTTON   "Accept",IDC_FILE_ACCEPT,76,63,50,14
 END
 
 IDD_PRINTING_DIALOG DIALOG DISCARDABLE  32, 32, 186, 95
@@ -307,7 +306,6 @@ BEGIN
     ID_FILE_PRINTTHIS       "Print the file you have been working on."
     ID_FILE_PRINTFILE       "Print any other file."
     ID_FILE_ABOUTSD         "Display program information and copyright."
-    ID_HELP_SDHELP          "Browse the Sd manual, in html format, using your selected browser."
     ID_FILE_EXIT            "Exit from the program."
     ID_COMMAND_UNDO         "Undo last call or concept, or exit from current search."
     ID_COMMAND_ABORTTHISSEQUENCE 

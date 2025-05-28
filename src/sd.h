@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
     Copyright (C) 1993  Stephen Gildea
     Copyright (C) 1993  Alan Snyder
 
@@ -16,9 +16,16 @@
 
 #include <stdio.h>
 
+// Figure out how to do dll linkage.  If the source file that includes this
+// had "SDLIB_EXPORTS" set (which it will if it's a file for sdlib.dll),
+// make symbols "export" type.  Otherwise, make them "import" type.
+// Unless this isn't for the WIN32 API at all, in which case make the
+// "SDLIB_API" symbol do nothing.
 
-#ifdef WIN32
-#ifndef SDLIB_API
+#if defined(WIN32)
+#if defined(SDLIB_EXPORTS)
+#define SDLIB_API __declspec(dllexport)
+#else
 #define SDLIB_API __declspec(dllimport)
 #endif
 #else
@@ -35,11 +42,11 @@
 // idea.  Microsoft doesn't even try, and raises a warning (How thoughtful!
 // See flaming below.) if we use them.
 
-//#define USE_THROW
+#define USE_THROW
 
 #if defined USE_THROW
 
-#if defined(WIN32)
+#if defined(_MSC_VER)
 // Microsoft can't be bothered to support C++ exception declarations
 // properly, but this pragma at least makes the compiler not complain.
 // Geez!  If I wanted to use compilers that whine and wail
@@ -49,6 +56,7 @@
 // As though this dangerous fact (that I was using ANSI C, of all things)
 // were something that I didn't know and needed to to warned about.
 // The HP-UX compilers came into the 20th century in the nick of time.
+// It's now the 21st.
 #pragma warning(disable: 4290)
 #endif
 
@@ -58,38 +66,143 @@
 #endif
 
 
-// The Intel compiler gets upset when it sees structure definitions
-// with "const" fields, that are not actually class definitions that
-// have constructors for those fields.  It quite rightly recognizes
-// that you can't have a class member be "const" if there isn't some
-// way to initialize instances, and that this is done in C++ with
-// class constructors.  I don't agree with the compiler extending
-// this reasoning to plain vanilla structs.  In any case, we
-// statically initialize the various structs in the plain C files
-// sdtables.c and sdctable.c, to get around the C++ initialization
-// restriction.  The Intel compiler doesn't know that we are going
-// to do that, so it doesn't understand how these struct definitions
-// with "const" fields are going to work.  So we shut off the warning.
-#if defined(WIN32) && defined(__ICL)
-#pragma warning(disable: 411)
-#endif
-
-
 #include "database.h"
 
-#define MAX_PEOPLE 24
+/* We customize the necessary declarations for functions
+   that don't return.  Alas, this requires something in front
+   and something in back. */
+
+#if defined(__GNUC__)
+#define NORETURN1
+#define NORETURN2 __attribute__ ((noreturn))
+#elif defined(WIN32)
+// This declspec only works for VC++ version 6.
+#define NORETURN1 /*__declspec(noreturn)*/
+#define NORETURN2
+#else
+#define NORETURN1
+#define NORETURN2
+#endif
+
+// We used to do some stuff to cater to compiler vendors (e.g. Sun
+// Microsystems) that couldn't be bothered to do the "const" attribute
+// correctly.  We no longer have any patience with such things.
+//
+// So we used to have a line that said "#define Const const".  But not
+// any longer.  If your compiler doesn't handle "const" correctly (or
+// any other aspect of ANSI C++, for that matter), that's too bad.
 
 
-struct uint64 {
-   uint32 her8it;
-   uint32 final;
+// We would like "veryshort" to be a signed char, but not all
+// compilers are fully ANSI compliant.  The IBM AIX compiler, for
+// example, considers char to be unsigned.  The switch
+// "NO_SIGNED_CHAR" alerts us to that fact.  The configure script has
+// checked this for us.
+//
+// Baloney!  We no longer use a configure script.  We are aware of the
+// fact that there is a whole "industry" dedicated to the job of
+// figuring out what hideous brokenness any given Unix system is
+// inflicting on us today, but we have no patience for that kind of
+// crap.  If your compiler or OS can't handle this, tough.
+#ifdef NO_SIGNED_CHAR
+typedef short veryshort;
+#else
+typedef char veryshort;
+#endif
+
+/* We would like to think that we will always be able to count on compilers to do the
+   right thing with "int" and "long int" and so on.  What we would really like is
+   for compilers to be counted on to make "int" at least 32 bits, because we need
+   32 bits in many places.  However, some compilers don't, so we have to use
+   "long int" or "unsigned long int".  We think that all compilers we deal with
+   will do the right thing with that, but, just in case, we use a typedef.
+
+   The type "uint32" must be an unsigned integer of at least 32 bits.
+   The type "uint16" must be an unsigned integer of at least 16 bits.
+
+   Note also:  There are many places in the program (not just in database.h and sd.h)
+   where the suffix "UL" is put on constants that are intended to be of type "uint32".
+   If "uint32" is changed to anything other than "unsigned long int", it may be
+   necessary to change all of those. */
+
+typedef unsigned long int uint32;
+typedef unsigned short int uint16;
+typedef unsigned char uint8;
+typedef const char *Cstring;
+
+enum { MAX_PEOPLE = 24 };
+
+
+enum error_flag_type {
+   error_flag_none = 0,          // Must be zero because setjmp returns this.
+                                 // (Of course, we haven't used setjmp since March, 2000.)
+   error_flag_1_line,            // 1-line error message, text is in error_message1.
+   error_flag_2_line,            // 2-line error message, text is in error_message1 and
+                                 // error_message2.
+   error_flag_collision,         // collision error, message is that people collided, they are in
+                                 // collision_person1 and collision_person2.
+   error_flag_cant_execute,      // unable-to-execute error, person is in collision_person1,
+                                 // text is in error_message1.
+
+   // Errors after this can't be restarted by the mechanism that goes on to the
+   // call's next definition when a call execution fails.
+   // "Error_flag_no_retry" is the indicator for this.
+
+   error_flag_no_retry,          // Like error_flag_1_line, but it is instantly fatal.
+
+   // Errors after this did not arise from call execution, so we don't
+   // show the ending formation.  "Error_flag_wrong_command" is the indicator for this.
+
+   error_flag_wrong_command,     // clicked on something inappropriate in subcall reader.
+   error_flag_wrong_resolve_command, // "resolve" or similar command was called
+                                     // in inappropriate context, text is in error_message1.
+   error_flag_show_stats,        // wants to display stale call statistics.
+   error_flag_selector_changed,  // warn that selector was changed during clipboard paste.
+   error_flag_formation_changed  // warn that formation changed during clipboard paste.
 };
 
-// We sometimes don't want to use "const" in C++,
-//   because initializers are screwed up.
-//   Maybe someday we will use real class initializers, and
-//   these fields can be constant once again.
-#define C_const
+
+
+// In several places in this program, we use C-style static aggregate
+// initializers.  Specifically, sdtables.cpp and sdctable.cpp are full of them.
+// Some of them are absolutely enormous.  The C++ language sort of frowns on
+// that style of initialization.  The C++ way would be to use constructors,
+// writing the appropriate code to invoke the constructors in the proper way.
+// While we have some sympathy with this style in many cases, we prefer the
+// C-style direct initializers for most of the big tables.  The reason is that
+// the benefits of C++ constructors seem infinitesimal for these tables, and
+// they would sacrifice transparency: with the direct initializers, you can
+// look at the struct definition in sd.h and look at the initializer in
+// sdtables.cpp and know for sure, without worrying about what clever things
+// the constructor might do, which constant belongs in which field.
+//
+// Because we are initializing things in ways that C++ frowns on, the
+// C++ compiler punishes us by not letting us declare fields "const".
+// This is unfortunate.  We attach great importance to the ability of
+// the C/C++ type mechanism to prevent table overwrites.  (In fact, a
+// test compilation of a competing program with "const" declarators on
+// these tables revealed an astonishing bug.)
+//
+// For a while, we solved this problem by putting the initializers in
+// plain C files (sdtables.c and sdctable.c) and linking with the other
+// C++ files.  Not surprisingly, this created difficulties.  In the end,
+// it became unworkable, and now all files are C++.
+//
+// By the way, one of the problems was that the Intel compiler saw what
+// we were doing in the C++ files, realized that we could not possibly
+// initialize the structures legally, and gave a warning.  What it
+// overlooked was that we were linking with C files to do what would
+// have been impossible in C++.  For reference, the incantation to
+// shut off the warning was:
+//     #if defined(WIN32) && defined(__ICL)
+//     #pragma warning(disable: 411)
+//     #endif
+//
+// Because what we really want is the protection against overwriting
+// that the "const" declaration would provide, we define the initialized
+// tables, and the definition of their structure, in classes.  The tables
+// themselves are private.  So that is why you see all these classes
+// that have no members, but have statically initialized structs.
 
 
 enum color_scheme_type {
@@ -110,10 +223,15 @@ class ui_option_type {
                           // are always done with bold colors.
    color_scheme_type color_scheme;
    int no_sound;
+   int force_session;
    int sequence_num_override;
-   long_boolean singlespace_mode;
-   long_boolean nowarn_mode;
-   long_boolean accept_single_click;
+   bool singlespace_mode;
+   bool nowarn_mode;
+   bool keep_all_pictures;
+   bool accept_single_click;
+   bool diagnostic_mode;
+   int resolve_test_minutes;
+   int singing_call_mode;
 
    /* This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
       for drawing people, so that it can fill in funny characters, or draw in color.
@@ -134,7 +252,7 @@ class ui_option_type {
    int use_escapes_for_drawing_people;
 
    /* These could get changed if the user requests special naming.  See "alternate_glyphs_1"
-      in the command-line switch parser in sdsi.c. */
+      in the command-line switch parser in sdsi.cpp. */
    char *pn1;             // 1st char (1/2/3/4) of what we use to print person.
    char *pn2;             // 2nd char (B/G) of what we use to print person.
    char *direc;           // 3rd char (direction arrow) of what we use to print person.
@@ -233,6 +351,7 @@ enum concept_kind {
    concept_triple_boxes,
    concept_triple_boxes_together,
    concept_triple_diamonds,
+   concept_triple_formations,
    concept_triple_diamonds_together,
    concept_quad_diamonds,
    concept_quad_diamonds_together,
@@ -244,6 +363,7 @@ enum concept_kind {
    concept_triple_twin,
    concept_triple_twin_nomystic,
    concept_misc_distort,
+   concept_misc_distort_matrix,
    concept_old_stretch,
    concept_new_stretch,
    concept_assume_waves,
@@ -402,23 +522,59 @@ enum useful_concept_enum {
   UC_extent    // Not a selector; indicates extent of the enum.
 };
 
-struct concept_descriptor {
-   Cstring name;
-   C_const concept_kind kind;
-   C_const uint32 concparseflags;   // See above.
-   C_const dance_level level;
-   C_const useful_concept_enum useful;
-   C_const struct {
-      C_const uint32 arg1;
-      C_const uint32 arg2;
-      C_const uint32 arg3;
-      C_const uint32 arg4;
-      C_const uint32 arg5;
-   } value;
-   Cstring menu_name;
+// Some versions of gcc don't like the class "concept", so we change the spelling.
+class SDLIB_API conzept {
+
+ public:
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "unsealed_concept_descriptor_table" be a statically initialized array.
+
+   struct concept_descriptor {
+      Cstring name;
+      concept_kind kind;
+      uint32 concparseflags;   // See above.
+      dance_level level;
+      useful_concept_enum useful;
+      uint32 arg1;
+      uint32 arg2;
+      uint32 arg3;
+      uint32 arg4;
+      uint32 arg5;
+      Cstring menu_name;
+   };
+
+   static concept_descriptor centers_concept;
+   static concept_descriptor special_magic;
+   static concept_descriptor special_interlocked;
+   static concept_descriptor mark_end_of_list;
+   static concept_descriptor marker_decline;
+   static concept_descriptor marker_concept_mod;
+   static concept_descriptor marker_concept_comment;
+   static concept_descriptor marker_concept_supercall;
+
+   // We want the concept list, as used by the main program, to be
+   // constant.  But we can't literally make it constant, because
+   // we need to translate the names during initialization, writing
+   // over the "menu_name" field.  So the actual table that has the
+   // static initializer in sdctable will *not* be constant.  But it
+   // will be private.
+
+ private:
+
+   static concept_descriptor unsealed_concept_descriptor_table[];
+
+ public:
+
+   // This does the translation, writes over the "menu_name" fields,
+   // and places a const pointer to the thing in "concept_descriptor_table".
+   // This is in sdinit.
+   static void conzept::translate_concept_names();
 };
 
-// BEWARE!!  This list must track the array "selector_list" in sdutil.cpp
+// BEWARE!!  This list must track the array "selector_list" in sdtables.cpp
 enum selector_kind {
    selector_uninitialized,
    selector_boys,
@@ -456,6 +612,9 @@ enum selector_kind {
    selector_ctr_1x6,
    selector_outer1x3s,
    selector_center4,
+   selector_center_wave,
+   selector_center_line,
+   selector_center_col,
    selector_outerpairs,
 #ifdef TGL_SELECTORS
    /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
@@ -501,10 +660,9 @@ enum selector_kind {
    selector_enum_extent    // Not a selector; indicates extent of the enum.
 };
 
-/* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
-   It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
-/* Note also that the "zig-zag" items will get disabled below A2.
-   The key for this is "direction_zigzag". */
+// BEWARE!!  This list must track the array "direction_names" in sdutil.cpp .
+// Note also that the "zig-zag" items will get disabled below A2.
+// The key for this is "direction_zigzag".
 enum direction_kind {
    direction_uninitialized,
    direction_no_direction,
@@ -588,14 +746,21 @@ struct by_def_item {
    uint32 modifiersh;
 };
 
+struct matrix_def_block {
+   matrix_def_block *next;
+   uint32 alternate_def_flags;
+   dance_level modifier_level;
+   uint32 items[2];     // Dynamically allocated to either 2 or 8.
+};
+
 struct calldefn {
-   uint32 callflags1;    /* The CFLAG1_??? flags. */
-   uint32 callflagsh;    /* The mask for the heritable flags. */
-   /* Within the "callflagsh" field, the various grouped fields
-      (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
-      on or they are all off.  A call can only inherit the entire group,
-      by saying "mxn_is_inherited". */
-   uint32 callflagsf;    /* The ESCAPE_WORD__???  and CFLAGH__??? flags. */
+   uint32 callflags1;    // The CFLAG1_??? flags.
+   uint32 callflagsh;    // The mask for the heritable flags.
+   // Within the "callflagsh" field, the various grouped fields
+   // (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
+   // on or they are all off.  A call can only inherit the entire group,
+   // by saying "mxn_is_inherited".
+   uint32 callflagsf;    // The ESCAPE_WORD__???  and CFLAGH__??? flags.
    short int age;
    short int level;
    calldef_schema schema;
@@ -603,19 +768,19 @@ struct calldefn {
    union {
       struct {
          calldef_block *def_list;
-      } arr;            /* if schema = schema_by_array */
+      } arr;            // if schema = schema_by_array
       struct {
-         uint32 flags;
-         uint32 *stuff;
-      } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
+         uint32 matrix_flags;
+         matrix_def_block *matrix_def_list;
+      } matrix;         // if schema = schema_matrix or schema_partner_matrix
       struct {
          int howmanyparts;
-         by_def_item *defarray;  /* Dynamically allocated, there are "howmanyparts" of them. */
-      } seq;            /* if schema = schema_sequential or whatever */
+         by_def_item *defarray;  // Dynamically allocated, there are "howmanyparts" of them.
+      } seq;                     // if schema = schema_sequential or whatever
       struct {
          by_def_item innerdef;
          by_def_item outerdef;
-      } conc;           /* if schema = any of the concentric ones. */
+      } conc;           // if schema = any of the concentric ones.
    } stuff;
 };
 
@@ -632,20 +797,20 @@ struct call_with_name {
 };
 
 struct parse_block {
-   const concept_descriptor *concept; // the concept or end marker
-   call_with_name *call;          /* if this is end mark, gives the call; otherwise unused */
-   call_with_name *call_to_print; /* the original call, for printing (sometimes the field
-                                     above gets changed temporarily) */
-   parse_block *next;             /* next concept, or, if this is end mark,
-                                     points to substitution list */
-   parse_block *subsidiary_root;  /* for concepts that take a second call,
-                                     this is its parse root */
-   parse_block *gc_ptr;           /* used for reclaiming dead blocks */
-   call_conc_option_state options;/* number, selector, direction, etc. */
-   short replacement_key;         /* this is the "DFM1_CALL_MOD_MASK" stuff
-                                     (shifted down) for a modification block */
-   short no_check_call_level;     /* if nonzero, don't check whether this call
-                                     is at the level. */
+   const conzept::concept_descriptor *concept; // the concept or end marker
+   call_with_name *call;          // if this is end mark, gives the call; otherwise unused
+   call_with_name *call_to_print; // the original call, for printing (sometimes the field
+                                  // above gets changed temporarily)
+   parse_block *next;             // next concept, or, if this is end mark,
+                                  // points to substitution list
+   parse_block *subsidiary_root;  // for concepts that take a second call,
+                                  // this is its parse root
+   parse_block *gc_ptr;           // used for reclaiming dead blocks
+   call_conc_option_state options;// number, selector, direction, etc.
+   short replacement_key;         // this is the "DFM1_CALL_MOD_MASK" stuff
+                                  // (shifted down) for a modification block
+   bool no_check_call_level;      // if true, don't check whether this call
+                                  // is at the level
 };
 
 // For ui_command_select:
@@ -654,9 +819,9 @@ struct parse_block {
 // to the array "title_string" in sdgetout.cpp, and maybe stuff in the UI.
 // For example, see "command_menu" in sdmain.cpp.
 
-/* BEWARE!!  The order is slightly significant -- all search-type commands
-   are >= command_resolve, and all "create some setup" commands
-   are >= command_create_any_lines.  Certain tests are made easier by this. */
+// BEWARE!!  The order is slightly significant -- all search-type commands
+// are >= command_resolve, and all "create some setup" commands
+// are >= command_create_any_lines.  Certain tests are made easier by this.
 enum command_kind {
    command_quit,
    command_undo,
@@ -681,6 +846,7 @@ enum command_kind {
    command_toggle_act_phan,
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
+   command_toggle_keepallpic_mode,
    command_toggle_singleclick_mode,
    command_select_print_font,
    command_print_current,
@@ -747,6 +913,7 @@ enum start_select_kind {
    start_select_toggle_act,
    start_select_toggle_retain,
    start_select_toggle_nowarn_mode,
+   start_select_toggle_keepallpic_mode,
    start_select_toggle_singleclick_mode,
    start_select_toggle_singer,
    start_select_toggle_singer_backward,
@@ -934,10 +1101,119 @@ struct small_setup {
    int srotation;
 };
 
+
+
+/* These bits are used to allocate flag bits
+   that appear in the "callflagsf" word of a top level calldefn block
+   and the "cmd_final_flags.final" of a setup with its command block. */
+
+enum {
+   // A 3-bit field.
+   CFLAGH__TAG_CALL_RQ_MASK        = 0x00000007UL,
+   CFLAGH__TAG_CALL_RQ_BIT         = 0x00000001UL,
+   CFLAGH__REQUIRES_SELECTOR       = 0x00000008UL,
+   CFLAGH__REQUIRES_DIRECTION      = 0x00000010UL,
+   CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020UL,
+   CFLAGH__ODD_NUMBER_ONLY         = 0x00000040UL,
+   CFLAGH__HAS_AT_ZERO             = 0x00000080UL,
+   CFLAGHSPARE_1                   = 0x00000100UL,
+   CFLAGHSPARE_2                   = 0x00000200UL,
+   CFLAGHSPARE_3                   = 0x00000400UL,
+   CFLAGHSPARE_4                   = 0x00000800UL,
+   CFLAGHSPARE_5                   = 0x00001000UL,
+   CFLAGHSPARE_6                   = 0x00002000UL
+   // We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits.
+};
+
+/* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
+   word of a callspec.  We use symbols that have been graciously
+   provided for us from database.h to tell us what bits may be safely used next
+   to the heritable flags.  Note that these bits overlap the FINAL__?? bits above.
+   These are used in the callflagsf word of a callspec.  The FINAL__?? bits are
+   used elsewhere.  They don't mix. */
+
+enum {
+   ESCAPE_WORD__LEFT            = CFLAGHSPARE_1,
+   ESCAPE_WORD__CROSS           = CFLAGHSPARE_2,
+   ESCAPE_WORD__MAGIC           = CFLAGHSPARE_3,
+   ESCAPE_WORD__INTLK           = CFLAGHSPARE_4,
+   ESCAPE_WORD__GRAND           = CFLAGHSPARE_5
+};
+
+
+/* These flags go along for the ride, in some parts of the code (BUT NOT
+   THE CALLFLAGSF WORD OF A CALLSPEC!), in the same word as the heritable flags,
+   but are not part of the inheritance mechanism.  We use symbols that have been
+   graciously provided for us from database.h to tell us what bits may be safely
+   used next to the heritable flags. */
+
+enum finalflags {
+   FINAL__SPLIT                      = CFLAGHSPARE_1,
+   FINAL__SPLIT_SQUARE_APPROVED      = CFLAGHSPARE_2,
+   FINAL__SPLIT_DIXIE_APPROVED       = CFLAGHSPARE_3,
+   FINAL__MUST_BE_TAG                = CFLAGHSPARE_4,
+   FINAL__TRIANGLE                   = CFLAGHSPARE_5,
+   FINAL__LEADTRIANGLE               = CFLAGHSPARE_6
+};
+
+
+// Because this is used in static C-style initializers (see, for example,
+// "test_setup_1x8" et. el. in sdinit.cpp and "configuration::startinfolist"
+// in sdtables.cpp) we apparently can't make constructors for it, though
+// we are allowed to make it a class.  And we aren't allowed to make the
+// members private.  Note that the static initializers don't attempt
+// to initialize this part.  So we just barely get away with this.
+class final_and_herit_flags {
+ public:
+   heritflags herit;
+   finalflags final;
+
+   // Stuff for manipulating the "herit" bits.
+
+   // This tests a single bit.  It returns an int rather than a bool
+   // in case the client wants to combine the result with other
+   // stuff for greater efficiency.
+   inline uint32 test_heritbit(heritflags y) { return herit & y; }
+   // This tests against a word, presumably containing a mask of 2 or more bits.
+   inline uint32 test_heritbits(uint32 y) { return herit & y; }
+   // This clears a single bit.
+   inline void clear_heritbit(heritflags y) { herit = (heritflags) (herit & ~y); }
+   // This clears a mask of bits.  Bits that are ON in the argument
+   // get CLEARED in the field.
+   inline void clear_heritbits(uint32 y) { herit = (heritflags) (herit & ~y); }
+   // This sets a single bit.
+   inline void set_heritbit(heritflags y) { herit = (heritflags) (herit | y); }
+   // This sets a mask of bits.
+   inline void set_heritbits(uint32 y) { herit = (heritflags) (herit | y); }
+   // Clear all bits.
+   inline void clear_all_heritbits() { herit = (heritflags) 0; }
+
+   // Stuff for manipulating the "final" bits.  Exactly analogous
+   // to the "herit" stuff.  See comments above.
+
+   inline uint32 test_finalbit(finalflags y) { return final & y; }
+   inline uint32 test_finalbits(uint32 y) { return final & y; }
+   inline void clear_finalbit(finalflags y) { final = (finalflags) (final & ~y); }
+   inline void clear_finalbits(uint32 y) { final = (finalflags) (final & ~y); }
+   inline void set_finalbit(finalflags y) { final = (finalflags) (final | y); }
+   inline void set_finalbits(uint32 y) { final = (finalflags) (final | y); }
+   inline void clear_all_finalbits() { final = (finalflags) 0; }
+
+   // Clear both herit and final bits.
+   inline void clear_all_herit_and_final_bits()
+      { herit = (heritflags) 0; final = (finalflags) 0; }
+
+   // Test both fields, presumably for both equal to zero.  This just
+   // returns the bitwise OR of both.  The expectation is that the
+   // resulting integer will simply be tested for zero/nonzero.
+   inline uint32 test_herit_and_final_bits() { return herit | final; }
+};
+
+
 struct setup_command {
    parse_block *parseptr;
    call_with_name *callspec;
-   uint64 cmd_final_flags;
+   final_and_herit_flags cmd_final_flags;
    uint32 cmd_frac_flags;
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
@@ -949,6 +1225,8 @@ struct setup_command {
    parse_block **restrained_final;
    uint32 restrained_fraction;
    uint32 restrained_super8flags;
+   bool restrained_do_as_couples;
+   uint32 restrained_super9flags;
    parse_block *skippable_concept;
 };
 
@@ -962,14 +1240,15 @@ struct setup {
    setup_command cmd;
    personrec people[MAX_PEOPLE];
 
-   /* The following item is not actually part of the setup description, but contains
-      miscellaneous information left by "move" and similar procedures, for the
-      convenience of whatever called same. */
-   uint32 result_flags;           /* Miscellaneous info, with names like RESULTFLAG__???. */
+   // The following item is not actually part of the setup description, but contains
+   // miscellaneous information left by "move" and similar procedures, for the
+   // convenience of whatever called same.
+   uint32 result_flags;           // Miscellaneous info, with names like RESULTFLAG__???.
 
-   /* The following three items are only used if the setup kind is "s_normal_concentric".  Note in particular that
-      "outer_elongation" is thus underutilized, and that a lot of complexity goes into storing similar information
-      (in two different places!) in the "prior_elongation_bits" and "result_flags" words. */
+   // The following three items are only used if the setup kind is "s_normal_concentric".
+   // Note in particular that "outer_elongation" is thus underutilized, and that a lot
+   // of complexity goes into storing similar information (in two different places!)
+   // in the "prior_elongation_bits" and "result_flags" words.
    small_setup inner;
    small_setup outer;
    int concsetup_outer_elongation;
@@ -1005,13 +1284,17 @@ class conc_tables {
 
    // Must be a power of 2.
    enum { NUM_CONC_HASH_BUCKETS = 32 };
+
+   // The big initialization table, in sdtables.
    static cm_thing conc_init_table[];
+
+   // The hash tables, constructed during initialization.  In sdconc.
    static cm_thing *conc_hash_synthesize_table[NUM_CONC_HASH_BUCKETS];
    static cm_thing *conc_hash_analyze_table[NUM_CONC_HASH_BUCKETS];
 
  public:
 
-   static bool analyze_this(
+   static bool analyze_this(             // In sdconc.
       setup *ss,
       setup *inners,
       setup *outers,
@@ -1021,7 +1304,7 @@ class conc_tables {
       int & outer_rot,
       calldef_schema analyzer);
 
-   static bool synthesize_this(
+   static bool synthesize_this(             // In sdconc.
       setup *inners,
       setup *outers,
       int center_arity,
@@ -1032,13 +1315,13 @@ class conc_tables {
       calldef_schema synthesizer,
       setup *result);
 
-   static void initialize();
+   static void initialize();             // In sdconc.
 };
 
 
 struct predicate_descriptor {
    // We wish we could put a "throw" clause on this function, but we can't.
-   long_boolean (*predfunc) (setup *, int, int, int, const long int *);
+   bool (*predfunc) (setup *, int, int, int, const long int *);
    const long int *extra_stuff;
 };
 
@@ -1073,363 +1356,415 @@ enum {
                       LOOKUP_MINI_B|LOOKUP_MINI_O)
 };
 
-enum fixerkey {
-   fx0,        // The null table entry.
-   fx_foo33a,
-   fx_foocc,
-   fx_foo33,
-   fx_foo5a,
-   fx_fooa5,
-   fx_foo55,
-   fx_fooaa,
-   fx_foo11,
-   fx_foo22,
-   fx_foo44,
-   fx_foo88,
-   fx_n1x43,
-   fx_n1x4c,
-   fx_n1x45,
-   fx_n1x4a,
-   fx_n1x3a,
-   fx_n1x3b,
-   fx_f1x6aa,
-   fx_f1x8aa,
-   fx_f1x855,
-   fx_fo6zz,
-   fx_foozz,
-   fx_fo6zzd,
-   fx_foozzd,
-   fx_f3x4east,
-   fx_f3x4west,
-   fx_f3x4left,
-   fx_f3x4right,
-   fx_f3x4lzz,
-   fx_f3x4rzz,
-   fx_f4x4nw,
-   fx_f4x4ne,
-   fx_f4x4wn,
-   fx_f4x4en,
-   fx_f4x4lzz,
-   fx_f4x4rzz,
-   fx_f3x4outer,
-   fx_f3dmouter,
-   fx_fdhrgl,
-   fx_specspindle,
-   fx_specfix3x40,
-   fx_specfix3x41,
-   fx_f525nw,
-   fx_f525ne,
-   fx_fdpx44,
-   fx_fdpxwve,
-   fx_f1x12outer,
-   fx_f3x4outrd,
-   fx_f3dmoutrd,
-   fx_fdhrgld,
-   fx_f1x12outrd,
-   fx_f1x12outre,
-   fx_f1x3d6,
-   fx_f323,
-   fx_f323d,
-   fx_f3x1zzd,
-   fx_f1x3zzd,
-   fx_f3x1yyd,
-   fx_f2x1yyd,
-   fx_f1x4xv,
-   fx_f1x3yyd,
-   fx_f1x6aad,
-   fx_f1x4qv,
-   fx_fo6qqd,
-   fx_f21dabd,
-   fx_f12dabd,
-   fx_f1x6abd,
-   fx_f2x1ded,
-   fx_f1x6ed,
-   fx_f1x8aad,
-   fx_fxwv1d,
-   fx_fxwv2d,
-   fx_fxwv3d,
-   fx_fqtgns,
-   fx_ftharns,
-   fx_ftharew,
-   fx_fqtgj1,
-   fx_fqtgj2,
-   fx_f2x3j1,
-   fx_f2x3j2,
-   fx_fqtgjj1,
-   fx_fqtgjj2,
-   fx_f2x3jj1,
-   fx_f2x3jj2,
-   fx_fgalcv,
-   fx_fgalch,
-   fx_fspindlc,
-   fx_fspindlf,
-   fx_fspindlg,
-   fx_fspindlfd,
-   fx_fspindlgd,
-   fx_ftgl6cwd,
-   fx_ftgl6ccwd,
-   fx_ftgl6cld,
-   fx_ftgl6ccld,
-   fx_ftgl6ccd,
-   fx_ftgl6cccd,
-   fx_f1x3aad,
-   fx_f2x3c,
-   fx_f2x3a41,
-   fx_f2x3a14,
-   fx_box3c,
-   fx_box6c,
-   fx_box9c,
-   fx_boxcc,
-   fx_box55,
-   fx_boxaa,
-   fx_f2x5c,
-   fx_f2x5d,
-   fx_fd2x5d,
-   fx_f4x6a,
-   fx_f4x6b,
-   fx_f4x6c,
-   fx_f4x6d,
-   fx_f4x6e,
-   fx_f4x6f,
-   fx_f1x2aad,
-   fx_f2x166d,
-   fx_f1x3bbd,
-   fx_fhrglassd,
-   fx_fspindld,
-   fx_fptpzzd,
-   fx_f3ptpo6,
-   fx_fspindlbd,
-   fx_fspindlod,
-   fx_d2x4b1,
-   fx_d2x4b2,
-   fx_d2x4w1,
-   fx_d2x4w2,
-   fx_d2x4d1,
-   fx_d2x4d2,
-   fx_d2x4c1,
-   fx_d2x4c2,
-   fx_d2x4z1,
-   fx_d2x4z2,
-   fx_d2x4y1,
-   fx_d2x4y2,
-   fx_d3x4ul1,
-   fx_d3x4ul2,
-   fx_d3x4ul3,
-   fx_d3x4ul4,
-   fx_d3x4ul5,
-   fx_d3x4ul6,
-   fx_d3x4ub1,
-   fx_d3x4ub2,
-   fx_d3x4ub3,
-   fx_d3x4ub4,
-   fx_d3x4vl1,
-   fx_d3x4vl2,
-   fx_d3x4vl3,
-   fx_d3x4vl4,
-   fx_d3x4vb1,
-   fx_d3x4vb2,
-   fx_d3x4vb3,
-   fx_d3x4vb4,
-   fx_d2x4x1,
-   fx_d2x4x2,
-   fx_dgalw1,
-   fx_dgalw2,
-   fx_dgalw3,
-   fx_dgalw4,
-   fx_dgald1,
-   fx_dgald2,
-   fx_dgald3,
-   fx_dgald4,
-   fx_ddmd1,
-   fx_ddmd2,
-   fx_distbone1,
-   fx_distbone2,
-   fx_distbone5,
-   fx_distbone6,
-   fx_distpgdmd1,
-   fx_distpgdmd2,
-   fx_distrig3,
-   fx_distrig1,
-   fx_distrig4,
-   fx_distrig2,
-   fx_distrig7,
-   fx_distrig5,
-   fx_distrig8,
-   fx_distrig6,
-   fx_distptp1,
-   fx_distptp2,
-   fx_distptp3,
-   fx_distptp4,
-   fx_distptp7,
-   fx_distptp8,
-   fx_disthrg1,
-   fx_disthrg2,
-   fx_d4x4l1,
-   fx_d4x4l2,
-   fx_d4x4l3,
-   fx_d4x4l4,
-   fx_d4x4d1,
-   fx_d4x4d2,
-   fx_d4x4d3,
-   fx_d4x4d4,
-   fx_dqtgdbb1,
-   fx_dqtgdbb2,
-   fx_hrgminb,
-   fx_ptpminb,
-   fx_rigmino,
-   fx_galmino,
-   fx_qtgminb,
-   fx_fcpl12,
-   fx_fcpl23,
-   fx_fcpl34,
-   fx_fcpl41,
-   fx_foo55d,
-   fx_fgalctb,
-   fx_f3x1ctl,
-   fx_f2x2pl,
-   fx_f1x4pl,
-   fx_fdmdpl,
-   fx_f1x2pl,
-   fx_f3x1d_2,
-   fx_f1x8_88,
-   fx_f1x8_22,
-   fx_f1x8_11,
-   fx_fdqtagzzz,
-   fx_f1x8_77_3,
-   fx_f1x8_77,
-   fx_fdrhgl_bb,
-   fx_f1x8_bb,
-   fx_f1x8_dd,
-   fx_foo99d,
-   fx_foo66d,
-   fx_f1x8ctr,
-   fx_fqtgctr,
-   fx_fxwve,
-   fx_fboneendd,
-   fx_fqtgend,
-   fx_f1x6endd,
-   fx_f1x2dd,
-   fx_fbn6ndd,
-   fx_f2x3od,
-   fx_fdmded,
-   fx_f1x4ed,
-   fx_fdrhgl1,
-   fx_f1x8endd,
-   fx_f1x8endo,
-   fx_f1x8lowf,
-   fx_f1x8hif,
-   fx_fbonectr,
-   fx_fbonetgl,
-   fx_frigtgl,
-   fx_fboneendo,
-   fx_frigendd,
-   fx_frigctr,
-   fx_f2x4ctr,
-   fx_f2x4lr,
-   fx_f2x4rl,
-   fx_f2x4far,
-   fx_f2x4near,
-   fx_f4dmdiden,
-   fx_f2x4pos1,
-   fx_f2x4pos2,
-   fx_f2x4pos3,
-   fx_f2x4pos4,
-   fx_f2x4pos5,
-   fx_f2x4pos6,
-   fx_f2x4pos7,
-   fx_f2x4pos8,
-   fx_f2x4posa,
-   fx_f2x4posb,
-   fx_f2x4posc,
-   fx_f2x4posd,
-   fx_f2x4pose,
-   fx_f2x4posf,
-   fx_f2x4posp,
-   fx_f2x4posq,
-   fx_f2x4posr,
-   fx_f2x4poss,
-   fx_f2x4posy,
-   fx_f2x4posz,
-   fx_f2x4left,
-   fx_f2x4right,
-   fx_f2x4dleft,
-   fx_f2x4dright,
-   fx_f2zzrdsc,
-   fx_f2zzrdsd,
-   fx_f288rdsd,
-   fx_f2yyrdsc,
-   fx_f2x5rdsd,
-   fx_f2qt1dsc,
-   fx_f2qt1dsd,
-   fx_f2qt2dsc,
-   fx_f2x6ndsc,
-   fx_f2x6ndsd,
-   fx_fdmdndx,
-   fx_fdmdnd,
-   fx_f3x4ndsd,
-   fx_f2x8ndsc,
-   fx_f4x6ndoo,
-   fx_f4x6ndxx,
-   fx_f1x8nd96,
-   fx_f1x8nd69,
-   fx_f1x8nd41,
-   fx_f1x8nd82,
-   fx_f1x8nd28,
-   fx_f1x8nd14,
-   fx_f1x10ndsc,
-   fx_f1x10ndsd,
-   fx_f1x10ndse,
-   fx_z1x4u,
-   fx_z2x3a,
-   fx_z2x3b,
-   fx_fgalpts,
-   fx_f2x4endd,
-   fx_fhrgl1,
-   fx_fhrgl2,
-   fx_fhrgle,
-   fx_fptpdid,
-   fx_f2x477,
-   fx_f2x4ee,
-   fx_f2x4bb,
-   fx_f2x4dd,
-   fx_fdhrgld1,
-   fx_fdhrgld2,
-   fx_f2x4endo,
-   fx_bar55d,
-   fx_fppaad,
-   fx_fpp55d,
-   fx_ENUMLAST    // Not actually in the table.
+
+class select {
+
+ public:
+
+   enum fixerkey {
+      fx0,        // The null table entry.
+      fx_foo33a,
+      fx_foocc,
+      fx_foo33,
+      fx_foo5a,
+      fx_fooa5,
+      fx_foo55,
+      fx_fooaa,
+      fx_foo11,
+      fx_foo22,
+      fx_foo44,
+      fx_foo88,
+      fx_n1x43,
+      fx_n1x4c,
+      fx_n1x45,
+      fx_n1x4a,
+      fx_n1x3a,
+      fx_n1x3b,
+      fx_f1x6aa,
+      fx_f1x8aa,
+      fx_f1x855,
+      fx_fo6zz,
+      fx_foozz,
+      fx_fo6zzd,
+      fx_foozzd,
+      fx_f3x4east,
+      fx_f3x4west,
+      fx_f3x4left,
+      fx_f3x4right,
+      fx_f3x4lzz,
+      fx_f3x4rzz,
+      fx_f4x4nw,
+      fx_f4x4ne,
+      fx_f4x4wn,
+      fx_f4x4en,
+      fx_f4x4lzz,
+      fx_f4x4rzz,
+      fx_f4x4lzza,
+      fx_f4x4rzza,
+      fx_f3x4outer,
+      fx_f3dmouter,
+      fx_fdhrgl,
+      fx_specspindle,
+      fx_specfix3x40,
+      fx_specfix3x41,
+      fx_f525nw,
+      fx_f525ne,
+      fx_fdpx44,
+      fx_fdpxwve,
+      fx_f1x12outer,
+      fx_f3x4outrd,
+      fx_f3dmoutrd,
+      fx_fdhrgld,
+      fx_f1x12outrd,
+      fx_f1x12outre,
+      fx_f1x3d6,
+      fx_f323,
+      fx_f323d,
+      fx_f3x1zzd,
+      fx_f1x3zzd,
+      fx_f3x1yyd,
+      fx_f2x1yyd,
+      fx_f1x4xv,
+      fx_f1x3yyd,
+      fx_f1x6aad,
+      fx_f1x4qv,
+      fx_fo6qqd,
+      fx_f21dabd,
+      fx_f12dabd,
+      fx_f1x6abd,
+      fx_f2x1ded,
+      fx_f1x6ed,
+      fx_f1x8aad,
+      fx_fxwv1d,
+      fx_fxwv2d,
+      fx_fxwv3d,
+      fx_fqtgns,
+      fx_ftharns,
+      fx_ftharew,
+      fx_fqtgj1,
+      fx_fqtgj2,
+      fx_f2x3j1,
+      fx_f2x3j2,
+      fx_fqtgjj1,
+      fx_fqtgjj2,
+      fx_f2x3jj1,
+      fx_f2x3jj2,
+      fx_fgalcv,
+      fx_fgalch,
+      fx_fdblbentcw,
+      fx_fdblbentccw,
+      fx_fcrookedcw,
+      fx_fcrookedccw,
+      fx_fspindlc,
+      fx_fspindlf,
+      fx_fspindlg,
+      fx_fspindlfd,
+      fx_fspindlgd,
+      fx_ftgl6cwd,
+      fx_ftgl6ccwd,
+      fx_ftgl6cld,
+      fx_ftgl6ccld,
+      fx_ftgl6ccd,
+      fx_ftgl6cccd,
+      fx_f1x3aad,
+      fx_f2x3c,
+      fx_f2x3a41,
+      fx_f2x3a14,
+      fx_box3c,
+      fx_box6c,
+      fx_box9c,
+      fx_boxcc,
+      fx_box55,
+      fx_boxaa,
+      fx_f2x5c,
+      fx_f2x5d,
+      fx_fd2x5d,
+      fx_bghrgla,
+      fx_bghrglb,
+      fx_shsqtga,
+      fx_shsqtgb,
+      fx_f4x6a,
+      fx_f4x6b,
+      fx_f4x6c,
+      fx_f4x6d,
+      fx_f4x6e,
+      fx_f4x6f,
+      fx_f1x2aad,
+      fx_f2x166d,
+      fx_f1x3bbd,
+      fx_fhrglassd,
+      fx_fspindld,
+      fx_fptpzzd,
+      fx_f3ptpo6,
+      fx_fspindlbd,
+      fx_fspindlod,
+      fx_d2x4b1,
+      fx_d2x4b2,
+      fx_d2x4w1,
+      fx_d2x4w2,
+      fx_d2x4d1,
+      fx_d2x4d2,
+      fx_d2x4c1,
+      fx_d2x4c2,
+      fx_d2x4z1,
+      fx_d2x4z2,
+      fx_d2x4y1,
+      fx_d2x4y2,
+      fx_d3x4ul1,
+      fx_d3x4ul2,
+      fx_d3x4ul3,
+      fx_d3x4ul4,
+      fx_d3x4ul5,
+      fx_d3x4ul6,
+      fx_d3x4ub1,
+      fx_d3x4ub2,
+      fx_d3x4ub3,
+      fx_d3x4ub4,
+      fx_d3x4vl1,
+      fx_d3x4vl2,
+      fx_d3x4vl3,
+      fx_d3x4vl4,
+      fx_d3x4vb1,
+      fx_d3x4vb2,
+      fx_d3x4vb3,
+      fx_d3x4vb4,
+      fx_d2x4x1,
+      fx_d2x4x2,
+      fx_dgalw1,
+      fx_dgalw2,
+      fx_dgalw3,
+      fx_dgalw4,
+      fx_dgald1,
+      fx_dgald2,
+      fx_dgald3,
+      fx_dgald4,
+      fx_ddmd1,
+      fx_ddmd2,
+      fx_distbone1,
+      fx_distbone2,
+      fx_distbone5,
+      fx_distbone6,
+      fx_distpgdmd1,
+      fx_distpgdmd2,
+      fx_distrig3,
+      fx_distrig1,
+      fx_distrig4,
+      fx_distrig2,
+      fx_distrig7,
+      fx_distrig5,
+      fx_distrig8,
+      fx_distrig6,
+      fx_distptp1,
+      fx_distptp2,
+      fx_distptp3,
+      fx_distptp4,
+      fx_distptp7,
+      fx_distptp8,
+      fx_disthrg1,
+      fx_disthrg2,
+      fx_d4x4l1,
+      fx_d4x4l2,
+      fx_d4x4l3,
+      fx_d4x4l4,
+      fx_d4x4d1,
+      fx_d4x4d2,
+      fx_d4x4d3,
+      fx_d4x4d4,
+      fx_dqtgdbb1,
+      fx_dqtgdbb2,
+      fx_hrgminb,
+      fx_ptpminb,
+      fx_rigmino,
+      fx_galmino,
+      fx_qtgminb,
+      fx_fcpl12,
+      fx_fcpl23,
+      fx_fcpl34,
+      fx_fcpl41,
+      fx_foo55d,
+      fx_fgalctb,
+      fx_f3x1ctl,
+      fx_f2x2pl,
+      fx_f1x4pl,
+      fx_fdmdpl,
+      fx_f1x2pl,
+      fx_f3x1d_2,
+      fx_f1x8_88,
+      fx_f1x8_22,
+      fx_f1x8_11,
+      fx_fdqtagzzz,
+      fx_f1x8_77_3,
+      fx_f1x8_77,
+      fx_fdrhgl_bb,
+      fx_f3x1d77,
+      fx_f1x8_bb,
+      fx_f1x8_dd,
+      fx_foo99d,
+      fx_foo66d,
+      fx_f1x8ctr,
+      fx_fqtgctr,
+      fx_fxwve,
+      fx_fboneendd,
+      fx_fqtgend,
+      fx_f1x6endd,
+      fx_f1x2dd,
+      fx_fbn6ndd,
+      fx_f2x3od,
+      fx_fdmded,
+      fx_f1x4ed,
+      fx_fdrhgl1,
+      fx_f1x8endd,
+      fx_f1x8endo,
+      fx_f1x8lowf,
+      fx_f1x8hif,
+      fx_fbonectr,
+      fx_fbonetgl,
+      fx_frigtgl,
+      fx_fboneendo,
+      fx_frigendd,
+      fx_frigctr,
+      fx_f2x4ctr,
+      fx_f2x4lr,
+      fx_f2x4rl,
+      fx_f2x4far,
+      fx_f2x4near,
+      fx_f4dmdiden,
+      fx_f2x4pos1,
+      fx_f2x4pos2,
+      fx_f2x4pos3,
+      fx_f2x4pos4,
+      fx_f2x4pos5,
+      fx_f2x4pos6,
+      fx_f2x4pos7,
+      fx_f2x4pos8,
+      fx_f2x4posa,
+      fx_f2x4posb,
+      fx_f2x4posc,
+      fx_f2x4posd,
+      fx_f2x4pose,
+      fx_f2x4posf,
+      fx_f2x4posp,
+      fx_f2x4posq,
+      fx_f2x4posr,
+      fx_f2x4poss,
+      fx_f2x4posy,
+      fx_f2x4posz,
+      fx_f2x4left,
+      fx_f2x4right,
+      fx_f2x4dleft,
+      fx_f2x4dright,
+      fx_f2zzrdsc,
+      fx_f2zzrdsd,
+      fx_f288rdsd,
+      fx_f2yyrdsc,
+      fx_f2x5rdsd,
+      fx_f2qt1dsc,
+      fx_f2qt1dsd,
+      fx_f2qt2dsc,
+      fx_f2qt2d99,
+      fx_f2x6ndsc,
+      fx_f2x6ndsd,
+      fx_fdmdndx,
+      fx_fdmdnd,
+      fx_f3x4ndsd,
+      fx_f2x8nd99,
+      fx_f2x8nda5,
+      fx_f4x6ndoo,
+      fx_f4x6ndxx,
+      fx_f1x8nd96,
+      fx_f1x8nd69,
+      fx_f1x8nd41,
+      fx_f1x8nd82,
+      fx_f1x8nd28,
+      fx_f1x8nd14,
+      fx_f1x10ndsc,
+      fx_f1x10ndsd,
+      fx_f1x10ndse,
+      fx_z1x4u,
+      fx_z2x3a,
+      fx_z2x3b,
+      fx_fgalpts,
+      fx_f2x4endd,
+      fx_fhrgl1,
+      fx_fhrgl2,
+      fx_fhrgle,
+      fx_fptpdid,
+      fx_f2x477,
+      fx_f2x4ee,
+      fx_f2x4bb,
+      fx_f2x4dd,
+      fx_fdhrgld1,
+      fx_fdhrgld2,
+      fx_f2x4endo,
+      fx_f4x4endo,
+      fx_bar55d,
+      fx_fppaad,
+      fx_fpp55d,
+      fx_ENUMLAST    // Not actually in the table.
+   };
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "fixer_init_table" be a statically initialized array.
+
+   struct fixer {
+      fixerkey mykey;
+      setup_kind ink;
+      setup_kind outk;
+      int rot;
+      short prior_elong;
+      short numsetups;
+      fixerkey next1x2;
+      fixerkey next1x2rot;
+      fixerkey next1x4;
+      fixerkey next1x4rot;
+      fixerkey nextdmd;
+      fixerkey nextdmdrot;
+      fixerkey next2x2;
+      fixerkey next2x2v;
+      veryshort nonrot[24];
+   };
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "sel_init_table" be a statically initialized array.
+
+   struct sel_item {
+      uint32 key;
+      setup_kind kk;
+      uint32 thislivemask;
+      fixerkey fixp;
+      fixerkey fixp2;
+      int use_fixp2;
+      sel_item *next;
+   };
+
+ private:
+
+   // Must be a power of 2.
+   enum { NUM_SEL_HASH_BUCKETS = 32 };
+
+   // The big initialization table, in sdtables.
+   static sel_item sel_init_table[];
+
+   // The hash table, constructed during initialization.  In sdconc.
+   static sel_item *sel_hash_table[NUM_SEL_HASH_BUCKETS];
+
+   // The big initialization table, in sdtables.
+   static fixer fixer_init_table[];
+
+ public:
+
+   // In sdconc.
+   static fixer *fixer_ptr_table[fx_ENUMLAST];
+   static void initialize();             // In sdconc.
+
+   // In sdconc.
+   static const fixer *hash_lookup(setup_kind kk, uint32 thislivemask,
+                                   uint32 key, uint32 arg, const setup *ss);
 };
-
-
-struct fixer {
-   fixerkey mykey;
-   setup_kind ink;
-   setup_kind outk;
-   int rot;
-   short prior_elong;
-   short numsetups;
-   fixerkey next1x2;
-   fixerkey next1x2rot;
-   fixerkey next1x4;
-   fixerkey next1x4rot;
-   fixerkey nextdmd;
-   fixerkey nextdmdrot;
-   fixerkey next2x2;
-   fixerkey next2x2v;
-   veryshort nonrot[24];
-};
-
-struct sel_item {
-   uint32 key;
-   setup_kind kk;
-   uint32 thislivemask;
-   fixerkey fixp;
-   fixerkey fixp2;
-   int use_fixp2;
-   sel_item *next;
-};
-
 
 class tglmap {
 
@@ -1471,9 +1806,9 @@ class tglmap {
       veryshort nointlkshapechange;
       veryshort switchtgls;
       veryshort mapqt1[8];   // In quarter-tag: first triangle (upright),
-      // then second triangle (inverted), then idle.
+                             // then second triangle (inverted), then idle.
       veryshort mapcp1[8];   // In C1 phantom: first triangle (inverted),
-      // then second triangle (upright), then idle.
+                             // then second triangle (upright), then idle.
       veryshort mapbd1[8];   // In bigdmd.
       veryshort map241[8];   // In 2x4.
       veryshort map261[8];   // In 2x6.
@@ -1512,31 +1847,170 @@ class tglmap {
 
 struct startinfo {
    char *name;
-   long_boolean into_the_middle;
+   bool into_the_middle;
    setup the_setup;
 };
 
-struct coordrec {
-   C_const setup_kind result_kind;
-   C_const int xfactor;
-   C_const veryshort xca[24];
-   C_const veryshort yca[24];
-   C_const veryshort diagram[64];
-};
 
 typedef uint32 id_bit_table[4];
 
 struct ctr_end_mask_rec {
-   C_const uint32 mask_normal;
-   C_const uint32 mask_6_2;
-   C_const uint32 mask_2_6;
-   C_const uint32 mask_ctr_dmd;
+   uint32 mask_normal;
+   uint32 mask_6_2;
+   uint32 mask_2_6;
+   uint32 mask_ctr_dmd;
+};
+
+
+// BEWARE!!  This list must track the array "warning_strings" in sdtables.cpp
+enum warning_index {
+   warn__none,
+   warn__do_your_part,
+   warn__tbonephantom,
+   warn__awkward_centers,
+   warn__bad_concept_level,
+   warn__not_funny,
+   warn__hard_funny,
+   warn__rear_back,
+   warn__awful_rear_back,
+   warn__excess_split,
+   warn__lineconc_perp,
+   warn__dmdconc_perp,
+   warn__lineconc_par,
+   warn__dmdconc_par,
+   warn__xclineconc_perpc,
+   warn__xcdmdconc_perpc,
+   warn__xclineconc_perpe,
+   warn__ctrstand_endscpls,
+   warn__ctrscpls_endstand,
+   warn__each2x2,
+   warn__each1x4,
+   warn__each1x2,
+   warn__eachdmd,
+   warn__take_right_hands,
+   warn__ctrs_are_dmd,
+   warn__1_4_pgram,
+   warn__full_pgram,
+   warn__3_4_pgram,
+   warn__offset_gone,
+   warn__overlap_gone,
+   warn__to_o_spots,
+   warn__to_x_spots,
+   warn__check_butterfly,
+   warn__check_galaxy,
+   warn__some_rear_back,
+   warn__not_tbone_person,
+   warn__check_c1_phan,
+   warn__check_dmd_qtag,
+   warn__check_quad_dmds,
+   warn__may_be_fudgy,
+   warn__fudgy_half_offset,
+   warn__check_3x4,
+   warn__check_2x4,
+   warn__check_hokey_2x4,
+   warn__check_4x4,
+   warn__check_4x6,
+   warn__check_hokey_4x4,
+   warn__check_4x4_start,
+   warn__check_centered_qtag,
+   warn__check_pgram,
+   warn__ctrs_stay_in_ctr,
+   warn__check_c1_stars,
+   warn__check_gen_c1_stars,
+   warn__bigblock_feet,
+   warn__bigblockqtag_feet,
+   warn__diagqtag_feet,
+   warn__adjust_to_feet,
+   warn__some_touch,
+   warn__some_touch_evil,
+   warn__split_to_2x4s,
+   warn__split_to_2x3s,
+   warn__split_to_1x8s,
+   warn__split_to_1x6s,
+   warn__take_left_hands,
+   warn__left_half_pass,
+   warn__evil_interlocked,
+   warn__split_phan_in_pgram,
+   warn__bad_interlace_match,
+   warn__not_on_block_spots,
+   warn__stupid_phantom_clw,
+   warn__bad_modifier_level,
+   warn__bad_call_level,
+   warn__did_not_interact,
+   warn__opt_for_normal_cast,
+   warn__opt_for_normal_hinge,
+   warn__opt_for_2fl,
+   warn__opt_for_no_collision,
+   warn__opt_for_not_tboned_base,
+   warn_partial_solomon,
+   warn_same_z_shear,
+   warn__like_linear_action,
+   warn__phantoms_thinner,
+   warn__hokey_jay_shapechanger,
+   warn__split_1x6,
+   warn_interlocked_to_6,
+   warn__offset_hard_to_see,
+   warn__pg_hard_to_see,
+   warn__colocated_once_rem,
+   warn_big_outer_triangles,
+   warn_hairy_fraction,
+   warn_bad_collision,
+   warn__dyp_resolve_ok,
+   warn__unusual,
+   warn_controversial,
+   warn_serious_violation,
+   warn_bogus_yoyo_rims_hubs,
+   warn_pg_in_2x6,
+   warn_real_people_spots,
+   warn__tasteless_com_spot,
+   warn__tasteless_junk,
+   warn__tasteless_slide_thru,
+   warn__compress_carefully,
+   warn__diagnostic,
+   warn__NUM_WARNINGS       // Not a real warning; just used for counting.
+};
+
+struct matrix_rec {
+   int x;              // This person's coordinates, calibrated so that a matrix
+   int y;              //   position cooresponds to an increase by 4.
+   int nicex;          // This person's "nice" coordinates, used for
+   int nicey;          //   calculating jay walk legality.
+   uint32 id1;         // The actual person, for error printing.
+   bool sel;           // True if this person is selected.  (False if selectors not in use.)
+   bool done;          // Used for loop control on each pass.
+   bool realdone;      // Used for loop control on each pass.
+   uint32 jbits;       // Bit mask for all possible jaywalkees.
+   int boybit;         // 1 if boy, 0 if not (might be neither).
+   int girlbit;        // 1 if girl, 0 if not (might be neither).
+   int dir;            // This person's initial facing direction, 0 to 3.
+   int deltax;         // How this person will move, relative to his own facing
+   int deltay;         //   direction, when call is finally executed.
+   int nearest;        // Forward distance to nearest jaywalkee.
+   int leftidx;        // X-increment of leftmost valid jaywalkee.
+   int rightidx;       // X-increment of rightmost valid jaywalkee.
+   int deltarot;       // How this person will turn.
+   uint32 roll_stability_info; // This person's roll & stability info, from call def'n.
+   int orig_source_idx;
+   matrix_rec *nextse; // Points to next person south (dir even) or east (dir odd.)
+   matrix_rec *nextnw; // Points to next person north (dir even) or west (dir odd.)
+   bool far_squeezer;  // This person's pairing is due to being far from someone.
+   bool tbstopse;      // True if nextse/nextnw is zero because the next spot
+   bool tbstopnw;      //   is occupied by a T-boned person (as opposed to being empty.)
+};
+
+
+struct coordrec {
+   setup_kind result_kind;
+   int xfactor;
+   veryshort xca[24];
+   veryshort yca[24];
+   veryshort diagram[64];
 };
 
 
 struct setup_attr {
    // This is the size of the setup MINUS ONE.
-   C_const int setup_limits;
+   int setup_limits;
 
    // These "coordrec" items have the fudged coordinates that are used for doing
    // press/truck calls.  For some setups, the coordinates of some people are
@@ -1560,32 +2034,50 @@ struct setup_attr {
    // These determine how designators like "side boys" get turned into
    // "center 2", so that so-and-so moves can be done with the much
    // more powerful concentric mechanism.
-   C_const ctr_end_mask_rec setup_conc_masks;
+   ctr_end_mask_rec setup_conc_masks;
 
    // These show the beginning setups that we look for in a by-array call
    // definition in order to do a call in this setup.
-   C_const begin_kind keytab[2];
+   begin_kind keytab[2];
 
-   /* In the bounding boxes, we do not fill in the "length" of a diamond, nor
-      the "height" of a qtag.  Everyone knows that the number must be 3, but it
-      is not really accepted that one can use that in instances where precision
-      is required.  That is, one should not make "matrix" calls depend on this
-      number.  Witness all the "diamond to quarter tag adjustment" stuff that
-      callers worry about, and the ongoing controversy about which way a quarter
-      tag setup is elongated, even though everyone knows that it is 4 wide and 3
-      deep, and that it is generally recognized, by the mathematically erudite,
-      that 4 is greater than 3. */
-   C_const short int bounding_box[2];
+   // In the bounding boxes, we do not fill in the "length" of a diamond, nor
+   // the "height" of a qtag.  Everyone knows that the number must be 3, but it
+   // is not really accepted that one can use that in instances where precision
+   // is required.  That is, one should not make "matrix" calls depend on this
+   // number.  Witness all the "diamond to quarter tag adjustment" stuff that
+   // callers worry about, and the ongoing controversy about which way a quarter
+   // tag setup is elongated, even though everyone knows that it is 4 wide and 3
+   // deep, and that it is generally recognized, by the mathematically erudite,
+   // that 4 is greater than 3.
+   short int bounding_box[2];
 
-   /* This is true if the setup has 4-way symmetry.  Such setups will always be
-      canonicalized so that their rotation field will be zero. */
-   C_const long_boolean four_way_symmetry;
+   // This is true if the setup has 4-way symmetry.  Such setups will always be
+   // canonicalized so that their rotation field will be zero.
+   bool four_way_symmetry;
 
-   /* This is the bit table for filling in the "ID2" bits. */
+      // This is the bit table for filling in the "ID2" bits.
    const id_bit_table *id_bit_table_ptr;
 
-   /* These are the tables that show how to print out the setup. */
+   // These are the tables that show how to print out the setup.
    Cstring print_strings[2];
+};
+
+
+extern const setup_attr setup_attrs[];    // In sdtables.
+
+// This class just exists for the purpose of reading out the setup_limits.
+// It had much more glorious plans at one time.
+
+class attr {
+
+ public:
+
+   // Get the "limit" (that's the number of people minus one), given
+   // only a setup kind.
+   static inline int klimit(setup_kind k) { return setup_attrs[k].setup_limits; }
+
+   // Get the limit for a given setup, reading out its setup kind.
+   static inline int slimit(const setup *s) { return setup_attrs[s->kind].setup_limits; }
 };
 
 struct writechar_block_type {
@@ -1593,7 +2085,7 @@ struct writechar_block_type {
    char lastchar;
    char lastlastchar;
    char *lastblank;
-   long_boolean usurping_writechar;
+   bool usurping_writechar;
 };
 
 
@@ -1740,16 +2232,16 @@ struct modifier_block {
    long int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    call_with_name *call_ptr;
-   const concept_descriptor *concept_ptr;
+   const conzept::concept_descriptor *concept_ptr;
    modifier_block *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
    modifier_block *packed_secondary_subcall; // points to substitution list for secondary subcall
    modifier_block *gc_ptr;                /* used for reclaiming dead blocks */
 };
 
 struct match_result {
-   long_boolean valid;       // Set to TRUE if a match was found.
-   long_boolean exact;       // Set to TRUE if an exact match was found.
-   long_boolean indent;      // This is a subordinate call; indent it in listing.
+   bool valid;               // Set to true if a match was found.
+   bool exact;               // Set to true if an exact match was found.
+   bool indent;              // This is a subordinate call; indent it in listing.
    modifier_block match;     // The little thing we actually return.
    const match_result *real_next_subcall;
    const match_result *real_secondary_subcall;
@@ -1812,11 +2304,15 @@ enum call_list_kind {
    call_list_extent    // Not a start call_list kind; indicates extent of the enum.
 };
 
-enum call_list_mode_t {
-   call_list_mode_none,
-   call_list_mode_writing,
-   call_list_mode_writing_full,
-   call_list_mode_abridging
+// BEWARE!!  Order is important.  Various comparisons are made.
+enum abridge_mode_t {
+   abridge_mode_none,             // Running, no abridgement.
+   abridge_mode_deleting_abridge, // Like the above, but user has explicitly
+                                  // requested that the abridgement specified for
+                                  // the current session be removed.
+   abridge_mode_abridging,        // Running, with abridgement list.
+   abridge_mode_writing,          // Just writing the list; don't run the program itself.
+   abridge_mode_writing_full      // Same, but write all lower lists as well.
 };
 
 struct parse_stack_item {
@@ -1916,22 +2412,28 @@ struct nice_setup_info_item {
 };
 
 // Values returned by the various popup routines.
-enum {
+enum popup_return {
    POPUP_DECLINE = 0,
    POPUP_ACCEPT  = 1,
    POPUP_ACCEPT_WITH_STRING = 2
 };
 
 
-/* These are the bits that get filled in by "update_id_bits". */
-#define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE| \
-ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6| \
-ID2_CTRDMD|ID2_NCTRDMD|ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6| \
-ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS)
+enum {
+   // These are the bits that get filled in by "update_id_bits".
+   BITS_TO_CLEAR =
+   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
+   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
+   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
+   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
+   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
 
+   // These are the really global position bits.  They get filled in only at the top level.
+   GLOB_BITS_TO_CLEAR =
+   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
+   ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE
+};
 
-/* These are the really global position bits.  They get filled in only at the top level. */
-#define GLOB_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE)
 
 
 
@@ -2008,49 +2510,58 @@ ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS)
    of the active phantoms mode can be toggled at arbitrary times, so a single
    card might have both usages.  In that unusual case, we want to so indicate
    on the card.
+
+   RESULTFLAG__DID_SHORT6_2X3 means that we fudged a short6 to a 2x3
+   (with permission), and, if we are putting back a concentric formation,
+   we may need to act accordingly.
 */
 
 // The two low bits are used for result elongation, so we start with 0x00000004.
 
-// This is a four bit field.
-static const uint32 RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CUL;
-static const uint32 RESULTFLAG__DID_LAST_PART        = 0x00000004UL;
-static const uint32 RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008UL;
-static const uint32 RESULTFLAG__SECONDARY_DONE       = 0x00000010UL;
-static const uint32 RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020UL;
+enum {
+   // This is a four bit field.
+   RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CUL,
+   RESULTFLAG__DID_LAST_PART        = 0x00000004UL,
+   RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008UL,
+   RESULTFLAG__SECONDARY_DONE       = 0x00000010UL,
+   RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020UL,
 
-static const uint32 RESULTFLAG__NEED_DIAMOND         = 0x00000040UL;
+   RESULTFLAG__NEED_DIAMOND         = 0x00000040UL,
 
-// This is a six bit field.
-static const uint32 RESULTFLAG__SPLIT_AXIS_FIELDMASK = 0x00001F80UL;
-static const uint32 RESULTFLAG__SPLIT_AXIS_XMASK     = 0x00000380UL;
-static const uint32 RESULTFLAG__SPLIT_AXIS_XBIT      = 0x00000080UL;
-static const uint32 RESULTFLAG__SPLIT_AXIS_YMASK     = 0x00001C00UL;
-static const uint32 RESULTFLAG__SPLIT_AXIS_YBIT      = 0x00000400UL;
-static const uint32 RESULTFLAG__SPLIT_AXIS_SEPARATION= 3;
+   // This is a six bit field.
+   RESULTFLAG__SPLIT_AXIS_FIELDMASK = 0x00001F80UL,
+   RESULTFLAG__SPLIT_AXIS_XMASK     = 0x00000380UL,
+   RESULTFLAG__SPLIT_AXIS_XBIT      = 0x00000080UL,
+   RESULTFLAG__SPLIT_AXIS_YMASK     = 0x00001C00UL,
+   RESULTFLAG__SPLIT_AXIS_YBIT      = 0x00000400UL,
+   RESULTFLAG__SPLIT_AXIS_SEPARATION= 3,
 
-static const uint32 RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00002000UL;
-static const uint32 RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00004000UL;
-static const uint32 RESULTFLAG__EXPAND_TO_2X3        = 0x00008000UL;
+   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00002000UL,
+   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00004000UL,
+   RESULTFLAG__EXPAND_TO_2X3        = 0x00008000UL,
 
-// This is a four bit field.
-static const uint32 RESULTFLAG__EXPIRATION_BITS      = 0x000F0000UL;
-static const uint32 RESULTFLAG__YOYO_EXPIRED         = 0x00010000UL;
-static const uint32 RESULTFLAG__TWISTED_EXPIRED      = 0x00020000UL;
-static const uint32 RESULTFLAG__SPLIT_EXPIRED        = 0x00040000UL;
-static const uint32 RESULTFLAG__EXPIRATION_ENAB      = 0x00080000UL;
+   // This is a four bit field.
+   RESULTFLAG__EXPIRATION_BITS      = 0x000F0000UL,
+   RESULTFLAG__YOYO_EXPIRED         = 0x00010000UL,
+   RESULTFLAG__TWISTED_EXPIRED      = 0x00020000UL,
+   RESULTFLAG__SPLIT_EXPIRED        = 0x00040000UL,
+   RESULTFLAG__EXPIRATION_ENAB      = 0x00080000UL,
 
-static const uint32 RESULTFLAG__DID_TGL_EXPANSION    = 0x00100000UL;
-static const uint32 RESULTFLAG__VERY_ENDS_ODD        = 0x00200000UL;
-static const uint32 RESULTFLAG__VERY_CTRS_ODD        = 0x00400000UL;
+   RESULTFLAG__DID_TGL_EXPANSION    = 0x00100000UL,
+   RESULTFLAG__VERY_ENDS_ODD        = 0x00200000UL,
+   RESULTFLAG__VERY_CTRS_ODD        = 0x00400000UL,
 
-// This is a 2 bit field.
-static const uint32 RESULTFLAG__DID_Z_COMPRESSMASK   = 0x01800000UL;
-static const uint32 RESULTFLAG__DID_Z_COMPRESSBIT    = 0x00800000UL;
+   // This is a 2 bit field.
+   RESULTFLAG__DID_Z_COMPRESSMASK   = 0x01800000UL,
+   RESULTFLAG__DID_Z_COMPRESSBIT    = 0x00800000UL,
 
-static const uint32 RESULTFLAG__NO_REEVALUATE        = 0x02000000UL;
-static const uint32 RESULTFLAG__IMPRECISE_ROT        = 0x04000000UL;
-static const uint32 RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000UL;
+   RESULTFLAG__NO_REEVALUATE        = 0x02000000UL,
+   RESULTFLAG__IMPRECISE_ROT        = 0x04000000UL,
+   RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000UL,
+   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000UL,
+   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000UL,
+   RESULTFLAG__INVADED_SPACE        = 0x40000000UL
+};
 
 struct comment_block {
    char txt[MAX_TEXT_LINE_LENGTH];
@@ -2067,119 +2578,12 @@ struct comment_block {
 // on one line.  One needs to be very careful about avoiding
 // ambiguity when setting this flag.
 #define CONCPARSE_PARSE_DIRECT   0x00000004UL
-// These are used by "print_recurse" in sdutil.c to control the printing.
+// These are used by "print_recurse" in sdutil.cpp to control the printing.
 // They govern the placement of commas.
 #define CONCPARSE_PARSE_L_TYPE 0x8
 #define CONCPARSE_PARSE_F_TYPE 0x10
 #define CONCPARSE_PARSE_G_TYPE 0x20
 
-
-// BEWARE!!  This list must track the array "warning_strings" in sdtables.cpp
-enum warning_index {
-   warn__none,
-   warn__do_your_part,
-   warn__tbonephantom,
-   warn__awkward_centers,
-   warn__bad_concept_level,
-   warn__not_funny,
-   warn__hard_funny,
-   warn__rear_back,
-   warn__awful_rear_back,
-   warn__excess_split,
-   warn__lineconc_perp,
-   warn__dmdconc_perp,
-   warn__lineconc_par,
-   warn__dmdconc_par,
-   warn__xclineconc_perpc,
-   warn__xcdmdconc_perpc,
-   warn__xclineconc_perpe,
-   warn__ctrstand_endscpls,
-   warn__ctrscpls_endstand,
-   warn__each2x2,
-   warn__each1x4,
-   warn__each1x2,
-   warn__eachdmd,
-   warn__take_right_hands,
-   warn__ctrs_are_dmd,
-   warn__1_4_pgram,
-   warn__full_pgram,
-   warn__3_4_pgram,
-   warn__offset_gone,
-   warn__overlap_gone,
-   warn__to_o_spots,
-   warn__to_x_spots,
-   warn__check_butterfly,
-   warn__check_galaxy,
-   warn__some_rear_back,
-   warn__not_tbone_person,
-   warn__check_c1_phan,
-   warn__check_dmd_qtag,
-   warn__check_quad_dmds,
-   warn__may_be_fudgy,
-   warn__fudgy_half_offset,
-   warn__check_3x4,
-   warn__check_2x4,
-   warn__check_hokey_2x4,
-   warn__check_4x4,
-   warn__check_4x6,
-   warn__check_hokey_4x4,
-   warn__check_4x4_start,
-   warn__check_centered_qtag,
-   warn__check_pgram,
-   warn__ctrs_stay_in_ctr,
-   warn__check_c1_stars,
-   warn__check_gen_c1_stars,
-   warn__bigblock_feet,
-   warn__bigblockqtag_feet,
-   warn__diagqtag_feet,
-   warn__adjust_to_feet,
-   warn__some_touch,
-   warn__split_to_2x4s,
-   warn__split_to_2x3s,
-   warn__split_to_1x8s,
-   warn__split_to_1x6s,
-   warn__take_left_hands,
-   warn__left_half_pass,
-   warn__evil_interlocked,
-   warn__split_phan_in_pgram,
-   warn__bad_interlace_match,
-   warn__not_on_block_spots,
-   warn__stupid_phantom_clw,
-   warn__bad_modifier_level,
-   warn__bad_call_level,
-   warn__did_not_interact,
-   warn__opt_for_normal_cast,
-   warn__opt_for_normal_hinge,
-   warn__opt_for_2fl,
-   warn__opt_for_no_collision,
-   warn__opt_for_not_tboned_base,
-   warn_partial_solomon,
-   warn_same_z_shear,
-   warn__like_linear_action,
-   warn__phantoms_thinner,
-   warn__hokey_jay_shapechanger,
-   warn__split_1x6,
-   warn_interlocked_to_6,
-   warn__offset_hard_to_see,
-   warn__pg_hard_to_see,
-   warn__colocated_once_rem,
-   warn_big_outer_triangles,
-   warn_hairy_fraction,
-   warn_bad_collision,
-   warn__dyp_resolve_ok,
-   warn__unusual,
-   warn_controversial,
-   warn_serious_violation,
-   warn_bogus_yoyo_rims_hubs,
-   warn_pg_in_2x6,
-   warn_real_people_spots,
-   warn__tasteless_com_spot,
-   warn__tasteless_junk,
-   warn__tasteless_slide_thru,
-   warn__compress_carefully,
-   warn__diagnostic,
-   warn__NUM_WARNINGS       // Not a real warning; just used for counting.
-};
 
 // BEWARE!!  This list must track the array "resolve_table" in sdgetout.cpp
 enum resolve_kind {
@@ -2249,43 +2653,6 @@ struct resolve_indicator {
    const resolve_tester *the_item;
    // Use this instead.
    int distance;
-};
-
-
-/* These bits are used to allocate flag bits
-   that appear in the "callflagsf" word of a top level calldefn block
-   and the "cmd_final_flags.final" of a setup with its command block. */
-
-enum {
-   // A 3-bit field.
-   CFLAGH__TAG_CALL_RQ_MASK        = 0x00000007UL,
-   CFLAGH__TAG_CALL_RQ_BIT         = 0x00000001UL,
-   CFLAGH__REQUIRES_SELECTOR       = 0x00000008UL,
-   CFLAGH__REQUIRES_DIRECTION      = 0x00000010UL,
-   CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020UL,
-   CFLAGH__ODD_NUMBER_ONLY         = 0x00000040UL,
-   CFLAGHSPARE_1                   = 0x00000080UL,
-   CFLAGHSPARE_2                   = 0x00000100UL,
-   CFLAGHSPARE_3                   = 0x00000200UL,
-   CFLAGHSPARE_4                   = 0x00000400UL,
-   CFLAGHSPARE_5                   = 0x00000800UL,
-   CFLAGHSPARE_6                   = 0x00001000UL
-   // We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits.
-};
-
-/* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
-   word of a callspec.  We use symbols that have been graciously
-   provided for us from database.h to tell us what bits may be safely used next
-   to the heritable flags.  Note that these bits overlap the FINAL__?? bits above.
-   These are used in the callflagsf word of a callspec.  The FINAL__?? bits are
-   used elsewhere.  They don't mix. */
-
-enum {
-   ESCAPE_WORD__LEFT            = CFLAGHSPARE_1,
-   ESCAPE_WORD__CROSS           = CFLAGHSPARE_2,
-   ESCAPE_WORD__MAGIC           = CFLAGHSPARE_3,
-   ESCAPE_WORD__INTLK           = CFLAGHSPARE_4,
-   ESCAPE_WORD__GRAND           = CFLAGHSPARE_5
 };
 
 /* These flags go into the "concept_prop" field of a "concept_table_item".
@@ -2445,7 +2812,7 @@ class configuration {
  public:
    parse_block *command_root;
    setup state;
-   long_boolean draw_pic;
+   bool draw_pic;
    int text_line;          // How many lines of text existed after this item was written,
                            // only meaningful if "written_history_items" is >= this index.
 
@@ -2497,9 +2864,9 @@ class configuration {
    inline static void initialize_history(int c) {
       history_ptr = 1;
       history[1].startinfoindex = c;
-      history[1].draw_pic = FALSE;
-      whole_sequence_low_lim = 
-         (startinfolist[c].into_the_middle) ? 1 : 2;
+      history[1].draw_pic = false;
+      whole_sequence_low_lim =
+         (startinfolist[c].into_the_middle) ? 2 : 1;
    }
    inline bool nontrivial_startinfo_specific() { return startinfoindex != 0; }
    inline startinfo *get_startinfo_specific() { return &startinfolist[startinfoindex]; }
@@ -2545,36 +2912,15 @@ struct concept_table_item{
    void (*concept_action)(setup *, parse_block *, setup *);
 };
 
-enum error_flag_type {
-   error_flag_none = 0,          /* Must be zero because setjmp returns this. */
-   error_flag_1_line,            /* 1-line error message, text is in error_message1. */
-   error_flag_2_line,            /* 2-line error message, text is in error_message1 and
-                                    error_message2. */
-   error_flag_no_retry,          /* Like error_flag_1_line, but it is instantly fatal. */
-   error_flag_collision,         /* collision error, message is that people collided, they are in
-                                    collision_person1 and collision_person2. */
-   error_flag_cant_execute,      /* unable-to-execute error, person is in collision_person1,
-                                    text is in error_message1. */
 
-   // Errors after this did not arise from call execution, so we don't
-   // show the ending formation.  "Error_flag_wrong_command" is the indicator for this.
-
-   error_flag_wrong_command,     /* clicked on something inappropriate in subcall reader. */
-   error_flag_wrong_resolve_command, /* "resolve" or similar command was called
-                                         in inappropriate context, text is in error_message1. */
-   error_flag_show_stats,        /* wants to display stale call statistics. */
-   error_flag_selector_changed,  /* warn that selector was changed during clipboard paste. */
-   error_flag_formation_changed  /* warn that formation changed during clipboard paste. */
-};
-
-#define zig_zag_level l_a2
-#define cross_by_level l_c1
-#define dixie_grand_level l_plus
-#define extend_34_level l_plus
-#define phantom_tandem_level l_c4a
-#define intlk_triangle_level l_c2
-#define general_magic_level l_c3
-#define beau_belle_level l_a2
+static const dance_level dixie_grand_level = l_plus;
+static const dance_level extend_34_level = l_plus;
+static const dance_level zig_zag_level = l_a2;
+static const dance_level beau_belle_level = l_a2;
+static const dance_level cross_by_level = l_c1;
+static const dance_level intlk_triangle_level = l_c2;
+static const dance_level general_magic_level = l_c3;
+static const dance_level phantom_tandem_level = l_c4a;
 
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
@@ -2586,9 +2932,6 @@ enum error_flag_type {
    bits of the components of a compound call, though this may not be so for
    the elongation bits at the bottom of the word. */
 
-
-
-#define TEST_HERITBITS(x,y) ((x).her8it & (y))
 
 
 /* Meanings of the items in a "setup_command" structure:
@@ -2672,21 +3015,6 @@ static const uint32 CMD_FRAC_FORCE_VIS       = 0x20000000UL;
 static const uint32 CMD_FRAC_LASTHALF_ALL    = 0x40000000UL;
 static const uint32 CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL;
 
-
-/* These flags go along for the ride, in some parts of the code (BUT NOT
-   THE CALLFLAGSF WORD OF A CALLSPEC!), in the same word as the heritable flags,
-   but are not part of the inheritance mechanism.  We use symbols that have been
-   graciously provided for us from database.h to tell us what bits may be safely
-   used next to the heritable flags. */
-
-enum {
-   FINAL__SPLIT                      = CFLAGHSPARE_1,
-   FINAL__SPLIT_SQUARE_APPROVED      = CFLAGHSPARE_2,
-   FINAL__SPLIT_DIXIE_APPROVED       = CFLAGHSPARE_3,
-   FINAL__MUST_BE_TAG                = CFLAGHSPARE_4,
-   FINAL__TRIANGLE                   = CFLAGHSPARE_5,
-   FINAL__LEADTRIANGLE               = CFLAGHSPARE_6
-};
 
 /* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
 
@@ -2808,30 +3136,28 @@ enum {
    CMD_MISC__VERIFY_REAL_3_4_LINE = 0x00002800UL,
    CMD_MISC__VERIFY_LINES         = 0x00002C00UL,
    CMD_MISC__VERIFY_COLS          = 0x00003000UL,
-   CMD_MISC__VERIFY_TALL6         = 0x00003400UL
-};
+   CMD_MISC__VERIFY_TALL6         = 0x00003400UL,
 
-enum {
-   CMD_MISC__EXPLICIT_MATRIX    = 0x00004000UL,
-   CMD_MISC__NO_EXPAND_MATRIX   = 0x00008000UL,
-   CMD_MISC__DISTORTED          = 0x00010000UL,
-   CMD_MISC__OFFSET_Z           = 0x00020000UL,
-   CMD_MISC__SAID_SPLIT         = 0x00040000UL,
-   CMD_MISC__SAID_TRIANGLE      = 0x00080000UL,
-   CMD_MISC__PUT_FRAC_ON_FIRST  = 0x00100000UL,
-   CMD_MISC__DO_AS_COUPLES      = 0x00200000UL,
-   CMD_MISC__RESTRAIN_CRAZINESS = 0x00400000UL,
-   CMD_MISC__RESTRAIN_MODIFIERS = 0x00800000UL,
-   CMD_MISC__NO_CHECK_MOD_LEVEL = 0x01000000UL,
-   CMD_MISC__MUST_SPLIT_HORIZ   = 0x02000000UL,
-   CMD_MISC__MUST_SPLIT_VERT    = 0x04000000UL,
-   CMD_MISC__NO_CHK_ELONG       = 0x08000000UL,
-   CMD_MISC__PHANTOMS           = 0x10000000UL,
-   CMD_MISC__NO_STEP_TO_WAVE    = 0x20000000UL,
-   CMD_MISC__ALREADY_STEPPED    = 0x40000000UL,
-   CMD_MISC__DOING_ENDS         = 0x80000000UL,
+   CMD_MISC__EXPLICIT_MATRIX      = 0x00004000UL,
+   CMD_MISC__NO_EXPAND_MATRIX     = 0x00008000UL,
+   CMD_MISC__DISTORTED            = 0x00010000UL,
+   CMD_MISC__OFFSET_Z             = 0x00020000UL,
+   CMD_MISC__SAID_SPLIT           = 0x00040000UL,
+   CMD_MISC__SAID_TRIANGLE        = 0x00080000UL,
+   CMD_MISC__PUT_FRAC_ON_FIRST    = 0x00100000UL,
+   CMD_MISC__DO_AS_COUPLES        = 0x00200000UL,
+   CMD_MISC__RESTRAIN_CRAZINESS   = 0x00400000UL,
+   CMD_MISC__RESTRAIN_MODIFIERS   = 0x00800000UL,
+   CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000UL,
+   CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000UL,
+   CMD_MISC__MUST_SPLIT_VERT      = 0x04000000UL,
+   CMD_MISC__NO_CHK_ELONG         = 0x08000000UL,
+   CMD_MISC__PHANTOMS             = 0x10000000UL,
+   CMD_MISC__NO_STEP_TO_WAVE      = 0x20000000UL,
+   CMD_MISC__ALREADY_STEPPED      = 0x40000000UL,
+   CMD_MISC__DOING_ENDS           = 0x80000000UL,
 
-   CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
+   CMD_MISC__MUST_SPLIT_MASK      = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
 };
 
 
@@ -2925,6 +3251,7 @@ enum {
 
 enum normalize_action {
    simple_normalize,
+   normalize_after_exchange_boxes,
    normalize_before_isolated_call,
    normalize_before_isolate_not_too_strict,
    normalize_to_6,
@@ -2997,27 +3324,6 @@ class expand {
    static thing *compress_hash_table[NUM_EXPAND_HASH_BUCKETS];
 
    static thing init_table[];
-
-   // Various static constant things.  In sdtables.
-
- public:
-   static const thing s_qtg_2x4;
-   static const thing s_2x3_qtg;
-   static const thing s_2x2_2x4;
-   static const thing s_4x4_4x6a;
-   static const thing s_4x4_4x6b;
-   static const thing s_4x4_4dma;
-   static const thing s_4x4_4dmb;
-   static const thing s_c1phan_4x4a;
-   static const thing s_c1phan_4x4b;
-   static const thing s_dmd_323;
-   static const thing s_1x4_dmd;
-   static const thing s_2x4_qtg;
-   static const thing s_1x2_dmd;
-   static const thing s_qtg_3x4;
-   static const thing s_1x2_hrgl;
-   static const thing s_dmd_hrgl;
-   static const thing s_dmd_hrgl_disc;
 };
 
 class full_expand {
@@ -3035,6 +3341,8 @@ class full_expand {
       // "4" bit = must set elongation.
       // Also, the "8" bit means to use "gather" and do this the other way.
       // Also, the "16" bit means allow only step to a box, not step to a full wave.
+      // Also, the "32" bit means to give "some people touch" warning if this is
+      //     a "step_to_wave_4_people" call.
       int forbidden_elongation;
       expand::thing *expand_lists;
       setup_kind kind;
@@ -3047,7 +3355,8 @@ class full_expand {
    static void initialize_touch_tables();
    static thing *search_table_1(setup_kind kind, uint32 livemask, uint32 directions);
    static thing *search_table_2(setup_kind kind, uint32 livemask, uint32 directions);
-   static thing *search_table_3(setup_kind kind, uint32 livemask, uint32 directions);
+   static thing *search_table_3(setup_kind kind,
+                                uint32 livemask, uint32 directions, uint32 touchflags);
 
  private:
 
@@ -3086,25 +3395,6 @@ enum disttest_kind {
    disttest_t, disttest_nil, disttest_only_two,
    disttest_any, disttest_offset, disttest_z};
 
-enum chk_type {
-   chk_none,
-   chk_wave,
-   chk_groups,
-   chk_anti_groups,
-   chk_box,
-   chk_box_dbl,
-   chk_indep_box,
-   chk_star,
-   chk_dmd_qtag,
-   chk_dmd_qtag_new,
-   chk_qtag,
-   chk_qbox,
-   chk_peelable,
-   chk_spec_directions,
-   chk_sex,
-   chk_inroller
-};
-
 
 enum restriction_test_result {
    restriction_passes,
@@ -3121,8 +3411,8 @@ struct concept_fixer_thing {
 };
 
 enum selective_key {
-   /* Warning!!!!  Order is important!  See all the stupid ways these are used
-      in sdconc.c . */
+   // Warning!!!!  Order is important!  See all the stupid ways these are used
+   // in sdconc.cpp.
    selective_key_dyp,
    selective_key_own,
    selective_key_plain_no_live_subsets,  // there is an
@@ -3202,13 +3492,12 @@ extern SDLIB_API int session_index;                           // in SDSI
 extern int random_number;                                     // in SDSI
 extern SDLIB_API char *database_filename;                     // in SDSI
 extern SDLIB_API char *new_outfile_string;                    // in SDSI
-extern SDLIB_API char *call_list_string;                      // in SDSI
-extern FILE *call_list_file;                                  // in SDSI
-extern long_boolean outfile_special;                          // in SDSI
+extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
+extern bool outfile_special;                                  // in SDSI
 
-extern SDLIB_API long_boolean showing_has_stopped;            // in SDMATCH
+extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
-extern SDLIB_API int GLOB_space_ok;                           // in SDMATCH
+extern SDLIB_API bool GLOB_space_ok;                          // in SDMATCH
 extern SDLIB_API int GLOB_yielding_matches;                   // in SDMATCH
 extern SDLIB_API char GLOB_user_input[];                      // in SDMATCH
 extern SDLIB_API char GLOB_full_extension[];                  // in SDMATCH
@@ -3238,7 +3527,7 @@ extern SDLIB_API resolve_list_menu_item resolve_menu[];             /* in SDMAIN
 extern SDLIB_API startup_list_menu_item startup_menu[];             /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern SDLIB_API char *sd_version_string();                         /* In SDMAIN */
-extern SDLIB_API long_boolean query_for_call();                     /* In SDMAIN */
+extern SDLIB_API bool query_for_call();                             /* In SDMAIN */
 
 extern int sdtty_screen_height;                                     /* in SDUI-TTY */
 extern int sdtty_no_cursor;                                         /* in SDUI-TTY */
@@ -3283,21 +3572,23 @@ class iobase {
    virtual bool print_this() = 0;
    virtual bool print_any() = 0;
    virtual bool help_manual() = 0;
-   virtual int do_outfile_popup(char dest[]) = 0;
-   virtual int do_header_popup(char dest[]) = 0;
-   virtual int do_getout_popup(char dest[]) = 0;
+   virtual popup_return do_outfile_popup(char dest[]) = 0;
+   virtual popup_return do_header_popup(char dest[]) = 0;
+   virtual popup_return do_getout_popup(char dest[]) = 0;
    virtual int do_write_anyway_popup() = 0;
    virtual int do_delete_clipboard_popup() = 0;
    virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
+   virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
    virtual int do_selector_popup() = 0;
    virtual int do_direction_popup() = 0;
    virtual int do_circcer_popup() = 0;
    virtual int do_tagger_popup(int tagger_class) = 0;
    virtual int do_modifier_popup(Cstring callname, modify_popup_kind kind) = 0;
-   virtual int do_comment_popup(char dest[]) = 0;
-   virtual uint32 get_number_fields(int nnumbers, long_boolean forbid_zero) = 0;
-   virtual long_boolean get_call_command(uims_reply *reply_p) = 0;
+   virtual popup_return do_comment_popup(char dest[]) = 0;
+   virtual uint32 get_number_fields(int nnumbers, bool forbid_zero) = 0;
+   virtual bool get_call_command(uims_reply *reply_p) = 0;
+   virtual void set_pick_string(const char *string) = 0;
    virtual void display_help() = 0;
    virtual void terminate(int code) = 0;
    virtual void process_command_line(int *argcp, char ***argvp) = 0;
@@ -3323,21 +3614,23 @@ class iofull : public iobase {
    bool print_this();
    bool print_any();
    bool help_manual();
-   int do_outfile_popup(char dest[]);
-   int do_header_popup(char dest[]);
-   int do_getout_popup(char dest[]);
+   popup_return do_outfile_popup(char dest[]);
+   popup_return do_header_popup(char dest[]);
+   popup_return do_getout_popup(char dest[]);
    int do_write_anyway_popup();
    int do_delete_clipboard_popup();
    void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
+   void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
    int do_selector_popup();
    int do_direction_popup();
    int do_circcer_popup();
    int do_tagger_popup(int tagger_class);
    int do_modifier_popup(Cstring callname, modify_popup_kind kind);
-   int do_comment_popup(char dest[]);
-   uint32 get_number_fields(int nnumbers, long_boolean forbid_zero);
-   long_boolean get_call_command(uims_reply *reply_p);
+   void set_pick_string(const char *string);
+   popup_return do_comment_popup(char dest[]);
+   uint32 get_number_fields(int nnumbers, bool forbid_zero);
+   bool get_call_command(uims_reply *reply_p);
    void display_help();
    void terminate(int code);
    void process_command_line(int *argcp, char ***argvp);
@@ -3360,11 +3653,11 @@ extern SDLIB_API int written_history_items;                         /* in SDTOP 
 extern SDLIB_API int written_history_nopic;                         /* in SDTOP */
 extern SDLIB_API dance_level higher_acceptable_level[];             /* in SDTOP */
 extern SDLIB_API uint32 the_topcallflags;                           /* in SDTOP */
-extern SDLIB_API long_boolean there_is_a_call;                      /* in SDTOP */
+extern SDLIB_API bool there_is_a_call;                              /* in SDTOP */
 
 extern SDLIB_API call_with_name **base_calls;                       /* in SDTOP */
 extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
-extern SDLIB_API long_boolean enable_file_writing;                  /* in SDTOP */
+extern SDLIB_API bool enable_file_writing;                          /* in SDTOP */
 extern SDLIB_API Cstring cardinals[];                               /* in SDTOP */
 extern SDLIB_API Cstring ordinals[];                                /* in SDTOP */
 extern SDLIB_API Cstring direction_names[];                         /* in SDTOP */
@@ -3379,7 +3672,7 @@ extern SDLIB_API start_select_kind *startup_command_values;         /* in SDTOP 
 extern SDLIB_API int number_of_resolve_commands;                    /* in SDTOP */
 extern SDLIB_API Cstring* resolve_command_strings;                  /* in SDTOP */
 extern SDLIB_API resolve_command_kind *resolve_command_values;      /* in SDTOP */
-extern SDLIB_API call_list_mode_t glob_call_list_mode;              /* in SDTOP */
+extern SDLIB_API abridge_mode_t glob_abridge_mode;                  /* in SDTOP */
 extern SDLIB_API int abs_max_calls;                                 /* in SDTOP */
 extern SDLIB_API int max_base_calls;                                /* in SDTOP */
 extern SDLIB_API Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];     /* in SDTOP */
@@ -3391,23 +3684,21 @@ extern SDLIB_API call_with_name **tagger_calls[NUM_TAGGER_CLASSES]; /* in SDTOP 
 extern SDLIB_API call_with_name **circcer_calls;                    /* in SDTOP */
 extern SDLIB_API uint32 number_of_taggers[NUM_TAGGER_CLASSES];      /* in SDTOP */
 extern SDLIB_API uint32 number_of_circcers;                         /* in SDTOP */
-extern SDLIB_API long_boolean diagnostic_mode;                      /* in SDTOP */
-extern SDLIB_API int singing_call_mode;                             /* in SDTOP */
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */
 extern SDLIB_API call_conc_option_state current_options;            /* in SDTOP */
-extern SDLIB_API long_boolean allowing_all_concepts;                /* in SDTOP */
-extern SDLIB_API long_boolean allowing_minigrand;                   /* in SDTOP */
-extern SDLIB_API long_boolean using_active_phantoms;                /* in SDTOP */
+extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
+extern SDLIB_API bool allowing_minigrand;                           /* in SDTOP */
+extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
 extern SDLIB_API const call_conc_option_state null_options;         /* in SDTOP */
 extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP */
-extern SDLIB_API long_boolean verify_used_number;                   /* in SDTOP */
-extern SDLIB_API long_boolean verify_used_direction;                /* in SDTOP */
-extern SDLIB_API long_boolean verify_used_selector;                 /* in SDTOP */
+extern SDLIB_API bool verify_used_number;                           /* in SDTOP */
+extern SDLIB_API bool verify_used_direction;                        /* in SDTOP */
+extern SDLIB_API bool verify_used_selector;                         /* in SDTOP */
 extern SDLIB_API int uims_menu_index;                               /* in SDTOP */
 extern SDLIB_API int last_direction_kind;                           /* in SDTOP */
 extern SDLIB_API interactivity_state interactivity;                 /* in SDTOP */
 extern SDLIB_API char database_version[81];                         /* in SDTOP */
-extern SDLIB_API long_boolean testing_fidelity;                     /* in SDTOP */
+extern SDLIB_API bool testing_fidelity;                             /* in SDTOP */
 extern SDLIB_API dance_level level_threshholds[];                   /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int hashed_randoms;                                /* in SDTOP */
@@ -3424,14 +3715,16 @@ extern SDLIB_API int global_age;                                    /* in SDUTIL
 extern bool global_leave_missing_calls_blank;                       /* in SDUTIL */
 extern configuration *clipboard;                                    /* in SDUTIL */
 extern int clipboard_size;                                          /* in SDUTIL */
-extern SDLIB_API long_boolean wrote_a_sequence;                     /* in SDUTIL */
-extern long_boolean retain_after_error;                             /* in SDUTIL */
-extern SDLIB_API char outfile_string[];                             /* in SDUTIL */
-extern SDLIB_API char header_comment[];                             /* in SDUTIL */
-extern SDLIB_API long_boolean need_new_header_comment;              /* in SDUTIL */
+extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL */
+extern bool retain_after_error;                                     /* in SDUTIL */
+extern SDLIB_API char outfile_string[MAX_FILENAME_LENGTH];          /* in SDUTIL */
+extern SDLIB_API char header_comment[MAX_TEXT_LINE_LENGTH];         /* in SDUTIL */
+extern SDLIB_API bool creating_new_session;                         /* in SDUTIL */
 extern SDLIB_API int sequence_number;                               /* in SDUTIL */
 extern SDLIB_API int starting_sequence_number;                      /* in SDUTIL */
-extern SDLIB_API Cstring filename_strings[];                        /* in SDUTIL */
+extern SDLIB_API Cstring old_filename_strings[];                    /* in SDUTIL */
+extern SDLIB_API Cstring new_filename_strings[];                    /* in SDUTIL */
+extern SDLIB_API Cstring *filename_strings;                         /* in SDUTIL */
 extern SDLIB_API Cstring concept_key_table[];                       /* in SDUTIL */
 
 extern SDLIB_API concept_table_item concept_table[];                /* in SDCONCPT */
@@ -3450,22 +3743,39 @@ extern short int *concept_sublists[call_list_extent];               /* in SDTOP 
 extern int good_concept_sublist_sizes[call_list_extent];            /* in SDTOP */
 extern short int *good_concept_sublists[call_list_extent];          /* in SDTOP */
 
-extern long_boolean selector_used;                                  /* in SDPREDS */
-extern long_boolean direction_used;                                 /* in SDPREDS */
-extern long_boolean number_used;                                    /* in SDPREDS */
-extern long_boolean mandatory_call_used;                            /* in SDPREDS */
+extern bool selector_used;                                          /* in SDPREDS */
+extern bool direction_used;                                         /* in SDPREDS */
+extern bool number_used;                                            /* in SDPREDS */
+extern bool mandatory_call_used;                                    /* in SDPREDS */
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
 extern int selector_preds;                                          /* in SDPREDS */
 
 
-extern SDLIB_API ctr_end_mask_rec dead_masks;                       /* in SDTABLES */
-extern SDLIB_API ctr_end_mask_rec masks_for_3x4;                    /* in SDTABLES */
-extern SDLIB_API ctr_end_mask_rec masks_for_3dmd_ctr2;              /* in SDTABLES */
-extern SDLIB_API ctr_end_mask_rec masks_for_3dmd_ctr4;              /* in SDTABLES */
-extern SDLIB_API ctr_end_mask_rec masks_for_bigh_ctr4;              /* in SDTABLES */
-extern SDLIB_API ctr_end_mask_rec masks_for_4x4;                    /* in SDTABLES */
-extern SDLIB_API const setup_attr setup_attrs[];                    /* in SDTABLES */
-extern SDLIB_API int begin_sizes[];                                 /* in SDTABLES */
+extern ctr_end_mask_rec dead_masks;                       /* in SDTABLES */
+extern ctr_end_mask_rec masks_for_3x4;                    /* in SDTABLES */
+extern ctr_end_mask_rec masks_for_3dmd_ctr2;              /* in SDTABLES */
+extern ctr_end_mask_rec masks_for_3dmd_ctr4;              /* in SDTABLES */
+extern ctr_end_mask_rec masks_for_bigh_ctr4;              /* in SDTABLES */
+extern ctr_end_mask_rec masks_for_4x4;                    /* in SDTABLES */
+extern int begin_sizes[];                                 /* in SDTABLES */
+
+extern const coordrec tgl3_0;
+extern const coordrec tgl3_1;
+extern const coordrec tgl4_0;
+extern const coordrec tgl4_1;
+extern const coordrec squeezethingglass;
+extern const coordrec squeezethinggal;
+extern const coordrec squeezethingqtag;
+extern const coordrec squeezething4dmd;
+extern const coordrec squeezefinalglass;
+extern const coordrec truck_to_ptpd;
+extern const coordrec truck_to_deepxwv;
+extern const coordrec press_4dmd_4x4;
+extern const coordrec press_4dmd_qtag1;
+extern const coordrec press_4dmd_qtag2;
+extern const coordrec press_qtag_4dmd1;
+extern const coordrec press_qtag_4dmd2;
+extern const coordrec acc_crosswave;
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_2x6_pg[];                          /* in SDTABLES */
@@ -3473,11 +3783,13 @@ extern id_bit_table id_bit_table_bigdmd_wings[];                    /* in SDTABL
 extern id_bit_table id_bit_table_bigbone_wings[];                   /* in SDTABLES */
 extern id_bit_table id_bit_table_bighrgl_wings[];                   /* in SDTABLES */
 extern id_bit_table id_bit_table_bigdhrgl_wings[];                  /* in SDTABLES */
+extern id_bit_table id_bit_table_bigh_dblbent[];                    /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_ctr6[];                        /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_offset[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_corners[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_butterfly[];                       /* in SDTABLES */
+extern id_bit_table id_bit_table_4x4_outer_pairs[];                 /* in SDTABLES */
 extern id_bit_table id_bit_table_525_nw[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_525_ne[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_343_outr[];                        /* in SDTABLES */
@@ -3490,7 +3802,16 @@ extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABL
 extern id_bit_table id_bit_table_4dmd_cc_ee[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_3x6_with_1x6[];                    /* in SDTABLES */
-extern fixer fixer_init_table[];                                    /* in SDTABLES */
+extern const expand::thing s_qtg_2x4;
+extern const expand::thing s_4x4_4x6a;
+extern const expand::thing s_4x4_4x6b;
+extern const expand::thing s_4x4_4dma;
+extern const expand::thing s_4x4_4dmb;
+extern const expand::thing s_c1phan_4x4a;
+extern const expand::thing s_c1phan_4x4b;
+extern const expand::thing s_1x4_dmd;
+extern const expand::thing s_qtg_3x4;
+extern const expand::thing s_short6_2x3;
 
 
 extern full_expand::thing rear_1x2_pair;
@@ -3509,26 +3830,10 @@ extern full_expand::thing step_qtgctr_pair;
 extern full_expand::thing touch_init_table1[];
 extern full_expand::thing touch_init_table2[];
 extern full_expand::thing touch_init_table3[];
-#define NEEDMASK(K) (1<<(((uint32) (K))/((uint32) CONCPROP__NEED_LOBIT)))
 
-extern const coordrec tgl3_0;                                       /* in SDTABLES */
-extern const coordrec tgl3_1;                                       /* in SDTABLES */
-extern const coordrec tgl4_0;                                       /* in SDTABLES */
-extern const coordrec tgl4_1;                                       /* in SDTABLES */
-extern const coordrec squeezethingglass;                            /* in SDTABLES */
-extern const coordrec squeezethinggal;                              /* in SDTABLES */
-extern const coordrec squeezethingqtag;                             /* in SDTABLES */
-extern const coordrec squeezething4dmd;                             /* in SDTABLES */
-extern const coordrec squeezefinalglass;                            /* in SDTABLES */
-extern const coordrec truck_to_ptpd;                                /* in SDTABLES */
-extern const coordrec truck_to_deepxwv;                             /* in SDTABLES */
-extern const coordrec press_4dmd_4x4;                               /* in SDTABLES */
-extern const coordrec press_4dmd_qtag1;                             /* in SDTABLES */
-extern const coordrec press_4dmd_qtag2;                             /* in SDTABLES */
-extern const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
-extern const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
-extern const coordrec acc_crosswave;                                /* in SDTABLES */
-extern sel_item sel_init_table[];                                   /* in SDTABLES */
+
+
+#define NEEDMASK(K) (1<<(((uint32) (K))/((uint32) CONCPROP__NEED_LOBIT)))
 
 enum mpkind {
    MPKIND__NONE,
@@ -3539,6 +3844,9 @@ enum mpkind {
    MPKIND__OVERLAP,
    MPKIND__INTLK,
    MPKIND__CONCPHAN,
+   MPKIND__INTLKDMD,
+   MPKIND__MAGICDMD,
+   MPKIND__MAGICINTLKDMD,
    MPKIND__NONISOTROPIC,
    MPKIND__NONISOTROP1,
    MPKIND__OFFS_L_ONEQ,
@@ -3597,18 +3905,42 @@ enum mpkind {
 // See sdtables.cpp (search for "map_thing") for extensive discussion
 // of how these maps, and their code numbers, are handled.
 
-struct map_thing {
-   C_const veryshort maps[48];  // Darn it!  40 would be enough for all maps but one.
-   C_const setup_kind inner_kind;
-   C_const int arity;
-   C_const mpkind map_kind;
-   C_const int vert;
-   C_const short int warncode;
-   C_const setup_kind outer_kind;
-   C_const uint32 rot;
-   C_const uint32 per_person_rot;
-   uint32 code;
-   map_thing *next;
+class map {
+
+ public:
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "map_init_table" be a statically initialized array.
+
+   struct map_thing {
+      veryshort maps[48];  // Darn it!  40 would be enough for all maps but one.
+      setup_kind inner_kind;
+      int arity;
+      mpkind map_kind;
+      int vert;
+      short int warncode;
+      setup_kind outer_kind;
+      uint32 rot;
+      uint32 per_person_rot;
+      uint32 code;
+      map_thing *next;
+   };
+
+   static void initialize();
+   static const map_thing *get_map_from_code(uint32 map_encoding);
+
+ private:
+
+   // Must be a power of 2.
+   enum { NUM_MAP_HASH_BUCKETS = 128 };
+
+   static map_thing *map_hash_table2[NUM_MAP_HASH_BUCKETS];
+
+   // The big initialization tables, in sdtables.
+   static const map_thing spec_map_table[];
+   static map_thing map_init_table[];
 };
 
 enum specmapkind {
@@ -3662,9 +3994,6 @@ enum specmapkind {
    spcmap_rh_zzztgl,
    spcmap_2x2v,
    spcmap_2x4_magic,
-   spcmap_qtg_magic,
-   spcmap_qtg_intlk,
-   spcmap_qtg_magic_intlk,
    spcmap_ptp_magic,
    spcmap_ptp_intlk,
    spcmap_ptp_magic_intlk,
@@ -3733,6 +4062,8 @@ enum specmapkind {
    spcmap_wblob_1x4b,
    spcmap_wblob_1x4c,
    spcmap_wblob_1x4d,
+   spcmap_bigbone_cw,
+   spcmap_bigbone_ccw,
    NUM_SPECMAP_KINDS   // End mark; not really in the enumeration.
 };
 
@@ -3751,44 +4082,30 @@ struct clw3_thing {
 
 /* in SDCTABLE */
 
-extern concept_descriptor unsealed_concept_descriptor_table[];
-extern SDLIB_API const concept_descriptor *concept_descriptor_table;
+extern SDLIB_API const conzept::concept_descriptor *concept_descriptor_table;
 extern SDLIB_API call_with_name **main_call_lists[call_list_extent];
 extern SDLIB_API int number_of_calls[call_list_extent];
 extern SDLIB_API dance_level calling_level;
 
-extern SDLIB_API nice_setup_info_item nice_setup_info[];
-
-extern SDLIB_API concept_descriptor centers_concept;
-extern concept_descriptor special_magic;
-extern concept_descriptor special_interlocked;
-extern SDLIB_API concept_descriptor mark_end_of_list;
-extern concept_descriptor marker_decline;
-extern SDLIB_API concept_descriptor marker_concept_mod;
-extern SDLIB_API concept_descriptor marker_concept_comment;
-extern concept_descriptor marker_concept_supercall;
+extern nice_setup_info_item nice_setup_info[];
 
 extern const concept_fixer_thing concept_fixer_table[];
 
-extern SDLIB_API selector_item selector_list[];                     /* in SDTABLES */
-extern SDLIB_API Cstring warning_strings[];                         /* in SDTABLES */
+extern selector_item selector_list[];                               /* in SDTABLES */
+extern Cstring warning_strings[];                                   /* in SDTABLES */
 
-extern const map_thing spec_map_table[];                            /* in SDTABLES */
 extern const clw3_thing clw3_table[];                               /* in SDTABLES */
-extern map_thing map_init_table[];                                  /* in SDTABLES */
-
 
 
 /* In SDPREDS */
 
-extern long_boolean selectp(setup *ss, int place) THROW_DECL;
+extern bool selectp(setup *ss, int place) THROW_DECL;
 
 /* In SDGETOUT */
 
-SDLIB_API void write_resolve_text(long_boolean doing_file);
+SDLIB_API void write_resolve_text(bool doing_file);
 SDLIB_API uims_reply full_resolve();
 extern int concepts_in_place();
-extern int reconcile_command_ok();
 extern int resolve_command_ok();
 extern int nice_setup_command_ok();
 SDLIB_API void create_resolve_menu_title(
@@ -3833,7 +4150,7 @@ public:
       {
          // If doing half of a call, and doing it left,
          // and there is a "collision", make them come to left hands.
-         if (mirror && (cmd->cmd_final_flags.her8it & INHERITFLAG_HALF)) {
+         if (mirror && cmd->cmd_final_flags.test_heritbit(INHERITFLAG_HALF)) {
             m_force_mirror_warn = false;
             m_doing_half_override = true;
          }
@@ -3841,7 +4158,7 @@ public:
 
    void note_prefilled_result(setup *result)
       {
-         for (int i=0; i<=setup_attrs[result->kind].setup_limits; i++)
+         for (int i=0; i<=attr::slimit(result); i++)
             if (result->people[i].id1) result_mask |= (1 << i);
       }
 
@@ -3865,15 +4182,14 @@ private:
    uint32 result_mask;
 };
 
-
 extern void mirror_this(setup *s) THROW_DECL;
 
 extern void do_stability(uint32 *personp, stability stab, int turning) THROW_DECL;
 
-extern long_boolean check_restriction(
+extern bool check_restriction(
    setup *ss,
    assumption_thing restr,
-   long_boolean instantiate_phantoms,
+   bool instantiate_phantoms,
    uint32 flags) THROW_DECL;
 
 extern void basic_move(
@@ -3890,21 +4206,21 @@ extern void canonicalize_rotation(setup *result) THROW_DECL;
 
 extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL;
 
-extern long_boolean divide_for_magic(
+extern bool divide_for_magic(
    setup *ss,
    uint32 heritflags_to_check,
    setup *result) THROW_DECL;
 
-extern long_boolean do_simple_split(
+extern bool do_simple_split(
    setup *ss,
    split_command_kind split_command,
    setup *result) THROW_DECL;
 
 extern void do_call_in_series(
    setup *sss,
-   long_boolean dont_enforce_consistent_split,
-   long_boolean roll_transparent,
-   long_boolean normalize,
+   bool dont_enforce_consistent_split,
+   bool roll_transparent,
+   bool normalize,
    bool qtfudged) THROW_DECL;
 
 extern void brute_force_merge(const setup *res1, const setup *res2,
@@ -3921,6 +4237,7 @@ extern bool get_real_subcall(
    const by_def_item *item,
    setup_command *cmd_in,
    const calldefn *parent_call,
+   bool forbid_flip,
    uint32 extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL;
 
@@ -3928,11 +4245,11 @@ extern uint32 process_new_fractions(
    int numer,
    int denom,
    uint32 incoming_fracs,
-   uint32 reverse_orderbit,   // Low bit on mean treat as if we mean "do the last M/N".
+   uint32 reverse_orderbit,   // Low bit on means treat as if we mean "do the last M/N".
    bool allow_improper = false,
    bool *improper_p = 0) THROW_DECL;
 
-extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
+extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 
 extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DECL;
 
@@ -3949,19 +4266,15 @@ extern void prepare_for_call_in_series(setup *result, setup *ss);
 
 extern void minimize_splitting_info(setup *ss, uint32 other_info);
 
-extern void initialize_map_tables();
-
 extern void remove_z_distortion(setup *ss) THROW_DECL;
 
 extern void remove_tgl_distortion(setup *ss) THROW_DECL;
-
-extern const map_thing *get_map_from_code(uint32 map_encoding);
 
 extern void divided_setup_move(
    setup *ss,
    uint32 map_encoding,
    phantest_kind phancontrol,
-   long_boolean recompute_id,
+   bool recompute_id,
    setup *result) THROW_DECL;
 
 extern void overlapped_setup_move(
@@ -4010,6 +4323,8 @@ extern void do_concept_wing(
    parse_block *parseptr,
    setup *result) THROW_DECL;
 
+extern void initialize_commonspot_tables();
+
 extern void common_spot_move(
    setup *ss,
    parse_block *parseptr,
@@ -4028,7 +4343,7 @@ extern void triangle_move(
 
 /* In SDCONCPT */
 
-extern long_boolean do_big_concept(
+extern bool do_big_concept(
    setup *ss,
    setup *result) THROW_DECL;
 
@@ -4037,12 +4352,12 @@ extern long_boolean do_big_concept(
 extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
-   int twosome,           /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
-   int fraction,          /* number, if doing fractional twosome/solid */
-   int phantom,           /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
+   int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
+   int fraction,          // number, if doing fractional twosome/solid
+   int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
    uint32 mxn_bits,
-   long_boolean phantom_pairing_ok,
+   bool phantom_pairing_ok,
    setup *result) THROW_DECL;
 
 extern void initialize_tandem_tables();
@@ -4056,13 +4371,12 @@ extern void concentric_move(
    calldef_schema analyzer,
    uint32 modifiersin1,
    uint32 modifiersout1,
-   long_boolean recompute_id,
+   bool recompute_id,
    uint32 specialoffsetmapcode,
    setup *result) THROW_DECL;
 
 extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number) THROW_DECL;
 
-extern void initialize_sel_tables();
 extern void initialize_fix_tables();
 
 extern void normalize_concentric(
@@ -4086,11 +4400,13 @@ extern void selective_move(
    setup *ss,
    parse_block *parseptr,
    selective_key indicator,
-   long_boolean others,
+   int others,  // -1 - only selectees do the call, others can still roll
+                //  0 - only selectees do the call, others can't roll
+                //  1 - both sets
    uint32 arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
-   long_boolean concentric_rules,
+   bool concentric_rules,
    setup *result) THROW_DECL;
 
 extern void inner_selective_move(
@@ -4098,8 +4414,11 @@ extern void inner_selective_move(
    setup_command *cmd1,
    setup_command *cmd2,
    selective_key indicator,
-   long_boolean others,
+   int others,  // -1 - only selectees do the call, others can still roll
+                //  0 - only selectees do the call, others can't roll
+                //  1 - both sets
    uint32 arg2,
+   bool demand_both_setups_live,
    uint32 override_selector,
    selector_kind selector_to_use,
    uint32 modsa1,
@@ -4110,6 +4429,11 @@ extern void inner_selective_move(
 
 extern void update_id_bits(setup *ss);
 
+extern void get_directions(
+   setup *ss,
+   uint32 & directions,
+   uint32 & livemask);
+
 extern void touch_or_rear_back(
    setup *scopy,
    bool did_mirror,
@@ -4118,9 +4442,11 @@ extern void touch_or_rear_back(
 extern void do_matrix_expansion(
    setup *ss,
    uint32 concprops,
-   long_boolean recompute_id) THROW_DECL;
+   bool recompute_id) THROW_DECL;
 
-SDLIB_API void initialize_sdlib();
+void initialize_sdlib();
+
+extern void crash_print(const char *filename, int linenum) THROW_DECL;
 
 extern bool check_for_concept_group(
    parse_block *parseptrcopy,
@@ -4128,23 +4454,23 @@ extern bool check_for_concept_group(
    uint32 *need_to_restrain_p,   // 1=(if not doing echo), 2=(yes, always)
    parse_block ***parseptr_skip_p = (parse_block ***) 0) THROW_DECL;
 
-NORETURN1 SDLIB_API void fail(const char s[]) THROW_DECL NORETURN2;
+NORETURN1 void fail(const char s[]) THROW_DECL NORETURN2;
 
-NORETURN1 SDLIB_API void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
+NORETURN1 void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
 
 NORETURN1 extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
 
 NORETURN1 extern void failp(uint32 id1, const char s[]) THROW_DECL NORETURN2;
 
-NORETURN1 SDLIB_API void specialfail(const char s[]) THROW_DECL NORETURN2;
+NORETURN1 void specialfail(const char s[]) THROW_DECL NORETURN2;
 
 extern void warn(warning_index w);
 
 extern restriction_test_result verify_restriction(
    setup *ss,
    assumption_thing tt,
-   long_boolean instantiate_phantoms,
-   long_boolean *failed_to_instantiate) THROW_DECL;
+   bool instantiate_phantoms,
+   bool *failed_to_instantiate) THROW_DECL;
 
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL;
 
@@ -4193,8 +4519,11 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
 
 extern parse_block *process_final_concepts(
    parse_block *cptr,
-   long_boolean check_errors,
-   uint64 *final_concepts) THROW_DECL;
+   bool check_errors,
+   final_and_herit_flags *final_concepts,
+   bool forbid_unfinished_parse,
+   const char *filename,
+   int linenum) THROW_DECL;
 
 extern parse_block *really_skip_one_concept(
    parse_block *incoming,
@@ -4202,27 +4531,27 @@ extern parse_block *really_skip_one_concept(
    uint32 *need_to_restrain_p,   // 1=(if not doing echo), 2=(yes, always)
    parse_block ***parseptr_skip_p) THROW_DECL;
 
-extern long_boolean fix_n_results(int arity, int goal, setup z[],
-                                  uint32 & rotstates,
-                                  uint32 & pointclip) THROW_DECL;
+extern bool fix_n_results(int arity, int goal, setup z[],
+                          uint32 & rotstates,
+                          uint32 & pointclip) THROW_DECL;
 
 extern bool warnings_are_unacceptable(bool strict);
 
 extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
      THROW_DECL;
 
-SDLIB_API void toplevelmove() THROW_DECL;
+void toplevelmove() THROW_DECL;
 
-SDLIB_API void finish_toplevelmove() THROW_DECL;
+void finish_toplevelmove() THROW_DECL;
 
-SDLIB_API long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
+SDLIB_API bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
 
-extern long_boolean do_subcall_query(
+extern bool do_subcall_query(
    int snumber,
    parse_block *parseptr,
    parse_block **newsearch,
-   long_boolean this_is_tagger,
-   long_boolean this_is_tagger_circcer,
+   bool this_is_tagger,
+   bool this_is_tagger_circcer,
    call_with_name *orig_call);
 
 extern call_list_kind find_proper_call_list(setup *s);
@@ -4230,25 +4559,25 @@ extern call_list_kind find_proper_call_list(setup *s);
 class fraction_info {
  public:
    fraction_info(int n) :
-      reverse_order(FALSE),
-      instant_stop(99),  // If not 99, says to stop instantly after doing one part,
+      m_reverse_order(false),
+      m_instant_stop(99),  // If not 99, says to stop instantly after doing one part,
                          // and to report (in RESULTFLAG__PART_COMPLETION_BITS bit)
                          // whether that part was the last part.
-      do_half_of_last_part(0),
-      do_last_half_of_first_part(0),
-      highlimit(n),
-      start_point(0),
-      end_point(n-1),
-      fetch_index(0),
-      client_index(0),
-      fetch_total(n),
-      client_total(n),
-      subcall_incr(1)
+      m_do_half_of_last_part(0),
+      m_do_last_half_of_first_part(0),
+      m_highlimit(n),
+      m_start_point(0),
+      m_end_point(n-1),
+      m_fetch_index(0),
+      m_client_index(0),
+      m_fetch_total(n),
+      m_client_total(n),
+      m_subcall_incr(1)
       {}
 
    void demand_this_part_exists() THROW_DECL
       {
-         if (fetch_index >= fetch_total || fetch_index < 0)
+         if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
             fail("The indicated part number doesn't exist.");
       }
 
@@ -4262,75 +4591,76 @@ class fraction_info {
 
    void fudge_client_total(int delta)
       {
-         client_total += delta;
-         highlimit = client_total;
-         end_point = highlimit-1;
+         m_client_total += delta;
+         m_highlimit = m_client_total;
+         m_end_point = m_highlimit-1;
       }
 
    bool not_yet_in_active_section()
       {
-         if (reverse_order) {
-            if (client_index > start_point) return true;
+         if (m_reverse_order) {
+            if (m_client_index > m_start_point) return true;
          }
          else {
-            if (client_index < start_point) return true;
+            if (m_client_index < m_start_point) return true;
          }
          return false;
       }
 
    bool ran_off_active_section()
       {
-         if (reverse_order) {
-            if (client_index < end_point) return true;
+         if (m_reverse_order) {
+            if (m_client_index < m_end_point) return true;
          }
          else {
-            if (client_index > end_point) return true;
+            if (m_client_index > m_end_point) return true;
          }
          return false;
       }
 
    inline bool this_starts_at_beginning()
       { return
-           start_point == 0 &&
-           !do_last_half_of_first_part &&
-           !reverse_order;
+           m_start_point == 0 &&
+           !m_do_last_half_of_first_part &&
+           !m_reverse_order;
       }
 
  public:
-   long_boolean reverse_order;
-   int instant_stop;
-   long_boolean first_call;
-   uint32 do_half_of_last_part;
-   uint32 do_last_half_of_first_part;
-   int highlimit;
+   bool m_reverse_order;
+   int m_instant_stop;
+   bool m_first_call;
+   uint32 m_do_half_of_last_part;
+   uint32 m_do_last_half_of_first_part;
+   int m_highlimit;
  private:
-   int start_point;
-   int end_point;
+   int m_start_point;
+   int m_end_point;
  public:
-   int fetch_index;
-   int client_index;
-   int fetch_total;
-   int client_total;
-   int subcall_incr;
+   int m_fetch_index;
+   int m_client_index;
+   int m_fetch_total;
+   int m_client_total;
+   int m_subcall_incr;
 };
 
 
 /* In SDUTIL */
 
-SDLIB_API const char *get_escape_string(char c);
-SDLIB_API void write_history_line(int history_index,
-                                  bool picture,
-                                  bool leave_missing_calls_blank,
-                                  file_write_flag write_to_file,
-                                  const char *header = 0);
-SDLIB_API void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
-SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg);
-SDLIB_API void clear_screen();
-SDLIB_API void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
+extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
+
+const char *get_escape_string(char c);
+void write_history_line(int history_index,
+                        bool picture,
+                        bool leave_missing_calls_blank,
+                        file_write_flag write_to_file,
+                        const char *header = 0);
+void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
+void print_recurse(parse_block *thing, int print_recurse_arg);
+void clear_screen();
 extern void writechar(char src);
 SDLIB_API void newline();
 extern void open_text_line();
-SDLIB_API void doublespace_file();
+void doublespace_file();
 SDLIB_API void writestuff(const char *s);
 extern parse_block *mark_parse_blocks();
 extern void release_parse_blocks_to_mark(parse_block *mark_point);
@@ -4338,8 +4668,8 @@ extern parse_block *copy_parse_tree(parse_block *original_tree);
 parse_block *get_parse_block();
 extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
 extern void save_parse_state();
-extern long_boolean restore_parse_state();
-SDLIB_API void string_copy(char **dest, Cstring src);
+extern void restore_parse_state();
+void string_copy(char **dest, Cstring src);
 void display_initial_history(int upper_limit, int num_pics);
 extern void initialize_parse();
 void run_program();
@@ -4347,24 +4677,20 @@ void run_program();
 /* In SDINIT */
 
 
-SDLIB_API long_boolean install_outfile_string(char newstring[]);
-SDLIB_API long_boolean get_first_session_line();
-SDLIB_API long_boolean get_next_session_line(char *dest);
-SDLIB_API void prepare_to_read_menus();
+SDLIB_API bool parse_level(Cstring s);
+void start_sel_dir_num_iterator();
+bool iterate_over_sel_dir_num(
+   bool enable_selector_iteration,
+   bool enable_direction_iteration,
+   bool enable_number_iteration);
+bool install_outfile_string(char newstring[]);
+SDLIB_API bool get_first_session_line();
+SDLIB_API bool get_next_session_line(char *dest);
+void prepare_to_read_menus();
 SDLIB_API int process_session_info(Cstring *error_msg);
-SDLIB_API void open_call_list_file(char filename[]);
-SDLIB_API void close_init_file();
+void close_init_file();
 SDLIB_API void general_final_exit(int code);
-SDLIB_API long_boolean open_database(char *msg1, char *msg2);
-SDLIB_API uint32 read_8_from_database();
-SDLIB_API uint32 read_16_from_database();
-SDLIB_API void close_database();
-extern long_boolean open_session(int argc, char **argv);
-SDLIB_API void start_sel_dir_num_iterator();
-SDLIB_API long_boolean iterate_over_sel_dir_num(
-   long_boolean enable_selector_iteration,
-   long_boolean enable_direction_iteration,
-   long_boolean enable_number_iteration);
+extern bool open_session(int argc, char **argv);
 
 /* In SDMATCH */
 
@@ -4376,38 +4702,38 @@ void matcher_initialize();
 SDLIB_API void matcher_setup_call_menu(call_list_kind cl);
 SDLIB_API int match_user_input(
    int which_commands,
-   long_boolean show,
-   long_boolean show_verify,
-   long_boolean only_want_extension);
+   bool show,
+   bool show_verify,
+   bool only_want_extension);
 
 /* In SDPICK */
 
-SDLIB_API bool in_exhaustive_search();
-SDLIB_API void reset_internal_iterators();
-SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration);
-SDLIB_API direction_kind do_direction_iteration();
-SDLIB_API void do_number_iteration(int howmanynumbers,
-                                   uint32 odd_number_only,
-                                   long_boolean allow_iteration,
-                                   uint32 *number_list);
-SDLIB_API void do_circcer_iteration(uint32 *circcp);
-SDLIB_API bool do_tagger_iteration(uint32 tagclass,
-                                   uint32 *tagg,
-                                   uint32 numtaggers,
-                                   call_with_name **tagtable);
-SDLIB_API call_with_name *do_pick();
-SDLIB_API const concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
-SDLIB_API resolve_goodness_test get_resolve_goodness_info();
-SDLIB_API bool pick_allow_multiple_items();
-SDLIB_API void start_pick();
-SDLIB_API void end_pick();
-SDLIB_API long_boolean forbid_call_with_mandatory_subcall();
-SDLIB_API long_boolean allow_random_subcall_pick();
+bool in_exhaustive_search();
+void reset_internal_iterators();
+selector_kind do_selector_iteration(bool allow_iteration);
+direction_kind do_direction_iteration();
+void do_number_iteration(int howmanynumbers,
+                         uint32 odd_number_only,
+                         bool allow_iteration,
+                         uint32 *number_list);
+bool do_tagger_iteration(uint32 tagclass,
+                         uint32 *tagg,
+                         uint32 numtaggers,
+                         call_with_name **tagtable);
+void do_circcer_iteration(uint32 *circcp);
+const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_place);
+call_with_name *do_pick();
+resolve_goodness_test get_resolve_goodness_info();
+bool pick_allow_multiple_items();
+void start_pick();
+void end_pick();
+bool forbid_call_with_mandatory_subcall();
+bool allow_random_subcall_pick();
 
 /* In SDUI */
 
-/* Change the title bar (or whatever it's called) on the window. */
-extern void ttu_set_window_title(char s[]);
+// Change the title bar (or whatever it's called) on the window.
+extern void ttu_set_window_title(const char *string);
 
 // Initialize this package.
 extern void ttu_initialize();
@@ -4473,14 +4799,10 @@ SDLIB_API void get_date(char dest[]);
 extern char *get_errstring();
 SDLIB_API void open_file();
 SDLIB_API void close_file();
-SDLIB_API long_boolean parse_level(Cstring s, dance_level *levelp);
-SDLIB_API char *read_from_call_list_file(char name[], int n);
-SDLIB_API void write_to_call_list_file(const char name[]);
-SDLIB_API void close_call_list_file();
 SDLIB_API void write_file(char line[]);
 
 /* in SDMAIN */
 
-SDLIB_API long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options);
-SDLIB_API long_boolean deposit_concept(const concept_descriptor *conc);
+SDLIB_API bool deposit_call(call_with_name *call, const call_conc_option_state *options);
+SDLIB_API bool deposit_concept(const conzept::concept_descriptor *conc);
 SDLIB_API int sdmain(int argc, char *argv[]);

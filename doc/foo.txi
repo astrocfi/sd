@@ -1,0 +1,38 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename appnote1.info
+@settitle Sd Application Note 1
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@end iftex
+@c %**end of header
+@ifclear html
+@center @strong{SD APPLICATION NOTE 1}
+@sp 1
+@end ifclear
+Copyright @copyright{} 1998 William B. Ackerman
+@sp 1
+@center RIMS / HUBS TRADE BACK
+@center and
+@center RIMS / HUBS TRADE ANYTHING
+@sp 1
+
+@example
+@group
+                   4B>   1B>
+
+                   4G<   1G<
+
+                   3G>   2G>
+
+                   3B<   2B<
+
+RANDOM FINISH, 2/3, REVERSE ORDER, hot foot spin
+
+     3B^  3GV  4G^  2BV  4B^  2GV  1G^  1BV
+
+
+@end group
+@end example
+@bye

@@ -1,11 +1,11 @@
-/* 
+/*
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
  * Time-stamp: <96/05/22 17:17:53 wba>
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
- * Copyright (c) 1994-2002 William B. Ackerman
+ * Copyright (c) 1994-2003 William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -49,15 +49,12 @@ and the following other variables:
 */
 
 
-/* For "sprintf" and some IO stuff (fflush, printf, stdout) that we use
-   during the "database tick" printing before the actual IO package is started.
-   During normal operation, we don't do any IO at all in this file. */
+// For "sprintf" and some IO stuff (fflush, printf, stdout) that we use
+// during the "database tick" printing before the actual IO package is started.
+// During normal operation, we don't do any IO at all in this file.
 #include <stdio.h>
-/* For "strlen". */
 #include <string.h>
-/* For "isprint". */
 #include <ctype.h>
-/* For "atoi". */
 #include <stdlib.h>
 
 extern void exit(int code);
@@ -71,12 +68,9 @@ static const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  
 
 #define DEL 0x7F
 
-/*
- * The total version string looks something like
- * "1.4:db1.5:ui0.6tty"
- * We return the "0.6tty" part.
- */
-
+// The total version string looks something like
+// "1.4:db1.5:ui0.6tty"
+// We return the "0.6tty" part.
 
 static char journal_name[MAX_TEXT_LINE_LENGTH];
 static FILE *journal_file = (FILE *) 0;
@@ -111,13 +105,9 @@ int main(int argc, char *argv[])
 }
 
 
-/*
- * User Input functions
- */
-
-/* This array is the same as GLOB_full_input, but has the original capitalization
-   as typed by the user.  GLOB_full_input is converted to all lower case for
-   ease of searching. */
+// This array is the same as GLOB_full_input, but has the original capitalization
+// as typed by the user.  GLOB_full_input is converted to all lower case for
+// ease of searching.
 static char user_input[INPUT_TEXTLINE_SIZE+1];
 static char *user_input_prompt;
 static char *function_key_expansion;
@@ -127,7 +117,7 @@ void refresh_input()
    erase_matcher_input();
    user_input[0] = '\0';
    function_key_expansion = (char *) 0;
-   clear_line(); /* clear the current line */
+   clear_line();
    put_line(user_input_prompt);
 }
 
@@ -156,7 +146,7 @@ static int current_text_line;
 
 static char *call_menu_prompts[call_list_extent];
 
-/* For the "alternate_glyphs_1" command-line switch. */
+// For the "alternate_glyphs_1" command-line switch.
 static char alt1_names1[] = "        ";
 static char alt1_names2[] = "1P2R3O4C";
 
@@ -177,7 +167,7 @@ static void get_string_input(char prompt[], char dest[], int max)
  * exit before doing anything else with the user interface, but this
  * must be made anyway.
  */
- 
+
 void iofull::process_command_line(int *argcp, char ***argvp)
 {
    int argno = 1;
@@ -213,18 +203,23 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 
          goto remove_two;
       }
+      else if (strcmp(argv[argno], "-maximize") == 0)
+         {}
+      else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp)) {
+         goto remove_two;
+      }
       else {
          argno++;
          continue;
       }
 
-      (*argcp)--;      /* Remove this argument from the list. */
+      (*argcp)--;      // Remove this argument from the list.
       for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
       continue;
 
       remove_two:
 
-      (*argcp) -= 2;      /* Remove two arguments from the list. */
+      (*argcp) -= 2;   // Remove two arguments from the list.
       for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
       continue;
    }
@@ -234,36 +229,44 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 static bool really_open_session()
 {
    Cstring session_error_msg;
-   char line[MAX_FILENAME_LENGTH];
 
-   if (glob_call_list_mode != call_list_mode_none)
-      open_call_list_file(call_list_string);  // Will exit if it fails.
-
-   // Put up the session list.
+   // Process the session list.  If user has specified a
+   // session number from the command line, we don't print
+   // stuff or query anyone, but we still go through the
+   // file.
 
    if (get_first_session_line()) goto no_session;
 
-   printf("Do you want to use one of the following sessions?\n\n");
+   // If user gave a session specification
+   // in the command line, we don't query about the session.
 
-   while (get_next_session_line(line))
-      printf("%s\n", line);
+   if (ui_options.force_session == -1000000) {
+      char line[MAX_FILENAME_LENGTH];
 
-   printf("Enter the number of the desired session:  ");
+      printf("Do you want to use one of the following sessions?\n\n");
 
-   if (!fgets(line, MAX_FILENAME_LENGTH, stdin) ||
-       !line[0] ||
-       line[0] == '\r' ||
-       line[0] == '\n')
-      goto no_session;
+      while (get_next_session_line(line))
+         printf("%s\n", line);
 
-   if (!sscanf(line, "%d", &session_index)) {
-      session_index = 0;         // User typed garbage -- exit the program immediately.
-      return true;
+      printf("Enter the number of the desired session\n");
+      printf("   (or a negative number to delete that session):  ");
+
+      if (!fgets(line, MAX_FILENAME_LENGTH, stdin) ||
+          !line[0] || line[0] == '\r' || line[0] == '\n')
+         goto no_session;
+
+      if (!sscanf(line, "%d", &session_index)) {
+         session_index = 0;         // User typed garbage -- exit the program immediately.
+         return true;
+      }
+   }
+   else {
+      while (get_next_session_line((char *) 0));   // Need to scan the file anyway.
+      session_index = ui_options.force_session;
    }
 
-   if (session_index < 0) {
+   if (session_index < 0)
       return true;    // Exit the program immediately.  Deletion will take place.
-   }
 
    {
       int session_info = process_session_info(&session_error_msg);
@@ -327,17 +330,16 @@ bool iofull::init_step(init_callback_state s, int n)
          while (size > 0 && (line[size-1] == '\n' || line[size-1] == '\r'))
             line[--size] = '\000';
 
-         (void) parse_level(line, &calling_level);
+         parse_level(line);
       }
 
-      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
       break;
 
    case init_database1:
       // The level has been chosen.  We are about to open the database.
 
-      if (glob_call_list_mode == call_list_mode_none ||
-          glob_call_list_mode == call_list_mode_abridging) {
+      if (glob_abridge_mode < abridge_mode_writing) {
          current_text_line = 0;
          ttu_initialize();
       }
@@ -379,12 +381,12 @@ bool iofull::init_step(init_callback_state s, int n)
 }
 
 
- 
+
 /*
  * Create a menu containing number_of_calls[cl] items.
  * Use the "menu_names" array to create a
  * title line for the menu.  The string is in static storage.
- * 
+ *
  * This will be called once for each value in the enumeration call_list_kind.
  */
 
@@ -399,7 +401,7 @@ void iofull::create_menu(call_list_kind cl)
          just use a vanilla prompt. */
       call_menu_prompts[cl] = "--> ";
    else
-      (void) sprintf(call_menu_prompts[cl], "(%s)--> ", menu_names[cl]);
+      sprintf(call_menu_prompts[cl], "(%s)--> ", menu_names[cl]);
 }
 
 
@@ -419,10 +421,10 @@ void iofull::set_window_title(char s[])
    char full_text[MAX_TEXT_LINE_LENGTH];
 
    if (journal_name[0]) {
-      (void) sprintf(full_text, "Sdtty %s {%s}", s, journal_name);
+      sprintf(full_text, "Sdtty %s {%s}", s, journal_name);
    }
    else {
-      (void) sprintf(full_text, "Sdtty %s", s);
+      sprintf(full_text, "Sdtty %s", s);
    }
 
    ttu_set_window_title(full_text);
@@ -469,41 +471,42 @@ static int match_counter;
 static int match_lines;
 
 
-static int prompt_for_more_output()
+static bool prompt_for_more_output()
 {
-    put_line("--More--");
+   put_line("--More--");
 
-    for (;;) {
-        int c = get_char();
-        clear_line();   /* Erase the "more" line; next item goes on that line. */
+   for (;;) {
+      int c = get_char();
+      clear_line();    // Erase the "more" line; next item goes on that line.
 
-        switch (c) {
-        case '\r':
-        case '\n':
-           match_counter = 1; /* show one more line */
-           return TRUE;       /* but otherwise keep going */
-        case '\b':
-        case DEL:
-        case EKEY+14:    /* The "delete" key on a PC. */
-        case 'q':
-        case 'Q':
-           return FALSE; /* stop showing */
-        case ' ':
-           return TRUE;  /* keep going */
-        default:   put_line("Type Space to see more, Return for next line, Delete to stop:  --More--");
-        }
-    }
+      switch (c) {
+      case '\r':
+      case '\n':
+         match_counter = 1; // Show one more line,
+         return true;       // but otherwise keep going.
+      case '\b':
+      case DEL:
+      case EKEY+14:    // The "delete" key on a PC.
+      case 'q':
+      case 'Q':
+         return false; // Stop showing.
+      case ' ':
+         return true;  // Keep going.
+      default:
+         put_line("Type Space to see more, Return for next line, Delete to stop:  --More--");
+      }
+   }
 }
 
 void iofull::show_match()
 {
-   if (showing_has_stopped) return;  /* Showing has been turned off. */
+   if (showing_has_stopped) return;  // Showing has been turned off.
 
    if (match_counter <= 0) {
       match_counter = match_lines - 1;
       if (!prompt_for_more_output()) {
-         match_counter = -1;   /* Turn it off. */
-         showing_has_stopped = TRUE;
+         match_counter = -1;   // Turn it off.
+         showing_has_stopped = true;
          return;
       }
    }
@@ -517,14 +520,14 @@ void iofull::show_match()
 }
 
 
-static long_boolean get_user_input(char *prompt, int which)
+static bool get_user_input(char *prompt, int which)
 {
    char *p;
    char c;
    int nc;
    int matches;
 
-   user_match.valid = FALSE;
+   user_match.valid = false;
    user_input_prompt = prompt;
    erase_matcher_input();
    user_input[0] = '\0';
@@ -619,7 +622,7 @@ static long_boolean get_user_input(char *prompt, int which)
             }
 
             current_text_line++;
-            return FALSE;
+            return false;
          }
 
          continue;   // Couldn't be processed; ignore the key press.
@@ -648,10 +651,10 @@ static long_boolean get_user_input(char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         match_lines = diagnostic_mode ? 1000000 : get_lines_for_more();
+         match_lines = ui_options.diagnostic_mode ? 1000000 : get_lines_for_more();
          match_counter = match_lines-1; /* last line used for "--More--" prompt */
-         showing_has_stopped = FALSE;
-         (void) match_user_input(which, TRUE, c == '?', FALSE);
+         showing_has_stopped = false;
+         (void) match_user_input(which, true, c == '?', false);
          put_line("\n");     /* Write a blank line. */
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -659,9 +662,8 @@ static long_boolean get_user_input(char *prompt, int which)
          continue;
       }
       else if (c == ' ' || c == '-') {
-         /* extend only to one space or hyphen, inclusive */
-         matches = match_user_input(which, FALSE, FALSE, TRUE);
-         //         user_match = GLOB_match;
+         // Extend only to one space or hyphen, inclusive.
+         matches = match_user_input(which, false, false, true);
          p = GLOB_echo_stuff;
 
          if (*p) {
@@ -673,13 +675,13 @@ static long_boolean get_user_input(char *prompt, int which)
                   goto foobar;
                }
             }
-            continue;   /* Do *not* pack the character. */
+            continue;   // Do *not* pack the character.
 
             foobar: ;
          }
          else if (GLOB_space_ok && matches > 1)
             pack_and_echo_character(c);
-         else if (diagnostic_mode)
+         else if (ui_options.diagnostic_mode)
             goto diagnostic_error;
          else
             uims_bell();
@@ -711,20 +713,20 @@ static long_boolean get_user_input(char *prompt, int which)
                   }
 
                   current_text_line++;
-                  return FALSE;
+                  return false;
                }
                break;   // Couldn't be processed.  Stop.  No other abbreviations will match.
             }
          }
 
-         matches = match_user_input(which, FALSE, FALSE, TRUE);
+         matches = match_user_input(which, false, false, true);
          user_match = GLOB_match;
 
          if (!strcmp(GLOB_user_input, "help")) {
             put_line("\n");
             user_match.match.kind = ui_help_simple;
             current_text_line++;
-            return TRUE;
+            return true;
          }
 
          /* We forbid a match consisting of two or more "direct parse" concepts, such as
@@ -750,17 +752,17 @@ static long_boolean get_user_input(char *prompt, int which)
             }
 
             current_text_line++;
-            return FALSE;
+            return false;
          }
 
-         if (diagnostic_mode)
+         if (ui_options.diagnostic_mode)
             goto diagnostic_error;
 
          /* Tell how bad it is, then redisplay current line. */
          if (matches > 0) {
             char tempstuff[200];
 
-            (void) sprintf(tempstuff, "  (%d matches, type ! or ? for list)\n", matches);
+            sprintf(tempstuff, "  (%d matches, type ! or ? for list)\n", matches);
             put_line(tempstuff);
          }
          else
@@ -771,7 +773,7 @@ static long_boolean get_user_input(char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         (void) match_user_input(which, FALSE, FALSE, TRUE);
+         (void) match_user_input(which, false, false, true);
          user_match = GLOB_match;
          p = GLOB_echo_stuff;
 
@@ -779,14 +781,14 @@ static long_boolean get_user_input(char *prompt, int which)
             while (*p)
                pack_and_echo_character(*p++);
          }
-         else if (diagnostic_mode)
+         else if (ui_options.diagnostic_mode)
             goto diagnostic_error;
          else
             uims_bell();
       }
       else if (isprint(c))
          pack_and_echo_character(c);
-      else if (diagnostic_mode)
+      else if (ui_options.diagnostic_mode)
          goto diagnostic_error;
       else
          uims_bell();
@@ -797,7 +799,7 @@ static long_boolean get_user_input(char *prompt, int which)
    (void) fputs("\nParsing error during diagnostic.\n", stdout);
    (void) fputs("\nParsing error during diagnostic.\n", stderr);
    general_final_exit(1);
-   return FALSE;
+   return false;
 }
 
 
@@ -862,25 +864,26 @@ uims_reply iofull::get_startup_command()
 
 
 
-// This returns TRUE if it fails, e.g. the user waves the mouse away.
-long_boolean iofull::get_call_command(uims_reply *reply_p)
+// This returns true if it fails, e.g. the user waves the mouse away.
+bool iofull::get_call_command(uims_reply *reply_p)
 {
    char prompt_buffer[200];
    char *prompt_ptr;
-   long_boolean retval = FALSE;
+   bool retval = false;
 
-   if (allowing_modifications)
+   if (allowing_modifications != 0)
       parse_state.call_list_to_use = call_list_any;
 
    prompt_ptr = prompt_buffer;
    prompt_buffer[0] = '\0';
 
-   /* Put any necessary special things into the prompt. */
+   // Put any necessary special things into the prompt.
 
-   int banner_mode = (allowing_minigrand << 8) |
-      (singing_call_mode << 6) |
-      (using_active_phantoms << 4) |
-      (allowing_all_concepts << 2) |
+   int banner_mode =
+      (allowing_minigrand ? 256 : 0) |
+      (ui_options.singing_call_mode << 6) |
+      (using_active_phantoms ? 16 : 0) |
+      (allowing_all_concepts ? 4 : 0) |
       (allowing_modifications);
 
    if (banner_mode != 0) {
@@ -928,7 +931,7 @@ long_boolean iofull::get_call_command(uims_reply *reply_p)
       // User typed "help".
       *reply_p = ui_command_select;
       uims_menu_index = command_help;
-      return FALSE;
+      return false;
    }
 
    *reply_p = user_match.match.kind;
@@ -944,7 +947,7 @@ long_boolean iofull::get_call_command(uims_reply *reply_p)
    }
    else {
       call_conc_option_state save_stuff = user_match.match.call_conc_options;
-      there_is_a_call = FALSE;
+      there_is_a_call = false;
       retval = deposit_call_tree(&user_match.match, (parse_block *) 0, 2);
       user_match.match.call_conc_options = save_stuff;
       if (there_is_a_call) {
@@ -983,20 +986,20 @@ uims_reply iofull::get_resolve_command()
 }
 
 
-static int get_popup_string(char prompt[], char dest[])
+static popup_return get_popup_string(char prompt[], char dest[])
 {
     char buffer[200];
 
-    (void) sprintf(buffer, "%s: ", prompt);
+    sprintf(buffer, "%s: ", prompt);
     get_string_input(buffer, dest, 200);
     return POPUP_ACCEPT_WITH_STRING;
 }
 
-int iofull::do_comment_popup(char dest[])
+popup_return iofull::do_comment_popup(char dest[])
 {
-   int retval = get_popup_string("Enter comment", dest);
+   popup_return retval = get_popup_string("Enter comment", dest);
 
-   if (retval) {
+   if (retval != POPUP_ACCEPT_WITH_STRING) {
       if (journal_file) {
          fputs(dest, journal_file);
          fputc('\n', journal_file);
@@ -1006,32 +1009,42 @@ int iofull::do_comment_popup(char dest[])
    return retval;
 }
 
-int iofull::do_outfile_popup(char dest[])
+popup_return iofull::do_outfile_popup(char dest[])
 {
-    char buffer[MAX_TEXT_LINE_LENGTH];
-    (void) sprintf(buffer, "Sequence output file is \"%s\".\n", outfile_string);
-
-    put_line(buffer);
-    current_text_line++;
-    return get_popup_string("Enter new file name", dest);
+   char buffer[MAX_TEXT_LINE_LENGTH];
+   sprintf(buffer, "Current sequence output file is \"%s\".\n", outfile_string);
+   put_line(buffer);
+   current_text_line++;
+   return get_popup_string("Enter new file name (or '+' to base it on today's date)", dest);
 }
 
-int iofull::do_header_popup(char dest[])
+popup_return iofull::do_header_popup(char dest[])
 {
    if (header_comment[0]) {
       char buffer[MAX_TEXT_LINE_LENGTH];
-      (void) sprintf(buffer, "Current title is \"%s\".\n", header_comment);
+      sprintf(buffer, "Current title is \"%s\".\n", header_comment);
       put_line(buffer);
       current_text_line++;
    }
    return get_popup_string("Enter new title", dest);
 }
 
-int iofull::do_getout_popup(char dest[])
+popup_return iofull::do_getout_popup(char dest[])
 {
-    put_line("Type comment for this sequence, if desired.\n");
-    current_text_line++;
-    return get_popup_string("Enter comment", dest);
+   if (header_comment[0]) {
+      char buffer[MAX_TEXT_LINE_LENGTH];
+      sprintf(buffer, "Session title is \"%s\".\n", header_comment);
+      put_line(buffer);
+      current_text_line++;
+      put_line("You can give an additional comment for just this sequence.\n");
+      current_text_line++;
+   }
+   else {
+      put_line("Type comment for this sequence, if desired.\n");
+      current_text_line++;
+   }
+
+   return get_popup_string("Enter comment", dest);
 }
 
 static int confirm(char *question)
@@ -1056,7 +1069,7 @@ static int confirm(char *question)
 
       if (c < 128) put_char(c);
 
-      if (diagnostic_mode) {
+      if (ui_options.diagnostic_mode) {
          (void) fputs("\nParsing error during diagnostic.\n", stdout);
          (void) fputs("\nParsing error during diagnostic.\n", stderr);
          general_final_exit(1);
@@ -1224,7 +1237,7 @@ int iofull::do_circcer_popup()
 }
 
 
-uint32 iofull::get_number_fields(int nnumbers, long_boolean forbid_zero)
+uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;
@@ -1319,6 +1332,14 @@ void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
 
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);
+}
+
+
+void iofull::serious_error_print(Cstring s1)
+{
+   fprintf(stderr, "%s\n", s1);
+   fprintf(stderr, "Press 'enter' to resume.\n");
+   get_char();
 }
 
 

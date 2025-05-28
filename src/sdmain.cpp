@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.7n"
-#define TIME_STAMP "wba@alum.mit.edu  11 August 2002 $"
+#define VERSION_STRING "34.8"
+#define TIME_STAMP "wba@alum.mit.edu  16 Aug 2003 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -43,36 +43,36 @@ and the following external variables:
 #include <stdio.h>
 #include <string.h>
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 #include "paths.h"
 #include "resource.h"
 
 
-/* We cause this string (that is, the concatentation of these strings) to appear
-   in the binary image of the program, so that the "what" and "ident" utilities
-   can print the version.
+// We cause this string (that is, the concatentation of these strings) to appear
+// in the binary image of the program, so that the "what" and "ident" utilities
+// can print the version.
 
-   We do not endorse those programs, or any probabilistic identification
-   mechanism -- we are simply trying to be helpful to those people who use them.
-   It is regrettable that those two identification mechanisms are different
-   and superficially incompatible, and that many existing programs only comply
-   with one or the other of them, but not both.  By choosing the contents of
-   the string carefully, we believe we comply with both.
+// We do not endorse those programs, or any probabilistic identification
+// mechanism -- we are simply trying to be helpful to those people who use them.
+// It is regrettable that those two identification mechanisms are different
+// and superficially incompatible, and that many existing programs only comply
+// with one or the other of them, but not both.  By choosing the contents of
+// the string carefully, we believe we comply with both.
 
-   We specifically break up the "Header" word to prevent utilities like RCS or
-   SCCS, if anyone should use them to store this source file, from attempting
-   to modify this.  Version control for this program is performed manually,
-   not by any utility.  Furthermore, we do not believe that it is proper for
-   source control utilities to alter the text in a source file. */
+// We specifically break up the "Header" word to prevent utilities like RCS or
+// SCCS, if anyone should use them to store this source file, from attempting
+// to modify this.  Version control for this program is performed manually,
+// not by any utility.  In particular, we do not believe that it is proper for
+// source control utilities to alter the text in a source file.
+
+// (Actually, we are fucking sick and tired of totally brain-dead garbage left
+// over from that piece-of-crap operating system that was conceived 30 years
+// ago for the purpose of writing a spacewar game.  We wish Unix would come
+// at least into the 20th century, if not the 21st, and that the retro mindset
+// that it created not continue to plague the computer world 30 years later.)
 
 static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
-   
+
 
 extern char *sd_version_string()
 {
@@ -114,6 +114,7 @@ command_list_menu_item command_menu[] = {
    {"toggle minigrand getouts",       command_toggle_minigrand, -1},
    {"toggle retain after error",      command_toggle_retain_after_error, -1},
    {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
+   {"toggle keep all pictures",       command_toggle_keepallpic_mode, -1},
    {"toggle singleclick mode",        command_toggle_singleclick_mode, -1},
    {"choose font for printing",       command_select_print_font, ID_FILE_CHOOSE_FONT},
    {"print current file",             command_print_current, ID_FILE_PRINTTHIS},
@@ -199,6 +200,7 @@ startup_list_menu_item startup_menu[] = {
    {"toggle singlespace mode",     start_select_toggle_singlespace, -1},
    {"toggle retain after error",   start_select_toggle_retain, -1},
    {"toggle nowarn mode",          start_select_toggle_nowarn_mode, -1},
+   {"toggle keep all pictures",    start_select_toggle_keepallpic_mode, -1},
    {"toggle singleclick mode",     start_select_toggle_singleclick_mode, -1},
    {"toggle singing call",         start_select_toggle_singer, -1},
    {"toggle reverse singing call", start_select_toggle_singer_backward, -1},
@@ -216,12 +218,12 @@ int last_file_position = -1;
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **tagger_call)
+static bool find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **tagger_call)
 {
    uint32 numtaggers = number_of_taggers[tagclass];
    call_with_name **tagtable = tagger_calls[tagclass];
 
-   if (numtaggers == 0) return TRUE;   /* We can't possibly do this. */
+   if (numtaggers == 0) return true;   /* We can't possibly do this. */
 
    if (interactivity == interactivity_normal) {
       if (user_match.valid &&
@@ -229,7 +231,7 @@ static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **
          *tagg = user_match.match.call_conc_options.tagger;
          user_match.match.call_conc_options.tagger = 0;
       }
-      else if ((*tagg = gg->do_tagger_popup(tagclass)) == 0) return TRUE;
+      else if ((*tagg = gg->do_tagger_popup(tagclass)) == 0) return true;
 
       if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
       if ((*tagg & 0x1F) > numtaggers) fail("bad tagger index???");
@@ -256,7 +258,7 @@ static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **
    }
    else {
       if (do_tagger_iteration(tagclass, tagg, numtaggers, tagtable))
-         return TRUE;  /* There simply are no acceptable taggers. */
+         return true;  /* There simply are no acceptable taggers. */
    }
 
    /* At this point, tagg contains 8 bits:
@@ -265,35 +267,35 @@ static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **
 
    *tagger_call = tagtable[(*tagg & 0x1F)-1];
 
-   return FALSE;
+   return false;
 }
 
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_circcer(uint32 *circcp)
+/* Returns true if it fails, meaning that the user waved the mouse away. */
+static bool find_circcer(uint32 *circcp)
 {
-   if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
+   if (number_of_circcers == 0) return true;   // We can't possibly do this.
 
    if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
       if ((*circcp = gg->do_circcer_popup()) == 0)
-         return TRUE;
+         return true;
    }
    else if (interactivity == interactivity_database_init) {
-      *circcp = 1;   /* This may not be right. */
+      *circcp = 1;   // This may not be right.
    }
    else {
       do_circcer_iteration(circcp);
    }
 
-   return FALSE;
+   return false;
 }
 
 
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_selector(selector_kind *sel_p, long_boolean is_for_call)
+/* Returns true if it fails, meaning that the user waved the mouse away. */
+static bool find_selector(selector_kind *sel_p, bool is_for_call)
 {
    if (interactivity == interactivity_normal) {
       int j;
@@ -304,19 +306,19 @@ static long_boolean find_selector(selector_kind *sel_p, long_boolean is_for_call
          user_match.match.call_conc_options.who = selector_uninitialized;
       }
       else if ((j = gg->do_selector_popup()) == 0)
-         return TRUE;
+         return true;
 
       *sel_p = (selector_kind) j;
    }
    else
       *sel_p = do_selector_iteration(is_for_call);
 
-   return FALSE;
+   return false;
 }
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_direction(direction_kind *dir_p)
+/* Returns true if it fails, meaning that the user waved the mouse away. */
+static bool find_direction(direction_kind *dir_p)
 {
    if (interactivity == interactivity_normal) {
       int j;
@@ -327,31 +329,31 @@ static long_boolean find_direction(direction_kind *dir_p)
          user_match.match.call_conc_options.where = direction_uninitialized;
       }
       else if ((j = gg->do_direction_popup()) == 0)
-         return TRUE;
+         return true;
 
       *dir_p = (direction_kind) j;
    }
    else
       *dir_p = do_direction_iteration();
 
-   return FALSE;
+   return false;
 }
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero,
-   uint32 odd_number_only, long_boolean allow_iteration, uint32 *number_list)
+static bool find_numbers(int howmanynumbers, bool forbid_zero,
+   uint32 odd_number_only, bool allow_iteration, uint32 *number_list)
 {
    if (interactivity == interactivity_normal) {
       *number_list = gg->get_number_fields(howmanynumbers, forbid_zero);
 
       if ((*number_list) == ~0UL)
-         return TRUE;           /* User waved the mouse away. */
+         return true;           /* User waved the mouse away. */
    }
    else
       do_number_iteration(howmanynumbers, odd_number_only, allow_iteration, number_list);
 
-   return FALSE;
+   return false;
 }
 
 
@@ -364,7 +366,7 @@ static long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero,
    can cause failure during a search.
    If not interactive, stuff will be chosen by random number. */
 
-extern long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options)
+extern bool deposit_call(call_with_name *call, const call_conc_option_state *options)
 {
    parse_block *new_block;
    call_with_name *tagger_call;
@@ -385,7 +387,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
        interactivity != interactivity_verify &&
        interactivity != interactivity_database_init) {
       if (in_exhaustive_search()) {
-         return TRUE;
+         return true;
       }
    }
 
@@ -397,29 +399,32 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
                 CFLAGH__TAG_CALL_RQ_BIT) - 1,
                &tagg,
                &tagger_call))
-         return TRUE;
+         return true;
    }
 
    /* Or circulating call index. */
 
    if (call->the_defn.callflagsf & CFLAGH__CIRC_CALL_RQ_BIT) {
-      if (find_circcer(&circc)) return TRUE;
+      if (find_circcer(&circc)) return true;
    }
 
    /* Put in selector, direction, and/or number as required. */
 
    if (call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) {
-      if (find_selector(&sel, TRUE)) return TRUE;
+      if (find_selector(&sel, true)) return true;
    }
 
    if (call->the_defn.callflagsf & CFLAGH__REQUIRES_DIRECTION)
-      if (find_direction(&dir)) return TRUE;
+      if (find_direction(&dir)) return true;
 
    if (howmanynums != 0)
-      if (find_numbers(howmanynums, FALSE, call->the_defn.callflagsf & CFLAGH__ODD_NUMBER_ONLY, TRUE, &number_list)) return TRUE;
+      if (find_numbers(howmanynums, false,
+                       call->the_defn.callflagsf & CFLAGH__ODD_NUMBER_ONLY, true,
+                       &number_list))
+         return true;
 
    new_block = get_parse_block();
-   new_block->concept = &mark_end_of_list;
+   new_block->concept = &conzept::mark_end_of_list;
    new_block->call = call;
    new_block->call_to_print = call;
    new_block->options = *options;
@@ -436,9 +441,9 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.tagger = tagg;
-      new_block->concept = &marker_concept_mod;
+      new_block->concept = &conzept::marker_concept_mod;
       new_block->next = get_parse_block();
-      new_block->next->concept = &marker_concept_mod;
+      new_block->next->concept = &conzept::marker_concept_mod;
 
       /* Deposit the index of the base tagging call.  This will of course be replaced. */
 
@@ -457,16 +462,16 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.circcer = circc;
-      new_block->concept = &marker_concept_mod;
+      new_block->concept = &conzept::marker_concept_mod;
       new_block->next = get_parse_block();
-      new_block->next->concept = &marker_concept_mod;
+      new_block->next->concept = &conzept::marker_concept_mod;
 
       /* Deposit the index of the base circcing call.  This will of course be replaced. */
 
       new_block->next->call = base_calls[base_call_circcer];
       new_block->next->call_to_print = base_calls[base_call_circcer];
 
-      if (circc > number_of_circcers) fail("bad circcer index???");
+      if (circc > number_of_circcers) fail_no_retry("bad circcer index???");
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
       if (deposit_call(circcer_calls[circc-1], &null_options))
@@ -477,7 +482,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
    parse_state.topcallflags1 = call->the_defn.callflags1;
    *parse_state.concept_write_ptr = new_block;
 
-   return FALSE;
+   return false;
 }
 
 
@@ -489,18 +494,18 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern long_boolean deposit_concept(const concept_descriptor *conc)
+extern bool deposit_concept(const conzept::concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
    uint32 number_list = 0;
    int howmanynumbers = 0;
 
-   /* We hash the actual concept pointer, as though it were an integer index. */
+   // We hash the actual concept pointer, as though it were an integer index.
    hash_nonrandom_number((int) conc);
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
-      if (find_selector(&sel, FALSE)) return TRUE;
+      if (find_selector(&sel, false)) return true;
    }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
@@ -509,7 +514,7 @@ extern long_boolean deposit_concept(const concept_descriptor *conc)
       howmanynumbers = 2;
 
    if (howmanynumbers != 0) {
-      if (find_numbers(howmanynumbers, TRUE, 0, FALSE, &number_list)) return TRUE;
+      if (find_numbers(howmanynumbers, true, 0, false, &number_list)) return true;
    }
 
    new_block = get_parse_block();
@@ -535,14 +540,14 @@ extern long_boolean deposit_concept(const concept_descriptor *conc)
 
    parse_state.call_list_to_use = call_list_any;
 
-   /* Advance the write pointer. */
+   // Advance the write pointer.
    parse_state.concept_write_ptr = &(new_block->next);
 
-   return FALSE;
+   return false;
 }
 
 
-static void print_error_person(unsigned int person, long_boolean example)
+static void print_error_person(unsigned int person, bool example)
 {
    char person_string[3];
 
@@ -566,7 +571,7 @@ static void print_error_person(unsigned int person, long_boolean example)
 /* False result means OK.  Otherwise, user clicked on something special,
    such as "abort" or "undo", and the reply tells what it was. */
 
-extern long_boolean query_for_call()
+extern bool query_for_call()
 {
    uims_reply local_reply;
    error_flag_type old_error_flag;
@@ -607,13 +612,13 @@ extern long_boolean query_for_call()
       if (global_error_flag < error_flag_wrong_command ||
           global_error_flag == error_flag_selector_changed ||
           global_error_flag == error_flag_formation_changed) {
-         display_initial_history(configuration::history_ptr, (diagnostic_mode ? 1 : 2));
+         display_initial_history(configuration::history_ptr, (ui_options.diagnostic_mode ? 1 : 2));
 
          if (configuration::sequence_is_resolved()) {
             newline();
             writestuff("     resolve is:");
             newline();
-            write_resolve_text(FALSE);
+            write_resolve_text(false);
             newline();
          }
       }
@@ -642,16 +647,16 @@ extern long_boolean query_for_call()
             // Very special message -- no text here, two people collided
             // and they are stored in collision_person1 and collision_person2.
             writestuff("Some people (");
-            print_error_person(collision_person1, FALSE);
+            print_error_person(collision_person1, false);
             writestuff(" and ");
-            print_error_person(collision_person2, TRUE);
+            print_error_person(collision_person2, true);
             writestuff(") on same spot.");
             break;
          case error_flag_cant_execute:
             // Very special message -- given text is to be prefixed with description
             // of the perpetrator, who is stored in collision_person1.
             writestuff("Some person (");
-            print_error_person(collision_person1, TRUE);
+            print_error_person(collision_person1, true);
             writestuff(") ");
             writestuff(error_message1);
             break;
@@ -665,7 +670,7 @@ extern long_boolean query_for_call()
             writestuff("You can't select that here.");
             break;
          }
-      
+
          newline();
          newline();
       }
@@ -708,7 +713,7 @@ extern long_boolean query_for_call()
       else {
          // No partially entered concepts.  Just do the sequence number.
 
-         if (!diagnostic_mode) {
+         if (!ui_options.diagnostic_mode) {
             char indexbuf[200];
             (void) sprintf (indexbuf, "%2d: ", configuration::history_ptr-configuration::whole_sequence_low_lim+2);
             writestuff(indexbuf);
@@ -742,7 +747,7 @@ extern long_boolean query_for_call()
                string_copy(&temp_text_ptr, comment);
 
                *parse_state.concept_write_ptr = get_parse_block();
-               (*parse_state.concept_write_ptr)->concept = &marker_concept_comment;
+               (*parse_state.concept_write_ptr)->concept = &conzept::marker_concept_comment;
 
                (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
                (*parse_state.concept_write_ptr)->call_to_print =
@@ -773,6 +778,9 @@ extern long_boolean query_for_call()
          case command_toggle_nowarn_mode:
             ui_options.nowarn_mode = !ui_options.nowarn_mode;
             goto check_menu;
+         case command_toggle_keepallpic_mode:
+            ui_options.keep_all_pictures = !ui_options.keep_all_pictures;
+            goto check_menu;
          case command_toggle_singleclick_mode:
             ui_options.accept_single_click = !ui_options.accept_single_click;
             goto check_menu;
@@ -782,7 +790,7 @@ extern long_boolean query_for_call()
             goto redisplay;
          default:
             global_reply = local_reply;     /* Save this -- top level will need it. */
-            return TRUE;
+            return true;
          }
       }
    }
@@ -792,11 +800,11 @@ extern long_boolean query_for_call()
          We must insert a concept or a call.  Decide which.
          We only insert a concept if in random search, and then only occasionally. */
 
-      const concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
+      const conzept::concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
 
       if (concept_to_use) {
-         /* We give 0 for the number fields.  It gets taken care of later,
-            perhaps not the best way. */
+         // We give 0 for the number fields.  It gets taken care of later,
+         // perhaps not the best way.
          (void) deposit_concept(concept_to_use);
          concepts_deposited++;
          local_reply = ui_concept_select;
@@ -811,48 +819,48 @@ extern long_boolean query_for_call()
    }
    else if (local_reply != ui_call_select) {
       global_reply = local_reply;     /* Save this -- top level will need it. */
-      return TRUE;
+      return true;
    }
 
    /* We have a call.  Get the actual call and deposit it into the parse tree,
       if we haven't already. */
 
    if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
-      fail("This shouldn't get printed.");
+      fail_no_retry("This shouldn't get printed.");
    else if (interactivity != interactivity_normal) {
       if (deposit_call(do_pick(), &null_options))
-         fail("This shouldn't get printed.");
+         fail_no_retry("This shouldn't get printed.");
    }
 
    /* Check our "stack" and see if we have recursive invocations to clean up. */
 
    if (parse_state.parse_stack_index != 0) {
       /* Set stuff up for reading second call and its concepts. */
-   
+
       /* Create a new parse block, point concept_write_ptr at its contents. */
       /* Fill in the pointer to the second parse block. */
-   
+
       parse_state.concept_write_ptr = parse_state.parse_stack[--parse_state.parse_stack_index].concept_write_save_ptr;
 
       (*parse_state.concept_write_ptr)->subsidiary_root = (parse_block *) 0;
       parse_state.concept_write_base = &(*parse_state.concept_write_ptr)->subsidiary_root;
       parse_state.concept_write_ptr = parse_state.concept_write_base;
       *parse_state.concept_write_ptr = (parse_block *) 0;
-   
+
       parse_state.call_list_to_use = call_list_any;
-   
+
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
-         case concept_centers_and_ends:
-            (void) strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
-            break;
-         case concept_on_your_own:
-            (void) strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
-            break;
-         default:
-            (void) strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
-            break;
+      case concept_centers_and_ends:
+         (void) strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
+         break;
+      case concept_on_your_own:
+         (void) strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
+         break;
+      default:
+         (void) strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
+         break;
       }
-   
+
       parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
       goto recurse_entry;
    }
@@ -860,7 +868,7 @@ extern long_boolean query_for_call()
    /* Advance the write pointer. */
    parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
 
-   return FALSE;
+   return false;
 }
 
 
@@ -872,10 +880,15 @@ ui_option_type::ui_option_type() :
    pastel_color(0),
    color_scheme(color_by_gender),
    no_sound(0),
+   force_session(-1000000),
    sequence_num_override(-1),
-   singlespace_mode(FALSE),
-   nowarn_mode(FALSE),
-   accept_single_click(FALSE),
+   singlespace_mode(false),
+   nowarn_mode(false),
+   keep_all_pictures(false),
+   accept_single_click(false),
+   diagnostic_mode(false),
+   resolve_test_minutes(0),
+   singing_call_mode(0),
    use_escapes_for_drawing_people(0),
    pn1("11223344"),
    pn2("BGBGBGBG"),
@@ -893,9 +906,11 @@ extern int sdmain(int argc, char *argv[])
              sd_version_string(), gg->version_string());
       printf("Usage: sd [flags ...] level\n");
       printf("  legal flags:\n");
-      printf("-write_list filename        write out list for this level\n");
-      printf("-write_full_list filename   write this list and all lower\n");
-      printf("-abridge filename           do not use calls in this file\n");
+      printf("-write_list <filename>      write out list for this level\n");
+      printf("-write_full_list <filename> write this list and all lower\n");
+      printf("-abridge <filename>         do not use calls in this file\n");
+      printf("-delete_abridge             delete abridgement from existing session\n");
+      printf("-session <n>                use the indicated session number\n");
       printf("-no_checkers                do not use large \"checkers\" for setup display\n");
       printf("-no_graphics                do not use special characters for setup display\n");
       printf("-reverse_video              (Sd only) display transcript in white-on-black\n");
@@ -909,35 +924,41 @@ extern int sdmain(int argc, char *argv[])
       printf("-no_sound                   do not make any noise when an error occurs\n");
       printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
       printf("-singlespace                single space the output file\n");
+      printf("-keep_all_pictures          keep the picture after every call\n");
       printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
       printf("-minigrand_getouts          allow \"mini-grand\" (RLG but promenade on 3rd hand) getouts\n");
       printf("-concept_levels             allow concepts from any level\n");
       printf("-no_warnings                do not display or print any warning messages\n");
       printf("-retain_after_error         retain pending concepts after error\n");
       printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
-      printf("-sequence filename          name for sequence output file (def \"%s\")\n",
-             SEQUENCE_FILENAME);
-      printf("-db filename                calls database file (def \"%s\")\n",
-             DATABASE_FILENAME);
-      printf("-sequence_num n             use this initial sequence number\n");
+      printf("-sequence <filename>        base name for sequence output file (def \""
+             SEQUENCE_FILENAME
+             "\")\n");
+      printf("-old_style_filename         use short file name, as in \""
+             SEQUENCE_FILENAME
+             ".MS\"\n");
+      printf("-new_style_filename         use long file name, as in \""
+             SEQUENCE_FILENAME
+             "_MS.txt\"\n");
+      printf("-db <filename>              calls database file (def \""
+             DATABASE_FILENAME
+             "\")\n");
+      printf("-sequence_num <n>           use this initial sequence number\n");
 
       gg->display_help(); // Get any others that the UI wants to tell us about.
       general_final_exit(0);
    }
 
-   enable_file_writing = FALSE;
+   enable_file_writing = false;
    interactivity = interactivity_database_init;
-   testing_fidelity = FALSE;
+   testing_fidelity = false;
    header_comment[0] = 0;
+   abridge_filename[0] = 0;
    verify_options.who = selector_uninitialized;
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;
    history_allocation = 15;
    configuration::history = (configuration *) get_mem(history_allocation * sizeof(configuration));
-
-   /* Do general initializations, which currently consist only of
-      seeding the random number generator. */
-   general_initialize();
 
    // Read the command line arguments and process the initialization file.
    // This will return TRUE if we are to cease execution immediately.
