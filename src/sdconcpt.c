@@ -2466,7 +2466,6 @@ Private void do_concept_twice(
    if (ss->cmd.cmd_frac_flags && (restraint & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
       /* The fractions were meant for us, not the subject call. */
       fraction_info zzz;
-
       zzz = get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, repetitions);
       reverse_order = zzz.reverse_order;
       do_half_of_last_part = zzz.do_half_of_last_part;

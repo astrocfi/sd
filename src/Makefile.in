@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <95/11/08 15:49:59 gildea>
+# Time-stamp: <95/11/14 17:30:03 gildea>
 
 srcdir = @srcdir@
 # VPATH is for GNU make
@@ -228,19 +228,22 @@ ls:
 pcdist: sd@PCVERSION@bn
 
 sd@PCVERSION@bn: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme relnotes oldnotes sample1.ini sample2.ini
+	lha a $@ readme relnotes oldnotes copying
+	lha a $@ sdtty.exe mkcalls.exe go32.exe
+	lha a $@ sample1.ini sample2.ini
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
-	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps
+	lha a $@ sd_doc.txt sd_doc.ps
 	lha s $@
 
 BIN_TARFILE = sd-@VERSION@-@SYSTEM@.tar
 
 @BINDIST_RULE@
 
-TARFILES = README Relnotes oldnotes \
-	 COPYING sample1.ini sample2.ini \
+TARFILES = README Relnotes oldnotes COPYING \
+	 sd sdtty mkcalls \
+	 sample1.ini sample2.ini \
 	 sd_calls.txt sd_calls.dat db_doc.txt \
-	 sd sdtty mkcalls Sd.res sd_doc.txt sd_doc.PS
+	 Sd.res sd_doc.txt sd_doc.PS
 
 $(BIN_TARFILE).Z: Makefile $(TARFILES)
 	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES)
