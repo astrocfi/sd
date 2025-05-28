@@ -1615,6 +1615,8 @@ inroller_is_cw
       other end of that line is not.  Otherwise, raises an error.  When phantoms
       are involved, it can still make its determination, as long as there is
       only one way to infer the phantom's facing direction that would be legal.
+      It also uses any applicable "assume" information in making its determination
+      in the presence of phantoms.
 
 magic_inroller_is_cw
       applies to 2x4 lines only.  Same as inroller_is_cw, but applies to this
@@ -2131,3 +2133,6 @@ inherit_single
 @t        - put optional secondary call substitution here.
 @u        - put ordinal number (1st, 2nd, ...) here.
 @v        - put tagging call here.
+@w        - put tagging call here.
+@x        - put tagging call here.
+@y        - put tagging call here.

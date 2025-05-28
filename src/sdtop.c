@@ -196,14 +196,14 @@ Private uint32 bit_table_bigdmd[][4] = {
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS}};
 
 Private uint32 bit_table_spindle[][4] = {
-   {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
-   {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
-   {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
-   {ID2_OUTR2,   ID2_OUTR2,  ID2_OUTR2,  ID2_OUTR2},
-   {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
-   {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
-   {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
-   {ID2_OUTR2,   ID2_OUTR2,  ID2_OUTR2,  ID2_OUTR2}};
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2},
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6},
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2},
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6}};
 
 Private uint32 bit_table_rigger[][4] = {
    {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0,     ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3,  ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2, ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1},
@@ -421,30 +421,34 @@ extern void touch_or_rear_back(
          tptr = &rear_miniwave_pair;      /* Rear back from a miniwave to facing people. */
       }
       else if (scopy->kind == s2x4) {
-         if ((livemask == 0xFFFFUL) && (directions == 0x2288UL)) {
+         if (livemask == 0xFFFFUL && directions == 0x2288UL) {
             tptr = &rear_2x4_pair;        /* Rear back from parallel waves to an 8 chain. */
          }
-         else if ((livemask == 0xFFFFUL) && (directions == 0x55FFUL)) {
+         else if (livemask == 0xFFFFUL && directions == 0x55FFUL) {
             tptr = &rear_col_pair;        /* Rear back from columns to end-to-end single 8-chains. */
          }
       }
       else if (scopy->kind == s2x2) {
-         if ((livemask == 0xFFUL) && (directions == 0x28UL)) {
+         if (livemask == 0xFFUL && directions == 0x28UL) {
             tptr = &rear_vrbox_pair;      /* Rear back from a right-hand box to a single 8 chain. */
          }
-         else if ((livemask == 0xFFUL) && (directions == 0x5FUL)) {
+         else if (livemask == 0xFFUL && directions == 0x5FUL) {
             tptr = &rear_hrbox_pair;      /* Rear back from a right-hand box to a single 8 chain. */
          }
       }
-      else if (scopy->kind == s1x8 && (livemask == 0xFFFFUL) && (directions == 0x2882UL)) {
+      else if (scopy->kind == s1x8 && livemask == 0xFFFFUL && directions == 0x2882UL) {
          tptr = &rear_gwave_pair;         /* Rear back from a grand wave to facing lines. */
       }
-      else if (scopy->kind == s_bone && livemask == 0xFFFFUL && ((directions == 0xA802UL) || (directions == 0x78D2UL))) {
+      else if (scopy->kind == s_bone && livemask == 0xFFFFUL && (directions & 0x0F0FUL) == 0x0802UL) {
          /* Centers rear back from a "bone" to lines facing or "split square thru" setup. */
+         /* This used to be "((directions == 0xA802UL) || (directions == 0x78D2UL))". but was liberalized
+            to allow funny square thru. */
          tptr = &rear_bone_pair;
       }
-      else if (scopy->kind == s_rigger && livemask == 0xFFFFUL && ((directions == 0xA802UL) || (directions == 0xD872UL))) {
+      else if (scopy->kind == s_rigger && livemask == 0xFFFFUL && (directions & 0x0F0FUL) == 0x0802UL) {
          /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
+         /* This used to be "((directions == 0xA802UL) || (directions == 0xD872UL))". but was liberalized
+            to allow funny square thru. */
          tptr = &rear_wing_pair;
       }
       else if (scopy->kind == sbigdmd && livemask == 0xFF0FF0UL && ((directions == 0x1E0B40UL) || (directions == 0x5D0F70UL))) {

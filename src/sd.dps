@@ -181,7 +181,10 @@ APPLICATION_INTERFACE sd_dialog
 
    task$quantifier_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
 
-   task$tagger_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
+   task$tagger0_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
+   task$tagger1_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
+   task$tagger2_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
+   task$tagger3_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
 
    task$general_concept_menu := ENUM:
       COMP => <RETURN> ;
@@ -362,8 +365,14 @@ APPLICATION_INTERFACE sd_dialog
    quantifier_enabler := task_group: END
    quantifier_disabler := task_group: END
 
-   tagger_enabler := task_group: END
-   tagger_disabler := task_group: END
+   tagger0_enabler := task_group: END
+   tagger0_disabler := task_group: END
+   tagger1_enabler := task_group: END
+   tagger1_disabler := task_group: END
+   tagger2_enabler := task_group: END
+   tagger2_disabler := task_group: END
+   tagger3_enabler := task_group: END
+   tagger3_disabler := task_group: END
 
    phantoml_concepts_enabler := task_group: END
    phantoml_concepts_disabler := task_group: END
@@ -479,8 +488,14 @@ USER_INTERFACE sd_dialog
    quantifier_enabler activate => <quantifier_popup show>
    quantifier_disabler activate => <quantifier_popup popdown>
 
-   tagger_enabler activate => <tagger_popup show>
-   tagger_disabler activate => <tagger_popup popdown>
+   tagger0_enabler activate => <tagger0_popup show>
+   tagger0_disabler activate => <tagger0_popup popdown>
+   tagger1_enabler activate => <tagger1_popup show>
+   tagger1_disabler activate => <tagger1_popup popdown>
+   tagger2_enabler activate => <tagger2_popup show>
+   tagger2_disabler activate => <tagger2_popup popdown>
+   tagger3_enabler activate => <tagger3_popup show>
+   tagger3_disabler activate => <tagger3_popup popdown>
 
    phantoml_concepts_enabler activate => <phantoml_concepts_popup show>
    phantoml_concepts_disabler activate => <phantoml_concepts_popup popdown>
@@ -946,13 +961,55 @@ USER_INTERFACE sd_dialog
             END
       END
 
-   tagger_popup := POPUP:
+   tagger0_popup := POPUP:
       leave => <popup_abort_task comp> ;
       HELP_TEXT = "This call requires a tagging call." ;
       CONTENTS =
          NICE_MENU:
             [m1] => <* select> ;
-            TASK = task$tagger_menu ;
+            TASK = task$tagger0_menu ;
+            BORDER_WIDTH = 50 ;
+            TITLE_FONT = "/sys/dm/fonts/f5x9" ;
+            TITLE_BAR = on ;
+            TITLE_STRING = "SELECT A TAGGING CALL" ;
+            END
+      END
+
+   tagger1_popup := POPUP:
+      leave => <popup_abort_task comp> ;
+      HELP_TEXT = "This call requires a tagging call." ;
+      CONTENTS =
+         NICE_MENU:
+            [m1] => <* select> ;
+            TASK = task$tagger1_menu ;
+            BORDER_WIDTH = 50 ;
+            TITLE_FONT = "/sys/dm/fonts/f5x9" ;
+            TITLE_BAR = on ;
+            TITLE_STRING = "SELECT A TAGGING CALL" ;
+            END
+      END
+
+   tagger2_popup := POPUP:
+      leave => <popup_abort_task comp> ;
+      HELP_TEXT = "This call requires a tagging call." ;
+      CONTENTS =
+         NICE_MENU:
+            [m1] => <* select> ;
+            TASK = task$tagger2_menu ;
+            BORDER_WIDTH = 50 ;
+            TITLE_FONT = "/sys/dm/fonts/f5x9" ;
+            TITLE_BAR = on ;
+            TITLE_STRING = "SELECT A TAGGING CALL" ;
+            END
+      END
+
+   tagger3_popup := POPUP:
+      leave => <popup_abort_task comp> ;
+      HELP_TEXT = "This call requires a tagging call." ;
+      CONTENTS =
+         NICE_MENU:
+            [m1] => <* select> ;
+            TASK = task$tagger3_menu ;
             BORDER_WIDTH = 50 ;
             TITLE_FONT = "/sys/dm/fonts/f5x9" ;
             TITLE_BAR = on ;
@@ -1061,7 +1118,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_1 ;
-                     SIZE = ((5 14) (40 14) (100 14)) chars ;
+                     SIZE = ((5 20) (40 20) (100 20)) chars ;
                      END )
                END
             ROW:
@@ -1072,7 +1129,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_2 ;
-                     SIZE = ((5 14) (40 14) (100 14)) chars ;
+                     SIZE = ((5 20) (40 20) (100 20)) chars ;
                      END )
                END
             ROW:
@@ -1083,7 +1140,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_3 ;
-                     SIZE = ((5 14) (40 14) (100 14)) chars ;
+                     SIZE = ((5 20) (40 20) (100 20)) chars ;
                      END )
                END
             ROW:
@@ -1094,7 +1151,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_4 ;
-                     SIZE = ((5 14) (40 14) (100 14)) chars ;
+                     SIZE = ((5 20) (40 20) (100 20)) chars ;
                      END )
                END )
          END

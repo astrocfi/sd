@@ -59,6 +59,25 @@ Do not rely on Sd to provide the necessary insight into challenge dancing.
 For beginning callers in particular, the best thing to do
 is to receive instruction from a qualified teacher/coach, and to practice.
 
+@unnumberedsec Quality and Correctness
+
+Quality, correctness, and reliability are fundamental and extremely important
+design goals of Sd and Sdtty.  Before any version is released, it must pass
+very rigorous diagnostic tests.  In addition to special diagnostics to test
+the programs' internal functions, it is tested against about 20 tips of material
+transcribed from actual C4 weekends.  The tests currently execute over 10,000
+commands.
+
+@unnumberedsec Authenticity of Calls and Concepts
+
+We have endeavored to use the current Callerlab lists and definitions as
+the source for call and concept names and definitions wherever possible.
+Where this is not possible, either because Callerlab does not publish
+lists or definitions at all levels, or because a definition is unclear
+in some area, we have used other well-respected encyclopedias, along with our
+best attempts to make things clear and sensible.  Particularly at high
+levels, it is not always possible to do this to everyone's satisfaction.
+
 @unnumberedsec Variations of the Program
 @end ifset
 
@@ -134,6 +153,8 @@ The file
 @file{<A HREF="ftp://ftp.x.org/misc/sd/sd-30.0m.tar.Z">sd-30.0m.tar.Z</A>}
 @end ifset
 is a compressed Unix-format "tar" file containing the sources.
+You will need the standard "tar" and "uncompress" or "zcat" utilities
+to process it.
 The file
 @ifclear html
 @file{sd@i{xxx}bn.exe} (where @code{@i{xxx}} changes with the version)
@@ -227,15 +248,12 @@ North Billerica MA 01862-2722
 
 Thanks to Kathy Godfrey, Sue Curtis, Chris Stacy, and Lynette Bellini
 for their help, encouragement, suggestions, contributions of calls,
-feedback, testing, and many other contributions.  Lynette Bellini,
-in particular, has contributed an enormous amount of assistance in
-the writing of this program.
+feedback, testing, and many other contributions.
 
 The non-windowed interface for @code{sdtty} (@pxref{Terminal Interface})
 and the user interface for the Macintosh
 (@pxref{Macintosh Overview})
-were written by
-Alan Snyder.
+were written by Alan Snyder.
 The section on building Sd for the Macintosh (see the INSTALL file)
 was written by Sue Curtis.
 

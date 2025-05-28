@@ -419,7 +419,7 @@ Private void write_nice_number(char indicator, uint32 num)
 }
 
 
-Private void writestuff_with_decorations(parse_block *cptr, Const char *s, long_boolean singular)
+Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
 {
    int index = cptr->number;
    Const char *f;
@@ -435,8 +435,12 @@ Private void writestuff_with_decorations(parse_block *cptr, Const char *s, long_
                f += 2;
                index >>= 4;
                continue;
-            case '6': case 'k':
-               writestuff(singular ? selector_singular[cptr->selector] : selector_names[cptr->selector]);
+            case '6':
+               writestuff(selector_names[cptr->selector]);
+               f += 2;
+               continue;
+            case 'k':
+               writestuff(selector_singular[cptr->selector]);
                f += 2;
                continue;
          }
@@ -516,7 +520,7 @@ extern Const char *get_escape_string(char c)
          return "<N/4>";
       case 'u':
          return "<Nth>";
-      case 'v':
+      case 'v': case 'w': case 'x': case 'y':
          return "<ATC>";
       case '7': case 'n': case 'j': case 'J': case 'E':
          return "";
@@ -596,13 +600,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_some_vs_others) {
                if ((i = item->value.arg1) == 1)
-                  writestuff_with_decorations(static_cptr, "@6 DO YOUR PART, ", FALSE);
+                  writestuff_with_decorations(static_cptr, "@6 DO YOUR PART, ");
                else if (i == 3)
-                  writestuff_with_decorations(static_cptr, "OWN THE @6, ", FALSE);
+                  writestuff_with_decorations(static_cptr, "OWN THE @6, ");
                else if (i == 5)
-                  writestuff_with_decorations(static_cptr, "@6, ", FALSE);
+                  writestuff_with_decorations(static_cptr, "@6, ");
                else
-                  writestuff_with_decorations(static_cptr, "@6 DISCONNECTED ", FALSE);
+                  writestuff_with_decorations(static_cptr, "@6 DISCONNECTED ");
             }
             else if (k == concept_sequential) {
                writestuff("(");
@@ -639,7 +643,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" WITH");
             else if (k == concept_replace_nth_part) {
                writestuff(" BUT ");
-               writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
+               writestuff_with_decorations(static_cptr, (Const char *) 0);
                writestuff(" WITH A [");
                request_final_space = FALSE;
             }
@@ -653,7 +657,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             next_cptr = subsidiary_ptr;
          }
          else if (k == concept_selbasedtrngl) {
-            writestuff_with_decorations(static_cptr, (Const char *) 0, TRUE);
+            writestuff_with_decorations(static_cptr, (Const char *) 0);
             request_final_space = TRUE;
          }
          else if (static_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
@@ -733,7 +737,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             else
                request_comma_after_next_concept = TRUE;   /* "DO THE <Nth> PART <concept>" */
 
-            writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
+            writestuff_with_decorations(static_cptr, (Const char *) 0);
          }
          else if ((k == concept_meta) && static_cptr->concept->value.arg1 == 3) {
             writestuff("START");
@@ -741,7 +745,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = TRUE;
          }
          else {
-            writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
+            writestuff_with_decorations(static_cptr, (Const char *) 0);
             request_final_space = TRUE;
          }
 
@@ -872,7 +876,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff(" ");
                         np += 2;       /* skip the indicator */
                         break;
-                     case 'v':
+                     case 'v': case 'w': case 'x': case 'y':
                         write_blank_if_needed();
 
                         /* Find the base tag call that this is invoking. */
@@ -880,7 +884,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         search = save_cptr->next;
                         while (search) {
                            subsidiary_ptr = search->subsidiary_root;
-                           if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_IS_BASE_TAG_CALL)) {
+                           if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
                               print_recurse(subsidiary_ptr, 0);
                               goto did_tagger;
                            }
@@ -891,7 +895,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            See if we can get it from the "tagger" field. */
 
                         if (save_cptr->tagger > 0)
-                           writestuff(tagger_calls[save_cptr->tagger-1]->menu_name);
+                           writestuff(tagger_calls[save_cptr->tagger >> 5][(save_cptr->tagger & 0x1F)-1]->menu_name);
                         else
                            writestuff("NO TAGGER???");
 
@@ -1054,7 +1058,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
                if (subsidiary_ptr &&
                            (!(subsidiary_ptr->call) ||    /* If no call pointer, it isn't a tag base call. */
-                           !(subsidiary_ptr->call->callflags1 & CFLAG1_IS_BASE_TAG_CALL))) {
+                           !(subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK))) {
                   switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
                      case 1:
                      case 2:
@@ -1617,7 +1621,7 @@ extern call_list_kind find_proper_call_list(setup *s)
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 {
    callarray *p;
-   int t, u, i, k, mask;
+   uint32 i, k, t, u, v, w, mask;
 
    for (p = spec; p; p = p->next) {
 
@@ -2041,19 +2045,40 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             else {
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
+         case sq_1_4_tag:                      /* dmd or qtag - is a 1/4 tag, i.e. points looking in */
+            switch (ss->kind) {
+               case sdmd:
+                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_east) &&  /* We forgive phantoms up to a point. */
+                         (!(u = ss->people[2].id1 & d_mask) || u == d_west) &&
+                         (t | u))               /* But require at least one live person to make the setup definitive. */
+                     goto good;
+                  goto bad;
+               case s_qtag:
+                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                         (!(u = ss->people[1].id1 & d_mask) || u == d_south) &&
+                         (!(v = ss->people[4].id1 & d_mask) || v == d_north) &&
+                         (!(w = ss->people[5].id1 & d_mask) || w == d_north) &&
+                         (t | u | v | w))
+                     goto good;
+                  goto bad;
+               default:
+                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
          case sq_3_4_tag:                      /* dmd or qtag - is a 3/4 tag, i.e. points looking out */
             switch (ss->kind) {
                case sdmd:
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_east))
-                  goto good;
+                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_west) &&  /* We forgive phantoms up to a point. */
+                         (!(u = ss->people[2].id1 & d_mask) || u == d_east) &&
+                         (t | u))               /* But require at least one live person to make the setup definitive. */
+                     goto good;
                   goto bad;
                case s_qtag:
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_south))
-                  goto good;
+                  if (   (!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                         (!(u = ss->people[1].id1 & d_mask) || u == d_north) &&
+                         (!(v = ss->people[4].id1 & d_mask) || v == d_south) &&
+                         (!(w = ss->people[5].id1 & d_mask) || w == d_south) &&
+                         (t | u | v | w))
+                     goto good;
                   goto bad;
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
@@ -2117,6 +2142,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_not_split_dixie:
             if (!(ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED)) goto good;
             goto bad;
+         case sq_said_tgl:
+            if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto good;
+            goto bad;
+         case sq_didnt_say_tgl:
+            if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto bad;
+            goto good;
       }
 
       bad: ;

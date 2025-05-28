@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.87"
+#define VERSION_STRING "30.88"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -76,10 +76,6 @@ and the following external variables:
    global_age
    parse_state
    uims_menu_index
-   uims_menu_cross
-   uims_menu_magic
-   uims_menu_intlk
-   uims_menu_left
    database_version
    whole_sequence_low_lim
    interactivity
@@ -133,17 +129,13 @@ Private void display_help(void)
 int abs_max_calls;
 int max_base_calls;
 callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
-int number_of_taggers = 0;
-callspec_block **tagger_calls = (callspec_block **) 0;
+int number_of_taggers[4];
+callspec_block **tagger_calls[4];
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 int last_file_position = -1;
 int global_age;
 parse_state_type parse_state;
 int uims_menu_index;
-long_boolean uims_menu_cross;
-long_boolean uims_menu_magic;
-long_boolean uims_menu_intlk;
-long_boolean uims_menu_left;
 char database_version[81];
 int whole_sequence_low_lim;
 interactivity_state interactivity = interactivity_normal;
@@ -164,20 +156,20 @@ warning_info dyp_each_warnings = {{0, 0}};
 
 /* These variables are are global to this file. */
 
-Private uims_reply reply;
-Private long_boolean reply_pending;
-Private int error_flag;
-Private parse_block *parse_active_list;
-Private parse_block *parse_inactive_list;
-Private int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
-Private short int *concept_sublists[NUM_CALL_LIST_KINDS];
-Private int resolve_scan_start_point;
-Private int resolve_scan_current_point;
+static uims_reply reply;
+static long_boolean reply_pending;
+static int error_flag;
+static parse_block *parse_active_list;
+static parse_block *parse_inactive_list;
+static int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
+static short int *concept_sublists[NUM_CALL_LIST_KINDS];
+static int resolve_scan_start_point;
+static int resolve_scan_current_point;
 
 /* Stuff for saving parse state while we resolve. */
 
-Private parse_state_type saved_parse_state;
-Private parse_block *saved_command_root;
+static parse_state_type saved_parse_state;
+static parse_block *saved_command_root;
 
 
 
@@ -339,7 +331,7 @@ Private parse_block *get_parse_block(void)
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
 
-   return(item);
+   return item;
 }
 
 
@@ -361,7 +353,7 @@ extern void initialize_parse(void)
       written_history_items = history_ptr;
 
    parse_state.parse_stack_index = 0;
-   parse_state.specialprompt = "";
+   parse_state.specialprompt[0] = '\0';
    parse_state.topcallflags1 = 0;
 }
 
@@ -449,7 +441,7 @@ Private void reset_parse_tree(
 
 /* Restore the parse state.  We write directly over the original dynamic blocks
    of the current parse state (making use of the fact that the alterations that
-   could have happened will add to the tree but never delete anything.  This way,
+   could have happened will add to the tree but never delete anything.)  This way,
    after we have saved and restored things, they are all in their original,
    locations, so that the pointers in the parse stack will still be valid. */
 extern long_boolean restore_parse_state(void)
@@ -477,6 +469,7 @@ extern long_boolean deposit_call(callspec_block *call)
 {
    parse_block *new_block;
    int i;
+   int tagclass;
    selector_kind sel = selector_uninitialized;
    direction_kind dir = direction_uninitialized;
    int tagg = -1;
@@ -485,20 +478,32 @@ extern long_boolean deposit_call(callspec_block *call)
 
    /* Put in tagging call index if required. */
 
-   if (call->callflagsh & CFLAGH__REQUIRES_TAG_CALL) {
-      if (interactivity == interactivity_database_init)
+   if (call->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) {
+      tagclass = ((call->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) / CFLAGH__TAG_CALL_RQ_BIT) - 1;
+
+      if (number_of_taggers[tagclass] == 0) return TRUE;   /* We can't possibly do this. */
+
+      if (interactivity == interactivity_database_init) {
          tagg = 1;   /* This may not be right. */
+         tagg |= tagclass << 5;
+      }
       else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
          tagg = 1;
          hash_nonrandom_number(tagg - 1);
+         tagg |= tagclass << 5;
       }
       else if (interactivity != interactivity_normal) {
-         tagg = generate_random_number(number_of_taggers)+1;
+         tagg = generate_random_number(number_of_taggers[tagclass])+1;
          hash_nonrandom_number(tagg - 1);
+         tagg |= tagclass << 5;
       }
-      else if ((tagg = uims_do_tagger_popup()) == 0)
+      else if ((tagg = uims_do_tagger_popup(tagclass)) == 0)
          return TRUE;
    }
+
+   /* At this point, tagg contains 8 bits:
+         3 bits of tagger list (zero-based - 0/1/2/3)
+         5 bits of tagger within that list (1-based). */
 
    /* Put in selector, direction, and/or number as required. */
 
@@ -582,12 +587,17 @@ extern long_boolean deposit_call(callspec_block *call)
       new_block->concept = &marker_concept_mod;
       new_block->next = get_parse_block();
       new_block->next->concept = &marker_concept_mod;
-      new_block->next->call = base_calls[3];
 
-      if (tagg <= 0 || tagg > number_of_taggers) fail("bad tagger index???");
+      /* Deposit the index of the base tagging call.  This will of course be replaced. */
+
+      new_block->next->call = base_calls[BASE_CALL_TAGGER0];
+
+      if ((tagg >> 5) != tagclass) fail("bad tagger class???");
+      tagg &= 0x1F;
+      if (tagg > number_of_taggers[tagclass]) fail("bad tagger index???");
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
-      if (deposit_call(tagger_calls[tagg-1]))
+      if (deposit_call(tagger_calls[tagclass][tagg-1]))
          longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
       parse_state.concept_write_ptr = savecwp;
    }
@@ -624,7 +634,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fiel
       else if ((j = uims_do_selector_popup()) != 0)
          sel = (selector_kind) j;
       else
-         return(TRUE);
+         return TRUE;
    }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
@@ -659,7 +669,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fiel
       if (parse_state.parse_stack_index == 39) specialfail("Excessive number of concepts.");
       parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind = conc->kind;
       parse_state.parse_stack[parse_state.parse_stack_index++].concept_write_save_ptr = parse_state.concept_write_ptr;
-      parse_state.specialprompt = "";
+      parse_state.specialprompt[0] = '\0';
       parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
    }
 
@@ -668,7 +678,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fiel
    /* Advance the write pointer. */
    parse_state.concept_write_ptr = &(new_block->next);
 
-   return(FALSE);
+   return FALSE;
 }
 
 
@@ -702,7 +712,6 @@ extern long_boolean query_for_call(void)
    uims_reply local_reply;
    callspec_block *result;
    int old_error_flag;
-   unsigned int concept_number_fields;
 
    recurse_entry:
 
@@ -712,8 +721,6 @@ extern long_boolean query_for_call(void)
       parse_state.call_list_to_use = call_list_any;
    
    redisplay:
-
-   concept_number_fields = 0;
 
    if (interactivity == interactivity_normal) {
       /* We are operating in interactive mode.  Update the
@@ -794,6 +801,7 @@ extern long_boolean query_for_call(void)
             writestuff("You can't select that here.");
       
          newline();
+         newline();
       }
 
       old_error_flag = error_flag; /* save for refresh command */
@@ -838,22 +846,41 @@ extern long_boolean query_for_call(void)
          }
       }
 
-      local_reply = uims_get_command(mode_normal, &parse_state.call_list_to_use);
+      /* Returned value of true means that the user waved the mouse away at some point,
+         that is, nothing was entered, and we should try again.  Otherwise, the concepts
+         and call have been deposited with calls to "deposit_call" and "deposit_concept". */
 
-      /* If user gave a concept, pick up any needed numeric modifiers. */
+      if (uims_get_call_command(&parse_state.call_list_to_use, &local_reply)) goto recurse_entry;
 
-      if (local_reply == ui_concept_select) {
-         int howmanynumbers = 0;
-         unsigned int props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
-
-         if (props & CONCPROP__USE_NUMBER)
-            howmanynumbers = 1;
-         if (props & CONCPROP__USE_TWO_NUMBERS)
-            howmanynumbers = 2;
-
-         if (howmanynumbers != 0) {
-            if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
-               goto recurse_entry;    /* User waved the mouse away. */
+      if (local_reply == ui_command_select) {
+         if (uims_menu_index == command_refresh) {
+             written_history_items = -1; /* suppress optimized display update */
+             error_flag = old_error_flag; /* want to see error messages, too */
+             goto redisplay;
+         }
+         else if (uims_menu_index == command_create_comment) {
+            char comment[MAX_TEXT_LINE_LENGTH];
+      
+            if (uims_do_comment_popup(comment)) {
+               char *temp_text_ptr;
+               comment_block *new_comment_block;     /* ****** Kludge!!!!! */
+      
+               new_comment_block = (comment_block *) get_mem(sizeof(comment_block));
+               temp_text_ptr = &new_comment_block->txt[0];
+               string_copy(&temp_text_ptr, comment);
+   
+               *parse_state.concept_write_ptr = get_parse_block();
+               (*parse_state.concept_write_ptr)->concept = &marker_concept_comment;
+   
+               (*parse_state.concept_write_ptr)->call = (callspec_block *) new_comment_block;
+               /* Advance the write pointer. */
+               parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
+            }
+            goto recurse_entry;
+         }
+         else {
+            reply = local_reply;     /* Save this -- top level will need it. */
+            return TRUE;
          }
       }
    }
@@ -868,66 +895,24 @@ extern long_boolean query_for_call(void)
          hash_nonrandom_number(j);
          local_reply = ui_concept_select;
          uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
+
+         /* We give 0 for the number fields.  It gets taken care of later, perhaps
+            not the best way. */
+         (void) deposit_concept(&concept_descriptor_table[uims_menu_index], 0);
       }
-      else {
+      else
          local_reply = ui_call_select;
-      }
-
-      uims_menu_cross = FALSE;
-      uims_menu_magic = FALSE;
-      uims_menu_intlk = FALSE;
-      uims_menu_left = FALSE;
    }
 
-   /* Now see what kind of command we have. */
-
-   if (local_reply == ui_command_select) {
-      if (uims_menu_index == command_refresh) {
-          written_history_items = -1; /* suppress optimized display update */
-          error_flag = old_error_flag; /* want to see error messages, too */
-          goto redisplay;
-      }
-      else if (uims_menu_index == command_create_comment) {
-         char comment[MAX_TEXT_LINE_LENGTH];
-   
-         if (uims_do_comment_popup(comment)) {
-            char *temp_text_ptr;
-            comment_block *new_comment_block;     /* ****** Kludge!!!!! */
-   
-            new_comment_block = (comment_block *) get_mem(sizeof(comment_block));
-            temp_text_ptr = &new_comment_block->txt[0];
-            string_copy(&temp_text_ptr, comment);
-
-            *parse_state.concept_write_ptr = get_parse_block();
-            (*parse_state.concept_write_ptr)->concept = &marker_concept_comment;
-
-            (*parse_state.concept_write_ptr)->call = (callspec_block *) new_comment_block;
-            /* Advance the write pointer. */
-            parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
-         }
-         goto recurse_entry;
-      }
-      else {
-         reply = local_reply;     /* Save this -- top level will need it. */
-         return(TRUE);
-      }
-   }
-   else if (local_reply == ui_concept_select) {
-      /* A concept is required.  Its index has been stored in uims_menu_index,
-         and the "concept_number_fields" is ready. */
-
-      (void) deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields);
-
-      /* We ignore the value returned by deposit_concept.
-         If the user refused to enter a selector, no action is taken. */
+   if (local_reply == ui_concept_select) {
       goto recurse_entry;
    }
    else if (local_reply != ui_call_select) {
       reply = local_reply;     /* Save this -- top level will need it. */
-      return(TRUE);
+      return TRUE;
    }
 
-   /* We have a call.  Get the actual call and deposit it into the concept list. */
+   /* We have a call.  Get the actual call and deposit it into the concept list, if we haven't already. */
 
    if (interactivity == interactivity_starting_first_scan) {
       /* Note that this random number will NOT be hashed. */
@@ -966,20 +951,6 @@ extern long_boolean query_for_call(void)
       if (result->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE) fail("This shouldn't get printed.");
       if (deposit_call(result)) goto recurse_entry;
    }
-   else {
-      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
-
-      if (uims_menu_cross)
-         (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
-      if (uims_menu_magic)
-         (void) deposit_concept(&concept_descriptor_table[magic_concept_index], 0);
-      if (uims_menu_intlk)
-         (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
-      if (uims_menu_left)
-         (void) deposit_concept(&concept_descriptor_table[left_concept_index], 0);
-
-      if (deposit_call(save_call)) goto recurse_entry;
-   }
 
    /* Check our "stack" and see if we have recursive invocations to clean up. */
 
@@ -1000,13 +971,13 @@ extern long_boolean query_for_call(void)
    
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
          case concept_centers_and_ends:
-            parse_state.specialprompt = "ENTER CALL FOR ENDS";
+            (void) strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
             break;
          case concept_on_your_own:
-            parse_state.specialprompt = "ENTER SECOND (CENTERS) CALL";
+            (void) strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
             break;
          default:
-            parse_state.specialprompt = "ENTER SECOND CALL";
+            (void) strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
             break;
       }
    
@@ -1103,7 +1074,7 @@ Private int mark_aged_calls(
 
 /* This is not automatic to keep it from being lost by the longjmp.
    It is also read by "write_header_stuff". */
-Private call_list_mode_t call_list_mode;
+static call_list_mode_t call_list_mode;
 
 
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
@@ -1145,6 +1116,44 @@ extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_fla
 }
 
 
+/* Returns TRUE if it successfully backed up one parse block. */
+Private long_boolean backup_one_item(void)
+{
+/* User wants to undo a call.  The concept parse list is not set up
+   for easy backup, so we search forward from the beginning. */
+
+   parse_block **this_ptr = parse_state.concept_write_base;
+
+   if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle) this_ptr = &((*this_ptr)->next);
+
+   for (;;) {
+      parse_block **last_ptr;
+
+      if (!*this_ptr) break;
+      last_ptr = this_ptr;
+      this_ptr = &((*this_ptr)->next);
+
+      if (this_ptr == parse_state.concept_write_ptr) {
+         parse_state.concept_write_ptr = last_ptr;
+
+         /* See whether we need to destroy a frame in the parse stack. */
+         if (parse_state.parse_stack_index != 0 &&
+               parse_state.parse_stack[parse_state.parse_stack_index-1].concept_write_save_ptr == last_ptr)
+            parse_state.parse_stack_index--;
+
+         *last_ptr = (parse_block *) 0;
+         return TRUE;
+      }
+
+      if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
+   }
+
+   /* We did not find our place. */
+
+   return FALSE;
+}
+
+
 
 void main(int argc, char *argv[])
 {
@@ -1166,6 +1175,8 @@ void main(int argc, char *argv[])
 
    for (argno=1; argno<argc; argno++) {
       if (argv[argno][0] == '-') {
+         call_list_mode_t this_mode_maybe = call_list_mode_none;
+
          /* Special flag: must be one of
             -write_list <filename>  -- write out the call list for the
                   indicated level INSTEAD OF running the program
@@ -1176,11 +1187,11 @@ void main(int argc, char *argv[])
             -diagnostic  -- (this is a hidden flag) suppress display of verison info */
 
          if (strcmp(&argv[argno][1], "write_list") == 0)
-            call_list_mode = call_list_mode_writing;
+            this_mode_maybe = call_list_mode_writing;
          else if (strcmp(&argv[argno][1], "write_full_list") == 0)
-            call_list_mode = call_list_mode_writing_full;
+            this_mode_maybe = call_list_mode_writing_full;
          else if (strcmp(&argv[argno][1], "abridge") == 0)
-            call_list_mode = call_list_mode_abridging;
+            this_mode_maybe = call_list_mode_abridging;
          else if (strcmp(&argv[argno][1], "diagnostic") == 0)
             { diagnostic_mode = TRUE; continue; }
 
@@ -1199,13 +1210,19 @@ void main(int argc, char *argv[])
          else
             uims_bad_argument("Unknown flag:", argv[argno], NULL);
 
+         /* At this point, if "this_mode_maybe" is not null, we have to deal with some
+            kind of "write_list" or "abridge" operation.  If not, we have already processed
+            the file name, and all that remains is to check its existence and then skip it. */
+
          argno++;
          if (argno>=argc)
             uims_bad_argument("This flag must be followed by a file name:", argv[argno-1], NULL);
 
-         if (call_list_mode != call_list_mode_none)
+         if (this_mode_maybe != call_list_mode_none) {
+            call_list_mode = this_mode_maybe;
             if (open_call_list_file(call_list_mode, argv[argno]))
                exit_program(1);
+         }
       }
       else if (argv[argno][0] == 'm') calling_level = l_mainstream;
       else if (argv[argno][0] == 'p') calling_level = l_plus;
@@ -1291,6 +1308,7 @@ void main(int argc, char *argv[])
       }
 
       history[0] = history[history_ptr+1];     /* So failing call will get printed. */
+      history[0].command_root = copy_parse_tree(history[0].command_root);  /* But copy the parse tree, since we are going to clip it. */
       history[0].warnings.bits[0] = 0;         /* But without any warnings we may have collected. */
       history[0].warnings.bits[1] = 0;
    
@@ -1299,12 +1317,24 @@ void main(int argc, char *argv[])
          if ((reply == ui_command_select) &&
               ((uims_menu_index == command_quit) ||
                (uims_menu_index == command_undo) ||
+               (uims_menu_index == command_erase) ||
                (uims_menu_index == command_abort)))
             reply_pending = TRUE;
             goto start_with_pending_reply;
       }
    
-      goto start_cycle;
+      /* Try to remove the call from the current parse tree, but leave everything else
+         in place.  This will fail if the parse tree, or our place on it, is too
+         complicated.  Also, we do not do it if in diagnostic mode, or if the special
+         "heads into the middle and ..." operation is in place. */
+
+      if (     !diagnostic_mode && 
+               ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
+               backup_one_item()) {
+         reply_pending = FALSE;
+         goto simple_restart;
+      }
+      goto start_cycle;      /* Failed, reinitialize the whole line. */
    }
 
    /* A few other modules want to initialize some static tables. */
@@ -1321,7 +1351,7 @@ void main(int argc, char *argv[])
    if (!diagnostic_mode) {
       writestuff("SD -- square dance caller's helper.");
       newline();
-      writestuff("Copyright (c) 1991-1994 William B. Ackerman and Stephen Gildea.");
+      writestuff("Copyright (c) 1991-1995 William B. Ackerman and Stephen Gildea.");
       newline();
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");
@@ -1356,7 +1386,7 @@ void main(int argc, char *argv[])
    
    /* Query for the starting setup. */
    
-   reply = uims_get_command(mode_startup, (call_list_kind *) 0);
+   reply = uims_get_startup_command();
 
    if (reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
    if (reply != ui_start_select || uims_menu_index == 0) goto normal_exit;           /* Huh? */
@@ -1459,42 +1489,18 @@ void main(int argc, char *argv[])
             clear_screen();
             goto show_banner;
          case command_undo:
-            {
-            /* User wants to undo a call.  The concept parse list is not set up
-               for easy backup, so we search forward from the beginning. */
-
-               parse_block **this_ptr = parse_state.concept_write_base;
-      
-               if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle) this_ptr = &((*this_ptr)->next);
-            
-               for (;;) {
-                  parse_block **last_ptr;
-      
-                  if (!*this_ptr) break;
-                  last_ptr = this_ptr;
-                  this_ptr = &((*this_ptr)->next);
-      
-                  if (this_ptr == parse_state.concept_write_ptr) {
-                     parse_state.concept_write_ptr = last_ptr;
-
-                     /* See whether we need to destroy a frame in the parse stack. */
-                     if (parse_state.parse_stack_index != 0 &&
-                           parse_state.parse_stack[parse_state.parse_stack_index-1].concept_write_save_ptr == last_ptr)
-                        parse_state.parse_stack_index--;
-
-                     *last_ptr = (parse_block *) 0;
-                     reply_pending = FALSE;
-                     goto simple_restart;
-                  }
-      
-                  if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
-               }
-      
-               /* We did not find our place, so we undo the whole line. */
+            if (backup_one_item()) {
+               reply_pending = FALSE;
+               goto simple_restart;
+            }
+            else {
+               /* Failed, undo the whole line. */
                if (history_ptr > 1) history_ptr--;
                /* Going to start_cycle will make sure written_history_items does not exceed history_ptr. */
                goto start_cycle;
             }
+         case command_erase:
+            goto start_cycle;
          case command_save_pic:
             history[history_ptr].draw_pic = TRUE;
             /* We have to back up to BEFORE the item we just changed. */
@@ -1577,7 +1583,8 @@ void main(int argc, char *argv[])
       
                error_flag = 0;
                
-               local_reply = uims_get_command(mode_normal, &dummy);
+**** this call is no longer in conformance with the procedure's behavior
+               local_reply = uims_get_call_command(&dummy);
             
                if (local_reply == ui_call_select) {
                   /* Age this call. */
@@ -1740,10 +1747,10 @@ extern void get_real_subcall(
 
 {
    char tempstring_text[MAX_TEXT_LINE_LENGTH];
-   char *tempstringptr;
    parse_block *search;
    parse_block **newsearch;
    int number, snumber;
+   long_boolean this_is_tagger = item->call_id >= BASE_CALL_TAGGER0 && item->call_id <= BASE_CALL_TAGGER3;
 
    /* Fill in defaults in case we choose not to get a replacement call. */
 
@@ -1767,7 +1774,9 @@ extern void get_real_subcall(
       and we don't want the unmodifiable nullcall that the ends are supposed to
       do getting modified, do we? */
 
-   if (!(item->modifiers1 & (DFM1_CALL_MOD_MASK | DFM1_MUST_BE_TAG_CALL)))
+   /* But if this is a tagging call substitution, we most definitely do proceed with the search. */
+
+   if (!(item->modifiers1 & DFM1_CALL_MOD_MASK) && !this_is_tagger)
       return;
 
    /* See if we had something from before.  This avoids embarassment if a call is actually
@@ -1786,7 +1795,10 @@ extern void get_real_subcall(
       newsearch = &parseptr->next;
 
       while ((search = *newsearch) != NULL) {
-         if (base_calls[item->call_id] == search->call) {
+         if (  base_calls[item->call_id] == search->call ||
+               (item->call_id >= BASE_CALL_TAGGER0 &&
+               item->call_id <= BASE_CALL_TAGGER3 &&
+               search->call == base_calls[BASE_CALL_TAGGER0])) {
             /* Found a reference to this call. */
             parse_block *subsidiary_ptr = search->subsidiary_root;
 
@@ -1795,8 +1807,15 @@ extern void get_real_subcall(
             if (!subsidiary_ptr) return;
 
             *concptrout = subsidiary_ptr;
-            *callout = NULLCALLSPEC;             /* ****** not right????. */
-            *concout = 0;                        /* ****** not right????. */
+
+            if (this_is_tagger) {
+               *callout = subsidiary_ptr->call;
+            }
+            else {
+               *callout = NULLCALLSPEC;             /* ****** not right????. */
+               *concout = 0;                        /* ****** not right????. */
+            }
+
             return;
          }
 
@@ -1860,12 +1879,11 @@ extern void get_real_subcall(
 
    /* Create a reference on the list.  "search" points to the null item at the end. */
 
-   tempstringptr = tempstring_text;
-   *tempstringptr = 0;           /* Null string, just to be safe. */
+   tempstring_text[0] = '\0';           /* Null string, just to be safe. */
 
-   /* If doing a new-style tagger, just get the call. */
+   /* If doing a tagger, just get the call. */
 
-   if (snumber == 0 && (number & DFM1_MUST_BE_TAG_CALL))
+   if (snumber == 0 && this_is_tagger)
       ;
 
    /* If the replacement is mandatory, or we are not interactive,
@@ -1874,7 +1892,7 @@ extern void get_real_subcall(
    else if (interactivity != interactivity_normal)
       ;
    else if (snumber == 2 || snumber == 6) {
-      string_copy(&tempstringptr, "SUBSIDIARY CALL");
+      sprintf (tempstring_text, "SUBSIDIARY CALL");
    }
    else {
 
@@ -1882,15 +1900,14 @@ extern void get_real_subcall(
 
       modify_popup_kind kind;
 
-      if (number & DFM1_MUST_BE_TAG_CALL) kind = modify_popup_only_tag;
+      if (this_is_tagger) kind = modify_popup_only_tag;
       else kind = modify_popup_any;
 
       if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->menu_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
       
-         string_copy(&tempstringptr, "REPLACEMENT FOR THE ");
-         string_copy(&tempstringptr, base_calls[item->call_id]->menu_name);
+         sprintf (tempstring_text, "REPLACEMENT FOR THE %s", base_calls[item->call_id]->menu_name);
       }
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */
@@ -1917,23 +1934,13 @@ extern void get_real_subcall(
 
    parse_state.parse_stack_index = 0;
    parse_state.call_list_to_use = call_list_any;
-   parse_state.specialprompt = tempstring_text;
+   (void) strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
 
    /* Search for special case of "must_be_tag_call" with no other modification bits.
       That means it is a new-style tagging call. */
 
-   if (snumber == 0 && (number & DFM1_MUST_BE_TAG_CALL)) {
-#ifdef dontneedthisanymore
-      /* We'd better check this -- we wouldn't want a crash arising from something careless. */
-      if (parseptr->tagger <= 0 || parseptr->tagger > number_of_taggers) fail("bad tagger index???");
-
-      *parse_state.concept_write_ptr = (parse_block *) 0;   /* We should actually re-use anything there. */
-      if (deposit_call(tagger_calls[parseptr->tagger-1]))
-         longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
-      parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
-#else
+   if (snumber == 0 && this_is_tagger) {
       longjmp(longjmp_ptr->the_buf, 5);
-#endif
    }
    else {
       if (query_for_call())

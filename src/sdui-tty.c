@@ -42,7 +42,9 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
-   uims_get_command
+   uims_get_startup_command
+   uims_get_call_command
+   uims_get_resolve_command
    uims_do_comment_popup
    uims_do_outfile_popup
    uims_do_getout_popup
@@ -72,7 +74,6 @@ and the following data that are used by sdmatch.c :
    command_commands
    number_of_resolve_commands
    resolve_command_strings
-   resolve_command_values
 */
 
 #ifndef THINK_C
@@ -162,21 +163,47 @@ get_char_input(void)
 #endif
 
    if (c == 129)
-      function_key_expansion = "split phantom lines\n";
+      function_key_expansion = "heads start\n";                /* F1 */
    else if (c == 130)
-      function_key_expansion = "split phantom columns\n";
+      function_key_expansion = "two calls in succession\n";    /* F2 */
    else if (c == 131)
-      function_key_expansion = "simple modifications\n";
+      function_key_expansion = "pick random call\n";           /* F3 */
    else if (c == 132)
-      function_key_expansion = "<anything>";
+      function_key_expansion = "resolve\n";                    /* F4 */
+   else if (c == 133)
+      function_key_expansion = "refresh display\n";            /* F5 */
+   else if (c == 134)
+      function_key_expansion = "simple modifications\n";       /* F6 */
+   else if (c == 135)
+      function_key_expansion = "toggle concept levels\n";      /* F7 */
+   else if (c == 136)
+      function_key_expansion = "<anything>";                   /* F8 */
+   else if (c == 137)
+      function_key_expansion = "undo last call\n";             /* F9 */
+   else if (c == 138)
+      function_key_expansion = "end this sequence\n";          /* F10 */
+
    else if (c == 161)
-      function_key_expansion = "interlocked phantom lines\n";
+      function_key_expansion = "sides start\n";                /* sF1 */
    else if (c == 162)
-      function_key_expansion = "interlocked phantom columns\n";
-   else if (c == 193)
-      function_key_expansion = "phantom lines\n";
-   else if (c == 194)
-      function_key_expansion = "phantom columns\n";
+      function_key_expansion = "twice\n";                      /* sF2 */
+   else if (c == 163)
+      function_key_expansion = "normalize\n";                  /* sF3 */
+   else if (c == 164)
+      function_key_expansion = "reconcile\n";                  /* sF4 */
+   else if (c == 165)
+      function_key_expansion = "keep picture\n";               /* sF5 */
+   else if (c == 166)
+      function_key_expansion = "allow modifications\n";        /* sF6 */
+   else if (c == 167)
+      function_key_expansion = "toggle active phantoms\n";     /* sF7 */
+   else if (c == 168)
+      function_key_expansion = "<concept>";                    /* sF8 */
+   else if (c == 169)
+      function_key_expansion = "abort the search\n";           /* sF9 */
+   else if (c == 170)
+      function_key_expansion = "change output file\n";         /* sF10 */
+
    else if (c >= 128)
       c = ' ';
 
@@ -413,11 +440,9 @@ show_match(char *user_input_str, Const char *extension, Const match_result *mr)
 
 Private match_result user_match;
 
-/* BEWARE!!  The first part of this list is keyed to the definition of
-   "command_kind" in sd.h .
-   There are NUM_COMMAND_KINDS items in that part.  The rest of it
-   corresponds to the special commands defined in sdmatch.h .  There
-   are NUM_SPECIAL_COMMANDS of those items. */
+
+
+/* BEWARE!!  These two lists must stay in step. */
 
 #define NUM_SPECIAL_COMMANDS 4
 #define SPECIAL_COMMAND_SIMPLE_MODS 0
@@ -425,12 +450,17 @@ Private match_result user_match;
 #define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
 #define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
 
-int num_command_commands = NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS;
-
+int num_command_commands = 18;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 
 Cstring command_commands[] = {
+    "simple modifications",
+    "allow modifications",
+    "toggle concept levels",
+    "toggle active phantoms",
     "exit the program",
+    "quit the program",
     "undo last call",
+    "erase entered concepts",
     "abort this sequence",
     "insert a comment",
     "change output file",
@@ -439,25 +469,35 @@ Cstring command_commands[] = {
     "reconcile",
     "pick random call",
     "normalize",
-#ifdef NEGLECT
-    "show neglected calls",
-#endif
     "keep picture",
-    "refresh display",
-/* The following items are the special ones. */
-    "simple modifications",
-    "allow modifications",
-    "toggle concept levels",
-    "toggle active phantoms"
+    "refresh display"
 };
 
-
-
+static command_kind command_command_values[] = {
+   (command_kind) -1,    /* The first 4 are special. */
+   (command_kind) -1,
+   (command_kind) -1,
+   (command_kind) -1,
+   command_quit,
+   command_quit,
+   command_undo,
+   command_erase,
+   command_abort,
+   command_create_comment,
+   command_change_outfile,
+   command_getout,
+   command_resolve,
+   command_reconcile,
+   command_anything,
+   command_nice_setup,
+   command_save_pic,
+   command_refresh
+};
 
 
 /* BEWARE!!  These two lists must stay in step. */
 
-int number_of_resolve_commands = 10;    /* The number of items, independent of NUM_RESOLVE_COMMAND_KINDS. */
+int number_of_resolve_commands = 10;    /* The number of items in the tables, independent of NUM_RESOLVE_COMMAND_KINDS. */
 
 Cstring resolve_command_strings[] = {
     "abort the search",
@@ -472,7 +512,7 @@ Cstring resolve_command_strings[] = {
     "lower reconcile point"
 };
 
-resolve_command_kind resolve_command_values[] = {
+static resolve_command_kind resolve_command_values[] = {
    resolve_command_abort,
    resolve_command_abort,
    resolve_command_abort,
@@ -492,8 +532,7 @@ resolve_command_kind resolve_command_values[] = {
 
 /* result is indicated in user_match */
 
-Private void
-get_user_input(char *prompt, int which)
+Private void get_user_input(char *prompt, int which)
 {
     char extended_input[200];
     char *p;
@@ -559,6 +598,7 @@ get_user_input(char *prompt, int which)
         }
         else if ((c == '\n') || (c == '\r')) {
             matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+
             if (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact) {
                 p = extended_input;
                 while (*p)
@@ -568,6 +608,7 @@ get_user_input(char *prompt, int which)
                 /* Include the input line in our count, so we will erase it
                    if we are trying to make the VT-100 screen look nice. */
                 current_text_line++;
+
                 return;
             }
 
@@ -590,7 +631,7 @@ get_user_input(char *prompt, int which)
             current_text_line++;   /* Count that line for erasure. */
         }
         else if (c == '\t' || c == '\033') {
-            matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+            (void) match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
             p = extended_input;
             if (*p) {
                 while (*p)
@@ -624,7 +665,7 @@ get_user_input(char *prompt, int which)
     final_exit(1);
 }
 
-Private call_list_kind current_call_menu;
+
 
 static char *banner_prompts[] = {
     (char *) 0,
@@ -640,71 +681,122 @@ static char *banner_prompts[] = {
     "[all concepts,all modifications] ",
     "[all concepts,AP,all modifications] "};
 
-extern uims_reply
-uims_get_command(mode_kind mode, call_list_kind *call_menu)
+
+
+extern uims_reply uims_get_startup_command(void)
 {
-    if (mode == mode_startup) {
-         get_user_input("Enter startup command> ", (int) match_startup_commands);
-         uims_menu_index = user_match.index;
-    }
-    else if (mode == mode_resolve) {
-         get_user_input("Enter resolve command> ", (int) match_resolve_commands);
-         uims_menu_index = resolve_command_values[user_match.index];
-    }
-    else {
-        char prompt_buffer[200];
-        char *prompt_ptr;
-        int banner_mode;
-
-        check_menu:
-
-        if (allowing_modifications)
-            *call_menu = call_list_any;
-
-        current_call_menu = *call_menu;
-        prompt_ptr = prompt_buffer;
-
-        /* Put any necessary special things into the prompt. */
-
-        banner_mode = (allowing_modifications << 2) |
-                      (allowing_all_concepts ? 2 : 0) |
-                      (using_active_phantoms ? 1 : 0);
-
-        if (banner_mode != 0)
-            (void) sprintf(prompt_ptr, "%s%s", banner_prompts[banner_mode], call_menu_prompts[current_call_menu]);
-        else
-            prompt_ptr = call_menu_prompts[current_call_menu];
-
-        get_user_input(prompt_ptr, (int) current_call_menu);
-
-        uims_menu_index = user_match.index;
-        uims_menu_cross = user_match.cross;
-        uims_menu_magic = user_match.magic;
-        uims_menu_intlk = user_match.interlocked;
-        uims_menu_left = user_match.left;
-
-        if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
-            if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_SIMPLE_MODS) {
-                /* Increment "allowing_modifications" up to a maximum of 2. */
-                if (allowing_modifications != 2) allowing_modifications++;
-            }
-            else if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
-                allowing_modifications = 2;
-            }
-            else if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS) {
-                allowing_all_concepts = !allowing_all_concepts;
-            }
-            else {   /* Must be SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS. */
-                using_active_phantoms = !using_active_phantoms;
-            }
-
-            goto check_menu;
-        }
-    }
-
-    return user_match.kind;
+   get_user_input("Enter startup command> ", (int) match_startup_commands);
+   uims_menu_index = user_match.index;
+   return user_match.kind;
 }
-                                                              
+
+
+extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+{
+   char prompt_buffer[200];
+   char *prompt_ptr;
+   int banner_mode;
+
+   call_menu_ptr = call_menu;
+
+   check_menu:
+
+   if (allowing_modifications)
+       *call_menu_ptr = call_list_any;
+
+   prompt_ptr = prompt_buffer;
+
+   /* Put any necessary special things into the prompt. */
+
+   banner_mode = (allowing_modifications << 2) |
+                 (allowing_all_concepts ? 2 : 0) |
+                 (using_active_phantoms ? 1 : 0);
+
+   if (banner_mode != 0)
+      (void) sprintf(prompt_ptr, "%s%s", banner_prompts[banner_mode], call_menu_prompts[*call_menu_ptr]);
+   else
+      prompt_ptr = call_menu_prompts[*call_menu_ptr];
+
+   get_user_input(prompt_ptr, (int) *call_menu_ptr);
+
+   *reply_p = user_match.kind;
+
+   uims_menu_index = user_match.index;
+
+   if (user_match.kind == ui_command_select) {
+      if (user_match.index < NUM_SPECIAL_COMMANDS) {
+         if (user_match.index == SPECIAL_COMMAND_SIMPLE_MODS) {
+             /* Increment "allowing_modifications" up to a maximum of 2. */
+             if (allowing_modifications != 2) allowing_modifications++;
+         }
+         else if (user_match.index == SPECIAL_COMMAND_ALLOW_MODS) {
+             allowing_modifications = 2;
+         }
+         else if (user_match.index == SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS) {
+             allowing_all_concepts = !allowing_all_concepts;
+         }
+         else {   /* Must be SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS. */
+             using_active_phantoms = !using_active_phantoms;
+         }
+   
+         goto check_menu;
+      }
+
+      /* Translate the command. */
+      uims_menu_index = command_command_values[user_match.index];
+   }
+
+   if (user_match.kind == ui_call_select) {
+      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
+
+      if (user_match.modifiers & INHERITFLAG_CROSS)
+         (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
+      if (user_match.modifiers & INHERITFLAG_MAGIC)
+         (void) deposit_concept(&concept_descriptor_table[magic_concept_index], 0);
+      if (user_match.modifiers & INHERITFLAG_INTLK)
+         (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
+      if (user_match.modifiers & INHERITFLAG_LEFT)
+         (void) deposit_concept(&concept_descriptor_table[left_concept_index], 0);
+      if (user_match.modifiers & INHERITFLAG_GRAND)
+         (void) deposit_concept(&concept_descriptor_table[grand_concept_index], 0);
+
+      if (deposit_call(save_call)) return TRUE;
+   }
+   else if (user_match.kind == ui_concept_select) {
+      /* If user gave a concept, pick up any needed numeric modifiers. */
+
+      uint32 concept_number_fields = 0;
+      int howmanynumbers = 0;
+      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
+
+      if (props & CONCPROP__USE_NUMBER)
+         howmanynumbers = 1;
+      if (props & CONCPROP__USE_TWO_NUMBERS)
+         howmanynumbers = 2;
+
+      if (howmanynumbers != 0) {
+         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
+            return TRUE;           /* User waved the mouse away. */
+      }
+
+      /* A concept is required.  Its index has been stored in uims_menu_index,
+         and the "concept_number_fields" is ready. */
+
+      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
+         return TRUE;
+   }
+
+   return FALSE;
+}
+
+
+extern uims_reply uims_get_resolve_command(void)
+{
+   get_user_input("Enter resolve command> ", (int) match_resolve_commands);
+   uims_menu_index = resolve_command_values[user_match.index];
+   return user_match.kind;
+}
+
 
 Private int
 get_popup_string(char prompt[], char dest[])
@@ -867,62 +959,67 @@ uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_st
     current_text_line++;
 }
 
-extern int
-uims_do_selector_popup(void)
+extern int uims_do_selector_popup(void)
 {
-    int n;
+   int n;
 
-    if (user_match.valid && (user_match.who > selector_uninitialized)) {
-        n = (int) user_match.who;
-        user_match.who = selector_uninitialized;
-        return n;
-    }
-    else {
-        /* We skip the zeroth selector, which is selector_uninitialized. */
-        get_user_input("Enter who> ", (int) match_selectors);
-        return user_match.index+1;
-    }
+   if (user_match.valid && (user_match.who > selector_uninitialized)) {
+       n = (int) user_match.who;
+       user_match.who = selector_uninitialized;
+       return n;
+   }
+   else {
+      int retval;
+      match_result saved_match = user_match;
+      get_user_input("Enter who> ", (int) match_selectors);
+      retval = user_match.index+1;      /* We skip the zeroth selector, which is selector_uninitialized. */
+      user_match = saved_match;
+      return retval;
+   }
 }    
 
-extern int
-uims_do_direction_popup(void)
+extern int uims_do_direction_popup(void)
 {
-    int n;
+   int n;
 
-    if (user_match.valid && (user_match.where > direction_uninitialized)) {
-        n = (int) user_match.where;
-        user_match.where = direction_uninitialized;
-        return n;
-    }
-    else {
-        /* We skip the zeroth direction, which is direction_uninitialized. */
-        get_user_input("Enter direction> ", (int) match_directions);
-        return user_match.index+1;
-    }
-}    
-
-extern int
-uims_do_tagger_popup(void)
-{
-   if (user_match.valid && (user_match.tagger > 0)) {
-     uint32 n;
-     int j = 0;
-
-      while ((user_match.tagger & 0xFF000000UL) == 0) {
-         user_match.tagger <<= 8;
-         j++;
-      }
-
-      n = user_match.tagger >> 24;
-      user_match.tagger &= 0x00FFFFFF;
-      while (j-- != 0) user_match.tagger >>= 8;   /* Shift it back. */
+   if (user_match.valid && (user_match.where > direction_uninitialized)) {
+      n = (int) user_match.where;
+      user_match.where = direction_uninitialized;
       return n;
    }
    else {
-      get_user_input("Enter tagger> ", (int) match_taggers);
-      return user_match.index+1;
+      int retval;
+      match_result saved_match = user_match;
+      get_user_input("Enter direction> ", (int) match_directions);
+      retval = user_match.index+1;      /* We skip the zeroth direction, which is direction_uninitialized. */
+      user_match = saved_match;
+      return retval;
    }
 }    
+
+extern int uims_do_tagger_popup(int tagger_class)
+{
+   uint32 retval;
+   int j = 0;
+
+   if (!user_match.valid || (user_match.tagger <= 0)) {
+      match_result saved_match = user_match;
+      get_user_input("Enter tagger> ", ((int) match_taggers) + tagger_class);
+      retval = user_match.tagger;
+      user_match = saved_match;
+      user_match.tagger = retval;
+   }
+
+   while ((user_match.tagger & 0xFF000000UL) == 0) {
+      user_match.tagger <<= 8;
+      j++;
+   }
+
+   retval = user_match.tagger >> 24;
+   user_match.tagger &= 0x00FFFFFF;
+   while (j-- != 0) user_match.tagger >>= 8;   /* Shift it back. */
+   return retval;
+}
 
 
 extern uint32 uims_get_number_fields(int nnumbers)

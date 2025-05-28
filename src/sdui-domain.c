@@ -43,6 +43,9 @@
    uims_reduce_line_count
    uims_add_new_line
    uims_get_command
+   uims_get_startup_command
+   uims_get_call_command
+   uims_get_resolve_command
    uims_begin_search
    uims_begin_reconcile_history
    uims_end_reconcile_history
@@ -65,7 +68,6 @@
    uims_do_comment_popup      Put up a popup to let user type a comment
    uims_do_getout_popup       Put up a popup to let user type a header line on a sequence
    uims_do_abort_popup        Put up a popup to ask whether user really wants to abort
-   uims_get_command           In any mode, query user for action to be taken
    uims_do_neglect_popup      Put up a popup to query for percentage of stale calls to show
    uims_do_selector_popup     Put up a popup to query for a selector (heads/sides..)
    uims_do_direction_popup    Put up a popup to query for a direction (left/right..)
@@ -131,7 +133,6 @@ static int local_textline_count = 0;
 static long_boolean text_changed;
 
 static dp_$string_desc_t *menu_list;         /* Gets allocated somewhere. */
-
 
 /* BEWARE!!  This table is keyed to the enumeration "call_list_kind". */
 
@@ -256,6 +257,12 @@ int tandem_tasks[] = {task$tandem_concept_menu_1, task$tandem_concept_menu_2, ta
 int distort_tasks[] = {task$distort_concept_menu_1, task$distort_concept_menu_2, task$distort_concept_menu_3, task$distort_concept_menu_4, -1};
 int dist4_tasks[] = {task$dist4_concept_menu_1, task$dist4_concept_menu_2, task$dist4_concept_menu_3, task$dist4_concept_menu_4, -1};
 int misc_tasks[] = {task$misc_concept_menu_1, task$misc_concept_menu_2, task$misc_concept_menu_3, -1};
+
+int tagger_tasks[] =     {task$tagger0_menu, task$tagger1_menu, task$tagger2_menu, task$tagger3_menu};
+int tagger_enablers[] =  {tagger0_enabler,   tagger1_enabler,   tagger2_enabler,   tagger3_enabler};
+int tagger_disablers[] = {tagger0_disabler,  tagger1_disabler,  tagger2_disabler,  tagger3_disabler};
+
+
 
 /* BEWARE!!  These five tables are keyed to the tables "concept_offset_tables" etc. in sd.h . */
 
@@ -421,7 +428,7 @@ extern void uims_preinitialize(void)
 extern void uims_postinitialize(void)
 {
    short junk16;
-   int j, k, column, popup;
+   int i, j, k, column, popup;
    Const char *p;
    dp_$string_desc_t my_text;
    char my_text_text[200];
@@ -532,11 +539,11 @@ extern void uims_postinitialize(void)
       status_error_check("quantifier popup - 1: ");
    }
 
-   {
-      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(number_of_taggers * sizeof(dp_$string_desc_t));
+   for (i=0 ; i<4 ; i++) {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(number_of_taggers[i] * sizeof(dp_$string_desc_t));
 
-      for (k=0; k<number_of_taggers; k++) {
-         p = tagger_calls[k]->menu_name;
+      for (k=0; k<number_of_taggers[i]; k++) {
+         p = tagger_calls[i][k]->menu_name;
          j = 0;
          while (p[j]) j++;
          popup_list[k].max_len = j;
@@ -544,7 +551,7 @@ extern void uims_postinitialize(void)
          popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
       }
 
-      dp_$enum_set_choices(task$tagger_menu, 1, (short) number_of_taggers, popup_list, true, &status);
+      dp_$enum_set_choices(tagger_tasks[i], 1, (short) number_of_taggers[i], popup_list, true, &status);
       status_error_check("tagger popup - 1: ");
    }
 
@@ -702,51 +709,11 @@ static char *banner_prompts[] = {
 
 
 
-/* BEWARE!!  The numbers deposited into "uims_menu_index" when this is invoked in
-   startup mode must correspond to the data in the array "startinfolist"
-   in sdtables.c . */
-
-extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
+Private long_boolean get_mouse_action(uims_reply *reply_p)
 {
    int my_task, index;
    int banner_mode;
    char prompt_buffer[200];
-
-   /* Check for mode changes. */
-
-   check_menu:
-
-   switch (mode) {
-      case mode_normal:
-         if (last_mode == mode_startup)
-            dialog_signal(startup_disabler);         /* Coming out of startup mode. */
-   
-         if (allowing_modifications)
-            *call_menu = call_list_any;
-
-         if (last_mode != mode_normal || current_call_list != *call_menu) {
-            /* Entering normal from startup/resolve, or call menu has changed -- must put up correct menu. */
-            dialog_signal(call_list_menu_signal_keys[*call_menu]);
-            current_call_list = *call_menu;
-         }
-
-         break;
-      case mode_resolve:
-         if (last_mode != mode_resolve)
-            /* Entering resolve mode.  Place the search submenu over the call menus. */
-            dialog_signal(search_enabler);
-
-         current_call_list = call_list_any;   /* Make it harmless. */
-         break;
-      case mode_startup:
-         if (last_mode != mode_startup)
-            dialog_signal(startup_enabler);          /* Entering startup mode. */
-
-         current_call_list = call_list_any;   /* Make it harmless. */
-         break;
-   }
-
-   last_mode = mode;
 
    /* See if the text area needs to be updated. */
 
@@ -804,61 +771,66 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
    getcmd:
    dialog_read(&my_task);
 
-   uims_menu_cross = FALSE;
-   uims_menu_magic = FALSE;
-   uims_menu_intlk = FALSE;
-   uims_menu_left = FALSE;
-
    switch (my_task) {
       case task$undo:
          uims_menu_index = command_undo;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$abort:
          uims_menu_index = command_abort;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$quit:
          uims_menu_index = command_quit;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case simple_modifications_task:
          /* Increment "allowing_modifications" up to a maximum of 2. */
          if (allowing_modifications != 2) allowing_modifications++;
-         goto check_menu;
+         return TRUE;
       case all_modifications_task:
          allowing_modifications = 2;
-         goto check_menu;
+         return TRUE;
       case allow_all_concept_task:
          allowing_all_concepts = !allowing_all_concepts;
          set_concept_activation();
-         goto check_menu;
+         return TRUE;
       case active_phantoms_task:
          using_active_phantoms = !using_active_phantoms;
          set_concept_activation();
-         goto check_menu;
+         return TRUE;
 #ifdef NEGLECT
       case neglect_task:
          uims_menu_index = command_neglect;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
 #endif
       case save_pic_task:
          uims_menu_index = command_save_pic;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$create_outfile:
          uims_menu_index = command_change_outfile;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$create_comment:
          uims_menu_index = command_create_comment;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case getout_task:
          uims_menu_index = command_getout;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case start_choices:
          dialog_get_menu_item(start_choices, &index);
          uims_menu_index = index;
-         return(ui_start_select);
+         *reply_p = ui_start_select;
+         return FALSE;
       case task$general_concept_menu:
          dialog_get_menu_item(task$general_concept_menu, &index);
          uims_menu_index = index+general_concept_offset-1;
-         return(ui_concept_select);
+         *reply_p = ui_concept_select;
+         return FALSE;
       case task$special_concept_menu:
          dialog_get_menu_item(task$special_concept_menu, &index);
 
@@ -888,40 +860,52 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
             if (concept_descriptor_table[uims_menu_index].kind == concept_comment) goto getcmd;
          }
 
-         return(ui_concept_select);
+         *reply_p = ui_concept_select;
+         return FALSE;
       case task$search_resolve:
          uims_menu_index = command_resolve;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search_reconcile:
          uims_menu_index = command_reconcile;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search_anything:
          uims_menu_index = command_anything;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search_nice_setup:
          uims_menu_index = command_nice_setup;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search$abort:
          uims_menu_index = (int) resolve_command_abort;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$another:
          uims_menu_index = (int) resolve_command_find_another;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$next:
          uims_menu_index = (int) resolve_command_goto_next;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$previous:
          uims_menu_index = (int) resolve_command_goto_previous;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$accept:
          uims_menu_index = (int) resolve_command_accept;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$incdepth:
          uims_menu_index = (int) resolve_command_raise_rec_point;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$decdepth:
          uims_menu_index = (int) resolve_command_lower_rec_point;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       /* These 3 should never happen, but dialog has been observed to return them if a modification popup
          was abandoned because the debugger confused the program.  Apparently, if the window is obscured,
          the debugger can walk right through the call to uims_do_modifier_popup without getting input
@@ -939,14 +923,115 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
       /* User clicked on a call. */
       dialog_get_menu_item(my_task, &index);
       uims_menu_index = index-1;
-      return(ui_call_select);
+      *reply_p = ui_call_select;
+      return FALSE;
    }
 
    uims_menu_index = command_abort;
-   return(ui_command_select);
+   *reply_p = ui_command_select;
+   return FALSE;
 }
 
 
+/* BEWARE!!  The numbers deposited into "uims_menu_index" must correspond
+   to the data in the array "startinfolist" in sdtables.c . */
+
+extern uims_reply uims_get_startup_command(void)
+{
+   uims_reply reply;
+
+   /* Check for mode changes. */
+
+   if (last_mode != mode_startup)
+      dialog_signal(startup_enabler);          /* Entering startup mode. */
+
+   current_call_list = call_list_any;   /* Make it harmless. */
+
+   last_mode = mode_startup;
+
+   check_menu:
+
+   if (get_mouse_action(&reply)) goto check_menu;
+   return reply;
+}
+
+
+extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+{
+   /* Check for mode changes. */
+
+   if (last_mode == mode_startup)
+      dialog_signal(startup_disabler);         /* Coming out of startup mode. */
+
+   check_menu:
+
+   if (allowing_modifications)
+      *call_menu = call_list_any;
+
+   if (last_mode != mode_normal || current_call_list != *call_menu) {
+      /* Entering normal from startup/resolve, or call menu has changed -- must put up correct menu. */
+      dialog_signal(call_list_menu_signal_keys[*call_menu]);
+      current_call_list = *call_menu;
+   }
+
+   last_mode = mode_normal;
+
+   if (get_mouse_action(reply_p)) goto check_menu;
+
+   if (*reply_p == ui_call_select) {
+      /* If user gave a call, deposit same. */
+
+      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
+
+      if (deposit_call(save_call)) return TRUE;
+   }
+   else if (*reply_p == ui_concept_select) {
+      /* If user gave a concept, pick up any needed numeric modifiers. */
+
+      uint32 concept_number_fields = 0;
+      int howmanynumbers = 0;
+      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
+
+      if (props & CONCPROP__USE_NUMBER)
+         howmanynumbers = 1;
+      if (props & CONCPROP__USE_TWO_NUMBERS)
+         howmanynumbers = 2;
+
+      if (howmanynumbers != 0) {
+         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
+            return TRUE;           /* User waved the mouse away. */
+      }
+
+      /* A concept is required.  Its index has been stored in uims_menu_index,
+         and the "concept_number_fields" is ready. */
+
+      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
+         return TRUE;
+   }
+
+   return FALSE;
+}
+
+
+extern uims_reply uims_get_resolve_command(void)
+{
+   uims_reply reply;
+
+   /* Check for mode changes. */
+
+   if (last_mode != mode_resolve)
+      /* Entering resolve mode.  Place the search submenu over the call menus. */
+      dialog_signal(search_enabler);
+
+   check_menu:
+
+   current_call_list = call_list_any;   /* Make it harmless. */
+
+   last_mode = mode_resolve;
+
+   if (get_mouse_action(&reply)) goto check_menu;
+   return reply;
+}
 
 
 extern void uims_reduce_line_count(int n)
@@ -1127,18 +1212,18 @@ extern int uims_do_direction_popup(void)
 }
 
 
-extern int uims_do_tagger_popup(void)
+extern int uims_do_tagger_popup(int tagger_class)
 {
    int task;
    int num;
 
-   dialog_signal(tagger_enabler);
+   dialog_signal(tagger_enablers[tagger_class]);
    dialog_read(&task);
-   dialog_signal(tagger_disabler);
+   dialog_signal(tagger_disablers[tagger_class]);
 
-   if (task == task$tagger_menu) {
-      dialog_get_menu_item(task$tagger_menu, &num);
-      return num;
+   if (task == tagger_tasks[tagger_class]) {
+      dialog_get_menu_item(task, &num);
+      return (tagger_class << 5) | num;
    }
    else
       return 0;

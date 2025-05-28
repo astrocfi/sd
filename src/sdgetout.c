@@ -588,7 +588,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
 
    /* Put in a special initial concept if needed to normalize. */
 
-   if (goal == search_nice_setup) {
+   if (goal == search_nice_setup && !concepts_in_place()) {
       int k, l;
 
       for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
@@ -1080,9 +1080,9 @@ extern uims_reply full_resolve(search_kind goal)
 
       show_resolve = TRUE;
 
-      for (;;) {          /* We ignore any "undo" clicks. */
-         reply = uims_get_command(mode_resolve, (call_list_kind *) 0);
-         if ((reply != ui_command_select) || (uims_menu_index != command_undo)) break;
+      for (;;) {          /* We ignore any "undo" or "erase" clicks. */
+         reply = uims_get_resolve_command();
+         if ((reply != ui_command_select) || ((uims_menu_index != command_undo) && (uims_menu_index != command_erase))) break;
       }
 
       if (reply == ui_resolve_select) {
@@ -1265,7 +1265,7 @@ extern int nice_setup_command_ok(void)
       if (nice_setup_info[k].kind == current_kind && nice_setup_info[k].number_available_now != 0) setup_ok = TRUE;
    }
 
-   return setup_ok && !concepts_in_place();
+   return setup_ok || concepts_in_place();
 }
 
 /*

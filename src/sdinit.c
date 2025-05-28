@@ -35,10 +35,10 @@ Private int global_callcount;     /* Index into the above. */
 #define HB (ID2_HEAD|ID2_BOY)
 #define SG (ID2_SIDE|ID2_GIRL)
 #define HG (ID2_HEAD|ID2_GIRL)
-#define WEST(x) (d_west|(x)<<6)
-#define EAST(x) (d_east|(x)<<6)
-#define NORT(x) (d_north|(x)<<6)
-#define SOUT(x) (d_south|(x)<<6)
+#define WEST(x) (d_west|ROLLBITL|(x)<<6)
+#define EAST(x) (d_east|ROLLBITL|(x)<<6)
+#define NORT(x) (d_north|ROLLBITL|(x)<<6)
+#define SOUT(x) (d_south|ROLLBITL|(x)<<6)
 
 /* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
    ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
@@ -277,7 +277,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    /* We also accept "<ATC> your neighbor" calls, since we don't know what the
       tagging call will be. */
-   if (test_call->callflagsh & CFLAGH__REQUIRES_TAG_CALL) goto accept;
+   if (test_call->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) goto accept;
 
    if (crossiness)
       (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
@@ -288,7 +288,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    if (intlkness)
       (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
 
-   (void) deposit_call(test_call);
+   if (deposit_call(test_call)) goto try_again;
    toplevelmove();
 
    /* It seems to have worked, save it.  We don't care about warnings here. */
@@ -374,7 +374,7 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 
       /* Next, skip elided stuff in the "m" stream. */
 
-      if (*m == '@' && m[1] != 'v' && m[1] != '6' && m[1] != 'k' && m[1] != '9' && m[1] != '0' && m[1] != 'm' && m[1] != 'a' && m[1] != 'b' && m[1] != 'B') {
+      if (*m == '@' && m[1] != 'v' && m[1] != 'w' && m[1] != 'x' && m[1] != 'y' && m[1] != '6' && m[1] != 'k' && m[1] != '9' && m[1] != '0' && m[1] != 'm' && m[1] != 'a' && m[1] != 'b' && m[1] != 'B') {
          /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
          if (m[1] == '7' || m[1] == 'n' || m[1] == 'j' || m[1] == 'J' || m[1] == 'E') {
             while (*++m != '@');
@@ -386,7 +386,7 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 
       /* And in the "n" stream. */
 
-      if (*n == '@' && n[1] != 'v' && n[1] != '6' && n[1] != 'k' && n[1] != '9' && n[1] != '0' && n[1] != 'm' && n[1] != 'a' && n[1] != 'b' && n[1] != 'B') {
+      if (*n == '@' && n[1] != 'v' && n[1] != 'w' && n[1] != 'x' && n[1] != 'y' && n[1] != '6' && n[1] != 'k' && n[1] != '9' && n[1] != '0' && n[1] != 'm' && n[1] != 'a' && n[1] != 'b' && n[1] != 'B') {
          if (n[1] == '7' || n[1] == 'n' || n[1] == 'j' || n[1] == 'J' || n[1] == 'E') {
             while (*++n != '@');
          }
@@ -397,7 +397,7 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
       if (*n == '@') {
          nc = *++n;
 
-         if (nc == 'v') {
+         if (nc == 'v' || nc == 'w' || nc == 'x' || nc == 'y') {
             nc = -6;
          }
          else if (nc == '6' || nc == 'k') {
@@ -417,7 +417,7 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
       if (*m == '@') {
          mc = *++m;
 
-         if (mc == 'v') {
+         if (mc == 'v' || mc == 'w' || mc == 'x' || mc == 'y') {
             mc = -6;
          }
          else if (mc == '6' || mc == 'k') {
@@ -767,6 +767,132 @@ Private void check_tag(int tag)
 }
 
 
+Private void read_in_call_definition(void)
+{
+   int j;
+
+   switch (call_root->schema) {
+      case schema_nothing:
+         return;
+      case schema_matrix:
+         {
+            uint32 left_half = last_datum;
+            read_halfword();
+            call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
+            read_halfword();
+
+            for (j=0; j < 2; j++) {
+               call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
+               read_halfword();
+            }
+
+            call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+         }
+         return;
+      case schema_partner_matrix:
+         {
+            uint32 left_half = last_datum;
+            read_halfword();
+            call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
+            read_halfword();
+
+            for (j=0; j < 8; j++) {
+               call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
+               read_halfword();
+            }
+         }
+         return;
+      case schema_roll:
+         return;
+   }
+
+   switch (call_root->schema) {
+      case schema_by_array:
+         {
+            calldef_block *zz, *yy;
+
+            /* Demand a level 2 group. */
+            if ((last_datum) != 0x4000) {
+               database_error("database phase error 2");
+            }
+
+            zz = (calldef_block *) get_mem(sizeof(calldef_block));
+            zz->next = 0;
+            zz->modifier_seth = 0;
+            zz->modifier_level = l_mainstream;
+            call_root->stuff.arr.def_list = zz;
+
+            read_level_3_groups(zz);
+
+            /* Check for more level 2 groups. */
+
+            while ((last_datum & 0xE000) == 0x4000) {
+               yy = (calldef_block *) get_mem(sizeof(calldef_block));
+               zz->next = yy;
+               zz = yy;
+               zz->modifier_level = (dance_level) (last_datum & 0xFF);
+               zz->next = 0;
+               read_fullword();
+               zz->modifier_seth = last_datum;
+
+               read_level_3_groups(zz);
+            }
+         }
+         break;
+      case schema_sequential:
+      case schema_split_sequential:
+         {
+            by_def_item templist[100];
+            int next_definition_index = 0;
+
+            /* Demand a level 2 group. */
+            if ((last_datum & 0xE000) != 0x4000) {
+               database_error("database phase error 6");
+            }
+
+            while ((last_datum & 0xE000) == 0x4000) {
+               check_tag(last_12);
+               templist[next_definition_index].call_id = last_12;
+               read_fullword();
+               templist[next_definition_index].modifiers1 = (defmodset) last_datum;
+               read_fullword();
+               templist[next_definition_index++].modifiersh = (defmodset) last_datum;
+               read_halfword();
+            }
+
+            call_root->stuff.def.howmanyparts = next_definition_index;
+            call_root->stuff.def.defarray = (by_def_item *) get_mem((next_definition_index) * sizeof(by_def_item));
+
+            while (--next_definition_index >= 0)
+               call_root->stuff.def.defarray[next_definition_index] = templist[next_definition_index];
+         }
+         break;
+      default:          /* These are all the variations of concentric. */
+         /* Demand a level 2 group. */
+         if ((last_datum & 0xE000) != 0x4000) {
+            database_error("database phase error 7");
+         }
+
+         check_tag(last_12);
+         call_root->stuff.conc.innerdef.call_id = last_12;
+         read_fullword();
+         call_root->stuff.conc.innerdef.modifiers1 = (defmodset) last_datum;
+         read_fullword();
+         call_root->stuff.conc.innerdef.modifiersh = (defmodset) last_datum;
+         read_halfword();
+         check_tag(last_12);
+         call_root->stuff.conc.outerdef.call_id = last_12;
+         read_fullword();
+         call_root->stuff.conc.outerdef.modifiers1 = (defmodset) last_datum;
+         read_fullword();
+         call_root->stuff.conc.outerdef.modifiersh = (defmodset) last_datum;
+         read_halfword();
+         break;
+   }
+}
+
+
+
 /* This fills the permanent array "main_call_lists[call_list_any]" with the stuff
       read in from the database, including name pointer fields containing the original text
       with "@" escapes.  It also sets "number_of_calls[call_list_any]" to the size thereof.
@@ -785,6 +911,11 @@ Private void build_database(call_list_mode_t call_list_mode)
    char *np, c;
    dance_level savelevel;
    callspec_block **local_call_list;
+
+   for (i=0 ; i<4 ; i++) {
+      number_of_taggers[i] = 0;
+      tagger_calls[i] = (callspec_block **) 0;
+   }
 
    /* This list will be permanent. */
    base_calls = (callspec_block **) get_mem(max_base_calls * sizeof(callspec_block *));
@@ -842,22 +973,6 @@ Private void build_database(call_list_mode_t call_list_mode)
          base_calls[savetag] = call_root;
       }
 
-      if (savelevel == calling_level || (call_list_mode != call_list_mode_writing && savelevel < calling_level)) {
-         /* Process tag base calls specially. */
-         if (saveflags1 & CFLAG1_IS_BASE_TAG_CALL) {
-         
-            number_of_taggers++;
-         
-            tagger_calls = get_more_mem(tagger_calls, number_of_taggers*sizeof(callspec_block *));
-            tagger_calls[number_of_taggers-1] = call_root;
-         }
-         else {
-            if (local_callcount >= abs_max_calls)
-               database_error("Too many base calls -- mkcalls made an error.");
-            local_call_list[local_callcount++] = call_root;
-         }
-      }
-
       call_root->age = 0;
       call_root->callflags1 = saveflags1;
       call_root->callflagsh = saveflagsh;
@@ -883,7 +998,13 @@ Private void build_database(call_list_mode_t call_list_mode)
             else if (c == 'h')
                call_root->callflagsh |= CFLAGH__REQUIRES_DIRECTION;
             else if (c == 'v')
-               call_root->callflagsh |= CFLAGH__REQUIRES_TAG_CALL;
+               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*1);
+            else if (c == 'w')
+               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*2);
+            else if (c == 'x')
+               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*3);
+            else if (c == 'y')
+               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*4);
          }
       }
 
@@ -891,124 +1012,42 @@ Private void build_database(call_list_mode_t call_list_mode)
 
       call_root->schema = call_schema;
 
-      switch (call_schema) {
-         case schema_nothing:
-            continue;
-         case schema_matrix:
-            {
-               int left_half = last_datum;
-               read_halfword();
-               call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
-               read_halfword();
+      read_in_call_definition();
 
-               for (j=0; j < 2; j++) {
-                  call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
-                  read_halfword();
-               }
+      if (savelevel == calling_level || (call_list_mode != call_list_mode_writing && savelevel < calling_level)) {
+         /* Process tag base calls specially. */
+         if (call_root->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
+            int tagclass = ((call_root->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) / CFLAG1_BASE_TAG_CALL_BIT) - 1;
 
-               call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
-               continue;
+            /* All classes go into list 0.  Additionally, the other classes go into their own list. */
+            number_of_taggers[tagclass]++;
+            tagger_calls[tagclass] = get_more_mem(tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(callspec_block *));
+            tagger_calls[tagclass][number_of_taggers[tagclass]-1] = call_root;
+            if (tagclass != 0) {
+               number_of_taggers[0]++;
+               tagger_calls[0] = get_more_mem(tagger_calls[0], number_of_taggers[0]*sizeof(callspec_block *));
+               tagger_calls[0][number_of_taggers[0]-1] = call_root;
             }
-         case schema_partner_matrix:
-            {
-               int left_half = last_datum;
-               read_halfword();
-               call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
-               read_halfword();
+            else if (call_root->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) {
+               /* But anything that invokes a tagging call goes into each list, inheriting its own class. */
+               int xxx;
 
-               for (j=0; j < 8; j++) {
-                  call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
-                  read_halfword();
-               }
-
-               continue;
-            }
-         case schema_roll:
-            continue;
-      }
-
-      switch (call_schema) {
-         case schema_by_array:
-            {
-               calldef_block *zz, *yy;
-   
-               /* Demand a level 2 group. */
-               if ((last_datum) != 0x4000) {
-                  database_error("database phase error 2");
-               }
-   
-               zz = (calldef_block *) get_mem(sizeof(calldef_block));
-               zz->next = 0;
-               zz->modifier_seth = 0;
-               zz->modifier_level = l_mainstream;
-               call_root->stuff.arr.def_list = zz;
-   
-               read_level_3_groups(zz);
-   
-               /* Check for more level 2 groups. */
-   
-               while ((last_datum & 0xE000) == 0x4000) {
-                  yy = (calldef_block *) get_mem(sizeof(calldef_block));
-                  zz->next = yy;
-                  zz = yy;
-                  zz->modifier_level = (dance_level) (last_datum & 0xFF);
-                  zz->next = 0;
-                  read_fullword();
-                  zz->modifier_seth = last_datum;
-   
-                  read_level_3_groups(zz);
+               for (xxx=1 ; xxx<4 ; xxx++) {
+                  callspec_block *new_call = (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
+                  (void) memcpy(new_call, call_root, sizeof(callspec_block) + char_count - 3);
+                  /* Fix it up. */
+                  new_call->callflagsh = (new_call->callflagsh & !CFLAGH__TAG_CALL_RQ_MASK) | CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
+                  number_of_taggers[xxx]++;
+                  tagger_calls[xxx] = get_more_mem(tagger_calls[xxx], number_of_taggers[xxx]*sizeof(callspec_block *));
+                  tagger_calls[xxx][number_of_taggers[xxx]-1] = new_call;
                }
             }
-            break;
-         case schema_sequential:
-         case schema_split_sequential:
-            {
-               by_def_item templist[100];
-               int next_definition_index = 0;
-
-               /* Demand a level 2 group. */
-               if ((last_datum & 0xE000) != 0x4000) {
-                  database_error("database phase error 6");
-               }
-
-               while ((last_datum & 0xE000) == 0x4000) {
-                  check_tag(last_12);
-                  templist[next_definition_index].call_id = last_12;
-                  read_fullword();
-                  templist[next_definition_index].modifiers1 = (defmodset) last_datum;
-                  read_fullword();
-                  templist[next_definition_index++].modifiersh = (defmodset) last_datum;
-                  read_halfword();
-               }
-
-               call_root->stuff.def.howmanyparts = next_definition_index;
-               call_root->stuff.def.defarray = (by_def_item *) get_mem((next_definition_index) * sizeof(by_def_item));
-
-               while (--next_definition_index >= 0)
-                  call_root->stuff.def.defarray[next_definition_index] = templist[next_definition_index];
-            }
-            break;
-         default:          /* These are all the variations of concentric. */
-            /* Demand a level 2 group. */
-            if ((last_datum & 0xE000) != 0x4000) {
-               database_error("database phase error 7");
-            }
-
-            check_tag(last_12);
-            call_root->stuff.conc.innerdef.call_id = last_12;
-            read_fullword();
-            call_root->stuff.conc.innerdef.modifiers1 = (defmodset) last_datum;
-            read_fullword();
-            call_root->stuff.conc.innerdef.modifiersh = (defmodset) last_datum;
-            read_halfword();
-            check_tag(last_12);
-            call_root->stuff.conc.outerdef.call_id = last_12;
-            read_fullword();
-            call_root->stuff.conc.outerdef.modifiers1 = (defmodset) last_datum;
-            read_fullword();
-            call_root->stuff.conc.outerdef.modifiersh = (defmodset) last_datum;
-            read_halfword();
-            break;
+         }
+         else {
+            if (local_callcount >= abs_max_calls)
+               database_error("Too many base calls -- mkcalls made an error.");
+            local_call_list[local_callcount++] = call_root;
+         }
       }
    }
 
@@ -1035,7 +1074,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
 {
    uint32 arithtest = 2081607680;
    uint32 escape_bit_junk;
-   int i;
+   int i, j;
 
    /* This "if" should never get executed.  We expect compilers to optimize
       it away, and perhaps print a warning about it. */
@@ -1076,8 +1115,10 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
    for (i=0; i<number_of_calls[call_list_any]; i++)
       main_call_lists[call_list_any][i]->menu_name = translate_menu_name(main_call_lists[call_list_any][i]->name, &main_call_lists[call_list_any][i]->callflagsh);
 
-   for (i=0; i<number_of_taggers; i++)
-      tagger_calls[i]->menu_name = translate_menu_name(tagger_calls[i]->name, &tagger_calls[i]->callflagsh);
+   for (i=0 ; i<4 ; i++) {
+      for (j=0; j<number_of_taggers[i]; j++)
+         tagger_calls[i][j]->menu_name = translate_menu_name(tagger_calls[i][j]->name, &tagger_calls[i][j]->callflagsh);
+   }
 
    /* Do the base calls (calls that are used in definitions of other calls).  These may have
       already been done, if they were on the level. */

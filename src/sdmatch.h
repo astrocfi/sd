@@ -14,6 +14,10 @@
  */
 
 
+/* This is provided by sdmatch.c */
+extern call_list_kind *call_menu_ptr;
+
+
 /* The following items are PROVIDED by the main program (that is, the user
    interface part of it) and IMPORTED by sdmatch.c */
 
@@ -22,8 +26,6 @@ extern Cstring command_commands[];
 
 extern int number_of_resolve_commands;
 extern Cstring resolve_command_strings[];
-extern resolve_command_kind resolve_command_values[];
-
 
 
 /*
@@ -38,7 +40,7 @@ extern resolve_command_kind resolve_command_values[];
  *
  */
 
-typedef struct {
+typedef struct zilch {
    long_boolean valid;       /* set to TRUE if a match was found */
    long_boolean exact;       /* set to TRUE if an exact match was found */
    uims_reply kind;
@@ -46,10 +48,9 @@ typedef struct {
    selector_kind who;        /* matches <anyone> */
    direction_kind where;     /* matches <direction> */
    uint32 tagger;            /* matches <atc> */
-   long_boolean left;        /* matches "left" */
-   long_boolean cross;       /* matches "cross" */
-   long_boolean magic;       /* matches "magic" */
-   long_boolean interlocked; /* matches "interlocked" */
+   struct zilch *modifier_parent;
+   uint32 modifiers;         /* has bits for "left", "magic", etc. */
+   long_boolean need_big_menu;
    uint32 number_fields;     /* matches all the number fields */
    int howmanynumbers;       /* tells how many there are */
    int space_ok;             /* space is a legitimate next input character */
@@ -64,7 +65,7 @@ enum {
     match_resolve_commands = -2,
     match_selectors = -3,
     match_directions = -4,
-    match_taggers = -5
+    match_taggers = -8      /* This is the lowest of 4 numbers. */
 };
 
 extern void

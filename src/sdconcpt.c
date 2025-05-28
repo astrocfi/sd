@@ -2011,11 +2011,18 @@ Private void do_concept_assume_waves(
       if (         ss->cmd.cmd_assume.assumption == t.assumption &&
                    ss->cmd.cmd_assume.assump_col == t.assump_col &&
                    ss->cmd.cmd_assume.assump_both == t.assump_both) ;
+
       /* We also allow certain tightenings of existing assumptions. */
-      else if (  ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
-                  (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0))
-                           &&
-                   (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright)) ;
+
+      else if (     (t.assumption == cr_jleft ||
+                     t.assumption == cr_jright ||
+                     t.assumption == cr_ijleft ||
+                     t.assumption == cr_ijright)
+                                 &&
+                    ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
+                     (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0) ||
+                     (ss->cmd.cmd_assume.assumption == cr_gen_1_4_tag && t.assump_both == 2) ||
+                     (ss->cmd.cmd_assume.assumption == cr_gen_3_4_tag && t.assump_both == 1))) ;
       else
          fail("Redundant or conflicting assumptions.");
    }
@@ -2170,9 +2177,20 @@ Private void do_concept_crazy(
    int i;
    int craziness, highlimit;
    setup tempsetup = *ss;
-   setup_command cmd = tempsetup.cmd;    /* We will modify these flags, and, in any case, we need
-                                             to rematerialize them at each step. */
+   setup_command cmd;
+
    unsigned int finalresultflags = 0;
+   int reverseness = parseptr->concept->value.arg1;
+
+   if (tempsetup.cmd.cmd_final_flags & INHERITFLAG_REVERSE) {
+      if (reverseness) fail("Redundant 'REVERSE' modifiers.");
+      reverseness = 1;
+   }
+
+   tempsetup.cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
+
+   cmd = tempsetup.cmd;    /* We will modify these flags, and, in any case, we need
+                              to rematerialize them at each step. */
 
    /* If we didn't do this check, and we had a 1x4, the "do it on each side"
       stuff would just do it without splitting or thinking anything was unusual,
@@ -2243,7 +2261,7 @@ Private void do_concept_crazy(
    for ( ; i<highlimit; i++) {
       tempsetup.cmd = cmd;    /* Get a fresh copy of the command. */
 
-      if ((i ^ parseptr->concept->value.arg1) & 1) {
+      if ((i ^ reverseness) & 1) {
          /* Do it in the center. */
          concentric_move(&tempsetup, &tempsetup.cmd, (setup_command *) 0,
                   schema_concentric, 0, 0, result);
@@ -2315,7 +2333,7 @@ Private void do_concept_fan_or_yoyo(
       tempsetup.cmd = ss->cmd;
       tempsetup.cmd.prior_elongation_bits = 0;
       tempsetup.cmd.parseptr = parseptrcopy;
-      tempsetup.cmd.callspec = base_calls[2];
+      tempsetup.cmd.callspec = base_calls[BASE_CALL_CAST_3_4];
       move(&tempsetup, FALSE, result);
       finalresultflags |= result->result_flags;
       tempsetup = *result;
@@ -2508,11 +2526,14 @@ Private void do_concept_checkpoint(
    parse_block *parseptr,
    setup *result)
 {
-   setup_command subsid_cmd;
-   subsid_cmd = ss->cmd;
+   setup_command subsid_cmd = ss->cmd;
    subsid_cmd.parseptr = parseptr->subsidiary_root;
 
-   if (parseptr->concept->value.arg1) {   /* 0 for normal, 1 for reverse checkpoint. */
+   if (parseptr->concept->value.arg1 || (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE)) {   /* 0 for normal, 1 for reverse checkpoint. */
+      if (parseptr->concept->value.arg1 && (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE))
+         fail("Redundant 'REVERSE' modifiers.");
+      ss->cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
+      subsid_cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint, 0, 0, result);
    }
    else {
@@ -3413,9 +3434,27 @@ Private void do_concept_meta(
       piecewise <concept>      : 2
       start <concept>          : 3
       finish                   : 4
-      reverse order            : 5 */
+      reverse order            : 5
+      like a                   : 6 */
 
-   if (key == 5) {
+   if (key == 4) {
+      /* This is "finish".  Do the call after the first part, with the special indicator
+         saying that this was invoked with "finish", so that the flag will be checked. */
+
+      if (ss->cmd.cmd_frac_flags == 0)
+         ss->cmd.cmd_frac_flags = 0301;
+      else if (ss->cmd.cmd_frac_flags == 0301)
+         ss->cmd.cmd_frac_flags = 0102;
+      else if ((ss->cmd.cmd_frac_flags & 0770) == 0100)
+         ss->cmd.cmd_frac_flags++;
+      else
+         fail("Can't stack meta or fractional concepts.");
+
+      move(ss, FALSE, result);
+      normalize_setup(result, simple_normalize);
+      return;
+   }
+   else if (key == 5) {
       /* This is "reverse order". */
 
       if (!(ss->cmd.cmd_frac_flags & 0x00200000)) {
@@ -3423,21 +3462,19 @@ Private void do_concept_meta(
          if (ss->cmd.cmd_frac_flags)
             fail("Can't stack meta or fractional concepts.");
    
-         ss->cmd.cmd_frac_flags = 0x00200111;
+         ss->cmd.cmd_frac_flags = 0x00200111UL;
       }
 
-      ss->cmd.cmd_frac_flags ^= 0x00100000;
+      ss->cmd.cmd_frac_flags ^= 0x00100000UL;
       move(ss, FALSE, result);
       return;
    }
-   else if (key == 4) {
-      /* This is "finish".  Do the call after the first part, with the special indicator
-         saying that this was invoked with "finish", so that the flag will be checked. */
+   else if (key == 6) {
+      /* This is "like a".  Do the last part of the call. */
 
       if (ss->cmd.cmd_frac_flags)
          fail("Can't stack meta or fractional concepts.");
-      /* Set the fractionalize field to [3 0 1]. */
-      ss->cmd.cmd_frac_flags |= (192|1);
+      ss->cmd.cmd_frac_flags |= 0x00310111UL;
       move(ss, FALSE, result);
       normalize_setup(result, simple_normalize);
       return;
@@ -4121,6 +4158,9 @@ extern long_boolean do_big_concept(
    if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) && !(this_table_item->concept_prop & CONCPROP__PERMIT_MATRIX))
       fail("\"Matrix\" concept must be followed by applicable concept.");
 
+   if ((ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE) && !(this_table_item->concept_prop & CONCPROP__PERMIT_REVERSE))
+      fail("Can't do this concept with REVERSE.");
+
    concept_func = this_table_item->concept_action;
    ss->cmd.parseptr = this_concept_parse_block->next;
 
@@ -4376,8 +4416,8 @@ concept_table_item concept_table[] = {
    /* concept_mirror */                   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_mirror},
    /* concept_central */                  {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_central},
    /* concept_snag_mystic */              {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_central},
-   /* concept_crazy */                    {0,                                                                                      do_concept_crazy},
-   /* concept_frac_crazy */               {CONCPROP__USE_NUMBER,                                                                   do_concept_crazy},
+   /* concept_crazy */                    {CONCPROP__PERMIT_REVERSE,                                                               do_concept_crazy},
+   /* concept_frac_crazy */               {CONCPROP__USE_NUMBER | CONCPROP__PERMIT_REVERSE,                                        do_concept_crazy},
    /* concept_fan_or_yoyo */              {0,                                                                                      do_concept_fan_or_yoyo},
    /* concept_c1_phantom */               {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_c1_phantom_move},
    /* concept_grand_working */            {CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                                       do_concept_grand_working},
@@ -4391,7 +4431,7 @@ concept_table_item concept_table[] = {
    /* concept_standard */                 {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX,                   do_concept_standard},
    /* concept_matrix */                   {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_matrix},
    /* concept_double_offset */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_double_offset},
-   /* concept_checkpoint */               {CONCPROP__SECOND_CALL,                                                                  do_concept_checkpoint},
+   /* concept_checkpoint */               {CONCPROP__SECOND_CALL | CONCPROP__PERMIT_REVERSE,                                       do_concept_checkpoint},
    /* concept_on_your_own */              {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              on_your_own_move},
    /* concept_trace */                    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_trace},
    /* concept_ferris */                   {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_ferris},

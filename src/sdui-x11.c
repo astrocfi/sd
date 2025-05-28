@@ -31,7 +31,9 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
-   uims_get_command
+   uims_get_startup_command
+   uims_get_call_command
+   uims_get_resolve_command
    uims_do_comment_popup
    uims_do_outfile_popup
    uims_do_getout_popup
@@ -70,7 +72,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
 #include <X11/Xaw/Dialog.h>
 #include <X11/Xaw/AsciiText.h>
 
-Private Cstring *tagger_menu_list;
+Private Cstring *tagger_menu_list[4];
 
 Private Widget toplevel, cmdmenu, conceptspecialmenu;
 Private Widget conceptpopup, conceptlist;
@@ -331,10 +333,6 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
         uims_reply local_reply = (uims_reply) client_data;
  
 	uims_menu_index = item->list_index; /* extern var <- menu item no. */
-         uims_menu_cross = FALSE;
-         uims_menu_magic = FALSE;
-         uims_menu_intlk = FALSE;
-         uims_menu_left = FALSE;
 
         if (local_reply == ui_command_select) {
             /* Translate into the form the main program wants, except for a few
@@ -1103,15 +1101,17 @@ Private Cstring empty_menu[] = {NULL};
 extern void
 uims_postinitialize(void)
 {
-    int i;
+   int i, k;
 
-   /* Create the tagger list. */
-   tagger_menu_list = (Cstring *) get_mem((number_of_taggers+1) * sizeof(char *));
+   /* Create the tagger lists. */
+   for (i=0 ; i<4 ; i++) {
+      tagger_menu_list[i] = (Cstring *) get_mem((number_of_taggers[i]+1) * sizeof(char *));
 
-   for (i=0; i<number_of_taggers; i++)
-      tagger_menu_list[i] = tagger_calls[i]->menu_name;
+      for (k=0; k<number_of_taggers[i]; k++)
+         tagger_menu_list[i][k] = tagger_calls[i][k]->menu_name;
 
-   tagger_menu_list[number_of_taggers] = (Cstring) 0;
+      tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
+   }
 
     /* initialize our special empty call menu */
     call_menu_lists[call_list_empty] = empty_menu;
@@ -1174,96 +1174,213 @@ switch_to_resolve_mode(void)
 
 Private int visible_modifications = -1;
 
-extern uims_reply
-uims_get_command(mode_kind mode, call_list_kind *call_menu)
+
+extern uims_reply uims_get_startup_command(void)
 {
-    try_again:
+   try_again:
 
-    /* Update the text area */
-    XawTextEnableRedisplay(txtwin);
+   /* Update the text area */
+   XawTextEnableRedisplay(txtwin);
 
-    if (visible_modifications != allowing_modifications) {
-	XtVaSetValues(statuswin,
-		      XtNlabel,
-		      sd_resources.modifications_allowed[allowing_modifications],
-		      NULL);
-	visible_modifications = allowing_modifications;
-    }
+   if (visible_modifications != allowing_modifications) {
+      XtVaSetValues(statuswin,
+                 XtNlabel,
+                 sd_resources.modifications_allowed[allowing_modifications],
+                 NULL);
+      visible_modifications = allowing_modifications;
+   }
 
-    switch (mode) {
-      case mode_startup:
-	if (visible_mode != mode_startup) {
-	    XtUnmanageChild(resolvewin); /* managed at startup, too */
-	    XtManageChild(callbox); /* nec if mode_resolve now */
-	    XawListChange(cmdmenu, sd_resources.start_list,
-			  NUM_START_SELECT_KINDS, 0, FALSE);
-	    XawListChange(conceptspecialmenu, (char **) empty_menu, 0, 0, FALSE);
-	    XawListChange(conceptmenu, (char **) empty_menu, 0, 0, FALSE);
-	    set_call_menu (call_list_empty, call_list_empty);
-	    XtRemoveAllCallbacks(cmdmenu, XtNcallback);
-	    XtAddCallback(cmdmenu, XtNcallback,
-			  command_or_menu_chosen, (XtPointer)ui_start_select);
-	    visible_mode = mode_startup;
-	}
-	break;
+   if (visible_mode != mode_startup) {
+      XtUnmanageChild(resolvewin); /* managed at startup, too */
+      XtManageChild(callbox); /* nec if mode_resolve now */
+      XawListChange(cmdmenu, sd_resources.start_list,
+                 NUM_START_SELECT_KINDS, 0, FALSE);
+      XawListChange(conceptspecialmenu, (char **) empty_menu, 0, 0, FALSE);
+      XawListChange(conceptmenu, (char **) empty_menu, 0, 0, FALSE);
+      set_call_menu (call_list_empty, call_list_empty);
+      XtRemoveAllCallbacks(cmdmenu, XtNcallback);
+      XtAddCallback(cmdmenu, XtNcallback,
+                 command_or_menu_chosen, (XtPointer)ui_start_select);
+      visible_mode = mode_startup;
+   }
 
-      case mode_resolve:
-	if (visible_mode != mode_resolve)
-	    switch_to_resolve_mode();
-	break;
+   inside_what = inside_get_command;
+   {
+      int local_reply = read_user_gesture(xtcontext);
 
-      case mode_normal:
-        if (allowing_modifications)
-            *call_menu = call_list_any;
-
-	if (visible_mode != mode_normal) {
-	    if (visible_mode == mode_resolve) {
-		XtUnmanageChild(resolvewin);
-		XtManageChild(callbox);
-	    } else if (visible_mode == mode_startup) {
-		switch_from_startup_mode();
-	    }
-	    visible_mode = mode_normal;
-	    visible_call_menu = call_list_none; /* no call menu visible */
-	}
-	if (visible_call_menu != *call_menu)
-	    set_call_menu (*call_menu, *call_menu);
-	break;
-    case mode_none:
-	/* this should never happen */
-	break;
-    }
-
-    inside_what = inside_get_command;
-    {
-        int local_reply = read_user_gesture(xtcontext);
-
-        if (local_reply == USER_GESTURE_NULL)
+      if (local_reply == USER_GESTURE_NULL)
+         goto try_again;
+      else if (local_reply == ui_command_select) {
+         if (uims_menu_index == SPECIAL_SIMPLE_MODS) {
+            /* Increment "allowing_modifications" up to a maximum of 2. */
+            if (allowing_modifications != 2) allowing_modifications++;
             goto try_again;
-        else if (local_reply == ui_command_select) {
-            if (uims_menu_index == SPECIAL_SIMPLE_MODS) {
-                /* Increment "allowing_modifications" up to a maximum of 2. */
-                if (allowing_modifications != 2) allowing_modifications++;
-                goto try_again;
-            }
-            else if (uims_menu_index == SPECIAL_ALLOW_MODS) {
-                allowing_modifications = 2;
-                goto try_again;
-            }
-            else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
-                allowing_all_concepts = !allowing_all_concepts;
-                /* ***** Maybe we should change visibility of off-level concepts at this point. */
-                goto try_again;
-            }
-            else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
-                using_active_phantoms = !using_active_phantoms;
-                goto try_again;
-            }
-        }
+         }
+         else if (uims_menu_index == SPECIAL_ALLOW_MODS) {
+            allowing_modifications = 2;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
+            allowing_all_concepts = !allowing_all_concepts;
+            /* ***** Maybe we should change visibility of off-level concepts at this point. */
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
+            using_active_phantoms = !using_active_phantoms;
+            goto try_again;
+         }
+      }
 
-        return local_reply;
-    }
+      return local_reply;
+   }
 }
+
+
+extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+{
+   int local_reply;
+
+   try_again:
+
+   /* Update the text area */
+   XawTextEnableRedisplay(txtwin);
+
+   if (visible_modifications != allowing_modifications) {
+      XtVaSetValues(statuswin,
+                 XtNlabel,
+                 sd_resources.modifications_allowed[allowing_modifications],
+                 NULL);
+      visible_modifications = allowing_modifications;
+   }
+
+   if (allowing_modifications)
+      *call_menu = call_list_any;
+
+   if (visible_mode != mode_normal) {
+      if (visible_mode == mode_resolve) {
+         XtUnmanageChild(resolvewin);
+         XtManageChild(callbox);
+      } else if (visible_mode == mode_startup) {
+         switch_from_startup_mode();
+      }
+      visible_mode = mode_normal;
+      visible_call_menu = call_list_none; /* no call menu visible */
+   }
+   if (visible_call_menu != *call_menu)
+      set_call_menu (*call_menu, *call_menu);
+
+   inside_what = inside_get_command;
+   local_reply = read_user_gesture(xtcontext);
+
+   if (local_reply == USER_GESTURE_NULL)
+      goto try_again;
+   else if (local_reply == ui_command_select) {
+      if (uims_menu_index == SPECIAL_SIMPLE_MODS) {
+         /* Increment "allowing_modifications" up to a maximum of 2. */
+         if (allowing_modifications != 2) allowing_modifications++;
+         goto try_again;
+      }
+      else if (uims_menu_index == SPECIAL_ALLOW_MODS) {
+         allowing_modifications = 2;
+         goto try_again;
+      }
+      else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
+         allowing_all_concepts = !allowing_all_concepts;
+         /* ***** Maybe we should change visibility of off-level concepts at this point. */
+         goto try_again;
+      }
+      else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
+         using_active_phantoms = !using_active_phantoms;
+         goto try_again;
+      }
+   }
+
+   *reply_p = local_reply;
+
+   if (*reply_p == ui_call_select) {
+      /* If user gave a call, deposit same. */
+
+      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
+      if (deposit_call(save_call)) return TRUE;
+   }
+   else if (*reply_p == ui_concept_select) {
+      /* If user gave a concept, pick up any needed numeric modifiers. */
+
+      uint32 concept_number_fields = 0;
+      int howmanynumbers = 0;
+      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
+
+      if (props & CONCPROP__USE_NUMBER)
+         howmanynumbers = 1;
+      if (props & CONCPROP__USE_TWO_NUMBERS)
+         howmanynumbers = 2;
+
+      if (howmanynumbers != 0) {
+         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
+            return TRUE;           /* User waved the mouse away. */
+      }
+
+      /* A concept is required.  Its index has been stored in uims_menu_index,
+         and the "concept_number_fields" is ready. */
+
+      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
+         return TRUE;
+   }
+
+   return FALSE;
+}
+
+
+extern uims_reply uims_get_resolve_command(void)
+{
+   try_again:
+
+   /* Update the text area */
+   XawTextEnableRedisplay(txtwin);
+
+   if (visible_modifications != allowing_modifications) {
+      XtVaSetValues(statuswin,
+                 XtNlabel,
+                 sd_resources.modifications_allowed[allowing_modifications],
+                 NULL);
+      visible_modifications = allowing_modifications;
+   }
+
+   if (visible_mode != mode_resolve)
+      switch_to_resolve_mode();
+
+   inside_what = inside_get_command;
+   {
+      int local_reply = read_user_gesture(xtcontext);
+
+      if (local_reply == USER_GESTURE_NULL)
+         goto try_again;
+      else if (local_reply == ui_command_select) {
+         if (uims_menu_index == SPECIAL_SIMPLE_MODS) {
+            /* Increment "allowing_modifications" up to a maximum of 2. */
+            if (allowing_modifications != 2) allowing_modifications++;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_ALLOW_MODS) {
+            allowing_modifications = 2;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
+            allowing_all_concepts = !allowing_all_concepts;
+            /* ***** Maybe we should change visibility of off-level concepts at this point. */
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
+            using_active_phantoms = !using_active_phantoms;
+            goto try_again;
+         }
+      }
+
+      return local_reply;
+   }
+}
+
+
 
 
 Private int
@@ -1489,12 +1606,11 @@ uims_do_direction_popup(void)
 }    
 
 
-extern int
-uims_do_tagger_popup(void)
+extern int uims_do_tagger_popup(int tagger_class)
 {
-    int t = choose_popup(sd_resources.tagger_title, tagger_menu_list);
+    int t = choose_popup(sd_resources.tagger_title, tagger_menu_list[tagger_class]);
     if (t==0) return POPUP_DECLINE;
-    return t;
+    return (tagger_class << 5) | t;
 }    
 
 

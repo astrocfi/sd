@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,10 +40,11 @@
    nice_setup_thing_4x6
    phantom_concept_index
    matrix_2x8_concept_index
-   left_concept_index
    cross_concept_index
    magic_concept_index
    intlk_concept_index
+   left_concept_index
+   grand_concept_index
    general_concept_offset
    general_concept_size
    concept_offset_tables
@@ -307,21 +308,21 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE DIAMONDS WORKING TOGETHER",   concept_quad_diamonds_together,FALSE, l_c4a},
 /* -------- column break -------- */
 #define pb__3_size 32
-   {"SPLIT PHANTOM 1/4-TAGS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
-   {"INTERLOCKED PHANTOM 1/4-TAGS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
-   {"PHANTOM 1/4-TAGS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_1_4_TAG}},
+   {"SPLIT PHANTOM 1/4 TAGS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
+   {"INTERLOCKED PHANTOM 1/4 TAGS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
+   {"PHANTOM 1/4 TAGS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_1_4_TAG}},
          {"", concept_comment, l_nonexistent_concept},
-   {"SPLIT PHANTOM 3/4-TAGS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
-   {"INTERLOCKED PHANTOM 3/4-TAGS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
-   {"PHANTOM 3/4-TAGS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_3_4_TAG}},
+   {"SPLIT PHANTOM 3/4 TAGS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
+   {"INTERLOCKED PHANTOM 3/4 TAGS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
+   {"PHANTOM 3/4 TAGS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_3_4_TAG}},
          {"", concept_comment, l_nonexistent_concept},
-   {"SPLIT PHANTOM GENERAL 1/4-TAGS",        concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
-   {"INTERLOCKED PHANTOM GENERAL 1/4-TAGS",  concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
-   {"PHANTOM GENERAL 1/4-TAGS",              concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"SPLIT PHANTOM GENERAL 1/4 TAGS",        concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"INTERLOCKED PHANTOM GENERAL 1/4 TAGS",  concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"PHANTOM GENERAL 1/4 TAGS",              concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, l_nonexistent_concept},
-   {"TWIN PHANTOM 1/4-TAGS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
-   {"TWIN PHANTOM 3/4-TAGS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
-   {"TWIN PHANTOM GENERAL 1/4-TAGS",         concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"TWIN PHANTOM 1/4 TAGS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
+   {"TWIN PHANTOM 3/4 TAGS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
+   {"TWIN PHANTOM GENERAL 1/4 TAGS",         concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE 1/4 TAGS",                       concept_triple_diamonds,       FALSE, l_c3a, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
    {"TRIPLE 3/4 TAGS",                       concept_triple_diamonds,       FALSE, l_c3a, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
@@ -342,7 +343,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* tandem concepts */
 
-#define tt__1_size 14
+#define tt__1_size 19
 #define tt__1_cpl 0
 #define tt__1_tnd 1
    {"AS COUPLES",                            concept_tandem,                FALSE, l_a1,         {0, FALSE, 0, 0, 1}},
@@ -357,10 +358,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEW",                                  concept_tandem,                FALSE, l_c4a,        {0, FALSE, 0, 0, 3}},
    {"@6 ARE AS COUPLES",                     concept_some_are_tandem,       FALSE, l_a1,         {0, TRUE,  0, 0, 1}},
    {"@6 ARE TANDEM",                         concept_some_are_tandem,       FALSE, l_c1,         {0, TRUE,  0, 0, 0}},
-   {"OUTSIDE TRIANGLES WORK SOLID",          concept_tandem,                FALSE, l_c3x,         {0, FALSE, 0, 0, 20}},
-   {"INSIDE TRIANGLES WORK SOLID",           concept_tandem,                FALSE, l_c3x,         {0, FALSE, 0, 0, 21}},
+   {"INSIDE TRIANGLES WORK SOLID",           concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 22}},
+   {"OUTSIDE TRIANGLES WORK SOLID",          concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 23}},
+   {"IN POINT TRIANGLES WORK SOLID",         concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 21}},
+   {"OUT POINT TRIANGLES WORK SOLID",        concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 20}},
+   {"WAVE-BASED TRIANGLES WORK SOLID",       concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 26}},
+   {"TANDEM-BASED TRIANGLES WORK SOLID",     concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 27}},
+   {"@k-BASED TRIANGLES WORK SOLID",         concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  0, 0, 30}},
 /* -------- column break -------- */
-#define tt__2_size 15
+#define tt__2_size 20
 #define tt__2_cpl2s 0
 #define tt__2_tnd2s 1
    {"COUPLES TWOSOME",                       concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 1}},
@@ -375,11 +381,16 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEWSOME",                              concept_tandem,                FALSE, l_c4a,        {0, FALSE, 1, 0, 3}},
    {"@6 ARE COUPLES TWOSOME",                concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 1}},
    {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 0}},
-   {"OUTSIDE TRIANGLES WORK THREESOME",      concept_tandem,                FALSE, l_a1,         {0, FALSE, 1, 0, 20}},
-   {"INSIDE TRIANGLES WORK THREESOME",       concept_tandem,                FALSE, l_a1,         {0, FALSE, 1, 0, 21}},
+   {"INSIDE TRIANGLES WORK THREESOME",       concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 22}},
+   {"OUTSIDE TRIANGLES WORK THREESOME",      concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 23}},
+   {"IN POINT TRIANGLES WORK THREESOME",     concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 21}},
+   {"OUT POINT TRIANGLES WORK THREESOME",    concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 20}},
+   {"WAVE-BASED TRIANGLES WORK THREESOME",   concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 26}},
+   {"TANDEM-BASED TRIANGLES WORK THREESOME", concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 27}},
+   {"@k-BASED TRIANGLES WORK THREESOME",     concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 30}},
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 1, 2, 1}},
 /* -------- column break -------- */
-#define tt__3_size 14
+#define tt__3_size 19
    {"COUPLES @b TWOSOME",                    concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 1}},
    {"TANDEM @b TWOSOME",                     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 0}},
    {"SIAMESE @b TWOSOME",                    concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 2}},
@@ -392,10 +403,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEW @b TWOSOME",                       concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 3}},
    {"@6 ARE COUPLES @b TWOSOME",             concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 1}},
    {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 0}},
-   {"OUTSIDE TRIANGLES WORK SOLID @b THREESOME", concept_frac_tandem,       FALSE, l_c3x,         {0, FALSE, 2, 0, 20}},
-   {"INSIDE TRIANGLES WORK SOLID @b THREESOME",  concept_frac_tandem,       FALSE, l_c3x,         {0, FALSE, 2, 0, 21}},
+   {"INSIDE TRIANGLES WORK SOLID @b THREESOME",       concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 0, 22}},
+   {"OUTSIDE TRIANGLES WORK SOLID @b THREESOME",      concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 0, 23}},
+   {"IN POINT TRIANGLES WORK SOLID @b THREESOME",     concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 0, 21}},
+   {"OUT POINT TRIANGLES WORK SOLID @b THREESOME",    concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 0, 20}},
+   {"WAVE-BASED TRIANGLES WORK SOLID @b THREESOME",   concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 0, 26}},
+   {"TANDEM-BASED TRIANGLES WORK SOLID @b THREESOME", concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 0, 27}},
+   {"@k-BASED TRIANGLES WORK SOLID @b THREESOME", concept_some_are_frac_tandem, FALSE, l_c4,     {0, TRUE,  2, 0, 30}},
 /* -------- column break -------- */         
-#define tt__4_size 14
+#define tt__4_size 19
    {"COUPLES TWOSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 1}},
    {"TANDEM TWOSOME @b SOLID",               concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 0}},
    {"SIAMESE TWOSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 2}},
@@ -408,8 +424,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEWSOME @b SOLID",                     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 3}},
    {"@6 ARE COUPLES TWOSOME @b SOLID",       concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  3, 0, 1}},
    {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  3, 0, 0}},
-   {"OUTSIDE TRIANGLES WORK THREESOME @b SOLID", concept_frac_tandem,       FALSE, l_c4,         {0, FALSE, 3, 0, 20}},
-   {"INSIDE TRIANGLES WORK THREESOME @b SOLID",  concept_frac_tandem,       FALSE, l_c4,         {0, FALSE, 3, 0, 21}},
+   {"INSIDE TRIANGLES WORK THREESOME @b SOLID",       concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 0, 22}},
+   {"OUTSIDE TRIANGLES WORK THREESOME @b SOLID",      concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 0, 23}},
+   {"IN POINT TRIANGLES WORK THREESOME @b SOLID",     concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 0, 21}},
+   {"OUT POINT TRIANGLES WORK THREESOME @b SOLID",    concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 0, 20}},
+   {"WAVE-BASED TRIANGLES WORK THREESOME @b SOLID",   concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 0, 26}},
+   {"TANDEM-BASED TRIANGLES WORK THREESOME @b SOLID", concept_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 0, 27}},
+   {"@k-BASED TRIANGLES WORK THREESOME @b SOLID", concept_some_are_frac_tandem, FALSE, l_c4,     {0, TRUE, 3, 0, 30}},
 
 /* distorted concepts */
 
@@ -418,11 +439,11 @@ concept_descriptor concept_descriptor_table[] = {
    {"STAIRSTEP COLUMNS",                     concept_do_phantom_2x4,        FALSE, l_c4,         {&map_stairst, phantest_only_one, 0, MPKIND__NONE}},
    {"LADDER COLUMNS",                        concept_do_phantom_2x4,        FALSE, l_c4,         {&map_ladder, phantest_only_one, 0, MPKIND__NONE}},
    {"OFFSET COLUMNS",                        concept_distorted,             FALSE, l_c2,         {0, disttest_offset, 0}},
-   {"\"Z\" COLUMNS",                         concept_distorted,             FALSE, l_c3,         {0, disttest_z, 0}},
+   {"Z COLUMNS",                             concept_distorted,             FALSE, l_c3,         {0, disttest_z, 0}},
    {"DISTORTED COLUMNS",                     concept_distorted,             FALSE, l_c3,         {0, disttest_any, 0}},
    {"@6 IN A DIAGONAL COLUMN",               concept_single_diagonal,       FALSE, l_c3,         {0, 0}},
    {"TWO DIAGONAL COLUMNS",                  concept_double_diagonal,       FALSE, l_c3,         {0, 0}},
-   {"\"O\"",                                 concept_do_phantom_2x4,        FALSE, l_c1,         {&map_o_s2x4_3, phantest_only_first_one, 0, MPKIND__NONE}},
+   {"O",                                     concept_do_phantom_2x4,        FALSE, l_c1,         {&map_o_s2x4_3, phantest_only_first_one, 0, MPKIND__NONE}},
    {"BUTTERFLY",                             concept_do_phantom_2x4,        FALSE, l_c1,         {&map_x_s2x4_3, phantest_only_second_one, 0, MPKIND__NONE}},
 /* -------- column break -------- */
 #define dd__2_size 10
@@ -430,7 +451,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"STAIRSTEP LINES",                       concept_do_phantom_2x4,        FALSE, l_c4,         {&map_ladder, phantest_only_one, 1, MPKIND__NONE}},
    {"LADDER LINES",                          concept_do_phantom_2x4,        FALSE, l_c4,         {&map_stairst, phantest_only_one, 1, MPKIND__NONE}},
    {"OFFSET LINES",                          concept_distorted,             FALSE, l_c2,         {0, disttest_offset, 1}},
-   {"\"Z\" LINES",                           concept_distorted,             FALSE, l_c3,         {0, disttest_z, 1}},
+   {"Z LINES",                               concept_distorted,             FALSE, l_c3,         {0, disttest_z, 1}},
    {"DISTORTED LINES",                       concept_distorted,             FALSE, l_c3,         {0, disttest_any, 1}},
    {"@6 IN A DIAGONAL LINE",                 concept_single_diagonal,       FALSE, l_c3,         {0, 1}},
    {"TWO DIAGONAL LINES",                    concept_double_diagonal,       FALSE, l_c3,         {0, 1}},
@@ -448,7 +469,7 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-   {"PHANTOM BUTTERFLY OR \"O\"",            concept_do_phantom_2x4,        FALSE, l_c4a,        {&map_but_o, phantest_both, 0, MPKIND__NONE}},
+   {"PHANTOM BUTTERFLY OR O",                concept_do_phantom_2x4,        FALSE, l_c4a,        {&map_but_o, phantest_both, 0, MPKIND__NONE}},
 /* -------- column break -------- */
 #define dd__4_size 4
 #define dd__4_pofl 3
@@ -475,8 +496,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERLOCKED PARALLELOGRAM",             concept_do_both_boxes,         FALSE, l_c3x,        {&map_2x4_int_pgram, 97, TRUE}},
    {"INTERLOCKED BOXES",                     concept_misc_distort,          FALSE, l_c3x,        {0, 3, 0}},
    {"TWIN PARALLELOGRAMS",                   concept_misc_distort,          FALSE, l_c3x,        {0, 2, 0}},
-   {"EACH \"Z\"",                            concept_misc_distort,          FALSE, l_c3a,        {0, 0, 0}},
-   {"INTERLOCKED \"Z's\"",                   concept_misc_distort,          FALSE, l_c3a,        {0, 0, 8}},
+   {"EACH Z",                                concept_misc_distort,          FALSE, l_c3a,        {0, 0, 0}},
+   {"INTERLOCKED Z's",                       concept_misc_distort,          FALSE, l_c3a,        {0, 0, 8}},
 /* -------- column break -------- */
 #define d4__3_size 6
    {"JAY",                                   concept_misc_distort,          FALSE, l_c3a,        {0, 1, 0}},
@@ -498,6 +519,7 @@ concept_descriptor concept_descriptor_table[] = {
 #define mm__1_size 63
 #define mm__1_left 0
 #define mm__1_cross 2
+#define mm__1_grand 5
 #define mm__1_intlk 9
 #define mm__1_phan 12
    {"LEFT",                                  concept_left,                  FALSE, l_mainstream},
@@ -564,7 +586,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                FALSE, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                FALSE, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 48
+#define mm__2_size 49
    {"CENTERS",                               concept_centers_or_ends,       FALSE, l_mainstream, {0, 0}},
    {"ENDS",                                  concept_centers_or_ends,       FALSE, l_mainstream, {0, 1}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,      FALSE, l_mainstream, {0, 0}},
@@ -608,6 +630,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERLACE",                             concept_interlace,             FALSE, l_c3x},
    {"START <concept>",                       concept_meta,                  FALSE, l_c2,         {0, 3}},
    {"FINISH",                                concept_meta,                  FALSE, l_c2,         {0, 4}},
+   {"LIKE A",                                concept_meta,                  FALSE, l_c2,         {0, 6}},
    {"@6 START",                              concept_so_and_so_begin,       FALSE, l_c2,         {0, 0}},
    {"SKIP THE @u PART",                      concept_nth_part,              FALSE, l_c2,         {0, 1}},
    {"DO THE @u PART <concept>",              concept_nth_part,              FALSE, l_c2,         {0, 0}},
@@ -617,15 +640,15 @@ concept_descriptor concept_descriptor_table[] = {
 #define mm__3_size 45
 #define mm__3_3x3 39
 #define mm__3_4x4 40
-   {"IN POINT TRIANGLE",                     concept_randomtrngl,           FALSE, l_c1,         {0, 1}},
-   {"OUT POINT TRIANGLE",                    concept_randomtrngl,           FALSE, l_c1,         {0, 0}},
    {"INSIDE TRIANGLES",                      concept_randomtrngl,           FALSE, l_c1,         {0, 2}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,           FALSE, l_c1,         {0, 3}},
+   {"IN POINT TRIANGLES",                    concept_randomtrngl,           FALSE, l_c1,         {0, 1}},
+   {"OUT POINT TRIANGLES",                   concept_randomtrngl,           FALSE, l_c1,         {0, 0}},
    {"TALL 6",                                concept_randomtrngl,           FALSE, l_c3x,        {0, 4}},
    {"SHORT 6",                               concept_randomtrngl,           FALSE, l_c3x,        {0, 5}},
-   {"WAVE-BASE TRIANGLES",                   concept_randomtrngl,           FALSE, l_c1,         {0, 6}},
-   {"TANDEM-BASE TRIANGLES",                 concept_randomtrngl,           FALSE, l_c1,         {0, 7}},
-   {"@6-BASED TRIANGLE",                     concept_selbasedtrngl,         FALSE, l_c1,         {0, 20}},
+   {"WAVE-BASED TRIANGLES",                  concept_randomtrngl,           FALSE, l_c1,         {0, 6}},
+   {"TANDEM-BASED TRIANGLES",                concept_randomtrngl,           FALSE, l_c1,         {0, 7}},
+   {"@k-BASED TRIANGLES",                    concept_selbasedtrngl,         FALSE, l_c1,         {0, 20}},
          {"", concept_comment, l_nonexistent_concept},
    {"CONCENTRIC",                            concept_concentric,            FALSE, l_c1,         {0, schema_concentric}},
    {"CROSS CONCENTRIC",                      concept_concentric,            FALSE, l_c2,         {0, schema_cross_concentric}},
@@ -639,8 +662,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"GRAND WORKING AS CENTERS",              concept_grand_working,         FALSE, l_c3x,        {0, 8}},
    {"GRAND WORKING AS ENDS",                 concept_grand_working,         FALSE, l_c3x,        {0, 9}},
          {"", concept_comment, l_nonexistent_concept},
-   {"@6 ARE CENTERS OF A DOUBLE-OFFSET 1/4-TAG",concept_double_offset,      FALSE, l_c4,         {0, 0}},
-   {"@6 ARE CENTERS OF A DOUBLE-OFFSET 3/4-TAG",concept_double_offset,      FALSE, l_c4,         {0, 1}},
+   {"@6 ARE CENTERS OF A DOUBLE-OFFSET 1/4 TAG",concept_double_offset,      FALSE, l_c4,         {0, 0}},
+   {"@6 ARE CENTERS OF A DOUBLE-OFFSET 3/4 TAG",concept_double_offset,      FALSE, l_c4,         {0, 1}},
    {"@6 ARE CENTERS OF A DOUBLE-OFFSET THING",concept_double_offset,        FALSE, l_c4,         {0, 2}},
    {"@6 ARE CENTERS OF DOUBLE-OFFSET DIAMONDS",concept_double_offset,       FALSE, l_c4,         {0, 3}},
          {"", concept_comment, l_nonexistent_concept},
@@ -899,10 +922,11 @@ nice_setup_thing nice_setup_thing_4x6 = {
 
 int phantom_concept_index = mm_1_offset + mm__1_phan;
 int matrix_2x8_concept_index = gg_offset + gg_2x8_matrix;
-int left_concept_index = mm_1_offset + mm__1_left;
 int cross_concept_index = mm_1_offset + mm__1_cross;
 int magic_concept_index = d4_1_offset + d4__1_magic;
 int intlk_concept_index = mm_1_offset + mm__1_intlk;
+int left_concept_index = mm_1_offset + mm__1_left;
+int grand_concept_index = mm_1_offset + mm__1_grand;
 
 
 Private int phantoml_sizes[]  = {pl__1_size, pl__2_size, pl__3_size,             -1};

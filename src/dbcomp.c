@@ -415,6 +415,7 @@ char *qualtab[] = {
    "miniwaves",
    "right_wave",
    "left_wave",
+   "1_4_tag",
    "3_4_tag",
    "dmd_same_point",
    "dmd_facing",
@@ -425,6 +426,8 @@ char *qualtab[] = {
    "not_split_dixie",
    "8_chain",
    "trade_by",
+   "said_triangle",
+   "didnt_say_triangle",
    ""};
 
 /* This table is keyed to "call_restriction". */
@@ -481,7 +484,7 @@ char *defmodtab1[] = {
    "endscando",
    "repeat_nm1",
    "roll_transparent",
-   "must_be_tag_call",
+   "???",                /* spare, ought to take it out. */
    "cpls_unless_single",
    "shift_one_number",
    "shift_two_numbers",     /* The constant "shift_three_numbers" is elsewhere. */
@@ -515,7 +518,9 @@ char *flagtab1[] = {
    "can_be_fan_or_yoyo",
    "no_cutting_through",
    "no_elongation_allowed",
-   "base_tag_call",
+   "base_tag_call_0",
+   "base_tag_call_1",      /* The constant "base_tag_call_2" is elsewhere. */
+   "base_tag_call_3",
    "yield_if_ambiguous",
    ""};
 
@@ -739,6 +744,8 @@ char *predtab[] = {
    "q_line_back",
    ""};
 
+#define N_INITIAL_TAGS 7
+
 /* The "tag table" is the table that we use to bind together things like
 
             "seq flipdiamond []"
@@ -753,18 +760,21 @@ char *predtab[] = {
    its own copy of the table, containing pointers to the actual call
    descriptors. */
 
-int tagtabsize = 3;      /* Number of items we currently have in tagtab -- we initially have three; see below. */
-int tagtabmax = 100;     /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
+int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
+int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
 
 tagtabitem *tagtab;      /* The dynamically allocated tag list. */
 
 tagtabitem tagtabinit[] = {
-      {1, "+++"},         /* Must be unused -- call #0 signals end of list in sequential encoding. */
-      {0, "nullcall"},    /* Must be #1 -- the database initializer uses call #1 for any mandatory
+      {1, "+++"},            /* Must be unused -- call #0 signals end of list in sequential encoding. */
+      {0, "nullcall"},       /* Must be #1 -- the database initializer uses call #1 for any mandatory
                                     modifier, e.g. "clover and [anything]" is executed as
                                     "clover and [call #1]". */
-      {0, "armturn_34"},    /* Must be #2 -- this is used for "yo-yo". */
-      {0, "(base ATC call)"}};   /* Must be #3. */
+      {0, "armturn_34"},     /* Must be #2 -- this is used for "yo-yo". */
+      {0, "tagnullcall0"},   /* Must be #3. */
+      {0, "tagnullcall1"},   /* Must be #4. */
+      {0, "tagnullcall2"},   /* Must be #5. */
+      {0, "tagnullcall3"}};  /* Must be #6. */
 
 int eof;
 int chars_left;
@@ -1470,7 +1480,7 @@ extern void dbcompile(void)
 
    tagtabmax = 100; /* try to make it reentrant */
    tagtabsize = 3;
-   eof = 0;
+   tagtabsize = N_INITIAL_TAGS;
    lineno = 0;
    chars_left = 0;
    error_is_fatal = 1;
@@ -1544,6 +1554,8 @@ extern void dbcompile(void)
                   call_flags1 |= (1 << iii);
                else if (strcmp(tok_str, "need_three_numbers") == 0)
                   call_flags1 |= (3*CFLAG1_NUMBER_BIT);
+               else if (strcmp(tok_str, "base_tag_call_2") == 0)
+                  call_flags1 |= (3*CFLAG1_BASE_TAG_CALL_BIT);
                else if ((iii = search(flagtabh)) >= 0)
                   call_flagsh |= (1 << iii);
                else

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,9 +27,18 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 54
+#define DATABASE_FORMAT_VERSION 56
 
 
+
+
+/* BEWARE!!  These must track the items in tagtabinit in dbcomp.c . */
+#define BASE_CALL_CAST_3_4   2
+/* These 4 must be consecutive. */
+#define BASE_CALL_TAGGER0    3
+#define BASE_CALL_TAGGER1    4
+#define BASE_CALL_TAGGER2    5
+#define BASE_CALL_TAGGER3    6
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -72,18 +81,18 @@
    If the definitions in sd.h find themselves using an undefined spare bit,
    we know we are in serious trouble. */
 
-#define CFLAGH__REQUIRES_TAG_CALL         0x00100000UL
-#define CFLAGH__REQUIRES_SELECTOR         0x00200000UL
-#define CFLAGH__REQUIRES_DIRECTION        0x00400000UL
-#define INHERITSPARE_1                    0x00800000UL
-#define INHERITSPARE_2                    0x01000000UL
-#define INHERITSPARE_3                    0x02000000UL
-#define INHERITSPARE_4                    0x04000000UL
-#define INHERITSPARE_5                    0x08000000UL
-#define INHERITSPARE_6                    0x10000000UL
-#define INHERITSPARE_7                    0x20000000UL
-#define INHERITSPARE_8                    0x40000000UL
-#define INHERITSPARE_9                    0x80000000UL
+/* A 3-bit field. */
+#define CFLAGH__TAG_CALL_RQ_MASK          0x00700000UL
+#define CFLAGH__TAG_CALL_RQ_BIT           0x00100000UL
+#define CFLAGH__REQUIRES_SELECTOR         0x00800000UL
+#define CFLAGH__REQUIRES_DIRECTION        0x01000000UL
+#define INHERITSPARE_1                    0x02000000UL
+#define INHERITSPARE_2                    0x04000000UL
+#define INHERITSPARE_3                    0x08000000UL
+#define INHERITSPARE_4                    0x10000000UL
+#define INHERITSPARE_5                    0x20000000UL
+#define INHERITSPARE_6                    0x40000000UL
+#define INHERITSPARE_7                    0x80000000UL
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block. */
@@ -112,8 +121,10 @@
 #define CFLAG1_CAN_BE_FAN_OR_YOYO         0x00200000UL
 #define CFLAG1_NO_CUTTING_THROUGH         0x00400000UL
 #define CFLAG1_NO_ELONGATION_ALLOWED      0x00800000UL
-#define CFLAG1_IS_BASE_TAG_CALL           0x01000000UL
-#define CFLAG1_YIELD_IF_AMBIGUOUS         0x02000000UL
+/* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
+#define CFLAG1_BASE_TAG_CALL_MASK         0x07000000UL
+#define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
+#define CFLAG1_YIELD_IF_AMBIGUOUS         0x08000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -315,6 +326,7 @@ typedef enum {
                                        magic columns, diamonds, wave-based triangles... */
    sq_rwave_only,                   /* As above, but all the miniwaves must be right-handed */
    sq_lwave_only,                   /* As above, but all the miniwaves must be left-handed */
+   sq_1_4_tag,                      /* dmd, qtag - this is a 1/4 tag, i.e. points are looking in */
    sq_3_4_tag,                      /* dmd, qtag - this is a 3/4 tag, i.e. points are looking out */
    sq_dmd_same_pt,                  /* dmd - centers would circulate to same point */
    sq_dmd_facing,                   /* dmd - diamond is fully occupied and fully facing */
@@ -324,7 +336,9 @@ typedef enum {
    sq_split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
    sq_not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
    sq_8_chain,                      /* 4x1 - setup is single 8 chain */
-   sq_trade_by                      /* 4x1 - setup is single trade by */
+   sq_trade_by,                     /* 4x1 - setup is single trade by */
+   sq_said_tgl,                     /* short6/pshort6 - caller said the word "triangle" */
+   sq_didnt_say_tgl                 /* short6/pshort6 - caller didn't say the word "triangle" */
 } search_qualifier;
 
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
@@ -436,7 +450,6 @@ typedef enum {
    dfm1_endscando                     --  concdefine outers: can tell ends only to do this
    dfm1_repeat_nm1                    --  seqdefine: take a numeric argument and replicate this part N-1 times
    dfm1_roll_transparent              --  seqdefine: any person who is marked roll-neutral after this call has his previous roll status restored
-   dfm1_must_be_tag_call              --  seqdefine: the subject call (or any replacement for it) must be a tagging call
    dfm1_cpls_unless_single            --  seqdefine: the do this part as couples, unless this call is being done "single"
                                                                and "single_is_inherited" was set
    INHERITFLAG_DIAMOND               --  concdefine/seqdefine: if original call said "diamond" apply it to this part
@@ -482,7 +495,7 @@ typedef enum {
 #define DFM1_ENDSCANDO                    0x00002000
 #define DFM1_REPEAT_NM1                   0x00004000
 #define DFM1_ROLL_TRANSPARENT             0x00008000
-#define DFM1_MUST_BE_TAG_CALL             0x00010000
+/* spare:                                 0x00010000 */
 #define DFM1_CPLS_UNLESS_SINGLE           0x00020000
 /* This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies. */
 #define DFM1_NUM_SHIFT_MASK               0x000C0000

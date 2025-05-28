@@ -1104,6 +1104,7 @@ typedef enum {
 typedef enum {
    command_quit,
    command_undo,
+   command_erase,
    command_abort,
    command_create_comment,
    command_change_outfile,
@@ -1261,6 +1262,7 @@ typedef cm_thing *cm_hunk[];
 #define CONCPROP__PERMIT_MATRIX    0x00200000UL
 #define CONCPROP__SHOW_SPLIT       0x00400000UL
 #define CONCPROP__PERMIT_MYSTIC    0x00800000UL
+#define CONCPROP__PERMIT_REVERSE   0x01000000UL
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1344,7 +1346,7 @@ typedef struct {
    int parse_stack_index;
    parse_block **concept_write_ptr;
    parse_block **concept_write_base;
-   char *specialprompt;
+   char specialprompt[MAX_TEXT_LINE_LENGTH];
    int topcallflags1;
    call_list_kind call_list_to_use;
 } parse_state_type;
@@ -1520,10 +1522,11 @@ extern nice_setup_thing nice_setup_thing_4dmd;                      /* in SDCTAB
 extern nice_setup_thing nice_setup_thing_4x6;                       /* in SDCTABLE */
 extern int phantom_concept_index;                                   /* in SDCTABLE */
 extern int matrix_2x8_concept_index;                                /* in SDCTABLE */
-extern int left_concept_index;                                      /* in SDCTABLE */
 extern int cross_concept_index;                                     /* in SDCTABLE */
 extern int magic_concept_index;                                     /* in SDCTABLE */
 extern int intlk_concept_index;                                     /* in SDCTABLE */
+extern int left_concept_index;                                      /* in SDCTABLE */
+extern int grand_concept_index;                                     /* in SDCTABLE */
 extern int general_concept_offset;                                  /* in SDCTABLE */
 extern int general_concept_size;                                    /* in SDCTABLE */
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
@@ -1620,8 +1623,8 @@ extern comment_block *comment_last;
 extern int abs_max_calls;                                           /* in SDMAIN */
 extern int max_base_calls;                                          /* in SDMAIN */
 extern callspec_block **base_calls;                                 /* in SDMAIN */
-extern int number_of_taggers;                                       /* in SDMAIN */
-extern callspec_block **tagger_calls;                               /* in SDMAIN */
+extern int number_of_taggers[4];                                    /* in SDMAIN */
+extern callspec_block **tagger_calls[4];                            /* in SDMAIN */
 extern char outfile_string[];                                       /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
@@ -1631,6 +1634,7 @@ extern long_boolean uims_menu_cross;                                /* in SDMAIN
 extern long_boolean uims_menu_magic;                                /* in SDMAIN */
 extern long_boolean uims_menu_intlk;                                /* in SDMAIN */
 extern long_boolean uims_menu_left;                                 /* in SDMAIN */
+extern long_boolean uims_menu_grand;                                /* in SDMAIN */
 extern char database_version[81];                                   /* in SDMAIN */
 extern int whole_sequence_low_lim;                                  /* in SDMAIN */
 extern interactivity_state interactivity;                           /* in SDMAIN */
@@ -1738,12 +1742,14 @@ extern int uims_do_abort_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
-extern int uims_do_tagger_popup(void);
+extern int uims_do_tagger_popup(int tagger_class);
 extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind);
 extern uint32 uims_get_number_fields(int nnumbers);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
-extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu);
+extern uims_reply uims_get_startup_command(void);
+extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p);
+extern uims_reply uims_get_resolve_command(void);
 extern void uims_begin_search(search_kind goal);
 extern void uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state);
 extern int uims_begin_reconcile_history(int currentpoint, int maxpoint);

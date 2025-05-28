@@ -1421,8 +1421,7 @@ that probably need to be put in. */
    /* Enforce the restriction that only tagging calls are allowed in certain contexts. */
 
    if (final_concepts & FINAL__MUST_BE_TAG) {
-      if (!(callspec->callflags1 & CFLAG1_IS_BASE_TAG_CALL) ||
-            ((callspec->callflags1 & CFLAG1_NUMBER_MASK) && current_number_fields != 2))
+      if (!(callspec->callflags1 & CFLAG1_BASE_TAG_CALL_MASK))
          fail("Only a tagging call is allowed here.");
    }
 
@@ -1824,7 +1823,7 @@ that probably need to be put in. */
                get_real_subcall(parseptr, this_item, temp_concepts, &cp1, &call1, &conc1);
 
                /* If this context requires a tagging or scoot call, pass that fact on. */
-               if (DFM1_MUST_BE_TAG_CALL & this_mod1) conc1 |= FINAL__MUST_BE_TAG;
+               if (this_item->call_id >= BASE_CALL_TAGGER0 && this_item->call_id <= BASE_CALL_TAGGER3) conc1 |= FINAL__MUST_BE_TAG;
 
                current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
                count_to_use = current_number_fields & 0xF;
@@ -1861,11 +1860,12 @@ that probably need to be put in. */
                }
                else if (DFM1_REPEAT_N_ALTERNATE & this_mod1) {
                   uint32 remember_elongation = result->cmd.prior_elongation_bits;
+                  /* Read the call after this one -- we will alternate between the two. */
+                  by_def_item *alt_item = &callspec->stuff.def.defarray[subcall_index+subcall_incr];
+                  uint32 alt_concepts = get_mods_for_subcall(new_final_concepts, alt_item->modifiersh, callspec->callflagsh);
+                  get_real_subcall(parseptr, alt_item, alt_concepts, &cp2, &call2, &conc2);
 
                   number_used = TRUE;
-
-                  /* Read the call after this one -- we will alternate between the two. */
-                  get_real_subcall(parseptr, &callspec->stuff.def.defarray[subcall_index+subcall_incr], temp_concepts, &cp2, &call2, &conc2);
 
                   for (j = 1; j <= count_to_use; j++) {
                      result->cmd = ss->cmd;
@@ -1969,9 +1969,10 @@ that probably need to be put in. */
                }
             }
 
-            /* Pick up the concentricity command stuff from the last thing we did. */
+            /* Pick up the concentricity command stuff from the last thing we did, but take out the effect of "splitseq". */
 
             ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags;
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
          }
          else {
             setup_command foo1, foo2;
@@ -2189,7 +2190,7 @@ extern void move(
 
       result->result_flags = 0;
 
-      if (check_concepts == 0) {
+      if (check_concepts == 0 || check_concepts == INHERITFLAG_REVERSE) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */
    
@@ -2198,7 +2199,7 @@ extern void move(
 
          /* We know that ss->callspec is null. */
          /* We do not know that ss->cmd.cmd_final_flags is null.  It may contain
-            FINAL__MUST_BE_TAG.  The code for doing hairy
+            FINAL__MUST_BE_TAG and/or INHERITFLAG_REVERSE.  The code for doing hairy
             concepts used to just ignore those, passing zero for the final commands.
             This may be a bug.  In any case, we have now preserved even those two flags
             in the cmd_final_flags, so things can possibly get better. */

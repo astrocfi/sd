@@ -156,7 +156,6 @@ MODEL sd =
 
       ELEMENT sdui-ttu.c @the_libe =
          DEPENDS_SOURCE
-            sdmatch.h @ the_libe;
             sdui-ttu.h @ the_libe;
             '/usr/include/unistd.h';
             '/usr/include/stdlib.h';

@@ -31,7 +31,9 @@ static char *sdui_version = "2.2";
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
-   uims_get_command
+   uims_get_startup_command
+   uims_get_call_command
+   uims_get_resolve_command
    uims_do_comment_popup
    uims_do_outfile_popup
    uims_do_getout_popup
@@ -223,10 +225,12 @@ call_list_kind uims_current_call_menu;
 static uims_reply
 get_call_command(call_list_kind *call_menu)
 {
+    call_menu_ptr = call_menu;
+
     check_menu:
 
     if (allowing_modifications)
-        *call_menu = call_list_any;
+        *call_menu_ptr = call_list_any;
 
     uims_current_call_menu = *call_menu;
     input_set_prompt("Enter concept or call", call_menu_names[*call_menu]);
@@ -265,6 +269,7 @@ get_call_command(call_list_kind *call_menu)
             (user_match.kind == ui_call_select) ||
             ((user_match.kind == ui_command_select) &&
              ((uims_menu_index == command_undo) ||
+             ((uims_menu_index == command_erase) ||
               (uims_menu_index == command_create_comment) ||
               (uims_menu_index == command_save_pic))))
             dirty = TRUE;
@@ -272,18 +277,65 @@ get_call_command(call_list_kind *call_menu)
     return user_match.kind;
 }
 
-extern uims_reply
-uims_get_command(mode_kind mode, call_list_kind *call_menu)
+extern uims_reply uims_get_startup_command(void)
 {
-    if (mode == mode_startup) {
-        return get_startup_command();
-    }
-    else if (mode == mode_resolve) {
-        return get_resolve_command();
-    }
-    else {
-        return get_call_command(call_menu);
-    }
+   return get_startup_command();
+}
+
+
+extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+{
+   *reply_p = get_call_command(call_menu);
+
+   if (*reply_p == ui_call_select) {
+      /* If user gave a call, deposit same. */
+
+      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
+
+      if (uims_menu_cross)
+         (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
+      if (uims_menu_magic)
+         (void) deposit_concept(&concept_descriptor_table[magic_concept_index], 0);
+      if (uims_menu_intlk)
+         (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
+      if (uims_menu_left)
+         (void) deposit_concept(&concept_descriptor_table[left_concept_index], 0);
+      if (uims_menu_grand)
+         (void) deposit_concept(&concept_descriptor_table[grand_concept_index], 0);
+
+      if (deposit_call(save_call)) return TRUE;
+   }
+   else if (*reply_p == ui_concept_select) {
+      /* If user gave a concept, pick up any needed numeric modifiers. */
+
+      uint32 concept_number_fields = 0;
+      int howmanynumbers = 0;
+      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
+
+      if (props & CONCPROP__USE_NUMBER)
+         howmanynumbers = 1;
+      if (props & CONCPROP__USE_TWO_NUMBERS)
+         howmanynumbers = 2;
+
+      if (howmanynumbers != 0) {
+         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
+            return TRUE;           /* User waved the mouse away. */
+      }
+
+      /* A concept is required.  Its index has been stored in uims_menu_index,
+         and the "concept_number_fields" is ready. */
+
+      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
+         return TRUE;
+   }
+
+   return FALSE;
+}
+
+
+extern uims_reply uims_get_resolve_command(void)
+{
+   return get_resolve_command();
 }
 
 extern int

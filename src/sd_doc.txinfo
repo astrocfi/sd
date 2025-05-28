@@ -1,11 +1,38 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c See the file INSTALL for how to format and view.
+@c
+@c    NOTE:  The preparation of this document may require a
+@c    blank page at the end to make the pagination of the table
+@c    of contents come out correctly for two-sided printing.
+@c
+@c    Whether you need that page is unpredictable, and varies as
+@c    the document is edited.
+@c
+@c    To see whether you need it for a given version, look at the
+@c    on-line output of the "dvips" run that makes the postscript
+@c    file.  If it ends something like this:
+@c        [59] [60] [61] [62] [63] [64] [65] [-1] [-2] [-3] [-4] 
+@c    showing an odd number (in this case 65) before the "[-1]",
+@c    you need to change the parity of the pages by changing the line
+@c    below from 
+@c          @set need-extra-page
+@c    to
+@c          @clear need-extra-page
+@c    or vice-versa.
+@c
+@c    When you have it right, the "dvips" run should show an even number.
+@c
+@c    The current status is ON, as indicated by the "set" command immediately below.
+@c
+@set need-extra-page
+@c
+@c
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set sd-version 30.87
-@set Time-stamp: Dec 29, 1994
+@set sd-version 30.88
+@set Time-stamp: Jan 25, 1995
 @set full-manual
 @c %**end of header
 @iftex
@@ -37,7 +64,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992, 1993, 1994 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-1995 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX and print the
@@ -87,7 +114,6 @@ This is the summary table of contents:
 * Linguistic Idiosyncrasies::   Linguistic Idiosyncrasies
 * Call Notes::                  Call Notes
 * Concept Notes::               Concept Notes
-* Bugs::                        Known Bugs and Misfeatures (very incomplete)
 * Misc Advice::                 Miscellaneous Advice and Warnings
 * Customization::               Customization with X Resources
 * Versions::                    Version Numbers
@@ -174,12 +200,11 @@ Concept Notes
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
-* Rewind                        Rewind
 * Implied Piecewise::           Implied Piecewise
 * Twice::                       Twice
 * Precede it or Follow it::     Precede it or Follow it
-* So-And-So::                   So-And-So
-* Finish::                      Finish
+* Designating Certain People::  Designating Certain People
+* Finish and Like a::           Finish and Like a
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 
 @end menu
@@ -516,6 +541,25 @@ on the desired menu item.  In @code{sdtty}, a call is selected by typing
 its name, followed by a @key{Return}.  The completing reader
 (@xref{The Completing Reader for Sdtty}) lets you abbreviate calls.
 
+It is important to be aware that a number of "modifier" words like 
+@code{grand} and @code{cross} are treated as @i{concepts} by @code{sd}
+and @code{sdtty}.  While concepts don't officially exist below the
+Advanced program, @code{sd} and @code{sdtty} consider the Mainstream
+and Plus words @code{cross}, @code{left} and @code{grand}, among others,
+to be concepts.  This means that, when using @code{sd}, you generally need
+to click on these concepts (they are in the concept menu in the lower
+left corner of the screen) before clicking on the call.  For example, to get
+a @i{grand swing thru}, click on @code{grand} in the concept menu, and
+then @code{swing thru} in the call menu.  There is no item @code{grand
+swing thru} in the call menu.  The menus would be too unwieldy if such
+things were listed separately.
+
+In @code{sdtty}, the equivalent action is to type @code{grand}, press
+@key{<ENTER>}, type @code{swing thru}, and press @key{<ENTER>} again.
+However, for certain modifiers (@code{grand} among them) you can type
+the whole thing on one line.  This one-line form form of modifier
+entry to the completing reader will be discussed below.
+
 A number of calls have limitations or quirks that you should be aware of.
 @xref{Call Notes}.
 
@@ -536,7 +580,7 @@ and quarter thru} or @code{vertical tag your neighbor} or @code{shuttle rally} o
 @code{in roll motivate}), and modifiers (as in @code{strut left} or @code{trans cross
 chain reaction}).
 
-To list all possible variations in the menus would be unweildy for a variety
+To list all possible variations in the menus would be unwieldy for a variety
 of reasons.  Because of this, various methods are used to shorten the menus
 and to allow the user to specify the desired variation.  These methods will
 be discussed in detail presently, but in most cases what happens is the following:
@@ -657,18 +701,20 @@ These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
 are just one of many types of modifications.  @xref{Call Modifications},
 for others.
 
-@item cross, left, magic, and interlocked concepts
-Some calls can use these concepts, but have the words appear in the call in a
-tricky way.  You can always enter the concept followed by the call in the usual
-way.  For example, in @code{sd}, you can click on @code{left} followed by
+@item modifiers such as cross, left, magic, and interlocked
+As discussed above, the program considers these to be actual concepts,
+even though they aren't really.
+
+Some calls use these concepts in ways that have a tricky word order.
+
+Whether the word order is tricky or not, you can always enter the concept
+followed by the call as separate items.
+For example, in @code{sd}, you can click on @code{left} followed by
 @code{chase right}.  In @code{sdtty}, you can type in @code{left} and then
 @code{chase right}, on two separate lines.
 
 In addition, @code{sdtty} allows more natural text entry.  You can type in
-@code{chase left} directly.
-
-No matter how you entered it, the calls will be printed out with the words
-in the correct place.
+@code{grand swing thru} or @code{chase left} directly.
 
 Other examples of this phenomenon are
 @example
@@ -680,14 +726,14 @@ Other examples of this phenomenon are
    @code{revert cross flip chain thru cross nuclear reaction}
 @end example
 
+No matter how you entered it, the calls will be printed out with the words
+in the correct place.
+
 The foregoing only applies to calls in which the word is an actual concept
 or modifier.  Some calls happen to have the word @code{cross} as part of
 their names.  Examples are:  @code{cross and wheel}, @code{cross and turn},
 @code{cross your neighbor}, and @code{crossfire}.  Such calls appear in the
-menu just as they are spelled.  Also, this only applies to cases in which the
-word order is actually transformed.  To get @code{magic diamond circulate},
-you must enter @code{magic} and then @code{diamond circulate} separately,
-because no transformation of word order takes place.
+menu just as they are spelled.
 @end table
 
 @node Call Menus, Scrolling, Call Variations, Entering Calls
@@ -1611,7 +1657,8 @@ appropriate words do not exist.  You must not write sequences containing such
 things, because you won't be able to call them.  For example, from
 boy-boy-girl-girl
 waves, it is perfectly straightforward for a caller to say @samp{boys hinge}.
-(However, the program requires that you enter this as @samp{boys only hinge}.)
+(However, the program requires that you enter this as @samp{boys, hinge},
+with a comma after the concept name.  See @ref{Designating Certain People}.)
 From boy-girl-boy-girl waves, @samp{boys hinge} is meaningless, but the
 program accepts
 @samp{boys do your part, hinge}.  It doesn't know that this is an unacceptable
@@ -1621,36 +1668,12 @@ In general, if you don't think you can clearly express to the dancers
 what you want, don't call it.
 
 A number of concepts are particularly vulnerable to this phenomenon.
-See @ref{Twice}, @ref{Precede it or Follow it}, and @ref{So-And-So}.
+See @ref{Twice}, @ref{Precede it or Follow it}, and @ref{Designating Certain People}.
 
-Callers often indulge in a form of poetic license, using phrases such as
-@samp{like a @dots{}} or @samp{finish like a @dots{}}.
-For example, at C2 one could
-say @samp{cast off 3/4 like a shazam}.  Since @i{shazam} means cast off (arm
-turn) 1/4 and then U-turn back, this is readily understood by the dancers
-to mean arm turn 3/4 and then U-turn back.
-
-It does not follow that @samp{like a shazam} means to U-turn back at the
-end of the call.  Calling @samp{pass and roll like a shazam} would cause
-a great deal of consternation.  @samp{<anything> like a shazam} is only
-reasonable when the <anything> is logically very similar to an arm turn 1/4.
-It would be very difficult for a computer program to understand how to
-characterize the calls that are reasonable, and Sd does not attempt
-to do so.
-
-Because of this potential for misuse, Sd does not support very many things
-of the form @samp{like a @dots{}} or @samp{finish like a @dots{}}.
-In many cases, you
-can use explicit substitution to get this effect.  For example, by clicking on
-@code{allow modifications}, you can enter @code{shazam BUT REPLACE
-arm turn 1/4 WITH [cast off 3/4]} which you can then read as @samp{cast off
-3/4 like a shazam}.  If you wish to enter such a thing, or enter
-@code{cast off 3/4}
-and @code{U-turn back} and then edit the transcript file with a text editor,
-or just extemporize while calling, by all means do so.
-
-The program @i{does} recognize the @samp{finish} concept.  It has potential
-for abuse.  See @ref{Finish}.
+Callers often use phrases such as @samp{finish @dots{}} or @samp{like a @dots{}}
+in imprecise ways.  Sd uses a very precise definition
+for these phrases, and we urge you to use them only in this way.
+See @ref{Finish and Like a}.
 
 @node Call Notes, Concept Notes, Linguistic Idiosyncrasies, Top
 @chapter Call Notes
@@ -1671,11 +1694,10 @@ for abuse.  See @ref{Finish}.
 @section Sweeping Direction
 
 @samp{Sweep 1/4}, @samp{with the flow}, and @samp{by golly}
-all assume a sweeping direction.
-The program does not currently remember sweeping direction from the
-preceding call.  Hence, it assumes clockwise.
-Click on @code{REVERSE} if you want it the other way.
-Of course, you must not say the word @i{reverse} when calling it.
+are somewhat unsophisticated in the way they calculate the sweeping direction.
+The program infers the sweeping direction from the roll direction of
+the preceding call.  This is known to work for the common calls such as
+@i{recycle}, but may do something tasteless if used with an unusual call.
 
 @node C1 Single Rotate, Spread, Sweeping Direction, Call Notes
 @section C1 @i{Single Rotate}
@@ -1697,10 +1719,9 @@ You can also use the call @samp{wheel and spread}.
 @node Flip Back, Face <DIRECTION>, Spread, Call Notes
 @section Flip Back
 
-In addition to all of the tagging calls (@xref{Call Variations}),
-which include @samp{<ATC> back to a wave} and hence @samp{flip
-back to a wave}, the menu contains the separate call @samp{flip back},
-which is the usual way of expressing this.
+This call is a special case of the @samp{<ATC> back to a wave} class
+of calls, and is a recognized C1 call.  You should use this name rather
+than the potentially misleading @samp{flip back to a wave}.
 
 @node Face <DIRECTION>, Snag Circulate, Flip Back, Call Notes
 @section Face <DIRECTION>
@@ -1756,7 +1777,7 @@ To permit fractional use of recycle, as with
 (but don't read the ``by parts'' phrase) when fractions are required.
 
 
-@node Concept Notes, Bugs, Call Notes, Top
+@node Concept Notes, Misc Advice, Call Notes, Top
 @chapter Concept Notes
 
 @menu
@@ -1765,12 +1786,11 @@ To permit fractional use of recycle, as with
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
-* Rewind::                      Rewind
 * Implied Piecewise::           Implied Piecewise
 * Twice::                       Twice
 * Precede it or Follow it::     Precede it or Follow it
-* So-And-So::                   So-And-So
-* Finish::                      Finish
+* Designating Certain People::  Designating Certain People
+* Finish and Like a::           Finish and Like a
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 @end menu
 
@@ -2014,10 +2034,8 @@ The @code{toggle active phantoms} command toggles (turns on or off)
 this mode.  @xref{Changing Modes}.
 When in this mode, @code{sd} will not actually insert the text
 @code{with active phantoms} after each @code{assume} concept.
-It will, however, put the annotation "(AP)" into the title line of any
-card that uses it, to remind you of why the dancers are having such a hard time.
 
-@node Diamond, Rewind, Assume Waves, Concept Notes
+@node Diamond, Implied Piecewise, Assume Waves, Concept Notes
 @section Diamond
 
 You should not need to click on @code{diamond} except when you actually
@@ -2032,14 +2050,7 @@ diamond, alter the diamond}, and clicking on @code{magic},
 right} will get @samp{magic interlocked diamond, diamond as couples
 quarter right}.
 
-@node Rewind, Implied Piecewise, Diamond, Concept Notes
-@section Rewind
-
-There is no @samp{rewind} concept in this program.
-A small number of individual @samp{rewind} calls may be in
-the database.
-
-@node Implied Piecewise, Twice, Rewind, Concept Notes
+@node Implied Piecewise, Twice, Diamond, Concept Notes
 @section Implied Piecewise
 
 Some of the replacement/interruption meta-concepts push the
@@ -2093,7 +2104,7 @@ twice, recoil}).  No universally recognized words for this exist,
 so the program uses the generic phrase @code{twice}.  When calling,
 use whatever words you think are appropriate.
 
-@node Precede it or Follow it, So-And-So, Twice, Concept Notes
+@node Precede it or Follow it, Designating Certain People, Twice, Concept Notes
 @section Precede it or Follow it
 
 The concepts @code{precede it by} and @code{follow it by} take two subject
@@ -2114,8 +2125,8 @@ You might say @code{piecewise add a criss cross the deucey, and turn the key},
 or @code{do a criss cross the deucey after each part, and turn the key}, or
 something similar.
 
-@node So-And-So, Finish, Precede it or Follow it, Concept Notes
-@section So-And-So
+@node Designating Certain People, Finish and Like a, Precede it or Follow it, Concept Notes
+@section Designating Certain People
 
 There are four closely related concepts here.  You must have a clear
 understanding of how the program treats them in order to use them effectively.
@@ -2124,13 +2135,34 @@ ideas, the program may seem idiosyncratic and ignorant in its handling of them.
 @xref{Linguistic Idiosyncrasies}.
 
 The four concepts are @code{so-and-so}, @code{so-and-so disconnected},
-@code{so-and-so do your part}, and @code{own the <so-and-so>}.
+@code{so-and-so do your part}, and @code{own the so-and-so}.
+
+In all of these concepts, the program will always use the word @dfn{others} for
+the non-designated people, if any.  When calling, you should probably say something
+more intelligent, like @dfn{girls} or @dfn{sides} or whatever.
+
+In general, be aware that the choice of words and punctuation that the program
+uses for these concepts is determined by the need to avoid ambiguity, and may
+not be the words that you should use when calling.  For example, if the program
+prints out @samp{boys, hinge}, it may be more natural to say just
+@samp{boys hinge} without any pause.  Similarly, if the program prints out
+@samp{boys do your part, transfer the column while the others switch the wave},
+it may be more natural to say @samp{everyone do your part, boys transfer the
+column while the girls switch the wave}.  As in all aspects of calling, choose
+your words carefully.
+
+@subsection So-And-So
+
+The concepts are:
 
 @example
    @code{<so-and-so>, <call>}
          or
    @code{<so-and-so>, <call> while the others <other call>}
 @end example
+
+Note the comma at the end of the concept name.  This is required for
+avoidance of ambiguity, as will be explained below.
 
 This means find the maximal connected undistorted subsets, and
 do the call in those subsets.  For example, from boy-boy-girl-girl waves,
@@ -2168,6 +2200,10 @@ the printout, how an action arose.  Of course, in many cases, you
 may find that the comma goes against your judgement of how to phrase the
 call for maximum dancer success.  Use your own judgement, of course.
 
+@subsection So-And-So Disconnected
+
+The concepts are:
+
 @example
    @code{<so-and-so> disconnected <call>} or
          or
@@ -2183,6 +2219,10 @@ they had vacated.  A few shape-changing calls are permitted.  In this case,
 whichever set of people occupied the center spots prior to the call will
 occupy the center of the result, in accordance with accepted usage for
 this concept.
+
+@subsection So-And-So Do Your Part
+
+The concepts are:
 
 @example
    @code{<so-and-so> do your part, <call>}
@@ -2208,6 +2248,10 @@ in the center.
 From boy-girl-boy-girl waves, @code{boys do your part, hinge} creates a mess.
 No sensible dancer would consider it acceptable.  Do not use such things.
 
+@subsection Own the So-And-So
+
+The concepts are:
+
 @example
    @code{own the <so-and-so>, <call> by <other call>}
 @end example
@@ -2217,37 +2261,39 @@ result setups are reassembled according to strict matrix positions.  That
 is, instead of a C1 phantom setup, a 4x4 matrix may result.
 This is a recognized C3A concept.
 
-In all of these concepts, the program will always use the word @dfn{others} for
-the non-designated people.  When calling, you should probably say something
-more intelligent, like @dfn{girls} or @dfn{sides} or whatever.
+@node Finish and Like a, 12 Matrix and 16 Matrix, Designating Certain People, Concept Notes
+@section Finish and Like a
 
-In general, be aware that the choice of words and punctuation that the program
-uses for these concepts is determined by the need to avoid ambiguity, and may
-not be the words that you should use when calling.  For example, if the program
-prints out @samp{boys, hinge}, it may be more natural to say just
-@samp{boys hinge}.  Similarly, if the program prints out @samp{boys do your
-part, transfer the column while the others switch the wave}, it may be more
-natural to say @samp{everyone do your part, boys transfer the column while
-the girls switch the wave}.  As in all aspects of calling, choose your
-words carefully.
+To Sd, @code{finish} means ``skip the first part,'' and is only legal for
+calls for which the first part is recognizable.  Sd also recognizes the concept
+@code{like a}, meaning ``do the last part''.  You need to be aware, however,
+that there are calls for which, while it is technically legal to say such things,
+they are not accepted as common usage.  For example, @code{finish shazam} as a way of
+saying @dfn{U turn back}, or @code{finish mix} or @code{like a mix} as ways
+of saying @dfn{centers trade}, would have to be considered rather peculiar.
+You must exercise your judgement when using these concepts.
 
-@node Finish, 12 Matrix and 16 Matrix, So-And-So, Concept Notes
-@section Finish
+We believe that these are the technically correct meanings of these phrases,
+and are consistent with common usage when that common usage is correctly
+applied.  For example,
+@example
+   @code{cast off 3/4}
+   @code{LIKE A shazam}
+@end example
+is a commonly accepted and completely correct usage.
 
-To Sd, this concept means ``skip the first part,'' and is only legal for
-certain calls---those for which dancers would generally agree on this meaning.
-However, it is still somewhat dangerous, since the actual meaning of
-@samp{finish} in the square dancing folklore seems to be a little more
-complicated than that.  You should be careful when using this concept.
-One call that is commonly used this way is @samp{finish like wheel the ocean}
-after an appropriate @dfn{pushy} cast off 3/4.
-In Sd, @code{finish wheel the ocean}
-means to have the belles cross.  Hence you may, after carefully verifying that
-the casting direction is correct, enter something like @code{chain reaction}
-and @code{centers finish wheel the ocean}, which you could read as
-@samp{chain reaction; centers finish like a wheel the ocean}.
+One occasionally hears things like @dfn{cross chain reaction, centers
+finish like a wheel the ocean}, in which the final cast off 3/4 of the
+chain reaction was ``pushy''.  While the plain English language meaning
+of that is clear, the way you must enter that to Sd is
+@example
+   @code{CROSS chain reaction}
+   @code{CENTERS LIKE A wheel the ocean}
+@end example
+You must, of course, verify that the casting direction is correct for
+smooth dancing of this figure.
 
-@node 12 Matrix and 16 Matrix,  , Finish, Concept Notes
+@node 12 Matrix and 16 Matrix,  , Finish and Like a, Concept Notes
 @section 12 Matrix and 16 Matrix
 
 This discussion will be in terms of 12 matrices.  16 matrices are analogous.
@@ -2381,14 +2427,7 @@ but not
 The above examples will work from 2x4 columns also---it expands
 the matrix by placing phantoms outside.
 
-@node Bugs, Misc Advice, Concept Notes, Top
-@chapter Known Bugs and Misfeatures
-
-The @dfn{funny} concept is not fully implemented.  Only @dfn{funny circulate}
-types of calls are supported, as in @i{funny go first class} or @i{funny bingo}.
-Do not attempt a @i{funny square thru} or @i{funny slide thru}.
-
-@node Misc Advice, Customization, Bugs, Top
+@node Misc Advice, Customization, Concept Notes, Top
 @chapter Miscellaneous Advice and Warnings
 
 If a call that you believe is legal does not appear on the menu,
@@ -2506,8 +2545,11 @@ change the version string at the top of the file.
 @include gpl.txinfo
 
 @page
-@ @c make an even number of pages
+@ifset need-extra-page
+@c next line makes the page contain a blank, so it won't get optimized away.
+@ @c
 @page
+@end ifset
 @contents
 @page
 @ @c make an even 4 pages of TOC

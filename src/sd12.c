@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 31. */
 
 /* This defines the following functions:
    triangle_move
@@ -258,9 +258,7 @@ Private void wv_tand_base_move(
          if (indicator == 20)
             fail("Can't find the indicated triangles.");
          tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
-         if ((tbonetest & 011) == 011)
-            fail("Can't find the indicated triangles.");
-         else if ((indicator ^ tbonetest) & 1)
+         if ((tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
             fail("Can't find the indicated triangles.");
    
          schema = schema_vertical_6;   /* This is the schema for picking out

@@ -55,8 +55,9 @@ to the desired directory, insert the disk, and type `A:INSTALL' or
    Sd is also available via anonymous FTP from the directory `misc/sd/'
 on host ftp.x.org.  FTP is the Internet file transfer protocol.  The
 file `sd-nn.tar.Z' (where `nn' changes with the version) is a
-compressed Unix-format "tar" file containing the sources.  The file
-`sdxxxbn.exe' (where `xxx' changes with the version) is a
+compressed Unix-format "tar" file containing the sources.  You will
+need the standard "tar" and "uncompress" or "zcat" utilities to process
+it.  The file `sdxxxbn.exe' (where `xxx' changes with the version) is a
 self-extracting DOS archive containing a pre-built executable of Sdtty
 for PC-compatible computers.
 

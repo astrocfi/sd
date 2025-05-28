@@ -1,6 +1,34 @@
-		   RELEASE NOTES FOR SD VERSION 30.87
-		 Database version = 30.87 format = 51,
+		   RELEASE NOTES FOR SD VERSION 30.88
+		 Database version = 30.88 format = 56.
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 30.88 ******
+
+The sdtty parser can now read the modifiers "grand", interlocked",
+"cross", and "magic" on the same line as the call.  So you can type,
+for example, "grand swing thru".  You can also type it the old way:
+"grand", <enter>, and "swing thru".  On sd, you still must click on
+the concept "grand" followed by the call "swing thru".
+
+The malfunctions involving "outside triangles circulate" have been fixed.
+
+When an illegal call is issued with concepts, after printing the error
+message, the program usually just erases the call and leaves the
+concepts in place.  This is intended to make mistakenly entered calls,
+after one or more concepts, less frustrating.  However, I have found
+that it makes mistakenly entered concepts more frustrating.  This is
+because whatever mistaken concepts were in place need to be removed
+one at a time with the "undo" command.  So a new command has been added --
+"erase entered concepts" ("erase" for short, below c3x) that removes all
+pending concepts entered so far.  I'm still not completely satisfied
+with the behavior, and I welcome suggestions for making it better.
+
+The "reverse checkpoint" and "reverse crazy" concepts may be entered either
+the old way, as a single concept name, or by entering "reverse" followed by
+"checkpoint"/"crazy" as separate concepts.
+
+The bug involving the simultaneous use of the "-sequence" and "-abridge"
+switched has been fixed.
 
 ****** Changes as of version 30.87 ******
 
@@ -21,6 +49,10 @@ New concepts: MYSTIC and INVERT MYSTIC work with the following:
 
 INNER/OUTER TRIANGLES WORK SOLID/THREESOME or fractional quarter
 solid/threesome, etc.
+
+The GRUESOME TWOSOME concept now correctly enforces the restriction
+that the resulting virtual setup be waves, so, for example, GRUESOME
+TWOSOME trade circulate is legal from parallel two-faced lines.
 
 ****** Changes as of version 30.86 ******
 
