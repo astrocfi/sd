@@ -1811,11 +1811,11 @@ static calldef_schema concentrify(
       if (crossing && ss->kind == s4x4 && livemask != 0x9999)
          fail("Can't find centers and ends in this formation.");
 
-      if ((ss->cmd.cmd_misc_flags & CMD_MISC__REDUCED_BY_TANDEM) != 0 && attr::klimit(ss->kind) < 4)
+      if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__REDUCED_BY_TANDEM) != 0 && attr::klimit(ss->kind) < 4)
          analyzer_result = schema_single_concentric;
       break;
    case schema_cross_concentric:
-      if ((ss->cmd.cmd_misc_flags & CMD_MISC__REDUCED_BY_TANDEM) != 0 && attr::klimit(ss->kind) < 4)
+      if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__REDUCED_BY_TANDEM) != 0 && attr::klimit(ss->kind) < 4)
          analyzer_result = schema_single_cross_concentric;
       break;
    case schema_rev_checkpoint:

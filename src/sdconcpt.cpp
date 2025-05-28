@@ -2149,7 +2149,7 @@ static void do_concept_grand_working(
 {
    int cstuff;
    uint32_t tbonetest;
-   uint32_t m0, m1, m2, m3, m4;
+   uint32_t m0(0), m1(0), m2(0), m3(0), m4(0);
    uint32_t masks[8];
    setup_kind kk;
    int arity = 2;
@@ -3956,18 +3956,8 @@ static void do_concept_crazy(
          sel.initialize();
          sel.who[0] = selector_center4;
 
-         if (attr::klimit(tempsetup.kind) < 7) {
-            if (two_couple_calling) {
-               sel.who[0] = selector_center2;
-            }
-            else {
-               if (tempsetup.cmd.prior_elongation_bits & PRIOR_ELONG_BASE_FOR_TANDEM) {
-                  sel.who[0] = selector_center2;
-               }
-               else
-                  fail("Need an 8-person setup for this.");
-            }
-         }
+         if (attr::klimit(tempsetup.kind) < 7)
+            sel.who[0] = selector_center2;
 
          // We might be doing a "finally 1/2 crazy central little more".
          // So we need to clear the splitting bits when doing it in the center.
@@ -4019,8 +4009,6 @@ static void do_concept_phan_crazy(
    if (process_brute_force_mxn(ss, parseptr, do_concept_phan_crazy, result)) return;
 
    int i;
-   setup tempsetup;
-   setup_command cmd;
    setup_kind kk = s4x4;
 
    int reverseness = (parseptr->concept->arg1 >> 3) & 1;
@@ -4039,10 +4027,10 @@ static void do_concept_phan_crazy(
    int craziness = (parseptr->concept->arg1 & 16) ?
       parseptr->options.number_fields : 4;
 
-   tempsetup = *ss;
+   setup tempsetup = *ss;
 
-   cmd = tempsetup.cmd;    // We will modify these flags, and, in any case,
-                           // we need to rematerialize them at each step.
+   setup_command cmd = tempsetup.cmd;    // We will modify these flags, and, in any case,
+                                         // we need to rematerialize them at each step.
 
    uint32_t offsetmapcode;
    uint32_t specialmapcode = ~0U;
@@ -4067,9 +4055,17 @@ static void do_concept_phan_crazy(
    int rot = tempsetup.rotation & 1;
    int spec_conc_rot = 1;
 
-   // Decide which way we are going to divide, once only.
+   // After taking care of crazy diamonds, decide which way we are going to divide, once only.
 
-   if ((parseptr->concept->arg1 & 7) < 4) {
+   if (tempsetup.kind == s4dmd) {
+      kk = s4dmd;
+      offsetmapcode = MAPCODE(s_qtag,2,MPKIND__SPLIT,0);
+   }
+   else if (tempsetup.kind == s4ptpd) {
+      kk = s4ptpd;
+      offsetmapcode = MAPCODE(s_ptpd,2,MPKIND__SPLIT,0);
+   }
+   else if ((parseptr->concept->arg1 & 7) < 4) {
       // This is {crazy phantom / crazy offset} C/L/W.  64 bit tells which.
 
       if ((global_tbonetest & 011) == 011) fail("People are T-boned -- try using 'standard'.");
@@ -4132,10 +4128,8 @@ static void do_concept_phan_crazy(
          offsetmapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
       }
    }
-   else {
-      kk = s4dmd;
-      offsetmapcode = MAPCODE(s_qtag,2,MPKIND__SPLIT,0);
-   }
+   else if ((parseptr->concept->arg1 & 7) == 5)
+      fail("Can't use crazy diamonds here.");
 
    uint32_t finalresultflagsmisc = 0;
 
@@ -4154,8 +4148,13 @@ static void do_concept_phan_crazy(
       // Check the validity of the setup each time for boxes/diamonds,
       // or first time only for C/L/W.
       // But allow 2x8 -> 4x4 transition for later parts.
-      if ((i==0 || (((parseptr->concept->arg1 & 7) >= 4 && !(parseptr->concept->arg1 & 64)) &&
-                    (kk != s2x8 || tempsetup.kind != s4x4))) && (tempsetup.kind != kk || tempsetup.rotation != 0))
+      if ((i==0 ||
+           !((parseptr->concept->arg1 & 7) < 4 ||
+             (parseptr->concept->arg1 & 64) != 0 ||
+             (kk == s2x8 && tempsetup.kind == s4x4) ||
+             (kk == s4dmd && tempsetup.kind == s4ptpd) ||
+             (kk == s4ptpd && tempsetup.kind == s4dmd))) &&
+          (tempsetup.kind != kk || tempsetup.rotation != 0))
          fail("Can't do crazy phantom or offset in this setup.");
 
       if (ctrflag) {
@@ -5566,7 +5565,7 @@ static void do_concept_trace(
    // We handle "interlocked trace" in a rather simple-minded way.
    if (interlock) ss->swap_people(3, 7);
 
-   ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED|CMD_MISC__QUASI_PHANTOMS;
 
    for (i=0 ; i<4 ; i++) {
       a[i] = *ss;

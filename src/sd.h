@@ -1090,7 +1090,9 @@ enum {
    NUMBER_FIELD_MASK = (1<<BITS_PER_NUMBER_FIELD)-1,
    NUMBER_FIELD_MASK_SECOND_ONE = NUMBER_FIELD_MASK << (BITS_PER_NUMBER_FIELD*2),
    NUMBER_FIELD_MASK_RIGHT_TWO = (1<<(BITS_PER_NUMBER_FIELD*2))-1,
+   PAIR_MASK_END = NUMBER_FIELD_MASK_RIGHT_TWO,
    NUMBER_FIELD_MASK_LEFT_TWO = NUMBER_FIELD_MASK_RIGHT_TWO << (BITS_PER_NUMBER_FIELD*2),
+   PAIR_MASK_START = NUMBER_FIELD_MASK_LEFT_TWO,
    NUMBER_FIELDS_1_0 = 00100U,          // A few useful canned values.
    NUMBER_FIELDS_2_1 = 00201U,
    NUMBER_FIELDS_1_1 = 00101U,
@@ -4353,10 +4355,6 @@ class configuration {
    been done the same way without the "split" concept.  This prevents superfluous
    things like "split pass thru".
 
-   CMD_MISC__REDUCED_BY_TANDEM means that we are at a level of recursion in which
-   some couples or tandem concept is in effect.  If we see a call with schema_concentric,
-   change it to schema_single_concentric.
-
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
@@ -4397,6 +4395,10 @@ class configuration {
    bits in "do_couples_heritflags" control this.  If INHERITFLAG_SINGLE is on,
    do not do it as couples.  If off, do it as couples.  If various other bits
    are on (e.g. INHERITFLAG_1X3), do the appropriate thing.
+
+   CMD_MISC3__REDUCED_BY_TANDEM means that we are at a level of recursion in which
+   some couples or tandem concept is in effect.  If we see a call with schema_concentric,
+   change it to schema_single_concentric.
 */
 
 
@@ -4435,13 +4437,13 @@ enum {
    CMD_MISC__OFFSET_Z             = 0x00080000U,
    CMD_MISC__SAID_SPLIT           = 0x00100000U,
    CMD_MISC__EXPLICIT_MIRROR      = 0x00200000U,
-   CMD_MISC__REDUCED_BY_TANDEM    = 0x00400000U,
+   CMD_MISC__QUASI_PHANTOMS       = 0x00400000U,  // A concept, like trace, isn't explicit, but allows pass thru
    CMD_MISC__SAID_PG_OFFSET       = 0x00800000U,  // Explicitly said it, so space-invasion rules don't apply.
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000U,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000U,
    CMD_MISC__MUST_SPLIT_VERT      = 0x04000000U,
    CMD_MISC__NO_CHK_ELONG         = 0x08000000U,
-   CMD_MISC__PHANTOMS             = 0x10000000U,
+   CMD_MISC__PHANTOMS             = 0x10000000U,  // A concept, like sp ph lines, is explicitly invoking phantoms.
    CMD_MISC__NO_STEP_TO_WAVE      = 0x20000000U,
    CMD_MISC__ALREADY_STEPPED      = 0x40000000U,
    CMD_MISC__DID_LEFT_MIRROR      = 0x80000000U,
@@ -4568,7 +4570,8 @@ enum {
    // call is being given an optional numeric arg because of really hairy fraction.
    CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x08000000U,
    CMD_MISC3__NO_FUDGY_2X3_FIX     = 0x10000000U,
-   CMD_MISC3__RECTIFY              = 0x20000000U
+   CMD_MISC3__RECTIFY              = 0x20000000U,
+   CMD_MISC3__REDUCED_BY_TANDEM    = 0x40000000U
 };
 
 enum normalize_action {
@@ -4887,6 +4890,7 @@ extern short int *good_concept_sublists[call_list_extent];          /* in SDTOP 
 
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
 extern int selector_preds;                                          /* in SDPREDS */
+extern int start_of_facing_tests;                                   /* in SDPREDS */
 
 
 extern const ctr_end_mask_rec dead_masks;                           /* in SDTABLES */
@@ -5587,6 +5591,16 @@ class fraction_info {
 
    // This one is in sdmoves.cpp
    fracfrac get_fracs_for_this_part();
+
+   uint32_t rplacstart(uint32_t base)
+   {
+      return (base & ~PAIR_MASK_START) | (m_do_last_half_of_first_part & PAIR_MASK_START);
+   }
+
+   uint32_t rplacend(uint32_t base)
+   {
+      return (base & ~PAIR_MASK_END) | (m_do_half_of_last_part & PAIR_MASK_END);
+   }
 
    // This one is in sdmoves.cpp
    bool query_instant_stop(uint32_t & result_flag_wordmisc) const;
@@ -6420,6 +6434,7 @@ extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API int session_index;                           // in SDSI
 extern SDLIB_API bool rewrite_with_new_style_filename;        // in SDSI
 extern SDLIB_API int random_number;                           // in SDSI
+extern SDLIB_API int resolve_test_count;                      // in SDSI
 extern SDLIB_API const char *database_filename;               // in SDSI
 extern SDLIB_API const char *new_outfile_string;              // in SDSI
 extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI

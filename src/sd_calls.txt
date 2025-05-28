@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.66"
+version "39.67"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -3098,6 +3098,11 @@ call "cast off 1/4" dontshow tag cast_off_14
          if cast_normal  [CR0E AL0W CR1E AL2W CR2E AL1W]
          if cast_pushy   [AL5W AL0W 0    CR3E CR2E 0]
          if always       [0    AL0W 0    0    CR2E 0]
+            alternate_definition [half] mainstream
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live wave_only
+      array [CR0N 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live wave_only
+      array [0 AL0S]
             alternate_definition [single] c4
    setup 1x2 1x2
       array [AL0W CR1E]
@@ -3207,18 +3212,15 @@ call "cast off @b, opt for normal" dontshow tag cast_off_n4_with_warn
       array [CR1S 0]
    setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live num 5 wave_only
       array [0 AL1N]
-
-
-
    // Alternate definition for fractionalization.
             parallel_conc_end yield_if_ambiguous neednumber
             bigmatrix_is_inherited
             single_is_inherited nxn_is_inherited yoyo_fractal_numbers
             visible_fractions distribute_repetitions
-   // Yes, recurse on same call.  See t18.
+   // Yes, recurse on same call.  See t18, t20, t39.
    // Well, without the "opt for normal" stuff.  Can't be bothered to make a "cast off 1/4, opt for normal" call.
-   seq_remainder cast_off_14 [inherit_single inherit_nxn inherit_bigmatrix repeat_nm1]
-   seq continue_cast [inherit_single inherit_nxn inherit_bigmatrix]
+   seq_remainder cast_off_14 [inherit_single inherit_nxn inherit_bigmatrix]
+   seq continue_cast [inherit_single inherit_nxn inherit_bigmatrix repeat_nm1]
 
 // This one has a pretty name, because it will be shown in "do you want to replace" messages.
 // So we don't show the "opt for normal" stuff.
@@ -3268,6 +3270,11 @@ call "_continue to cast off" dontshow tag continue_cast
       preds "Can't figure out which way to cast."
          if roll_is_cw  [CR0N CR1N]
          if roll_is_ccw [AL1S AL0S]
+            alternate_definition [half] mainstream
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live wave_only
+      array [CR0N 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live wave_only
+      array [0 AL0S]
             alternate_definition [single] c4
    setup 1x1 1x1
       preds "Can't figure out which way to cast."
@@ -3452,9 +3459,9 @@ call "cast off @b" mainstream tag cast_off_n4
             bigmatrix_is_inherited
             single_is_inherited nxn_is_inherited yoyo_fractal_numbers
             visible_fractions distribute_repetitions
-   // Yes, recurse on same call.  See t15.
-   seq_remainder cast_off_14 [inherit_single inherit_nxn inherit_bigmatrix repeat_nm1]
-   seq continue_cast [inherit_single inherit_nxn inherit_bigmatrix]
+   // Yes, recurse on same call.  See t15, t20, t39.
+   seq_remainder cast_off_14 [inherit_single inherit_nxn inherit_bigmatrix]
+   seq continue_cast [inherit_single inherit_nxn inherit_bigmatrix repeat_nm1]
 
 call "_check odd number" dontshow tag check_odd_number
    setup 1x1 1x1 qualifier num 1 none
@@ -7921,20 +7928,23 @@ call "@6 split the others, first go right, next go left" mainstream
          if conc_from_select [0 0 0 0 0 0 0 0 0 AL2S 0 CR5S AL0S 0 CR3S 0]
 
 call "pass thru" mainstream tag passthru
-/* **** can't do rear_back if doing last half! */
             rear_back_from_r_wave left_means_mirror
             12_16_matrix_means_split
             funny_means_those_facing
-   setup 2x1 1x2
+   setup 2x1 1x2 // qualifier facing_someone
       array [ZM1N 0]
-   /* We put in this next definition to allow it from T-boned boxes
-      (which would otherwise get the "People are not working with each other
-      in a consistent way" error).  The restriction will make it give a
-      "do your part" warning when used in this way. */
+   // We put in this next definition to allow it from T-boned boxes
+   // (which would otherwise get the "People are not working with each other
+   // in a consistent way" error).  The restriction will make it give a
+   // "do your part" warning when used in this way.
    setup 2x2 2x2 no_cutting_through
                  qualifier tbone in independent_in_or_out
                  restriction alwaysfail
       array [0 0 ZM1N ZM0N]
+   setup 8x1 1x8 qualifier facing_someone
+      array [ZM1N ZM3N ZM6N ZM2N 0    ZM4N ZM7N ZM5N]
+
+
             alternate_definition [magic] c2
    setup 4x2 2x4 qualifier in in_or_out
       array [ZM6N 0 ZM4N 0 0 ZM3N 0 ZM1N]
@@ -21798,7 +21808,7 @@ call "triple play to a wave" c3a
    seq tripleplay [inherit_magic]
    seq backemup []
 
-call "double play" c3
+call "double play" c4x
    setup 3x2 2x3 restriction forbidden wave_only
       array [CC0E C1W C5W A0E A4E AA5W]
             alternate_definition [magic] c3x

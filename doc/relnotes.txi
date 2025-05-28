@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <26 May 2024 wba>
+@c Time-stamp: <31 May 2024 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.66
-@set title2 Database version = 39.66 format = 411
+@set title1 RELEASE NOTES FOR VERSION 39.67
+@set title2 Database version = 39.67 format = 412
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.67::
 * 39.66::
 * 39.65::
 * 39.64::
@@ -166,7 +167,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.66, Top, (dir)
+@node Intro, 39.67, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -177,11 +178,25 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2024 William B. Ackerman
 @sp 3
 @menu
-* 39.66::               Changes in the current version
+* 39.67::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.66, 39.65, Intro, Top
+@node 39.67, 39.66, Intro, Top
+@unnumberedsec Version 39.67 changes
+
+The obsolete concept @strong{halfway} was removed.  Use @strong{first
+1/2 <concept>} instead.
+@sp 1
+A bug was fixed that, in obscure cases, could make the program crash
+with certain versions of Windows.
+@sp 1
+Handling of @strong{crazy diamonds} was improved.
+@sp 1
+The program's understanding of what @strong{pass thru} means was improved.
+
+@c ************
+@node 39.66, 39.65, 39.67, Top
 @unnumberedsec Version 39.66 changes
 
 Handling of the @strong{paranoid} concept was improved; it can handle

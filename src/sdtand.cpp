@@ -2313,7 +2313,7 @@ extern void tandem_couples_move(
       tandstuff.m_virtual_setup[0].cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
 
    tandstuff.m_virtual_setup[0].update_id_bits();
-   tandstuff.m_virtual_setup[0].cmd.cmd_misc_flags |= CMD_MISC__REDUCED_BY_TANDEM;
+   tandstuff.m_virtual_setup[0].cmd.cmd_misc3_flags |= CMD_MISC3__REDUCED_BY_TANDEM;
 
    int tttcount = 1;
 

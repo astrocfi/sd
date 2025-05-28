@@ -1969,8 +1969,6 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, meta_key_first_frac_work, 2},
    {"LAST @9/@9",                            concept_meta_two_args,         L+D, l_c3,
     UC_none, meta_key_first_frac_work, 1},
-   {"HALFWAY",                               concept_meta,                  L+D, l_c4,
-    UC_none, meta_key_first_frac_work, 3},
    {"DO THE @u PART",                        concept_meta_one_arg,          L+D, l_c1,
     UC_none, meta_key_nth_part_work},
    {"DO THE LAST PART",                      concept_meta,                  G+D, l_c1,

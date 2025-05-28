@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 411
+#define DATABASE_FORMAT_VERSION 412
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1137,6 +1137,7 @@ enum call_restriction {
    cr_socker_is_cw,
    cr_socker_is_ccw,
    cr_ends_didnt_move,
+   cr_facing_someone,
    cr_levelplus,
    cr_levela1,
    cr_levela2,

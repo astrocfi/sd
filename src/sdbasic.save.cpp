@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -413,10 +413,6 @@ static collision_map collision_map_table[] = {
     s2x4,        s2x8,        0, warn_bad_collision, 0},
    {4, 0x0000000000000000, 0x3C, 0x3C, {2, 3, 4, 5},        {4, 6, 9, 11},         {5, 7, 8, 10},
     s2x4,        s2x8,        0, warn_bad_collision, 0},
-   {4, 0x0000000000000000, 0x5A, 0x5A, {1, 3, 4, 6},        {2, 6, 9, 13},         {3, 7, 8, 12},
-    s2x4,        s2x8,        0, warn_bad_collision, 0},
-   {4, 0x0000000000000000, 0xA5, 0xA5, {0, 2, 5, 7},        {0, 4, 11, 15},        {1, 5, 10, 14},
-    s2x4,        s2x8,        0, warn_bad_collision, 0},
 
    // These items handle various types of "1/2 circulate" calls from 2x2's.
    {2, 0x0000000000000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},
@@ -520,20 +516,20 @@ static collision_map collision_map_table[] = {
 
    // These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey.
 
-   {6, 0x0000000000000012,  077,  055,  {0, 1, 2, 3, 4, 5},       {0, 2, 3, 6, 7, 9},    {1, 2, 4, 5, 7, 8},
+   {6, 0x0000000000000000,  077,  055,  {0, 1, 2, 3, 4, 5},       {0, 2, 3, 6, 7, 9},    {1, 2, 4, 5, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0x40000000},
    {4, 0x0000000000000000,  055,  044,  {0, 2, 3, 5},       {1, 2, 5, 7},    {1, 3, 5, 6},
     s_short6,    s2x4,        0, warn__none, 0x40000000},
    {4, 0x0000000000000000,  055,  011,  {0, 2, 3, 5},       {0, 2, 5, 6},    {1, 2, 4, 6},
     s_short6,    s2x4,        0, warn__none, 0x40000000},
 
-   {5, 0x0000000000000012,  073,  001,  {0, 1, 3, 4, 5},          {0, 2, 6, 7, 8},       {1, 2, 6, 7, 8},
+   {5, 0x0000000000000000,  073,  001,  {0, 1, 3, 4, 5},          {0, 2, 6, 7, 8},       {1, 2, 6, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 0x0000000000000012,  067,  040,  {0, 1, 2, 4, 5},          {1, 2, 3, 7, 9},       {1, 2, 3, 7, 8},
+   {5, 0x0000000000000000,  067,  040,  {0, 1, 2, 4, 5},          {1, 2, 3, 7, 9},       {1, 2, 3, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 0x0000000000000012,  076,  004,  {1, 2, 3, 4, 5},          {2, 3, 6, 7, 8},       {2, 4, 6, 7, 8},
+   {5, 0x0000000000000000,  076,  004,  {1, 2, 3, 4, 5},          {2, 3, 6, 7, 8},       {2, 4, 6, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 0x0000000000000012,  037,  010,  {0, 1, 2, 3, 4},          {1, 2, 3, 6, 7},       {1, 2, 3, 5, 7},
+   {5, 0x0000000000000000,  037,  010,  {0, 1, 2, 3, 4},          {1, 2, 3, 6, 7},       {1, 2, 3, 5, 7},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
    {6, 0x0000001200000012, 0x3F, 022, {0, 1, 2, 3, 4, 5},    {5, 6, 0, 1, 3, 4},    {5, 7, 0, 1, 2, 4},
     s_short6,    s_rigger,    1, warn__none, 0},
@@ -741,7 +737,7 @@ void collision_collector::fix_possible_collision(merge_action action /*= merge_s
       if (!masksmatch &&
           (c_map_ptr->assume_key & 0x40000000) != 0 &&
           (m_result_mask & ~c_map_ptr->rmask) == 0 &&
-          ((((uint64_t) m_result_mask) | (((uint64_t) m_result_mask) << 32)) & c_map_ptr->lmask) == lowbitmask &&
+          ((m_result_mask | (m_result_mask << 16)) & c_map_ptr->lmask) == lowbitmask &&
           (m_result_mask & c_map_ptr->cmask) == m_collision_mask) {
          masksmatch = true;
       }
@@ -1219,9 +1215,6 @@ extern void do_stability(uint32_t *personp,
                          int turning,
                          bool mirror) THROW_DECL
 {
-   // This is the amount the person turned for stability calculation.  Applying that
-   // turning to the person's position in the result setup has already been done; we
-   // are just calculating stability info here.
    turning &= 3;
 
    switch (field & STB_MASK) {
@@ -1233,21 +1226,11 @@ extern void do_stability(uint32_t *personp,
       if (turning != 0)
          fail("Person turned but was marked 'Z' stability.");
       break;
-   case STB_A:                            // Call literally said "A"
-      if (!mirror) {
-         turning -= 4;
-      }
-      else {
-         if (turning == 0) turning = 4;   // But meant "C"
-      }
+   case STB_A:
+      turning -= 4;
       break;
-   case STB_A+STB_REVERSE:                // Call literally said "C"
-      if (!mirror) {
-         if (turning == 0) turning = 4;
-      }
-      else {
-         turning -= 4;                    // But meant "A"
-      }
+   case STB_A+STB_REVERSE:
+      if (turning == 0) turning = 4;
       break;
    case STB_AC:
       // Turn one quadrant anticlockwise.
@@ -1307,26 +1290,27 @@ extern void do_stability(uint32_t *personp,
       return;
    }
 
-   // Now turning has the number of quadrants the person turned.
-   // -4 for all the way around CCW; +4 for all the way around CW.
+   // Now turning has the number of quadrants the person turned, clockwise or anticlockwise.
+
+   if (mirror) turning = -turning;
 
    int absturning_in_eighths = turning * 2;     // Measured in eighths!
    if (absturning_in_eighths < 0) absturning_in_eighths = -absturning_in_eighths;
 
    int abs_overturning_in_eighths = absturning_in_eighths -
-      ((*personp & STABLE_REMMASK) / STABLE_REMBIT);
+      ((*personp & STABLE_RMASK) / STABLE_RBIT);
 
    if (abs_overturning_in_eighths <= 0)
-      *personp -= absturning_in_eighths*STABLE_REMBIT;  // We haven't run over; just reduce REM
+      *personp -= absturning_in_eighths*STABLE_RBIT;
    else {
       if (turning < 0) {
-         *personp =            // We have run over, to the left.  Clear REM and set VL.
-            (*personp & ~(STABLE_REMMASK|STABLE_VLMASK)) |
+         *personp =
+            (*personp & ~(STABLE_RMASK|STABLE_VLMASK)) |
             ((*personp + (STABLE_VLBIT * abs_overturning_in_eighths)) & STABLE_VLMASK);
       }
       else {
-         *personp =            // We have run over, to the right.  Clear REM and set VR.
-            (*personp & ~(STABLE_REMMASK|STABLE_VRMASK)) |
+         *personp =
+            (*personp & ~(STABLE_RMASK|STABLE_VRMASK)) |
             ((*personp + (STABLE_VRBIT * abs_overturning_in_eighths)) & STABLE_VRMASK);
       }
    }
@@ -1454,7 +1438,7 @@ extern bool check_restriction(
          }
          break;
       case cr_not_tboned:
-         if ((ss->or_all_people() & 011) == 011) goto restr_failed;
+         if ((or_all_people(ss) & 011) == 011) goto restr_failed;
          break;
       }
    }
@@ -2150,28 +2134,17 @@ static bool handle_4x4_division(
 
    if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
        (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
-      if (((newtb & 8) == 0 || assoc(b_4x2, ss, calldeflist)) &&
-          ((newtb & 1) == 0 || assoc(b_2x4, ss, calldeflist))) {
+      if ((!(newtb & 010) || assoc(b_4x2, ss, calldeflist)) &&
+          (!(newtb & 001) || assoc(b_2x4, ss, calldeflist))) {
          // Split to left and right halves.
          finalrot++;
          division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
          return true;
       }
-      else if (((newtb & 1) == 0 || assoc(b_4x2, ss, calldeflist)) &&
-               ((newtb & 8) == 0 || assoc(b_2x4, ss, calldeflist))) {
+      else if ((!(newtb & 001) || assoc(b_4x2, ss, calldeflist)) &&
+               (!(newtb & 010) || assoc(b_2x4, ss, calldeflist))) {
          // Split to bottom and top halves.
          division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
-         return true;
-      }
-      else if (((newtb & 8) == 0 || assoc(b_4x1, ss, calldeflist)) &&
-               ((newtb & 1) == 0 || assoc(b_1x4, ss, calldeflist))) {
-         finalrot++;
-         division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
-         return true;
-      }
-      else if (((newtb & 1) == 0 || assoc(b_4x1, ss, calldeflist)) && 
-               ((newtb & 8) == 0 || assoc(b_1x4, ss, calldeflist))) {
-         division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
          return true;
       }
    }
@@ -2650,7 +2623,7 @@ static int divide_the_setup(
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    // It will be helpful to have a mask of where the live people are.
-   uint32_t livemask = ss->little_endian_live_mask();
+   uint32_t livemask = little_endian_live_mask(ss);
 
    // Take care of "snag" and "mystic".  "Central" is illegal, and was already caught.
    // We first limit it to just the few setups for which it can possibly be legal, to make
@@ -2675,7 +2648,6 @@ static int divide_the_setup(
    switch (ss->kind) {
       uint32_t tbi, tbo;    // Many clauses will use these.
       bool temp;
-      uint32_t tinytb;
 
    case s_thar:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -2691,7 +2663,7 @@ static int divide_the_setup(
       // The call has no applicable 2x8 or 8x2 definition.
 
       // Check whether it has 2x4/4x2/1x8/8x1 definitions, and divide the setup if so,
-      // or if the caller explicitly said some matrix thing.
+      // or if the caller explicitly said "2x8 matrix".
 
       temp =
          (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
@@ -2700,15 +2672,8 @@ static int divide_the_setup(
       if (temp ||
           ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_16_MATRIX) ||
           (ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS))) {
-         if ((!(newtb & 0x8) || assoc(b_1x8, ss, calldeflist)) &&
-             (!(newtb & 0x1) || assoc(b_8x1, ss, calldeflist))) {
-            division_code = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
-            if (!temp) warn(warn__split_to_1x8s);
-            goto divide_us_no_recompute;
-         }
-
-         if ((!(newtb & 0x8) || assoc(b_2x4, ss, calldeflist)) &&
-             (!(newtb & 0x1) || assoc(b_4x2, ss, calldeflist))) {
+         if ((!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
+             (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
             division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
 
             // I consider it an abomination to call such a thing as "2x8 matrix
@@ -2724,10 +2689,10 @@ static int divide_the_setup(
             if (!temp) warn(warn__split_to_2x4s);
             goto divide_us_no_recompute;
          }
-         else if ((!(newtb & 0x8) ||
+         else if ((!(newtb & 010) ||
                    assoc(b_1x4, ss, calldeflist) ||
                    assoc(b_1x8, ss, calldeflist)) &&
-                  (!(newtb & 0x1) ||
+                  (!(newtb & 001) ||
                    assoc(b_4x1, ss, calldeflist) ||
                    assoc(b_8x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
@@ -2795,7 +2760,7 @@ static int divide_the_setup(
       if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_EXPAND_MATRIX|CMD_MISC__MUST_SPLIT_MASK)) &&
           (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
-         ss->do_matrix_expansion(CONCPROP__NEEDK_2X8, true);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
          // Should never fail, but we don't want a loop.
          if (ss->kind != s2x8) fail("Failed to expand to 2X8.");
          return 2;        // And try again.
@@ -2931,7 +2896,7 @@ static int divide_the_setup(
                assoc(b_2x2, ss, calldeflist) ||
                assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)) {
          // Need to turn it into a mundane matrix setup.
-         ss->do_matrix_expansion(CONCPROP__NEEDK_4X6, false);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, false);
          normalize_setup(ss, plain_normalize, qtag_no_compress);
          // Check that it did something.  (Otherwise, divide_us_no_recompute will raise an error.)
          if (ss->kind == s2x4 || ss->kind == s4x4 || ss->kind == s4x6)
@@ -3041,7 +3006,7 @@ static int divide_the_setup(
       if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
             (!(newtb & 010) || assoc(b_1x16, ss, calldeflist)) &&
             (!(newtb & 001) || assoc(b_16x1, ss, calldeflist))) {
-         ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, true);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
          if (ss->kind != s1x16) fail("Failed to expand to 1X16.");  // Should never fail, but we don't want a loop.
          return 2;        // And try again.
       }
@@ -3116,7 +3081,7 @@ static int divide_the_setup(
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
           (!(newtb & 010) || assoc(b_1x12, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_12x1, ss, calldeflist))) {
-         ss->do_matrix_expansion(CONCPROP__NEEDK_1X12, true);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, true);
          if (ss->kind != s1x12) fail("Failed to expand to 1X12.");  // Should never fail, but we don't want a loop.
          return 2;        // And try again.
       }
@@ -3134,7 +3099,7 @@ static int divide_the_setup(
       if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
             (!(newtb & 010) || assoc(b_1x16, ss, calldeflist)) &&
             (!(newtb & 001) || assoc(b_16x1, ss, calldeflist))) {
-         ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, true);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
          if (ss->kind != s1x16) fail("Failed to expand to 1X16.");  // Should never fail, but we don't want a loop.
          return 2;        // And try again.
       }
@@ -3488,23 +3453,24 @@ static int divide_the_setup(
       if (must_do_mystic)
          goto do_mystically;
 
-      tinytb =
-         ss->people[2].id1 | ss->people[3].id1 |
-         ss->people[6].id1 | ss->people[7].id1;
+      {
+         uint32_t tinytb =
+            ss->people[2].id1 | ss->people[3].id1 |
+            ss->people[6].id1 | ss->people[7].id1;
 
-      // See if this call has applicable 1x2 or 2x1 definitions,
-      // and the people in the wings are facing appropriately.
-      // Then do it concentrically, which will break it into 4-person triangles
-      // first and 1x2/2x1's later.  If it has a 1x1 definition,
-      // do it no matter how people are facing.
+         // See if this call has applicable 1x2 or 2x1 definitions,
+         // and the people in the wings are facing appropriately.
+         // Then do it concentrically, which will break it into 4-person triangles
+         // first and 1x2/2x1's later.  If it has a 1x1 definition,
+         // do it no matter how people are facing.
 
-      if ((!(tinytb & 0x8) || assoc(b_1x2, ss, calldeflist)) &&
-          (!(tinytb & 0x1) || assoc(b_2x1, ss, calldeflist)))
-         goto do_concentrically;
+         if ((!(tinytb & 010) || assoc(b_1x2, ss, calldeflist)) &&
+             (!(tinytb & 1) || assoc(b_2x1, ss, calldeflist)))
+            goto do_concentrically;
 
-      if (assoc(b_1x1, ss, calldeflist))
-         goto do_concentrically;
-
+         if (assoc(b_1x1, ss, calldeflist))
+            goto do_concentrically;
+      }
       break;
    case s3x4:
       if (handle_3x4_division(ss, callflags1, callflagsf, newtb, livemask,
@@ -3957,7 +3923,7 @@ static int divide_the_setup(
       if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
             (!(newtb & 010) || assoc(b_1x12, ss, calldeflist) || assoc(b_1x16, ss, calldeflist)) &&
             (!(newtb & 1) || assoc(b_12x1, ss, calldeflist) || assoc(b_16x1, ss, calldeflist))) {
-         ss->do_matrix_expansion(CONCPROP__NEEDK_1X12, true);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, true);
          if (ss->kind != s1x12) fail("Failed to expand to 1X12.");  /* Should never fail, but we don't want a loop. */
          return 2;                        /* And try again. */
       }
@@ -4064,7 +4030,7 @@ static int divide_the_setup(
          if (must_do_mystic)
             fail("Can't do \"snag/mystic\" with this call.");
 
-         ss->do_matrix_expansion(CONCPROP__NEEDK_2X6, true);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, true);
 
          // Should never fail, but we don't want a loop.
          if (ss->kind != s2x6) fail("Failed to expand to 2X6.");
@@ -4932,12 +4898,7 @@ static uint32_t do_actual_array_call(
           !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
          if (callspec->callflagsf & CFLAG2_NO_ELONGATION_ALLOWED)
             fail_no_retry("Call can't be done around the outside of the set.");
-         if (callspec->callflagsf & CFLAG2_WARN_ON_ELONGATION) {
-            if (calling_level >= concentric_level)
-               warn(warn__maybe_use_concentric);
-            else
-               warn(warn__went_to_other_side);
-         }
+
          if (goodies->callarray_flags & CAF__NO_CUTTING_THROUGH) {
             if (result->kind == s1x4)
                check_peeloff_migration = true;
@@ -6037,7 +5998,7 @@ static uint32_t do_actual_array_call(
        result->kind == s2x2) {
       // We just did a "dixie 1/2 tag" but will want to back up to the 1/4 position.
       // Need to change handedness.
-      uint32_t newtb99 = result->or_all_people();
+      uint32_t newtb99 = or_all_people(result);
       if (!(newtb99 & 001)) {
          result->swap_people(0, 1);
          result->swap_people(2, 3);
@@ -6053,7 +6014,7 @@ static uint32_t do_actual_array_call(
    // If a star went to a 2x2, set outer_elongation to make people laterally far and vertically close.
    // This is a hack to make Load the Boat work when the outsides are a facing star.
    if (ss->kind == s_star && result->kind == s2x2) {
-      uint32_t newtb99 = result->or_all_people();
+      uint32_t newtb99 = or_all_people(result);
       if (!(newtb99 & 001))
          desired_elongation = 1;
       else if (!(newtb99 & 010))
@@ -6271,7 +6232,7 @@ extern void basic_move(
             // directions of the live people.  Demand that it be unambiguous.
 
             uint32_t directions, livemask;
-            ss->big_endian_get_directions32(directions, livemask);
+            big_endian_get_directions32(ss, directions, livemask);
             int i1 = -1;
 
             for (int i=0 ; i<4 ; i++) {
@@ -6292,18 +6253,6 @@ extern void basic_move(
                ss->swap_people(i1, i2);
                copy_rot(ss, i1, ss, i1, 033);
                copy_rot(ss, i2, ss, i2, 011);
-
-               if (ss->people[i1].id1 & STABLE_ENAB) {
-                  if ((ss->people[i1].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
-                     fail("Sorry, can't do this.");
-                  ss->people[i1].id1 += 2*STABLE_REMBIT;
-               }
-
-               if (ss->people[i2].id1 & STABLE_ENAB) {
-                  if ((ss->people[i2].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
-                     fail("Sorry, can't do this.");
-                  ss->people[i2].id1 += 2*STABLE_REMBIT;
-               }
 
                // Repair the damage.
                newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
@@ -6331,19 +6280,6 @@ extern void basic_move(
                copy_rot(ss, 1, ss, 1, 011);
                copy_rot(ss, 2, ss, 2, 011);
                copy_rot(ss, 3, ss, 3, 033);
-
-               if (ss->people[2].id1 & STABLE_ENAB) {
-                  if ((ss->people[2].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
-                     fail("Sorry, can't do this.");
-                  ss->people[2].id1 += 4*STABLE_REMBIT;
-               }
-
-               if (ss->people[3].id1 & STABLE_ENAB) {
-                  if ((ss->people[3].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
-                     fail("Sorry, can't do this.");
-                  ss->people[3].id1 += 4*STABLE_REMBIT;
-               }
-
                ss->rotation--;
                ss->kind = s1x4;
                canonicalize_rotation(ss);
@@ -6558,13 +6494,13 @@ foobar:
                   *ss = qtagtemp;
                }
             }
+
+            newtb = or_all_people(ss);
          }
          else if (k == s2x2) {
             *ss = linetemp;
-
+            newtb = or_all_people(ss);
          }
-
-         newtb = ss->or_all_people();
       }
 
       begin_kind key1 = setup_attrs[ss->kind].keytab[0];
@@ -6610,7 +6546,7 @@ foobar:
 
                   if (!whuzzis2)
                      result->result_flags.misc |= RESULTFLAG__COMPRESSED_FROM_2X3;
-                  newtb = ss->or_all_people();
+                  newtb = or_all_people(ss);
                   linedefinition = assoc(b_2x2, ss, calldeflist);
                   coldefinition = linedefinition;
                   four_way_startsetup = true;
@@ -6769,7 +6705,8 @@ foobar:
 
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
                if ((search_concepts_without_funny & INHERITFLAG_12_MATRIX) != 0ULL) {
-                  ss->do_matrix_expansion(
+                  do_matrix_expansion(
+                     ss,
                      (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
                      true);
 
@@ -6779,11 +6716,11 @@ foobar:
                }
                else if ((search_concepts_without_funny & INHERITFLAG_16_MATRIX) != 0ULL) {
                   if (ss->kind == s2x6)
-                     ss->do_matrix_expansion(CONCPROP__NEEDK_2X8, true);
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
                   else if (ss->kind == s_alamo)
-                     ss->do_matrix_expansion(CONCPROP__NEEDK_4X4, true);
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
                   else if (ss->kind != s2x4)
-                     ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, true);
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
 
                   // Take no action (and hence cause an error) if the setup was a 2x4.
                   // If someone wants to say "16 matrix 4x4 peel off" from normal columns,
@@ -6795,7 +6732,7 @@ foobar:
                }
             }
 
-            newtb = ss->or_all_people();
+            newtb = or_all_people(ss);
          }
 
          search_concepts_without_funny &= ~matrix_check_flag;

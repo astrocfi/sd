@@ -2566,10 +2566,12 @@ void ui_utils::display_initial_history(int upper_limit, int num_pics)
    }
    else {
       // We lose, there is nothing we can use.
-      if (no_erase_before_this != 0)
-         iob88.no_erase_before_n(no_erase_before_this);
-
-      clear_screen();
+      // Don't erase the random number log if doing a resolve test.
+      if (ui_options.resolve_test_minutes <= 0) {
+         if (no_erase_before_this != 0)
+            iob88.no_erase_before_n(no_erase_before_this);
+         clear_screen();
+      }
       write_header_stuff(true, 0);
       newline();
       newline();

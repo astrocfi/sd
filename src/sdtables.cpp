@@ -3088,6 +3088,10 @@ map::map_thing map::map_init_table[] = {
     s1x2,2,MPKIND__SPLIT_WITH_45_ROTATION,1, warn__none,  s2x3, 0x000, 0},
    {{4, 3,                  0, 1},
     s1x2,2,MPKIND__SPLIT_WITH_M45_ROTATION,1, warn__none, s2x3, 0x000, 0},
+   {{6, 7, -1, 4, 5, -1,    0, 1, -1, 2, 3, -1},
+    s2x3,2,MPKIND__SPLIT_WITH_45_ROTATION,0, warn__none, s_qtag, 0x000, 0},
+   {{-1, 3, 2, -1, 4, 5,    -1, 0, 1, -1, 7, 6},
+    s2x3,2,MPKIND__SPLIT_WITH_45_ROTATION,1, warn__none, s_qtag, 0x000, 1},
 
    {{9, 11, 6, 8,           14, 0, 1, 3},
     s2x2,2,MPKIND__SPLIT_WITH_45_ROTATION,0, warn__none,  s4x4, 0x000, 0},

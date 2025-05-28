@@ -673,15 +673,6 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                   |_____|           |_____|           |_____|           |_____|
 
 
-                   _____             _____             _____             _____
-             _____|     |_____ _____|     |_____ _____|     |_____ _____|     |_____
-            |     |  0  |     |     |  1  |     |     |  2  |     |     |  3  |     |
-4ptpd       | 12  |_____| 13  | 14  |_____| 15  |  7  |_____|  6  |  5  |_____|  4  |
-            |_____|     |_____|_____|     |_____|_____|     |_____|_____|     |_____|
-                  | 11  |           | 10  |           |  9  |           |  8  |
-                  |_____|           |_____|           |_____|           |_____|
-
-
 
                    _____             _____
              _____|     |_____ _____|     |_____
@@ -2979,6 +2970,12 @@ unselect_once_rem_from_select
       Applies to 2x4 only (lines or columns).  These three are the 2x4
       versions of the three predicates listed above.  They apply to the
       2x2 split box that the person under test is in.
+
+4x1_facing_someone
+8x1_facing_someone
+      Applies to 4x1 / 8x1 column only.  Returns TRUE if this person is
+      immediately facing someone who is alive and facing back at the person.
+      Returns FALSE otherwise.
 
 columns_someone_in_front
       applies to 3x2 or 4x2 only.  For a 3x2:  Returns TRUE for any of the

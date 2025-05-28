@@ -5329,17 +5329,12 @@ fracfrac fraction_info::get_fracs_for_this_part()
          return FRAC_FRAC_NULL_VALUE;
    }
    else {
-      uint32_t retval = FRAC_FRAC_NULL_VALUE;
-
       if (m_do_half_of_last_part != 0 && (m_client_index == m_highlimit-1 || m_client_index == m_instant_stop-1))
-         // overwrite RH with m_do_half_of_last_part;
-         retval = rplacend(retval);
-
-      if (m_do_last_half_of_first_part != 0 && m_client_index == m_start_point)
-         // overwrite LH with m_do_last_half_of_first_part;
-         retval = rplacstart(retval);
-
-      return (fracfrac) retval;
+         return m_do_half_of_last_part;
+      else if (m_do_last_half_of_first_part != 0 && m_client_index == m_start_point)
+         return (fracfrac) m_do_last_half_of_first_part;
+      else
+         return FRAC_FRAC_NULL_VALUE;
    }
 }
 
@@ -5894,8 +5889,6 @@ static void do_sequential_call(
    bool first_call = true;    // First call in logical definition.
    bool first_time = true;    // First thing we are doing, in temporal sequence.
    bool use_incoming_assumption = true;  // Normally turned off after first round; only 1st call get the assumption.
-   bool cast_didnt_start_at_beginning = false;    // This makes it start a cast off with continue_cast, so it
-                                                  // will use the roll info from the earlier part of the call.
    assumption_thing fix_next_assumption;
 
    // This tells whether the setup was genuinely elongated when it came in.
@@ -5951,31 +5944,30 @@ static void do_sequential_call(
       int ED = ss->cmd.cmd_fraction.end_denom();
       ss->cmd.cmd_fraction.set_to_null();    // Won't need this any more.
 
-      // Now we need to push the fraction down to bottom, so can do "middle 1/2 of ..."
+      // But we need to push the fraction down to bottom, so can do "middle 1/2 of ..."
 
       int NNN = EN*SD - SN*ED;
       int DDD = ED * SD;
       reduce_fraction(NNN, DDD);
-      if (SN != 0) cast_didnt_start_at_beginning = true;   // Record the fact that we pushed.
 
       // We want number_fields * NNN / DDD, calibrated in quarters, or
       // number_fields * NNN * 2 / DDD, calibrated in eighths, and that
       // number must be an integer at least 1.
 
+
+      // want number_fields * NNN / DDD      = 0.5 or 1 or 1.5 ...
+      // want number_fields * NNN*2 / DDD    = 1 or 2 ....
+
+
       current_options.number_fields *= NNN*2;
-      uint32_t bar = current_options.number_fields;
+      int bar = current_options.number_fields;
       current_options.number_fields /= DDD;
       if (bar != current_options.number_fields * DDD)
          fail("fraction is too complicated.");
 
-      if (current_options.number_fields & 1)
-         zzz.m_do_half_of_last_part = FRAC_FRAC_HALF_VALUE;
+      int extra_eighth = current_options.number_fields & 1;
 
-      current_options.number_fields++;
       current_options.number_fields /= 2;
-      // This is now the integer number of full quarters that we are going to cast.
-      // If casting a half integer, this is rounded up and that extra half is taken away
-      // in zzz.m_do_half_of_last_part.
    }
 
    if (distribute_repetitions) {
@@ -6245,12 +6237,6 @@ static void do_sequential_call(
       {
          setup_command foobar = ss->cmd;
          this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index];
-         // Fetch the "continue_cast" instead of the "cast_off_14" if there was an earlier part.
-         // Is this the right thing?  Do people actually want this behavior?  Who knows?  But
-         // it used to be done this way.  Tradition.
-         if (zzz.m_fetch_index == 0 && zzz.m_highlimit == 1 &&
-             this_schema == schema_sequential_remainder && cast_didnt_start_at_beginning)
-            this_item = &callspec->stuff.seq.defarray[1];
          this_mod1 = this_item->modifiers1;
          foobar.cmd_final_flags = new_final_concepts;
 

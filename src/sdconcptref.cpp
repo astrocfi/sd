@@ -4426,6 +4426,63 @@ void stable_move(
    result->kind = nothing;
 }
 
+
+static void do_concept_paranoid(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   if (process_brute_force_mxn(ss, parseptr, do_concept_paranoid, result)) return;
+
+   if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
+      fail("Illegal modifier before \"paranoid\".");
+
+   setup do_the_utb;
+   move(ss, false, &do_the_utb);    // Do the indicated call.
+
+   do_the_utb.cmd = ss->cmd;
+
+
+   do_the_utb.cmd.cmd_misc_flags = 0;
+   do_the_utb.cmd.cmd_misc2_flags = 0;
+   do_the_utb.cmd.cmd_misc3_flags = 0;
+   do_the_utb.cmd.do_couples_her8itflags = 0ULL;
+   do_the_utb.cmd.cmd_fraction.set_to_null();
+   do_the_utb.cmd.cmd_assume.assumption = cr_none;
+   do_the_utb.cmd.cmd_assume.assump_cast = 0;
+   do_the_utb.cmd.prior_elongation_bits = 0;
+   do_the_utb.cmd.prior_expire_bits = 0;
+   do_the_utb.cmd.skippable_concept = (parse_block *) 0;
+   do_the_utb.cmd.skippable_heritflags = 0ULL;
+   do_the_utb.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0ULL;
+   do_the_utb.cmd.restrained_concept = (parse_block *) 0;
+   do_the_utb.cmd.restrained_super8flags = 0ULL;
+   do_the_utb.cmd.restrained_super9flags = 0ULL;
+   do_the_utb.cmd.restrained_do_as_couples = false;
+   do_the_utb.cmd.restrained_miscflags = 0;
+   do_the_utb.cmd.restrained_misc2flags = 0;
+   do_the_utb.cmd.restrained_selector_decoder[0] = 0;
+   do_the_utb.cmd.restrained_selector_decoder[1] = 0;
+   do_the_utb.cmd.restrained_fraction.flags = 0;
+   do_the_utb.cmd.restrained_fraction.fraction = 0;
+
+   do_the_utb.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
+
+
+   do_the_utb.cmd.parseptr = parse_block::get_parse_block();
+   do_the_utb.cmd.parseptr->initialize(&concept_mark_end_of_list);
+   do_the_utb.cmd.callspec = parseptr->concept->arg1 ?
+      base_calls[base_call_anyoneuturnback] : base_calls[base_call_uturnback];
+   do_the_utb.cmd.parseptr->call = do_the_utb.cmd.callspec;
+   do_the_utb.cmd.parseptr->call_to_print = do_the_utb.cmd.callspec;
+
+   who_list saved_selector = current_options.who;
+   if (parseptr->concept->arg1) current_options.who = parseptr->options.who;
+   move(&do_the_utb, false, result);
+   current_options.who = saved_selector;
+}
+
+
 static void do_concept_nose(
    setup *ss,
    parse_block *parseptr,
@@ -4990,7 +5047,6 @@ static void do_call_in_series_and_update_bits(setup *result) THROW_DECL
 }
 
 
-
 static void do_concept_sequential(
    setup *ss,
    parse_block *parseptr,
@@ -5093,97 +5149,25 @@ static void do_concept_special_sequential(
    //    part_key_frac_and_frac (6) - I/J and M/N
    //    part_key_use_last_part (7) - use (call) for the last part
    //    part_key_paranoid      (8) - paranoid
+   //    part_key_sel_paranoid  (9) - so-and-so are paranoid
 
-   if (parseptr->concept->arg1 == part_key_paranoid &&
-       process_brute_force_mxn(ss, parseptr, do_concept_special_sequential, result))
-       return;
-
-   if (parseptr->concept->arg1 == part_key_half_and_half ||
-       parseptr->concept->arg1 == part_key_frac_and_frac ||
-       parseptr->concept->arg1 == part_key_paranoid) {
-
-      // This is "half and half", "frac and frac", or "paranoid".
-
-      if (parseptr->concept->arg1 == part_key_paranoid) {
-         if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
-            fail("Illegal modifier before \"paranoid\".");
-
-         ss->cmd.cmd_misc3_flags |= CMD_MISC3__PUT_FRAC_ON_FIRST;
-
-         if (!ss->cmd.cmd_fraction.is_null() &&
-             !(ss->cmd.cmd_misc3_flags & CMD_MISC3__PUT_FRAC_ON_FIRST))
-            fail("Can't stack meta or fractional concepts.");
-
-      }
-
-      uint32_t incoming_numerical_arg = (parseptr->concept->arg1 == part_key_frac_and_frac) ?
-         parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
+   if (parseptr->concept->arg1 == part_key_half_and_half || parseptr->concept->arg1 == part_key_frac_and_frac) {
+      // This is "half and half".
 
       fraction_info zzz(2);
 
-      // ****************  This would break initially paranoid swing thru
-      if (parseptr->concept->arg1 != part_key_paranoid ||
-          (ss->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP)) {
-         if (!ss->cmd.cmd_fraction.is_null()) {
-            zzz.get_fraction_info(ss->cmd.cmd_fraction,
-                                  CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT,
-                                  weirdness_off);
-         }
+      uint32_t given_fractions = (parseptr->concept->arg1 == 6) ?
+         parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
+
+      if (!ss->cmd.cmd_fraction.is_null()) {
+         zzz.get_fraction_info(ss->cmd.cmd_fraction,
+                               CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT,
+                               weirdness_off);
       }
 
       zzz.m_first_call = !zzz.m_reverse_order;
 
       prepare_for_call_in_series(result, ss);
-
-      if (parseptr->concept->arg1 == part_key_paranoid) {
-
-         uint32_t saved_last_flagmisc;
-         call_with_name *save_subject_call = ss->cmd.parseptr->call;
-         who_list saved_selector = current_options.who;
-
-         for (;;) {
-            if (zzz.not_yet_in_active_section()) goto paranoid_next_cycle;
-            if (zzz.ran_off_active_section()) break;
-
-            saved_last_flagmisc = result->result_flags.misc &
-               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
-            copy_cmd_preserve_elong_and_expire(ss, result);
-
-            // Figure out which thing to do.  Normally, it's the subject calll and then the U-Turn Back.
-            if (zzz.m_fetch_index == 0) {
-               // It's all set up!
-            }
-            else {
-               // Set up for doing the U-Turn Back.
-               result->cmd.parseptr->call = (parseptr->concept->arg2) ?
-                  base_calls[base_call_anyoneuturnback] : base_calls[base_call_uturnback];
-               result->cmd.parseptr->call_to_print = result->cmd.parseptr->call;
-               result->cmd.callspec = result->cmd.parseptr->call;
-
-               if (parseptr->concept->arg2) current_options.who = parseptr->options.who;
-               result->cmd.cmd_fraction.set_to_null();
-               //   result->update_id_bits();    // It's the *original* people.
-
-            }
-
-            do_call_in_series_simple(result);
-            result->result_flags.misc |= saved_last_flagmisc;
-
-         paranoid_next_cycle:
-
-            // Increment for next cycle.
-            zzz.m_fetch_index += zzz.m_subcall_incr;
-            zzz.m_client_index += zzz.m_subcall_incr;
-         }
-
-         // Set it back.
-
-         result->cmd.callspec = save_subject_call;
-         ss->cmd.parseptr->call = save_subject_call;
-         ss->cmd.parseptr->call_to_print = save_subject_call;
-         current_options.who = saved_selector;
-         return;
-      }
 
       for (;;) {
          int fetch_number;
@@ -5201,13 +5185,13 @@ static void do_concept_special_sequential(
          if (fetch_number == 0) {
             // Doing the first call.  Apply the fraction "first 1/2", or whatever.
             result->cmd.cmd_fraction.flags = 0;
-            result->cmd.cmd_fraction.process_fractions(NUMBER_FIELDS_1_0, incoming_numerical_arg,
+            result->cmd.cmd_fraction.process_fractions(NUMBER_FIELDS_1_0, given_fractions,
                                                        FRAC_INVERT_NONE, corefracs);
          }
          else {
             // Doing the second call.  Apply the fraction "last 1/2", or whatever.
             result->cmd.cmd_fraction.flags = 0;
-            result->cmd.cmd_fraction.process_fractions(incoming_numerical_arg >> (BITS_PER_NUMBER_FIELD*2), NUMBER_FIELDS_1_1,
+            result->cmd.cmd_fraction.process_fractions(given_fractions >> (BITS_PER_NUMBER_FIELD*2), NUMBER_FIELDS_1_1,
                                                        FRAC_INVERT_START, corefracs);
             result->cmd.parseptr = parseptr->subsidiary_root;
          }
@@ -5339,6 +5323,8 @@ static void do_concept_special_sequential(
       //    replace with (part_key_use)
       //    follow by (part_key_follow_by)
       //    precede with (part_key_precede_by)
+      //    paranoid (part_key_paranoid)
+      //    so-and-so are paranoid (part_key_sel_paranoid)
 
       // We allow fractionalization commands only for the special case of "piecewise"
       // or "random", in which case we will apply them to the first call only.
@@ -5369,7 +5355,7 @@ static void do_concept_special_sequential(
          result->result_flags.misc &= ~RESULTFLAG__PART_COMPLETION_BITS;
          result->result_flags.misc |= saved_last_flagmisc;
       }
-      else {
+      else if (parseptr->concept->arg1 == part_key_follow_by || parseptr->concept->arg1 == part_key_follow_by) {
          // This is follow (part_key_follow_by,0) or precede (part_key_precede_by,1).
 
          for (int call_index=0; call_index<2; call_index++) {
@@ -9935,6 +9921,10 @@ const concept_table_item concept_table[] = {
    {CONCPROP__USE_SELECTOR | CONCPROP__USE_NUMBER |
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_stable},                                     // concept_so_and_so_frac_stable
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_special_sequential},                         // concept_paranoid
+   {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_special_sequential},                         // concept_so_and_so_paranoid
    {CONCPROP__USE_DIRECTION | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_nose},                                       // concept_nose
    {CONCPROP__USE_DIRECTION | CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
@@ -9975,19 +9965,12 @@ const concept_table_item concept_table[] = {
     do_concept_sequential},                                 // concept_sequential
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_special_sequential},                         // concept_special_sequential
-   {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT |
-    CONCPROP__USES_PARTS,
-    do_concept_special_sequential},                         // concept_special_sequential_sel
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT |
     CONCPROP__USE_NUMBER | CONCPROP__USES_PARTS,
     do_concept_special_sequential},                         // concept_special_sequential_num
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT |
     CONCPROP__USE_FOUR_NUMBERS | CONCPROP__USES_PARTS,
     do_concept_special_sequential},                         // concept_special_sequential_4num
-   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
-    do_concept_special_sequential},                         // concept_special_sequential_no_2nd
-   {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
-    do_concept_special_sequential},                         // concept_special_sequential_sel_no_2nd
    {CONCPROP__MATRIX_OBLIVIOUS |
     CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE |
     CONCPROP__IS_META | CONCPROP__USES_PARTS,

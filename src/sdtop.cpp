@@ -4065,6 +4065,52 @@ extern callarray *assoc(
          default:
             goto good;           // We don't understand the setup -- we'd better accept it.
          }
+      case cr_facing_someone:
+         {
+            predicate_descriptor *pred;
+            int begin_size = attr::slimit(ss)+1;
+
+            switch (ssK) {
+            case s1x2:
+               //            case s2x4:
+               // This is the index for "2x1_facing_someone",
+               pred = &pred_table[start_of_facing_tests+5];
+               break;
+            case s1x4:
+               // This is the index for "4x1_facing_someone",
+               pred = &pred_table[start_of_facing_tests+6];
+               break;
+            case s1x8:
+               // This is the index for "8x1_facing_someone",
+               pred = &pred_table[start_of_facing_tests+7];
+               break;
+            default:
+               goto good;
+            }
+
+            setup tempthing;
+            int source_size = begin_size;
+            int num_quadrants = 1;
+
+            // Usually, this loop will only cycle once.  But if testing for people facing directly
+            // in pairs in a 2x4, we run the test in each quadrant.
+            for (int quadrant_count=0; quadrant_count<num_quadrants; quadrant_count++) {
+               tempthing = *ss;
+
+               for (int real_index=0; real_index<source_size; real_index++) {
+                  personrec this_person = tempthing.people[real_index];
+                  if (this_person.id1) {
+                     int real_direction = this_person.id1 & 3;
+                     int northified_index = (real_index + (((4-real_direction)*source_size) >> 2)) % source_size;
+                     if (!((*(pred->predfunc))
+                           (ss, real_index, real_direction,
+                            northified_index, pred->extra_stuff)))
+                        goto bad;
+                  }
+               }
+               goto good;
+            }
+         }
 
       case cr_all_facing_same:
          switch (ssA) {

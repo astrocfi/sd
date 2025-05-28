@@ -1202,6 +1202,15 @@ static bool inner_search(command_kind goal,
       // will signal and go to cant_consider_this_call.
       // This may, of course, add more concepts.
 
+
+      if (ui_options.resolve_test_minutes > 0 && (++resolve_test_count & 0x3FFFF) == 0) {
+         char tempstuff[200];
+
+         sprintf(tempstuff, "Random number is %d.", random_number);
+         gg77->writestuff(tempstuff);
+         gg77->newline();
+      }
+
       query_for_call();
 
       // Do the call.  An error will signal and go to cant_consider_this_call.
