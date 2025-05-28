@@ -304,7 +304,7 @@ static const resolve_tester test_rigger_stuff[] = {
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_4x4_stuff[] = {
-   // "circle left/right", etc. from squared-set.
+   // "Circle left/right", etc. from squared-set.
    {resolve_circle,         MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},
    {resolve_circle,         MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},
    {resolve_sglfileprom,    MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8833AA11},
@@ -386,6 +386,24 @@ static const resolve_tester test_4x4_stuff[] = {
    {resolve_la,             MS, 7,   {5, 2, 3, 0, 13, 10, 11, 8},  0xA8A88A8A},
    {resolve_la,             MS, 5,   {1, 14, 15, 12, 9, 6, 7, 4},  0x13133131},
    {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_alamo_stuff[] = {
+   // "Circle left/right", etc.
+   {resolve_circle,         MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0x33AA1188},
+   {resolve_circle,         MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x833AA118},
+   {resolve_sglfileprom,    MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0x8833AA11},
+   {resolve_sglfileprom,    MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x18833AA1},
+   {resolve_revsglfileprom, MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0xAA118833},
+   {resolve_revsglfileprom, MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x3AA11883},
+
+   // Around the corner.
+   {resolve_rlg,            MS, 3,   {4, 3, 2, 1, 0, 7, 6, 5},  0x1A8138A3},
+   {resolve_la,             MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0xA8138A31},
+
+   // Facing directly.
+   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},  0x8A31A813},
+   {resolve_la,             MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x38A31A81},
+};
 
 static const resolve_tester test_4x6_stuff[] = {
    {resolve_rlg,            MS, 2,   {23, 6, 3, 2, 11, 18, 15, 14},0x8A31A813},
@@ -705,6 +723,8 @@ void configuration::calculate_resolve()
       testptr = test_rigger_stuff; break;
    case s_spindle:
       testptr = test_spindle_stuff; break;
+   case s_alamo:
+      testptr = test_alamo_stuff; break;
    default: goto no_resolve;
    }
 

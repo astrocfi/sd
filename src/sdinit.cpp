@@ -491,7 +491,8 @@ static void create_misc_call_lists(call_list_kind cl)
              assoc(b_dmd, (setup *) 0, deflist) ||
              assoc(b_pmd, (setup *) 0, deflist) ||
              assoc(b_1x2, (setup *) 0, deflist) ||
-             assoc(b_2x1, (setup *) 0, deflist))
+             assoc(b_2x1, (setup *) 0, deflist) ||
+             assoc(b_1x1, (setup *) 0, deflist))
             goto accept;
       }
 
@@ -952,7 +953,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             check_tag(last_12);
             templist[next_definition_index].call_id = (uint16) last_12;
             read_fullword();
-            templist[next_definition_index].modifiers1 = last_datum;
+            templist[next_definition_index].modifiers1 = (mods1_word) last_datum;
             read_fullword();
             templist[next_definition_index++].modifiersh = last_datum;
             read_halfword();
@@ -975,14 +976,14 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       check_tag(last_12);
       root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
       read_fullword();
-      root_to_use->stuff.conc.innerdef.modifiers1 = last_datum;
+      root_to_use->stuff.conc.innerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
       root_to_use->stuff.conc.innerdef.modifiersh = last_datum;
       read_halfword();
       check_tag(last_12);
       root_to_use->stuff.conc.outerdef.call_id = (uint16) last_12;
       read_fullword();
-      root_to_use->stuff.conc.outerdef.modifiers1 = last_datum;
+      root_to_use->stuff.conc.outerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
       root_to_use->stuff.conc.outerdef.modifiersh = last_datum;
       read_halfword();

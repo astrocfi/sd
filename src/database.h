@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 256
+#define DATABASE_FORMAT_VERSION 263
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -178,9 +178,8 @@ enum {
    CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL,
    CFLAG1_STEP_TO_NONPHAN_BOX       = 0x00000C00UL,
    CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL,
-   CFLAG1_STEP_TO_WAVE_4_PEOPLE     = 0x00001400UL,
-   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001800UL,
-   CFLAG1_STEP_TO_QTAG              = 0x00001C00UL,
+   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001400UL,
+   CFLAG1_STEP_TO_QTAG              = 0x00001800UL,
    CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00002000UL,
    CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
    CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit
@@ -393,7 +392,8 @@ enum setup_kind {
    s_thar,
    s_alamo,
    sx4dmd,    // These are too big to actually represent --
-   s8x8,      // we don't let them out of their cage.
+   sx4dmdbone,// we don't let them out of their cage.
+   s8x8,      // Ditto.
    sxequlize, // Ditto.
    sx1x16,    // Ditto.
    shypergal, // Ditto.
@@ -664,7 +664,7 @@ enum call_restriction {
    cr_alwaysfail,          // Restriction only.
    cr_give_fudgy_warn,
    cr_wave_only,
-   cr_wave_unless_say_2faced, // Not implemented.
+   cr_wave_unless_say_2faced,
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
@@ -685,6 +685,7 @@ enum call_restriction {
    cr_dmd_facing,
    cr_diamond_like,
    cr_qtag_like,
+   cr_qtag_like_anisotropic,
    cr_pu_qtag_like,
    cr_conc_iosame,
    cr_conc_iodiff,
@@ -710,6 +711,7 @@ enum call_restriction {
    cr_split_dixie,         // Qualifier only.
    cr_not_split_dixie,     // Qualifier only.
    cr_dmd_ctrs_mwv,        // Qualifier only.
+   cr_dmd_ctrs_mwv_no_mirror,  // Qualifier only.
    cr_spd_base_mwv,        // Qualifier only.
    cr_qtag_mwv,            // Qualifier only.
    cr_qtag_mag_mwv,        // Qualifier only.
@@ -770,7 +772,7 @@ enum call_restriction {
    cr_levelc3,
    cr_levelc4,
    cr_not_tboned,          // Restriction only.
-   cr_opposite_sex,        // Restriction only.
+   cr_opposite_sex,
    cr_quarterbox_or_col,   // Restriction only.
    cr_quarterbox_or_magic_col, // Restriction only.
    cr_all_ns,              // Restriction only.
@@ -999,7 +1001,7 @@ enum calldef_schema {
 // of those flags start where these end.  Keep it that way.  If any flags are added here,
 // they must be taken away from the CMD_MISC__ flags.
 
-enum {
+enum mods1_word {
    // These are the "conc" flags.  They overlay the "seq" flags.
 
    DFM1_CONC_DEMAND_LINES            = 0x00000001,
@@ -1052,7 +1054,7 @@ enum {
    DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL,
 
    DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800UL,
-   // spare:                         = 0x00001000UL,
+   // spare        = 0x00001000UL,
    DFM1_ENDSCANDO                    = 0x00002000UL,
    DFM1_FINISH_THIS                  = 0x00004000UL,
    DFM1_ROLL_TRANSPARENT             = 0x00008000UL,

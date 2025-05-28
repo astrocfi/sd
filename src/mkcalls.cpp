@@ -747,6 +747,7 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "???",
    "3x23",
    "3x43",
    "5x25",
@@ -935,6 +936,7 @@ char *qualtab[] = {
    "dmd_facing",
    "diamond_like",
    "qtag_like",
+   "qtag_like_anisotropic",
    "pu_qtag_like",
    "conc_cpls_same",
    "conc_cpls_diff",
@@ -960,6 +962,7 @@ char *qualtab[] = {
    "split_dixie",
    "not_split_dixie",
    "dmd_ctrs_mwv",
+   "dmd_ctrs_mwv_no_mirror",
    "spd_base_mwv",
    "qtag_mwv",
    "qtag_mag_mwv",
@@ -1367,6 +1370,7 @@ char *predtab[] = {
    "cast_normal",
    "cast_pushy",
    "cast_normal_or_warn",
+   "cast_normal_or_nowarn",
    "intlk_cast_normal_or_warn",
    "lines_magic_miniwave",
    "lines_magic_couple",
@@ -1435,6 +1439,8 @@ char *predtab[] = {
    "quad_person_ccw",
    "next_dmd_spot_is_facing",
    "next_dmd_spot_is_normal",
+   "next_qtag_spot_faces_me",
+   "next_qtag_spot_faces_away",
    "nexttrnglspot_is_tboned",
    "nextinttrnglspot_is_tboned",
    "next62spot_is_tboned",
@@ -2638,6 +2644,9 @@ int main(int argc, char *argv[])
       call_flags2 = 0;
 
       for (;;) {
+         uint32 flagh_to_set = 0;
+         uint32 flag1_to_set = 0;
+
          if ((iii = search(flagtab1)) >= 0) {
             if (iii >= 32) {
                call_flags2 |= (1 << (iii-32));
@@ -2658,11 +2667,6 @@ int main(int argc, char *argv[])
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_STEP_TO_NONPHAN_BOX;
          }
-         else if (!strcmp(tok_str, "step_to_wave_4_people")) {
-            if (call_flags1 & CFLAG1_STEP_REAR_MASK)
-               errexit("Too many touch/rear flags");
-            call_flags1 |= CFLAG1_STEP_TO_WAVE_4_PEOPLE;
-         }
          else if (!strcmp(tok_str, "rear_back_from_wave_or_qtag")) {
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
                errexit("Too many touch/rear flags");
@@ -2680,19 +2684,30 @@ int main(int argc, char *argv[])
          else if (!strcmp(tok_str, "need_three_numbers"))
             call_flags1 |= (3*CFLAG1_NUMBER_BIT);
          else if (!strcmp(tok_str, "base_tag_call_2"))
-            call_flags1 |= (3*CFLAG1_BASE_TAG_CALL_BIT);
+            flag1_to_set = (3*CFLAG1_BASE_TAG_CALL_BIT);
          else if (!strcmp(tok_str, "mxn_is_inherited"))
-            call_flagsh |= INHERITFLAG_MXNMASK;
+            flagh_to_set = INHERITFLAG_MXNMASK;
          else if (!strcmp(tok_str, "nxn_is_inherited"))
-            call_flagsh |= INHERITFLAG_NXNMASK;
+            flagh_to_set = INHERITFLAG_NXNMASK;
          else if (!strcmp(tok_str, "bigmatrix_is_inherited"))
-            call_flagsh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
+            flagh_to_set = INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
          else if (!strcmp(tok_str, "revert_is_inherited"))
-            call_flagsh |= INHERITFLAG_REVERTMASK;
+            flagh_to_set = INHERITFLAG_REVERTMASK;
          else if ((iii = search(flagtabh)) >= 0)
-            call_flagsh |= (1 << iii);
+            flagh_to_set = (1 << iii);
          else
             break;
+
+         if ((call_flags1 & flag1_to_set) != 0)
+            errexit("Redundant indicator");
+
+         call_flags1 |= flag1_to_set;
+
+         if ((call_flagsh & flagh_to_set) != 0)
+            errexit("Redundant indicator");
+
+         call_flagsh |= flagh_to_set;
+
          get_tok();
          if (tok_kind != tok_symbol) errexit("Missing indicator");
       }

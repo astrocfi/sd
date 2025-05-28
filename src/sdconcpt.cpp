@@ -192,7 +192,6 @@ static void do_c1_phantom_move(
 {
    parse_block *next_parseptr;
    final_and_herit_flags junk_concepts;
-   setup setup1, setup2;
    setup the_setups[2];
    phan_map *map_ptr = (phan_map *) 0;
 
@@ -375,8 +374,8 @@ static void do_c1_phantom_move(
    if (!map_ptr)
       fail("Inappropriate setup for phantom concept.");
 
-   setup1 = *ss;
-   setup2 = *ss;
+   setup setup1 = *ss;
+   setup setup2 = *ss;
 
    setup1.kind = map_ptr->ikind;
    setup2.kind = map_ptr->ikind;
@@ -2328,6 +2327,22 @@ static void do_concept_dblbent(
          else if (global_livemask == 0x3CF)
             map_code = MAPCODE(s1x4,2,MPKIND__BENT5CCW,0);
       }
+      else if (ss->kind == s4x4) {
+         if (global_livemask == 0x4B4B) {
+            if (!((ss->people[0].id1 ^ ss->people[8].id1) & 1))
+               fail("Setup must be unsymmetrical for this concept.");
+            map_code = ((ss->people[0].id1 ^ arg1) & 1) ?
+               MAPCODE(s2x4,1,MPKIND__BENT8NE,0) :
+               MAPCODE(s2x4,1,MPKIND__BENT8SW,0);
+         }
+         else if (global_livemask == 0xB4B4) {
+            if (!((ss->people[4].id1 ^ ss->people[12].id1) & 1))
+               fail("Setup must be unsymmetrical for this concept.");
+            map_code = ((ss->people[4].id1 ^ arg1) & 1) ?
+               MAPCODE(s2x4,1,MPKIND__BENT8SE,0) :
+               MAPCODE(s2x4,1,MPKIND__BENT8NW,0);
+         }
+      }
    }
    else {
       // Double bent tidal C/L/W.
@@ -3628,6 +3643,9 @@ static void do_concept_stable(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
+      fail("Illegal modifier before \"stable\".");
+
    stable_move(ss,
                parseptr->concept->arg2 != 0,
                parseptr->concept->arg1 == 0,
@@ -5150,6 +5168,16 @@ static void do_concept_inner_outer(
 }
 
 
+static void do_concept_two_faced(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   ss->cmd.cmd_misc3_flags |= CMD_MISC3__TWO_FACED_CONCEPT;
+   move(ss, false, result);
+}
+
+
 static void do_concept_do_both_boxes(
    setup *ss,
    parse_block *parseptr,
@@ -5936,42 +5964,45 @@ static void do_concept_meta(
       // Scan the modifiers, remembering them and their end point.  The reason for this is to
       // avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
       // This code used to have the beginnings of stuff to do it really right.  It isn't
-      // worth it, and isn't worth holding up "random left" for.  In any case, the stupid
-      // handling of comments will go away soon.
+      // worth it, and isn't worth holding up "random left" for.  (Previous sentence written several
+      // years ago; I wonder what on Earth I was talking about?)  In any case, the stupid handling
+      // of comments will go away soon.  (Yeah, right!)
 
-      skipped_concept_info foo;
+      skipped_concept_info foo(parseptr->next);
 
-      really_skip_one_concept(parseptr->next, foo);
-
-      if (foo.heritflag != 0) {
-         result_of_skip = foo.concept_with_root;
+      if (foo.m_heritflag != 0) {
+         result_of_skip = foo.m_concept_with_root;
          yescmd.parseptr = result_of_skip;
-         nocmd.parseptr = result_of_skip;
          yescmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
          yescmd.restrained_final = 0;
-         yescmd.restrained_super8flags = foo.heritflag;
+         yescmd.restrained_super8flags = foo.m_heritflag;
       }
       else {
-         result_of_skip = foo.result_of_skip;
-         yescmd.parseptr = foo.old_retval;
-         nocmd.parseptr = result_of_skip;
+         result_of_skip = foo.m_result_of_skip;
+         yescmd.parseptr = foo.m_old_retval;
 
-         if ((foo.need_to_restrain & 2) ||
-             ((foo.need_to_restrain & 1) &&
+         if ((foo.m_need_to_restrain & 2) ||
+             ((foo.m_need_to_restrain & 1) &&
               (key != meta_key_rev_echo && key != meta_key_echo))) {
-            yescmd.restrained_concept = foo.old_retval;
+            yescmd.restrained_concept = foo.m_old_retval;
             yescmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_CRAZINESS;
-            yescmd.restrained_final = foo.root_of_result_of_skip;
+            yescmd.restrained_final = foo.m_root_of_result_of_skip;
             yescmd.parseptr = result_of_skip;
          }
       }
 
+      if (key != meta_key_echo && foo.m_nocmd_misc3_bits != 0)
+         fail("Can't use \"anythinger's\" as a concept here.");
+
+      nocmd.parseptr = result_of_skip;
+      nocmd.cmd_misc3_flags |= foo.m_nocmd_misc3_bits;
+
       // If the skipped concept is "twisted" or "yoyo", get ready to clear
       // the expiration bit for same, if we do it "piecewise" or whatever.
 
-      if (foo.skipped_concept->concept->kind == concept_yoyo)
+      if (foo.m_skipped_concept->concept->kind == concept_yoyo)
          expirations_to_clearmisc = RESULTFLAG__YOYO_EXPIRED;
-      if (foo.skipped_concept->concept->kind == concept_twisted)
+      if (foo.m_skipped_concept->concept->kind == concept_twisted)
          expirations_to_clearmisc = RESULTFLAG__TWISTED_EXPIRED;
    }
 
@@ -6172,9 +6203,9 @@ static void do_concept_meta(
          if (--concept_option_code <= 0) break;   // Do it, the last time.
 
          // There will be future rounds; set nocmd so that the following round will be correct.
-         skipped_concept_info foo;
-         really_skip_one_concept(nocmd.parseptr, foo);
-         nocmd.parseptr = (foo.heritflag != 0) ? foo.concept_with_root : foo.result_of_skip;
+         skipped_concept_info foo(nocmd.parseptr);
+         nocmd.parseptr = (foo.m_heritflag != 0) ? foo.m_concept_with_root : foo.m_result_of_skip;
+         nocmd.cmd_misc3_flags |= foo.m_nocmd_misc3_bits;
       }
 
       goto do_less;
@@ -7019,44 +7050,40 @@ static void do_concept_fractional(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* Note: if we ever implement something that omits the first fraction, that
-      concept would have to have "CONCPROP__NO_STEP" set in concept_table, and
-      things might get ugly.
-   Actually, we have implemented exactly that -- "do last fraction", and we
-      have not set CONCPROP__NO_STEP in the concept table.  The user is responsible
-      for the consequences of using this. */
+   // Note: if we ever implement something that omits the first fraction, that
+   //   concept would have to have "CONCPROP__NO_STEP" set in concept_table, and
+   //   things might get ugly.
+   // Actually, we have implemented exactly that -- "do last fraction", and we
+   //   have not set CONCPROP__NO_STEP in the concept table.  The user is responsible
+   //   for the consequences of using this.
 
    // The meaning of arg1 is as follows:
    // 0 - "M/N" - do first part
    // 1 - "DO THE LAST M/N"
    // 2 - "1-M/N" do the whole call and then some.
 
-   if (ss->cmd.restrained_fraction.fraction) {
-      if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
-         fail("Fraction nesting is too complicated.");
-      ss->cmd.cmd_fraction.fraction = ss->cmd.restrained_fraction.fraction;
-      ss->cmd.restrained_fraction.fraction = 0;
-   }
-
-   fraction_command ARG4 = ss->cmd.cmd_fraction;
-
-   uint32 ddnn = (parseptr->concept->arg1 >= 4) ?
-      NUMBER_FIELDS_2_1 :        // Canned number fields as though fraction were 1/2.
-      parseptr->options.number_fields;
+   uint32 ddnn = parseptr->options.number_fields;
 
    int dd = ddnn >> BITS_PER_NUMBER_FIELD;
    int nn = ddnn & NUMBER_FIELD_MASK;
    uint32 FOO = (parseptr->concept->arg1 & 1) ?
-      ((dd << (BITS_PER_NUMBER_FIELD*3)) +
-       ((dd-nn) << (BITS_PER_NUMBER_FIELD*2)) +
-       NUMBER_FIELDS_1_1) :
+      ((dd << (BITS_PER_NUMBER_FIELD*3)) + ((dd-nn) << (BITS_PER_NUMBER_FIELD*2)) + NUMBER_FIELDS_1_1) :
       ddnn+NUMBER_FIELDS_1_0_0_0;
 
-   uint32 start = (FOO >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK_RIGHT_TWO;
-   uint32 end = FOO & NUMBER_FIELD_MASK_RIGHT_TWO;
+   fraction_command ARG4 = ss->cmd.cmd_fraction;
+
+   if (ss->cmd.restrained_fraction.fraction) {
+      if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
+         fail("Fraction nesting is too complicated.");
+      ARG4.fraction = FOO;
+      ss->cmd.cmd_fraction.fraction = ss->cmd.restrained_fraction.fraction;
+      ss->cmd.restrained_fraction.fraction = 0;
+      FOO = ss->cmd.cmd_fraction.fraction;
+   }
 
    bool improper = false;
-   uint32 new_fracs = process_stupendously_new_fractions(start, end,
+   uint32 new_fracs = process_stupendously_new_fractions((FOO >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK_RIGHT_TWO,
+                                                         FOO & NUMBER_FIELD_MASK_RIGHT_TWO,
                                                          FRAC_INVERT_NONE,
                                                          ARG4,
                                                          parseptr->concept->arg1 == 2,
@@ -7738,6 +7765,7 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_8x8
    {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,
     do_concept_expand_some_matrix},                         // concept_create_matrix
+   {0, do_concept_two_faced},                               // concept_two_faced
    {0, 0},                                                  // concept_funny
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_MODIFIERS,
     triangle_move},                                         // concept_randomtrngl

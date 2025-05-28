@@ -2552,6 +2552,11 @@ cast_normal_or_warn
       is phantom, and this person is an end) it issues the warning
       "If in doubt, assume a normal cast." and returns TRUE.
 
+cast_normal_or_nowarn
+      applies to 1x2, 1x4, or 1x6 lines only.
+      This is the same as "cast_normal_or_warn", except that, it never
+      raises a warning.
+
 lines_magic_miniwave
       applies to 2x4 lines only.  Returns TRUE if the magic partner
       of the person under test (the person in the opposite corner of
@@ -2835,16 +2840,26 @@ outposter_is_ccw
       from this person is the outposter.  Returns FALSE if the outposter is at the
       clockwise end of the line, or there is no live outposter.
 
-nexd_dmd_spot_is_facing
+next_dmd_spot_is_facing
       applies to "real" diamonds (everyone has a hand toward the center) only.
       Returns TRUE if the person to which this person would circulate is facing
       back.  That is, the diamond appears to be facing, as seen by the person
       under test.  If that person is facing another direction, or there is no
       person on that spot, it returns FALSE.
 
-nexd_dmd_spot_is_normal
-      Similar to "nexd_dmd_spot_is_facing", but tests whether the next person
+next_dmd_spot_is_normal
+      similar to "nexd_dmd_spot_is_facing", but tests whether the next person
       in the circulate path would circulate in the same direction.
+
+next_qtag_spot_faces_me
+next_qtag_spot_faces_away
+      applies to single 1/4 tag only.  For a center, it tests the point that this
+      person is facing.  If that point is facing back at the person under test,
+      these predicates return TRUE or FALSE, respectively.  If that point is facing
+      away, it does the opposite.  If that point is missing, it returns FALSE.
+      For a point, it tests the center miniwave.  If it is right-handed, the
+      predicates return TRUE or FALSE, respectively.  If it is a couple, or one
+      or both people are missing, it returns FALSE.
 
 nexttrnglspot_is_tboned
       applies to triangles only.  This is intended to determine which way a
@@ -3199,7 +3214,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    4x4_2fl_only       R/Q           1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other.
                                     As a qualifier, this can take the "live" modifier.
 
-   3x3couples_only    R/Q           1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are
+   3x3couples_only    R/Q           1x3/1x6/2x3/2x6/1x12 lines / 3x4 columns - each group of 3 people are
                                        facing the same way and are line-like.
                                     As a qualifier, this can take the "live" modifier.
 
@@ -3249,6 +3264,14 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     definitive.  It does not require all live people.
                                     NOTE that "gen_n_4_tag" is identical to "qtag_like"
 
+   qtag_like_anisotropic R/Q        dmd/qtag/ptpd - similar to qtag_like, except that, in each
+                                    single 1/4 tag, the points are both facing the same wall,
+                                    that is, one is looking in and the other is looking out.
+                                    In an 8-person setup, this still requires symmetry, with
+                                    the points of one single 1/4 tag facing east and the points
+                                    of the other facing west.  This is *NOT* used with "in"
+                                    or "out".  It typically *IS* used with "live", which
+                                    requires all people be live.
 
    gen_n_4_tag        Q             dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
                                     in which the ends could individually be facing either
@@ -3366,7 +3389,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        C1 phantom - the same.
 
    not_tboned,                      2x2 - people must not be T-boned
-   opposite_sex,                    2x1 - people must be opposite sexes facing each other
+   opposite_sex,                    1x2/2x1 - people must be opposite sexes with each other, left/right
+                                       distinguishes the two configurations.
    quarterbox_or_col,               4x2/3x2 - acceptable setup for "quick step" or
                                        "triple cross".  This ignores any people in line-like
                                        orientation.

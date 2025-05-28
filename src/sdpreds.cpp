@@ -121,7 +121,7 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
             case selector_center_box:
             case selector_outerpairs:
                pid2 = ptr[place][0] &
-                  BITS_TO_CLEAR &
+                  ID2_BITS_TO_CLEAR &
                   ~(ID2_FACING|ID2_NOTFACING|ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE);
                goto do_switch;
             }
@@ -291,34 +291,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       else if (p2 == ID2_OUTR2) s = selector_veryends;
       else break;
       goto eq_return;
-#ifdef TGL_SELECTORS
-   case selector_wvbasetgl:
-      break;
-   case selector_tndbasetgl:
-      break;
-   case selector_insidetgl:
-      switch (ss->kind) {
-      case s_ptpd: case s_qtag: case s_rigger:
-         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
-         if      (p2 == ID2_CTR6)  return true;
-         else if (p2 == ID2_OUTR2) return false;
-         break;
-      }
-      break;
-   case selector_outsidetgl:
-      switch (ss->kind) {
-      case s_ptpd: case s_qtag: case s_bone: case s_spindle:
-         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-         if      (p2 == ID2_CTR2)  return false;
-         else if (p2 == ID2_OUTR6) return true;
-         break;
-      }
-      break;
-   case selector_inpttgl:
-      break;
-   case selector_outpttgl:
-      break;
-#endif
    case selector_ctrdmd:
    case selector_notctrdmd:
       p2 = pid2 & (ID2_CTRDMD|ID2_NCTRDMD);
@@ -372,60 +344,68 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
 
       break;
    case selector_headliners:
-      if      ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEFRONT ||
-               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEBACK) return true;
-      else if ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACELEFT ||
-               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACERIGHT) return false;
+      if      ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEFRONT ||
+               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEBACK) return true;
+      else if ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACELEFT ||
+               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACERIGHT) return false;
       break;
    case selector_sideliners:
-      if      ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACELEFT ||
-               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACERIGHT) return true;
-      else if ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEFRONT ||
-               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEBACK) return false;
+      if      ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACELEFT ||
+               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACERIGHT) return true;
+      else if ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEFRONT ||
+               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEBACK) return false;
       break;
    case selector_thosefacing:
       if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return true;
       else if ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_NOTFACING) return false;
       break;
    case selector_nearline:
-      if      (pid2 & ID2_NEARLINE) return true;
-      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+      if      (pid3 & ID3_NEARLINE) return true;
+      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX)) return false;
       break;
    case selector_farline:
-      if      (pid2 & ID2_FARLINE) return true;
-      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+      if      (pid3 & ID3_FARLINE) return true;
+      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX)) return false;
       break;
    case selector_nearcolumn:
-      if      (pid2 & ID2_NEARCOL) return true;
-      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+      if      (pid3 & ID3_NEARCOL) return true;
+      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX)) return false;
       break;
    case selector_farcolumn:
-      if      (pid2 & ID2_FARCOL) return true;
-      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+      if      (pid3 & ID3_FARCOL) return true;
+      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX)) return false;
       break;
    case selector_nearbox:
-      if      (pid2 & ID2_NEARBOX) return true;
-      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+      if      (pid3 & ID3_NEARBOX) return true;
+      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX)) return false;
       break;
    case selector_farbox:
-      if      (pid2 & ID2_FARBOX) return true;
-      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+      if      (pid3 & ID3_FARBOX) return true;
+      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX)) return false;
+      break;
+   case selector_nearfour:
+      if      (pid3 & ID3_NEARFOUR) return true;
+      else if (pid3 & ID3_FARFOUR) return false;
+      break;
+   case selector_farfour:
+      if      (pid3 & ID3_FARFOUR) return true;
+      else if (pid3 & ID3_NEARFOUR) return false;
       break;
    case selector_facingfront:
-      if      (pid2 & ID2_FACEFRONT) return true;
-      else if (pid2 & (ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) return false;
+      if      (pid3 & ID3_FACEFRONT) return true;
+      else if (pid3 & (ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) return false;
       break;
    case selector_facingback:
-      if      (pid2 & ID2_FACEBACK) return true;
-      else if (pid2 & (ID2_FACEFRONT|ID2_FACELEFT|ID2_FACERIGHT)) return false;
+      if      (pid3 & ID3_FACEBACK) return true;
+      else if (pid3 & (ID3_FACEFRONT|ID3_FACELEFT|ID3_FACERIGHT)) return false;
       break;
    case selector_facingleft:
-      if      (pid2 & ID2_FACELEFT) return true;
-      else if (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACERIGHT)) return false;
+      if      (pid3 & ID3_FACELEFT) return true;
+      else if (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACERIGHT)) return false;
       break;
    case selector_facingright:
-      if      (pid2 & ID2_FACERIGHT) return true;
-      else if (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT)) return false;
+      if      (pid3 & ID3_FACERIGHT) return true;
+      else if (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT)) return false;
       break;
 
       // For the unsymmetrical selectors, we demand that the person not be virtual
@@ -1185,12 +1165,13 @@ static bool cast_normal_or_whatever(setup *real_people, int real_index,
       case 2:
          return false;
       default:
-         if (extra_stuff[0] & 2) {
+         if (extra_stuff[0] & 4)
+            return true;   // This is "cast_normal_or_nowarn".  Just do normal cast, don't complain.
+         else if (extra_stuff[0] & 2) {
             // This is "cast_normal_or_warn".  Don't give the warning if person
             // would have known what to do anyway.
-            if (     real_people->kind == s1x2
-                     ||
-                     (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
+            if (real_people->kind == s1x2 ||
+                (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
                warn(warn__opt_for_normal_cast);
             return true;
          }
@@ -2086,6 +2067,24 @@ static bool check_facing_dmd_spot(setup *real_people, int real_index,
    return ((my_handedness ^ next_handedness) & (BIT_PERSON|3)) == extra_stuff[0];
 }
 
+/* ARGSUSED */
+static bool check_qtag_spot_facing_me(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff)
+{
+   if (real_index & 1) {
+      int my_handedness = real_people->people[real_index].id1 ^ real_index;
+      int next_index = (real_index + 1 - (my_handedness & 2)) & 3;
+      int next_handedness = real_people->people[next_index].id1 ^ next_index;
+      // We demand that the next person be real.
+      return (next_handedness & (BIT_PERSON|3)) == (extra_stuff[0] | BIT_PERSON);
+   }
+   else {
+      int center_xor = real_people->people[1].id1 ^ real_people->people[3].id1;
+      if ((center_xor & (BIT_PERSON|3)) != 2) return false;
+      return (int) (real_people->people[1].id1 & 3) == extra_stuff[0];
+   }
+}
+
 
 // -3 means error, -2 means return false, -1 does not occur, and >= 0 means test that person.
 
@@ -2556,6 +2555,7 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[1]},            // "cast_normal"
       {cast_normal_or_whatever,        &iden_tab[0]},            // "cast_pushy"
       {cast_normal_or_whatever,        &iden_tab[3]},            // "cast_normal_or_warn"
+      {cast_normal_or_whatever,        &iden_tab[7]},            // "cast_normal_or_nowarn"
       {x14_once_rem_miniwave,          &iden_tab[3]},            // "intlk_cast_normal_or_warn"
       {opp_in_magic,                 (const long int *) 0},      // "lines_magic_miniwave"
       {same_in_magic,                (const long int *) 0},      // "lines_magic_couple"
@@ -2624,6 +2624,8 @@ predicate_descriptor pred_table[] = {
       {check_4x4_quad,                 &iden_tab[11]},           // "quad_person_ccw"
       {check_facing_dmd_spot,          &iden_tab[2]},            // "next_dmd_spot_is_facing"
       {check_facing_dmd_spot,          &iden_tab[0]},            // "next_dmd_spot_is_normal"
+      {check_qtag_spot_facing_me,      &iden_tab[1]},            // "next_qtag_spot_faces_me"
+      {check_qtag_spot_facing_me,      &iden_tab[3]},            // "next_qtag_spot_faces_away"
       {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
       {nextinttrnglspot_is_tboned,   (const long int *) 0},      // "nextinttrnglspot_is_tboned"
       {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"

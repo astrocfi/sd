@@ -981,7 +981,7 @@ bool iofull::get_call_command(uims_reply *reply_p)
    else {
       call_conc_option_state save_stuff = user_match.match.call_conc_options;
       there_is_a_call = false;
-      retval = deposit_call_tree(&user_match.match, (parse_block *) 0, 2);
+      retval = deposit_call_tree(&user_match.match, (parse_block *) 0, DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT);
       user_match.match.call_conc_options = save_stuff;
       if (there_is_a_call) {
          parse_state.topcallflags1 = the_topcallflags;

@@ -496,7 +496,7 @@ extern void update_id_bits(setup *ss)
       19, d_south, 10, d_north,
       ~0};
 
-   for (i=0 ; i<=attr::slimit(ss) ; i++) ss->people[i].id2 &= ~BITS_TO_CLEAR;
+   for (i=0 ; i<=attr::slimit(ss) ; i++) ss->people[i].id2 &= ~ID2_BITS_TO_CLEAR;
 
    uint32 livemask = little_endian_live_mask(ss);
 
@@ -838,11 +838,12 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
 
    for (thing *tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
       // If it has the evil "32" bit on, don't allow it except for special
-      // fan-the-top calls, indicated by CFLAG1_STEP_TO_WAVE_4_PEOPLE.
+      // fan-the-top calls, indicated by CFLAG1_STEP_TO_WAVE.
+      // Well, not that way any longer.
       if (tptr->kind == kind &&
           tptr->live == livemask &&
           ((tptr->dir ^ directions) & tptr->dirmask) == 0 &&
-          (!(tptr->forbidden_elongation & 32) || touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE))
+          (!(tptr->forbidden_elongation & 32) || touchflags == CFLAG1_STEP_TO_WAVE))
          return tptr;
    }
 
@@ -953,7 +954,6 @@ extern void touch_or_rear_back(
 
    case CFLAG1_STEP_TO_WAVE:
    case CFLAG1_STEP_TO_NONPHAN_BOX:
-   case CFLAG1_STEP_TO_WAVE_4_PEOPLE:
    case CFLAG1_STEP_TO_QTAG:
 
       // Special stuff:  If lines facing, but people are incomplete,
@@ -989,9 +989,7 @@ extern void touch_or_rear_back(
       // though we are careful.
 
       bool step_ok =
-         touchflags == CFLAG1_STEP_TO_WAVE ||
-         touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE ||
-         touchflags == CFLAG1_STEP_TO_QTAG;
+         touchflags == CFLAG1_STEP_TO_WAVE || touchflags == CFLAG1_STEP_TO_QTAG;
 
       switch (scopy->kind) {
       case s2x4:
@@ -1082,32 +1080,53 @@ extern void touch_or_rear_back(
       break;
    }
 
-   // We didn't find anything.  But we still need to raise an error
-   // if the caller said "left spin the top" when we were in a right-hand wave.
+ do_the_leftie_test:
 
-   if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-      uint32 aa;
-      uint32 bb = ~0UL;
-      bool other_test = true;
+   // We need to raise an error if the caller said "left spin the top" when we were in a right-hand wave.
+
+   if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
+      big_endian_get_directions(scopy, directions, livemask);    // Need to do this again.
+
+      uint32 rtest = ~0UL;
+      uint32 rothertest = ~0UL;
 
       switch (scopy->kind) {
       case s2x2:
-         other_test = (directions & livemask) != (0x5FUL & livemask);
-         aa = 0x28UL;
+         rtest = 0x28UL;
+         rothertest = 0x5FUL;
          break;
       case s2x4:
-         other_test = (directions & livemask) != (0x55FFUL & livemask);
-         aa = 0x2288UL;
+         rtest = 0x2288UL;
+         rothertest = 0x55FFUL;
          break;
-      case s_bone:   aa = 0x58F2UL; break;
-      case s_rigger: aa = 0x58F2UL; break;
-      case s1x2:     aa = 0x2UL; break;
-      case s1x4:     aa = 0x28UL; break;
-      case s1x8:     aa = 0x2882UL; break;
-      case s_qtag:   aa = 0x0802UL; bb = 0x0F0F; break;
+      case s_bone:
+         rtest = 0x58F2UL;
+         break;
+      case s_rigger:
+         rtest = 0x58F2UL;
+         break;
+      case s1x2:
+         rtest = 0x2UL;
+         break;
+      case s1x4:
+         rtest = 0x28UL;
+         break;
+      case s1x8:
+         rtest = 0x2882UL;
+         break;
+      case s_qtag:
+         rtest = 0x0802UL;
+         livemask &= 0x0F0F;
+         break;
       }
-      if ((directions & livemask & bb) != (aa & livemask) && other_test)
-         fail("Setup is not left-handed.");
+
+      if (rtest != ~0UL) {
+         bool rfail = (((directions) ^ rtest) & livemask) != 0;
+         if (rothertest != ~0UL)
+            rfail = rfail && ((directions ^ rothertest) & livemask) != 0;
+
+         if (did_mirror && rfail) fail("Setup is not left-handed.");
+      }
    }
 
    return;
@@ -1118,7 +1137,8 @@ extern void touch_or_rear_back(
    // the centers would touch.  Case is a starting DPT with ends 1/4 left.
    // People are supposed to step to right hands, but the centers on a Fan the Top
    // normally step to left hands.  What are the dancers supposed to do?
-   if ((tptr->forbidden_elongation & 64) && touchflags == CFLAG1_STEP_TO_WAVE_4_PEOPLE)
+   if ((tptr->forbidden_elongation & 64) && (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) &&
+       touchflags == CFLAG1_STEP_TO_WAVE)
       warn(warn__some_touch_evil);
    else
       warn(tptr->warning);  // Or give whatever warning the table says, but not both.
@@ -1131,7 +1151,7 @@ extern void touch_or_rear_back(
    if ((tptr->forbidden_elongation & 128) && (scopy->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS))
       return;
 
-   if ((tptr->forbidden_elongation & 4) && (scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS))
+   if ((tptr->forbidden_elongation & 4) && (scopy->cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS))
       scopy->cmd.prior_elongation_bits =
          (scopy->cmd.prior_elongation_bits & (~3)) | ((scopy->rotation+1) & 3);
 
@@ -1219,6 +1239,8 @@ extern void touch_or_rear_back(
    // Assumptions are no longer valid, except for a few special cases.
    scopy->cmd.cmd_assume.assumption = new_assume;
    canonicalize_rotation(scopy);
+
+   goto do_the_leftie_test;
 }
 
 
@@ -1343,12 +1365,12 @@ extern void do_matrix_expansion(
 
       expanded:
 
-      /* Most global selectors are disabled if we expanded the matrix. */
+      // Most global selectors are disabled if we expanded the matrix.
 
       for (i=0; i<MAX_PEOPLE; i++)
-         ss->people[i].id2 &= ~ID2_LESS_BITS_TO_CLEAR;
+         ss->people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
 
-      /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
+      // Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.)
       if (recompute_id) update_id_bits(ss);
    }
 }
@@ -1362,6 +1384,8 @@ private:
       chk_none,
       chk_wave,
       chk_groups,
+      chk_groups_cpls_in_tbone,
+      chk_groups_cpls_in_tbone_either_way,
       chk_anti_groups,
       chk_box,
       chk_box_dbl,
@@ -1752,6 +1776,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {4}, {0}, {0}, true, chk_groups},
    {s2x8, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15},
     {4}, {0}, {0}, true, chk_groups},
+   {s4x4, cr_4x4couples_only, 4, {12, 13, 14, 0, 10, 15, 3, 1, 9, 11, 7, 2, 8, 6, 5, 4},
+    {4}, {0}, {0}, false, chk_groups_cpls_in_tbone_either_way},
    {s2x8, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
     {8}, {0}, {0}, true, chk_groups},
    {s2x8, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
@@ -1823,7 +1849,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {s_qtag, cr_real_3_4_line, 4, {6, 3, 7, 2},
     {4, 0, 4, 1, 5}, {0}, {0}, true, chk_qtag},
    {s_alamo, cr_couples_only, 2, {0, 2, 5, 7, 1, 3, 4, 6},
-    {4}, {0}, {0}, false, chk_groups},
+    {4}, {0}, {0}, false, chk_groups_cpls_in_tbone},
    {s_alamo, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true, chk_wave},
    {s_trngl, cr_wave_only, 2, {1, 2},
@@ -1913,6 +1939,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = 
     {6, 7, 8, 9, 10, 11}, {0}, {0}, false, chk_peelable},
    {s2x6, cr_couples_only, 3, {0, 1, 2, 3, 4, 5, 11, 10, 9, 8, 7, 6},
     {4}, {0}, {0}, true, chk_groups},
+   {s3x4, cr_3x3couples_only, 3, {0, 1, 2, 3, 10, 11, 5, 4, 9, 8, 7, 6},
+    {4}, {0}, {0}, true, chk_groups},
    {s2x5, cr_wave_only, 10, {0, 5, 1, 6, 2, 7, 3, 8, 4, 9},
     {0}, {0}, {0}, true, chk_wave},
    {s2x5, cr_peelable_box, 5, {0, 1, 2, 3, 4},
@@ -1967,6 +1995,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = 
     {4, 0, 1, 4, 5}, {0}, {0}, false, chk_dmd_qtag},
    {s_qtag, cr_qtag_like, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
     {0}, {2, 4, 5}, {2, 0, 1}, false, chk_dmd_qtag},
+   {s_qtag, cr_qtag_like_anisotropic, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
+    {0}, {2, 0, 5}, {2, 4, 1}, false, chk_dmd_qtag_new},
    {s_qtag, cr_pu_qtag_like, 0, {0},
     {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 0, 1}, {2, 4, 5}, false, chk_dmd_qtag},
    {s3dmd, cr_diamond_like, 0, {6, 3, 4, 5, 9, 10, 11},
@@ -1995,6 +2025,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = 
     {2, 1, 3}, {0}, {0}, false, chk_dmd_qtag},
    {sdmd, cr_qtag_like, 4, {0},
     {4, 0, 1, 2, 3}, {1, 0}, {1, 2}, false, chk_dmd_qtag},
+   {sdmd, cr_qtag_like_anisotropic, 4, {0},
+    {4, 0, 1, 2, 3}, {2, 0, 2}, {0}, false, chk_dmd_qtag_new},
    {sdmd, cr_pu_qtag_like, 0, {4, 0, 1, 2, 3},
     {0}, {1, 0}, {1, 2}, false, chk_dmd_qtag},
    {s_ptpd, cr_jright, 8, {2, 0, 1, 3, 4, 6, 7, 5},
@@ -2005,6 +2037,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = 
     {4, 1, 3, 5, 7}, {0}, {0}, false, chk_dmd_qtag},
    {s_ptpd, cr_qtag_like, 4, {0},
     {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
+   {s_ptpd, cr_qtag_like_anisotropic, 4, {0},
+    {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 0, 2}, {2, 6, 4}, false, chk_dmd_qtag},
    {s4x6, cr_qtag_like, 8, {0},
     {16, 11, 1, 9, 10, 8, 4, 6, 7, 23, 13, 21, 22, 20, 16, 19, 18},
     {4, 11, 8, 18, 21}, {4, 9, 6, 23, 20}, false, chk_dmd_qtag},
@@ -2152,12 +2186,18 @@ restriction_test_result verify_restriction(
    if (tt.assumption == cr_not_all_sel || tt.assumption == cr_some_sel)
       local_negate = 1;
 
+   call_restriction orig_assumption = tt.assumption;
+
    switch (tt.assumption) {
    case cr_alwaysfail:
       return restriction_fails;
    case cr_give_fudgy_warn:
       warn(warn__may_be_fudgy);
       return restriction_passes;
+
+   case cr_wave_unless_say_2faced:
+      tt.assumption = cr_wave_only;
+      break;
 
    case cr_ptp_unwrap_sel:
       k ^= 022002200 ^ 014001400;
@@ -2473,7 +2513,7 @@ restriction_test_result verify_restriction(
 
          for (i=0,j=idx; i<rr->size; i++,j+=limit) {
             if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= t^2; }
-            else if (local_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
+            else if (local_negate || tt.assump_live) goto bad;    // All live people were demanded.
          }
 
          if ((qa0 & qa1 & 2) != 0) goto bad;
@@ -2505,6 +2545,49 @@ restriction_test_result verify_restriction(
          }
       }
       goto good;
+   case restriction_tester::chk_groups_cpls_in_tbone:
+      limit = rr->map2[0];
+
+      for (idx=0; idx<limit; idx++) {
+         qa0 = 0; qa1 = 0;
+
+         for (i=0; i<rr->size; i++) {
+            if ((t = ss->people[rr->map1[idx+i*limit]].id1) != 0) { qa0 |= t; qa1 |= ~t; }
+            else if (local_negate || tt.assump_live) goto bad;    // All live people were demanded.
+         }
+
+         if ((qa0 & qa1 & 2) != 0) goto bad;
+         if ((qa0 >> (idx&1 ? 3 : 0)) & 1) goto bad;
+      }
+      goto good;
+   case restriction_tester::chk_groups_cpls_in_tbone_either_way:
+      limit = rr->map2[0];
+
+      {
+         uint32 allqa0 = 0;
+         uint32 allqa2 = 0;
+         uint32 allcol = 0;
+         uint32 allrow = 0;
+         for (idx=0; idx<limit; idx++) {
+            qa0 = 0; qa1 = 0; qa2 = 0; qa3 = 0;
+
+            for (i=0; i<rr->size; i++) {
+               if ((t = ss->people[rr->map1[idx+i*limit]].id1) != 0) { qa0 |= t; qa1 |= ~t; }
+               else if (local_negate || tt.assump_live) goto bad;    // All live people were demanded.
+               if ((t = ss->people[rr->map1[idx*limit+i]].id1) != 0) { qa2 |= t; qa3 |= ~t; }
+            }
+            
+            if ((qa0 & 9) == 9 || (qa2 & 9) == 9) goto bad;  // People are T-boned.
+
+            allqa0 |= qa0;          // If allqa0 & 8, some column fails (but rows might be OK.)
+            allqa2 |= qa2;          // If allqa2 & 1, some row fails (but columns might be OK.)
+            allcol |= (qa0 & qa1);  // If allcol & 2, some column fails (but rows might be OK.)
+            allrow |= (qa2 & qa3);  // If allrow & 2, some row fails (but columns might be OK.)
+         }
+
+         if ((allcol | (allqa0 >> 2)) & (allrow | (allqa2 << 1)) & 2) goto bad;
+      }
+      goto good;
    case restriction_tester::chk_anti_groups:
       limit = rr->map2[0];
 
@@ -2516,9 +2599,9 @@ restriction_test_result verify_restriction(
 
          for (int jjj=0 ; jjj<rr->size ; jjj++) {
             if ((t = ss->people[map1item[0]].id1) != 0)     { qa0 |= t;   qa1 |= t^2; }
-            else if (local_negate) goto bad;    /* All live people were demanded. */
+            else if (local_negate) goto bad;    // All live people were demanded.
             if ((t = ss->people[map1item[szlim]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
-            else if (local_negate) goto bad;    /* All live people were demanded. */
+            else if (local_negate) goto bad;    // All live people were demanded.
             map1item++;
          }
 
@@ -2635,15 +2718,18 @@ restriction_test_result verify_restriction(
       if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
          goto bad;
 
+      // If "both" is on, we demand correct facing directions for points.
+      if (tt.assump_both) {
+         if ((qa2 & (tt.assump_both << 1) & 2) != 0 ||
+             (qa3 & tt.assump_both & 2) != 0)
+            goto bad;
+      }
+
       if (rr->check == restriction_tester::chk_dmd_qtag) {
          if (tt.assump_both) {
             // The "live" modifier means that we need a definitive person
             // to distinguish "in" or "out".
             if (tt.assump_live && !(qa2 | qa3))
-               goto bad;
-
-            if ((qa2 & (tt.assump_both << 1) & 2) != 0 ||
-                (qa3 & tt.assump_both & 2) != 0)
                goto bad;
          }
       }
@@ -2655,14 +2741,9 @@ restriction_test_result verify_restriction(
             }
          }
 
-         // If "both" is off, we demand either consistent handedness.
-         // If it's on, we demand that handedness.
-         if (tt.assump_both) {
-            if ((qa2 & (tt.assump_both << 1) & 2) != 0 ||
-                (qa3 & tt.assump_both & 2) != 0)
-               goto bad;
-         }
-         else if ((qa2 & qa3 & 2) != 0) goto bad;
+         // If "both" is off, we demand consistent handedness.
+         if (!tt.assump_both && (qa2 & qa3 & 2) != 0)
+            goto bad;
       }
 
       goto good;
@@ -2812,6 +2893,7 @@ restriction_test_result verify_restriction(
 
  bad:
    if (local_negate) return restriction_passes;
+   else if (orig_assumption == cr_wave_unless_say_2faced) return restriction_fails_on_2faced;
    else return restriction_fails;
 }
 
@@ -3123,7 +3205,8 @@ static bool check_for_supercall(parse_block *parseptrcopy)
       if (parseptrcopy->concept->kind == concept_another_call_next_mod &&
           parseptrcopy->next &&
           (parseptrcopy->next->call == base_calls[base_call_null] ||
-           parseptrcopy->next->call == base_calls[base_call_null_second]) &&
+           parseptrcopy->next->call == base_calls[base_call_null_second] ||
+           parseptrcopy->next->call == base_calls[base_call_circcer]) &&
           !parseptrcopy->next->next &&
           parseptrcopy->next->subsidiary_root) {
          return true;
@@ -3151,8 +3234,8 @@ bool check_for_concept_group(
 
    parse_block *first_arg = parseptrcopy;
 
-   retstuff.skipped_concept = &pbend;
-   retstuff.need_to_restrain = 0;
+   retstuff.m_skipped_concept = &pbend;
+   retstuff.m_need_to_restrain = 0;
 
  try_again:
 
@@ -3173,12 +3256,12 @@ bool check_for_concept_group(
    k = this_concept->kind;
 
    if (!retval) {
-      retstuff.skipped_concept = kk;
+      retstuff.m_skipped_concept = kk;
 
       if (k == concept_crazy || k == concept_frac_crazy || k == concept_dbl_frac_crazy)
-         retstuff.need_to_restrain |= 1;
+         retstuff.m_need_to_restrain |= 1;
       else if (k == concept_n_times_const || k == concept_n_times)
-         retstuff.need_to_restrain |= 2;
+         retstuff.m_need_to_restrain |= 2;
    }
 
    // We do these even if we aren't the first concept.
@@ -3186,7 +3269,7 @@ bool check_for_concept_group(
    if (k == concept_supercall ||
        k == concept_fractional ||
        (get_meta_key_props(this_concept) & MKP_RESTRAIN_1))
-      retstuff.need_to_restrain |= 1;
+      retstuff.m_need_to_restrain |= 1;
 
    // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
    // Similarly with "parallelogram split phantom C/L/W/B" or
@@ -3253,19 +3336,19 @@ bool check_for_concept_group(
 
    if (want_result_root) {
       if (k == concept_supercall) {
-         retstuff.concept_with_root = parseptrcopy->next;
-         retstuff.root_of_result_of_skip = &retstuff.concept_with_root->subsidiary_root;
+         retstuff.m_concept_with_root = parseptrcopy->next;
+         retstuff.m_root_of_result_of_skip = &retstuff.m_concept_with_root->subsidiary_root;
       }
       else {
          if (retval)
-            retstuff.concept_with_root = next_parseptr;
+            retstuff.m_concept_with_root = next_parseptr;
          else
-            retstuff.concept_with_root = first_arg;
+            retstuff.m_concept_with_root = first_arg;
 
-         if (concept_table[retstuff.concept_with_root->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
-            retstuff.root_of_result_of_skip = &retstuff.concept_with_root->subsidiary_root;
+         if (concept_table[retstuff.m_concept_with_root->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
+            retstuff.m_root_of_result_of_skip = &retstuff.m_concept_with_root->subsidiary_root;
          else
-            retstuff.root_of_result_of_skip = &retstuff.concept_with_root->next;
+            retstuff.m_root_of_result_of_skip = &retstuff.m_concept_with_root->next;
       }
    }
 
@@ -3371,7 +3454,11 @@ extern void warn(warning_index w)
 }
 
 
-extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
+extern callarray *assoc(
+   begin_kind key,
+   setup *ss,
+   callarray *spec,
+   bool *specialpass /* = (bool *) 0 */) THROW_DECL
 {
    for (callarray *p = spec ; p ; p = p->next) {
       uint32 i, k, t, u, w, mask;
@@ -3431,6 +3518,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       setup_kind ssK = ss->kind;
 
       call_restriction this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
+
+      if (this_qualifier == cr_dmd_ctrs_mwv_no_mirror) {
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__DID_LEFT_MIRROR) goto bad;
+         this_qualifier = cr_dmd_ctrs_mwv;
+      }
 
       if (this_qualifier == cr_none) {
          if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   // All live people were demanded.
@@ -3499,6 +3591,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          case s1x2:
             goto fix_col_line_stuff;
          default:
+            if (setup_attrs[ssK].keytab[0] != key && setup_attrs[ssK].keytab[1] != key) {
+               if (specialpass) *specialpass = true;
+            }
             goto good;           // Accept this all the way down to 1x2.
          }
       case cr_indep_in_out:
@@ -3822,6 +3917,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          }
          goto check_tt;
       case cr_qtag_like:
+      case cr_qtag_like_anisotropic:
          switch (ssA) {
          case cr_diamond_like: case cr_pu_qtag_like:
             goto bad;
@@ -4129,9 +4225,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          // If we are not looking at the whole setup (that is, we are deciding
          // whether to split the setup into smaller ones), let it pass.
 
-         if (setup_attrs[ssK].keytab[0] != key &&
-             setup_attrs[ssK].keytab[1] != key)
+         if (setup_attrs[ssK].keytab[0] != key && setup_attrs[ssK].keytab[1] != key) {
+            if (specialpass) *specialpass = true;
             goto good;
+         }
 
          goto check_tt;
 
@@ -4750,34 +4847,34 @@ extern parse_block *process_final_concepts(
 }
 
 
-void really_skip_one_concept(
-   parse_block *incoming,
-   skipped_concept_info & retstuff) THROW_DECL
+skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
 {
-   final_and_herit_flags junk_concepts;
-   parse_block *parseptrcopy;
-
    while (incoming->concept->kind == concept_comment)
       incoming = incoming->next;
 
+   m_nocmd_misc3_bits = 0;
+   m_heritflag = 0;
+   m_old_retval = incoming;
+   m_skipped_concept = incoming;
+   m_result_of_skip = m_skipped_concept->next;
+   m_need_to_restrain = 0;
+   m_root_of_result_of_skip = (parse_block **) 0;
+
+   final_and_herit_flags junk_concepts;
    junk_concepts.clear_all_herit_and_final_bits();
 
    // We tell it to process only one concept.
-   parseptrcopy = process_final_concepts(incoming, false, &junk_concepts, true, true);
+   parse_block *parseptrcopy = process_final_concepts(incoming, false, &junk_concepts, true, true);
+
+   m_concept_with_root = parseptrcopy;
 
    // Find out whether the next concept (the one that will be "random" or whatever)
    // is a modifier or a "real" concept.
 
-   retstuff.heritflag = 0;
-
    if (junk_concepts.final == 0 &&
        (junk_concepts.herit & (INHERITFLAG_YOYO | INHERITFLAG_LEFT | INHERITFLAG_FRACTAL)) != 0) {
-      retstuff.heritflag = junk_concepts.herit;
-      retstuff.old_retval = incoming;
-      retstuff.skipped_concept = incoming;
-      retstuff.concept_with_root = parseptrcopy;
-      retstuff.need_to_restrain = 0;
-      goto getout;
+      m_heritflag = junk_concepts.herit;
+      return;
    }
    else if (junk_concepts.test_herit_and_final_bits() != 0) {
       parseptrcopy = incoming;
@@ -4786,17 +4883,33 @@ void really_skip_one_concept(
       concept_kind kk = parseptrcopy->concept->kind;
 
       if (check_for_supercall(parseptrcopy)) {
-         retstuff.concept_with_root = parseptrcopy->next;
-         retstuff.root_of_result_of_skip = &retstuff.concept_with_root->subsidiary_root;
-         retstuff.skipped_concept = &pbsuper;
+         if (parseptrcopy->call->the_defn.callflagsf & (CFLAGH__HAS_AT_ZERO | CFLAGH__HAS_AT_M)) {
+            // This gets "busy [...]".
+            // This gets "tally ho but [...]".
+            // We skip over the supercall, and use the "but" subcall.
+            m_concept_with_root = parseptrcopy->next;
+            m_root_of_result_of_skip = &m_concept_with_root->subsidiary_root;
+            m_result_of_skip = *m_root_of_result_of_skip;
+            m_skipped_concept = &pbsuper;
 
-         /* We don't restrain for echo with supercalls, because echo doesn't pull parts
-            apart, and supercalls don't work with multiple-part calls as the target
-            for which they are restraining the concept. */
+            // We don't restrain for echo with supercalls, because echo doesn't pull parts
+            // apart, and supercalls don't work with multiple-part calls as the target
+            // for which they are restraining the concept.
 
-         retstuff.need_to_restrain = 1;
-         retstuff.old_retval = parseptrcopy;
-         goto getout;
+            m_need_to_restrain = 1;
+            m_old_retval = parseptrcopy;
+            return;
+         }
+         else {
+            // This gets "[...] motivate".
+            // We don't skip over anything -- we just return the motivate, but with an indicator
+            // that the "anythinger's" subcall is not to be used.
+            m_result_of_skip = m_skipped_concept;
+            m_need_to_restrain = 1;
+            m_old_retval = parseptrcopy;
+            m_nocmd_misc3_bits = CMD_MISC3__NO_ANYTHINGERS_SUBST;
+            return;
+         }
       }
 
       if (concept_table[kk].concept_action == 0)
@@ -4812,14 +4925,10 @@ void really_skip_one_concept(
          fail("Can't use a concept that takes a second call.");
    }
 
-   check_for_concept_group(parseptrcopy, retstuff, true);
+   check_for_concept_group(parseptrcopy, *this, true);
 
-   retstuff.old_retval = parseptrcopy;
-
- getout:
-
-   retstuff.result_of_skip = (retstuff.heritflag != 0) ?
-      retstuff.skipped_concept->next : *retstuff.root_of_result_of_skip;
+   m_old_retval = parseptrcopy;
+   m_result_of_skip = *m_root_of_result_of_skip;
 }
 
 
@@ -5555,6 +5664,7 @@ bool check_for_centers_concept(uint32 callflags1_to_examine,
              parse_scan->concept->kind == concept_once_removed ||
              parse_scan->concept->kind == concept_stable ||
              parse_scan->concept->kind == concept_frac_stable ||
+             parse_scan->concept->kind == concept_mirror ||
              parse_scan->concept->kind == concept_new_stretch ||
              parse_scan->concept->kind == concept_old_stretch) {
             parse_scan = parse_scan->next;
@@ -5691,7 +5801,7 @@ void toplevelmove() THROW_DECL
    current_options = null_options;
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
-   for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id2 &= ~ID2_GLOB_BITS_TO_CLEAR;
+   for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id3 &= ~ID3_GLOB_BITS_TO_CLEAR;
 
    if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)) {
       // Can't do it if rotation is not known.
@@ -5701,16 +5811,16 @@ void toplevelmove() THROW_DECL
             if (starting_setup.people[i].id1 & BIT_PERSON) {
                switch ((starting_setup.people[i].id1 + starting_setup.rotation) & 3) {
                case 0:
-                  starting_setup.people[i].id2 |= ID2_FACEBACK;
+                  starting_setup.people[i].id3 |= ID3_FACEBACK;
                   break;
                case 1:
-                  starting_setup.people[i].id2 |= ID2_FACERIGHT;
+                  starting_setup.people[i].id3 |= ID3_FACERIGHT;
                   break;
                case 2:
-                  starting_setup.people[i].id2 |= ID2_FACEFRONT;
+                  starting_setup.people[i].id3 |= ID3_FACEFRONT;
                   break;
                case 3:
-                  starting_setup.people[i].id2 |= ID2_FACELEFT;
+                  starting_setup.people[i].id3 |= ID3_FACELEFT;
                   break;
                }
             }
@@ -5722,8 +5832,8 @@ void toplevelmove() THROW_DECL
          uint32 farbit = 0;
 
          if (starting_setup.rotation & 1) {
-            nearbit = ID2_NEARBOX;
-            farbit = ID2_FARBOX;
+            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
+            farbit = ID3_FARBOX|ID3_FARFOUR;
          }
          else {
             uint32 tbonetest = 0;
@@ -5731,18 +5841,18 @@ void toplevelmove() THROW_DECL
             for (i=0; i<8; i++) tbonetest |= starting_setup.people[i].id1;
 
             if (!(tbonetest & 1)) {
-               nearbit = ID2_NEARLINE;
-               farbit = ID2_FARLINE;
+               nearbit = ID3_NEARLINE|ID3_NEARFOUR;
+               farbit = ID3_FARLINE|ID3_FARFOUR;
             }
             else if (!(tbonetest & 010)) {
-               nearbit = ID2_NEARCOL;
-               farbit = ID2_FARCOL;
+               nearbit = ID3_NEARCOL|ID3_NEARFOUR;
+               farbit = ID3_FARCOL|ID3_FARFOUR;
             }
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id2 |= ((i + (starting_setup.rotation << 1)) & 4) ? nearbit : farbit;
+               starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ? nearbit : farbit;
          }
       }
       else if (starting_setup.kind == s1x8 && starting_setup.rotation & 1) {
@@ -5753,58 +5863,85 @@ void toplevelmove() THROW_DECL
          for (i=0; i<8; i++) tbonetest |= starting_setup.people[i].id1;
 
          if (!(tbonetest & 1)) {
-            nearbit = ID2_NEARLINE;
-            farbit = ID2_FARLINE;
+            nearbit = ID3_NEARLINE|ID3_NEARFOUR;
+            farbit = ID3_FARLINE|ID3_FARFOUR;
          }
          else if (!(tbonetest & 010)) {
-            nearbit = ID2_NEARCOL;
-            farbit = ID2_FARCOL;
+            nearbit = ID3_NEARCOL|ID3_NEARFOUR;
+            farbit = ID3_FARCOL|ID3_FARFOUR;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id2 |= ((i + 2 + (starting_setup.rotation << 1)) & 4) ? farbit : nearbit;
+               starting_setup.people[i].id3 |= ((i + 2 + (starting_setup.rotation << 1)) & 4) ? farbit : nearbit;
          }
       }
       else if (starting_setup.kind == s_c1phan) {
          uint32 nearbit = 0;
          uint32 farbit = 0;
          uint32 tbonetest[2];
-         uint32 livemask;
-         uint32 j;
+         uint32 livemask = little_endian_live_mask(&starting_setup);
 
          tbonetest[0] = 0;
          tbonetest[1] = 0;
 
-         for (i=0, j=1, livemask = 0; i<16; i++, j<<=1) {
-            if (starting_setup.people[i].id1) livemask |= j;
+         for (i=0; i<16; i++)
             tbonetest[i>>3] |= starting_setup.people[i].id1;
-         }
 
          if (livemask == 0x5AA5UL) {
-            nearbit = ID2_NEARBOX;
+            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
 
-            if (!(tbonetest[0] & 1)) {
-               farbit = ID2_FARLINE;
-            }
-            else if (!(tbonetest[0] & 010)) {
-               farbit = ID2_FARCOL;
-            }
+            if (!(tbonetest[0] & 1))
+               farbit = ID3_FARLINE|ID3_FARFOUR;
+            else if (!(tbonetest[0] & 010))
+               farbit = ID3_FARCOL|ID3_FARFOUR;
          }
          else if (livemask == 0xA55AUL) {
-            farbit = ID2_FARBOX;
+            farbit = ID3_FARBOX|ID3_FARFOUR;
 
-            if (!(tbonetest[1] & 1)) {
-               nearbit = ID2_NEARLINE;
-            }
-            else if (!(tbonetest[1] & 010)) {
-               nearbit = ID2_NEARCOL;
-            }
+            if (!(tbonetest[1] & 1))
+               nearbit = ID3_NEARLINE|ID3_NEARFOUR;
+            else if (!(tbonetest[1] & 010))
+               nearbit = ID3_NEARCOL|ID3_NEARFOUR;
+         }
+         else if (livemask == 0x5555UL || livemask == 0xAAAAUL) {
+            farbit = ID3_FARFOUR;
+            nearbit = ID3_NEARFOUR;
          }
 
          for (i=0; i<16; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id2 |= (i & 8) ? nearbit : farbit;
+               starting_setup.people[i].id3 |= (i & 8) ? nearbit : farbit;
+         }
+      }
+      else if (starting_setup.kind == s4x4) {
+         uint32 nearbit = 0;
+         uint32 farbit = 0;
+         uint32 tbonetest[2];
+         uint32 livemask = little_endian_live_mask(&starting_setup);
+
+         tbonetest[0] = 0;
+         tbonetest[1] = 0;
+
+         for (i=0; i<16; i++)
+            tbonetest[(setup_attrs[s4x4].setup_coords->yca[i] < 0) ? 1 : 0] |= starting_setup.people[i].id1;
+
+         if (livemask == 0x4B4BUL || livemask == 0x0B4B4UL) {
+            farbit = ID3_FARBOX|ID3_FARFOUR;
+            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
+         }
+         else if (livemask == 0xEA8CUL) {
+            farbit = ID3_FARBOX|ID3_FARFOUR;
+            nearbit = ID3_NEARLINE|ID3_NEARCOL|ID3_NEARFOUR;
+         }
+         else if (livemask == 0x8CEAUL) {
+            farbit = ID3_NEARLINE|ID3_NEARCOL|ID3_NEARFOUR;
+            nearbit = ID3_FARBOX|ID3_FARFOUR;
+         }
+
+         for (i=0; i<16; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON)
+               starting_setup.people[i].id3 |= (setup_attrs[s4x4].setup_coords->yca[i] < 0) ? nearbit : farbit;
          }
       }
    }
@@ -5855,7 +5992,7 @@ void finish_toplevelmove() THROW_DECL
    // Remove outboard phantoms from the resulting setup.
    normalize_setup(&newhist.state, simple_normalize, false);
 
-   for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id2 &= ~ID2_GLOB_BITS_TO_CLEAR;
+   for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id3 &= ~ID3_GLOB_BITS_TO_CLEAR;
    newhist.calculate_resolve();
 }
 

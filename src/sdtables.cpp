@@ -197,15 +197,6 @@ selector_item selector_list[] = {
    {"rightmost 2",  "rightmost 2", "RIGHTMOST 2",  "RIGHTMOST 2", selector_uninitialized},
    {"leftmost 3",   "leftmost 3",  "LEFTMOST 3",   "LEFTMOST 3",  selector_uninitialized},
    {"rightmost 3",  "rightmost 3", "RIGHTMOST 3",  "RIGHTMOST 3", selector_uninitialized},
-#ifdef TGL_SELECTORS
-   /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
-   {"wave-based triangles",   "wave-based triangle",   "WAVE-BASED TRIANGLES",   "WAVE-BASED TRIANGLE",   selector_uninitialized},
-   {"tandem-based triangles", "tandem-based triangle", "TANDEM-BASED TRIANGLES", "TANDEM-BASED TRIANGLE", selector_uninitialized},
-   {"inside triangles",       "inside triangle",       "INSIDE TRIANGLES",       "INSIDE TRIANGLE",       selector_uninitialized},
-   {"outside triangles",      "outside triangle",      "OUTSIDE TRIANGLES",      "OUTSIDE TRIANGLE",      selector_uninitialized},
-   {"in point triangles",     "in point triangle",     "IN POINT TRIANGLES",     "IN POINT TRIANGLE",     selector_uninitialized},
-   {"out point triangles",    "out point triangle",    "OUT POINT TRIANGLES",    "OUT POINT TRIANGLE",    selector_uninitialized},
-#endif
    {"headliners",   "headliner",   "HEADLINERS",   "HEADLINER",   selector_sideliners},
    {"sideliners",   "sideliner",   "SIDELINERS",   "SIDELINER",   selector_headliners},
    {"those facing", "those facing","THOSE FACING", "THOSE FACING",selector_uninitialized},
@@ -219,6 +210,8 @@ selector_item selector_list[] = {
    {"far column",   "far column",  "FAR COLUMN",   "FAR COLUMN",  selector_uninitialized},
    {"near box",     "near box",    "NEAR BOX",     "NEAR BOX",    selector_uninitialized},
    {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
+   {"near 4",       "near 4",      "NEAR 4",       "NEAR 4",      selector_uninitialized},
+   {"far 4",        "far 4",       "FAR 4",        "FAR 4",       selector_uninitialized},
    {"those facing the caller", "those facing the caller",
     "THOSE FACING THE CALLER", "THOSE FACING THE CALLER",         selector_uninitialized},
    {"those facing away from the caller", "those facing away from the caller",
@@ -263,6 +256,7 @@ Cstring warning_strings[] = {
    /*  warn__none                */   " Unknown warning????",
    /*  warn__really_no_collision */   " Unknown no_collision warning????",
    /*  warn__do_your_part        */   "*Do your part.",
+   /*  warn__unusual_or_2faced   */   "*This is an unusual setup for this call.",
    /*  warn__tbonephantom        */   " This is a T-bone phantom setup call.  Everyone will do their own part.",
    /*  warn__awkward_centers     */   "*Awkward for centers.",
    /*  warn__bad_concept_level   */   "*This concept is not allowed at this level.",
@@ -308,6 +302,7 @@ Cstring warning_strings[] = {
    /*  warn__check_4x6           */   "*Check a 4x6 setup.",
    /*  warn__check_hokey_4x4     */   "*Check a center box and outer lines/columns.",
    /*  warn__check_4x4_start     */   "*Check a 4x4 setup at the start of this call.",
+   /*  warn__check_4x4_ctrbox    */   "*Check a center box of 4 at the start of this call.",
    /*  warn__check_centered_qtag */   "*Each 8-person twin general 1/4 tag is centered, with the outsides directly adjacent.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
@@ -368,6 +363,7 @@ Cstring warning_strings[] = {
    /*  warn__tasteless_junk      */   "*The algorithmic nondeterminism of this usage is truly extraordinary.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial.",
    /*  warn__compress_carefully  */   "*Preserve the phantom spots internal to the outer setups.",
+   /*  warn__two_faced           */   "*Not a wave -- maybe should say 'two-faced'.",
    /*  warn__diagnostic          */   "*This is a diagnostic warning and should never arise."};
 
 
@@ -805,6 +801,22 @@ expand::thing expand::init_table[] = {
    {{-1, -1, 13, 10, -1, -1, 1, 14, -1, -1, 5, 2, -1, -1, 9, 6},
     16, s_c1phan, s4x4, 0, 0x3333, ~0UL,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
+
+   {{-1, 13, -1, 15, -1, 1, -1, 3, 2, -1, 7, -1, 6, -1, 11, -1},
+    16, s_c1phan, s4x4, 0, 0xAA55, ~0UL,
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
+
+   {{10, -1, 15, -1, -1, 1, -1, 3, -1, 5, -1, 7, 6, -1, 11, -1},
+    16, s_c1phan, s4x4, 0, 0xA55A, ~0UL,
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
+
+   {{10, -1, 15, -1, 14, -1, 3, -1, -1, 5, -1, 7, -1, 9, -1, 11},
+    16, s_c1phan, s4x4, 0, 0x55AA, ~0UL,
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
+
+   {{-1, 13, -1, 15, 14, -1, 3, -1, 2, -1, 7, -1, -1, 9, -1, 11},
+    16, s_c1phan, s4x4, 0, 0x5AA5, ~0UL,
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{10, 13, -1, 15, 14, 1, 3, -1, 2, 5, -1, 7, 6, 9, 11, -1},
     16, s_c1phan, s4x4, 0, 0x8484, ~0UL,
@@ -1332,6 +1344,17 @@ map::map_thing map::map_init_table[] = {
    {{18, 11, 2, 1, 14, 13, 6, 23},
     s1x4,2,MPKIND__BENT7CCW,0,    0,  s4x6,      0x000, 0xF00F},
 
+   // Stuff for bent CLW in unsymmetrical 4x4.
+
+   {{8, 9, 14, 0, 1, 3, 11, 6},
+    s2x4,1,MPKIND__BENT8NE,0,     0,  s4x4,      0x000, 0xF00F},
+   {{13, 15, 7, 2, 4, 5, 10, 12},
+    s2x4,1,MPKIND__BENT8SE,0,     0,  s4x4,      0x000, 0x5005},
+   {{9, 11, 3, 14, 0, 1, 6, 8},
+    s2x4,1,MPKIND__BENT8SW,0,     0,  s4x4,      0x000, 0x0FF0},
+   {{12, 13, 2, 4, 5, 7, 15, 10},
+    s2x4,1,MPKIND__BENT8NW,0,     0,  s4x4,      0x000, 0x0550},
+
    // Stuff for 1x8.
 
    {{1, 9, 8, 12, 13, 21, 20, 0},
@@ -1423,9 +1446,9 @@ map::map_thing map::map_init_table[] = {
     s_1x2dmd,2,MPKIND__MAGICINTLKDMD,1,0,sbigdmd,0x000, 0},
 
    {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},   // Changed.
+    sdmd,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},
    {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},   // Changed, darn it.
+    sdmd,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},
    {{0, 2,                 1, 3},
     s1x2,2,MPKIND__DMD_STUFF,0,   0,  sdmd,      0x004, 0},
    {{1, 3,                 0, 2},
@@ -1433,9 +1456,9 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 2, 3, 0, 1, 2, 3},
     s2x2,2,MPKIND__DMD_STUFF,0,   0,  s2x2,      0x000, 0},
    {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},   // Changed.
+    s1x4,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},
    {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},   // Changed, darn it.
+    s1x4,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},
 
    {{13, 14, 5, 6,         10, 1, 2, 9},
     s2x2,2,MPKIND__ALL_8,0,       0,  s4x4,      0x000, 0},
@@ -2245,6 +2268,32 @@ map::map_thing map::map_init_table[] = {
     s1x2,3,MPKIND__SPLIT,0,       0,  s1x6,      0x000, 0},
    {{0, 5,                  1, 4,                  2, 3},
     s1x2,3,MPKIND__SPLIT,1,       0,  s2x3,      0x015, 0},
+   {{0, 1,                  3, 2,                  6, 7,                  5, 4},
+    s1x2,4,MPKIND__SPLIT,0,       0,  s1x8,      0x000, 0},
+   {{0, 7,                  1, 6,                  2, 5,                  3, 4},
+    s1x2,4,MPKIND__SPLIT,1,       0,  s2x4,      0x055, 0},
+   {{5, 4,                  2, 3,                  7, 6,                  0, 1},
+    s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,1, 0, s2x4, 0x000, 0},
+   {{7, 6,                  5, 4,                  0, 1,                  2, 3},
+    s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0, 0, s2x4, 0x000, 0},
+   {{3, 2,                  0, 1,                  5, 4,                  6, 7},
+    s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,1, 0, s_qtag, 0x000, 0},
+   {{5, 4,                  3, 2,                  6, 7,                  0, 1},
+    s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, 0, s_rigger, 0x000, 0},
+
+   {{7, 6, 5, 4, 0, 1, 2, 3},
+    s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,0, 0, s2x4, 0x000, 0},
+   {{7, 6, 5, 4, 0, 1, 2, 3},
+    s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,1, 0, s2x4, 0x5555, 0},
+   {{12, 15, 6, 5, 13, 14, 7, 4},
+    s1x1,8,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, 0, s_c1phan, 0x0000, 0},
+
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s1x1,8,MPKIND__QTAG8,0, 0, s_qtag, 0x0000, 0},
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s1x1,8,MPKIND__QTAG8,1, 0, s_qtag, 0x5555, 0},
+   {{10, 13, 0, 3, 2, 5, 8, 11},
+    s1x1,8,MPKIND__QTAG8_WITH_45_ROTATION,0, 0, s4x4, 0x0000, 0},
 
    {{0,        1},
     s1x1,2,MPKIND__SPLIT,0,       0,  s1x2,      0x000, 0},
@@ -2598,6 +2647,7 @@ static expand::thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, s2x4, s2x4, 
 static expand::thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, s2x4, s1x8, 0};
 static expand::thing step_li6_stuff = {{1, 5, 3, 4, 2, 0}, 6, s2x3, s1x6, 0};
 static expand::thing step_liphan_stuff = {{-1, 1, -1, 2, -1, 3, -1, 0}, 8, s2x4, s1x4, 0};
+static expand::thing step_thar_stuff = {{7, 6, 1, 0, 3, 2, 5, 4}, 8, s_thar, s_alamo, 0};
 static expand::thing step_spindle_stuff = {{3, 6, 5, 4, 7, 2, 1, 0}, 8, s_spindle, s1x8, 0};
 static expand::thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, 8, nothing, s_bone, 0};
 static expand::thing step_bn23_stuff = {{0, 2, 1, 3, 5, 4}, 6, nothing, s_bone6, 0};
@@ -2613,13 +2663,23 @@ static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, s_rigger, s1
 static expand::thing step_2x1d_stuff = {{0, 1, 5, 3, 4, 2}, 6, s_1x2dmd, s1x6, 0};
 
 static expand::thing step_phan1_stuff = {{-1, 7, -1, 6, -1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4},
-                                        16, nothing, s2x4, 1};
+                                        16, s_c1phan, s2x4, 1};
 static expand::thing step_phan2_stuff = {{7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1},
-                                        16, nothing, s2x4, 1};
+                                        16, s_c1phan, s2x4, 1};
 static expand::thing step_phan3_stuff = {{0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6, -1},
-                                        16, nothing, s2x4, 0};
+                                        16, s_c1phan, s2x4, 0};
 static expand::thing step_phan4_stuff = {{-1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4, -1, 7, -1, 6},
-                                        16, nothing, s2x4, 0};
+                                        16, s_c1phan, s2x4, 0};
+
+static expand::thing step_4x4_1_stuff = {{-1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4, -1, 7, -1, 6},
+                                        16, s4x4, s2x4, 1};
+static expand::thing step_4x4_2_stuff = {{-1, -1, 3, 1, -1, -1, 4, 2, -1, -1, 7, 5, -1, -1, 0, 6},
+                                        16, s4x4, s2x4, 1};
+static expand::thing step_4x4_3_stuff = {{-1, -1, 4, 2, -1, -1, 7, 5, -1, -1, 0, 6, -1, -1, 3, 1},
+                                        16, s4x4, s2x4, 0};
+static expand::thing step_4x4_4_stuff = {{-1, 3, -1, 2, -1, 5, -1, 4, -1, 7, -1, 6, -1, 1, -1, 0},
+                                        16, s4x4, s2x4, 0};
+
 static expand::thing step_bigd_stuff1 = {{0, 1, 3, 2, -1, -1, 6, 7, 9, 8, -1, -1},
                                         12, nothing, s2x6, 0};
 static expand::thing step_bigd_stuff2 = {{-1, -1, 3, 2, 4, 5, -1, -1, 9, 8, 10, 11},
@@ -2650,7 +2710,7 @@ full_expand::thing touch_init_table1[] = {
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD2UL, ~0UL},      /* Two similar ones with miniwave base for funny square thru. */
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD8UL, ~0UL},      /* (The base couldn't want to rear back -- result would be stupid.) */
    {warn__awful_rear_back, 0, &rear_tgl4b_stuff, s_trngl4,    0xFFUL,       0x22UL, ~0UL},      /* Rear back from a 4-person triangle to a single 8 chain. */
-   {warn__rear_back,       8, &step_li_stuff,    s1x8,      0xFFFFUL,     0x2882UL, ~0UL},      /* Rear back from a grand wave to facing lines. */
+   {warn__rear_back,       8, &step_li_stuff,    s1x8,      0xFFFFUL,     0x2882UL, ~0UL},      /* Rear back from a tidal wave to facing lines. */
    {warn__some_rear_back,  8, &rear_bone_stuffa, s_bone,    0xFFFFUL,     0x55F5UL, 0xF5F5UL},  /* Ends rear back from a "bone" to grand 8-chain or whatever. */
    {warn__some_rear_back,  0, &rear_bone_stuffb, s_bone,    0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Centers rear back from a "bone" to lines facing or "split square thru" setup. */
    {warn__rear_back,       0, &rear_bone_stuffc, s_bone,    0xFFFFUL,     0x58F2UL, 0xFFFFUL},  /* All rear back from a "bone" to a "rigger". */
@@ -2735,20 +2795,28 @@ full_expand::thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_phan3_stuff,   s_c1phan, 0xCCCCCCCCUL, 0x08808008UL, ~0UL},
    {warn__some_touch, 0, &step_phan4_stuff,   s_c1phan, 0x33333333UL, 0x20200202UL, ~0UL},
 
+   {warn__some_touch, 0, &step_4x4_1_stuff,   s4x4, 0x33333333UL, 0x31311313UL, ~0UL},
+   {warn__some_touch, 0, &step_4x4_2_stuff,   s4x4, 0x0F0F0F0FUL, 0x0F0D0507UL, ~0UL},
+   {warn__some_touch, 0, &step_4x4_3_stuff,   s4x4, 0x0F0F0F0FUL, 0x0800020AUL, ~0UL},
+   {warn__some_touch, 0, &step_4x4_4_stuff,   s4x4, 0x33333333UL, 0x20020220UL, ~0UL},
+
    // Some people touch from horrible "T"'s.
    {warn__some_touch, 0, &step_bigd_stuff1,   sbigdmd,    0xFF0FF0UL,   0x280820UL, ~0UL},
    {warn__some_touch, 0, &step_bigd_stuff2,   sbigdmd,    0x0FF0FFUL,   0x082028UL, ~0UL},
 
-   // Check for stepping to a grand wave from lines facing.
+   // Check for stepping to a tidal wave from lines facing.
    {warn__none,      16, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},
    {warn__none,      16, &step_li6_stuff,     s2x3,          0xFFFUL,      0xA80UL, ~0UL},
-   {warn__none,      16, &step_spindle_stuff, s_spindle,    0xFFFFUL,     0xA802UL, ~0UL},
+   {warn__none,   64+16, &step_spindle_stuff, s_spindle,    0xFFFFUL,     0xA800UL, 0xFDFDUL},
    // Same, with missing people.
    {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},
    {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},
 
    // Check for stepping to a wave from partially occupied lines facing, only beaus present.
    {warn__none,     128, &step_liphan_stuff,  s2x4,         0x3333UL,     0x2200UL, ~0UL},
+
+   // Check for stepping to an alamo wave from thar-like facing people.
+   {warn__none,      16, &step_thar_stuff,    s_thar,       0xFFFFUL,     0x78D2UL, ~0UL},
 
    // Check for stepping to a bone from a squared set or whatever.
    {warn__none,      16, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},
@@ -2862,7 +2930,7 @@ full_expand::thing touch_init_table3[] = {
    // The 32 bit says these are allowed only for fan the top.
    {warn__some_touch,64+32+8,&step_qtctr_stuff, s_qtag,   0xFFFFUL,     0x0D07UL, 0x0F0FUL},
    {warn__none,    64+32+8, &step_ptpctr_stuff, s_ptpd,   0xFFFFUL,     0x2002UL, 0x3333UL},
-   {warn__none,    64+32+8, &step_dmdctr_stuff,   sdmd,     0xFFUL,       0x20UL, 0x33UL},
+   {warn__some_touch,64+32+8, &step_dmdctr_stuff, sdmd,     0xFFUL,       0x20UL, 0x33UL},
 
    {warn__none,       0, (expand::thing *) 0, nothing}
 };
@@ -3195,8 +3263,12 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s3x4,           schema_nothing, {10, 11, 4, 5,    9, 0, 3, 6},
              s1x4,     s2x2,     0, 1, 3, 1,  0x2DF, schema_concentric},
 
+   // These must be in this order, so it will prefer the 2x2 on the outside.
+   {s4x4,           schema_concentric, {15, 3, 7, 11,    0, 1, 2, -1, 4, 5, 6, -1, 8, 9, 10, -1, 12, 13, 14, -1},
+             s2x2,     s4x4,     0, 0, 3, 1,  0x100, schema_concentric},
    {s4x4,           schema_concentric, {15, 3, 7, 11,    12, 0, 4, 8},
              s2x2,     s2x2,     0, 0, 3, 1,  0x0CF, schema_concentric},
+
    {s1x3dmd,        schema_concentric_diamond_line, {1, 2, 5, 6,    0, 3, 4, 7},
              s1x4,     sdmd,     0, 0, 1, 1,  0x100, schema_nothing},
    {s_crosswave,    schema_concentric_diamond_line, {1, -1, 5, -1,    0, 2, 4, 6},
@@ -7627,6 +7699,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
+   {31,                     // sx4dmdbone
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {63,                     // s8x8
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -8625,6 +8707,15 @@ select::fixer select::fixer_init_table[] = {
    {fx_f2x8tt3, s2x2, s2x8,         0, 0, 1, {4, 7, 9, 10},
     fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx_f4x4neq, s2x2, s4x4,         0, 0, 1, {14, 0, 1, 3},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f4x4seq, s2x2, s4x4,         0, 0, 1, {7, 2, 4, 5},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f4x4swq, s2x2, s4x4,         0, 0, 1, {9, 11, 6, 8},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f4x4nwq, s2x2, s4x4,         0, 0, 1, {12, 13, 15, 10},
+    fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
    {fx_f2x6qq0, s2x2, s2x6,         0, 0, 1, {0, 1, 10, 11},
     fx0,          fx0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x6qq1, s2x2, s2x6,         0, 0, 1, {4, 5, 6, 7},
@@ -8806,9 +8897,12 @@ select::fixer select::fixer_init_table[] = {
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_f2x5d, s1x2, s2x5,        0, 0, 2,          {0, 1, 6, 5},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+   {fx_f2x5e, s1x2, s2x5,        1, 0, 3,          {0, 9, 2, 7, 4, 5},
+    fx0,          fx_f4ptpd,    fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+   {fx_f4ptpd, s1x2, s4ptpd,     0, 0, 3,          {13, 14, 15, 7, 6, 5},
+    fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_fd2x5d, s2x3, sd2x5,      1, 0, 1,          {9, 8, 7, 4, 3, 2},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
-
    {fx_fd2x7d1, s1x2, sd2x7,      0, 0, 2,          {13, 12, 5, 6},
     fx0,          fx_f3x4east,  fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_fd2x7d2, s1x2, sd2x7,      0, 0, 2,          {0, 1, 8, 7},
@@ -9573,6 +9667,12 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_TRAPEZOID,          s2x8,       0x0960,  fx_f2x8tt2,    fx0, -1},
    {LOOKUP_TRAPEZOID,          s2x8,       0x0690,  fx_f2x8tt3,    fx0, -1},
 
+   // Unsymmetrical in a 4x4 - near/far box.
+   {LOOKUP_NONE,               s4x4,       0x400B,  fx_f4x4neq,    fx0, -1},
+   {LOOKUP_NONE,               s4x4,       0x00B4,  fx_f4x4seq,    fx0, -1},
+   {LOOKUP_NONE,               s4x4,       0x0B40,  fx_f4x4swq,    fx0, -1},
+   {LOOKUP_NONE,               s4x4,       0xB400,  fx_f4x4nwq,    fx0, -1},
+
    // Next 6 are unsymmetrical in a 2x6 - boxes and trapezoids.
    {LOOKUP_NONE,               s2x6,        0xC03,  fx_f2x6qq0,    fx0, -1},
    {LOOKUP_NONE,               s2x6,        0x0F0,  fx_f2x6qq1,    fx0, -1},
@@ -9605,6 +9705,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,               s2x3,        014,    fx_f2x3a14,    fx0, -1},
    {LOOKUP_NONE,               s2x5,        0x318,  fx_f2x5c,      fx0, -1},
    {LOOKUP_NONE,               s2x5,        0x063,  fx_f2x5d,      fx0, -1},
+   {LOOKUP_NONE,               s2x5,        0x2B5,  fx_f2x5e,      fx0, -1},
    {LOOKUP_NONE,               sd2x5,       0x18C,  fx_fd2x5d,     fx0, -1},
    {LOOKUP_NONE,               sd2x5,       0x318,  fx_fd2x5d,     fx0, -1},
    {LOOKUP_NONE,               sd2x5,       0x198,  fx_fd2x5d,     fx0, -1},

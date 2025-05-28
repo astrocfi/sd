@@ -141,6 +141,16 @@ static const WORD color_translate_reverse_video[8] = {
    FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY,  // 6 - magenta
    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY}; // 7 - cyan
 
+static const WORD color_translate_reverse_video_nointen[8] = {
+   0,
+   FOREGROUND_RED  | FOREGROUND_GREEN,                         // 1 - dark yellow
+   FOREGROUND_RED ,                                            // 2 - red
+   FOREGROUND_GREEN,                                           // 3 - green
+   FOREGROUND_RED  | FOREGROUND_GREEN,                         // 4 - yellow
+   FOREGROUND_BLUE,                                            // 5 - blue
+   FOREGROUND_RED  | FOREGROUND_BLUE,                          // 6 - magenta
+   FOREGROUND_BLUE | FOREGROUND_GREEN};                        // 7 - cyan
+
 static const WORD color_translate_normal_video[8] = {
    0,
    FOREGROUND_RED  | FOREGROUND_GREEN                        | bgWHT,  // 1 - dark yellow
@@ -229,7 +239,7 @@ extern void ttu_initialize()
    if (ui_options.no_intensify) {
       if (ui_options.reverse_video) {
          text_color = fgGRY;
-         color_translate = color_translate_reverse_video;
+         color_translate = color_translate_reverse_video_nointen;
       }
       else {
          text_color = bgGRY;

@@ -349,10 +349,21 @@ is a 4-person call.  It is not @strong{grand} unless you say so.  If you
 believe that just saying @strong{remake the column} might confuse the
 dancers, don't do it.
 
+@unnumberedsec How does stepping to a wave work?  Can people actually step to right hands and then do a left @strong{spin the top}?
+
+Yes they can, if only the centers stepped.  What happens when some, but not all,
+people step to right (or left) hands can be confusing.  Here is how it works:
+Whenever anyone steps to a (mini) wave, they always take @i{right} hands unless
+the caller said ``left'', in which case they take left hands.  This is true even
+if the result (because of other people who didn't need to step) is a wave of the
+other handedness.  The call then proceeds in whatever handedness the resultant
+wave has, @emph{except that}, if the caller said @strong{left}, the resultant
+setup @emph{must} be a left-handed wave.
+
 @unnumberedsec Now that the right-hand rule is enforced for @strong{remake}, how can I do a @strong{crazy remake}?
 
-You can say @strong{crazy any hand remake}, or @strong{reverse random mirror crazy remake},
-or @strong{reverse random left crazy remake}.
+You can say @strong{crazy any hand remake}, or @strong{evenly mirror crazy remake},
+or @strong{evenly left crazy remake}.
 
 @unnumberedsec How can I identify the center wave of 6 in a 3x1 diamond?
 
@@ -561,14 +572,6 @@ It is much simpler just to type "centers squeeze".  The parser in Sdtty and Sd i
 resolve ambiguities such as this; the menu mechanism of Sd can't do it.  Even if you are using
 Sd and prefer the mouse-and-menu mechanism, typing what you want is a good way to proceed when
 problems like this arise.
-
-@unnumberedsec How can I use the @strong{two-faced} concept?
-
-It isn't clear that this is actually something that needs to be
-said---modern challenge choreography seems to have adopted the position
-that you just do your part anyway.  So just give the call.  A warning
-may be printed, such as "Do your part" or "This is an unusual setup for
-this call".  You may or may not choose to say "two-faced" when calling.
 
 @unnumberedsec How can I do @strong{same sex disconnected}?
 
@@ -921,7 +924,7 @@ There is also a concept @strong{precede it by}, which performs the first call
 @emph{before} the second.
 
 There is really only one context in which these concepts are sensible---they can be
-the subject of the @strong{piecewise}, @strong{random}, or @strong{reverse random}
+the subject of the @strong{piecewise}, @strong{oddly}, or @strong{evenly}
 meta-concepts.  For example:
 
 @example

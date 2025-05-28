@@ -871,7 +871,7 @@ extern uint32 do_call_in_series(
             /* If just the ends were doing this, and it had some
                "force_lines" type of directive, honor same. */
 
-            if (qqqq.cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS) {
+            if (qqqq.cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS) {
                if (sss->kind == s2x2 &&
                    (qqqq.cmd.cmd_misc_flags &
                     (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS))) {
@@ -2880,8 +2880,7 @@ extern bool get_real_subcall(
    const calldefn *parent_call,
    bool forbid_flip,
    uint32 extra_heritmask_bits,
-   setup_command *cmd_out) THROW_DECL         /* We fill in just the parseptr, callspec,
-                                      cmd_final_flags fields. */
+   setup_command *cmd_out) THROW_DECL   // We fill in just the parseptr, callspec, cmd_final_flags fields.
 {
    parse_block *search;
    parse_block **newsearch;
@@ -2973,14 +2972,27 @@ extern bool get_real_subcall(
    newsearch = &parseptr->next;
 
    if (parseptr->concept->kind == concept_another_call_next_mod) {
+      if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) &&
+          (cmd_in->cmd_misc3_flags & CMD_MISC3__NO_ANYTHINGERS_SUBST) &&
+          item_id == base_call_circulate) {
+         goto ret_false;
+      }
+      else if (snumber == (DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT) &&
+          (cmd_in->cmd_misc3_flags & CMD_MISC3__NO_ANYTHINGERS_SUBST) &&
+               item_id == base_call_circcer) {
+         cmd_out->callspec = base_calls[base_call_circulate];
+         goto ret_true;
+      }
+
       while ((search = *newsearch) != (parse_block *) 0) {
          if (orig_call == search->call ||
+             (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) &&
+              search->call == base_calls[base_call_null] && orig_call == base_calls[base_call_circulate]) ||
              (this_is_tagger && search->call == base_calls[base_call_tagger0])) {
             // Found a reference to this call.
             parse_block *subsidiary_ptr = search->subsidiary_root;
 
-            // If the pointer is nil, we already asked about this call,
-            // and the reply was no.
+            // If the pointer is nil, we already asked about this call, and the reply was no.
             if (!subsidiary_ptr)
                goto ret_false;
 
@@ -3036,6 +3048,7 @@ extern bool get_real_subcall(
    return true;
 
  ret_false:
+
    current_options = save_state;
    return false;
 }
@@ -3231,22 +3244,22 @@ extern int gcd(int a, int b)
 
 
 // This computes "incoming_fracs of arg_fracs".  That is, it composes
-// two fraction specs.  For example, if incoming_fracs=1st half (0112)
-// and arg_fracs=last half (1211), this calculates the first half of the last
-// half, which is the part from 1/2 to 3/4 (1234).
+// two fraction specs.  For example, if incoming_fracs=1st half (1,0,2,1)
+// and arg_fracs=last half (2,1,1,1), this calculates the first half of the last
+// half, which is the part from 1/2 to 3/4 (2,1,4,3).
 // If the user nests fraction concepts as in
 //          "1/2, do the last 1/2, split the difference",
-// we will process the first concept (1/2) and set the cmd_frac_flags to 0112.
+// we will process the first concept (1/2) and set the cmd_frac_flags to 1,0,2,1.
 // We will then see the second concept (do the last 1/2) and call this
 // function with incoming_fracs = the cmd_frac_flags field we have so far,
-// and arg_fracs = this concept.
+// and start+end = this concept.
 //
 // If the incoming_fracs argument has the CMD_FRAC_REVERSE flag on, we
 // presumably saw something like "1/2, reverse order", and are trying to
 // do "1/2, reverse order, do the last 1/2, split the difference".
 // In that case, this function returns
 //      "incoming_fracs of reverse order of arg_fracs",
-// that is, the first 1/4 (0114).  If the client retains the
+// that is, the first 1/4 (1,0,4,1).  If the client retains the
 // CMD_FRAC_REVERSE flag on that, it will do the last 1/4 of the call.
 extern uint32 process_stupendously_new_fractions(int start, int end,
                                                  fraction_invert_flags invert_flags,
@@ -4426,8 +4439,6 @@ static void do_sequential_call(
    for (;;) {
       by_def_item *this_item;
       uint32 this_mod1;
-      setup_command foo1, foo2;
-      setup_command foobar;
       by_def_item *alt_item;
       bool recompute_id = false;
       uint32 saved_number_fields = current_options.number_fields;
@@ -4472,7 +4483,15 @@ static void do_sequential_call(
 
       this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index];
       this_mod1 = this_item->modifiers1;
+      setup_command foobar = ss->cmd;
+      foobar.cmd_final_flags = new_final_concepts;
 
+      // The no_anythingers_subst flag only applies to the first subcall.  This check shouldn't
+      // be needed, but we want to be protected against an improperly formed database.
+      if (zzz.m_fetch_index != 0)
+         foobar.cmd_misc3_flags &= ~CMD_MISC3__NO_ANYTHINGERS_SUBST;
+
+      result->result_flags.misc &= ~RESULTFLAG__NO_REEVALUATE;
       if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
           !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
          result->result_flags.misc |= RESULTFLAG__NO_REEVALUATE;
@@ -4511,16 +4530,14 @@ static void do_sequential_call(
       // But if the user does something like "circle by 1/4 x [leads run]", we
       // want to re-evaluate who the leads are.
 
-      foobar = ss->cmd;
-      foobar.cmd_final_flags = new_final_concepts;
-
       // Turn on the expiration mechanism.
       result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
+
+      setup_command foo1, foo2;
 
       {
          bool zzy = get_real_subcall(parseptr, this_item, &foobar,
                                      callspec, forbid_flip, extra_heritmask_bits, &foo1);
-         // Well, not if this is an explicit substitution.
          if (zzy) {
             result->cmd.prior_expire_bits &= ~RESULTFLAG__EXPIRATION_ENAB;
             recompute_id = true;
@@ -5525,6 +5542,7 @@ static void really_inner_move(setup *ss,
          if (!(callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
          if (!mirror) mirror_this(ss);
          mirror = true;
+         ss->cmd.cmd_misc_flags |= CMD_MISC__DID_LEFT_MIRROR;
          ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
       }
 
@@ -5868,6 +5886,7 @@ static void move_with_real_call(
          fail("This concept not allowed here.");
 
    uint32 herit_concepts = ss->cmd.cmd_final_flags.herit;
+
    calldefn *this_defn = &ss->cmd.callspec->the_defn;
    calldefn *deferred_array_defn = (calldefn *) 0;
    warning_info saved_warnings = configuration::save_warnings();
@@ -5937,7 +5956,7 @@ static void move_with_real_call(
          // We shut off the "doing ends" stuff.  If we say "ends detour" we
          // mean "ends do the ends part of detour".  But if we say "ends
          // central detour" we mean "ends do the *centers* part of detour".
-         ss->cmd.cmd_misc_flags &= ~CMD_MISC__DOING_ENDS;
+         ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__DOING_ENDS;
 
          // Now we demand that, if a concept was given, the call had the
          // appropriate flag set saying that the concept is legal and will
@@ -6208,7 +6227,7 @@ static void move_with_real_call(
                }
             }
 
-            /* Actually, turning off the "left" flag is more global than that. */
+            // Actually, turning off the "left" flag is more global than that.
 
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
@@ -6295,7 +6314,7 @@ static void move_with_real_call(
       // specifically allows just the ends part to be done.  If the call was
       // "central", this flag will be turned off.
 
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS) {
+      if (ss->cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS) {
          if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
             fail("Can't do \"invert/central/snag/mystic\" with a call for the ends only.");
 
@@ -6469,6 +6488,12 @@ static void move_with_real_call(
             }
             else if (ss->kind == s4x4) {
                if (mask == 0x4B4B || mask == 0xB4B4)
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+               else
+                  fail("Can't split this setup.");
+            }
+            else if (ss->kind == s2x6) {
+               if (mask == 0xDB6 || mask == 0x6DB)
                   ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
                else
                   fail("Can't split this setup.");
@@ -6786,19 +6811,17 @@ extern void move(
    parse_block *parseptrcopy;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
-      skipped_concept_info foo;
+      skipped_concept_info foo(ss->cmd.parseptr);
 
-      really_skip_one_concept(ss->cmd.parseptr, foo);
-
-      if (foo.heritflag != 0) {
-         parseptrcopy = foo.concept_with_root;
-         ss->cmd.skippable_heritflags = foo.heritflag;
+      if (foo.m_heritflag != 0) {
+         parseptrcopy = foo.m_concept_with_root;
+         ss->cmd.skippable_heritflags = foo.m_heritflag;
       }
       else {
-         parseptrcopy = *foo.root_of_result_of_skip;
-
-         if (foo.skipped_concept->concept->kind == concept_supercall)
+         if (!foo.m_root_of_result_of_skip || foo.m_skipped_concept->concept->kind == concept_supercall)
             fail("A concept is required.");
+
+         parseptrcopy = *foo.m_root_of_result_of_skip;
       }
    }
    else

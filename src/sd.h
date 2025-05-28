@@ -113,8 +113,9 @@
 // fact that there is a whole "industry" (config/autoconf/etc.)
 // dedicated to the job of figuring out what hideous brokenness any
 // given Unix implementation is inflicting on us today, but we have no
-// patience for that kind of garbage.  If your compiler or OS can't
-// handle this, tough.
+// patience for that kind of garbage, and we are not going to support
+// that "industry".  If your compiler or OS can't handle this, tough.
+// (But we still leave the ifdef in place; it does no harm.)
 //
 // We no longer take pity on broken compilers or operating systems.
 
@@ -124,20 +125,20 @@ typedef short veryshort;
 typedef char veryshort;
 #endif
 
-/* We would like to think that we will always be able to count on compilers to do the
-   right thing with "int" and "long int" and so on.  What we would really like is
-   for compilers to be counted on to make "int" at least 32 bits, because we need
-   32 bits in many places.  However, some compilers don't, so we have to use
-   "long int" or "unsigned long int".  We think that all compilers we deal with
-   will do the right thing with that, but, just in case, we use a typedef.
-
-   The type "uint32" must be an unsigned integer of at least 32 bits.
-   The type "uint16" must be an unsigned integer of at least 16 bits.
-
-   Note also:  There are many places in the program (not just in database.h and sd.h)
-   where the suffix "UL" is put on constants that are intended to be of type "uint32".
-   If "uint32" is changed to anything other than "unsigned long int", it may be
-   necessary to change all of those. */
+// We would like to think that we will always be able to count on compilers to do the
+// right thing with "int" and "long int" and so on.  What we would really like is
+// for compilers to be counted on to make "int" at least 32 bits, because we need
+// 32 bits in many places.  However, some compilers don't, so we have to use
+// "long int" or "unsigned long int".  We think that all compilers we deal with
+// will do the right thing with that, but, just in case, we use a typedef.
+//
+// The type "uint32" must be an unsigned integer of at least 32 bits.
+// The type "uint16" must be an unsigned integer of at least 16 bits.
+//
+// Note also:  There are many places in the program (not just in database.h and sd.h)
+// where the suffix "UL" is put on constants that are intended to be of type "uint32".
+// If "uint32" is changed to anything other than "unsigned long int", it may be
+// necessary to change all of those.
 
 typedef unsigned long int uint32;
 typedef unsigned short int uint16;
@@ -363,6 +364,7 @@ enum concept_kind {
    concept_7x7,
    concept_8x8,
    concept_create_matrix,
+   concept_two_faced,
    concept_funny,
    concept_randomtrngl,
    concept_selbasedtrngl,
@@ -678,15 +680,6 @@ enum selector_kind {
    selector_rightmosttwo,
    selector_leftmostthree,
    selector_rightmostthree,
-#ifdef TGL_SELECTORS
-   // Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c .
-   selector_wvbasetgl,
-   selector_tndbasetgl,
-   selector_insidetgl,
-   selector_outsidetgl,
-   selector_inpttgl,
-   selector_outpttgl,
-#endif
    selector_headliners,
    selector_sideliners,
    selector_thosefacing,
@@ -701,6 +694,8 @@ enum selector_kind {
    selector_farcolumn,
    selector_nearbox,
    selector_farbox,
+   selector_nearfour,
+   selector_farfour,
    selector_facingfront,
    selector_facingback,
    selector_facingleft,
@@ -844,7 +839,7 @@ struct calldef_block {
 
 struct by_def_item {
    short call_id;
-   uint32 modifiers1;
+   mods1_word modifiers1;
 
    /* The "modifiersh" field of an invocation of a subcall tells what
       incoming modifiers will be passed to the subcall.  What the bits mean
@@ -1309,7 +1304,7 @@ struct resolve_list_menu_item {
 struct personrec {
    uint32 id1;       // Frequently used bits go here.
    uint32 id2;       // Bits used for evaluating predicates.
-   uint32 id3;       // The "permanent ID" bits.
+   uint32 id3;       // More, for unsymmetrical stuff, plus the "permanent ID" bits.
 };
 
 // Bits that go into the "id1" field.
@@ -1414,46 +1409,56 @@ enum {
    ID2_NOTFACING  = 0x00004000UL,
    ID2_CENTER     = 0x00002000UL,
    ID2_END        = 0x00001000UL,
-   ID2_NEARCOL    = 0x00000800UL,
-   ID2_NEARLINE   = 0x00000400UL,
-   ID2_NEARBOX    = 0x00000200UL,
-   ID2_FARCOL     = 0x00000100UL,
-   ID2_FARLINE    = 0x00000080UL,
-   ID2_FARBOX     = 0x00000040UL,
-   ID2_CTR4       = 0x00000020UL,
-   ID2_OUTRPAIRS  = 0x00000010UL,
-   ID2_FACEFRONT  = 0x00000008UL,
-   ID2_FACEBACK   = 0x00000004UL,
-   ID2_FACELEFT   = 0x00000002UL,
-   ID2_FACERIGHT  = 0x00000001UL,
+   ID2_CTR4       = 0x00000800UL,
+   ID2_OUTRPAIRS  = 0x00000400UL,
+
+   // 10 available codes.
 
    // Various useful combinations.
 
-   BITS_TO_CLEAR =
+   // These bits are not a property just of the person and his position
+   // in the formation -- they depend on other people's facing direction.
+   ID2_BITS_NOT_INTRINSIC = ID2_FACING | ID2_NOTFACING,
+
+   // These happen to be all the bits currently in this word.
+   ID2_BITS_TO_CLEAR =
    ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
    ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
    ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
    ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
-   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
-
-   ID2_GLOB_BITS_TO_CLEAR =
-   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
-   ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT,
-
-   ID2_LESS_BITS_TO_CLEAR =
-   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX
+   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS
 };
 
 
-// Bits that go into the "id3" field.
+// Bits that go into the "id3" field.  It is sort of an extension of "id2".
 //
 // This field contains "permanent" information related to the identity
 // of this person.  For real people, this never changes.  The reason
 // this field is needed is that the bits get cobbled together (by ANDing)
 // when combining people for tandem, etc.  For active phantoms, these
-// bits are all zero.
+// bits are all zero.  This field also has unsymmetrical selector bits.
 
 enum {
+
+   ID3_NEARCOL    = 0x80000000UL,
+   ID3_NEARLINE   = 0x40000000UL,
+   ID3_NEARBOX    = 0x20000000UL,
+   ID3_NEARFOUR   = 0x10000000UL,
+   ID3_FARCOL     = 0x08000000UL,
+   ID3_FARLINE    = 0x04000000UL,
+   ID3_FARBOX     = 0x02000000UL,
+   ID3_FARFOUR    = 0x01000000UL,
+   ID3_FACEFRONT  = 0x00800000UL,
+   ID3_FACEBACK   = 0x00400000UL,
+   ID3_FACELEFT   = 0x00200000UL,
+   ID3_FACERIGHT  = 0x00100000UL,
+
+   ID3_LESS_BITS_TO_CLEAR =
+   ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR,
+
+   ID3_GLOB_BITS_TO_CLEAR =
+   ID3_LESS_BITS_TO_CLEAR|ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT,
+
    ID3_PERM_NSG     = 0x00040000UL,  // Not side girl
    ID3_PERM_NSB     = 0x00020000UL,  // Not side boy
    ID3_PERM_NHG     = 0x00010000UL,  // Not head girl
@@ -1464,7 +1469,7 @@ enum {
    ID3_PERM_SIDE    = 0x00000800UL,  // Side
    ID3_PERM_BOY     = 0x00000400UL,  // Boy
    ID3_PERM_GIRL    = 0x00000200UL,  // Girl
-   ID3_PERM_ALLBITS = 0x0007FE00UL,  // We no longer need this, since we own the whole word.
+   ID3_PERM_ALLBITS = 0x0007FE00UL,
 
    // These are the standard definitions for the 8 people in the square.
 
@@ -1650,7 +1655,7 @@ class conc_tables {
       int & mapelong,
       int & inner_rot,
       int & outer_rot,
-      calldef_schema analyzer);
+      calldef_schema & analyzer);
 
    static bool synthesize_this(             // In sdconc.
       setup *inners,
@@ -1760,6 +1765,10 @@ class select {
       fx_f2x8tt1,
       fx_f2x8tt2,
       fx_f2x8tt3,
+      fx_f4x4neq,
+      fx_f4x4seq,
+      fx_f4x4swq,
+      fx_f4x4nwq,
       fx_f2x6qq0,
       fx_f2x6qq1,
       fx_f2x6tt0,
@@ -1849,6 +1858,8 @@ class select {
       fx_boxaa,
       fx_f2x5c,
       fx_f2x5d,
+      fx_f2x5e,
+      fx_f4ptpd,
       fx_fd2x5d,
       fx_fd2x7d1,
       fx_fd2x7d2,
@@ -2152,6 +2163,7 @@ class select {
 
    // In sdconc.
    static const fixer *hash_lookup(setup_kind kk, uint32 thislivemask,
+                                   bool allow_phantoms,
                                    uint32 key, uint32 arg, const setup *ss);
 };
 
@@ -2260,6 +2272,7 @@ enum warning_index {
    warn__none,
    warn__really_no_collision,
    warn__do_your_part,
+   warn__unusual_or_2faced,
    warn__tbonephantom,
    warn__awkward_centers,
    warn__bad_concept_level,
@@ -2305,6 +2318,7 @@ enum warning_index {
    warn__check_4x6,
    warn__check_hokey_4x4,
    warn__check_4x4_start,
+   warn__check_4x4_ctrbox,
    warn__check_centered_qtag,
    warn__check_pgram,
    warn__ctrs_stay_in_ctr,
@@ -2365,6 +2379,7 @@ enum warning_index {
    warn__tasteless_junk,
    warn__tasteless_slide_thru,
    warn__compress_carefully,
+   warn__two_faced,
    warn__diagnostic,
    warn__NUM_WARNINGS       // Not a real warning; just used for counting.
 };
@@ -3472,11 +3487,6 @@ struct concept_table_item{
    CMD_MISC__NO_STEP_TO_WAVE means that we are at a level of recursion that
    no longer permits us to do the implicit step to a wave or rear back from one
    that some calls permit at the top level.
-
-   CMD_MISC__DOING_ENDS means that this call is directed only to the ends
-   of the original setup.  If the call turns out to be an 8-person call with distinct
-   centers and ends parts, we may want to just apply the ends part.  This is what
-   makes "ends detour" work.
 */
 
 // Beware!  These flags must be disjoint from DFM1_CONCENTRICITY_FLAG_MASK, in database.h .
@@ -3524,13 +3534,19 @@ enum {
    CMD_MISC__PHANTOMS             = 0x10000000UL,
    CMD_MISC__NO_STEP_TO_WAVE      = 0x20000000UL,
    CMD_MISC__ALREADY_STEPPED      = 0x40000000UL,
-   CMD_MISC__DOING_ENDS           = 0x80000000UL,
+   CMD_MISC__DID_LEFT_MIRROR      = 0x80000000UL,
 
    CMD_MISC__MUST_SPLIT_MASK      = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
 };
 
 
 // Flags that reside in the "cmd_misc3_flags" word of a setup BEFORE a call is executed.
+/*
+   CMD_MISC3__DOING_ENDS means that this call is directed only to the ends
+   of the original setup.  If the call turns out to be an 8-person call with distinct
+   centers and ends parts, we may want to just apply the ends part.  This is what
+   makes "ends detour" work.
+*/
 enum {
    CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002UL,
    CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
@@ -3538,7 +3554,10 @@ enum {
    CMD_MISC3__META_NOCMD           = 0x00000010UL,
    CMD_MISC3__NO_CHECK_LEVEL       = 0x00000020UL,
    CMD_MISC3__DOING_YOUR_PART      = 0x00000040UL,    // Some kind of "DYP" has happened, setups may be bizarre.
-   CMD_MISC3__NEED_DIAMOND         = 0x00000080UL
+   CMD_MISC3__NEED_DIAMOND         = 0x00000080UL,
+   CMD_MISC3__DOING_ENDS           = 0x00000100UL,
+   CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200UL,
+   CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL     // Treat "<anything> motivate" as plain motivate.
 };
 
 
@@ -3781,6 +3800,7 @@ enum restriction_test_result {
    restriction_passes,
    restriction_fails,
    restriction_bad_level,
+   restriction_fails_on_2faced,
    restriction_no_item
 };
 
@@ -4244,6 +4264,10 @@ enum mpkind {
    MPKIND__NONE,
    MPKIND__SPLIT,
    MPKIND__SPLIT_OTHERWAY_TOO,
+   MPKIND__SPLIT_WITH_45_ROTATION,
+   MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,
+   MPKIND__QTAG8,
+   MPKIND__QTAG8_WITH_45_ROTATION,
    MPKIND__REMOVED,
    MPKIND__TWICE_REMOVED,
    MPKIND__THRICE_REMOVED,
@@ -4311,6 +4335,10 @@ enum mpkind {
    MPKIND__BENT6CCW,
    MPKIND__BENT7CW,
    MPKIND__BENT7CCW,
+   MPKIND__BENT8NE,
+   MPKIND__BENT8SE,
+   MPKIND__BENT8SW,
+   MPKIND__BENT8NW,
    MPKIND__SPEC_ONCEREM,
    MPKIND__SPEC_TWICEREM,
    NUM_PLAINMAP_KINDS   // End mark; not really in the enumeration.
@@ -4559,13 +4587,17 @@ void initialize_sdlib();
 extern void crash_print(const char *filename, int linenum) THROW_DECL;
 
 struct skipped_concept_info {
-   parse_block *old_retval;
-   parse_block *skipped_concept;
-   uint32 need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
-   uint32 heritflag;
-   parse_block *concept_with_root;
-   parse_block *result_of_skip;
-   parse_block **root_of_result_of_skip;
+   parse_block *m_old_retval;
+   parse_block *m_skipped_concept;
+   uint32 m_need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
+   uint32 m_heritflag;
+   parse_block *m_concept_with_root;
+   parse_block *m_result_of_skip;
+   parse_block **m_root_of_result_of_skip;
+   uint32 m_nocmd_misc3_bits;
+
+   skipped_concept_info() : m_nocmd_misc3_bits(0) {}
+   skipped_concept_info(parse_block *incoming) THROW_DECL;    // In SDTOP
 };
 
 extern bool check_for_concept_group(
@@ -4591,7 +4623,11 @@ extern restriction_test_result verify_restriction(
    bool instantiate_phantoms,
    bool *failed_to_instantiate) THROW_DECL;
 
-extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL;
+extern callarray *assoc(
+   begin_kind key,
+   setup *ss,
+   callarray *spec,
+   bool *specialpass = (bool *) 0) THROW_DECL;
 
 extern uint32 find_calldef(
    callarray *tdef,
@@ -4690,10 +4726,6 @@ extern parse_block *process_final_concepts(
    final_and_herit_flags *final_concepts,
    bool forbid_unfinished_parse,
    bool only_one) THROW_DECL;
-
-extern void really_skip_one_concept(
-   parse_block *incoming,
-   skipped_concept_info & retstuff) THROW_DECL;
 
 extern bool fix_n_results(int arity,
                           int goal,

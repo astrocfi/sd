@@ -352,8 +352,10 @@ static void innards(
    }
 
    mpkind starting_map_kind = map_kind;
+   uint32 eighth_rot_flag = ~0UL;
 
    result->clear_people();
+   result->rotation = 0;
    sscmd->cmd_misc2_flags &= ~(CMD_MISC2__MYSTIFY_SPLIT | CMD_MISC2__MYSTIFY_INVERT);
 
    for (i=0,rrr=rot; i<arity; i++,rrr>>=2) {
@@ -405,6 +407,14 @@ static void innards(
 
          if (mirror)
             mirror_this(&z[i]);
+
+         if (arity >= 2 && (z[i].result_flags.misc & RESULTFLAG__IMPRECISE_ROT))
+            fail("Rotation is imprecise.");
+
+         if (eighth_rot_flag == ~0UL)
+            eighth_rot_flag = z[i].result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT;
+         else if ((eighth_rot_flag ^ z[i].result_flags.misc) & RESULTFLAG__PLUSEIGHTH_ROT)
+            fail("Rotation is inconsistent.");
       }
       else {
          xorigkind[i] = x[i].kind;
@@ -412,10 +422,57 @@ static void innards(
          z[i].kind = nothing;
          clear_result_flags(&z[i]);
       }
+   }
 
-      if (arity >= 2 &&
-          (z[i].result_flags.misc & (RESULTFLAG__IMPRECISE_ROT | RESULTFLAG__PLUSEIGHTH_ROT)))
-         fail("Rotation is imprecise or is 45 degrees.");
+   // If multiple setups are involved and they have rotated by 45 degrees, we have to be very careful.
+
+   if (arity >= 2 && (eighth_rot_flag & RESULTFLAG__PLUSEIGHTH_ROT)) {
+      if ((sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) || (arity != 4 && arity != 8))
+         fail("Can't handle this rotation.");
+
+      if (arity == 8) warn(warn__may_be_fudgy);
+
+      bool take_out_double_45_rotation = false;
+
+      if (map_kind == MPKIND__SPLIT) {
+         map_kind = MPKIND__SPLIT_WITH_45_ROTATION;
+      }
+      else if (map_kind == MPKIND__SPLIT_WITH_45_ROTATION) {
+         map_kind = MPKIND__SPLIT;
+         take_out_double_45_rotation = true;
+      }
+      else if (map_kind == MPKIND__SPLIT_OTHERWAY_TOO) {
+         map_kind = MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO;
+      }
+      else if (map_kind == MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO) {
+         map_kind = MPKIND__SPLIT_OTHERWAY_TOO;
+         take_out_double_45_rotation = true;
+      }
+      else if (map_kind == MPKIND__QTAG8) {
+         map_kind = MPKIND__QTAG8_WITH_45_ROTATION;
+      }
+      else if (map_kind == MPKIND__QTAG8_WITH_45_ROTATION) {
+         map_kind = MPKIND__QTAG8;
+         take_out_double_45_rotation = true;
+      }
+      else
+         fail("Can't handle this rotation.");
+
+      if (take_out_double_45_rotation) {
+         if (arity == 8) {
+            vert ^= 1;
+         }
+         else {
+            // This is unfortunate.
+            setup ttt = z[0];
+            z[0] = z[2];
+            z[2] = z[3];
+            z[3] = z[1];
+            z[1] = ttt;
+         }
+      }
+
+      no_reuse_map = true;
    }
 
    const map::map_thing *final_map = (map::map_thing *) 0;
@@ -1215,6 +1272,7 @@ extern void divided_setup_move(
    // the incoming rotation into account.
 
    if (maps->map_kind == MPKIND__SPLIT ||
+       maps->map_kind == MPKIND__SPLIT_OTHERWAY_TOO ||
        maps->map_kind == MPKIND__NONISOTROP1 ||
        (arity == 2 &&
         (maps->map_kind == MPKIND__OFFS_L_HALF ||
@@ -1226,9 +1284,19 @@ extern void divided_setup_move(
 
       int fieldselect = (maps->vert ^ maps->rot) & 1;
 
-      uint16 field = result->result_flags.split_info[fieldselect];
-      if (field < 100)
-         result->result_flags.split_info[fieldselect] += (field+1) * (arity-1);
+      if (maps->map_kind == MPKIND__SPLIT_OTHERWAY_TOO) {
+         uint16 field = result->result_flags.split_info[fieldselect];
+         if (field < 100)
+            result->result_flags.split_info[fieldselect] += (field+1) * ((arity>>1)-1);
+         field = result->result_flags.split_info[fieldselect^1];
+         if (field < 100)
+            result->result_flags.split_info[fieldselect^1] += (field+1);
+      }
+      else {
+         uint16 field = result->result_flags.split_info[fieldselect];
+         if (field < 100)
+            result->result_flags.split_info[fieldselect] += (field+1) * (arity-1);
+      }
 
       // More stuff to do if this was a "parallelogram" type map.
       // Look at the "other" division.  If the call split things along
@@ -1441,7 +1509,7 @@ extern void do_phantom_2x4_concept(
    // We allow stuff like "dodge [split phantom lines zing]" from a butterfly.
    if (ss->kind == s2x2 &&
        ss->cmd.prior_elongation_bits == 3 &&
-       (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)) {
+       (ss->cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS)) {
       expand::expand_setup(expand_big2x2_4x4, ss);
    }
 
@@ -2616,7 +2684,7 @@ extern void distorted_move(
 
          // This line taken from do_matrix_expansion.  Would like to do it right.
          for (int i=0; i<MAX_PEOPLE; i++)
-            ss->people[i].id2 &= ~ID2_LESS_BITS_TO_CLEAR;
+            ss->people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
       }
 
       // Now we have the setup we want.
@@ -2881,7 +2949,7 @@ extern void distorted_move(
       // ***** What's this for????
       // Taken from do_matrix_expansion?  Then we *don't* need to do it?  At least, if did 3x4 -> 4x5?
       for (int i=0; i<MAX_PEOPLE; i++)
-         ss->people[i].id2 &= ~ID2_LESS_BITS_TO_CLEAR;
+         ss->people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
    }
    else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     // Only allow 50% offset.
@@ -3889,11 +3957,6 @@ extern void common_spot_move(
       for (i=0; i<=attr::klimit(map_ptr->partial_kind); i++) {
          int t = map_ptr->uncommon[i];
          if (t >= 0 && ss->people[t].id1) {
-
-            // These bits are not a property just of the person and his position
-            // in the formation -- they depend on other people's facing direction.
-            enum { ID2_BITS_NOT_INTRINSIC = ID2_FACING | ID2_NOTFACING };
-
             for (k=0; k<=attr::klimit(the_results[0].kind); k++) {
                if (the_results[0].people[k].id1 &&
                    ((the_results[0].people[k].id1 ^ ss->people[t].id1) & PID_MASK) == 0) {

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <18 Jan 2007 wba>
+@c Time-stamp: <23 Jun 2007 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.3
-@set title2 Database version = 37.3 format = 256
+@set title1 RELEASE NOTES FOR VERSION 37.4
+@set title2 Database version = 37.4 format = 263
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.4::
 * 37.3::
 * 37.2::
 * 37.1::
@@ -55,7 +56,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.3, Top, (dir)
+@node Intro, 37.4, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -66,11 +67,68 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2007 William B. Ackerman
 @sp 3
 @menu
-* 37.3::               Changes in the current version
+* 37.4::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.3, 37.2, Intro, Top
+@node 37.4, 37.3, Intro, Top
+@unnumberedsec Version 37.4 changes
+
+New concepts: @strong{two-faced}, or @strong{2-faced}.  This will make
+the warning go away if a call that normally expects a wave is called
+from a two-faced line.
+
+The meaning of "step to a [mini]-wave" was reworked.  See the FAQ file
+for details.  Briefly, people always step to right hands (or left hands
+if the @strong{left} modifier was given) even if the overall resulting
+setup is not a wave.  The various warnings related to this, and to doing
+things in a 2-faced line without the @strong{two-faced} concept, were
+made more accurate.
+
+The display colors with -no_intensify and -reverse_video were changed to be less intense.
+
+The program will be less likely to be confused by the difference between an alamo ring and "O" spots.
+
+A number of @strong{fractal} calls were improved.
+
+The ability to do things that involve 45 degree rotation was improved.
+
+The "2x5 matrix heads hinge" bug was fixed.
+
+The "echo split phantom waves rims trade back" bug was fixed.
+
+The "mirror split dixie" bug was fixed.
+
+The "unwrap the diamonds" bug was fixed.
+
+The "initially once removed all tie" bug was fixed.
+
+The "finally 1/2 sandwich" bug was fixed.
+
+Modifications to calls like @strong{motivate} now count as concepts for the purpose of @strong{echo}.
+That is, @strong{echo [cross back] er's motivate} and @strong{echo in roll motivate} work.
+
+An extremely stupid and embarrassing bug was fixed.  This bug probably
+never arose in practice.  Nevertheless, we apologize to anyone who
+called something in a T-boned butterfly and found the center 4 rotated
+improperly.
+
+Some minor bug fixes were made in calls like @strong{1/2 circulate} and @strong{split counter rotate}.
+
+A marginal/bogus use of extend (1/4 tag spots, miniwaves everywhere) is now allowed.  A warning
+is printed, of course.
+
+The call @strong{half sashay} may also be spelled @strong{1/2 sashay}.
+
+Unsymmetrical phantom bend the line, and unsymmetrical fudging of the result to a 4x4 matrix, and various
+things that can be done with the result, were improved.
+
+Various 3x3 and 4x4 rotates were fixed.
+
+Unsymmetrical bent lines and bent columns in a 4x4 (clumps) are now allowed.
+
+@c ************
+@node 37.3, 37.2, 37.4, Top
 @unnumberedsec Version 37.3 changes
 
 @b{MAJOR CHANGE}

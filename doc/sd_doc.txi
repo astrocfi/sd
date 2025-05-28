@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 37.3
-@set Time-stamp: April 8, 2007
+@set sd-version 37.4
+@set Time-stamp: June 12, 2007
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -1552,9 +1552,6 @@ The people selector popup contains various asymmetric selectors such as
 the @code{<ANYONE> do your part} concept to call @i{near column
 pass thru}, etc.  The resultant setup must be reasonable---shape-changers
 on one side of the set may lead to problems.
-Most calls have not been checked for
-robustness in the presence of asymmetrical setups.  Use this with care!
-The resolver checks all eight people, so it should work.
 If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
@@ -4339,7 +4336,7 @@ These are done from a 1x8 in which the two people at each end are ``bent''
 These are done from a variety of setups, in which the designated people
 form a recognizable ``double bent'' setup.
 @item bent C/L/W/B @r{(plural)}
-These are done from suitable setups.
+These are done from suitable setups, including unsymmetrical 4x4's occupied as ``clumps''.
 @item <ANYONE> in your trapezoid
 This is typically used in unsymmetrical setups.
 @item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
@@ -5726,6 +5723,7 @@ the tag to a diamond}.)  You will often need to use the
 @item near line / far line
 @item near column / far column
 @item near box / far box
+@item near 4 / far 4
 @item those facing the caller
 @item those facing away from the caller
 @item those facing the caller's left

@@ -666,6 +666,12 @@ void write_history_line(int history_index,
    if (this_item->test_one_warning_specific(warn__split_1x6))
       this_item->clear_one_warning_specific(warn__split_to_1x6s);
 
+   // Or "do your part" (that is, the "warn__dyp_or_2faced" version) and "you ought to say 2-faced".
+   // And don't say "do your part" twice.
+
+   if (this_item->test_one_warning_specific(warn__two_faced))
+      this_item->clear_one_warning_specific(warn__unusual_or_2faced);
+
    if (!ui_options.nowarn_mode) {
       for (w=0 ; w<warn__NUM_WARNINGS ; w++) {
          if (this_item->test_one_warning_specific((warning_index) w)) {
@@ -1110,7 +1116,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
          if (comma_after_next_concept == 2 && next_cptr) {
             skipped_concept_info foo;
-            foo.root_of_result_of_skip = (parse_block **) 0;
+            foo.m_root_of_result_of_skip = (parse_block **) 0;
 
             if (check_for_concept_group(next_cptr, foo, false))
                comma_after_next_concept = 3;    // Will try again later.
@@ -1990,8 +1996,6 @@ extern void initialize_parse()
 
 static void do_change_outfile(bool signal)
 {
-   char *GodDamnedPieceOfShitToGetTheMicrosoftDebuggerToShowMeThisSymbol = outfile_string;
-
    char newfile_string[MAX_FILENAME_LENGTH];
    char buffer[MAX_TEXT_LINE_LENGTH];
    sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string);

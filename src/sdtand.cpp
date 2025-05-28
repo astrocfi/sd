@@ -1950,7 +1950,7 @@ extern void tandem_couples_move(
                (orbit_in_eighths - ((tandstuff.virtual_result.rotation + tandstuff.vertical_people[vpi]) << 1)) & 7;
          }
 
-         if (fractional)
+         if (fractional || dynamic != 0)
             tandstuff.virtual_result.people[i].id1 &= ~STABLE_ALL_MASK;
       }
    }
