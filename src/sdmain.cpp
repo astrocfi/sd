@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.60"
-#define TIME_STAMP "wba@alum.mit.edu  5 Jul 2005 $"
+#define VERSION_STRING "36.61"
+#define TIME_STAMP "wba@alum.mit.edu  14 Aug 2005 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -59,8 +59,8 @@ and the following external variables:
 
 
 // We cause this string (that is, the concatentation of these strings) to appear
-// in the binary image of the program, so that the "what" and "ident" utilities
-// can print the version.
+// in the binary image of the program, so that the Unix "what" and "ident"
+// utilities can print the version.
 
 // We do not endorse those programs, or any probabilistic identification
 // mechanism -- we are simply trying to be helpful to those people who use them.
@@ -229,6 +229,7 @@ startup_list_menu_item startup_menu[] = {
    {"print current file",          start_select_print_current, ID_FILE_PRINTTHIS},
    {"print any file",              start_select_print_any, ID_FILE_PRINTFILE},
    {"initialize session file",     start_select_init_session_file, -1},
+   {"change to new style filename",start_select_change_to_new_style_filename, -1},
    {"change output file",          start_select_change_outfile, ID_COMMAND_CH_OUTFILE},
    {"change title",                start_select_change_title, ID_COMMAND_CH_TITLE},
    {(Cstring) 0}};

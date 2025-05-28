@@ -338,7 +338,7 @@ static void do_c1_phantom_move(
          fail("This call is not appropriate for use with phantom concept.");
 
       temp = *result;
-      clear_people(result);
+      result->clear_people();
       
       if (!(temp.people[0].id1 | temp.people[7].id1 | temp.people[8].id1 | temp.people[15].id1)) {
          (void) copy_person(result, 0, &temp, 1);
@@ -386,8 +386,8 @@ static void do_c1_phantom_move(
    setup2.kind = map_ptr->ikind;
    setup1.rotation = ss->rotation;
    setup2.rotation = ss->rotation+1;
-   clear_people(&setup1);
-   clear_people(&setup2);
+   setup1.clear_people();
+   setup2.clear_people();
 
    gather(&setup1, ss, map_ptr->map1, map_ptr->sizem1, 0);
    gather(&setup2, ss, map_ptr->map2, map_ptr->sizem1, 033);
@@ -2632,6 +2632,9 @@ static void do_concept_old_stretch(
       else if (result->kind == s1x4) {
          result->swap_people(1, 3);
       }
+      else if (result->kind == s3x4 && little_endian_live_mask(result) == 07171) {
+         result->swap_people(5, 11);
+      }
       else
          fail("Stretch call didn't go to a legal setup.");
    }
@@ -2754,6 +2757,10 @@ static void do_concept_new_stretch(
       tempsetup.swap_people(0, 1);
       tempsetup.swap_people(4, 5);
       maps = MAPCODE(s_trngl4,2,MPKIND__SPLIT,1);
+   }
+   else if (tempsetup.kind == s3x4 && little_endian_live_mask(&tempsetup) == 07171) {
+      tempsetup.swap_people(5, 11);
+      maps = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
    }
    else
       fail("Stretched setup call didn't start in appropriate setup.");
@@ -3685,7 +3692,7 @@ static void do_concept_checkerboard(
    int offset = -1;
    setup_kind kn = (setup_kind) parseptr->concept->arg1;
 
-   clear_people(result);
+   result->clear_people();
 
    if (parseptr->concept->arg2 == 1) {
       // This is "shadow <setup>"
@@ -4425,7 +4432,7 @@ static void do_concept_trace(
 
    for (i=0 ; i<4 ; i++) {
       a[i] = *ss;
-      clear_people(&a[i]);
+      a[i].clear_people();
       a[i].kind = s2x2;
       a[i].rotation = 0;
    }
@@ -4452,8 +4459,8 @@ static void do_concept_trace(
    }
 
    finalresultflags = get_multiple_parallel_resultflags(res, 4);
-   clear_people(&outer_inners[1]);
-   clear_people(&outer_inners[0]);
+   outer_inners[1].clear_people();
+   outer_inners[0].clear_people();
 
    // Check that everyone is in a 2x2 or vertically oriented 1x4.
 
@@ -4589,7 +4596,7 @@ static void do_concept_outeracting(
    temp = *ss;
    temp.kind = s2x4;
    temp.rotation++;
-   clear_people(&temp);
+   temp.clear_people();
 
    if (ss->kind != s_qtag)
       fail("Must have 1/4 tag to do this concept.");
@@ -5511,7 +5518,7 @@ static void do_concept_all_8(
               ((tbends & 1) == 0 && (tbctrs & 010) == 0))) {   /* Like an alamo column. */
             setup temp = *ss;
             ss->kind = s4x4;
-            clear_people(ss);
+            ss->clear_people();
             scatter(ss, &temp, expander, 7, 0);
             canonicalize_rotation(ss);
          }
@@ -7172,7 +7179,7 @@ extern bool do_big_concept(
    parse_block *this_concept_parse_block = orig_concept_parse_block;
    const conzept::concept_descriptor *this_concept = this_concept_parse_block->concept;
    concept_kind this_kind = this_concept->kind;
-   concept_table_item *this_table_item = &concept_table[this_kind];
+   const concept_table_item *this_table_item = &concept_table[this_kind];
 
    // Take care of combinations like "mystic triple waves".
 
@@ -7250,7 +7257,7 @@ extern bool do_big_concept(
 
    if (this_concept->level > calling_level) warn(warn__bad_concept_level);
 
-   clear_people(result);
+   result->clear_people();
 
    if (this_table_item->concept_prop & CONCPROP__SET_PHANTOMS)
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -7424,7 +7431,7 @@ extern bool do_big_concept(
 
 // Beware!!  This table must be keyed to definition of "concept_kind" in sd.h .
 
-concept_table_item concept_table[] = {
+const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_another_call_next_mod
    {0, 0},                                                  // concept_mod_declined
    {0, 0},                                                  // marker_end_of_list

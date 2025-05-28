@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.60
-@set title2 Database version = 36.60 format = 233
+@set title1 RELEASE NOTES FOR VERSION 36.61
+@set title2 Database version = 36.61 format = 235
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.61::
 * 36.60::
 * 36.59::
 * 36.58::
@@ -63,7 +64,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.60, Top, (dir)
+@node Intro, 36.61, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -74,11 +75,55 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2005 William B. Ackerman
 @sp 3
 @menu
-* 36.60::               Changes in the current version
+* 36.61::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.60, 36.59, Intro, Top
+@node 36.61, 36.60, Intro, Top
+@unnumberedsec Version 36.61 changes
+
+A mechanism has been added to facilitate changing from ``old style''
+file names to ``new style''.  The new style file names are names like
+``13aug05_c1.txt'' or ``sequence_c1.txt''.  The old style file names
+were like ``13aug05.c1'' or ``sequence.c1''.  The new names are better
+suited for use on modern operating systems, such as Windows 95 or later,
+but most session files specify the legacy names.  If you want to change
+your session file to specify the new names, give the command
+@strong{change to new style filename} right after starting the program
+(@code{Sdtty} or @code{Sd}.)  See the manual or the FAQ file for further
+details.
+
+The definitions of @strong{strut left}, @strong{strut right and left},
+and @strong{strut left and right} were fixed.  The initial pass thru for
+the centers is @i{always} right shoulder.
+
+A number of bugs (a few of which could cause a crash) were fixed in the
+following areas.  If you recognize your bug, it's been fixed.  If not,
+it's not worth going into the details---these are all quite obscure.
+@example
+@group
+    "keep all pictures"
+    twist the line
+    change lanes
+    nuclear reaction
+    prefer the <anyone>, out roll circulate
+    cut the interlocked diamond
+    stretch, and stretched setup, with 3x1 triangles
+    3x1 and 1x3 checkmate
+    <ATC> and scatter reaction
+    grand chain 8
+@end group
+@end example
+
+
+
+
+
+
+
+
+@c ************
+@node 36.60, 36.59, 36.61, Top
 @unnumberedsec Version 36.60 changes
 
 The program can do a few more rewinds.  It does not do rewinds by
@@ -203,7 +248,7 @@ A bug that might have made the program slow to start on Linux was fixed.
 
 The program handles "curried metaconcepts".  This means that one can
 do things like @strong{finally checkpoint recycle by 1/4 thru}.  The
-@strong{checkpoint} concept normally takes two subject calls--@strong{recycle}
+@strong{checkpoint} concept normally takes two subject calls---@strong{recycle}
 and @strong{1/4 thru} in this case.  When the concept is used under a metaconcept
 (@strong{finally} in this case), the metaconcept applies only to the second
 call.  The first call is treated as though it is an integral part of the
@@ -527,7 +572,7 @@ in the manual.  Briefly, if you have been using an abridge list and want
 to add it to a session, you can check the ``Use abridged list''
 checkbox, and fill in the abridgement file name, when @code{Sd} starts,
 before selecting the session.  The abridgement file will now be
-associated with that session.  The association will be permanent--this
+associated with that session.  The association will be permanent---this
 step will not be required again.
 
 The program now recognizes that @kbd{all 8 recycle} can mean either the
@@ -590,7 +635,7 @@ to ignore these operations when no characters have been typed in the
 current command.  When no characters have been typed, the number of
 possible commands that need to be listed is huge.  It used to take a
 long time to do this.  Modern computers are fast enough that this is
-no longer a problem.  This change does not affect Sdtty--Sdtty has always
+no longer a problem.  This change does not affect Sdtty---Sdtty has always
 acted on "?" and "!" even when no characters have been typed.
 
 The program can handle obscure and problematical cases of just the centers
@@ -861,7 +906,7 @@ For example, from parallelogram lines back-to-back, you can have the
 people in the outer triple boxes do a cross fold, creating an 8-chain
 formation.  The designator to use for these people is ``outer pairs'',
 if simpler things like ``girls'' won't work.  We don't recommend actually
-saying ``outer pairs'' --- it is simply the notation that the program uses.
+saying ``outer pairs''---it is simply the notation that the program uses.
 
 The program handles @kbd{triple waves switch to a Z} correctly.
 
@@ -1028,7 +1073,7 @@ New concept: @code{common spot point-to-point diamonds}.
 This is done from the setup that would be obtained after
 certain fractional exchanges from point-to-point diamonds.
 Note that @code{switch to a diamond} and @code{diamond circulate}
-never produce this setup -- the Callerlab C1 definitions specifically
+never produce this setup---the Callerlab C1 definitions specifically
 state that the colliding people center themselves.
 
 The program can now handle parallelogram diamonds.  That is,
@@ -1326,7 +1371,7 @@ to whatever is last done by the centers.  This is already commonly recognized fo
 calls such as @samp{chain reaction} and @samp{tally ho}.  @code{Sd} now applies
 it to calls like @samp{load the boat} and @samp{square the bases}
 (replace the final centers' @samp{pass thru}) and @samp{percolate} (replace
-the final centers' cross).
+the final centers' hinge and cross).
 
 This convention does not apply universally.  There are a number of existing uses in
 which the ``but'' call is done by everyone, or is not just the very last thing:

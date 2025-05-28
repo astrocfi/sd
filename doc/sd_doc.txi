@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.60
-@set Time-stamp: July 5, 2005
+@set sd-version 36.61
+@set Time-stamp: August 14, 2005
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -179,6 +179,7 @@ Miscellaneous Commands
 * Save Sequence::               Saving the Sequence
 * Change Output File::          Changing the Output File
 * Change Title::                Changing the Title
+* Change File Name Style::      Changing to the New File Name Style
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
@@ -2339,6 +2340,7 @@ sequences.
 * Save Sequence::               Saving the Sequence
 * Change Output File::          Changing the Output File
 * Change Title::                Changing the Title
+* Change File Name Style::      Changing to the New File Name Style
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
@@ -2368,7 +2370,7 @@ Just resolving isn't enough.
 @section Changing the Output File
 
 You can change the name of the file to which the program writes its
-output by selecting the @code{Change output file} command.  A popup
+output by selecting the @code{change output file} command.  A popup
 will appear, prompting you for a new file name, or @code{Sdtty} will
 ask you to type in the new name.  This action will become
 effective the next time a sequence is written out.  Sequences previously
@@ -2378,7 +2380,7 @@ When the initialization file is used (@pxref{The Initialization File}),
 any change in the output file name will
 be written back to the init file at the end of the session.
 
-@node Change Title, Abort/Exit/Undo, Change Output File, Miscellaneous Commands
+@node Change Title, Change File Name Style, Change Output File, Miscellaneous Commands
 @section Changing the Title
 
 You can change the title that will appear at the top of each sequence
@@ -2395,7 +2397,42 @@ file was used.  @xref{The Initialization File}.
 When the initialization file is used, any change in the title will
 be written back to the init file at the end of the session.
 
-@node Abort/Exit/Undo, Inserting Comments, Change Title, Miscellaneous Commands
+@node Change File Name Style, Abort/Exit/Undo, Change Title, Miscellaneous Commands
+@section Changing to the New File Name Style
+
+Prior to version 34.6, when support for DOS and Windows 3.1 were
+withdrawn, the program used names for the transcript (output) files in
+an ``old'' style, which looked like ``13aug05.c1'' or ``sequence.c1''.
+It now supports a ``new'' style, which looks like ``13aug05_c1.txt'' or
+``sequence_c1.txt''.  (The names with dates in them are what you get if
+you use the ``+'' file name.  @xref{Session Control}.)
+
+The part after the period is called the "extension".  When using
+modern operating systems, it is very helpful for files to
+have a correct extension, and ".txt" is the right extension for these
+files.  For example, attaching files in email messages is sometimes
+facilitated by having the ".txt" extension.
+
+Whether you use old or new style file names is controlled by your
+initialization (session) file, in the options @code{new_style_filename}
+or @code{old_style_filename}.  @xref{Option Control}.
+
+There is a command to change the style specified in your initialization
+file from old to new.  The command is ``change to new style
+filename''.  It must be given when the program starts, not when it is in
+the middle of a sequence.  After giving the command, you must exit the
+program and restart it.
+
+When you change to new style file names, no previously written files
+will be renamed.  Only newly created files will have the new names.
+Also, no pre-existing sessions that use explicit old style names (e.g.
+``sequence.c1'') will have those names changed.  (You may change the
+explicit names used by existing sessions with the ``change output
+file'' command.)  Pre-existing sessions that use the ``+'' or ``*'' file
+name will be changed to the new style for all future sequences, based on
+the date.
+
+@node Abort/Exit/Undo, Inserting Comments, Change File Name Style, Miscellaneous Commands
 @section @code{Abort}, @code{Exit}, and @code{Undo}
 
 If you select the @code{exit} command, the program will exit.  If a

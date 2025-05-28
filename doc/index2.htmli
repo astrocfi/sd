@@ -7,7 +7,7 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 36.60</strong>, released on July 5, 2005.
+<strong>The current version of Sd/Sdtty is 36.61</strong>, released on August 14, 2005.
 <br>
 <p align="center">
 There is a new "Frequently Asked Questions" (FAQ) file.
@@ -19,6 +19,7 @@ Source files are available below.
 <dl>
 <dt>
 <font size="+1">Hints for inexperienced users:</font></dt>
+<p>
 (1) You may find that Sd is more user-friendly than Sdtty, particularly if you
 are having trouble with sessions or abridgement files.  It will show you the
 startup options more clearly.  You can type commands at Sd the same way you

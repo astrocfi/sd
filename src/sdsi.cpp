@@ -35,6 +35,7 @@
 and the following external variables:
 
    session_index
+   rewrite_with_new_style_filename
    random_number
    database_filename
    new_outfile_string
@@ -93,7 +94,8 @@ and the following external variables:
    the session file is in use, and the final state should be written back
    to it at that line. */
 
-int session_index = 0;        /* If this is nonzero, we have opened a session. */
+int session_index = 0;        // If this is nonzero, we have opened a session.
+bool rewrite_with_new_style_filename = false;   // User gave "change to new file format".
 
 /* e1 = page up
    e2 = page down

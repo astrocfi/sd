@@ -1467,15 +1467,17 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "base_tag_call_flip"},  // "flip"
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
-      {0, "chreact_1"},      /* This is used for propagating the hinge info
-                                for part 2 of chain reaction. */
-      {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info
-                                for part 2 of make a pass. */
+      {0, "chreact_1"},      // This is used for propagating the hinge info
+                             // for part 2 of chain reaction.
+      {0, "makepass_1"},     // This is used for propagating the cast off 3/4 info
+                             // for part 2 of make a pass.
+      {0, "nuclear_1"},      // Same, for part 2 of nuclear reaction.
       {0, "scootback"},
       {0, "scootbacktowave"},
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "trade"},
+      {0, "remake"},
       {0, "passthru"},       /* To tell how to do "12_16_matrix_means_split". */
       {0, "check_cross_counter"},
       {0, "lockit"},
@@ -2396,6 +2398,11 @@ def2:
          }
          else if (!strcmp(tok_str, "controversial")) {
             callarray_flags2 |= CAF__RESTR_CONTROVERSIAL;
+            get_tok();
+            if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
+         }
+         else if (!strcmp(tok_str, "assume_dpt")) {
+            callarray_flags2 |= CAF__RESTR_ASSUME_DPT;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }

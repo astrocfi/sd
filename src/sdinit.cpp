@@ -1425,7 +1425,7 @@ static int write_back_session_line(FILE *wfile)
 
 static void rewrite_init_file()
 {
-   if (session_index != 0) {
+   if (session_index != 0 || rewrite_with_new_style_filename) {
       char line[MAX_FILENAME_LENGTH];
       FILE *rfile;
       FILE *wfile;
@@ -1448,13 +1448,56 @@ static void rewrite_init_file()
             else {
                bool more_stuff = false;
 
+               if (rewrite_with_new_style_filename) {
+                  // Search for the "[Options]" indicator, copying stuff that we skip.
+
+                  for (;;) {
+                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+                     if (fputs(line, wfile) == EOF) goto copy_failed;
+                     if (!strncmp(line, "[Options]", 9)) break;
+                     else if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
+                  }
+
+                  bool got_the_command = false;
+
+                  for (;;) {
+                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+
+                     if (!strncmp(line, "new_style_filename", 18))
+                        got_the_command = true;
+
+                     if (line[0] == '\n' || !strncmp(line, "[Sessions]", 10)) {
+                        // At the end of the section.
+                        if (!got_the_command) {
+                           if (fputs("new_style_filename\n", wfile) == EOF) goto copy_failed;
+                        }
+
+                        if (fputs("\n", wfile) == EOF) goto copy_failed;
+
+                        if (line[0] == '\n')
+                           goto search_for_sessions;
+                        else
+                           goto got_sessions;
+                     }
+
+                     // Don't copy this line is it is "old_style".
+                     if (strncmp(line, "old_style_filename", 18)) {
+                        if (fputs(line, wfile) == EOF) goto copy_failed;
+                     }
+                  }
+               }
+
                // Search for the "[Sessions]" indicator, copying stuff that we skip.
+
+            search_for_sessions:
 
                for (;;) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
                   if (fputs(line, wfile) == EOF) goto copy_failed;
-                  if (!strncmp(line, "[Sessions]", 10)) break;
+                  if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
                }
+
+            got_sessions:
 
                for (i=0 ; ; i++) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
@@ -1488,11 +1531,11 @@ static void rewrite_init_file()
 
                goto copy_done;
 
-               copy_failed:
+            copy_failed:
 
                printf("Failed to write to '" SESSION_FILENAME "'\n");
 
-               copy_done:
+            copy_done:
 
                fclose(wfile);
             }
@@ -2450,7 +2493,7 @@ extern bool open_session(int argc, char **argv)
             do_accelerator_spec(q, true);
       }
       else {
-         Cstring *q;
+         const Cstring *q;
          for (q = concept_key_table ; *q ; q++)
             do_accelerator_spec(*q, true);
       }

@@ -2355,7 +2355,6 @@ int match_user_input(
    GLOB_exact_count = 0;
    GLOB_lowest_yield_depth = 999;
    GLOB_showing = show;
-   GLOB_verify = show_verify;
    GLOB_echo_stuff[0] = 0;   // Needed if no matches or user input is empty.
    GLOB_yielding_matches = 0;
    GLOB_match.valid = false;
@@ -2370,9 +2369,13 @@ int match_user_input(
       else if (*p == ']') GLOB_user_bracket_depth--;
    }
 
+   GLOB_verify = false;
+
    if (static_call_menu >= 0) {
+      GLOB_verify = show_verify;
       search_menu(ui_call_select);
       search_menu(ui_concept_select);
+      GLOB_verify = false;
       search_menu(ui_command_select);
    }
    else

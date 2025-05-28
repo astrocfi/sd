@@ -216,7 +216,7 @@ static void fix_missing_centers(
          inners[i].kind = kki;
          inners[i].rotation = 0;
          inners[i].result_flags = outers->result_flags;
-         clear_people(&inners[i]);
+         inners[i].clear_people();
       }
       else if (inners[i].kind != kki && enforce_kk)
          fail("Don't recognize concentric ending setup.");
@@ -269,7 +269,7 @@ bool conc_tables::analyze_this(
             // Need to flip alternating triangles upside down.
             if (lmap_ptr->insetup == s_trngl && (m&1)) rr ^= 2;
 
-            clear_people(&inners[m]);
+            inners[m].clear_people();
             inners[m].kind = lmap_ptr->insetup;
             inners[m].rotation = (0-rr) & 3;
             gather(&inners[m], ss, &lmap_ptr->maps[m*inlim], inlim-1, rr * 011);
@@ -463,7 +463,7 @@ extern void normalize_concentric(
    uint32 orig_elong_is_controversial = outer_elongation & CONTROVERSIAL_CONC_ELONG;
    outer_elongation &= ~CONTROVERSIAL_CONC_ELONG;
 
-   clear_people(result);
+   result->clear_people();
    result->result_flags = get_multiple_parallel_resultflags(outer_inners, center_arity+1);
 
    // Only the first setup (centers) counts when check for space invasion.
@@ -622,7 +622,7 @@ extern void normalize_concentric(
       }
       else if (i0p->kind == nothing) {
          if (outers->kind == sdmd) {
-            clear_people(i0p);
+            i0p->clear_people();
             i0p->kind = s2x2;
             i0p->rotation = 0;
             *i1p = *i0p;
@@ -698,10 +698,10 @@ extern void normalize_concentric(
       else if (i0p->kind == nothing && outer_elongation == 2) {
          i0p->kind = s2x3;
          i0p->rotation = 0;
-         clear_people(i0p);
+         i0p->clear_people();
          i1p->kind = s2x3;
          i1p->rotation = 0;
-         clear_people(i1p);
+         i1p->clear_people();
          // Compute the rotation again.
          i = (i0p->rotation - outers->rotation) & 3;
       }
@@ -741,10 +741,10 @@ extern void normalize_concentric(
       else if (i0p->kind == nothing && outer_elongation == 2) {
          i0p->kind = s2x4;
          i0p->rotation = 0;
-         clear_people(i0p);
+         i0p->clear_people();
          i1p->kind = s2x4;
          i1p->rotation = 0;
-         clear_people(i1p);
+         i1p->clear_people();
       }
       else
          fail("Can't figure out what to do.");
@@ -776,14 +776,14 @@ extern void normalize_concentric(
          inners[0].kind = outers->kind;
          inners[0].rotation = outers->rotation;
          inners[0].result_flags = outers->result_flags;
-         clear_people(&inners[0]);
+         inners[0].clear_people();
          i = 0;
       }
       else if (outers->kind == nothing) {
          outers->kind = inners[0].kind;
          outers->rotation = inners[0].rotation;
          outers->result_flags = inners[0].result_flags;
-         clear_people(outers);
+         outers->clear_people();
          i = 0;
       }
       break;
@@ -795,7 +795,7 @@ extern void normalize_concentric(
          inners[0].kind = s_star;
          inners[0].rotation = 0;
          inners[0].result_flags = outers->result_flags;
-         clear_people(&inners[0]);
+         inners[0].clear_people();
          goto compute_rotation_again;
       }
       else if (inners[0].kind == sdmd && outers->kind == nothing) {
@@ -803,7 +803,7 @@ extern void normalize_concentric(
          outers->kind = s1x4;
          outers->rotation = inners[0].rotation;
          outers->result_flags = inners[0].result_flags;
-         clear_people(outers);
+         outers->clear_people();
          goto compute_rotation_again;
       }
       break;
@@ -815,21 +815,21 @@ extern void normalize_concentric(
          outers->kind = s_star;
          outers->rotation = 0;
          outers->result_flags = inners[0].result_flags;
-         clear_people(outers);
+         outers->clear_people();
          goto compute_rotation_again;
       }
       else if (outers->kind == nothing && inners[0].kind == s_star) {
          outers->kind = s1x4;
          outers->rotation = outer_elongation-1;
          outers->result_flags = inners[0].result_flags;
-         clear_people(outers);
+         outers->clear_people();
          goto compute_rotation_again;
       }
       else if (outers->kind == s1x4 && inners[0].kind == nothing) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
          inners[0].result_flags = outers->result_flags;
-         clear_people(&inners[0]);
+         inners[0].clear_people();
          goto compute_rotation_again;
       }
 
@@ -928,7 +928,7 @@ extern void normalize_concentric(
          }
 
          inners[0].result_flags = outers->result_flags;
-         clear_people(&inners[0]);
+         inners[0].clear_people();
          for (int j=1 ; j<center_arity ; j++) inners[j] = inners[0];
          i = 0;
       }
@@ -943,7 +943,7 @@ extern void normalize_concentric(
             outers->rotation = inners[0].rotation;
          }
          outers->result_flags = inners[0].result_flags;
-         clear_people(outers);
+         outers->clear_people();
          i = 0;
       }
 
@@ -1084,8 +1084,8 @@ static calldef_schema concentrify(
 
    *outer_elongation = 1;   //  **** shouldn't these be -1????
    *xconc_elongation = 1;
-   clear_people(outers);
-   clear_people(&inners[0]);
+   outers->clear_people();
+   inners[0].clear_people();
 
    // It will be helpful to have a mask of where the live people are.
 
@@ -1700,7 +1700,7 @@ static bool fix_empty_outers(
       // in the stars.
 
       result_outer->kind = s1x4;
-      clear_people(result_outer);
+      result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = 0;
    }
@@ -1712,20 +1712,20 @@ static bool fix_empty_outers(
       // when everyone is in the stars.
 
       result_outer->kind = s2x3;
-      clear_people(result_outer);
+      result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->result_flags.misc |= 1;
       result_outer->rotation = 1;
    }
    else if (analyzer == schema_checkpoint) {
       result_outer->kind = s2x2;
-      clear_people(result_outer);
+      result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = 0;
    }
    else if (analyzer == schema_in_out_triple_squash) {
       result_outer->kind = s2x2;
-      clear_people(result_outer);
+      result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = 0;
    }
@@ -1740,7 +1740,7 @@ static bool fix_empty_outers(
       case s3x1dmd:
          result_outer->kind = s2x2;
          result_outer->rotation = 0;
-         clear_people(result_outer);
+         result_outer->clear_people();
          // Set their "natural" elongation perpendicular to their original diamond.
          // The test for this is 1P2P; touch 1/4; column circ; boys truck; split phantom
          // lines tag chain thru reaction.  They should finish in outer triple boxes,
@@ -1824,20 +1824,44 @@ static bool fix_empty_outers(
          // diamond chain through work from columns far apart, among
          // other things.
 
-         // Make sure these people go to the same spots,
-         // and remove possibly misleading info.
+         call_with_name *the_call = begin_outer->cmd.callspec;   // Might be null pointer.
+
+         // ***** We have a bug (well, a not completely correct situation) here.
+         // From a split phantom boxes with everyone as ends of waves in their
+         // split phantom boxes, if we say "split phantom boxes change lanes",
+         // it should refuse to do it unless we said "assume waves" or something
+         // like that.  Otherwise, how does it know that the phantom centers
+         // aren't T-boned, and hence go into the other spaces when they spread?
+         // (BTW, if we are in columns far apart and we say "split phantom waves
+         // change lanes", there is an implicit "assume waves", so we should win
+         // anyway.)
+         //
+         // Now the correct way to handle this is *NOT* to change localmods1 in
+         // the way it is done just below, in the cases of "nothing", "nothing_noroll",
+         // "trade", or "remake".  Leave it as it is in those cases.  (And probably
+         // other cases too.)  We then need to have "fix_empty_outers" (that's us) set
+         // "final_outers_finish_dirs" with the directions those phantoms would have
+         // had if (a) we know that the call was one of the four that we are discussing,
+         // and (b) we know, from an assumption, what direction those phantoms should
+         // have been known to have at the start.
+         // (Note that "final_outers_finish_dirs"  was computed to be zero just before
+         // we got called.  It would need to be passed in to us as a writeable variable.)
+         //
+         // But this is no worse than lots of other places where this program, and
+         // humans, make assumptions about "normal" situations.
+
+         // Make sure these people go to the same spots, and remove possibly misleading info.
          localmods1 |= DFM1_CONC_FORCE_SPOTS;
          localmods1 &= ~(DFM1_CONC_FORCE_LINES |
                          DFM1_CONC_FORCE_COLUMNS |
                          DFM1_CONC_FORCE_OTHERWAY);
 
-         call_with_name *the_call = begin_outer->cmd.callspec;   // Might be null pointer.
-
          if (the_call && (the_call->the_defn.schema == schema_nothing ||
                           the_call->the_defn.schema == schema_nothing_noroll))
-            ;        // It's OK, the call was "nothing"
-         else if (the_call == base_calls[base_call_trade])
-            ;        // It's OK, the call was "trade"
+            ;        // It's OK, the call was "nothing".
+         else if (the_call == base_calls[base_call_trade] ||
+                  the_call == base_calls[base_call_remake])
+            ;        // It's OK, the call was "trade" or "remake".
          else if (the_call == base_calls[base_call_circulate] &&
                   cmdout && cmdout->cmd_final_flags.test_heritbit(INHERITFLAG_HALF) &&
                   cmdout->cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
@@ -1884,7 +1908,7 @@ static bool fix_empty_outers(
    if (cmdin == cmdout && analyzer == schema_in_out_triple) {
       result_outer->kind = result_inner[0].kind;
       result_outer->rotation = result_inner[0].rotation;
-      clear_people(result_outer);  // Do we need this?  Maybe the result setup got bigger.
+      result_outer->clear_people();  // Do we need this?  Maybe the result setup got bigger.
    }
 
    return false;
@@ -1902,7 +1926,7 @@ static bool fix_empty_inners(
    setup *result)
 {
    for (int i=0 ; i<center_arity ; i++) {
-      clear_people(&result_inner[i]);    // This is always safe.
+      result_inner[i].clear_people();    // This is always safe.
       clear_result_flags(&result_inner[i]);
    }
 
@@ -2795,7 +2819,7 @@ extern void concentric_move(
              !(result_ptr->people[1].id1 | result_ptr->people[3].id1)) {
          }
          else if (result_ptr->kind == nothing) {
-            clear_people(result_ptr);
+            result_ptr->clear_people();
          }
          else
             fail("Can't make a diamond out of this.");
@@ -3593,7 +3617,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
          static const veryshort matrixmap2[8] = {10, 15, 3, 1, 2, 7, 11, 9};
          // Make this an instance of expand_setup.
          result->kind = s4x4;
-         clear_people(result);
+         result->clear_people();
          scatter(result, res1, matrixmap1, 7, 011);
          install_scatter(result, 8, matrixmap2, res2, 0);
       }
@@ -3606,7 +3630,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
          uint32 t4 = mask1 & 0xCC;
 
          result->kind = s_c1phan;
-         clear_people(result);
+         result->clear_people();
          scatter(result, res1, phanmap1, 7, 011);
          scatter(result, res2, phanmap2, 7, 0);
 
@@ -3689,7 +3713,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       *result = *res2;
       result->rotation += the_map->orot;
       result->kind = the_map->innerk;
-      clear_people(result);
+      result->clear_people();
       scatter(result, res2, the_map->outermap, attr::slimit(res2),
               ((-the_map->orot) & 3) * 011);
       r -= the_map->orot;
@@ -3704,7 +3728,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       rot = 033;
    }
    outer_inners[0] = *res2;
-   clear_people(&outer_inners[0]);
+   outer_inners[0].clear_people();
    gather(&outer_inners[0], res2, the_map->outermap, attr::slimit(res2), rot);
    canonicalize_rotation(&outer_inners[0]);
 
@@ -3715,7 +3739,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       rot = 033;
    }
    outer_inners[1] = *res1;
-   clear_people(&outer_inners[1]);
+   outer_inners[1].clear_people();
    gather(&outer_inners[1], res1, the_map->innermap, attr::slimit(res1), rot);
    canonicalize_rotation(&outer_inners[1]);
    normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, 0, result);
@@ -4479,7 +4503,7 @@ extern void inner_selective_move(
       {6, 11, 15, 10, 14, 3, 7, 2, 011, 011, 022, 022, 011, 011, 022, 022};
 
       the_setups[0] = *ss;        // Use this all over again.
-      clear_people(&the_setups[0]);
+      the_setups[0].clear_people();
       the_setups[0].kind = s2x4;
 
       uint32 dirmask, junk;
@@ -5091,7 +5115,7 @@ back_here:
          if (fix_n_results(numsetups, -1, lilresult, rotstate, pointclip)) goto lose;
          if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 
-         clear_people(this_result);
+         this_result->clear_people();
 
          this_result->result_flags =
             get_multiple_parallel_resultflags(lilresult, numsetups);

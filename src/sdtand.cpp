@@ -765,7 +765,7 @@ static bool pack_us(
    uint32 m, sgl;
    int virt_index = -1;
 
-   clear_people(&tandstuff->virtual_setup);
+   tandstuff->virtual_setup.clear_people();
    tandstuff->virtual_setup.rotation = map_ptr->rot & 1;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
@@ -942,7 +942,7 @@ extern void tandem_couples_move(
    tandstuff.single_mask = 0;
    tandstuff.no_unit_symmetry = false;
    tandstuff.phantom_pairing_ok = phantom_pairing_ok;
-   clear_people(result);
+   result->clear_people();
    remove_z_distortion(ss);
 
    if (mxn_bits != 0) {

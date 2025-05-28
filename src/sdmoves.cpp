@@ -255,12 +255,95 @@ extern bool divide_for_magic(
    static const expand::thing expl27 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0};
    static const expand::thing expl72 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0};
 
+   struct Nx1_checker {
+      uint32 directions;
+      const expand::thing *action_if_Nx1;
+      const expand::thing *action_if_1xN;
+   };
+
+   static const Nx1_checker Nx1_checktable_2x4[] = {
+      {0x2A80, &exp27, &exp27},  // These are independent of whether we said "1x3" or "3x1".
+      {0x802A, &exp27, &exp27},
+      {0x7FD5, &exp27, &exp27},
+      {0xD57F, &exp27, &exp27},
+      {0xA802, &exp72, &exp72},
+      {0x02A8, &exp72, &exp72},
+      {0xFD57, &exp72, &exp72},
+      {0x57FD, &exp72, &exp72},
+      {0x208A, &exp35, &exp35},
+      {0x8A20, &exp35, &exp35},
+      {0x75DF, &exp35, &exp35},
+      {0xDF75, &exp35, &exp35},
+      {0xA208, &exp56, &exp56},
+      {0x08A2, &exp56, &exp56},
+      {0xF75D, &exp56, &exp56},
+      {0x5DF7, &exp56, &exp56},
+      {0x55FF, &exp27, &exp72},  // These are specific to "1x3" or "3x1".
+      {0x00AA, &exp27, &exp72},
+      {0xFF55, &exp72, &exp27},
+      {0xAA00, &exp72, &exp27},
+      {0}};
+
+   static const Nx1_checker Nx1_checktable_1x8[] = {
+      {0x2A80, &expg27, &expg27},  // These are independent of whether we said "1x3" or "3x1".
+      {0x802A, &expg27, &expg27},
+      {0x7FD5, &expg27, &expg27},
+      {0xD57F, &expg27, &expg27},
+      {0xA208, &expg72, &expg72},
+      {0x08A2, &expg72, &expg72},
+      {0xF75D, &expg72, &expg72},
+      {0x5DF7, &expg72, &expg72},
+      {0x208A, &expg35, &expg35},
+      {0x8A20, &expg35, &expg35},
+      {0x75DF, &expg35, &expg35},
+      {0xDF75, &expg35, &expg35},
+      {0xA802, &expg56, &expg56},
+      {0x02A8, &expg56, &expg56},
+      {0xFD57, &expg56, &expg56},
+      {0x57FD, &expg56, &expg56},
+      {0x55FF, &expg27, &expg72},  // These are specific to "1x3" or "3x1".
+      {0x00AA, &expg27, &expg72},
+      {0xFF55, &expg72, &expg27},
+      {0xAA00, &expg72, &expg27},
+      {0}};
+
+   static const Nx1_checker Nx1_checktable_2x3[] = {
+      {01240, &exp25, &exp25},  // These are independent of whether we said "1x2" or "2x1".
+      {04012, &exp25, &exp25},
+      {03765, &exp25, &exp25},
+      {06537, &exp25, &exp25},
+      {05002, &exp52, &exp52},
+      {00250, &exp52, &exp52},
+      {07527, &exp52, &exp52},
+      {02775, &exp52, &exp52},
+      {02577, &exp25, &exp52},  // These are specific to "1x2" or "2x1".
+      {00052, &exp25, &exp52},
+      {07725, &exp52, &exp25},
+      {05200, &exp52, &exp25},
+      {0}};
+
+   static const Nx1_checker Nx1_checktable_1x6[] = {
+      {01240, &expl13, &expl13},  // These are independent of whether we said "1x2" or "2x1".
+      {04012, &expl13, &expl13},
+      {03765, &expl13, &expl13},
+      {06537, &expl13, &expl13},
+      {05002, &expl31, &expl31},
+      {00250, &expl31, &expl31},
+      {07527, &expl31, &expl31},
+      {02775, &expl31, &expl31},
+      {02577, &expl13, &expl31},  // These are specific to "1x2" or "2x1".
+      {00052, &expl13, &expl31},
+      {07725, &expl31, &expl13},
+      {05200, &expl31, &expl13},
+      {0}};
+
    warning_info saved_warnings;
    int i;
    uint32 division_code;
    uint32 resflagsmisc = 0;
    uint32 directions;
-   uint32 livemask;
+   uint32 dblbitlivemask;
+   const Nx1_checker *getin_search;
 
    uint32 heritflags_to_use = ss->cmd.cmd_final_flags.herit;
 
@@ -346,158 +429,66 @@ extern bool divide_for_magic(
        heritflags_to_check == INHERITFLAGMXNK_1X3 ||
        heritflags_to_check == INHERITFLAGMXNK_2X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X2) {
-      directions = 0;
-      livemask = 0;
-
-      for (i=0; i<=attr::slimit(ss); i++) {
-         uint32 p = ss->people[i].id1;
-         livemask <<= 1;
-         if (p) livemask |= 1;
-         directions = (directions<<2) | (p&3);
-      }
+      get_directions(ss, directions, dblbitlivemask);
 
       if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
           heritflags_to_check == INHERITFLAGMXNK_1X3) {
          if (ss->kind == s2x4) {
-            if (livemask != 0xFF) return false;
-
-            // These are independent of whether we said "1x3" or "3x1".
-            if (directions == 0x2A80 || directions == 0x802A ||
-                directions == 0x7FD5 || directions == 0xD57F) {
-               expand::expand_setup(&exp27, ss);
-               goto do_3x3;
-            }
-            else if (directions == 0xA802 || directions == 0x02A8 ||
-                     directions == 0xFD57 || directions == 0x57FD) {
-               expand::expand_setup(&exp72, ss);
-               goto do_3x3;
-            }
-            else if (directions == 0x208A || directions == 0x8A20 ||
-                     directions == 0x75DF || directions == 0xDF75) {
-               expand::expand_setup(&exp35, ss);
-               goto do_3x3;
-            }
-            else if (directions == 0xA208 || directions == 0x08A2 ||
-                     directions == 0xF75D || directions == 0x5DF7) {
-               expand::expand_setup(&exp56, ss);
-               goto do_3x3;
-            }
-
-            // These are specific to "1x3" or "3x1".
-            if (directions == 0x55FF || directions == 0x00AA) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
-                                    &exp27 : &exp72,
-                                    ss);
-               goto do_3x3;
-            }
-            else if (directions == 0xFF55 || directions == 0xAA00) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
-                                    &exp72 : &exp27,
-                                    ss);
-               goto do_3x3;
-            }
+            // ***** Want to get rid of this test, so can handle phantoms.
+            // But that doesn't work.
+            if (dblbitlivemask != 0xFFFF) return false;
+            getin_search = Nx1_checktable_2x4;
+            goto do_Nx1_search;
          }
          else if (ss->kind == s1x8) {
-            if (livemask != 0xFF) return false;
-
-            // These are independent of whether we said "1x3" or "3x1".
-            if (directions == 0x2A80 || directions == 0x802A ||
-                directions == 0x7FD5 || directions == 0xD57F) {
-               expand::expand_setup(&expg27, ss);
-               goto do_3x3;
-            }
-            else if (directions == 0xA208 || directions == 0x08A2 ||
-                     directions == 0xF75D || directions == 0x5DF7) {
-               expand::expand_setup(&expg72, ss);
-               goto do_3x3;
-            }
-            else if (directions == 0x208A || directions == 0x8A20 ||
-                     directions == 0x75DF || directions == 0xDF75) {
-               expand::expand_setup(&expg35, ss);
-               goto do_3x3;
-            }
-            else if (directions == 0xA802 || directions == 0x02A8 ||
-                     directions == 0xFD57 || directions == 0x57FD) {
-               expand::expand_setup(&expg56, ss);
-               goto do_3x3;
-            }
-
-            // These are specific to "1x3" or "3x1".
-            if (directions == 0x55FF || directions == 0x00AA) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
-                                    &expg27 : &expg72,
-                                    ss);
-               goto do_3x3;
-            }
-            else if (directions == 0xFF55 || directions == 0xAA00) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
-                                    &expg72 : &expg27,
-                                    ss);
-               goto do_3x3;
-            }
+            if (dblbitlivemask != 0xFFFF) return false;
+            getin_search = Nx1_checktable_1x8;
+            goto do_Nx1_search;
          }
          else if (ss->kind == s3x4) {
-            if (livemask == 03333 || livemask == 04747 ||
-                livemask == 02753 || livemask == 05327) goto do_3x3;
+            if (dblbitlivemask == 0x3CF3CF || dblbitlivemask == 0xC3FC3F ||
+                dblbitlivemask == 0x33FCCF || dblbitlivemask == 0xCCF33F) goto do_3x3;
          }
          else if (ss->kind == s2x6) {
-            if (livemask == 02727 || livemask == 07272 ||
-                livemask == 02277 || livemask == 07722) goto do_3x3;
+            if (dblbitlivemask == 0x33F33F || dblbitlivemask == 0xFCCFCC ||
+                dblbitlivemask == 0x30CFFF || dblbitlivemask == 0xFFF30C) goto do_3x3;
          }
          else if (ss->kind == s_spindle) {
-            if (livemask == 0xFF) {
+            if (dblbitlivemask == 0xFFFF) {
                expand::expand_setup(&expsp3, ss);
                goto do_3x3;
             }
          }
          else if (ss->kind == s3dmd) {
-            if (livemask == 07171) {
+            if (dblbitlivemask == 0xFC3FC3) {
                expand::expand_setup(&exp3d3, ss);
                goto do_3x3;
             }
          }
          else if (ss->kind == s_323) {
-            if (livemask == 0xFF) {
+            if (dblbitlivemask == 0xFFFF) {
                expand::expand_setup(&exp323, ss);
                goto do_3x3;
             }
          }
          else if (ss->kind == s2x3) {
-            if (livemask == 027 || livemask == 072) goto do_3x3;
+            if (dblbitlivemask == 0x33F || dblbitlivemask == 0xFCC) goto do_3x3;
          }
       }
       else if (heritflags_to_check == INHERITFLAGMXNK_2X1 ||
                heritflags_to_check == INHERITFLAGMXNK_1X2) {
          if (ss->kind == s2x3) {
-            if (livemask != 077) return false;
-
-            // These are independent of whether we said "1x2" or "2x1".
-            if (directions == 01240 || directions == 04012 ||
-                directions == 03765 || directions == 06537) {
-               expand::expand_setup(&exp25, ss);
-               goto do_3x3;
-            }
-            else if (directions == 05002 || directions == 00250 ||
-                     directions == 07527 || directions == 02775) {
-               expand::expand_setup(&exp52, ss);
-               goto do_3x3;
-            }
-            // These are specific to "1x2" or "2x1".
-            if (directions == 02577 || directions == 00052) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
-                                    &exp25 : &exp52,
-                                    ss);
-               goto do_3x3;
-            }
-            else if (directions == 07725 || directions == 05200) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
-                                    &exp52 : &exp25,
-                                    ss);
-               goto do_3x3;
-            }
+            if (dblbitlivemask != 0xFFF) return false;
+            getin_search = Nx1_checktable_2x3;
+            goto do_Nx1_search;
+         }
+         else if (ss->kind == s1x6) {
+            if (dblbitlivemask != 0xFFF) return false;
+            getin_search = Nx1_checktable_1x6;
+            goto do_Nx1_search;
          }
          else if (ss->kind == s_bone6) {
-            if (livemask != 077) return false;
+            if (dblbitlivemask != 0xFFF) return false;
 
             if (directions == 01240 || directions == 04012 ||
                 directions == 01042 || directions == 04210 ||
@@ -508,41 +499,13 @@ extern bool divide_for_magic(
             }
          }
          else if (ss->kind == s_short6) {
-            if (livemask != 077) return false;
+            if (dblbitlivemask != 0xFFF) return false;
 
             if (directions == 00052 || directions == 05200 ||
                 directions == 07725 || directions == 02577 ||
                 directions == 03567 || directions == 06735 ||
                 directions == 01042 || directions == 04210) {
                expand::expand_setup(&expb32, ss);
-               goto do_3x3;
-            }
-         }
-         else if (ss->kind == s1x6) {
-            if (livemask != 077) return false;
-
-            // These are independent of whether we said "1x2" or "2x1".
-            if (directions == 01240 || directions == 04012 ||
-                directions == 03765 || directions == 06537) {
-               expand::expand_setup(&expl13, ss);
-               goto do_3x3;
-            }
-            else if (directions == 05002 || directions == 00250 ||
-                     directions == 07527 || directions == 02775) {
-               expand::expand_setup(&expl31, ss);
-               goto do_3x3;
-            }
-            // These are specific to "1x2" or "2x1".
-            if (directions == 02577 || directions == 00052) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
-                                    &expl13 : &expl31,
-                                    ss);
-               goto do_3x3;
-            }
-            else if (directions == 07725 || directions == 05200) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
-                                    &expl31 : &expl13,
-                                    ss);
                goto do_3x3;
             }
          }
@@ -568,6 +531,38 @@ extern bool divide_for_magic(
    result->result_flags.misc |= resflagsmisc;
    return true;
 
+ do_Nx1_search:
+
+   // Search the table for a unique getin map.
+   // *** We used to check only the direction bits that were masked on by dblbitlivemask,
+   // and demand that the result be unique.  (That's what the "if (final) return false"
+   // is about.)  We also used to try not to demand that dblbitlivemask have all bits
+   // on.  But that really doesn't work.  We can't search for hard Nx1 and 1xN
+   // formulations in the presence of phantoms.
+
+   {
+      const expand::thing *final = (const expand::thing *) 0;
+
+      while (getin_search->directions != 0) {
+         if (getin_search->directions == directions) {
+            if (final) return false;    // It's ambiguous.  ***** Won't happen.
+            final = (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
+                     heritflags_to_check == INHERITFLAGMXNK_2X1) ?
+               getin_search->action_if_Nx1 :
+               getin_search->action_if_1xN;
+            break;
+         }
+         getin_search++;
+      }
+
+      if (final) {
+         expand::expand_setup(final, ss);
+         goto do_3x3;
+      }
+   }
+
+   return false;
+
  do_3x3:
 
    ss->cmd.cmd_final_flags.herit = (heritflags)
@@ -585,31 +580,35 @@ extern bool divide_for_magic(
 
    configuration::clear_multiple_warnings(dyp_each_warnings);
    configuration::set_multiple_warnings(saved_warnings);
-   livemask = 0;
+
+   uint32 livemask = 0;
 
    for (i=0; i<=attr::slimit(result); i++) {
       livemask <<= 1;
       if (result->people[i].id1) livemask |= 1;
    }
 
-   if (result->kind == s2x6) {
-      if      (livemask == exp25.biglivemask) expand::compress_setup(&exp25, result);
-      else if (livemask == exp52.biglivemask) expand::compress_setup(&exp52, result);
-      else if (livemask == exp27.biglivemask) expand::compress_setup(&exp27, result);
-      else if (livemask == exp72.biglivemask) expand::compress_setup(&exp72, result);
-      else if (livemask == exp35.biglivemask) expand::compress_setup(&exp35, result);
-      else if (livemask == exp53.biglivemask) expand::compress_setup(&exp53, result);
-      else if (livemask == exp56.biglivemask) expand::compress_setup(&exp56, result);
-      else if (livemask == exp65.biglivemask) expand::compress_setup(&exp65, result);
+   const expand::thing *final = (const expand::thing *) 0;
 
-      else if (livemask == 03131) expand::compress_setup(&exp31, result);
-      else if (livemask == 01313) expand::compress_setup(&exp13, result);
-      else if (livemask == 01515) expand::compress_setup(&exp15, result);
-      else if (livemask == 05151) expand::compress_setup(&exp51, result);
-      else if (livemask == 04545) expand::compress_setup(&exp45, result);
-      else if (livemask == 05454) expand::compress_setup(&exp54, result);
-      else if (livemask == 04646) expand::compress_setup(&exp46, result);
-      else if (livemask == 06464) expand::compress_setup(&exp64, result);
+   static const expand::thing *unwind_2x6_table[] = {
+      &exp25, &exp52, &exp27, &exp72,
+      &exp35, &exp53, &exp56, &exp65,
+      &exp31, &exp13, &exp15, &exp51,
+      &exp45, &exp54, &exp46, &exp64,
+      (const expand::thing *) 0};
+
+   if (result->kind == s2x6) {
+      const expand::thing **p = unwind_2x6_table;
+      while (*p) {
+         if (livemask == (*p)->biglivemask) {
+            final = *p;
+            break;
+         }
+         p++;
+      }
+
+      if (final) expand::compress_setup(final, result);
+      else fail("Can't figure out how to finish this call.");
    }
    else if (result->kind == s1x12) {
       if (livemask == 02525) expand::compress_setup(&expl13, result);
@@ -1086,7 +1085,7 @@ static int start_matrix_call(
 
    if (base == 0) {
       *people = *ss;    /* Get the setup kind, so selectp will be happier. */
-      clear_people(people);
+      people->clear_people();
    }
 
    const coordrec *nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
@@ -1449,7 +1448,7 @@ static void finish_matrix_call(
    int xmax, ymax, x, y, k;
    uint32 signature, xpar, ypar;
    const coordrec *checkptr;
-   clear_people(result);
+   result->clear_people();
 
    xmax = xpar = ymax = ypar = signature = 0;
 
@@ -3871,12 +3870,13 @@ static void do_stuff_inside_sequential_call(
             }
          }
       }
-      else if (result->cmd.callspec == base_calls[base_call_makepass_1]) {
+      else if (result->cmd.callspec == base_calls[base_call_makepass_1] ||
+               result->cmd.callspec == base_calls[base_call_nuclear_1]) {
 
-         /* If we are starting a "make a pass", and the assumption was some form
-            of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
-            assumption on, so that they can cast off 3/4.  If it was a 1/4 line,
-            the result will be a wave in the center. */
+         // If we are starting a "make a pass", and the assumption was some form
+         // of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
+         // assumption on, so that they can cast off 3/4.  If it was a 1/4 line,
+         // the result will be a wave in the center.
 
          if (((old_assumption == cr_jleft || old_assumption == cr_jright) &&
               old_assump_both == 2) ||
@@ -4606,27 +4606,27 @@ static bool do_misc_schema(
       return true;
    }
    else if (the_schema == schema_select_who_can) {
-      uint32 resultmask = 0xFFFFFF;   // Everyone.
+      uint32 result_mask = 0xFFFFFF;   // Everyone.
       switch (ss->kind) {
-      case sdmd: resultmask = 0xA; break;
-      case s_short6: resultmask = 055; break;
-      case s_2x1dmd: resultmask = 033; break;
+      case sdmd: result_mask = 0xA; break;
+      case s_short6: result_mask = 055; break;
+      case s_2x1dmd: result_mask = 033; break;
       case s_qtag:
          // If this is like diamonds, only the centers hinge.
          // If it is like a 1/4 tag, everyone does.
          if ((ss->people[0].id1 | ss->people[1].id1 |
               ss->people[4].id1 | ss->people[5].id1) & 1)
-            resultmask = 0xCC;
+            result_mask = 0xCC;
          break;
-      case s3x1dmd: resultmask = 0x77; break;
-      case s_spindle: resultmask = 0x77; break;
-      case s_hrglass: resultmask = 0x88; break;
-      case s_dhrglass: resultmask = 0xBB; break;
-      case s_ptpd: resultmask = 0xEE; break;
-      case s_galaxy: resultmask = 0xAA; break;
+      case s3x1dmd: result_mask = 0x77; break;
+      case s_spindle: result_mask = 0x77; break;
+      case s_hrglass: result_mask = 0x88; break;
+      case s_dhrglass: result_mask = 0xBB; break;
+      case s_ptpd: result_mask = 0xEE; break;
+      case s_galaxy: result_mask = 0xAA; break;
       }
       inner_selective_move(ss, foo1p, (setup_command *) 0,
-                           selective_key_plain, 0, 0, false, resultmask,
+                           selective_key_plain, 0, 0, false, result_mask | 0x400000,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4641,7 +4641,7 @@ static bool do_misc_schema(
       }
 
       inner_selective_move(ss, foo1p, (setup_command *) 0,
-                           selective_key_plain, 0, 0, false, result_mask,
+                           selective_key_plain, 0, 0, false, result_mask | 0x400000,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4649,7 +4649,7 @@ static bool do_misc_schema(
    }
    else if (the_schema == schema_select_who_didnt) {
       uint32 sourcemask = 0;
-      uint32 resultmask = 0xFFFFFF;   // Everyone.
+      uint32 result_mask = 0xFFFFFF;   // Everyone.
       int i, j;
 
       for (i=0,j=1; i<=attr::slimit(ss); i++,j<<=1) {
@@ -4658,46 +4658,46 @@ static bool do_misc_schema(
 
       switch (ss->kind) {
       case s1x4:
-         if (sourcemask == 0xA) resultmask = 0xF;
-         else resultmask = 0xA;
+         if (sourcemask == 0xA) result_mask = 0xF;
+         else result_mask = 0xA;
          break;
       case s1x8:
-         if (sourcemask == 0xEE) resultmask = 0xFF;
-         else resultmask = 0xEE;
+         if (sourcemask == 0xEE) result_mask = 0xFF;
+         else result_mask = 0xEE;
          break;
       case s1x6:
-         if (sourcemask == 066) resultmask = 077;
-         else resultmask = 066;
+         if (sourcemask == 066) result_mask = 077;
+         else result_mask = 066;
          break;
       case s2x4:
-         if (sourcemask == 0x66) resultmask = 0xFF;
-         else resultmask = 0x66;
+         if (sourcemask == 0x66) result_mask = 0xFF;
+         else result_mask = 0x66;
          break;
       case s_qtag:
-         if (sourcemask == 0x88) resultmask = 0xCC;
-         else resultmask = 0x88;
+         if (sourcemask == 0x88) result_mask = 0xCC;
+         else result_mask = 0x88;
          break;
          /*
-      case s_2x1dmd: resultmask = 033; break;
-      case s3x1dmd: resultmask = 0x77; break;
-      case s_spindle: resultmask = 0x77; break;
-      case s_hrglass: resultmask = 0x88; break;
-      case s_dhrglass: resultmask = 0xBB; break;
-      case s_ptpd: resultmask = 0xEE; break;
-      case s_galaxy: resultmask = 0xAA; break;
+      case s_2x1dmd: result_mask = 033; break;
+      case s3x1dmd: result_mask = 0x77; break;
+      case s_spindle: result_mask = 0x77; break;
+      case s_hrglass: result_mask = 0x88; break;
+      case s_dhrglass: result_mask = 0xBB; break;
+      case s_ptpd: result_mask = 0xEE; break;
+      case s_galaxy: result_mask = 0xAA; break;
          */
       default: fail("Can't do this call from this setup.");
       }
 
       inner_selective_move(ss, foo1p, (setup_command *) 0,
-                           selective_key_plain, 0, 0, false, resultmask,
+                           selective_key_plain, 0, 0, false, result_mask | 0x400000,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
    }
    else if (the_schema == schema_select_who_did_and_didnt) {
-      uint32 result_mask(0);
+      uint32 result_mask = 0;
       int i, j;
 
       for (i=0,j=1; i<=attr::slimit(ss); i++,j<<=1) {
@@ -4705,7 +4705,7 @@ static bool do_misc_schema(
       }
 
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain_no_live_subsets, 1, 0, false, result_mask,
+                           selective_key_plain_no_live_subsets, 1, 0, false, result_mask | 0x400000,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -5048,7 +5048,13 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
       }
       break;
    case schema_maybe_matrix_single_concentric_together:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
+      if ((herit_concepts & (INHERITFLAG_NXNMASK|INHERITFLAG_12_MATRIX)) ==
+               (INHERITFLAGNXNK_3X3|INHERITFLAG_12_MATRIX))
+         return schema_3x3_concentric;
+      else if ((herit_concepts & (INHERITFLAG_NXNMASK|INHERITFLAG_16_MATRIX)) ==
+               (INHERITFLAGNXNK_4X4|INHERITFLAG_16_MATRIX))
+         return schema_4x4_lines_concentric;
+      else if (herit_concepts & INHERITFLAG_12_MATRIX)
          return schema_conc_12;
       else if (herit_concepts & INHERITFLAG_16_MATRIX)
          return schema_conc_16;
@@ -5056,6 +5062,8 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
          return schema_concentric_others;
       else if (herit_concepts & INHERITFLAG_DIAMOND)
          return schema_concentric_2_6;
+      else if (herit_concepts & INHERITFLAG_SINGLE)
+         return schema_single_concentric;
       else
          return schema_single_concentric_together;
    case schema_maybe_matrix_conc:
@@ -5506,13 +5514,13 @@ static void really_inner_move(setup *ss,
 
             if (mask == 02727) {
                setup temp = *result;
-               clear_people(result);
+               result->clear_people();
                gather(result, &temp, map_3x1fixa, 7, 0);
                result->kind = s2x4;
             }
             else if (mask == 07272) {
                setup temp = *result;
-               clear_people(result);
+               result->clear_people();
                gather(result, &temp, map_3x1fixb, 7, 0);
                result->kind = s2x4;
             }
@@ -5672,7 +5680,7 @@ static void move_with_real_call(
       configuration::restore_warnings(saved_warnings);
       current_options = saved_options;
       *ss = saved_ss;
-      clear_people(result);
+      result->clear_people();
       clear_result_flags(result);   // In case we bail out.
       uint32 imprecise_rotation_result_flagmisc = 0;
       split_command_kind force_split = split_command_none;
@@ -6801,7 +6809,7 @@ extern void move(
          }
       }
 
-      clear_people(result);
+      result->clear_people();
 
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
          fail("Can't do \"invert/central/snag/mystic\" followed by another concept or modifier.");

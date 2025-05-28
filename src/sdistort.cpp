@@ -331,7 +331,7 @@ static void innards(
    mpkind map_kind = maps->map_kind;
    if (map_kind == MPKIND__NONISOTROP1) map_kind = MPKIND__SPLIT;
 
-   clear_people(result);
+   result->clear_people();
    sscmd->cmd_misc2_flags &= ~(CMD_MISC2__MYSTIFY_SPLIT | CMD_MISC2__MYSTIFY_INVERT);
 
    for (i=0; i<arity; i++) {
@@ -546,6 +546,14 @@ static void innards(
 
       no_reuse_map = true;
    }
+
+   // If we split a qtag into 2x3's and did a call that went back to 2x3's populated
+   // appropriately (e.g. 3x1 triangle circulate after invert the column 1/4),
+   // don't go back to a qtag.  Go to a 3x4.  Otherwise, it would allow "stretch
+   // 3x1 triangle circulate", which would be wrong.
+
+   if (map_encoding == spcmap_qtag_2x3)
+      no_reuse_map = true;
 
    // Some maps (the ones used in "triangle peel and trail") do not want the result
    // to be reassembled, so we get out now.  These maps are indicated by arity = 1
@@ -816,30 +824,30 @@ static void innards(
       else if (before_distance == after_distance*2 && arity == 2) {
          map_kind = MPKIND__SPLIT;
          z[2] = z[1];
-         clear_people(&z[1]);
+         z[1].clear_people();
          arity = 3;
       }
       else if (before_distance == after_distance*2 && arity == 3) {
          map_kind = MPKIND__SPLIT;
          z[4] = z[2];
          z[2] = z[1];
-         clear_people(&z[3]);
-         clear_people(&z[1]);
+         z[3].clear_people();
+         z[1].clear_people();
          arity = 5;
       }
       else if (before_distance == after_distance*3 && arity == 2) {
          map_kind = MPKIND__SPLIT;
          z[3] = z[1];
-         clear_people(&z[1]);
-         clear_people(&z[2]);
+         z[1].clear_people();
+         z[2].clear_people();
          arity = 4;
       }
       else if (before_distance == after_distance*4 && arity == 2) {
          map_kind = MPKIND__SPLIT;
          z[4] = z[1];
-         clear_people(&z[1]);
-         clear_people(&z[2]);
-         clear_people(&z[3]);
+         z[1].clear_people();
+         z[2].clear_people();
+         z[3].clear_people();
          arity = 5;
       }
       else
@@ -1419,7 +1427,7 @@ extern void overlapped_setup_move(
 
    for (j=0, rot=maps->rot ; j<arity ; j++, rot>>=2) {
       int rrr = 011*((-rot) & 3);
-      clear_people(&x[j]);
+      x[j].clear_people();
       x[j].kind = kn;
       for (i=0, k=1; i<insize; i++, k<<=1, mapbase++) {
          if (k & masks[j])
@@ -1455,8 +1463,8 @@ static void phantom_2x4_move(
    hflag = 0;
    hpeople = *ss;
    vpeople = *ss;
-   clear_people(&hpeople);
-   clear_people(&vpeople);
+   hpeople.clear_people();
+   vpeople.clear_people();
 
    for (i=0; i<16; i++) {
       if ((ss->people[i].id1 ^ lineflag) & 1)
@@ -3264,7 +3272,7 @@ extern void do_concept_rigger(
 
    map_ptr = indicator ? map1 : map2;
 
-   clear_people(&a1);
+   a1.clear_people();
    scatter(&a1, ss, &map_ptr[base], attr::slimit(ss), rot*033);
    a1.kind = startkind;
    a1.rotation = 0;
@@ -3352,8 +3360,8 @@ void do_concept_wing(
    setup normal = *ss;
    setup winged = *ss;
 
-   clear_people(&normal);
-   clear_people(&winged);
+   normal.clear_people();
+   winged.clear_people();
 
    int sizem1 = attr::slimit(ss);
    const coordrec *coordptr = setup_attrs[ss->kind].nice_setup_coords;
@@ -3936,8 +3944,8 @@ extern void common_spot_move(
    setup a0 = *ss;
    setup a1 = *ss;
 
-   clear_people(&a0);
-   clear_people(&a1);
+   a0.clear_people();
+   a1.clear_people();
 
    a0.kind = map_ptr->partial_kind;
    a1.kind = map_ptr->partial_kind;

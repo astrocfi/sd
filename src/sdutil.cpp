@@ -101,13 +101,13 @@ int starting_sequence_number;
 // has been reported to Microsoft, and, of course, was never fixed.
 
 #if defined(DJGPP)
-Cstring *filename_strings = old_filename_strings;
+const Cstring *filename_strings = old_filename_strings;
 #else
-Cstring *filename_strings = old_filename_strings; // ******** For now
+const Cstring *filename_strings = old_filename_strings; // ******** For now
 #endif
 
 // BEWARE!!  These lists are keyed to the definition of "dance_level" in database.h
-Cstring old_filename_strings[] = {
+const Cstring old_filename_strings[] = {
    ".MS",
    ".Plus",
    ".A1",
@@ -124,7 +124,7 @@ Cstring old_filename_strings[] = {
    ".all",
    ""};
 
-Cstring new_filename_strings[] = {
+const Cstring new_filename_strings[] = {
    "_MS.txt",
    "_Plus.txt",
    "_A1.txt",
@@ -141,7 +141,7 @@ Cstring new_filename_strings[] = {
    "_all.txt",
    ""};
 
-Cstring concept_key_table[] = {
+const Cstring concept_key_table[] = {
    /* These are the standard bindings. */
    "cu     deleteline",
    "cx     deleteword",
@@ -676,7 +676,15 @@ void write_history_line(int history_index,
       }
    }
 
-   if (picture || this_item->draw_pic || ui_options.keep_all_pictures) {
+   // The "keep all pictures" flag could trick us into drawing a picture of
+   // an invalid setup during sequence startup when the very intricate
+   // "heads/sides start" mechanism is being used.  But when writing out
+   // the transcript file, the same setup will be valid.  We use the
+   // "state_is_valid" flag to tell when it is permissible to draw the
+   // picture.
+
+   if (this_item->state_is_valid &&
+       (picture || this_item->draw_pic || ui_options.keep_all_pictures)) {
       printsetup(&this_item->state);
 
       if (this_item->state.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
@@ -1953,6 +1961,7 @@ extern void initialize_parse()
    configuration::next_config().init_centersp_specific();
    configuration::init_warnings();
    configuration::next_config().draw_pic = false;
+   configuration::next_config().state_is_valid = false;
 
    if (written_history_items > configuration::history_ptr)
       written_history_items = configuration::history_ptr;
@@ -2440,16 +2449,16 @@ void run_program()
          char title[MAX_TEXT_LINE_LENGTH];
 
          if (sequence_number >= 0)
-            (void) sprintf(numstuff, " (%d:%d)", starting_sequence_number, sequence_number);
+            sprintf(numstuff, " (%d:%d)", starting_sequence_number, sequence_number);
          else
             numstuff[0] = '\0';
 
          if (header_comment[0])
-            (void) sprintf(title, "%s  %s%s",
-                           &old_filename_strings[calling_level][1], header_comment, numstuff);
+            sprintf(title, "%s  %s%s",
+                    &old_filename_strings[calling_level][1], header_comment, numstuff);
          else
-            (void) sprintf(title, "%s%s",
-                           &old_filename_strings[calling_level][1], numstuff);
+            sprintf(title, "%s%s",
+                    &old_filename_strings[calling_level][1], numstuff);
 
          gg->set_window_title(title);
       }
@@ -2518,11 +2527,11 @@ void run_program()
          goto new_sequence;
       case start_select_init_session_file:
          {
-            Cstring *q;
+            const Cstring *q;
             FILE *session = fopen(SESSION_FILENAME, "r");
 
             if (session) {
-               (void) fclose(session);
+               fclose(session);
 
                if (gg->yesnoconfirm("Confirmation",
                                     "You already have a session file.",
@@ -2561,7 +2570,7 @@ void run_program()
             }
 
             if (fputs("\n", session) == EOF) goto copy_failed;
-            (void) fclose(session);
+            fclose(session);
             writestuff("The file has been initialized, and will take effect the next time the program is started.");
             newline();
             writestuff("Exit and restart the program if you want to use it now.");
@@ -2572,7 +2581,25 @@ void run_program()
 
             writestuff("Failed to create '" SESSION_FILENAME "'");
             newline();
-            (void) fclose(session);
+            fclose(session);
+            goto new_sequence;
+         }
+      case start_select_change_to_new_style_filename:
+         {
+            FILE *session = fopen(SESSION_FILENAME, "r");
+
+            if (!session) {
+               writestuff("You must have a session file to do this.");
+               newline();
+               writestuff("Give the 'initialize session file command' to create it.");
+               newline();
+               goto new_sequence;
+            }
+
+            fclose(session);
+            rewrite_with_new_style_filename = true;
+            writestuff("Exit and restart the program to have this take effect.");
+            newline();
             goto new_sequence;
          }
       case start_select_change_outfile:
@@ -2594,6 +2621,7 @@ void run_program()
       configuration::history[1].init_resolve();
       // Put the people into their starting position.
       configuration::history[1].state = configuration::history[1].get_startinfo_specific()->the_setup;
+      configuration::history[1].state_is_valid = true;
 
       written_history_items = -1;
 
@@ -2882,6 +2910,8 @@ void run_program()
             else {
                // There were no concepts entered.  Throw away the entire preceding line.
                if (configuration::history_ptr > 1) {
+                  configuration::current_config().draw_pic = false;
+                  configuration::current_config().state_is_valid = false;
                   configuration::history_ptr--;
                   // Going to start_cycle will make sure written_history_items
                   // does not exceed history_ptr.
@@ -3056,6 +3086,7 @@ void run_program()
 
                allowing_modifications = 0;
                configuration::next_config().draw_pic = false;
+               configuration::next_config().state_is_valid = false;
                parse_state.concept_write_base = &configuration::next_config().command_root;
                parse_state.concept_write_ptr = parse_state.concept_write_base;
                *parse_state.concept_write_ptr = (parse_block *) 0;

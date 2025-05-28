@@ -39,7 +39,7 @@
    verify_restriction
    assoc
    find_calldef
-   clear_people
+   setup::clear_people
    clear_result
    rotperson
    rotcw
@@ -136,6 +136,7 @@ and the following external variables:
 */
 
 
+// For memset, memcpy, and strncpy.
 #include <string.h>
 
 #include "sd.h"
@@ -169,11 +170,11 @@ int written_history_items;
    forced pictures. */
 int written_history_nopic;
 
-/* This list tells what level calls will be put in the menu and hence made available.
-   In some cases, we make calls available that are higher than the requested level.
-   When we use such a call, a warning is printed. */
-
-/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+// This list tells what level calls will be put in the menu and hence made available.
+// In some cases, we make calls available that are higher than the requested level.
+// When we use such a call, a warning is printed.
+//
+// BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
 dance_level higher_acceptable_level[] = {
    l_mainstream,
    l_plus,
@@ -189,6 +190,44 @@ dance_level higher_acceptable_level[] = {
    l_c4x,
    l_dontshow,
    l_nonexistent_concept};
+
+// This list tells what level calls will be accepted for the "pick level call"
+// operation.  When doing a "pick level call, we don't actually require calls
+// to be exactly on the indicated level, as long as it's plausibly close.
+//
+// BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
+dance_level level_threshholds[] = {
+   l_mainstream,
+   l_plus,
+   l_a1,
+   l_a1,      /* If a2 is given, an a1 call is OK. */
+   l_c1,
+   l_c2,
+   l_c3a,
+   l_c3a,     /* If c3 is given, a c3a call is OK. */
+   l_c3a,     /* If c3x is given, a c3a call is OK. */
+   l_c3x,     /* If c4a is given, a c3x call is OK. */
+   l_c3x,     /* If c4 is given, a c3x call is OK. */
+   l_c3x,     /* If c4x is given, a c3x call is OK. */
+   l_dontshow,
+   l_nonexistent_concept};
+
+// BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
+Cstring getout_strings[] = {
+   "Mainstream",
+   "Plus",
+   "A1",
+   "A2",
+   "C1",
+   "C2",
+   "C3A",
+   "C3",
+   "C3X",
+   "C4A",
+   "C4",
+   "C4X",
+   "all",
+   ""};
 
 
 uint32 the_topcallflags;
@@ -221,23 +260,6 @@ Cstring direction_names[] = {
    "zig-zig",
    "zag-zag",
    (Cstring) 0};
-
-/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
-Cstring getout_strings[] = {
-   "Mainstream",
-   "Plus",
-   "A1",
-   "A2",
-   "C1",
-   "C2",
-   "C3A",
-   "C3",
-   "C3X",
-   "C4A",
-   "C4",
-   "C4X",
-   "all",
-   ""};
 
 writechar_block_type writechar_block;
 int num_command_commands;     // Size of the command menu.
@@ -274,26 +296,6 @@ interactivity_state interactivity = interactivity_normal;
 char database_version[81];
 bool testing_fidelity = false;
 
-/* This list tells what level calls will be accepted for the "pick level call"
-   operation.  When doing a "pick level call, we don't actually require calls
-   to be exactly on the indicated level, as long as it's plausibly close. */
-/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
-dance_level level_threshholds[] = {
-   l_mainstream,
-   l_plus,
-   l_a1,
-   l_a1,      /* If a2 is given, an a1 call is OK. */
-   l_c1,
-   l_c2,
-   l_c3a,
-   l_c3a,     /* If c3 is given, a c3a call is OK. */
-   l_c3a,     /* If c3x is given, a c3a call is OK. */
-   l_c3x,     /* If c4a is given, a c3x call is OK. */
-   l_c3x,     /* If c4 is given, a c3x call is OK. */
-   l_c3x,     /* If c4x is given, a c3x call is OK. */
-   l_dontshow,
-   l_nonexistent_concept};
-
 int allowing_modifications = 0;
 int hashed_randoms;
 
@@ -328,7 +330,7 @@ void expand::compress_setup(const expand::thing *thing, setup *stuff) THROW_DECL
    setup temp = *stuff;
 
    stuff->kind = thing->inner_kind;
-   clear_people(stuff);
+   stuff->clear_people();
    gather(stuff, &temp, thing->source_indices, thing->size-1, thing->rot * 011);
    stuff->rotation -= thing->rot;
    canonicalize_rotation(stuff);
@@ -340,7 +342,7 @@ void expand::expand_setup(const expand::thing *thing, setup *stuff) THROW_DECL
    setup temp = *stuff;
 
    stuff->kind = thing->outer_kind;
-   clear_people(stuff);
+   stuff->clear_people();
    scatter(stuff, &temp, thing->source_indices, thing->size-1, thing->rot * 033);
    stuff->rotation += thing->rot;
    canonicalize_rotation(stuff);
@@ -1120,7 +1122,7 @@ extern void touch_or_rear_back(
    zptr = tptr->expand_lists;
    scopy->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    setup stemp = *scopy;
-   clear_people(scopy);
+   scopy->clear_people();
 
    if (tptr->forbidden_elongation & 8) {
       gather(scopy, &stemp, zptr->source_indices, zptr->size-1, zptr->rot * 011);
@@ -2026,6 +2028,7 @@ restriction_test_result verify_restriction(
    uint32 dirtest[2];
    const veryshort *p, *q;
    int phantom_count = 0;
+   unsigned int live_test = tt.assump_live;  // We might clear this later.
    restriction_tester::restr_initializer *rr;
    int k = 0;
    int local_negate = tt.assump_negate;
@@ -2193,6 +2196,14 @@ restriction_test_result verify_restriction(
 
       goto bad;
    case restriction_tester::chk_wave:
+      // Fix grand chain 8.  If the "assume dpt" command
+      // was given, don't issue the warning.
+      if (ss->kind == s2x4 &&
+          ss->cmd.cmd_assume.assump_both == 1 &&
+          ss->cmd.cmd_assume.assumption == cr_2fl_only &&
+          ss->cmd.cmd_assume.assump_col == 1)
+         live_test = 0;
+
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 
@@ -2201,8 +2212,7 @@ restriction_test_result verify_restriction(
             qaa[idx&1] |=  t;
             qaa[(idx&1)^1] |= t^2;
          }
-         else if (local_negate || tt.assump_live) goto bad;    /* All live people
-                                                                      were demanded. */
+         else if (local_negate || live_test) goto bad;    // All live people were demanded.
       }
 
       if ((qaa[0] & qaa[1] & 2) != 0)
@@ -3220,7 +3230,7 @@ extern void crash_print(const char *filename, int linenum) THROW_DECL
 
 extern void fail(const char s[]) THROW_DECL
 {
-   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
    throw error_flag_type(error_flag_1_line);
@@ -4197,9 +4207,9 @@ got_it:
 }
 
 
-extern void clear_people(setup *z)
+void setup::clear_people()
 {
-   memset(z->people, 0, sizeof(personrec)*MAX_PEOPLE);
+   memset(people, 0, sizeof(personrec)*MAX_PEOPLE);
 }
 
 
@@ -4916,7 +4926,7 @@ extern bool fix_n_results(int arity, int goal, setup z[],
 
    for (i=0; i<arity; i++) {
       if (z[i].kind == nothing)
-         clear_people(&z[i]);
+         z[i].clear_people();
       else if (z[i].kind == s1x2 && kk == s1x4) {
          // We have to expand a 1x2 to the center spots of a 1x4.
          (void) copy_person(&z[i], 3, &z[i], 1);
@@ -5801,6 +5811,7 @@ void toplevelmove() THROW_DECL
    // will query the user to find out who is selected.
    newhist.init_centersp_specific();
    newhist.draw_pic = false;
+   newhist.state_is_valid = false;
    newhist.init_resolve();
    current_options = null_options;
 
@@ -5921,6 +5932,7 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.callspec = (call_with_name *) 0;
    starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
    move(&starting_setup, false, &newhist.state);
+   newhist.state_is_valid = true;
    remove_tgl_distortion(&newhist.state);
 
    if (newhist.state.kind == s1p5x8)

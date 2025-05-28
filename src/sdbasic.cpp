@@ -408,7 +408,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
    uint32 lowbitmask = 0;
    collision_map *c_map_ptr;
 
-   clear_people(result);
+   result->clear_people();
 
    for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
@@ -1005,6 +1005,9 @@ extern bool check_restriction(
       case CAF__RESTR_BOGUS:
          warn(warn_serious_violation);
          break;
+      case CAF__RESTR_ASSUME_DPT:
+         warn(warn__assume_dpt);
+         break;
       case CAF__RESTR_FORBID:
          fail("This call is not legal from this formation.");
       case 99:
@@ -1377,7 +1380,7 @@ static bool handle_3x4_division(
        assoc(b_3x2, ss, calldeflist));
 
    switch (livemask) {
-   case 0xF3C: case 0xCF3:
+   case 07474: case 06363:
       // We are in offset lines/columns, i.e. "clumps".
       // See if we can do the call in 2x2 or smaller setups.
       if (forbid_little_stuff ||
@@ -1387,11 +1390,11 @@ static bool handle_3x4_division(
            !assoc(b_1x1, ss, calldeflist)))
          fail("Don't know how to do this call in this setup.");
       if (!matrix_aware) warn(warn__each2x2);
-      division_code = (livemask == 0xF3C) ?
+      division_code = (livemask == 07474) ?
          MAPCODE(s2x2,2,MPKIND__OFFS_L_HALF,0) :
             MAPCODE(s2x2,2,MPKIND__OFFS_R_HALF,0);
       return true;
-   case 0xEBA: case 0xD75:
+   case 07272: case 06565:
       // We are in "Z"'s.  See if we can do the call in 1x2, 2x1, or 1x1 setups.
       // We do not allow 2x2 definitions.
       // We do now!!!!  It is required to allow utb in "1/2 press ahead" Z lines.
@@ -1402,7 +1405,7 @@ static bool handle_3x4_division(
             (!(newtb & 010) || assoc(b_2x1, ss, calldeflist))) ||
            assoc(b_1x1, ss, calldeflist))) {
          warn(warn__each1x2);
-         division_code = (livemask == 0xEBA) ? spcmap_lz12 : spcmap_rz12;
+         division_code = (livemask == 07272) ? spcmap_lz12 : spcmap_rz12;
          return true;
       }
    }
@@ -1410,7 +1413,7 @@ static bool handle_3x4_division(
    // Check for everyone in either the outer 2 triple lines or the
    // center triple line, and able to do the call in 1x4 or smaller setups.
 
-   if (((livemask & 0x3CF) == 0 || (livemask & 0xC30) == 0) &&
+   if (((livemask & 01717) == 0 || (livemask & 06060) == 0) &&
        !forbid_little_stuff &&
        (assoc(b_1x4, ss, calldeflist) ||
         assoc(b_4x1, ss, calldeflist) ||
@@ -1443,8 +1446,8 @@ static bool handle_3x4_division(
    //
    // But that's a pretty ambitious change.
 
-   if (!forbid_little_stuff &&
-       (assoc(b_1x1, ss, calldeflist) ||
+   if (assoc(b_1x1, ss, calldeflist) ||
+       (!forbid_little_stuff &&
         (((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
           (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)) &&
          ((!(newtb & 010) ||
@@ -1470,14 +1473,18 @@ static bool handle_3x4_division(
    // (which includes diamonds).  Note whether we fudged,
    // since some calls do not tolerate it.
    // But don't do this if the "points" are all outside and their orientation
-   // is in triple lines.
+   // is in triple lines.  Or if we would have to move someone and the call
+   // does not permit the fudging.
 
-   if (livemask == 0xE79 &&
-       ((ss->people[0].id1 & ss->people[3].id1 & ss->people[6].id1 & ss->people[9].id1) & 1))
+   if ((!(callflags1 & CFLAG1_FUDGE_TO_Q_TAG) && livemask != 06666) ||
+       (livemask == 07171 &&
+        ((ss->people[0].id1 & ss->people[3].id1 &
+          ss->people[6].id1 & ss->people[9].id1) & 1)))
       fail("Can't do this call from arbitrary 3x4 setup.");
 
    bool really_fudged = false;
    setup sss = *ss;
+
    expand::compress_setup(&s_qtg_3x4, &sss);
 
    if (ss->people[0].id1) {
@@ -4066,7 +4073,7 @@ foobar:
    
          if (ss->inner.skind == s1x4) {
             stemp.kind = s1x8;
-            clear_people(&stemp);
+            stemp.clear_people();
             static veryshort exp_conc_1x8[] = {3, 2, 7, 6};
             scatter(&stemp, ss, exp_conc_1x8, 3, 0);
 
@@ -4076,7 +4083,7 @@ foobar:
             }
             else {
                stemp.kind = s_qtag;
-               clear_people(&stemp);
+               stemp.clear_people();
                static veryshort exp_conc_qtg[] = {6, 7, 2, 3};
                scatter(&stemp, ss, exp_conc_qtg, 3, 0);
 
@@ -4093,7 +4100,7 @@ foobar:
          }
          else if (ss->inner.skind == s2x2) {
             stemp.kind = s2x4;
-            clear_people(&stemp);
+            stemp.clear_people();
             static veryshort exp_conc_2x2[] = {6, 1, 2, 5, 6};
 
             if (ss->concsetup_outer_elongation == 1) {
@@ -4551,7 +4558,7 @@ foobar:
 
       if (funny) fail("Sorry, can't do this call 'funny'");
 
-      clear_people(&p1);
+      p1.clear_people();
 
       for (real_index=0; real_index<8; real_index++) {
          personrec this_person = ss->people[real_index];

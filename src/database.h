@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -20,16 +20,16 @@
 //
 //    This is for version 36.
 
-/* These are written as the first two halfwords of the binary database file.
-   The format version is not related to the version of the program or database.
-   It is used only to make sure that the "mkcalls" program that compiled
-   the database and the "sd" program that reads it are in sync with each
-   other, as indicated by the version of this file.  Whenever we change
-   anything in this file that could cause an incompatibility, we bump the
-   database format version. */
+// These are written as the first two halfwords of the binary database file.
+// The format version is not related to the version of the program or database.
+// It is used only to make sure that the "mkcalls" program that compiled
+// the database and the "sd" program that reads it are in sync with each
+// other, as indicated by the version of this file.  Whenever we change
+// anything in this file that could cause an incompatibility, we bump the
+// database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 233
+#define DATABASE_FORMAT_VERSION 235
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -43,11 +43,13 @@ enum base_call_index {
    base_call_ends_shadow,
    base_call_chreact_1,
    base_call_makepass_1,
+   base_call_nuclear_1,
    base_call_scootback,
    base_call_scoottowave,
    base_call_backemup,
    base_call_circulate,
    base_call_trade,
+   base_call_remake,
    base_call_passthru,
    base_call_check_cross_counter,
    base_call_lockit,
@@ -247,12 +249,12 @@ enum {
 };
 
 
-/* BEWARE!!  This list must track the table "leveltab" in mkcalls.c . */
-/* BEWARE!!  This list must track the table "getout_strings" in sdtables.c . */
-/* BEWARE!!  This list must track the table "old_filename_strings" in sdtables.c . */
-/* BEWARE!!  This list must track the table "filename_strings" in sdtables.c . */
-/* BEWARE!!  This list must track the table "level_threshholds" in sdtables.c . */
-/* BEWARE!!  This list must track the table "higher_acceptable_level" in sdtables.c . */
+// BEWARE!!  This list must track the table "leveltab" in mkcalls.c .
+// BEWARE!!  This list must track the table "getout_strings" in sdtables.c .
+// BEWARE!!  This list must track the table "old_filename_strings" in sdtables.c .
+// BEWARE!!  This list must track the table "filename_strings" in sdtables.c .
+// BEWARE!!  This list must track the table "level_threshholds" in sdtables.c .
+// BEWARE!!  This list must track the table "higher_acceptable_level" in sdtables.c .
 
 enum dance_level {
    l_mainstream,
@@ -612,12 +614,13 @@ enum {
    CAF__ROT_OUT                 = 0x8,
    // This is a 3 bit field.
    CAF__RESTR_MASK             = 0x70,
-   // These next 5 are the nonzero values it can have.
+   // These next 6 are the nonzero values it can have.
    CAF__RESTR_UNUSUAL          = 0x10,
    CAF__RESTR_FORBID           = 0x20,
    CAF__RESTR_RESOLVE_OK       = 0x30,
    CAF__RESTR_CONTROVERSIAL    = 0x40,
    CAF__RESTR_BOGUS            = 0x50,
+   CAF__RESTR_ASSUME_DPT       = 0x60,
    CAF__PREDS                  = 0x80,
    CAF__NO_CUTTING_THROUGH    = 0x100,
    CAF__NO_FACING_ENDS        = 0x200,
