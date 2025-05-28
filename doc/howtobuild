@@ -196,9 +196,20 @@ Copy these into an appropriate directory:
                PRODUCTION BUILD, TESTING, AND UPLOAD - Linux
 
 copy sd_vnnnn.zip, r_vnnnn.zip, doc_vnnnn.zip and this file onto a thumb drive.
+Simplest way is to copy the entire vnnnn directory from the archive into
+the home directory on Ubuntu.
 
-On Linux:
+Copy the vnnnn directory from the thumb drive into the home directory on Ubuntu.
 
+Then, on Ubuntu, in the home directory, do
+./make_linux.sh nnnn
+as in
+./make_linux.sh 3906
+
+That will copy the files from the ~/vnnn directory down to the various things
+under ~/sd, compile everything, and make the tarball.
+
+/*
 Copy the above files into ~.
 
 cd ~
@@ -220,11 +231,15 @@ cd ~/sd
 cp ../sd.ini .
 make -f makefile.linux64 clean
 make -f makefile.linux64 all
-cd regress
+make -f makefile.linux64 tarball
+*/
+
+Then, to do regression tests:
+
+cd ~/sd/regress
 chmod 775 *.sh
 ./doit.sh
-cd ..
-make -f makefile.linux64 tarball
+
 
 sftp USERNAME@www.challengedance.org
   challengedance.org> (P=PASSWORD)

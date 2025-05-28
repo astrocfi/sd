@@ -1492,8 +1492,8 @@ static int start_matrix_call(
             matrix_info[nump].boybit = (rollbits == ROLL_IS_R) ? 1 : 0;
          }
          else {
-            matrix_info[nump].girlbit = (people->people[nump].id3 & ID3_PERM_GIRL) ? 1 : 0;
-            matrix_info[nump].boybit = (people->people[nump].id3 & ID3_PERM_BOY) ? 1 : 0;
+            matrix_info[nump].girlbit = (people->people[nump].id2 & ID2_PERM_GIRL) ? 1 : 0;
+            matrix_info[nump].boybit = (people->people[nump].id2 & ID2_PERM_BOY) ? 1 : 0;
          }
 
          matrix_info[nump].nextse = 0;
@@ -1677,6 +1677,10 @@ static const coordrec press_4dmd_qtag2 = {s_qtag, 0x123,
 
 static const coordrec acc_crosswave = {s_crosswave, 0x123,
    { -8,  -4,   0,   0,   8,   4,   0,   0},
+   {  0,   0,   6,   2,   0,   0,  -6,  -2}};
+
+static const coordrec trucked_crosswave = {s_crosswave, 0x123,
+   { -9,  -5,   0,   0,   9,   5,   0,   0},
    {  0,   0,   6,   2,   0,   0,  -6,  -2}};
 
 static const coordrec s3dmdtoqtg0 = {s_qtag, 0x123,
@@ -2049,6 +2053,9 @@ static const checkitem checktable[] = {
 
    // This is a "crosswave" on precise matrix spots.
    {0x00660084, 0x01040420, nothing, 1, warn__none, &acc_crosswave, (const veryshort *) 0},
+
+   // And here it is after truck from sbig3dmd.
+   {0x00660095, 0x03000480, s_crosswave, 1, warn__none, &trucked_crosswave, (const veryshort *) 0},
 
    {0x00950066, 0x28008200, s_crosswave, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00A20026, 0x01040420, s_bone, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},

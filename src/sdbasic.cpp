@@ -488,13 +488,22 @@ static collision_map collision_map_table[] = {
     s2x2,        s2x4,        1, warn__none, 0},
    {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 5},                {1, 4},
     s2x2,        s2x4,        1, warn__none, 0},
+
    {3, 0x00800B, 0x0B, 0x08, {0, 1, 3},            {6, 1, 5},             {6, 1, 4},
+    s2x2,        s2x4,        1, warn__none, 0},
+   {3, 0x00800D, 0x0D, 0x08, {0, 2, 3},            {6, 2, 5},             {6, 2, 4},
     s2x2,        s2x4,        1, warn__none, 0},
    {3, 0x00200E, 0x0E, 0x02, {1, 2, 3},            {0, 2, 5},             {1, 2, 5},
     s2x2,        s2x4,        1, warn__none, 0},
+   {3, 0x002007, 0x07, 0x02, {0, 1, 2},            {6, 0, 2},             {6, 1, 2},
+    s2x2,        s2x4,        1, warn__none, 0},
    {3, 0x00100B, 0x0B, 0x01, {0, 1, 3},            {7, 1, 5},             {6, 1, 5},
     s2x2,        s2x4,        1, warn__none, 0},
+   {3, 0x00100D, 0x0D, 0x01, {0, 2, 3},            {7, 2, 5},             {6, 2, 5},
+    s2x2,        s2x4,        1, warn__none, 0},
    {3, 0x00400E, 0x0E, 0x04, {1, 2, 3},            {1, 2, 5},             {1, 3, 5},
+    s2x2,        s2x4,        1, warn__none, 0},
+   {3, 0x004007, 0x07, 0x04, {0, 1, 2},            {6, 1, 2},             {6, 1, 3},
     s2x2,        s2x4,        1, warn__none, 0},
 
    // These 2 in particular are what make a crossfire from waves go to a 2x4 instead of a 2x3.
@@ -2734,6 +2743,19 @@ static int divide_the_setup(
       }
 
       goto divide_us_no_recompute;
+   case s_343:
+      if (((ss->people[1].id1 | ss->people[6].id1) & 011) == 0 &&
+          (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) ||
+           assoc(b_qtag, ss, calldeflist) || assoc(b_pqtag, ss, calldeflist))) {
+         static const expand::thing s_fix_343 = {{0, 2, 3, 4, 5, 7, 8, 9}, s_qtag, s_343, 0};
+         setup sss = *ss;
+         expand::compress_setup(s_fix_343, &sss);
+         move(&sss, true, result);
+         result->result_flags.clear_split_info();
+         return 1;
+      }
+
+      break;
    case s2x2dmd:
       if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) ||
           assoc(b_qtag, ss, calldeflist) || assoc(b_pqtag, ss, calldeflist))

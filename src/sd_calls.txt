@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.06"
+version "39.07"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -15071,6 +15071,11 @@ call "@6@C kickoff" c2 tag designeeskick
          if select        [CR6W CR5W CR4W 0    AL2E AL1E AL0E 0]
          if kicker_coming [CM6E CM5E CM4E 0    AM2W AM1W AM0W 0]
          if unselect      [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup qtag qtag
+      preds "Can't tell who is kicking off."
+         if select        [CR1W AL0E AL3E CR2W AL5E CR4W CR7W AL6E]
+         if kicker_coming [CM1E AM0W AM3W CM2E AM5W CM4E CM7E AM6W]
+         if unselect      [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup dmd dmd
       preds "Can't tell who is kicking off."
          if unselect [ZM0N ZM1N ZM2N ZM3N]
@@ -23225,12 +23230,12 @@ call "@6 rip n snort" c4x
 
 call "acey deucey" plus tag aceydeucey
             fudge_to_q_tag
-            half_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            left_means_mirror half_is_inherited yoyo_is_inherited gen_sting_is_inherited
             magic_is_inherited funny_is_inherited mxn_is_inherited
    conc6p_or_normal_or_2x6_2x3
-                    trade_w_tbone    [inherit_half inherit_funny inherit_yoyo
+                    trade_w_tbone    [inherit_left inherit_half inherit_funny inherit_yoyo
                                       inherit_gensting suppress_elongation_warnings]
-                    circulateforacey [or_anycall inherit_half inherit_magic
+                    circulateforacey [or_anycall inherit_left inherit_half inherit_magic
                                       inherit_funny inherit_mxn conc_force_spots endscando]
 
 call "6X2 acey deucey" a1

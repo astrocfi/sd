@@ -52,9 +52,10 @@ and the following external variables:
    color_randomizer
 */
 
+#if defined(WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <windowsx.h>
+#endif
 #include <stdlib.h>
 #include <algorithm>
 #include <sys/types.h>
@@ -1460,6 +1461,12 @@ static void rewrite_init_file()
       FILE *wfile;
       int i;
 
+      // Rename sd.ini to sd2.ini, then copy sd2.ini, with our modifications, to sd.ini.
+      // Sd2.ini will be left around as a backup for the customer's use.
+      // But if the rename fails, create a temporary file, copy sd.ini to it, and use that
+      // as the source for the copy+modify.  In that case the customer will not receive a
+      // backup.
+
       remove(SESSION2_FILENAME);
 
       if (rename(SESSION_FILENAME, SESSION2_FILENAME)) {
@@ -1471,6 +1478,7 @@ static void rewrite_init_file()
                  MAX_TEXT_LINE_LENGTH);
          gg77->iob88.serious_error_print(errmsg);
 
+#if defined(WIN32)
          char tmpname[_MAX_PATH+1];
          GetTempFileName(".", "", 0, tmpname);
 
@@ -1481,11 +1489,34 @@ static void rewrite_init_file()
          }
 
          if (!(rfile = fopen(tmpname, "r"))) {
-            strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
-                    MAX_TEXT_LINE_LENGTH);
+            strncpy(errmsg, "Failed to read temp file.", MAX_TEXT_LINE_LENGTH);
             gg77->iob88.serious_error_print(errmsg);
             return;
          }
+#else
+         if (!(rfile = tmpfile())) {
+            strncpy(errmsg, "Failed to open temp file.", MAX_TEXT_LINE_LENGTH);
+            gg77->iob88.serious_error_print(errmsg);
+            return;
+         }
+
+         FILE *tfile;
+
+         // Open sd.ini, which we will later write the result to, for reading.
+         if (!(tfile = fopen(SESSION_FILENAME, "r"))) {
+            strncpy(errmsg, "Failed to read file '" SESSION_FILENAME "'\n", MAX_TEXT_LINE_LENGTH);
+            gg77->iob88.serious_error_print(errmsg);
+            return;
+         }
+
+         // Now rfile, which, being the temp file, is writeable.  Copy sd.ini to it,
+         // and then read it back for the edit step.
+         while (!feof(tfile))
+            fputc(fgetc(tfile), rfile);
+         fflush(rfile);
+         fclose(tfile);
+         rewind(rfile);   // Has contents of sd.ini, ready for reading.
+#endif
       }
       else if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
          strncpy(errmsg, "Failed to open '" SESSION2_FILENAME "'.",
@@ -1498,131 +1529,134 @@ static void rewrite_init_file()
          strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
                  MAX_TEXT_LINE_LENGTH);
          gg77->iob88.serious_error_print(errmsg);
+         fclose(rfile);
          return;
       }
-      else {
-         bool more_stuff = false;
 
-         if (rewrite_with_new_style_filename) {
-            // Search for the "[Options]" indicator, copying stuff that we skip.
+      bool more_stuff = false;
 
-            for (;;) {
-               if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
-               if (fputs(line, wfile) == EOF) goto copy_failed;
-               if (!strncmp(line, "[Options]", 9)) break;
-               else if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
-            }
-
-            bool got_the_command = false;
-
-            for (;;) {
-               if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
-
-               if (!strncmp(line, "new_style_filename", 18))
-                  got_the_command = true;
-
-               if (line[0] == '\n' || !strncmp(line, "[Sessions]", 10)) {
-                  // At the end of the section.
-                  if (!got_the_command) {
-                     if (fputs("new_style_filename\n", wfile) == EOF) goto copy_failed;
-                  }
-
-                  if (fputs("\n", wfile) == EOF) goto copy_failed;
-
-                  if (line[0] == '\n')
-                     goto search_for_sessions;
-                  else
-                     goto got_sessions;
-               }
-
-               // Don't copy this line is it is "old_style".
-               if (strncmp(line, "old_style_filename", 18)) {
-                  if (fputs(line, wfile) == EOF) goto copy_failed;
-               }
-            }
-         }
-
-         // Search for the "[Sessions]" indicator, copying stuff that we skip.
-
-      search_for_sessions:
+      if (rewrite_with_new_style_filename) {
+         // Search for the "[Options]" indicator, copying stuff that we skip.
 
          for (;;) {
             if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
             if (fputs(line, wfile) == EOF) goto copy_failed;
-            if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
+            if (!strncmp(line, "[Options]", 9)) break;
+            else if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
          }
 
-      got_sessions:
+         bool got_the_command = false;
 
-         for (i=0 ; ; i++) {
-            if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
-            if (line[0] == '\n') { more_stuff = true; break; }
+         for (;;) {
+            if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
 
-            if (i == session_index-1) {
-               if (write_back_session_line(wfile) < 0)
-                  goto copy_failed;
+            if (!strncmp(line, "new_style_filename", 18))
+               got_the_command = true;
+
+            if (line[0] == '\n' || !strncmp(line, "[Sessions]", 10)) {
+               // At the end of the section.
+               if (!got_the_command) {
+                  if (fputs("new_style_filename\n", wfile) == EOF) goto copy_failed;
+               }
+
+               if (fputs("\n", wfile) == EOF) goto copy_failed;
+
+               if (line[0] == '\n')
+                  goto search_for_sessions;
+               else
+                  goto got_sessions;
             }
-            else if (i == -session_index-1) {
-            }
-            else {
+
+            // Don't copy this line is it is "old_style".
+            if (strncmp(line, "old_style_filename", 18)) {
                if (fputs(line, wfile) == EOF) goto copy_failed;
             }
          }
+      }
 
-         if (i < session_index) {
-            // User has requested a line number larger than the file.
-            // Append a new line.
+      // Search for the "[Sessions]" indicator, copying stuff that we skip.
+
+   search_for_sessions:
+
+      for (;;) {
+         if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+         if (fputs(line, wfile) == EOF) goto copy_failed;
+         if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
+      }
+
+   got_sessions:
+
+      for (i=0 ; ; i++) {
+         if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+         if (line[0] == '\n') { more_stuff = true; break; }
+
+         if (i == session_index-1) {
             if (write_back_session_line(wfile) < 0)
                goto copy_failed;
          }
-
-         if (more_stuff) {
-            if (fputs("\n", wfile) == EOF) goto copy_failed;
-            for (;;) {
-               if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
-               if (fputs(line, wfile) == EOF) goto copy_failed;
-            }
+         else if (i == -session_index-1) {
          }
-
-         goto copy_done;
-
-      copy_failed:
-
-         strncpy(errmsg, "Failed to write to '" SESSION_FILENAME "'.",
-                 MAX_TEXT_LINE_LENGTH);
-         gg77->iob88.serious_error_print(errmsg);
-
-      copy_done:
-
-         fclose(wfile);
+         else {
+            if (fputs(line, wfile) == EOF) goto copy_failed;
+         }
       }
 
-      fclose(rfile);
+      if (i < session_index) {
+         // User has requested a line number larger than the file.
+         // Append a new line.
+         if (write_back_session_line(wfile) < 0)
+            goto copy_failed;
+      }
 
-      // Write out the stats file if there is one.
-
-      if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
-         stats_file = fopen(GLOB_decorated_stats_filename, "w");
-
-         if (stats_file) {     // If it's gone, don't do anything.
-            for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
-               if (main_call_lists[call_list_any][i]->the_defn.frequency > 0) {
-                  fprintf(stats_file, "%-4d %s\n",
-                          main_call_lists[call_list_any][i]->the_defn.frequency,
-                          main_call_lists[call_list_any][i]->menu_name);
-               }
-            }
-
-            for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
-               if (concept_descriptor_table[i].frequency > 0) {
-                  fprintf(stats_file, "%-4d %s\n",
-                          concept_descriptor_table[i].frequency,
-                          concept_descriptor_table[i].menu_name);
-               }
-            }
-
-            fclose(stats_file);
+      if (more_stuff) {
+         if (fputs("\n", wfile) == EOF) goto copy_failed;
+         for (;;) {
+            if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+            if (fputs(line, wfile) == EOF) goto copy_failed;
          }
+      }
+
+      goto copy_done;
+
+   copy_failed:
+
+      strncpy(errmsg, "Failed to write to '" SESSION_FILENAME "'.",
+              MAX_TEXT_LINE_LENGTH);
+      gg77->iob88.serious_error_print(errmsg);
+
+   copy_done:
+
+      fclose(rfile);
+      fclose(wfile);
+   }
+}
+
+static void do_stats_file()
+{
+   // Write out the stats file if there is one.
+
+   if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
+      stats_file = fopen(GLOB_decorated_stats_filename, "w");
+      int i;
+
+      if (stats_file) {     // If it's gone, don't do anything.
+         for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
+            if (main_call_lists[call_list_any][i]->the_defn.frequency > 0) {
+               fprintf(stats_file, "%-4d %s\n",
+                       main_call_lists[call_list_any][i]->the_defn.frequency,
+                       main_call_lists[call_list_any][i]->menu_name);
+            }
+         }
+
+         for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
+            if (concept_descriptor_table[i].frequency > 0) {
+               fprintf(stats_file, "%-4d %s\n",
+                       concept_descriptor_table[i].frequency,
+                       concept_descriptor_table[i].menu_name);
+            }
+         }
+
+         fclose(stats_file);
       }
    }
 }
@@ -1638,8 +1672,10 @@ extern void general_final_exit(int code)
    // "sdtty -help".  In that case, "rewrite_init_file", will do nothing,
    // so it won't matter that "ttu_initialize" wasn't called.
 
-   if (glob_abridge_mode < abridge_mode_writing_only)   // Not writing out a list, actually running the program.
+   if (glob_abridge_mode < abridge_mode_writing_only) {   // Not writing out a list, actually running the program.
       rewrite_init_file();
+      do_stats_file();
+   }
 
    // If this is Sdtty, this next procedure will call "ttu_terminate".
    // If we had just been printing command-line help, "ttu_initialize"
@@ -1802,7 +1838,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
                   memcpy(new_call, call_root, sizeof(call_with_name) + char_count - 3);
                   /* Fix it up. */
                   new_call->the_defn.callflagsf =
-                     (new_call->the_defn.callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) |
+                     (new_call->the_defn.callflagsf & ~CFLAGH__TAG_CALL_RQ_MASK) |
                      CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
                   create_new_tagger(xxx, new_call);
                }
@@ -1947,34 +1983,34 @@ void configuration::initialize()
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
    configuration::initialize_startinfolist_item(start_select_h1p2p, "Heads 1P2P", false, new setup(s2x4, 1,
-      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
-      0100|d_south,ID3_G1, 0000|d_south,ID3_B1,
-      0700|d_north,ID3_G4, 0600|d_north,ID3_B4,
-      0500|d_north,ID3_G3, 0400|d_north,ID3_B3));
+      0300|d_south,ID2_G2, 0200|d_south,ID2_B2,
+      0100|d_south,ID2_G1, 0000|d_south,ID2_B1,
+      0700|d_north,ID2_G4, 0600|d_north,ID2_B4,
+      0500|d_north,ID2_G3, 0400|d_north,ID2_B3));
 
    configuration::initialize_startinfolist_item(start_select_s1p2p, "Sides 1P2P", false, new setup(s2x4, 0,
-      0500|d_south,ID3_G3, 0400|d_south,ID3_B3,
-      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
-      0100|d_north,ID3_G1, 0000|d_north,ID3_B1,
-      0700|d_north,ID3_G4, 0600|d_north,ID3_B4));
+      0500|d_south,ID2_G3, 0400|d_south,ID2_B3,
+      0300|d_south,ID2_G2, 0200|d_south,ID2_B2,
+      0100|d_north,ID2_G1, 0000|d_north,ID2_B1,
+      0700|d_north,ID2_G4, 0600|d_north,ID2_B4));
 
    configuration::initialize_startinfolist_item(start_select_heads_start, "HEADS", true, new setup(s2x4, 0,
-      0600|d_east,ID3_B4,  0500|d_south,ID3_G3,
-      0400|d_south,ID3_B3, 0300|d_west,ID3_G2,
-      0200|d_west,ID3_B2,  0100|d_north,ID3_G1,
-      0000|d_north,ID3_B1, 0700|d_east,ID3_G4));
+      0600|d_east,ID2_B4,  0500|d_south,ID2_G3,
+      0400|d_south,ID2_B3, 0300|d_west,ID2_G2,
+      0200|d_west,ID2_B2,  0100|d_north,ID2_G1,
+      0000|d_north,ID2_B1, 0700|d_east,ID2_G4));
 
    configuration::initialize_startinfolist_item(start_select_sides_start, "SIDES", true, new setup(s2x4, 1,
-      0400|d_east,ID3_B3,  0300|d_south,ID3_G2,
-      0200|d_south,ID3_B2, 0100|d_west,ID3_G1,
-      0000|d_west,ID3_B1,  0700|d_north,ID3_G4,
-      0600|d_north,ID3_B4, 0500|d_east,ID3_G3));
+      0400|d_east,ID2_B3,  0300|d_south,ID2_G2,
+      0200|d_south,ID2_B2, 0100|d_west,ID2_G1,
+      0000|d_west,ID2_B1,  0700|d_north,ID2_G4,
+      0600|d_north,ID2_B4, 0500|d_east,ID2_G3));
 
    configuration::initialize_startinfolist_item(start_select_as_they_are, "From squared set", false, new setup(s4x4, 0,
-      0000|d_north,ID3_B1, 0100|d_north,ID3_G1,
-      0200|d_west,ID3_B2,  0300|d_west,ID3_G2,
-      0400|d_south,ID3_B3, 0500|d_south,ID3_G3,
-      0600|d_east,ID3_B4,  0700|d_east,ID3_G4,
+      0000|d_north,ID2_B1, 0100|d_north,ID2_G1,
+      0200|d_west,ID2_B2,  0300|d_west,ID2_G2,
+      0400|d_south,ID2_B3, 0500|d_south,ID2_G3,
+      0600|d_east,ID2_B4,  0700|d_east,ID2_G4,
       0x9ADE1256));
 }
 
@@ -2717,88 +2753,88 @@ bool open_session(int argc, char **argv)
          // RH tidal wave
          test_starting_setup(call_list_1x8,
                              setup(s1x8, 0,
-                                   0600|NORT,ID3_B4, 0500|SOUT,ID3_G3, 0400|SOUT,ID3_B3, 0700|NORT,ID3_G4,
-                                   0200|SOUT,ID3_B2, 0100|NORT,ID3_G1, 0000|NORT,ID3_B1, 0300|SOUT,ID3_G2));
+                                   0600|NORT,ID2_B4, 0500|SOUT,ID2_G3, 0400|SOUT,ID2_B3, 0700|NORT,ID2_G4,
+                                   0200|SOUT,ID2_B2, 0100|NORT,ID2_G1, 0000|NORT,ID2_B1, 0300|SOUT,ID2_G2));
 
          // LH tidal wave
          test_starting_setup(call_list_l1x8,
                              setup(s1x8, 0,
-                                   0600|SOUT,ID3_B4, 0500|NORT,ID3_G3, 0400|NORT,ID3_B3, 0700|SOUT,ID3_G4,
-                                   0200|NORT,ID3_B2, 0100|SOUT,ID3_G1, 0000|SOUT,ID3_B1, 0300|NORT,ID3_G2));
+                                   0600|SOUT,ID2_B4, 0500|NORT,ID2_G3, 0400|NORT,ID2_B3, 0700|SOUT,ID2_G4,
+                                   0200|NORT,ID2_B2, 0100|SOUT,ID2_G1, 0000|SOUT,ID2_B1, 0300|NORT,ID2_G2));
 
 
 
          // DPT
          test_starting_setup(call_list_dpt,
                              setup(s2x4, 0,
-                                   0300|EAST,ID3_G2, 0400|EAST,ID3_B3, 0500|WEST,ID3_G3, 0200|WEST,ID3_B2,
-                                   0700|WEST,ID3_G4, 0000|WEST,ID3_B1, 0100|EAST,ID3_G1, 0600|EAST,ID3_B4));
+                                   0300|EAST,ID2_G2, 0400|EAST,ID2_B3, 0500|WEST,ID2_G3, 0200|WEST,ID2_B2,
+                                   0700|WEST,ID2_G4, 0000|WEST,ID2_B1, 0100|EAST,ID2_G1, 0600|EAST,ID2_B4));
 
          // completed DPT
          test_starting_setup(call_list_cdpt,
                              setup(s2x4, 0,
-                                   0700|WEST,ID3_G4, 0500|WEST,ID3_G3, 0400|EAST,ID3_B3, 0600|EAST,ID3_B4,
-                                   0300|EAST,ID3_G2, 0100|EAST,ID3_G1, 0000|WEST,ID3_B1, 0200|WEST,ID3_B2));
+                                   0700|WEST,ID2_G4, 0500|WEST,ID2_G3, 0400|EAST,ID2_B3, 0600|EAST,ID2_B4,
+                                   0300|EAST,ID2_G2, 0100|EAST,ID2_G1, 0000|WEST,ID2_B1, 0200|WEST,ID2_B2));
 
          // RCOL
          test_starting_setup(call_list_rcol,
                              setup(s2x4, 0,
-                                   0600|EAST,ID3_B4, 0500|EAST,ID3_G3, 0400|EAST,ID3_B3, 0700|EAST,ID3_G4,
-                                   0200|WEST,ID3_B2, 0100|WEST,ID3_G1, 0000|WEST,ID3_B1, 0300|WEST,ID3_G2));
+                                   0600|EAST,ID2_B4, 0500|EAST,ID2_G3, 0400|EAST,ID2_B3, 0700|EAST,ID2_G4,
+                                   0200|WEST,ID2_B2, 0100|WEST,ID2_G1, 0000|WEST,ID2_B1, 0300|WEST,ID2_G2));
 
          // LCOL
          test_starting_setup(call_list_lcol,
                              setup(s2x4, 0,
-                                   0300|WEST,ID3_G2, 0000|WEST,ID3_B1, 0100|WEST,ID3_G1, 0200|WEST,ID3_B2,
-                                   0700|EAST,ID3_G4, 0400|EAST,ID3_B3, 0500|EAST,ID3_G3, 0600|EAST,ID3_B4));
+                                   0300|WEST,ID2_G2, 0000|WEST,ID2_B1, 0100|WEST,ID2_G1, 0200|WEST,ID2_B2,
+                                   0700|EAST,ID2_G4, 0400|EAST,ID2_B3, 0500|EAST,ID2_G3, 0600|EAST,ID2_B4));
 
          // 8CH
          test_starting_setup(call_list_8ch,
                              setup(s2x4, 0,
-                                   0600|EAST,ID3_B4, 0500|WEST,ID3_G3, 0400|EAST,ID3_B3, 0700|WEST,ID3_G4,
-                                   0200|WEST,ID3_B2, 0100|EAST,ID3_G1, 0000|WEST,ID3_B1, 0300|EAST,ID3_G2));
+                                   0600|EAST,ID2_B4, 0500|WEST,ID2_G3, 0400|EAST,ID2_B3, 0700|WEST,ID2_G4,
+                                   0200|WEST,ID2_B2, 0100|EAST,ID2_G1, 0000|WEST,ID2_B1, 0300|EAST,ID2_G2));
 
          // TBY
          test_starting_setup(call_list_tby,
                              setup(s2x4, 0,
-                                   0500|WEST,ID3_G3, 0600|EAST,ID3_B4, 0700|WEST,ID3_G4, 0400|EAST,ID3_B3,
-                                   0100|EAST,ID3_G1, 0200|WEST,ID3_B2, 0300|EAST,ID3_G2, 0000|WEST,ID3_B1));
+                                   0500|WEST,ID2_G3, 0600|EAST,ID2_B4, 0700|WEST,ID2_G4, 0400|EAST,ID2_B3,
+                                   0100|EAST,ID2_G1, 0200|WEST,ID2_B2, 0300|EAST,ID2_G2, 0000|WEST,ID2_B1));
 
          // LIN
          test_starting_setup(call_list_lin,
                              setup(s2x4, 0,
-                                   0300|SOUT,ID3_G2, 0000|SOUT,ID3_B1, 0100|SOUT,ID3_G1, 0200|SOUT,ID3_B2,
-                                   0700|NORT,ID3_G4, 0400|NORT,ID3_B3, 0500|NORT,ID3_G3, 0600|NORT,ID3_B4));
+                                   0300|SOUT,ID2_G2, 0000|SOUT,ID2_B1, 0100|SOUT,ID2_G1, 0200|SOUT,ID2_B2,
+                                   0700|NORT,ID2_G4, 0400|NORT,ID2_B3, 0500|NORT,ID2_G3, 0600|NORT,ID2_B4));
 
          // LOUT
          test_starting_setup(call_list_lout,
                              setup(s2x4, 0,
-                                   0600|NORT,ID3_B4, 0500|NORT,ID3_G3, 0400|NORT,ID3_B3, 0700|NORT,ID3_G4,
-                                   0200|SOUT,ID3_B2, 0100|SOUT,ID3_G1, 0000|SOUT,ID3_B1, 0300|SOUT,ID3_G2));
+                                   0600|NORT,ID2_B4, 0500|NORT,ID2_G3, 0400|NORT,ID2_B3, 0700|NORT,ID2_G4,
+                                   0200|SOUT,ID2_B2, 0100|SOUT,ID2_G1, 0000|SOUT,ID2_B1, 0300|SOUT,ID2_G2));
 
          // RWV
          test_starting_setup(call_list_rwv,
                              setup(s2x4, 0,
-                                   0600|NORT,ID3_B4, 0500|SOUT,ID3_G3, 0700|NORT,ID3_G4, 0400|SOUT,ID3_B3,
-                                   0200|SOUT,ID3_B2, 0100|NORT,ID3_G1, 0300|SOUT,ID3_G2, 0000|NORT,ID3_B1));
+                                   0600|NORT,ID2_B4, 0500|SOUT,ID2_G3, 0700|NORT,ID2_G4, 0400|SOUT,ID2_B3,
+                                   0200|SOUT,ID2_B2, 0100|NORT,ID2_G1, 0300|SOUT,ID2_G2, 0000|NORT,ID2_B1));
 
          // LWV
          test_starting_setup(call_list_lwv,
                              setup(s2x4, 0,
-                                   0600|SOUT,ID3_B4, 0500|NORT,ID3_G3, 0700|SOUT,ID3_G4, 0400|NORT,ID3_B3,
-                                   0200|NORT,ID3_B2, 0100|SOUT,ID3_G1, 0300|NORT,ID3_G2, 0000|SOUT,ID3_B1));
+                                   0600|SOUT,ID2_B4, 0500|NORT,ID2_G3, 0700|SOUT,ID2_G4, 0400|NORT,ID2_B3,
+                                   0200|NORT,ID2_B2, 0100|SOUT,ID2_G1, 0300|NORT,ID2_G2, 0000|SOUT,ID2_B1));
 
          // R2FL
          test_starting_setup(call_list_r2fl,
                              setup(s2x4, 0,
-                                   0600|NORT,ID3_B4, 0500|NORT,ID3_G3, 0700|SOUT,ID3_G4, 0400|SOUT,ID3_B3,
-                                   0200|SOUT,ID3_B2, 0100|SOUT,ID3_G1, 0300|NORT,ID3_G2, 0000|NORT,ID3_B1));
+                                   0600|NORT,ID2_B4, 0500|NORT,ID2_G3, 0700|SOUT,ID2_G4, 0400|SOUT,ID2_B3,
+                                   0200|SOUT,ID2_B2, 0100|SOUT,ID2_G1, 0300|NORT,ID2_G2, 0000|NORT,ID2_B1));
 
          // L2FL
          test_starting_setup(call_list_l2fl,
                              setup(s2x4, 0,
-                                   0500|SOUT,ID3_G3, 0600|SOUT,ID3_B4, 0400|NORT,ID3_B3, 0700|NORT,ID3_G4,
-                                   0100|NORT,ID3_G1, 0200|NORT,ID3_B2, 0000|SOUT,ID3_B1, 0300|SOUT,ID3_G2));
+                                   0500|SOUT,ID2_G3, 0600|SOUT,ID2_B4, 0400|NORT,ID2_B3, 0700|NORT,ID2_G4,
+                                   0100|NORT,ID2_G1, 0200|NORT,ID2_B2, 0000|SOUT,ID2_B1, 0300|SOUT,ID2_G2));
 
          // tidal column
          create_misc_call_lists(call_list_gcol);

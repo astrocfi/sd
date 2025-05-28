@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.06
-@set title2 Database version = 39.06 format = 357
+@set title1 RELEASE NOTES FOR VERSION 39.07
+@set title2 Database version = 39.07 format = 357
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.07::
 * 39.06::
 * 39.05::
 * 39.04::
@@ -103,7 +104,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.06, Top, (dir)
+@node Intro, 39.07, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -114,11 +115,31 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2019 William B. Ackerman
 @sp 3
 @menu
-* 39.06::               Changes in the current version
+* 39.07::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.06, 39.05, Intro, Top
+@node 39.07, 39.06, Intro, Top
+@unnumberedsec Version 39.07 changes
+
+A number of bugs were fixed, and improvements made.  Many of these
+improvements involve unsymmetrical identification of people, as in
+@strong{near 5}.
+
+Note that there are no designators for things like @strong{the 3 on the
+caller's left}, though one can designate the line, column, or box on
+the caller's left or right.  The designators like @strong{leftmost 3} do not select people based
+on their position in the room.  They are intended to select the leftmost or rightmost N people in a line of 4
+all facing the same way, as in @strong{leftmost 3 here comes the judge} from back-to-back lines.
+
+In the setup obtained after @strong{1/2 circulate} from parallel
+waves, one can designate the @strong{center diamond} and the
+@strong{outside diamond}.  In the setup obtained after @strong{1/2
+acey deucey} from parallel waves, one can additionally designate the
+@strong{middle (intermediate) diamond}.
+
+@c ************
+@node 39.06, 39.05, 39.07, Top
 @unnumberedsec Version 39.06 changes
 
 A bug was fixed in the handling of @strong{counter rotate} from the ``checkpoint spots'' of point-to-point diamonds or a spindle.
@@ -130,8 +151,6 @@ A bug was fixed in the handling of @strong{counter rotate} from the ``checkpoint
 @noindent Sd can now handle the malfunctions that occur when saving
 the backup version of @file{sd.ini} while using Windows Vista.  We
 thank Microsoft for making this interesting.
-
-@noindent
 
 @c ************
 @node 39.05, 39.04, 39.06, Top

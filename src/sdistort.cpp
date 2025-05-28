@@ -4725,7 +4725,7 @@ extern void common_spot_move(
                      int spot_to_clear = k;
                      if ((the_results[0].people[k].id1 ^ the_results[1].people[k].id1) |
                          ((the_results[0].people[k].id2 ^ the_results[1].people[k].id2) &
-                          !ID2_BITS_NOT_INTRINSIC)) {
+                          ~ID2_BITS_NOT_INTRINSIC)) {
                         // They didn't match.  Maybe some people had collided in one setup
                         // but not the other.  Find where they might have gone.
                         if (the_results[0].kind == s4x4) {
@@ -4735,7 +4735,7 @@ extern void common_spot_move(
 
                            if ((the_results[0].people[k].id1 ^ the_results[1].people[j].id1) |
                                ((the_results[0].people[k].id2 ^ the_results[1].people[j].id2) &
-                                !ID2_BITS_NOT_INTRINSIC)) {
+                                ~ID2_BITS_NOT_INTRINSIC)) {
                               fail("People moved inconsistently during common-spot call.");
                            }
 

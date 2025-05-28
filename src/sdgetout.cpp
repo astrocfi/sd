@@ -1594,10 +1594,10 @@ static bool inner_search(command_kind goal,
 
                if (this_state.state.people[k].id1 != ((t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK)))
                   goto cant_consider_this_call;
-               if (this_state.state.people[k].id2 != t.id2)
+               if (this_state.state.people[k].id2 !=
+                   ((t.id2 & ~ID2_PERM_ALLBITS) | (thispermuteperson.id2 & ID2_PERM_ALLBITS)))
                   goto cant_consider_this_call;
-               if (this_state.state.people[k].id3 !=
-                   ((t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS)))
+               if (this_state.state.people[k].id3 != t.id3)
                   goto cant_consider_this_call;
             }
             else {
@@ -1949,7 +1949,7 @@ uims_reply_thing ui_utils::full_resolve()
 
                if (t.id1) {
                   const personrec & thispermuteperson = this_resolve->permutepersoninfo[(t.id1 & PID_MASK) >> 6];
-                  t.id3 = (t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS);
+                  t.id2 = (t.id2 & ~ID2_PERM_ALLBITS) | (thispermuteperson.id2 & ID2_PERM_ALLBITS);
                   t.id1 = (t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK);
                }
             }

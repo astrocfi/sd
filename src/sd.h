@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2017  William B. Ackerman.
+//    Copyright (C) 1990-2019  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -792,46 +792,54 @@ enum {
 // "bounce".
 
 enum {
-   ID2_CTR2       = 0x80000000U,
-   ID2_BELLE      = 0x40000000U,
-   ID2_BEAU       = 0x20000000U,
-   ID2_CTR6       = 0x10000000U,
-   ID2_OUTR2      = 0x08000000U,
-   ID2_OUTR6      = 0x04000000U,
-   ID2_TRAILER    = 0x02000000U,
-   ID2_LEAD       = 0x01000000U,
-   ID2_CTRDMD     = 0x00800000U,
-   ID2_NCTRDMD    = 0x00400000U,
-   ID2_CTR1X4     = 0x00200000U,
-   ID2_NCTR1X4    = 0x00100000U,
-   ID2_CTR1X6     = 0x00080000U,
-   ID2_NCTR1X6    = 0x00040000U,
-   ID2_OUTR1X3    = 0x00020000U,
-   ID2_NOUTR1X3   = 0x00010000U,
-   ID2_FACING     = 0x00008000U,
-   ID2_NOTFACING  = 0x00004000U,
-   ID2_CENTER     = 0x00002000U,
-   ID2_END        = 0x00001000U,
-   ID2_CTR4       = 0x00000800U,
-   ID2_OUTRPAIRS  = 0x00000400U,
-   ID2_FACEFRONT  = 0x00000200U,
-   ID2_FACEBACK   = 0x00000100U,
-   ID2_FACELEFT   = 0x00000080U,
-   ID2_FACERIGHT  = 0x00000040U,
-   ID2_LEFTCOL    = 0x00000020U,
-   ID2_LEFTLINE   = 0x00000010U,
-   ID2_LEFTBOX    = 0x00000008U,
-   ID2_RIGHTCOL   = 0x00000004U,
-   ID2_RIGHTLINE  = 0x00000002U,
-   ID2_RIGHTBOX   = 0x00000001U,
+   ID2_CTR2         = 0x80000000U,
+   ID2_BELLE        = 0x40000000U,
+   ID2_BEAU         = 0x20000000U,
+   ID2_CTR6         = 0x10000000U,
+   ID2_OUTR2        = 0x08000000U,
+   ID2_OUTR6        = 0x04000000U,
+   ID2_TRAILER      = 0x02000000U,
+   ID2_LEAD         = 0x01000000U,
+   ID2_CTRDMD       = 0x00800000U,
+   ID2_NCTRDMD      = 0x00400000U,
+   ID2_CTR1X4       = 0x00200000U,
+   ID2_NCTR1X4      = 0x00100000U,
+   ID2_CTR1X6       = 0x00080000U,
+   ID2_NCTR1X6      = 0x00040000U,
+   ID2_OUTR1X3      = 0x00020000U,
+   ID2_NOUTR1X3     = 0x00010000U,
+   ID2_FACING       = 0x00008000U,
+   ID2_NOTFACING    = 0x00004000U,
+   ID2_CENTER       = 0x00002000U,
+   ID2_END          = 0x00001000U,
+   ID2_CTR4         = 0x00000800U,
+   ID2_OUTRPAIRS    = 0x00000400U,
+   ID2_PERM_NSG     = 0x00000200U,  // Not side girl
+   ID2_PERM_NSB     = 0x00000100U,  // Not side boy
+   ID2_PERM_NHG     = 0x00000080U,  // Not head girl
+   ID2_PERM_NHB     = 0x00000040U,  // Not head boy
+   ID2_PERM_HCOR    = 0x00000020U,  // Head corner
+   ID2_PERM_SCOR    = 0x00000010U,  // Side corner
+   ID2_PERM_HEAD    = 0x00000008U,  // Head
+   ID2_PERM_SIDE    = 0x00000004U,  // Side
+   ID2_PERM_BOY     = 0x00000002U,  // Boy
+   ID2_PERM_GIRL    = 0x00000001U,  // Girl
+   ID2_PERM_ALLBITS = 0x000003FFU,
+
+   // These are the bits that never change.
+   ID2_PERM_ALL_ID = ID2_PERM_HEAD|ID2_PERM_SIDE|ID2_PERM_BOY|ID2_PERM_GIRL,
+
+   // These are the standard definitions for the 8 people in the square.
+   ID2_B1 = ID2_PERM_NSG|ID2_PERM_NSB|ID2_PERM_NHG|ID2_PERM_HCOR|ID2_PERM_HEAD|ID2_PERM_BOY,
+   ID2_G1 = ID2_PERM_NSG|ID2_PERM_NSB|ID2_PERM_NHB|ID2_PERM_SCOR|ID2_PERM_HEAD|ID2_PERM_GIRL,
+   ID2_B2 = ID2_PERM_NSG|ID2_PERM_NHG|ID2_PERM_NHB|ID2_PERM_SCOR|ID2_PERM_SIDE|ID2_PERM_BOY,
+   ID2_G2 = ID2_PERM_NSB|ID2_PERM_NHG|ID2_PERM_NHB|ID2_PERM_HCOR|ID2_PERM_SIDE|ID2_PERM_GIRL,
+   ID2_B3 = ID2_PERM_NSG|ID2_PERM_NSB|ID2_PERM_NHG|ID2_PERM_HCOR|ID2_PERM_HEAD|ID2_PERM_BOY,
+   ID2_G3 = ID2_PERM_NSG|ID2_PERM_NSB|ID2_PERM_NHB|ID2_PERM_SCOR|ID2_PERM_HEAD|ID2_PERM_GIRL,
+   ID2_B4 = ID2_PERM_NSG|ID2_PERM_NHG|ID2_PERM_NHB|ID2_PERM_SCOR|ID2_PERM_SIDE|ID2_PERM_BOY,
+   ID2_G4 = ID2_PERM_NSB|ID2_PERM_NHG|ID2_PERM_NHB|ID2_PERM_HCOR|ID2_PERM_SIDE|ID2_PERM_GIRL,
 
    // Various useful combinations.
-
-   ID2_ABSOLUTE_PROXIMITY_BITS =
-      ID2_LEFTCOL|ID2_LEFTLINE|ID2_LEFTBOX|
-      ID2_RIGHTCOL|ID2_RIGHTLINE|ID2_RIGHTBOX,
-
-   ID2_ABSOLUTE_FACING_BITS = ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT,
 
    // These bits are not a property just of the person and his position
    // in the formation -- they depend on other people's facing direction.
@@ -882,37 +890,29 @@ enum {
 
    // 2 available codes.
 
-   ID3_PERM_NSG     = 0x00000200U,  // Not side girl
-   ID3_PERM_NSB     = 0x00000100U,  // Not side boy
-   ID3_PERM_NHG     = 0x00000080U,  // Not head girl
-   ID3_PERM_NHB     = 0x00000040U,  // Not head boy
-   ID3_PERM_HCOR    = 0x00000020U,  // Head corner
-   ID3_PERM_SCOR    = 0x00000010U,  // Side corner
-   ID3_PERM_HEAD    = 0x00000008U,  // Head
-   ID3_PERM_SIDE    = 0x00000004U,  // Side
-   ID3_PERM_BOY     = 0x00000002U,  // Boy
-   ID3_PERM_GIRL    = 0x00000001U,  // Girl
-   ID3_PERM_ALLBITS = 0x000003FFU,
+   ID3_FACEFRONT  = 0x00000200U,
+   ID3_FACEBACK   = 0x00000100U,
+   ID3_FACELEFT   = 0x00000080U,
+   ID3_FACERIGHT  = 0x00000040U,
+   ID3_LEFTCOL    = 0x00000020U,
+   ID3_LEFTLINE   = 0x00000010U,
+   ID3_LEFTBOX    = 0x00000008U,
+   ID3_RIGHTCOL   = 0x00000004U,
+   ID3_RIGHTLINE  = 0x00000002U,
+   ID3_RIGHTBOX   = 0x00000001U,
+
+   // Various useful combinations.
+
+   ID3_ABSOLUTE_FACING_BITS = ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT,
 
    ID3_ABSOLUTE_PROXIMITY_BITS =
       ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|
       ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR|
       ID3_NEARTHREE|ID3_NEARFIVE|ID3_FARTHREE|ID3_FARFIVE|
       ID3_FARTHEST1|ID3_NOTFARTHEST1|ID3_NEAREST1|ID3_NOTNEAREST1|
-      ID3_NEARTWO|ID3_FARTWO|ID3_NEARSIX|ID3_FARSIX,
-
-   // These are the bits that never change.
-   ID3_PERM_ALL_ID = ID3_PERM_HEAD|ID3_PERM_SIDE|ID3_PERM_BOY|ID3_PERM_GIRL,
-
-   // These are the standard definitions for the 8 people in the square.
-   ID3_B1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
-   ID3_G1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
-   ID3_B2 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
-   ID3_G2 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL,
-   ID3_B3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
-   ID3_G3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
-   ID3_B4 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
-   ID3_G4 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL
+      ID3_NEARTWO|ID3_FARTWO|ID3_NEARSIX|ID3_FARSIX|
+      ID3_LEFTCOL|ID3_LEFTLINE|ID3_LEFTBOX|
+      ID3_RIGHTCOL|ID3_RIGHTLINE|ID3_RIGHTBOX
 };
 
 
@@ -1461,6 +1461,8 @@ enum selector_kind {
    selector_facingright,
    selector_farthest1,
    selector_nearest1,
+   selector_nearseven,
+   selector_farseven,
    // Another WHO_YOU_ARE group.  It runs up to TGL_START, exclusive.
    selector_boy1,    selector_WHO_YOU_ARE_2_START = selector_boy1,
    selector_girl1,
@@ -3006,6 +3008,7 @@ class select {
       fx_rigmino,
       fx_galmino,
       fx_qtgminb,
+      fx_fqtg2x3,
       fx_fcpl12,
       fx_fcpl23,
       fx_fcpl34,
@@ -3587,7 +3590,9 @@ enum {
    SPROP_OUTSIDE_TRIANGLES = 0x00000004U,
    SPROP_INSIDE_TRIANGLES  = 0x00000008U,
    // For setups with inside/outside triangles, the base people are horizontal to each other.
-   SPROP_TGL_BASE_HORIZ    = 0x00000010U
+   SPROP_TGL_BASE_HORIZ    = 0x00000010U,
+   // This setup can have things like "near 3" evaluated.
+   SPROP_FIND_NEAR_PEOPLE  = 0x00000020U
 };
 
 
@@ -4675,7 +4680,6 @@ extern id_bit_table id_bit_table_4x4_outer_pairs[];                 /* in SDTABL
 extern id_bit_table id_bit_table_525_nw[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_525_ne[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_343_outr[];                        /* in SDTABLES */
-extern id_bit_table id_bit_table_343_innr[];                        /* in SDTABLES */
 extern id_bit_table id_bit_table_545_outr[];                        /* in SDTABLES */
 extern id_bit_table id_bit_table_545_innr[];                        /* in SDTABLES */
 extern id_bit_table id_bit_table_3dmd_in_out[];                     /* in SDTABLES */
