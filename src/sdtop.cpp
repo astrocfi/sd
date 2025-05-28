@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    compress_setup
@@ -40,6 +42,8 @@
    assoc
    find_calldef
    setup::clear_people
+   clear_result_flags
+   setup::setup    // big constructor.
    clear_result
    rotperson
    rotcw
@@ -3015,6 +3019,7 @@ static void initialize_concept_sublists()
 
 extern void initialize_sdlib()
 {
+   configuration::initialize();
    initialize_tandem_tables();
    restriction_tester::initialize_tables();
    select::initialize();
@@ -3377,7 +3382,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       // First, we demand that the starting setup be correct.
       // Also, if a qualifier number was specified, it must match.
 
-      if ((begin_kind) p->start_setup != key) continue;
+      if (p->get_start_setup() != key) continue;
 
       tt.assump_negate = 0;
 
@@ -4321,6 +4326,42 @@ extern void clear_result_flags(setup *z)
    z->result_flags.clear_split_info();
 }
 
+setup::setup(setup_kind k, int r,
+             uint32 P0, uint32 I0,
+             uint32 P1, uint32 I1,
+             uint32 P2, uint32 I2,
+             uint32 P3, uint32 I3,
+             uint32 P4, uint32 I4,
+             uint32 P5, uint32 I5,
+             uint32 P6, uint32 I6,
+             uint32 P7, uint32 I7,
+             uint32 little_endian_wheretheygo /* = 0x76543210 */) :
+   kind(k), rotation(r)
+{
+   clear_people();
+   clear_result_flags(this);
+   int i;
+
+   // This is kind of klutzy and inefficient, but this constructor is only
+   // used at program startup.
+   i = little_endian_wheretheygo & 0xF;
+   people[i].id1 = P0; people[i].id2 = 0; people[i].id3 = I0;
+   i = (little_endian_wheretheygo >> 4) & 0xF;
+   people[i].id1 = P1; people[i].id2 = 0; people[i].id3 = I1;
+   i = (little_endian_wheretheygo >> 8) & 0xF;
+   people[i].id1 = P2; people[i].id2 = 0; people[i].id3 = I2;
+   i = (little_endian_wheretheygo >> 12) & 0xF;
+   people[i].id1 = P3; people[i].id2 = 0; people[i].id3 = I3;
+   i = (little_endian_wheretheygo >> 16) & 0xF;
+   people[i].id1 = P4; people[i].id2 = 0; people[i].id3 = I4;
+   i = (little_endian_wheretheygo >> 20) & 0xF;
+   people[i].id1 = P5; people[i].id2 = 0; people[i].id3 = I5;
+   i = (little_endian_wheretheygo >> 24) & 0xF;
+   people[i].id1 = P6; people[i].id2 = 0; people[i].id3 = I6;
+   i = (little_endian_wheretheygo >> 28) & 0xF;
+   people[i].id1 = P7; people[i].id2 = 0; people[i].id3 = I7;
+}
+
 
 
 
@@ -4420,16 +4461,18 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
       install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
 }
 
-extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout, setup & dmdout)
+extern setup_kind try_to_expand_dead_conc(const setup & result,
+                                          const call_with_name *call,
+                                          setup & lineout, setup & qtagout, setup & dmdout)
 {
-   lineout = ss;
+   lineout = result;
    lineout.rotation += lineout.inner.srotation;
-   qtagout = ss;
+   qtagout = result;
    qtagout.rotation += qtagout.inner.srotation;
-   dmdout = ss;
+   dmdout = result;
    dmdout.rotation += dmdout.inner.srotation;
 
-   if (ss.inner.skind == s1x4) {
+   if (result.inner.skind == s1x4) {
       static expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
       expand::expand_setup(exp_conc_1x8, &lineout);
       static expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
@@ -4437,17 +4480,17 @@ extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, set
       static expand::thing exp_conc_dmd = {{1, 2, 5, 6}, 4, s1x4, s3x1dmd, 0};
       expand::expand_setup(exp_conc_dmd, &dmdout);
    }
-   else if (ss.inner.skind == s2x2) {
+   else if (result.inner.skind == s2x2) {
       static expand::thing exp_conc_2x2a = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
       static expand::thing exp_conc_2x2b = {{6, 1, 2, 5}, 4, s2x2, s2x4, 1};
-      if (ss.concsetup_outer_elongation == 1)
+      if (result.concsetup_outer_elongation == 1)
          expand::expand_setup(exp_conc_2x2a, &lineout);
-      else if (ss.concsetup_outer_elongation == 2)
+      else if (result.concsetup_outer_elongation == 2)
          expand::expand_setup(exp_conc_2x2b, &lineout);
-      else fail("Setup is bizarre.");
+      else fail("Can't figure out where the ends went.");
    }
 
-   return ss.inner.skind;
+   return result.inner.skind;
 }
 
 
@@ -5656,12 +5699,20 @@ void toplevelmove() THROW_DECL
          // Put in headliner/sideliner stuff if possible.
          for (i=0; i<=attr::slimit(&starting_setup); i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON) {
-               if ((starting_setup.people[i].id1 + starting_setup.rotation) & 1)
-                  starting_setup.people[i].id2 |= ID2_SIDELINE;
-               else if ((starting_setup.people[i].id1 + starting_setup.rotation) & 2)
-                  starting_setup.people[i].id2 |= ID2_HEADLINE|ID2_FACEFRONT;
-               else
-                  starting_setup.people[i].id2 |= ID2_HEADLINE|ID2_FACEBACK;
+               switch ((starting_setup.people[i].id1 + starting_setup.rotation) & 3) {
+               case 0:
+                  starting_setup.people[i].id2 |= ID2_FACEBACK;
+                  break;
+               case 1:
+                  starting_setup.people[i].id2 |= ID2_FACERIGHT;
+                  break;
+               case 2:
+                  starting_setup.people[i].id2 |= ID2_FACEFRONT;
+                  break;
+               case 3:
+                  starting_setup.people[i].id2 |= ID2_FACELEFT;
+                  break;
+               }
             }
          }
       }

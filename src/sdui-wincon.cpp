@@ -1,3 +1,5 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 /*
  * sdui-wincon.cpp
  * Time-stamp: <93/07/19 19:38:40 wba>
@@ -66,7 +68,7 @@ extern void ttu_set_window_title(const char *string)
 }
 
 
-void iofull::set_pick_string(const char *string)
+void iofull::set_pick_string(Cstring string)
 {
    if (string && *string) SetConsoleTitle(string);
    else SetConsoleTitle(szMainTitle);    // End of pick, reset to our main title.

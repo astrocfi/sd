@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.1
-@set title2 Database version = 37.1 format = 256
+@set title1 RELEASE NOTES FOR VERSION 37.3
+@set title2 Database version = 37.3 format = 256
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.3::
+* 37.2::
 * 37.1::
 * 37.0::
 * 36.81::
@@ -53,7 +55,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.1, Top, (dir)
+@node Intro, 37.3, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -64,11 +66,99 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2007 William B. Ackerman
 @sp 3
 @menu
-* 37.1::               Changes in the current version
+* 37.3::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.1, 37.0, Intro, Top
+@node 37.3, 37.2, Intro, Top
+@unnumberedsec Version 37.3 changes
+
+@b{MAJOR CHANGE}
+
+New concept family: @strong{dynamic}.  This is a variation of
+@strong{twosome}.  Those who are turning to the right work rigidly,
+while those who are turning to the left work twosome.  The
+@strong{reverse dynamic} works the other way---those who are turning to
+the right work twosome, while those who are turning to the left work
+rigidly.
+
+The word ``dynamic'' (or ``reverse dynamic'') is grammatically similar
+to ``twosome'' (or ``threesome'', ``diamondsome'', etc.)  That is:
+
+@table @code
+@item @strong{couples twosome} becomes @strong{couples dynamic}
+@item @strong{siamese twosome} becomes @strong{siamese dynamic}
+@item @strong{couples threesome} becomes @strong{couples of 3 dynamic}
+@item @strong{boxsome} becomes @strong{boxes dynamic}
+@item @strong{diamondsome} becomes @strong{diamonds dynamic}
+@item @strong{skewsome} becomes @strong{skew dynamic}
+@item @strong{gruesome twosome} becomes @strong{gruesome dynamic}
+@end table
+
+Fractional solid-to-dynamic and twosome-to-dynamic concepts are also permitted.  Use, for example:
+
+@table @code
+@item @strong{couples 1/4 dynamic} @r{or} @strong{couples twosome 1/4 dynamic}
+@item @strong{siamese 1/4 dynamic} @r{or} @strong{siamese twosome 1/4 dynamic}
+@item @strong{couples of 3 1/4 dynamic} @r{or} @strong{couples threesome 1/4 dynamic}
+@item @strong{boxes are solid 1/4 dynamic} @r{or} @strong{boxsome 1/4 dynamic}
+@item @strong{diamonds are solid 1/4 dynamic} @r{or} @strong{diamondsome 1/4 dynamic}
+@item @strong{skew 1/4 dynamic} @r{or} @strong{skewsome 1/4 dynamic}
+@item @strong{gruesome as couples 1/4 dynamic} @r{or} @strong{gruesome couples twosome 1/4 dynamic}
+@end table
+
+@b{ANOTHER MAJOR CHANGE}
+
+The program keeps track of ``call usage statistics''.  This operates in the context of the ``sessions'' feature.
+A call's ``frequency number'' is the number of times it has been used since the counters were reset.
+The new commands are:
+
+@strong{frequency show}---List calls, with frequency numbers.
+
+@strong{frequency show level}---List calls at the current level, with frequency numbers.
+
+@strong{frequency show near level}---List calls at the current level or next lower level, with frequency numbers.
+
+@strong{frequency show sort}---Like @strong{frequency show}, but sort calls by decreasing number.
+
+@strong{frequency show sort level}---Like @strong{frequency show level}, but sort calls by decreasing number.
+
+@strong{frequency show sort near level}---Like @strong{frequency show near level}, but sort calls by decreasing number.
+
+@strong{frequency start}---Set up the statistics counting associated with the current session.
+
+@strong{frequency reset}---Reset all the counters to zero.
+
+@strong{frequency delete}---Terminate the statistics counting.
+
+The statistics are kept in a separate file, which is associated with a ``session''.  This file
+persists for as long as the session is defined, so the statistics keep track of all sequences
+associated with the session, whenever they were written.
+
+@b{OTHER CHANGES}
+
+There is better handling of combinations of meta-concepts.  For example, it can do
+@strong{finally initially tandem reverse order settle back}.
+
+It can do a better job of handling unsymmetrical cases of the @strong{those facing} selector.
+
+It has a more precise notion of how to know where missing outsides went.
+
+It has better handling of @strong{roll} information when doing @strong{checkerboard} concepts.
+
+It recognizes more resolves, of course.
+
+@c ************
+@node 37.2, 37.1, 37.3, Top
+@unnumberedsec Version 37.2 changes
+
+New selectors were added: @strong{those facing the caller's left} and
+@strong{those facing the caller's right}.  These go along with
+@strong{those facing the caller} and @strong{those facing away from the
+caller}.  You don't need to type the apostrophe.
+
+@c ************
+@node 37.1, 37.0, 37.2, Top
 @unnumberedsec Version 37.1 changes
 
 A few bugs relating to 2x1 or 3x1 @strong{wheel the ocean} were fixed.

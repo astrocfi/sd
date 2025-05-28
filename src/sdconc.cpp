@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    get_multiple_parallel_resultflags
@@ -938,6 +940,23 @@ extern void normalize_concentric(
             outers->rotation = 0;
             outer_elongation = 3;
          }
+         else if (table_synthesizer == schema_concentric) {
+            // This makes vi01 and vi03 work.
+            result->kind = s_dead_concentric;
+            result->rotation = 0;
+            result->inner.skind = inners[0].kind;
+            result->inner.srotation = inners[0].rotation;
+            result->outer.skind = nothing;
+            result->outer.srotation = 0;
+            result->concsetup_outer_elongation = 0;
+            for (j=0; j<(MAX_PEOPLE/2); j++) {
+               copy_person(result, j, &inners[0], j);
+               result->clear_person(j+(MAX_PEOPLE/2));
+            }
+            canonicalize_rotation(result);
+            clear_result_flags(result);
+            return;
+         }
          else {
             outers->kind = inners[0].kind;
             outers->rotation = inners[0].rotation;
@@ -1371,7 +1390,7 @@ static calldef_schema concentrify(
 
          break;
       case schema_concentric_6_2_line:
-         try_to_expand_dead_conc(*ss, linetemp, qtagtemp, dmdtemp);
+         try_to_expand_dead_conc(*ss, (const call_with_name *) 0, linetemp, qtagtemp, dmdtemp);
          *ss = dmdtemp;
          break;
 
@@ -1943,8 +1962,14 @@ static bool fix_empty_outers(
             result->inner.skind = result_inner[0].kind;
             result->inner.srotation = result_inner[0].rotation;
             result->rotation = 0;
-            // We remember a vague awareness of where the outside would have been.
-            result->concsetup_outer_elongation = begin_outer_elongation;
+
+            // This used to set concsetup_outer_elongation to begin_outer_elongation
+            // instead of zero.  It was explained with a comment:
+            //     "We remember a vague awareness of where the outside would have been."
+            // It is no longer done that way.  We enforce precise rules, with no notions
+            // of a "vague awareness".
+
+            result->concsetup_outer_elongation = 0;
             return true;
          }
       }
@@ -1962,29 +1987,34 @@ static bool fix_empty_outers(
 }
 
 
-static bool this_call_preserves_shape(int override,
-                                      const setup *begin, calldefn *def,
+static bool this_call_preserves_shape(const setup *begin,
                                       const call_conc_option_state & call_options,
                                       setup_kind sss)
 {
-   if (override > 0) return true;
-   else if (override < 0) return false;
+   if (!begin->cmd.callspec) return false;
 
-   // The call "arm turn N/4" is special.  Look at the number that it was given.
-   // It preserves shape if that number is even.
-   if (begin->cmd.callspec == base_calls[base_call_armturn_n4])
-      return sss == s1x2 && (call_options.number_fields & 1) == 0;
+   const calldefn *def = &begin->cmd.callspec->the_defn;
 
-   if ((def->stuff.arr.def_list->callarray_list->callarray_flags & CAF__ROT) != 0 ||
-       (setup_kind) def->stuff.arr.def_list->callarray_list->end_setup != sss)
-      return false;
+   switch (def->schema) {
+   case schema_nothing: case schema_nothing_noroll: return true;
+   case schema_by_array:
+      {
+         // The call "arm turn N/4" is special.  Look at the number that it was given.
+         // It preserves shape if that number is even.
+         if (begin->cmd.callspec == base_calls[base_call_armturn_n4])
+            return sss == s1x2 && (call_options.number_fields & 1) == 0;
 
-   begin_kind bb = (begin_kind) def->stuff.arr.def_list->callarray_list->start_setup;
+         if ((def->stuff.arr.def_list->callarray_list->callarray_flags & CAF__ROT) != 0 ||
+             def->stuff.arr.def_list->callarray_list->get_end_setup() != sss)
+            return false;
 
-   if (bb == setup_attrs[sss].keytab[0] || bb == setup_attrs[sss].keytab[1])
-      return true;
+         begin_kind bb = def->stuff.arr.def_list->callarray_list->get_start_setup();
 
-   else return false;
+         if (bb == setup_attrs[sss].keytab[0] || bb == setup_attrs[sss].keytab[1]) return true;
+         else return false;
+      }
+   default: return false;
+   }
 }
 
 
@@ -2003,19 +2033,6 @@ static bool fix_empty_inners(
    for (int i=0 ; i<center_arity ; i++) {
       result_inner[i].clear_people();    // This is always safe.
       clear_result_flags(&result_inner[i]);
-   }
-
-   // Get preliminary information on whether the call changes shape.
-
-   int shape_override = 0;
-   calldefn *def = (calldefn *) 0;
-
-   if (!begin_inner->cmd.callspec)
-      shape_override = -1;
-   else {
-      def = &begin_inner->cmd.callspec->the_defn;
-      if ((def->schema == schema_nothing || def->schema == schema_nothing_noroll)) shape_override = 1;
-      else if (def->schema != schema_by_array) shape_override = -1;
    }
 
    // If the schema is one of the special ones, we will know what to do.
@@ -2073,9 +2090,9 @@ static bool fix_empty_inners(
          result_inner->rotation = orig_elong_flags & 1;
       }
       else {
-         if (this_call_preserves_shape(shape_override, begin_inner, def, call_options, s1x2) ||
-             this_call_preserves_shape(shape_override, begin_inner, def, call_options, s2x2) ||
-             this_call_preserves_shape(shape_override, begin_inner, def, call_options, s1x4)) {
+         if (this_call_preserves_shape(begin_inner, call_options, s1x2) ||
+             this_call_preserves_shape(begin_inner, call_options, s2x2) ||
+             this_call_preserves_shape(begin_inner, call_options, s1x4)) {
             // Restore the original bunch of phantoms.
             *result_inner = *begin_inner;
             clear_result_flags(result_inner);
@@ -2090,7 +2107,7 @@ static bool fix_empty_inners(
       // If the ends are a bone6, we just set the missing centers to a 1x2,
       // unless the missing centers did "nothing", in which case they
       // retain their shape.
-      if (this_call_preserves_shape(shape_override, begin_inner, def, call_options, s1x2)) {
+      if (this_call_preserves_shape(begin_inner, call_options, s1x2)) {
          // Restore the original bunch of phantoms.
          *result_inner = *begin_inner;
          clear_result_flags(result_inner);
@@ -2106,7 +2123,7 @@ static bool fix_empty_inners(
       // retain their shape.
       setup_kind inner_start = (analyzer_result == schema_concentric_6p) ? s1x2 : s1x4;
 
-      if (this_call_preserves_shape(shape_override, begin_inner, def, call_options, inner_start)) {
+      if (this_call_preserves_shape(begin_inner, call_options, inner_start)) {
          // Restore the original bunch of phantoms.
          *result_inner = *begin_inner;
          clear_result_flags(result_inner);
@@ -5244,7 +5261,7 @@ back_here:
             for (k=0;
                  k<=attr::klimit(fixp->ink);
                  k++,map_scanner++,vrot>>=2)
-               tbone |= copy_rot(lilss, k, this_one, fixp->nonrot[map_scanner],
+               tbone |= copy_rot(lilss, k, this_one, fixp->indices[map_scanner],
                                  011*((0-frot-vrot) & 3));
 
             // If we are picking out a distorted diamond from a 4x4, we can't tell
@@ -5506,7 +5523,7 @@ back_here:
             for (k=0;
                  k<=attr::klimit(lilresult[0].kind);
                  k++,map_scanner++,vrot>>=2)
-               copy_rot(this_result, fixp->nonrot[map_scanner],
+               copy_rot(this_result, fixp->indices[map_scanner],
                         &lilresult[lilcount], k, 011*((frot+vrot) & 3));
          }
 

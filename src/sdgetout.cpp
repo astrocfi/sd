@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    configuration::null_resolve_thing
@@ -92,7 +94,6 @@ static Cstring title_string[] = {
    "Standardize: ",
    "Reconcile: ",
    "Pick Random Call: ",
-   "Fill Random Call: ",
    "Pick Simple Call: ",
    "Pick Concept Call: ",
    "Pick Level Call: ",
@@ -303,10 +304,13 @@ static const resolve_tester test_rigger_stuff[] = {
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_4x4_stuff[] = {
-   // "circle left/right" from squared-set, normal.
+   // "circle left/right", etc. from squared-set.
    {resolve_circle,         MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},
-   // "circle left/right" from squared-set, sashayed.
    {resolve_circle,         MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},
+   {resolve_sglfileprom,    MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8833AA11},
+   {resolve_sglfileprom,    MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x18833AA1},
+   {resolve_revsglfileprom, MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0xAA118833},
+   {resolve_revsglfileprom, MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x3AA11883},
 
    // From vertical 8-chain in "O".
    {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A8AA8A8},
@@ -389,6 +393,17 @@ static const resolve_tester test_4x6_stuff[] = {
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_c1phan_stuff[] = {
+   // Various circle/RLG/LA from phantom-type squared-set.
+   {resolve_circle,         MS, 6,   {11, 6, 7, 2, 3, 14, 15, 10}, 0x33AA1188},
+   {resolve_circle,         MS, 7,   {10, 11, 6, 7, 2, 3, 14, 15}, 0x833AA118},
+   {resolve_la,             MS, 6,   {11, 6, 7, 2, 3, 14, 15, 10}, 0xA8138A31},
+   {resolve_la,             MS, 7,   {10, 11, 6, 7, 2, 3, 14, 15}, 0x38A31A81},
+   {resolve_rlg,            MS, 2,   {11, 6, 7, 2, 3, 14, 15, 10}, 0x8A31A813},
+   {resolve_rlg,            MS, 3,   {10, 11, 6, 7, 2, 3, 14, 15}, 0x1A8138A3},
+   {resolve_sglfileprom,    MS, 6,   {11, 6, 7, 2, 3, 14, 15, 10}, 0x8833AA11},
+   {resolve_sglfileprom,    MS, 7,   {10, 11, 6, 7, 2, 3, 14, 15}, 0x18833AA1},
+   {resolve_revsglfileprom, MS, 6,   {11, 6, 7, 2, 3, 14, 15, 10}, 0xAA118833},
+   {resolve_revsglfileprom, MS, 7,   {10, 11, 6, 7, 2, 3, 14, 15}, 0x3AA11883},
    // From phantoms, all facing.
    {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x138A31A8},
    {resolve_rlg,            MS, 3,   {9, 11, 5, 7, 1, 3, 13, 15},  0x8A31A813},

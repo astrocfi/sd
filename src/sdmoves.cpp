@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -47,7 +49,6 @@
 #include <string.h>
 
 #include "sd.h"
-
 
 extern void canonicalize_rotation(setup *result) THROW_DECL
 {
@@ -824,6 +825,7 @@ extern uint32 do_call_in_series(
          qqqq.cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
          qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_fraction;
          qqqq.cmd.cmd_fraction.set_to_null();
+
       }
    }
 
@@ -3659,8 +3661,10 @@ void fraction_info::get_fraction_info(
       // We would like to handle this properly when reverse order is on,
       // but we haven't gotten around to it.
    }
-   else if (available_fractions != 1000) {
+   else if (available_fractions != 1000 && (m_client_total > 1 || (frac_stuff.flags & CMD_FRAC_REVERSE))) {
       // Unless all parts are visible, this is illegal.
+      // However:   Calls with just one part can always be fractionalized.
+      // But they can't be reversed.
       fail("This call can't be fractionalized.");
    }
 
@@ -5849,16 +5853,6 @@ static void move_with_real_call(
    // useful to check that someday) and we just have the callspec and the final
    // concepts.
 
-   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_MODIFIERS) {
-      ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_MODIFIERS;
-      ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.restrained_super8flags);
-      ss->cmd.do_couples_her8itflags = ss->cmd.restrained_super9flags;
-
-      if (ss->cmd.restrained_do_as_couples) {
-         if (do_forced_couples_stuff(ss, result)) return;
-      }
-   }
-
    if (ss->kind == nothing) {
       if (!ss->cmd.cmd_fraction.is_null())
          fail("Can't fractionalize a call if no one is doing it.");
@@ -6589,8 +6583,6 @@ static void move_with_real_call(
    It may well be that the goal described above is not actually implemented correctly.
 */
 
-
-
 extern void move(
    setup *ss,
    bool qtfudged,
@@ -6598,7 +6590,6 @@ extern void move(
 {
    result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
    parse_block *saved_magic_diamond = (parse_block *) 0;
-   parse_block *parseptrcopy;
    parse_block *parseptr = ss->cmd.parseptr;
    uint32 resultflags_to_put_inmisc = 0;
    final_and_herit_flags save_incoming_final;
@@ -6630,13 +6621,13 @@ extern void move(
 
          if (ss->cmd.callspec == 0) {
             // We need to fill in the call.  This requires that things be nice.
-            parseptrcopy = process_final_concepts(parseptr, true, &ss->cmd.cmd_final_flags, true, false);
+            parse_block *parseptrtemp = process_final_concepts(parseptr, true, &ss->cmd.cmd_final_flags, true, false);
 
-            if (parseptrcopy->concept->kind > marker_end_of_list)
+            if (parseptrtemp->concept->kind > marker_end_of_list)
                fail("Incomplete supercall.");
 
-            ss->cmd.parseptr = parseptrcopy;
-            ss->cmd.callspec = parseptrcopy->call;
+            ss->cmd.parseptr = parseptrtemp;
+            ss->cmd.callspec = parseptrtemp->call;
          }
 
          parse_block p1 = *t;
@@ -6662,110 +6653,89 @@ extern void move(
          move(ss, false, result);
       }
       else {
+         // Find the end of the restraint chain, then splice that call in at the restraint tail.
+         // The end of the restraint chain may be past the tail point.
+         parse_block *z0 = t;
 
-         // We need to find the end of the concept chain, and plug in our
-         // call, after saving its old contents.
-         parse_block *saved_old_parseptr = ss->cmd.parseptr;
-         call_with_name *saved_old_call = ss->cmd.callspec;
-         ss->cmd.callspec = (call_with_name *) 0;
-         call_conc_option_state saved_options = ss->cmd.parseptr->options;
-         if (saved_old_call) ss->cmd.parseptr->options = current_options;
-         bool did_crazy_tag_back = false;
-         parse_block **doing_crazy_concept = (parse_block **) 0;
-         parse_block *saved_crazy_ptr;
-         parse_block **z0 = ss->cmd.restrained_final;
-         parse_block **y0 = z0;
+         for ( ; ; ) {
+            if (z0->concept->kind == marker_end_of_list)
+               break;
 
-         for ( ; ; z0=&((*z0)->next)) {
-            if ((*z0)->concept->kind == concept_crazy ||
-                (*z0)->concept->kind == concept_frac_crazy ||
-                (*z0)->concept->kind == concept_dbl_frac_crazy ||
-                (*z0)->concept->kind == concept_sandwich) {
-               doing_crazy_concept = z0;
+            if (z0->concept->kind < marker_end_of_list &&
+                (z0->call->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) != 0) {
+               // A tagger call stops immediately.
                break;
             }
-            else if ((*z0)->concept->kind <= marker_end_of_list)
-               break;
-         }
-
-         if (doing_crazy_concept) {
-            saved_crazy_ptr = *doing_crazy_concept;
-            *doing_crazy_concept = ss->cmd.parseptr;
-         }
-
-         parse_block *foobar = (parse_block *) 0;
-
-         if (saved_old_call != base_calls[base_call_basetag0] &&
-             saved_old_call != base_calls[base_call_basetag0_noflip]) {
-            if ((*z0)->concept->kind == concept_another_call_next_mod) {
-               if (saved_old_call) {
-                  z0 = &((*z0)->next->subsidiary_root);
-               }
-               else {
-                  foobar = *y0;
-                  *y0 = (*z0)->next->subsidiary_root;
-               }
+            else if (z0->concept->kind < marker_end_of_list && z0->subsidiary_root) {
+               // For "mod" pairs, watch for tracing downward.
+               z0 = z0->subsidiary_root;
             }
-
-            did_crazy_tag_back = (saved_old_call != 0);
+            else if (concept_table[z0->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
+               // Concepts like "sandwich" also trace downward.
+               z0 = z0->subsidiary_root;
+            else
+               z0 = z0->next;
          }
 
-         call_with_name *saved_new_call = (*z0)->call;
-         if (saved_old_call) (*z0)->call = saved_old_call;
-         (*z0)->no_check_call_level = true;
+         parse_block *ssparseptrsave = ss->cmd.parseptr;
+         call_with_name *sscallsave = ss->cmd.callspec;
+         uint32 savemisc = ss->cmd.cmd_misc_flags;
+         uint32 savemisc3 = ss->cmd.cmd_misc3_flags;
+         final_and_herit_flags ssheritsave = ss->cmd.cmd_final_flags;
+         parse_block **save_restr_fin = ss->cmd.restrained_final;
+         parse_block *save_restr_fin_ptr = *ss->cmd.restrained_final;
+         call_with_name *z0callsave = z0->call;
+         bool z0levelsave = z0->no_check_call_level;
+         final_and_herit_flags z0heritsave = z0->more_finalherit_flags;
+         call_conc_option_state saved_options = z0->options;
 
+         if (ss->cmd.callspec) {
+            z0->call = ss->cmd.callspec;
+            z0->options = current_options;
+         }
+
+         ss->cmd.callspec = 0;
+         z0->no_check_call_level = true;
+         z0->more_finalherit_flags = ss->cmd.cmd_final_flags;
+
+         ss->cmd.parseptr = t;
+         *ss->cmd.restrained_final = ssparseptrsave;
+         ss->cmd.restrained_final = 0;
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
          ss->cmd.restrained_do_as_couples =
             (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) != 0;
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
          ss->cmd.restrained_super9flags = ss->cmd.do_couples_her8itflags;
-         ss->cmd.cmd_final_flags.clear_all_heritbits();
-         if (did_crazy_tag_back) {
-            ss->cmd.parseptr = *z0;
-         }
+         ss->cmd.cmd_final_flags.clear_all_herit_and_final_bits();
 
-         setup foo = *ss;
-         parse_block ppp = *t;
-         ppp.next = foo.cmd.parseptr;
-         foo.cmd.parseptr = &ppp;
          // Preserved across a throw; must be volatile.
          volatile error_flag_type maybe_throw_this = error_flag_none;
 
          try {
-            do_big_concept(&foo, t, false, result);
+            move(ss, false, result);
          }
          catch(error_flag_type foo) {
             // An error occurred.  We need to restore stuff, and then throw the saved error code.
             maybe_throw_this = foo;
          }
 
-         if (foobar) *y0 = foobar;
-
-         if (doing_crazy_concept)
-             *doing_crazy_concept = saved_crazy_ptr;
-
-         ss->cmd.parseptr = saved_old_parseptr;
-         ss->cmd.callspec = saved_old_call;
-         if (saved_old_call) {
-            (*z0)->call = saved_new_call;
-            ss->cmd.parseptr->options = saved_options;
-         }
-
-         ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_MODIFIERS;
-         ss->cmd.cmd_final_flags.herit = (heritflags) ss->cmd.restrained_super8flags;
+         ss->cmd.parseptr = ssparseptrsave;
+         ss->cmd.callspec = sscallsave;
+         ss->cmd.cmd_misc_flags = savemisc;
+         ss->cmd.cmd_misc3_flags = savemisc3;
+         ss->cmd.cmd_final_flags = ssheritsave;
+         ss->cmd.restrained_final = save_restr_fin;
+         *ss->cmd.restrained_final = save_restr_fin_ptr;
+         z0->call = z0callsave;
+         z0->options = saved_options;
+         z0->no_check_call_level = z0levelsave;
+         z0->more_finalherit_flags = z0heritsave;
 
          if (maybe_throw_this != error_flag_none)
             throw maybe_throw_this;
       }
 
-      return;
-   }
-
-   if (ss->cmd.restrained_fraction.fraction) {
-      conzept::concept_descriptor bar = {"?????", concept_fractional, 0, l_mainstream, UC_none, 90};
-      parse_block foo(&bar);
-      (concept_table[foo.concept->kind].concept_action)(ss, &foo, result);
       return;
    }
 
@@ -6812,6 +6782,8 @@ extern void move(
    last_magic_diamond = 0;
 
    // But if we have a pending "centers/ends work <concept>" concept, don't.
+
+   parse_block *parseptrcopy;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
       skipped_concept_info foo;
@@ -6957,6 +6929,20 @@ extern void move(
       if (((dance_level) this_call->the_defn.level) > calling_level &&
           !parseptrcopy->no_check_call_level)
          warn(warn__bad_call_level);
+
+      if (ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_MODIFIERS) {
+         ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_MODIFIERS;
+         ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.restrained_super8flags);
+         ss->cmd.do_couples_her8itflags = ss->cmd.restrained_super9flags;
+
+         ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.parseptr->more_finalherit_flags.herit);
+         ss->cmd.cmd_final_flags.set_finalbits(ss->cmd.parseptr->more_finalherit_flags.final);
+
+         if (ss->cmd.restrained_do_as_couples) {
+            // Maybe should just set ss->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
+            if (do_forced_couples_stuff(ss, result)) return;
+         }
+      }
 
       move_with_real_call(ss, qtfudged, false, result);
       remove_mxn_spreading(result);

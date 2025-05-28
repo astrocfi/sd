@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    parse_level
@@ -32,6 +34,9 @@
    close_init_file
    general_final_exit
    conzept::translate_concept_names
+   configuration::startinfolist
+   configuration::initialize
+   start_stats_file_from_GLOB_stats_filename
    open_session
 and the following external variables:
    selector_for_initialize
@@ -66,92 +71,9 @@ static int *global_temp_call_indices;
 static int global_callcount;     /* Index into the above. */
 
 
-#define WEST (d_west|PERSON_MOVED|ROLL_IS_L)
-#define EAST (d_east|PERSON_MOVED|ROLL_IS_L)
-#define NORT (d_north|PERSON_MOVED|ROLL_IS_L)
-#define SOUT (d_south|PERSON_MOVED|ROLL_IS_L)
-
-// In all of these setups in which people are facing, they are normal couples.
-// In general, we use the "Callerlab #0" arrangement for things like lines and waves.
-// This makes initialization work for things like star thru, ladies chain, curlique,
-// and half breed thru from waves.
-//
-// But the setup for starting DPT has the appropriate sex for triple star thru.
-
-static setup test_setup_1x8 = {
-   s1x8, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|SOUT,0,ID3_G3},
-                  {0400|SOUT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
-                  {0200|SOUT,0,ID3_B2}, {0100|NORT,0,ID3_G1},
-                  {0000|NORT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_l1x8 = {
-   s1x8, 0, {0}, {{0600|SOUT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0400|NORT,0,ID3_B3}, {0700|SOUT,0,ID3_G4},
-                  {0200|NORT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0000|SOUT,0,ID3_B1}, {0300|NORT,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_dpt = {
-   s2x4, 0, {0}, {{0300|EAST,0,ID3_G2}, {0400|EAST,0,ID3_B3},
-                  {0500|WEST,0,ID3_G3}, {0200|WEST,0,ID3_B2},
-                  {0700|WEST,0,ID3_G4}, {0000|WEST,0,ID3_B1},
-                  {0100|EAST,0,ID3_G1}, {0600|EAST,0,ID3_B4}}, {{0, 0}, 0}};
-static setup test_setup_cdpt = {
-   s2x4, 0, {0}, {{0700|WEST,0,ID3_G4}, {0500|WEST,0,ID3_G3},
-                  {0400|EAST,0,ID3_B3}, {0600|EAST,0,ID3_B4},
-                  {0300|EAST,0,ID3_G2}, {0100|EAST,0,ID3_G1},
-                  {0000|WEST,0,ID3_B1}, {0200|WEST,0,ID3_B2}}, {{0, 0}, 0}};
-static setup test_setup_rcol = {
-   s2x4, 0, {0}, {{0600|EAST,0,ID3_B4}, {0500|EAST,0,ID3_G3},
-                  {0400|EAST,0,ID3_B3}, {0700|EAST,0,ID3_G4},
-                  {0200|WEST,0,ID3_B2}, {0100|WEST,0,ID3_G1},
-                  {0000|WEST,0,ID3_B1}, {0300|WEST,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_lcol = {
-   s2x4, 0, {0}, {{0300|WEST,0,ID3_G2}, {0000|WEST,0,ID3_B1},
-                  {0100|WEST,0,ID3_G1}, {0200|WEST,0,ID3_B2},
-                  {0700|EAST,0,ID3_G4}, {0400|EAST,0,ID3_B3},
-                  {0500|EAST,0,ID3_G3}, {0600|EAST,0,ID3_B4}}, {{0, 0}, 0}};
-static setup test_setup_8ch = {
-   s2x4, 0, {0}, {{0600|EAST,0,ID3_B4}, {0500|WEST,0,ID3_G3},
-                  {0400|EAST,0,ID3_B3}, {0700|WEST,0,ID3_G4},
-                  {0200|WEST,0,ID3_B2}, {0100|EAST,0,ID3_G1},
-                  {0000|WEST,0,ID3_B1}, {0300|EAST,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_tby = {
-   s2x4, 0, {0}, {{0500|WEST,0,ID3_G3}, {0600|EAST,0,ID3_B4},
-                  {0700|WEST,0,ID3_G4}, {0400|EAST,0,ID3_B3},
-                  {0100|EAST,0,ID3_G1}, {0200|WEST,0,ID3_B2},
-                  {0300|EAST,0,ID3_G2}, {0000|WEST,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_lin = {
-   s2x4, 0, {0}, {{0300|SOUT,0,ID3_G2}, {0000|SOUT,0,ID3_B1},
-                  {0100|SOUT,0,ID3_G1}, {0200|SOUT,0,ID3_B2},
-                  {0700|NORT,0,ID3_G4}, {0400|NORT,0,ID3_B3},
-                  {0500|NORT,0,ID3_G3}, {0600|NORT,0,ID3_B4}}, {{0, 0}, 0}};
-static setup test_setup_lout = {
-   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0400|NORT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
-                  {0200|SOUT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0000|SOUT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
-static setup test_setup_rwv = {
-   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|SOUT,0,ID3_G3},
-                  {0700|NORT,0,ID3_G4}, {0400|SOUT,0,ID3_B3},
-                  {0200|SOUT,0,ID3_B2}, {0100|NORT,0,ID3_G1},
-                  {0300|SOUT,0,ID3_G2}, {0000|NORT,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_lwv = {
-   s2x4, 0, {0}, {{0600|SOUT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0700|SOUT,0,ID3_G4}, {0400|NORT,0,ID3_B3},
-                  {0200|NORT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0300|NORT,0,ID3_G2}, {0000|SOUT,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_r2fl = {
-   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
-                  {0700|SOUT,0,ID3_G4}, {0400|SOUT,0,ID3_B3},
-                  {0200|SOUT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
-                  {0300|NORT,0,ID3_G2}, {0000|NORT,0,ID3_B1}}, {{0, 0}, 0}};
-static setup test_setup_l2fl = {
-   s2x4, 0, {0}, {{0500|SOUT,0,ID3_G3}, {0600|SOUT,0,ID3_B4},
-                  {0400|NORT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
-                  {0100|NORT,0,ID3_G1}, {0200|NORT,0,ID3_B2},
-                  {0000|SOUT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
-
 
 /* These variables are actually local to test_starting_setup, but they are
-   expected to be preserved across the longjmp, so they must be static. */
+   expected to be preserved across the throw, so they must be static. */
 static parse_block *parse_mark;
 static int call_index;
 static call_with_name *test_call;
@@ -160,11 +82,12 @@ static bool magicness;
 static bool intlkness;
 
 
-extern bool parse_level(Cstring s)
+extern bool parse_level(Cstring s, Cstring *break_ptr /*= 0*/)
 {
    int len = strlen(s);
-   char *minuspos = strchr(s, '-');
-   if (minuspos) len = minuspos-s;
+   Cstring breakpos = strpbrk(s, "-:");
+   if (breakpos) len = breakpos-s;
+   if (break_ptr) *break_ptr = breakpos;
 
    switch (s[0]) {
       case 'm': case 'M': calling_level = l_mainstream; return true;
@@ -294,7 +217,7 @@ bool iterate_over_sel_dir_num(
 
 
 
-static void test_starting_setup(call_list_kind cl, const setup *test_setup)
+static void test_starting_setup(call_list_kind cl, const setup & test_setup)
 {
    gg->init_step(do_tick, 2);
 
@@ -335,7 +258,7 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
    configuration::history_ptr = 1;
 
    configuration::current_config().init_centersp_specific();
-   configuration::current_config().state = *test_setup;
+   configuration::current_config().state = test_setup;
    initialize_parse();
 
    // If the call has the "rolldefine" schema, we accept it, since the test setups
@@ -517,7 +440,7 @@ static void create_misc_call_lists(call_list_kind cl)
    for (j=0; j<number_of_calls[call_list_any]; j++) {
       call_with_name *callp = main_call_lists[call_list_any][j];
 
-      if (cl == call_list_gcol) {     // GCOL
+      if (cl == call_list_gcol) {     // tidal column
          if (callp->the_defn.schema != schema_by_array || callp->the_defn.compound_part)
             goto accept;    // We don't understand it.
 
@@ -538,7 +461,7 @@ static void create_misc_call_lists(call_list_kind cl)
                goto accept;
          }
       }
-      else {      // QTAG
+      else {      // qtag
          call_with_name *callq = callp;
 
          if (callq->the_defn.schema != schema_by_array || callq->the_defn.compound_part)
@@ -607,6 +530,7 @@ static int session_line_state = 0;
 static char rewrite_filename_as_star[2] = { '\0' , '\0' };  // First char could be "*" or "+".
 static FILE *database_file;
 static FILE *abridge_file;
+static FILE *stats_file = (FILE *) 0;
 
 
 static uint32 read_8_from_database()
@@ -1085,7 +1009,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       uint32 saveflagsh = last_datum;
       read_halfword();       // Get char count (ignore same) and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
-      recursed_call_root->age = 0;
+      recursed_call_root->frequency = 0;
       recursed_call_root->level = 0;
       recursed_call_root->schema = call_schema;
       recursed_call_root->callflags1 = saveflags1;
@@ -1366,20 +1290,29 @@ extern int process_session_info(Cstring *error_msg)
          return 3;
       }
 
-      if (!parse_level(session_levelstring)) {
+      Cstring breakpos = 0;
+      Cstring statspos = 0;
+
+      if (!parse_level(session_levelstring, &breakpos)) {
          *error_msg = "Bad level given in session file.";
          return 3;
       }
 
-      // Look for an abridge list, immediately after the level,
-      // separated by a minus sign.
-      char *minuspos = strchr(session_levelstring, '-');
-      if (minuspos) {
+      // Look for an abridge list or stats list, immediately after the level,
+      // separated by a minus sign and/or colon.
+      if (breakpos && *breakpos == '-') {
+         int len = strlen(breakpos+1);
+         statspos = strchr(breakpos+1, ':');
+         if (statspos) len = statspos-breakpos-1;
+
          // If there is already a file name, the operator is overriding
          // the name from the session.  Use the override.  Don't take
          // the name from the session.
-         if (abridge_filename[0] == 0)
-            strncpy(abridge_filename, minuspos+1, MAX_TEXT_LINE_LENGTH);
+         if (abridge_filename[0] == 0) {
+            if (len > MAX_TEXT_LINE_LENGTH-1) len = MAX_TEXT_LINE_LENGTH-1;
+            strncpy(abridge_filename, breakpos+1, len);
+            abridge_filename[len] = 0;
+         }
 
          if (abridge_filename[0] != 0) {
             // The session line specifies an abridgement file.
@@ -1393,6 +1326,11 @@ extern int process_session_info(Cstring *error_msg)
                abridge_mode_none : abridge_mode_abridging;
          }
       }
+      else
+         statspos = breakpos;  // Maybe there is a stats name but not an abridge name.
+
+      if (GLOB_stats_filename[0] == 0 && statspos)
+         strncpy(GLOB_stats_filename, statspos+1, MAX_TEXT_LINE_LENGTH);
 
       if (num_fields_parsed == 4)
          strncpy(header_comment, line+ccount, MAX_TEXT_LINE_LENGTH);
@@ -1439,10 +1377,16 @@ static int write_back_session_line(FILE *wfile)
    char level_and_abridge_name[MAX_TEXT_LINE_LENGTH];
    strncpy(level_and_abridge_name, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
 
-   // If the abridgement is being deleted, don't write the file name.
+   // Write the abridge file name, unless the abridgement is being deleted.
    if (glob_abridge_mode != abridge_mode_none && abridge_filename[0]) {
       strcat(level_and_abridge_name, "-");
       strcat(level_and_abridge_name, abridge_filename);
+   }
+
+   // Write the stats file name.
+   if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
+      strcat(level_and_abridge_name, ":");
+      strcat(level_and_abridge_name, GLOB_stats_filename);
    }
 
    if (header_comment[0])
@@ -1588,7 +1532,34 @@ static void rewrite_init_file()
 
                fclose(wfile);
             }
+
             fclose(rfile);
+
+            // Write out the stats file if there is one.
+
+            if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
+               stats_file = fopen(GLOB_decorated_stats_filename, "w");
+
+               if (stats_file) {     // If it's gone, don't do anything.
+                  for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
+                     if (main_call_lists[call_list_any][i]->the_defn.frequency > 0) {
+                        fprintf(stats_file, "%-4d %s\n",
+                                main_call_lists[call_list_any][i]->the_defn.frequency,
+                                main_call_lists[call_list_any][i]->menu_name);
+                     }
+                  }
+
+                  for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
+                     if (concept_descriptor_table[i].frequency > 0) {
+                        fprintf(stats_file, "%-4d %s\n",
+                                concept_descriptor_table[i].frequency,
+                                concept_descriptor_table[i].menu_name);
+                     }
+                  }
+
+                  fclose(stats_file);
+               }
+            }
          }
       }
    }
@@ -1701,7 +1672,7 @@ static void build_database(abridge_mode_t abridge_mode)
          base_calls[savetag] = call_root;
       }
 
-      call_root->the_defn.age = 0;
+      call_root->the_defn.frequency = 0;
       call_root->the_defn.level = (int) this_level;
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
@@ -1905,15 +1876,68 @@ void conzept::translate_concept_names()
    uint32 escape_bit_junk;
 
    for (i=0; conzept::unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++) {
-      conzept::unsealed_concept_descriptor_table[i].menu_name =
-         translate_menu_name(conzept::unsealed_concept_descriptor_table[i].name,
-                             &escape_bit_junk);
+      unsealed_concept_descriptor_table[i].menu_name =
+         translate_menu_name(unsealed_concept_descriptor_table[i].name, &escape_bit_junk);
+
+      unsealed_concept_descriptor_table[i].frequency = 0;
    }
 
-   // "Seal" the concept table.  It will be made visible outside og the
+   // "Seal" the concept table.  It will be made visible outside of the
    // concept class as a constant array.
 
    concept_descriptor_table = conzept::unsealed_concept_descriptor_table;
+}
+
+/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h. */
+startinfo configuration::startinfolist[start_select_as_they_are+1];
+
+void configuration::initialize()
+{
+   configuration::startinfolist[0].name = "???";
+   configuration::startinfolist[0].into_the_middle = false;
+   configuration::startinfolist[0].the_setup = setup(nothing, 0,
+                                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+   configuration::startinfolist[start_select_h1p2p].name = "Heads 1P2P";
+   configuration::startinfolist[start_select_h1p2p].into_the_middle = false;
+   configuration::startinfolist[start_select_h1p2p].the_setup = setup(s2x4, 1,
+                                                                      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
+                                                                      0100|d_south,ID3_G1, 0000|d_south,ID3_B1,
+                                                                      0700|d_north,ID3_G4, 0600|d_north,ID3_B4,
+                                                                      0500|d_north,ID3_G3, 0400|d_north,ID3_B3);
+
+   configuration::startinfolist[start_select_s1p2p].name = "Sides 1P2P";
+   configuration::startinfolist[start_select_s1p2p].into_the_middle = false;
+   configuration::startinfolist[start_select_s1p2p].the_setup = setup(s2x4, 0,
+                                                                      0500|d_south,ID3_G3, 0400|d_south,ID3_B3,
+                                                                      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
+                                                                      0100|d_north,ID3_G1, 0000|d_north,ID3_B1,
+                                                                      0700|d_north,ID3_G4, 0600|d_north,ID3_B4);
+
+   configuration::startinfolist[start_select_heads_start].name = "HEADS";
+   configuration::startinfolist[start_select_heads_start].into_the_middle = true;
+   configuration::startinfolist[start_select_heads_start].the_setup = setup(s2x4, 0,
+                                                                            0600|d_east,ID3_B4,  0500|d_south,ID3_G3,
+                                                                            0400|d_south,ID3_B3, 0300|d_west,ID3_G2,
+                                                                            0200|d_west,ID3_B2,  0100|d_north,ID3_G1,
+                                                                            0000|d_north,ID3_B1, 0700|d_east,ID3_G4);
+
+   configuration::startinfolist[start_select_sides_start].name = "SIDES";
+   configuration::startinfolist[start_select_sides_start].into_the_middle = true;
+   configuration::startinfolist[start_select_sides_start].the_setup = setup(s2x4, 1,
+                                                                            0400|d_east,ID3_B3,  0300|d_south,ID3_G2,
+                                                                            0200|d_south,ID3_B2, 0100|d_west,ID3_G1,
+                                                                            0000|d_west,ID3_B1,  0700|d_north,ID3_G4,
+                                                                            0600|d_north,ID3_B4, 0500|d_east,ID3_G3);
+
+   configuration::startinfolist[start_select_as_they_are].name = "From squared set";
+   configuration::startinfolist[start_select_as_they_are].into_the_middle = false;
+   configuration::startinfolist[start_select_as_they_are].the_setup = setup(s4x4, 0,
+                                                                            0000|d_north,ID3_B1, 0100|d_north,ID3_G1,
+                                                                            0200|d_west,ID3_B2,  0300|d_west,ID3_G2,
+                                                                            0400|d_south,ID3_B3, 0500|d_south,ID3_G3,
+                                                                            0600|d_east,ID3_B4,  0700|d_east,ID3_G4,
+                                                                            0x9ADE1256);
 }
 
 
@@ -1947,6 +1971,14 @@ static int couple_colors_ygrb[8] = {4, 4, 3, 3, 2, 2, 5, 5};
 int useful_concept_indices[UC_extent];
 
 
+extern void start_stats_file_from_GLOB_stats_filename()
+{
+   GLOB_doing_frequency = true;
+   strncpy(GLOB_decorated_stats_filename, GLOB_stats_filename, MAX_TEXT_LINE_LENGTH);
+   if (!strchr(GLOB_stats_filename, '.'))
+      strncat(GLOB_decorated_stats_filename, ".txt", MAX_FILENAME_LENGTH);
+}
+
 
 extern bool open_session(int argc, char **argv)
 {
@@ -1956,6 +1988,8 @@ extern bool open_session(int argc, char **argv)
    char line[MAX_FILENAME_LENGTH];
    char **args;
    int nargs = argc;
+
+   GLOB_stats_filename[0] = 0;
 
    /* Copy the arguments, so that we can use "realloc" to grow the list. */
 
@@ -2392,11 +2426,14 @@ extern bool open_session(int argc, char **argv)
 
       if (glob_abridge_mode >= abridge_mode_abridging) {
          if (glob_abridge_mode == abridge_mode_abridging) {
-            char abridge_call[100];
-   
+            char abridge_call[MAX_TEXT_LINE_LENGTH];
+
             while (fgets(abridge_call, 99, abridge_file)) {
                // Remove the newline character.
-               abridge_call[strlen(abridge_call)-1] = '\0';
+               int ll;
+               while ((ll = strlen(abridge_call)-1) >= 0 && abridge_call[ll] == '\n')
+                  abridge_call[ll] = '\0';
+
                // Search through the call name list for this call.
                // Why don't we use a more efficient search, based on the fact
                // that the call list has been alphabetized?  Because it was
@@ -2525,22 +2562,108 @@ extern bool open_session(int argc, char **argv)
          // by testing all calls in all common setups.
          // This is the thing that takes all the time.
 
-         test_starting_setup(call_list_1x8,  &test_setup_1x8);          /* RH grand wave */
-         test_starting_setup(call_list_l1x8, &test_setup_l1x8);         /* LH grand wave */
-         test_starting_setup(call_list_dpt,  &test_setup_dpt);          /* DPT */
-         test_starting_setup(call_list_cdpt, &test_setup_cdpt);         /* completed DPT */
-         test_starting_setup(call_list_rcol, &test_setup_rcol);         /* RCOL */
-         test_starting_setup(call_list_lcol, &test_setup_lcol);         /* LCOL */
-         test_starting_setup(call_list_8ch,  &test_setup_8ch);          /* 8CH */
-         test_starting_setup(call_list_tby,  &test_setup_tby);          /* TBY */
-         test_starting_setup(call_list_lin,  &test_setup_lin);          /* LIN */
-         test_starting_setup(call_list_lout, &test_setup_lout);         /* LOUT */
-         test_starting_setup(call_list_rwv,  &test_setup_rwv);          /* RWV */
-         test_starting_setup(call_list_lwv,  &test_setup_lwv);          /* LWV */
-         test_starting_setup(call_list_r2fl, &test_setup_r2fl);         /* R2FL */
-         test_starting_setup(call_list_l2fl, &test_setup_l2fl);         /* L2FL */
-         create_misc_call_lists(call_list_gcol);                        /* GCOL */
-         create_misc_call_lists(call_list_qtag);                        /* QTAG */
+         // In all of these setups in which people are facing, they are normal couples.
+         // In general, we use the "Callerlab #0" arrangement for things like lines and waves.
+         // This makes initialization work for things like star thru, ladies chain, curlique,
+         // and half breed thru from waves.
+         //
+         // But the setup for starting DPT has the appropriate sex for triple star thru.
+
+#define WEST (d_west|PERSON_MOVED|ROLL_IS_L)
+#define EAST (d_east|PERSON_MOVED|ROLL_IS_L)
+#define NORT (d_north|PERSON_MOVED|ROLL_IS_L)
+#define SOUT (d_south|PERSON_MOVED|ROLL_IS_L)
+
+         // RH tidal wave
+         test_starting_setup(call_list_1x8,
+                             setup(s1x8, 0, 
+                                   0600|NORT,ID3_B4, 0500|SOUT,ID3_G3, 0400|SOUT,ID3_B3, 0700|NORT,ID3_G4,
+                                   0200|SOUT,ID3_B2, 0100|NORT,ID3_G1, 0000|NORT,ID3_B1, 0300|SOUT,ID3_G2));
+
+         // LH tidal wave
+         test_starting_setup(call_list_l1x8,
+                             setup(s1x8, 0,
+                                   0600|SOUT,ID3_B4, 0500|NORT,ID3_G3, 0400|NORT,ID3_B3, 0700|SOUT,ID3_G4,
+                                   0200|NORT,ID3_B2, 0100|SOUT,ID3_G1, 0000|SOUT,ID3_B1, 0300|NORT,ID3_G2));
+
+
+
+         // DPT
+         test_starting_setup(call_list_dpt,
+                             setup(s2x4, 0,
+                                   0300|EAST,ID3_G2, 0400|EAST,ID3_B3, 0500|WEST,ID3_G3, 0200|WEST,ID3_B2,
+                                   0700|WEST,ID3_G4, 0000|WEST,ID3_B1, 0100|EAST,ID3_G1, 0600|EAST,ID3_B4));
+
+         // completed DPT
+         test_starting_setup(call_list_cdpt,
+                             setup(s2x4, 0,
+                                   0700|WEST,ID3_G4, 0500|WEST,ID3_G3, 0400|EAST,ID3_B3, 0600|EAST,ID3_B4,
+                                   0300|EAST,ID3_G2, 0100|EAST,ID3_G1, 0000|WEST,ID3_B1, 0200|WEST,ID3_B2));
+
+         // RCOL
+         test_starting_setup(call_list_rcol,
+                             setup(s2x4, 0,
+                                   0600|EAST,ID3_B4, 0500|EAST,ID3_G3, 0400|EAST,ID3_B3, 0700|EAST,ID3_G4,
+                                   0200|WEST,ID3_B2, 0100|WEST,ID3_G1, 0000|WEST,ID3_B1, 0300|WEST,ID3_G2));
+
+         // LCOL
+         test_starting_setup(call_list_lcol,
+                             setup(s2x4, 0,
+                                   0300|WEST,ID3_G2, 0000|WEST,ID3_B1, 0100|WEST,ID3_G1, 0200|WEST,ID3_B2,
+                                   0700|EAST,ID3_G4, 0400|EAST,ID3_B3, 0500|EAST,ID3_G3, 0600|EAST,ID3_B4));
+
+         // 8CH
+         test_starting_setup(call_list_8ch,
+                             setup(s2x4, 0,
+                                   0600|EAST,ID3_B4, 0500|WEST,ID3_G3, 0400|EAST,ID3_B3, 0700|WEST,ID3_G4,
+                                   0200|WEST,ID3_B2, 0100|EAST,ID3_G1, 0000|WEST,ID3_B1, 0300|EAST,ID3_G2));
+
+         // TBY
+         test_starting_setup(call_list_tby,
+                             setup(s2x4, 0,
+                                   0500|WEST,ID3_G3, 0600|EAST,ID3_B4, 0700|WEST,ID3_G4, 0400|EAST,ID3_B3,
+                                   0100|EAST,ID3_G1, 0200|WEST,ID3_B2, 0300|EAST,ID3_G2, 0000|WEST,ID3_B1));
+
+         // LIN
+         test_starting_setup(call_list_lin,
+                             setup(s2x4, 0,
+                                   0300|SOUT,ID3_G2, 0000|SOUT,ID3_B1, 0100|SOUT,ID3_G1, 0200|SOUT,ID3_B2,
+                                   0700|NORT,ID3_G4, 0400|NORT,ID3_B3, 0500|NORT,ID3_G3, 0600|NORT,ID3_B4));
+
+         // LOUT
+         test_starting_setup(call_list_lout,
+                             setup(s2x4, 0,
+                                   0600|NORT,ID3_B4, 0500|NORT,ID3_G3, 0400|NORT,ID3_B3, 0700|NORT,ID3_G4,
+                                   0200|SOUT,ID3_B2, 0100|SOUT,ID3_G1, 0000|SOUT,ID3_B1, 0300|SOUT,ID3_G2));
+
+         // RWV
+         test_starting_setup(call_list_rwv,
+                             setup(s2x4, 0,
+                                   0600|NORT,ID3_B4, 0500|SOUT,ID3_G3, 0700|NORT,ID3_G4, 0400|SOUT,ID3_B3,
+                                   0200|SOUT,ID3_B2, 0100|NORT,ID3_G1, 0300|SOUT,ID3_G2, 0000|NORT,ID3_B1));
+
+         // LWV
+         test_starting_setup(call_list_lwv,
+                             setup(s2x4, 0,
+                                   0600|SOUT,ID3_B4, 0500|NORT,ID3_G3, 0700|SOUT,ID3_G4, 0400|NORT,ID3_B3,
+                                   0200|NORT,ID3_B2, 0100|SOUT,ID3_G1, 0300|NORT,ID3_G2, 0000|SOUT,ID3_B1));
+
+         // R2FL
+         test_starting_setup(call_list_r2fl,
+                             setup(s2x4, 0,
+                                   0600|NORT,ID3_B4, 0500|NORT,ID3_G3, 0700|SOUT,ID3_G4, 0400|SOUT,ID3_B3,
+                                   0200|SOUT,ID3_B2, 0100|SOUT,ID3_G1, 0300|NORT,ID3_G2, 0000|NORT,ID3_B1));
+
+         // L2FL
+         test_starting_setup(call_list_l2fl,
+                             setup(s2x4, 0,
+                                   0500|SOUT,ID3_G3, 0600|SOUT,ID3_B4, 0400|NORT,ID3_B3, 0700|NORT,ID3_G4,
+                                   0100|NORT,ID3_G1, 0200|NORT,ID3_B2, 0000|SOUT,ID3_B1, 0300|SOUT,ID3_G2));
+
+         // tidal column
+         create_misc_call_lists(call_list_gcol);
+         // qtag
+         create_misc_call_lists(call_list_qtag);
 
          // Write the cache file;
 
@@ -2598,6 +2721,56 @@ extern bool open_session(int argc, char **argv)
 
    gg->init_step(tick_end, 0);
    matcher_initialize();
+
+   // Read in the "stats" file.
+   // If the fopen fails, leave it at zero.  We won't read, but we will write it back with fresh data.
+   // If the given name doesn't have a suffix, use ".txt".
+   if (GLOB_stats_filename[0]) {
+      start_stats_file_from_GLOB_stats_filename();
+      stats_file = fopen(GLOB_decorated_stats_filename, "r");
+   }
+
+   if (stats_file) {
+      char stats_call[MAX_TEXT_LINE_LENGTH];
+
+      while (fgets(stats_call, 99, stats_file)) {
+         // Remove the newline character.
+         int ll;
+         while ((ll = strlen(stats_call)-1) >= 0 && stats_call[ll] == '\n')
+            stats_call[ll] = '\0';
+
+         int frequency, ccount;
+         char junk[MAX_TEXT_LINE_LENGTH];
+
+         if (sscanf(stats_call, "%d %n%s", &frequency, &ccount, junk) == 2) {
+
+            // Search through the call name list for this call.
+            // Why don't we use a more efficient search, based on the fact
+            // that the call list has been alphabetized?  Because it was
+            // alphabetized before the '@' escapes were expanded.  It
+            // is no longer in alphabetical order.
+            for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
+               if (!strcmp(stats_call+ccount, main_call_lists[call_list_any][i]->menu_name)) {
+                  main_call_lists[call_list_any][i]->the_defn.frequency = frequency;
+                  break;
+               }
+            }
+
+            // If that failed, search for concepts.
+            if (i == number_of_calls[call_list_any]) {
+               for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
+                  if (!strcmp(stats_call+ccount, concept_descriptor_table[i].menu_name)) {
+                     concept_descriptor_table[i].frequency = frequency;
+                     break;
+                  }
+               }
+            }
+         }
+      }
+
+      if (fclose(stats_file))
+         gg->fatal_error_exit(1, "Can't close stats file");
+   }
 
    // Make the status bar show that we are processing accelerators.
    gg->init_step(do_accelerator, 0);

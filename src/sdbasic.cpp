@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    collision_collector::install_with_collision
@@ -648,10 +650,10 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 }
 
 
-static void install_person_in_matrix(int x, int y, int doffset,
-                                     setup *s, const personrec *temp_p,
-                                     const coordrec *cptr, const coordrec *optr,
-                                     uint32 zmask)
+static void install_mirror_person_in_matrix(int x, int y, int doffset,
+                                            setup *s, const personrec *temp_p,
+                                            const coordrec *cptr, const coordrec *optr,
+                                            uint32 zmask)
 {
    int place = optr->diagram[doffset - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
@@ -660,8 +662,10 @@ static void install_person_in_matrix(int x, int y, int doffset,
 
    // Switch the stable bits.
    uint32 n = temp_p->id1;
-   uint32 t = (0 - (n & (STABLE_VBIT*7))) & (STABLE_VBIT*7);
-   uint32 z = (n & ~(STABLE_VBIT*7)) | t;
+
+   uint32 tl = (n & STABLE_VLMASK) / STABLE_VLBIT;
+   uint32 tr = (n & STABLE_VRMASK) / STABLE_VRBIT;
+   uint32 z = (n & ~(STABLE_VLMASK|STABLE_VRMASK)) | (tl*STABLE_VRBIT) | (tr*STABLE_VLBIT);
 
    // Switch the roll bits.
    z &= ~(3*NROLL_BIT);
@@ -771,13 +775,13 @@ void mirror_this(setup *s) THROW_DECL
 
    if (s->rotation & 1) {
       for (i=0; i<=limit; i++)
-         install_person_in_matrix(cptr->xca[i], -cptr->yca[i], doffset,
-                                  s, &temp.people[i], cptr, optr, 010);
+         install_mirror_person_in_matrix(cptr->xca[i], -cptr->yca[i], doffset,
+                                         s, &temp.people[i], cptr, optr, 010);
    }
    else {
       for (i=0; i<=limit; i++)
-         install_person_in_matrix(-cptr->xca[i], cptr->yca[i], doffset,
-                                  s, &temp.people[i], cptr, optr, 1);
+         install_mirror_person_in_matrix(-cptr->xca[i], cptr->yca[i], doffset,
+                                         s, &temp.people[i], cptr, optr, 1);
    }
 }
 
@@ -888,7 +892,7 @@ extern void do_stability(uint32 *personp,
 
    switch (field & STB_MASK) {
    case STB_NONE:
-      *personp &= ~STABLE_MASK;
+      *personp &= ~STABLE_ALL_MASK;
       return;
    case STB_NONE+STB_REVERSE:
       // "None" + REV = "Z".
@@ -955,7 +959,7 @@ extern void do_stability(uint32 *personp,
       do_stability(personp, STB_A+STB_REVERSE, 0, mirror);
       break;      // And keep turning.
    default:
-      *personp &= ~STABLE_MASK;
+      *personp &= ~STABLE_ALL_MASK;
       return;
    }
 
@@ -963,18 +967,26 @@ extern void do_stability(uint32 *personp,
 
    if (mirror) turning = -turning;
 
-   int st = (turning < 0) ? -1 : 1;
+   int absturning_in_eighths = turning * 2;     // Measured in eighths!
+   if (absturning_in_eighths < 0) absturning_in_eighths = -absturning_in_eighths;
 
-   int absturning_in_eighths = turning * st * 2;     // Measured in eighths!
    int abs_overturning_in_eighths = absturning_in_eighths -
-      ((*personp & (STABLE_RBIT*15)) / STABLE_RBIT);
+      ((*personp & STABLE_RMASK) / STABLE_RBIT);
 
    if (abs_overturning_in_eighths <= 0)
       *personp -= absturning_in_eighths*STABLE_RBIT;
-   else
-      *personp =
-         (*personp & ~(STABLE_RBIT*15|STABLE_VBIT*7)) |
-         ((*personp + (STABLE_VBIT * abs_overturning_in_eighths * st)) & (STABLE_VBIT*7));
+   else {
+      if (turning < 0) {
+         *personp =
+            (*personp & ~(STABLE_RMASK|STABLE_VLMASK)) |
+            ((*personp + (STABLE_VLBIT * abs_overturning_in_eighths)) & STABLE_VLMASK);
+      }
+      else {
+         *personp =
+            (*personp & ~(STABLE_RMASK|STABLE_VRMASK)) |
+            ((*personp + (STABLE_VRBIT * abs_overturning_in_eighths)) & STABLE_VRMASK);
+      }
+   }
 }
 
 
@@ -4194,7 +4206,7 @@ foobar:
          setup linetemp;
          setup qtagtemp;
          setup dmdtemp;
-         setup_kind k = try_to_expand_dead_conc(*ss, linetemp, qtagtemp, dmdtemp);
+         setup_kind k = try_to_expand_dead_conc(*ss, (const call_with_name *) 0, linetemp, qtagtemp, dmdtemp);
 
          if (k == s1x4) {
             if ((!(newtb & 010) || assoc(b_1x8, &linetemp, calldeflist)) &&
@@ -4241,10 +4253,10 @@ foobar:
                if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
 
                if ((linedefinition &&
-                    (attr::klimit((setup_kind) linedefinition->end_setup) == 3 ||
+                    (attr::klimit(linedefinition->get_end_setup()) == 3 ||
                      (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))) ||
                    (coldefinition &&
-                    (attr::klimit((setup_kind) coldefinition->end_setup) == 3 ||
+                    (attr::klimit(coldefinition->get_end_setup()) == 3 ||
                      (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF)))) {
                   ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
                }
@@ -4640,7 +4652,7 @@ foobar:
          /* ***** should also check the other stupid fields! */
          inconsistent_rotation =
             (goodies->callarray_flags ^ coldefinition->callarray_flags) & CAF__ROT;
-         if ((setup_kind) goodies->end_setup != (setup_kind) coldefinition->end_setup)
+         if (goodies->get_end_setup() != coldefinition->get_end_setup())
             inconsistent_setup = 1;
       }
 
@@ -4649,7 +4661,7 @@ foobar:
 
    if (!goodies) crash_print(__FILE__, __LINE__);
 
-   result->kind = (setup_kind) goodies->end_setup;
+   result->kind = goodies->get_end_setup();
 
    if (result->kind == s_normal_concentric) {
       /* ***** this requires an 8-person call definition */
@@ -4678,7 +4690,7 @@ foobar:
             p1.people[k].id1 = do_roll(p1.people[k].id1, z, real_direction);
 
             // For now, can't do fractional stable on this kind of call.
-            p1.people[k].id1 &= ~STABLE_MASK;
+            p1.people[k].id1 &= ~STABLE_ALL_MASK;
          }
       }
 
@@ -4689,8 +4701,8 @@ foobar:
 
       clear_result_flags(&outer_inners[0]);
       clear_result_flags(&outer_inners[1]);
-      outer_inners[0].kind = (setup_kind) goodies->end_setup_out;
-      outer_inners[1].kind = (setup_kind) goodies->end_setup_in;
+      outer_inners[0].kind = goodies->get_end_setup_out();
+      outer_inners[1].kind = goodies->get_end_setup_in();
       outer_inners[0].rotation = (goodies->callarray_flags & CAF__ROT_OUT) ? 1 : 0;
       outer_inners[1].rotation = goodies->callarray_flags & CAF__ROT;
 
@@ -4799,7 +4811,7 @@ foobar:
          uint32 oddness = (numoutl & 1) ? numoutl-1 : 0;
 
          if (inconsistent_setup) {
-            setup_kind other_kind = (setup_kind) linedefinition->end_setup;
+            setup_kind other_kind = linedefinition->get_end_setup();
 
             if (inconsistent_rotation) {
                if (result->kind == s_spindle && other_kind == s_crosswave) {

@@ -1,3 +1,5 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 /*
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
@@ -5,7 +7,7 @@
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
- * Copyright (c) 1994-2006 William B. Ackerman
+ * Copyright (c) 1994-2007 William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -23,7 +25,7 @@
  * Type TAB to complete as much as possible.
  * Type Control-U to clear the line.
  *
- * For use with version 34 of the Sd program.
+ * For use with version 37 of the Sd program.
  *
  * The version of this file is as shown immediately below.  This string
  * gets displayed at program startup, as the "ui" part of the complete
@@ -517,7 +519,7 @@ static bool prompt_for_more_output()
    }
 }
 
-void iofull::show_match()
+void iofull::show_match(int frequency_to_show)
 {
    if (showing_has_stopped) return;  // Showing has been turned off.
 
@@ -530,10 +532,26 @@ void iofull::show_match()
       }
    }
 
+   if (frequency_to_show >= 0) {
+      char buffer[MAX_TEXT_LINE_LENGTH];
+      sprintf(buffer, "%-4d ", frequency_to_show);
+      writestuff(buffer);
+   }
+
    if (GLOB_match.indent) writestuff("   ");
    writestuff(GLOB_user_input);
    writestuff(GLOB_full_extension);
    newline();
+}
+
+
+void iofull::prepare_for_listing()
+{
+   match_lines = get_lines_for_more();
+   if (match_lines < 2) match_lines = 25;  // The system is screwed up.
+   if (ui_options.diagnostic_mode) match_lines = 1000000;
+   match_counter = text_line_count+match_lines-2;   // Count for for "--More--" prompt.
+   showing_has_stopped = false;
 }
 
 
@@ -675,12 +693,8 @@ static bool get_user_input(char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         match_lines = get_lines_for_more();
-         if (match_lines < 2) match_lines = 25;  // The system is screwed up.
-         if (ui_options.diagnostic_mode) match_lines = 1000000;
-         match_counter = text_line_count+match_lines-2;   // Count for for "--More--" prompt.
-         showing_has_stopped = false;
-         (void) match_user_input(which, true, c == '?', false);
+         gg->prepare_for_listing();
+         match_user_input(which, true, c == '?', false);
          put_line("\n");     // Write a blank line.
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -799,7 +813,7 @@ static bool get_user_input(char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         (void) match_user_input(which, false, false, true);
+         match_user_input(which, false, false, true);
          user_match = GLOB_match;
          p = GLOB_echo_stuff;
 
@@ -822,8 +836,8 @@ static bool get_user_input(char *prompt, int which)
 
    diagnostic_error:
 
-   (void) fputs("\nParsing error during diagnostic.\n", stdout);
-   (void) fputs("\nParsing error during diagnostic.\n", stderr);
+   fputs("\nParsing error during diagnostic.\n", stdout);
+   fputs("\nParsing error during diagnostic.\n", stderr);
    general_final_exit(1);
    return false;
 }
@@ -870,8 +884,6 @@ uims_reply iofull::get_startup_command()
       if (!get_user_input("Enter startup command> ", (int) match_startup_commands))
          break;
 
-      /* ****** remember to remove "start_select_help" in sd.h */
-
       writestuff("The program wants you to start a sequence.  Type, for example, "
                  "'heads start', and press Enter.  Then type a call, such as "
                  "'pass the ocean', and press Enter again.");
@@ -916,39 +928,34 @@ bool iofull::get_call_command(uims_reply *reply_p)
       int i;
       int comma = 0;
 
-      (void) strcat(prompt_buffer, "[");
+      strcat(prompt_buffer, "[");
 
       for (i=0 ; i<5 ; i++,banner_mode>>=2) {
          if (banner_mode&3) {
 
-            if (comma) (void) strcat(prompt_buffer, ",");
+            if (comma) strcat(prompt_buffer, ",");
 
-            if (i==0) {
-               (void) strcat(prompt_buffer, banner_prompts0[banner_mode&3]);
-            }
+            if (i==0)
+               strcat(prompt_buffer, banner_prompts0[banner_mode&3]);
 
-            if (i==1) {
-               (void) strcat(prompt_buffer, banner_prompts1[banner_mode&3]);
-            }
+            if (i==1)
+               strcat(prompt_buffer, banner_prompts1[banner_mode&3]);
 
-            if (i==2) {
-               (void) strcat(prompt_buffer, banner_prompts2[banner_mode&3]);
-            }
+            if (i==2)
+               strcat(prompt_buffer, banner_prompts2[banner_mode&3]);
 
-            if (i==3) {
-               (void) strcat(prompt_buffer, banner_prompts3[banner_mode&3]);
-            }
+            if (i==3)
+               strcat(prompt_buffer, banner_prompts3[banner_mode&3]);
 
-            if (i==4) {
-               (void) strcat(prompt_buffer, banner_prompts4[banner_mode&3]);
-            }
+            if (i==4)
+               strcat(prompt_buffer, banner_prompts4[banner_mode&3]);
 
             comma |= banner_mode&3;
          }
       }
 
-      (void) strcat(prompt_buffer, "] ");
-      (void) strcat(prompt_buffer, call_menu_prompts[parse_state.call_list_to_use]);
+      strcat(prompt_buffer, "] ");
+      strcat(prompt_buffer, call_menu_prompts[parse_state.call_list_to_use]);
    }
    else
       prompt_ptr = call_menu_prompts[parse_state.call_list_to_use];
@@ -1012,69 +1019,32 @@ uims_reply iofull::get_resolve_command()
 }
 
 
-static popup_return get_popup_string(char prompt[], char dest[])
+popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
+                                      Cstring /*seed*/, char *dest)
 {
-    char buffer[200];
+   // We ignore the "seed".  But Sd might use it.
 
-    sprintf(buffer, "%s: ", prompt);
-    get_string_input(buffer, dest, 200);
-    return POPUP_ACCEPT_WITH_STRING;
-}
+   // Two lines of prompts are allowed.  But if they start with an asterisk,
+   // Sd shows it but Sdtty does not.
 
-popup_return iofull::do_comment_popup(char dest[])
-{
-   popup_return retval = get_popup_string("Enter comment", dest);
-
-   if (retval != POPUP_ACCEPT_WITH_STRING) {
-      if (journal_file) {
-         fputs(dest, journal_file);
-         fputc('\n', journal_file);
-      }
-   }
-
-   return retval;
-}
-
-popup_return iofull::do_outfile_popup(char dest[])
-{
-   writestuff("Current sequence output file is \"");
-   writestuff(outfile_string);
-   writestuff("\".");
-   newline();
-
-   return get_popup_string("Enter new file name (or '+' to base it on today's date)", dest);
-}
-
-popup_return iofull::do_header_popup(char dest[])
-{
-   if (header_comment[0]) {
-      writestuff("Current title is \"");
-      writestuff(header_comment);
-      writestuff("\".");
-      newline();
-   }
-   return get_popup_string("Enter new title", dest);
-}
-
-popup_return iofull::do_getout_popup(char dest[])
-{
-   if (header_comment[0]) {
-      writestuff("Session title is \"");
-      writestuff(header_comment);
-      writestuff("\".");
-      newline();
-      writestuff("You can give an additional comment for just this sequence.");
-      newline();
-   }
-   else {
-      writestuff("Type comment for this sequence, if desired.");
+   if (prompt1 && prompt1[0] && prompt1[0] != '*') {
+      writestuff(prompt1);
       newline();
    }
 
-   return get_popup_string("Enter comment", dest);
+   if (prompt2 && prompt2[0] && prompt2[0] != '*') {
+      writestuff(prompt2);
+      newline();
+   }
+
+   char buffer[MAX_TEXT_LINE_LENGTH];
+   sprintf(buffer, "%s ", final_inline_prompt);
+   get_string_input(buffer, dest, 200);
+   return dest[0] ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
 }
 
-static int confirm(char *question)
+
+static int confirm(Cstring question)
 {
    for (;;) {
       put_line(question);
@@ -1096,8 +1066,8 @@ static int confirm(char *question)
       if (c >= 0) put_char(c);
 
       if (ui_options.diagnostic_mode) {
-         (void) fputs("\nParsing error during diagnostic.\n", stdout);
-         (void) fputs("\nParsing error during diagnostic.\n", stderr);
+         fputs("\nParsing error during diagnostic.\n", stdout);
+         fputs("\nParsing error during diagnostic.\n", stderr);
          general_final_exit(1);
       }
 
@@ -1108,8 +1078,7 @@ static int confirm(char *question)
    }
 }
 
-int iofull::yesnoconfirm(char * /*title*/, char *line1, char *line2,
-                         bool /*excl*/, bool /*info*/)
+int iofull::yesnoconfirm(Cstring /*title*/, Cstring line1, Cstring line2, bool /*excl*/, bool /*info*/)
 {
    if (line1) {
       writestuff(line1);
@@ -1346,7 +1315,7 @@ void iofull::serious_error_print(Cstring s1)
 
 void iofull::terminate(int code)
 {
-   if (journal_file) (void) fclose(journal_file);
+   if (journal_file) fclose(journal_file);
    if (ttu_is_initialized) ttu_terminate();
    exit(code);
 }

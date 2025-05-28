@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //    Copyright (C) 1993 Alan Snyder
 //
 //    This file is part of "Sd".
@@ -19,7 +21,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This file defines the following functions:
    do_accelerator_spec
@@ -29,6 +31,17 @@
    matcher_setup_call_menu
    match_user_input
 and the following external variables:
+   showing_has_stopped
+   GLOB_match
+   GLOB_space_ok
+   GLOB_doing_frequency
+   GLOB_stats_filename
+   GLOB_decorated_stats_filename
+   GLOB_yielding_matches
+   GLOB_user_input
+   GLOB_full_extension
+   GLOB_echo_stuff
+   GLOB_user_input_size
    concept_list
    concept_list_length
    level_concept_list
@@ -62,6 +75,9 @@ bool showing_has_stopped;
 match_result GLOB_match;
 int GLOB_extended_bracket_depth;
 bool GLOB_space_ok;
+bool GLOB_doing_frequency;
+char GLOB_stats_filename[MAX_TEXT_LINE_LENGTH];
+char GLOB_decorated_stats_filename[MAX_TEXT_LINE_LENGTH];
 int GLOB_yielding_matches;
 char GLOB_user_input[INPUT_TEXTLINE_SIZE+1];     // the current user input
 char GLOB_full_extension[INPUT_TEXTLINE_SIZE+1];      // the extension for the current pattern
@@ -143,8 +159,8 @@ static bool GLOB_only_extension;        // Only want extension, short-circuit th
 static int GLOB_user_bracket_depth;
 static int GLOB_match_count;            /* the number of matches so far */
 static int GLOB_exact_count;            /* the number of exact matches so far */
-static bool GLOB_showing;               /* we are only showing the matching patterns */
-static bool GLOB_verify;                /* true => verify calls before showing */
+static bool GLOB_showing;               // We are only showing the matching patterns.
+static bool GLOB_verify;                // True => verify calls before showing.
 static int GLOB_lowest_yield_depth;
 
 
@@ -1114,7 +1130,7 @@ static void record_a_match(void)
       GLOB_yielding_matches++;
 
    if (GLOB_showing) {
-      if (verify_call()) gg->show_match();
+      if (verify_call()) gg->show_match(-1);
    }
 }
 
@@ -2202,7 +2218,8 @@ static void search_menu(uims_reply kind)
             // Another quick check -- there are hundreds of concepts.
             char pch = this_concept->name[0];
 
-            if (uch != pch &&
+            if (!GLOB_showing &&
+                uch != pch &&
                 (pch > 'Z' || pch < 'A' || uch != pch+'a'-'A') &&
                 ((pch != '@') ||
                  (this_concept->name[1] == '0' && uch != '[' && uch != '<')))

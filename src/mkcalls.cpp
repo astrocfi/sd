@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -265,8 +267,8 @@ char db_output_filename[FILENAME_LEN];
 
 typedef unsigned long int uint32;
 
-/* These things come from mkcalls.c for the standalone compiler, or from
-   sdtables.c or sdui-mac.c for the built-in compiler. */
+// These things come from mkcalls.c for the standalone compiler, or from
+// sdtables.c or sdui-mac.c for the built-in compiler.
 extern int begin_sizes[];
 
 typedef enum {
@@ -432,7 +434,7 @@ typedef struct {
 } tagtabitem;
 
 
-/* This table is keyed to "level". */
+// This table is keyed to "level".
 char *leveltab[] = {
    "mainstream",
    "plus",
@@ -449,7 +451,7 @@ char *leveltab[] = {
    "dontshow",
    ""};
 
-/* This table is keyed to "begin_kind". */
+// This table is keyed to "begin_kind".
 char *sstab[] = {
    "??",
    "1x1",
@@ -1055,8 +1057,8 @@ char *defmodtab1[] = {
    "permit_touch_or_rear_back",
    "cpls_unless_single",
    "shift_one_number",
-   "shift_two_numbers",     /* The constant "shift_three_numbers" is elsewhere. */
-   "???",                   /* We get numbers by other means. */
+   "shift_two_numbers",     // The constant "shift_three_numbers" is elsewhere.
+   "???",                   // We get numbers by other means.
    "???",
    "???",
    "no_check_mod_level",
@@ -1074,9 +1076,9 @@ char *seqmodtab1[] = {
    "normalize",
    ""};
 
-/* This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 12).
-   These are the general top-level call flags.  They go into the "callflags1" word and
-   part of the "callflagsh" word. */
+// This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 12).
+// These are the general top-level call flags.  They go into the "callflags1" word and
+// part of the "callflagsh" word.
 
 char *flagtab1[] = {
    "first_part_visible",
@@ -1094,7 +1096,7 @@ char *flagtab1[] = {
    "rear_back_from_qtag",
    "distribute_repetitions",
    "neednumber",
-   "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
+   "need_two_numbers",     // The constant "need_three_numbers" is elsewhere.
    "need_four_numbers",
    "left_means_touch_or_check",
    "left_only_if_half",
@@ -1105,7 +1107,7 @@ char *flagtab1[] = {
    "split_large_setups",
    "split_if_z",
    "base_tag_call_0",
-   "base_tag_call_1",      /* The constant "base_tag_call_2" is elsewhere. */
+   "base_tag_call_1",      // The constant "base_tag_call_2" is elsewhere.
    "base_tag_call_3",
    "base_circ_call",
    "ends_take_right_hands",
@@ -1123,10 +1125,10 @@ char *flagtab1[] = {
    "fractional_numbers",
    ""};
 
-/* The next three tables are all in step with each other, and with the "heritable" flags. */
+// The next three tables are all in step with each other, and with the "heritable" flags.
 
-/* This table is keyed to the constants "INHERITFLAG_???".  The bits indicated by it
-   are encoded into the "callflags" word of the top-level call descriptor. */
+// This table is keyed to the constants "INHERITFLAG_???".  The bits indicated by it
+// are encoded into the "callflags" word of the top-level call descriptor.
 char *flagtabh[] = {
    "diamond_is_legal",
    "reverse_means_mirror",
@@ -1150,8 +1152,8 @@ char *flagtabh[] = {
    "rewind_is_inherited",
    ""};
 
-/* This table is keyed to the constants "INHERITFLAG_???".
-   Notice that it looks like flagtabh. */
+// This table is keyed to the constants "INHERITFLAG_???".
+// Notice that it looks like flagtabh.
 char *altdeftabh[] = {
    "diamond",
    "reverse",
@@ -1229,9 +1231,9 @@ char *reverttabforce[] = {
    "force_reflectreflect",
    ""};
 
-/* This table is keyed to the constants "dfm_***".  These are the heritable
-   definition-modifier flags.  They go in the "modifiersh" word of a by_def_item.
-   Notice that it looks like flagtabh. */
+// This table is keyed to the constants "dfm_***".  These are the heritable
+// definition-modifier flags.  They go in the "modifiersh" word of a by_def_item.
+// Notice that it looks like flagtabh.
 char *defmodtabh[] = {
    "inherit_diamond",
    "inherit_reverse",
@@ -1255,15 +1257,15 @@ char *defmodtabh[] = {
    "inherit_rewind",
    ""};
 
-/* This table is keyed to the constants "dfm_***".  These are the heritable
-   definition-modifier force flags.  They go in the "modifiersh" word of a by_def_item.
-   These are the words that one uses if the top-level enabling bit is OFF.  The
-   bit in the "modifiersh" is the same in either case -- the different interpretation
-   simply depends on whether the top level bit is on or off.
-   Notice that it looks like flagtabh. */
+// This table is keyed to the constants "dfm_***".  These are the heritable
+// definition-modifier force flags.  They go in the "modifiersh" word of a by_def_item.
+// These are the words that one uses if the top-level enabling bit is OFF.  The
+// bit in the "modifiersh" is the same in either case -- the different interpretation
+// simply depends on whether the top level bit is on or off.
+// Notice that it looks like flagtabh.
 char *forcetabh[] = {
    "force_diamond",
-   "???",    /* We don't allow "reverse" -- the bits move around during inheritance. */
+   "???",    // We don't allow "reverse" -- the bits move around during inheritance.
    "force_left",
    "force_funny",
    "force_intlk",
@@ -1285,7 +1287,7 @@ char *forcetabh[] = {
    ""};
 
 
-/* This table is keyed to the constants "MTX_???". */
+// This table is keyed to the constants "MTX_???".
 char *matrixcallflagtab[] = {
    "use_selector",
    "stop_and_warn_on_tbone",
@@ -1475,73 +1477,71 @@ char *predtab[] = {
    "base_is_left",
    ""};
 
-/* The "tag table" is the table that we use to bind together things like
-
-            "seq flipdiamond []"
-
-   in a definition, and
-
-            call "flip the diamond" plus tag flipdiamond
-
-   in another definition.  We keep a list of the strings, and turn
-   each tag into a number that is its index in the list.  The binary
-   database deals with these numbers.  The main sd program will make
-   its own copy of the table, containing pointers to the actual call
-   descriptors. */
+// The "tag table" is the table that we use to bind together things like
+//
+//            "seq flipdiamond []"
+//
+// in a definition, and
+//
+//            call "flip the diamond" plus tag flipdiamond
+//
+// in another definition.  We keep a list of the strings, and turn
+// each tag into a number that is its index in the list.  The binary
+// database deals with these numbers.  The main sd program will make
+// its own copy of the table, containing pointers to the actual call
+// descriptors.
 
 // BEWARE!!  These must track the enumeration "base_call_index" in database.h
 tagtabitem tagtabinit[num_base_call_indices] = {
-      {1, "+++"},            /* Must be unused -- call #0 signals end of list
-                                in sequential encoding. */
-      {0, "nullcall"},       /* Must be #1 -- the database initializer uses call #1
-                                for any mandatory modifier, e.g. "clover and [anything]"
-                                is executed as "clover and [call #1]". */
-      {0, "nullsecond"},     /* Base call for mandatory secondary modification. */
-      {0, "real_base_0"},    // General thing that takes a tagging call
-      {0, "real_base_0_noflip"},  // Same, but must not be "flip"
-      {0, "base_tag_call_flip"},  // "flip"
-      {0, "armturn_34"},     // This is used for "yo-yo".
-      {0, "armturn_n4"},     // To tell where phantoms went.
-      {0, "endsshadow"},     /* This is used for "shadow <setup>". */
-      {0, "chreact_1"},      // This is used for propagating the hinge info
-                             // for part 2 of chain reaction.
-      {0, "makepass_1"},     // This is used for propagating the cast off 3/4 info
-                             // for part 2 of make a pass.
-      {0, "nuclear_1"},      // Same, for part 2 of nuclear reaction.
-      {0, "scootback"},
-      {0, "scootbacktowave"},
-      {0, "backemup"},       /* This is used for remembering the handedness. */
-      {0, "circulate"},
-      {0, "trade"},
-      {0, "any_hand_remake_start_with_n"},
-      {0, "passthru"},       /* To tell how to do "12_16_matrix_means_split". */
-      {0, "check_cross_counter"},
-      {0, "lockit"},
-      {0, "disband1"},
-      {0, "slither"},
-      {0, "maybegrandslither"},
-      {0, "plan_ctrtoend"},
-      {0, "prepare_to_drop"},
-      {0, "hinge_then_trade"},
-      {0, "hinge_then_trade_for_breaker"},
-      {0, "two_o_circs_for_frac"},
-      /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
-      {0, "tagnullcall0"},
-      {0, "tagnullcall1"},
-      {0, "tagnullcall2"},
-      {0, "tagnullcall3"},
-      {0, "circnullcall"},
-      {0, "turnstarn"},
-      {0, "revert_if_needed"},
-      {0, "extend_n"}};
+   {1, "+++"},            // Must be unused -- call #0 signals end of list
+   // in sequential encoding.
+   {0, "nullcall"},       // Must be #1 -- the database initializer uses call #1
+                          // for any mandatory modifier, e.g. "clover and [anything]"
+                          // is executed as "clover and [call #1]".
+   {0, "nullsecond"},          // Base call for mandatory secondary modification.
+   {0, "real_base_0"},         // General thing that takes a tagging call
+   {0, "real_base_0_noflip"},  // Same, but must not be "flip"
+   {0, "base_tag_call_flip"},  // "flip"
+   {0, "armturn_34"},     // This is used for "yo-yo".
+   {0, "armturn_n4"},     // To tell where phantoms went.
+   {0, "endsshadow"},     // This is used for "shadow <setup>".
+   {0, "chreact_1"},      // This is used for propagating the hinge info for part 2 of chain reaction.
+   {0, "makepass_1"},     // This is used for propagating the cast off 3/4 info for part 2 of make a pass.
+   {0, "nuclear_1"},      // Same, for part 2 of nuclear reaction.
+   {0, "scootback"},
+   {0, "scootbacktowave"},
+   {0, "backemup"},       // This is used for remembering the handedness.
+   {0, "circulate"},
+   {0, "trade"},
+   {0, "any_hand_remake_start_with_n"},
+   {0, "passthru"},       // To tell how to do "12_16_matrix_means_split".
+   {0, "check_cross_counter"},
+   {0, "lockit"},
+   {0, "disband1"},
+   {0, "slither"},
+   {0, "maybegrandslither"},
+   {0, "plan_ctrtoend"},
+   {0, "prepare_to_drop"},
+   {0, "hinge_then_trade"},
+   {0, "hinge_then_trade_for_breaker"},
+   {0, "two_o_circs_for_frac"},
+   // The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group.
+   {0, "tagnullcall0"},
+   {0, "tagnullcall1"},
+   {0, "tagnullcall2"},
+   {0, "tagnullcall3"},
+   {0, "circnullcall"},
+   {0, "turnstarn"},
+   {0, "revert_if_needed"},
+   {0, "extend_n"}};
 
-int tagtabsize = num_base_call_indices;  // Number of items we currently have in tagtab.
-int tagtabmax = 100;                     // Amount of space allocated for tagtab;
-                                         // must be >= tagtabsize at all times, obviously.
-tagtabitem *tagtab;                      // The dynamically allocated tag list.
+int tagtabsize;          // Number of items we currently have in tagtab.
+int tagtabmax;           // Amount of space allocated for tagtab;
+                         // must be >= tagtabsize at all times, obviously.
+tagtabitem *tagtab;      // The dynamically allocated tag list.
 
 
-int errnum1 = -1;   /* These may get set >= when raising a fatal error. */
+int errnum1 = -1;   // These may get set >= when raising a fatal error.
 int errnum2 = -1;
 int eof;
 int chars_left;
@@ -1614,8 +1614,8 @@ static void errexit(char s[])
       printf("Error data are:   %d   %d\n", errnum1, errnum2);
 
    if (error_is_fatal) {
-      free(tagtab);
-      // Close files here if desired.
+      // We have, of course, leaked all of tagtab and the strings therein,
+      // and left some files open.
       exit(1);
    }
 }
@@ -1780,7 +1780,7 @@ static int search(char *table[])
 }
 
 
-/* The returned value fits into 13 bits. */
+// The returned value fits into 13 bits.
 static uint32 tagsearch(int def)
 {
    int i;
@@ -1790,21 +1790,21 @@ static uint32 tagsearch(int def)
    }
 
    i = tagtabsize++;
-   /* Independently of the way we reallocate memory, the tag field must be able
-      to fit into 13 bits in order to be packed into the binary database file. */
-   /* Also, we can't allow a tag of 8191, because that would be taken
-      as a compound call definition. */
+   // Independently of the way we reallocate memory, the tag field must be able
+   // to fit into 13 bits in order to be packed into the binary database file.
+   // Also, we can't allow a tag of 8191, because that would be taken
+   // as a compound call definition.
    if (i >= 8190) errexit("Sorry, too many tagged calls");
 
    if (i >= tagtabmax) {
+      tagtabitem *tempsave = tagtab;
+      tagtab = new tagtabitem [tagtabmax * 2];
+      memcpy(tagtab, tempsave, tagtabmax * sizeof(tagtabitem));
       tagtabmax <<= 1;
-      tagtab = (tagtabitem *) realloc((char *) tagtab, tagtabmax * sizeof(tagtabitem));
-      if (!tagtab) errexit("Out of memory!!!!!!");
+      delete [] tempsave;
    }
 
-   tagtab[i].s = (char *) malloc(strlen(tok_str)+1);
-   if (!tagtab[i].s) errexit("Out of memory!!!!!!");
-
+   tagtab[i].s = new char [strlen(tok_str)+1];
    strcpy(tagtab[i].s, tok_str);
    tagtab[i].def = 0;
 
@@ -1873,9 +1873,9 @@ static void write_fullword(uint32 n)
 }
 
 
-/* WARNING!!!!  This procedure appears verbatim in sdutil.c and dbcomp.c . */
+// WARNING!!!!  This procedure appears verbatim in sdutil.c and dbcomp.c.
 
-/* These combinations are not allowed. */
+// These combinations are not allowed.
 
 #define FORBID1 (INHERITFLAG_FRACTAL|INHERITFLAG_YOYO)
 #define FORBID2 (INHERITFLAG_SINGLEFILE|INHERITFLAG_SINGLE)
@@ -1886,7 +1886,7 @@ static void write_fullword(uint32 n)
 static bool do_heritflag_merge(uint32 *dest, uint32 source)
 {
    if (source & INHERITFLAG_REVERTMASK) {
-      /* If the source is a revert/reflect bit, things are complicated. */
+      // If the source is a revert/reflect bit, things are complicated.
       if (!(*dest & INHERITFLAG_REVERTMASK)) {
          goto good;
       }
@@ -1919,8 +1919,8 @@ static bool do_heritflag_merge(uint32 *dest, uint32 source)
          return true;
    }
 
-   /* Check for plain redundancy.  If this is a bit in one of the complex
-      fields, this simple test may not catch the error, but the next one will. */
+   // Check for plain redundancy.  If this is a bit in one of the complex
+   // fields, this simple test may not catch the error, but the next one will.
 
    if ((*dest & source))
       return true;
@@ -2008,8 +2008,8 @@ static void write_defmod_flags(int is_seq)
          else if ((i = search(defmodtabh)) >= 0) {
             uint32 bit = 1 << i;
 
-            /* Don't check the left/reverse flags -- they are complicated,
-               so there is no "force" word for them. */
+            // Don't check the left/reverse flags -- they are complicated,
+            // so there is no "force" word for them.
             if (bit & ~(call_flagsh | INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
@@ -2024,8 +2024,8 @@ static void write_defmod_flags(int is_seq)
             else if ((i = search(reverttabforce)) >= 0) bit = INHERITFLAG_REVERTBIT * (i+1);
             else errexit("Unknown defmod key");
 
-            /* Don't check the left/reverse flags -- they are complicated,
-                  so there is no "force" word for them. */
+            // Don't check the left/reverse flags -- they are complicated,
+            // so there is no "force" word for them.
             if (bit & call_flagsh & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use a \"force\" flag unless corresponding top level flag is off");
 
@@ -2309,21 +2309,21 @@ def2:
    if (tok_kind != tok_symbol) errexit("Improper ending setup");
    if ((call_endsetup = search(estab)) < 0) errexit("Unknown ending setup");
 
-   /* Should actually look for anomalous concentric and do it specially */
+   // Should actually look for anomalous concentric and do it specially.
 
    for (;;) {
       get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
 
       if (!strcmp(tok_str, "array")) {
-         write_array_def_block(callarray_flags1 | callarray_flags2);             /* Pred flag off. */
+         write_array_def_block(callarray_flags1 | callarray_flags2);             // Pred flag off.
          get_tok();
          write_callarray(begin_sizes[call_startsetup], 0);
          get_tok_or_eof();
          break;
       }
       else if (!strcmp(tok_str, "preds")) {
-         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2);        /* Pred flag on. */
+         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2);        // Pred flag on.
          get_tok();
          if (tok_kind != tok_string) errexit("Missing string");
          iii = char_ct;
@@ -2337,14 +2337,14 @@ def2:
             get_tok_or_eof();
             if (eof) break;
 
-            if (tok_kind != tok_symbol) break;    /* Will give an error. */
+            if (tok_kind != tok_symbol) break;    // Will give an error.
 
             if (!strcmp(tok_str, "if")) {
                get_tok();
                if (tok_kind != tok_symbol) errexit("Improper predicate");
                if ((iii = search(predtab)) < 0) errexit("Unknown predicate");
 
-               /* Write a level 4 group. */
+               // Write a level 4 group.
                write_halfword(0x8000);
                write_halfword(iii);
                get_tok();
@@ -2362,7 +2362,7 @@ def2:
          if (call_qual_stuff) errexit("Only one qualifier is allowed");
          get_tok();
 
-         /* Look for other indicators. */
+         // Look for other indicators.
          for (;;) {
             if (tok_kind == tok_symbol && (!strcmp(tok_str, "left") || !strcmp(tok_str, "out"))) {
                call_qual_stuff |= QUALBIT__LEFT;
@@ -2516,7 +2516,7 @@ def2:
          errexit("Need \"setup\" indicator");
    }
 
-   /* Must have seen "setup" -- do another basic array. */
+   // Must have seen "setup" -- do another basic array.
 
    goto def2;
 }
@@ -2542,12 +2542,12 @@ int main(int argc, char *argv[])
       if (errno != ENOENT) {
 	 fprintf(stderr, "trouble deleting old output file ");
 	 perror(db_output_filename);
-         /* This one does NOT abort. */
+         // This one does NOT abort.
       }
    }
 
-   /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
-      however, require it for correct handling of binary data. */
+   // The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
+   // however, require it for correct handling of binary data.
    db_output = fopen(db_output_filename, "wb");
    if (!db_output) {
       fprintf(stderr, "Can't open output file ");
@@ -2558,26 +2558,25 @@ int main(int argc, char *argv[])
    int i, iii;
    uint32 funnyflag;
 
-   tagtabmax = 100; /* try to make it reentrant */
    tagtabsize = num_base_call_indices;
+   tagtabmax = 100;
+   if (tagtabsize > tagtabmax) tagtabmax = tagtabsize;
+   tagtab = new tagtabitem [tagtabmax];
    lineno = 0;
    chars_left = 0;
    error_is_fatal = 1;
    ch = ' ';
-   call_namelen = 0;   /* So won't print error first time around. */
-   tagtab = (tagtabitem *) malloc(tagtabmax * sizeof(tagtabitem));
-   if (!tagtab)
-      errexit("Out of memory!!!!!!");
+   call_namelen = 0;   // So won't print error first time around.
 
-   memcpy(tagtab, tagtabinit, sizeof(tagtabinit));   /* initialize first few entries in tagtab */
+   memcpy(tagtab, tagtabinit, sizeof(tagtabinit));   // Initialize first few entries in tagtab.
 
    filecount = 0;
 
    write_halfword(DATABASE_MAGIC_NUM);
    write_halfword(DATABASE_FORMAT_VERSION);
-   /* Next two halfwords in the file will be the call count and the tag table size.
-      The latter tells sd how much memory to allocate internally for its reconstruction
-      of the tag table. */
+   // Next two halfwords in the file will be the call count and the tag table size.
+   // The latter tells sd how much memory to allocate internally for its reconstruction
+   // of the tag table.
    write_halfword(0);
    write_halfword(0);
 
@@ -2620,7 +2619,7 @@ int main(int argc, char *argv[])
       get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
 
-      /* Get tag, if present. */
+      // Get tag, if present.
 
       if (!strcmp(tok_str, "tag")) {
          get_tok();
@@ -2632,7 +2631,7 @@ int main(int argc, char *argv[])
 
    restart_compound_call:
 
-      /* Get toplevel options. */
+      // Get toplevel options.
 
       call_flagsh = 0;
       call_flags1 = 0;
@@ -2698,11 +2697,11 @@ int main(int argc, char *argv[])
          if (tok_kind != tok_symbol) errexit("Missing indicator");
       }
 
-      /* Process the actual definition.  First, check for the "simple_funny" or "lateral_to_selectees" indicator. */
+      // Process the actual definition.  First, check for the "simple_funny" or "lateral_to_selectees" indicator.
 
       funnyflag = scan_for_per_array_def_flags();
 
-      /* Find out what kind of call it is. */
+      // Find out what kind of call it is.
       iii = search(schematab);
 
       if (iii < 0) errexit("Can't determine call definition type");
@@ -2758,11 +2757,11 @@ int main(int argc, char *argv[])
       case schema_sequential_remainder:
          write_seq_stuff();
 
-         for (;;) {               /* Write a level 2 seqdefine group. */
+         for (;;) {               // Write a level 2 seqdefine group.
             get_tok_or_eof();
             if (eof) goto startagain;
             else if ((tok_kind == tok_symbol) && (!strcmp(tok_str, "seq"))) {
-               /* Write a level 2 seqdefine group. */
+               // Write a level 2 seqdefine group.
                write_seq_stuff();
             }
             else break;
@@ -2828,7 +2827,7 @@ int main(int argc, char *argv[])
    if (result != 0)
       db_output_error();
 
-   free(tagtab);
+   // We have, of course, leaked all of tagtab and the strings therein.
 
    return 0;
 }

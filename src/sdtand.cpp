@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 
 // This file contains stuff for tandem and as-couples moves.
@@ -773,8 +775,8 @@ static void unpack_us(
          for (j=0 ; j<howmanytounpack ; j++) {
             fb[j] = tandstuff->real_saved_people[j][ii];
             if (fb[j].id1) fb[j].id1 =
-                              (fb[j].id1 & ~(NROLL_MASK|STABLE_MASK|077)) |
-                              (z & (NROLL_MASK|STABLE_MASK|013));
+                              (fb[j].id1 & ~(NROLL_MASK|STABLE_ALL_MASK|077)) |
+                              (z & (NROLL_MASK|STABLE_ALL_MASK|013));
          }
 
          for (j=0 ; j<howmanytounpack ; j++) {
@@ -939,7 +941,8 @@ static bool pack_us(
    personrec *s,
    tm_thing *map_ptr,
    int fraction,    // This is in eighths.
-   int twosome,
+   bool fraction_in_use,
+   bool dynamic_in_use,
    int key,
    tandrec *tandstuff) THROW_DECL
 {
@@ -962,7 +965,11 @@ static bool pack_us(
            sgllow |= sglhigh << 29,
            mlow >>= 3,
            mlow |= mhigh << 29) {
-      personrec fb[8];
+
+      // Process a virtual person, put together from some number (1 or tandstuff->np)
+      // of people working together.
+
+      personrec fb[8];    // Will receive the people being assembled.
       personrec *ptr = &tandstuff->virtual_setup.people[i];
       uint32 vp1, vp2, vp3;
       // We know (hopefully) that this map doesn't have the "1/8 twosome" stuff, so the bits will be AB0.
@@ -983,12 +990,14 @@ static bool pack_us(
       if (!tandstuff->no_unit_symmetry) vert &= 1;
 
       if (sgllow & 1) {
+         // This person is not paired, as in "boys are tandem" when we are a girl.
          vp1 = fb[0].id1;
          vp2 = fb[0].id2;
          vp3 = fb[0].id3;
          fb[1].id1 = ~0UL;
       }
       else {
+         // This person is paired; pick up the other real people.
          uint32 orpeople1 = fb[0].id1;
          uint32 andpeople1 = fb[0].id1;
 
@@ -1037,7 +1046,7 @@ static bool pack_us(
          }
 
          if (orpeople1) {
-            if (twosome >= 2 && (orpeople1 & STABLE_MASK))
+            if ((fraction_in_use || dynamic_in_use) && (orpeople1 & STABLE_ALL_MASK))
                fail("Sorry, can't nest fractional stable/twosome.");
 
             vp1 = ~0UL;
@@ -1059,7 +1068,7 @@ static bool pack_us(
 
                   // If they have different fractional stability states,
                   // just clear them -- they can't do it.
-                  if ((fb[j].id1 ^ orpeople1) & STABLE_MASK) vp1 &= ~STABLE_MASK;
+                  if ((fb[j].id1 ^ orpeople1) & STABLE_ALL_MASK) vp1 &= ~STABLE_ALL_MASK;
                   // If they have different roll states, just clear them -- they can't roll.
                   if ((fb[j].id1 ^ orpeople1) & NROLL_MASK) vp1 &= ~NROLL_MASK;
                   // Check that all real people face the same way.
@@ -1086,10 +1095,12 @@ static bool pack_us(
          ptr->id3 = vp3;
 
          if (!(sgllow & 1)) {
-            if (twosome >= 2)
+            if (fraction_in_use)
                ptr->id1 |= STABLE_ENAB | (STABLE_RBIT * fraction);
+            else if (dynamic_in_use)
+               ptr->id1 |= STABLE_ENAB;
 
-            /* 1 if original people were near/far; 0 if lateral */
+            // 1 if original people were near/far; 0 if lateral.
             tandstuff->vertical_people[virt_index] = vert;
          }
 
@@ -1117,6 +1128,7 @@ extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
    int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
+                          // also, 4 bit => dynamic, 8 bit => reverse dynamic
    int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
@@ -1124,6 +1136,9 @@ extern void tandem_couples_move(
    bool phantom_pairing_ok,
    setup *result) THROW_DECL
 {
+   uint32 dynamic = twosome >> 2;
+   twosome &= 3;
+
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       result->kind = nothing;
       clear_result_flags(result);
@@ -1677,8 +1692,8 @@ extern void tandem_couples_move(
       goto siamese_failed;
    }
    else if (key & 1) {
-      /* Couples -- swap masks.  Tandem -- do nothing. */
-      uint32 temp(ewmask);
+      // Couples -- swap masks.  Tandem -- do nothing.
+      uint32 temp = ewmask;
       ewmask = nsmask;
       nsmask = temp;
    }
@@ -1782,7 +1797,7 @@ extern void tandem_couples_move(
    if (phantom == 3) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    // Give it the fraction in quarters, rounded down if an eighth part was specified.
-   if (!pack_us(ss->people, map, fraction_in_eighths, twosome, key, &tandstuff))
+   if (!pack_us(ss->people, map, fraction_in_eighths, fractional, dynamic != 0, key, &tandstuff))
       goto got_good_separation;
 
    // Or failure to pack people properly may just be because we are taking
@@ -1889,7 +1904,7 @@ extern void tandem_couples_move(
             sglmask3low |= 7;
          }
          else {
-            if (fractional) {
+            if (fractional || dynamic != 0) {
                if (!(p & STABLE_ENAB))
                   fail("fractional twosome not supported for this call.");
             }
@@ -1897,16 +1912,38 @@ extern void tandem_couples_move(
             int orbit_in_eighths =
                (p + tandstuff.virtual_result.rotation - tandstuff.saved_originals[vpi]) << 1;
 
-            uint32 stable_stuff_in_eighths = ((p & (STABLE_VBIT*7)) / STABLE_VBIT);
+            uint32 stable_stuff_in_eighths = ((p & STABLE_VRMASK) / STABLE_VRBIT) - ((p & STABLE_VLMASK) / STABLE_VLBIT);
 
-            if (twosome == 2) {
-               orbit_in_eighths -= stable_stuff_in_eighths;
+            if (twosome == 3) {
+               // This is "twosome to solid" -- they orbit by whatever the excess is after the stability expires.
+               orbit_in_eighths = 0;
+               if (fractional) {
+                  if (dynamic == 1)
+                     orbit_in_eighths += (p & STABLE_VRMASK) / STABLE_VRBIT;
+                  else if (dynamic == 2)
+                     orbit_in_eighths -= (p & STABLE_VLMASK) / STABLE_VLBIT;
+                  else
+                     orbit_in_eighths = stable_stuff_in_eighths;
+               }
             }
-            else if (twosome == 3) {
-               orbit_in_eighths = stable_stuff_in_eighths;
+            else if (twosome == 2) {
+               // This is "solid to twosome" -- they orbit by whatever happened before the stability expired.
+               if (fractional) {
+                  if (dynamic == 1)
+                     orbit_in_eighths += (p & STABLE_VLMASK) / STABLE_VLBIT;
+                  else if (dynamic == 2)
+                     orbit_in_eighths -= (p & STABLE_VRMASK) / STABLE_VRBIT;
+                  else
+                     orbit_in_eighths -= stable_stuff_in_eighths;
+               }
             }
             else if (twosome == 1) {
+               // This is "twosome" -- they don't orbit (unless "dynamic" is on).
                orbit_in_eighths = 0;
+               if (dynamic == 1)
+                  orbit_in_eighths += (p & STABLE_VRMASK) / STABLE_VRBIT;
+               else if (dynamic == 2)
+                  orbit_in_eighths -= (p & STABLE_VLMASK) / STABLE_VLBIT;
             }
 
             orbitmask3low |=
@@ -1914,7 +1951,7 @@ extern void tandem_couples_move(
          }
 
          if (fractional)
-            tandstuff.virtual_result.people[i].id1 &= ~STABLE_MASK;
+            tandstuff.virtual_result.people[i].id1 &= ~STABLE_ALL_MASK;
       }
    }
 

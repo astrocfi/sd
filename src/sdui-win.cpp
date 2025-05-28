@@ -1,3 +1,5 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
 //    Copyright (C) 1990-2006  William B. Ackerman.
@@ -20,7 +22,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 
 //    sdui-win.cpp - SD -- Microsoft Windows User Interface
@@ -226,7 +228,7 @@ static void UpdateStatusBar(Cstring szFirstPane)
    if (allowing_modifications || allowing_all_concepts ||
        using_active_phantoms || allowing_minigrand ||
        ui_options.singing_call_mode || ui_options.nowarn_mode) {
-      (void) SendMessage(hwndStatusBar, SB_SETPARTS, 7, (LPARAM) StatusBarDimensions);
+      SendMessage(hwndStatusBar, SB_SETPARTS, 7, (LPARAM) StatusBarDimensions);
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 1,
                   (LPARAM) ((allowing_modifications == 2) ? "all mods" :
@@ -249,11 +251,11 @@ static void UpdateStatusBar(Cstring szFirstPane)
                   (LPARAM) (allowing_minigrand ? "minigrand" : ""));
    }
    else {
-      (void) SendMessage(hwndStatusBar, SB_SETPARTS, 1, (LPARAM) StatusBarDimensions);
+      SendMessage(hwndStatusBar, SB_SETPARTS, 1, (LPARAM) StatusBarDimensions);
    }
 
-   (void) SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szGLOBFirstPane);
-   (void) SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
+   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szGLOBFirstPane);
+   SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
    UpdateWindow(hwndStatusBar);
 }
 
@@ -313,8 +315,14 @@ static void erase_questionable_stuff()
 }
 
 
-void iofull::show_match()
+void iofull::show_match(int frequency_to_show)
 {
+   if (frequency_to_show >= 0) {
+      char buffer[MAX_TEXT_LINE_LENGTH];
+      sprintf(buffer, "%-4d ", frequency_to_show);
+      writestuff(buffer);
+   }
+
    if (GLOB_match.indent) writestuff("   ");
    writestuff(GLOB_user_input);
    writestuff(GLOB_full_extension);
@@ -382,7 +390,7 @@ static void check_text_change(bool doing_escape)
                lstrcpy(GLOB_user_input, szLocalString);
                GLOB_user_input_size = lstrlen(GLOB_user_input);
                // This will call show_match with each match.
-               (void) match_user_input(nLastOne, true, cCurChar == '?', false);
+               match_user_input(nLastOne, true, cCurChar == '?', false);
                question_stuff_to_erase = my_mark;
                // Restore the scroll position so that the user will see the start,
                // not the end, of what we displayed.
@@ -713,7 +721,7 @@ static int LookupKeystrokeBinding(
             GetWindowText(hwndTextInputArea, szLocalString, MAX_TEXT_LINE_LENGTH);
             lstrcpy(GLOB_user_input, szLocalString);
             GLOB_user_input_size = lstrlen(GLOB_user_input);
-            (void) delete_matcher_word();
+            delete_matcher_word();
             SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
             SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
@@ -858,8 +866,8 @@ static void Transcript_OnPaint(HWND hwnd)
       PaintStruct.rcPaint.bottom = TranscriptClientRect.bottom-TVOFFSET;
 
    SelectFont(PaintDC, GetStockObject(OEM_FIXED_FONT));
-   (void) SetTextColor(PaintDC, plaintext_fg);
-   (void) SetBkColor(PaintDC, plaintext_bg);
+   SetTextColor(PaintDC, plaintext_fg);
+   SetBkColor(PaintDC, plaintext_bg);
 
    SelectPalette(PaintStruct.hdc, hPalette, FALSE);
    RealizePalette(PaintStruct.hdc);
@@ -902,7 +910,7 @@ static void Transcript_OnPaint(HWND hwnd)
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 1, 0);
 
                   if (ui_options.color_scheme != no_color)
-                     (void) SetTextColor(PaintDC, text_color_translate[color_index_list[personidx]]);
+                     SetTextColor(PaintDC, text_color_translate[color_index_list[personidx]]);
 
                   cc[0] = ui_options.pn1[personidx];
                   cc[1] = ui_options.pn2[personidx];
@@ -913,7 +921,7 @@ static void Transcript_OnPaint(HWND hwnd)
                   // Set back to plain "white".
 
                   if (ui_options.color_scheme != no_color)
-                     (void) SetTextColor(PaintDC, plaintext_fg);
+                     SetTextColor(PaintDC, plaintext_fg);
 
                   xdelta = TranscriptTextWidth*4;
                   continue;
@@ -1060,7 +1068,7 @@ static void Transcript_OnScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
    ClientRect.top += TVOFFSET;
    ClientRect.bottom -= BottomFudge;
 
-   (void) ScrollWindowEx(hwnd, 0, -delta*TranscriptTextHeight,
+   ScrollWindowEx(hwnd, 0, -delta*TranscriptTextHeight,
                          &ClientRect, &ClientRect, NULL, NULL, SW_ERASE | SW_INVALIDATE);
 
    if (delta > 0) {
@@ -1127,11 +1135,22 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
 }
 
 
-static popup_return do_general_text_popup(Cstring prompt1, Cstring prompt2,
-                                          Cstring seed, char dest[])
+popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring /*final_inline_prompt*/,
+                                      Cstring seed, char *dest)
 {
-   strncpy(szPrompt1, prompt1, MAX_TEXT_LINE_LENGTH);
-   strncpy(szPrompt2, prompt2, MAX_TEXT_LINE_LENGTH);
+   // We ignore the "final_inline_prompt".  We assume that the appearance of the
+   // edit box will clue the user.  But we show other prompts, even if they have asterisks.
+
+   if (prompt1 && prompt1[0] && prompt1[0] == '*')
+      strncpy(szPrompt1, prompt1+1, MAX_TEXT_LINE_LENGTH);
+   else
+      strncpy(szPrompt1, prompt1, MAX_TEXT_LINE_LENGTH);
+
+   if (prompt2 && prompt2[0] && prompt2[0] == '*')
+      strncpy(szPrompt2, prompt2+1, MAX_TEXT_LINE_LENGTH);
+   else
+      strncpy(szPrompt2, prompt2, MAX_TEXT_LINE_LENGTH);
+
    strncpy(szSeed, seed, MAX_TEXT_LINE_LENGTH);
    DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_TEXT_ENTRY_DIALOG),
              hwndMain, (DLGPROC) TEXT_ENTRY_DIALOG_WndProc);
@@ -1140,8 +1159,6 @@ static popup_return do_general_text_popup(Cstring prompt1, Cstring prompt2,
    else dest[0] = 0;
    return PopupStatus;
 }
-
-
 
 int WINAPI WinMain(
    HINSTANCE hInstance,
@@ -1359,14 +1376,14 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 
 bool iofull::help_manual()
 {
-   (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
+   ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
    return TRUE;
 }
 
 
 bool iofull::help_faq()
 {
-   (void) ShellExecute(NULL, "open", "c:\\sd\\faq.html", NULL, NULL, SW_SHOWNORMAL);
+   ShellExecute(NULL, "open", "c:\\sd\\faq.html", NULL, NULL, SW_SHOWNORMAL);
    return TRUE;
 }
 
@@ -1385,11 +1402,11 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // The claim is that we can take this clause out, and the normal
       // program mechanism will do the same thing.  That claim isn't yet
       // completely true, so we leave this in for now.
-      (void) gg->help_manual();
+      gg->help_manual();
       break;
    case ID_HELP_FAQ:
       // Ditto.
-      (void) gg->help_faq();
+      gg->help_faq();
       break;
    case ID_FILE_EXIT:
       SendMessage(hwndMain, WM_CLOSE, 0, 0L);
@@ -1766,7 +1783,7 @@ void MainWindow_OnMenuSelect(HWND hwnd, HMENU hmenu, int item, HMENU hmenuPopup,
       MenuHelp(WM_MENUSELECT, item, (LPARAM) hmenu, NULL,
                GLOBhInstance, hwndStatusBar, &UIStringbase);
    else
-      (void) SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
+      SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
 }
 
 
@@ -1835,7 +1852,7 @@ static void SetTitle()
 }
 
 
-void iofull::set_pick_string(const char *string)
+void iofull::set_pick_string(Cstring string)
 {
    if (string && *string) {
       UpdateStatusBar((Cstring) 0);
@@ -2415,10 +2432,10 @@ void iofull::final_initialize()
                                      16*sizeof(RGBQUAD) +
                                      BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
 
-   (void) memcpy(lpBi, lpBitsTemp,
-                 lpBitsTemp->bmiHeader.biSize +
-                 16*sizeof(RGBQUAD) +
-                 BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
+   memcpy(lpBi, lpBitsTemp,
+          lpBitsTemp->bmiHeader.biSize +
+          16*sizeof(RGBQUAD) +
+          BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
 
    lpBits = ((LPTSTR) lpBi) + lpBi->bmiHeader.biSize + 16*sizeof(RGBQUAD);
 
@@ -2774,7 +2791,9 @@ void ShowListBox(int nWhichOne)
 }
 
 
-
+void iofull::prepare_for_listing()
+{
+}
 
 void iofull::create_menu(call_list_kind cl) {}
 
@@ -2872,58 +2891,7 @@ uims_reply iofull::get_resolve_command()
 
 
 
-popup_return iofull::do_comment_popup(char dest[])
-{
-   if (do_general_text_popup("Enter comment:", "", "", dest) == POPUP_ACCEPT_WITH_STRING)
-      return POPUP_ACCEPT_WITH_STRING;
-   else
-      return POPUP_DECLINE;
-}
-
-
-popup_return iofull::do_outfile_popup(char dest[])
-{
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string);
-   return do_general_text_popup(buffer,
-                                "Enter new name (or '+' to base it on today's date):",
-                                outfile_string,
-                                dest);
-}
-
-
-popup_return iofull::do_header_popup(char dest[])
-{
-   char myPrompt[MAX_TEXT_LINE_LENGTH];
-
-   if (header_comment[0])
-      sprintf(myPrompt, "Current title is \"%s\".", header_comment);
-   else
-      myPrompt[0] = 0;
-
-   return do_general_text_popup(myPrompt, "Enter new title:", "", dest);
-}
-
-
-popup_return iofull::do_getout_popup (char dest[])
-{
-   char buffer[MAX_TEXT_LINE_LENGTH+MAX_FILENAME_LENGTH];
-
-   if (header_comment[0]) {
-      sprintf(buffer, "Session title is \"%s\".", header_comment);
-      return
-         do_general_text_popup(buffer,
-                               "You can give an additional comment for just this sequence:",
-                               "",
-                               dest);
-   }
-   else {
-      sprintf(buffer, "Output file is \"%s\".", outfile_string);
-      return do_general_text_popup(buffer, "Sequence comment:", "", dest);
-   }
-}
-
-int iofull::yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info)
+int iofull::yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl, bool info)
 {
    char finalline[200];
 
@@ -3209,6 +3177,6 @@ void iofull::terminate(int code)
       SendMessage(hwndMain, WM_USER+2, 0, 0L);
    }
 
-   (void) GlobalFree(lpBi);
+   GlobalFree(lpBi);
    ExitProcess(code);
 }

@@ -1,3 +1,5 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
 //    Copyright (C) 1990-2007  William B. Ackerman.
@@ -31,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "37.1"
-#define TIME_STAMP "wba@alum.mit.edu  18 Jan 2007 $"
+#define VERSION_STRING "37.3"
+#define TIME_STAMP "wba@alum.mit.edu  8 Apr 2007 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -159,6 +161,17 @@ command_list_menu_item command_menu[] = {
    {"clipboard paste all",            command_paste_all_calls, -1},
    {"keep picture",                   command_save_pic, ID_COMMAND_KEEP_PICTURE},
    {"refresh display",                command_refresh, -1},
+
+   {"frequency show",                 command_freq_show, -1},
+   {"frequency show level",           command_freq_show_level, -1},
+   {"frequency show near level",      command_freq_show_nearlevel, -1},
+   {"frequency show sort",            command_freq_show_sort, -1},
+   {"frequency show sort level",      command_freq_show_sort_level, -1},
+   {"frequency show sort near level", command_freq_show_sort_nearlevel, -1},
+   {"frequency reset",                command_freq_reset, -1},
+   {"frequency start",                command_freq_start, -1},
+   {"frequency delete",               command_freq_delete, -1},
+
    {"resolve",                        command_resolve, ID_COMMAND_RESOLVE},
    {"normalize",                      command_normalize, ID_COMMAND_NORMALIZE},
    {"standardize",                    command_standardize, ID_COMMAND_STANDARDIZE},
@@ -234,11 +247,20 @@ startup_list_menu_item startup_menu[] = {
    {"change to new style filename",start_select_change_to_new_style_filename, -1},
    {"change output file",          start_select_change_outfile, ID_COMMAND_CH_OUTFILE},
    {"change title",                start_select_change_title, ID_COMMAND_CH_TITLE},
+
+   {"frequency show",              start_select_freq_show, -1},
+   {"frequency show level",        start_select_freq_show_level, -1},
+   {"frequency show near level",   start_select_freq_show_nearlevel, -1},
+   {"frequency show sort",         start_select_freq_show_sort, -1},
+   {"frequency show sort level",   start_select_freq_show_sort_level, -1},
+   {"frequency show sort near level", start_select_freq_show_sort_nearlevel, -1},
+   {"frequency reset",             start_select_freq_reset, -1},
+   {"frequency start",             start_select_freq_start, -1},
+   {"frequency delete",            start_select_freq_delete, -1},
+
    {(Cstring) 0}};
+
 int last_file_position = -1;
-
-
-
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
@@ -615,21 +637,7 @@ extern bool query_for_call()
    redisplay:
 
    if (interactivity == interactivity_normal) {
-      /* We are operating in interactive mode.  Update the
-         display and query the user. */
-
-      if (global_error_flag == error_flag_show_stats) {
-         clear_screen();
-         writestuff("***** LEAST RECENTLY USED 2% OF THE CALLS ARE:");
-         newline();
-         writestuff("filibuster     peel the toptivate");
-         newline();
-         writestuff("spin chain and circulate the gears    spin chain and exchange the gears");
-         newline();
-         global_error_flag = (error_flag_type) 0;
-         goto try_again;
-      }
-
+      // We are operating in interactive mode.  Update the display and query the user.
       // First, update the output area to the current state, with error messages, etc.
       // We draw a picture for the last two calls.
 
@@ -699,6 +707,9 @@ extern bool query_for_call()
          case error_flag_wrong_command:
             writestuff("You can't select that here.");
             break;
+         case error_flag_OK_but_dont_erase:
+            global_error_flag = error_flag_none;
+            break;
          }
 
          newline();
@@ -706,7 +717,7 @@ extern bool query_for_call()
       }
 
       old_error_flag = global_error_flag; /* save for refresh command */
-      global_error_flag = (error_flag_type) 0;
+      global_error_flag = error_flag_none;
 
       if (clipboard_size != 0) {
          int j;
@@ -724,8 +735,6 @@ extern bool query_for_call()
          writestuff("............................");
          newline();
       }
-
-      try_again:
 
       // Display the call index number, and the partially entered call and/or
       // prompt, as appropriate.
@@ -768,11 +777,13 @@ extern bool query_for_call()
          newline();
       }
 
-      /* Returned value of true means that the user waved the mouse away at some point,
-         that is, nothing was entered, and we should try again.  Otherwise, the concepts
-         and call have been deposited with calls to "deposit_call" and "deposit_concept". */
+   check_menu:
 
-      check_menu:
+      // Returned value of true means that the user declined to enter anything (waved
+      // the mouse away, clicked "cancel", whatever the user interface requires), and
+      // hence no concepts or calls were entered, so we should try again.  Otherwise,
+      // the concepts and call have been deposited with calls to "deposit_call" and
+      // "deposit_concept".
 
       if (gg->get_call_command(&local_reply)) goto recurse_entry;
 
@@ -780,23 +791,24 @@ extern bool query_for_call()
          switch ((command_kind) uims_menu_index) {
             char comment[MAX_TEXT_LINE_LENGTH];
          case command_create_comment:
-            if (gg->do_comment_popup(comment)) {
-               char *temp_text_ptr;
-               comment_block *new_comment_block;     /* ****** Kludge!!!!! */
+            {
+               if (gg->get_popup_string("*Enter comment:", "", "Enter comment:", "", comment) ==
+                   POPUP_ACCEPT_WITH_STRING) {
+                  comment_block *new_comment_block = (comment_block *) get_mem(sizeof(comment_block));
+                  char *temp_text_ptr = new_comment_block->txt;
+                  string_copy(&temp_text_ptr, comment);
 
-               new_comment_block = (comment_block *) get_mem(sizeof(comment_block));
-               temp_text_ptr = &new_comment_block->txt[0];
-               string_copy(&temp_text_ptr, comment);
+                  *parse_state.concept_write_ptr = get_parse_block();
+                  (*parse_state.concept_write_ptr)->concept = &conzept::marker_concept_comment;
 
-               *parse_state.concept_write_ptr = get_parse_block();
-               (*parse_state.concept_write_ptr)->concept = &conzept::marker_concept_comment;
-
-               (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
-               (*parse_state.concept_write_ptr)->call_to_print =
-                  (call_with_name *) new_comment_block;
-               /* Advance the write pointer. */
-               parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
+                  (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
+                  (*parse_state.concept_write_ptr)->call_to_print =
+                     (call_with_name *) new_comment_block;
+                  // Advance the write pointer.
+                  parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
+               }
             }
+
             goto recurse_entry;
          case command_simple_mods:
             /* Increment "allowing_modifications" up to a maximum of 2. */
@@ -928,7 +940,6 @@ extern bool query_for_call()
 }
 
 
-
 ui_option_type::ui_option_type() :
    color_scheme(color_by_gender),
    force_session(-1000000),
@@ -1022,6 +1033,7 @@ extern int sdmain(int argc, char *argv[])
    verify_options.who = selector_uninitialized;
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;
+   GLOB_doing_frequency = false;
    history_allocation = 15;
    configuration::history = (configuration *) get_mem(history_allocation * sizeof(configuration));
 

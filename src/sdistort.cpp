@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    tglmap::initialize
@@ -426,6 +428,17 @@ static void innards(
    // which the incoming map might cause this: maps with kind = MPKIND__DMD_STUFF or
    // MPKIND__4_EDGES, for example.
 
+   if (map_kind == MPKIND__X_SPOTS && arity == 2 && 
+       z[0].kind == nothing && z[1].kind == s_dead_concentric && z[1].inner.skind == s2x2) {
+      result->kind = s4x4;
+      result->rotation += z[1].inner.srotation;
+      result->clear_people();
+      static const veryshort butterfly_fixer[] = {15, 3, 7, 11};
+      scatter(result, &z[1], butterfly_fixer, 3, 0);
+      result->result_flags = z[1].result_flags;
+      return;
+   }
+
    // These two special map kinds involve different setups, so "fix_n_results" can't be used.
    if (map_kind != MPKIND__SPEC_ONCEREM && map_kind != MPKIND__SPEC_TWICEREM) {
 
@@ -446,22 +459,24 @@ static void innards(
       }
 
       // We still might have all setups dead concentric.  Try to fix that.
-      for (i=0; i<arity; i++) {
-         if (map_kind == MPKIND__SPLIT &&
-             ((z[i].kind == s_dead_concentric) ||
-              (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing))) {
-            setup linetemp;
-            setup qtagtemp;
-            setup dmdtemp;
-            setup_kind k = try_to_expand_dead_conc(z[i], linetemp, qtagtemp, dmdtemp);
-            if (k == s1x4) {
-               if (x[i].kind == s_qtag)
-                  z[i] = qtagtemp;
-               else
+      if (map_kind == MPKIND__SPLIT || map_kind == MPKIND__OVERLAP ||
+          map_kind == MPKIND__OVERLAP14 || map_kind == MPKIND__OVERLAP34) {
+         for (i=0; i<arity; i++) {
+            if ((z[i].kind == s_dead_concentric ||
+                 (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing))) {
+               setup linetemp;
+               setup qtagtemp;
+               setup dmdtemp;
+               setup_kind k = try_to_expand_dead_conc(z[i], x[i].cmd.callspec, linetemp, qtagtemp, dmdtemp);
+               if (k == s1x4) {
+                  if (x[i].kind == s_qtag)
+                     z[i] = qtagtemp;
+                  else
+                     z[i] = linetemp;
+               }
+               if (k == s2x2)
                   z[i] = linetemp;
             }
-            if (k == s2x2)
-               z[i] = linetemp;
          }
       }
 
@@ -3877,7 +3892,7 @@ extern void common_spot_move(
 
             // These bits are not a property just of the person and his position
             // in the formation -- they depend on other people's facing direction.
-#define ID2_BITS_NOT_INTRINSIC (ID2_FACING | ID2_NOTFACING)
+            enum { ID2_BITS_NOT_INTRINSIC = ID2_FACING | ID2_NOTFACING };
 
             for (k=0; k<=attr::klimit(the_results[0].kind); k++) {
                if (the_results[0].people[k].id1 &&

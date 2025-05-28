@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    get_escape_string
@@ -46,7 +48,6 @@ and the following external variables:
    global_cache_failed_flag
    global_cache_miss_reason
    global_reply
-   global_age
    clipboard
    clipboard_size
    wrote_a_sequence
@@ -67,7 +68,7 @@ and the following external variables:
 #include <string.h>
 
 #include "sd.h"
-
+#include "sort.h"
 
 
 // External variables.
@@ -79,7 +80,6 @@ bool global_cache_failed_flag;
 // Word 2 is what we got.
 int global_cache_miss_reason[3];
 uims_reply global_reply;
-int global_age;
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 bool wrote_a_sequence = false;
@@ -729,8 +729,6 @@ void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
 
 void print_recurse(parse_block *thing, int print_recurse_arg)
 {
-   parse_block *local_cptr;
-   parse_block *next_cptr;
    bool use_left_name = false;
    bool use_cross_name = false;
    bool use_magic_name = false;
@@ -746,13 +744,11 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
    bool last_was_l_type = false;
    bool request_final_space = false;
 
-   local_cptr = thing;
+   parse_block *local_cptr = thing;
 
    while (local_cptr) {
       concept_kind k;
-      const conzept::concept_descriptor *item;
-
-      item = local_cptr->concept;
+      const conzept::concept_descriptor *item = local_cptr->concept;
       k = item->kind;
 
       if (k == concept_comment) {
@@ -771,7 +767,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
       }
       else if (k > marker_end_of_list) {
          // This is a concept.
-
+         if (enable_file_writing) item->frequency++;
          bool force = false;
          // 1 for comma, 2 for the word "all", 3 to skip an extra if it's "tandem".
          int request_comma_after_next_concept = 0;
@@ -810,7 +806,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          if (force && did_comma == 0 && k != concept_tandem_in_setup) writestuff(", ");
          else if (request_final_space) writestuff(" ");
 
-         next_cptr = local_cptr->next;    // Now it points to the thing after this concept.
+         parse_block *next_cptr = local_cptr->next;    // Now it points to the thing after this concept.
 
          request_final_space = false;
 
@@ -1149,7 +1145,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          selector_kind i16junk = local_cptr->options.who;
          direction_kind idirjunk = local_cptr->options.where;
          uint32 number_list = local_cptr->options.number_fields;
-         call_with_name *localcall = local_cptr->call_to_print;
+         const call_with_name *localcall = local_cptr->call_to_print;
          parse_block *save_cptr = local_cptr;
 
          bool subst1_in_use = false;
@@ -1202,9 +1198,9 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          /* Call = NIL means we are echoing input and user hasn't entered call yet. */
 
          if (localcall) {
-            char *np = localcall->name;
+            Cstring np = localcall->name;
 
-            if (enable_file_writing) localcall->the_defn.age = global_age;
+            if (enable_file_writing) localcall->the_defn.frequency++;
 
             while (*np) {
                char c = *np++;
@@ -1680,8 +1676,8 @@ extern void writechar(char src)
 
       *q = '\0';
 
-      newline();            /* End the current buffer and write it out. */
-      writestuff("   ");    /* Make a new line, copying saved stuff into it. */
+      newline();            // End the current buffer and write it out.
+      writestuff("   ");   // Make a new line, copying saved stuff into it.
       writestuff(save_buffer);
    }
 }
@@ -1994,10 +1990,16 @@ extern void initialize_parse()
 
 static void do_change_outfile(bool signal)
 {
-   char newfile_string[MAX_FILENAME_LENGTH];
+   char *GodDamnedPieceOfShitToGetTheMicrosoftDebuggerToShowMeThisSymbol = outfile_string;
 
-   if (gg->do_outfile_popup(newfile_string) == POPUP_ACCEPT_WITH_STRING &&
-       newfile_string[0]) {
+   char newfile_string[MAX_FILENAME_LENGTH];
+   char buffer[MAX_TEXT_LINE_LENGTH];
+   sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string);
+
+   if (gg->get_popup_string(buffer,
+                           "*Enter new name (or '+' to base it on today's date)",
+                           "Enter new file name (or '+' to base it on today's date):",
+                           outfile_string, newfile_string) == POPUP_ACCEPT_WITH_STRING && newfile_string[0]) {
       char confirm_message[MAX_FILENAME_LENGTH+25];
       char *final_message;
 
@@ -2073,11 +2075,25 @@ static bool write_sequence_to_file() THROW_DECL
 
    // Put up the getout popup to see if the user wants to enter a header string.
 
-   popup_return getout_ind = gg->do_getout_popup(second_header);
+   popup_return getout_ind;
 
-   // Some user interfaces (those with icons) may have an icon to abort the
-   // sequence, rather than just decline the comment.  Such an action comes
-   // back as "POPUP_DECLINE".
+   if (header_comment[0]) {
+      char buffer[MAX_TEXT_LINE_LENGTH+MAX_FILENAME_LENGTH];
+      sprintf(buffer, "Session title is \"%s\".", header_comment);
+      getout_ind = gg->get_popup_string(buffer,
+                                        "You can give an additional comment for just this sequence.",
+                                        "Enter comment:", "", second_header);
+   }
+   else {
+      getout_ind = gg->get_popup_string("",
+                                        "Type comment for this sequence, if desired.",
+                                        "Enter comment:", "", second_header);
+   }
+
+   // Some user interfaces (those with buttons or icons) may have a button to abort the
+   // sequence, rather than just decline the comment.  Such an action comes back as
+   // "POPUP_DECLINE".  Otherwise, we get POPUP_ACCEPT_WITH_STRING if a nonempty string
+   // was given, or POPUP_ACCEPT if the string was empty.
 
    if (getout_ind == POPUP_DECLINE)
       return false;    // User didn't want to end this sequence after all.
@@ -2165,7 +2181,6 @@ static bool write_sequence_to_file() THROW_DECL
    newline();
 
    wrote_a_sequence = true;
-   global_age++;
    return true;
 }
 
@@ -2358,9 +2373,146 @@ extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, ui
    return false;
 }
 
+
+class freqitemforsorting {
+public:
+   static bool inorder(uint32 a, uint32 b)
+   { return a > b; }
+};
+
+
+typedef SORT<uint32, freqitemforsorting> freqtablesorter;
+
+
+static void do_freq_reset()
+{
+   if (gg->yesnoconfirm("Confirmation",
+                        "This will reset the frequency counters for the current session, so that they will start over"
+                        " at zero.  No other aspect of this session will change.",
+                        "Do you really want to do this?",
+                        true, false) == POPUP_ACCEPT) {
+      int i;
+
+      for (i=0 ; i<number_of_calls[call_list_any] ; i++)
+         main_call_lists[call_list_any][i]->the_defn.frequency = 0;
+
+      for (i=0 ; i<level_concept_list_length ; i++)
+         concept_descriptor_table[level_concept_list[i]].frequency = 0;
+   }
+}
+
+static void do_freq_start()
+{
+   if (session_index <= 0) {
+      writestuff("Frequency counting must be associated with a session.");
+      newline();
+      return;
+   }
+
+   if (GLOB_doing_frequency) {
+      writestuff("You already have frequency counting enabled.");
+      newline();
+      return;
+   }
+
+   if (gg->get_popup_string("*Enter new frequency file:", "",
+                            "Enter frequency file:", "", GLOB_stats_filename) == POPUP_ACCEPT_WITH_STRING)
+      start_stats_file_from_GLOB_stats_filename();
+   else
+      GLOB_stats_filename[0] = 0;    // Don't leave garbage in it.
+}
+
+static void do_freq_delete()
+{
+   if (!GLOB_doing_frequency) {
+      writestuff("Frequency counting is not enabled.");
+      newline();
+      return;
+   }
+
+   if (gg->yesnoconfirm("Confirmation",
+                        "This will delete the association of the current session with frequency counters,"
+                        " and delete the counter file itself.  No other aspect of this session will change.",
+                        "Do you really want to do this?",
+                        true, false) == POPUP_ACCEPT) {
+      GLOB_doing_frequency = false;
+      remove(GLOB_decorated_stats_filename);
+   }
+}
+
+
+
+static void do_freq_show(int options)
+{
+   int freq_show_level_tolerance = options & 0xFFFF;
+
+   if (GLOB_doing_frequency) {
+      // Make the table to sort.
+      // format is
+      //    if call      frequency   complement of (index into actual call or concept list)
+      //        (1)         (15)                           (16)
+      // The reason for the complement is so that the sort will appear to be stable --
+      // items are in decreasing order, so that they are in listed with calls before concepts,
+      // in decreasing frequency, and in the order in the original lists.
+      uint32 *table = new uint32[number_of_calls[call_list_any] + level_concept_list_length];
+      int i;
+      gg->prepare_for_listing();
+      int how_much_in_table = 0;
+
+      for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
+         const call_with_name *this_call = main_call_lists[call_list_any][i];
+         if ((this_call->the_defn.level) < (int) calling_level-freq_show_level_tolerance) continue;
+         table[how_much_in_table++] = 0x80000000 | (this_call->the_defn.frequency << 16) | (0xFFFF & ~i);
+      }
+
+      for (i=0 ; i<level_concept_list_length ; i++) {
+         const conzept::concept_descriptor *this_concept = &concept_descriptor_table[level_concept_list[i]];
+         table[how_much_in_table++] = (this_concept->frequency << 16) | (0xFFFF & ~i);
+      }
+
+      // Optionally sort the list.
+      if (options & 0x10000) {
+         freqtablesorter::heapsort(table, how_much_in_table);
+      }
+
+      for (i=0 ; i<how_much_in_table ; i++) {
+         if (showing_has_stopped) break;
+         GLOB_match.indent = false;
+         GLOB_user_input[0] = 0;
+         uint32 table_item = table[i];
+
+         if (table_item & 0x80000000) {
+            const call_with_name *this_call = main_call_lists[call_list_any][~table_item & 0xFFFF];
+            strncpy(GLOB_full_extension, this_call->menu_name, INPUT_TEXTLINE_SIZE);
+         }
+         else {
+            const conzept::concept_descriptor *this_concept =
+               &concept_descriptor_table[level_concept_list[~table_item & 0xFFFF]];
+            strncpy(GLOB_full_extension, this_concept->menu_name, INPUT_TEXTLINE_SIZE);
+         }
+         gg->show_match((table_item >> 16) & 0x7FFF);
+      }
+
+      delete [] table;
+   }
+}
+
+
+static popup_return do_header_popup(char *dest)
+{
+   char myPrompt[MAX_TEXT_LINE_LENGTH];
+
+   if (header_comment[0])
+      sprintf(myPrompt, "Current title is \"%s\".", header_comment);
+   else
+      myPrompt[0] = 0;
+
+   return gg->get_popup_string(myPrompt, "*Enter new title:", "Enter new title:", "", dest);
+}
+
+
 void run_program()
 {
-   global_age = 1;
    no_erase_before_this = 0;
    global_error_flag = (error_flag_type) 0;
    interactivity = interactivity_normal;
@@ -2370,7 +2522,7 @@ void run_program()
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2006 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2007 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();
@@ -2410,7 +2562,8 @@ void run_program()
          (void) fclose(session);
       }
       else {
-         writestuff("You do not have a session control file.  If you want to create one, give the command \"initialize session file\".");
+         writestuff("You do not have a session control file.  If you want to create one"
+                    ", give the command \"initialize session file\".");
          newline();
          newline();
       }
@@ -2514,7 +2667,7 @@ void run_program()
 
       if (creating_new_session) {
          do_change_outfile(false);
-         gg->do_header_popup(header_comment);
+         do_header_popup(header_comment);
          creating_new_session = false;
       }
 
@@ -2693,8 +2846,37 @@ void run_program()
          do_change_outfile(false);
          goto new_sequence;
       case start_select_change_title:
-         gg->do_header_popup(header_comment);
+         do_header_popup(header_comment);
          goto new_sequence;
+
+      case start_select_freq_show:
+         do_freq_show(1000);    // Make sure everything gets shown.
+         goto new_sequence;
+      case start_select_freq_show_level:
+         do_freq_show(0);
+         goto new_sequence;
+      case start_select_freq_show_nearlevel:
+         do_freq_show(1);
+         goto new_sequence;
+      case start_select_freq_show_sort:
+         do_freq_show(0x10000 + 1000);    // Make sure everything gets shown.
+         goto new_sequence;
+      case start_select_freq_show_sort_level:
+         do_freq_show(0x10000 + 0);
+         goto new_sequence;
+      case start_select_freq_show_sort_nearlevel:
+         do_freq_show(0x10000 + 1);
+         goto new_sequence;
+      case start_select_freq_reset:
+         do_freq_reset();
+         goto new_sequence;
+      case start_select_freq_start:
+         do_freq_start();
+         goto new_sequence;
+      case start_select_freq_delete:
+         do_freq_delete();
+         goto new_sequence;
+
       case start_select_exit:
          goto normal_exit;
       }
@@ -2964,6 +3146,45 @@ void run_program()
             if (written_history_items > configuration::history_ptr-1)
                written_history_items = configuration::history_ptr-1;
             goto simple_restart;
+
+         case command_freq_show:
+            do_freq_show(1000);    // Make sure everything gets shown.
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+         case command_freq_show_sort:
+            do_freq_show(0x10000 + 1000);    // Make sure everything gets shown.
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+         case command_freq_show_nearlevel:
+            do_freq_show(1);
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+         case command_freq_show_sort_nearlevel:
+            do_freq_show(0x10000 + 1);
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+         case command_freq_show_level:
+            do_freq_show(0);
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+         case command_freq_show_sort_level:
+            do_freq_show(0x10000 + 0);
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+
+         case command_freq_reset:
+            do_freq_reset();
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+         case command_freq_start:
+            do_freq_start();
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+         case command_freq_delete:
+            do_freq_delete();
+            global_error_flag = error_flag_OK_but_dont_erase;
+            goto simple_restart;
+
          case command_help:
             {
                char help_string[MAX_ERR_LENGTH];
@@ -3038,7 +3259,8 @@ void run_program()
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
 
-               if (gg->do_header_popup(newhead_string)) {
+               // Process it even if it's the null string.
+               if (do_header_popup(newhead_string) != POPUP_DECLINE) {
                   strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
                   if (newhead_string[0]) {

@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 /* This defines the following functions:
    do_big_concept
@@ -36,8 +38,6 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
-
-#define WEIRD_BUT_DO_IT_ANYWAY
 
 static uint32 orig_tbonetest;
 uint32 global_tbonetest;
@@ -79,10 +79,8 @@ typedef struct {
 static phan_map map_c1_phan   = {7, s2x4,   {0, 2, 7, 5, 8, 10, 15, 13},    {4, 6, 11, 9, 12, 14, 3, 1}};
 static phan_map map_pinwheel1 = {7, s2x4,   {10, 15, -1, -1, 2, 7, -1, -1}, {14, 3, -1, -1, 6, 11, -1, -1}};
 static phan_map map_pinwheel2 = {7, s2x4,   {-1, -1, 3, 1, -1, -1, 11, 9},  {-1, -1, 7, 5, -1, -1, 15, 13}};
-#ifdef WEIRD_BUT_DO_IT_ANYWAY
 static phan_map map_pinwheel3 = {7, s2x4,   {0, 1, -1, -1, 6, 7, -1, -1}, {2, 5, -1, -1, 8, 11, -1, -1}};
 static phan_map map_pinwheel4 = {7, s2x4,   {-1, -1, 2, 3, -1, -1, 8, 9},  {-1, -1, 5, 7, -1, -1, 11, 1}};
-#endif
 static phan_map map_o_spots   = {7, s2x4,   {10, -1, -1, 1, 2, -1, -1, 9},  {14, -1, -1, 5, 6, -1, -1, 13}};
 static phan_map map_qt_phan   = {7, s_qtag, {-1, -1, 2, 3, -1, -1, 6, 7},   {1, 4, -1, -1, 5, 0, -1, -1}};
 
@@ -98,6 +96,8 @@ static void do_concept_tandem(
    //    1=twosome
    //    2=solid-frac-twosome
    //    3=twosome-frac-solid
+   //    "8" bit: any twosome is actually "dynamic"
+   //    "4" bit: any twosome is actually "reverse dynamic"
    // "0F" field:
    //    0=normal
    //    2=plain-gruesome
@@ -177,8 +177,8 @@ static void do_concept_tandem(
      (parseptr->concept->arg3 & 0x100) ? parseptr->options.who : selector_uninitialized,
      (parseptr->concept->arg3 & 0xF0) >> 4, // (fractional) twosome info
      parseptr->options.number_fields,
-     parseptr->concept->arg3 & 0xF,         // normal/phantom/gruesome etc.
-     (tandem_key) parseptr->concept->arg4,  // key
+     parseptr->concept->arg3 & 0xF,          // normal/phantom/gruesome etc.
+     (tandem_key) parseptr->concept->arg4,   // key
      mxnflags,
      false,
      result);
@@ -293,7 +293,6 @@ static void do_c1_phantom_move(
    else if (ss->kind == s_bone)
       // We allow "phantom" in a bone setup to mean two "dunlap" quarter tags.
       map_ptr = &map_qt_phan;
-#ifdef WEIRD_BUT_DO_IT_ANYWAY
    else if (ss->kind == s3x4) {
 
       // Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms.
@@ -303,7 +302,6 @@ static void do_c1_phantom_move(
       else if (global_livemask == 05656)
          map_ptr = &map_pinwheel4;
    }
-#endif
    else if (ss->kind == s4x4) {
       setup temp;
 
@@ -3567,7 +3565,7 @@ void stable_move(
          directions[(p >> 6) & 037] = p;
          selected[(p >> 6) & 037] = everyone || selectp(ss, i);
          if (fractional) {
-            if (p & STABLE_MASK)
+            if (p & STABLE_ALL_MASK)
                fail("Sorry, can't nest fractional stable/twosome.");
             ss->people[i].id1 |= STABLE_ENAB | (STABLE_RBIT * howfar);
          }
@@ -3594,29 +3592,30 @@ void stable_move(
          if (selected[(p >> 6) & 037]) {
             uint32 stop_amount;
             if (fractional) {
-               stop_amount = (p & (STABLE_VBIT*7)) / STABLE_VBIT;
+               stop_amount = ((p & STABLE_VLMASK) / STABLE_VLBIT) - ((p & STABLE_VRMASK) / STABLE_VRBIT);
+
                if (stop_amount & 1)
                   fail("Sorry, can't do 1/8 stable.");
 
                if (!(p & STABLE_ENAB))
                   fail("fractional stable not supported for this call.");
-               p = rotperson(p, ((0 - stop_amount/2) & 3) * 011);
+               p = rotperson(p, ((stop_amount/2) & 3) * 011);
             }
             else {
-               stop_amount = 2;   // So that roll will be turned off.
+               stop_amount = 1;   // So that roll will be turned off.
 
                p = rotperson(
-                  (p & ~(d_mask | STABLE_MASK)) |
-                  (directions[(p >> 6) & 037] & (d_mask | STABLE_MASK)),
+                  (p & ~(d_mask | STABLE_ALL_MASK)) |
+                  (directions[(p >> 6) & 037] & (d_mask | STABLE_ALL_MASK)),
                   rot);
             }
 
             // If this was fractional stable, roll is turned off
             // only if the person was actually stopped from turning.
-            if (stop_amount) p = (p & ~ROLL_DIRMASK) | ROLL_IS_M;
+            if (stop_amount != 0) p = (p & ~ROLL_DIRMASK) | ROLL_IS_M;
          }
 
-         if (fractional) p &= ~STABLE_MASK;
+         if (fractional) p &= ~STABLE_ALL_MASK;
 
          result->people[i].id1 = p;
       }
@@ -3670,8 +3669,8 @@ static void do_concept_emulate(
          for (j=0; j<=m; j++) {
             uint32 q = res1.people[j].id1;
             if ((q & BIT_PERSON) && ((q ^ p) & XPID_MASK) == 0) {
-               result->people[i].id1 &= ~(NROLL_MASK | STABLE_MASK | 0x3F);
-               result->people[i].id1 |= rotperson(q, rot) & (NROLL_MASK | STABLE_MASK | 0x3F);
+               result->people[i].id1 &= ~(NROLL_MASK | STABLE_ALL_MASK | 0x3F);
+               result->people[i].id1 |= rotperson(q, rot) & (NROLL_MASK | STABLE_ALL_MASK | 0x3F);
                goto did_it;
             }
          }
@@ -3968,7 +3967,9 @@ static void do_concept_checkerboard(
    a1.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a1);
    setup res1;
+   a1.suppress_all_rolls();     // From moving in.
    move(&a1, false, &res1);
+   res1.suppress_all_rolls();   // From moving out.
 
    // Look at the rotation coming out of the move.  If the setup is
    // 1x4, we require it to be even (checkerboard lockit not allowed).
@@ -5804,7 +5805,6 @@ static void do_concept_meta(
    setup *result) THROW_DECL
 {
    parse_block *result_of_skip;
-   parse_block fudgyblock;
    uint32 expirations_to_clearmisc = 0;
    uint32 finalresultflagsmisc = 0;
    meta_key_kind key = (meta_key_kind) parseptr->concept->arg1;
@@ -5889,6 +5889,14 @@ static void do_concept_meta(
 
       // The "CMD_FRAC_THISISLAST" bit, if still set, might not tell the truth at this point.
       ss->cmd.cmd_fraction.flags &= ~CMD_FRAC_THISISLAST;
+
+      if (ss->cmd.restrained_fraction.fraction) {
+         if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
+            fail("Fraction nesting is too complicated.");
+         ss->cmd.cmd_fraction.fraction = ss->cmd.restrained_fraction.fraction;
+         ss->cmd.restrained_fraction.fraction = 0;
+      }
+
       move(ss, false, result);
       normalize_setup(result, simple_normalize, false);
       return;
@@ -5951,8 +5959,7 @@ static void do_concept_meta(
          if ((foo.need_to_restrain & 2) ||
              ((foo.need_to_restrain & 1) &&
               (key != meta_key_rev_echo && key != meta_key_echo))) {
-            fudgyblock = *foo.old_retval;
-            yescmd.restrained_concept = &fudgyblock;
+            yescmd.restrained_concept = foo.old_retval;
             yescmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_CRAZINESS;
             yescmd.restrained_final = foo.root_of_result_of_skip;
             yescmd.parseptr = result_of_skip;
@@ -7023,31 +7030,27 @@ static void do_concept_fractional(
    // 0 - "M/N" - do first part
    // 1 - "DO THE LAST M/N"
    // 2 - "1-M/N" do the whole call and then some.
-   // 4 - first half
-   // 5 - last half
-   // 90 - special
+
+   if (ss->cmd.restrained_fraction.fraction) {
+      if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
+         fail("Fraction nesting is too complicated.");
+      ss->cmd.cmd_fraction.fraction = ss->cmd.restrained_fraction.fraction;
+      ss->cmd.restrained_fraction.fraction = 0;
+   }
 
    fraction_command ARG4 = ss->cmd.cmd_fraction;
-   uint32 FOO;
 
-   if (parseptr->concept->arg1 == 90) {
-      FOO = ss->cmd.restrained_fraction.fraction;
-      ss->cmd.restrained_fraction.fraction = 0;
-      ss->cmd.restrained_fraction.flags = 0;
-   }
-   else {
-      uint32 ddnn = (parseptr->concept->arg1 >= 4) ?
-         NUMBER_FIELDS_2_1 :        // Canned number fields as though fraction were 1/2.
-         parseptr->options.number_fields;
+   uint32 ddnn = (parseptr->concept->arg1 >= 4) ?
+      NUMBER_FIELDS_2_1 :        // Canned number fields as though fraction were 1/2.
+      parseptr->options.number_fields;
 
-      int dd = ddnn >> BITS_PER_NUMBER_FIELD;
-      int nn = ddnn & NUMBER_FIELD_MASK;
-      FOO = (parseptr->concept->arg1 & 1) ?
-         ((dd << (BITS_PER_NUMBER_FIELD*3)) +
-          ((dd-nn) << (BITS_PER_NUMBER_FIELD*2)) +
-          NUMBER_FIELDS_1_1) :
-         ddnn+NUMBER_FIELDS_1_0_0_0;
-   }
+   int dd = ddnn >> BITS_PER_NUMBER_FIELD;
+   int nn = ddnn & NUMBER_FIELD_MASK;
+   uint32 FOO = (parseptr->concept->arg1 & 1) ?
+      ((dd << (BITS_PER_NUMBER_FIELD*3)) +
+       ((dd-nn) << (BITS_PER_NUMBER_FIELD*2)) +
+       NUMBER_FIELDS_1_1) :
+      ddnn+NUMBER_FIELDS_1_0_0_0;
 
    uint32 start = (FOO >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK_RIGHT_TWO;
    uint32 end = FOO & NUMBER_FIELD_MASK_RIGHT_TWO;
@@ -7427,6 +7430,8 @@ extern bool do_big_concept(
          if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
             if (this_kind != concept_fractional &&
                 this_kind != concept_fan &&
+                this_kind != concept_dbl_frac_crazy &&
+                this_kind != concept_frac_crazy &&
                 (this_kind != concept_meta ||
                  (this_concept->arg1 != meta_key_like_a &&
                   this_concept->arg1 != meta_key_shift_n)) &&

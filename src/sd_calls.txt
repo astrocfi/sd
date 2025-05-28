@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "37.1"
+version "37.3"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -5812,7 +5812,7 @@ call "quarter @h" dontshow tag inner_quarter_dir
                     AL1W AL2W AL7W AL3W AL5W AL6W AL11W AL7W]
 
 call "1/4 @h" mainstream tag quarter_dir
-            dont_use_in_nice_resolve one_person_call visible_fractions
+            dont_use_in_nice_resolve one_person_call
             // We accept (and ignore) the "single" modifier, so that things
             // like "3x1 dodge [1/4 right]" will work.
             single_is_inherited
@@ -6388,7 +6388,7 @@ call "_righttable left touch" dontshow tag rightable_left_touch
    setup 2x1 1x2 rotate
       array [ZM1W 0]
 
-call "_leftable touch @b" dontshow tag lft_touch_n_4
+call "_leftable touch @b" dontshow tag lftble_touch_n_4
             neednumber left_means_mirror bigmatrix_is_inherited
    seq lft_touch [inherit_left inherit_bigmatrix]
    seq armturn_14 [inherit_bigmatrix repeat_n]
@@ -8799,15 +8799,15 @@ call "snap back" c4
 
 call "touch by @b part 1" dontshow tag touch_by_first
             left_means_mirror neednumber
-   singlecrossconc nullcall [] lft_touch_n_4 [inherit_left]
+   singlecrossconc nullcall [] lftble_touch_n_4 [inherit_left]
 
 call "touch by @b part 1 spiffy" dontshow tag touch_by_first_spiffy
             left_means_mirror neednumber
-   crossconc_innermost nullcall [] lft_touch_n_4 [inherit_left conc_force_lines]
+   crossconc_innermost nullcall [] lftble_touch_n_4 [inherit_left conc_force_lines]
 
 call "touch by @b part 2" dontshow tag touch_by_second
             left_means_mirror neednumber
-   singleconc_together lft_touch_n_4 [inherit_left] nullcall []
+   singleconc_together lftble_touch_n_4 [inherit_left] nullcall []
 
 call "touch by @b X @b" c3a
             left_means_mirror visible_fractions need_two_numbers
@@ -8819,23 +8819,38 @@ call "_second third of triple touch by, @b" dontshow tag touch_by_second_6
             left_means_mirror neednumber
    conc_double_innermost touch_by_first_spiffy [inherit_left] nullcall []
 
-call "_second third of triple touch by, @b" dontshow tag touch_by_third_6
+call "_second third of triple touch by, @b" dontshow tag touch_by_final
             left_means_mirror neednumber
-   conc_innermost lft_touch_n_4 [inherit_left] nullcall []
+   conc_innermost lftble_touch_n_4 [inherit_left] nullcall []
+
+call "_second quarter of quadruple touch by, @b" dontshow tag touch_by_second_8
+            left_means_mirror neednumber
+   conc6_2 touch_by_first_spiffy [inherit_left] nullcall []
+
+call "_third quarter of quadruple touch by, @b" dontshow tag touch_by_third_8
+            left_means_mirror neednumber
+   conc_diamond_line touch_by_first_spiffy [inherit_left] nullcall []
 
 call "touch by @b X @b X @b" c3a
             left_means_mirror visible_fractions need_three_numbers
    seq touch_by_first_spiffy [inherit_left]
    seq touch_by_second_6 [inherit_left shift_one_number]
-   seq touch_by_third_6 [inherit_left shift_two_numbers]
+   seq touch_by_final [inherit_left shift_two_numbers]
+
+call "touch by @b X @b X @b X @b" c3a
+            left_means_mirror visible_fractions need_four_numbers
+   seq touch_by_first_spiffy [inherit_left]
+   seq touch_by_second_8 [inherit_left shift_one_number]
+   seq touch_by_third_8 [inherit_left shift_two_numbers]
+   seq touch_by_final [inherit_left shift_three_numbers]
 
 call "touch by @b X @0" c3a
             left_means_mirror neednumber
-   singlecrossconc_together nullcall [mandatory_anycall] lft_touch_n_4 [inherit_left]
+   singlecrossconc_together nullcall [mandatory_anycall] lftble_touch_n_4 [inherit_left]
 
 call "touch by @0 X @b" c3a
             left_means_mirror neednumber
-   singlecrossconc_together lft_touch_n_4 [inherit_left] nullcall [mandatory_anycall]
+   singlecrossconc_together lftble_touch_n_4 [inherit_left] nullcall [mandatory_anycall]
 
 call "touch by @0 X @m" c3a
    singlecrossconc_together nullsecond [mandatory_secondary_call] nullcall [mandatory_anycall]
@@ -13087,7 +13102,7 @@ call "circle by @b X @b" c1
             nxn_is_inherited bigmatrix_is_inherited
    seq circle4_n [inherit_reverse inherit_singlefile inherit_single inherit_twisted
                 inherit_nxn inherit_bigmatrix]
-   seq lft_touch_n_4 [inherit_left inherit_bigmatrix shift_one_number]
+   seq lftble_touch_n_4 [inherit_left inherit_bigmatrix shift_one_number]
 
 call "circle by @b X @0" c1
             reverse_means_mirror neednumber single_is_inherited singlefile_is_inherited
@@ -15273,7 +15288,7 @@ call "_chisel1" dontshow tag chisel1
    conc pass_in [inherit_twisted] pass_in [conc_demand_lines conc_force_otherway suppress_elongation_warnings endscando inherit_twisted]
 
 call "_chisel2" dontshow tag chisel2
-   conc pass_out [] pass_in [conc_demand_lines conc_force_columns endscando]
+   conc pass_out [] pass_in [conc_demand_lines conc_force_spots endscando]
 
 call "chisel thru" c2
             visible_fractions twisted_is_inherited
@@ -19683,7 +19698,7 @@ call "_ends shadow box" dontshow tag endsshadow
 
 call "detour" c2 tag detour
    conc ctr_rot [conc_force_otherway]
-        endsdetour [conc_demand_lines conc_force_columns endscando]
+        endsdetour [conc_demand_lines conc_force_spots endscando]
 
 call "team up" c3a
    // The "force columns" makes the hingers stay together.
@@ -19818,7 +19833,7 @@ call "@6 rip n snort" c4x
 call "acey deucey" plus tag aceydeucey
             half_is_inherited yoyo_is_inherited
    conc6p_or_normal trade_w_tbone [inherit_half inherit_yoyo suppress_elongation_warnings]
-                    circulate [inherit_half endscando]
+                    circulate [inherit_half conc_force_spots endscando]
 
 call "mix the deucey" c4a
    seq mix []

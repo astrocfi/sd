@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 
 /* This defines the following function:
@@ -370,12 +372,16 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
 
       break;
    case selector_headliners:
-      if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return true;
-      else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return false;
+      if      ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEFRONT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEBACK) return true;
+      else if ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACELEFT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACERIGHT) return false;
       break;
    case selector_sideliners:
-      if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return true;
-      else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return false;
+      if      ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACELEFT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACERIGHT) return true;
+      else if ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEFRONT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEBACK) return false;
       break;
    case selector_thosefacing:
       if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return true;
@@ -407,11 +413,19 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       break;
    case selector_facingfront:
       if      (pid2 & ID2_FACEFRONT) return true;
-      else if (pid2 & ID2_FACEBACK) return false;
+      else if (pid2 & (ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) return false;
       break;
    case selector_facingback:
       if      (pid2 & ID2_FACEBACK) return true;
-      else if (pid2 & ID2_FACEFRONT) return false;
+      else if (pid2 & (ID2_FACEFRONT|ID2_FACELEFT|ID2_FACERIGHT)) return false;
+      break;
+   case selector_facingleft:
+      if      (pid2 & ID2_FACELEFT) return true;
+      else if (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACERIGHT)) return false;
+      break;
+   case selector_facingright:
+      if      (pid2 & ID2_FACERIGHT) return true;
+      else if (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT)) return false;
       break;
 
       // For the unsymmetrical selectors, we demand that the person not be virtual

@@ -1,6 +1,8 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 #include <stdio.h>
 
@@ -171,9 +173,9 @@ enum error_flag_type {
    error_flag_wrong_command,     // clicked on something inappropriate in subcall reader.
    error_flag_wrong_resolve_command, // "resolve" or similar command was called
                                      // in inappropriate context, text is in error_message1.
-   error_flag_show_stats,        // wants to display stale call statistics.
    error_flag_selector_changed,  // warn that selector was changed during clipboard paste.
-   error_flag_formation_changed  // warn that formation changed during clipboard paste.
+   error_flag_formation_changed, // warn that formation changed during clipboard paste.
+   error_flag_OK_but_dont_erase  // We have finished a "frequency" operation -- don't clear the screen.
 };
 
 
@@ -586,6 +588,7 @@ class SDLIB_API conzept {
       uint32 arg3;
       uint32 arg4;
       uint32 arg5;
+      mutable int frequency;  // For call/concept-use statistics.
       Cstring menu_name;
    };
 
@@ -614,7 +617,7 @@ class SDLIB_API conzept {
    // This does the translation, writes over the "menu_name" fields,
    // and places a const pointer to the thing in "concept_descriptor_table".
    // This is in sdinit.
-   static void conzept::translate_concept_names();
+   static void translate_concept_names();
 };
 
 // BEWARE!!  This list must track the array "selector_list" in sdtables.cpp
@@ -700,6 +703,8 @@ enum selector_kind {
    selector_farbox,
    selector_facingfront,
    selector_facingback,
+   selector_facingleft,
+   selector_facingright,
    selector_boy1,
    selector_girl1,
    selector_cpl1,
@@ -806,14 +811,20 @@ struct callarray {
    uint32 callarray_flags;
    call_restriction restriction;
    uint16 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
+
    uint8 start_setup;       /* Must cast to begin_kind! */
    uint8 end_setup;         /* Must cast to setup_kind! */
    uint8 end_setup_in;      /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
    uint8 end_setup_out;     /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
+   begin_kind get_start_setup() { return (begin_kind) start_setup; }
+   setup_kind get_end_setup() { return (setup_kind) end_setup; }
+   setup_kind get_end_setup_in() { return (setup_kind) end_setup_in; }
+   setup_kind get_end_setup_out() { return (setup_kind) end_setup_out; }
+
    union {
       // Dynamically allocated to whatever size is required.
-      uint16 def[4];     /* only if pred = false */
-      struct {                   /* only if pred = true */
+      uint16 def[4];        /* only if pred = false */
+      struct {              /* only if pred = true */
          predptr_pair *predlist;
          // Dynamically allocated to whatever size is required.
          char errmsg[4];
@@ -868,7 +879,7 @@ struct calldefn {
    // on or they are all off.  A call can only inherit the entire group,
    // by saying "mxn_is_inherited".
    uint32 callflagsf;    // The ESCAPE_WORD__???  and CFLAGH__??? flags.
-   short int age;
+   mutable short int frequency;  // For call-use statistics.  Logically ought to be at the top level, but we hide it here.
    short int level;
    calldef_schema schema;
    calldefn *compound_part;
@@ -902,373 +913,6 @@ struct call_with_name {
       This is the name as it appeared in the database, with "@" escapes. */
    char name[4];
 };
-
-struct parse_block {
-   const conzept::concept_descriptor *concept; // the concept or end marker
-   call_with_name *call;          // if this is end mark, gives the call; otherwise unused
-   call_with_name *call_to_print; // the original call, for printing (sometimes the field
-                                  // above gets changed temporarily)
-   parse_block *next;             // next concept, or, if this is end mark,
-                                  // points to substitution list
-   parse_block *subsidiary_root;  // for concepts that take a second call,
-                                  // this is its parse root
-   parse_block *gc_ptr;           // used for reclaiming dead blocks
-   call_conc_option_state options;// number, selector, direction, etc.
-   short replacement_key;         // this is the "DFM1_CALL_MOD_MASK" stuff
-                                  // (shifted down) for a modification block
-   bool no_check_call_level;      // if true, don't check whether this call
-                                  // is at the level
-
-   // We allow static instantiation of these things with just
-   // the "concept" field filled in.
-   parse_block(const conzept::concept_descriptor *ccc) : concept(ccc) {}
-   // Which of course means we need to provide the default constructor too.
-   parse_block() {}
-};
-
-// For ui_command_select:
-
-// BEWARE!!  The resolve part of this next definition must be keyed
-// to the array "title_string" in sdgetout.cpp, and maybe stuff in the UI.
-// For example, see "command_menu" in sdmain.cpp.
-
-// BEWARE!!  The order is slightly significant -- all search-type commands
-// are >= command_resolve, and all "create some setup" commands
-// are >= command_create_any_lines.  Certain tests are made easier by this.
-enum command_kind {
-   command_quit,
-   command_undo,
-   command_erase,
-   command_abort,
-   command_create_comment,
-   command_change_outfile,
-   command_change_title,
-   command_getout,
-   command_cut_to_clipboard,
-   command_delete_entire_clipboard,
-   command_delete_one_call_from_clipboard,
-   command_paste_one_call,
-   command_paste_all_calls,
-   command_save_pic,
-   command_help,
-   command_help_manual,
-   command_help_faq,
-   command_simple_mods,
-   command_all_mods,
-   command_toggle_conc_levels,
-   command_toggle_minigrand,
-   command_toggle_act_phan,
-   command_toggle_retain_after_error,
-   command_toggle_nowarn_mode,
-   command_toggle_keepallpic_mode,
-   command_toggle_singleclick_mode,
-   command_toggle_singer,
-   command_toggle_singer_backward,
-   command_select_print_font,
-   command_print_current,
-   command_print_any,
-   command_refresh,
-   command_resolve,            // Search commands start here.
-   command_normalize,
-   command_standardize,
-   command_reconcile,
-   command_random_call,
-   command_simple_call,
-   command_concept_call,
-   command_level_call,
-   command_8person_level_call,
-   command_create_any_lines,   // Create setup commands start here.
-   command_create_waves,
-   command_create_2fl,
-   command_create_li,
-   command_create_lo,
-   command_create_inv_lines,
-   command_create_3and1_lines,
-   command_create_any_col,
-   command_create_col,
-   command_create_magic_col,
-   command_create_dpt,
-   command_create_cdpt,
-   command_create_tby,
-   command_create_8ch,
-   command_create_any_qtag,
-   command_create_qtag,
-   command_create_3qtag,
-   command_create_qline,
-   command_create_3qline,
-   command_create_dmd,
-   command_create_any_tidal,
-   command_create_tidal_wave,
-   command_kind_enum_extent    // Not a command kind; indicates extent of the enum.
-};
-
-
-// In each case, an integer or enum is deposited into the global variable
-// uims_menu_index.  Its interpretation depends on which of the replies above
-// was given.  For some of the replies, it gives the index into a menu.  For
-// "ui_start_select" it is a start_select_kind.  For other replies, it is one of
-// the following constants:
-
-/* BEWARE!!  This list must track the array "startup_resources" in sdui-x11.c . */
-/* BEWARE!!!!!!!!  Lots of implications for "centersp" and all that! */
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "startinfolist" in sdtables.cpp, and also necessary stuff in the user interfaces.
-   The latter includes the definition of "start_choices" in sd.dps
-   in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
-   in the Macintosh system.  You may also need changes in create_controls() in
-   macstuff.c. */
-enum start_select_kind {
-   start_select_exit,        /* Don't start a sequence; exit from the program. */
-   start_select_h1p2p,       /* Start with Heads 1P2P. */
-   start_select_s1p2p,       /* Etc. */
-   start_select_heads_start,
-   start_select_sides_start,
-   start_select_as_they_are,
-   start_select_toggle_conc,
-   start_select_toggle_singlespace,
-   start_select_toggle_minigrand,
-   start_select_toggle_act,
-   start_select_toggle_retain,
-   start_select_toggle_nowarn_mode,
-   start_select_toggle_keepallpic_mode,
-   start_select_toggle_singleclick_mode,
-   start_select_toggle_singer,
-   start_select_toggle_singer_backward,
-   start_select_select_print_font,
-   start_select_print_current,
-   start_select_print_any,
-   start_select_init_session_file,
-   start_select_change_to_new_style_filename,
-   start_select_change_outfile,
-   start_select_change_title,
-   start_select_kind_enum_extent    // Not a start_select kind; indicates extent of the enum.
-};
-
-
-/* For ui_resolve_select: */
-/* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
-enum resolve_command_kind {
-   resolve_command_abort,
-   resolve_command_find_another,
-   resolve_command_goto_next,
-   resolve_command_goto_previous,
-   resolve_command_accept,
-   resolve_command_raise_rec_point,
-   resolve_command_lower_rec_point,
-   resolve_command_grow_rec_region,
-   resolve_command_shrink_rec_region,
-   resolve_command_write_this,
-   resolve_command_kind_enum_extent    // Not a resolve kind; indicates extent of the enum.
-};
-
-
-struct command_list_menu_item {
-   Cstring command_name;
-   command_kind action;
-   int resource_id;
-};
-
-struct startup_list_menu_item {
-   Cstring startup_name;
-   start_select_kind action;
-   int resource_id;
-};
-
-struct resolve_list_menu_item {
-   Cstring command_name;
-   resolve_command_kind action;
-};
-
-
-// This defines a person in a setup.
-struct personrec {
-   uint32 id1;       // Frequently used bits go here.
-   uint32 id2;       // Bits used for evaluating predicates.
-   uint32 id3;       // The "permanent ID" bits.
-};
-
-// Bits that go into the "id1" field.
-//
-// This field comprises the important part of the state of this person.
-// It changes frequently as the person moves around.
-
-enum {
-   // These comprise a 3 bit field for roll info.
-   // High bit says person moved.
-   // Low 2 bits are: 1=R; 2=L; 3=M; 0=roll unknown/unsupported.
-   NROLL_MASK       = 0x00700000UL,  // mask of the field
-   PERSON_MOVED     = 0x00400000UL,
-   ROLL_DIRMASK     = 0x00300000UL,  // the low 2 bits, that control roll direction
-   NROLL_BIT        = 0x00100000UL,  // low bit of the field
-   ROLL_IS_R        = 0x00100000UL,
-   ROLL_IS_L        = 0x00200000UL,
-   ROLL_IS_M        = 0x00300000UL,
-
-   // These comprise an 8 bit field for fractional stability info.  STABLE_ENAB
-   // means some fractional stable (or fractional twosome) is in effect.  The
-   // "R" field has the amount of fraction left to go.  It is initialized to the
-   // number given (in eighths) in the fractional stable command, and counts
-   // down to zero.  The "V" field is zero while the "R" field still has some
-   // turning left.  Once the turning exceeds the specified amount, and the "R"
-   // field is zero, the "V" field tells how this person is turned relative the
-   // limit.  For example, V=6 says this person is now 2 positions (one
-   // quadrant) counter-clockwise from where she was when the limit was reached,
-   // and therefore needs to be turned 1 quadrant clockwise at the end of the
-   // fractional stable call to compensate.
-   //
-   // As of version 36.63, all counting is done in eighths, not quarters.
-   STABLE_MASK      = 0x000FF000UL,  // mask of the field
-   STABLE_ENAB      = 0x00080000UL,  // fractional stability enabled
-   STABLE_VBIT      = 0x00010000UL,  // stability "v" field, 3 bits, this is low bit
-   STABLE_RBIT      = 0x00001000UL,  // stability "r" field, 4 bits, this is low bit
-
-   BIT_PERSON       = 0x00000800UL,  // live person (just so at least one bit is always set)
-   BIT_ACT_PHAN     = 0x00000400UL,  // active phantom (see below, under XPID_MASK)
-   BIT_TANDVIRT     = 0x00000200UL,  // virtual person (see below, under XPID_MASK)
-
-   // Person ID.  These bit positions are extremely hard wired into, among other
-   // things, the resolver and the printer.
-   PID_MASK         = 0x000001C0UL,  // these 3 bits identify actual person
-
-   // Extended person ID.  These 5 bits identify who the person is for the purpose
-   // of most manipulations.  0 to 7 are normal live people (the ones who squared up).
-   // 8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
-   // active (but nevertheless identifiable) phantoms.  This means that, when
-   // BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT.
-   XPID_MASK        = 0x000007C0UL,
-
-   // Remaining bits:
-   // For various historical reasons, we count these in octal.
-   //     0x00000030 (060) - these 2 bits must be clear for rotation
-   //     0x00000008 (010) - part of rotation (facing north/south)
-   //     0x00000004 (004) - bit must be clear for rotation
-   //     0x00000002 (002) - part of rotation
-   //     0x00000001 (001) - part of rotation (facing east/west)
-   d_mask  = BIT_PERSON | 013UL,
-   d_north = BIT_PERSON | 010UL,
-   d_south = BIT_PERSON | 012UL,
-   d_east  = BIT_PERSON | 001UL,
-   d_west  = BIT_PERSON | 003UL
-};
-
-// Bits that go into the "id2" field.
-//
-// This field contains information to respond to queries like
-// "Is this person a center?" that are used in doing various operations
-// like "centers run".  Such operations are usually based on this field,
-// rather than on the actual geometry.  This is what makes it possible
-// to do things like "bounce the centers".  This field is updated, from
-// the geometry, by "update_id_bits", at strategic times, such as at
-// the beginning of a call.  It is not updated between the parts of
-// "bounce".
-
-enum {
-   ID2_HEADLINE   = 0x80000000UL,
-   ID2_SIDELINE   = 0x40000000UL,
-   ID2_CTR2       = 0x20000000UL,
-   ID2_BELLE      = 0x10000000UL,
-   ID2_BEAU       = 0x08000000UL,
-   ID2_CTR6       = 0x04000000UL,
-   ID2_OUTR2      = 0x02000000UL,
-   ID2_OUTR6      = 0x01000000UL,
-   ID2_TRAILER    = 0x00800000UL,
-   ID2_LEAD       = 0x00400000UL,
-   ID2_CTRDMD     = 0x00200000UL,
-   ID2_NCTRDMD    = 0x00100000UL,
-   ID2_CTR1X4     = 0x00080000UL,
-   ID2_NCTR1X4    = 0x00040000UL,
-   ID2_CTR1X6     = 0x00020000UL,
-   ID2_NCTR1X6    = 0x00010000UL,
-   ID2_OUTR1X3    = 0x00008000UL,
-   ID2_NOUTR1X3   = 0x00004000UL,
-   ID2_FACING     = 0x00002000UL,
-   ID2_NOTFACING  = 0x00001000UL,
-   ID2_CENTER     = 0x00000800UL,
-   ID2_END        = 0x00000400UL,
-   ID2_NEARCOL    = 0x00000200UL,
-   ID2_NEARLINE   = 0x00000100UL,
-   ID2_NEARBOX    = 0x00000080UL,
-   ID2_FARCOL     = 0x00000040UL,
-   ID2_FARLINE    = 0x00000020UL,
-   ID2_FARBOX     = 0x00000010UL,
-   ID2_CTR4       = 0x00000008UL,
-   ID2_OUTRPAIRS  = 0x00000004UL,
-   ID2_FACEFRONT  = 0x00000002UL,
-   ID2_FACEBACK   = 0x00000001UL,
-
-   // Various useful combinations.
-
-   BITS_TO_CLEAR =
-   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
-   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
-   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
-   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
-   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
-
-   ID2_GLOB_BITS_TO_CLEAR =
-   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
-   ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE,
-
-   ID2_LESS_BITS_TO_CLEAR =
-   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX
-};
-
-
-// Bits that go into the "id3" field.
-//
-// This field contains "permanent" information related to the identity
-// of this person.  For real people, this never changes.  The reason
-// this field is needed is that the bits get cobbled together (by ANDing)
-// when combining people for tandem, etc.  For active phantoms, these
-// bits are all zero.
-
-enum {
-   ID3_PERM_NSG     = 0x00040000UL,  // Not side girl
-   ID3_PERM_NSB     = 0x00020000UL,  // Not side boy
-   ID3_PERM_NHG     = 0x00010000UL,  // Not head girl
-   ID3_PERM_NHB     = 0x00008000UL,  // Not head boy
-   ID3_PERM_HCOR    = 0x00004000UL,  // Head corner
-   ID3_PERM_SCOR    = 0x00002000UL,  // Side corner
-   ID3_PERM_HEAD    = 0x00001000UL,  // Head
-   ID3_PERM_SIDE    = 0x00000800UL,  // Side
-   ID3_PERM_BOY     = 0x00000400UL,  // Boy
-   ID3_PERM_GIRL    = 0x00000200UL,  // Girl
-   ID3_PERM_ALLBITS = 0x0007FE00UL,  // We no longer need this, since we own the whole word.
-
-   // These are the standard definitions for the 8 people in the square.
-
-   ID3_B1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
-   ID3_G1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
-   ID3_B2 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
-   ID3_G2 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL,
-   ID3_B3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
-   ID3_G3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
-   ID3_B4 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
-   ID3_G4 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL
-};
-
-// The following items are not actually part of the setup description,
-// but are placed here for the convenience of "move" and similar procedures.
-// They contain information about the call to be executed in this setup.
-// Once the call is complete, that is, when printing the setup or storing it
-// in a history array, this stuff is meaningless.
-
-struct assumption_thing {
-   unsigned int assump_col:  16;  // Stuff to go with assumption -- col vs. line.
-   unsigned int assump_both:  8;  // Stuff to go with assumption -- "handedness" enforcement
-                                  // 0/1/2 = either/1st/2nd.
-   unsigned int assump_cast:  6;  // Nonzero means there is an "assume normal casts"
-                                  // assumption.
-   unsigned int assump_live:  1;  // One means to accept only if everyone is live.
-   unsigned int assump_negate:1;  // One means to invert the sense of everything.
-   call_restriction assumption;   // Any "assume waves" type command.
-};
-
-struct small_setup {
-   setup_kind skind;
-   int srotation;
-};
-
 
 
 /* These bits are used to allocate flag bits
@@ -1462,6 +1106,401 @@ struct fraction_command {
    { return (flags & testmask) == testflags && fraction == CMD_FRAC_NULL_VALUE; }
 };
 
+struct parse_block {
+   const conzept::concept_descriptor *concept; // the concept or end marker
+   call_with_name *call;          // if this is end mark, gives the call; otherwise unused
+   call_with_name *call_to_print; // the original call, for printing (sometimes the field
+                                  // above gets changed temporarily)
+   parse_block *next;             // next concept, or, if this is end mark,
+                                  // points to substitution list
+   parse_block *subsidiary_root;  // for concepts that take a second call,
+                                  // this is its parse root
+
+   final_and_herit_flags more_finalherit_flags;
+
+   parse_block *gc_ptr;           // used for reclaiming dead blocks
+   call_conc_option_state options;// number, selector, direction, etc.
+   short replacement_key;         // this is the "DFM1_CALL_MOD_MASK" stuff
+                                  // (shifted down) for a modification block
+   bool no_check_call_level;      // if true, don't check whether this call
+                                  // is at the level
+
+   // We allow static instantiation of these things with just
+   // the "concept" field filled in.
+   parse_block(const conzept::concept_descriptor *ccc) : concept(ccc)
+   { more_finalherit_flags.clear_all_herit_and_final_bits(); }
+   // Which of course means we need to provide the default constructor too.
+   parse_block()
+   { more_finalherit_flags.clear_all_herit_and_final_bits(); }
+};
+
+// For ui_command_select:
+
+// BEWARE!!  The resolve part of this next definition must be keyed
+// to the array "title_string" in sdgetout.cpp, and maybe stuff in the UI.
+// For example, see "command_menu" in sdmain.cpp.
+
+// BEWARE!!  The order is slightly significant -- all search-type commands
+// are >= command_resolve, and all "create some setup" commands
+// are >= command_create_any_lines.  Certain tests are made easier by this.
+enum command_kind {
+   command_quit,
+   command_undo,
+   command_erase,
+   command_abort,
+   command_create_comment,
+   command_change_outfile,
+   command_change_title,
+   command_getout,
+   command_cut_to_clipboard,
+   command_delete_entire_clipboard,
+   command_delete_one_call_from_clipboard,
+   command_paste_one_call,
+   command_paste_all_calls,
+   command_save_pic,
+   command_help,
+   command_help_manual,
+   command_help_faq,
+   command_simple_mods,
+   command_all_mods,
+   command_toggle_conc_levels,
+   command_toggle_minigrand,
+   command_toggle_act_phan,
+   command_toggle_retain_after_error,
+   command_toggle_nowarn_mode,
+   command_toggle_keepallpic_mode,
+   command_toggle_singleclick_mode,
+   command_toggle_singer,
+   command_toggle_singer_backward,
+   command_select_print_font,
+   command_print_current,
+   command_print_any,
+   command_refresh,
+
+   command_freq_show,
+   command_freq_show_level,
+   command_freq_show_nearlevel,
+   command_freq_show_sort,
+   command_freq_show_sort_level,
+   command_freq_show_sort_nearlevel,
+   command_freq_reset,
+   command_freq_start,
+   command_freq_delete,
+
+   command_resolve,            // Search commands start here.
+   command_normalize,
+   command_standardize,
+   command_reconcile,
+   command_random_call,
+   command_simple_call,
+   command_concept_call,
+   command_level_call,
+   command_8person_level_call,
+   command_create_any_lines,   // Create setup commands start here.
+   command_create_waves,
+   command_create_2fl,
+   command_create_li,
+   command_create_lo,
+   command_create_inv_lines,
+   command_create_3and1_lines,
+   command_create_any_col,
+   command_create_col,
+   command_create_magic_col,
+   command_create_dpt,
+   command_create_cdpt,
+   command_create_tby,
+   command_create_8ch,
+   command_create_any_qtag,
+   command_create_qtag,
+   command_create_3qtag,
+   command_create_qline,
+   command_create_3qline,
+   command_create_dmd,
+   command_create_any_tidal,
+   command_create_tidal_wave,
+   command_kind_enum_extent    // Not a command kind; indicates extent of the enum.
+};
+
+
+// In each case, an integer or enum is deposited into the global variable
+// uims_menu_index.  Its interpretation depends on which of the replies above
+// was given.  For some of the replies, it gives the index into a menu.  For
+// "ui_start_select" it is a start_select_kind.  For other replies, it is one of
+// the following constants:
+
+/* BEWARE!!!!!!!!  Lots of implications for "centersp" and all that! */
+/* BEWARE!!  If change this next definition, be sure to update the definition of
+   "startinfolist" in sdinit.cpp, and also necessary stuff in the user interfaces. */
+enum start_select_kind {
+   start_select_exit,        /* Don't start a sequence; exit from the program. */
+   start_select_h1p2p,       /* Start with Heads 1P2P. */
+   start_select_s1p2p,       /* Etc. */
+   start_select_heads_start,
+   start_select_sides_start,
+   start_select_as_they_are,    // End of items that are keyed to startinfolist.
+   start_select_toggle_conc,
+   start_select_toggle_singlespace,
+   start_select_toggle_minigrand,
+   start_select_toggle_act,
+   start_select_toggle_retain,
+   start_select_toggle_nowarn_mode,
+   start_select_toggle_keepallpic_mode,
+   start_select_toggle_singleclick_mode,
+   start_select_toggle_singer,
+   start_select_toggle_singer_backward,
+   start_select_select_print_font,
+   start_select_print_current,
+   start_select_print_any,
+   start_select_init_session_file,
+   start_select_change_to_new_style_filename,
+   start_select_change_outfile,
+   start_select_change_title,
+
+   start_select_freq_show,
+   start_select_freq_show_level,
+   start_select_freq_show_nearlevel,
+   start_select_freq_show_sort,
+   start_select_freq_show_sort_level,
+   start_select_freq_show_sort_nearlevel,
+   start_select_freq_reset,
+   start_select_freq_start,
+   start_select_freq_delete,
+
+   start_select_kind_enum_extent    // Not a start_select kind; indicates extent of the enum.
+};
+
+
+/* For ui_resolve_select: */
+/* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
+enum resolve_command_kind {
+   resolve_command_abort,
+   resolve_command_find_another,
+   resolve_command_goto_next,
+   resolve_command_goto_previous,
+   resolve_command_accept,
+   resolve_command_raise_rec_point,
+   resolve_command_lower_rec_point,
+   resolve_command_grow_rec_region,
+   resolve_command_shrink_rec_region,
+   resolve_command_write_this,
+   resolve_command_kind_enum_extent    // Not a resolve kind; indicates extent of the enum.
+};
+
+
+struct command_list_menu_item {
+   Cstring command_name;
+   command_kind action;
+   int resource_id;
+};
+
+struct startup_list_menu_item {
+   Cstring startup_name;
+   start_select_kind action;
+   int resource_id;
+};
+
+struct resolve_list_menu_item {
+   Cstring command_name;
+   resolve_command_kind action;
+};
+
+
+// This defines a person in a setup.
+struct personrec {
+   uint32 id1;       // Frequently used bits go here.
+   uint32 id2;       // Bits used for evaluating predicates.
+   uint32 id3;       // The "permanent ID" bits.
+};
+
+// Bits that go into the "id1" field.
+//
+// This field comprises the important part of the state of this person.
+// It changes frequently as the person moves around.
+
+enum {
+   // Highest 4 bits are unused.
+
+   // These comprise a 3 bit field for roll info.
+   // High bit says person moved.
+   // Low 2 bits are: 1=R; 2=L; 3=M; 0=roll unknown/unsupported.
+   NROLL_MASK       = 0x0E000000UL,  // mask of the field
+   PERSON_MOVED     = 0x08000000UL,
+   ROLL_DIRMASK     = 0x06000000UL,  // the low 2 bits, that control roll direction
+   NROLL_BIT        = 0x02000000UL,  // low bit of the field
+   ROLL_IS_R        = 0x02000000UL,
+   ROLL_IS_L        = 0x04000000UL,
+   ROLL_IS_M        = 0x06000000UL,
+
+   // These comprise an 8 bit field for fractional stability info.  STABLE_ENAB
+   // means some fractional stable (or fractional twosome) is in effect.  The
+   // "R" field has the amount of fraction left to go.  It is initialized to the
+   // number given (in eighths) in the fractional stable command, and counts
+   // down to zero.  The "V" field is zero while the "R" field still has some
+   // turning left.  Once the turning exceeds the specified amount, and the "R"
+   // field is zero, the "V" field tells how this person is turned relative the
+   // limit.  For example, V=6 says this person is now 6/8 clockwise (that is,
+   // one quadrant counterclockwise) from where she was when the limit was
+   // reached, and therefore needs to be turned 1 quadrant clockwise at the end
+   // of the fractional stable call to compensate.
+   //
+   // All counting is done in eighths, not quarters.
+   STABLE_ENAB      = 0x01000000UL,  // fractional stability enabled
+   STABLE_VLMASK    = 0x00F00000UL,  // stability "V" field for left turns, 4 bits
+   STABLE_VLBIT     = 0x00100000UL,  // this is low bit
+   STABLE_VRMASK    = 0x000F0000UL,  // stability "V" field for right turns, 4 bits
+   STABLE_VRBIT     = 0x00010000UL,  // this is low bit
+   STABLE_RMASK     = 0x0000F000UL,  // stability "R" field, 4 bits
+   STABLE_RBIT      = 0x00001000UL,  // this is low bit
+   STABLE_ALL_MASK  = STABLE_ENAB|STABLE_VLMASK|STABLE_VRMASK|STABLE_RMASK, // This is 0x01FFF000.
+
+   BIT_PERSON       = 0x00000800UL,  // live person (just so at least one bit is always set)
+   BIT_ACT_PHAN     = 0x00000400UL,  // active phantom (see below, under XPID_MASK)
+   BIT_TANDVIRT     = 0x00000200UL,  // virtual person (see below, under XPID_MASK)
+
+   // Person ID.  These bit positions are extremely hard wired into, among other
+   // things, the resolver and the printer.
+   PID_MASK         = 0x000001C0UL,  // these 3 bits identify actual person
+
+   // Extended person ID.  These 5 bits identify who the person is for the purpose
+   // of most manipulations.  0 to 7 are normal live people (the ones who squared up).
+   // 8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
+   // active (but nevertheless identifiable) phantoms.  This means that, when
+   // BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT.
+   XPID_MASK        = 0x000007C0UL,
+
+   // Remaining bits:
+   // For various historical reasons, we count these in octal.
+   //     0x00000030 (060) - these 2 bits must be clear for rotation
+   //     0x00000008 (010) - part of rotation (facing north/south)
+   //     0x00000004 (004) - bit must be clear for rotation
+   //     0x00000002 (002) - part of rotation
+   //     0x00000001 (001) - part of rotation (facing east/west)
+   d_mask  = BIT_PERSON | 013UL,
+   d_north = BIT_PERSON | 010UL,
+   d_south = BIT_PERSON | 012UL,
+   d_east  = BIT_PERSON | 001UL,
+   d_west  = BIT_PERSON | 003UL
+};
+
+// Bits that go into the "id2" field.
+//
+// This field contains information to respond to queries like
+// "Is this person a center?" that are used in doing various operations
+// like "centers run".  Such operations are usually based on this field,
+// rather than on the actual geometry.  This is what makes it possible
+// to do things like "bounce the centers".  This field is updated, from
+// the geometry, by "update_id_bits", at strategic times, such as at
+// the beginning of a call.  It is not updated between the parts of
+// "bounce".
+
+enum {
+   ID2_CTR2       = 0x80000000UL,
+   ID2_BELLE      = 0x40000000UL,
+   ID2_BEAU       = 0x20000000UL,
+   ID2_CTR6       = 0x10000000UL,
+   ID2_OUTR2      = 0x08000000UL,
+   ID2_OUTR6      = 0x04000000UL,
+   ID2_TRAILER    = 0x02000000UL,
+   ID2_LEAD       = 0x01000000UL,
+   ID2_CTRDMD     = 0x00800000UL,
+   ID2_NCTRDMD    = 0x00400000UL,
+   ID2_CTR1X4     = 0x00200000UL,
+   ID2_NCTR1X4    = 0x00100000UL,
+   ID2_CTR1X6     = 0x00080000UL,
+   ID2_NCTR1X6    = 0x00040000UL,
+   ID2_OUTR1X3    = 0x00020000UL,
+   ID2_NOUTR1X3   = 0x00010000UL,
+   ID2_FACING     = 0x00008000UL,
+   ID2_NOTFACING  = 0x00004000UL,
+   ID2_CENTER     = 0x00002000UL,
+   ID2_END        = 0x00001000UL,
+   ID2_NEARCOL    = 0x00000800UL,
+   ID2_NEARLINE   = 0x00000400UL,
+   ID2_NEARBOX    = 0x00000200UL,
+   ID2_FARCOL     = 0x00000100UL,
+   ID2_FARLINE    = 0x00000080UL,
+   ID2_FARBOX     = 0x00000040UL,
+   ID2_CTR4       = 0x00000020UL,
+   ID2_OUTRPAIRS  = 0x00000010UL,
+   ID2_FACEFRONT  = 0x00000008UL,
+   ID2_FACEBACK   = 0x00000004UL,
+   ID2_FACELEFT   = 0x00000002UL,
+   ID2_FACERIGHT  = 0x00000001UL,
+
+   // Various useful combinations.
+
+   BITS_TO_CLEAR =
+   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
+   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
+   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
+   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
+   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
+
+   ID2_GLOB_BITS_TO_CLEAR =
+   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
+   ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT,
+
+   ID2_LESS_BITS_TO_CLEAR =
+   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX
+};
+
+
+// Bits that go into the "id3" field.
+//
+// This field contains "permanent" information related to the identity
+// of this person.  For real people, this never changes.  The reason
+// this field is needed is that the bits get cobbled together (by ANDing)
+// when combining people for tandem, etc.  For active phantoms, these
+// bits are all zero.
+
+enum {
+   ID3_PERM_NSG     = 0x00040000UL,  // Not side girl
+   ID3_PERM_NSB     = 0x00020000UL,  // Not side boy
+   ID3_PERM_NHG     = 0x00010000UL,  // Not head girl
+   ID3_PERM_NHB     = 0x00008000UL,  // Not head boy
+   ID3_PERM_HCOR    = 0x00004000UL,  // Head corner
+   ID3_PERM_SCOR    = 0x00002000UL,  // Side corner
+   ID3_PERM_HEAD    = 0x00001000UL,  // Head
+   ID3_PERM_SIDE    = 0x00000800UL,  // Side
+   ID3_PERM_BOY     = 0x00000400UL,  // Boy
+   ID3_PERM_GIRL    = 0x00000200UL,  // Girl
+   ID3_PERM_ALLBITS = 0x0007FE00UL,  // We no longer need this, since we own the whole word.
+
+   // These are the standard definitions for the 8 people in the square.
+
+   ID3_B1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
+   ID3_G1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
+   ID3_B2 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
+   ID3_G2 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL,
+   ID3_B3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
+   ID3_G3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
+   ID3_B4 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
+   ID3_G4 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL
+};
+
+// The following items are not actually part of the setup description,
+// but are placed here for the convenience of "move" and similar procedures.
+// They contain information about the call to be executed in this setup.
+// Once the call is complete, that is, when printing the setup or storing it
+// in a history array, this stuff is meaningless.
+
+struct assumption_thing {
+   unsigned int assump_col:  16;  // Stuff to go with assumption -- col vs. line.
+   unsigned int assump_both:  8;  // Stuff to go with assumption -- "handedness" enforcement
+                                  // 0/1/2 = either/1st/2nd.
+   unsigned int assump_cast:  6;  // Nonzero means there is an "assume normal casts"
+                                  // assumption.
+   unsigned int assump_live:  1;  // One means to accept only if everyone is live.
+   unsigned int assump_negate:1;  // One means to invert the sense of everything.
+   call_restriction assumption;   // Any "assume waves" type command.
+};
+
+struct small_setup {
+   setup_kind skind;
+   int srotation;
+};
+
+
 struct setup_command {
    parse_block *parseptr;
    call_with_name *callspec;
@@ -1544,11 +1583,23 @@ struct setup {
    small_setup outer;
    int concsetup_outer_elongation;
 
-   void clear_people();
+   void clear_people();     // in sdtop.cpp.
    inline void clear_person(int resultplace);
    inline void suppress_roll(int place);
    inline void suppress_all_rolls();
    inline void swap_people(int oneplace, int otherplace);
+
+   setup() {}
+   setup(setup_kind k, int r,    // in sdtop.cpp.
+         uint32 P0, uint32 I0,
+         uint32 P1, uint32 I1,
+         uint32 P2, uint32 I2,
+         uint32 P3, uint32 I3,
+         uint32 P4, uint32 I4,
+         uint32 P5, uint32 I5,
+         uint32 P6, uint32 I6,
+         uint32 P7, uint32 I7,
+         uint32 little_endian_wheretheygo = 0x76543210);
 };
 
 
@@ -1960,9 +2011,9 @@ class select {
       fx_f2x4ctr,
       fx_f2x4lr,
       fx_f2x4rl,
+      fx_f4dmdiden,
       fx_f2x4far,
       fx_f2x4near,
-      fx_f4dmdiden,
       fx_f2x4pos1,
       fx_f2x4pos2,
       fx_f2x4pos3,
@@ -1981,6 +2032,10 @@ class select {
       fx_f2x4posq,
       fx_f2x4posr,
       fx_f2x4poss,
+      fx_f2x4posu,
+      fx_f2x4posv,
+      fx_f2x4posw,
+      fx_f2x4posx,
       fx_f2x4posy,
       fx_f2x4posz,
       fx_f2x4left,
@@ -2049,6 +2104,7 @@ class select {
       int rot;
       short prior_elong;
       short numsetups;
+      veryshort indices[24];
       fixerkey next1x2;
       fixerkey next1x2rot;
       fixerkey next1x4;
@@ -2057,7 +2113,6 @@ class select {
       fixerkey nextdmdrot;
       fixerkey next2x2;
       fixerkey next2x2v;
-      veryshort nonrot[24];
    };
 
    // We make this a struct inside the class, rather than having its
@@ -3170,11 +3225,13 @@ class configuration {
    // It shows how the sequence starts.
    int startinfoindex;
 
-   // This constant table has useful info pertaining to the various nonzero
+   // This constant table tells how to set up the configuration at the start of a sequence.
    // values that might be in "startinfoindex", e.g. sides start or heads 1P2P.
-   static startinfo startinfolist[];                  // in SDTABLES
+   static startinfo startinfolist[start_select_as_they_are+1];    // In sdinit.cpp
 
  public:
+
+   static void initialize();             // In sdinit.
 
    // The sequence being written is in a global array "history".  The item
    // indexed by "history_ptr" is the "current" configuration, and the next higher
@@ -3833,6 +3890,9 @@ extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
 extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
 extern SDLIB_API bool GLOB_space_ok;                          // in SDMATCH
+extern SDLIB_API bool GLOB_doing_frequency;                   // in SDMATCH
+extern SDLIB_API char GLOB_stats_filename[MAX_TEXT_LINE_LENGTH];   // in SDMATCH
+extern SDLIB_API char GLOB_decorated_stats_filename[MAX_TEXT_LINE_LENGTH];   // in SDMATCH
 extern SDLIB_API int GLOB_yielding_matches;                   // in SDMATCH
 extern SDLIB_API char GLOB_user_input[];                      // in SDMATCH
 extern SDLIB_API char GLOB_full_extension[];                  // in SDMATCH
@@ -3892,6 +3952,7 @@ enum init_callback_state {
 class iobase {
  public:
    virtual int do_abort_popup() = 0;
+   virtual void prepare_for_listing() = 0;
    virtual uims_reply get_startup_command() = 0;
    virtual void set_window_title(char s[]) = 0;
    virtual void add_new_line(const char the_line[], uint32 drawing_picture) = 0;
@@ -3899,7 +3960,7 @@ class iobase {
    virtual void reduce_line_count(int n) = 0;
    virtual void update_resolve_menu(command_kind goal, int cur, int max,
                                     resolver_display_state state) = 0;
-   virtual void show_match() = 0;
+   virtual void show_match(int frequency_to_show) = 0;
    virtual char *version_string() = 0;
    virtual uims_reply get_resolve_command() = 0;
    virtual bool choose_font() = 0;
@@ -3907,9 +3968,8 @@ class iobase {
    virtual bool print_any() = 0;
    virtual bool help_manual() = 0;
    virtual bool help_faq() = 0;
-   virtual popup_return do_outfile_popup(char dest[]) = 0;
-   virtual popup_return do_header_popup(char dest[]) = 0;
-   virtual popup_return do_getout_popup(char dest[]) = 0;
+   virtual popup_return get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
+                                         Cstring seed, char *dest) = 0;
    virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
    virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
@@ -3917,11 +3977,10 @@ class iobase {
    virtual int do_direction_popup() = 0;
    virtual int do_circcer_popup() = 0;
    virtual int do_tagger_popup(int tagger_class) = 0;
-   virtual int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info) = 0;
-   virtual popup_return do_comment_popup(char dest[]) = 0;
+   virtual int yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl, bool info) = 0;
    virtual uint32 get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero) = 0;
    virtual bool get_call_command(uims_reply *reply_p) = 0;
-   virtual void set_pick_string(const char *string) = 0;
+   virtual void set_pick_string(Cstring string) = 0;
    virtual void display_help() = 0;
    virtual void terminate(int code) = 0;
    virtual void process_command_line(int *argcp, char ***argvp) = 0;
@@ -3933,6 +3992,7 @@ class iobase {
 class iofull : public iobase {
  public:
    int do_abort_popup();
+   void prepare_for_listing();
    uims_reply get_startup_command();
    void set_window_title(char s[]);
    void add_new_line(const char the_line[], uint32 drawing_picture);
@@ -3940,7 +4000,7 @@ class iofull : public iobase {
    void reduce_line_count(int n);
    void update_resolve_menu(command_kind goal, int cur, int max,
                             resolver_display_state state);
-   void show_match();
+   void show_match(int frequency_to_show);
    char *version_string();
    uims_reply get_resolve_command();
    bool choose_font();
@@ -3948,9 +4008,8 @@ class iofull : public iobase {
    bool print_any();
    bool help_manual();
    bool help_faq();
-   popup_return do_outfile_popup(char dest[]);
-   popup_return do_header_popup(char dest[]);
-   popup_return do_getout_popup(char dest[]);
+   popup_return get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
+                                 Cstring seed, char *dest);
    void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
    void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
@@ -3958,9 +4017,8 @@ class iofull : public iobase {
    int do_direction_popup();
    int do_circcer_popup();
    int do_tagger_popup(int tagger_class);
-   int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info);
-   void set_pick_string(const char *string);
-   popup_return do_comment_popup(char dest[]);
+   int yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl, bool info);
+   void set_pick_string(Cstring string);
    uint32 get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero);
    bool get_call_command(uims_reply *reply_p);
    void display_help();
@@ -4045,7 +4103,6 @@ extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL
 extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL */
 extern SDLIB_API int global_cache_miss_reason[3];                   /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
-extern SDLIB_API int global_age;                                    /* in SDUTIL */
 extern configuration *clipboard;                                    /* in SDUTIL */
 extern int clipboard_size;                                          /* in SDUTIL */
 extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL */
@@ -4543,7 +4600,7 @@ extern uint32 find_calldef(
    int real_direction,
    int northified_index) THROW_DECL;
 
-extern void clear_result_flags(setup *z);
+extern void clear_result_flags(setup *z);    // in sdtop.cpp.
 
 inline uint32 rotperson(uint32 n, int amount)
 { if (n == 0) return 0; else return (n + amount) & ~064; }
@@ -4623,7 +4680,9 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL;
 
-extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout, setup & dmdout);
+extern setup_kind try_to_expand_dead_conc(const setup & result,
+                                          const call_with_name *call,
+                                          setup & lineout, setup & qtagout, setup & dmdout);
 
 extern parse_block *process_final_concepts(
    parse_block *cptr,
@@ -5130,7 +5189,7 @@ void run_program();
 /* In SDINIT */
 
 
-SDLIB_API bool parse_level(Cstring s);
+SDLIB_API bool parse_level(Cstring s, Cstring *break_ptr = 0);
 void start_sel_dir_num_iterator();
 bool iterate_over_sel_dir_num(
    bool enable_selector_iteration,
@@ -5143,6 +5202,7 @@ void prepare_to_read_menus();
 SDLIB_API int process_session_info(Cstring *error_msg);
 void close_init_file();
 SDLIB_API void general_final_exit(int code);
+SDLIB_API void start_stats_file_from_GLOB_stats_filename();
 extern bool open_session(int argc, char **argv);
 
 /* In SDMATCH */

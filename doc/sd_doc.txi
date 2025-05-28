@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 37.1
-@set Time-stamp: January 18, 2007
+@set sd-version 37.3
+@set Time-stamp: April 8, 2007
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -5661,22 +5661,7 @@ designators.
 @code{everyone} and @code{all} are the same.  In practice you should hardly
 ever need to use them to the program, though in some situations you may need
 to use them when calling.
-
 @item no one
-@end table
-
-@noindent The following ones are unsymmetrical:
-
-@table @code
-@item near line / far line
-@item near column / far column
-@item near box / far box
-@item those facing the caller
-@item those facing away from the caller
-@item #1 boy / #2 boy / #3 boy / #4 boy
-@item #1 girl / #2 girl / #3 girl / #4 girl
-@item #1 couple / #2 couple / #3 couple / #4 couple
-@item couples 1 and 2 / couples 2 and 3 / couples 3 and 4 / couples 1 and 4
 @sp 1
 @item center 4
 This is intended for use in a parallelogram or offset lines
@@ -5733,6 +5718,22 @@ This may be used to designate the outer lines or columns of 3 in such
 setups as an `H' or a diamond between two couples (@samp{heads circle
 the tag to a diamond}.)  You will often need to use the
 @samp{disconnected} concept with this.
+@end table
+
+@noindent The following ones are unsymmetrical:
+
+@table @code
+@item near line / far line
+@item near column / far column
+@item near box / far box
+@item those facing the caller
+@item those facing away from the caller
+@item those facing the caller's left
+@item those facing the caller's right
+@item #1 boy / #2 boy / #3 boy / #4 boy
+@item #1 girl / #2 girl / #3 girl / #4 girl
+@item #1 couple / #2 couple / #3 couple / #4 couple
+@item couples 1 and 2 / couples 2 and 3 / couples 3 and 4 / couples 1 and 4
 @end table
 
 @subsection @code{ANYONE}
