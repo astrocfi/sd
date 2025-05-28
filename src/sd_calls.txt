@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.10"
+version "39.11"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -3082,6 +3082,30 @@ call "cast off @b, opt for normal" dontshow tag cast_off_n4_with_warn
       array [CR3W 0 AL3E 0]
    setup pmd dmd qualifier num 3 none restriction forbidden nice_diamonds
       array [0 CR0W 0 AL0E]
+            alternate_definition [half] mainstream
+   setup 1x2 1x2        restriction forbidden wave_only qualifier num 0 none
+      array [ZM0N ZM1N]
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live num 1 wave_only
+      array [CR0N 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live num 1 wave_only
+      array [0 AL0S]
+   setup 1x2 1x2                      rotate qualifier            num 2 none
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal  [CR0N AL0S]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier right live num 3 wave_only
+      array [CR0N 0]
+   setup 1x2 1x2        plus_eighth_rotation qualifier  left live num 3 wave_only
+      array [0 AL0S]
+   setup 1x2 1x2                             qualifier            num 4 none
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal  [CR1S AL0S]
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live num 5 wave_only
+      array [CR1S 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live num 5 wave_only
+      array [0 AL1N]
+
+
+
    // Alternate definition for fractionalization.
             parallel_conc_end yield_if_ambiguous neednumber
             bigmatrix_is_inherited
@@ -3170,6 +3194,9 @@ call "cast off @b" mainstream tag cast_off_n4
    setup 1x2 1x2 rotate qualifier num 3 none
       preds "Need to be in miniwave or line of 4."
          if cast_normal_or_warn [CR1S AL1N]
+   setup 1x2 1x2 qualifier num 4 none
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal_or_warn [CR0N AL1N]
    setup 1x4 2x2 qualifier num 1 none
       predscantdo
          if cast_normal  [CR0E AL0W AL1W CR1E]
@@ -5406,7 +5433,7 @@ call "@6 in anchor 1/2" c4
 
 call "@6 in anchor 3/4" c4
    partnermatrix lateral_mirror_if_right_of_center use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 CR20W 8 CR20W 8 CR16W 16 CR16W 16 0 0 0 0 0 0 0 0]
+      [0 0 0 0 CR20W 12 CR20W 12 CR16W 16 CR16W 16 0 0 0 0 0 0 0 0]
 
 call "in anchor 1/4" c4
    partnermatrix lateral_mirror_if_right_of_center must_face_same_way
@@ -5418,11 +5445,11 @@ call "in anchor 1/2" c4
 
 call "in anchor 3/4" c4
    partnermatrix lateral_mirror_if_right_of_center must_face_same_way
-      [CR20W 8 CR20W 8 CR16W 16 CR16W 16 0 0 0 0 0 0 0 0 0 0 0 0]
+      [CR20W 12 CR20W 12 CR16W 16 CR16W 16 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "@6 out anchor 1/4" c4
    partnermatrix lateral_mirror_if_right_of_center use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 AL16W 16 AL16W 16 AL8W 20 AL8W 20 0 0 0 0 0 0 0 0]
+      [0 0 0 0 AL16W 16 AL16W 16 AL12W 20 AL12W 20 0 0 0 0 0 0 0 0]
 
 call "@6 out anchor 1/2" c4
    partnermatrix lateral_mirror_if_right_of_center use_selector ignore_nonselectees must_face_same_way
@@ -5430,11 +5457,11 @@ call "@6 out anchor 1/2" c4
 
 call "@6 out anchor 3/4" c4
    partnermatrix lateral_mirror_if_right_of_center use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 AL16E 16 AL16E 16 AL8E 8 AL8E 8 0 0 0 0 0 0 0 0]
+      [0 0 0 0 AL16E 16 AL16E 16 AL12E 12 AL12E 12 0 0 0 0 0 0 0 0]
 
 call "out anchor 1/4" c4
    partnermatrix lateral_mirror_if_right_of_center must_face_same_way
-      [AL16W 16 AL16W 16 AL8W 20 AL8W 20 0 0 0 0 0 0 0 0 0 0 0 0]
+      [AL16W 16 AL16W 16 AL12W 20 AL12W 20 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "out anchor 1/2" c4
    partnermatrix lateral_mirror_if_right_of_center must_face_same_way
@@ -5442,7 +5469,7 @@ call "out anchor 1/2" c4
 
 call "out anchor 3/4" c4
    partnermatrix lateral_mirror_if_right_of_center must_face_same_way
-      [AL16E 16 AL16E 16 AL8E 8 AL8E 8 0 0 0 0 0 0 0 0 0 0 0 0]
+      [AL16E 16 AL16E 16 AL12E 12 AL12E 12 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "@6 squeeze" c1
             dont_use_in_resolve
@@ -6965,6 +6992,12 @@ call "1/8 @h" c1
       preds "Direction must be right or left."
          if rightp [CR0N]
          if leftp [AL0W]
+   setup 2x2 star plus_eighth_rotation
+      preds "Direction must be right, left, in, or out."
+         if rightp [CR0N CR1N CR2N CR3N]
+         if leftp  [AL0W AL1W AL2W AL3W]
+         if inp    [AL0W CR1N AL2W CR3N]
+         if outp   [CR0N AL1W CR2N AL3W]
 
 // This one allows "no direction".
 call "_maybe quarter @h" dontshow tag quarter_maybe
@@ -7579,7 +7612,7 @@ call "touch" mainstream tag touch
    setup 2x1 1x2 rotate qualifier in in_or_out
       array [ZM0W 0]
    // This is for handling things from a triangle-become-box.  Cf. t42t.
-   setup 2x2 1x4 qualifier in in_or_out
+   setup 2x2 1x4 no_cutting_through qualifier in in_or_out
       array [0 0 ZM3N ZM0N]
             alternate_definition [twisted] c4
    // This really should be marked controversial,
@@ -7913,6 +7946,24 @@ call "_like a slide thru" dontshow tag likeaslidethru
       preds "Unknown sex."
          if boyp [CR0E]
          if girlp [AL0W]
+            alternate_definition [half] mainstream
+   setup 1x1 1x1 plus_eighth_rotation
+      preds "Unknown sex."
+         if boyp  [CR0N]
+         if girlp [AL0W]
+   setup 2x2 star plus_eighth_rotation
+      preds "Unknown sex."
+         if boyp  [CR0N CR1N CR2N CR3N]
+         if girlp [AL0W AL1W AL2W AL3W]
+            alternate_definition [lasthalf] mainstream
+   setup 1x1 1x1 plus_eighth_rotation
+      preds "Unknown sex."
+         if boyp  [CR0N]
+         if girlp [AL0W]
+   setup 2x2 star plus_eighth_rotation
+      preds "Unknown sex."
+         if boyp  [CR0N CR1N CR2N CR3N]
+         if girlp [AL0W AL1W AL2W AL3W]
 
 call "slide thru" mainstream tag slidethru
             rear_back_from_r_wave funny_means_those_facing
@@ -13843,6 +13894,13 @@ call "catch @1@9" c2
    seq stepnfold [inherit_cross inherit_diamond]
 
 call "catch @0 @9" c3a
+            split_like_square_thru cross_is_inherited twisted_is_inherited diamond_is_legal
+            left_means_mirror neednumber visible_fractions
+   seq square_thru_to_wave [inherit_left inherit_twisted inherit_diamond]
+   seq nullcall [mandatory_anycall inherit_diamond]
+   seq stepnfold [inherit_cross inherit_diamond]
+
+call "catch it @9 @0" c4
             split_like_square_thru cross_is_inherited twisted_is_inherited diamond_is_legal
             left_means_mirror neednumber visible_fractions
    seq square_thru_to_wave [inherit_left inherit_twisted inherit_diamond]
@@ -24539,9 +24597,9 @@ call "scoot chain thru" a2 tag scootchainthru
             visible_fractions yoyo_is_inherited
             gen_sting_is_inherited cross_is_inherited
    seq extend_1_to_2 [inherit_cross]
-   seq swing [inherit_yoyo inherit_gensting]
+   seq cast_off_n4_with_warn [inherit_yoyo inherit_gensting insert_number 2]
    seq maybegrandslip [inherit_yoyo inherit_gensting]
-   seq swing [inherit_yoyo inherit_gensting]
+   seq cast_off_n4_with_warn [inherit_yoyo inherit_gensting insert_number 2]
    seq extend_n [insert_number 3]
 
 call "_fudgy scoot chain thru" dontshow tag fudgyscootchainthru
@@ -24937,6 +24995,11 @@ call "flip the hourglass" a2
       array [0 0 CR4S 0 0 0 AL0S 0]
    setup phrglass crosswave
       array [ZM3N CR5E 0 AL2S AL5W ZM7N 0 CR6S]
+            alternate_definition [funny] c2
+   setup hrglass spindle qualifier dmd_facing
+      array [0 0 ZM3N 0 0 0 ZM7N 0]
+   setup phrglass spindle qualifier dmd_facing
+      array [CR0S CR2S 0 ZM1N AL4S AL6S 0 ZM5N]
 
 call "cut the hourglass" a2
             fudge_to_q_tag take_right_hands
@@ -24949,6 +25012,11 @@ call "cut the hourglass" a2
       array [0 0 AL0S 0 0 0 CR4S 0]
    setup phrglass crosswave
       array [ZM3N CR5E 0 CR6S AL5W ZM7N 0 AL2S]
+            alternate_definition [funny] c2
+   setup hrglass spindle qualifier dmd_facing
+      array [0 0 ZM3N 0 0 0 ZM7N 0]
+   setup phrglass spindle qualifier dmd_facing
+      array [CR6S CR4S 0 ZM1N AL2S AL0S 0 ZM5N]
 
 call "galaxy circulate" c1 tag galaxy_circ
    take_right_hands simple_funny
@@ -27422,6 +27490,11 @@ call "@0 and rally but @m" c3a
    seq rallybut2nd [inherit_intlk]
 
 call "LINES @0 THRU" c2
+            twisted_is_inherited visible_fractions dont_use_in_resolve
+   conc_or_diamond_line nullcall [mandatory_anycall]
+                        box_circulate_maybe_diamond [inherit_twisted conc_force_spots]
+
+call "LINES IT THRU @0" c2
             twisted_is_inherited visible_fractions dont_use_in_resolve
    conc_or_diamond_line nullcall [mandatory_anycall]
                         box_circulate_maybe_diamond [inherit_twisted conc_force_spots]

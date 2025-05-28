@@ -3745,14 +3745,15 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        When used in a c1phan, the expectation is that
                                        people are in stars.
 
-   dmd_facing         R/Q           dmd, qtag, ptpd, or c1phan - diamond(s) are actual
+   dmd_facing         R/Q           dmd, qtag, ptpd, hrglass, or c1phan - diamond(s) are actual
                                        diamonds, are facing, and have consistent handedness.
                                        "Right/left" and "live" may be used when it
                                        is a qualifier -- right/left demand that handedness
                                        for the ends; the centers will be the opposite.
-                                       When used in a c1phan, the expectation is that
-                                       people are in stars, and "right"/"left" are
-                                       meaningless.
+                                       When used in an hourglass, it applies to the center
+                                       diamond.  When used in a c1phan, the expectation is
+                                       that people are in stars.  "Right"/"left" are
+                                       meaningless in this case.
 
    conc_cpls_same     R/Q           2x4 - centers and ends are couples, T-boned to each
                                        other, but all looking in or all looking out.

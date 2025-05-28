@@ -144,8 +144,8 @@ extern void general_initialize()
    // That way, one can run two usefully independent tests
    // on a multiprocessor, by giving them slightly
    // different timeouts.
-   unsigned int seed = (ui_options.resolve_test_minutes != 0) ?
-      ui_options.resolve_test_minutes : time((time_t *)0);
+   unsigned int seed = (ui_options.resolve_test_random_seed != 0) ?
+      ui_options.resolve_test_random_seed : time((time_t *)0);
    srand(seed);
 }
 

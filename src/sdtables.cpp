@@ -1965,6 +1965,9 @@ map::map_thing map::map_init_table[] = {
    {{5, 4,                 6, 7,                 0, 1,              3, 2},
     s1x2,4,MPKIND__4_QUADRANTS_WITH_45_ROTATION,1, warn__none,  s_alamo, 0x0CC, 0},
 
+   {{9, 11, 6, 8,       10, 12, 13, 15,    14, 0, 1, 3,     5, 7, 2, 4},
+    s2x2,4,MPKIND__4_QUADRANTS,1, warn__none,  s4x4, 0x0CC, 0},
+
    {{0, 1, 2, 3, 6, 7, 8, 9},
     s2x4,1,MPKIND__OFFS_L_HALF,1, warn__none,  s2x6,      0x000, 0},
    {{2, 3, 4, 5, 8, 9, 10, 11},
@@ -2957,15 +2960,23 @@ map::map_thing map::map_init_table[] = {
    {{5, 4,                  3, 2,                  6, 7,                  0, 1},
     s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, warn__none, s_rigger, 0x000, 0},
 
+   {{3,                     1},
+    s1x1,2,MPKIND__SPLIT_WITH_45_ROTATION,0, warn__none,  s2x2, 0x000, 0},
+
    {{5, 4,                  1, 2},
     s1x2,2,MPKIND__SPLIT_WITH_45_ROTATION,0, warn__none,  s2x3, 0x000, 0},
-   {{4, 3,                  0, 1},
-    s1x2,2,MPKIND__SPLIT_WITH_45_ROTATION,1, warn__none,  s2x3, 0x000, 0},
    {{5, 4,                  1, 2},
     s1x2,2,MPKIND__SPLIT_WITH_M45_ROTATION,0, warn__none, s2x3, 0x000, 0},
+   {{4, 3,                  0, 1},
+    s1x2,2,MPKIND__SPLIT_WITH_45_ROTATION,1, warn__none,  s2x3, 0x000, 0},
+   {{4, 3,                  0, 1},
+    s1x2,2,MPKIND__SPLIT_WITH_M45_ROTATION,1, warn__none, s2x3, 0x000, 0},
 
    {{9, 11, 6, 8,           14, 0, 1, 3},
     s2x2,2,MPKIND__SPLIT_WITH_45_ROTATION,0, warn__none,  s4x4, 0x000, 0},
+
+   {{13, 14, 15, 12,        7, 4, 5, 6},
+    s_star,2,MPKIND__SPLIT_WITH_45_ROTATION,0, warn__none,s_c1phan, 0x000, 0},
 
    {{14, 13,                16, 17,                3, 4,                  7, 6},
     s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION,0, warn__none, s4x5, 0x000, 0},
@@ -3970,7 +3981,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
                                      5, 6, 23, 7, 12, 13, 16, 22,
                                      17, 18, 11, 19, 0, 1, 4, 10},
              s2x4,     s4x4,     1, 0, 1, 1,  0xAFD, schema_concentric},
-
+   {s4x4,           schema_nothing, {6, 11, 15, 13, 14, 3, 7, 5,    10, 1, 2, 9},
+             s2x4,     s2x2,     1, 0, 1, 1,  0xAFD, schema_concentric},
    {sbigrig,        schema_nothing, {0, 1, 3, 2, 9, 8, 6, 7,    -1, 11, 4, -1, -1, 5, 10, -1},
              s1x4,     s2x4,     0, 1, 1, 2,  0xAF7, schema_in_out_quad},
    {s4x6,           schema_nothing, {18, 11, 10, 19, 22, 7, 6, 23,
@@ -4530,7 +4542,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x3,     s1x2,     1, 0, 1, 1,  0x8F5, schema_concentric},
    {s_2stars,       schema_concentric_6_2, {0, 1, 3, 4, 5, 7,    6, 2},
              s_bone6,  s1x2,     0, 0, 1, 1,  0x9F5, schema_concentric},
-   {s4x5,          schema_nothing, {9, 8, 7, 6, 5, 19, 18, 17, 16, 15,    2, 12},
+   {s4x5,          schema_nothing, {9, 8, 7, 6, 5, 19, 18, 17, 16, 15,    12, 2},
              s2x5,     s1x2,     0, 1, 1, 1,  0xAF5, schema_concentric},
    {s_spindle,      schema_concentric_6_2, {0, 1, 2, 4, 5, 6,    7, 3},
              s2x3,     s1x2,     0, 0, 1, 1,  0x8FA, schema_concentric},

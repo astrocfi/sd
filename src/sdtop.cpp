@@ -30,6 +30,7 @@
    clear_bits_for_update
    clear_absolute_proximity_bits
    clear_absolute_proximity_and_facing_bits
+   put_in_absolute_proximity_and_facing_bits
    expand::initialize
    full_expand::initialize_touch_tables
    full_expand::search_table_1
@@ -2174,11 +2175,12 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = 
 
 restriction_tester::restr_initializer restriction_tester::restr_init_table4[] = {
    {sdmd, cr_jright, 4, {0, 2, 1, 3},                     {0}, {0}, {0}, true, chk_wave},
-   {sdmd, cr_jleft, 4, {0, 2, 3, 1},                      {0}, {0}, {0}, true, chk_wave},
+   {sdmd, cr_jleft,  4, {0, 2, 3, 1},                     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_conc_iosame, 8, {6, 1, 0, 3, 5, 2, 7, 4},    {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_conc_iodiff, 8, {1, 6, 0, 3, 2, 5, 7, 4},    {0}, {0}, {0}, true, chk_wave},
    {s_ptpd, cr_jright, 8, {0, 2, 1, 3, 6, 4, 7, 5},       {0}, {0}, {0}, true, chk_wave},
-   {s_ptpd, cr_jleft, 8, {0, 2, 3, 1, 6, 4, 5, 7},        {0}, {0}, {0}, true, chk_wave},
+   {s_ptpd, cr_jleft, 8,  {0, 2, 3, 1, 6, 4, 5, 7},       {0}, {0}, {0}, true, chk_wave},
+   {s_hrglass, cr_jleft, 4, {6, 2, 7, 3},                 {0}, {0}, {0}, true, chk_wave},
    {nothing}};
 
 restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = {
@@ -6238,8 +6240,6 @@ static void check_near_far(setup *ss, int Vsize, uint32 *Vtable,
    uint32 colbits = do_near ? ID3_NEARCOL : ID3_FARCOL;
    uint32 linebits = do_near ? ID3_NEARLINE : ID3_FARLINE;
 
-   // NOTE THAT THE LEFT/RIGHT STUFF IS PUT INTO ID2, WHEREAS NEAR/FAR IS IN ID3!
-   // Also, these bit assignments may look peculiar.
    if (speciallateral) {
       if (ss->rotation & 1) {
          colbits = do_near ? ID3_LEFTLINE : ID3_RIGHTLINE;
@@ -6314,8 +6314,11 @@ static void check_near_far_wrapper(setup *ss, int Vsize, uint32 *Vtable,
 }
 
 
-void put_in_absolute_location_bits(setup *ss)
+extern void put_in_absolute_proximity_and_facing_bits(setup *ss)
 {
+   // Can't do it if rotation is not known.
+   if (ss->result_flags.misc & RESULTFLAG__IMPRECISE_ROT) return;
+
    int i;
 
    if (attr::slimit(ss) >= 0) {
@@ -6548,10 +6551,7 @@ void toplevelmove() THROW_DECL
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
    clear_absolute_proximity_and_facing_bits(&starting_setup);
-
-   // Can't do it if rotation is not known.
-   if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT))
-      put_in_absolute_location_bits(&starting_setup);
+   put_in_absolute_proximity_and_facing_bits(&starting_setup);
 
    // Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.)
    update_id_bits(&starting_setup);
@@ -6594,7 +6594,9 @@ void finish_toplevelmove() THROW_DECL
 {
    configuration & newhist = configuration::next_config();
 
-   normalize_setup(&newhist.state, plain_normalize, true);   // Remove outboard phantoms from the resulting setup.
+   // Remove outboard phantoms from the resulting setup.
+   normalize_setup(&newhist.state, plain_normalize, true);
+   // Resolve needs to know what "near 4" means right now.
    clear_absolute_proximity_and_facing_bits(&newhist.state);
    newhist.calculate_resolve();
 }

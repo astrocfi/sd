@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.10
-@set title2 Database version = 39.10 format = 360
+@set title1 RELEASE NOTES FOR VERSION 39.11
+@set title2 Database version = 39.11 format = 360
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.11::
 * 39.10::
 * 39.09::
 * 39.08::
@@ -107,7 +108,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.10, Top, (dir)
+@node Intro, 39.11, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -118,11 +119,18 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2019 William B. Ackerman
 @sp 3
 @menu
-* 39.10::               Changes in the current version
+* 39.11::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.10, 39.09, Intro, Top
+@node 39.11, 39.10, Intro, Top
+@unnumberedsec Version 39.11 changes
+
+A few few bugs were fixed, most notably involving the re-evaluation of what
+things like @code{near 4} mean when doing a @code{two calls in succession} operation.
+
+@c ************
+@node 39.10, 39.09, 39.11, Top
 @unnumberedsec Version 39.10 changes
 
 The ``nonstandard'' version of @strong{little more} was removed.  This

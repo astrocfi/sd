@@ -1814,7 +1814,7 @@ static calldef_schema concentrify(
    case schema_concentric_2_4_or_single:
       if (ss->kind == s_bone6)
          analyzer_result = schema_concentric_2_4;
-      else if (ss->kind == s1x4 || ss->kind == s1x8)
+      else if (ss->kind == s1x4 || ss->kind == s1x8 || ss->kind == sdmd)
          analyzer_result = schema_single_concentric;
       else
          analyzer_result = schema_concentric;
@@ -8057,11 +8057,6 @@ extern void inner_selective_move(
                       crossconc ? cmd2 : cmd1,
                       crossconc ? cmd1 : cmd2,
                       schema, modsa1, modsb1, true, enable_3x1_warn, specialoffsetmapcode, result);
-   }
-
-   if (result->result_flags.misc & RESULTFLAG__INVADED_SPACE) {
-      configuration::restore_warnings(saved_warnings);
-      goto back_here;
    }
 
    return;

@@ -814,6 +814,13 @@ enum {
    ID2_END          = 0x00001000U,
    ID2_CTR4         = 0x00000800U,
    ID2_OUTRPAIRS    = 0x00000400U,
+
+   // These are the "permanent" information related to the identity of this person.  For
+   // real people, this never changes.  The reason this field is needed is that the bits
+   // get cobbled together (by ANDing) when combining people for tandem, etc.  For
+   // active phantoms, these bits are all zero.  This field also has unsymmetrical
+   // selector bits.
+
    ID2_PERM_NSG     = 0x00000200U,  // Not side girl
    ID2_PERM_NSB     = 0x00000100U,  // Not side boy
    ID2_PERM_NHG     = 0x00000080U,  // Not head girl
@@ -826,7 +833,6 @@ enum {
    ID2_PERM_GIRL    = 0x00000001U,  // Girl
    ID2_PERM_ALLBITS = 0x000003FFU,
 
-   // These are the bits that never change.
    ID2_PERM_ALL_ID = ID2_PERM_HEAD|ID2_PERM_SIDE|ID2_PERM_BOY|ID2_PERM_GIRL,
 
    // These are the standard definitions for the 8 people in the square.
@@ -858,13 +864,8 @@ enum {
 };
 
 
-// Bits that go into the "id3" field.  It is sort of an extension of "id2".
-//
-// This field contains "permanent" information related to the identity
-// of this person.  For real people, this never changes.  The reason
-// this field is needed is that the bits get cobbled together (by ANDing)
-// when combining people for tandem, etc.  For active phantoms, these
-// bits are all zero.  This field also has unsymmetrical selector bits.
+// Bits that go into the "id3" field.  This is sort of an extension of "id2".
+// These are the unsymmetrical selector bits.  Handle with care.
 
 enum {
    ID3_NEARCOL      = 0x80000000U,
@@ -5120,6 +5121,7 @@ extern void update_id_bits(setup *ss);
 extern void clear_bits_for_update(setup *ss);
 extern void clear_absolute_proximity_bits(setup *ss);
 extern void clear_absolute_proximity_and_facing_bits(setup *ss);
+extern void put_in_absolute_proximity_and_facing_bits(setup *ss);
 
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
@@ -6065,7 +6067,16 @@ class ui_option_type {
    // random solutions for an hour, rejecting them all.  Doing this on multiple
    // processors, with slightly different arguments, will run separate
    // deterministic tests on each processor.
+   //
+   // The two numbers are normally the same.  The first controls the time.
+   // The second controls the random generator.
+   // The switch "resolve_test <N>" sets both the same.  The switch
+   // "resolve_test <N> <K>" sets the time to the first parameter and the seed to
+   // the second parameter.  This allows using a specific seed while allowing the
+   // time to be a value that might overrun if in debug mode.
+
    int resolve_test_minutes;
+   int resolve_test_random_seed;
 
    int singing_call_mode;
 

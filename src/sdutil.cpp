@@ -376,6 +376,7 @@ ui_option_type::ui_option_type() :
    tab_changes_focus(false),
    max_print_length(59),
    resolve_test_minutes(0),
+   resolve_test_random_seed(0),
    singing_call_mode(0),
    use_escapes_for_drawing_people(0),
    pn1("11223344"),

@@ -2165,8 +2165,16 @@ bool open_session(int argc, char **argv)
          }
          else if (strcmp(&args[argno][1], "resolve_test") == 0) {
             if (argno+1 < nargs) {
+               // If this option isn't last, it could consume whatever is next.
                if (sscanf(args[argno+1], "%d", &ui_options.resolve_test_minutes) != 1)
                   gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
+               ui_options.resolve_test_random_seed = ui_options.resolve_test_minutes;
+
+               if (argno+2 < nargs) {
+                  argno++;
+                  if (sscanf(args[argno+1], "%d", &ui_options.resolve_test_random_seed) != 1)
+                     gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
+               }
             }
          }
          else if (strcmp(&args[argno][1], "print_length") == 0) {

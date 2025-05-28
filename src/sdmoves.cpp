@@ -6788,6 +6788,8 @@ void really_inner_move(
 
          bool expanded = false;
          static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, s2x2, s4x4, 0};
+         static const expand::thing exp_from_2x2_stuffh = {{8, 9, 10, 12, 0, 1, 2, 4}, s2x4, s4x4, 1};
+         static const expand::thing exp_from_2x2_stuffv = {{12, 13, 14, 0, 4, 5, 6, 8}, s2x4, s4x4, 0};
          static const expand::thing exp_back_to_2x6_stuff = {{0, 1, 4, 5, 6, 7, 10, 11}, s2x4, s2x6, 0};
 
          // The "reverse" concept might mean mirror, as in "reverse truck".
@@ -6915,26 +6917,32 @@ void really_inner_move(
          }
 
          if (expanded) {
+            // If the outsides invaded space, but only did so perpendicular to the
+            // elongation that we are making to stay clear of the centers, compress
+            // out the extra space.
+            uint32 dirjunk;
+            uint32 livemask;
+
             result->result_flags.misc &= ~3;
-            if (result->kind == s4x4 &&
-                     !(result->people[15].id1 | result->people[3].id1 |
-                       result->people[7].id1 | result->people[11].id1 |
-                       result->people[13].id1 | result->people[14].id1 |
-                       result->people[5].id1 | result->people[6].id1 |
-                       result->people[10].id1 | result->people[9].id1 |
-                       result->people[1].id1 | result->people[2].id1)) {
+            big_endian_get_directions(result, dirjunk, livemask);
+
+            if (result->kind == s4x4 && (livemask & 0x3F3F3F3F) == 0) {
                result->result_flags.misc |= 3;
                expand::compress_setup(exp_from_2x2_stuff, result);
             }
-            else if (result->kind == s2x4 &&
-                     !(result->people[1].id1 | result->people[2].id1 |
-                       result->people[5].id1 | result->people[6].id1)) {
+            else if (result->kind == s4x4 && (livemask & 0x033F033F) == 0) {
+               result->result_flags.misc |= 1;
+               expand::compress_setup(exp_from_2x2_stuffh, result);
+            }
+            else if (result->kind == s4x4 && (livemask & 0x3F033F03) == 0) {
+               result->result_flags.misc |= 2;
+               expand::compress_setup(exp_from_2x2_stuffv, result);
+            }
+            else if (result->kind == s2x4 && (livemask & 0x3C3C) == 0) {
                result->result_flags.misc |= (result->rotation & 1) + 1;
                expand::compress_setup(s_2x2_2x4_ends, result);
             }
-            else if (result->kind == s2x6 &&
-                     !(result->people[2].id1 | result->people[3].id1 |
-                       result->people[8].id1 | result->people[9].id1)) {
+            else if (result->kind == s2x6 && (livemask & 0x0F00F0) == 0) {
                result->result_flags.misc |= (result->rotation & 1) + 1;
                expand::compress_setup(exp_back_to_2x6_stuff, result);
             }

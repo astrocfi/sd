@@ -4893,6 +4893,17 @@ static void do_concept_sequential(
 
    go_to_next_cycle:
 
+      // Are we someplace where absolute location bits are known?  That is, are we not
+      // under some other operation that could get the bits wrong?  If so, clear those
+      // bits and put in new ones.  Just sample one person.
+
+      if (attr::slimit(result) >= 0 && (result->people[0].id3 & ID3_ABSOLUTE_PROXIMITY_BITS) != 0) {
+         clear_absolute_proximity_and_facing_bits(result);
+         put_in_absolute_proximity_and_facing_bits(result);
+      }
+      else
+         clear_absolute_proximity_and_facing_bits(result);
+
       // Increment for next cycle.
       zzz.m_fetch_index += zzz.m_subcall_incr;
       zzz.m_client_index += zzz.m_subcall_incr;
