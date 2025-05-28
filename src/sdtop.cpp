@@ -1160,7 +1160,19 @@ extern void touch_or_rear_back(
       }
 
       tptr = full_expand::search_table_3(scopy->kind, livemask, directions, touchflags);
-      if (tptr) goto found_tptr;
+      if (tptr) {
+         if (!(tptr->forbidden_elongation & 0x80))
+            goto found_tptr;
+
+         // If we just have beaus in what might be facing lines, but the incoming assumption
+         // says the others aren't facing us, don't do anything.
+         if (scopy->cmd.cmd_assume.assumption == cr_wave_only ||
+             (scopy->kind == s2x4 && livemask == 0x3333)) {
+            return;
+         }
+
+         goto found_tptr;
+      }
 
       // A few setups are special -- we allow any combination at all in livemask,
       // though we are careful.
@@ -5878,7 +5890,7 @@ const expand::thing s_dmd_323 = {{5, 7, 1, 3}, sdmd, s_323, 1};
 // When preparing for an isolated call, that is, "so-and-so do your part, whatever",
 // we work at it a little, so we set action=normalize_before_isolated_call.
 // For normal usage, we set action=simple_normalize.
-void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress) THROW_DECL
+void normalize_setup(setup *ss, normalize_action action, qtag_compress_choice noqtagcompress) THROW_DECL
 {
    uint32_t livemask, tbonetest;
    bool did_something = false;
@@ -5936,7 +5948,11 @@ void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress) TH
 
    setup_kind oldk = ss->kind;
 
-   bool b = expand::compress_from_hash_table(ss, action, livemask, noqtagcompress);
+   // decide whether to compress a qtag to a 2x3.  If people are T-boned, don't,
+   // even if the ends of the center 1x4 are missing.
+   bool b = expand::compress_from_hash_table(ss, action, livemask,
+                                             noqtagcompress == qtag_no_compress ||
+                                             (noqtagcompress == qtag_compress_unless_tboned && (tbonetest & 011) == 011));
 
    if (!b) goto difficult;
 
@@ -6724,7 +6740,9 @@ void finish_toplevelmove() THROW_DECL
    configuration & newhist = configuration::next_config();
 
    // Remove outboard phantoms from the resulting setup.
-   normalize_setup(&newhist.state, two_couple_calling ? normalize_to_4 : plain_normalize, true);
+   normalize_setup(&newhist.state,
+                   two_couple_calling ? normalize_to_4 : plain_normalize, 
+                   two_couple_calling ? qtag_compress_unless_tboned : qtag_no_compress);
    // Resolve needs to know what "near 4" means right now.
    clear_absolute_proximity_and_facing_bits(&newhist.state);
    newhist.calculate_resolve();

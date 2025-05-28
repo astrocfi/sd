@@ -478,8 +478,8 @@ static void do_c1_phantom_move(
    gather(&setup1, ss, map_ptr->map1, map_ptr->sizem1, 0);
    gather(&setup2, ss, map_ptr->map2, map_ptr->sizem1, ((parseptr->concept->arg2) ? 0 : 033));
 
-   normalize_setup(&setup1, simple_normalize, false);
-   normalize_setup(&setup2, simple_normalize, false);
+   normalize_setup(&setup1, simple_normalize, qtag_compress);
+   normalize_setup(&setup2, simple_normalize, qtag_compress);
 
    setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    setup2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
@@ -2782,6 +2782,7 @@ static void do_concept_once_removed(
 {
    ss->clear_all_overcasts();
    uint32_t map_code = ~0U;
+   ss->cmd.cmd_assume.assumption = cr_none;    // Not any more.
 
    // We allow "3x1" and the like only with plain "once removed".
    if (parseptr->concept->arg1 &&
@@ -3557,7 +3558,7 @@ static void do_concept_assume_waves(
  fudge_diamond_like:
 
    switch (ss->kind) {
-   case s1x4: 
+   case s1x4:
       no_phan_error = false;    // There really were phantoms after all.
       copy_person(ss, 6, ss, 0);
       copy_person(ss, 7, ss, 1);
@@ -3567,7 +3568,7 @@ static void do_concept_assume_waves(
       ss->clear_person(5);
       ss->kind = s_qtag;
       goto check_it;
-   case s2x4: 
+   case s2x4:
       if (ss->people[1].id1 || ss->people[2].id1 || ss->people[5].id1 || ss->people[6].id1)
          fail("Can't do this assumption.");
       copy_rot(ss, 5, ss, 0, 033);
@@ -3575,6 +3576,20 @@ static void do_concept_assume_waves(
       copy_rot(ss, 0, ss, 3, 033);
       copy_rot(ss, 4, ss, 7, 033);
       ss->clear_person(3);
+      ss->clear_person(7);
+      ss->rotation++;
+      ss->kind = s_qtag;
+      goto check_it;
+   case s2x3:
+      if (ss->people[1].id1 || ss->people[4].id1)
+         fail("Can't do this assumption.");
+      copy_rot(ss, 4, ss, 5, 033);
+      copy_rot(ss, 5, ss, 0, 033);
+      copy_rot(ss, 1, ss, 3, 033);
+      copy_rot(ss, 0, ss, 2, 033);
+      ss->clear_person(2);
+      ss->clear_person(3);
+      ss->clear_person(6);
       ss->clear_person(7);
       ss->rotation++;
       ss->kind = s_qtag;
@@ -4075,7 +4090,7 @@ static void do_concept_phan_crazy(
 
          // Concentric_move sometimes gets carried away.  Maybe should fix same.
          if (result->kind == s4x6) {
-            normalize_setup(result, simple_normalize, false);
+            normalize_setup(result, simple_normalize, qtag_compress);
             do_matrix_expansion(result, CONCPROP__NEEDK_2X8, true);
          }
 
@@ -5236,7 +5251,7 @@ static void do_concept_special_sequential(
          update_id_bits(&tttt);           /* So you can use "leads run", etc. */
       move(&tttt, false, result);
       finalresultflagsmisc |= result->result_flags.misc;
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
 
       // Do the rest of the original call, if there is more.
 
@@ -5247,7 +5262,7 @@ static void do_concept_special_sequential(
       tttt.cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_FROMTOREV,2,0));
       move(&tttt, false, result);
       finalresultflagsmisc |= result->result_flags.misc;
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
 
       result->result_flags.misc = finalresultflagsmisc & ~3;
    }
@@ -6651,17 +6666,21 @@ static void do_concept_overlapped_diamond(
 
    switch (ss->kind) {
    case s1x4:
-      if (parseptr->concept->arg1 & 1)
+      if (parseptr->concept->arg1 != 2)
          fail("Must be in a diamond.");
 
       scatterlist = &list1x4;
       mapcode = MAPCODE(sdmd,2,MPKIND__NONISOTROPDMD,0);
       break;
    case sdmd:
-      if (!(parseptr->concept->arg1 & 1))
-         fail("Must be in a line.");
-      if (parseptr->concept->arg1 == 3)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+      if (parseptr->concept->arg1 == 2)
+         fail("Must be in a 1x4.");
+
+      switch (parseptr->concept->arg1) {
+      case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
+      case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
+      case 3: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES; break;
+      }
 
       scatterlist = &listdmd;
       mapcode = MAPCODE(s1x4,2,MPKIND__NONISOTROPDMD,0);
@@ -6997,7 +7016,7 @@ static void do_concept_meta(
       }
 
       move(ss, false, result);
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
       return;
 
    case meta_key_like_a:
@@ -7024,7 +7043,7 @@ static void do_concept_meta(
          fail("Can't stack meta or fractional concepts.");
 
       move(ss, false, result);
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
       return;
 
    case meta_key_roundtrip:
@@ -7894,13 +7913,13 @@ static void do_concept_meta(
 
             do_call_in_series_and_update_bits(result);
 
-            // Is this the right thing to do?  
+            // Is this the right thing to do?
             // Cf. tests pt00, pt01, and pt02.
             // We really don't completely know how two-couple stuff is supposed to work.
             if (two_couple_calling &&
                 (yescmd.parseptr->concept->kind == concept_meta ||
                  yescmd.parseptr->concept->kind == concept_each_1x4))
-               normalize_setup(result, normalize_to_4, true);
+               normalize_setup(result, normalize_to_4, qtag_no_compress);
 
             // And the rest of the call without it.
             // Try to figure out whether there is more.
@@ -9002,8 +9021,8 @@ static void do_concept_so_and_so_begin(
 
    current_options.who = saved_selector;
 
-   normalize_setup(&setup1, plain_normalize, false);
-   normalize_setup(&setup2, plain_normalize, false);
+   normalize_setup(&setup1, plain_normalize, qtag_compress);
+   normalize_setup(&setup2, plain_normalize, qtag_compress);
 
    // We just feed the "reverse" bit and the fractional stuff (low 16 bits)
    // through.  They have no effect on what we are doing.
@@ -9030,7 +9049,7 @@ static void do_concept_so_and_so_begin(
 
    merge_table::merge_setups(&the_setups[0], merge_c1_phantom, &the_setups[1]);
    uint32_t finalresultflagsmisc = the_setups[1].result_flags.misc;
-   normalize_setup(&the_setups[1], simple_normalize, false);
+   normalize_setup(&the_setups[1], simple_normalize, qtag_compress);
 
    if ((incoming_code_and_parts & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY)
       fail("Can't stack meta or fractional concepts.");
@@ -9054,7 +9073,7 @@ static void do_concept_so_and_so_begin(
    move(&the_setups[1], false, result);
    result->result_flags.misc = finalresultflagsmisc;
    result->result_flags.misc &= ~3;
-   normalize_setup(result, simple_normalize, false);
+   normalize_setup(result, simple_normalize, qtag_compress);
 }
 
 

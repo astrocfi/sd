@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.21
-@set Time-stamp: August 24, 2020
+@set sd-version 39.22
+@set Time-stamp: September 1, 2020
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4419,6 +4419,7 @@ These are straightforward.
 This is done from a 1x4.
 @item overlapped lines
 @item overlapped waves
+@item overlapped columns
 These are done from a diamond.
 @item interlocked parallelogram
 This is done from either a 2x4 or a 3x4.  In the latter case,

@@ -600,6 +600,11 @@ expand::thing expand::init_table[] = {
     s2x2, s_short6, 0, 0U, 022U, false,
     warn__none, warn__none, normalize_to_4, 0},
 
+   // This thing compresses a qtag to a 2x3.  Not actually a 4-person setup, but we tried.
+   {{1, 3, 4, 5, 7, 0},
+    s2x3, s_qtag, 0, 0U, 0x44U, false,
+    warn__none, warn__none, normalize_to_4, 0},
+
    // And this one compresses a bigptpd.
    {{2, 4, 3, 1, 8, 10, 9, 7},
     s_ptpd, sbigptpd, 0, 0U, 04141U, false,
@@ -3691,7 +3696,8 @@ full_expand::thing touch_init_table3[] = {
    {warn__none,      16, &step_li_stuff,      s2x4,         0xF00FU,     0xA000U, ~0U},
 
    // Check for stepping to a wave from partially occupied lines facing, only beaus present.
-   {warn__none,     128, &step_liphan_stuff,  s2x4,         0x3333U,     0x2200U, ~0U},
+   // The "80" bit in "forbidden_elongation" says don't do it in that case.
+   {warn__none,    0x80, &step_liphan_stuff,  s2x4,         0x3333U,     0x2200U, ~0U},
 
    // Check for stepping to an alamo wave from thar-like facing people.
    {warn__none,      16, &step_thar_stuff,    s_thar,       0xFFFFU,     0x78D2U, ~0U},
@@ -5093,10 +5099,16 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x8,          s2x4, 0x0F,  0xF0, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {4, 5, 6, 7, -1, -1, -1, -1}},
    {s1x8,          s2x4, 0xF0,  0x0F, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 2, {0, 1, 3, 2, -1, -1, -1, -1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
    {s2x4,      s_trngl8, 0x0F,  0x0F, 0x0E, 0x0, schema_matrix,         s2x4,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 2, 3}},
-   {s1x8,      s_trngl8, 0xF0,  0xF0, 0x0D, 0x0, schema_matrix,         s1x8,     nothing,     warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {4, 5, 7, 6, -1, -1, -1, -1}},
-
-   {s2x4,      s_trngl8, 0xC3,  0x0F, 0x0D, 0x0, schema_matrix,     s_c1phan,     nothing,     warn__none, 0, 0, {-1, -1, 11, 9, 12, 14, -1, -1}, {-1, -1, -1, -1, 0, 2, 7, 5}},
-
+   {s1x8,      s_trngl8, 0xF0,  0xF0, 0x0D, 0x0, schema_matrix,         s1x8,     nothing,     warn__none, 0, 1,
+    {0, 1, 2, 3, -1, -1, -1, -1}, {4, 5, 7, 6, -1, -1, -1, -1}},
+   {s1x4,      s_trngl4, 0x0C,  0x0C, 0x0D, 0x1, schema_nothing,     nothing,     nothing,     warn__none, 0, 0,
+    {2, 3, -1, -1}, {0}},
+   {s1x4,      s_trngl4, 0x0B,  0x01, 0x0D, 0x0, schema_nothing,     nothing,     nothing,     warn__none, 0, 0,
+    {-1, -1, 0, -1}, {0}},
+   {s1x4,      s_trngl4, 0x07,  0x02, 0x0D, 0x0, schema_nothing,     nothing,     nothing,     warn__none, 0, 0,
+    {-1, -1, -1, 1}, {0}},
+   {s2x4,      s_trngl8, 0xC3,  0x0F, 0x0D, 0x0, schema_matrix,     s_c1phan,     nothing,     warn__none, 0, 0,
+    {-1, -1, 11, 9, 12, 14, -1, -1}, {-1, -1, -1, -1, 0, 2, 7, 5}},
    {s_trngl8,  splinepdmd,   0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
    {s_trngl8,  splinepdmd,   0xF0, 0, 0x0D, 0x0, schema_matrix,    splinepdmd,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
 
@@ -8741,7 +8753,7 @@ const setup_attr setup_attrs[] = {
     {0x5, 0, 0, 0},
     {b_dmd, b_pmd},
     {0, 2},
-    0U,
+    SPROP_FIND_NEAR_PEOPLE,
     id_bit_table_dmd,
     {"6 b@7a 6 c@76 d@",
      " 5a@@ db@@ 5c@"}},
@@ -10976,8 +10988,18 @@ select::fixer select::fixer_init_table[] = {
    {fx_f2x6ccw, s1x2, s2x6,         0, 0, 2, {1, 2, 8, 7},
     fx0, fx_fpgdmdccw,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   {fx_ftgl4, s_trngl, s_trngl4,    0, 0, 1, {1, 2, 3},
+   {fx_ftgl4, s_trngl, s_trngl4, UINT32_C(0x08000000), 0, 1, {1, 2, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx_fudmd1,             fx0, fx0},
+
+   {fx_ftgl43, s1x2, s_trngl4,      1, 0, 1, {1, 0},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_ftgl4c, s1x2, s_trngl4,      0, 0, 1, {2, 3},
+    fx0, fx_n1x4c,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_fudmd1, s_trngl, sdmd,       3, 0, 1, {2, 3, 1},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx_ftgl4,              fx0, fx0},
+   {fx_fudmd2, s_trngl, sdmd,       1, 0, 1, {0, 1, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx_ftgl4,              fx0, fx0},
 
    {fx_fdhrgl, s_trngl, s_dhrglass, 0x2A03, 0, 2, {6, 5, 0, 2, 1, 4},
     fx_f323, fx0,               fx0, fx0,                   fx0, fx_specspindle,        fx0, fx0},
@@ -12246,7 +12268,6 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s3x1dmd,  0x66, fx_f3x1ctl,   fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s1x4,     0x0F, fx_f1x4pl,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x66, fx_f2x4ctr,   fx0, -1},
-
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x0F, fx_f2x4far,   fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0xF0, fx_f2x4near,  fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x81, fx_f2x4pos1,  fx0, -1},
@@ -12320,30 +12341,28 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      slinebox,    0xF0,   fx_1x5p1f,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0x0F,   fx_1x5p1g,     fx0, -1},
    {LOOKUP_NONE,                      s_trngl4,    0x0E,   fx_ftgl4,      fx0, -1},
+   {LOOKUP_NONE,                      s_trngl4,    0x03,   fx_ftgl43,     fx0, -1},
+   {LOOKUP_NONE,                      s_trngl4,    0x0C,   fx_ftgl4c,     fx0, -1},
+   {LOOKUP_NONE,                      sdmd,        0x0E,   fx_fudmd1,     fx0, -1},
+   {LOOKUP_NONE,                      sdmd,        0x0B,   fx_fudmd2,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0x03,   fx_1x5p1g,     fx0, -1},  // Goes to "Y"
    {LOOKUP_NONE,                      slinebox,    0x60,   fx_linefbox0,  fx0, -1},  // Goes to "F"
    {LOOKUP_NONE,                      slinebox,    0x9C,   fx_1x5p1h,     fx0, -1},  // Goes to sdbltrngl4
    {LOOKUP_NONE,                      sdbltrngl4,  0x3C,   fx_1x5p1k,     fx0, -1},  // Goes to slinebox
    {LOOKUP_NONE,                      slinebox,    0x0C,   fx_1x5p1j,     fx0, -1},  // Goes to "J"
    {LOOKUP_NONE,                      slinebox,    0x90,   fx_linefbox4,  fx0, -1},  // Goes to "V"
-
-
    {LOOKUP_NONE,                      slinefbox,   0xD8,   fx_1x4p2d,     fx0, -1},
-
    {LOOKUP_NONE,                      slinejbox,   0xFC,   fx_l2b1,       fx0, -1},
    {LOOKUP_NONE,                      slinejbox,   0x03,   fx_l2b2,       fx0, -1},
    {LOOKUP_NONE,                      slinejbox,   0x30,   fx_l2b3,       fx0, -1},
    {LOOKUP_NONE,                      slinejbox,   0x87,   fx_l2b7,       fx0, -1},
    {LOOKUP_NONE,                      slinejbox,   0xB4,   fx_l2b8,       fx0, -1},
-
    {LOOKUP_NONE,                      slinevbox,   0x3F,   fx_l6b1,       fx0, -1},
    {LOOKUP_NONE,                      slinevbox,   0xC0,   fx_l6b2,       fx0, -1},
    {LOOKUP_NONE,                      slinevbox,   0x03,   fx_l6b3,       fx0, -1},
    {LOOKUP_NONE,                      slinevbox,   0x33,   fx_l6b13,      fx0, -1},
    {LOOKUP_NONE,                      slinevbox,   0xF0,   fx_l6b15,      fx0, -1},
    {LOOKUP_NONE,                      slinefbox,   0xF0,   fx_l6b16,      fx0, -1},
-
-
    {LOOKUP_NONE,                      slineybox,   0x0C,   fx_l6b5,       fx0, -1},
    {LOOKUP_NONE,                      slineybox,   0x60,   fx_l6b6,       fx0, -1},
    {LOOKUP_NONE,                      slineybox,   0x03,   fx_l6b8,       fx0, -1},
@@ -12353,7 +12372,6 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      slineybox,   0x9F,   fx_l6b9,       fx0, -1},
    {LOOKUP_NONE,                      slinefbox,   0xFC,   fx_dbt6u,      fx0, -1},
    {LOOKUP_NONE,                      slineybox,   0x93,   fx_l6b12,      fx0, -1},
-
    {LOOKUP_NONE,                     sdbltrngl4,   0x30,   fx_dbt1,       fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0x0C,   fx_dbt2,       fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0x03,   fx_dbt3,       fx0, -1},
@@ -12377,7 +12395,6 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                       sboxpdmd,   0xF0,   fx_boxpdma,    fx0, -1},
    {LOOKUP_NONE,                       sboxpdmd,   0x0F,   fx_boxpdmb,    fx0, -1},
    {LOOKUP_NONE,                       sboxpdmd,   0xF4,   fx_beehive1,   fx0, -1},
-
    {LOOKUP_NONE,                      s_spindle,   0xE3,   fx_beehive2,   fx0, -1},
    {LOOKUP_NONE,                      s_spindle,   0x3E,   fx_beehive3,   fx0, -1},
    {LOOKUP_NONE,                      s_spindle,   0x1C,   fx_spnnrtgl,   fx0, -1},
@@ -12386,31 +12403,25 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s_galaxy,    0x0E,   fx_galfrtgl,   fx0, -1},
    {LOOKUP_NONE,                      s_galaxy,    0xF1,   fx_galnrvee,   fx0, -1},
    {LOOKUP_NONE,                      s_galaxy,    0x1F,   fx_galfrvee,   fx0, -1},
-
    {LOOKUP_NONE,                      s_323,       0x70,   fx323nrln,     fx0, -1},
    {LOOKUP_NONE,                      s_323,       0x07,   fx323frln,     fx0, -1},
    {LOOKUP_NONE,                      s_323,       0x33,   fx323a,        fx0, -1},
    {LOOKUP_NONE,                      s_323,       0x66,   fx323b,        fx0, -1},
    {LOOKUP_NONE,                      s_ntrglcw,   0xCC,   fxntrgla,      fx0, -1},
    {LOOKUP_NONE,                      s_ntrglccw,  0x33,   fxntrglb,      fx0, -1},
-
    {LOOKUP_NONE,                      s_trngl8,    0xF0,   fx_trngl8a,    fx0, -1},
    {LOOKUP_NONE,                      s_trngl8,    0x0F,   fx_trngl8b,    fx0, -1},
    {LOOKUP_NONE,                      sdmdpdmd,    0xF0,   fxdmdpdmda,    fx0, -1},
    {LOOKUP_NONE,                      sdmdpdmd,    0x0F,   fxdmdpdmdb,    fx0, -1},
-
    {LOOKUP_NONE,                      s_23232,    04242,   fx23232a,      fx0, -1},
    {LOOKUP_NONE,                      s_23232,    04141,   fx23232b,      fx0, -1},
    {LOOKUP_NONE,                      s_23232,    01010,   fx23232c,      fx0, -1},
-
    {LOOKUP_NONE,                      s_23232,    01414,   fx23232d,      fx0, -1},
    {LOOKUP_NONE,                      s_23232,    03030,   fx23232e,      fx0, -1},
-
    {LOOKUP_NONE,                      s_c1phan,  0x5500,   fx_phantg4a,   fx0, -1},
    {LOOKUP_NONE,                      s_c1phan,  0xAA00,   fx_phantg4b,   fx0, -1},
    {LOOKUP_NONE,                      s_c1phan,  0x0055,   fx_phantg4c,   fx0, -1},
    {LOOKUP_NONE,                      s_c1phan,  0x00AA,   fx_phantg4d,   fx0, -1},
-
    {LOOKUP_NONE,                      s1x6,         074,   fx_1x6hif,     fx0, -1},
    {LOOKUP_NONE,                      s1x6,         047,   fx_1x6lowf,    fx0, -1},
    {LOOKUP_NONE,                      s1x4,        0x3,    fx_n1x43,      fx0, -1},

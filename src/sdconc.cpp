@@ -1511,9 +1511,9 @@ extern void normalize_concentric(
    if (table_synthesizer == schema_conc_o ||
        synthesizer == schema_in_out_triple_squash ||
        synthesizer == schema_in_out_triple_dyp_squash)
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
    if (table_synthesizer == schema_sgl_in_out_triple)
-      normalize_setup(result, normalize_to_4, false);
+      normalize_setup(result, normalize_to_4, qtag_compress);
 
    canonicalize_rotation(result);
    return;
@@ -1811,7 +1811,7 @@ static calldef_schema concentrify(
    case schema_concentric_or_2_6_line:
       if (ss->kind == s3x1dmd) {
          if ((livemask & 0xCC) == 0 && two_couple_calling) {
-            normalize_setup(ss, normalize_to_4, true);     // Get rid of the outlier.
+            normalize_setup(ss, normalize_to_4, qtag_no_compress);     // Get rid of the outlier.
             analyzer_result = schema_concentric_2_4;       // The pt04 case.
          }
          else
@@ -4719,14 +4719,14 @@ void merge_table::merge_setups(setup *ss,
    }
 
    canonicalize_rotation(res1);    // Do we really need to do this before normalize_setup?
-   normalize_setup(res1, na, res2->kind == nothing);
+   normalize_setup(res1, na, res2->kind == nothing ? qtag_no_compress : qtag_compress);
    canonicalize_rotation(res1);    // We definitely need to do it now --
                                    // a 2x2 might have been created.
 
  tryagain:
 
    canonicalize_rotation(res2);
-   normalize_setup(res2, na, res1->kind == nothing);
+   normalize_setup(res2, na, res1->kind == nothing ? qtag_no_compress : qtag_compress);
    canonicalize_rotation(res2);
 
    // Canonicalize the setups according to their kind.  This is a bit sleazy, since
@@ -5325,8 +5325,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       normalizer = normalize_before_isolated_callMATRIXMATRIXMATRIX;
    }
 
-   normalize_setup(&the_setups[0], normalizer, false);
-   normalize_setup(&the_setups[1], normalizer, false);
+   normalize_setup(&the_setups[0], normalizer, qtag_compress);
+   normalize_setup(&the_setups[1], normalizer, qtag_compress);
    warning_info saved_warnings = configuration::save_warnings();
 
    for (setupcount=0; setupcount<2; setupcount++) {
@@ -5472,7 +5472,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
       result->result_flags.misc = finalresultflagsmisc & ~3;
    }
    else if (doing_do_last_frac) {
@@ -5490,7 +5490,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
       result->result_flags.misc = finalresultflagsmisc & ~3;
    }
 }
@@ -7100,9 +7100,9 @@ extern void inner_selective_move(
 
    // Don't normalize if doing triangle stuff.
    if (!tglindicator && !special_tgl_ignore)
-      normalize_setup(&the_setups[0], action, false);
+      normalize_setup(&the_setups[0], action, qtag_compress);
    if (others > 0)
-      normalize_setup(&the_setups[1], action, false);
+      normalize_setup(&the_setups[1], action, qtag_compress);
 
    saved_warnings = configuration::save_warnings();
 
@@ -7123,6 +7123,7 @@ extern void inner_selective_move(
       setup *this_result = &the_results[setupcount];
       setup_kind kk = this_one->kind;
       setup_command *cmdp = (setupcount == 1) ? cmd2 : cmd1;
+      bool special_unsym_dyp = false;
 
       process_number_insertion((setupcount == 1) ? modsb1 : modsa1);
       this_one->cmd = ss->cmd;
@@ -7143,6 +7144,7 @@ extern void inner_selective_move(
           ((kk == s2x4 && (thislivemask == 0xCC || thislivemask == 0x33)) ||
            (kk == s1x6 && (thislivemask == 033)) ||
            (kk == s_spindle12 && ((thislivemask & 0xE7) == 0)) ||
+           (kk == s_trngl4 && two_couple_calling && (thislivemask == 0x0C)) ||
            (kk == s2x6 && (thislivemask == 00303 || thislivemask == 06060)))) {
          const call_with_name *callspec = this_one->cmd.callspec;
 
@@ -7152,8 +7154,10 @@ extern void inner_selective_move(
              this_one->cmd.parseptr->concept->kind <= marker_end_of_list)
             callspec = this_one->cmd.parseptr->call;
 
-         if (callspec && (callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL))
+         if (callspec && (callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL)) {
             indicator = selective_key_dyp;
+            special_unsym_dyp = true;
+         }
       }
 
       if (indicator == selective_key_snag_anyone) {
@@ -7787,6 +7791,11 @@ extern void inner_selective_move(
                      }
                   }
                }
+               else if (((nextfixp->rot - fixp->rot) & 3) == 1) {
+                  if (nextfixp->rot & 0x08000000) {
+                     this_result->rotation += 1;
+                  }
+               }
                else if (((nextfixp->rot - fixp->rot) & 3) == 2) {
                   if (nextfixp->rot & 0x80000000) {
                      this_result->rotation += 2;
@@ -7795,6 +7804,9 @@ extern void inner_selective_move(
                else if (((nextfixp->rot - fixp->rot) & 3) == 3) {
                   if (nextfixp->rot & 0x80000000) {
                      this_result->rotation += 2;
+                  }
+                  if (nextfixp->rot & 0x08000000) {
+                     this_result->rotation += 3;
                   }
                }
 
@@ -7980,7 +7992,22 @@ extern void inner_selective_move(
             }
          }
 
-         move(this_one, false, this_result);
+         // Look for special cases like two people peeling off from the base of a trngl4.
+         if (special_unsym_dyp &&
+             (this_one->kind == s_trngl4 &&
+              ((this_one->people[0].id1 | this_one->people[1].id1) == 0))) {
+            setup trythis = *this_one;
+            trythis.kind = s2x2;
+            trythis.clear_people();
+            copy_person(&trythis, 0, this_one, 2);
+            copy_person(&trythis, 1, this_one, 3);
+            canonicalize_rotation(&trythis);
+            move(&trythis, false, this_result);
+         }
+         else {
+            move(this_one, false, this_result);
+         }
+
          if (mirror) mirror_this(this_result);
       }
 

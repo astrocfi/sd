@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.21"
+version "39.22"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -23625,6 +23625,10 @@ call "detour" c2 tag detour
         endsdetour [inherit_fractal inherit_gensting conc_demand_lines conc_force_spots endscando]
 
 call "team up" c3a
+   // Be a little less rigorous about where missing ends might have gone.
+   // With two couple dancing, there will often be a lot of them.
+   setup 4x2 2x4
+      array [0 CR6S CR5S CR4S 0 ZM2N ZM1N 0]
             fractal_is_inherited gen_sting_is_inherited
    // The "force columns" makes the hingers stay together.
    conc beaurun [] half_circ_and_hinge [conc_force_columns endscando inherit_fractal inherit_gensting]

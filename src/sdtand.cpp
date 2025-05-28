@@ -3999,7 +3999,7 @@ bool process_brute_force_mxn(
 
    update_id_bits(&ttt.m_virtual_setup[0]);
    backstop(&ttt.m_virtual_setup[0], parseptr, &ttt.virtual_result);
-   normalize_setup(&ttt.virtual_result, normalize_before_merge, false);
+   normalize_setup(&ttt.virtual_result, normalize_before_merge, qtag_compress);
 
    // Figure out what happened.
 

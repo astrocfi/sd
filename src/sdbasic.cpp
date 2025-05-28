@@ -2781,7 +2781,7 @@ static int divide_the_setup(
                assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)) {
          // Need to turn it into a mundane matrix setup.
          do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, false);
-         normalize_setup(ss, plain_normalize, true);
+         normalize_setup(ss, plain_normalize, qtag_no_compress);
          // Check that it did something.  (Otherwise, divide_us_no_recompute will raise an error.)
          if (ss->kind == s2x4 || ss->kind == s4x4 || ss->kind == s4x6)
             return 2;
@@ -5861,7 +5861,7 @@ static uint32_t do_actual_array_call(
    fixup:
 
    if (need_to_normalize || result->kind == s_c1phan)
-      normalize_setup(result, plain_normalize, true);
+      normalize_setup(result, plain_normalize, qtag_no_compress);
 
    reinstate_rotation(ss, result);
 

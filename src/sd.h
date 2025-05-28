@@ -2860,6 +2860,10 @@ class select {
       fx_f2x6cw,
       fx_f2x6ccw,
       fx_ftgl4,
+      fx_ftgl43,
+      fx_ftgl4c,
+      fx_fudmd1,
+      fx_fudmd2,
       fx_fdhrgl,
       fx_fdbtgll,
       fx_fdbtglr,
@@ -4527,7 +4531,7 @@ class full_expand {
       // Also, the "64" bit means this is an item relating to having just the centers
       // touch to a miniwave, and we may need to give the "warn__some_touch_evil"
       // warning.
-      // Also, the "128" bit means this is an item that lets you do a swing thru
+      // Also, the "0x80" bit means this is an item that lets you do a swing thru
       // from the partially occupied 2x4 that would result from everyone doing a
       // 1/2 press back from a right-hand wave.  We don't allow the touch to a wave
       // if the user gave a phantom concept.
@@ -5372,7 +5376,8 @@ bool fix_n_results(
 
 bool warnings_are_unacceptable(bool strict);
 
-void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress) THROW_DECL;
+enum qtag_compress_choice { qtag_compress, qtag_no_compress, qtag_compress_unless_tboned };
+void normalize_setup(setup *ss, normalize_action action, qtag_compress_choice noqtagcompress) THROW_DECL;
 
 void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
 

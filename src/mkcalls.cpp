@@ -1641,6 +1641,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "scootback"},
    {0, "qtagscootback"},
    {0, "scootbacktowave"},
+   {0, "tradethewave"},
    {0, "ctr_rot"},
    {0, "splitctrrot"},
    {0, "backemup"},       // This is used for remembering the handedness.

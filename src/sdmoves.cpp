@@ -1300,7 +1300,7 @@ extern uint32_t do_call_in_series(
       Only "1x12 matrix" turns on CMD_MISC__EXPLICIT_MATRIX.  Plain "12 matrix will appear
       in the "new_final_concepts" word. */
 
-   if (normalize) normalize_setup(sss, plain_normalize, false);
+   if (normalize) normalize_setup(sss, plain_normalize, qtag_compress);
 
    /* To be safe, we should take away the "did last part" bit for the second call,
       but we are fairly sure it won't be on. */
@@ -5191,6 +5191,10 @@ void do_stuff_inside_sequential_call(
                *fix_next_assump_both_p = 1;
             }
          }
+         else if (result->cmd.callspec == base_calls[base_call_tradethewave]) {
+            if (old_assumption == cr_wave_only)
+               *fix_next_assumption_p = cr_wave_only;
+         }
          else if (result->cmd.callspec == base_calls[base_call_scootback] ||
                   result->cmd.callspec == base_calls[base_call_qtagscootback]) {
             if (result->kind == s_qtag) {
@@ -6474,7 +6478,7 @@ static bool do_misc_schema(
          just the center 4, so that the illegal information won't affect anything. */
 
       if (normalize_strongly)
-         normalize_setup(result, normalize_after_triple_squash, false);
+         normalize_setup(result, normalize_after_triple_squash, qtag_compress);
 
       if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1)
          configuration::clear_multiple_warnings(conc_elong_warnings);
@@ -6855,7 +6859,7 @@ void really_inner_move(
           (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META)))
          fail("Illegal concept for this call.");
       *result = *ss;
-      normalize_setup(result, normalize_recenter, false);
+      normalize_setup(result, normalize_recenter, qtag_compress);
       if (ss->kind == result->kind)
          fail("This setup can't be recentered.");
       break;
@@ -6980,8 +6984,8 @@ void really_inner_move(
             doing_mystic = 1;
             the_setups[0].cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;  // Turn off this error
             the_setups[1].cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;
-            normalize_setup(&the_setups[0], normalize_before_merge, false);
-            normalize_setup(&the_setups[1], normalize_before_merge, false);
+            normalize_setup(&the_setups[0], normalize_before_merge, qtag_compress);
+            normalize_setup(&the_setups[1], normalize_before_merge, qtag_compress);
             mirror_this(&the_setups[which_to_mirror]);
          }
 
@@ -7242,7 +7246,7 @@ void really_inner_move(
                      of the call, and the_setups[1] has original ends, also after completion.
                      We will have the_setups[0] proceed with the rest of the call. */
 
-               normalize_setup(&the_setups[0], normalize_before_isolated_call, false);
+               normalize_setup(&the_setups[0], normalize_before_isolated_call, qtag_compress);
                warning_info saved_warnings = configuration::save_warnings();
 
                the_setups[0].cmd = ss->cmd;
@@ -7341,7 +7345,7 @@ void really_inner_move(
       outer_inners[1].kind = nothing;
       clear_result_flags(&outer_inners[1]);
       normalize_concentric(ss, schema_conc_o, 1, outer_inners, 1, 0, result);
-      normalize_setup(result, simple_normalize, false);
+      normalize_setup(result, simple_normalize, qtag_compress);
       if (result->kind == s2x4) {
          if (result->people[1].id1 | result->people[2].id1 |
              result->people[5].id1 | result->people[6].id1)
@@ -8205,7 +8209,7 @@ static void move_with_real_call(
          normalize_setup(result,
                          (result->kind == sbigdmd || result->kind == sbigptpd) ?
                          normalize_compress_bigdmd : normalize_after_exchange_boxes,
-                         false);
+                         qtag_compress);
    }
    catch(error_flag_type foo) {
       if (foo < error_flag_no_retry && this_defn != deferred_array_defn) {

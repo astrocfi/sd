@@ -653,7 +653,7 @@ static void multiple_move_innards(
    }
 
    if (thing) {
-      normalize_setup(&z[0], plain_normalize, false);
+      normalize_setup(&z[0], plain_normalize, qtag_compress);
       no_reuse_map = true;
    }
 
@@ -1611,7 +1611,7 @@ extern void divided_setup_move(
          x[2].kind = kn_secondary;
    }
 
-   if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
+   if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves || t.assumption == cr_wave_only) {
       // Pass it through.
    }
    else if (recompute_id) {
@@ -2431,7 +2431,7 @@ extern void distorted_2x2s_move(
       // Maybe they fit into a 3x6; maybe not.  We expand to a 3x8
       // and then try to cut it back to a 3x6 or whatever.
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, false);
-      normalize_setup(ss, simple_normalize, false);
+      normalize_setup(ss, simple_normalize, qtag_compress);
    }
 
    arity = 2;
