@@ -982,14 +982,14 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (allow_deferred_concept &&
                      next_cptr &&
-                     (k == concept_twice ||
+                     (k == concept_n_times_const ||
                       k == concept_n_times ||
                       (k == concept_fractional && item->value.arg1 == 2))) {
                deferred_concept = local_cptr;
                comma_after_next_concept = 0;
                did_concept = FALSE;
 
-               /* If there is another concept, we need parens. */
+               // If there is another concept, we need parens.
                if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
 
                if (deferred_concept_paren == 3) writestuff("(");
@@ -1496,7 +1496,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
       if (deferred_concept_paren & 1) writestuff(/*(*/")");
       writestuff(" ");
 
-      if (deferred_concept->concept->kind == concept_twice &&
+      if (deferred_concept->concept->kind == concept_n_times_const &&
           deferred_concept->concept->value.arg2 == 3)
          writestuff("3 TIMES");
       else

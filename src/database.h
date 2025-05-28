@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 196
+#define DATABASE_FORMAT_VERSION 197
 
 // BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
 enum base_call_index {
@@ -203,7 +203,7 @@ enum {
    CFLAG1_PARALLEL_CONC_END         = 0x00000020UL,
    CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040UL,
    CFLAG1_IS_STAR_CALL              = 0x00000080UL,
-   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00000100UL,
+   CFLAG1_YOYO_FRACTAL_NUM          = 0x00000100UL,
    CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL,
    CFLAG1_STEP_REAR_MASK            = 0x00001C00UL, // 3 bit field
    CFLAG1_STEP_TO_WAVE              = 0x00000400UL, // its low bit
@@ -217,15 +217,15 @@ enum {
    CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL,
    CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL,
    CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL,
-   CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL,
-   CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL,
+   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00400000UL,
+   CFLAG1_SPLIT_IF_Z                = 0x00800000UL,
    CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL, // 3 bit field
    CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL, // its low bit
    CFLAG1_BASE_CIRC_CALL            = 0x08000000UL,
    CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL,
    CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL,
    CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x40000000UL,
-   CFLAG1_YOYO_FRACTAL_NUM          = 0x80000000UL
+   CFLAG1_NO_ELONGATION_ALLOWED     = 0x80000000UL
 };
 
 // These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
@@ -234,7 +234,8 @@ enum {
    CFLAG2_IMPRECISE_ROTATION        = 0x01000000UL,
    CFLAG2_CAN_BE_FAN                = 0x02000000UL,
    CFLAG2_EQUALIZE                  = 0x04000000UL,
-   CFLAG2_ONE_PERSON_CALL           = 0x08000000UL
+   CFLAG2_ONE_PERSON_CALL           = 0x08000000UL,
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x10000000UL
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.cpp .

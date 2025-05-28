@@ -1880,15 +1880,16 @@ extern bool check_for_concept_group(
 
       if (k == concept_crazy ||
           k == concept_frac_crazy || 
-          k == concept_twice ||
+          k == concept_n_times_const ||
           k == concept_n_times)
          *need_to_restrain_p |= 2;
    }
 
-   /* We do these even if we aren't the first concept. */
+   // We do these even if we aren't the first concept.
 
    if (k == concept_supercall ||
        k == concept_fractional ||
+       k == concept_fractional_const ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_initially) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finally) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_piecewise) ||
@@ -4980,6 +4981,8 @@ SDLIB_API void toplevelmove() THROW_DECL
          // Also skip "stretch".
          while ((parse_scan->concept->kind == concept_fractional &&
                  parse_scan->concept->value.arg1 == 0) ||
+                (parse_scan->concept->kind == concept_fractional_const &&
+                 parse_scan->concept->value.arg1 == 4) ||
                 parse_scan->concept->kind == concept_old_stretch) {
             parse_scan = parse_scan->next;
             did_something = true;

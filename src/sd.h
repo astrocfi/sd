@@ -278,7 +278,7 @@ enum concept_kind {
    concept_all_8,
    concept_centers_and_ends,
    concept_mini_but_o,
-   concept_twice,
+   concept_n_times_const,
    concept_n_times,
    concept_sequential,
    concept_special_sequential,
@@ -291,6 +291,7 @@ enum concept_kind {
    concept_interrupt_at_fraction,
    concept_sandwich,
    concept_interlace,
+   concept_fractional_const,
    concept_fractional,
    concept_rigger,
    concept_wing,
@@ -3533,7 +3534,7 @@ extern uint32 process_new_fractions(
    int numer,
    int denom,
    uint32 incoming_fracs,
-   uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
+   uint32 reverse_orderbit,   // Low bit on mean treat as if we mean "do the last M/N".
    bool allow_improper = false,
    bool *improper_p = 0) THROW_DECL;
 

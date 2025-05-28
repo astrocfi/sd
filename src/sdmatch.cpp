@@ -1548,7 +1548,7 @@ static void scan_concepts_and_calls(
 
          p2b.car = this_call->name;
          current_result->yield_depth =
-            ((this_call->the_defn.callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ?
+            ((this_call->the_defn.callflagsf & CFLAG2_YIELD_IF_AMBIGUOUS) ?
              new_depth+1 : new_depth);
          local_result.match.call_conc_options = null_options;
 
@@ -2038,7 +2038,7 @@ static void search_menu(uims_reply kind)
             parse_state.call_list_to_use = (call_list_kind) static_call_menu;
             active_result.match.call_ptr = this_call;
             active_result.yield_depth =
-               (this_call->the_defn.callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
+               (this_call->the_defn.callflagsf & CFLAG2_YIELD_IF_AMBIGUOUS) ? 1 : 0;
             matches_as_seen_by_me = GLOB_match_count;
 
             pat2_block p2b(this_call->name);

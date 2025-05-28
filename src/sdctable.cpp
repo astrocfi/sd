@@ -942,7 +942,7 @@ concept_descriptor unsealed_concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1, /*CONCPROP__NEEDK_3X4*/0}},
 /* -------- column break -------- */
-#define mm__2_size 94
+#define mm__2_size 97
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
    {"CENTER 6/OUTER 2",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center6, FALSE}},
    {"CENTER 2/OUTER 6",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center2, FALSE}},
@@ -985,6 +985,7 @@ concept_descriptor unsealed_concept_descriptor_table[] = {
    {"two calls in succession",               concept_sequential,                0, l_mainstream},
    {"FOLLOW IT BY",                          concept_special_sequential,        0, l_c2,         {0, 0}},
    {"PRECEDE IT BY",                         concept_special_sequential,        0, l_c2,         {0, 1}},
+   {"ADD",                                   concept_special_sequential,        0, l_c2,         {0, 0}},
    {"USE",                                   concept_special_sequential,        0, l_c2,         {0, 4}},
    {"CRAZY",                                 concept_crazy,                     D, l_c2,         {0, 0, FALSE}},
    {"REVERSE CRAZY",                         concept_crazy,                     D, l_c2,         {0, 1, FALSE}},
@@ -997,10 +998,12 @@ concept_descriptor unsealed_concept_descriptor_table[] = {
    {"PIECEWISE",                             concept_meta,                    G+D, l_c3x,        {0, meta_key_piecewise}},
    {"@9/@9",                                 concept_fractional,              F+D, l_mainstream, {0, 0}},
    {"1-@9/@9",                               concept_fractional,              F+D, l_mainstream, {0, 2}},
-   {"TWICE",                                 concept_twice,                   F+D, l_mainstream, {0, 0, 2}},
-   {"THRICE",                                concept_twice,                   F+D, l_mainstream, {0, 0, 3}},
+   {"TWICE",                                 concept_n_times_const,           F+D, l_mainstream, {0, 0, 2}},
+   {"THRICE",                                concept_n_times_const,           F+D, l_mainstream, {0, 0, 3}},
    {"@9 TIMES",                              concept_n_times,                 F+D, l_mainstream, {0, 1}},
    {"DO THE LAST @9/@9",                     concept_fractional,              F+D, l_mainstream, {0, 1}},
+   {"FIRST HALF",                            concept_fractional_const,        F+D, l_mainstream, {0, 4}},
+   {"LAST HALF",                             concept_fractional_const,        F+D, l_mainstream, {0, 5}},
    {"REVERSE ORDER",      concept_meta,       D, l_mainstream, {0, meta_key_revorder}},
    {"INTERLACE",          concept_interlace,  0, l_c3x},
    {"INITIALLY",          concept_meta,     G+D, l_c3a,     {0, meta_key_initially}},

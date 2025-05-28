@@ -1258,6 +1258,7 @@ static long_boolean handle_3x4_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
    uint32 *division_code_p, const map_thing **division_maps_p,
    callarray *calldeflist, long_boolean matrix_aware, setup *result)
+
 {
    static const veryshort map_3x4_fudge[8] = {1, 2, 4, 5, 7, 8, 10, 11};
    long_boolean forbid_little_stuff;
@@ -1272,10 +1273,12 @@ static long_boolean handle_3x4_division(
       "3x4 matrix". */
 
    if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+       ((callflags1 & CFLAG1_SPLIT_IF_Z) &&
+        nxnbits != INHERITFLAGNXNK_3X3 &&
+        (livemask == 06565 || livemask == 07272)) ||
        (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
        nxnbits == INHERITFLAGMXNK_1X3 ||
-       nxnbits == INHERITFLAGMXNK_3X1 ||
-       nxnbits == INHERITFLAGNXNK_3X3) {
+       nxnbits == INHERITFLAGMXNK_3X1) {
 
       if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
@@ -1366,15 +1369,33 @@ static long_boolean handle_3x4_division(
    // If so, divide the 3x4 into 3 1x4's.  We accept 1x2/2x1 definitions if the call is
    // "matrix aware" (it knows that 1x4's are what it wants) or if the facing directions
    // are such that that would win anyway.
+   // We are also more lenient about "run", which we detect through
+   // CAF__LATERAL_TO_SELECTEES.  See test nf35.
+   //
+   // This is not the right way to do this.  The right way would be,
+   // in general, to try various recursive splittings and check that the call
+   // could be done on the various *fully occupied* subparts.  So, for example,
+   // in the case that arises in nf35, we have a 3x4 that consists of a center
+   // column of 6 and two outlyers, who are in fact the runners.  We split
+   // into 1x4's and then into 1x2's and 1x1's, guided by the live people.
+   // For those in the centers column not adjacent to the outlyers, we have
+   // to divide to 1x1's.  The call "anyone run" is arranged to be legal on
+   // a 1x1 as long as that person isn't selected.  Now the outlyers and
+   // their adjacent center form a fully live 1x2.  In that 1x2, the "run"
+   // call is legal, when one selectee and one non-selectee.
+   //
+   // But that's a pretty ambitious change.
 
    if (!forbid_little_stuff &&
        (assoc(b_1x1, ss, calldeflist) ||
-        ((!(newtb & 010) ||
-          assoc(b_1x2, ss, calldeflist) ||
-          assoc(b_1x4, ss, calldeflist)) &&
-         (!(newtb & 001) ||
-          assoc(b_2x1, ss, calldeflist) ||
-          assoc(b_4x1, ss, calldeflist))) ||
+        (((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
+          (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)) &&
+         ((!(newtb & 010) ||
+           assoc(b_1x2, ss, calldeflist) ||
+           assoc(b_1x4, ss, calldeflist)) &&
+          (!(newtb & 001) ||
+           assoc(b_2x1, ss, calldeflist) ||
+           assoc(b_4x1, ss, calldeflist)))) ||
         (matrix_aware &&
          (assoc(b_1x2, ss, calldeflist) ||
           assoc(b_2x1, ss, calldeflist))))) {
@@ -1951,6 +1972,9 @@ static int divide_the_setup(
          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX);
    int finalrot = 0;
 
+   uint32 nxnbits =
+      ss->cmd.cmd_final_flags.her8it & (INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
+
    // It will be helpful to have a mask of where the live people are.
 
    for (i=0, j=1, livemask = 0; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
@@ -2095,8 +2119,10 @@ static int divide_the_setup(
       // We also enable this if the caller explicitly said "2x6 matrix".
 
       temp =
-         (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-         (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_3X3;
+         (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+         ((callflags1 & CFLAG1_SPLIT_IF_Z) &&
+          nxnbits != INHERITFLAGNXNK_3X3 &&
+          (livemask == 03333 || livemask == 06666));
 
       if (temp ||
           (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) ||
@@ -2666,67 +2692,62 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       break;
    case s_qtag:
-      {
-         uint32 nxnbits =
-            ss->cmd.cmd_final_flags.her8it &
-            (INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
-
-         if (assoc(b_dmd, ss, calldeflist) ||
-             assoc(b_pmd, ss, calldeflist) ||
-             assoc(b_1x1, ss, calldeflist) ||
-             assoc(b_1x4, ss, calldeflist)) {
-            division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
-            goto divide_us_no_recompute;
-         }
-
-         /* Check whether it has 2x3/3x2 definitions, and divide the setup if so,
-            and if the call permits it.  This is important for permitting "Z axle" from
-            a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
-            phantom columns.)  We also enable this if the caller explicitly said
-            "3x4 matrix". */
-
-         if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
-              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
-              nxnbits == INHERITFLAGMXNK_1X3 ||
-              nxnbits == INHERITFLAGMXNK_3X1 ||
-              nxnbits == INHERITFLAGNXNK_3X3) &&
-             (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
-             (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
-            division_maps = &map_qtag_2x3;
-            goto divide_us_no_recompute;
-         }
-
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
-            fail("Can't split the setup.");
-
-         if (must_do_mystic)
-            goto do_mystically;
-
-         if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-             (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-            goto do_concentrically;
-         }
-         else if ((livemask & 0x55) == 0) {
-            /* Check for stuff like "heads pass the ocean; side corners only slide thru". */
-            division_maps = &map_qtag_f1;
-            goto divide_us_no_recompute;
-         }
-         else if ((livemask & 0x66) == 0) {
-            division_maps = &map_qtag_f2;
-            goto divide_us_no_recompute;
-         }
-
-         /* ******** Regression test OK to here.  The next thing doesn't work, because the
-               "do your part" junk doesn't work right!  This has been a known problem for some
-               time, of course.  It's about time it got fixed.  It appears to have been broken
-               as far back as 27.8. */
-
-         else if ((livemask & 0x77) == 0) {
-            /* Check for stuff like "center two slide thru". */
-            division_maps = &map_qtag_f0;
-            goto divide_us_no_recompute;
-         }
+      if (assoc(b_dmd, ss, calldeflist) ||
+          assoc(b_pmd, ss, calldeflist) ||
+          assoc(b_1x1, ss, calldeflist) ||
+          assoc(b_1x4, ss, calldeflist)) {
+         division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
+         goto divide_us_no_recompute;
       }
+
+      /* Check whether it has 2x3/3x2 definitions, and divide the setup if so,
+         and if the call permits it.  This is important for permitting "Z axle" from
+         a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
+         phantom columns.)  We also enable this if the caller explicitly said
+         "3x4 matrix". */
+
+      if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+           (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
+           nxnbits == INHERITFLAGMXNK_1X3 ||
+           nxnbits == INHERITFLAGMXNK_3X1 ||
+           nxnbits == INHERITFLAGNXNK_3X3) &&
+          (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
+          (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
+         division_maps = &map_qtag_2x3;
+         goto divide_us_no_recompute;
+      }
+
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+         fail("Can't split the setup.");
+
+      if (must_do_mystic)
+         goto do_mystically;
+
+      if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
+          (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
+         goto do_concentrically;
+      }
+      else if ((livemask & 0x55) == 0) {
+         /* Check for stuff like "heads pass the ocean; side corners only slide thru". */
+         division_maps = &map_qtag_f1;
+         goto divide_us_no_recompute;
+      }
+      else if ((livemask & 0x66) == 0) {
+         division_maps = &map_qtag_f2;
+         goto divide_us_no_recompute;
+      }
+
+      /* ******** Regression test OK to here.  The next thing doesn't work, because the
+         "do your part" junk doesn't work right!  This has been a known problem for some
+         time, of course.  It's about time it got fixed.  It appears to have been broken
+         as far back as 27.8. */
+
+      else if ((livemask & 0x77) == 0) {
+         /* Check for stuff like "center two slide thru". */
+         division_maps = &map_qtag_f0;
+         goto divide_us_no_recompute;
+      }
+
       break;
    case s_2stars:
       if (assoc(b_star, ss, calldeflist)) {
@@ -3840,6 +3861,14 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
             division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
+            goto divide_us;
+         }
+         break;
+      case s1x12:
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
+            division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
             goto divide_us;
          }
          break;

@@ -3897,6 +3897,14 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       denom = (fraction_to_finish >> 4) & 0xF;
       doing_do_last_frac = TRUE;
    }
+   else if ((cmd2word & CMD_MISC2__ANY_WORK) &&
+            ss->cmd.parseptr->concept->kind == concept_fractional_const &&
+            ss->cmd.parseptr->concept->value.arg1 == 5 &&
+            ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
+      numer = 1;
+      denom = 2;
+      doing_do_last_frac = TRUE;
+   }
 
    for (setupcount=0; setupcount<2; setupcount++) {
       setup *this_one = &the_setups[setupcount];

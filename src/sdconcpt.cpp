@@ -3907,7 +3907,7 @@ static void do_concept_special_sequential(
 
 
 
-static void do_concept_twice(
+static void do_concept_n_times(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
@@ -5355,6 +5355,8 @@ static void do_concept_meta(
             (shiftynum * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
       }
       else {         // Not fractional shift.
+         uint32 incoming_break = corefracs & CMD_FRAC_BREAKING_UP;
+
          if (corefracs == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE)) {
             result->cmd.cmd_frac_flags =        // We allow "reverse order".
                CMD_FRAC_BREAKING_UP |
@@ -5371,12 +5373,11 @@ static void do_concept_meta(
                FRACS(CMD_FRAC_CODE_FROMTOREV,1,shiftynum) |
                CMD_FRAC_BREAKING_UP | CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE;
          }
-         else if ((corefracs & ~(CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK)) ==
-                  (CMD_FRAC_BREAKING_UP |
-                   CMD_FRAC_CODE_FROMTOREV |
+         else if ((corefracs & ~(CMD_FRAC_BREAKING_UP|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK)) ==
+                  (CMD_FRAC_CODE_FROMTOREV |
                    CMD_FRAC_NULL_VALUE)) {
             result->cmd.cmd_frac_flags =
-               CMD_FRAC_BREAKING_UP |
+               incoming_break |
                CMD_FRAC_CODE_FROMTOREV |
                ((shiftynum * CMD_FRAC_PART_BIT) +
                 (corefracs & CMD_FRAC_PART_MASK)) |
@@ -5394,26 +5395,23 @@ static void do_concept_meta(
             // Do the initial part up to the shift point.
             result->cmd.cmd_frac_flags =
                FRACS(CMD_FRAC_CODE_FROMTO,shiftynum-kfield,0) |
-               CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
+               incoming_break | CMD_FRAC_NULL_VALUE;
          }
-         else if ((corefracs & ~CMD_FRAC_PART_MASK) ==
-                  (CMD_FRAC_BREAKING_UP |
-                   CMD_FRAC_CODE_ONLYREV |
-                   CMD_FRAC_NULL_VALUE)) {
+         else if ((corefracs & ~(CMD_FRAC_BREAKING_UP|CMD_FRAC_PART_MASK)) ==
+                  (CMD_FRAC_CODE_ONLYREV | CMD_FRAC_NULL_VALUE)) {
             if (shiftynum < nfield)
                fail("Can't stack these meta or fractional concepts.");
             result->cmd.cmd_frac_flags =
-               CMD_FRAC_BREAKING_UP |
+               incoming_break |
                CMD_FRAC_CODE_ONLY |
                ((shiftynum+1-nfield) * CMD_FRAC_PART_BIT) |
                CMD_FRAC_NULL_VALUE;
          }
-         else if ((corefracs & ~CMD_FRAC_PART_MASK) ==
-                  (CMD_FRAC_BREAKING_UP |
-                   CMD_FRAC_CODE_ONLY |
-                   CMD_FRAC_NULL_VALUE)) {
+         else if ((corefracs & ~(CMD_FRAC_PART_MASK | CMD_FRAC_BREAKING_UP)) ==
+                  (CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE) &&
+                  nfield != 0) {
             result->cmd.cmd_frac_flags =
-               CMD_FRAC_BREAKING_UP |
+               incoming_break |
                CMD_FRAC_CODE_ONLY |
                ((shiftynum+nfield) * CMD_FRAC_PART_BIT) |
                CMD_FRAC_NULL_VALUE;
@@ -6155,14 +6153,22 @@ static void do_concept_fractional(
    // 0 - "M/N" - do first part
    // 1 - "DO THE LAST M/N"
    // 2 - "1-M/N" do the whole call and then some.
+   // 4 - first half
+   // 5 - last half
 
    int numer, denom;
    uint32 new_fracs;
    uint32 incoming_fracs = ss->cmd.cmd_frac_flags;
 
-   numer = parseptr->options.number_fields;
-   denom = numer >> 4;
-   numer &= 0xF;
+   if (parseptr->concept->value.arg1 >= 4) {
+      numer = 1;
+      denom = 2;
+   }
+   else {
+      numer = parseptr->options.number_fields;
+      denom = numer >> 4;
+      numer &= 0xF;
+   }
 
    // Check that user isn't doing something stupid.
    if (numer <= 0 || numer >= denom)
@@ -6509,14 +6515,15 @@ extern long_boolean do_big_concept(
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
 
-      /* If we have an "invert", "central", "mystic" or "snag" concept in place,
-         we have to check whether the current concept can deal with it. */
+      // If we have an "invert", "central", "mystic" or "snag" concept in place,
+      // we have to check whether the current concept can deal with it.
 
-      /* The following concepts are always acceptable with invert/snag/etc in place. */
+      // The following concepts are always acceptable with invert/snag/etc in place.
 
       if (this_kind == concept_snag_mystic ||
           this_kind == concept_central ||
           this_kind == concept_fractional ||
+          this_kind == concept_fractional_const ||
           this_kind == concept_concentric ||
           this_kind == concept_some_vs_others ||
           (this_kind == concept_meta &&
@@ -6524,10 +6531,11 @@ extern long_boolean do_big_concept(
             this_concept->value.arg1 == meta_key_revorder)))
          goto this_is_ok;
 
-      /* Otherwise, if "central" is selected, it must be one of the following ones. */
+      // Otherwise, if "central" is selected, it must be one of the following ones.
 
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
          if (this_kind != concept_fractional &&
+             this_kind != concept_fractional_const &&
              this_kind != concept_fan &&
              (this_kind != concept_meta ||
               (this_concept->value.arg1 != meta_key_like_a &&
@@ -6964,9 +6972,9 @@ concept_table_item concept_table[] = {
    {CONCPROP__SECOND_CALL, do_concept_centers_and_ends},    // concept_centers_and_ends
    {0, do_concept_mini_but_o},                              // concept_mini_but_o
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
-    do_concept_twice},                                      // concept_twice
+    do_concept_n_times},                                    // concept_n_times_const
    {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
-    do_concept_twice},                                      // concept_n_times
+    do_concept_n_times},                                    // concept_n_times
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_sequential},                                 // concept_sequential
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
@@ -6993,6 +7001,8 @@ concept_table_item concept_table[] = {
     do_concept_replace_nth_part},                           // concept_sandwich
    {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
     do_concept_interlace},                                  // concept_interlace
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_fractional},                                 // concept_fractional_const
    {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_fractional},                                 // concept_fractional

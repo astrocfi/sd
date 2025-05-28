@@ -17,7 +17,9 @@
 
 #define DB_FMT_STR(name) DB_FMT_NUM(name)
 #define DB_FMT_NUM(number) #number
-volatile const char * id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@alum.mit.edu  16 Feb 2002 $";
+volatile const char * id="@(#)$Sd: dbcomp.cpp for db fmt "
+   DB_FMT_STR(DATABASE_FORMAT_VERSION)
+   "      wba@alum.mit.edu  19 May 2002 $";
 
 #include "paths.h"
 
@@ -814,7 +816,7 @@ char *flagtab1[] = {
    "parallel_conc_end",
    "take_right_hands",
    "is_star_call",
-   "split_large_setups",
+   "yoyo_fractal_numbers",
    "fudge_to_q_tag",
    "step_to_wave",
    "rear_back_from_r_wave",
@@ -828,8 +830,8 @@ char *flagtab1[] = {
    "distribute_repetitions",
    "dont_use_in_resolve",
    "dont_use_in_nice_resolve",
-   "yield_if_ambiguous",
-   "no_elongation_allowed",
+   "split_large_setups",
+   "split_if_z",
    "base_tag_call_0",
    "base_tag_call_1",      /* The constant "base_tag_call_2" is elsewhere. */
    "base_tag_call_3",
@@ -837,11 +839,12 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-   "yoyo_fractal_numbers",
+   "no_elongation_allowed",
    "imprecise_rotation",       // The overflow (into CFLAG2_) items start here.
-   "can_be_fan",               //    There is space for 8 of them.  So there are 4 left.
+   "can_be_fan",               //    There is space for 8 of them.  So there are 3 left.
    "equalize",
    "one_person_call",
+   "yield_if_ambiguous",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */

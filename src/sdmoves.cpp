@@ -761,7 +761,7 @@ extern void do_call_in_series(
 
    if (qqqq.cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS &&
        (qqqq.cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
-      if (qqqq.cmd.restrained_concept->concept->kind == concept_twice) {
+      if (qqqq.cmd.restrained_concept->concept->kind == concept_n_times_const) {
          qqqq.cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
          qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_frac_flags;
          qqqq.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
@@ -6131,7 +6131,8 @@ extern void move(
       if (!parseptrcopy)
          fail("Incomplete parse.");
 
-      if (parseptrcopy->concept->kind == concept_fractional &&
+      if ((parseptrcopy->concept->kind == concept_fractional ||
+           parseptrcopy->concept->kind == concept_fractional_const) &&
           ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
          parseptrcopy = parseptrcopy->next;
       }
