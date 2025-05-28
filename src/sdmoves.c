@@ -1872,7 +1872,8 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
    int subcall_index, highlimit;
 
    int available_fractions = (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT;
-   if (available_fractions == 3) available_fractions = 1000;     /* 3 means all parts. */
+   if (available_fractions == 3 || (frac_flags & 0x02000000)) available_fractions = 1000;     /* 3 means all parts. */
+
 
    retval.reverse_order = 0;
    retval.instant_stop = 0;
@@ -2590,7 +2591,7 @@ that probably need to be put in. */
             fail("This call can't be fractionalized.");
             break;
          case schema_sequential: case schema_split_sequential:
-            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK))
+            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) && !(ss->cmd.cmd_frac_flags & 0x02000000))
                fail("This call can't be fractionalized.");
             break;
          default:
@@ -2768,10 +2769,29 @@ that probably need to be put in. */
       cause splitting to take place. */
 
    if (the_schema == schema_split_sequential) {
-      if (      setup_attrs[ss->kind].setup_limits == 7 ||
-               (setup_attrs[ss->kind].setup_limits == 11 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3)) ||
+      if (ss->kind == s3x4 && !(ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3)) {
+
+         /* If this is a 3x4 inhabited in boxes, we allow the splitting into those boxes. */
+
+         int i, j;
+         uint32 mask = 0;
+
+         for (i=0, j=1; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
+            if (ss->people[i].id1) mask |= j;
+         }
+
+         if (mask == 0xF3C || mask == 0xCF3)
+            ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+         else
+            fail("Can't split this setup.");
+      }
+      else if (setup_attrs[ss->kind].setup_limits == 7) {
+         if (!(ss->cmd.cmd_final_flags.herit & (INHERITFLAG_3X3|INHERITFLAG_4X4)))
+            ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+      }
+      else if ((setup_attrs[ss->kind].setup_limits == 11 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3)) ||
                (setup_attrs[ss->kind].setup_limits == 15 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_4X4)))
-         ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+         ;    /* No action. */
       else if (setup_attrs[ss->kind].setup_limits != 3)
          fail("Need a 4 or 8 person setup for this.");
    }
@@ -3208,7 +3228,7 @@ extern void move(
       /* ***** We used to have FINAL__SPLIT in the list below, but it caused "matrix split, tandem step thru" to fail.
          This needs to be reworked. */
 
-      if (             (check_concepts.herit & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK)) == 0 &&
+      if (             (check_concepts.herit & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_MAGIC|INHERITFLAG_SINGLE|INHERITFLAG_INTLK)) == 0 &&
                         check_concepts.final == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */

@@ -45,8 +45,7 @@
 #include <time.h>
 #endif
 
-static callspec_block *empty_menu[] = {NULLCALLSPEC};
-static callspec_block **call_menu_lists[NUM_CALL_LIST_KINDS];
+static short *call_hash_lists[NUM_CALL_LIST_KINDS];
 static Cstring *selector_menu_list;
 
 static int *concept_list; /* all concepts */
@@ -135,12 +134,7 @@ extern void matcher_initialize(void)
       when we will stop the concept list scan. */
    if (diagnostic_mode) end_marker = marker_end_of_list;
 
-   /* initialize our special empty call menu */
-
-   call_menu_lists[call_list_empty] = empty_menu;
-   number_of_calls[call_list_empty] = 0;
-
-   /* count the number of concepts to put in the lists */
+   /* Count the number of concepts to put in the lists. */
    
    concept_list_length = 0;
    level_concept_list_length = 0;
@@ -198,14 +192,17 @@ extern void matcher_initialize(void)
 }
 
 
-extern void matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[])
+extern void matcher_setup_call_menu(call_list_kind cl)
 {
+/* used to be:
    int i;
 
-   call_menu_lists[cl] = (callspec_block **) get_mem((number_of_calls[cl]) * sizeof(callspec_block *));
+   call_hash_lists[cl] = (short *) get_mem(number_of_calls[cl] * sizeof(short));
+   (void) memset(call_hash_lists[cl], 0, number_of_calls[cl] * sizeof(short));
 
-   for (i=0; i<number_of_calls[cl]; i++)
-      call_menu_lists[cl][i] = call_name_list[i];
+   for (i=0; i<number_of_calls[cl]; i++) call_hash_lists[cl][i] = 0;
+      call_hash_lists[cl][i] = main_call_lists[cl][i];
+*/
 }
 
 /*
@@ -535,11 +532,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
          }
       }
 
-#ifdef CLOVER_AND
-      if (user && (*user == '\0' || (*user == ']' && *pat1 == '\0'))) {
-#else
       if (user && (*user == '\0')) {
-#endif
          /* we have just reached the end of the user input */
          Cstring p = pat1;
 
@@ -722,8 +715,9 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
    saved_result_p->match.kind = ui_call_select;
 
    for (i = 0; i < number_of_calls[call_list_any]; i++) {
-      saved_result_p->match.call_ptr = main_call_lists[call_list_any][i];
-      p2b.car = call_menu_lists[call_list_any][i]->name;
+      callspec_block *cb = main_call_lists[call_list_any][i];
+      saved_result_p->match.call_ptr = cb;
+      p2b.car = cb->name;
       saved_result_p->match.call_conc_options = null_options;
       current_result = saved_result_p;
       match_suffix_2(user, firstchar, &p2b, patxi);
@@ -1032,7 +1026,6 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
       match_suffix_2(user, pattern, &p2b, patxi);
       current_result = saved_resultptr;
       *current_result = saved_result;
-      current_result->next = (match_result *) 0;
    }
 }
 
@@ -1104,11 +1097,14 @@ static void search_menu(uims_reply kind)
       menu_length = number_of_calls[static_call_menu];
 
       for (i = 0; i < menu_length; i++) {
+         callspec_block *cb;
+
          if (static_ss.verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
          parse_state.call_list_to_use = static_call_menu;
-         everyones_real_result.match.call_ptr = main_call_lists[static_call_menu][i];
-         everyones_real_result.yield_depth = (call_menu_lists[static_call_menu][i]->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
-         match_pattern(call_menu_lists[static_call_menu][i]->name, (concept_descriptor *) 0);
+         cb = main_call_lists[static_call_menu][i];
+         everyones_real_result.match.call_ptr = cb;
+         everyones_real_result.yield_depth = (cb->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
+         match_pattern(cb->name, (concept_descriptor *) 0);
       }
    }
    else if (kind == ui_concept_select) {

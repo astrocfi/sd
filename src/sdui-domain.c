@@ -744,7 +744,7 @@ This will be called once for each value in the enumeration
 "call_list_kind".
 */
 
-extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
+extern void uims_create_menu(call_list_kind cl)
 {
    short ncjunk = number_of_calls[cl];
    int i;
@@ -753,7 +753,7 @@ extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[]
       menu_list = (dp_$string_desc_t *) get_mem(abs_max_calls * sizeof(dp_$string_desc_t));
 
    for (i=0; i<number_of_calls[cl]; i++) {
-      menu_list[i].chars_p = (char *) call_name_list[i]->menu_name;
+      menu_list[i].chars_p = (char *) main_call_lists[cl][i]->menu_name;
       menu_list[i].cur_len = strlen(menu_list[i].chars_p);
       if (menu_width < menu_list[i].cur_len) menu_list[i].cur_len = menu_width;
       menu_list[i].max_len = menu_list[i].cur_len;

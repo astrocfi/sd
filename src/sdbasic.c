@@ -1025,7 +1025,7 @@ Private void special_4_way_symm(
          int real_direction = this_person.id1 & 3;
          int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
          uint32 z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 4) & 017;
+         k = (z >> 4) & 0x1F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
          newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
@@ -1078,7 +1078,7 @@ Private void special_3person(
          }
 
          z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 4) & 017;
+         k = (z >> 4) & 0x1F;
 
          if (scopy->kind == s_trngl) {
             k -= d2;
@@ -1453,10 +1453,10 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 01717:
-               division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF,0);
+               division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF,1);
                break;
             case 07474:
-               division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,0);
+               division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,1);
                break;
             default:
                fail("You must specify a concept.");
@@ -1962,16 +1962,20 @@ Private int divide_the_setup(
          break;
       case s2x3:
          /* See if this call has applicable 1x2 or 2x1 definitions, in which case split it 3 ways. */
-
-         if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
+         if (     ((!(newtb & 010) || assoc(b_2x1, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_1x2, ss, calldeflist))) ||
+                        assoc(b_1x1, ss, calldeflist)) {
             division_code = MAPCODE(s1x2,3,MPKIND__SPLIT,1);
             goto divide_us_no_recompute;
          }
-         /* If it has 1x3 or 3x1 definitions, split it 2 ways. */
-         if (assoc(b_1x3, ss, calldeflist) || assoc(b_3x1, ss, calldeflist)) {
+
+         /* See if this call has applicable 1x3 or 3x1 definitions, in which case split it 2 ways. */
+         if (     (!(newtb & 010) || assoc(b_1x3, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_3x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x3,2,MPKIND__SPLIT,1);
             goto divide_us_no_recompute;
          }
+
          break;
       case s_short6:
          if (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist) ||
@@ -3134,7 +3138,7 @@ extern void basic_move(
             int d2 = (this_person.id1 << 1) & 4;
             northified_index = (real_index ^ d2);
             z = find_calldef((real_direction & 1) ? coldefinition : linedefinition, ss, real_index, real_direction, northified_index);
-            k = ((z >> 4) & 017) ^ (d2 >> 1);
+            k = ((z >> 4) & 0x1F) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
             p1.people[k].id1 = (p1.people[k].id1 & ~(ROLL_MASK | 077)) | ((z + real_direction * 011) & 013) | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
             p1.people[k].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
@@ -3341,7 +3345,7 @@ extern void basic_move(
                final_direction = (final_direction+real_direction) & 3;
 
                z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
-               k = (((z >> 4) & 017) + d2out) % numout;
+               k = (((z >> 4) & 0x1F) + d2out) % numout;
                newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
                      ((z + final_direction * 011) & 013) |
                      ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);

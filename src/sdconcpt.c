@@ -2525,17 +2525,65 @@ Private void do_concept_stable(
 }
 
 
+Private void do_concept_emulate(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int i, j, n, m, rot;
+   setup a1;
+   setup res1;
+
+   a1 = *ss;
+
+   move(&a1, FALSE, &res1);
+
+   *result = res1;      /* Get all the other fields. */
+
+   result->kind = ss->kind;
+   result->rotation = ss->rotation;
+
+   n = setup_attrs[ss->kind].setup_limits;
+   m = setup_attrs[res1.kind].setup_limits;
+   if (n < 0 || m < 0) fail("Sorry, can't do emulate in this setup.");
+
+   rot = ((res1.rotation-result->rotation) & 3) * 011;
+
+   for (i=0; i<=n; i++) {
+      uint32 p;
+
+      result->people[i] = ss->people[i];
+
+      p = ss->people[i].id1;
+
+      if (p & BIT_PERSON) {
+         for (j=0; j<=m; j++) {
+            uint32 q = res1.people[j].id1;
+            if (((q ^ p) & XPID_MASK) == 0) {
+               result->people[i].id1 &= ~077;
+               result->people[i].id1 |= (rotperson(q, rot) & 077);
+               goto did_it;
+            }
+         }
+         fail("Lost someone else during common-spot call.");
+         did_it: ;
+      }
+   }
+}
+
+
 Private void do_concept_checkerboard(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 {
-   static veryshort mape[16] = {0, 2, 4, 6, 1, 3, 5, 7, 0, 1, 4, 5, 2, 3, 6, 7};
+   static veryshort mape[20] = {0, 2, 4, 6, 1, 3, 5, 7, 0, 1, 4, 5, 2, 3, 6, 7, 0, 3, 4, 7};
    static veryshort mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2, 7, 6, 3, 2, 0, 1, 4, 5};
-   static veryshort mapb[16] = {1, 3, 5, 7, 0, 2, 4, 6, 2, 3, 6, 7, 0, 1, 4, 5};
+   static veryshort mapb[20] = {1, 3, 5, 7, 0, 2, 4, 6, 2, 3, 6, 7, 0, 1, 4, 5, 1, 2, 5, 6};
    static veryshort mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, -1};
 
-   int i, rot, offset;
+   int i, rot;
+   int offset = 0;
    setup a1;
    setup res1;
    veryshort *map_ptr;
@@ -2573,6 +2621,8 @@ Private void do_concept_checkerboard(
          offset = 8;
       else if (global_selectmask == 0xCC)
          offset = 12;
+      else if (global_selectmask == 0x99)
+         offset = 16;
       else fail("Can't select these people.");
    }
    else {
@@ -2596,9 +2646,14 @@ Private void do_concept_checkerboard(
          offset = 8;
       else if ((directions & 0x44881122) == 0x44881122)
          offset = 12;
+      else if ((directions & 0x84482112) == 0x84482112)
+         offset = 16;
       else
          fail("Can't identify checkerboard people.");
    }
+
+   if (offset == 16 && kn != s2x2)
+      fail("Can't identify checkerboard people.");
 
    /* Move the people who simply trade, filling in their roll info. */
 
@@ -2651,6 +2706,9 @@ Private void do_concept_checkerboard(
       fail("'Checker' call went to 1x4 setup oriented wrong way.");
 
    rot = res1.rotation * 011;
+
+   if (offset == 16 && res1.kind != s2x2)
+      fail("Don't recognize ending setup after 'checker' call.");
 
    switch (res1.kind) {
       case s1x4:
@@ -2794,33 +2852,67 @@ Private void do_concept_special_sequential(
    parse_block *parseptr,
    setup *result)
 {
-   int call_index;
+   if (parseptr->concept->value.arg1 == 2) {
+      /* This is "start with <call>", which is the same as "replace the 1st part". */
 
-   /* We allow fractionalization commands only for the special case of "piecewise"
-      or "random", in which case we will apply them to the first call only. */
+      setup tttt;
+      uint32 finalresultflags = 0;
 
-   if (ss->cmd.cmd_frac_flags != 0 && !(ss->cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST))
-      fail("Can't stack meta or fractional concepts.");
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't stack meta or fractional concepts.");
 
-   *result = *ss;
-   result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
+      /* Do the special first part. */
 
-   for (call_index=0; call_index<2; call_index++) {
-      uint32 save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
-      uint32 saved_last_flag = 0;
-      result->cmd = ss->cmd;      /* The call we wish to execute (we will fix it up shortly). */
+      tttt = *ss;
+      tttt.cmd = ss->cmd;
+      update_id_bits(&tttt);           /* So you can use "leads run", etc. */
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
 
-      if ((call_index ^ parseptr->concept->value.arg1) != 0) {   /* Maybe do them in reverse order. */
-         result->cmd.cmd_frac_flags = 0;  /* No fractions to 2nd call. */
-         saved_last_flag = result->result_flags & (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+      /* Do the rest of the original call, if there is more. */
+
+      tttt = *result;
+      /* Skip over the concept. */
+      /* Set the fractionalize field to [1 0 parts-to-do-normally+1]. */
+      tttt.cmd = ss->cmd;
+      tttt.cmd.parseptr = parseptr->subsidiary_root;
+      tttt.cmd.cmd_frac_flags = 0x200111 | (1 << 16);
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
+
+      result->result_flags = finalresultflags & ~3;
+   }
+   else {
+      int call_index;
+
+      /* We allow fractionalization commands only for the special case of "piecewise"
+         or "random", in which case we will apply them to the first call only. */
+
+      if (ss->cmd.cmd_frac_flags != 0 && !(ss->cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST))
+         fail("Can't stack meta or fractional concepts.");
+
+      *result = *ss;
+      result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
+
+      for (call_index=0; call_index<2; call_index++) {
+         uint32 save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
+         uint32 saved_last_flag = 0;
+         result->cmd = ss->cmd;      /* The call we wish to execute (we will fix it up shortly). */
+
+         if ((call_index ^ parseptr->concept->value.arg1) != 0) {   /* Maybe do them in reverse order. */
+            result->cmd.cmd_frac_flags = 0;  /* No fractions to 2nd call. */
+            saved_last_flag = result->result_flags & (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+         }
+         else {
+            result->cmd.parseptr = parseptr->subsidiary_root;
+         }
+
+         result->cmd.prior_elongation_bits = save_elongation;
+         do_call_in_series(result, FALSE, TRUE, FALSE);
+         result->result_flags |= saved_last_flag;
       }
-      else {
-         result->cmd.parseptr = parseptr->subsidiary_root;
-      }
-
-      result->cmd.prior_elongation_bits = save_elongation;
-      do_call_in_series(result, FALSE, TRUE, FALSE);
-      result->result_flags |= saved_last_flag;
    }
 }
 
@@ -4137,7 +4229,7 @@ Private void do_concept_meta(
             if (subject_props & CONCPROP__SECOND_CALL)
                parseptrcopycopy = parseptrcopycopy->subsidiary_root;
             else
-               parseptrcopycopy = parseptrcopycopy->next;
+               parseptrcopycopy = parseptr_skip;
          }
          else
             tttt.cmd.cmd_misc_flags |= craziness_restraint;
@@ -4545,7 +4637,7 @@ Private void do_concept_tandem(
          parseptr->concept->value.arg1 ? parseptr->options.who : selector_uninitialized,
          parseptr->concept->value.arg2,    /* normal=FALSE, twosome=TRUE */
          parseptr->options.number_fields,
-         parseptr->concept->value.arg3,    /* normal=0 phantom=1 gruesome=2 */
+         parseptr->concept->value.arg3,    /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
          parseptr->concept->value.arg4,    /* tandem=0 couples=1 siamese=2, etc. */
          result);
 }
@@ -4881,6 +4973,7 @@ concept_table_item concept_table[] = {
    /* concept_frac_tandem */              {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_tandem},
    /* concept_some_are_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                   do_concept_tandem},
    /* concept_gruesome_tandem */          {CONCPROP__NEEDK_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT,                    do_concept_tandem},
+   /* concept_gruesome_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__NEEDK_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT, do_concept_tandem},
    /* concept_checkerboard */             {0,                                                                                      do_concept_checkerboard},
    /* concept_sel_checkerboard */         {CONCPROP__USE_SELECTOR | CONCPROP__GET_MASK,                                            do_concept_checkerboard},
    /* concept_reverse */                  {0,                                                                                      0},
@@ -4973,6 +5066,7 @@ concept_table_item concept_table[] = {
    /* concept_so_and_so_stable */         {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,             do_concept_stable},
    /* concept_frac_stable */              {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,               do_concept_stable},
    /* concept_so_and_so_frac_stable */    {CONCPROP__USE_SELECTOR | CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,   do_concept_stable},
+   /* concept_emulate */                  {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_emulate},
    /* concept_standard */                 {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX,                   do_concept_standard},
    /* concept_matrix */                   {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_matrix},
    /* concept_double_offset */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_double_offset},

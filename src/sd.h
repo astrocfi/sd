@@ -664,7 +664,8 @@ typedef enum {
 typedef struct {
    Const veryshort maps[32];
    Const mpkind map_kind;
-   Const int arity;
+   Const short int warncode;
+   Const short int arity;
    Const setup_kind outer_kind;
    Const setup_kind inner_kind;
    Const uint32 rot;
@@ -706,6 +707,7 @@ typedef enum {
    concept_frac_tandem,
    concept_some_are_frac_tandem,
    concept_gruesome_tandem,
+   concept_gruesome_frac_tandem,
    concept_checkerboard,
    concept_sel_checkerboard,
    concept_reverse,
@@ -798,6 +800,7 @@ typedef enum {
    concept_so_and_so_stable,
    concept_frac_stable,
    concept_so_and_so_frac_stable,
+   concept_emulate,
    concept_standard,
    concept_matrix,
    concept_double_offset,
@@ -858,8 +861,7 @@ typedef struct {
    Cstring menu_name;
 } concept_descriptor;
 
-/* BEWARE!!  This list must track the arrays "selector_list" in sdutil.c .
-   It must also track the DITL "Select Dancers" in *.rsrc in the Macintosh system. */
+/* BEWARE!!  This list must track the arrays "selector_list" in sdutil.c . */
 typedef enum {
    selector_uninitialized,
    selector_boys,
@@ -876,6 +878,10 @@ typedef enum {
    selector_ends,
    selector_leads,
    selector_trailers,
+   selector_lead_ends,
+   selector_lead_ctrs,
+   selector_trail_ends,
+   selector_trail_ctrs,
    selector_beaus,
    selector_belles,
    selector_center2,
@@ -1128,6 +1134,7 @@ typedef enum {
    warn__check_dmd_qtag,
    warn__check_2x4,
    warn__check_4x4,
+   warn__check_hokey_4x4,
    warn__check_4x4_start,
    warn__check_pgram,
    warn__dyp_resolve_ok,
@@ -1150,6 +1157,7 @@ typedef enum {
    warn__did_not_interact,
    warn__opt_for_normal_cast,
    warn__split_1x6,
+   warn__tasteless_com_spot,
    warn__tasteless_slide_thru  /* If this ceases to be last, look 2 lines below! */
 } warning_index;
 #define NUM_WARNINGS (((int) warn__tasteless_slide_thru)+1)
@@ -1835,6 +1843,8 @@ extern map_thing map_s8_tgl4;                                       /* in SDTABL
 extern map_thing map_p8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_phan_trngl4a;                                  /* in SDTABLES */
 extern map_thing map_phan_trngl4b;                                  /* in SDTABLES */
+extern map_thing map_lh_zzztgl;                                     /* in SDTABLES */
+extern map_thing map_rh_zzztgl;                                     /* in SDTABLES */
 extern map_thing map_2x2v;                                          /* in SDTABLES */
 extern map_thing map_2x4_magic;                                     /* in SDTABLES */
 extern map_thing map_qtg_magic;                                     /* in SDTABLES */
@@ -1880,13 +1890,18 @@ extern map_thing map_tgl4_1;                                        /* in SDTABL
 extern map_thing map_tgl4_2;                                        /* in SDTABLES */
 extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
 extern map_thing map_qtag_2x3;                                      /* in SDTABLES */
+extern map_thing map_2x3_rmvr;                                      /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
 extern map_thing map_inner_box;                                     /* in SDTABLES */
+extern map_thing map_lh_c1phana;                                    /* in SDTABLES */
+extern map_thing map_lh_c1phanb;                                    /* in SDTABLES */
 extern map_thing map_lh_s2x3_3;                                     /* in SDTABLES */
 extern map_thing map_lh_s2x3_2;                                     /* in SDTABLES */
+extern map_thing map_rh_c1phana;                                    /* in SDTABLES */
+extern map_thing map_rh_c1phanb;                                    /* in SDTABLES */
 extern map_thing map_rh_s2x3_3;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_2;                                     /* in SDTABLES */
 extern map_thing map_lz12;                                          /* in SDTABLES */
@@ -2031,7 +2046,7 @@ extern void uims_process_command_line(int *argcp, char ***argvp);
 extern void uims_display_help(void);
 extern void uims_display_ui_intro_text(void);
 extern void uims_preinitialize(void);
-extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[]);
+extern void uims_create_menu(call_list_kind cl);
 extern void uims_postinitialize(void);
 extern int uims_do_outfile_popup(char dest[]);
 extern int uims_do_header_popup(char dest[]);

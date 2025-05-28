@@ -26,7 +26,6 @@
  *
  */
 
-#define CLOVER_AND
 #define INPUT_TEXTLINE_SIZE 300
 
 typedef struct glozk {
@@ -97,7 +96,7 @@ extern void show_match(void);
 
 extern void matcher_initialize(void);
 
-extern void matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[]);
+extern void matcher_setup_call_menu(call_list_kind cl);
     
 extern int match_user_input(
    int which_commands,

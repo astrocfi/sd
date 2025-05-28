@@ -141,6 +141,10 @@ selector_item selector_list[] = {
    {"ends",         "end",         "ENDS",         "END",         selector_centers},
    {"leads",        "lead",        "LEADS",        "LEAD",        selector_trailers},
    {"trailers",     "trailer",     "TRAILERS",     "TRAILER",     selector_leads},
+   {"lead ends",    "lead end",    "LEAD ENDS",    "LEAD END",    selector_uninitialized},
+   {"lead centers", "lead center", "LEAD CENTERS", "LEAD CENTER", selector_uninitialized},
+   {"trailing ends","trailing end","TRAILING ENDS","TRAILING END",selector_uninitialized},
+   {"trailing centers","trailing center","TRAILING CENTERS","TRAILING CENTER",selector_uninitialized},
    {"beaus",        "beau",        "BEAUS",        "BEAU",        selector_belles},
    {"belles",       "belle",       "BELLES",       "BELLE",       selector_beaus},
    {"center 2",     "center 2",    "CENTER 2",     "CENTER 2",    selector_outer6},
@@ -255,6 +259,7 @@ Cstring warning_strings[] = {
    /*  warn__check_dmd_qtag      */   " Fudge to a diamond/quarter-tag setup.",
    /*  warn__check_2x4           */   " Check a 2x4 setup.",
    /*  warn__check_4x4           */   "*Check a 4x4 setup.",
+   /*  warn__check_hokey_4x4     */   "*Check a center box and outer lines/columns.",
    /*  warn__check_4x4_start     */   "*Check a 4x4 setup at the start of this call.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
    /*  warn__dyp_resolve_ok      */   " Do your part.",
@@ -277,6 +282,7 @@ Cstring warning_strings[] = {
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
+   /*  warn__tasteless_com_spot  */   "*Common-spot people have left hands.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave is questionable."};
 
 
@@ -480,6 +486,7 @@ static restr_initializer restr_init_table[] = {
    {s1x2, cr_wave_only, &wave_1x2},
    {s1x2, cr_2fl_only, &all_same_2},
    {s1x2, cr_couples_only, &all_same_2},
+   {s1x2, cr_all_facing_same, &all_same_2},
    {s1x2, cr_miniwaves, &all_diff_2},
    {s3x4, cr_wave_only, &wave_3x4},
    {s3x4, cr_2fl_only, &two_faced_3x4},
@@ -577,6 +584,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
       case s1x2:
          if (t.assumption == cr_wave_only && t.assump_col == 2)
             restr_thing_ptr = &wave_1x2;
+         else if (t.assumption == cr_all_facing_same)
+            restr_thing_ptr = &all_same_2;
          break;
       case s2x6:
          if (t.assumption == cr_wave_only && t.assump_col != 0)
@@ -837,10 +846,6 @@ Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
                f += 2;
                continue;
          }
-      }
-      else if (f[0] == '<' && f[1] == 'c' && f[2] == 'o' && f[3] == 'n' && f[4] == 'c' && f[5] == 'e' && f[6] == 'p' && f[7] == 't' && f[8] == '>') {
-         f += 9;
-         continue;
       }
 
       writechar(*f++);
@@ -1150,8 +1155,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_sequential)
                writestuff(" ;");
-            else if (k == concept_special_sequential)
-               writestuff(",");
+            else if (k == concept_special_sequential) {
+               if (item->value.arg1 == 2)
+                  writestuff(" :");   /* This is "start with". */
+               else
+                  writestuff(",");
+            }
             else
                writestuff(" BY");
 
@@ -1226,27 +1235,15 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                request_final_space = TRUE;
             }
          }
-         else if (k == concept_nth_part && local_cptr->concept->value.arg1 == 8) {
-            request_comma_after_next_concept = TRUE;   /* "DO THE <Nth> PART <concept>" */
-            writestuff_with_decorations(local_cptr, (Const char *) 0);
-         }
-         else if ((k == concept_so_and_so_only) && local_cptr->concept->value.arg1 == 11) {
-            request_comma_after_next_concept = TRUE;   /* "<ANYONE> WORK <concept>" */
-            writestuff_with_decorations(local_cptr, (Const char *) 0);
-         }
-         else if (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) {
-            /* If INVERT is followed by another concept, it must be SNAG or MYSTIC.  Put a comma after it. */
-            request_comma_after_next_concept = TRUE;
-            writestuff_with_decorations(local_cptr, (Const char *) 0);
-            request_final_space = TRUE;
-         }
-         else if ((k == concept_meta) && (local_cptr->concept->value.arg1 == 3 || local_cptr->concept->value.arg1 == 7)) {
-            /* Initially/finally. */
-            writestuff_with_decorations(local_cptr, (Const char *) 0);
-            request_comma_after_next_concept = TRUE;
-            request_final_space = TRUE;
-         }
          else {
+            if (     (k == concept_nth_part && local_cptr->concept->value.arg1 == 8) ||      /* "DO THE <Nth> PART" */
+                     (k == concept_so_and_so_only && local_cptr->concept->value.arg1 == 11) ||    /* "<ANYONE> WORK" */
+                     (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||        /* If INVERT
+                                                               is followed by another concept, it must be SNAG or MYSTIC. */
+                     (k == concept_meta && (local_cptr->concept->value.arg1 == 3 || local_cptr->concept->value.arg1 == 7))) {   /* Initially/finally. */
+               request_comma_after_next_concept = TRUE;     /* These concepts require a comma after the following concept. */
+            }
+
             writestuff_with_decorations(local_cptr, (Const char *) 0);
             request_final_space = TRUE;
          }
@@ -2027,6 +2024,16 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 
 extern void warn(warning_index w)
 {
+   if (w == warn__none) return;
+
+   /* If this is an "each 1x4" type of warning, and we already have
+      such a warning, don't enter the new one.  The first one takes precedence. */
+
+   if ((dyp_each_warnings.bits[w>>5] & (1 << (w & 0x1F))) &&
+         ((dyp_each_warnings.bits[0] & history[history_ptr+1].warnings.bits[0]) ||
+          (dyp_each_warnings.bits[1] & history[history_ptr+1].warnings.bits[1])))
+      return;
+
    if (w != warn__none) history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1F);
 }
 

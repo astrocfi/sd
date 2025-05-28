@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: November 30, 1996
+@set Time-stamp: December 24, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.80
+@set sd-version 31.81
 @set full-manual
 @c %**end of header
 @iftex
@@ -2279,7 +2279,7 @@ F4   resolve                  reconcile                normalize
 F5   refresh display          keep picture             insert a comment
 F6   simple modifications     allow modifications
 F7   toggle concept levels    toggle active phantoms
-F8   <anything>               <concept>
+F8   <anything>
 F9   undo last call           abort the search
 F10  write this sequence      change output file
 F11  pick level call          pick 8 person level call
@@ -2287,7 +2287,7 @@ F12  find another             accept current choice    previous
 @end group
 @end example
 
-All of these except @samp{<anything>} and @samp{<concept>} execute the command
+All of these except @samp{<anything>} execute the command
 directly, that is, pressing the function key is equivalent to typing the indicated
 text and then pressing
 @iftex
@@ -2296,8 +2296,7 @@ text and then pressing
 @ifinfo
 @key{<ENTER>}.
 @end ifinfo
-The keys for @samp{<anything>} and
-@samp{<concept>} are simply equivalent to entering that text without pressing
+The key for @samp{<anything>} is simply equivalent to entering that text without pressing
 @iftex
 @keycap{ENTER}.
 @end iftex
@@ -3104,6 +3103,9 @@ The menu for these is brought up by clicking on the ``couples/tandem concepts'' 
 @item boxes work solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ boxsome
 @item diamonds work solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ diamondsome
 @item skew@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ skewsome
+@item gruesome twosome
+@item gruesome as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome couples twosome
+@item gruesome tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome tandem twosome
 @item <ANYONE> are as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples twosome
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
 @item <ANYONE> are couples of three@ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
@@ -3147,8 +3149,11 @@ You could call a @code{ferris wheel}, but not a @code{checkmate the column},
 from this setup.  If you wanted the pairs of real people to be centers of
 columns, so that you could call @code{checkmate the column}, use
 @code{2x8 matrix phantom tandem checkmate the columns}.
-@item gruesome twosome
-This is done from a 2x8.  It has an implicit ``assume waves'' in it.
+Concepts with the word ``gruesome'' always form a 2x8, and require that
+the people be paired in a direction parallel to that 2x8.  The @code{gruesome twosome}
+concept is the same as @code{gruesome couples twosome}, with the additional requirement
+that the resulting virtual setup be waves.  It is the only concept in that family that
+is widely accepted.
 @end table
 
 @node Distorted Setup Concepts, 4-person distorted concepts, Tandem or Couples Concepts, Concept Notes
@@ -3419,30 +3424,14 @@ to dictate where the ends should finish.
 @item <ANYONE> preferred for trade, checkerdiamond
 @item shadow box
 These are straightforward.
-@item <ANYONE> work <concept>
-This concept is rather difficult to do in the most general case.
+@item <ANYONE> work
+This seemingly nonsensical phrase is intended to be followed by another concept, as in
+@samp{centers work tandem acey deucey}.  It causes the indicated
+people to use the following concept while the others do not.
 The program executes it effectively as an @samp{own the <ANYONE> for
 a <concept> <call> by <call>}.  That is, @code{ends work tandem, swing thru}
 is performed by having the ends do their part of a @samp{tandem swing thru}
 while the centers do a @samp{swing thru}.
-This concept is entered by typing the designated people instead of the
-@samp{<anyone>}, and then ``work <concept>''.  You literally type the
-``<concept>'', including the angle brackets.  (Of course, type-in completion
-makes it unnecessary to type the whole thing.)  After you press
-@iftex
-@keycap{ENTER},
-@end iftex
-@ifinfo
-@key{<ENTER>},
-@end ifinfo
-type the concept, press
-@iftex
-@keycap{ENTER},
-@end iftex
-@ifinfo
-@key{<ENTER>},
-@end ifinfo
-and type the call.
 @item two calls in succession@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 This concept allows a pair of calls to be executed atomically under a concept.
 This makes it possible to do a @samp{concentric (recycle ; roll)} and have the
@@ -3583,9 +3572,10 @@ You must, of course, verify that the casting direction is correct for
 smooth dancing of this figure.
 @item <ANYONE> start
 @item skip the <Nth> part
-@item do the <Nth> part <concept>
+@item do the <Nth> part
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item start with@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These concepts cause the call to be interrupted or replaced as indicated.
 
 The @code{<ANYONE> start} concept has the indicated people do their own
@@ -3601,38 +3591,66 @@ boys start quarter thru@key{<ENTER>}
 @end ifinfo
 @end group
 @end example
-The @code{do the <Nth> part <concept>} concept applies the given concept
-to the indicated part of the call, but not to the rest.  You literally type the
-``<concept>'', including the angle brackets.  (Of course, type-in completion
-makes it unnecessary to type the whole thing.)  For example, you might type
-@example
-@group
-@iftex
-do the 2nd part <concept> @keycap{ENTER}
-tandem remake @keycap{ENTER}
-@end iftex
-@ifinfo
-do the 2nd part <concept> @key{<ENTER>}
-tandem remake @key{<ENTER>}
-@end ifinfo
-@end group
-@end example
-or
-@example
-@group
-@iftex
-do the 2nd part <concept> tandem remake @keycap{ENTER}
-@end iftex
-@ifinfo
-do the 2nd part <concept> tandem remake @key{<ENTER>}
-@end ifinfo
-@end group
-@end example
+The @code{do the <Nth> part} concept is intended to be used
+with a following concept, as in @samp{do the 2nd part tandem remake}.
+It applies the following concept
+to the indicated part of the call, but not to the rest.
 
 The @code{replace} and @code{interrupt} concepts require two calls.  After
 typing the concept, type the call that is to have a part interrupted or replaced.
 The program will then ask you for the call that comprises the interruption or
 replacement.
+For example, you might type
+@example
+@group
+@iftex
+replace the 3rd part @keycap{ENTER}
+swing the fractions @keycap{ENTER}
+2/3 recycle @keycap{ENTER}
+@end iftex
+@ifinfo
+replace the 3rd part @key{<ENTER>}
+swing the fractions @key{<ENTER>}
+2/3 recycle @key{<ENTER>}
+@end ifinfo
+@end group
+@end example
+
+The @code{start with} concept is equivalent to replacing the first part.
+However, you must enter the replacement call first, and the program will then
+prompt you for the call that is to have its first part replaced.
+For example, you might type
+@example
+@group
+@iftex
+start with @keycap{ENTER}
+fan the top @keycap{ENTER}
+the difference @keycap{ENTER}
+@end iftex
+@ifinfo
+start with @key{<ENTER>}
+fan the top @key{<ENTER>}
+the difference @key{<ENTER>}
+@end ifinfo
+@end group
+@end example
+
+Because the @code{replace}, @code{interrupt} and @code{start with} require
+two calls, you must press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+after typing them, and then type the two calls with
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+after each one.
 
 Some of the replacement/interruption meta-concepts push the
 semantics of the language to the limit.  Whenever a call undergoes an

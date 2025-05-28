@@ -257,10 +257,10 @@ extern void uims_preinitialize(void)
  * This will be called once for each value in the enumeration call_list_kind.
  */
 
-extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
+extern void uims_create_menu(call_list_kind cl)
 {
    call_menu_prompts[cl] = (char *) get_mem(50);  /* *** Too lazy to compute it. */
-   matcher_setup_call_menu(cl, call_name_list);
+   matcher_setup_call_menu(cl);
 
    if (cl == call_list_any)
       /* The menu name here is "(any setup)".  That may be a sensible
@@ -721,9 +721,6 @@ Private void get_user_input(char *prompt, int which)
                return;
             }
          }
-         else if (nc == 152)
-            function_key_expansion = "<concept>";                    /* sF8 */
-                                                                     /* See above for sF9. */
          else if (nc == 154) {                                       /* sF10 = change output file */
             if (which >= 0) {
                put_line("change output file\n");

@@ -1125,14 +1125,14 @@ Private int longest_title_length = 0;
  * Create a menu containing number_of_calls[cl] items.
  * This will be called once for each value in the enumeration call_list_kind.
  */
-extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
+extern void uims_create_menu(call_list_kind cl)
 {
    int i;
    int name_len = strlen((char *) menu_names[cl]);
 
    for (i=0; i<number_of_calls[cl]; i++) {
       add_call_to_menu(&call_menu_lists[cl], i,
-         number_of_calls[cl], call_name_list[i]->menu_name);
+         number_of_calls[cl], main_call_lists[cl][i]->menu_name);
    }
 
    call_menu_names[cl] = menu_names[cl];

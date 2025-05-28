@@ -36,11 +36,6 @@
 #define ID1_PERM_ALLBITS     017770000000UL
 
 
-/* maximum number of hashes we remember to avoid duplicates.
-   This may be bigger because we remember hashes of things the
-   guy threw away, so as not to annoy him too much. */
-#define AVOID_LIST_MAX 100
-
 typedef struct {
    configuration stuph[MAX_RESOLVE_SIZE];
    int size;
@@ -118,8 +113,9 @@ static int huge_history_ptr;
 static resolve_rec *all_resolves = (resolve_rec *) 0;
 static int resolve_allocation = 0;
 
-static int avoid_list[AVOID_LIST_MAX];
+static int *avoid_list = (int *) 0;
 static int avoid_list_size;
+static int avoid_list_allocation = 0;
 static int perm_array[8];
 static setup_kind goal_kind;
 static int goal_directions[8];
@@ -681,8 +677,9 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    
    /* See if we have already seen this sequence. */
    
-   for (i=0; i<avoid_list_size; i++)
+   for (i=0; i<avoid_list_size; i++) {
       if (hashed_randoms == avoid_list[i]) goto try_again;
+   }
    
    /* The call was legal, see if it satisfies our criterion. */
    
@@ -965,9 +962,20 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
    for (j=0; j<MAX_RESOLVE_SIZE; j++)
       new_resolve->stuph[j] = history[j+history_insertion_point+1];
-   
-   if (avoid_list_size < AVOID_LIST_MAX)
-      avoid_list[avoid_list_size++] = hashed_randoms;
+
+   /* Grow the "avoid_list" array as needed. */
+
+   avoid_list_size++;
+
+   if (avoid_list_allocation <= avoid_list_size) {
+      int *t;
+      avoid_list_allocation = avoid_list_size+100;
+      t = (int *) get_more_mem_gracefully(avoid_list, avoid_list_allocation * sizeof(int));
+      if (!t) specialfail("Not enough memory!");
+      avoid_list = t;
+   }
+
+   avoid_list[avoid_list_size] = hashed_randoms;   /* It's now safe to do this. */
 
    retval = TRUE;
    goto timeout;

@@ -1126,11 +1126,29 @@ extern void normalize_setup(setup *ss, normalize_action action)
          canonicalize_rotation(ss);
       }
       else if ((ss->kind == s_qtag) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
-         ss->kind = s1x4;
-         (void) copy_person(ss, 0, ss, 6);
-         (void) copy_person(ss, 1, ss, 7);
-         (void) copy_person(ss, 2, ss, 2);
-         (void) copy_person(ss, 3, ss, 3);
+         if (!(ss->people[2].id1 | ss->people[6].id1)) {
+            ss->kind = s1x2;
+            (void) copy_person(ss, 0, ss, 7);
+            (void) copy_person(ss, 1, ss, 3);
+         }
+         else {
+            ss->kind = s1x4;
+            (void) copy_person(ss, 0, ss, 6);
+            (void) copy_person(ss, 1, ss, 7);
+         }
+      }
+      else if (ss->kind == s_hrglass && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         if (!(ss->people[2].id1 | ss->people[6].id1)) {
+            ss->kind = s1x2;
+            (void) copy_person(ss, 0, ss, 7);
+            (void) copy_person(ss, 1, ss, 3);
+         }
+         else {
+            ss->kind = sdmd;
+            (void) copy_person(ss, 0, ss, 6);
+            (void) copy_person(ss, 1, ss, 3);
+            (void) copy_person(ss, 3, ss, 7);
+         }
       }
       else if ((ss->kind == s_galaxy) && (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1))) {
          ss->kind = s2x2;
@@ -1163,6 +1181,8 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
    }
 
+
+
    /* If preparing for a "so-and-so only do your part", we remove outboard phantoms
       fairly aggressively.  The level "normalize_before_isolated_call" is used for
          <anyone> start, <call>
@@ -1187,7 +1207,7 @@ it's hard to imagine why I thought otherwise.  I can only guess that
 "normalize_before_isolated_call" was formerly used for some other operation.
 
 In fact, the comment above: "we remove outboard phantoms more aggressively"
-suggestes that.  We are definitely NOT removing outboard phantoms.  We are simply
+suggests that.  We are definitely NOT removing outboard phantoms.  We are simply
 moving them so as to make the overall setup seem more normal to the remaining live
 people.
 

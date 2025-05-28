@@ -27,6 +27,8 @@
 
 /* Global to this file. */
 
+static callspec_block *empty_menu[] = {(callspec_block *) 0};
+
 /* This gets temporarily allocated.  It persists through the entire initialization. */
 Private callspec_block **global_temp_call_list;
 Private int global_callcount;     /* Index into the above. */
@@ -317,7 +319,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    /* Create the menu for it. */
 
-   uims_create_menu(cl, global_temp_call_list);
+   uims_create_menu(cl);
 }
 
 
@@ -573,7 +575,7 @@ but not executable are now not parsable.  So we take it out.
    }
 
    /* Create the menu for it. */
-   uims_create_menu(cl, global_temp_call_list);
+   uims_create_menu(cl);
 }
 
 
@@ -1194,7 +1196,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          subsetted text. */
 
    /* This is the universal menu. */
-   uims_create_menu(call_list_any, main_call_lists[call_list_any]);
+   uims_create_menu(call_list_any);
    uims_database_tick(5);
 
    /* Create the special call menus for restricted setups. */
@@ -1218,6 +1220,11 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
 
    /* This was global to the initialization, but it goes away also. */
    free_mem(global_temp_call_list);
+
+   /* Initialize the special empty call menu */
+
+   main_call_lists[call_list_empty] = empty_menu;
+   number_of_calls[call_list_empty] = 0;
 
    getout:
 

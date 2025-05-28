@@ -21,10 +21,39 @@
 Copyright @copyright{} 1996 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.78
-         Database version = 31.78 format = 85.
+          RELEASE NOTES FOR SD VERSION 31.81
+         Database version = 31.81 format = 88.
        X11 UI version 1.17, SDTTY UI version 1.9.
 @end example
+
+****** Changes as of version 31.81 ******
+
+IMPORTANT NOTICE   IMPORTANT NOTICE   IMPORTANT NOTICE
+
+The word "<concept>" has been removed from the names of the two concepts:
+         do the <Nth> part                and
+         <anyone> work
+You just type them that way, as in:
+      centers work tandem acey deucey     or
+      do the 2nd part tandem remake
+They will be printed in the transcript the same as before:
+      centers work tandem, acey deucey    or
+      do the 2nd part tandem, remake
+
+The difference is that you NEVER type the word "<concept>".
+
+
+New designators:
+   lead ends
+   lead centers
+   trailing ends
+   trailing centers
+These can be used, for example, to designate people for calls like "ripple".
+
+The program is much better at handling various types of perpendicular 1x2
+setups of the sort that arise in fractional exchange the diamonds or
+fractional ripples.  For example, it can do "<so-and-so> ripple 2-1/2"
+from a parallelogram.
 
 ****** Changes as of version 31.80 ******
 

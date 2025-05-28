@@ -638,7 +638,7 @@ extern void tandem_couples_move(
    selector_kind selector,
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
-   int phantom,               /* normal=0 / phantom=1 / gruesome=2 */
+   int phantom,               /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
    int key,                   /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
                                  tandem of 3 = 4 / couples of 3 = 5 / tandem of 4 = 6 / couples of 4 = 7
                                  box = 10 / diamond = 11 / out point triangles = 20
@@ -962,7 +962,7 @@ extern void tandem_couples_move(
                ss->kind != s3dmd && ss->kind != s4dmd && ss->kind != s3x8)
          fail("Can't do couples or tandem concepts in this setup.");
    }
-   else if (phantom == 2) {
+   else if (phantom >= 2) {
       if (ss->kind != s2x8 || map->insetup != s2x4)
          fail("Can't do gruesome concept in this setup.");
    }
@@ -975,7 +975,7 @@ extern void tandem_couples_move(
 
    tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_none;
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   if (phantom == 2) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+   if (phantom == 3) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    pack_us(ss->people, map, fraction, twosome, key, &tandstuff);
 
    update_id_bits(&tandstuff.virtual_setup);

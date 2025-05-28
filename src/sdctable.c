@@ -432,7 +432,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* tandem concepts */
 
-#define tt__1_size 47
+#define tt__1_size 51
 #define tt__1_cpl 2
 #define tt__1_tnd 3
    {"PHANTOM",                               concept_c1_phantom,            L+U+D, l_c1},
@@ -447,6 +447,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"BOXES WORK SOLID",                      concept_tandem,                  F+D, l_c2,         {0, FALSE, 0, 0, 10}},
    {"DIAMONDS WORK SOLID",                   concept_tandem,                  F+D, l_c2,         {0, FALSE, 0, 0, 11}},
    {"SKEW",                                  concept_tandem,                    D, l_c4a,        {0, FALSE, 0, 0, 3}},
+   {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,           D, l_c4a,        {0, FALSE, 0, 2, 1}},
+   {"GRUESOME TANDEM",                       concept_gruesome_tandem,           D, l_c4a,        {0, FALSE, 0, 2, 0}},
    {"@6 ARE AS COUPLES",                     concept_some_are_tandem,         F+D, l_a1,         {0, TRUE,  0, 0, 1}},
    {"@6 ARE TANDEM",                         concept_some_are_tandem,         F+D, l_c1,         {0, TRUE,  0, 0, 0}},
    {"@6 ARE COUPLES OF THREE",               concept_some_are_tandem,         F+D, l_c1,         {0, TRUE,  0, 0, 5}},
@@ -470,6 +472,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"BOXES ARE SOLID @b BOXSOME",            concept_frac_tandem,             F+D, l_c4,         {0, FALSE, 2, 0, 10}},
    {"DIAMONDS ARE SOLID @b DIAMONDSOME",     concept_frac_tandem,             F+D, l_c4,         {0, FALSE, 2, 0, 11}},
    {"SKEW @b TWOSOME",                       concept_frac_tandem,               D, l_c4,         {0, FALSE, 2, 0, 3}},
+   {"GRUESOME AS COUPLES @b TWOSOME",        concept_gruesome_frac_tandem,      D, l_c4,         {0, FALSE, 2, 2, 1}},
+   {"GRUESOME TANDEM @b TWOSOME",            concept_gruesome_frac_tandem,      D, l_c4,         {0, FALSE, 2, 2, 0}},
    {"@6 ARE COUPLES @b TWOSOME",             concept_some_are_frac_tandem,    F+D, l_c4,         {0, TRUE,  2, 0, 1}},
    {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,    F+D, l_c4,         {0, TRUE,  2, 0, 0}},
    {"@6 ARE COUPLES OF THREE @b THREESOME",  concept_some_are_frac_tandem,    F+D, l_c4,         {0, TRUE,  2, 0, 5}},
@@ -483,10 +487,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"@k-BASED TRIANGLES WORK SOLID @b THREESOME", concept_some_are_frac_tandem, F+D, l_c4,       {0, TRUE,  2, 0, 30}},
    {"3X1 TRIANGLES WORK SOLID @b TRIANGLESOME",       concept_frac_tandem,    F+D, l_c4,         {0, FALSE, 2, 0, 31}},
 /* -------- column break -------- */
-#define tt__2_size 47
+#define tt__2_size 51
 #define tt__2_cpl2s 2
 #define tt__2_tnd2s 3
-   {"GRUESOME TWOSOME",                      concept_gruesome_tandem,           D, l_c4a,        {0, FALSE, 1, 2, 1}},
+   {"GRUESOME TWOSOME",                      concept_gruesome_tandem,           D, l_c4a,        {0, FALSE, 1, 3, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"COUPLES TWOSOME",                       concept_tandem,                    D, l_c3,         {0, FALSE, 1, 0, 1}},
    {"TANDEM TWOSOME",                        concept_tandem,                    D, l_c3,         {0, FALSE, 1, 0, 0}},
@@ -498,6 +502,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"BOXSOME",                               concept_tandem,                  F+D, l_c4a,        {0, FALSE, 1, 0, 10}},
    {"DIAMONDSOME",                           concept_tandem,                  F+D, l_c4a,        {0, FALSE, 1, 0, 11}},
    {"SKEWSOME",                              concept_tandem,                    D, l_c4a,        {0, FALSE, 1, 0, 3}},
+   {"GRUESOME COUPLES TWOSOME",              concept_gruesome_tandem,           D, l_c4a,        {0, FALSE, 1, 2, 1}},
+   {"GRUESOME TANDEM TWOSOME",               concept_gruesome_tandem,           D, l_c4a,        {0, FALSE, 1, 2, 0}},
    {"@6 ARE COUPLES TWOSOME",                concept_some_are_tandem,         F+D, l_c3,         {0, TRUE,  1, 0, 1}},
    {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,         F+D, l_c3,         {0, TRUE,  1, 0, 0}},
    {"@6 ARE COUPLES THREESOME",              concept_some_are_tandem,         F+D, l_c3,         {0, TRUE,  1, 0, 5}},
@@ -521,6 +527,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"BOXSOME @b SOLID",                      concept_frac_tandem,             F+D, l_c4,         {0, FALSE, 3, 0, 10}},
    {"DIAMONDSOME @b SOLID",                  concept_frac_tandem,             F+D, l_c4,         {0, FALSE, 3, 0, 11}},
    {"SKEWSOME @b SOLID",                     concept_frac_tandem,               D, l_c4,         {0, FALSE, 3, 0, 3}},
+   {"GRUESOME TWOSOME @b SOLID",             concept_gruesome_frac_tandem,      D, l_c4,         {0, FALSE, 3, 2, 1}},
+   {"GRUESOME TANDEM TWOSOME @b SOLID",      concept_gruesome_frac_tandem,      D, l_c4,         {0, FALSE, 3, 2, 0}},
    {"@6 ARE COUPLES TWOSOME @b SOLID",       concept_some_are_frac_tandem,    F+D, l_c4,         {0, TRUE,  3, 0, 1}},
    {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,    F+D, l_c4,         {0, TRUE,  3, 0, 0}},
    {"@6 ARE COUPLES THREESOME @b SOLID",     concept_some_are_frac_tandem,    F+D, l_c4,         {0, TRUE,  3, 0, 5}},
@@ -656,7 +664,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 72
+#define mm__1_size 73
 #define mm__1_left 0
 #define mm__1_cross 2
 #define mm__1_grand 5
@@ -725,6 +733,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE STABLE",                         concept_so_and_so_stable,        F+D, l_c3a,        {0, TRUE,  FALSE}},
    {"@b STABLE",                             concept_frac_stable,               D, l_c4,         {0, FALSE, TRUE}},
    {"@6 ARE @b STABLE",                      concept_so_and_so_frac_stable,   F+D, l_c4,         {0, TRUE,  TRUE}},
+   {"EMULATE",                               concept_emulate,                   D, l_c4},
    {"TRACE",                                 concept_trace,                     0, l_c3x},
    {"STRETCH",                               concept_old_stretch,               D, l_c1},
    {"STRETCHED SETUP",                       concept_new_stretch,               D, l_c2,         {0, 16}},
@@ -735,7 +744,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 62
+#define mm__2_size 63
    {"CENTERS",                               concept_centers_or_ends,           D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,           D, l_mainstream, {0, selector_ends,    FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
@@ -767,7 +776,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"ON YOUR OWN",                           concept_on_your_own,               0, l_c4a},
    {"OWN THE @6",                            concept_some_vs_others,            F, l_c3a,        {0, 3, 0}},
    {"IGNORE THE @6",                         concept_so_and_so_only,          F+D, l_c1,         {0, 8, 0}},
-   {"@6 WORK <concept>",                     concept_so_and_so_only,          L+D, l_c2,         {0, 11, 0}},
+   {"@6 WORK",                               concept_so_and_so_only,          L+D, l_c2,         {0, 11, 0}},
    {"@6 LEAD FOR A",                         concept_so_and_so_only,            D, l_mainstream, {0, 12, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"two calls in succession",               concept_sequential,                0, l_mainstream},
@@ -795,13 +804,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"SHIFT @9",                              concept_nth_part,                F+D, l_c4,         {0, 10}},
    {"@6 START",                              concept_so_and_so_begin,         F+D, l_c1,         {0, 0}},
    {"SKIP THE @u PART",                      concept_nth_part,                F+D, l_c1,         {0, 9}},
-   {"DO THE @u PART <concept>",              concept_nth_part,                L+D, l_c1,         {0, 8}},
+   {"DO THE @u PART",                        concept_nth_part,                L+D, l_c1,         {0, 8}},
    {"REPLACE THE @u PART",                   concept_replace_nth_part,          0, l_c1,         {0, 0}},
+   {"START WITH",                            concept_special_sequential,        0, l_c2,         {0, 2}},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,          0, l_c1,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 56
-#define mm__3_3x3 50
-#define mm__3_4x4 51
+#define mm__3_size 61
+#define mm__3_3x3 55
+#define mm__3_4x4 56
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,               D, l_c1,         {0, 3}},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,               D, l_c1,         {0, 5}},
@@ -840,12 +850,17 @@ concept_descriptor concept_descriptor_table[] = {
    {"BACKRIGGER",                            concept_rigger,                    D, l_c3x,        {0, 16}},
    {"FRONTRIGGER",                           concept_rigger,                    D, l_c3x,        {0, 18}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"COMMON POINT GALAXY",                   concept_common_spot,               D, l_c4,         {0, 0}},
-   {"COMMON SPOT COLUMNS",                   concept_common_spot,               D, l_c4,         {0, 1}},
-   {"COMMON POINT DIAMONDS",                 concept_common_spot,               D, l_c4,         {0, 2}},
-   {"COMMON END LINES",                      concept_common_spot,               D, l_c4,         {0, 3}},
-   {"COMMON END WAVES",                      concept_common_spot,               D, l_c4,         {0, 16+3}},
-   {"COMMON SPOT TWO-FACED LINES",           concept_common_spot,               D, l_c4,         {0, 4}},
+   {"COMMON POINT GALAXY",                   concept_common_spot,               D, l_c4,         {0, 1, FALSE}},
+   {"COMMON SPOT COLUMNS",                   concept_common_spot,               D, l_c4,         {0, 2, FALSE}},
+   {"COMMON POINT DIAMONDS",                 concept_common_spot,               D, l_c4,         {0, 4, FALSE}},
+   {"COMMON SPOT DIAMONDS",                  concept_common_spot,               D, l_c4,         {0, 4, FALSE}},
+   {"COMMON END LINES",                      concept_common_spot,               D, l_c4,         {0, 0x10, FALSE}},
+   {"COMMON END WAVES",                      concept_common_spot,               D, l_c4,         {0, 0x10, TRUE}},
+   {"COMMON CENTER LINES",                   concept_common_spot,               D, l_c4,         {0, 0x20, FALSE}},
+   {"COMMON CENTER WAVES",                   concept_common_spot,               D, l_c4,         {0, 0x20, TRUE}},
+   {"COMMON SPOT LINES",                     concept_common_spot,               D, l_c4,         {0, 0x38, FALSE}},
+   {"COMMON SPOT WAVES",                     concept_common_spot,               D, l_c4,         {0, 0x38, TRUE}},
+   {"COMMON SPOT TWO-FACED LINES",           concept_common_spot,               D, l_c4,         {0, 8, FALSE}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"1X2",                                   concept_1x2,                     L+D, l_c3},
    {"2X1",                                   concept_2x1,                     L+D, l_c3},

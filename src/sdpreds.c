@@ -46,7 +46,8 @@ long_boolean mandatory_call_used;
 
 extern long_boolean selectp(setup *ss, int place)
 {
-   uint32 permpid1, pid2;
+   uint32 permpid1, pid2, p2;
+   selector_kind s;
 
    selector_used = TRUE;
 
@@ -109,45 +110,51 @@ extern long_boolean selectp(setup *ss, int place)
          else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG) return FALSE;
          break;
       case selector_centers:
-         if      ((pid2 & (ID2_CENTER|ID2_END)) == ID2_CENTER) return TRUE;
-         else if ((pid2 & (ID2_CENTER|ID2_END)) == ID2_END) return FALSE;
-         break;
       case selector_ends:
-         if      ((pid2 & (ID2_CENTER|ID2_END)) == ID2_END) return TRUE;
-         else if ((pid2 & (ID2_CENTER|ID2_END)) == ID2_CENTER) return FALSE;
-         break;
+         p2 = pid2 & (ID2_CENTER|ID2_END);
+         if      (p2 == ID2_CENTER) s = selector_centers;
+         else if (p2 == ID2_END)    s = selector_ends;
+         else break;
+         goto eq_return;
       case selector_leads:
-         if      ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_LEAD) return TRUE;
-         else if ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_TRAILER) return FALSE;
-         break;
       case selector_trailers:
-         if      ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_TRAILER) return TRUE;
-         else if ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_LEAD) return FALSE;
-         break;
+         p2 = pid2 & (ID2_LEAD|ID2_TRAILER);
+         if      (p2 == ID2_LEAD)    s = selector_leads;
+         else if (p2 == ID2_TRAILER) s = selector_trailers;
+         else break;
+         goto eq_return;
+      case selector_lead_ends:
+      case selector_lead_ctrs:
+      case selector_trail_ends:
+      case selector_trail_ctrs:
+         p2 = pid2 & (ID2_LEAD|ID2_TRAILER|ID2_CENTER|ID2_END);
+         if      (p2 == (ID2_LEAD|ID2_END))       s = selector_lead_ends;
+         else if (p2 == (ID2_LEAD|ID2_CENTER))    s = selector_lead_ctrs;
+         else if (p2 == (ID2_TRAILER|ID2_END))    s = selector_trail_ends;
+         else if (p2 == (ID2_TRAILER|ID2_CENTER)) s = selector_trail_ctrs;
+         else break;
+         goto eq_return;
       case selector_beaus:
-         if      ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BEAU) return TRUE;
-         else if ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BELLE) return FALSE;
-         break;
       case selector_belles:
-         if      ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BELLE) return TRUE;
-         else if ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BEAU) return FALSE;
-         break;
+         p2 = pid2 & (ID2_BEAU|ID2_BELLE);
+         if      (p2 == ID2_BEAU)  s = selector_beaus;
+         else if (p2 == ID2_BELLE) s = selector_belles;
+         else break;
+         goto eq_return;
       case selector_center2:
-         if      ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_CTR2) return TRUE;
-         else if ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_OUTR6) return FALSE;
-         break;
-      case selector_center6:
-         if      ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_CTR6) return TRUE;
-         else if ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_OUTR2) return FALSE;
-         break;
-      case selector_outer2:
-         if      ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_OUTR2) return TRUE;
-         else if ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_CTR6) return FALSE;
-         break;
       case selector_outer6:
-         if      ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_OUTR6) return TRUE;
-         else if ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_CTR2) return FALSE;
-         break;
+         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+         if      (p2 == ID2_CTR2)  s = selector_center2;
+         else if (p2 == ID2_OUTR6) s = selector_outer6;
+         else break;
+         goto eq_return;
+      case selector_center6:
+      case selector_outer2:
+         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+         if      (p2 == ID2_CTR6)  s = selector_center6;
+         else if (p2 == ID2_OUTR2) s = selector_outer2;
+         else break;
+         goto eq_return;
       case selector_ctrdmd:
          if      ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_CTRDMD) return TRUE;
          else if ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_NCTRDMD) return FALSE;
@@ -163,6 +170,8 @@ extern long_boolean selectp(setup *ss, int place)
       case selector_center4:
          if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return TRUE;
          else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return FALSE;
+         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return TRUE;
+         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_END) return FALSE;
          break;
       case selector_outerpairs:
          if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
@@ -268,6 +277,10 @@ extern long_boolean selectp(setup *ss, int place)
    
    fail("Can't decide who are selected.");
    /* NOTREACHED */
+
+   eq_return:
+
+   return (current_options.who == s);
 }
 
 

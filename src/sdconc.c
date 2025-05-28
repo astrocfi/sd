@@ -1443,6 +1443,13 @@ extern void concentric_move(
                   (localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
             ;        /* Take no further action. */
          }
+         else if (final_outers_start_kind == s1x4 &&
+                  result_outer.kind == s1x4 &&
+                  (localmods1 & DFM1_CONC_FORCE_SPOTS)) {
+            /* If a call starts in a 1x4 and has "force spots" indicated, it must go to a 2x2
+               with same elongation. */
+            result_outer.kind = s2x2;    /* Take no further action. */
+         }
          else if (final_outers_start_kind == s1x2 && result_outer.kind == s1x2 && ((orig_elong_flags+1) & 2)) {
             result_outer.rotation = orig_elong_flags & 1;    /* Note that the "desired elongation" is the opposite
                                                                of the rotation, because of the default change
@@ -1800,9 +1807,11 @@ static concmerge_thing map_223x1  = {schema_concentric,     s2x2,        sdmd,  
 static concmerge_thing map_1424   = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
 static concmerge_thing map_qt24   = {schema_concentric,     s1x4,        s2x2,     0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}};
 static concmerge_thing map_hr24   = {schema_concentric,     sdmd,        s2x2,     0, 0, {6, 3, 2, 7},               {0, 3, 4, 7}};
+static concmerge_thing map_dm24   = {schema_concentric,     sdmd,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
 static concmerge_thing map_ptp22  = {schema_concentric,     s2x2,        s2x2,     0, 0, {0, 1, 2, 3},               {1, 7, 5, 3}};
 static concmerge_thing map_bn22   = {schema_concentric,     s2x2,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
 static concmerge_thing map_qtqhgl = {schema_concentric,     s_short6,    s1x2,     1, 0, {1, 2, 4, 5, 6, 0},         {6, 2}};
+static concmerge_thing map_qtqx1x4= {schema_concentric,     s_short6,    s1x2,     1, 0, {1, 2, 4, 5, 6, 0},         {0, 2}};
 static concmerge_thing map_hglgalh= {schema_concentric,     s_bone6,     s1x2,     1, 0, {1, 4, 7, 5, 0, 3},         {0, 4}};
 static concmerge_thing map_hglgalv= {schema_concentric,     s_bone6,     s1x2,     1, 1, {1, 4, 7, 5, 0, 3},         {2, 6}};
 static concmerge_thing map_s612   = {schema_concentric_2_6, s1x2,        s_short6, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}};
@@ -2165,7 +2174,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       goto merge_concentric;
    }
    else if (res2->kind == s_qtag && res1->kind == s1x2 && ((mask2 & 0x88) == 0)) {
-      outer_elongation = res2->rotation & 1;
+      outer_elongation = (~res2->rotation) & 1;
       the_map = &map_s612;
       goto merge_concentric;
    }
@@ -2289,12 +2298,26 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_qtqhgl;
       goto merge_concentric;
    }
+   else if (res1->kind == s1x4 && res2->kind == s_qtag && (r&1) && ((mask2 & 0x88) == 0) && ((mask1 & 0xA) == 0)) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      warn(warn__check_galaxy);
+      outer_elongation = res2->rotation & 1;
+      the_map = &map_qtqx1x4;
+      goto merge_concentric;
+   }
    else if (res2->kind == s_galaxy && res1->kind == s_hrglass && r == 0 && ((mask1 & 0x44) == 0) && ((mask2 & 0xEE) == 0)) {
       the_map = &map_hglgalh;
       goto merge_concentric;
    }
    else if (res2->kind == s_galaxy && res1->kind == s_hrglass && (r&1) && ((mask1 & 0x44) == 0) && ((mask2 & 0xBB) == 0)) {
       the_map = &map_hglgalv;
+      goto merge_concentric;
+   }
+   else if (res1->kind == sdmd && res2->kind == s2x4 && (mask2 & 0x66) == 0) {
+      outer_elongation = res2->rotation & 1;
+      the_map = &map_dm24;
       goto merge_concentric;
    }
    else if ((res1->kind == s_hrglass || res1->kind == s_dhrglass) && res2->kind == s2x4 && ((mask1 & 0x33) == 0) && ((mask2 & 0x66) == 0)) {
@@ -2669,6 +2692,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
    cm_hunk *chunk = setup_attrs[ss->kind].conctab;
    calldef_schema schema = ((calldef_schema) ss->cmd.cmd_misc2_flags & 0xFFFFUL);
    int crossconc = (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE_INVERT) ? 1 : 0;
+   long_boolean doing_yoyo = FALSE;
+   parse_block *parseptrcopy;
 
    /* Clear the stuff out of the cmd_misc2_flags word. */
 
@@ -2698,11 +2723,25 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
    normalize_setup(&the_setups[1], normalize_before_isolated_call);
    saved_warnings = history[history_ptr+1].warnings;
 
+   /* Check for "someone work yoyo".  If call is sequential and yoyo is consumed by
+      first part, then just do this stuff on the first part.  After that, merge
+      the setups and finish the call normally. */
+
+   if (     ss->cmd.parseptr->concept->kind == concept_yoyo &&
+            ss->cmd.parseptr->next->concept->kind == marker_end_of_list &&
+            ss->cmd.parseptr->next->call->schema == schema_sequential &&
+            (ss->cmd.parseptr->next->call->callflagsh & INHERITFLAG_YOYO) &&
+            (ss->cmd.parseptr->next->call->stuff.def.defarray[0].modifiersh & INHERITFLAG_YOYO) &&
+            ss->cmd.cmd_frac_flags == 0) {
+      doing_yoyo = TRUE;
+      ss->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | 0x02000000 | 0x00010111;
+   }
+
    for (setupcount=0; setupcount<2; setupcount++) {
       the_setups[setupcount].cmd = ss->cmd;
       the_setups[setupcount].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       if (setupcount == 1) {
-         parse_block *parseptrcopy = skip_one_concept(ss->cmd.parseptr);
+         parseptrcopy = skip_one_concept(ss->cmd.parseptr);
          the_setups[setupcount].cmd.parseptr = parseptrcopy->next;
       }
 
@@ -2719,6 +2758,20 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
    merge_setups(&the_results[0], merge_c1_phantom, result);
+
+   if (doing_yoyo) {
+      uint32 finalresultflags = result->result_flags;
+
+      the_setups[0] = *result;
+      the_setups[0].cmd = ss->cmd;    /* Restore original command stuff (though we clobbered fractionalization info). */
+      the_setups[0].cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
+      the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | 0x02000000 | 0x00810111;
+      the_setups[0].cmd.parseptr = parseptrcopy->next;      /* Skip over the concept. */
+      move(&the_setups[0], FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
+      result->result_flags = finalresultflags & ~3;
+   }
 }
 
 
