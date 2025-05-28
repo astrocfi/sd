@@ -6128,7 +6128,7 @@ static uint32_t do_actual_array_call(
 // Also, result->people have been cleared.
 extern void basic_move(
    setup *ss,
-   calldefn *the_calldefn,
+   const calldefn *the_calldefn,
    int tbonetest,
    bool fudged,
    bool mirror,

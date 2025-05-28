@@ -3719,6 +3719,22 @@ static void do_concept_active_phantoms(
 }
 
 
+static void do_concept_rectify(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   // Check that we aren't setting the bit twice.
+
+   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__RECTIFY)
+      fail("You can't give this concept twice.");
+
+   ss->cmd.cmd_misc3_flags |= CMD_MISC3__RECTIFY;
+
+   move(ss, false, result);
+}
+
+
 static void do_concept_central(
    setup *ss,
    parse_block *parseptr,
@@ -7473,6 +7489,9 @@ static void do_concept_meta(
       case concept_twisted:
          expirations_to_clearmisc = RESULTFLAG__TWISTED_EXPIRED;
          break;
+      case concept_rectify:
+         expirations_to_clearmisc = RESULTFLAG__RECTIFY_EXPIRED;
+         break;
       }
 
       yescmd.parseptr->more_finalherit_flags.set_finalbit(FINAL__UNDER_RANDOM_META);
@@ -8714,6 +8733,8 @@ static void do_concept_interlace(
       callb_expiration_bitsmisc |= RESULTFLAG__TWISTED_EXPIRED;
    if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_SQUARE_APPROVED))
       callb_expiration_bitsmisc |= RESULTFLAG__SPLIT_EXPIRED;
+   if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY))
+      callb_expiration_bitsmisc |= RESULTFLAG__RECTIFY_EXPIRED;
 
    // Well, actually, what we want to do it not carry the stuff around,
    // that is, not clear and restore.
@@ -9857,6 +9878,8 @@ const concept_table_item concept_table[] = {
     do_concept_mirror},                                     // concept_mirror
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_MODIFIERS,
     do_concept_central},                                    // concept_central
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_MODIFIERS,
+    do_concept_rectify},                                    // concept_rectify
    {CONCPROP__MATRIX_OBLIVIOUS, do_concept_central},        // concept_snag_mystic
    {CONCPROP__PERMIT_MODIFIERS | CONCPROP__USES_PARTS,
     do_concept_crazy},                                      // concept_crazy

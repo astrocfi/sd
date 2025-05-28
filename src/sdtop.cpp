@@ -5286,6 +5286,8 @@ parse_block *process_final_concepts(
             heritsetbit = INHERITFLAGNXNK_8X8; break;
          case concept_revert:
             heritsetbit = (heritflags) cptr->concept->arg1; break;
+         case concept_rectify:
+            heritsetbit = INHERITFLAG_RECTIFY; break;
          case concept_split:
             the_final_bit = FINAL__SPLIT;
             goto new_final;

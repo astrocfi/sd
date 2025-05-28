@@ -232,6 +232,7 @@ enum concept_kind {
    concept_active_phantoms,
    concept_mirror,
    concept_central,
+   concept_rectify,
    concept_snag_mystic,
    concept_crazy,
    concept_frac_crazy,
@@ -3977,14 +3978,15 @@ enum {
    RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080U,
    RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000100U,
    RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x00000200U,
-   // 1 spare bit here
-   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00000800U,
-   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00001000U,
-   RESULTFLAG__EXPAND_TO_2X3        = 0x00002000U,
-   RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x00004000U,
 
-   // This is a 5 bit field.
-   RESULTFLAG__EXPIRATION_BITS      = 0x000F8000U,
+   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00000400U,
+   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00000800U,
+   RESULTFLAG__EXPAND_TO_2X3        = 0x00001000U,
+   RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x00002000U,
+
+   // This is a 6 bit field.
+   RESULTFLAG__EXPIRATION_BITS      = 0x000FC000U,
+   RESULTFLAG__RECTIFY_EXPIRED      = 0x00004000U,
    RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x00008000U,
    RESULTFLAG__GEN_STING_EXPIRED    = 0x00010000U,
    RESULTFLAG__TWISTED_EXPIRED      = 0x00020000U,
@@ -4006,7 +4008,7 @@ enum {
    RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000U,
    RESULTFLAG__INVADED_SPACE        = 0x40000000U,
    RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000U
-   // No spares!  Actually, 3 spares above.
+   // No spares!
 };
 
 
@@ -4498,7 +4500,8 @@ enum {
    // This refers to the special invocation of a "optional_special_number" call;
    // call is being given an optional numeric arg because of really hairy fraction.
    CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x08000000U,
-   CMD_MISC3__NO_FUDGY_2X3_FIX     = 0x10000000U
+   CMD_MISC3__NO_FUDGY_2X3_FIX     = 0x10000000U,
+   CMD_MISC3__RECTIFY              = 0x20000000U
 };
 
 enum normalize_action {
@@ -5714,7 +5717,7 @@ extern bool check_restriction(
 
 extern void basic_move(
    setup *ss,
-   calldefn *the_calldefn,
+   const calldefn *the_calldefn,
    int tbonetest,
    bool fudged,
    bool mirror,
@@ -5791,7 +5794,7 @@ void do_stuff_inside_sequential_call(setup *result, uint32_t this_mod1,
 void really_inner_move(
    setup *ss,
    bool qtfudged,
-   calldefn *callspec,
+   const calldefn *callspec,
    calldef_schema the_schema,
    uint32_t callflags1,
    uint32_t callflagsf,

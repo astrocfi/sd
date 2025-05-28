@@ -3552,7 +3552,7 @@ void mimic_move(
    if (MI.groupsize <= 2) {
       try {
          // Don't split into 1x2's if user requested C/L/W.
-         if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS)) == 0 &&
+         if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS|MIMIC_SETUP_TIDAL_SETUP)) == 0 &&
              !((MI.setup_hint & MIMIC_SETUP_BOXES) == 0 && (flags2 & CFLAG2_CAN_BE_ONE_SIDE_LATERAL))) {
             switch (ss->kind) {
             case s1x4:

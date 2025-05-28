@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.56
-@set title2 Database version = 39.56 format = 401
+@set title1 RELEASE NOTES FOR VERSION 39.57
+@set title2 Database version = 39.57 format = 403
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.57::
 * 39.56::
 * 39.55::
 * 39.54::
@@ -156,7 +157,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.56, Top, (dir)
+@node Intro, 39.57, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -167,11 +168,17 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2023 William B. Ackerman
 @sp 3
 @menu
-* 39.56::               Changes in the current version
+* 39.57::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.56, 39.55, Intro, Top
+@node 39.57, 39.56, Intro, Top
+@unnumberedsec Version 39.57 changes
+
+New concept:  @strong{rectify}.  This needs more work.
+
+@c ************
+@node 39.56, 39.55, 39.57, Top
 @unnumberedsec Version 39.56 changes
 
 Address a few intriguing issues; fix a few bugs.

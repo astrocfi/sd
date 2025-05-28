@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.56
-@set Time-stamp: Sept 4, 2023
+@set sd-version 39.57
+@set Time-stamp: Sept 30, 2023
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4564,6 +4564,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item <ANYONE> are <N/4> stable
 @item emulate
 @item nose
+@item rectify
 @item drag the <ANYONE>
 @item trace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item outeracting
@@ -4692,7 +4693,7 @@ These are straightforward.
 @item twice
 @item <N> times
 @item do the last <N>/<N>
-The @code{M/N} concept, where @code{M} and @code{N} are numbers, causes that
+The @code{N/N} concept, where @code{N} and @code{N} are numbers, causes that
 fraction of the subject call to be executed, as in @samp{3/5 swing the fractions}.
 In @code{Sdtty}, just type in the numbers directly, as in @code{3/5}.
 In @code{Sd}, the concept is listed as @code{<N>/<N>}.  A popup will appear asking
@@ -4912,7 +4913,7 @@ For example, you might type
 @end group
 @end example
 
-Because the @kbd{replace}, @kbd{interrupt} @kbd{start with}, and @kbd{use}
+Because the @kbd{replace}, @kbd{interrupt}, @kbd{start with}, and @kbd{use}
 concepts require two calls, you must press @key{ENTER}
 after typing them, and then type the two calls with @key{ENTER} after each one.
 

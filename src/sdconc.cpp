@@ -4222,9 +4222,16 @@ extern void concentric_move(
    localmodsout1 |= (begin_outer.cmd.cmd_misc_flags & DFM1_CONCENTRICITY_FLAG_MASK);
 
    // If doing half of an acey deucey, don't force spots--it messes up short6 orientation.
-   if (analyzer == schema_concentric_6p_or_normal_or_2x6_2x3 &&
-       ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))
-      localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
+   if (analyzer == schema_concentric_6p_or_normal_or_2x6_2x3 ||
+       analyzer == schema_concentric_or_diamond_line ||
+       analyzer == schema_concentric) {
+      if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))
+         localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
+      else if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY)) {
+         localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
+         localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
+      }
+   }
 
    // If the outsides did "emulate", they stay on the same spots no matter what
    // anyone says.

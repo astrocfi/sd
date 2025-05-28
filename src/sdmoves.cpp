@@ -4319,6 +4319,7 @@ extern bool get_real_subcall(
 
    cmd_out->parseptr = parseptr;
    cmd_out->cmd_final_flags = new_final_concepts;
+   cmd_out->cmd_misc3_flags = cmd_in->cmd_misc3_flags;
 
    // If this context requires a tagging or scoot call, pass that fact on.
    if (this_is_tagger) cmd_out->cmd_final_flags.set_finalbit(FINAL__MUST_BE_TAG);
@@ -6126,9 +6127,9 @@ static void do_sequential_call(
    int subpart_count = 0;
 
    for (;;) {
-      by_def_item *this_item = &callspec->stuff.seq.defarray[0];
+      const by_def_item *this_item = &callspec->stuff.seq.defarray[0];
       uint32_t this_mod1 = this_item->modifiers1;
-      by_def_item *alt_item = this_item;
+      const by_def_item *alt_item = this_item;
       bool recompute_id = false;
       uint32_t saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
@@ -6223,6 +6224,8 @@ static void do_sequential_call(
 
          // Turn on the expiration mechanism.
          result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
+         foo1.prior_expire_bits = result->cmd.prior_expire_bits;
+         foo2.prior_expire_bits = result->cmd.prior_expire_bits;
 
          if (get_real_subcall(parseptr, this_item, &foobar,
                               callspec, forbid_flip, extra_heritmask_bits, &foo1)) {
@@ -6528,7 +6531,7 @@ static void do_sequential_call(
 static bool do_misc_schema(
    setup *ss,
    calldef_schema the_schema,
-   calldefn *callspec,
+   const calldefn *callspec,
    uint32_t callflags1,
    setup_command *foo1p,
    uint32_t override_concentric_rules,
@@ -7183,7 +7186,7 @@ static void matrixmovewrapper(setup *ss,
 void really_inner_move(
    setup *ss,
    bool qtfudged,
-   calldefn *callspec,
+   const calldefn *callspec,
    calldef_schema the_schema,
    uint32_t callflags1,
    uint32_t callflagsf,
@@ -7605,10 +7608,9 @@ void really_inner_move(
          // Fix special case of yoyo/generous/stingy.
          heritflags hhhh = callflagsh;
          fix_gensting_weirdness(&ss->cmd, hhhh);
+         hhhh |= INHERITFLAG_RECTIFY;  // This one doesn't count.
+         heritflags unaccepted_flags = ss->cmd.cmd_final_flags.herit & ~hhhh;
 
-         heritflags unaccepted_flags;
-         unaccepted_flags = ss->cmd.cmd_final_flags.herit & ~hhhh;
-             
          // Special case:  Some calls do not specify "magic" inherited
          // to their children, but can nevertheless be executed magically.
          // In such a case, the whole setup is divided into magic lines
@@ -7930,8 +7932,36 @@ static void move_with_real_call(
 
    heritflags herit_concepts = ss->cmd.cmd_final_flags.herit;
 
-   calldefn *this_defn = &ss->cmd.callspec->the_defn;
-   calldefn *deferred_array_defn = (calldefn *) 0;
+   // Deal with RECTIFY substitution.
+   if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_RECTIFY) {
+      ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_RECTIFY;
+
+      if (ss->cmd.callspec == base_calls[base_call_circulate] ||
+          ss->cmd.callspec == base_calls[base_call_motcirc] ||
+          ss->cmd.callspec == base_calls[base_call_couples_circ] ||
+          ss->cmd.callspec == base_calls[base_call_circ_for_coord] ||
+          ss->cmd.callspec == base_calls[base_call_colcirc] ||
+          ss->cmd.callspec == base_calls[base_call_circulate_for_tally_ho]) {
+         ss->cmd.callspec = base_calls[base_call_ctrrot];
+      }
+      else if (ss->cmd.callspec == base_calls[base_call_ctrrot]) {
+         ss->cmd.callspec = base_calls[base_call_circulate];
+      }
+      else if (ss->cmd.callspec == base_calls[base_call_splctrrot]) {
+         ss->cmd.callspec = base_calls[base_call_boxcirc];
+      }
+      else if (ss->cmd.callspec == base_calls[base_call_splitcirc] ||
+               ss->cmd.callspec == base_calls[base_call_boxcirc] ||
+               ss->cmd.callspec == base_calls[base_call_boxcirc1] ||
+               ss->cmd.callspec == base_calls[base_call_boxcirc2]) {
+         ss->cmd.callspec = base_calls[base_call_splctrrot];
+      }
+      else
+         ss->cmd.cmd_final_flags.herit |= INHERITFLAG_RECTIFY;  // Didn't use it; leave the flag on.
+   }
+
+   const calldefn *this_defn = &ss->cmd.callspec->the_defn;
+   const calldefn *deferred_array_defn = (calldefn *) 0;
    warning_info saved_warnings = configuration::save_warnings();
    call_conc_option_state saved_options = current_options;
    setup saved_ss = *ss;
@@ -8739,6 +8769,12 @@ static void handle_expiration(setup *ss, uint32_t *bit_to_set)
          *bit_to_set |= RESULTFLAG__TWISTED_EXPIRED;
       }
 
+      if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY)) {
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__RECTIFY_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_RECTIFY);   // Already did that.
+         *bit_to_set |= RESULTFLAG__RECTIFY_EXPIRED;
+      }
+
       // Take care of generous and stingy; they are complicated.
 
       switch (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
@@ -8871,6 +8907,10 @@ void move(
             }
             else {
                parseptrtemp = process_final_concepts(parseptr, true, &ss->cmd.cmd_final_flags, true, false);
+
+               // This one takes additional action.
+               if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_RECTIFY)
+                  ss->cmd.cmd_misc3_flags |= CMD_MISC3__RECTIFY;
 
                if (parseptrtemp->concept->kind > marker_end_of_list)
                   fail("Incomplete supercall.");
@@ -9060,6 +9100,9 @@ void move(
 
    save_incoming_final = ss->cmd.cmd_final_flags;   // In case we need to punt.
    parseptrcopy = process_final_concepts(parseptrcopy, true, &ss->cmd.cmd_final_flags, true, false);
+   // This one takes additional action.
+   if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_RECTIFY)
+      ss->cmd.cmd_misc3_flags |= CMD_MISC3__RECTIFY;
    saved_magic_diamond = last_magic_diamond;
 
    // Handle expired concepts.

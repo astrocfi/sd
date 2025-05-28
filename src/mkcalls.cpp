@@ -1133,6 +1133,7 @@ const char *flagtabh[] = {
    "zoomroll_is_inherited",
    "trade_is_inherited",
    "crossover_is_inherited",
+   "rectify_is_inherited",
    ""};
 
 // This table is keyed to the constants "INHERITFLAG_???".
@@ -1184,6 +1185,7 @@ const char *altdeftabh[] = {
    "zoomroll",
    "trade",
    "crossover",
+   "rectify",
    ""};
 
 // See INHERITFLAG_YOYOETCMASK in database.h
@@ -1326,6 +1328,7 @@ const char *defmodtabh[] = {
    "inherit_zoomroll",
    "inherit_trade",
    "inherit_crossover",
+   "inherit_rectify",
    ""};
 
 // This table is keyed to the constants "dfm_***".  These are the heritable
@@ -1381,6 +1384,7 @@ const char *forcetabh[] = {
    "force_zoomroll",
    "force_trade",
    "force_crossover",
+   "force_rectify",
    ""};
 
 // This table is keyed to the constants "MTX_???".
@@ -1672,7 +1676,17 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "backemup"},       // This is used for remembering the handedness.
    {0, "circulate"},
    {0, "motcirc"},
+   {0, "couples_circ"},
+   {0, "circ_for_coord"},
+   {0, "colcirc"},
+   {0, "circulate_for_tally_ho"},
+   {0, "circulateforacey"},
    {0, "trade"},
+   {0, "split_circ"},
+   {0, "box_circ"},
+   {0, "box_circ_1"},
+   {0, "box_circ_2"},
+   {0, "turndmdn"},
    {0, "touch"},
    {0, "plainprom"},
    {0, "plainpromeighths"},

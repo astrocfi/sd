@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.56"
+version "39.57"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -537,7 +537,7 @@ call "_revert if needed" dontshow tag revert_if_needed
 /*   Note!  The base circulate calls are not alphabetized.  They appear in the
    menu in the order in which we list them here. */
 
-call "split@O circulate@P" mainstream
+call "split@O circulate@P" mainstream tag split_circ
             base_circ_call take_right_hands
    simple_funny
    setup 2x2 2x2 no_cutting_through
@@ -838,6 +838,35 @@ call "rotary@O circulate@P" c4
             alternate_definition [lasthalf] c4
    setup 2x4 2x4 rotate qualifier 2fl_only
       array [CR1S CM6S AM1N AL6N AL0S AM7S CM0N CR7N]
+// Must put in traditional-style rectify here!
+// This should make t12t pass.
+
+call "rotary circulate" c4
+            rectify_is_inherited
+   setup 2x4 2x4 restriction wave_only
+      array [CR5N AL4N CR7N AL6N AM1N CM0N AM3N CM2N]
+            alternate_definition [single] c4
+   setup 1x4 1x4 restriction wave_only
+      array [C3N A2N A1N C0N]
+   setup 2x2 2x2 restriction wave_only
+      array [CR3N AL2N AM1N CM0N]
+            alternate_definition [3x3 12matrix] c4
+   setup 3x4 3x4 restriction wave_only
+      array [C7N A6N C9N A8N A11N C10N A1N C0N A3N C2N C5N A4N]
+   setup 2x6 2x6 restriction wave_only
+      array [CR7N AL6N CR9N AL8N CR11N AL10N AM1N CM0N AM3N CM2N AM5N CM4N]
+            alternate_definition [4x4 12matrix] c4
+   setup 4x4 4x4 restriction wave_only
+      array [A6N A11N A15N C9N A13N C12N A0N C10N
+             C14N C3N C7N A1N C5N A4N C8N A2N]
+   setup 2x8 2x8 restriction wave_only
+      array [CR9N AL8N CR11N AL10N CR13N AL12N CR15N AL14N
+             AM1N CM0N AM3N CM2N AM5N CM4N AM7N CM6N]
+            visible_fractions yield_if_ambiguous bigmatrix_is_inherited nxn_is_inherited rectify_is_inherited
+   seq boxyfollowthru []
+   seq circulate [inherit_bigmatrix inherit_rectify]
+   seq circulate [inherit_bigmatrix inherit_rectify]
+   seq natural_half_tag []
 
 call "rotary circulate, centers to a wave" c4
    setup 2x4 qtag restriction wave_only
@@ -2474,7 +2503,8 @@ call "snap the diamond" c4
       array [3W 4E 0 0 7E 0W 0 0]
 
 call "dodge @2circulate@3" c2
-   conc_ctrbox walkndodge [] circulate [or_anycall]
+            rectify_is_inherited
+   conc_ctrbox walkndodge [] circulate [inherit_rectify or_anycall]
 
 call "dodge @0" c2
             mxn_is_inherited
@@ -3713,6 +3743,31 @@ call "turn the star @b, nobox" dontshow tag turndmdn
       array [0 CCR1N 0 AAL1S]
    setup 1x4 dmd rotate qualifier num 5 none
       array [CCR0N 0 AAL0S 0]
+            alternate_definition [rectify] c4
+   setup dmd dmd        qualifier num 0 none
+      array [ZM0N 0 ZM2N 0]
+   setup pmd dmd        qualifier num 0 none
+      array [0 ZM1N 0 ZM3N]
+   setup dmd dmd        qualifier num 1 none
+      array [CR1E 0 AL1W 0]
+   setup pmd dmd        qualifier num 1 none
+      array [0 CR2E 0 AL2W]
+   setup dmd dmd rotate qualifier num 2 none
+      array [CR1E 0 AL3E 0]
+   setup pmd dmd rotate qualifier num 2 none
+      array [0 CR2E 0 AL0E]
+   setup dmd dmd        qualifier num 3 none
+      array [CR3W 0 AL3E 0]
+   setup pmd dmd        qualifier num 3 none
+      array [0 CR0W 0 AL0E]
+   setup dmd dmd rotate qualifier num 4 none
+      array [CR3W 0 AL1W 0]
+   setup pmd dmd rotate qualifier num 4 none
+      array [0 CR0W 0 AL2W]
+   setup dmd dmd        qualifier num 5 none
+      array [CCR1E 0 AAL1W 0]
+   setup pmd dmd        qualifier num 5 none
+      array [0 CCR2E 0 AAL2W]
             alternate_definition [half] a2
    setup star star      qualifier num 2 none
       array [CR1E 0 AL1W 0]
@@ -3753,120 +3808,129 @@ call "_diamond ends isolate" dontshow tag diamond_ends_isolate
       array [0 ZM3W 0 ZM1W]
 
 call "_centers slip/ends circulate" dontshow tag ctrsslipendscirc
-            bigmatrix_is_inherited gen_sting_is_inherited
-   maybematrix_conc any_hand_slip [inherit_bigmatrix inherit_gensting] circulate [conc_demand_lines conc_force_spots]
+            bigmatrix_is_inherited gen_sting_is_inherited rectify_is_inherited
+   maybematrix_conc any_hand_slip [inherit_bigmatrix inherit_gensting] circulate [inherit_rectify conc_demand_lines conc_force_spots]
 
 call "alter the wave@S" c1
             step_to_wave can_be_fan left_means_touch_or_check visible_fractions
-            yoyo_is_inherited gen_sting_is_inherited
+            yoyo_is_inherited gen_sting_is_inherited rectify_is_inherited
    seq trade_or_swing_half [inherit_yoyo inherit_gensting allow_forced_mod]
    seq fanback []
-   seq turndmdn [allow_forced_mod insert_number 2]
+   seq turndmdn [inherit_rectify allow_forced_mod insert_number 2]
    seq flipdiamond [allow_forced_mod]
 
 call "alter the diamond@S" c4a
-            visible_fractions gen_sting_is_inherited
-   seq turndmdn [allow_forced_mod insert_number 2]
+            visible_fractions gen_sting_is_inherited rectify_is_inherited
+   seq turndmdn [inherit_rectify allow_forced_mod insert_number 2]
    seq flipdiamond [allow_forced_mod]
    seq fanback [inherit_gensting]
 
 call "alter and circulate@S" c2
             step_to_wave can_be_fan left_means_touch_or_check visible_fractions
             yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
+            rectify_is_inherited
    seq swing [inherit_yoyo inherit_gensting inherit_bigmatrix allow_forced_mod]
    seq fanback [inherit_bigmatrix]
-   seq ctrsslipendscirc [inherit_gensting inherit_bigmatrix]
+   seq ctrsslipendscirc [inherit_gensting inherit_bigmatrix inherit_rectify]
    seq turndmdn [allow_forced_mod inherit_bigmatrix insert_number 2]
    seq flipdiamond [inherit_bigmatrix allow_forced_mod]
 
 call "@B the alter@S" c4a
             step_to_nonphantom_box left_means_touch_or_check
             neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod]
+   seq turndmdn [inherit_rectify allow_forced_mod]
    seq flipdiamond [allow_forced_mod]
 
 call "@9-@9-@9 quarter the alter" c4a
             step_to_nonphantom_box left_means_touch_or_check
-            need_three_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            need_three_numbers yoyo_is_inherited fractal_is_inherited
+            gen_sting_is_inherited visible_fractions rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number inherit_yoyo inherit_gensting inherit_fractal]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod shift_two_numbers]
+   seq turndmdn [inherit_rectify allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
 // Same as above.
 call "@9-@9-@9 1/4 the alter" c4a
             step_to_nonphantom_box left_means_touch_or_check
-            need_three_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            need_three_numbers yoyo_is_inherited fractal_is_inherited
+            gen_sting_is_inherited visible_fractions rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number inherit_yoyo inherit_gensting inherit_fractal]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod shift_two_numbers]
+   seq turndmdn [inherit_rectify allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
 // Same as above.
 call "@9-@9-@9 alter the wave" c4a
             step_to_nonphantom_box left_means_touch_or_check
-            need_three_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            need_three_numbers yoyo_is_inherited fractal_is_inherited
+            gen_sting_is_inherited visible_fractions rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number inherit_yoyo inherit_gensting inherit_fractal]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod shift_two_numbers]
+   seq turndmdn [inherit_rectify allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
 call "@B the alter and circulate" c4a
             step_to_nonphantom_box left_means_touch_or_check
             neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
-   seq ctrsslipendscirc [inherit_gensting]
+   seq ctrsslipendscirc [inherit_gensting inherit_rectify]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod]
+   seq turndmdn [inherit_rectify allow_forced_mod]
    seq flipdiamond [allow_forced_mod]
 
 call "@9-@9-@9 alter and circulate" c4a
             step_to_nonphantom_box left_means_touch_or_check
-            need_three_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            need_three_numbers yoyo_is_inherited fractal_is_inherited
+            gen_sting_is_inherited visible_fractions rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number inherit_yoyo inherit_gensting inherit_fractal]
-   seq ctrsslipendscirc [inherit_gensting]
+   seq ctrsslipendscirc [inherit_gensting inherit_rectify]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod shift_two_numbers]
+   seq turndmdn [inherit_rectify allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
 // Same as above.
 call "@9-@9-@9 quarter the alter and circulate" c4a
             dont_use_in_resolve
             step_to_nonphantom_box left_means_touch_or_check
-            need_three_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            need_three_numbers yoyo_is_inherited fractal_is_inherited
+            gen_sting_is_inherited visible_fractions rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number inherit_yoyo inherit_gensting inherit_fractal]
-   seq ctrsslipendscirc [inherit_gensting]
+   seq ctrsslipendscirc [inherit_gensting inherit_rectify]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod shift_two_numbers]
+   seq turndmdn [inherit_rectify allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
 // Same as above.
 call "@9-@9-@9 1/4 the alter and circulate" c4a
             dont_use_in_resolve
             step_to_nonphantom_box left_means_touch_or_check
-            need_three_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
+            need_three_numbers yoyo_is_inherited fractal_is_inherited
+            gen_sting_is_inherited visible_fractions rectify_is_inherited
    seq armturn_n4 [allow_forced_mod inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number inherit_yoyo inherit_gensting inherit_fractal]
-   seq ctrsslipendscirc [inherit_gensting]
+   seq ctrsslipendscirc [inherit_gensting inherit_rectify]
    // This next part will demand diamonds, which the previous part
    // will create only if the fraction is odd.
-   seq turndmdn [allow_forced_mod shift_two_numbers]
+   seq turndmdn [inherit_rectify allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
 call "change the wave" c3
@@ -6208,8 +6272,8 @@ call "couples circulate" mainstream tag couples_circ
             alternate_definition [half] mainstream
    setup 2x4 crosswave rotate qualifier couples_only restriction unusual 2fl_only
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
-            mxn_is_inherited
-   seq circulate [cpls_unless_single]   // Of course, "single" isn't allowed.
+            mxn_is_inherited rectify_is_inherited
+   seq circulate [cpls_unless_single inherit_rectify]   // Of course, "single" isn't allowed.
 
 call "shazam" c2
             visible_fractions diamond_is_legal fractal_is_inherited gen_sting_is_inherited rewind_is_inherited
@@ -8838,6 +8902,49 @@ call "half tag" mainstream tag half_tag
    setup 1x8 2x4
       array [C0E C1E C3E C2E A4W A5W A7W A6W]
 
+call "_natural half tag" dontshow tag natural_half_tag
+            left_means_mirror
+   setup 1x4 2x2
+      array [C0E C1E A1W A0W]
+            alternate_definition [3x3] mainstream
+   setup 1x6 2x3
+      array [C0E C1E C2E A2W A1W A0W]
+   setup 3x4 2x6 rotate
+      array [C11N C0N A11S A0S A2S A9S A4S A7S C4N C7N C9N C2N]
+
+// See comments in boxyfollowthru
+/*
+            alternate_definition [4x4] mainstream
+   setup 1x8 2x4
+      array [C0N C1E C3E C2E A3W A2W A0W A1W]
+*/
+
+
+
+/*****
+            alternate_definition [single] c4
+   setup 1x4 1x4 restriction wave_only
+      array [C3N A2N A1N C0N]
+   setup 2x2 2x2 restriction wave_only
+      array [CR3N AL2N AM1N CM0N]
+            alternate_definition [3x3 12matrix] c4
+   setup 3x4 3x4 restriction wave_only
+      array [C7N A6N C9N A8N A11N C10N A1N C0N A3N C2N C5N A4N]
+   setup 2x6 2x6 restriction wave_only
+      array [CR7N AL6N CR9N AL8N CR11N AL10N AM1N CM0N AM3N CM2N AM5N CM4N]
+            alternate_definition [4x4 12matrix] c4
+   setup 4x4 4x4 restriction wave_only
+      array [A6N A11N A15N C9N A13N C12N A0N C10N
+             C14N C3N C7N A1N C5N A4N C8N A2N]
+   setup 2x8 2x8 restriction wave_only
+      array [CR9N AL8N CR11N AL10N CR13N AL12N CR15N AL14N
+             AM1N CM0N AM3N CM2N AM5N CM4N AM7N CM6N]
+*/
+
+
+
+
+
 call "line of 6, @a tag" mainstream
             neednumber
    setup 1x6 2x3 qualifier num 2 none
@@ -10880,11 +10987,12 @@ call "criss cross your neighbor" c2 tag xxneighbor
       array [CR3W AL3E CM2S AM0S]
 
 call "_ends circulate" dontshow tag ends_circ
-   conc nullcall [] circulate [conc_force_spots]
+            rectify_is_inherited
+   conc nullcall [] circulate [conc_force_spots inherit_rectify]
 
 call "_lines slip thru" dontshow tag lines_slip_thru
-            yoyo_is_inherited gen_sting_is_inherited
-   conc any_hand_slip [inherit_yoyo inherit_gensting] circulate [conc_force_spots]
+            yoyo_is_inherited gen_sting_is_inherited rectify_is_inherited
+   conc any_hand_slip [inherit_yoyo inherit_gensting] circulate [conc_force_spots inherit_rectify]
 
 call "_trade your neighbor part 1" dontshow tag start_trade_neighbor
    setup 2x4 2x4 rotate restriction forbidden wave_only
@@ -10893,7 +11001,7 @@ call "_trade your neighbor part 1" dontshow tag start_trade_neighbor
    setup 2x4 2x4 rotate restriction forbidden wave_only
       array [ZM7W ZM7W ZM0W ZM0W CR2S AL2N CR5S AL5N]
 
-call "_trade your neighbor right part 1" dontshow tag start_trade_neighbor_right
+call "_trade your neighbor natural, part 1" dontshow tag start_trade_neighbor_natural
    setup 2x4 2x4 rotate qualifier wave_only restriction controversial alwaysfail
       array [CR7N AL7S CR0N AL0S AL2N CR2S AL5N CR5S]
             alternate_definition [cross] c4
@@ -10901,16 +11009,47 @@ call "_trade your neighbor right part 1" dontshow tag start_trade_neighbor_right
       array [CR7N AL7S CR0N AL0S CR2S AL2N CR5S AL5N]
 
 call "trade your neighbor @h" c4a
-            cross_is_inherited
+            cross_is_inherited rectify_is_inherited
    seq start_trade_neighbor [inherit_cross]
    seq set_windmill_direction []
-   seq ends_circ []
+   seq ends_circ [inherit_rectify]
 
-// With no direction, we go right, but the call is deprecated.
+// With no direction, we go to natural handhold.
 call "trade your neighbor" c4
-            cross_is_inherited
-   seq start_trade_neighbor_right [inherit_cross]
-   seq ends_circ []
+            cross_is_inherited rectify_is_inherited
+   seq start_trade_neighbor_natural [inherit_cross]
+   seq ends_circ [inherit_rectify]
+
+call "_boxy follow thru" dontshow tag boxyfollowthru
+   setup 2x2 1x4 no_cutting_through rotate restriction wave_only
+      array [CR0N AL0S AL1S CR1N]
+// Don't allow 3x3 etc. if doing rotary circulate by parts;
+// so don't allow them if doing rectify stuff.  Breaking apart the circulates
+// doesn't work if doing 3x3.  3x3 rotary circulate must be done with the
+// traditional ("alternate_definition [3x3 12matrix]") method.
+
+/*
+            alternate_definition [single] c4
+   setup 1x2 1x2 rotate qualifier wave_only
+      array [CR0N AL0S]
+            alternate_definition [3x3] c4a
+   setup 3x2 1x6 restriction wave_only
+      array [CR5E CR4E CR3E AL3W AL4W AL5W]
+   setup 2x6 3x4 rotate restriction wave_only
+      array [CR9N AL9S CR10N AL10S CR0N AL0S AL1S CR1N AL11S CR11N AL8S CR8N]
+            alternate_definition [4x4] c4a
+   setup 4x2 1x8 restriction wave_only
+      array [CR6E CR7E CR5E CR4E AL4W AL5W AL7W AL6W]
+*/
+
+/*************
+   setup 4x4 4x4 restriction wave_only
+      array [A6N A11N A15N C9N A13N C12N A0N C10N
+             C14N C3N C7N A1N C5N A4N C8N A2N]
+   setup 2x8 2x8 restriction wave_only
+      array [CR9N AL8N CR11N AL10N CR13N AL12N CR15N AL14N
+             AM1N CM0N AM3N CM2N AM5N CM4N AM7N CM6N]
+*************/
 
 call "follow thru" c1 tag followthru
    setup 2x2 1x4 no_cutting_through rotate restriction wave_only
@@ -14145,8 +14284,8 @@ call "along part 1" dontshow tag along1
    conc6_2_or_4_2 hinge_with_warn [inherit_gensting inherit_fractal] ctr_rot []
 
 call "along part 2" dontshow tag along2
-            magic_is_inherited
-   conc6_2_or_4_2 colcirc [inherit_magic allow_forced_mod] nullcall []
+            magic_is_inherited rectify_is_inherited
+   conc6_2_or_4_2 colcirc [inherit_magic inherit_rectify allow_forced_mod] nullcall []
 
 call "along part 3" dontshow tag along3
             take_right_hands yoyo_is_inherited gen_sting_is_inherited
@@ -16035,8 +16174,8 @@ call "box counter rotate" a2 tag boxctrrot
       array [CR1E AL0W CR0E AL1W]
 
 call "_circulate and quarter in" dontshow tag circ_and_quarter_in
-            visible_fractions
-   seq box_circulate_maybe_diamond []
+            visible_fractions rectify_is_inherited 
+   seq box_circulate_maybe_diamond [inherit_rectify]
    seq quarterin []
 
 call "rotate @b" c2 tag rotn
@@ -17565,9 +17704,9 @@ call "@0 and anything" c4
    seq anything []
 
 call "_finish set back" dontshow tag finish_set_back
-            funny_is_inherited
+            funny_is_inherited rectify_is_inherited
    conc crossback [inherit_funny]
-        circulate [conc_demand_lines conc_force_lines endscando inherit_funny]
+        circulate [conc_demand_lines conc_force_lines endscando inherit_funny inherit_rectify]
 
 call "set back" c4a
             funny_is_inherited visible_fractions
@@ -17662,12 +17801,13 @@ call "_gamut inner part 2" dontshow tag gamutinner2
    seq tradethewave [allow_forced_mod]
 
 call "_gamut part 1" dontshow tag gamut1
-            fractal_is_inherited gen_sting_is_inherited
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    conc armturn_n4 [insert_number 3 inherit_fractal inherit_gensting]
-        circulate [conc_demand_lines conc_force_spots]
+        circulate [conc_demand_lines conc_force_spots inherit_rectify]
 
 call "_gamut part 2" dontshow tag gamut2
-   conc gamutinner2 [] circulate [conc_demand_lines conc_force_spots]
+            rectify_is_inherited
+   conc gamutinner2 [] circulate [conc_demand_lines conc_force_spots inherit_rectify]
 
 call "gamut" c3a
             dont_use_in_resolve last_part_visible
@@ -17805,7 +17945,8 @@ call "shape up @h" c4x
    conc tickle [] endsshape [conc_demand_columns conc_force_otherway endscando]
 
 call "ease off" c3a
-   conc circ_and_quarter_in [] zing [conc_demand_lines conc_force_spots endscando]
+            /*rectify_is_inherited*/
+   conc circ_and_quarter_in [/*inherit_rectify*/] zing [conc_demand_lines conc_force_spots endscando]
 
 call "_line of 4 trade / change ends" dontshow tag fourtrade_change_ends
             yoyo_is_inherited gen_sting_is_inherited
@@ -18524,7 +18665,8 @@ call "presto" c4a
 
 call "_finish follow and cross" dontshow tag rfinfollx
    // This is just acey-deucey, but we take no chances with weird setups.
-   conc trade [] circulate [conc_demand_lines conc_force_lines]
+            rectify_is_inherited
+   conc trade [] circulate [conc_demand_lines conc_force_lines inherit_rectify]
 
 call "follow the deucey" c4x tag finfollx
             cross_is_inherited
@@ -18654,10 +18796,10 @@ call "ferris trade and wheel" c4
       array [CR0E CR7E AL0E AL7E AL6E AL5W CR2W CR1E]
 
 call "step lively" c4a
-            visible_fractions funny_is_inherited
+            visible_fractions funny_is_inherited rectify_is_inherited
    seq detour [inherit_funny]
    seq slimdown [inherit_funny]
-   seq circulate [inherit_funny]
+   seq circulate [inherit_funny inherit_rectify]
 
 call "recount" c4a
    setup 2x4 2x4 rotate qualifier wave_only
@@ -19165,29 +19307,30 @@ call "@v er's flow but criss cross it" c4a
    seq fin_xxlin_flow [inherit_single inherit_mxn inherit_yoyo inherit_gensting]
 
 call "eroo" c4
-            fractal_is_inherited gen_sting_is_inherited
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    // This is inconsistent with similar suffixes like delight or dream --
    // the ends are considered to have already quartered to handhold direction,
    // whereas the other calls assume that they have stepped straight ahead.
    // But if you use the call "extend eroo", the right thing will happen.
    conc cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
-        circulate [conc_demand_lines conc_force_spots]
+        circulate [conc_demand_lines conc_force_spots inherit_rectify]
 
 call "eroo but @m" c4
-            fractal_is_inherited gen_sting_is_inherited
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    conc nullsecond [mandatory_secondary_call]
-        circulate [conc_demand_lines conc_force_spots]
+        circulate [conc_demand_lines conc_force_spots inherit_rectify]
 
 call "_eroo" dontshow tag eroo
-            fractal_is_inherited gen_sting_is_inherited
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    // We really want the "cast off 3/4" in the ATC-eroo calls to be
    // an arm turn, to prevent printing annoying warnings.
    conc armturn_n4 [insert_number 3 inherit_gensting inherit_fractal]
-        circulate [conc_demand_lines conc_force_spots]
+        circulate [conc_demand_lines conc_force_spots inherit_rectify]
 
 call "_eroo but @m" dontshow tag eroobut2nd
+            rectify_is_inherited
    conc nullsecond [mandatory_secondary_call]
-        circulate [conc_demand_lines conc_force_spots]
+        circulate [conc_demand_lines conc_force_spots inherit_rectify]
 
 call "_ends delight" dontshow tag elight
    setup 2x2 2x2 restriction unusual leads_only
@@ -19497,8 +19640,8 @@ call "_finish cast a net" dontshow tag fincastanet
       array [C2S A2N A0S A7N A5N C5S C0N C7S]
 
 call "cast a net" c4a
-            first_part_visible yoyo_is_inherited gen_sting_is_inherited
-   seq circulate [force_half allow_forced_mod]
+            first_part_visible yoyo_is_inherited gen_sting_is_inherited rectify_is_inherited
+   seq circulate [force_half allow_forced_mod inherit_rectify]
    seq fincastanet [inherit_yoyo inherit_gensting]
 
 call "_check facing couples, no roll" dontshow tag checkfacing_noroll
@@ -20787,8 +20930,8 @@ call "@2walk @3the plank" c4a
    setup 8x2 4x4 restriction wave_only
       array [ZM14N ZM3N ZM7N ZM5N C4S C2S C1S C0S
             A4S A2S A1S A0S ZM14N ZM3N ZM7N ZM5N]
-            visible_fractions magic_is_inherited funny_is_inherited
-   seq colcirc [or_anycall inherit_magic inherit_funny]
+            visible_fractions magic_is_inherited funny_is_inherited rectify_is_inherited
+   seq colcirc [or_anycall inherit_magic inherit_funny inherit_rectify]
    seq plank []
 
 call "@0 the plank" c4a
@@ -20806,8 +20949,8 @@ call "@0 the plank but @m" c4a
    seq plankbut []
 
 call "walk the plank but @m" c4a
-            visible_fractions
-   seq circulate []
+            visible_fractions rectify_is_inherited
+   seq circulate [ inherit_rectify]
    seq plankbut []
 
 call "cut across" c4a
@@ -22145,16 +22288,16 @@ call "@k tie" c4a
 
 call "no one tie" c4a
             visible_fractions
-            cross_is_inherited single_is_inherited nxn_is_inherited
+            cross_is_inherited single_is_inherited nxn_is_inherited rectify_is_inherited
    seq crossable_peeloff [inherit_cross inherit_single inherit_nxn]
    seq bendtheline       [inherit_single inherit_nxn]
-   seq circulate         [inherit_single inherit_nxn]
+   seq circulate         [inherit_single inherit_nxn inherit_rectify]
 
 call "everyone tie" c4a
             visible_fractions
-            cross_is_inherited single_is_inherited nxn_is_inherited
+            cross_is_inherited single_is_inherited nxn_is_inherited rectify_is_inherited
    seq crossable_peeloff [inherit_cross inherit_single inherit_nxn]
-   seq circulate         [inherit_single inherit_nxn]
+   seq circulate         [inherit_single inherit_nxn inherit_rectify]
    seq bendtheline       [inherit_single inherit_nxn]
 
 call "circle four right 1/4" dontshow tag circle4right
@@ -23188,6 +23331,11 @@ call "circulate for acey deucey" dontshow tag circulateforacey
       predscantdocallinsetup
          if next62spot_is_tboned [ZM1N CR2E CR3S AL2S AL3W ZM4N]
          if always               [ZM1N ZM2N CR3S AL2S ZM3N ZM4N]
+            alternate_definition [rectify] c4
+   setup 2x2 2x2
+      array [CR1E AL0W ZM1W ZM0E]
+   setup 1x4 1x4 rotate
+      array [ZM0N ZM1N AL0S AL1S]
             alternate_definition [6x2] a1
    simple_funny
    setup 2x3 2x3 no_cutting_through
@@ -23274,8 +23422,8 @@ call "half circulate, facing out" dontshow tag half_out_circ
       array [CR0E AL1W 0 0]
 
 call "circulate @9 times" mainstream
-            neednumber visible_fractions distribute_repetitions
-   seq circulate [repeat_n]
+            neednumber visible_fractions distribute_repetitions rectify_is_inherited
+   seq circulate [inherit_rectify repeat_n]
 
 call "_box circulate, maybe diamond" dontshow tag box_circulate_maybe_diamond
             take_right_hands fudge_to_q_tag
@@ -23289,6 +23437,15 @@ call "_box circulate, maybe diamond" dontshow tag box_circulate_maybe_diamond
    setup dmd dmd restriction forbidden diamond_like
       array [CR1E 0 AL1W 0]
    setup pmd dmd restriction forbidden diamond_like
+      array [0 CR2E 0 AL2W]
+            alternate_definition [rectify] c4
+   setup 2x2 2x2 no_cutting_through
+      array [CR1E AL0W ZM1W ZM0E]
+   setup star star
+      array [CR1E 0 AL1W 0]
+   setup dmd star restriction forbidden diamond_like
+      array [CR1E 0 AL1W 0]
+   setup pmd star restriction forbidden diamond_like
       array [0 CR2E 0 AL2W]
             alternate_definition [half] mainstream
    simple_funny
@@ -23353,7 +23510,8 @@ call "column circulate" mainstream tag colcirc
       array [0 0 0 AL3W 0 0 0 CR0E]
 
 call "circulate for coordinate" dontshow tag circ_for_coord
-// This exists just to give the warnings if the circulates indicate that the coordinate itself is unusual.
+// This exists just to give the warnings if the circulates indicate
+// that the coordinate itself is unusual.
             take_right_hands
    setup 2x4 2x4 restriction unusual alwaysfail
       array [CR3S CR2S AL1S AL0S ZM3N ZM2N ZM1N ZM0N]
@@ -23449,7 +23607,7 @@ call "box circulate" mainstream tag box_circ
    setup pmd 2x2 restriction forbidden diamond_like
       array [0 ZM1N 0 ZM2N]
 
-call "box circulate #1 with 3x3" dontshow tag box_circ_1_w_3x3
+call "box circulate #1" dontshow tag box_circ_1
    setup 2x2 2x2 no_cutting_through
       array [CR1S AL0S ZM1N ZM0N]
             alternate_definition [grand] c4
@@ -23470,7 +23628,7 @@ call "box circulate #1 with 3x3" dontshow tag box_circ_1_w_3x3
    setup 4x2 2x4 restriction forbidden wave_only
       array [ZM2N ZM3N CR4S CM5S AM2S AL3S ZM4N ZM5N]
 
-call "box circulate #2 with 3x3" dontshow tag box_circ_2_w_3x3
+call "box circulate #2 with 3x3" dontshow tag box_circ_2
    setup 2x2 2x2 no_cutting_through
       array [CR1S AL0S ZM1N ZM0N]
             alternate_definition [grand] c4
@@ -23538,13 +23696,13 @@ call "_finish clear out" dontshow tag finclearout
       array [ZM0N CR2S CR5S CR3S AL4S AL2S AL5S ZM7N]
 
 call "@1clear out" c4a
-            first_part_visible magic_is_inherited funny_is_inherited
-   seq circulate [or_anycall inherit_magic inherit_funny]
+            first_part_visible magic_is_inherited funny_is_inherited rectify_is_inherited
+   seq circulate [or_anycall inherit_magic inherit_funny inherit_rectify]
    seq finclearout [roll_transparent]
 
 call "@T clear out" c4a
-            first_part_visible
-   seq circulate [mandatory_anycall]
+            first_part_visible rectify_is_inherited
+   seq circulate [mandatory_anycall inherit_rectify]
    seq finclearout [roll_transparent]
 
 call "@N clear out" c4a
@@ -23566,9 +23724,9 @@ call "_lift off but" dontshow tag liftoffbut
       array [0 0 0 0 0 ZM9N ZM19N 0 0 0 0 0 0 CM3E C21W 0]
 
 call "lift off" c3
-            reverse_means_mirror last_part_visible
+            reverse_means_mirror last_part_visible rectify_is_inherited
    seq liftoffbut [inherit_reverse]
-   seq couples_circ [allow_plain_mod]
+   seq couples_circ [inherit_rectify allow_plain_mod]
 
 call "lift off but @0" c3
             reverse_means_mirror last_part_visible
@@ -24189,18 +24347,20 @@ call "@6 rip n snort" c4x
 call "acey deucey" plus tag aceydeucey
             fudge_to_q_tag
             left_means_mirror half_is_inherited yoyo_is_inherited gen_sting_is_inherited
-            magic_is_inherited funny_is_inherited mxn_is_inherited
+            magic_is_inherited funny_is_inherited mxn_is_inherited rectify_is_inherited
    conc6p_or_normal_or_2x6_2x3
                     trade_w_tbone    [inherit_left inherit_half inherit_funny inherit_yoyo
                                       inherit_gensting suppress_elongation_warnings]
                     circulateforacey [or_anycall inherit_left inherit_half inherit_magic
-                                      inherit_funny inherit_mxn conc_force_spots endscando]
+                                      inherit_funny inherit_mxn inherit_rectify
+                                      conc_force_spots endscando]
 
 call "6X2 acey deucey" a1
             fudge_to_q_tag yield_if_ambiguous
-            half_is_inherited yoyo_is_inherited gen_sting_is_inherited magic_is_inherited funny_is_inherited
+            half_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            magic_is_inherited funny_is_inherited rectify_is_inherited
    conc2_6 trade [inherit_half inherit_yoyo inherit_gensting or_anycall]
-           circulate [inherit_half inherit_magic inherit_funny]
+           circulate [inherit_half inherit_magic inherit_funny inherit_rectify]
 
 call "3X2 acey deucey" c1
             fudge_to_q_tag yield_if_ambiguous
@@ -24293,14 +24453,16 @@ call "_ctrs fan chain thru" dontshow tag ctrs_fanchainthru
    seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
 call "_ends fan tag the deucey part 2" dontshow tag ends_fantag2
+            rectify_is_inherited
    seq partnertag []
    seq quarter_right []
-   seq circulate []
+   seq circulate [inherit_rectify]
 
 call "_ends fan tag the deucey @h part 2" dontshow tag ends_fantag2dir
+            rectify_is_inherited
    seq partnertag []
    seq quarter_maybe []
-   seq circulate []
+   seq circulate [inherit_rectify]
 
 call "_fan tag the deucey part 2" dontshow tag fantag2
             fractal_is_inherited
@@ -24441,12 +24603,12 @@ call "_check par lines and fan back" dontshow tag checkparlinesnfanback
    seq fanback [inherit_fractal inherit_gensting]
 
 call "_rims trade part 2" dontshow tag rims_trade_2
-            yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
-   select_original_rims box_circulate_maybe_diamond [or_anycall] nullcall []
+            yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited rectify_is_inherited 
+   select_original_rims box_circulate_maybe_diamond [inherit_rectify or_anycall] nullcall []
 
 call "_hubs trade part 2" dontshow tag hubs_trade_2
-            yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
-   select_original_hubs box_circulate_maybe_diamond [or_anycall] nullcall []
+            yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited rectify_is_inherited 
+   select_original_hubs box_circulate_maybe_diamond [inherit_rectify or_anycall] nullcall []
 
 call "_rims trade @0 part 2" dontshow tag rims_trade_2_any
             yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
@@ -24457,18 +24619,20 @@ call "_hubs trade @0 part 2" dontshow tag hubs_trade_2_any
    select_original_hubs nullcall [mandatory_anycall] nullcall []
 
 call "rims trade @2back@3" c2
-            visible_fractions yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
+            visible_fractions yoyo_is_inherited gen_sting_is_inherited
+            bigmatrix_is_inherited rectify_is_inherited
    seq_with_split_1x8_id tradenchecklineorthar_unusual
             [seq_never_re_evaluate inherit_yoyo inherit_gensting]
    seq rims_trade_2
-            [inherit_yoyo inherit_gensting inherit_bigmatrix]
+            [inherit_yoyo inherit_gensting inherit_bigmatrix inherit_rectify]
 
 call "hubs trade @2back@3" c2
-            visible_fractions yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
+            visible_fractions yoyo_is_inherited gen_sting_is_inherited
+            bigmatrix_is_inherited rectify_is_inherited
    seq_with_split_1x8_id tradenchecklineorthar_unusual
             [seq_never_re_evaluate inherit_yoyo inherit_gensting]
    seq hubs_trade_2
-            [inherit_yoyo inherit_gensting inherit_bigmatrix]
+            [inherit_yoyo inherit_gensting inherit_bigmatrix inherit_rectify]
 
 call "rims trade @0" c2
             visible_fractions yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited dont_use_in_resolve
@@ -24620,7 +24784,8 @@ call "first cast off 3/4" dontshow tag first_cast_off_34
 
 call "@1motivate@S" a2
             bigmatrix_is_inherited visible_fractions fractal_is_inherited gen_sting_is_inherited
-   seq motcirc [inherit_bigmatrix or_anycall]
+            rectify_is_inherited
+   seq motcirc [inherit_bigmatrix inherit_rectify or_anycall]
    seq motivate2 [inherit_bigmatrix inherit_fractal inherit_gensting]
    seq turndmdn_endstrade [inherit_bigmatrix insert_number 2]
    seq finishwithplainmod [inherit_bigmatrix inherit_fractal inherit_gensting]
@@ -24643,15 +24808,15 @@ call "@N motivate@S" c2
 // it's clear to any group that you have any business calling this to)
 // which cast off is being referred to.
 call "motivate@S but @m" a2
-            visible_fractions fractal_is_inherited
-   seq motcirc []
+            visible_fractions fractal_is_inherited rectify_is_inherited
+   seq motcirc [inherit_rectify]
    seq motivate2 [inherit_fractal]
    seq turndmdn_endstrade [insert_number 2]
    seq finishwithmodbut2nd []
 
 call "@T motivate@S but @m" c2
-            visible_fractions fractal_is_inherited
-   seq motcirc [mandatory_anycall]
+            visible_fractions fractal_is_inherited rectify_is_inherited
+   seq motcirc [inherit_rectify mandatory_anycall]
    seq motivate2 [inherit_fractal]
    seq turndmdn_endstrade [insert_number 2]
    seq finishwithmodbut2nd []
@@ -24794,36 +24959,37 @@ call "spin chain and exchange the gears@S" plus
    seq fan_chain_exch_gears []
 
 call "fan chain and circulate the gears@S" c4
-            step_to_wave left_means_touch_or_check yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            step_to_wave left_means_touch_or_check yoyo_is_inherited
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
-   seq lines_slip_thru [inherit_yoyo inherit_gensting]
+   seq lines_slip_thru [inherit_yoyo inherit_gensting inherit_rectify]
    seq turnstarn_fudge [inherit_fractal insert_number 3]
    seq veryctr2trade [inherit_gensting]
    seq ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
-   seq ends_circ []
+   seq ends_circ [inherit_rectify]
 
 call "spin chain and circulate the gears@S" c4
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
-            left_means_touch_or_check first_part_visible
+            left_means_touch_or_check first_part_visible rectify_is_inherited
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
-   seq lines_slip_thru [inherit_yoyo inherit_gensting]
+   seq lines_slip_thru [inherit_yoyo inherit_gensting inherit_rectify]
    seq turnstarn_fudge [inherit_fractal insert_number 3]
    seq veryctr2trade [inherit_gensting]
    seq ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
-   seq ends_circ []
+   seq ends_circ [inherit_rectify]
 
 call "@9-@9-@9-@9 spin chain and circulate the gears@S" c4
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-            need_four_numbers left_means_touch_or_check first_part_visible
+            need_four_numbers left_means_touch_or_check first_part_visible rectify_is_inherited
    seq armturn_n4 [inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [inherit_fractal inherit_gensting shift_one_number]
-   seq ends_circ []
+   seq ends_circ [inherit_rectify]
    seq veryctr2trade [inherit_gensting]
    seq turnstarn_fudge [inherit_fractal shift_two_numbers]
    seq veryctr2trade [inherit_gensting]
    seq ctrarmturn_n4_utaway [inherit_yoyo inherit_fractal inherit_gensting shift_three_numbers]
-   seq ends_circ []
+   seq ends_circ [inherit_rectify]
 
 call "scoot back" mainstream tag scootback
             fudge_to_q_tag
@@ -25673,9 +25839,10 @@ call "scatter scoot chain thru to a wave" c1
    seq backemup []
 
 call "quick change" c4a
-            visible_fractions yoyo_is_inherited gen_sting_is_inherited diamond_is_legal funny_is_inherited
+            visible_fractions yoyo_is_inherited gen_sting_is_inherited
+            diamond_is_legal funny_is_inherited /*rectify_is_inherited*/
    conc6p_or_normal trade_and_roll_w_tbone [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
-                    circ_and_quarter_in [inherit_diamond inherit_funny conc_force_spots endscando]
+                    circ_and_quarter_in [inherit_diamond inherit_funny /*inherit_rectify*/ conc_force_spots endscando]
 
 call "deuces wild" c4a
             half_is_inherited yoyo_is_inherited gen_sting_is_inherited
@@ -25939,9 +26106,10 @@ call "counterpoint" c4a
 
 call "@2turn @3the key" c3
             can_be_one_side_lateral
-            visible_fractions diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            visible_fractions diamond_is_legal yoyo_is_inherited
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    seq trade [or_anycall inherit_diamond inherit_yoyo inherit_gensting]
-   seq ctr_rot [allow_forced_mod inherit_diamond]
+   seq ctr_rot [allow_forced_mod inherit_diamond inherit_rectify]
    seq hinge [allow_forced_mod inherit_diamond inherit_fractal inherit_gensting]
 
 call "@0 the key" c3
@@ -27091,10 +27259,13 @@ call "the difference" c4a
 
 call "contour the line" c4a
             left_means_mirror single_is_inherited grand_is_inherited
-            magic_is_inherited bigmatrix_is_inherited nxn_is_inherited visible_fractions
+            magic_is_inherited bigmatrix_is_inherited
+            nxn_is_inherited rectify_is_inherited visible_fractions
    seq hinge_for_nicely [inherit_left inherit_single inherit_bigmatrix inherit_nxn]
-   seq box_circ_1_w_3x3 [inherit_grand inherit_single inherit_magic inherit_bigmatrix inherit_nxn]
-   seq box_circ_2_w_3x3 [inherit_grand inherit_single inherit_magic inherit_bigmatrix inherit_nxn]
+   seq box_circ_1 [inherit_grand inherit_single inherit_magic
+                   inherit_bigmatrix inherit_nxn inherit_rectify]
+   seq box_circ_2 [inherit_grand inherit_single inherit_magic
+                   inherit_bigmatrix inherit_nxn inherit_rectify]
    seq hinge_with_warn [inherit_left]
 
 call "_centers big time" dontshow tag ctrs_big_time
@@ -27108,8 +27279,8 @@ call "_centers big time but @0" dontshow tag ctrs_big_time_but
    seq nullcall [mandatory_anycall]
 
 call "_circ 1.5" dontshow tag circ_1p5
-            visible_fractions left_means_mirror
-   seq circulate []
+            visible_fractions left_means_mirror rectify_is_inherited
+   seq circulate [inherit_rectify]
    seq circulate [force_half]
 
 call "big time" c4x
@@ -27651,12 +27822,12 @@ call "sterling chain thru" c4x
    seq ctrscastoff_n [inherit_fractal roll_transparent insert_number 3]
 
 call "_circulate @9 times" dontshow tag circ_n_times
-            neednumber bigmatrix_is_inherited
-   seq circulate [inherit_bigmatrix repeat_n]
+            neednumber bigmatrix_is_inherited rectify_is_inherited
+   seq circulate [inherit_bigmatrix repeat_n inherit_rectify]
 
 call "_circulate @9-1/2 times" dontshow tag circ_n_times_and_a_half
-            neednumber bigmatrix_is_inherited
-   seq circulate [inherit_bigmatrix repeat_n]
+            neednumber bigmatrix_is_inherited rectify_is_inherited
+   seq circulate [inherit_bigmatrix repeat_n inherit_rectify]
    seq circulate [inherit_bigmatrix force_half]
 
 call "_start @B chain and circ in" dontshow tag startchcircin
@@ -28428,14 +28599,14 @@ call "@0 and rally but @m" c3a
    seq rallybut2nd [inherit_intlk]
 
 call "LINES @0 THRU" c2
-            twisted_is_inherited visible_fractions dont_use_in_resolve
+            twisted_is_inherited visible_fractions dont_use_in_resolve rectify_is_inherited
    conc_or_diamond_line nullcall [mandatory_anycall]
-                        box_circulate_maybe_diamond [inherit_twisted conc_force_spots]
+                        box_circulate_maybe_diamond [inherit_twisted inherit_rectify conc_force_spots]
 
 call "LINES IT THRU @0" c2
-            twisted_is_inherited visible_fractions dont_use_in_resolve
+            twisted_is_inherited visible_fractions dont_use_in_resolve rectify_is_inherited
    conc_or_diamond_line nullcall [mandatory_anycall]
-                        box_circulate_maybe_diamond [inherit_twisted conc_force_spots]
+                        box_circulate_maybe_diamond [inherit_twisted inherit_rectify conc_force_spots]
 
 call "spin a wheel" c4
             visible_fractions mxn_is_inherited
@@ -28574,10 +28745,11 @@ call "_stim part 2" dontshow tag stim2
 
 call "@1stimulate the column" c3
             first_and_last_parts_visible magic_is_inherited
-            bigmatrix_is_inherited nxn_is_inherited mxn_is_inherited fractal_is_inherited gen_sting_is_inherited
+            bigmatrix_is_inherited nxn_is_inherited mxn_is_inherited
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter stimulate, or whatever.
-   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall]
-   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify or_anycall]
+   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq stim2 [inherit_bigmatrix inherit_nxn inherit_mxn inherit_gensting]
    // Of course, if you want it here, it had better be *FINALLY* generous stimulate, or whatever.
    seq finishwithplainmod [inherit_bigmatrix inherit_nxn inherit_mxn inherit_fractal inherit_gensting]
@@ -28585,48 +28757,54 @@ call "@1stimulate the column" c3
 call "@1stimulate" c3
             first_and_last_parts_visible magic_is_inherited
             bigmatrix_is_inherited nxn_is_inherited mxn_is_inherited fractal_is_inherited gen_sting_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter stimulate, or whatever.
-   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall]
-   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify or_anycall]
+   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq stim2 [inherit_bigmatrix inherit_nxn inherit_mxn inherit_gensting]
    seq finishwithplainmod [inherit_bigmatrix inherit_nxn inherit_mxn inherit_fractal inherit_gensting]
 
 call "@T stimulate" c3
             first_and_last_parts_visible magic_is_inherited
             bigmatrix_is_inherited nxn_is_inherited mxn_is_inherited fractal_is_inherited gen_sting_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter stimulate, or whatever.
-   seq circulate [mandatory_anycall inherit_bigmatrix inherit_nxn inherit_mxn]
-   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq circulate [mandatory_anycall inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
+   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq stim2 [inherit_bigmatrix inherit_nxn inherit_mxn inherit_gensting]
    seq finishwithplainmod [inherit_bigmatrix inherit_nxn inherit_mxn inherit_fractal inherit_gensting]
 
 call "@N stimulate" c3
             first_and_last_parts_visible magic_is_inherited
             bigmatrix_is_inherited nxn_is_inherited mxn_is_inherited fractal_is_inherited gen_sting_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter stimulate, or whatever.
    seq circnullcall [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall]
-   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq circulate [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq stim2 [inherit_bigmatrix inherit_nxn inherit_mxn inherit_gensting]
    seq finishwithplainmod [inherit_bigmatrix inherit_nxn inherit_mxn inherit_fractal inherit_gensting]
 
 call "@1stimulate but @m" c3
             first_and_last_parts_visible magic_is_inherited
-   seq colcirc [inherit_magic or_anycall]
-   seq circulate [force_half inherit_magic]
+            rectify_is_inherited
+   seq colcirc [inherit_magic or_anycall inherit_rectify]
+   seq circulate [force_half inherit_magic inherit_rectify]
    seq stim2 []
    seq finishwithmodbut2nd []
 
 call "@T stimulate but @m" c3
             first_and_last_parts_visible
+            rectify_is_inherited
    seq circulate [mandatory_anycall]
-   seq circulate [force_half]
+   seq circulate [force_half inherit_rectify]
    seq stim2 []
    seq finishwithmodbut2nd []
 
 call "@N stimulate but @m" c3
             first_and_last_parts_visible
+            rectify_is_inherited
    seq circnullcall [or_anycall]
-   seq circulate [force_half]
+   seq circulate [force_half inherit_rectify]
    seq stim2 []
    seq finishwithmodbut2nd []
 
@@ -28687,45 +28865,49 @@ call "_coordinate to a diamond part 3" dontshow tag coord3d
 
 call "@1coordinate" plus
             magic_is_inherited yoyo_is_inherited gen_sting_is_inherited rewind_is_inherited
-            twisted_is_inherited visible_fractions
-   seq circ_for_coord [or_anycall inherit_magic inherit_twisted]
-   seq circ_for_coord [force_half inherit_magic inherit_twisted inherit_rewind]
+            twisted_is_inherited visible_fractions rectify_is_inherited
+   seq circ_for_coord [or_anycall inherit_magic inherit_twisted inherit_rectify]
+   seq circ_for_coord [force_half inherit_magic inherit_twisted inherit_rewind inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3 [inherit_rewind roll_transparent]
 
 call "@T coordinate" c2
-            magic_is_inherited yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited visible_fractions
-   seq circulate [mandatory_anycall inherit_twisted]
-   seq circ_for_coord [force_half inherit_twisted inherit_magic]
+            magic_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            twisted_is_inherited visible_fractions rectify_is_inherited
+   seq circulate [mandatory_anycall inherit_twisted inherit_rectify]
+   seq circ_for_coord [force_half inherit_twisted inherit_magic inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3 [roll_transparent]
 
 call "@N coordinate" c2
-            yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited visible_fractions
+            yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited
+            visible_fractions rectify_is_inherited
    seq circnullcall [or_anycall inherit_twisted]
-   seq circ_for_coord [force_half inherit_twisted]
+   seq circ_for_coord [force_half inherit_twisted inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3 [roll_transparent]
 
 call "@1coordinate to a diamond" c4a
             magic_is_inherited yoyo_is_inherited gen_sting_is_inherited rewind_is_inherited
-            twisted_is_inherited first_two_parts_visible
-   seq circ_for_coord [or_anycall inherit_twisted inherit_magic]
-   seq circ_for_coord [force_half inherit_twisted inherit_magic inherit_rewind]
+            twisted_is_inherited first_two_parts_visible rectify_is_inherited
+   seq circ_for_coord [or_anycall inherit_twisted inherit_magic inherit_rectify]
+   seq circ_for_coord [force_half inherit_twisted inherit_magic inherit_rewind inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3d [inherit_rewind roll_transparent]
 
 call "@T coordinate to a diamond" c4a
-            magic_is_inherited yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible
-   seq circulate [mandatory_anycall inherit_twisted]
-   seq circ_for_coord [force_half inherit_twisted inherit_magic]
+            magic_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            twisted_is_inherited rectify_is_inherited first_two_parts_visible
+   seq circulate [mandatory_anycall inherit_twisted inherit_rectify]
+   seq circ_for_coord [force_half inherit_twisted inherit_magic inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3d [roll_transparent]
 
 call "@N coordinate to a diamond" c4a
             yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible
+            rectify_is_inherited
    seq circnullcall [or_anycall inherit_twisted]
-   seq circ_for_coord [force_half inherit_twisted]
+   seq circ_for_coord [force_half inherit_twisted inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3d [roll_transparent]
 
@@ -28741,10 +28923,11 @@ call "@1cooperate" c4a
             magic_is_inherited rewind_is_inherited visible_fractions
             bigmatrix_is_inherited
             nxn_is_inherited mxn_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter cooperate, or whatever.
-   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall]
+   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify or_anycall]
    seq colcirc [force_half inherit_magic inherit_rewind
-                inherit_bigmatrix inherit_nxn inherit_mxn]
+                inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq coop2 [inherit_magic inherit_rewind inherit_bigmatrix inherit_nxn inherit_mxn]
    seq coop3 [inherit_rewind inherit_bigmatrix inherit_nxn inherit_mxn]
 
@@ -28752,9 +28935,10 @@ call "@T cooperate" c4
             magic_is_inherited visible_fractions
             bigmatrix_is_inherited
             nxn_is_inherited mxn_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter cooperate, or whatever.
    seq circulate [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn mandatory_anycall]
-   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq coop2 [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
    seq coop3 [inherit_bigmatrix inherit_nxn inherit_mxn]
 
@@ -28762,9 +28946,10 @@ call "@N cooperate" c4
             magic_is_inherited visible_fractions
             bigmatrix_is_inherited
             nxn_is_inherited mxn_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter cooperate, or whatever.
-   seq circnullcall [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall]
-   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq circnullcall [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall inherit_rectify]
+   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq coop2 [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
    seq coop3 [inherit_bigmatrix inherit_nxn inherit_mxn]
 
@@ -28772,9 +28957,10 @@ call "@1cooperate but @m" c4
             magic_is_inherited visible_fractions
             bigmatrix_is_inherited
             nxn_is_inherited mxn_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter cooperate, or whatever.
-   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall]
-   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq colcirc [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify or_anycall]
+   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq coop2 [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
    seq ctrs_mandatory_2ndcall [inherit_bigmatrix inherit_nxn inherit_mxn]
 
@@ -28782,9 +28968,10 @@ call "@T cooperate but @m" c4
             magic_is_inherited visible_fractions
             bigmatrix_is_inherited
             nxn_is_inherited mxn_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter cooperate, or whatever.
-   seq circulate [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn mandatory_anycall]
-   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq circulate [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify mandatory_anycall]
+   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq coop2 [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
    seq ctrs_mandatory_2ndcall [inherit_bigmatrix inherit_nxn inherit_mxn]
 
@@ -28792,9 +28979,10 @@ call "@N cooperate but @m" c4
             magic_is_inherited visible_fractions
             bigmatrix_is_inherited
             nxn_is_inherited mxn_is_inherited
+            rectify_is_inherited
    // Of course, it had better be *INITIALLY* 3x3 split counter cooperate, or whatever.
-   seq circnullcall [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn or_anycall]
-   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
+   seq circnullcall [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify or_anycall]
+   seq colcirc [force_half inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn inherit_rectify]
    seq coop2 [inherit_magic inherit_bigmatrix inherit_nxn inherit_mxn]
    seq ctrs_mandatory_2ndcall [inherit_bigmatrix inherit_nxn inherit_mxn]
 
@@ -28805,24 +28993,26 @@ call "_set your pace 3" dontshow tag pace3
    conc cyclewheel [] cyclewheel []
 
 call "@2set @3your pace" c4
-            first_two_parts_visible
-   seq colcirc [or_anycall]
-   seq colcirc [force_half]
+            first_two_parts_visible rectify_is_inherited
+   seq colcirc [inherit_rectify or_anycall]
+   seq colcirc [force_half inherit_rectify]
    seq pace2 []
    seq pace3 []
 
 call "@T set your pace" c4
-            first_two_parts_visible
-   seq circulate [mandatory_anycall]
-   seq colcirc [force_half]
+            first_two_parts_visible rectify_is_inherited
+   seq circulate [inherit_rectify mandatory_anycall]
+   seq colcirc [force_half inherit_rectify
+
+]
    seq pace2 []
    seq pace3 []
 
 call "@N set your pace" c4    /* We leave the word "set" in for stuff like
                                     "split counter set your pace". */
-            first_two_parts_visible
+            first_two_parts_visible rectify_is_inherited
    seq circnullcall [or_anycall]
-   seq colcirc [force_half]
+   seq colcirc [force_half inherit_rectify]
    seq pace2 []
    seq pace3 []
 
@@ -28844,8 +29034,8 @@ call "_percolate part 3 but @m" dontshow tag percolate3butany
 // Of course, we put the version that allows replacement first.
 call "@1percolate" c1
             left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
-            twisted_is_inherited visible_fractions funny_is_inherited
-   seq circulate [or_anycall inherit_left inherit_funny inherit_twisted]
+            twisted_is_inherited visible_fractions funny_is_inherited rectify_is_inherited
+   seq circulate [or_anycall inherit_left inherit_funny inherit_twisted inherit_rectify]
    seq circulate [inherit_funny force_half inherit_left]
    seq percolate3 [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
    // People sometimes do "central percolate"-types of things, so we have to
@@ -28858,41 +29048,44 @@ call "@1percolate" c1
 
 call "@T percolate" c2
             left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
-            twisted_is_inherited first_two_parts_visible funny_is_inherited
+            twisted_is_inherited first_two_parts_visible funny_is_inherited rectify_is_inherited
    seq circulate [mandatory_anycall inherit_left inherit_funny inherit_twisted]
-   seq circulate [inherit_funny force_half inherit_left]
+   seq circulate [inherit_funny force_half inherit_left inherit_rectify]
    seq percolate3 [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
 
 call "@N percolate" c2
             left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
-            first_two_parts_visible funny_is_inherited
-   seq circnullcall [or_anycall inherit_left inherit_funny]
-   seq circulate [inherit_funny force_half inherit_left]
+            first_two_parts_visible funny_is_inherited rectify_is_inherited
+   seq circnullcall [or_anycall inherit_left inherit_funny inherit_rectify]
+   seq circulate [inherit_funny force_half inherit_left inherit_rectify]
    seq percolate3 [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
 
 call "@1percolate but @m" c1
             left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
-            twisted_is_inherited first_two_parts_visible funny_is_inherited
-   seq circulate [or_anycall inherit_left inherit_funny inherit_twisted]
-   seq circulate [inherit_funny force_half inherit_left]
+            twisted_is_inherited first_two_parts_visible funny_is_inherited rectify_is_inherited
+   seq circulate [or_anycall inherit_left inherit_funny inherit_twisted inherit_rectify]
+   seq circulate [inherit_funny force_half inherit_left inherit_rectify]
    seq percolate3butany [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
             left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible
-   seq conccirculate [inherit_left]
-   seq conccirculate [force_half inherit_left]
+            rectify_is_inherited
+   seq conccirculate [inherit_left inherit_rectify]
+   seq conccirculate [force_half inherit_left inherit_rectify]
    seq percolate3butany [inherit_left inherit_fractal inherit_yoyo inherit_gensting]
 
 call "@T percolate but @m" c2
             left_means_mirror yoyo_is_inherited gen_sting_is_inherited
             first_two_parts_visible funny_is_inherited
+            rectify_is_inherited
    seq circulate [inherit_funny mandatory_anycall]
-   seq circulate [inherit_funny force_half]
+   seq circulate [inherit_funny inherit_rectify force_half]
    seq percolate3butany [inherit_yoyo inherit_gensting]
 
 call "@N percolate but @m" c2
             left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
             twisted_is_inherited first_two_parts_visible funny_is_inherited
-   seq circnullcall [or_anycall inherit_left inherit_funny]
-   seq circulate [inherit_funny force_half inherit_left]
+            rectify_is_inherited
+   seq circnullcall [or_anycall inherit_left inherit_funny inherit_rectify]
+   seq circulate [inherit_funny force_half inherit_left inherit_rectify]
    seq percolate3butany [inherit_yoyo inherit_gensting]
 
 /* *** This isn't right -- the "nicely" people aren't checking that they aren't selected.
@@ -28905,32 +29098,36 @@ call "_percolate part 3, @6 to a wave" dontshow tag percolate3_sometowave
 
 call "@1percolate, @6 to a wave" c1
             yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible funny_is_inherited
-   seq circulate [or_anycall inherit_funny inherit_twisted]
-   seq circulate [force_half]
-   seq percolate3_sometowave [inherit_yoyo inherit_gensting]
+            rectify_is_inherited
+   seq circulate [or_anycall inherit_funny inherit_twisted inherit_rectify]
+   seq circulate [force_half inherit_rectify]
+   seq percolate3_sometowave [inherit_yoyo inherit_gensting inherit_rectify]
 
 call "@T percolate, @6 to a wave" c2
             yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible
+            rectify_is_inherited
    seq circulate [mandatory_anycall]
-   seq circulate [force_half]
+   seq circulate [force_half inherit_rectify]
    seq percolate3_sometowave [inherit_yoyo inherit_gensting]
 
 call "@N percolate, @6 to a wave" c2
             yoyo_is_inherited gen_sting_is_inherited first_two_parts_visible funny_is_inherited
+            rectify_is_inherited
    seq circnullcall [inherit_funny or_anycall]
-   seq circulate [force_half]
+   seq circulate [force_half inherit_rectify]
    seq percolate3_sometowave [inherit_yoyo inherit_gensting]
 
 call "turn up" dontshow tag hinge_circ_trade
             visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            rectify_is_inherited
    seq hinge_with_warn [allow_forced_mod inherit_fractal inherit_gensting]
-   seq circulate []
+   seq circulate [inherit_rectify]
    seq trade [allow_forced_mod inherit_yoyo inherit_gensting]
 
 call "turn up but @m" dontshow tag hinge_circ_any
-            visible_fractions fractal_is_inherited
+            visible_fractions fractal_is_inherited rectify_is_inherited
    seq hinge [allow_forced_mod inherit_fractal]
-   seq circulate []
+   seq circulate [inherit_rectify]
    seq nullsecond [mandatory_secondary_call]
 
 call "_finish perk up" dontshow tag finperk
@@ -28946,7 +29143,8 @@ call "_finish perk up but @m" dontshow tag finperkbut
 // Of course, we put the version that allows replacement first.
 call "@1perk up" c2
             first_part_visible yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq circulate [or_anycall]
+            rectify_is_inherited
+   seq circulate [or_anycall inherit_rectify]
    seq halfboxcirc_miniwaves []
    seq finperk [inherit_yoyo inherit_gensting inherit_fractal]
    // People sometimes do "central perk up"-types of things, so we have to
@@ -28959,32 +29157,37 @@ call "@1perk up" c2
 
 call "@T perk up" c2
             first_part_visible yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq circulate [mandatory_anycall]
+            rectify_is_inherited
+   seq circulate [mandatory_anycall inherit_rectify]
    seq halfboxcirc_miniwaves []
    seq finperk [inherit_yoyo inherit_gensting inherit_fractal]
 
 call "@N perk up" c2
             first_part_visible yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq circnullcall [or_anycall]
+            rectify_is_inherited
+   seq circnullcall [or_anycall inherit_rectify]
    seq halfboxcirc_miniwaves []
    seq finperk [inherit_yoyo inherit_gensting inherit_fractal]
 
 call "@1perk up but @m" c3
             first_part_visible fractal_is_inherited
-   seq circulate [or_anycall]
-   seq halfboxcirc_miniwaves []
+            rectify_is_inherited
+   seq circulate [or_anycall inherit_rectify]
+   seq halfboxcirc_miniwaves [inherit_rectify]
    seq finperkbut [inherit_fractal]
 
 call "@T perk up but @m" c3
             first_part_visible fractal_is_inherited
+            rectify_is_inherited
    seq circulate [mandatory_anycall]
-   seq halfboxcirc_miniwaves []
+   seq halfboxcirc_miniwaves [inherit_rectify]
    seq finperkbut [inherit_fractal]
 
 call "@N perk up but @m" c3
             first_part_visible fractal_is_inherited
-   seq circnullcall [or_anycall]
-   seq halfboxcirc_miniwaves []
+            rectify_is_inherited
+   seq circnullcall [inherit_rectify or_anycall]
+   seq halfboxcirc_miniwaves [inherit_rectify]
    seq finperkbut [inherit_fractal]
 
 call "_bogus leads circulate" dontshow tag bogus_leads_circulate
@@ -29034,9 +29237,10 @@ call "_finish cover up but @m" dontshow tag fincoverbut2nd
 // Of course, we put the version that allows replacement first.
 call "@1cover up" c4a
             diamond_is_legal twisted_is_inherited visible_fractions
+            rectify_is_inherited
    // You have to say "finally diamond cover up", of course.
-   seq circulate [or_anycall inherit_twisted inherit_diamond]
-   seq circulate [force_half inherit_diamond]
+   seq circulate [or_anycall inherit_twisted inherit_diamond inherit_rectify]
+   seq circulate [force_half inherit_diamond inherit_rectify]
    seq fincover [inherit_diamond]
    // People sometimes do "central cover up"-types of things, so we have to
    // recognize that the circulate and 1/2 circulate are sometimes concentric,
@@ -29048,32 +29252,37 @@ call "@1cover up" c4a
 
 call "@T cover up" c4a
             diamond_is_legal visible_fractions
+            rectify_is_inherited
    seq circulate [mandatory_anycall]
-   seq circulate [force_half inherit_diamond]
+   seq circulate [force_half inherit_diamond inherit_rectify]
    seq fincover [inherit_diamond]
 
 call "@N cover up" c4a
             diamond_is_legal visible_fractions
+            rectify_is_inherited
    seq circnullcall [or_anycall inherit_diamond]
-   seq circulate [force_half inherit_diamond]
+   seq circulate [force_half inherit_diamond inherit_rectify]
    seq fincover [inherit_diamond]
 
 call "@1cover up but @m" c4a
             twisted_is_inherited visible_fractions
+            rectify_is_inherited
    seq circulate [or_anycall inherit_twisted]
-   seq circulate [force_half]
+   seq circulate [force_half inherit_rectify]
    seq fincoverbut2nd []
 
 call "@T cover up but @m" c4a
             visible_fractions
+            rectify_is_inherited
    seq circulate [mandatory_anycall]
-   seq circulate [force_half]
+   seq circulate [force_half inherit_rectify]
    seq fincoverbut2nd []
 
 call "@N cover up but @m" c4a
             visible_fractions
+            rectify_is_inherited
    seq circnullcall [or_anycall]
-   seq circulate [force_half]
+   seq circulate [force_half inherit_rectify]
    seq fincoverbut2nd []
 
 call "_start choice" dontshow tag startchoice
@@ -29141,8 +29350,9 @@ call "reciprocate" c4
 
 call "_ctrs scamper" dontshow tag ctrs_scamper
             visible_fractions step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
+            rectify_is_inherited
    seq armturn_n4 [inherit_fractal inherit_gensting insert_number 1]
-   seq circulate []
+   seq circulate [inherit_rectify]
 
 call "_ctrs scamper but @0" dontshow tag ctrs_scamper_but
             visible_fractions step_to_wave left_means_mirror fractal_is_inherited gen_sting_is_inherited
@@ -29186,13 +29396,17 @@ call "ends divide and @0" mainstream
 
 call "scamper" c4a tag scamper
             fudge_to_q_tag left_means_mirror fractal_is_inherited gen_sting_is_inherited
+            rectify_is_inherited
    conc ctrs_scamper [inherit_left inherit_fractal inherit_gensting]
-        ends_scamper [inherit_left inherit_fractal inherit_gensting conc_demand_columns conc_force_columns endscando]
+        ends_scamper [inherit_left inherit_fractal inherit_gensting inherit_rectify
+                      conc_demand_columns conc_force_columns endscando]
 
 call "scamper but @0" c4
             fudge_to_q_tag left_means_mirror fractal_is_inherited gen_sting_is_inherited
+            rectify_is_inherited
    conc ctrs_scamper_but [inherit_left inherit_fractal inherit_gensting]
-        ends_scamper [inherit_left inherit_fractal inherit_gensting conc_demand_columns conc_force_columns]
+        ends_scamper [inherit_left inherit_fractal inherit_gensting inherit_rectify
+                     conc_demand_columns conc_force_columns]
 
 call "divvy up" c4a
    // ***** Make sure we do a "fudge to 3/4 tag".
@@ -29335,13 +29549,15 @@ call "_tally ho part 2" dontshow tag tally_ho_part_2
 
 call "tally ho" c1
             visible_fractions left_means_mirror bigmatrix_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq circulate_for_tally_ho [force_half inherit_left inherit_bigmatrix]
+            rectify_is_inherited
+   seq circulate_for_tally_ho [force_half inherit_left inherit_bigmatrix inherit_rectify]
    seq tally_ho_part_2 [inherit_left inherit_bigmatrix inherit_fractal inherit_gensting]
    seq finishwithplainmod [inherit_bigmatrix inherit_fractal inherit_gensting]
 
 call "tally ho but @m" c1
             visible_fractions fractal_is_inherited gen_sting_is_inherited
-   seq circulate_for_tally_ho [force_half]
+            rectify_is_inherited
+   seq circulate_for_tally_ho [force_half inherit_rectify]
    seq tally_ho_part_2 [inherit_fractal inherit_gensting]
    seq finishwithmodbut2nd []
 
@@ -29363,19 +29579,22 @@ call "_touchngo @0 anything part 3" dontshow tag touchngo3cpri
 
 call "touch and go @b X @b" c4a
             magic_is_inherited need_two_numbers fractal_is_inherited gen_sting_is_inherited
-   seq circulate [force_half inherit_magic]
+            rectify_is_inherited
+   seq circulate [force_half inherit_magic inherit_rectify]
    seq touchngo2 [inherit_fractal inherit_gensting]
    seq touchngo3 [shift_one_number inherit_fractal inherit_gensting]
 
 call "touch and go @b X @0" c4a
             magic_is_inherited neednumber fractal_is_inherited gen_sting_is_inherited
-   seq circulate [force_half inherit_magic]
+            rectify_is_inherited
+   seq circulate [force_half inherit_magic inherit_rectify]
    seq touchngo2 [inherit_fractal inherit_gensting]
    seq touchngo3cpri []
 
 call "touch and go @0 X @m" c4
             last_part_visible magic_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq circulate [force_half inherit_magic]
+            rectify_is_inherited
+   seq circulate [force_half inherit_magic inherit_rectify]
    seq touchngo2c []
    seq finishwithmodbut2nd []
 

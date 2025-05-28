@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 401
+#define DATABASE_FORMAT_VERSION 403
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -208,7 +208,17 @@ enum base_call_index {
    base_call_backemup,
    base_call_circulate,
    base_call_motcirc,
+   base_call_couples_circ,
+   base_call_circ_for_coord,
+   base_call_colcirc,
+   base_call_circulate_for_tally_ho,
+   base_call_circulateforacey,
    base_call_trade,
+   base_call_splitcirc,
+   base_call_boxcirc,
+   base_call_boxcirc1,
+   base_call_boxcirc2,
+   base_call_turndmdn,
    base_call_touch,
    base_call_plainprom,
    base_call_plainpromeighths,
@@ -355,6 +365,7 @@ const uint64_t INHERITFLAG_TRAP       = 0x0000040000000000ULL;
 const uint64_t INHERITFLAG_ZOOMROLL   = 0x0000080000000000ULL;
 const uint64_t INHERITFLAG_TRADE      = 0x0000100000000000ULL;
 const uint64_t INHERITFLAG_CROSSOVER  = 0x0000200000000000ULL;
+const uint64_t INHERITFLAG_RECTIFY    = 0x0000400000000000ULL;
 
 
 typedef uint64_t heritflags;
