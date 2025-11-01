@@ -5993,11 +5993,7 @@ void normalize_setup(setup *ss, normalize_action action, qtag_compress_choice no
    tbonetest = ss->or_all_people();
    livemask = ss->little_endian_live_mask();
 
-   if (ss->kind == sfat2x8)
-      ss->kind = s2x8;     /* That's all it takes! */
-   else if (ss->kind == swide4x4)
-      ss->kind = s4x4;     /* That's all it takes! */
-   else if (ss->kind == s_dead_concentric && action > plain_normalize) {
+   if (ss->kind == s_dead_concentric && action > plain_normalize) {
       ss->kind = ss->inner.skind;
       ss->rotation += ss->inner.srotation;
       ss->eighth_rotation += ss->inner.seighth_rotation;
@@ -6036,6 +6032,10 @@ void normalize_setup(setup *ss, normalize_action action, qtag_compress_choice no
          goto startover;
       }
    }
+
+   // At the top level, these setups stay until user explicitly cuts them down.
+   if (action <= plain_normalize && (ss->kind == sdblthar || ss->kind == sdblalamo))
+      return;
 
    // Next, search for simple things in the hash table.
 

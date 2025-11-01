@@ -774,9 +774,10 @@ static void multiple_move_innards(
    // since they can handle non-isotropic setups.  But we raise an error on any other maps,
    // since they can't handle it.  These map kinds are known to work -- they all arise
    // in regression tests.  It may be that more map kinds need to be added to this list.
-   bool funnymap =
+   bool map_has_alternating_directions =
       map_kind == MPKIND__NONISOTROPDMD ||
       map_kind == MPKIND__ALL_8 ||
+      map_kind == MPKIND__4_EDGES_REALLY_ALTERNATING ||
       map_kind == MPKIND__4_QUADRANTS ||
       map_kind == MPKIND__4_QUADRANTS_WITH_45_ROTATION ||
       map_kind == MPKIND__TRIPLETRADEINWINGEDSTAR6;
@@ -820,7 +821,7 @@ static void multiple_move_innards(
       // This uses the "allow_hetero_and_notify" mechanism.
 
       if (fix_n_results(arity,
-                        (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : funnymap ? 7 : -1,
+                        (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : map_has_alternating_directions ? 7 : -1,
                         z,
                         rotstate,
                         pointclip,
@@ -881,7 +882,7 @@ static void multiple_move_innards(
       if (!hetero_mapkind(map_kind) && (arity != 2 || (setup_attrs[z[0].kind].setup_props & SPROP_NO_SYMMETRY) == 0)) {
          if (map_kind != MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR && (rotstate & 0xF03) == 0) {
             // Rotations are alternating.  Aside from the two map kinds just below,
-            // we demand funnymap on.  These are the maps that want alternating rotations.
+            // we demand map_has_alternating_directions on.  These are the maps that want alternating rotations.
             if (map_kind == MPKIND__SPLIT || map_kind == MPKIND__CONCPHAN) {
                if (!(rotstate & 0x0F0))
                   fail("Can't do this orientation changer.");
@@ -900,7 +901,7 @@ static void multiple_move_innards(
 
                map_kind = MPKIND__NONISOTROPDMD;
             }
-            else if (!funnymap && map_kind != MPKIND__NONE)
+            else if (!map_has_alternating_directions && map_kind != MPKIND__NONE)
                fail("Can't do this orientation changer.");
          }
          else {
@@ -1338,6 +1339,15 @@ static void multiple_move_innards(
    if (z[0].kind == nothing || (arity >= 2 && z[1].kind == nothing))
       fail("This is an inconsistent shape or orientation changer.");
 
+   // Very special and interesting action.  Setup is bone; concept calls for orthogonal qtags.
+   // That is, "phantom 1/4 tags" or "phantom diamonds".
+
+   if (map_kind == MPKIND__HET_CO_ONCEREM && arity == 2 && ss->kind == s_bone) {
+      *result = z[0];
+      merge_table::merge_setups(&z[1], merge_strict_matrix, result);
+      goto getout;
+   }
+
    final_mapcode = hetero_mapkind(map_kind) ?
       HETERO_MAPCODE(z[0].kind,arity,map_kind,(z[0].rotation ^ vert) & 1,
                      z[1].kind,((z[1].rotation & 3) << 2) | (z[0].rotation & 3)) :
@@ -1379,40 +1389,6 @@ static void multiple_move_innards(
          }
       }
 
-      // We allow the special case of appending two 4x4's or 2x8's, if the
-      // real people (this includes active phantoms!) can fit inside a 4x4 or 2x8.
-      if (arity == 2 && z[0].kind == s4x4 && map_kind == MPKIND__SPLIT) {
-         uint32_t mask0 = z[0].little_endian_live_mask();
-         uint32_t mask1 = z[1].little_endian_live_mask();
-
-         if (vert == 1) {
-            if (((mask0 | mask1) & 0x1717) != 0)
-               final_mapcode = spcmap_w4x4_4x4;
-            else
-               final_mapcode = spcmap_f2x8_4x4;
-         }
-         else {
-            if (((mask0 | mask1) & 0x7171) != 0)
-               final_mapcode = spcmap_w4x4_4x4h;
-            else
-               final_mapcode = spcmap_f2x8_4x4h;
-         }
-      }
-      else if (arity == 2 && z[0].kind == s2x8 && map_kind == MPKIND__SPLIT) {
-         if (vert != z[0].rotation) {
-            uint32_t mask0 = z[0].little_endian_live_mask();
-            uint32_t mask1 = z[1].little_endian_live_mask();
-
-            if (((mask0 | mask1) & 0xC3C3) != 0)
-               final_mapcode = spcmap_f2x8_2x8;
-            else
-               final_mapcode = spcmap_w4x4_2x8;
-         }
-         else {
-            final_mapcode = spcmap_f2x8_2x8h;
-         }
-      }
-
       if (final_mapcode != ~0U)
          final_map = map::get_map_from_code(final_mapcode);
 
@@ -1423,7 +1399,7 @@ static void multiple_move_innards(
 
    // The low 2 bits of the ten thousands digit give additional rotation info.
    result->rotation = (map_kind == MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR) ? 0 :
-      ((z[0].rotation + (final_map->rot >> 16) - final_map->rot) & 3);
+      (z[0].rotation + (final_map->rot >> 16) - final_map->rot) & 3;
 
    if (map_kind == MPKIND__HET_SPLIT || map_kind == MPKIND__HET_TWICEREM || map_kind == MPKIND__HET_CONCPHAN) {
 

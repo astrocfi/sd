@@ -1988,6 +1988,9 @@ static void do_concept_multiple_lines(
       if (ss->kind == s1x6 || ss->kind == s1x8 || ss->kind == s1x10)
          ss->do_matrix_expansion(CONCPROP__NEEDK_1X12, false);
 
+      if (ss->kind == sdblthar)
+         ss->do_matrix_expansion(CONCPROP__NEEDK_TRIPLE_1X4, false);
+
       if (ss->kind == s3x4)
          code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
       else if (ss->kind == s1x12)
@@ -2613,6 +2616,8 @@ static void do_concept_do_phantom_diamonds(
       map_code = HETERO_MAPCODE(s_qtag,2,het_map_kind,0,s_ptpd,0);
    else if (ss->kind == s_4mptpd)
       map_code = HETERO_MAPCODE(s_ptpd,2,het_map_kind,0,s_qtag,0);
+   else if (ss->kind == s_bone)
+      map_code = HETERO_MAPCODE(s_qtag,2,MPKIND__HET_CO_ONCEREM,0,s_qtag,4);
    else
       fail("Must have a quadruple diamond/quarter-tag setup for this concept.");
 
@@ -2651,18 +2656,8 @@ static void do_concept_do_divided_bones(
 {
    setup tempsetup = *ss;
 
-   if (parseptr->concept->arg2) {
-      // Expand, first to a bigbone, and then to a dblrig.
-      // Either or both of these may be unnecessary or may fail.
-
-      tempsetup.do_matrix_expansion(CONCPROP__NEEDK_END_2X2, false);
-      if (tempsetup.kind == sbigbone) expand::expand_setup(s_bigbone_dblrig, &tempsetup);
-
-      divided_setup_move(&tempsetup,
-                         MAPCODE(s_rigger,2,MPKIND__SPLIT,0),
-                         (phantest_kind) parseptr->concept->arg1, true, result);
-   }
-   else {
+   switch (parseptr->concept->arg2) {
+   case 0:    // twin phantom bones
       // Expand, first to a bigrig, and then to a dblbone.
       // Either or both of these may be unnecessary or may fail.
 
@@ -2672,6 +2667,32 @@ static void do_concept_do_divided_bones(
       divided_setup_move(&tempsetup,
                          MAPCODE(s_bone,2,MPKIND__SPLIT,0),
                          (phantest_kind) parseptr->concept->arg1, true, result);
+      break;
+   case 1:    // twin phantom riggers
+      // Expand, first to a bigbone, and then to a dblrig.
+      // Either or both of these may be unnecessary or may fail.
+
+      tempsetup.do_matrix_expansion(CONCPROP__NEEDK_END_2X2, false);
+      if (tempsetup.kind == sbigbone) expand::expand_setup(s_bigbone_dblrig, &tempsetup);
+
+      divided_setup_move(&tempsetup,
+                         MAPCODE(s_rigger,2,MPKIND__SPLIT,0),
+                         (phantest_kind) parseptr->concept->arg1, true, result);
+      break;
+   case 2:    // twin phantom thars
+      if (ss->kind == sbigh) expand::expand_setup(s_bigh_dblthar, ss);
+
+      divided_setup_move(ss,
+                         MAPCODE(s_thar,2,MPKIND__SPLIT,0),
+                         (phantest_kind) parseptr->concept->arg1, true, result);
+      break;
+   case 3:    // twin phantom alamos
+      if (ss->kind == s4x6) expand::expand_setup(s4x6_dblalamo, ss);
+
+      divided_setup_move(ss,
+                         MAPCODE(s_alamo,2,MPKIND__SPLIT,0),
+                         (phantest_kind) parseptr->concept->arg1, true, result);
+      break;
    }
 }
 
@@ -2695,12 +2716,14 @@ static void do_concept_dblbent(
 
 /*
    Args from the concept are as follows:
-   arg1 =
+   arg1 low bit =
       0 - user claims this is some kind of columns
       1 - user claims this is some kind of lines
       3 - user claims this is waves
-   8 bit -- this is double bent tidal
-   16 bit -- this is bent box
+   0      -- this is double bent CLW's
+   8 bit  -- this is double bent tidal CLW
+   16 bit -- this is bent boxes (low bits set to 4, though it doesn't matter)
+   32 bit -- this is double bent CLW
 */
 
    uint32_t map_code = 0;
@@ -2708,9 +2731,8 @@ static void do_concept_dblbent(
    setup otherfolks = *ss;
    setup *otherfolksptr = (setup *) 0;
 
-
    if (arg1 & 16) {
-      //Bent boxes.
+      // Bent boxes.
       if (ss->kind == s3x6) {
          if (global_livemask == 0x2170B)
             map_code = MAPCODE(s2x2,2,MPKIND__BENT0CW,0);
@@ -2752,8 +2774,20 @@ static void do_concept_dblbent(
             map_code = MAPCODE(s2x2,2,MPKIND__BENT7CCW,0);
       }
    }
+   else if (arg1 & 32) {
+      // Double bent CLW's.
+      // Could come in as a double alamo or as a 4x6.  Change to 4x6.
+      ss->do_matrix_expansion(CONCPROP__NEEDK_4X6, true);
+
+      if (ss->kind == s4x6) {
+         if (global_livemask == 0x0F0F)
+            map_code = MAPCODE(s2x4,1,MPKIND__BENT4CW,0);
+         else if (global_livemask == 0x3C3C)
+            map_code = MAPCODE(s2x4,1,MPKIND__BENT4CCW,0);
+      }
+   }
    else if (!(arg1 & 8)) {
-      //Bent C/L/W's.
+      // Bent C/L/W's.
       if (ss->kind == s3x6) {
          if (global_livemask == 0x2170B)
             map_code = MAPCODE(s1x4,2,MPKIND__BENT2CW,0);
@@ -4330,7 +4364,7 @@ void nose_move(
    if (n < 0) fail("Sorry, can't do nose starting in this setup.");
    const coordrec *coordptr = setup_attrs[ss->kind].nice_setup_coords;
 
-   int initial_turn[32];
+   int initial_turn[MAX_PEOPLE];
 
    int i;
    for (i=0; i<=n; i++) {           // Execute the required turning, and remember same.
@@ -4339,8 +4373,7 @@ void nose_move(
          int turn;
          int my_coord;
          bool select = everyone || selectp(ss, i);
-         switch (where)
-         {
+         switch (where) {
          case direction_left:
             turn = 3;
             break;
@@ -4363,7 +4396,7 @@ void nose_move(
          }
 
          if (select) ss->people[i].id1 = rotperson(p, turn * 011);
-         initial_turn[(p >> 6) & 037] = select ? turn : 0;
+         initial_turn[(p & XPID_MASK) >> 6] = select ? turn : 0;
       }
    }
 
@@ -4383,7 +4416,7 @@ void nose_move(
    for (i=0; i<=n; i++) {      // Undo the turning.
       uint32_t p = result->people[i].id1;
       if (p & BIT_PERSON) {
-         result->people[i].id1 = rotperson(p, ((- initial_turn[(p >> 6) & 037]) & 3) * 011);
+         result->people[i].id1 = rotperson(p, ((- initial_turn[(p & XPID_MASK) >> 6]) & 3) * 011);
       }
    }
 }
@@ -4414,8 +4447,8 @@ void stable_move(
 
    howfar <<= 1;    // Calibrated in eighths.
 
-   uint32_t directions[32];
-   bool selected[32];
+   uint32_t directions[MAX_PEOPLE];
+   bool selected[MAX_PEOPLE];
 
    int i;
    for (i=0; i<=n; i++) {           // Save current facing directions.
@@ -9464,7 +9497,10 @@ static void do_concept_concentric(
          fail("Use the \"CONCENTRIC Z's\" concept.");
 
       concentric_move(ss, &sscmd, &sscmd, schema, 0,
-                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0U, result);
+                      parseptr->concentric_4p ? 0 : DFM1_CONC_CONCENTRIC_RULES,
+                      true, false,
+                      parseptr->concentric_4p ? ~2U : ~0U,
+                      result);
 
       // 8-person concentric operations do not show the split.
       result->result_flags.clear_split_info();
@@ -9839,6 +9875,8 @@ extern bool do_big_concept(
    if (!(this_kind == concept_special_sequential_no_2nd ||
          this_kind == concept_special_sequential_sel_no_2nd))
       ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__PARTS_OVER_THIS_CONCEPT;
+
+   ss->cmd.parseptr->concentric_4p = this_concept_parse_block->concentric_4p;
 
    (*concept_func)(ss, this_concept_parse_block, result);
    remove_tgl_distortion(result);

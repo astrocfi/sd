@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2025  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1691,6 +1691,7 @@ public:
    bool no_check_call_level;      // if true, don't check whether this call
                                   // is at the level
    bool say_and;                  // Used by "randomize" -- put "AND" in front of this
+   bool concentric_4p;            // To make "concentric" concept do 4-person setup only.
 
    static parse_block *get_parse_block_mark();    // In sdutil.cpp
    static parse_block *get_parse_block();         // In sdutil.cpp
@@ -1801,7 +1802,7 @@ struct resultflag_rec {
    // BEWARE!!!  If add fields to this, be sure to initialize them in constructor, below.
    uint16_t split_info[2];  // The split stuff.  X in slot 0, Y in slot 1.
    uint32_t misc;           // Miscellaneous info, with names like RESULTFLAG__???.
-   heritflags res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__DID_MXN_EXPANSION bit on.
+   heritflags res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__REQUEST_MXN_COMPRESSION bit on.
                            // Gets copied to command block for next cycle of sequential call.
 
    inline void clear_split_info()
@@ -1827,7 +1828,7 @@ struct resultflag_rec {
    }
 };
 
-enum { MAX_PEOPLE = 24 };
+enum { MAX_PEOPLE = 32 };
 
 struct small_setup {
    setup_kind skind;
@@ -3029,6 +3030,17 @@ class select {
       fx_fdblbentccw,
       fx_fcrookedcw,
       fx_fcrookedccw,
+
+      fx_dblthar0,
+      fx_dblthar1,
+      fx_dblthar2,
+      fx_dblthar3,
+
+      fx_dblalamo0,
+      fx_dblalamo1,
+      fx_dblalamo2,
+      fx_dblalamo3,
+
       fx_fspindlc,
       fx_fspindlf,
       fx_fspindlg,
@@ -3737,7 +3749,7 @@ class tglmap {
 };
 
 
-typedef int id_bit_table[4];
+typedef uint32_t id_bit_table[4];
 
 struct ctr_end_mask_rec {
    uint32_t mask_normal;
@@ -3770,8 +3782,8 @@ struct coordrec {
    // search in any case.  Doing it this way means that the picture area, 64 bytes, is
    // wasted, but it's just more straightforward this way.
    int xfactor;
-   int8_t xca[24];
-   int8_t yca[24];
+   int8_t xca[MAX_PEOPLE];
+   int8_t yca[MAX_PEOPLE];
    int8_t diagram[64];
 };
 
@@ -4069,13 +4081,12 @@ enum {
    RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008U,
    RESULTFLAG__SECONDARY_DONE       = 0x00000010U,
    RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020U,
-
    RESULTFLAG__NEED_DIAMOND         = 0x00000040U,
-   RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080U,
-   RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000100U,
-   RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x00000200U,
-   RESULTFLAG__RECTIFY_ACCEPTED     = 0x00000400U,
-   //   Spare = 0x00000800U,
+   RESULTFLAG__REQUEST_MXN_COMPRESSION = 0x00000080U,
+   RESULTFLAG__DEFER_MXN_COMPRESSION = 0x00000100U,
+   RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000200U,
+   RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x00000400U,
+   RESULTFLAG__RECTIFY_ACCEPTED     = 0x00000800U,
    RESULTFLAG__EXPAND_TO_2X3        = 0x00001000U,
    RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x00002000U,
 
@@ -4633,7 +4644,7 @@ class expand {
    // initialized arrays.
 
    struct thing {
-      int8_t source_indices[24];
+      int8_t source_indices[MAX_PEOPLE];
       setup_kind inner_kind;
       setup_kind outer_kind;
       int rot;
@@ -4986,7 +4997,9 @@ extern const expand::thing s_qtg_3x4;
 extern const expand::thing s_short6_2x3;
 extern const expand::thing s_bigrig_dblbone;
 extern const expand::thing s_bigbone_dblrig;
-extern const int8_t identity24[24];
+extern const expand::thing s_bigh_dblthar;
+extern const expand::thing s4x6_dblalamo;
+extern const int8_t identity32[32];
 extern full_expand::thing rear_1x2_pair;
 extern full_expand::thing rear_2x2_pair;
 extern full_expand::thing rear_bone_pair;
@@ -5104,6 +5117,7 @@ enum mpkind {
    MPKIND__4_QUADRANTS_WITH_45_ROTATION,
    MPKIND__4_EDGES_FROM_4X4,
    MPKIND__4_EDGES,
+   MPKIND__4_EDGES_REALLY_ALTERNATING,
    MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
    MPKIND__NONISOTROPDMD,
@@ -5233,13 +5247,6 @@ enum specmapkind {
    spcmap_diag23b,
    spcmap_diag23c,
    spcmap_diag23d,
-   spcmap_f2x8_4x4,
-   spcmap_f2x8_4x4h,
-   spcmap_w4x4_4x4,
-   spcmap_w4x4_4x4h,
-   spcmap_f2x8_2x8,
-   spcmap_f2x8_2x8h,
-   spcmap_w4x4_2x8,
    spcmap_emergency1,
    spcmap_emergency2,
    spcmap_fix_triple_turnstyle,
