@@ -484,6 +484,11 @@ extern void normalize_concentric(
    uint32_t matrix_concept,
    setup *result) THROW_DECL
 {
+   if (center_arity == 0) {
+      *result = outer_inners[0];
+      return;
+   }
+
    // If "outer_elongation" < 0, the outsides can't deduce their ending spots on
    // the basis of the starting formation.  In this case, it is an error unless
    // they go to some setup for which their elongation is obvious, like a 1x4.
@@ -491,8 +496,8 @@ extern void normalize_concentric(
    // are sort of OK, and that a warning needs to be raised.
 
    int j;
-   setup *inners = &outer_inners[1];
    setup *outers = &outer_inners[0];
+   setup *inners = &outer_inners[1];
    calldef_schema table_synthesizer = synthesizer;
    if (synthesizer == schema_rev_checkpoint_concept) table_synthesizer = schema_rev_checkpoint;
    uint32_t orig_elong_is_controversial = outer_elongation & CONTROVERSIAL_CONC_ELONG;
@@ -3237,6 +3242,14 @@ extern void concentric_move(
    uint32_t specialoffsetmapcode,
    setup *result) THROW_DECL
 {
+   // "specialoffsetmapcode" has the following meaning:
+   // ~0U : The usual default; no special action.
+   // ~1U : Special promenade operation.
+   // ~2U : We already picked out centers and ends.  Just doing the ends now,
+   //       with concentric_rules turned on.
+   // lower than ~2U : This is a special map for divided_setup_move.
+   //    No legitimate map is anywhere near this high.
+
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       clear_result_flags(result);
       result->kind = nothing;
@@ -3409,11 +3422,30 @@ extern void concentric_move(
 
    bool imposing_z = cmdin && ((cmdin->cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) != 0);
 
-   // This reads and writes to "analyzer" and "inverting", and writes to "crossing".
-   analyzer_result = concentrify(ss, analyzer, crossing, inverting, cmdout, enable_3x1_warn,
-                                 imposing_z,
-                                 begin_inner, &begin_outer, &center_arity,
-                                 &begin_outer_elongation, &begin_xconc_elongation);
+   // Check for just doing the ends.
+
+   if (specialoffsetmapcode == ~2U) {
+      begin_outer = *ss;
+      begin_inner[0] = *ss;  // Do these 3 so they won't be corrupt; they doen't get done.
+      begin_inner[1] = *ss;
+      begin_inner[2] = *ss;
+      crossing = false;
+      inverting = false;
+      enable_3x1_warn = false;
+      imposing_z = false;
+      analyzer_result = schema_concentric;
+      center_arity = 0;
+      cmdin = (setup_command *) 0;
+      begin_outer_elongation = 1;   // Is this right?  It's what the rest of the world uses.
+      //      modifiersout1 |= DFM1_CONC_CONCENTRIC_RULES;
+   }
+   else {
+      // This reads and writes to "analyzer" and "inverting", and writes to "crossing".
+      analyzer_result = concentrify(ss, analyzer, crossing, inverting, cmdout, enable_3x1_warn,
+                                    imposing_z,
+                                    begin_inner, &begin_outer, &center_arity,
+                                    &begin_outer_elongation, &begin_xconc_elongation);
+   }
 
    // But reverse them if doing "invert".
    if (save_cmd_misc2_flags & CMD_MISC2__SAID_INVERT)
@@ -3632,16 +3664,16 @@ extern void concentric_move(
                 !(localmodsout1 & DFM1_CONC_CONCENTRIC_RULES)) {
                final_and_herit_flags junk_concepts;
                junk_concepts.clear_all_herit_and_final_bits();
-               parse_block *next_parseptr;
-
-               next_parseptr = process_final_concepts(begin_ptr->cmd.parseptr,
-                                                      false, &junk_concepts, true, false);
+               parse_block *next_parseptr = begin_ptr->cmd.parseptr;
 
                if (!junk_concepts.test_for_any_herit_or_final_bit() &&
                    next_parseptr->concept->kind == concept_concentric) {
                   localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
                   begin_ptr->cmd.parseptr = next_parseptr->next;
                }
+
+               if (!cmdin)
+                  next_parseptr->concentric_4p = true;
 
                if (next_parseptr->concept->kind == marker_end_of_list &&
                    next_parseptr->call == base_calls[base_call_cloverleaf]) {
@@ -3946,7 +3978,7 @@ extern void concentric_move(
             if (doing_ends || suppress_overcasts)
                begin_ptr->clear_all_overcasts();
 
-            if (specialoffsetmapcode < ~1U) {
+            if (specialoffsetmapcode < ~2U) {
                divided_setup_move(begin_ptr, specialoffsetmapcode,
                                   phantest_only_one, true, result_ptr);
             }

@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 414
+#define DATABASE_FORMAT_VERSION 418
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -667,6 +667,7 @@ enum setup_kind {
    s3x8,
    s4x5,
    s4x6,
+   s4x8,
    s2x10,
    s2x12,
    sdeepqtg,
@@ -696,8 +697,6 @@ enum setup_kind {
    shyper4x8b,// Ditto.
    shyper3x8, // Ditto.
    shyper2x16,// Ditto.
-   sfat2x8,   // Ditto.  These are big setups that are the size of 4x8's,
-   swide4x4,  // but only have 16 people.  The reason is to prevent loss of phantoms.
    s_323,
    s_343,
    s_3223,
@@ -725,6 +724,8 @@ enum setup_kind {
    sbig3dmd,
    sbig4dmd,
    sdblxwave,
+   sdblthar,
+   sdblalamo,
    sdblspindle,
    sdblbone,
    sdblrig,
@@ -854,6 +855,8 @@ enum begin_kind {
    b_5x4,
    b_4x6,
    b_6x4,
+   b_4x8,
+   b_8x4,
    b_2x10,
    b_10x2,
    b_2x12,
@@ -974,6 +977,8 @@ enum begin_kind {
    b_pbig4dmd,
    b_dblxwave,
    b_pdblxwave,
+   b_dblthar,
+   b_dblalamo,
    b_dblspindle,
    b_pdblspindle,
    b_dblbone,

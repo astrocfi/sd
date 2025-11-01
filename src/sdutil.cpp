@@ -465,8 +465,10 @@ void ui_utils::do_write(Cstring s)
          else
             newline();
       }
-      else if (c >= 'a' && c <= 'x')
+      else if (c >= 'a' && c <= 'z')
          printperson(rotperson(printarg->people[personstart + ((c-'a'-offs)%modulus)].id1, ri));
+      else if (c >= 'A' && c <= 'F')
+         printperson(rotperson(printarg->people[personstart + ((c-'A'+26-offs)%modulus)].id1, ri));
       else {
          // We need to do the mundane translation of "5" and "6" if the result
          // isn't going to be used by something that uses same.
@@ -994,7 +996,7 @@ void ui_utils::printsetup(setup *x)
          writestuff(" ends:");
          newline();
          ui_options.drawing_picture = 1;
-         print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
+         print_4_person_setup(MAX_PEOPLE/2, &(x->outer), x->concsetup_outer_elongation);
          break;
       default:
          if (two_couple_calling) {
@@ -2358,6 +2360,7 @@ void parse_block::initialize(const concept_descriptor *cc)
    replacement_key = 0;
    no_check_call_level = false;
    say_and = false;
+   concentric_4p = false;
    subsidiary_root = (parse_block *) 0;
    next = (parse_block *) 0;
 }

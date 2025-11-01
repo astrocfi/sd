@@ -1214,6 +1214,7 @@ static const int32_t dbl_tab21n[5]       = {2, 1, 1, 0, 1};
 static const int32_t x22tabtandem[6]     = {3, 0, 1, 0,      0, 0};
 static const int32_t x22tabantitandem[6] = {3, 2, 1, 0,      0, 0};
 static const int32_t x22tabfacing[6]     = {3, 2, 1, 0x1B,   0, 0};
+static const int32_t x24tabfacediag[6]   = {99, 2, 0, 0,     0, 0};
 static const int32_t x24tabtandem[6]     = {7, 0, 1, 0,      0, 0};
 static const int32_t x24tabantitandem[6] = {7, 2, 1, 0,      0, 0};
 static const int32_t x24tabfacing[6]     = {7, 2, 1, 0x1B1B, 0, 0};
@@ -1554,6 +1555,12 @@ static bool facing_test(setup *real_people, int real_index,
       if (delta == 0)
          return false;
       other_index = (real_index+delta)&0xF;
+   }
+   else if (extra_stuff[0] == 99)  {
+      // Doing the "2x4_facing_diag" test.
+
+      if (northified_index < 4) return false;
+      other_index = (real_index & 1) | ((real_index & 6) ^ 6);
    }
    else {
       // Not doing the special "facing someone directly" stuff.
@@ -3208,7 +3215,7 @@ static bool q_tag_check(setup *real_people, int real_index,
 // BEWARE!!  This list must track the array "predtab" in mkcalls.cpp.
 // BEWARE!!  Obey the correctness of SELECTOR_PREDS.
 
-// BEWARE!!!!!!  Some things below are tagged as #57 or so.  See sdtop\4080 and START_OF_FACING_TESTS.
+// BEWARE!!!!!!  Some things below are tagged as #57 or so.  See sdtop\4099 and START_OF_FACING_TESTS.
 // Note that START_OF_FACING_TESTS is defined both here and in sdtop.
 // This is, needless to say, extremely dangerous.  Will fix someday.
 
@@ -3280,6 +3287,7 @@ predicate_descriptor pred_table[] = {
       {facing_test,                    x21tabfacing},            // "2x1_facing_someone"   // WARNING!!  This is tagged as #57.
       {facing_test,                    x41tabfacing},            // "4x1_facing_someone"   // WARNING!!  This is tagged as #58.
       {facing_test,                    x81tabfacing},            // "8x1_facing_someone"   // WARNING!!  This is tagged as #59.
+      {facing_test,                    x24tabfacediag},          // "2x4_facing_diag"
       {facing_test,                    x24tabfacing},            // "2x4_facing_someone"
       {always,                       (const int32_t *) 0},       // "always"
       {plus_mod_real,                 &iden_tab[1]},             // "person_real_plus1"

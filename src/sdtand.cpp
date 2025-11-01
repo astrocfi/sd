@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2025  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -186,12 +186,6 @@ static tm_thing maps_isearch_twosome[] = {
    {{15, 3, 7, 6, 13, 1, 2, 11},                                       00220ULL,    0x008E,       4, 0,  s2x2,  s4x4},
    {{3, 7, 10, 12, 1, 5, 8, 14},                                       00220ULL,    0x05A0,       4, 0,  s2x2,  s_c1phan},
 
-   // getouts
-   {{0, 2, 6, 7, 1, 3, 5, 4},                                          04466ULL,    0x000F,       4, 0,  s1x4,  slinebox},
-   {{5, 4, 1, 3, 6, 7, 0, 2},                                          06204ULL,    0x000F,       4, 2,  s1x4,  slinebox},
-   {{0, 3, 7, 4, 1, 2, 6, 5},                                          06446ULL,    0x0033,       4, 0,  s1x4,  sdbltrngl4},
-   {{6, 5, 1, 2, 7, 4, 0, 3},                                          04664ULL,    0x0033,       4, 2,  s1x4,  sdbltrngl4},
-
    {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},          0ULL,    0,            8, 0,  s2x4,  s4x4},
    {{14, 3, 7, 5, 8, 9, 10, 12,      0, 1, 2, 4, 6, 11, 15, 13},           0ULL,    0xFFFF,       8, 1,  s2x4,  s4x4},
    {{-2, 15, 3, 1, -2, 5, 11, 9,     -1, 13, -1, -1, -1, 7, -1, -1},       0ULL,    0,            8, 0,  s2x4,  s4x4},
@@ -361,6 +355,12 @@ static tm_thing maps_isearch_twosome[] = {
    // Must be after "2x4_4".
    {{6, 5, 3, 4,                     7, 0, 2, 1},                      00202ULL,    0xCC,         4, 0,  s1x4,  s_rigger},
    {{5, 6, 4, 3,                     0, 7, 1, 2},                      02020ULL,    0xCC,         4, 0,  s1x4,  s_bone},
+
+   // Getouts, must be after the above two.
+   {{0, 2, 6, 7, 1, 3, 5, 4},                                          04466ULL,    0x000F,       4, 0,  s1x4,  slinebox},
+   {{5, 4, 1, 3, 6, 7, 0, 2},                                          06204ULL,    0x000F,       4, 2,  s1x4,  slinebox},
+   {{0, 3, 7, 4, 1, 2, 6, 5},                                          06446ULL,    0x0033,       4, 0,  s1x4,  sdbltrngl4},
+   {{6, 5, 1, 2, 7, 4, 0, 3},                                          04664ULL,    0x0033,       4, 2,  s1x4,  sdbltrngl4},
 
    // Next 2 must precede the third.
    {{0, 3, 6,                        1, 2, 7},                         00220ULL,    0x33,      3, 1,  s_trngl, s_crosswave},
@@ -1105,7 +1105,7 @@ void tandrec::unpack_us(
       }
    }
    else
-      my_huge_map = identity24;
+      my_huge_map = identity32;
 
    if (!my_huge_map)
       fail("This would go to an impossible setup.");

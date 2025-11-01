@@ -97,9 +97,9 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
       result->kind = result->outer.skind;
       result->rotation = save_rotation + result->outer.srotation;
       result->eighth_rotation = save_eighth_rotation + result->inner.seighth_rotation;
-      for (i=0 ; i<12 ; i++) result->swap_people(i, i+12);
+      for (i=0 ; i<MAX_PEOPLE/2 ; i++) result->swap_people(i, i+MAX_PEOPLE/2);
       canonicalize_rotation(result);    // Sorrier!
-      for (i=0 ; i<12 ; i++) result->swap_people(i, i+12);
+      for (i=0 ; i<MAX_PEOPLE/2 ; i++) result->swap_people(i, i+MAX_PEOPLE/2);
       result->outer.srotation = result->rotation;
 
       result->kind = s_normal_concentric;
@@ -340,7 +340,7 @@ static const expand::thing expg72 = {{1, 3, 5, 4, 7, 9, 11, 10}, s1x8, s1x12, 0,
 static const expand::thing expg27 = {{0, 1, 4, 2, 6, 7, 10, 8},  s1x8, s1x12, 0, 0, 02727};
 static const expand::thing expg56 = {{1, 2, 5, 3, 7, 8, 11, 9},  s1x8, s1x12, 0, 0, 05656};
 static const expand::thing expg35 = {{0, 2, 4, 3, 6, 8, 10, 9},  s1x8, s1x12, 0, 0, 03535};
-
+static const expand::thing exp0f0f = {{0, 1, 3, 2, 8, 9, 11, 10},s1x8, s1x16, 0, 0, 0x0F0F};
 static const expand::thing exprig12a = {{9, 10, 11, 1, 3, 4, 5, 7}, s1x3dmd, srigger12, 0, 0, 07272};
 static const expand::thing exprig12b = {{0, 1, 2, 4, 6, 7, 8, 10}, s_spindle, srigger12, 0, 0, 02727};
 
@@ -436,7 +436,9 @@ void fix_roll_transparency_stupidly(const setup *ss, setup *result)
 
 extern void remove_mxn_spreading(setup *ss) THROW_DECL
 {
-   if (!(ss->result_flags.misc & RESULTFLAG__DID_MXN_EXPANSION))
+   if ((ss->result_flags.misc & (RESULTFLAG__REQUEST_MXN_COMPRESSION|
+                                 RESULTFLAG__DEFER_MXN_COMPRESSION)) !=
+       RESULTFLAG__REQUEST_MXN_COMPRESSION)
       return;
 
    uint32_t livemasklittle = ss->little_endian_live_mask();
@@ -477,6 +479,10 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
       &expl52, &expl25, &expg72, &expg27, &expg56, &expg35,
       (const expand::thing *) 0};
 
+   static const expand::thing *unwind_1x16_table[] = {
+      &exp0f0f,
+      (const expand::thing *) 0};
+
    static const expand::thing *unwind_rigger12_table[] = {
       &exprig12a, &exprig12b,
       (const expand::thing *) 0};
@@ -484,7 +490,6 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
    static const expand::thing *unwind_4x6_table[] = {
       &exp4141,
       (const expand::thing *) 0};
-
 
    const expand::thing **p = (const expand::thing **) 0;
 
@@ -512,6 +517,9 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
       break;
    case s1x12:
       p = unwind_1x12_table;
+      break;
+   case s1x16:
+      p = unwind_1x16_table;
       break;
    case srigger12:
       p = unwind_rigger12_table;
@@ -544,7 +552,7 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
          else if (final == &expg27)
             ss->result_flags.misc |= RESULTFLAG__VERY_CTRS_ODD;
 
-         ss->result_flags.misc &= ~RESULTFLAG__DID_MXN_EXPANSION;
+         ss->result_flags.misc &= ~RESULTFLAG__REQUEST_MXN_COMPRESSION;
       }
    }
 }
@@ -1000,11 +1008,16 @@ extern bool divide_for_magic(
       ss->cmd.cmd_final_flags.set_heritbits(sixteen ? INHERITFLAG_16_MATRIX : INHERITFLAG_12_MATRIX);
 
    saved_warnings = configuration::save_warnings();
-   // If doing a 3x1/1x3 (not NOT a 3x3) squash out extras spots in subsetups.
-   if (heritflags_to_use & (INHERITFLAGMXNK_1X3|INHERITFLAGMXNK_3X1|INHERITFLAGMXNK_1X2|INHERITFLAGMXNK_2X1))
-       ss->cmd.cmd_misc2_flags |= CMD_MISC2__LOCAL_RECENTER;
+
+   // If doing a 3x1/1x3 (but NOT a 3x3) squash out extras spots in subsetups.
+   if ((heritflags_to_use == INHERITFLAGMXNK_1X3) || 
+       (heritflags_to_use == INHERITFLAGMXNK_3X1) || 
+       (heritflags_to_use == INHERITFLAGMXNK_1X2) || 
+       (heritflags_to_use == INHERITFLAGMXNK_2X1))
+      ss->cmd.cmd_misc2_flags |= CMD_MISC2__LOCAL_RECENTER;
+
    impose_assumption_and_move(ss, result);
-   result->result_flags.misc |= RESULTFLAG__DID_MXN_EXPANSION;
+   result->result_flags.misc |= RESULTFLAG__REQUEST_MXN_COMPRESSION;
 
    result->result_flags.res_heritflags_to_save_from_mxn_expansion = 
       heritflags_to_use & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK);
@@ -1971,10 +1984,6 @@ static const coordrec galtodeep2x1 = {sdeep2x1dmd, 0x123,
    { -7,  -2,   0,   2,   7,   7,   2,   0,  -2,  -7},
    {  2,   2,   7,   2,   2,  -2,  -2,  -7,  -2,  -2}};
 
-static const coordrec bonetobigh = {sbigh, 0x123,
-   {-10, -10, -10, -10,  -6,  -2,  10,  10,  10,  10,   6,   2},
-   {  6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6,   0,   0}};
-
 static const coordrec spinto343 = {s_343, 0x123,
    { -4,   0,   4,   8,   2,   4,   0,  -4,  -8,  -2},
    {  6,   6,   6,   0,   0,  -6,  -6,  -6,   0,   0}};
@@ -2059,6 +2068,9 @@ static const int8_t s1x6correction_a[] =
     {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0, 127};
 static const int8_t s1x6correction_b[] =
    {0, -9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 127};
+static const int8_t sbighcorrection[] =
+   {10, -6, 9, -6, 10, -2, 9, -2, 10, 6, 9, 6, 10, 2, 9, 2,
+    -10, -6, -9, -6, -10, -2, -9, -2, -10, 6, -9, 6, -10, 2, -9, 2, 127};
 
 static const checkitem checktable[] = {
    {0x00220026, 0x01008004, s_trngl, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2344,6 +2356,7 @@ static const checkitem checktable[] = {
 
    {0x00A20062, 0x109CC067, s4x6, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x006200A2, 0x1918C4C6, s4x6, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00E20062, 0x00C60231, s4x8, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00C40062, 0x6E001B80, s3oqtg, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00C40062, 0x6E001B80, s3oqtg, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00620062, 0x1018C046, s4x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2354,9 +2367,17 @@ static const checkitem checktable[] = {
    {0x00910062, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00910022, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    // Pressed out from a bone.
-   {0x00A20066, 0x01840421, nothing, 0, warn__none, &bonetobigh, (const int8_t *) 0},
+   {0x00A20066, 0x01840421, sbigh, 0x200, warn__none,    (const coordrec *) 0, sbighcorrection},
+   //   {0x00660093, 0x08040210, nothing, 0, warn__none, &bonetobigh, (const int8_t *) 0},
    {0x00E20026, 0x01440430, sbigbone, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x01620026, 0x4A00A484, sdblbone, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+
+   // These have to be after the matrixy things above, or we
+   // could find ourselves in in unwarranted double alamo.
+   {0x00930086, 0x13180D44, sdblthar,  0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00F10086, 0x13180D44, sdblthar,  0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00E20062, 0x00C8C055, sdblalamo, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00A20062, 0x0080C045, sdblalamo, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // Next 3 must follow the "bigbone" entry above.
    {0x00A20026, 0x090C0422, slinebox, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -6457,9 +6478,19 @@ static void do_sequential_call(
           result->cmd.cmd_heritflags_to_save_from_mxn_expansion ==
           ((result->cmd.cmd_final_flags.herit) & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK))) {
 
+         // If I were an old PDP-1 bit-basher I wouldn't write it this way,
+         // but we're in the 21st century.
+
+         uint64_t H = result->cmd.cmd_final_flags.herit;
+         uint64_t otherbits = (H & ~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK));
+         uint64_t mxnbits = H & INHERITFLAG_MXNMASK;
+         bool mxnbits_4 = (mxnbits == INHERITFLAGMXNK_4X0 || mxnbits == INHERITFLAGMXNK_0X4);
+
          result->cmd.cmd_final_flags.herit = 
-            ((result->cmd.cmd_final_flags.herit & ~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) |
-             (INHERITFLAGNXNK_3X3|INHERITFLAG_12_MATRIX));
+            (otherbits |
+            (mxnbits_4 ?
+             (INHERITFLAGNXNK_4X4|INHERITFLAG_16_MATRIX) :
+             (INHERITFLAGNXNK_3X3|INHERITFLAG_12_MATRIX)));
       }
 
       // We don't supply these; they get filled in by the call.
@@ -6530,6 +6561,8 @@ static void do_sequential_call(
            ss->cmd.callspec == base_calls[base_call_basetag0_noflip]) &&
           (result->cmd.cmd_final_flags.herit & (INHERITFLAG_FRACTAL | INHERITFLAG_REVERTMASK)) == INHERITFLAG_FRACTAL)
          result->cmd.cmd_final_flags.herit &= ~INHERITFLAG_FRACTAL;
+
+      result->result_flags.misc |= RESULTFLAG__DEFER_MXN_COMPRESSION;
 
       do_stuff_inside_sequential_call(
          result, this_mod1,
@@ -6604,6 +6637,10 @@ static void do_sequential_call(
 
    ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags;
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+
+   // If we had deferred compression, do it now.
+   result->result_flags.misc &= ~RESULTFLAG__DEFER_MXN_COMPRESSION;
+   remove_mxn_spreading(result);
 }
 
 
@@ -8071,7 +8108,9 @@ static void move_with_real_call(
       *ss = saved_ss;
       result->clear_people();
       clear_result_flags(result,
-         RESULTFLAG__REALLY_NO_REEVALUATE|RESULTFLAG__RECTIFY_ACCEPTED);   // In case we bail out.
+                         RESULTFLAG__REALLY_NO_REEVALUATE|
+                         RESULTFLAG__RECTIFY_ACCEPTED|
+                         RESULTFLAG__DEFER_MXN_COMPRESSION);   // In case we bail out.
       uint32_t imprecise_rotation_result_flagmisc = 0;
       split_command_kind force_split = split_command_none;
       bool mirror = false;

@@ -1009,9 +1009,9 @@ static const coordrec tgl4_rotated = {s_trngl4, 0x23,
          s->kind = s->outer.skind;
          s->rotation = s->outer.srotation;
          s->eighth_rotation = s->outer.seighth_rotation;
-         for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
+         for (i=0 ; i<MAX_PEOPLE/2 ; i++) s->swap_people(i, i+MAX_PEOPLE/2);
          mirror_this(s);    // Sorrier!
-         for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
+         for (i=0 ; i<MAX_PEOPLE/2 ; i++) s->swap_people(i, i+MAX_PEOPLE/2);
          s->outer.srotation = s->rotation;
          s->outer.seighth_rotation = s->eighth_rotation;
 
@@ -2758,6 +2758,12 @@ static int divide_the_setup(
          }
       }
 
+      // 4x4 given?  We know what to do.
+      if (ss->cmd.cmd_final_flags.herit == INHERITFLAGNXNK_4X4) {
+         division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+         goto divide_us_no_recompute;
+      }
+
       // Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2,
       // 2x3, or other unseemly things.
       // If so, divide the 2x8 into 2 2x4's and proceed from there.
@@ -3337,6 +3343,19 @@ static int divide_the_setup(
       }
 
       goto divide_us_no_recompute;
+
+   case sbigh:
+      division_code = MAPCODE(s1x2,6,MPKIND__4_EDGES,1);
+      goto divide_us_no_recompute;
+
+   case sdblthar:
+      division_code = MAPCODE(s1x2,8,MPKIND__4_EDGES_REALLY_ALTERNATING,0);
+      goto divide_us_no_recompute;
+
+   case sdblalamo:
+      division_code = MAPCODE(s1x2,8,MPKIND__4_EDGES_REALLY_ALTERNATING,1);
+      goto divide_us_no_recompute;
+
    case sbigdmd:
 
       // The only way this can be legal is if people are in genuine "T" spots.
@@ -4994,8 +5013,8 @@ static uint32_t do_actual_array_call(
       }
       else {
          int halfnumoutl, halfnumoutc, numoutl, numoutc;
-         const int8_t *final_translatec = identity24;
-         const int8_t *final_translatel = identity24;
+         const int8_t *final_translatec = identity32;
+         const int8_t *final_translatel = identity32;
          int rotfudge_line = 0;
          int rotfudge_col = 0;
          numoutl = attr::slimit(result)+1;
@@ -5020,12 +5039,12 @@ static uint32_t do_actual_array_call(
                arraycallfixer arraycallfixtable[] = {
                   {s_spindle, s_crosswave, sx4dmd, ftcspn, ftlcwv, false},
                   {s_bone, s_qtag, sx4dmdbone, ftcbone, ftlbigqtg, false},
-                  {s_short6, s_2x1dmd, s_short6, identity24, ftlshort6dmd, false},
+                  {s_short6, s_2x1dmd, s_short6, identity32, ftlshort6dmd, false},
                   {s_2x1dmd, s1x6, sx1x6, ftc2x1dmd, ftl2x1dmd, false},
                   {s2x4, s_qtag, sxequlize, ftequalize, ftlqtg, true}, // Complicated T-boned "transfer and []".
-                  {s2x4, s_qtag, s2x4, identity24, qtg2x4, false},
-                  {s_qtag, s2x4, s_qtag, identity24, f2x4qtg, false},
-                  {s_c1phan, s2x4, s_c1phan, identity24, f2x4phan, false},
+                  {s2x4, s_qtag, s2x4, identity32, qtg2x4, false},
+                  {s_qtag, s2x4, s_qtag, identity32, f2x4qtg, false},
+                  {s_c1phan, s2x4, s_c1phan, identity32, f2x4phan, false},
                   {nothing},
                };
 
@@ -6234,7 +6253,9 @@ extern void basic_move(
    // (1) We want it to be zero in case we bail out.
    // (2) we want the RESULTFLAG__SPLIT_AXIS_MASK stuff to be clear
    //     for the normal case, and have bits only if splitting actually occurs.
-   clear_result_flags(result, RESULTFLAG__RECTIFY_ACCEPTED);
+   clear_result_flags(result,
+                      RESULTFLAG__RECTIFY_ACCEPTED|
+                      RESULTFLAG__DEFER_MXN_COMPRESSION);
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       result->kind = nothing;

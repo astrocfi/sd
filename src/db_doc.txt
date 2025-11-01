@@ -1685,6 +1685,40 @@ dblxwave    |  0  |  1  |_____|  5  |  4  | 12  | 13  |_____|  9  |  8  |
 
 
 
+                         _____                         _____
+                        |     |                       |     |
+                        |  2  |                       | 14  |
+                        |_____|                       |_____|
+                        |     |                       |     |
+                        |  3  |                       | 15  |
+             ___________|     |_______________________|     |___________
+            |     |      \   /      |     |     |      \   /      |     |
+sdblthar    |  0  |  1           5  |  4  | 12  | 13           9  |  8  |
+            |_____|_____ /    \_____|_____|_____|_____ /   \ _____|_____|
+                        |     |                       |     |
+                        |  7  |                       | 11  |
+                        |_____|                       |_____|
+                        |     |                       |     |
+                        |  6  |                       | 10  |
+                        |_____|                       |_____|
+
+
+
+                   _____ _____             _____ _____
+                  |     |     |           |     |     |
+                  |  0  |  1  |           | 12  | 13  |
+             _____|_____|_____|_____ _____|_____|_____|_____
+            |     |           |     |     |           |     |
+            |  7  |           |  2  | 11  |           | 14  |
+sdblalamo   |_____|           |_____|_____|           |_____|
+            |     |           |     |     |           |     |
+            |  6  |           |  3  | 10  |           | 15  |
+            |_____|_____ _____|_____|_____|_____ _____|_____|
+                  |     |     |           |     |     |
+                  |  5  |  4  |           |  9  |  8  |
+                  |_____|_____|           |_____|_____|
+
+
 
                    _____ _____ _____             _____ _____ _____
              _____|     |     |     |_____ _____|     |     |     |_____
@@ -2963,6 +2997,11 @@ unselect_once_rem_from_select
       is facing someone who is alive and facing back at the person.
       Returns FALSE otherwise.  This is the trailer-restricted version
       of 2x2_antitandem.
+
+2x4_facing_diag
+      Applies to 2x4 lines only.  Returns TRUE if this person is a
+      trailer and his diagonal opposite in his box is alive and facing
+      back diagonally at the person.  Returns FALSE otherwise.
 
 2x4_tandem_with_someone
 2x4_antitandem
