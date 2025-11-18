@@ -136,8 +136,8 @@ Go to the sddoc directory and do:
 26 May 24  -  13 Aug 24  #76  // finally tandem paranoid swing thru
                          #77  // reverse order paranoid swing the fractions
 13 Aug 24  -   4 Nov 24  #78  // middle 6/7 of cast off 7/8
-                         #79  // crazy phantom diamonds 3x2 AD
-4 Nov 24                 #80  // tandem triangle reshape
+4 Nov 24   -  25 Apr 25  #80  // tandem triangle reshape
+25 Apr 25                #79  // crazy phantom diamonds 3x2 AD
                          #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption
@@ -149,7 +149,7 @@ Also, do [DPT] initially touch by 1/2 x [split sidetrack]
 BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
 -------------------------------------------------------------------------------
 
-               TESTING AND PRODUCTION BUILD - MINGW 64 BITS, ON WINDOWS 10
+               TESTING AND PRODUCTION BUILD - MINGW 64 BITS, ON WINDOWS 11
                32 BIT COMPILERS MAY NO LONGER BE USED!!!!
                     Yes, the make utility for 64-bit mingw
                     is still called "mingw32-make".
@@ -219,17 +219,17 @@ from sd or sddoc to the archive subdirectory.
                PRODUCTION BUILD, TESTING, AND UPLOAD - Linux: RUBBISH.
 
 -------------------------------------------------------------------------------
-             UPLOADING TO LYNETTE'S WEB SITE, ON WINDOWS 10
+             UPLOADING TO LYNETTE'S WEB SITE, ON WINDOWS 11
 -------------------------------------------------------------------------------
 Start WinSCP.  Choose host www.challengedance.org and
-user name USERNAME.
+user name chaldnce.
 On right pane, choose public_html/sd (It might already be showing that.)
 On left pane, navigate to C:\Users\wba\sdfullarchive\vnnnn
    or wherever the pack.zip file is.
 Drag pack.zip left to right.  Exit from WinSCP.
 
 Start PuTTY.  Choose host www.challengedance.org, called "chal".
-Login as USERNAME.
+Login as chaldnce.
   challengedance.org> cd public_html/sd
   challengedance.org> ls -lt
      to check that pack.zip is there.
