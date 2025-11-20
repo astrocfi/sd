@@ -3195,7 +3195,7 @@ map::map_thing map::map_init_table[] = {
    {{9, 11, 6, 8,       7, 2, 4, 5,      12, 13, 15, 10,     14, 0, 1, 3},
     s2x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none, s4x4,0x000, 0},
 
-   // Don't seem to need this.  But I believe it's corrrect.
+   // Don't seem to need this.  But I believe it's correct.
    //{{9, 11, 6, 8,       7, 2, 4, 5,      12, 13, 15, 10,     14, 0, 1, 3},
    // s2x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, 0, s4x4, 0x000, 0},
 
@@ -3243,6 +3243,11 @@ map::map_thing map::map_init_table[] = {
     s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none, s2x4, 0x000, 0},
    {{5, 4,                  2, 3,                  7, 6,                  0, 1},
     s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,1, warn__none, s2x4, 0x000, 0},
+
+   {{12, 13, 14, 15,        10, 11, 8, 9,          0, 1, 2, 3,            6, 7, 4, 5},
+    sdmd,4,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none, s2x2dmd, 0x000, 0},
+   {{10, 11, 8, 9,          6, 7, 4, 5,            12, 13, 14, 15,        0, 1, 2, 3},
+    sdmd,4,MPKIND__SPLIT_OTHERWAY_TOO,1, warn__none, s2x2dmd, 0x000, 0},
 
    {{13, 15,                1, 3,                 7, 5,                  11, 9},
     s1x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,0, warn__none,s_c1phan, 0x000, 0},
@@ -7669,23 +7674,23 @@ static const coordrec thingblob = {s_bigblob, 0x23,
 
 
 
-#define NOBIT(otherbits) { otherbits, otherbits, otherbits, otherbits }
+#define NOBIT(otherbits) { (uint32_t) (otherbits), (uint32_t) (otherbits), (uint32_t) (otherbits), (uint32_t) (otherbits) }
 
-#define WESTBIT(otherbits) { ID2_BEAU | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits, ID2_LEAD | otherbits }
+#define WESTBIT(otherbits) { (uint32_t) (ID2_BEAU | otherbits), (uint32_t) (ID2_TRAILER | otherbits), (uint32_t) (ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD | otherbits) }
 
-#define EASTBIT(otherbits) { ID2_BELLE | otherbits, ID2_LEAD | otherbits, ID2_BEAU | otherbits, ID2_TRAILER | otherbits }
+#define EASTBIT(otherbits) { (uint32_t) (ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD | otherbits), (uint32_t) (ID2_BEAU | otherbits), (uint32_t) (ID2_TRAILER | otherbits) }
 
-#define NORTHBIT(otherbits) { ID2_LEAD | otherbits, ID2_BEAU | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits }
+#define NORTHBIT(otherbits) { (uint32_t) (ID2_LEAD | otherbits), (uint32_t) (ID2_BEAU | otherbits), (uint32_t) (ID2_TRAILER | otherbits), (uint32_t) (ID2_BELLE | otherbits) }
 
-#define SOUTHBIT(otherbits) { ID2_TRAILER | otherbits, ID2_BELLE | otherbits, ID2_LEAD | otherbits, ID2_BEAU | otherbits }
+#define SOUTHBIT(otherbits) { (uint32_t) (ID2_TRAILER | otherbits), (uint32_t) (ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD | otherbits), (uint32_t) (ID2_BEAU | otherbits) }
 
-#define NWBITS(otherbits) { ID2_LEAD   |ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BELLE | otherbits, ID2_LEAD   |ID2_BELLE | otherbits }
+#define NWBITS(otherbits) { (uint32_t) (ID2_LEAD   |ID2_BEAU  | otherbits), (uint32_t) (ID2_TRAILER|ID2_BEAU  | otherbits), (uint32_t) (ID2_TRAILER|ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD   |ID2_BELLE | otherbits) }
 
-#define SWBITS(otherbits) { ID2_TRAILER|ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BELLE | otherbits, ID2_LEAD   |ID2_BELLE | otherbits, ID2_LEAD   |ID2_BEAU  | otherbits }
+#define SWBITS(otherbits) { (uint32_t) (ID2_TRAILER|ID2_BEAU  | otherbits), (uint32_t) (ID2_TRAILER|ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD   |ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD   |ID2_BEAU  | otherbits) }
 
-#define SEBITS(otherbits) { ID2_TRAILER|ID2_BELLE | otherbits, ID2_LEAD   |ID2_BELLE | otherbits, ID2_LEAD   |ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BEAU  | otherbits }
+#define SEBITS(otherbits) { (uint32_t) (ID2_TRAILER|ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD   |ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD   |ID2_BEAU  | otherbits), (uint32_t) (ID2_TRAILER|ID2_BEAU  | otherbits) }
 
-#define NEBITS(otherbits) { ID2_LEAD   |ID2_BELLE | otherbits, ID2_LEAD   |ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BELLE | otherbits }
+#define NEBITS(otherbits) { (uint32_t) (ID2_LEAD   |ID2_BELLE | otherbits), (uint32_t) (ID2_LEAD   |ID2_BEAU  | otherbits), (uint32_t) (ID2_TRAILER|ID2_BEAU  | otherbits), (uint32_t) (ID2_TRAILER|ID2_BELLE | otherbits) }
 
 
 
@@ -8059,11 +8064,11 @@ static const id_bit_table id_bit_table_2stars[] = {
 static const id_bit_table id_bit_table_ptpd[] = {
    {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
    {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE},
-   {ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER, ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD},
+   {(uint32_t) (ID2_CTR2|ID2_CTR6|ID2_BEAU),     (uint32_t) (ID2_CTR2|ID2_CTR6|ID2_TRAILER), (uint32_t) (ID2_CTR2|ID2_CTR6|ID2_BELLE),    (uint32_t) (ID2_CTR2|ID2_CTR6|ID2_LEAD)},
    {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
    {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
    {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
-   {ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD,    ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER},
+   {(uint32_t) (ID2_CTR2|ID2_CTR6|ID2_BELLE),    (uint32_t) (ID2_CTR2|ID2_CTR6|ID2_LEAD),    (uint32_t) (ID2_CTR2|ID2_CTR6|ID2_BEAU),     (uint32_t) (ID2_CTR2|ID2_CTR6|ID2_TRAILER)},
    {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE}};
 
 static const id_bit_table id_bit_table_crosswave[] = {

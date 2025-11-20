@@ -136,9 +136,9 @@ Go to the sddoc directory and do:
 26 May 24  -  13 Aug 24  #76  // finally tandem paranoid swing thru
                          #77  // reverse order paranoid swing the fractions
 13 Aug 24  -   4 Nov 24  #78  // middle 6/7 of cast off 7/8
-4 Nov 24   -  25 Apr 25  #80  // tandem triangle reshape
-25 Apr 25                #79  // crazy phantom diamonds 3x2 AD
-                         #64  // hairy [boys trade] and circle 1/2
+ 4 Nov 24  -  25 Apr 25  #80  // tandem triangle reshape
+25 Apr 25  -  23 Jul 25  #79  // crazy phantom diamonds 3x2 AD
+23 Jul 25  -             #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption
                          #68  // echo split grand chain 8
@@ -185,7 +185,7 @@ Stress tests to try:
    sdtty c4 -resolve_test 240 <today's ddmm date>+10000  H start, pick random call
 
 -------------------------------------------------------------------------------
-                        FINAL PREPARATION, ON WINDOWS 10
+                        FINAL PREPARATION, ON WINDOWS 11
 -------------------------------------------------------------------------------
 
    THE DOCUMENTATION MUST HAVE BEEN PREPARED, AND THE SOURCES SAVED,

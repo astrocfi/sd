@@ -114,21 +114,24 @@ public:
    int m_people_per_group;
 };
 
+// limit=size of inner (small) setup
+// Each half (or third, whatever) of the map is calibrated by the inner setup.  First half (that is, first
+// "limit" items) shows the left/front person's location in the outer setup; second half shows the right/back person
+// (and so on for threesome).
 
 static tm_thing maps_isearch_twosome[] = {
    //       maps                                                      ilatmask3     olatmask  limit rot insetup outsetup
+
+   // !!!! NOTE !!!! These first two are conditionally included.  Search for "wd38t".  Note the use of "maps_isearch_twosome+2".
+   {{2, 4, 5, 0,                     -2, 3, -2, 1},                        0ULL,    0033,         4, 1,  s2x2,  s2x3},  // ***special***
+   {{1, 3, 5, 0,                     2, -2, 4, -2},                        0ULL,    0066,         4, 1,  s2x2,  s2x3},  // ***special***
+
    // "2x4_4" - see below; this must be before the others.
    {{7, 6, 4, 5,                     0, 1, 3, 2},                          0ULL,    0000,         4, 0,  s1x4,  s2x4},
    {{0, 2, 5, 7,                     1, 3, 4, 6},                      02222ULL,    0xFF,         4, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0,                     3, 4, 6, 1},                          0ULL,    0xFF,         4, 1,  s2x2,  s2x4},
    {{0, 2, 4, 7, 10, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8}, 0222222222ULL,0x3FFFF,    9, 0,  s3x3,  s3x6},
    {{4, 7, 10, 12, 14, 15, 0, 2, 17,     5, 6, 9, 11, 13, 16, 1, 3, 8},      0ULL,    0x3FFFF,    9, 1,  s3x3,  s3x6},
-   // This one gets h1p, far box star thru, as couples touch
-   {{7, 6, 2, 5,                     0, 1, 3, 4},                      00022ULL,    0x3C,         4, 1, s_trngl4, s2x4},
-   // This one gets h1p, near box star thru, as couples touch
-   {{4, 5, 7, 0,                     3, 2, 6, 1},                      00022ULL,    0xC3,         4, 3, s_trngl4, s2x4},
-   // This one comes back from far box
-   {{0, 2, 4, 6,                     1, 3, 5, 7},                         02200ULL, 0xF0,         4, 0, s_trngl4, s_trngl8},
 
    // Special maps for couples 1/8 twosome stuff.
    // These need further work in the table initializer.
@@ -156,6 +159,11 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 2, 6, 4, 9, 11, 15, 13,      1, 3, 7, 5, 8, 10, 14, 12},     022222222ULL, 0xFFFF,        8, 0,  s1x8,  s1x16},
    {{15, 14, 12, 13, 8, 9, 11, 10,   0, 1, 3, 2, 7, 6, 4, 5},              0ULL,    0000,         8, 0,  s1x8,  s2x8},
    {{11, 10, 9, 6, 7, 8,             0, 1, 2, 5, 4, 3},                    0ULL,    0000,         6, 0,  s1x6,  s2x6},
+
+   {{12, 3, 14, 15, 8, 9, 10, 5,     0, 1, 2, 13, 4, 11, 6, 7},            0ULL,       0,         8, 0,  s_ptpd,s2x2dmd},
+   {{6, 0, 3, 5,    15, 9, 10, 12,   7, 1, 2, 4,   14, 8, 11, 13},  002220222ULL, 0xCFCF,         8, 0,  s_ptpd,sdblrig},
+   {{6, 0, 3, 5,    15, 9, 10, 12,   7, 1, 2, 4,   14, 8, 11, 13},  022022202ULL, 0xFCFC,         8, 0,  s_ptpd,sdblrig},
+   {{-2, 0, 2, 11, -2, 7, 9, 4,   -2, 1, 3, 10, -2, 6, 8, 5},       022202220ULL,  0xFFF,         8, 0,  s_ptpd,sbigbone},
 
    {{0, 2, 3, 4,                     1, -1, -1, -1},                     00002ULL,   0x3,         4, 0,  s1x4,  s1x5},
    {{0, 1, 3, 4,                     -1, 2, -1, -1},                     00020ULL,   0x6,         4, 0,  s1x4,  s1x5},
@@ -255,6 +263,12 @@ static tm_thing maps_isearch_twosome[] = {
 
    // Must be after "2x4_4".
    {{7, 1, 4, 6,                     0, 2, 3, 5},                      02020ULL,    0146,         4, 0,  sdmd,  s2x4},
+   // This one gets h1p, far box star thru, as couples touch
+   {{7, 6, 2, 5,                     0, 1, 3, 4},                      00022ULL,    0x3C,         4, 1, s_trngl4, s2x4},
+   // This one gets h1p, near box star thru, as couples touch
+   {{4, 5, 7, 0,                     3, 2, 6, 1},                      00022ULL,    0xC3,         4, 3, s_trngl4, s2x4},
+   // This one comes back from far box
+   {{0, 2, 4, 6,                     1, 3, 5, 7},                         02200ULL, 0xF0,         4, 0, s_trngl4, s_trngl8},
    // Next one is for so-and-so in tandem in a bone6, making a virtual line of 4.
    {{4, 5, 3, 2,                     0, -1, 1, -1},                        0ULL,    0000,         4, 0,  s1x4,  s_bone6},
    // Next one is for so-and-so in tandem in a short6, making a virtual line of 4.
@@ -278,14 +292,16 @@ static tm_thing maps_isearch_twosome[] = {
    {{6, 0, 5,                        7, 1, 4},                            0ULL,     0xFF,         3, 1,  s_trngl, s_rigger},
    {{3, 5, 0,                        2, 4, 1},                            0ULL,     0xFF,         3, 3,  s_trngl, s_rigger},
 
-   // Next 4 are for so-and-so in tandem from a column of 6, making a virtual column of
+   // Next few are for so-and-so in tandem from a column of 6, making a virtual column of
    // 4.  The first two are the real maps, and the other two take care of the
    // reorientation that sometimes happens when coming out of a 2x2.
 
+   {{2, 4, 5, 0,                     -1, 3, -1, 1},                    00202ULL,    0033,         4, 1,  s2x2,  s2x3},
+   {{1, 3, 5, 0,                     2, -1, 4, -1},                        0ULL,    0066,         4, 1,  s2x2,  s2x3},
    {{0, 1, 3, 5,                     -1, 2, -1, 4},                    02020ULL,    0066,         4, 0,  s2x2,  s2x3},
    {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0ULL,    0033,         4, 1,  s2x2,  s2x3},
    {{0, 2, 4, 5,                     1, -1, 3, -1},                    00202ULL,    0033,         4, 0,  s2x2,  s2x3},
-   {{1, 3, 5, 0,                     2, -1, 4, -1},                        0ULL,    0066,         4, 1,  s2x2,  s2x3},
+
    {{0, 1, 4, 5,                     -1, 2, 3, -1},                    00220ULL,    0036,         4, 0,  s2x2,  s2x3},
    {{0, 2, 3, 5,                     1, -1, -1, 4},                    02002ULL,    0063,         4, 0,  s2x2,  s2x3},
    {{2, 3, 5, 0,                     -1, -1, 4, 1},                        0ULL,    0063,         4, 1,  s2x2,  s2x3},
@@ -818,6 +834,21 @@ const siamese_item siamese_table_of_2[] = {
    {sdeepbigqtg, 0xCACA3535U, 0x3A3AU, warn__none},
    {sdeepbigqtg, 0xC5C53A3AU, 0x3535U, warn__none},
    {sdeepbigqtg, 0x3A3AC5C5U, 0xCACAU, warn__none},
+
+   {s2x2dmd,     0x0A0A1111U, 0x10000A0AU, warn__none},
+   {s2x2dmd,     0x11110A0AU, 0x20000000U, warn__none},
+   {s2x2dmd,     0xA0A01111U, 0x3000A0A0U, warn__none},
+   {s2x2dmd,     0x1111A0A0U, 0x40000000U, warn__none},
+   {s2x2dmd,     0x0A0A4444U, 0x50000A0AU, warn__none},
+   {s2x2dmd,     0x44440A0AU, 0x60000000U, warn__none},
+   {s2x2dmd,     0xA0A04444U, 0x7000A0A0U, warn__none},
+   {s2x2dmd,     0x4444A0A0U, 0x80000000U, warn__none},
+
+   {sdblrig,     0x0303C0C0U, 0x1000C0C0U, warn__none},
+   {sdblrig,     0x3030C0C0U, 0x2000C0C0U, warn__none},
+   {sbigbone,    0x3CF33F3CU, 0x1000030C,  warn__none},
+   {sbigbone,    0x0C30030CU, 0x2000030C,  warn__none},
+
    {nothing,     0,           0,       warn__none}};
 
 const siamese_item siamese_table_of_3[] = {
@@ -1411,6 +1442,7 @@ extern void tandem_couples_move(
    int finalcount;
    setup ttt[8];
 
+   // This (little-endian) mask causes live people to be flagged as single.
    uint32_t special_mask = 0;
    result->clear_people();
    remove_z_distortion(ss);
@@ -1506,6 +1538,10 @@ extern void tandem_couples_move(
 
       {
          // ****** Maybe all this could be done in terms of "do_1x3_type_expansion".
+         // Note that livemask64 and directions64 are BIG_ENDIAN,
+         // instead of the usual little-endian.
+
+         // Use facing directions, if possible, to figure out who is single.
 
          if (mxn_bits == INHERITFLAGMXNK_2X1 || mxn_bits == INHERITFLAGMXNK_1X2) {
             people_per_group = 2;
@@ -1547,8 +1583,16 @@ extern void tandem_couples_move(
                   special_mask |= 011;
 
                if (special_mask != 011 && special_mask != 044 &&
-                   special_mask != 014 && special_mask != 041)
-                  special_mask = 0;
+                   special_mask != 014 && special_mask != 041) {
+                  // If only one person in one of the 1x3's is home, and that person is not centermost,
+                  // we make a guess that that person is single and the other 2 phantoms are paired..
+                  // Is this logically sound?  No, but (a) it's correct for 2x1 or 1x2 hinge, and
+                  // (b) it makes test wd38t, with its 2x1 stack the wheel, work.
+                  if (livemask64 == 00003 || livemask64 == 00300)
+                     special_mask = 044;
+                  else
+                     special_mask = 0;
+               }
             }
          }
          else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
@@ -1834,7 +1878,7 @@ extern void tandem_couples_move(
    }
    else {    // Includes tandem_key_overlap_siam.
       people_per_group = 2;
-      our_map_table = maps_isearch_twosome;
+      our_map_table = maps_isearch_twosome+2;   // For wd38t.
    }
 
    if (attr::slimit(ss) < 0)
@@ -2762,12 +2806,15 @@ extern void tandem_couples_move(
 
    // Don't raise the "phantom tandem" warning if it's just a 2x4 to a 2x4
    // that splits into 1x2's.  That is, things like tandem hinge from clumps.
+   // And don't raise it if user gave a pg offset concept.
    if (tandstuff.m_maybe_raise_phantom_warning && !two_couple_calling) {
-      if (tandstuff.m_virtual_setup[0].kind != s2x4 ||
-          tandstuff.virtual_result.kind != s2x4 ||
-          (tandstuff.virtual_result.result_flags.split_info[0] &
-           tandstuff.virtual_result.result_flags.split_info[1]) != 1)
-         fail("Use \"phantom\" concept in front of this concept.");
+      if (!(tandstuff.m_virtual_setup[0].cmd.cmd_misc_flags & CMD_MISC__SAID_PG_OFFSET)) {
+         if (tandstuff.m_virtual_setup[0].kind != s2x4 ||
+             tandstuff.virtual_result.kind != s2x4 ||
+             (tandstuff.virtual_result.result_flags.split_info[0] &
+              tandstuff.virtual_result.result_flags.split_info[1]) != 1)
+            fail("Use \"phantom\" concept in front of this concept.");
+      }
    }
 
    result->clear_all_overcasts();

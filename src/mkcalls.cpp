@@ -967,6 +967,7 @@ const char *qualtab[] = {
    "levelc4",
    "not_tboned",
    "opposite_sex",
+   "have_roll_info",
    "quarterbox",
    "threequarterbox",
    "quarterbox_or_col",

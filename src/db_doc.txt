@@ -2301,7 +2301,6 @@ If someone is last in a right-hand column, he will do the following:
 
       looks at item number 0 in the call definition array, which is
             setup 4x2 2x4
-            setup 4x2 2x4
                array [ZM1N ZM2N ZM3N CR4S AL3S ZM4N ZM5N ZM6N]
       (Note that the beginning setup is now 4x2, but the ending setup
          is still 2x4.  PU names are never used in ending setup names.)

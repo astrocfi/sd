@@ -6658,6 +6658,8 @@ static void do_concept_multiple_diamonds(
          code = HETERO_MAPCODE(sdmd,4,MPKIND__HET_SPLIT,1,sdmd,0x1); break;
       case s_4mptpd:
          code = HETERO_MAPCODE(sdmd,4,MPKIND__HET_SPLIT,0,sdmd,0x4); break;
+      case s2x2dmd:
+         code = MAPCODE(sdmd,4,MPKIND__SPLIT_OTHERWAY_TOO,0); break;
       default:
          fail("Must have a quadruple diamond or 1/4 tag setup for this concept.");
       }

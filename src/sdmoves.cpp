@@ -998,7 +998,10 @@ extern bool divide_for_magic(
 
  do_3x3:
 
-   bool sixteen = (heritflags_to_use == INHERITFLAGMXNK_0X4 || heritflags_to_use == INHERITFLAGMXNK_4X0);
+   uint32_t mxnstuff = heritflags_to_use & INHERITFLAG_MXNMASK;
+
+   bool sixteen =
+      (mxnstuff == INHERITFLAGMXNK_0X4) || (mxnstuff == INHERITFLAGMXNK_4X0);
 
    ss->cmd.cmd_final_flags.herit =
       ((heritflags_to_use & ~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) |
