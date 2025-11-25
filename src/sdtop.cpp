@@ -3871,6 +3871,8 @@ extern callarray *assoc(
 
       if (!ss) return p;
 
+      int begin_size = attr::slimit(ss)+1;
+
       // The bits of the "qualifierstuff" field have the following meaning
       //          (see definitions in database.h):
       // 10000  left/out only (put 2 into assump_both)
@@ -3986,7 +3988,7 @@ extern callarray *assoc(
 
       if (this_qualifier == cr_none) {
          if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   // All live people were demanded.
-            for (plaini=0; plaini<=attr::slimit(ss); plaini++) {
+                 for (plaini=0; plaini < begin_size; plaini++) {
                if ((ss->people[plaini].id1) == 0) goto bad;
             }
          }
@@ -4007,6 +4009,7 @@ extern callarray *assoc(
       k = 0;   // Many tests will find these values useful.
       mask = 0;
       uint32_t livemask;
+
       tt.assumption = this_qualifier;
       tt.assump_col = 0;
       tt.assump_cast = 0;
@@ -4090,7 +4093,6 @@ extern callarray *assoc(
       case cr_facing_someone:
          {
             predicate_descriptor *pred;
-            int begin_size = attr::slimit(ss)+1;
 
             switch (ssK) {
             case s1x2:
@@ -4388,6 +4390,27 @@ extern callarray *assoc(
                                // could subdivide into 2x6's -- we'd better accept it.
 
          goto bad;   // If it's a 2x4, for example, it can't be a parallelogram.
+
+
+      case cr_have_roll_info:
+
+         w = 0;
+
+         for (plaini=0; plaini < begin_size; plaini++) {
+            u = ss->people[plaini].id1;
+            // Ignore people with both bits on.
+            if ((u & ROLL_DIRMASK) != ROLL_DIRMASK)
+               w |= u & ROLL_DIRMASK;
+         }
+
+         // Now if w is just ROLL_IS_R or ROLL_IS_L, we have a roll direction.
+
+         if (w == ROLL_IS_R && tt.assump_both == 2)
+            goto good;
+         else if (w == ROLL_IS_L && tt.assump_both == 1)
+            goto good;
+
+         goto bad;
       case cr_lateral_cols_empty:
          t = ss->or_all_people();
          mask = ss->little_endian_live_mask();
