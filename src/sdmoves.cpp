@@ -352,8 +352,7 @@ static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, s_323, sd3x4, 1
 static const expand::thing exp303 = {{10, 11, 0, 4, 5, 6}, s2x3, sd3x4, 1, 0, 06161};
 static const expand::thing exp030 = {{1, 2, 3, 7, 8, 9}, s2x3, sd3x4, 0, 0, 01616};
 static const expand::thing exp4141 = {{17, 18, 11, 0, 5, 6, 23, 12}, s2x4, s4x6, 1, 0, 041414141};
-
-
+static const expand::thing exp2x9a = {{0, 1, 2, 4, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17}, s2x7, s2x9, 0, 0, 0x3AFD7};
 
 static const expand::thing expb51 = {{0, 3, 5, 6, 9, 11},        s_bone6, s3x4, 0, 0, 05151};
 static const expand::thing expb26 = {{8, 10, 1, 2, 4, 7},        s_short6, s3x4, 1, 0, 02626};
@@ -491,6 +490,10 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
       &exp4141,
       (const expand::thing *) 0};
 
+   static const expand::thing *unwind_2x9_table[] = {
+      &exp2x9a,
+      (const expand::thing *) 0};
+
    const expand::thing **p = (const expand::thing **) 0;
 
    switch (ss->kind) {
@@ -526,6 +529,9 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
       break;
    case s4x6:
       p = unwind_4x6_table;
+      break;
+   case s2x9:
+      p = unwind_2x9_table;
       break;
    }
 
@@ -923,6 +929,11 @@ extern bool divide_for_magic(
          goto do_qtag;
       }
 
+      break;
+   case s3x6:
+      if (heritflags_to_check == INHERITFLAGNXNK_3X3) {
+         goto do_3x3;
+      }
       break;
    case s_qtag:
    do_qtag:
@@ -6567,16 +6578,25 @@ static void do_sequential_call(
 
       result->result_flags.misc |= RESULTFLAG__DEFER_MXN_COMPRESSION;
 
-      do_stuff_inside_sequential_call(
-         result, this_mod1,
-         &fix_next_assumption,
-         &remembered_2x2_elongation,
-         new_final_concepts,
-         ss->cmd.cmd_misc_flags,
-         zzz.m_reverse_order,
-         recompute_id,
-         qtfudged,
-         setup_is_elongated);
+      {
+         uint32_t save_split_requirement = result->cmd.cmd_misc_flags &
+            (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
+
+         do_stuff_inside_sequential_call(
+            result, this_mod1,
+            &fix_next_assumption,
+            &remembered_2x2_elongation,
+            new_final_concepts,
+            ss->cmd.cmd_misc_flags,
+            zzz.m_reverse_order,
+            recompute_id,
+            qtfudged,
+            setup_is_elongated);
+
+         result->cmd.cmd_misc_flags = (result->cmd.cmd_misc_flags &
+                                       ~(CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)) |
+            save_split_requirement;
+      }
 
       remember_elongation = result->cmd.prior_elongation_bits;
 
@@ -8560,6 +8580,12 @@ static void move_with_real_call(
          }
 
          switch (the_schema) {
+         case schema_counter_rotate:
+            if (ss->kind == s2x4 &&
+                (((ss->rotation & 1) && (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_HORIZ) ||
+                 (!(ss->rotation & 1) && (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_VERT)))
+               force_split = split_command_1x4_dmd;
+            break;
          case schema_concentric_2_4_or_single:
             // If this is going to be turned into a schema_single_concentric, split it now.
             if (ss->kind == s1x8)
@@ -8574,16 +8600,39 @@ static void move_with_real_call(
          case schema_single_cross_concentric_together_if_odd:
             force_split = split_command_1x4_dmd;
             break;
+            //         case schema_counter_rotate:    ***** If this is in, t00t fails.  kind=1x8
          case schema_single_concentric_together:
          case schema_single_cross_concentric_together:
-            if (ss->kind == s2x6) {
+            if (ss->kind == s1x8) {
+               force_split = split_command_1x4_dmd;
+            }
+            // FALL THROUGH!!!!!
+         case schema_single_concentric_together_nosplit:
+         case schema_single_cross_concentric_together_nosplit:
+            // FELL THROUGH!!
+            if (ss->kind == s1x8) {
+               switch (the_schema) {
+               case schema_single_concentric_together:
+                  the_schema = schema_single_concentric;
+                  break;
+               case schema_single_cross_concentric_together:
+                  the_schema = schema_single_cross_concentric;
+                  break;
+               case schema_single_concentric_together_nosplit:
+                  the_schema = schema_concentric;   // ***** Can't be right.  Actually, it is.
+                  break;
+               case schema_single_cross_concentric_together_nosplit:
+                  the_schema = schema_cross_concentric;   // ***** Can't be right.  Actually, it is.
+                  break;
+               }
+
+               break;
+            }
+            else if (ss->kind == s2x6) {
                uint32_t mask = ss->little_endian_live_mask();
                if (mask == 01717 || mask == 07474)
                   force_split = split_command_1x4_dmd;
             }
-            // FALL THROUGH!!!!!
-         case schema_concentric_6p_or_sgltogether:
-            // FELL THROUGH!!
             switch (ss->kind) {
             case s2x8: case s1x8: case s_ptpd:
                force_split = (ss->kind == s2x8) ? split_command_1x8_ptpd : split_command_1x4_dmd;
@@ -8592,6 +8641,15 @@ static void move_with_real_call(
                // and the schema is something like "schema_single_concentric_together"
                // (e.g. the call is "you all"), and the setup is a 2x4, we force a split
                // into 1x4's.  If that makes the call illegal, that's too bad.
+               if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+                  force_split = split_command_1x4_dmd;
+            }
+            break;
+         case schema_concentric_6p_or_sgltogether:
+            switch (ss->kind) {
+            case s2x8: case s1x8: case s_ptpd:
+               force_split = (ss->kind == s2x8) ? split_command_1x8_ptpd : split_command_1x4_dmd;
+            case s2x4:
                if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
                   force_split = split_command_1x4_dmd;
             }

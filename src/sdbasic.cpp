@@ -1652,7 +1652,7 @@ static uint32_t do_slide_roll(uint32_t person_in, uint32_t z, int direction)
 }
 
 static void put_person_away(setup *destination, callarray *tdef, personrec & this_person, uint32_t z, int real_index,
-                            int real_direction, int k, uint16_t resultrot, int newplacelist[], uint32_t lilresult_mask[])
+                            int real_direction, int k, uint16_t resultrot, int newplacelist[], uint32_t localmask[])
 {
    destination->people[real_index].id1 = do_slide_roll(this_person.id1, z, real_direction);
 
@@ -1672,7 +1672,7 @@ static void put_person_away(setup *destination, callarray *tdef, personrec & thi
    }
 
    newplacelist[real_index] = k;
-   lilresult_mask[k>>5] |= (1 << (k&037));
+   localmask[(k&077)>>5] |= (1 << (k&037));
 }
 
 
@@ -4696,6 +4696,9 @@ static uint32_t do_actual_array_call(
    bool & check_peeloff_migration,
    setup *result) THROW_DECL
 {
+   uint32_t lilresult_mask[2];
+   lilresult_mask[0] = 0;
+   lilresult_mask[1] = 0;
    int inconsistent_rotation = 0;
    uint32_t resultflagsmisc = 0;
    int inconsistent_setup = 0;
@@ -4709,8 +4712,12 @@ static uint32_t do_actual_array_call(
    setup newpersonlist;
    int newplacelist[MAX_PEOPLE];
    bool need_to_normalize = false;
+   bool specialhetero = false;
+   setup_kind tempkind;
+   setup_kind Lresult_kind;
 
    newpersonlist.clear_people();
+   Lresult_kind = linedefinition ? linedefinition->get_end_setup() : nothing;
 
    // This shouldn't happen, but we are being very careful here.
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
@@ -4923,16 +4930,11 @@ static uint32_t do_actual_array_call(
       goto fixup;
    }
    else {
-      uint32_t lilresult_mask[2];
-      setup_kind tempkind;
-
       result->rotation = goodies->callarray_flags & CAF__ROT;
       result->rotation_offset_from_true_north = ss->rotation_offset_from_true_north;
       num = attr::slimit(ss)+1;
       halfnum = num >> 1;
       tempkind = result->kind;
-      lilresult_mask[0] = 0;
-      lilresult_mask[1] = 0;
 
       if (funnybits != 0ULL) {
          if ((ss->kind != result->kind) || result->rotation ||
@@ -5023,8 +5025,6 @@ static uint32_t do_actual_array_call(
          uint32_t oddness = (numoutl & 1) ? numoutl-1 : 0;
 
          if (inconsistent_setup) {
-            setup_kind other_kind = linedefinition->get_end_setup();
-
             if (inconsistent_rotation) {
 
                struct arraycallfixer {
@@ -5034,28 +5034,30 @@ static uint32_t do_actual_array_call(
                   const int8_t *final_c;
                   const int8_t *final_l;
                   bool onlyifequalize;
+                  bool specialhetero;
                };
 
                arraycallfixer arraycallfixtable[] = {
-                  {s_spindle, s_crosswave, sx4dmd, ftcspn, ftlcwv, false},
-                  {s_bone, s_qtag, sx4dmdbone, ftcbone, ftlbigqtg, false},
-                  {s_short6, s_2x1dmd, s_short6, identity32, ftlshort6dmd, false},
-                  {s_2x1dmd, s1x6, sx1x6, ftc2x1dmd, ftl2x1dmd, false},
-                  {s2x4, s_qtag, sxequlize, ftequalize, ftlqtg, true}, // Complicated T-boned "transfer and []".
-                  {s2x4, s_qtag, s2x4, identity32, qtg2x4, false},
-                  {s_qtag, s2x4, s_qtag, identity32, f2x4qtg, false},
-                  {s_c1phan, s2x4, s_c1phan, identity32, f2x4phan, false},
+                  {s_spindle, s_crosswave, sx4dmd, ftcspn, ftlcwv, false, false},
+                  {s_bone, s_qtag, sx4dmdbone, ftcbone, ftlbigqtg, false, false},
+                  {s_short6, s_2x1dmd, s_short6, identity32, ftlshort6dmd, false, false},
+                  {s_2x1dmd, s1x6, sx1x6, ftc2x1dmd, ftl2x1dmd, false, false},
+                  {s2x4, s_qtag, sxequlize, ftequalize, ftlqtg, true, false}, // Complicated T-boned "transfer and []".
+                  {s2x4, s_qtag, s2x4, identity32, identity32, false, true},      // **** Special "2 steps at a time" thing.
+                  {s_qtag, s2x4, s_qtag, identity32, f2x4qtg, false, false},
+                  {s_c1phan, s2x4, s_c1phan, identity32, f2x4phan, false, false},
                   {nothing},
                };
 
                for (arraycallfixer *p = arraycallfixtable ; p->reskind != nothing ; p++) {
-                  if (result->kind == p->reskind && other_kind == p->otherkind &&
+                  if (result->kind == p->reskind && Lresult_kind == p->otherkind &&
                       (!p->onlyifequalize || (callspec->callflagsf & CFLAG2_EQUALIZE))) {
                      result->kind = p->finalkind;
                      tempkind = result->kind;
                      final_translatec = p->final_c;
                      final_translatel = p->final_l;
-                     rotfudge_line = 3;
+                     specialhetero = p->specialhetero;
+                     rotfudge_line = specialhetero ? 0 : 3;
 
                      if (!(goodies->callarray_flags & CAF__ROT)) {
                         final_translatel += (attr::klimit(p->reskind) + 1) >> 1;
@@ -5066,7 +5068,7 @@ static uint32_t do_actual_array_call(
                   }
                }
 
-               if (result->kind == s2x4 && other_kind == s_hrglass) {
+               if (result->kind == s2x4 && Lresult_kind == s_hrglass) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
                   result->kind = s_hrglass;
                   tempkind = s_hrglass;
@@ -5080,7 +5082,7 @@ static uint32_t do_actual_array_call(
                      rotfudge_col = 3;
                   }
                }
-               else if (result->kind == s_hrglass && other_kind == s2x4) {
+               else if (result->kind == s_hrglass && Lresult_kind == s2x4) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
                   result->kind = s2x4;
                   tempkind = s2x4;
@@ -5094,7 +5096,7 @@ static uint32_t do_actual_array_call(
                      rotfudge_col = 3;
                   }
                }
-               else if (result->kind == s_qtag && other_kind == s_bone) {
+               else if (result->kind == s_qtag && Lresult_kind == s_bone) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
                   result->kind = sx4dmdbone;
                   tempkind = sx4dmdbone;
@@ -5113,42 +5115,42 @@ static uint32_t do_actual_array_call(
                   fail("T-bone call went to a weird setup.");
             }
             else {
-               if (result->kind == s4x4 && other_kind == s2x4) {
-                  numoutl = attr::klimit(other_kind)+1;
+               if (result->kind == s4x4 && Lresult_kind == s2x4) {
+                  numoutl = attr::klimit(Lresult_kind)+1;
                   final_translatel = ftc4x4;
                }
-               else if (result->kind == srigger12 && other_kind == s1x12) {
+               else if (result->kind == srigger12 && Lresult_kind == s1x12) {
                   final_translatel = ftrig12;
                }
-               else if (result->kind == s4x4 && other_kind == s_qtag) {
-                  numoutl = attr::klimit(other_kind)+1;
+               else if (result->kind == s4x4 && Lresult_kind == s_qtag) {
+                  numoutl = attr::klimit(Lresult_kind)+1;
                   result->kind = sbigh;
                   tempkind = sbigh;
                   final_translatec = ft4x4bh;
                   final_translatel = ftqtgbh;
                }
-               else if (result->kind == s4x4 && other_kind == s2x6) {
-                  numoutl = attr::klimit(other_kind)+1;
+               else if (result->kind == s4x4 && Lresult_kind == s2x6) {
+                  numoutl = attr::klimit(Lresult_kind)+1;
                   result->kind = s4x6;
                   tempkind = s4x6;
                   final_translatec = ft4x446;
                   final_translatel = ft2646;
                }
-               else if (result->kind == sbigbone && other_kind == s3x4) {
+               else if (result->kind == sbigbone && Lresult_kind == s3x4) {
                   tempkind = result->kind;
                   final_translatel = ft3x4bb;
                }
-               else if (result->kind == s2x4 && other_kind == s2x6) {
-                  numoutl = attr::klimit(other_kind)+1;
+               else if (result->kind == s2x4 && Lresult_kind == s2x6) {
+                  numoutl = attr::klimit(Lresult_kind)+1;
                   result->kind = s2x6;
                   tempkind = s2x6;
                   final_translatec = ft2x42x6;
                }
-               else if (result->kind == s_c1phan && other_kind == s2x4) {
-                  numoutl = attr::klimit(other_kind)+1;
+               else if (result->kind == s_c1phan && Lresult_kind == s2x4) {
+                  numoutl = attr::klimit(Lresult_kind)+1;
                   final_translatel = ftcphan;
                }
-               else if (result->kind == s2x4 && other_kind == s_bone) {
+               else if (result->kind == s2x4 && Lresult_kind == s_bone) {
                   // We seem to be doing a complicated T-boned "busy []".
                   // Check whether we have been requested to "equalize",
                   // in which case we can do glorious things like going into
@@ -5163,20 +5165,20 @@ static uint32_t do_actual_array_call(
                      final_translatel = qtlbone;
                   }
                }
-               else if (result->kind == s_bone && other_kind == s2x4) {
+               else if (result->kind == s_bone && Lresult_kind == s2x4) {
                   final_translatel = qtlbone2;
                }
-               else if (result->kind == s1x8 && other_kind == s_crosswave) {
+               else if (result->kind == s1x8 && Lresult_kind == s_crosswave) {
                   final_translatel = qtlxwv;
                }
-               else if (result->kind == s1x8 && other_kind == s_qtag) {
+               else if (result->kind == s1x8 && Lresult_kind == s_qtag) {
                   final_translatel = qtl1x8;
                }
-               else if (result->kind == s_rigger && other_kind == s1x8) {
+               else if (result->kind == s_rigger && Lresult_kind == s1x8) {
                   final_translatel = qtlrig;
                }
-               else if (result->kind == s_hyperglass && other_kind == s_qtag) {
-                  numoutl = attr::klimit(other_kind)+1;
+               else if (result->kind == s_hyperglass && Lresult_kind == s_qtag) {
+                  numoutl = attr::klimit(Lresult_kind)+1;
                   final_translatel = qtlgls;
                }
                else
@@ -5268,8 +5270,16 @@ static uint32_t do_actual_array_call(
                kt = final_translate[where];
                if (kt < 0) fail("T-bone call went to a weird and confused setup.");
 
-               put_person_away(&newpersonlist, goodies, this_person, z, real_index, final_direction, kt,
-                               final_direction - real_direction + result->rotation, newplacelist, lilresult_mask);
+               put_person_away(&newpersonlist,
+                               goodies,
+                               this_person,
+                               z,
+                               real_index,
+                               final_direction,
+                               kt + ((specialhetero && (real_direction & 1)) ? 64 : 0),
+                               final_direction - real_direction + result->rotation,
+                               newplacelist,
+                               lilresult_mask);
             }
          }
       }
@@ -6009,6 +6019,9 @@ static uint32_t do_actual_array_call(
       // assumption.
 
       collision_collector CC(result, mirror, &ss->cmd, callspec);
+      setup secondresult = *result;    // Just clone the main result to get a few things.
+      secondresult.clear_people();     // Just making sure.
+      collision_collector secondCC(&secondresult, mirror, &ss->cmd, callspec);
 
       for (real_index=0; real_index<num; real_index++) {
          personrec newperson = newpersonlist.people[real_index];
@@ -6062,8 +6075,18 @@ static uint32_t do_actual_array_call(
                }
             }
             else {              // Un-funny move.
-               CC.install_with_collision(newplacelist[real_index],
-                                         &newpersonlist, real_index, 0);
+               if (specialhetero) {
+                  if (newplacelist[real_index] >= 64)
+                     CC.install_with_collision(newplacelist[real_index] - 64,
+                                               &newpersonlist, real_index, 0);
+                  else
+                     secondCC.install_with_collision(newplacelist[real_index],
+                                                     &newpersonlist, real_index, 0);
+               }
+               else {
+                  CC.install_with_collision(newplacelist[real_index],
+                                            &newpersonlist, real_index, 0);
+               }
             }
          }
       }
@@ -6080,6 +6103,15 @@ static uint32_t do_actual_array_call(
          merge_c1_phantom_real_couples : merge_strict_matrix;
 
       CC.fix_possible_collision(action, goodies->callarray_flags, ss);
+
+
+      if (specialhetero) {
+         // result has line people's result,
+         secondresult.kind = Lresult_kind;
+         secondresult.rotation = result->rotation-1;
+         secondCC.fix_possible_collision(action, goodies->callarray_flags, ss);
+         merge_table::merge_setups(&secondresult, merge_c1_phantom, result);
+      }
    }
 
    // Fix up "dixie tag" result if fraction was 1/4.
@@ -6809,7 +6841,7 @@ foobar:
                      (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
                      true);
 
-                  if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12)
+                  if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12 && ss->kind != s3x6)
                      fail("Can't expand to a 12 matrix.");
                   matrix_check_flag = INHERITFLAG_12_MATRIX;
                }

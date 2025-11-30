@@ -2970,10 +2970,13 @@ map::map_thing map::map_init_table[] = {
    {{2, 4, 0,                          5, 1, 3},
     s_trngl,2,MPKIND__REMOVED,1,  warn__none,  s_bone6,   0x107, 0},
 
+   // Very special maps!!!!
    {{0, 1, 2, 3, 8, 7},
     s2x3,1,MPKIND__OFFSET_UPWARD_1,0,  warn__none, s3x3,  0x000, 0},
    {{0, 1, 4, 2},
     s1x4,1,MPKIND__OFFSET_UPWARD_1,1,  warn__none, s1x5,  0x000, 0},
+   {{1, 3, 2, 6, 7, 5},
+    s1x3,2,MPKIND__OFFSET_UPWARD_1,0,  warn__none, s1x8,  0x000, 0},
 
    {{0, 1,     2, 3,        4, 9,      8, 7,       6, 5},
     s1x2,5,MPKIND__SPLIT,0,       warn__none,  s1x10,     0x000, 0},
@@ -3558,8 +3561,8 @@ const map::map_thing map::spec_map_table[] = {
     s1x3,2,MPKIND__NONE,1,        warn__none, s4x6,       0x005, 0, spcmap_34x6a},
    {{7, 22, 13, 1, 10, 19},
     s1x3,2,MPKIND__NONE,1,        warn__none, s4x6,       0x005, 0, spcmap_34x6b},
-   {{1, 3, 4, 0, 7, 5},
-    s1x3,2,MPKIND__NONE,1,        warn__none, s_qtag,     0x005, 0, spcmap_3lqtg},
+   {{0, 7, 5, 1, 3, 4},
+    s1x3,2,MPKIND__OFFSET_UPWARD_1,1, warn__none, s_qtag, 0x005, 0, spcmap_3lqtg},
    {{0, 1, 2, 6, 5, 4},
     s1x3,2,MPKIND__NONE,0,        warn__none, s_spindle,  0x000, 0, spcmap_3spn},
    {{0, 1, 2, 5, 4, 3},
@@ -10910,8 +10913,12 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_single_concentric_together
    {SCA_CENTRALCONC | SCA_CROSS | SCA_SNAGOK | SCA_SPLITOK,
     schema_nothing},                     // schema_single_cross_concentric_together
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK | SCA_NO_OVERCAST,
+    schema_nothing},                     // schema_single_concentric_together_nosplit
    {SCA_CENTRALCONC | SCA_CROSS | SCA_SNAGOK | SCA_SPLITOK,
-    schema_nothing},                     // schema_maybe_grand_single_conc_together
+    schema_nothing},                     // schema_single_cross_concentric_together_nosplit
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_maybe_6x2_single_conc_together
    {SCA_NO_OVERCAST,
     schema_nothing},                     // schema_maybe_matrix_single_concentric_together
    {SCA_NO_OVERCAST,

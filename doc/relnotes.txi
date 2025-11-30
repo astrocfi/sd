@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <23 Jul 2025 wba>
+@c Time-stamp: <17 Oct 2025 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.76
-@set title2 Database version = 39.76 format = 419
+@set title1 RELEASE NOTES FOR VERSION 39.77
+@set title2 Database version = 39.77 format = 422
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.77::
 * 39.76::
 * 39.75::
 * 39.74::
@@ -176,7 +177,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.76, Top, (dir)
+@node Intro, 39.77, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -187,11 +188,28 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2025 William B. Ackerman
 @sp 3
 @menu
-* 39.76::               Changes in the current version
+* 39.77::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.76, 39.75, Intro, Top
+@node 39.77, 39.76, Intro, Top
+@unnumberedsec Version 39.77 changes
+
+Further bug fixes and improvements, many of them related to
+the 2024 Berkshires weekend.  Some of these related to the
+@strong{twisted} concept, some related to tricky cases of @strong{2x1}
+and @strong{3x3}, and some related to the ``lines-to-lines'' rule in
+unsymmetrical situations.
+@sp 1
+There is a new way of starting a sequence, a variation of ``Sides
+Face, Grand Square''.  One can call things like ``Sides Face, Load the
+Boat''.  Type or click ``Sides Face'', or ``Heads Face'', and let the
+completing reader finish it for you.  It works the same way as ``Heads
+1P2P'' or ``Sides 1P2P''.  The indicated people will have faced each
+other, and the others will have moved forward to make facing lines.
+
+@c ************
+@node 39.76, 39.75, 39.77, Top
 @unnumberedsec Version 39.76 changes
 
 Numerous bug fixes and improvements, many of them related to the 2024

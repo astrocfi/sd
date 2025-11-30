@@ -3767,7 +3767,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     2x3/2x4/2x6 - individual 1FL's.  In these cases, when used
                                     as a qualifier, the "in" and "out" modifiers may be used.
 
-                                    thar or xwv - crossed 2FL's of opposite handedness, ready to "move along".
+                                    thar or xwv - crossed 2FL's of opposite handedness,
+                                    ready to "move along".
 
                                     As a qualifier, this can take the "live" modifier.
 
@@ -4165,6 +4166,12 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        For bone6, it tests the center 2.  For a short6,
                                        it tests the "points".  For a star, the people must
                                        not be T-boned, and it tests the "lateral" people.
+
+   ctr_pts_rh_or_fake_it, ctr_pts_lh_or_fake_it  Q        short6 only
+                                       The above qualifiers are intended to test the "points".
+                                       When they fail, use these.  They fake the points for an
+                                       "<anything> and circle 1/4" by figuring out which way
+                                       the outsides want to go to make a 1x4.  They are bogus.
 
    extend_inroutl,
    extend_inloutr          Q        short6, rigger, spindle, 1x2dmd, 1x3dmd - these

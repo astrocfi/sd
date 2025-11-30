@@ -3901,7 +3901,8 @@ static void do_concept_crazy(
                                                 INHERITFLAG_SPLITTRADE|INHERITFLAG_BIAS|
                                                 INHERITFLAG_BIASTRADE|INHERITFLAG_ORBIT|
                                                 INHERITFLAG_TWINORBIT|INHERITFLAG_ROTARY|
-                                                INHERITFLAG_SCATTER | INHERITFLAG_ZOOMROLL)) != 0 ||
+                                                INHERITFLAG_RECTIFY|INHERITFLAG_SCATTER|
+                                                INHERITFLAG_ZOOMROLL)) != 0 ||
        tempsetup.cmd.cmd_final_flags.final != 0)
       fail("Illegal modifier before \"crazy\".");
 
@@ -4038,6 +4039,8 @@ static void do_concept_crazy(
       tempsetup.cmd = cmd;    // Get a fresh copy of the command.
 
       tempsetup.update_id_bits();
+      // Intended to be subsumed by prepare_for_call_in_series.
+      tempsetup.result_flags.misc &= ~RESULTFLAG__RECTIFY_ACCEPTED;
 
       // If craziness isn't an integral multiple of 1/4 and this is the last time,
       // put in the fraction.
@@ -4649,6 +4652,10 @@ static void do_concept_checkerboard(
        d_north, d_south, 0, {0, 1, 6, 7}, {-1, -1, -1, -1}, {2, 3, 4, 5}, {-1, -1, -1, -1}, {-1}},
       {s2x4, 0,              0x0FF0,     0x00AA,      // unsymmetrical, outfacers on right
        d_north, d_south, 0, {2, 3, 4, 5}, {-1, -1, -1, -1}, {0, 1, 6, 7}, {-1, -1, -1, -1}, {-1}},
+      {s2x4, 0,              0x3CC3,     0x00AA,      // unsymmetrical, ends down
+       d_north, d_south, 0, {1, 2, 4, 7}, {0, 6, 3, 5}, {0, 3, 5, 6}, {-1, -1, -1, -1}, {-1}},
+      {s2x4, 0,              0xC33C,     0x00AA,      // unsymmetrical, ends down
+       d_north, d_south, 0, {0, 3, 5, 6}, {7, 1, 4, 2}, {1, 2, 4, 7}, {-1, -1, -1, -1}, {-1}},
 
       // 2X6, left offset
       {s2x6, 0,              0xCC0CC0,     0x000AA0,      // outfacers are as if in RWV
@@ -9642,6 +9649,8 @@ extern bool do_big_concept(
                 (this_kind != concept_meta ||
                  (this_concept->arg1 != meta_key_like_a &&
                   this_concept->arg1 != meta_key_skip_last_part &&
+                  this_concept->arg1 != meta_key_echo &&
+                  this_concept->arg1 != meta_key_rev_echo &&
                   this_concept->arg1 != meta_key_shift_n)) &&
                 (this_kind != concept_meta_one_arg ||
                  (this_concept->arg1 != meta_key_skip_nth_part &&

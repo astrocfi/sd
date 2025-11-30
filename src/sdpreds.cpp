@@ -2702,6 +2702,13 @@ static bool outposter_is_ccw(setup *real_people, int real_index,
                real_people->cmd.cmd_assume.assump_both == 2)
          return false;
 
+      if ((real_direction & 1) == 0 && real_index == (real_direction << 1))
+         return true;    // I am the outposter.
+
+      if ((real_direction & 1) == 0 && real_index == (real_direction << 1) + 1 &&
+          (real_people->people[real_index-1].id1 & 3) == (uint32_t) real_direction)
+         return true;    // Outposter is next to me.
+
       outroll_direction = 012 - ((real_index & 4) >> 1);
 
       // Demand that cw_end be looking in -- otherwise "outposter_is_cw"

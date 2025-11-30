@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 419
+#define DATABASE_FORMAT_VERSION 422
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1097,6 +1097,8 @@ enum call_restriction {
    cr_tall6,               // Actually not checked as qualifier or restriction.
    cr_ctr_pts_rh,          // Qualifier only.
    cr_ctr_pts_lh,          // Qualifier only.
+   cr_ctr_pts_rh_or_fake_it,// Qualifier only.
+   cr_ctr_pts_lh_or_fake_it,// Qualifier only.
    cr_extend_inroutl,      // Qualifier only.
    cr_extend_inloutr,      // Qualifier only.
    cr_said_dmd,            // Qualifier only.
@@ -1119,7 +1121,9 @@ enum call_restriction {
    cr_ripple_both_ends_1x4_only, // Qualifier only.
    cr_ripple_both_centers, // Qualifier only.
    cr_ripple_any_centers,  // Qualifier only.
-   cr_people_1_and_5_real, // Qualifier only.
+   cr_people_1_opp_real,   // Qualifier only.
+   cr_people_12_opp_real,  // Qualifier only.
+   cr_people_34_opp_real,  // Qualifier only.
    cr_consistent_roll,     // Qualifier only.
    cr_ctrs_sel,
    cr_ends_sel,
@@ -1209,6 +1213,8 @@ enum calldef_schema {
    schema_grand_single_cross_concentric,
    schema_single_concentric_together,
    schema_single_cross_concentric_together,
+   schema_single_concentric_together_nosplit,
+   schema_single_cross_concentric_together_nosplit,
    schema_maybe_6x2_single_conc_together,
    schema_maybe_matrix_single_concentric_together,
    schema_maybe_single_concentric,
