@@ -4017,6 +4017,7 @@ extern callarray *assoc(
       tt.assump_both = (p->qualifierstuff / QUALBIT__RIGHT) & 3;
 
       u = ss->or_all_people();
+      w = 0;
 
       switch (this_qualifier) {
       case cr_wave_only:
@@ -4393,9 +4394,6 @@ extern callarray *assoc(
 
 
       case cr_have_roll_info:
-
-         w = 0;
-
          for (plaini=0; plaini < begin_size; plaini++) {
             u = ss->people[plaini].id1;
             // Ignore people with both bits on.
@@ -4643,6 +4641,9 @@ extern callarray *assoc(
       case cr_extend_inloutr:
          /* **** FELL THROUGH!!!!!! */
          goto check_tt;
+      case cr_ctr_pts_rh_or_fake_it:   // These two are very special, short6 only.
+      case cr_ctr_pts_lh_or_fake_it:
+         w = 1;
       case cr_ctr_pts_rh:
       case cr_ctr_pts_lh:
          {
@@ -4683,6 +4684,24 @@ extern callarray *assoc(
             case s_short6:
                // This one has the people facing sideways.
                ndir = d_east; sdir = d_west;
+
+               if (this_qualifier == cr_ctr_pts_rh_or_fake_it) {
+                  t1 = ss->people[3].id1;
+                  t2 = ss->people[0].id1;
+
+                  if ((t1 & d_mask) == d_west && (t2 & d_mask) == d_east)
+                     goto good;
+                  else goto bad;
+               }
+               else if (this_qualifier == cr_ctr_pts_lh_or_fake_it) {
+                  t1 = ss->people[2].id1;
+                  t2 = ss->people[5].id1;
+
+                  if ((t1 & d_mask) == d_west && (t2 & d_mask) == d_east)
+                     goto good;
+                  else goto bad;
+               }
+
                t1 = 1; t2 = 4; break;
             case s_star:
                // This has to look at headliner-sideliner-ness.  It
@@ -4783,8 +4802,18 @@ extern callarray *assoc(
          // we will test it more thoroughly.
          if (ssK == s2x4)
             goto good;
-      case cr_people_1_and_5_real:
-         if (ss->people[1].id1 & ss->people[5].id1) goto good;
+      case cr_people_1_opp_real:
+         if (ss->people[1].id1 != 0 && ss->people[(begin_size>>1)+1].id1 != 0) goto good;
+         goto bad;
+      case cr_people_12_opp_real:
+         if (ss->people[1].id1 != 0 && ss->people[(begin_size>>1)+1].id1 != 0 &&
+             ss->people[2].id1 != 0 && ss->people[(begin_size>>1)+2].id1 != 0) 
+            goto good;
+         goto bad;
+      case cr_people_34_opp_real:
+         if (ss->people[3].id1 != 0 && ss->people[(begin_size>>1)+3].id1 != 0 &&
+             ss->people[4].id1 != 0 && ss->people[(begin_size>>1)+4].id1 != 0) 
+            goto good;
          goto bad;
 
       case cr_ptp_unwrap_sel:

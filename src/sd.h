@@ -2112,6 +2112,8 @@ enum start_select_kind {
    start_select_heads_start,
    start_select_sides_start,
    start_select_as_they_are,
+   start_select_headsface,
+   start_select_sidesface,
    start_select_two_couple,     // End of items that are keyed to startinfolist.
    start_select_toggle_conc,
    start_select_toggle_singlespace,
@@ -5455,7 +5457,7 @@ inline uint32_t setup::or_all_people() const
 
 inline void setup::clear_people()
 {
-   memset(people, 0, sizeof(personrec)*MAX_PEOPLE);
+   ::memset(people, 0, sizeof(personrec)*MAX_PEOPLE);
 }
 
 

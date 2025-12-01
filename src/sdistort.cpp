@@ -3498,11 +3498,20 @@ extern void distorted_move(
             ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
          divided_setup_move(ss, goodmap->map_code, phantest_ok, true, result);
-         if (result->kind != goodmap->k) fail("Can't figure out result setup.");
-
-         // Now we have to put back the inactives.  Note also that they can't roll.
 
          const int8_t *inactivemap = goodmap->inactives;
+
+         const int8_t special_1x6_inactives[] = {0, 4, -1};
+
+         // Special case: shapechanger.
+         if (goodmap->map_code == spcmap_3lqtg && result->kind == s1x8) {
+            copy_person(&ssave, 0, &ssave, 6);
+            copy_person(&ssave, 4, &ssave, 2);
+            inactivemap = special_1x6_inactives;
+         }
+         else if (result->kind != goodmap->k) fail("Can't figure out result setup.");
+
+         // Now we have to put back the inactives.  Note also that they can't roll.
 
          for (int i=0 ; ; i++) {
             int j = inactivemap[i];

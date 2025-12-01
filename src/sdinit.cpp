@@ -2028,6 +2028,18 @@ void configuration::initialize()
       0600|d_east,ID2_B4,  0700|d_east,ID2_G4,
       0x9ADE1256));
 
+   configuration::initialize_startinfolist_item(start_select_headsface, "Heads face (while the sides move in and) ...", false, new setup(s2x4, 1,
+      0400|d_south,ID2_B3, 0300|d_south,ID2_G2,
+      0200|d_south,ID2_B2, 0100|d_south,ID2_G1,
+      0000|d_north,ID2_B1, 0700|d_north,ID2_G4,
+      0600|d_north,ID2_B4, 0500|d_north,ID2_G3));
+
+   configuration::initialize_startinfolist_item(start_select_sidesface, "Sides face (while the heads move in and) ...", false, new setup(s2x4, 0,
+      0600|d_south,ID2_B4, 0500|d_south,ID2_G3,
+      0400|d_south,ID2_B3, 0300|d_south,ID2_G2,
+      0200|d_north,ID2_B2, 0100|d_north,ID2_G1,
+      0000|d_north,ID2_B1, 0700|d_north,ID2_G4));
+
    configuration::initialize_startinfolist_item(start_select_two_couple, "Two couples only", false, new setup(s2x2, 0,
       0500|d_south,ID2_G3, 0400|d_south,ID2_B3,
       0100|d_north,ID2_G1, 0000|d_north,ID2_B1,

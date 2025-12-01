@@ -307,6 +307,9 @@ static tm_thing maps_isearch_twosome[] = {
    {{2, 3, 5, 0,                     -1, -1, 4, 1},                        0ULL,    0063,         4, 1,  s2x2,  s2x3},
    {{1, 4, 5, 0,                     2, 3, -1, -1},                        0ULL,    0036,         4, 1,  s2x2,  s2x3},
 
+   {{0, 2,                           1, -1},                           0002ULL,      003,         2, 0,  s1x2,  s1x3},
+   {{0, 1,                           -1, 2},                           0020ULL,      006,         2, 0,  s1x2,  s1x3},
+
    // Next 2 are for similar situations, in "nonisotropic triangles".
    // We do not have the 3rd or 4th maps in the class, because they apply only
    // to unwinding, and we never unwind to these setups.  That's why
@@ -454,7 +457,6 @@ static tm_thing maps_isearch_twosome[] = {
 
 static tm_thing maps_isearch_threesome[] = {
    //       maps                                                      ilatmask3      olatmask   limit rot insetup outsetup
-
    {{0,                    1,                    2},                        02ULL,       07,      1, 0,  s1x1,  s1x3},
    {{0,                    1,                    2},                        00ULL,       07,      1, 1,  s1x1,  s1x3},
    {{0, 5,                 1, 4,                 2, 3},                    022ULL,      077,      2, 0,  s1x2,  s1x6},
@@ -467,6 +469,15 @@ static tm_thing maps_isearch_threesome[] = {
 
    {{0, 3, 8, 11,     1, 4, 7, 10,     2, 5, 6, 9},                      02222ULL,    07777,      4, 0,  s2x2,  s2x6},
    {{3, 8, 11, 0,     4, 7, 10, 1,     5, 6, 9, 2},                          0ULL,    07777,      4, 1,  s2x2,  s2x6},
+
+   {{-2, 3, 4, -2, 10, 13,       -2, -2, 5, -2, -2, 12,
+             -2, -2, 6, -2, -2, 11},                                   0200200ULL,   0x3870,      6, 0,  s2x3,  s2x7},
+   {{-2, 3, 6, -2, 12, 13,       -2, 4, -2, -2, 11, -2,
+             -2, 5, -2, -2, 10, -2},                                   0020020ULL,   0x1C38,      6, 0,  s2x3,  s2x7},
+   {{0, 3, -2, 9, 10, -2,        1, -2, -2, 8, -2, -2,
+             2, -2, -2, 7, -2, -2},                                    0002002ULL,   0x0387,      6, 0,  s2x3,  s2x7},
+   {{0, 1, -2, 7, 10, -2,        -2, 2, -2, -2, 9, -2,
+             -2, 3, -2, -2, 8, -2},                                    0020020ULL,   0x070E,      6, 0,  s2x3,  s2x7},
 
    {{3, 8, 11, 14, 15, 0,   4, 7, 10, 13, 16, 1,   5, 6, 9, 12, 17, 2},      0ULL,  0777777,      6, 1,  s2x3,  s3x6},
 
@@ -1547,7 +1558,18 @@ extern void tandem_couples_move(
             people_per_group = 2;
             our_map_table = maps_isearch_twosome;
 
-            if (ss->kind == s2x3 || ss->kind == s1x6) {
+            if (ss->kind == s1x3) {
+               if (transformed_key == tandem_key_tand) directions64 ^= 0x15ULL;
+
+               if (((directions64 ^ 0x02ULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0x28ULL) & livemask64)== 0ULL)
+                  special_mask |= 4;
+
+               if (((directions64 ^ 0x0AULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0x20ULL) & livemask64)== 0ULL)
+                  special_mask |= 1;
+            }
+            else if (ss->kind == s2x3 || ss->kind == s1x6) {
                if (transformed_key == tandem_key_tand) directions64 ^= 0x555ULL;
 
                if (((directions64 ^ 0x0A8ULL) & livemask64)== 0ULL ||
@@ -1598,11 +1620,11 @@ extern void tandem_couples_move(
          else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
             people_per_group = 3;
             our_map_table = maps_isearch_threesome;
-            if (transformed_key == tandem_key_tand) directions64 ^= 0x555555ULL;
+            if (transformed_key == tandem_key_tand) directions64 ^= 0x55555555ULL;
 
             if (ss->kind == s2x4) {
-               if (((directions64 ^ 0x02A8) & livemask64) == 0ULL ||
-                   ((directions64 ^ 0xA802) & livemask64) == 0ULL)
+               if (((directions64 ^ 0x02A8ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0xA802ULL) & livemask64) == 0ULL)
                   special_mask |= 0x88;
 
                if (((directions64 ^ 0x2A80ULL) & livemask64) == 0ULL ||
@@ -1684,6 +1706,19 @@ extern void tandem_couples_move(
                   special_mask |= 0x11;
 
                if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;
+            }
+            else if (ss->kind == s2x7) {
+               if (((directions64 ^ 0x00A8080ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x020002AULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x0202A00ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0xA800080ULL) & livemask64) == 0ULL)
+                  special_mask |= 0x0408;
+               else if (((directions64 ^ 0x00080A8ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x02A0002ULL) & livemask64) == 0ULL)
+                  special_mask |= 0x2040;
+               else if (((directions64 ^ 0x2A02000ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x8000A80ULL) & livemask64) == 0ULL)
+                  special_mask |= 0x0081;
             }
             else if (ss->kind == s3x1dmd) {
                if (((directions64 ^ 0x00A8ULL) & 0xFCFCULL & livemask64) == 0ULL ||
@@ -2416,7 +2451,7 @@ extern void tandem_couples_move(
 
       fix_n_results(tttcount+1, -1, ttt, rotstate, pointclip, 0);
 
-      if (ttt[0].kind == nothing || !(rotstate & 0xF03))
+      if (ttt[0].kind == nothing)
          fail("Can't do this.");
 
       result->result_flags = get_multiple_parallel_resultflags(ttt, tttcount+1);

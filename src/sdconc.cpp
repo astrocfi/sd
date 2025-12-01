@@ -3276,15 +3276,24 @@ extern void concentric_move(
    int crossing;       // This is an int (0 or 1) rather than a bool,
                        // because we will index with it.
 
+   // These three arrays carry information, before and after, of the
+   // various people, for implementing the "lines to line" rule.
+   // They are indexed not by position in the array, but by the actual person.
+   // That is, slot 3 has information about the #2 girl.
+   // The low bits give the facing direction.
+   // The left half shows the actual place in the setup.
+
+   uint32_t orig_outers_start_directions[MAX_PEOPLE];  // People who STARTED on the outside.
+   uint32_t orig_inners_start_directions[MAX_PEOPLE];  // People who STARTED on the inside.
+   uint32_t final_outers_finish_directions[MAX_PEOPLE]; // People who will FINISH on the outside.
+
    // The original info about the people who STARTED on the inside.
    setup_kind orig_inners_start_kind;
    uint32_t orig_inners_start_dirs;
-   uint32_t orig_inners_start_directions[32];
 
    // The original info about the people who STARTED on the outside.
    setup_kind orig_outers_start_kind;
    uint32_t orig_outers_start_dirs;
-   uint32_t orig_outers_start_directions[32];
    // We might need this for tricky counter rotate 1/8.
    uint64_t orig_outers_herit_bits;
 
@@ -3294,7 +3303,6 @@ extern void concentric_move(
 
    // The final info about the people who FINISHED on the outside.
    int final_outers_finish_dirs;
-   uint32_t final_outers_finish_directions[32];
    uint32_t ccmask, eemask;
 
    const call_conc_option_state save_state = current_options;
@@ -3374,11 +3382,9 @@ extern void concentric_move(
         scrnxn == INHERITFLAGNXNK_3X3))
       ss->do_matrix_expansion(CONCPROP__NEEDK_3X4, true);
 
-   for (i=0; i<32; i++) {
-      orig_inners_start_directions[i] =
-      orig_outers_start_directions[i] =
-      final_outers_finish_directions[i] = 0;
-   }
+   ::memset(orig_inners_start_directions, 0, sizeof(uint32_t)*MAX_PEOPLE);
+   ::memset(orig_outers_start_directions, 0, sizeof(uint32_t)*MAX_PEOPLE);
+   ::memset(final_outers_finish_directions, 0, sizeof(uint32_t)*MAX_PEOPLE);
 
    if (save_cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
       if (save_cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG) {
@@ -3393,7 +3399,8 @@ extern void concentric_move(
    if (analyzer == schema_single_cross_concentric_together_if_odd) {
       analyzer = schema_single_cross_concentric;     // Setup was already split.
    }
-   else if (analyzer == schema_single_concentric_together) {
+   else if (analyzer == schema_single_concentric_together ||
+            analyzer == schema_single_concentric_together_nosplit) {
       if (ss->kind == s1x8 || ss->kind == s_ptpd || ss->kind == s4x4 || attr::slimit(ss) == 3)
          analyzer = schema_single_concentric;
       else if (ss->kind == s_bone6)
@@ -3401,7 +3408,8 @@ extern void concentric_move(
       else
          analyzer = schema_concentric;
    }
-   else if (analyzer == schema_single_cross_concentric_together) {
+   else if (analyzer == schema_single_cross_concentric_together ||
+            analyzer == schema_single_cross_concentric_together_nosplit) {
       if (ss->kind == s1x8 || ss->kind == s_ptpd || ss->kind == s4x4 || attr::slimit(ss) == 3)
          analyzer = schema_single_cross_concentric;
       else
@@ -3469,7 +3477,7 @@ extern void concentric_move(
       orig_outers_start_dirs |= q;
       if (q) {
          eemask |= k;
-         orig_outers_start_directions[(q >> 6) & 037] = q;
+         orig_outers_start_directions[(q >> 6) & 037] = ((q&0xFFFF) | (i<<16));
       }
    }
    orig_outers_start_kind = begin_outer.kind;
@@ -3483,7 +3491,7 @@ extern void concentric_move(
       orig_inners_start_dirs |= q;
       if (q) {
          ccmask |= k;
-         orig_inners_start_directions[(q >> 6) & 037] = q;
+         orig_inners_start_directions[(q >> 6) & 037] = ((q&0xFFFF) | (i<<16));
       }
    }
    orig_inners_start_kind = begin_inner[0].kind;
@@ -4169,6 +4177,7 @@ extern void concentric_move(
    }
 
    int final_elongation = crossing ? begin_xconc_elongation : begin_outer_elongation;
+   int need_lines_to_lines_fixup = -1;
 
    // Note: final_elongation might be -1 now, meaning that the people on the outside
    // cannot determine their elongation from the original setup.  Unless their
@@ -4385,7 +4394,7 @@ extern void concentric_move(
    for (i=0; i<=attr::slimit(&outer_inners[0]); i++) {
       int q = outer_inners[0].people[i].id1;
       final_outers_finish_dirs |= q;
-      if (q) final_outers_finish_directions[(q >> 6) & 037] = q;
+      if (q) final_outers_finish_directions[(q >> 6) & 037] = ((q&0xFFFF) | (i<<16));
    }
 
    // Now final_outers_finish_dirs tells whether outer peoples' orientations
@@ -4692,31 +4701,49 @@ extern void concentric_move(
             }
             else if (DFM1_CONC_CONCENTRIC_RULES & localmods1) {
                // Do "lines-to-lines / columns-to-columns".
-               int new_elongation = -1;
-
                if (final_elongation < 0)
                   fail("People who finish on the outside can't tell whether they started in line-like or column-like orientation.");
 
-               // If they are butterfly points, leave them there.
-               if ((final_elongation & ~CONTROVERSIAL_CONC_ELONG) <= 2) {
-                  // Otherwise, search among all possible people,
-                  // including virtuals and phantoms.
-                  for (i=0; i<32; i++) {
-                     if (final_outers_finish_directions[i]) {
-                        int t = ((final_outers_start_directions[i] ^
-                                  final_outers_finish_directions[i] ^
-                                  (final_elongation-1)) & 1) + 1;
-                        if (t != new_elongation) {
-                           if (new_elongation >= 0)
-                              fail("Sorry, outsides would have to go to a 'pinwheel', can't handle that.");
-                           new_elongation = t;
+               // Spiffy new code:  Look for 2x2's inside and out.
+
+               // If they are butterfly points, or we are not going to concentric 2x2's, leave them there.
+               if ((final_elongation & ~CONTROVERSIAL_CONC_ELONG) <= 2 &&
+                   outer_inners[0].kind == s2x2 &&
+                   outer_inners[1].kind == s2x2 &&
+                   orig_inners_start_kind == s2x2 &&
+                   orig_outers_start_kind == s2x2 &&
+                   analyzer_result == schema_concentric) {
+                  // Send them to a butterfly, and fix it up later.
+                  // Preserve the "controversial" bit, I guess.
+                  need_lines_to_lines_fixup = final_elongation;
+                  final_elongation &= CONTROVERSIAL_CONC_ELONG;
+                  final_elongation |= 3;
+               }
+               else {
+                  // Old code:
+                  // Search among all possible people, including virtuals and
+                  // phantoms, unless they are butterfly points,
+                  // in which case just leave them there.
+                  if ((final_elongation & ~CONTROVERSIAL_CONC_ELONG) <= 2) {
+                     int new_elongation = -1;
+
+                     for (i=0; i<MAX_PEOPLE; i++) {
+                        if (final_outers_finish_directions[i]) {
+                           int t = ((final_outers_start_directions[i] ^
+                                     final_outers_finish_directions[i] ^
+                                     (final_elongation-1)) & 1) + 1;
+                           if (t != new_elongation) {
+                              if (new_elongation >= 0)
+                                 fail("Sorry, outsides would have to go to a 'pinwheel', can't handle that.");
+                              new_elongation = t;
+                           }
                         }
                      }
-                  }
 
-                  // Preserve the "controversial" bit.
-                  final_elongation &= CONTROVERSIAL_CONC_ELONG;
-                  final_elongation |= new_elongation;
+                     // Preserve the "controversial" bit.
+                     final_elongation &= CONTROVERSIAL_CONC_ELONG;
+                     final_elongation |= new_elongation;
+                  }
                }
             }
             else {
@@ -4784,7 +4811,6 @@ extern void concentric_move(
    if (analyzer == schema_concentric_zs)
       analyzer = schema_in_out_triple_zcom;
 
-
    if (ends_are_in_situ) {
       *result = outer_inners[1];
       merge_table::merge_setups(&outer_inners[0], merge_strict_matrix, result);
@@ -4792,6 +4818,31 @@ extern void concentric_move(
    else {
       normalize_concentric(ss, analyzer, center_arity, outer_inners,
                            final_elongation, matrix_concept, result);
+
+      if (need_lines_to_lines_fixup >= 0) {
+         // We have a butterfly, with turning info about the 4 people that
+         // went to the corners.  Find out how far people turned, and move them
+         // to the proper edge.
+
+         for (i=0; i<MAX_PEOPLE; i++) {
+            if (final_outers_finish_directions[i]) {
+               int location_in_the_4x4 = (((final_outers_finish_directions[i]) >> 14)+12) & 0xF;
+
+               int turnamount =
+                  final_outers_start_directions[i] ^
+                  final_outers_finish_directions[i];
+
+               bool locationthing = (location_in_the_4x4 & 4) != 0;
+
+               if (turnamount & 1) locationthing = !locationthing;
+
+               result->swap_people(location_in_the_4x4,
+                                   (location_in_the_4x4+(locationthing ? 14 : 1)) & 0xF);
+            }
+         }
+
+         normalize_setup(result, normalize_strict_matrix, qtag_no_compress);
+      }
    }
 
    getout:
