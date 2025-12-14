@@ -4334,15 +4334,60 @@ struct common_spot_map {
    setup_kind orig_kind;
    setup_kind partial_kind;  // What setup they are virtually in.
    int rot;                  // Whether to rotate partial setup CW.
-   int uncommon[12];
-   int common0[12];
-   uint32_t dir0[12];
-   int common1[12];
-   uint32_t dir1[12];
+   int uncommon[16];
+   int common0[16];
+   uint32_t dir0[16];
+   int common1[16];
+   uint32_t dir1[16];
    uint32_t people_accounted_for;
 };
 
 common_spot_map cmaps[] = {
+
+   // Common spot waves from a tidal wave, inner spots.
+   {0x1000, s1x16, s1x8, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       6,       5,      -1,      -1,      14,      13},
+    { d_north, d_south, d_north, d_south, d_south, d_north, d_south, d_north},
+    {      -1,      -1,       7,       4,      -1,      -1,      15,      12},
+    { d_south, d_north, d_south, d_north, d_north, d_south, d_north, d_south}},
+
+   // Common spot 2FL from a tidal wave, inner spots.
+   {0x2000, s1x16, s1x8, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       6,       4,      -1,      -1,      14,      12},
+    { d_north, d_south, d_north, d_north, d_south, d_north, d_south, d_south},
+    {      -1,      -1,       7,       5,      -1,      -1,      15,      13},
+    { d_south, d_north, d_south, d_south, d_north, d_south, d_north, d_north}},
+
+
+   // Common spot (1-faced) lines from a tidal wave, inner spots,
+   // probably bogus.
+   {0x4000, s1x16, s1x8, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       6,       4,      -1,      -1,      15,      13},
+    { d_north, d_south, d_north, d_north, d_south, d_north, d_north, d_north},
+    {      -1,      -1,       7,       5,      -1,      -1,      14,      12},
+    { d_south, d_north, d_south, d_south, d_north, d_south, d_south, d_south}},
+
+   // Common spot waves from a tidal wave, outer spots.
+   {0x1000, s1x16, s1x8, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,       3,      -1,      -1,      8,       11,      -1,      -1},
+    { d_north, d_south, d_south, d_north, d_south, d_north, d_north, d_south},
+    {       1,       2,      -1,      -1,      9,       10,      -1,      -1},
+    { d_south, d_north, d_north, d_south, d_north, d_south, d_south, d_north}},
+
+   // Common spot 2FL from a tidal wave, outer spots.
+   {0x2000, s1x16, s1x8, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       2,       0,      -1,      -1,      10,       8},
+    { d_north, d_south, d_north, d_north, d_south, d_north, d_south, d_south},
+    {      -1,      -1,       3,       1,      -1,      -1,      11,       9},
+    { d_south, d_north, d_south, d_south, d_north, d_south, d_north, d_north}},
+
+
+
 
    // Common point galaxy.
    {0x40000001, s_rigger, s_galaxy, 0,
@@ -4425,7 +4470,16 @@ common_spot_map cmaps[] = {
     { d_south,       0,       0, d_north, d_north,       0,       0, d_south}},
 
    // All in outer quadruple boxes; we allow this.
+   // This handles common spot lines load the boat, all RH or all LH.
    {0x10, s2x8, s2x4, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,      -1,      -1,       6,       8,      -1,      -1,      14},
+    { d_north,       0,       0, d_north, d_south,       0,       0, d_south},
+    {       1,      -1,      -1,       7,       9,      -1,      -1,      15},
+    { d_south,       0,       0, d_south, d_north,       0,       0, d_north}},
+
+   // Alternate version, for some having left hands.
+   {0x80000010, s2x8, s2x4, 0,
     {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
     {       0,      -1,      -1,       7,       8,      -1,      -1,      15},
     { d_north,       0,       0, d_south, d_south,       0,       0, d_north},
@@ -4736,6 +4790,12 @@ extern void common_spot_move(
    // common spot 1/4 lines                    : 0x100
    // common spot 1/4 tags                     : 0x200
    // common spot point-to-point diamonds      : 0x400
+   // common spot tidal line                   : 0x2000
+   // common spot tidal wave                   : 0x1000
+
+   if (parseptr->concept->arg3 == s1x16 && ss->kind == s1x8) {
+      ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, false);
+   }
 
    if (ss->kind == s_c1phan) {
       ss->do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
@@ -4767,26 +4827,18 @@ extern void common_spot_move(
             int t = map_ptr->common0[i];
             int u = map_ptr->common1[i];
 
-            if (t >= 0) {
-               if ((ss->people[t].id1 & d_mask) != map_ptr->dir0[i]) goto not_this_rh_map;
+            if (t >= 0 && ss->people[t].id1) {
+               if ((ss->people[t].id1 & d_mask) != map_ptr->dir0[i]) {
+                  if ((ss->people[t].id1 & d_mask) != (map_ptr->dir0[i] ^ 2)) goto not_this_map;
+                  not_rh = true;
+               }
             }
 
-            if (u >= 0) {
-               if ((ss->people[u].id1 & d_mask) != map_ptr->dir1[i]) goto not_this_rh_map;
-            }
-
-            continue;
-
-         not_this_rh_map: ;
-
-            not_rh = true;
-
-            if (t >= 0) {
-               if ((ss->people[t].id1 & d_mask) != (map_ptr->dir0[i] ^ 2)) goto not_this_map;
-            }
-
-            if (u >= 0) {
-               if ((ss->people[u].id1 & d_mask) != (map_ptr->dir1[i] ^ 2)) goto not_this_map;
+            if (u >= 0 && ss->people[u].id1) {
+               if ((ss->people[u].id1 & d_mask) != map_ptr->dir1[i]) {
+                  if ((ss->people[u].id1 & d_mask) != (map_ptr->dir1[i] ^ 2)) goto not_this_map;
+                  not_rh = true;
+               }
             }
          }
 

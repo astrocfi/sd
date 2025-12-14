@@ -1076,6 +1076,8 @@ static const int8_t ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
 static const int8_t ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
 static const int8_t ftc2x1dmd[6] = {1, 2, 4, 7, 8, 10};
 static const int8_t ftl2x1dmd[9] = {10, 1, 2, 4, 7, 8, 10, 1, 2};
+static const int8_t ftc2x3qtag[6] = {5, 7, 0, 1, 3, 4};
+static const int8_t ftcxwvqtag[9] = {-1, 2, -1, -1, 6, -1, -1, 2, -1};
 static const int8_t qhypergall[8] = {1, 8, 10, -1, 9, 0, 2, -1};
 static const int8_t qhypergalc[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
 
@@ -4936,12 +4938,6 @@ static uint32_t do_actual_array_call(
       halfnum = num >> 1;
       tempkind = result->kind;
 
-      if (funnybits != 0ULL) {
-         if ((ss->kind != result->kind) || result->rotation ||
-             inconsistent_rotation || inconsistent_setup)
-            fail("Can't do 'funny' shape-changer.");
-      }
-
       // Check for a 1x4 call around the outside that
       // sends people far away without permission.
       if ((ss->kind == s1x4 || ss->kind == s1x6) &&
@@ -5031,6 +5027,9 @@ static uint32_t do_actual_array_call(
                   setup_kind reskind;
                   setup_kind otherkind;
                   setup_kind finalkind;
+                  int rotc;
+                  int rotl;
+                  int rotfinal;
                   const int8_t *final_c;
                   const int8_t *final_l;
                   bool onlyifequalize;
@@ -5038,14 +5037,15 @@ static uint32_t do_actual_array_call(
                };
 
                arraycallfixer arraycallfixtable[] = {
-                  {s_spindle, s_crosswave, sx4dmd, ftcspn, ftlcwv, false, false},
-                  {s_bone, s_qtag, sx4dmdbone, ftcbone, ftlbigqtg, false, false},
-                  {s_short6, s_2x1dmd, s_short6, identity32, ftlshort6dmd, false, false},
-                  {s_2x1dmd, s1x6, sx1x6, ftc2x1dmd, ftl2x1dmd, false, false},
-                  {s2x4, s_qtag, sxequlize, ftequalize, ftlqtg, true, false}, // Complicated T-boned "transfer and []".
-                  {s2x4, s_qtag, s2x4, identity32, identity32, false, true},      // **** Special "2 steps at a time" thing.
-                  {s_qtag, s2x4, s_qtag, identity32, f2x4qtg, false, false},
-                  {s_c1phan, s2x4, s_c1phan, identity32, f2x4phan, false, false},
+                  {s_spindle, s_crosswave, sx4dmd, 0, 3, 0, ftcspn, ftlcwv, false, false},
+                  {s_bone, s_qtag, sx4dmdbone, 0, 3, 0, ftcbone, ftlbigqtg, false, false},
+                  {s_short6, s_2x1dmd, s_short6, 0, 3, 0, identity32, ftlshort6dmd, false, false},
+                  {s_2x1dmd, s1x6, sx1x6, 0, 3, 0, ftc2x1dmd, ftl2x1dmd, false, false},
+                  {s2x3, s_crosswave, s_qtag, 3, 2, 1, ftc2x3qtag, ftcxwvqtag, false, false}, // Complicated 1/2 funny circulate
+                  {s2x4, s_qtag, sxequlize, 0, 3, 0, ftequalize, ftlqtg, true, false}, // Complicated T-boned "transfer and []".
+                  {s2x4, s_qtag, s2x4, 0, 0, 0, identity32, identity32, false, true},      // **** Special "2 steps at a time" thing.
+                  {s_qtag, s2x4, s_qtag, 0, 3, 0, identity32, f2x4qtg, false, false},
+                  {s_c1phan, s2x4, s_c1phan, 0, 3, 0, identity32, f2x4phan, false, false},
                   {nothing},
                };
 
@@ -5053,11 +5053,13 @@ static uint32_t do_actual_array_call(
                   if (result->kind == p->reskind && Lresult_kind == p->otherkind &&
                       (!p->onlyifequalize || (callspec->callflagsf & CFLAG2_EQUALIZE))) {
                      result->kind = p->finalkind;
+                     result->rotation += p->rotfinal;
                      tempkind = result->kind;
                      final_translatec = p->final_c;
                      final_translatel = p->final_l;
+                     rotfudge_col = p->rotc;
+                     rotfudge_line = p->rotl;
                      specialhetero = p->specialhetero;
-                     rotfudge_line = specialhetero ? 0 : 3;
 
                      if (!(goodies->callarray_flags & CAF__ROT)) {
                         final_translatel += (attr::klimit(p->reskind) + 1) >> 1;
@@ -6678,8 +6680,8 @@ foobar:
             // we can find the "CFLAG1_PARALLEL_CONC_END" bit,
             // also known as the "other_elongate" bit.
 
-            if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
-            if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+            if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist, (bool *) 0, funnybits);
+            if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist, (bool *) 0, funnybits);
 
             if (ss->cmd.cmd_misc2_flags & CMD_MISC2__REQUEST_Z && ss->kind == s2x3) {
                // See if the call has a 2x3 definition that goes to a setup of size 4.

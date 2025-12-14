@@ -539,7 +539,7 @@ Cstring warning_strings[] = {
    /*  warn__two_faced           */   "*Not a wave -- maybe should say 'two-faced'.",
    /*  warn__cant_track_phantoms */   "*The phantoms may not have been tracked correctly.",
    /*  warn__6peoplestretched    */   "*6 people stretched.",
-   /*  warn__did_weird_stretch_response */"*Forced a smaller setup for 'stretch'.",
+   /*  warn__did_weird_stretch_response */"*Forced to reduce to a smaller setup for 'stretch', this may not be what you want.",
    /*  warn__mimic_ambiguity_checked */"*The mimic was ambiguous, but the result is the same either way.",
    /*  warn__mimic_ambiguity_resolved */"*The mimic was ambiguous, but only one assumption works.",
    /*  warn__diagnostic          */   "*This is a diagnostic warning and should never arise."};

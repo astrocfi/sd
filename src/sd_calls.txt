@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.77"
+version "39.78"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -5049,8 +5049,8 @@ call "@6 spread" c1 tag selected_spread
       0 0 0 0 0 0 0 0]
 
 call "@0 and spread" plus
-            dont_use_in_resolve visible_fractions
-   seq nullcall [mandatory_anycall]
+            dont_use_in_resolve nxn_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall inherit_nxn]
    seq spread []
 
 call "@0 and the @6 spread" plus
@@ -21287,10 +21287,10 @@ call "_finish pass and roll something" dontshow tag fin_passnroll_something
 
 call "pass and roll your neighbor" a2
             rear_back_from_r_wave first_part_visible
-            left_means_mirror twisted_is_inherited gen_sting_is_inherited magic_is_inherited
+            left_means_mirror twisted_is_inherited gen_sting_is_inherited magic_is_inherited nxn_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
    seq fin_passnroll_something [inherit_left inherit_gensting]
-   seq neighbor []
+   seq neighbor [inherit_nxn]
 
 call "pass and roll your cross neighbor" c1
             rear_back_from_r_wave first_part_visible
@@ -22944,6 +22944,14 @@ call "slim down" c4a tag slimdown
       array [ZM6W ZM7W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W]
    setup 4x2 2x4 rotate
       array [ZM6W ZM7W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W]
+   setup qtag rigger
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup pqtag rigger
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup rigger qtag
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup prigger qtag
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup 4x4 4x4
       predscantdocallinsetup
          if quad_person_cw  [0 ZM3N ZM7N ZM14N 0 ZM7N ZM11N ZM2N 0 ZM11N ZM15N ZM6N 0 ZM15N ZM3N ZM10N]
@@ -22959,6 +22967,10 @@ call "slim down" c4a tag slimdown
       array [ZM9W ZM10W ZM11W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W ZM6W ZM7W ZM8W]
    setup 6x2 2x6 rotate
       array [ZM9W ZM10W ZM11W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W ZM6W ZM7W ZM8W]
+   setup 3x23 spindle
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup p3x23 spindle
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
             alternate_definition [4x4] c4
    setup 2x8 2x8 rotate
       array [ZM12W ZM13W ZM14W ZM15W ZM0W ZM1W ZM2W  ZM3W
@@ -23315,6 +23327,10 @@ call "circulate" mainstream tag circulate
       array [0 ZM2N 0 CR4E AL5W 0 ZM7N 0]
    setup 4x2 2x4 rotate qualifier ntbone in in_or_out
       array [ZM7W 0 ZM0W 0 0 ZM2W 0 ZM5W]
+   setup 4x2 spindle qualifier not_funny
+      array [ZM0N ZM1N ZM2N CR3E AL3W ZM4N ZM5N ZM6N]
+   setup 4x2 2x3 qualifier tbone none    // If it's funny, end looking out does not move.
+      array [ZM0N ZM1N ZM2N ZM2N ZM3N ZM3N ZM4N ZM5N]
    setup 4x2 spindle
       array [ZM0N ZM1N ZM2N CR3E AL3W ZM4N ZM5N ZM6N]
    setup c1phan crosswave rotate
@@ -29904,21 +29920,21 @@ call "_touchngo @0 anything part 3" dontshow tag touchngo3cpri
                      spec_drop_in [suppress_elongation_warnings]
 
 call "touch and go @b X @b" c4a
-            magic_is_inherited need_two_numbers fractal_is_inherited gen_sting_is_inherited
-            rectify_is_inherited
+            visible_fractions magic_is_inherited need_two_numbers
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    seq circulate [force_half inherit_magic inherit_rectify]
    seq touchngo2 [inherit_fractal inherit_gensting]
    seq touchngo3 [shift_one_number inherit_fractal inherit_gensting]
 
 call "touch and go @b X @0" c4a
-            magic_is_inherited neednumber fractal_is_inherited gen_sting_is_inherited
-            rectify_is_inherited
+            visible_fractions magic_is_inherited neednumber
+            fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    seq circulate [force_half inherit_magic inherit_rectify]
    seq touchngo2 [inherit_fractal inherit_gensting]
    seq touchngo3cpri []
 
 call "touch and go @0 X @m" c4
-            last_part_visible magic_is_inherited fractal_is_inherited gen_sting_is_inherited
+            first_and_last_parts_visible magic_is_inherited fractal_is_inherited gen_sting_is_inherited
             rectify_is_inherited
    seq circulate [force_half inherit_magic inherit_rectify]
    seq touchngo2c []

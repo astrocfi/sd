@@ -918,6 +918,7 @@ const char *qualtab[] = {
    "said_triangle",
    "didnt_say_triangle",
    "said_galaxy",
+   "not_funny",
    "didnt_say_matrix",
    "occupied_as_stars",
    "occupied_as_clumps",

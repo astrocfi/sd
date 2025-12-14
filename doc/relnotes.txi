@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <17 Oct 2025 wba>
+@c Time-stamp: <26 Nov 2025 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.77
-@set title2 Database version = 39.77 format = 422
+@set title1 RELEASE NOTES FOR VERSION 39.78
+@set title2 Database version = 39.78 format = 423
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.78::
 * 39.77::
 * 39.76::
 * 39.75::
@@ -177,7 +178,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.77, Top, (dir)
+@node Intro, 39.78, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -188,11 +189,41 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2025 William B. Ackerman
 @sp 3
 @menu
-* 39.77::               Changes in the current version
+* 39.78::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.77, 39.76, Intro, Top
+@node 39.78, 39.77, Intro, Top
+@unnumberedsec Version 39.78 changes
+
+Improvements to @strong{stretch}.  If a call like @strong{pass in} or
+@strong{face in} needs to know where the center of the whole set is,
+that is is nominally improper with @strong{stretch}.  But people call
+things like @strong{stretch counter rotate}, expecting it to be
+changed to @strong{stretch split counter rotate}.  The same will be
+done with @strong{stretch pass in}.  It will be permitted, but a
+warning will be printed.
+@sp 1
+More improvements related to the 2024 Berkshires weekend.
+@sp 1
+Better handling of @strong{funny} fractional circulates.
+@sp 1
+Handling of @strong{spread} with @strong{NxN}.
+@sp 1
+@strong{NxN pass and roll your neighbor}.
+@sp 1
+Better handling of @strong{slim down}.
+@sp 1
+Handling of parts of @strong{touch and go}.
+@sp 1
+Better handling of @strong{melded}.
+@sp 1
+Improvements in @strong{common spot}.
+@sp 1
+Better handling of @strong{rectify 6x2 acey deucey}.
+
+@c ************
+@node 39.77, 39.76, 39.78, Top
 @unnumberedsec Version 39.77 changes
 
 Further bug fixes and improvements, many of them related to

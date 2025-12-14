@@ -4201,6 +4201,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    said_triangle           Q        short6/pshort6 - caller said the word "triangle"
    didnt_say_triangle      Q        short6/pshort6 - caller didn't say the word "triangle"
+   said_galaxy             Q        **** - document this!! caller said the word "galaxy"
+
+   not_funny               Q        any - "funny" concept was not given
 
    occupied_as_stars       Q        c1phan - live bodies are in 2 stars
    occupied_as_clumps      Q        4x4 - live bodies are in 2 clumps
