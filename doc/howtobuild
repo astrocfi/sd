@@ -265,3 +265,143 @@ Page 13: Do it.   Next
 Page 14: Finish.
 
 *************** END OF ONE-TIME CREATION OF SED FILE
+
+*************** ONE-TIME SETUP OF GIT
+
+Download from https://git-scm.com/install/windows
+
+Install; don't run Git Bash.  Pin "Git CMD" to taskbar.
+
+Run "Git CMD"; cd to sdgitclone\sd
+
+To create that, do git clone astrocfi/sd; should need to do it only once.
+Set up preferences, should only need to do it once:
+git config --global user.name "Bill Ackerman"
+git config --global user.email wba@alum.mit.edu
+git config --global core.editor C:/Windows\notepad.exe
+
+*************** RELEASE A VERSION INTO GIT
+
+Completely wipe out the contents of wba\sdgitclone, all the way up to,
+and including, the "sd" subdirectory.  Start Git CMD, and connect to wba\sdgitclone.
+Do
+   git clone https://github.com/astrocfi/sd
+wba\sdgitclone\sd should now exist, containing subdirectories src and doc.
+(And a few other thigns.)
+
+   cd wba\sdgitclone\sd
+
+Find out versions of src and doc, by examining
+sdgitclone\sd\doc\index2.html and
+sdgitclone\sd\src\sdmain.cpp
+They should of course match the desired "old" versions.
+
+Decide what version to update to (presumably the next versions of each).
+
+   git checkout main
+      It should say Already on 'main'
+                    Your branch is up to date with 'origin/main'.
+      If not, someone else has edited.
+   git pull
+      It should say Already up to date.
+   git checkout -b sd<NNNN>, e.g. sd3976
+      It should say Switched to a new branch 'sd<NNNN>'
+
+FRESHENING DOC
+
+Create, if necessary, a temporary garbage directory wba\dddd,
+connect to it, clear it, and unzip wba\sdfullarchive\v<NNNN>\doc_v<NNNN>.zip into it.
+This now needs to be merged onto sdgitclone\sd\doc.
+
+Clean up dddd by deleting many things, so it has the same files as sdgitclone\sd\doc.
+(This state of affairs should probably be fixed at some point, so that
+sdfullarchive and sdgitclone\sd\doc have the same list of files, with only different
+content.  But that can be attended to later.)
+
+Delete many .html files from dddd.  (Actual source files are htmli, html files are derived, I think.)
+Poster*.html.  appnote*.html.  demo.html.
+relnotes*.html
+faq.html
+NOT index.html
+*.exe
+sample.html
+sd_doc.html
+sessions.html
+
+dddd and sdgitclone\sd\doc should have the same list of files,
+differing only in content.  (Well, poster files may have been created.)
+Use winmergeu to compare them.  This is the final check.
+Create edit comment as needed.
+
+FRESHENING SRC
+
+Create, if necessary, a temporary garbage directory wba\ssss,
+connect to it, clear it, and unzip wba\sdfullarchive\v<NNNN>\sd_v<NNNN>.zip into it.
+This now needs to be merged onto sdgitclone\sd\src.
+
+Clean up ssss by deleting a few things, so it has the same files as sdgitclone\sd\src:
+*~
+*.lnk
+
+Use winmergeu to compare ssss and sdgitclone\sd\src.
+They should have the same file names, differeing only in content.  Compare content carefully.
+This is the last chance to get the git repository right.  Compose the edit comment for
+this version.  (The release notes have a short "customer" version of this.)
+
+THE ACTUAL UPDATE
+
+Copy dddd to sdgitclone\sd\doc, overwriting previous contents.
+Copy ssss to sdgitclone\sd\src.
+
+When connected to sdgitclone\sd, git status should show changed files
+in both src and doc.  In red.
+
+Do git add .
+
+Now git status (in sdgitclone\sd) should now show staged files in green.
+
+git checkout sd<NNNN>  (Actually doesn't matter, but don't reuse these branches.)
+git commit
+This will bring up a "Notepad" editor.  Edit in the summary of changes.
+Issue "Save" (Ctrl-S) and exit.
+
+git push -u origin sd<NNNN>   # branch name
+It will say
+  remote: Create a pull request for 'sd3975' on GitHub by visiting:
+  remote:      https://github.com/astrocfi/sd/pull/new/sd<NNNN>
+Do so.
+Insert "This is SRC and DOC for version XXXX" into title box.
+Description box should already be set.
+Click the green "create pull request" button.
+
+Go to "Pull Requests" at top.  Click "New Pull Request".
+Near top, see "Compare: main".  Click the twistie.  Should see "sd<NNNN>"
+at bottom of list.  Click it.
+Green button "View pull request".  Click same.
+
+
+DONE, I think.
+
+
+Log in to github  
+This uses the "Git Credential Manager" for wbawba.
+Then it says
+info: please complete authentication in your browser...
+Total 0 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+remote:
+remote: Create a pull request for 'sd3975' on GitHub by visiting:
+remote:      https://github.com/astrocfi/sd/pull/new/sd3975
+remote:
+To https://github.com/astrocfi/sd
+ * [new branch]      sd3975 -> sd3975
+branch 'sd3975' set up to track 'origin/sd3975'.
+
+
+In the long run, I should be able to do things like
+
+cd sd
+git checkout v38.40
+cd ../sd-regression
+git checkout v38.40
+
+and see the files from git.

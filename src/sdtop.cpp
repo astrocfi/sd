@@ -3851,7 +3851,8 @@ extern callarray *assoc(
    begin_kind key,
    setup *ss,
    callarray *spec,
-   bool *specialpass /* = (bool *) 0 */) THROW_DECL
+   bool *specialpass /* = (bool *) 0 */,
+   uint64_t funnybits /* = 0ULL */) THROW_DECL
 {
    for (callarray *p = spec ; p ; p = p->next) {
       uint32_t k, t, u, w, mask;
@@ -3986,7 +3987,12 @@ extern callarray *assoc(
          this_qualifier = cr_dmd_ctrs_mwv;
       }
 
-      if (this_qualifier == cr_none) {
+      if (this_qualifier == cr_not_funny) {
+         if ((funnybits & INHERITFLAG_FUNNY) != 0ULL)
+            goto bad;
+      }
+
+      if (this_qualifier == cr_none || this_qualifier == cr_not_funny) {
          if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   // All live people were demanded.
                  for (plaini=0; plaini < begin_size; plaini++) {
                if ((ss->people[plaini].id1) == 0) goto bad;
@@ -4528,7 +4534,7 @@ extern callarray *assoc(
       case cr_said_dmd:
          if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_DIAMOND) goto good;
          goto bad;
-      case cr_said_gal:
+      case cr_said_galaxy:
          if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_GALAXY) goto good;
          goto bad;
       case cr_didnt_say_tgl:

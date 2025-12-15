@@ -5429,7 +5429,8 @@ extern callarray *assoc(
    begin_kind key,
    setup *ss,
    callarray *spec,
-   bool *specialpass = (bool *) 0) THROW_DECL;
+   bool *specialpass = (bool *) 0,
+   uint64_t funnybits = 0ULL) THROW_DECL;
 
 uint32_t uncompress_position_number(uint32_t datum);
 

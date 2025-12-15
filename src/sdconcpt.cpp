@@ -145,7 +145,7 @@ static void do_concept_tandem(
       // "triangles are solid" or whatever.
 
       if ((master_key != tandem_key_cpls && master_key != tandem_key_tand) ||
-          (parseptr->concept->arg3 & ~0x0F0) != 0)
+          (parseptr->concept->arg3 & ~0x0F8) != 0)
          fail("Can do this only with \"as couples\" or \"tandem\".");
 
       // Find out how the matrix is to be expanded.

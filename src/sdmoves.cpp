@@ -348,6 +348,7 @@ static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, s_spindle, sd3x4
 static const expand::thing expd34s6 = {{9, 11, 1, 3, 5, 7}, s_short6, sd3x4, 1, 0, 05252};
 static const expand::thing expd3423 = {{0, 2, 4, 6, 8, 10}, s2x3, sd3x4, 0, 0, 02525};
 static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8}, s3dmd, sd3x4, 1};
+static const expand::thing exp3d_323 = {{0, 1, 2, -1, -1, 3, 4, 5, 6, -1, -1, 7}, s3dmd, s_323, 0};
 static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, s_323, sd3x4, 1, 0, 06565};
 static const expand::thing exp303 = {{10, 11, 0, 4, 5, 6}, s2x3, sd3x4, 1, 0, 06161};
 static const expand::thing exp030 = {{1, 2, 3, 7, 8, 9}, s2x3, sd3x4, 0, 0, 01616};
@@ -766,7 +767,7 @@ static bool do_1x3_type_expansion(setup *ss, heritflags heritflags_to_check) THR
       }
       else if (ss->kind == s3dmd) {
          if (dblbitlivemask == 0xFC3FC3) {
-            expand::expand_setup(exp3d3, ss);
+            expand::expand_setup(exp3d_323, ss);
             return true;
          }
       }
@@ -7472,6 +7473,10 @@ void really_inner_move(
    case schema_partner_partial_matrix:
       // FELL THROUGH!
       {
+         uint32_t dirbits;
+         uint32_t livemask;
+         ss->big_endian_get_directions32(dirbits, livemask);
+
          selector_kind local_selector = current_options.who.who[0];
 
          // For fairly hairy reasons "<anyone> trade" is given as a matrix call.  That
@@ -7634,23 +7639,30 @@ void really_inner_move(
 
          *result = the_results[0];
 
+         // Any use of "in" or "out", (as in "face in" or "pass in"), when people are facing up or down,
+         // constitutes a reference to the whole setup, and, as such, may not be used in "stretch".
+         if (the_schema == schema_matrix &&
+             (result->kind == s2x4 || result->kind == s1x8 || result->kind == s1x4) &&
+             (livemask & 0x11111111 & ~dirbits) != 0 &&
+             (current_options.where == direction_in || current_options.where == direction_out)) {
+            result->result_flags.split_info[0] = 0;
+            result->result_flags.split_info[1] = 0;
+         }
+
          if (doing_mystic != 0) {
             result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
             merge_table::merge_setups(&the_results[1], merge_c1_phantom, result);
          }
 
-         // Be sure we bring back the CMD_MISC3__DID_Z_COMPRESSMASK info.
+         // Be sure we bring back the CMD_MISC3__DID_Z_COMPRESSMASK info, and the dirbits.
          ss->cmd.cmd_misc3_flags = the_setups[0].cmd.cmd_misc3_flags;
+         result->big_endian_get_directions32(dirbits, livemask);
 
          if (expanded) {
             // If the outsides invaded space, but only did so perpendicular to the
             // elongation that we are making to stay clear of the centers, compress
             // out the extra space.
-            uint32_t dirjunk;
-            uint32_t livemask;
-
             result->result_flags.misc &= ~3;
-            result->big_endian_get_directions32(dirjunk, livemask);
 
             if (result->kind == s4x4 && (livemask & 0x3F3F3F3F) == 0) {
                result->result_flags.misc |= 3;
@@ -8107,10 +8119,14 @@ static void move_with_real_call(
       }
 
       if (used_it) {
-         // Not taking any chances with result.  In any case, it gates cleared
+         // Not taking any chances with result.  In any case, it gets cleared
          // around line 8070.
          ss->result_flags.misc |= RESULTFLAG__RECTIFY_ACCEPTED;
          result->result_flags.misc |= RESULTFLAG__RECTIFY_ACCEPTED;
+
+         // We might have been passed something like 6X2 or 3X2.  User can't want that
+         // When we have done a "rectify" switch.
+         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_MXNMASK);
       }
    }
 
