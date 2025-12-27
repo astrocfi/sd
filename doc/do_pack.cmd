@@ -8,4 +8,4 @@ REM The rest of these files don't get downloaded to the user's computer unless
 REM manually requested by clicking various things on the web pages.
 REM
 del pack.zip
-zip pack.zip *.html *.pdf *.txt *.tar.gz getacro.gif pdfdoc.zip textdoc.zip install.exe install3.exe install32.exe sd_source.zip
+zip pack.zip *.html *.pdf *.txt getacro.gif pdfdoc.zip textdoc.zip install.exe install3.exe install32.exe sd_source.zip

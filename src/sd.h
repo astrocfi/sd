@@ -6342,8 +6342,19 @@ class ui_option_type {
    // the second parameter.  This allows using a specific seed while allowing the
    // time to be a value that might overrun if in debug mode.
 
-   int resolve_test_minutes;
+   // The switch "resolve_test <N> <K> <L>" sets the number of attempts per log printing.
+   // When L is nonzero, after every L attempts the random number that was used at that
+   // will be printed.  This is intended for situations in which the program crashes
+   // after a long time (hours) in a stress test in release mode, and running it in
+   // debug mode would take prohibitively long.  Set L to some number so that the random
+   // number is logged at some random interval.  When it crashes, note the printed number,
+   // and run it again with that number as the seed and a smaller value of L.  It should
+   // get to the bad case sooner.  When L is small enough, it should be possible to do
+   // this in debug mode and locate the crash exactly.
+
    int resolve_test_random_seed;
+   int resolve_test_minutes;
+   int resolve_test_attempts_per_print;
 
    int singing_call_mode;
 
