@@ -1,0 +1,1071 @@
+<html lang="en">
+<head>
+<title>Sd Release Notes</title>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="description" content="Sd Release Notes">
+<meta name="generator" content="makeinfo 4.13">
+<link title="Top" rel="top" href="#Top">
+<link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css"><!--
+  pre.display { font-family:inherit }
+  pre.format  { font-family:inherit }
+  pre.smalldisplay { font-family:inherit; font-size:smaller }
+  pre.smallformat  { font-family:inherit; font-size:smaller }
+  pre.smallexample { font-size:smaller }
+  pre.smalllisp    { font-size:smaller }
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
+--></style>
+</head>
+<body>
+
+<a name="Top"></a>
+
+   <p>
+
+<a name="Intro"></a>
+
+   <p>
+&nbsp;<!-- /@w --><!-- the @* above makes the @sp below fail without this line  1998-05 -->
+   <pre class="sp">
+
+
+</pre>
+Copyright &copy; 1996-1998 William B. Ackerman
+   <pre class="sp">
+
+
+
+</pre>
+
+<!-- ************ -->
+<a name="32.5"></a>
+<a name="g_t32_002e5"></a>
+
+<h3 class="unnumberedsec">Version 32.5 changes</h3>
+
+<p>
+The missing <code>CWSDPMI</code> memory manager has been restored to the
+Windows 3.1/DOS version of the program.  It is not needed for
+Windows 95, 98, or NT.
+
+<code>Sdtty</code> now handles control-C correctly on Windows 95, 98, or NT.
+You can safely bind control-C to &lsquo;<samp><span class="samp">interlocked phantom columns</span></samp>&rsquo;,
+or whatever else you want.  Typing control-C will not automatically stop
+the program.  If you need to stop the program, type &lt;break&gt; or
+control-&lt;break&gt;, or use the task manager to perform an
+&ldquo;end task&rdquo; operation.
+
+New concept: &lt;anyone&gt; in your Z.
+
+It is now possible to enter fairly complex variations of &lsquo;<samp><span class="samp">plenty</span></samp>&rsquo;, with
+modifications to the star turns and similar things.  For example, you can
+directly type &lsquo;<samp><span class="samp">[jay walk] and plenty, turn the star 3/4, interrupt before
+the star turns with [trade circulate]</span></samp>&rsquo;.  For more complex variations, such as
+turning the star 3 but interrupting after the first 2, you still must use the
+&ldquo;allow modifications&rdquo; mechanism.
+
+The program recognizes a few more resolves.
+
+The program can now handle fractional stable and fractional twosome
+concepts on matrix calls.  For example, from a completed DPT setup,
+you can call &lsquo;<samp><span class="samp">tandem 1/4 twosome belles shove off</span></samp>&rsquo;.
+
+The call &lsquo;<samp><span class="samp">fold</span></samp>&rsquo; has been made legal for the ends, if they
+are as if leads in lines, from generalized diamonds or a &ldquo;dog-bone&rdquo;
+setup.
+
+An embarrassing bug with the &lsquo;<samp><span class="samp">diamond</span></samp>&rsquo; concept was fixed.
+We apologize for any bogus cards that were created.
+
+The interpretation of things like &lsquo;<samp><span class="samp">initially twice</span></samp>&rsquo; or &lsquo;<samp><span class="samp">random twice</span></samp>&rsquo;
+has been changed, in accordance with what appears to be the emerging consensus
+on this.  The subject call is &ldquo;flattened&rdquo;.  That is, &lsquo;<samp><span class="samp">initially twice mix</span></samp>&rsquo;
+has three parts&mdash;&lsquo;<samp><span class="samp">centers cross run</span></samp>&rsquo;, &lsquo;<samp><span class="samp">centers cross run</span></samp>&rsquo;, and
+&lsquo;<samp><span class="samp">centers trade</span></samp>&rsquo;.  &lsquo;<samp><span class="samp">Initially as couples initially twice mix</span></samp>&rsquo; will do
+an as couples centers cross run, a normal centers cross run, and a normal centers trade.
+
+[Note: the above was incorrect, and was removed in version 32.6.]
+
+The usual number of radical changes were made in the internal mechanism of the
+program, making it more elegant, general, and powerful.  The usual number of
+ad-hoc kludges were replaced with more powerful and general mechanisms.  The
+particular areas revamped in this release were the &ldquo;qualifiers&rdquo; and &ldquo;restrictions&rdquo;
+in the database.  The fractionalization mechanism was not changed this time.
+
+<!-- ************ -->
+<a name="32.4"></a>
+<a name="g_t32_002e4"></a>
+
+<h3 class="unnumberedsec">Version 32.4 changes</h3>
+
+<p>
+It is once again possible to exit from a multiple-screen listing from
+&ldquo;?&rdquo; or &ldquo;!&rdquo; by pressing the &ldquo;delete&rdquo; key on a PC.  You can also
+press &ldquo;backspace&rdquo; or the letter &ldquo;q&rdquo;.
+
+Digits on the numeric keypad are treated the same as ordinary digits.
+Control, alt, and control-alt numeric keypad presses can be programmed
+as accelerator keys by using designators such as &ldquo;cn3&rdquo;, &ldquo;an4&rdquo;, or &ldquo;can5&rdquo;.
+See the manual for details.
+
+A few bugs were fixed in the handling of heavily stacked concepts and meta-concepts.
+
+Linear cycle from inverted lines is now done by the official Callerlab definition.
+The pass is right shoulders, but the final peel is in the direction
+of the original minwave.
+
+There is a call &lsquo;<samp><span class="samp">easy does it (matrix)</span></samp>&rsquo; which allows &lsquo;<samp><span class="samp">3x3</span></samp>&rsquo; usage while
+compromising other aspects of the call.
+
+There is a call &lsquo;<samp><span class="samp">recoil (matrix)</span></samp>&rsquo;, permitted only from facing couples,
+which allows &lsquo;<samp><span class="samp">3x3</span></samp>&rsquo; usage while compromising other aspects of the call.
+
+The usual number of radical changes were made in the internal mechanism of the
+program, making it more elegant, general, and powerful.  The usual number of
+ad-hoc kludges were replaced with more powerful and general mechanisms.  The
+particular areas revamped in this release were the inheritance mechanism
+(particularly relating to NxN modifiers and revert/reflect), the qualifiers to
+test general 1/4 tags, and, of course, the fractionalization mechanism.
+
+<!-- ************ -->
+<a name="32.3"></a>
+<a name="g_t32_002e3"></a>
+
+<h3 class="unnumberedsec">Version 32.3 changes</h3>
+
+<p>
+An improper handling of screen erasure, scrolling, and cursor motion in the new
+Windows interface was fixed.
+
+A possible error involving typing in comments under certain circumstances under
+Windows 95 may have been fixed.
+
+The call &lsquo;<samp><span class="samp">mini busy</span></samp>&rsquo; now uses the really correct definition.  For example,
+try &lsquo;<samp><span class="samp">split phantom waves explode and [mini busy]</span></samp>&rsquo; from 16-matrix offset columns.
+The call &lsquo;<samp><span class="samp">mini busy (matrix)</span></samp>&rsquo; was added, to allow the old non-canonical
+usage with concepts like &lsquo;<samp><span class="samp">single</span></samp>&rsquo; and &lsquo;<samp><span class="samp">3x3</span></samp>&rsquo;.
+
+A bug in the interaction of the &lsquo;<samp><span class="samp">echo</span></samp>&rsquo; concept and certain meta-concepts was fixed.
+
+A bug causing occasional spurious &ldquo;setups did not interact&rdquo; warnings was fixed.
+
+The bug allowing &lsquo;<samp><span class="samp">stretch finally twice scoot and weave (parts)</span></samp>&rsquo; was fixed.
+
+<!-- ************ -->
+<a name="32.2"></a>
+<a name="g_t32_002e2"></a>
+
+<h3 class="unnumberedsec">Version 32.2 changes</h3>
+
+<p>
+Sdtty's interface with the Windows operating system has been rewritten.  The program
+should be much more &ldquo;system friendly&rdquo; (and, we hope, &ldquo;user-friendly&rdquo;) than before.
+It no longer sets itself up in &ldquo;full screen&rdquo; mode.  It operates in an ordinary
+window, that can be maximized, minimized, moved, and resized in the usual way.  It
+also has scroll bars.  It can also sense special key presses in a more flexible way.
+
+Sdtty can respond to many more special key presses than before.  In addition to the
+function keys, it can respond to letters and digits with the control and/or alt keys
+held down.  It can also respond to &ldquo;enhanced&rdquo; keys such as the cursor arrow keys,
+&ldquo;insert&rdquo;, &ldquo;delete&rdquo; etc.
+
+Sdtty now permits you to customize your special key presses in your initialization
+file.  The file <samp><span class="file">sample3.ini</span></samp> in the distribution has an example of this.  It
+has an &ldquo;[accelerators]&rdquo; section followed by lines of the form
+<pre class="example">        key-specification     action
+</pre>
+   <p class="noindent">For example:
+<pre class="example">     al     split phantom lines
+     cl     interlocked phantom lines
+     cal    phantom lines
+</pre>
+   <p class="noindent">These three entries mean that alt-l will be a short cut for
+<code>split phantom lines</code>, control-l will be a short cut for
+<code>interlocked phantom lines</code>, and control-alt-l will be a short cut for
+<code>phantom lines</code>.  A plus sign in front of a key specification means that
+it is to be used when starting, as in &ldquo;+f1 heads start&rdquo;, and an asterisk
+means that it is to be used when resolving, as in &ldquo;*f12 find another&rdquo;.
+
+If you do not have an <samp><span class="file">sd.ini</span></samp> file (for example, you have not copied
+<samp><span class="file">sample3.ini</span></samp> to <samp><span class="file">sd.ini</span></samp>), or if the file does not have an
+&ldquo;[accelerators]&rdquo; section, all of the standard key bindings will be used.
+If there is an &ldquo;[accelerators]&rdquo; section, whatever follows will replace
+<em>all</em> key bindings.
+
+Refer to the manual for more details.
+
+The following new options were added, to disable the various new features of the
+Sdtty user interface.  You can place these in the &ldquo;[options]&rdquo; section of
+the initialization file.
+<pre class="example">        no_intensify
+        no_sound
+        no_color
+        no_console
+</pre>
+   <p>
+Refer to the manual for more details.
+
+Sd has limited support for the &lsquo;<samp><span class="samp">fractal</span></samp>&rsquo; concept.
+
+Sd can handle supercalls, as in &lsquo;<samp><span class="samp">finally clover and [right and left thru]</span></samp>&rsquo;
+or &lsquo;<samp><span class="samp">initially busy [finish turn the key]</span></samp>&rsquo;.
+
+There is a call &lsquo;<samp><span class="samp">&lt;anyone&gt; tie (parts)</span></samp>&rsquo; that can be used when the parts are
+required (for fractionalization, &lsquo;<samp><span class="samp">piecewise</span></samp>&rsquo;, &lsquo;<samp><span class="samp">initially</span></samp>&rsquo;, and so on.)
+It is like &lsquo;<samp><span class="samp">recycle (parts)</span></samp>&rsquo; or &lsquo;<samp><span class="samp">scoot and weave (parts)</span></samp>&rsquo; in that it
+doesn't have all that power of the base call, and should only be used when
+fractionalization is required.
+
+<!-- ************ -->
+<a name="32.0"></a>
+<a name="g_t32_002e0"></a>
+
+<h3 class="unnumberedsec">Version 32.0 changes</h3>
+
+<p>
+There is a major new feature.  It is now possible to &ldquo;edit&rdquo; sequences at any point.
+The way this is accomplished is through a &ldquo;clipboard&rdquo;.  If you want to change your
+sequence at a point 5 calls back from the current point, you can move the last 5 calls
+to the clipboard.  Then you can insert or delete calls in the usual way (by calling, or
+by using the <code>undo last call</code> command), and then move the clipboard back to the
+main sequence.  See the &ldquo;editing&rdquo; section (section 7, page 34) of the manual.
+
+You can use modifiers like &lsquo;<samp><span class="samp">1x3</span></samp>&rsquo; in front of the &lsquo;<samp><span class="samp">as couples</span></samp>&rsquo;
+or &lsquo;<samp><span class="samp">tandem</span></samp>&rsquo; concepts, or their twosome or fractional twosome veriants.
+In practice, a common way of expressing this to the dancers is with something
+like &ldquo;one by tandems of three&rdquo; or &ldquo;threesome by one&rdquo;.
+
+New concepts: &lsquo;<samp><span class="samp">triple twin C/L/W of 3</span></samp>&rsquo;.  These are done in a 3x6 formation,
+and form three virtual 2x3's.  You can of course use &lsquo;<samp><span class="samp">mystic</span></samp>&rsquo; and
+&lsquo;<samp><span class="samp">invert mystic</span></samp>&rsquo; with them.
+
+New concepts: &lsquo;<samp><span class="samp">center/outside triple twin C/L/W</span></samp>&rsquo;.  These are done in a 4x6 formation,
+and form three virtual 2x4's.  The center formation, or the two end formations,
+do the call.
+
+New concepts: &lsquo;<samp><span class="samp">center/outside triple twin C/L/W of 3</span></samp>&rsquo;.  These are done in a 3x6 formation,
+and form three virtual 2x3's.  The center formation, or the two end formations,
+do the call.
+
+New concept: &lsquo;<samp><span class="samp">center Z</span></samp>&rsquo;.
+
+New concepts: &lsquo;<samp><span class="samp">twice removed</span></samp>&rsquo;, &lsquo;<samp><span class="samp">thrice removed</span></samp>&rsquo;.
+
+New selectors: &lsquo;<samp><span class="samp">end boys</span></samp>&rsquo;, &lsquo;<samp><span class="samp">end girls</span></samp>&rsquo;, &lsquo;<samp><span class="samp">center boys</span></samp>&rsquo;, and
+&lsquo;<samp><span class="samp">center girls</span></samp>&rsquo;.  These are intended for use with calls like &lsquo;<samp><span class="samp">ripple</span></samp>&rsquo;.
+If one of these selectors can identify the desired two people uniquely, it is
+probably preferable to use it instead of something like <code>side girls</code> or
+<code>lead ends</code>.
+
+The &lsquo;<samp><span class="samp">[beau hop] an anchor but [[reflected flip your neighbor] and spread]</span></samp>&rsquo;
+bug was fixed.
+
+The program has a vastly improved ability to handle differently oriented triple
+and quadruple columns, lines, waves, and diamonds.
+
+The program has a vastly improved ability to handle Z's.
+
+Many other minor improvements.  We thank the callers at the
+2nd USA West Convention for bringing up several interesting issues.
+
+<!-- ************ -->
+<a name="31.98"></a>
+<a name="g_t31_002e98"></a>
+
+<h3 class="unnumberedsec">Version 31.98 changes</h3>
+
+<p>
+Many minor improvements.  We thank the callers in the C2 hall at the
+47th National Square Dance Convention for calling 3 things that can't
+be done by the program that they used, and for bringing up a number of
+interesting issues.
+
+The &lsquo;<samp><span class="samp">triple Z's</span></samp>&rsquo; concept was added.
+
+The calls &lsquo;<samp><span class="samp">rims/hubs trade back</span></samp>&rsquo; and &lsquo;<samp><span class="samp">rims/hubs trade &lt;anything&gt;</span></samp>&rsquo;
+now follow the definition really correctly.  The <em>original</em> rims
+or hubs do the circulate or the other call.  This now works correctly in
+columns, and things like &lsquo;<samp><span class="samp">yoyo rims trade [single shakedown]</span></samp>&rsquo;
+will work correctly in a tidal inverted line.
+
+More generally, the mechanism for dealing with calls that involve the
+determination of the <em>original</em> centers, ends, or whatever (e.g.
+&lsquo;<samp><span class="samp">patch the &lt;anyone&gt;</span></samp>&rsquo; or &lsquo;<samp><span class="samp">rims trade back</span></samp>&rsquo;) is much more carefully
+worked out.  For example, from columns, you can do a &lsquo;<samp><span class="samp">random tandem
+patch the centers</span></samp>&rsquo;.  The original centers, before the &lsquo;<samp><span class="samp">tandem hinge</span></samp>&rsquo; and
+before the dancers were combined into tandems, will do the &lsquo;<samp><span class="samp">U-turn back</span></samp>&rsquo;
+at the end of the call.
+
+A bug was fixed involving certain disconnected shape-changers in diamonds.
+For example, from a tidal wave, if the center 2 hinge,
+the program can now have various disconnected diamonds do things
+like &lsquo;<samp><span class="samp">flip the diamond</span></samp>&rsquo;.
+
+<!-- ************ -->
+<a name="31.97"></a>
+<a name="g_t31_002e97"></a>
+
+<h3 class="unnumberedsec">Version 31.97 changes</h3>
+
+<p>
+Many minor improvements.  We thank the usual anonymous sources
+for their many suggestions.
+
+The space-invading version of &lsquo;<samp><span class="samp">&lt;anyone&gt; run the wheel</span></samp>&rsquo; has been
+renamed to &lsquo;<samp><span class="samp">&lt;anyone&gt; run the wheel (matrix)</span></samp>&rsquo;.  The call
+&lsquo;<samp><span class="samp">&lt;anyone&gt; run the wheel</span></samp>&rsquo; is a non-space-invading version that
+does not allow the various bizarre effects, but may be used with
+concepts like &lsquo;<samp><span class="samp">parallelogram</span></samp>&rsquo;
+
+The designators &lsquo;<samp><span class="samp">very centers</span></samp>&rsquo;, &lsquo;<samp><span class="samp">very ends</span></samp>&rsquo; and &lsquo;<samp><span class="samp">all</span></samp>&rsquo;
+have been added.  They are completely equivalent to &lsquo;<samp><span class="samp">center 2</span></samp>&rsquo;,
+&lsquo;<samp><span class="samp">outer 2</span></samp>&rsquo;, and &lsquo;<samp><span class="samp">everyone</span></samp>&rsquo;, respectively.  Note that you
+very rarely need to say &lsquo;<samp><span class="samp">all</span></samp>&rsquo; or &lsquo;<samp><span class="samp">everyone</span></samp>&rsquo;.  If you want
+everyone to press ahead, just say &lsquo;<samp><span class="samp">press ahead</span></samp>&rsquo;.
+
+The handling of the &lsquo;<samp><span class="samp">disconnected</span></samp>&rsquo; concept has been expanded
+to handle the formulation in the Choreo Corner article in the
+June, 1998 issue of Zip Coder.
+
+<!-- ************ -->
+<a name="31.96"></a>
+<a name="g_t31_002e96"></a>
+
+<h3 class="unnumberedsec">Version 31.96 changes</h3>
+
+<p>
+The program can now do shape-changers in triple formations that
+go to different orientations.  From triple boxes with the center
+box oriented differently from the outer boxes, one can do things
+like &lsquo;<samp><span class="samp">triple boxes reach out</span></samp>&rsquo; or &lsquo;<samp><span class="samp">triple boxes follow
+to a diamond</span></samp>&rsquo;.
+
+The program can recognize &lsquo;<samp><span class="samp">&lt;anyone&gt; lead for a &lt;anycall&gt;</span></samp>&rsquo; from
+a larger number of positions.  Specifically, it recognizes &ldquo;C1 phantom&rdquo;
+setups and suitably populated 4x4 matrices that are in a promenade-like
+arrangement.  You will be presumed to have told the dancers to
+promenade from that setup before the &lsquo;<samp><span class="samp">&lt;anyone&gt; lead</span></samp>&rsquo;.
+
+New designator: &lsquo;<samp><span class="samp">outer 1x3s</span></samp>&rsquo;.  This may be used to designate the
+outer lines or columns of 3 in such setups as an `H' or a diamond
+between two couples (&lsquo;<samp><span class="samp">heads circle the tag to a diamond</span></samp>&rsquo;.)  You
+will often need to use the &lsquo;<samp><span class="samp">disconnected</span></samp>&rsquo; concept with this.
+
+New call: &lsquo;<samp><span class="samp">plus &lt;N&gt;</span></samp>&rsquo;.  Like &lsquo;<samp><span class="samp">with the flow</span></samp>&rsquo;, &lsquo;<samp><span class="samp">sweep 1/4</span></samp>&rsquo;,
+and similar calls, this uses rolling direction from the preceding call
+to tell it what to do.  It might not be correct in all cases.
+
+The &lsquo;<samp><span class="samp">triple columns</span></samp>&rsquo; concept was moved to C2 in accordance with a
+recent decision of the Callerlab challenge committee.
+
+<!-- ************ -->
+<a name="31.95"></a>
+<a name="g_t31_002e95"></a>
+
+<h3 class="unnumberedsec">Version 31.95 changes</h3>
+
+<p>
+The program can handle mixed-orientation triple formations.  For
+example, from a tidal wave, you can have the centers &lsquo;<samp><span class="samp">lockit</span></samp>&rsquo;,
+and then call &lsquo;<samp><span class="samp">triple waves switch to a diamond</span></samp>&rsquo;.
+
+New concept: &lsquo;<samp><span class="samp">snag the &lt;anyone&gt;</span></samp>&rsquo;.
+
+The code for &lsquo;<samp><span class="samp">snag</span></samp>&rsquo; and &lsquo;<samp><span class="samp">&lt;anyone&gt; work &lt;concept&gt;</span></samp>&rsquo; was
+overhauled.  It should be much better at doing really obscure
+cases now.  The special call &lsquo;<samp><span class="samp">snag circulate</span></samp>&rsquo; was removed.
+The &lsquo;<samp><span class="samp">snag</span></samp>&rsquo; concept simply does the right thing.
+
+<!-- ************ -->
+<a name="31.94"></a>
+<a name="g_t31_002e94"></a>
+
+<h3 class="unnumberedsec">Version 31.94 changes</h3>
+
+<p>
+Many of the usual sorts of improvements were put in, in
+response to user requests.  It is not possible to list
+all the ramifications of them, except to say that the program
+is less likely to refuse to do obscure things.  It has a
+better understanding of call fractionalization and of where
+people are and how to put them back together.
+
+The &lsquo;<samp><span class="samp">initially invert counteract</span></samp>&rsquo; bug was fixed.
+The &lsquo;<samp><span class="samp">stretch twist the line</span></samp>&rsquo; bug was fixed.
+The &lsquo;<samp><span class="samp">stretch dixie diamond</span></samp>&rsquo; bug was fixed.
+The &lsquo;<samp><span class="samp">own the boys (reach out ; concentric lockit) by touch and go 1/4 by [ah so]</span></samp>&rsquo; bug was fixed.
+
+A rather obscure person-disappearance bug was fixed.  An incredibly
+obscure (it required &lsquo;<samp><span class="samp">sextuple columns working right</span></samp>&rsquo; to provoke
+it) memory corruption bug was fixed.
+
+The definition of &lsquo;<samp><span class="samp">regroup</span></samp>&rsquo; was changed in accordance with the
+recent Callerlab definition change.  The ends are now permitted to be
+looking in.
+
+New call: &lsquo;<samp><span class="samp">change the apex &lt;M/4&gt; x &lt;N/4&gt;</span></samp>&rsquo;.  New concept: &lsquo;<samp><span class="samp">echo</span></samp>&rsquo;.
+
+When one does &lsquo;<samp><span class="samp">split phantom columns zip code 1-1/2</span></samp>&rsquo; from
+facing lines, so that the &lsquo;<samp><span class="samp">nothing</span></samp>&rsquo; in the center is done
+by phantoms, they sort of stay in a 2x2 box.  A warning is printed,
+and the final setup is a 2x6.
+
+New calls: 6 or 8 person &lsquo;<samp><span class="samp">here comes the judge</span></samp>&rsquo; or
+&lsquo;<samp><span class="samp">sock it to me</span></samp>&rsquo;.  You may specify these with with <code>12 matrix</code>/<code>16 matrix</code>,
+or with an explicit matrix size designator (e.g. <code>2x6 matrix</code>), or
+with a concept that explicitly designates long lines (e.g. <code>twin
+phantom lines of 6</code>.)
+
+New selector:  <code>those facing</code>.  Also, the <code>funny</code> concept, for
+certain calls such as &lsquo;<samp><span class="samp">slide thru</span></samp>&rsquo;, simply means <code>those facing</code>.
+So you can do &lsquo;<samp><span class="samp">funny slide thru</span></samp>&rsquo; large numbers of times.  You must
+enter this as, for example, &lsquo;<samp><span class="samp">9 times funny slide thru</span></samp>&rsquo;.
+
+<!-- ************ -->
+<a name="31.93"></a>
+<a name="g_t31_002e93"></a>
+
+<h3 class="unnumberedsec">Version 31.93 changes</h3>
+
+<p>
+The parser is about 15 times faster on very difficult phrases, such as
+<code>[[right and left thru] and roll] coordinate</code>.
+
+Because of an ambiguity, it was necessary to remove the &ldquo;space invader&rdquo;
+versions of <code>right anchor &lt;N/4&gt;</code> and <code>left anchor &lt;N/4&gt;</code>, when
+no person designator is given.  If you want the &ldquo;space invader&rdquo; versions
+of these calls, you must use a person designator, even if that is <code>everyone</code>.
+Without a person designator, these are &ldquo;breathing&rdquo; calls that are suitable
+for use in distorted setups, as in <code>trapezoid left anchor 3/4</code>.
+
+<!-- ************ -->
+<a name="31.92"></a>
+<a name="g_t31_002e92"></a>
+
+<h3 class="unnumberedsec">Version 31.92 changes</h3>
+
+<p>
+The unpleasantness of the parser in 31.91 has been fixed&mdash;you can type
+things like <code>ping pong circulate</code> directly.
+
+Apostrophe and comma are optional.
+
+You can get a u-turn back by typing u &lt;space&gt; &lt;enter&gt;.
+
+The resolver is much more thorough in searching for single call
+resolves that give RLG, LA, or promenade endings.
+
+The mechanism by which the resolver avoids presenting the same resolve
+twice sometimes mistakenly thought that it had already presented a
+resolve that it hadn't.  As a consequence, the program occasionally
+missed a perfectly good resolve.  This has been fixed.
+
+You can type the call <code>eight by</code> as either <code>eight by</code> or <code>8 by</code>.
+
+You can now type in star modifications directly, as in
+<code>chain reaction, turn the star 1/2</code>
+or
+<code>chain reaction, don't turn the star</code>
+(You may also use the <code>simple modifications</code> or <code>allow modifications</code>
+stuff, but you should hardly ever need to use those any more.)
+
+For the call tag the star, you *must* type it directly.  Do not type
+<code>allow modifications</code> and then <code>tag the star the yellow brick road</code>,
+expecting to be queried for modified star turns.
+
+In text that Sd displays or writes out to the transcript file,
+the concepts <code>twice</code>, <code>N times</code>, and <code>1-M/N</code> will
+be placed after the call.  <em>You still enter concepts, as before,
+in front of the call.</em>
+
+The spelling of <code>wheel fan &amp; cross thru</code> has been changed to <code>wheel fan and cross thru</code>.
+We apologize for jerking people around, but this makes it consistent with all other
+&ldquo;and&rdquo; calls.  There are now no calls with an ampersand in their names.
+
+
+<!-- ************ -->
+<a name="31.91"></a>
+<a name="g_t31_002e91"></a>
+
+<h3 class="unnumberedsec">Version 31.91 changes</h3>
+
+<p>
+This is an interim release, fixing a few embarrassing bugs.  Major
+functionality improvements that are being worked on are not yet in place.
+They will be coming out soon.
+
+The function key control-F6 really, really, really gives the &lsquo;<samp><span class="samp">centers</span></samp>&rsquo;
+concept.
+
+The definitions of &lsquo;<samp><span class="samp">scoot and weave</span></samp>&rsquo; and &lsquo;<samp><span class="samp">turn and weave</span></samp>&rsquo; were
+fixed to handle the turning motions correctly.  We thank Kerry Hodnett
+for pointing out this problem.
+
+The problem with &lsquo;<samp><span class="samp">outer 6 invert the column 1/3</span></samp>&rsquo; was fixed.
+
+For most calls with star turns, you can type a modification to the star turn amount
+directly.  Say &lsquo;<samp><span class="samp">motivate, don't turn the star</span></samp>&rsquo; or &lsquo;<samp><span class="samp">motivate, turn the star 3/4</span></samp>&rsquo;.
+This doesn't yet work with &lsquo;<samp><span class="samp">tag the star</span></samp>&rsquo;.
+Also, if you want more esoteric things, like &lsquo;<samp><span class="samp">turn the star 3 but interrupt
+after 2 with a bias motivate</span></samp>&rsquo;, you still need to use the <code>allow modifications</code>
+mechanism.
+
+There is a new section of the manual, &ldquo;Interruptions and Interlace&rdquo;,
+describing some esoteric aspects of calls like &lsquo;<samp><span class="samp">exchange the diamonds</span></samp>&rsquo;.
+
+It is legal to omit the typing of apostrophe or comma.  This means that
+you can type <code>chain reaction turn the star 1/2</code> or <code>ends go as you
+are turntable</code> or <code>lockers choice</code> or "tag the star ers delight".
+
+It is also legal to type a space where a hyphen would normally be
+required.  This means that you can type "swing o late" or "tandem based
+triangles".  Use this cautiously!!  Because of word completion, Sd may
+complete more of the call than you were expecting when you type a space.
+
+[The above problem was fixed in version 31.92.]
+
+The calls &lsquo;<samp><span class="samp">triple scoot</span></samp>&rsquo;, &lsquo;<samp><span class="samp">partner tag</span></samp>&rsquo;, and &lsquo;<samp><span class="samp">remake the thar</span></samp>&rsquo;
+were moved from the Plus to the A1 lists, in accordance with the recent
+Callerlab resolution.
+
+
+<!-- ************ -->
+<a name="31.90"></a>
+<a name="g_t31_002e90"></a>
+
+<h3 class="unnumberedsec">Version 31.90 changes</h3>
+
+<p>
+An enormous number of improvements were made, far too many to
+list here.  Many are minor, many are significant.  Most of these
+were made possible by analysis of C4 material generously provided
+by Lynette Bellini.
+
+New call:
+<pre class="example">     cast a shadow, very centers cast 3/4
+</pre>
+   <p>
+New concepts:
+<pre class="example">     REPLACE THE LAST PART
+     INTERRUPT BEFORE THE LAST PART
+     Y'S ARE SOLID
+     Y-SOME
+     Y's ARE SOLID N/4 Y-SOME
+     Y-SOME N/4 SOLID
+</pre>
+   <p>
+In the concepts BOXES/DIAMONDS/TRIANGLES WORK solid / N-some /
+fractional solid / fractional N-some, the word <i>WORK</i> has been
+changed to <i>ARE</i>.  We realize that callers often use the word
+"work" in things like "triangles work solid 1/4 threesome",
+but this change makes the program's naming more consistent,
+and avoids any possibility of ambiguity.  There is a meta-concept
+&lt;ANYONE&gt; WORK &lt;concept&gt;, that is essentially equivalent to
+"OWN the &lt;ANYONE&gt; for &lt;concept&gt; &lt;call&gt; BY &lt;call&gt;.  We want to give
+the user complete and unambiguous control over which concept
+is used.
+
+The calls that used the phrase "(by parts)" in their name have had
+that phrase changed to just "(parts)".  Those calls are: recycle,
+cross cycle, scoot and weave, and couple up.
+
+The program's interpretation of the splitting of a 2x4 for the concepts
+CENTRAL or CRAZY has been made more regular.  The rule is that, if
+it is at all possible to divide the 2x4 into 2x2's, the program, and
+presumably the dancers, do so, even if such a division does not lead to
+the most common application of the call.  The 2x4 is split into 1x4's
+only if the call is impossible in 2x2's.  So, for example, &lsquo;<samp><span class="samp">1/2 crazy
+switch to a diamond</span></samp>&rsquo; from parallel waves initially splits the setup into
+waves, as it has always done.  The difference is in calls like &lsquo;<samp><span class="samp">tickle</span></samp>&rsquo;
+and the centers part of &lsquo;<samp><span class="samp">counter</span></samp>&rsquo;.  On a &lsquo;<samp><span class="samp">1/2 crazy tickle</span></samp>&rsquo;
+from parallel waves, the first action is done in each box, resulting in
+a tidal wave.  then the centers do it again.  On a &lsquo;<samp><span class="samp">central counter</span></samp>&rsquo;
+from parallel waves, each box does a &lsquo;<samp><span class="samp">cast off 3/4</span></samp>&rsquo; followed by
+a &lsquo;<samp><span class="samp">lockit</span></samp>&rsquo;.  On &lsquo;<samp><span class="samp">central interlocked counter</span></samp>&rsquo; or &lsquo;<samp><span class="samp">central
+cross counter</span></samp>&rsquo;, the initial division is into each wave, since the call
+is impossible otherwise.
+
+The definition of crossfire has been changed so that the original ends
+can roll.  The definition of this call does not involve an extend.
+It involves the original centers walking straight ahead to meet the
+original ends.  Since the latter did not move forward, they do not lose
+their roll status from the cross fold.
+
+The program can directly parse calls that take two subcalls in brackets,
+as in &lsquo;<samp><span class="samp">slant [swing thru] and [turn and deal]</span></samp>&rsquo; or &lsquo;<samp><span class="samp">[slip] the
+windmill, outsides [ramble]</span></samp>&rsquo;.
+
+&lsquo;<samp><span class="samp">Dixie grand</span></samp>&rsquo; is now a call, as well as being a recognized getout.
+After doing this call, the dancers will be in an alamo ring.  You may
+need to give the pseudo-call &lsquo;<samp><span class="samp">adjust alamo to other pairing</span></samp>&rsquo; before
+doing the next call.
+
+In <code>Sdtty</code> for PC's, function key control-F6 is a shortcut for
+the &lsquo;<samp><span class="samp">centers</span></samp>&rsquo; concept.
+
+The call &lsquo;<samp><span class="samp">&lt;anything&gt; and the &lt;anyone&gt; roll</span></samp>&rsquo; re-evaluates people's
+positions before deciding who should roll.  So, for example, if you say
+&lsquo;<samp><span class="samp">[swing thru] and the centers roll</span></samp>&rsquo;, it will be the <em>new</em> centers
+that will roll.  You may need to make that clear to the dancers by
+saying something like &lsquo;<samp><span class="samp">the new centers roll</span></samp>&rsquo;
+
+The program now understands the number zero.  It can do things like
+&lsquo;<samp><span class="samp">take 0</span></samp>&rsquo;, &lsquo;<samp><span class="samp">loop and tag 0/4</span></samp>&rsquo;, &lsquo;<samp><span class="samp">0 steps at a time</span></samp>&rsquo;,
+and &lsquo;<samp><span class="samp">track 0</span></samp>&rsquo;.
+
+The word order &lsquo;<samp><span class="samp">reverse N/4 crazy</span></samp>&rsquo; is no longer accepted.  It appears
+that some people believe that this word order is just a short notation
+for &ldquo;reverse order N/4 crazy.&rdquo;  If you want &lsquo;<samp><span class="samp">reverse order N/4 crazy</span></samp>&rsquo;,
+say so.  If you want &lsquo;<samp><span class="samp">N/4 reverse crazy</span></samp>&rsquo;, say so.
+
+
+<!-- ************ -->
+<a name="31.89"></a>
+<a name="g_t31_002e89"></a>
+
+<h3 class="unnumberedsec">Version 31.89 changes</h3>
+
+<p>
+The program can do singing call progressions.  There are two new
+commands, available only at the start of a sequence (that is, when
+you could say &lsquo;<samp><span class="samp">heads start</span></samp>&rsquo;):
+
+<pre class="example">     toggle singing call
+     toggle reverse singing call
+</pre>
+   <p>
+The "reverse" singing call option chooses a reverse ("right hand lady")
+progression.
+
+
+It has a much more sophisticated way of checking for
+getouts, and can see many more of them than previously.
+
+
+It has an improved understanding of how 12 matrix, 16 matrix, 3x3,
+and 4x4 interact.
+
+
+Plus several dozen minor improvements in the database, the program's
+awareness of where people are, and so on.
+
+
+<!-- ************ -->
+<a name="31.88"></a>
+<a name="g_t31_002e88"></a>
+
+<h3 class="unnumberedsec">Version 31.88 changes</h3>
+
+<p>
+The changes described below (for version 31.87) for
+&lsquo;<samp><span class="samp">percolate (centers and ends)</span></samp>&rsquo;
+and &lsquo;<samp><span class="samp">cover up (centers and ends)</span></samp>&rsquo; were added for
+&lsquo;<samp><span class="samp">perk up (centers and ends)</span></samp>&rsquo; as well.
+
+An error in &lsquo;<samp><span class="samp">sidetrack</span></samp>&rsquo; from a 1x8 column was fixed.
+
+
+<!-- ************ -->
+<a name="31.87"></a>
+<a name="g_t31_002e87"></a>
+
+<h3 class="unnumberedsec">Version 31.87 changes</h3>
+
+<p>
+When the &lsquo;<samp><span class="samp">&lt;anyone&gt; work</span></samp>&rsquo; concept is used, as in &lsquo;<samp><span class="samp">boys work
+tandem swing thru</span></samp>&rsquo;, the program will put in the word &lsquo;<samp><span class="samp">all</span></samp>&rsquo;, along
+with a comma.  It will come out like &lsquo;<samp><span class="samp">boys work tandem, all swing thru</span></samp>&rsquo;.
+You do not type in the comma or the word &lsquo;<samp><span class="samp">all</span></samp>&rsquo;.
+
+Some of the obscure nuances of &lsquo;<samp><span class="samp">countershake</span></samp>&rsquo;, like
+&lsquo;<samp><span class="samp">3x3 countershake</span></samp>&rsquo; from a 2x6 matrix, have been dealt with
+by creating a call &lsquo;<samp><span class="samp">countershake (matrix)</span></samp>&rsquo;.  The default
+call (without the word &lsquo;<samp><span class="samp">matrix</span></samp>&rsquo;) is completely fractionalizable.
+See the manual for details.
+
+&lsquo;<samp><span class="samp">Cover up</span></samp>&rsquo; and &lsquo;<samp><span class="samp">percolate</span></samp>&rsquo; can be used with the &lsquo;<samp><span class="samp">central</span></samp>&rsquo;
+concept from some formations.  The calls &lsquo;<samp><span class="samp">cover up (centers and ends)</span></samp>&rsquo; and
+&lsquo;<samp><span class="samp">percolate (centers and ends)</span></samp>&rsquo; have been created for this purpose.
+See the manual for details.
+
+The call "scoot and counter", if done from a left-handed 1/4 tag, will
+have the outsides use a right hand at the end.  This appears to be
+somewhat more in keeping with common usage than using a left hand,
+though the situation is not really clear.  The Callerlab definition
+still prohibits this, and Sd did prior to this release.  You were
+always permitted to say "left scoot and counter", and this is still
+permitted.
+
+The "anchor the &lt;anyone&gt;" concept has been improved to handle 2-person calls
+in a more general way.  It should now handle all 2 and 4 person calls.
+
+
+
+<!-- ************ -->
+<a name="31.85"></a>
+<a name="g_t31_002e85"></a>
+
+<h3 class="unnumberedsec">Version 31.85 changes</h3>
+
+<p>
+There is a rudimentary understanding of the "anchor the &lt;anyone&gt;" concept.
+
+The handling of fractional, interruptible, crazy, random,
+initially, and finally has been completely revamped.  The program
+has a much simpler and more logical internal structure now.  It
+should do a much better job of handling things like
+"random finish 2/3 reverse order hot foot spin".
+
+
+The program has a much better understanding of the individual "O" circulates
+that the outsides do on a "hocus pocus".  However, you must use the special
+call "hocus pocus (fractions)" to get this.  See the discussion in the manual.
+
+
+The definition of "crossfire" has been changed to bring it up to date
+with the nuances of this call.
+
+
+It was discovered that the program had been cheating on "change the web",
+turning the star only one position instead of the five positions that
+the definition mandates.  This shocking and scandalous situation has
+been rectified.
+
+
+<!-- ************ -->
+<a name="31.84"></a>
+<a name="g_t31_002e84"></a>
+
+<h3 class="unnumberedsec">Version 31.84 changes</h3>
+
+<p>
+The mechanism for deciding when to step to a wave or rear back
+from one has been improved, hopefully making it better able
+to reflect the way real dancers think about this issue.
+
+The level "c4x" has been added, and the interpretation of level "c3x"
+has been changed.  These levels are for calls that might not be considered
+really legitimate, but that are nevertheless used.  In the case of
+c3x, these calls are not on the official list.  In the case
+of c4x, these calls don't appear to be commonly used, according to
+informal lists.
+
+It is generally NOT NECESSARY to run the program at either of these
+levels.  When you run at c3, c3x calls may be used.
+When you run at c4, c4x calls may be used.  Whenever such a call is
+used, a warning is printed.  (If you explicitly run the program at
+c3x or c4x, you may use the calls without getting a warning.)
+
+Examples of c3x calls are:
+<pre class="example">     &lt;ATC&gt; nuclear reaction
+     change lanes
+     &lt;anyone&gt; run the wheel
+     snake
+     trixie
+     settle back
+     hang loose
+</pre>
+   <p>
+Examples of c4x calls are:
+<pre class="example">     disperse
+     mayday
+     loop the loop
+     trap it
+</pre>
+   <p>
+The above lists are intended to be illustrative, not exhaustive.
+
+
+<!-- ************ -->
+<a name="31.83"></a>
+<a name="g_t31_002e83"></a>
+
+<h3 class="unnumberedsec">Version 31.83 changes</h3>
+
+<p>
+A number of questionable or controversial calls now print warnings
+when they are used.  For example, &lsquo;<samp><span class="samp">explode the line</span></samp>&rsquo; from a
+2-faced line is marked as a violation of the definition of the call.
+
+New concepts:
+
+<pre class="example">     as couples in a 1/4 tag
+     as couples in a 3/4 tag
+     as couples in a 1/4 line
+     as couples in a 3/4 line
+</pre>
+   <p>
+A number of minor bugs and inconveniences were fixed.
+
+
+<!-- ************ -->
+<a name="31.82"></a>
+<a name="g_t31_002e82"></a>
+
+<h3 class="unnumberedsec">Version 31.82 changes</h3>
+
+<p>
+There is added detail in the manual describing subtleties of &lsquo;<samp><span class="samp">&lt;anyone&gt; start</span></samp>&rsquo;
+and &lsquo;<samp><span class="samp">initially &lt;anyone&gt;</span></samp>&rsquo;.  Please see the section &ldquo;Anyone Start&rdquo;, at
+approximately page 90.
+
+
+A number of minor improvements were made in various calls, such as:
+<pre class="example">        Load the Boat (can be done from inverted lines)
+        Rip the Line (allow T-boned centers)
+        [Cross] Pair the Line (allow T-boned centers)
+        Explode and Reverse Explode (follow Callerlab definitions better)
+</pre>
+   <p>
+
+The behavior of the "cross concentric" concept has been modified slightly
+to bring it into conformance with modern usage.  When a cross concentric
+call takes a 1x4 to a 2x2 (e.g. recycle), the original center 1x4 will elongate
+their final 2x2 on the outside perpendicular to *THEIR OWN* original 1x4 axis,
+not the elongation of the entire setup.  The difference arises when the setup
+is a wave between two miniwaves (e.g. centers lockit from a tidal wave).
+A cross concentric recycle will have the original centers elongate perpendicular
+to their original center wave.  The resulting setup will be a "split square thru"
+type of setup.  See the excellent article on this topic in the April 1996 issue
+of the Zip Coder magazine.
+
+Some people do not agree with this.  In fact, it is contrary to an example
+diagram in the Callerlab C2 definitions, though the text of those definitions
+is not clear as to whether elongation is being measured relative to the whole
+setup or just the centers or ends.
+
+When this different behavior occurs, the program will print a warning:
+
+<pre class="example">        "New ends should opt for setup perpendicular to their original (center)
+        line.  Beware:  This may be controversial."
+</pre>
+   <p>
+Proceed with caution in this area.  If you do not agree with this, do not use it.
+If you require the old behavior, enter a "stable concentric quarter right" after
+the cross concentric call to move the outsides to the other position.
+
+<!-- ************ -->
+<a name="31.81"></a>
+<a name="g_t31_002e81"></a>
+
+<h3 class="unnumberedsec">Version 31.81 changes</h3>
+
+<p>
+IMPORTANT NOTICE   IMPORTANT NOTICE   IMPORTANT NOTICE
+
+The word "&lt;concept&gt;" has been removed from the names of the two concepts:
+<pre class="example">        do the &lt;Nth&gt; part                <span class="roman">and</span>
+        &lt;anyone&gt; work
+</pre>
+   <p>You just type them that way, as in:
+<pre class="example">        centers work tandem acey deucey     <span class="roman">or</span>
+        do the 2nd part tandem remake
+</pre>
+   <p>They will be printed in the transcript the same as before:
+<pre class="example">        centers work tandem, acey deucey    <span class="roman">or</span>
+        do the 2nd part tandem, remake
+</pre>
+   <p>The difference is that you NEVER type the word "&lt;concept&gt;".
+
+
+New designators:
+<pre class="example">        lead ends
+        lead centers
+        trailing ends
+        trailing centers
+</pre>
+   <p>These can be used, for example, to designate people for calls like "ripple".
+
+The program is much better at handling various types of perpendicular 1x2
+setups of the sort that arise in fractional exchange the diamonds or
+fractional ripples.  For example, it can do "&lt;so-and-so&gt; ripple 2-1/2"
+from a parallelogram.
+
+<!-- ************ -->
+<a name="31.80"></a>
+<a name="g_t31_002e80"></a>
+
+<h3 class="unnumberedsec">Version 31.80 changes</h3>
+
+<p>
+The handling of Quarter the Deucey, Spin Chain the Star, and variants thereof
+has been changed.  After the first part, the end looking out has only one
+remaining part, which is a circulate to the other end of the wave.  This
+person formerly did two parts &ndash; a half circulate as if in a Relay the Top,
+and then the other half of the circulate.  This makes a difference if
+"Finally Stable" is used.  The correct ending position for "Finally Stable
+Quarter the Deucey" has both ends facing out, as if in lines.  We thank
+Dave Hodson and Leon Eskenazi for pointing out this problem.
+
+
+<!-- ************ -->
+<a name="31.78"></a>
+<a name="g_t31_002e78"></a>
+
+<h3 class="unnumberedsec">Version 31.78 changes</h3>
+
+<p>
+Various problems in the parser changes of version 31.77 were fixed.
+
+The bug arising from the line "sequence &lt;filename&gt;" in the "options" section
+of the initialization file was fixed.
+
+A number of improvements have been made in "ladies chain" types
+of calls.  All 4 ladies chain N/4 (from a squared set) has been added,
+along with head/side ladies chain to the right and head/side ladies chain 3/4.
+See the section &ldquo;Up to the Middle&rdquo; in the manual.
+
+The call "&lt;ANYONE&gt; cloverleaf while the others &lt;ANYTHING&gt;" has been added, and
+is at Mainstream.  It attempts to capture some of the common uses of this figure.
+It is in many cases identical to the A1 call "clover and &lt;ANYTHING&gt;".
+
+The calls "and 1/4 more" and "and 1/2 more" were moved to Mainstream to capture
+such things as the "courtesy turn full around" usage.
+
+
+<!-- ************ -->
+<a name="31.77"></a>
+<a name="g_t31_002e77"></a>
+
+<h3 class="unnumberedsec">Version 31.77 changes</h3>
+
+<p>
+There is a *MAJOR* improvement in the parser.  (That's the part of the
+program that analyzes the line that you type and figures out the logical
+structure of what you are trying to say.)  All the calls that have "&lt;ANYTHING&gt;"
+in them, like "clover and &lt;ANYTHING&gt;", the ones that print out with brackets
+around the "&lt;ANYTHING&gt;" calls, can now be typed in directly.  You just type
+&lsquo;<samp><span class="samp">clover and [swap around]</span></samp>&rsquo; or &lsquo;<samp><span class="samp">[follow your neighbor] and spread</span></samp>&rsquo; or
+&lsquo;<samp><span class="samp">catch [2/3 recycle] 3</span></samp>&rsquo; or &lsquo;<samp><span class="samp">[shakedown] and roll</span></samp>&rsquo; or
+&lsquo;<samp><span class="samp">clover and [3/4 stable left catch [[reflected flip your neighbor] and spread] 3]</span></samp>&rsquo;
+or whatever you have in mind.  (Good luck calling that last one!)
+
+THE BRACKETS ARE NECESSARY!!!  Without them, it would be impossible
+to distinguish between
+<pre class="example">              clover and [[swap around] and roll]
+     <span class="roman">and</span>
+              [clover and [swap around]] and roll
+</pre>
+   <p>
+The calls like "trade motivate" (a modified version of the circulate
+for calls that start with a circulate) have had their name changed in the
+menus.  They are now "&lt;ANYCIRC&gt; motivate".  There are also calls
+"&lt;ANYTHING&gt; motivate" (along with their more mundane friends like
+"clover and &lt;ANYTHING&gt;" and "&lt;ANYTHING&gt; and spread".  The former calls
+are entered, as before, without brackets:  Just type &lsquo;<samp><span class="samp">in roll perk up</span></samp>&rsquo;
+or whatever.  The latter are entered with brackets.  Type &lsquo;<samp><span class="samp">[2/3 recycle]
+motivate</span></samp>&rsquo; or &lsquo;<samp><span class="samp">clover and [swap around]</span></samp>&rsquo; or whatever.  Because both types
+of calls can be typed directly, there is hardly ever any need to type words
+like "&lt;ANYTHING&gt;" or "&lt;ANYCIRC&gt;".  However, we thought you'd like to know
+that we have changed the names to avoid any ambiguity.
+
+<!-- ************ -->
+<a name="31.76"></a>
+<a name="g_t31_002e76"></a>
+
+<h3 class="unnumberedsec">Version 31.76 changes</h3>
+
+<p>
+The "straight" and "twisted" concepts are implemented.  Of course,
+"straight" things have existed on a case-by-case basis for some time,
+but now you can say, for example, "straight yoyo crossfire" instead of
+"yoyo straight fire" if you wish.
+
+<!-- ************ -->
+<a name="31.75"></a>
+<a name="g_t31_002e75"></a>
+
+<h3 class="unnumberedsec">Version 31.75 changes</h3>
+
+<p>
+The program has a significantly improved notion of how to do
+the call &lsquo;<samp><span class="samp">squeeze</span></samp>&rsquo;.
+
+<!-- ************ -->
+<a name="31.73"></a>
+<a name="g_t31_002e73"></a>
+
+<h3 class="unnumberedsec">Version 31.73 changes</h3>
+
+<p>
+The program's ability to handle calls in alamo rings is somewhat
+improved.  See the discussion of the call <code>adjust alamo to other pairing</code>
+under &ldquo;Call Notes&rdquo; in the manual.
+
+The concept formerly called &lsquo;<samp><span class="samp">diagonal</span></samp>&rsquo; has been changed
+to &lsquo;<samp><span class="samp">diagonal box</span></samp>&rsquo; in accordance with current usage.
+
+The call &lsquo;<samp><span class="samp">... and spread</span></samp>&rsquo; is obsolete.  Just use &lsquo;<samp><span class="samp">spread</span></samp>&rsquo;,
+for both the <i>follow your neighbor</i> type and the <i>heads star thru</i>
+type.  There are also calls &lsquo;<samp><span class="samp">&lt;anything&gt; and spread</span></samp>&rsquo; and
+&lsquo;<samp><span class="samp">&lt;anything&gt; and the &lt;anyone&gt; spread</span></samp>&rsquo;.  Use the latter to have specified
+adjacent people spread, after, for example, a <i>motivate</i>.
+
+<!-- ************ -->
+<a name="31.72"></a>
+<a name="g_t31_002e72"></a>
+
+<h3 class="unnumberedsec">Version 31.72 changes</h3>
+
+<p>
+*********************************************************
+
+IMPORTANT NOTICE   IMPORTANT NOTICE   IMPORTANT NOTICE
+
+Version 31.72 behaves differently from previous versions.  If an error
+occurs on a call/concept combination (for example, you type <code>triple boxes
+switch the wave</code>), the concept and call will both be discarded.  Previously,
+the concept (<code>triple boxes</code>) remained in place.  You would have had to type
+<code>undo</code> if you wanted to get rid of the concept.
+
+The old behavior was misguided and horrible.  If you are accustomed to
+typing <code>undo</code> after an error involving a concept, you may find the
+change disconcerting, since <code>undo</code> will now delete the entire previous
+line.  You should either get accustomed to the new behavior as soon as
+possible, or follow the directions below for making the program use
+the old behavior.  This involves either typing the command
+<code>toggle retain after error</code> when the program starts, or putting
+the line <code>retain_after_error</code> in the <code>[Options]</code>
+section of your <samp><span class="file">sd.ini</span></samp> file.
+
+*********************************************************
+
+The operation of ignoring blanks (previously set with the
+<code>ignoreblanks</code> line in the <samp><span class="file">sd.ini</span></samp> file or in the command line)
+is now controlled with a <code>toggle</code> command.  The command is
+
+<pre class="example">     toggle ignoreblanks
+</pre>
+   <p>
+It is normally off.  It can still be turned on automatically
+at program startup, as before, through the <samp><span class="file">sd.ini</span></samp> file or the
+command line.  See the reference manual for further details.
+
+The operation of discarding or retaining entered concepts after
+an error occurs (previously set with the <code>discard_after_error</code>
+line in the <samp><span class="file">sd.ini</span></samp> file or in the command line) is now
+controlled with a <code>toggle</code> command.  The command is
+
+<pre class="example">     toggle retain after error
+</pre>
+   <p>
+The name of this has been changed from <code>discard</code> to <code>retain</code>.
+It is still normally off, but that means that the program normally
+discards, rather than retaining.  Hence, the default behavior has
+changed.  In the absence of any special action, the program will
+DISCARD entered concepts.  Previously, it retained them.  To get the
+old behavior, that is, to retain entered concepts, you must use the
+<code>toggle retain after error</code> command.  It can also be turned on
+automatically at program startup, through the <samp><span class="file">sd.ini</span></samp> file or the
+command line.  The line in the <code>[options]</code> section of
+<samp><span class="file">sd.ini</span></samp> file to do this is
+<code>retain_after_error</code>.  The command line switch is <code>-retain_after_error</code>.
+The old command <code>discard_after_error</code> are maintained for compatibility,
+but they have no effect.  See the reference manual for further details.
+
+
+</body></html>
+

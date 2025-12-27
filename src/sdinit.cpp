@@ -2210,6 +2210,12 @@ bool open_session(int argc, char **argv)
                   if (sscanf(args[argno+1], "%d", &ui_options.resolve_test_random_seed) != 1)
                      gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
                }
+
+               if (argno+2 < nargs) {
+                  argno++;
+                  if (sscanf(args[argno+1], "%d", &ui_options.resolve_test_attempts_per_print) != 1)
+                     gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
+               }
             }
          }
          else if (strcmp(&args[argno][1], "print_length") == 0) {

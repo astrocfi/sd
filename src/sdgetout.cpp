@@ -1202,14 +1202,23 @@ static bool inner_search(command_kind goal,
       // will signal and go to cant_consider_this_call.
       // This may, of course, add more concepts.
 
-
-      if (ui_options.resolve_test_minutes > 0 && (++resolve_test_count & 0x3FFFF) == 0) {
+      /*
+      if (ui_options.resolve_test_minutes > 0 &&
+          ui_options.resolve_test_attempts_per_print != 0 &&
+          (++resolve_test_count >= ui_options.resolve_test_attempts_per_print)) {
+      */
+      if (ui_options.resolve_test_minutes > 0 /* && (resolve_test_count++ & 0xF) == 0 */ && 
+          ui_options.resolve_test_attempts_per_print != 0) {
          char tempstuff[200];
 
-         sprintf(tempstuff, "Random number is %d.", random_number);
-         gg77->writestuff(tempstuff);
-         gg77->newline();
+         if ((resolve_test_count & 3) == 0) {
+            //         resolve_test_count = 0;
+            sprintf(tempstuff, "Random number is %d.", random_number);
+            gg77->writestuff(tempstuff);
+            gg77->newline();
+         }
       }
+      resolve_test_count++;
 
       query_for_call();
 
