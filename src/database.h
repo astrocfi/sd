@@ -647,6 +647,7 @@ enum setup_kind {
    slinevbox,
    slineybox,
    slinefbox,
+   sdbltrnglu,
    sdbltrngl4,
    sboxdmd,
    sboxpdmd,

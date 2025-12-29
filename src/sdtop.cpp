@@ -5769,6 +5769,10 @@ bool fix_n_results(
             else
                rotstates &= 0xF00;
          }
+         else if (z[i].kind == sdbltrnglu) {
+               zirot = 0;  // The rotstate_table table won't understand what we are doing.
+               rotstates &= 0x033;
+         }
          else
             rotstates &= 0x033;
 

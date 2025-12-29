@@ -288,18 +288,19 @@ NNNN are the *new* version numbers to be checked into git.
 
 GRABBING THE FILES TO BE CHECKED IN
 
-Create, if necessary, temporary garbage directories wba\ssss, wba\dddd, and wba\rrrr.
-Connect to ssss, clear it, and
-unzip ..\sdfullarchive\v<NNNN>\sd_v<NNNN>.zip
-Connect to dddd, clear it, and
-unzip ..\sdfullarchive\v<NNNN>\doc_v<NNNN>.zip
-connect to rrrr, clear it, and
-unzip ..\sdfullarchive\v<NNNN>\r_v<NNNN>.zip
+ALL   Because of a bug in windows, wiping out a subdirectory is best done
+ALL   with the explorer, not the shell.
+
+ALL   Create, if necessary, temporary garbage directories wba\ssss, wba\dddd, and wba\rrrr.
+ALL   Connect to ssss, clear it, and
+ALL   unzip ..\sdfullarchive\v<NNNN>\sd_v<NNNN>.zip
+ALL   Connect to dddd, clear it, and
+ALL   unzip ..\sdfullarchive\v<NNNN>\doc_v<NNNN>.zip
+ALL   connect to rrrr, clear it, and
+ALL   unzip ..\sdfullarchive\v<NNNN>\r_v<NNNN>.zip
 
 SRCDOC   Completely wipe out the contents of wba\sdgitclone, all the way up to,
-SRCDOC   and including, the "sd" subdirectory.  (Because of a bug in windows,
-SRCDOC   wiping out a subdirectory is best done with the explorer, not the
-SRCDOC   shell.
+SRCDOC   and including, the "sd" subdirectory.
 SRCDOC
 SRCDOC   Start Git CMD, and connect to wba\sdgitclone.
 SRCDOC
@@ -314,7 +315,7 @@ SRCDOC   sdgitclone\sd\src\sdmain.cpp
 SRCDOC   sdgitclone\sd\doc\index2.html and
 SRCDOC   They should of course match the desired "old" versions.
 SRCDOC
-SRCDOC   FRESHENING SRC
+SRCDOC   STAGING SRC
 SRCDOC   
 SRCDOC   ssss now needs to be merged onto sdgitclone\sd\src.
 SRCDOC   
@@ -323,6 +324,7 @@ SRCDOC   *~
 SRCDOC   *.lnk
 SRCDOC   *.ico
 SRCDOC   savew10stuff.cmd
+SRCDOC   savew10.cmd
 SRCDOC   
 SRCDOC   Use winmergeu to compare ssss and sdgitclone\sd\src:
 SRCDOC   cd ssss
@@ -332,10 +334,11 @@ SRCDOC   The new stuff, from sdfullarchive, is on the left.
 SRCDOC   The pre-existing stuff, from git, is on the right.
 SRCDOC   Remember:  It's too late to fix stuff now.  We are just checking in existing code.
 SRCDOC   If problems are found, fix them in the next release.
-SRCDOC   This is the important test get the git repository right.  Compose the edit comment for
-SRCDOC   this version.  (The release notes have a short "customer" version of this.)
+SRCDOC   This is the important test get the git repository right.  Compose the draft of the
+SRCDOC   edit message for thie version: wba\sd\editmsg_for_<NNNN>.txt
+SRCDOC   (The release notes have a short "customer" version of this.)
 SRCDOC   
-SRCDOC   FRESHENING DOC
+SRCDOC   STAGING DOC
 SRCDOC   
 SRCDOC   dddd now needs to be merged onto sdgitclone\sd\doc.
 SRCDOC   
@@ -345,7 +348,7 @@ SRCDOC   sdfullarchive and sdgitclone\sd\doc have the same list of files, with o
 SRCDOC   content.  But that can be attended to later.)
 SRCDOC   
 SRCDOC   Delete many .html files from dddd.  (They are derived; actual source files are htmli.)
-SRCDOC   poster*.html.  appnote*.html.  demo.html.
+SRCDOC   poster*.htmli.  allposters.html.  appnote*.html.  demo.html.  opera.html.
 SRCDOC   relnotes*.html
 SRCDOC   faq.html
 SRCDOC   NOT index.html
@@ -360,7 +363,7 @@ SRCDOC   Use winmergeu to compare dddd and sdgitclone\sd\doc:
 SRCDOC   winmergeu . ..\sdgitclone\sd\doc
 SRCDOC   This is the important test get the git repository right.
 SRCDOC   
-SRCDOC   THE ACTUAL UPDATE
+SRCDOC   THE ACTUAL STAGING
 SRCDOC   
 SRCDOC   In dddd:
 SRCDOC   copy * ..\sdgitclone\sd\doc
@@ -373,7 +376,6 @@ SRCDOC
 SRCDOC   When connected to sdgitclone\sd, git status should show changed files
 SRCDOC   in both src and doc.  In red.
 SRCDOC   
-SRCDOC   ?????   YESYESYES
 SRCDOC   While connected to wba\sdgitclone\sd, do
 SRCDOC   git checkout main
 SRCDOC      It should say Already on 'main'
@@ -381,7 +383,6 @@ SRCDOC                    Your branch is up to date with 'origin/main'.
 SRCDOC      If not, someone else has edited.
 SRCDOC   git pull
 SRCDOC      It should say Already up to date.
-SRCDOC   ?????   YESYESYES
 SRCDOC   
 SRCDOC   Do git add .
 SRCDOC   
@@ -394,7 +395,8 @@ SRCDOC
 SRCDOC   git commit
 SRCDOC   
 SRCDOC   This will bring up a "Notepad" editor.  Edit in the summary of changes.
-SRCDOC   Issue "Save" (Ctrl-S) and exit.
+SRCDOC   Issue "File->Save" (Ctrl-S) and "File->Exit".
+SRCDOC   It will announce that it has taken the stuff.
 SRCDOC   
 SRCDOC   git push -u origin sd<NNNN>
 SRCDOC   It will say
@@ -402,14 +404,14 @@ SRCDOC     remote: Create a pull request for 'sd<NNNN>' on GitHub by visiting:
 SRCDOC     remote:      https://github.com/astrocfi/sd/pull/new/sd<NNNN>
 SRCDOC     remote:
 SRCDOC     To https://github.com/astrocfi/sd
-SRCDOC      * [new branch]      sd3977 -> sd3977
-SRCDOC     branch 'sd3977' set up to track 'origin/sd3977'.
+SRCDOC      * [new branch]      sd<NNNN> -> sd<NNNN>
+SRCDOC     branch 'sd<NNNN>' set up to track 'origin/sd<NNNN>'.
 SRCDOC   
-SRCDOC   Do so.
+SRCDOC   Do so, by control-clicking the link.
 SRCDOC   Insert "This is SRC and DOC for version NNNN" into title box.
 SRCDOC   Description box should already be set, from the Notepad edit.  Right?
 SRCDOC   Click the green "create pull request" button.
-SRCDOC   Go to "Pull Requests" at top.  Click "New Pull Request".
+SRCDOC   Go to "Pull Requests" at very top.  Click "New Pull Request".
 SRCDOC   Near top, see "Compare: main".  Click the twistie.  Should see "sd<NNNN>"
 SRCDOC   at bottom of list.  Click it.
 SRCDOC   Green button "View pull request".  Click same.
@@ -425,9 +427,7 @@ REG   Note that this uses sdgitclone, same as the SRC and DOC stuff.  It all
 REG   gets wiped out between tasks.
 REG
 REG   Completely wipe out the contents of wba\sdgitclone, all the way up to,
-REG   and including, the "sd" subdirectory.  (Because of a bug in windows,
-REG   wiping out a subdirectory is best done with the explorer, not the
-REG   shell.
+REG   and including, the "sd" subdirectory.
 REG
 REG   Start Git CMD, and connect to wba\sdgitclone.
 REG
@@ -447,18 +447,15 @@ REG      If not, someone else has edited.
 REG   git pull
 REG      It should say Already up to date.
 REG
-REG   FRESHENING REGRESS
-REG
 REG   rrrr now needs to be merged onto sdgitclone\sd-regression.
 REG
-REG   Use winmergeu to compare rrrr and sdgitclone\sd-regression:
 REG   cd rrrr
 REG   winmergeu . ..\sdgitclone\sd-regression\regression_tests
 REG   This is the final check.
 REG   The new stuff, from sdfullarchive, is on the left.
 REG   The pre-existing stuff, from git, is on the right.
 REG
-REG   THE ACTUAL UPDATE OF REGRESS
+REG   THE ACTUAL STAGING OF REGRESS
 REG
 REG   delete all the files in sdgitclone\sd-regression\regression_tests
 REG   cd rrrr
@@ -467,7 +464,7 @@ REG
 REG   When connected to sdgitclone\sd-regression, git status should show changed files.
 REG   In red.
 REG
-REG   While connected to wba\sdgitclone\sd, do
+REG   While connected to wba\sdgitclone\sd-regression, do
 REG   git checkout main
 REG      It should say Already on 'main'
 REG                    Your branch is up to date with 'origin/main'.
@@ -479,38 +476,26 @@ REG   Do git add .
 REG
 REG   Now git status (in sdgitclone\sd-regression) should now show staged files in green.
 REG
-
-
-NONONOREG   git checkout -b r<oldNNNN>, e.g. r3975    // This is the pre-existing version.
-NONONOREG      It should say Switched to a new branch 'r<oldNNNN>'
-
-
-
-REG   git checkout -b regression_tests<newNNNN>
+REG   git checkout -b regression_tests<NNNN>
 REG        (Actually doesn't matter, but don't reuse these branches.)
-REG   It should say "Switched to new branch 'regression_testsnewNNNN'
+REG   It should say "Switched to new branch 'regression_tests<NNNN>'
 REG   git commit
 REG   This will bring up a "Notepad" editor.  Edit in the summary of changes.
 REG   Issue "Save" (Ctrl-S) and exit.
 REG   It will give a summary of what happened.
 REG
-REG   git checkout main
-REG      It should say Already on 'main'
-REG                    Your branch is up to date with 'origin/main'.
-REG      If not, someone else has edited.
-REG   git pull
-REG      It should say Already up to date.
-REGNONONO   git checkout -b regression_tests<newNNNN>    NOOOO!  That was already done 14 lines above!
-REGNONONO      It should say Switched to a new branch 'regression_tests<newNNNN>'
-REG    git push -u origin regression_tests<newNNNN>
+REG   git push -u origin regression_tests<NNNN>
 REG
 REG   It should say
-REG   remote: Create a pull request for 'regression_tests<newNNNN>' on GitHub by visiting:
-REG   remote:      https://github.com/astrocfi/sd-regression/pull/new/regression_tests<newNNNN>
+REG   remote: Create a pull request for 'regression_tests<NNNN>' on GitHub by visiting:
+REG   remote:      https://github.com/astrocfi/sd-regression/pull/new/regression_tests<NNNN>
 REG   remote:
 REG   To https://github.com/astrocfi/sd-regression
-REG    * [new branch]      regression_tests<newNNNN> -> regression_tests<newNNNN>
-REG   branch 'regression_tests<newNNNN>' set up to track 'origin/regression_tests<newNNNN>'.
+REG    * [new branch]      regression_tests<NNNN> -> regression_tests<NNNN>
+REG   branch 'regression_tests<NNNN>' set up to track 'origin/regression_tests<NNNN>'.
+REG
+REG   Do so, with ctrl-click.
+REG
 REG
 REG   Go to that web site, check the title, click the green
 REG   "create pull request" button in lower right.

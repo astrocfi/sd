@@ -591,6 +591,7 @@ const char *estab[] = {
    "linevbox",
    "lineybox",
    "linefbox",
+   "dbltrgnglu",
    "dbltrgngl4",
    "boxdmd",
    "boxpdmd",
