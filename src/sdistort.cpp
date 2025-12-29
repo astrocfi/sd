@@ -4893,6 +4893,8 @@ extern void common_spot_move(
       if (0x20000000U & map_ptr->indicator) {
          a0.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
          a1.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
+         a0.cmd.cmd_assume.assumption = cr_diamond_like;
+         a1.cmd.cmd_assume.assumption = cr_diamond_like;
       }
 
       a0.update_id_bits();
@@ -4913,6 +4915,12 @@ extern void common_spot_move(
             the_results[0].do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
          else if (the_results[1].kind == s2x4 && the_results[0].kind == s4x4)
             the_results[1].do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
+         else if (the_results[0].kind == s_qtag && the_results[1].kind == sbigdmd &&
+                  the_results[0].rotation != the_results[1].rotation)
+            the_results[0].do_matrix_expansion(CONCPROP__NEEDK_BIGDMD, false);
+         else if (the_results[1].kind == s_qtag && the_results[0].kind == sbigdmd &&
+                  the_results[0].rotation != the_results[1].rotation)
+            the_results[1].do_matrix_expansion(CONCPROP__NEEDK_BIGDMD, false);
 
          if (the_results[0].kind != the_results[1].kind ||
              the_results[0].rotation != the_results[1].rotation)

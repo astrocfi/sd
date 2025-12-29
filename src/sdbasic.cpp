@@ -4431,6 +4431,9 @@ static int divide_the_setup(
    case sdbltrngl4:
       division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0x5);
       goto divide_us_no_recompute;
+   case sdbltrnglu:
+      division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x2);
+      goto divide_us_no_recompute;
    case sdbltrngl:
       division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x5);
       goto divide_us_no_recompute;

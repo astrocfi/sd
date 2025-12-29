@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.79"
+version "39.80"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -20967,9 +20967,13 @@ call "turn away" c4a
             alternate_definition [3x3] c4
    setup 6x2 2x6 rotate
       array [CR8E CR7E CR6E CR3E CR4E CR5E CM6E CM7E CM8E CR11W CR10W CR9W]
+   setup 4x3 3x4 rotate
+      array [0 0 C2E C3E C4E C5E C6E C7E 0 0 0 0]
             alternate_definition [4x4] c4
    setup 8x2 2x8 rotate
       array [CR11E CR10E CR9E CR8E CR4E CR5E CR6E CR7E CM8E CM9E CM10E CM11E CR15W CR14W CR13W CR12W]
+   setup 4x4 4x4
+      array [C4S C5S 0 C7S 0 0 0 0 0 0 C14S 0 C0S C1S C2S C3S]
 
 call "single hang a @eright@f" c4
             left_means_mirror
@@ -20996,12 +21000,16 @@ call "hang a @eright@f" c4a
       array [0 0 CM3S CR2S]
    setup 2x2 1x4
       array [C2S C3S 0 0]
-            alternate_definition [3x3 single] c4
+            alternate_definition [3x3] c4
    setup 6x1 2x3
       array [0 0 0 C5S C4S C3S]
-            alternate_definition [4x4 single] c4
+   setup 4x3 2x6 rotate
+      array [0 0 C5E C6E C7E C4E C8E C3E 0 0 0 0]
+            alternate_definition [4x4] c4
    setup 8x1 2x4
       array [0 0 0 0 C7S C6S C4S C5S]
+   setup 4x4 2x8
+      array [C11S C4S 0 C5S 0 0 0 0 0 0 C7S 0 C8S C9S C10S C6S]
 
 call "_the axle part 1" dontshow tag axle1
             rear_back_from_qtag
@@ -27545,6 +27553,12 @@ call "@0 the difference" c4a
    seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
 call "the difference" c4a
+            visible_fractions
+   setup 1x4 1x4
+      array [0 0 0 0]  // Always illegal; just picking up the "split trade the difference" case.
+            alternate_definition [splittrade] c3
+   setup 2x2 2x2 qualifier live magic_only
+      array [AL1S CR0S CR3N AL2N]
             visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             diamond_is_legal grand_is_inherited
    seq cast_off_n4_with_warn [insert_number 3 inherit_diamond inherit_fractal inherit_gensting]

@@ -2086,6 +2086,8 @@ static const int8_t s1x6correction_b[] =
 static const int8_t sbighcorrection[] =
    {10, -6, 9, -6, 10, -2, 9, -2, 10, 6, 9, 6, 10, 2, 9, 2,
     -10, -6, -9, -6, -10, -2, -9, -2, -10, 6, -9, 6, -10, 2, -9, 2, 127};
+static const int8_t s3x4_correction[] =
+    {0, 5, 2, 4, 9, 5, 6, 4, 0, -5, -2, -4, -9, -5, -6, -4, 127};
 
 static const checkitem checktable[] = {
    {0x00220026, 0x01008004, s_trngl, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2339,6 +2341,7 @@ static const checkitem checktable[] = {
    {0x00910026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00530026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00620044, 0x11800C40, s3x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00970055, 0x01400480, s3x4, 0x200, warn__none, (const coordrec *) 0, s3x4_correction},
    {0x00440062, 0x0C202300, s3x4, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00840022, 0x06001300, s2x5, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00220084, 0x21080840, s2x5, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},

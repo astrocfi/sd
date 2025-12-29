@@ -8219,6 +8219,10 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                   else if (lilresult[0].kind == s_bone6)
                      nextfixp = select::fixer_ptr_table[fixp->next1x2rot];
+                  else if (lilresult[0].kind == sdbltrnglu) {
+                     *this_result = lilresult[0];
+                     goto fooble;
+                  }
                }
                else if (attr::klimit(fixp->ink) == 7) {
                   if (lilresult[0].kind == s1x8)
@@ -8280,7 +8284,9 @@ extern void inner_selective_move(
                   }
                }
                else if (((nextfixp->rot - fixp->rot) & 3) == 2) {
-                  if (nextfixp->rot & 0x80000000) {
+                  if (nextfixp->rot & 0x20000000)
+                     this_result->rotation--;
+                  else if (nextfixp->rot & 0x80000000) {
                      this_result->rotation += 2;
                   }
                }

@@ -101,6 +101,9 @@ public:
                   setup *result) THROW_DECL;
 
 
+   // m_real_saved_people[0] shows a setup with the left or front people in each pair.
+   // m_real_saved_people[1] shows a setup with the right or back people in each pair.
+   // and so on if couples of 3, etc.
    setup m_real_saved_people[8];
    int m_saved_rotations[MAX_PEOPLE];
    setup m_virtual_setup[4];       // If melded, use however many in group.  Otherwise only m_virtual_setup[0].
@@ -284,13 +287,16 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 1, 3, 5,                     -1, 2, -1, 4},                    02020ULL,    0066,         4, 0,  s1x4,  s1x6},
    {{0, 2, 4, 5,                     1, -1, 3, -1},                    00202ULL,    0033,         4, 0,  s1x4,  s1x6},
 
-   // Next six are for couples/tandem triangles in a 2x3 or rigger, doing a triangle circulate or some such.
+   // Next five are for couples/tandem triangles in a 2x3, rigger, or double upright triangles,
+   // doing a triangle circulate or some such.
+   {{0, 4, 2,                        1, 5, 3},                         0222ULL,     0x3F,         3, 2,  s_trngl, sdbltrnglu},
    {{3, 5, 0,                        2, 4, 1},                         0002ULL,     0063,         3, 3,  s_trngl, s2x3},
    {{5, 1, 4,                        0, 2, 3},                         0002ULL,     0036,         3, 1,  s_trngl, s2x3},
-   {{6, 0, 2,                        5, 1, 3},                         0222ULL,     0x6F,         3, 0,  s_trngl, s2x4},
-   {{1, 5, 7,                        2, 4, 6},                         0222ULL,     0xF6,         3, 2,  s_trngl, s2x4},
    {{6, 0, 5,                        7, 1, 4},                            0ULL,     0xFF,         3, 1,  s_trngl, s_rigger},
    {{3, 5, 0,                        2, 4, 1},                            0ULL,     0xFF,         3, 3,  s_trngl, s_rigger},
+   // No longer needed, kept for historical reference.
+   //   {{6, 0, 2,                        5, 1, 3},                         0222ULL,     0x6F,         3, 0,  s_trngl, s2x4},
+   //   {{1, 5, 7,                        2, 4, 6},                         0222ULL,     0xF6,         3, 2,  s_trngl, s2x4},
 
    // Next few are for so-and-so in tandem from a column of 6, making a virtual column of
    // 4.  The first two are the real maps, and the other two take care of the
@@ -997,6 +1003,8 @@ void tandrec::unpack_us(
          bool invert_order =
             (((omask >> 1) + r0 + 1) & 2) && !m_no_unit_symmetry;
 
+         if (map_ptr->outsetup == sdbltrnglu && map_ptr->rot == 2) invert_order = !invert_order;
+
          // Figure out whether we are unpacking a single person or multiple people.
          int howmanytounpack = 1;
 
@@ -1173,7 +1181,7 @@ void tandrec::unpack_us(
 
 // The canonical storage of the real people, while we are doing the virtual
 // call, is as follows:
-//    m_real_saved_people[0] gets person on left (lat=1) near person (lat=0).
+//    m_real_saved_people[0] gets person on left (lat=1) or near person (lat=0).
 //    m_real_saved_people[last] gets person on right (lat=1) or far person (lat=0).
 
 // This returns true if it found people facing the wrong way.  This can happen
