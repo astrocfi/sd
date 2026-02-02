@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <28 Dec 2025 wba>
+@c Time-stamp: <30 Jan 2026 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.80
-@set title2 Database version = 39.80 format = 423
+@set title1 RELEASE NOTES FOR VERSION 39.81
+@set title2 Database version = 39.81 format = 427
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.81::
 * 39.80::
 * 39.79::
 * 39.78::
@@ -180,7 +181,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.80, Top, (dir)
+@node Intro, 39.81, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -188,14 +189,50 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2025 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2026 William B. Ackerman
 @sp 3
 @menu
-* 39.80::               Changes in the current version
+* 39.81::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.80, 39.79, Intro, Top
+@node 39.81, 39.80, Intro, Top
+@unnumberedsec Version 39.81 changes
+
+Added levels @strong{mainstream26} and @strong{plus26} in accordance
+with recent Callerlab directives.  These new levels will go into
+effect (as the new @strong{mainstream} and @strong{plus} levels) on
+September 1, 2026.  See @uref{faq.html} for details.
+@sp 1
+Better handling of @strong{circle to a wave}.
+@sp 1
+Better handling of @strong{melded}, expecially with @strong{explode}.
+@sp 1
+Improve @strong{scoot the tall 6}.
+@sp 1
+Improved @strong{common spot} stuff, including @strong{common spot 6x2 acey deucey}.
+@sp 1
+Fix @strong{rectify counterpoint}.
+@sp 1
+Improve @strong{veering} and @strong{veer and turn}.  Be aware that
+there is no agreed veering direction after @strong{right and left thru}.
+@sp 1
+@strong{dream} and @strong{nightmare} are illegal with a left hand in the center.
+@sp 1
+Improve @strong{wheel and} with @strong{single} and @strong{3x1/1x3}.
+@sp 1
+Improve @strong{connect the diamond}.
+@sp 1
+Add missing handling of @strong{fractal/generous/stingy} for a number of calls.
+@sp 1
+Improve @strong{scoot chain thru}.
+@sp 1
+Improve @strong{scoot back} in triangles.
+@sp 1
+The call @strong{eight chain thru} has been added.  It's just an @strong{eight chain 8}.
+
+@c ************
+@node 39.80, 39.79, 39.81, Top
 @unnumberedsec Version 39.80 changes
 
 It can handle unsymmetrical parallel triangles.
@@ -204,7 +241,7 @@ It can handle unsymmetrical parallel triangles.
 @sp 1
 @strong{3x3 and 4x4 hang a right/left}.
 @sp 1
-It can handle @strong{split trade the difference'' in which @strong{split trade} is given as a separate modifier.
+It can handle @strong{split trade the difference} in which @strong{split trade} is given as a separate modifier.
 @sp 1
 Improvement to @strong{common spot 6x2 acey deucey}; more work needed.
 @sp 1

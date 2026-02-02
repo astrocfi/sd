@@ -363,7 +363,7 @@ bool iofull::init_step(init_callback_state s, int n)
       // a command line.  In that case, we need to query the user for the
       // level.
 
-      calling_level = l_mainstream;   // Default in case we fail.
+      calling_level = l_xyz;   // Default in case we fail.
       put_line("Enter the level: ");
 
       get_string(line, MAX_FILENAME_LENGTH);

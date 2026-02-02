@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 423
+#define DATABASE_FORMAT_VERSION 427
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -263,6 +263,7 @@ enum base_call_index {
    base_call_extend_n,
    base_call_inrollcirc,
    base_call_outrollcirc,
+   base_call_withflow,
    base_call_uturnback,
    base_call_anyoneuturnback,
    num_base_call_indices    // Not an actual enumeration item.
@@ -505,14 +506,16 @@ enum {
 
 
 // BEWARE!!  This list must track the table "leveltab" in mkcalls.cpp .
-// BEWARE!!  This list must track the table "getout_strings" in sdtables.cpp .
-// BEWARE!!  This list must track the table "old_filename_strings" in sdtables.cpp .
-// BEWARE!!  This list must track the table "filename_strings" in sdtables.cpp .
+// BEWARE!!  This list must track the table "getout_strings" in sdtop.cpp .
+// BEWARE!!  This list must track the table "old_filename_strings" in sdutil.cpp .
+// BEWARE!!  This list must track the table "filename_strings" in sdutil.cpp .
 // BEWARE!!  This list must track the table "level_threshholds_for_pick" in sdtop.cpp .
 
 enum dance_level {
+   l_xyz,    // Publicly called "Mainstream2026".
    l_mainstream,
    l_plus,
+   l_pqr,    // Publicly called "Plus2026".
    l_a1,
    l_a2,
    l_c1,
@@ -1127,6 +1130,7 @@ enum call_restriction {
    cr_people_12_opp_real,  // Qualifier only.
    cr_people_34_opp_real,  // Qualifier only.
    cr_consistent_roll,     // Qualifier only.
+   cr_slide_seems_good,
    cr_ctrs_sel,
    cr_ends_sel,
    cr_all_sel,
@@ -1152,6 +1156,7 @@ enum call_restriction {
    cr_ends_didnt_move,
    cr_facing_someone,
    cr_levelplus,
+   cr_levelpqr,
    cr_levela1,
    cr_levela2,
    cr_levelc1,
@@ -1258,6 +1263,7 @@ enum calldef_schema {
    schema_concentric_4_2_prefer_1x4,
    schema_cross_concentric_4_2,
    schema_concentric_4_2_or_normal,
+   schema_concentric_6_2_or_normal,
    schema_concentric_or_2_6,
    schema_concentric_with_number,
    schema_concentric_8_4,        // Not for public use!

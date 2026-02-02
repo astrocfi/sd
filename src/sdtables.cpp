@@ -5721,6 +5721,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_hrglass,     s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 3, 4, 7}},
    {s_dhrglass,    s2x4, 0x21,  0x7E, 0x0E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, -1, -1, -1, -1, -1, 5},            {0}},
    {s_dhrglass,    s2x4, 0x12,  0xE7, 0x0E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, 1, 4, -1, -1, -1},            {0}},
+   {s_bone6,       s2x3, 033,   022,  0x0E, 0x0, schema_concentric,     s1x2,        s2x2,     warn__none, 0, 0, {5, 2},                     {0, 2, 3, 5}},
    {s_bone6,   s_galaxy, 0,     0xBB, 0x0E, 0x0, schema_concentric,     s_bone6,     s1x2,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},         {2, 6}},
    {s_bone6,   s_galaxy, 0,     0xEE, 0x0D, 0x0, schema_concentric,     s_bone6,     s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 4}},
    {s_hrglass, s_galaxy, 0x44,  0xBB, 0x0D, 0x0, schema_concentric,     s_bone6,     s1x2,     warn__none, 1, 1, {1, 4, 7, 5, 0, 3},         {2, 6}},
@@ -11029,6 +11030,8 @@ const schema_attr schema_attrs[] = {
     schema_concentric_4_2},              // schema_cross_concentric_4_2
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_4_2_or_normal
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
+    schema_nothing},                     // schema_concentric_6_2_or_normal
    {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_or_2_6
    {0 | SCA_REMOVE_VERIFY,

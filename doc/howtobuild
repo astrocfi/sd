@@ -134,11 +134,11 @@ Go to the sddoc directory and do:
 10 Dec 23  -  12 Jan 24  #74  // rectify clear the centers for a [trade]
 12 Jan 24  -  26 May 24  #75  // 1/8 star turns in spin chain the gears
 26 May 24  -  13 Aug 24  #76  // finally tandem paranoid swing thru
-                         #77  // reverse order paranoid swing the fractions
+30 Jan 26  -             #77  // reverse order paranoid swing the fractions
 13 Aug 24  -   4 Nov 24  #78  // middle 6/7 of cast off 7/8
  4 Nov 24  -  25 Apr 25  #80  // tandem triangle reshape
 25 Apr 25  -  23 Jul 25  #79  // crazy phantom diamonds 3x2 AD
-23 Jul 25  -             #64  // hairy [boys trade] and circle 1/2
+23 Jul 25  -  30 Jan 26  #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption
                          #68  // echo split grand chain 8
@@ -310,7 +310,7 @@ SRCDOC
 SRCDOC   wba\sdgitclone\sd should now exist, containing subdirectories src and doc,
 SRCDOC   plus a few supervisory things.
 SRCDOC
-SRCDOC   Find out versions of src and doc are alread in git, by examining
+SRCDOC   Find out versions of src and doc are already in git, by examining
 SRCDOC   sdgitclone\sd\src\sdmain.cpp
 SRCDOC   sdgitclone\sd\doc\index2.html and
 SRCDOC   They should of course match the desired "old" versions.
@@ -324,7 +324,7 @@ SRCDOC   *~
 SRCDOC   *.lnk
 SRCDOC   *.ico
 SRCDOC   savew10stuff.cmd
-SRCDOC   savew10.cmd
+SRCDOC   save10.cmd
 SRCDOC   
 SRCDOC   Use winmergeu to compare ssss and sdgitclone\sd\src:
 SRCDOC   cd ssss
@@ -347,15 +347,9 @@ SRCDOC   (This state of affairs should probably be fixed at some point, so that
 SRCDOC   sdfullarchive and sdgitclone\sd\doc have the same list of files, with only different
 SRCDOC   content.  But that can be attended to later.)
 SRCDOC   
-SRCDOC   Delete many .html files from dddd.  (They are derived; actual source files are htmli.)
-SRCDOC   poster*.htmli.  allposters.html.  appnote*.html.  demo.html.  opera.html.
-SRCDOC   relnotes*.html
-SRCDOC   faq.html
-SRCDOC   NOT index.html
-SRCDOC   *.exe
-SRCDOC   sample.html
-SRCDOC   sd_doc.html
-SRCDOC   sessions.html
+SRCDOC   Delete many .html files from dddd:
+SRCDOC   While in dddd, do cleardddd.  It's a script that clean it up.
+SRCDOC   (These are derived; actual source files are htmli.)
 SRCDOC   
 SRCDOC   dddd and sdgitclone\sd\doc should have the same list of files,
 SRCDOC   differing only in content.  (Well, poster files may have been created.)

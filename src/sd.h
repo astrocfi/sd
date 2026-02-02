@@ -730,8 +730,8 @@ enum {
    // These comprise a 2 bit field for slide info.
    NSLIDE_MASK      = 0x30000000U,  // mask of the field
    NSLIDE_BIT       = 0x10000000U,  // low bit of the field
-   SLIDE_IS_R       = 0x10000000U,
-   SLIDE_IS_L       = 0x20000000U,
+   SLIDE_IS_R       = 0x10000000U,  // "G"
+   SLIDE_IS_L       = 0x20000000U,  // "F"
 
    // These comprise a 3 bit field for roll info.
    // High bit says person moved.
@@ -740,9 +740,9 @@ enum {
    PERSON_MOVED     = 0x08000000U,
    ROLL_DIRMASK     = 0x06000000U,  // the low 2 bits, that control roll direction
    NROLL_BIT        = 0x02000000U,  // low bit of the field
-   ROLL_IS_R        = 0x02000000U,
-   ROLL_IS_L        = 0x04000000U,
-   ROLL_IS_M        = 0x06000000U,
+   ROLL_IS_R        = 0x02000000U,  // "R"
+   ROLL_IS_L        = 0x04000000U,  // "L"
+   ROLL_IS_M        = 0x06000000U,  // "M"
 
    NSLIDE_ROLL_MASK = NSLIDE_MASK | NROLL_MASK,   // Commonly used together.
 
@@ -4612,7 +4612,8 @@ enum {
    CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x08000000U,
    CMD_MISC3__NO_FUDGY_2X3_FIX     = 0x10000000U,
    CMD_MISC3__RECTIFY              = 0x20000000U,
-   CMD_MISC3__REDUCED_BY_TANDEM    = 0x40000000U
+   CMD_MISC3__REDUCED_BY_TANDEM    = 0x40000000U,
+   CMD_MISC3__UNDER_MELDED         = 0x80000000U
 };
 
 enum normalize_action {
@@ -5760,11 +5761,11 @@ public:
 
    // Glorious constructor, takes all sorts of stuff.
    collision_collector(setup *const result, bool mirror,
-                       setup_command *cmd, const calldefn *callspec):
+                       setup_command *cmd, uint32_t callflags1):
       m_result_ptr(result),
       m_allow_collisions(collision_severity_ok),
       m_collision_mask(0),
-      m_callflags1(callspec->callflags1),
+      m_callflags1(callflags1),
       m_assume_ptr(&cmd->cmd_assume),
       m_force_mirror_warn(mirror),
       m_doing_half_override(false),
@@ -5788,7 +5789,7 @@ public:
       int resultplace,
       const setup *sourcepeople, int sourceplace,
       int rot,
-      bool force_moved_bit = false) THROW_DECL;
+      bool stop_on_collision = false) THROW_DECL;
 
    void fix_possible_collision(merge_action_type action = merge_strict_matrix,
                                uint32_t callarray_flags = 0,

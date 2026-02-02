@@ -376,6 +376,8 @@ static collision_map collision_map_table[] = {
     sdmd,    s_1x2dmd,        0, warn__none, 0},
    {3, 0x000000000000000A, 0x0B, 0x01, {0, 1, 3},            {0, 2, 5},             {1, 2, 5},
     sdmd,    s_1x2dmd,        0, warn__none, 0},
+   {6, 0x000000000000030C, 0x71c, 0x410, {2, 3, 4, 8, 9, 10}, {2, 3, 4, 8, 9, 11}, {2, 3, 5, 8, 9, 10},
+    sbigdmd, sbigdmd,        0,  warn__none, 0},   // in "wings" of bigdmd
    // These items handle columns with people wedged everywhere, and hence handle unwraps of facing diamonds etc.
    {4, 0x0000005500000055, 0x55, 0x55, {0, 2, 4, 6},         {12, 14, 2, 11},       {10, 3, 4, 6},
     s2x4,        s4x4,        0, warn__none, 0x40000000},
@@ -657,7 +659,7 @@ uint32_t * collision_collector::install_with_collision(
    int resultplace,
    const setup *sourcepeople, int sourceplace,
    int rot,
-   bool force_moved_bit /* = false */) THROW_DECL
+   bool stop_on_collision /* = false */) THROW_DECL
 {
    if (resultplace < 0) fail("This would go into an excessively large matrix.");
    m_result_mask |= 1<<resultplace;
@@ -666,6 +668,8 @@ uint32_t * collision_collector::install_with_collision(
    if (m_result_ptr->people[resultplace].id1) {
       // We have a collision.
       // Prepare the error message, in case it is needed.
+      if (stop_on_collision) return (uint32_t *) 0;
+
       collision_person1 = m_result_ptr->people[resultplace].id1;
       collision_person2 = sourcepeople->people[sourceplace].id1;
       error_message1[0] = '\0';
@@ -6023,10 +6027,10 @@ static uint32_t do_actual_array_call(
       // the stuff for handling the nuances of the call definition and the
       // assumption.
 
-      collision_collector CC(result, mirror, &ss->cmd, callspec);
+      collision_collector CC(result, mirror, &ss->cmd, callspec->callflags1);
       setup secondresult = *result;    // Just clone the main result to get a few things.
       secondresult.clear_people();     // Just making sure.
-      collision_collector secondCC(&secondresult, mirror, &ss->cmd, callspec);
+      collision_collector secondCC(&secondresult, mirror, &ss->cmd, callspec->callflags1);
 
       for (real_index=0; real_index<num; real_index++) {
          personrec newperson = newpersonlist.people[real_index];

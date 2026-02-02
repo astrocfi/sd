@@ -2450,6 +2450,7 @@ extern void tandem_couples_move(
          for (int j=0 ; j<=attr::klimit(incoming_map->insetup) ; j++) {
             setup sss = tandstuff.m_virtual_setup[k];
             sss.clear_people();
+            sss.cmd.cmd_misc3_flags |= CMD_MISC3__UNDER_MELDED;
             if (copy_person(&sss, j, &tandstuff.m_virtual_setup[k], j)) {
                if ((++tttcount) >= 8) fail("Sorry, too many tandem or as couples people.");
                impose_assumption_and_move(&sss, &ttt[tttcount], true);

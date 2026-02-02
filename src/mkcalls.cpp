@@ -230,10 +230,14 @@ struct tagtabitem {
 };
 
 
-// This table is keyed to "level".
+// This table is keyed to "dance_level".
+// They are the level strings that can appear in the database.
+// The reason for the crazy names is to make it easy to search for things.
 const char *leveltab[] = {
+   "xyz",
    "mainstream",
    "plus",
+   "pqr",
    "a1",
    "a2",
    "c1",
@@ -735,6 +739,7 @@ const char *schematab[] = {
    "conc4_2_prefer_1x4",
    "crossconc4_2",
    "conc4_2_or_normal",
+   "conc6_2_or_normal",
    "conc_or_2_6",
    "conc_with_number",
    "???",
@@ -940,6 +945,7 @@ const char *qualtab[] = {
    "people_12_opp_real",
    "people_34_opp_real",
    "roll_is_consistent",
+   "slide_seems_good",
    "centers_sel",
    "ends_sel",
    "all_sel",
@@ -965,6 +971,7 @@ const char *qualtab[] = {
    "ends_didnt_move",
    "facing_someone",
    "levelplus",
+   "levelpqr",
    "levela1",
    "levela2",
    "levelc1",
@@ -1753,6 +1760,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "extend_n"},
    {0, "inrollcirc"},
    {0, "outrollcirc"},
+   {0, "withflow"},
    {0, "uturnback"},
    {0, "anyoneuturnback"},
 };

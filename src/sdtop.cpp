@@ -202,8 +202,10 @@ int written_history_nopic;
 //
 // BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
 dance_level level_threshholds_for_pick[] = {
+   l_xyz,
    l_mainstream,
    l_plus,
+   l_pqr,
    l_a1,
    l_a1,      // If a2 is given, an a1 call is OK.
    l_c1,
@@ -219,8 +221,10 @@ dance_level level_threshholds_for_pick[] = {
 
 // BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
 Cstring getout_strings[] = {
+   "Mainstream 2026",
    "Mainstream",
    "Plus",
+   "Plus 2026",
    "A1",
    "A2",
    "C1",
@@ -2570,6 +2574,9 @@ restriction_test_result verify_restriction(
    case cr_levelplus:
       if (calling_level < l_plus) return restriction_bad_level;
       goto good;
+   case cr_levelpqr:
+      if (calling_level < l_pqr) return restriction_bad_level;
+      goto good;
    case cr_levela1:
       if (calling_level < l_a1) return restriction_bad_level;
       goto good;
@@ -2670,6 +2677,11 @@ restriction_test_result verify_restriction(
          if (t1 && (t1 & 3)!=qa3) qa0 &= ~1;
          if (t2 && (t2 & 3)!=qa2) qa0 &= ~1;
          if ((t1|t2) == 0 && tt.assump_live) goto bad;
+         else if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__UNDER_MELDED) != 0 &&
+                  (t1 == 0 || t2 == 0) && tt.assump_live)
+            // If it's under a melded command, demand both points nonzero.
+            // Need this to keep t02t, wd39t, le01t, and le02t happy.
+            goto bad;
       }
 
       if (qa1) {
@@ -2921,7 +2933,7 @@ restriction_test_result verify_restriction(
    case restriction_tester::chk_anti_groups:
       limit = rr->map2[0];
       // Under certain circumstances (dividing a qtag made of different-handedness single qtags)
-      // cr_miniwaves has no handedness.  (Though after division, in the qingle qtags, it will.)
+      // cr_miniwaves has no handedness.  (Though after division, in the single qtags, it will.)
       if (rr->map2[1] != 0) tt.assump_both = 0;
       map1item = rr->map1;
       szlim = rr->size*limit;
@@ -2931,9 +2943,9 @@ restriction_test_result verify_restriction(
 
          for (int jjj=0 ; jjj<rr->size ; jjj++) {
             if ((t = ss->people[map1item[0]].id1) != 0)     { qa0 |= t;   qa1 |= t^2; }
-            else if (local_negate) goto bad;    // All live people were demanded.
+            else if (local_negate || tt.assump_live) goto bad;    // All live people were demanded.
             if ((t = ss->people[map1item[szlim]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
-            else if (local_negate) goto bad;    // All live people were demanded.
+            else if (local_negate || tt.assump_live) goto bad;    // All live people were demanded.
             map1item++;
          }
 
@@ -4822,6 +4834,39 @@ extern callarray *assoc(
             goto good;
          goto bad;
 
+      case cr_slide_seems_good:
+         {
+            if (ss->kind != s2x2) goto bad;
+
+            int left_count = 0;
+            int right_count = 0;
+
+            for (k=0 ; k<4 ; k++) {
+               if (ss->people[k].id1 & SLIDE_IS_L)
+                  left_count++;
+               else if ((ss->people[k].id1 & ROLL_DIRMASK) == ROLL_IS_R)
+                  left_count++;
+               if (ss->people[k].id1 & SLIDE_IS_R)
+                  right_count++;
+               else if ((ss->people[k].id1 & ROLL_DIRMASK) == ROLL_IS_L)
+                  right_count++;
+            }
+
+            // We want at least 3 people to agree on the slide direction.
+            // If we have a quorum, that is.
+            if (tt.assump_both == 2 && (left_count >= 3 || right_count == 0)) {
+               if (right_count != 0)
+                  warn(warn_controversial);
+               goto good;
+            }
+            else if (tt.assump_both == 1 && (right_count >= 3 || left_count == 0)) {
+               if (left_count != 0)
+                  warn(warn_controversial);
+               goto good;
+            }
+            goto bad;
+         }
+
       case cr_ptp_unwrap_sel:
       case cr_nor_unwrap_sel:
       case cr_ends_sel:
@@ -4842,6 +4887,7 @@ extern callarray *assoc(
          goto check_tt;
 
       case cr_levelplus:
+      case cr_levelpqr:
       case cr_levela1:
       case cr_levela2:
       case cr_levelc1:

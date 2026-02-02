@@ -8,6 +8,78 @@
 
 @contents
 
+@unnumberedsec How can I use the new @strong{mainstream} and @strong{plus} lists?
+
+These programs, as per a vote in Callerlab, will go into effect in
+September 2026.  Sd now recognizes, in addition the @strong{mainstream}
+and @strong{plus} programs, the new programs called @strong{mainstream26}
+and @strong{plus26}.  When Sd or Sdtty is started at @strong{mainstream}
+or @strong{plus}, its behavior is the same as before.  When started at
+@strong{mainstream26}, it recognizes the new Callerlab mainstream list.
+That means that it will not allow:
+
+@itemize @bullet{}
+@item
+Circle to a Line
+@item
+Cloverleaf
+@item
+Dixie style to a wave
+@item
+Eight chain <N> or Eight chain thru
+@item
+Pass to the center
+@item
+Shoot the star 
+@item
+Slip the Clutch
+@item
+Spin Chain Thru
+@item
+Allemande thar
+@item
+Turn Thru
+@item
+Walk and dodge
+@end itemize
+
+The above calls were moved down, by Callerlab, to the @strong{basic} program,
+which Sd does not support.  But Sd supports them at mainstream and above.
+
+When started at
+@strong{plus26}, it recognizes the new Callerlab plus list.
+That means that it will recognize all of the above calls dropped from mainstream,
+in addition to these calls added from A1:
+
+@itemize @bullet{}
+@item
+Clover and <anything>
+@item
+Pair off
+@item
+Hinge from a couple (hinge from a miniwave continues to be supported as mainstream)
+@item
+Partner tag
+@item
+Pass the sea
+@item
+(grand) 1/4 thru, (grand) 3/4 thru
+@item
+Scoot and dodge
+@item
+Triple trade
+@end itemize
+
+The above calls will of course still be available at A1 and above.
+
+In Sd, The names of the new lists are @strong{mainstream26} and
+@strong{plus26}.  Anything starting with ``m'' and ending with ``6''
+will be recognized as @strong{mainstream26}, so you can abbreviate it
+to ``m26''.  Anything starting with ``p'' and ending with ``6'' will
+be recognized as @strong{plus26}, so you can abbreviate it to ``p26''.
+Do not place hyphens or blank spaces in the level name.  Doing so
+would make the parsing of session files ambiguous.
+
 @unnumberedsec How does the stuff for calling just to two couples work?
 
 Give @strong{two couples only} as the starting command, instead of the
