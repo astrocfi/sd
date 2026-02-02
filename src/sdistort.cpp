@@ -4915,12 +4915,77 @@ extern void common_spot_move(
             the_results[0].do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
          else if (the_results[1].kind == s2x4 && the_results[0].kind == s4x4)
             the_results[1].do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
-         else if (the_results[0].kind == s_qtag && the_results[1].kind == sbigdmd &&
-                  the_results[0].rotation != the_results[1].rotation)
-            the_results[0].do_matrix_expansion(CONCPROP__NEEDK_BIGDMD, false);
-         else if (the_results[1].kind == s_qtag && the_results[0].kind == sbigdmd &&
-                  the_results[0].rotation != the_results[1].rotation)
-            the_results[1].do_matrix_expansion(CONCPROP__NEEDK_BIGDMD, false);
+
+         // Handle important case of common-point diamonds doing a non-shape-changer
+         // like 6x2 Acey Deucey.  But, at present, the other code is too complicated.
+
+         if (rstuff == 0x804 && ss->kind == sbigdmd) {
+            if (the_results[0].kind == s_qtag && the_results[0].rotation == 1)
+               the_results[0].do_matrix_expansion(CONCPROP__NEEDK_BIGDMD, false);
+            if (the_results[1].kind == s_qtag && the_results[1].rotation == 1)
+               the_results[1].do_matrix_expansion(CONCPROP__NEEDK_BIGDMD, false);
+
+            if (the_results[0].kind == sbigdmd &&
+                the_results[1].kind == sbigdmd &&
+                the_results[0].rotation == the_results[1].rotation) {
+               int t;
+
+               *result = the_results[0];
+               result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
+               reinstate_rotation(ss, result);
+
+               // We create an especially glorious collision collector here, with all
+               // the stuff for handling the nuances of the call definition and the
+               // assumption.
+
+               collision_collector CC(result, false, &ss->cmd, CFLAG1_TAKE_RIGHT_HANDS);
+
+               result->clear_people();
+
+               // Scan setup 0, see if any of its people can be found in setup 1.
+               // If so, delete my copy, that person will be picked up later.
+
+               for (t=0; t<12; t++) {
+                  int hopefully_adjacent_position = t^1;   // Grotesque kludge.
+                  if (the_results[0].people[t].id1) {
+                     if (the_results[1].people[t].id1) {
+                        // Check that they are actually the same person, and facing the same way.
+                        if (((the_results[0].people[t].id1 ^ the_results[1].people[t].id1) |
+                             ((the_results[0].people[t].id2 ^ the_results[1].people[t].id2) &
+                              ~ID2_BITS_NOT_INTRINSIC)) == 0) {
+
+                           // Exact match in same position.  Delete other version.
+                           the_results[1].clear_person(t);
+                        }
+
+                        // Well, check with adjacent position; see if there's a match there.
+                        else if (((the_results[0].people[t].id1 ^ the_results[1].people[hopefully_adjacent_position].id1) |
+                             ((the_results[0].people[t].id2 ^ the_results[1].people[hopefully_adjacent_position].id2) &
+                              ~ID2_BITS_NOT_INTRINSIC)) == 0) {
+                           // Then delete that person.
+                           the_results[1].clear_person(hopefully_adjacent_position);
+                        }
+                        else
+                           fail("This common spot call is very problematical.");
+                     }
+
+                     // Need to check for displaced person. !!!!
+                     // Move to prime (inner) spot!!!!
+
+                     CC.install_with_collision(t, &the_results[0], t, 0);
+                  }
+               }
+
+               // Now do what's left in setup 1.
+               for (t=0; t<12; t++) {
+                  if (the_results[1].people[t].id1)
+                     CC.install_with_collision(t, &the_results[1], t, 0);
+               }
+
+               CC.fix_possible_collision();
+               goto getout;
+            }
+         }
 
          if (the_results[0].kind != the_results[1].kind ||
              the_results[0].rotation != the_results[1].rotation)
@@ -5006,6 +5071,8 @@ extern void common_spot_move(
       else
          saved_error.throw_saved_error();
    }
+
+ getout:
 
    // Turn off any "do your part" warnings that arose during execution
    // of the subject call.  The dancers already know.

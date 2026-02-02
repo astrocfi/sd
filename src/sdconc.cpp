@@ -1894,6 +1894,15 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric;
       break;
+   case schema_concentric_6_2_or_normal:
+      if (ss->kind == s3x4 && (livemask == 06666)) {
+         analyzer_result = schema_concentric_6_2;
+         outers->cmd.cmd_final_flags.set_heritbits(INHERITFLAG_SINGLE);
+         inners[0].cmd.cmd_final_flags.set_heritbits(INHERITFLAGNXNK_3X3);
+      }
+      else
+         analyzer_result = schema_concentric;
+      break;
    case schema_concentric_or_2_6:
       if (ss->kind == s_323)
          analyzer_result = schema_concentric_2_6;
@@ -3633,6 +3642,14 @@ extern void concentric_move(
          // put the "3x3" flag into the 6-person call, whichever call that is,
          // and "single" into the other one.
          if (analyzer == schema_1331_concentric) {
+            if (attr::slimit(begin_ptr) == 5) {
+               begin_ptr->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_NXNMASK);
+               begin_ptr->cmd.cmd_final_flags.set_heritbits(INHERITFLAGNXNK_3X3);
+            }
+            else
+               begin_ptr->cmd.cmd_final_flags.set_heritbits(INHERITFLAG_SINGLE);
+         }
+         else if (analyzer == schema_concentric_6_2_or_normal && analyzer_result == schema_concentric_6_2) {
             if (attr::slimit(begin_ptr) == 5) {
                begin_ptr->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_NXNMASK);
                begin_ptr->cmd.cmd_final_flags.set_heritbits(INHERITFLAGNXNK_3X3);

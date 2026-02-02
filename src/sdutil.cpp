@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2025  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -124,8 +124,10 @@ const Cstring *filename_strings = old_filename_strings; // ******** For now
 
 // BEWARE!!  These lists are keyed to the definition of "dance_level" in database.h
 const Cstring old_filename_strings[] = {
+   ".MS_2026",
    ".MS",
    ".Plus",
+   ".Plus_2026",
    ".A1",
    ".A2",
    ".C1",
@@ -141,8 +143,10 @@ const Cstring old_filename_strings[] = {
    ""};
 
 const Cstring new_filename_strings[] = {
+   "_MS2026.txt",
    "_MS.txt",
    "_Plus.txt",
+   "_Plus2026.txt",
    "_A1.txt",
    "_A2.txt",
    "_C1.txt",
@@ -3066,7 +3070,7 @@ void ui_utils::run_program(iobase & ggg)
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2025 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2026 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

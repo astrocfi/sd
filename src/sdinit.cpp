@@ -103,8 +103,12 @@ extern bool parse_level(Cstring s, Cstring *break_ptr /*= 0*/)
    if (break_ptr) *break_ptr = breakpos;
 
    switch (s[0]) {
-      case 'm': case 'M': calling_level = l_mainstream; return true;
-      case 'p': case 'P': case '+': calling_level = l_plus; return true;
+      case 'm': case 'M':
+         calling_level = (s[len-1] == '6') ? l_xyz : l_mainstream;
+         return true;
+      case 'p': case 'P': case '+':
+         calling_level = (s[len-1] == '6') ? l_pqr : l_plus;
+         return true;
       case 'a': case 'A':
          if (s[1] == '1' && len == 2) calling_level = l_a1;
          else if (s[1] == '2' && len == 2) calling_level = l_a2;
@@ -973,7 +977,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          zz = new calldef_block;
          zz->next = 0;
          zz->modifier_seth = 0ULL;
-         zz->modifier_level = l_mainstream;
+         zz->modifier_level = l_xyz;
          root_to_use->stuff.arr.def_list = zz;
 
          read_array_def_blocks(zz);    // The first group.
@@ -2300,7 +2304,7 @@ bool open_session(int argc, char **argv)
       }
       else if (!parse_level(args[argno])) {
          gg77->iob88.bad_argument("Unknown calling level argument", args[argno],
-            "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, c4, or c4x.");
+            "Known calling levels: m, p, m26, p26, a1, a2, c1, c2, c3a, c3, c3x, c4a, c4, or c4x.");
       }
    }
 

@@ -4229,6 +4229,12 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     and at least one center must be column-like.
    col_ends_looking_in              2x4 columns - the ends are #4
    people_1_and_5_real              1x8 (or any applicable setup) people #1 and #5 are real.
+
+   slide_seems_left        Q        2x2 facing coupls only.  At least one of the couples has
+                                    slide direction to the left for both people, and it is
+                                    not contradicted by both of the other couple.
+   slide_seems_right       Q        Same, sliding right.
+
    centers_sel                      1x4/2x4/qtag/bone - the centers are selected
                                     and the ends are not.
    ends_sel                         1x4/2x4/qtag/bone - the ends are selected
