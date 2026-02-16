@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.81"
+version "39.82"
 
 call "nothing" xyz tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -12593,12 +12593,6 @@ call "eight chain @9, new centers to a wave" mainstream
    seq_alternate eightchain1_centers_to_wave [inherit_left inherit_twisted repeat_nm1 do_half_more]
    seq           eightchain2_centers_to_wave [inherit_left inherit_twisted]
 
-call "eight chain thru" mainstream
-            visible_fractions
-            rear_back_from_r_wave left_means_mirror twisted_is_inherited
-   seq_alternate eightchain1 [inherit_left inherit_twisted]
-   seq eightchain2 [inherit_left inherit_twisted]
-
 call "weave" c1 tag weave
             step_to_nonphantom_box
    split_to_box
@@ -14042,7 +14036,7 @@ call "@D mix" c3a
             left_means_mirror neednumber visible_fractions
             grand_is_inherited bigmatrix_is_inherited yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited
    seq odd_frac_by_right [inherit_left inherit_grand inherit_gensting inherit_fractal]
-   seq ctrrun [force_cross inherit_grand roll_transparent]
+   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand roll_transparent]
    seq maybegrandslip_in_lw [inherit_left inherit_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand @D cross" c4a
@@ -15696,10 +15690,6 @@ call "centers@C run" xyz tag ctrrun
       array [ZM1N CR2S ZM3N AL0S]
    setup 4x1 1x4
       array [ZM1N    0 ZM3N    0]
-   setup qtag qtag
-      array [ZM0N ZM1N ZM3N AL6S ZM4N ZM5N ZM7N CR2S]
-   setup pqtag qtag
-      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
             alternate_definition [cross half] xyz
    setup 1x4 2x2
       predscantdo
@@ -18180,11 +18170,8 @@ call "relay the deucey but @m" c1
    seq finishwithmodbut2nd []
 
 call "_barrel of fun part 1" dontshow tag barrelfirst
-   conc quarterin [] barrelfirste [conc_demand_lines conc_force_lines]
-
-call "_start barrel of fun ends" dontshow tag barrelfirste
-            visible_fractions
-   seq face_in []   // ends bend
+   setup 2x4 2x4 rotate qualifier line_ends_looking_out
+      array [CR7N CR6N AL1S AL0S 0 AL2S CR5N 0]
 
 call "_barrel of fun part 2" dontshow tag barrelsecond
    conc swingthru [] touch_n_4 [insert_number 2]
@@ -24087,7 +24074,8 @@ call "wave the belles" c3
    seq finishwavebel [inherit_single]
 
 call "_spin the pulley but" dontshow tag spinpulleypart1
-            left_means_mirror single_is_inherited fractal_is_inherited gen_sting_is_inherited
+            allow_if_centers_only left_means_mirror
+            single_is_inherited fractal_is_inherited gen_sting_is_inherited
    singleconc_together touch_3_4 [inherit_left inherit_gensting inherit_fractal]
                        nullcall [conc_force_spots]
 
@@ -24205,7 +24193,7 @@ call "wheel and @0" c1
 
 
 // This is sort of a counter rotate and roll, and sort of a couple up.
-// But the actual definition involvescross fold, or circulate and fold.
+// But the actual definition involves cross fold, or circulate and fold.
 // And we need to honor "single", which has no counterpart in the official
 // definition.  So we have to be careful. "Half" means trailers just circulate,
 // while the leads can't do it.

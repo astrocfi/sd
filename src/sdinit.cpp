@@ -1050,24 +1050,20 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    root_to_use->compound_part = (calldefn *) 0;
 
    if (last_datum == 0x3FFF) {
-      calldef_schema call_schema;
-
       calldefn *recursed_call_root = new calldefn;
 
-      read_halfword();       // Get level (not really) and 16 bits of "callflags2" stuff.
-      uint32_t saveflags1overflow = last_datum;
-      read_fullword();       // Get top level flags, first word.
-                             // This is the "callflags1" stuff.
-      uint32_t saveflags1 = last_datum;
+      read_fullword();       // Get level (not really) and 16 bits of "callflags2" stuff.
+      uint64_t flags1word = ((uint64_t) last_datum) << 32;
+      read_fullword();
+      flags1word |= last_datum;
       // The "heritflags" stuff, two full words, right then left.
       heritflags saveflagsherit = read_hugeword();
       read_halfword();       // Get char count (ignore same) and schema.
-      call_schema = (calldef_schema) (last_datum & 0xFF);
+      calldef_schema call_schema = (calldef_schema) (last_datum & 0xFF);
       recursed_call_root->level = 0;
       recursed_call_root->schema = call_schema;
-      recursed_call_root->callflags1 = saveflags1;
-      recursed_call_root->callflagsf = saveflags1overflow << 16;
-      // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
+      recursed_call_root->callflags1 = flags1word;
+      recursed_call_root->callflagsf = 0;
       recursed_call_root->callflagsherit = saveflagsherit;
       read_in_call_definition(recursed_call_root, 0);    // Recurse.
       root_to_use->compound_part = recursed_call_root;
@@ -1715,21 +1711,18 @@ static void build_database_1(abridge_mode_t abridge_mode)
 
       dance_level this_calls_level = (dance_level) (read_8_from_database() & 0xFF);
 
-      read_halfword();       // Get 16 bits of "callflags1"  overflow stuff.
-      uint32_t saveflags1overflow = last_datum;
-
-      // This is the "callflags1" stuff.
       read_fullword();
-      uint32_t saveflags1 = last_datum;
+      uint64_t flags1word = ((uint64_t) last_datum) << 32;
+      read_fullword();
+      flags1word |= last_datum;
 
       // Deal with the special "base_circ_call" / phony "force" info.
       heritflags phonyheritbit = 0ULL;
-      if (saveflags1 & CFLAG1_BASE_CIRC_CALL) {
+      if (flags1word & CFLAG1_BASE_CIRC_CALL) {
          phonyheritbit = read_hugeword();
       }
 
-      // The "heritflags" stuff, 64-bit "hugeword".
-      heritflags saveflagsherit = read_hugeword();
+      heritflags flagshword = read_hugeword();
 
       read_halfword();       // Get char count and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
@@ -1744,6 +1737,9 @@ static void build_database_1(abridge_mode_t abridge_mode)
       call_root = (call_with_name *) ::operator new(sizeof(call_with_name) + char_count - 3);
       call_root->menu_name = (Cstring) 0;
 
+      call_root->the_defn.callflagsherit = flagshword;
+      call_root->the_defn.callflags1 = flags1word;
+
       if (savetag) {
          check_tag(savetag);
          base_calls[savetag] = call_root;
@@ -1751,10 +1747,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
 
       call_root->the_defn.level = (int) this_calls_level;
       call_root->the_defn.schema = call_schema;
-      call_root->the_defn.callflags1 = saveflags1;
-      call_root->the_defn.callflagsf = saveflags1overflow << 16;
-      // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
-      call_root->the_defn.callflagsherit = saveflagsherit;
+      call_root->the_defn.callflagsf = 0;
 
       read_in_call_definition(&call_root->the_defn, char_count);
 

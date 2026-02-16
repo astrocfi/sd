@@ -4316,7 +4316,7 @@ static void do_concept_fan(
 
    callspec = parseptrcopy->call;
 
-   if (!callspec || !(callspec->the_defn.callflagsf & CFLAG2_CAN_BE_FAN))
+   if (!callspec || !(callspec->the_defn.callflags1 & CFLAG1_CAN_BE_FAN))
       fail("Can't do \"fan\" with this call.");
 
    // Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
@@ -5927,7 +5927,7 @@ static void do_concept_move_in_and(
 
    // We need to find out whether the subject call has an implicit "centers" concept.
 
-   uint32_t bogus_topcallflags1 = 0;
+   uint64_t bogus_topcallflags1 = 0;
    parse_block *bogus_parse_block = ss->cmd.parseptr;
    if (check_for_centers_concept(bogus_topcallflags1, bogus_parse_block, &ss->cmd)) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;

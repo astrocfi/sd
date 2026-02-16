@@ -239,7 +239,7 @@ Cstring getout_strings[] = {
    ""};
 
 // *** There are more globals proclaimed at line 164.
-uint32_t the_topcallflags;
+uint64_t the_topcallflags;
 bool there_is_a_call;
 call_with_name **base_calls;        // Gets allocated as array of pointers in sdinit.
 
@@ -344,7 +344,7 @@ Cstring get_concept_name(const concept_descriptor *foo) { return foo->name; }
 Cstring get_concept_menu_name(const concept_descriptor *foo) { return foo->menu_name; }
 concept_kind get_concept_kind(const concept_descriptor *foo) { return foo->kind; }
 const concept_descriptor *access_concept_descriptor_table(int i) { return &concept_descriptor_table[i]; }
-bool get_yield_if_ambiguous_flag(call_with_name *foo) {return (foo->the_defn.callflagsf & CFLAG2_YIELD_IF_AMBIGUOUS) != 0; }
+bool get_yield_if_ambiguous_flag(call_with_name *foo) {return (foo->the_defn.callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) != 0; }
 call_with_name *access_base_calls(int i) { return base_calls[i]; }
 
 const concept_kind constant_with_concept_diagnose = concept_diagnose;
@@ -1106,7 +1106,7 @@ void setup::big_endian_get_directions32(
 
 void setup::touch_or_rear_back(
    bool did_mirror,
-   int callflags1) THROW_DECL
+   uint64_t callflags1) THROW_DECL
 {
    uint32_t directions, livemask;
    const full_expand::thing *tptr;
@@ -3947,7 +3947,7 @@ extern callarray *assoc(
 
          // Either way, demand that it be the correct number.
          int t = (current_options.number_fields & NUMBER_FIELD_MASK);
-         if ((ss->cmd.callspec->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) &&
+         if ((ss->cmd.callspec->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) &&
              current_options.star_turn_option != 0) {
             if (current_options.star_turn_option == -1)
                t = 0;
@@ -6396,7 +6396,7 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
    }
 }
 
-bool check_for_centers_concept(uint32_t & callflags1_to_examine,   // We rewrite this.
+bool check_for_centers_concept(uint64_t & callflags1_to_examine,   // We rewrite this.
                                parse_block * & parse_scan,         // This too.
                                const setup_command *the_cmd) THROW_DECL
 {
@@ -7087,7 +7087,7 @@ bool do_subcall_query(
       // Star turn calls can have funny names like "nobox".
 
       gg77->unparse_call_name(
-         (orig_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) ?
+         (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
 

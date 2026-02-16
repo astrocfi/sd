@@ -1944,14 +1944,14 @@ static void special_triangle(
 
 static void warn_unless_one_person_call(setup *ss, warning_index w)
 {
-   if ((ss->cmd.callspec->the_defn.callflagsf & CFLAG2_ONE_PERSON_CALL) == 0)
+   if ((ss->cmd.callspec->the_defn.callflags1 & CFLAG1_ONE_PERSON_CALL) == 0)
       warn(w);
 }
 
 
 
 static bool handle_3x4_division(
-   setup *ss, uint32_t callflags1, uint32_t callflagsf, uint32_t newtb, uint32_t livemask,
+   setup *ss, uint64_t callflags1, uint32_t newtb, uint32_t livemask,
    uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware, setup *result)
 {
@@ -1976,7 +1976,7 @@ static bool handle_3x4_division(
 
       if ((!(newtb & 001) || assoc(b_2x3, ss, calldeflist)) &&
           (!(newtb & 010) || assoc(b_3x2, ss, calldeflist) ||
-           ((callflagsf & CFLAG2_CAN_DO_IN_Z) &&
+           ((callflags1 & CFLAG1_CAN_DO_IN_Z) &&
             (livemask == 06565 || livemask == 07272) && 
             assoc(b_2x2, ss, calldeflist)))) {
          division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
@@ -2160,7 +2160,7 @@ static bool handle_3x4_division(
 
 
 static bool handle_4x4_division(
-   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   setup *ss, uint64_t callflags1, uint32_t newtb, uint32_t livemask,
    uint32_t & division_code,            // We write over this.
    int & finalrot,                    // We write over this.
    callarray *calldeflist, bool matrix_aware)
@@ -2428,7 +2428,7 @@ static bool handle_4x4_division(
 
 
 static bool handle_4x6_division(
-   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   setup *ss, uint64_t callflags1, uint32_t newtb, uint32_t livemask,
    uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
@@ -2543,7 +2543,7 @@ static bool handle_4x6_division(
 
 
 static bool handle_3x8_division(
-   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   setup *ss, uint64_t callflags1, uint32_t newtb, uint32_t livemask,
    uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
@@ -2591,7 +2591,7 @@ static bool handle_3x8_division(
 
 
 static bool handle_2x12_division(
-   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   setup *ss, uint64_t callflags1, uint32_t newtb, uint32_t livemask,
    uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
@@ -2659,8 +2659,7 @@ static int divide_the_setup(
    callarray *have_1x2, *have_2x1, *have_2x2;
    uint32_t division_code = ~0U;
    uint32_t newtb = *newtb_p;
-   uint32_t callflags1 = ss->cmd.callspec->the_defn.callflags1;
-   uint32_t callflagsf = ss->cmd.callspec->the_defn.callflagsf;
+   uint64_t callflags1 = ss->cmd.callspec->the_defn.callflags1;
    final_and_herit_flags final_concepts = ss->cmd.cmd_final_flags;
    setup_command conc_cmd;
    uint32_t must_do_mystic = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
@@ -2851,7 +2850,7 @@ static int divide_the_setup(
          if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
              (!(newtb & 001) ||
               assoc(b_3x2, ss, calldeflist) ||
-              ((callflagsf & CFLAG2_CAN_DO_IN_Z) && assoc(b_2x2, ss, calldeflist)))) {
+              ((callflags1 & CFLAG1_CAN_DO_IN_Z) && assoc(b_2x2, ss, calldeflist)))) {
             division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
             // See comment above about abomination.
             // If database said to split, don't give warning, unless said "3x3".
@@ -3551,7 +3550,7 @@ static int divide_the_setup(
 
       break;
    case s3x4:
-      if (handle_3x4_division(ss, callflags1, callflagsf, newtb, livemask,
+      if (handle_3x4_division(ss, callflags1, newtb, livemask,
                               division_code, calldeflist, matrix_aware, result))
          goto divide_us_no_recompute;
       return 1;
@@ -3766,7 +3765,7 @@ static int divide_the_setup(
    case s2x3:
       // If the "CAN_DO_IN_Z" flag is on (e.g. peel off), we accept a 2x2 def'n as
       // being as good as a 3x2 def'n.
-      if ((!(newtb & 010)) && (callflagsf & CFLAG2_CAN_DO_IN_Z) && assoc(b_2x2, ss, calldeflist)) {
+      if ((!(newtb & 010)) && (callflags1 & CFLAG1_CAN_DO_IN_Z) && assoc(b_2x2, ss, calldeflist)) {
          if ((livemask & 011) == 0)
             division_code = MAPCODE(s2x2,1,MPKIND__OFFS_R_HALF,1);
          else if ((livemask & 044) == 0)
@@ -4973,9 +4972,9 @@ static uint32_t do_actual_array_call(
       if ((ss->kind == s2x2 || ss->kind == s2x3) &&
           (orig_elongation & 0x3F) != 0 &&
           !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
-         if (callspec->callflagsf & CFLAG2_NO_ELONGATION_ALLOWED)
+         if (callspec->callflags1 & CFLAG1_NO_ELONGATION_ALLOWED)
             fail_no_retry("Call can't be done around the outside of the set.");
-         if (callspec->callflagsf & CFLAG2_WARN_ON_ELONGATION) {
+         if (callspec->callflags1 & CFLAG1_WARN_ON_ELONGATION) {
             if (calling_level >= concentric_level)
                warn(warn__maybe_use_concentric);
             else
@@ -5058,7 +5057,7 @@ static uint32_t do_actual_array_call(
 
                for (arraycallfixer *p = arraycallfixtable ; p->reskind != nothing ; p++) {
                   if (result->kind == p->reskind && Lresult_kind == p->otherkind &&
-                      (!p->onlyifequalize || (callspec->callflagsf & CFLAG2_EQUALIZE))) {
+                      (!p->onlyifequalize || (callspec->callflags1 & CFLAG1_EQUALIZE))) {
                      result->kind = p->finalkind;
                      result->rotation += p->rotfinal;
                      tempkind = result->kind;
@@ -5164,7 +5163,7 @@ static uint32_t do_actual_array_call(
                   // Check whether we have been requested to "equalize",
                   // in which case we can do glorious things like going into
                   // a center diamond.
-                  if ((callspec->callflagsf & CFLAG2_EQUALIZE)) {
+                  if ((callspec->callflags1 & CFLAG1_EQUALIZE)) {
                      result->kind = shypergal;
                      tempkind = shypergal;
                      final_translatec = qhypergalc;
@@ -6171,7 +6170,7 @@ static uint32_t do_actual_array_call(
    //   are adjacent, with roll direction toward each other, but the bit is not on, because
    //   they were not adjacent before the call.
 
-   if (!ss->cmd.callspec || (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_OVERCAST_TRANSPARENT) == 0) {
+   if (!ss->cmd.callspec || (ss->cmd.callspec->the_defn.callflags1 & CFLAG1_OVERCAST_TRANSPARENT) == 0) {
       // Save the original locations.
       // ****** make this a nice routine, and use same at sdmoves/1100.
       // Also, use the full XPID_MASK bits, not just 3 bits.
@@ -6228,7 +6227,7 @@ static uint32_t do_actual_array_call(
                                ((result->people[place].id1 ^ ss->people[f8].id1) & ROLL_DIRMASK) == 0) {
                               // Other person -- same.  Check whether the call prevents this.
                               if (!ss->cmd.callspec ||
-                                  (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_NO_RAISE_OVERCAST) == 0)
+                                  (ss->cmd.callspec->the_defn.callflags1 & CFLAG1_NO_RAISE_OVERCAST) == 0)
                                  warn(warn__overcast);
                            }
                         }
@@ -6703,7 +6702,7 @@ foobar:
                   (coldefinition && (attr::klimit(coldefinition->get_end_setup()) == 3 ||
                                      (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF)));
 
-               if (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_CAN_DO_IN_Z)
+               if (ss->cmd.callspec->the_defn.callflags1 & CFLAG1_CAN_DO_IN_Z)
                    whuzzis2 = true;
 
                if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__ACTUAL_Z_CONCEPT) && whuzzis2) {

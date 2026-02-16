@@ -4226,7 +4226,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    line_ends_looking_out            2x4 ends must be line-like and must be leads.
                                     May be used with tbone or ntbone.
-                                    and at least one center must be column-like.
+                                    and (if tbone) at least one center must be column-like.
    col_ends_looking_in              2x4 columns - the ends are #4
    people_1_and_5_real              1x8 (or any applicable setup) people #1 and #5 are real.
 

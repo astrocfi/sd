@@ -3646,13 +3646,13 @@ void mimic_move(
    // Find out whether this is a call like "counter rotate", which would give deceptive results
    // if we were allowed to do it in smaller setups.  Counter rotate can be done in a 1x2 miniwave,
    // but we don't want to be deceived by that.  Get the "flags2" word of the call definition.
-   uint32_t flags2 = 0;
+   uint64_t flags1 = 0;
 
    if (ss->cmd.callspec)
-      flags2 = ss->cmd.callspec->the_defn.callflagsf;
+      flags1 = ss->cmd.callspec->the_defn.callflags1;
    else if (ss->cmd.parseptr && ss->cmd.parseptr->concept && ss->cmd.parseptr->concept->kind == marker_end_of_list &&
        ss->cmd.parseptr->call)
-      flags2 = ss->cmd.parseptr->call->the_defn.callflagsf;
+      flags1 = ss->cmd.parseptr->call->the_defn.callflags1;
 
    // Look for 2-person underlying calls that we can do with a single person.
    // Break up the incoming setup, whatever it is, into 1-person setups.
@@ -3664,7 +3664,7 @@ void mimic_move(
    clear_result_flags(result);
 
    // But don't do it if user requested any setup, or if this is a [split] counter rotate.
-   if (MI.groupsize <= 1 && MI.setup_hint == 0 && !(flags2 & CFLAG2_CAN_BE_ONE_SIDE_LATERAL)) {
+   if (MI.groupsize <= 1 && MI.setup_hint == 0 && !(flags1 & CFLAG1_CAN_BE_ONE_SIDE_LATERAL)) {
       try {
          for (i=0 ; i<=sizem1; i++) {
             if (ss->people[i].id1) {
@@ -3715,7 +3715,7 @@ void mimic_move(
       try {
          // Don't split into 1x2's if user requested C/L/W.
          if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS|MIMIC_SETUP_TIDAL_SETUP)) == 0 &&
-             !((MI.setup_hint & MIMIC_SETUP_BOXES) == 0 && (flags2 & CFLAG2_CAN_BE_ONE_SIDE_LATERAL))) {
+             !((MI.setup_hint & MIMIC_SETUP_BOXES) == 0 && (flags1 & CFLAG1_CAN_BE_ONE_SIDE_LATERAL))) {
             switch (ss->kind) {
             case s1x4:
                division_code = MAPCODE(s1x2,2,MPKIND__SPLIT,0);

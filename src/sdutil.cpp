@@ -2088,11 +2088,11 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                   /* Need to check for case of replacing one star turn with another. */
 
                   if ((first_replace == 0) &&
-                      (replaced_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) &&
+                      (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) &&
                       ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
                        subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
                       cc &&
-                      ((cc->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) ||
+                      ((cc->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ||
                        cc->the_defn.schema == schema_nothing)) {
                      first_replace++;
 
@@ -2147,7 +2147,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
 
                         writestuff_with_decorations(
                            &search->options,
-                           (replaced_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) ?
+                           (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
                            "turn the star @b" : replaced_call->name, false);
 
                         writestuff(" WITH [");

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <30 Jan 2026 wba>
+@c Time-stamp: <15 Feb 2026 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.81
-@set title2 Database version = 39.81 format = 427
+@set title1 RELEASE NOTES FOR VERSION 39.82
+@set title2 Database version = 39.82 format = 428
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.82::
 * 39.81::
 * 39.80::
 * 39.79::
@@ -181,7 +182,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.81, Top, (dir)
+@node Intro, 39.82, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -192,11 +193,28 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2026 William B. Ackerman
 @sp 3
 @menu
-* 39.81::               Changes in the current version
+* 39.82::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.81, 39.80, Intro, Top
+@node 39.82, 39.81, Intro, Top
+@unnumberedsec Version 39.82 changes
+
+There was a serious rearrangement of the call attributes word in the
+database, to take advantage of 64-bit arithmetic and add one needed
+flag.  This was a serious change to the code that reads and writes the
+binary database file.
+@sp 1
+Make @strong{mix} not legal in a 1/4 tag.
+@sp 1
+Make @strong{barrel of fun} not legal in waves.
+@sp 1
+Fix @strong{spin the pulley} behave better with tricky metaconcepts.
+@sp 1
+The call @strong{eight chain thru} has been removed.  It was stupid, and didn't really work.
+
+@c ************
+@node 39.81, 39.80, 39.82, Top
 @unnumberedsec Version 39.81 changes
 
 Added levels @strong{mainstream26} and @strong{plus26} in accordance
