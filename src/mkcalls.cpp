@@ -1088,9 +1088,8 @@ const char *flagtab1f[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-
-   "no_seq_if_no_frac",        // The overflow (into CFLAG2_) items start here.
-   "can_be_one_side_lateral",  //    There is space for 16 of them.
+   "no_seq_if_no_frac",
+   "can_be_one_side_lateral",
    "no_elongation_allowed",
    "imprecise_rotation",
    "can_be_fan",
@@ -1105,6 +1104,7 @@ const char *flagtab1f[] = {
    "is_star_call",
    "can_do_in_z",
    "warn_on_elongation",
+   "allow_if_centers_only",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.
@@ -1791,9 +1791,8 @@ char *return_ptr;
 int callcount;
 int filecount;
 int dumbflag;
-uint32_t call_flags1;
+uint64_t call_flags1;
 uint64_t call_flagsh;
-uint32_t call_flags1overflow;
 uint32_t call_tag;
 heritflags phonyheritbit;
 char call_name[100];
@@ -2081,32 +2080,34 @@ void db_output_error()
 // So, under DJGPP, we used to have to use errno as the sole means of telling
 // whether an error occurred.  Of course, we no longer compile with DJGPP, and
 // no longer take pity on buggy compilers.
-void db_putc(char ch)
-{
-   if (fputc(ch, db_output) == EOF)
-      db_output_error();
-}
 
 static void write_byte(uint32_t n)
 {
-   db_putc((char) ((n) & 0xFF));
+   if (fputc((char) (n & 0xFF), db_output) == EOF)
+      db_output_error();
+
    filecount += 1;
 }
 
+// Highest byte to lowest.
 static void write_halfword(uint32_t n)
 {
-   db_putc((char) ((n>>8) & 0xFF));
-   db_putc((char) ((n) & 0xFF));
-   filecount += 2;
+   write_byte(n>>8);
+   write_byte(n);
 }
 
+// Highest byte to lowest.
 static void write_fullword(uint32_t n)
 {
-   db_putc((char) ((n>>24) & 0xFF));
-   db_putc((char) ((n>>16) & 0xFF));
-   db_putc((char) ((n>>8) & 0xFF));
-   db_putc((char) ((n) & 0xFF));
-   filecount += 4;
+   write_halfword(n>>16);
+   write_halfword(n);
+}
+
+// Low 32, then high 32.
+static void write_hugeword(uint64_t n)
+{
+   write_fullword(n & 0x00000000FFFFFFFFULL);
+   write_fullword(n >> 32);
 }
 
 
@@ -2233,8 +2234,7 @@ static void write_defmod_flags(int is_seq)
    }
 
    write_fullword(rr1);
-   write_fullword(rrh & 0x00000000FFFFFFFFULL);
-   write_fullword(rrh >> 32);
+   write_hugeword(rrh);
 }
 
 
@@ -2390,20 +2390,19 @@ static void write_call_header(calldef_schema schema)
       write_byte(call_level);
    }
 
-   write_halfword(call_flags1overflow);
-   write_fullword(call_flags1);
+   write_fullword(call_flags1 >> 32);
+   write_fullword((call_flags1 & 0xFFFFFFFF));
 
    // If this is a "base_circ_call", write out 64 bits of phony "force" info.
    if (call_flags1 & CFLAG1_BASE_CIRC_CALL) {
-      write_fullword(phonyheritbit & 0x00000000FFFFFFFFULL);
-      write_fullword(phonyheritbit >> 32);
+      write_hugeword(phonyheritbit);
    }
    else if (phonyheritbit != 0ULL) {
       errexit("Special top-level herit item requires \"base_circ_call\"");
    }
 
-   write_fullword(call_flagsh & 0x00000000FFFFFFFFULL);
-   write_fullword(call_flagsh >> 32);
+   write_hugeword(call_flagsh);
+
    write_halfword((call_namelen << 8) | (uint32_t) schema);
 
    for (j=0; j<call_namelen; j++)
@@ -2559,8 +2558,7 @@ static void process_alt_def_header()
    if (alt_level >= 16) errexit("Too many levels");
 
    write_halfword(0x4000 | alt_level);
-   write_fullword(altherit & 0x00000000FFFFFFFFULL);
-   write_fullword(altherit >> 32);
+   write_hugeword(altherit);
 }
 
 
@@ -2864,8 +2862,7 @@ int main(int argc, char *argv[])
    if (tok_kind != tok_string) errexit("Improper version string -- must be in quotes");
    write_halfword(char_ct);
    for (i=0; i<char_ct; i++)
-      db_putc((char) (((uint32_t) tok_str[i]) & 0xFF));
-   filecount += char_ct;
+      write_byte(((uint32_t) tok_str[i]) & 0xFF);
 
    callcount = 0;
    for (;;) {
@@ -2920,27 +2917,18 @@ int main(int argc, char *argv[])
       // Get toplevel options.
 
       call_flagsh = 0ULL;
-      call_flags1 = 0;
-      call_flags1overflow = 0;
+      call_flags1 = 0ULL;
 
       for (;;) {
-         uint32_t flag1_to_set = 0;
+         uint64_t flag1_to_set = 0ULL;
          uint64_t heritflag_to_set = 0ULL;
 
          if ((iii = search(flagtab1f)) >= 0) {
-            if (iii >= 32) {
-               call_flags1overflow |= (1U << (iii-32));
-               // We only have room for 16 overflow call flags.
-               if (call_flags1overflow & ~0xFFFF)
-                  errexit("Too many secondary flags");
-            }
-            else {
-               uint32_t bit = 1U << iii;
-               if ((call_flags1 & CFLAG1_STEP_REAR_MASK) &&
-                   (bit & CFLAG1_STEP_REAR_MASK))
-                  errexit("Too many touch/rear flags");
-               call_flags1 |= bit;
-            }
+            uint64_t bit = 1ULL << iii;
+            if ((call_flags1 & CFLAG1_STEP_REAR_MASK) &&
+                (bit & CFLAG1_STEP_REAR_MASK))
+               errexit("Too many touch/rear flags");
+            call_flags1 |= bit;
          }
          else if (!strcmp(tok_str, "step_to_nonphantom_box")) {
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
@@ -3076,7 +3064,7 @@ int main(int argc, char *argv[])
 
          break;
       case schema_alias:
-         if (call_flagsh|(call_flags1 & ~CFLAG1_BASE_CIRC_CALL)|call_flags1overflow|call_tag)
+         if (call_flagsh|(call_flags1 & ~CFLAG1_BASE_CIRC_CALL)|call_tag)
             errexit("Flags not allowed with alias");
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper alias symbol");

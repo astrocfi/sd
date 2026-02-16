@@ -1021,7 +1021,7 @@ struct by_def_item {
 };
 
 struct calldefn {
-   uint32_t callflags1;      // The CFLAG1_??? flags.
+   uint64_t callflags1;      // The CFLAG1_??? flags.
    heritflags callflagsherit; // The mask for the heritable flags.
    uint32_t callflagsf;    // The ESCAPE_WORD__???  and CFLAGH__??? flags.
    int8_t level;
@@ -1276,7 +1276,6 @@ struct fraction_command {
 // These bits are used to allocate flag bits
 // that appear in the "callflagsf" word of a top level calldefn block
 // and the "cmd_final_flags.final" of a setup with its command block.
-// We need to leave the top 16 bits free in order to accomodate the "CFLAG2" bits.
 
 enum {
    // A 3-bit field.
@@ -1927,8 +1926,7 @@ void put_in_absolute_proximity_and_facing_bits();
 
 void touch_or_rear_back(
    bool did_mirror,
-   int callflags1) THROW_DECL;
-
+   uint64_t callflags1) THROW_DECL;
 };
 
 
@@ -5567,7 +5565,7 @@ void normalize_setup(setup *ss, normalize_action action, qtag_compress_choice no
 
 void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
 
-bool check_for_centers_concept(uint32_t & callflags1_to_examine,     // We rewrite this.
+bool check_for_centers_concept(uint64_t & callflags1_to_examine,     // We rewrite this.
                                parse_block * & parse_scan,         // This too.
                                const setup_command *the_cmd) THROW_DECL;
 
@@ -5761,7 +5759,7 @@ public:
 
    // Glorious constructor, takes all sorts of stuff.
    collision_collector(setup *const result, bool mirror,
-                       setup_command *cmd, uint32_t callflags1):
+                       setup_command *cmd, uint64_t callflags1):
       m_result_ptr(result),
       m_allow_collisions(collision_severity_ok),
       m_collision_mask(0),
@@ -5801,7 +5799,7 @@ private:
    const collision_severity m_allow_collisions;
    int m_collision_index;
    uint32_t m_collision_mask;
-   uint32_t m_callflags1;
+   uint64_t m_callflags1;
    assumption_thing *m_assume_ptr;
    bool m_force_mirror_warn;
    bool m_doing_half_override;
@@ -5909,8 +5907,7 @@ void really_inner_move(
    bool qtfudged,
    const calldefn *callspec,
    calldef_schema the_schema,
-   uint32_t callflags1,
-   uint32_t callflagsf,
+   uint64_t callflags1,
    uint32_t override_concentric_rules,
    bool did_4x4_expansion,
    uint32_t imprecise_rotation_result_flagmisc,
@@ -6406,7 +6403,7 @@ struct parse_state_type {
    parse_block **concept_write_ptr;
    parse_block **concept_write_base;
    char specialprompt[MAX_TEXT_LINE_LENGTH];
-   uint32_t topcallflags1;
+   uint64_t topcallflags1;
    call_list_kind call_list_to_use;
    call_list_kind base_call_list_to_use;
 };
@@ -6536,7 +6533,7 @@ extern SDLIB_API int text_line_count;                               /* in SDTOP 
 extern SDLIB_API bool there_is_a_call;                              /* in SDTOP */
 extern SDLIB_API int no_erase_before_this;                          /* in SDTOP */
 extern SDLIB_API int written_history_nopic;                         /* in SDTOP */
-extern SDLIB_API uint32_t the_topcallflags;                         /* in SDTOP */
+extern SDLIB_API uint64_t the_topcallflags;                         /* in SDTOP */
 
 /* In SDTOP */
 

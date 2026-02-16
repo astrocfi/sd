@@ -227,7 +227,7 @@ Start WinSCP.  Choose host www.challengedance.org and
 user name chaldnce.
 On right pane, choose public_html/sd (It might already be showing that.)
 On left pane, navigate to C:\Users\wba\sdfullarchive\vnnnn
-   or wherever the pack.zip file is.
+   or wherever the pack.zip file is.  Be sure to get the latest vnnnn.
 Drag pack.zip left to right.  Exit from WinSCP.
 
 Start PuTTY.  Choose host www.challengedance.org, called "chal".
@@ -312,7 +312,7 @@ SRCDOC   plus a few supervisory things.
 SRCDOC
 SRCDOC   Find out versions of src and doc are already in git, by examining
 SRCDOC   sdgitclone\sd\src\sdmain.cpp
-SRCDOC   sdgitclone\sd\doc\index2.html and
+SRCDOC   sdgitclone\sd\doc\index2.htmli and
 SRCDOC   They should of course match the desired "old" versions.
 SRCDOC
 SRCDOC   STAGING SRC

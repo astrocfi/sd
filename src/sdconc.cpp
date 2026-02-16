@@ -3256,7 +3256,8 @@ extern void concentric_move(
    // ~1U : Special promenade operation.
    // ~2U : We already picked out centers and ends.  Just doing the ends now,
    //       with concentric_rules turned on.
-   // lower than ~2U : This is a special map for divided_setup_move.
+   // ~3U : We already picked out centers and ends.  Just doing the centers now.
+   // lower than ~3U : This is a special map for divided_setup_move.
    //    No legitimate map is anywhere near this high.
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
@@ -3439,11 +3440,11 @@ extern void concentric_move(
 
    bool imposing_z = cmdin && ((cmdin->cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) != 0);
 
-   // Check for just doing the ends.
+   // Check for just doing the ends.  Or the centers.
 
-   if (specialoffsetmapcode == ~2U) {
+   if (specialoffsetmapcode == ~2U || specialoffsetmapcode == ~3U) {
       begin_outer = *ss;
-      begin_inner[0] = *ss;  // Do these 3 so they won't be corrupt; they doen't get done.
+      begin_inner[0] = *ss;  // Do these 3 so they won't be corrupt; they don't get done.
       begin_inner[1] = *ss;
       begin_inner[2] = *ss;
       crossing = false;
@@ -3451,10 +3452,17 @@ extern void concentric_move(
       enable_3x1_warn = false;
       imposing_z = false;
       analyzer_result = schema_concentric;
-      center_arity = 0;
-      cmdin = (setup_command *) 0;
+
+      if (specialoffsetmapcode == ~2U) {
+         cmdin = (setup_command *) 0;  // Just doing ends.
+         center_arity = 0;
+      }
+      if (specialoffsetmapcode == ~3U) {
+         cmdout = (setup_command *) 0; // Just doing centers.
+         center_arity = 1;
+      }
+
       begin_outer_elongation = 1;   // Is this right?  It's what the rest of the world uses.
-      //      modifiersout1 |= DFM1_CONC_CONCENTRIC_RULES;
    }
    else {
       // This reads and writes to "analyzer" and "inverting", and writes to "crossing".
@@ -4003,7 +4011,7 @@ extern void concentric_move(
             if (doing_ends || suppress_overcasts)
                begin_ptr->clear_all_overcasts();
 
-            if (specialoffsetmapcode < ~2U) {
+            if (specialoffsetmapcode < ~3U) {
                divided_setup_move(begin_ptr, specialoffsetmapcode,
                                   phantest_only_one, true, result_ptr);
             }
@@ -4831,6 +4839,9 @@ extern void concentric_move(
    if (ends_are_in_situ) {
       *result = outer_inners[1];
       merge_table::merge_setups(&outer_inners[0], merge_strict_matrix, result);
+   }
+   else if (specialoffsetmapcode == ~3U) {
+      *result = outer_inners[1];
    }
    else {
       normalize_concentric(ss, analyzer, center_arity, outer_inners,
@@ -6927,7 +6938,7 @@ extern void inner_selective_move(
                   DFM1_CONC_FORCE_COLUMNS : 0;
 
                really_inner_move(&local_setup, false, callspec, whattodo->schema1,
-                                 callspec->callflags1, callspec->callflagsf,
+                                 callspec->callflags1,
                                  override, false, 0, false, result);
                current_options = saved_options;
                return;
@@ -6942,7 +6953,7 @@ extern void inner_selective_move(
                if ((1 << (current_options.number_fields & 1)) & whattodo->rotation_forbid)
                   fail("These people can't come into the middle gracefully.");
 
-               really_inner_move(ss, false, callspec, whattodo->xschema, callspec->callflags1, callspec->callflagsf,
+               really_inner_move(ss, false, callspec, whattodo->xschema, callspec->callflags1,
                                  DFM1_CONC_FORCE_OTHERWAY, false, 0, false, result);
                current_options = saved_options;
                return;
@@ -7530,7 +7541,7 @@ extern void inner_selective_move(
             // those will be taken care of elsewhere, and may or may not involve
             // turning into a DYP operation.
 
-            if ((callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL) &&
+            if ((callspec->the_defn.callflags1 & CFLAG1_CAN_BE_ONE_SIDE_LATERAL) &&
                 callspec->the_defn.schema != schema_counter_rotate &&
                 ((kk == s2x4 && (thislivemask == 0xCC || thislivemask == 0x33)) ||
                  (kk == s1x6 && (thislivemask == 033)) ||

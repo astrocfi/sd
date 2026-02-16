@@ -384,7 +384,7 @@ void fix_roll_transparency_stupidly(const setup *ss, setup *result)
       // and not have it reset to the previous call.
 
       bool moving_people_cant_roll = ss->cmd.callspec &&
-         (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_IF_MOVE_CANT_ROLL) != 0 &&
+         (ss->cmd.callspec->the_defn.callflags1 & CFLAG1_IF_MOVE_CANT_ROLL) != 0 &&
          result->kind == ss->kind;
 
       for (int u=0; u<=attr::slimit(result); u++) {
@@ -4405,7 +4405,7 @@ extern bool get_real_subcall(
    // Do the substitutions called for by star turn replacements (from "@S" escape codes.)
 
    if (current_options.star_turn_option != 0 &&
-       (orig_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL)) {
+       (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL)) {
       parse_block *xx = parse_block::get_parse_block();
       xx->concept = &concept_marker_concept_mod;
       xx->options = current_options;
@@ -5926,7 +5926,7 @@ static void do_sequential_call(
    bool forbid_flip = ss->cmd.callspec == base_calls[base_call_basetag0_noflip];
    final_and_herit_flags new_final_concepts = ss->cmd.cmd_final_flags;
    parse_block *parseptr = ss->cmd.parseptr;
-   uint32_t callflags1 = callspec->callflags1;
+   uint64_t callflags1 = callspec->callflags1;
    calldef_schema this_schema = callspec->schema;
    bool this_schema_is_rem_or_alt =
       this_schema == schema_sequential_remainder ||
@@ -6675,7 +6675,7 @@ static bool do_misc_schema(
    setup *ss,
    calldef_schema the_schema,
    const calldefn *callspec,
-   uint32_t callflags1,
+   uint64_t callflags1,
    setup_command *foo1p,
    uint32_t override_concentric_rules,
    selector_kind *special_selectorp,
@@ -7019,6 +7019,17 @@ static bool do_misc_schema(
          break;
       }
 
+      uint32_t specialoffsetmapcode = ~0U;
+
+      if (the_schema == schema_single_concentric_together &&
+          attr::slimit(ss) == 3 &&
+          (callflags1 & CFLAG1_ALLOW_IF_CENTERS_ONLY) != 0 &&
+          foo2.parseptr->concept->kind == marker_end_of_list &&
+          foo2.callspec == base_calls[base_call_null] &&
+          (ss->or_all_people() & 011) != 011) {
+         specialoffsetmapcode = ~3U;
+      }
+
       // If the schema is "reverse checkpoint", we leave the ID bits in place.
       // The database author is responsible for what ID bits mean in this case.
       concentric_move(ss, foo1p, &foo2, the_schema,
@@ -7026,7 +7037,7 @@ static bool do_misc_schema(
                       override_concentric_rules ?
                       (outerdef->modifiers1 & ~DFM1_CONCENTRICITY_FLAG_MASK) | override_concentric_rules :
                       outerdef->modifiers1,
-                      the_schema != schema_rev_checkpoint, true, ~0U, result);
+                      the_schema != schema_rev_checkpoint, true, specialoffsetmapcode, result);
 
       result->rotation -= rot;   // Flip the setup back.
 
@@ -7331,8 +7342,7 @@ void really_inner_move(
    bool qtfudged,
    const calldefn *callspec,
    calldef_schema the_schema,
-   uint32_t callflags1,
-   uint32_t callflagsf,
+   uint64_t callflags1,
    uint32_t override_concentric_rules,
    bool did_4x4_expansion,
    uint32_t imprecise_rotation_result_flagmisc,
@@ -7342,7 +7352,7 @@ void really_inner_move(
    who_list sel;
    sel.initialize();
 
-   if (callflagsf & CFLAG2_NO_RAISE_OVERCAST)
+   if (callflags1 & CFLAG1_NO_RAISE_OVERCAST)
       ss->clear_all_overcasts();
 
    selector_kind special_selector = selector_none;
@@ -7806,7 +7816,7 @@ void really_inner_move(
                if (!divide_for_magic(ss, unaccepted_flags, result))
                   fail("Can't do this call with this concept.");
 
-               if (callflagsf & CFLAG2_NO_RAISE_OVERCAST)
+               if (callflags1 & CFLAG1_NO_RAISE_OVERCAST)
                   result->clear_all_overcasts();
                return;
             }
@@ -7957,7 +7967,7 @@ void really_inner_move(
       to roll direction, elongation checking, and telling which way
       "in" is.  But in fact they are treated as 1-person calls in
       terms of "stretch", "crazy", etc. */
-   if (callflagsf & CFLAG2_ONE_PERSON_CALL)
+   if (callflags1 & CFLAG1_ONE_PERSON_CALL)
       result->result_flags.maximize_split_info();
 
    result->result_flags.misc |= imprecise_rotation_result_flagmisc;
@@ -7990,7 +8000,7 @@ void really_inner_move(
       }
    }
 
-   if (callflagsf & CFLAG2_NO_RAISE_OVERCAST)
+   if (callflags1 & CFLAG1_NO_RAISE_OVERCAST)
       result->clear_all_overcasts();
 }
 
@@ -8156,10 +8166,9 @@ static void move_with_real_call(
       uint32_t imprecise_rotation_result_flagmisc = 0;
       split_command_kind force_split = split_command_none;
       bool mirror = false;
-      uint32_t callflags1 = this_defn->callflags1;
+      uint64_t callflags1 = this_defn->callflags1;
       // These two are always heritable.
       heritflags callflagsh = this_defn->callflagsherit | INHERITFLAG_HALF|INHERITFLAG_LASTHALF;
-      uint32_t callflagsf = this_defn->callflagsf;
 
       calldef_schema the_schema =
          get_real_callspec_and_schema(ss, herit_concepts, this_defn->schema);
@@ -8342,7 +8351,7 @@ static void move_with_real_call(
             if (attr::slimit(ss) < 0 || ss->or_all_people() != 0) {
                heritflags bit_to_set = 0ULL;
 
-               if ((callflagsf & CFLAG2_FRACTIONAL_NUMBERS) &&
+               if ((callflags1 & CFLAG1_FRACTIONAL_NUMBERS) &&
                    (ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0 &&
                    current_options.howmanynumbers == 1) {
 
@@ -8582,7 +8591,7 @@ static void move_with_real_call(
          }
       }
 
-      if (callflagsf & CFLAG2_IMPRECISE_ROTATION)
+      if (callflags1 & CFLAG1_IMPRECISE_ROTATION)
          imprecise_rotation_result_flagmisc = RESULTFLAG__IMPRECISE_ROT;
 
       /* Check for a call whose schema is single (cross) concentric.
@@ -8940,10 +8949,10 @@ static void move_with_real_call(
       if ((callflags1 & CFLAG1_SEQUENCE_STARTER_PROM) != 0 && config_history_ptr != 1)
          fail("You must specify who is to do it.");
 
-      really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1, callflagsf,
+      really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1,
                         0, did_4x4_expansion, imprecise_rotation_result_flagmisc, mirror, result);
 
-      if ((callflagsf & CFLAG2_DO_EXCHANGE_COMPRESS))
+      if ((callflags1 & CFLAG1_DO_EXCHANGE_COMPRESS))
          normalize_setup(result,
                          (result->kind == sbigdmd || result->kind == sbigptpd) ?
                          normalize_compress_bigdmd : normalize_after_exchange_boxes,
@@ -8955,7 +8964,7 @@ static void move_with_real_call(
             // Don't take a sequential definition if there are no fractions or parts
             // specified and the call has the special flag.  This is for recycle.
             if (this_defn->compound_part->schema != schema_sequential ||
-                !(this_defn->compound_part->callflagsf & CFLAG2_NO_SEQ_IF_NO_FRAC) ||
+                !(this_defn->compound_part->callflags1 & CFLAG1_NO_SEQ_IF_NO_FRAC) ||
                 !ss->cmd.cmd_fraction.is_null() || ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
                this_defn = this_defn->compound_part;
                goto try_next_callspec;
@@ -9457,7 +9466,7 @@ void move(
 
       // But the star turn info is not inherited.  It uses shallow binding.  And save the
       // number fields too, even though they will eventually be overridden.
-      if ((this_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) && save_star_option != 0) {
+      if ((this_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) && save_star_option != 0) {
          current_options.star_turn_option = save_star_option;
          current_options.howmanynumbers = save_nn;
          current_options.number_fields = save_n;
