@@ -800,6 +800,7 @@ const char *schematab[] = {
    "3x3_in_out_triple_squash",
    "4x4_in_out_triple_squash",
    "in_out_triple",
+   "in_out_triple_1x3s",
    "sgl_in_out_triple",
    "3x3_in_out_triple",
    "4x4_in_out_triple",
@@ -1051,11 +1052,11 @@ const char *seqmodtab1[] = {
    "normalize",
    ""};
 
-// This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 15).
+// This table is keyed to the constants "CFLAG1_***".
 // These are the general top-level call flags.  They go into the "callflags1" word and
 // part of the "callflagsh" word.
 
-const char *flagtab1f[] = {
+const char *flagtab1[] = {
    "first_part_visible",
    "first_two_parts_visible",
    "last_two_parts_visible",
@@ -1496,7 +1497,9 @@ const char *predtab[] = {
    "2x4_tandem_with_someone",
    "2x4_antitandem",
    "2x1_facing_someone",
+   "3x1_facing_someone",
    "4x1_facing_someone",
+   "6x1_facing_someone",
    "8x1_facing_someone",
    "2x4_facing_diag",
    "2x4_facing_someone",
@@ -2923,7 +2926,7 @@ int main(int argc, char *argv[])
          uint64_t flag1_to_set = 0ULL;
          uint64_t heritflag_to_set = 0ULL;
 
-         if ((iii = search(flagtab1f)) >= 0) {
+         if ((iii = search(flagtab1)) >= 0) {
             uint64_t bit = 1ULL << iii;
             if ((call_flags1 & CFLAG1_STEP_REAR_MASK) &&
                 (bit & CFLAG1_STEP_REAR_MASK))

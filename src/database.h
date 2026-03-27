@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2025  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 428
+#define DATABASE_FORMAT_VERSION 430
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1319,6 +1319,7 @@ enum calldef_schema {
    schema_3x3_in_out_triple_squash,
    schema_4x4_in_out_triple_squash,
    schema_in_out_triple,
+   schema_in_out_triple_1x3s,
    schema_sgl_in_out_triple,
    schema_3x3_in_out_triple,
    schema_4x4_in_out_triple,

@@ -3295,13 +3295,17 @@ static void do_concept_stretched_setup(
    int linesp = parseptr->concept->arg1;
 
    // linesp =
-   //  0x10 : any setup
    //  1    : line
    //  3    : wave
    //  4    : column
+   //  0x10 : any setup
    //  0x12 : box
-   //  0x13 : diamond spots
-   //  0x14 : just "stretched", to be used with triangles.
+   //  0x13 : diamond
+   //  0x14 : diamond spots, that is, 1/4 tag or 2/4 tag.
+   //  0x15 : just "stretched", to be used with triangles.
+
+   if (linesp == 0x13)
+       tempsetup.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
 
    if ((linesp == 0x12 && tempsetup.kind != s2x4) ||
        (linesp == 0x13 && tempsetup.kind != s_qtag && tempsetup.kind != s_ptpd) ||
@@ -3322,7 +3326,7 @@ static void do_concept_stretched_setup(
 
    tempsetup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
-   if (linesp == 0x14) {
+   if (linesp == 0x15) {
       // This was just "stretched".  Demand that the next concept
       // be some kind of triangle designation.
       // Search ahead, skipping comments of course.  This means we
@@ -6033,6 +6037,9 @@ static void do_concept_inner_outer(
 
    switch (arg1 & 0x70) {
    case 0:      // triple CLWBDZ
+      sch = ((arg1 & 0x4) == 0 && ss->kind == s3dmd) ?
+         schema_in_out_triple_1x3s : schema_in_out_triple;
+      break;
    case 0x20:   // triple twin CLW
    case 0x30:   // triple twin CLW of 3
    case 0x50:   // triple tidal CLW
@@ -6080,7 +6087,8 @@ static void do_concept_inner_outer(
             else                      fail("There are no triple columns here.");
          }
          goto ready;
-      case sbigh: case sbigx: case sbigrig: case s_hsqtag: case s5x1dmd: case s1x5dmd:
+      case sbigh: case sbigx: case sbigrig: case s_hsqtag:
+      case s3dmd: case s5x1dmd: case s1x5dmd: case s_323:
          goto verify_clw;
       }
 

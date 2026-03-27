@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.82"
+version "39.83"
 
 call "nothing" xyz tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1905,8 +1905,9 @@ call "scoot chain thru and gravitate" c4a
 
 call "@2scoot @3and scamper" c4a
             left_means_mirror yoyo_is_inherited gen_sting_is_inherited first_part_visible
+            rectify_is_inherited
    seq qtagscootback [or_anycall inherit_left inherit_yoyo inherit_gensting]
-   seq scamper [inherit_left]
+   seq scamper [inherit_left inherit_rectify]
 
 call "stroll part 1" dontshow tag stroll1
             fudge_to_q_tag
@@ -2553,6 +2554,9 @@ call "_ends strip" dontshow tag endsstrip
             alternate_definition [yoyo] c4
    setup 2x2 2x2 restriction forbidden peelable_box
       array [AL0W CR1E CR2W AL3E]
+            alternate_definition [rewind] c4
+   setup 1x4 2x2
+      array [AL3S AL3N CR2S CR2N]
 
 call "_ends strip but the @6 criss cross it" dontshow tag endsxxstrip
    setup 2x2 1x4 restriction forbidden peelable_box
@@ -2577,9 +2581,10 @@ call "strip the setup" c3a
                       endsstrip [conc_demand_lines inherit_yoyo inherit_gensting endscando]
 
 call "strip the diamonds" c3a
-            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   reverse_checkpoint linefanthetop [inherit_fractal inherit_gensting]
-                      endsstrip [conc_demand_lines inherit_yoyo inherit_gensting endscando]
+            yoyo_is_inherited fractal_is_inherited
+            gen_sting_is_inherited rewind_is_inherited
+   reverse_checkpoint linefanthetop [inherit_fractal inherit_gensting inherit_rewind]
+                      endsstrip [conc_demand_lines conc_force_spots inherit_yoyo inherit_gensting inherit_rewind endscando]
 
 call "strip the hourglass" c3a
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -5185,6 +5190,12 @@ call "_slither as subcall" dontshow tag slither
    // Now, after the plain call has failed, we do the good stuff.
    // First, make sure we aren't in a diamond.  The "singleconc"
    // schema wouldn't mind, but we do.
+            alternate_definition [1x2] c4
+   setup 1x3 1x3
+      array [ZM1N ZM2N ZM2N]
+            alternate_definition [2x1] c4
+   setup 1x3 1x3
+      array [ZM1N ZM2N ZM2N]
             alternate_definition [1x3] c4
    setup 1x6 1x6 qualifier wave_only
       array [ZM0N ZM5N ZM1N ZM3N ZM2N ZM4N]
@@ -5573,6 +5584,10 @@ call "fan the top (line)" dontshow tag linefanthetop
             alternate_definition [generous] c3
    setup 1x4 dmd rotate no_cutting_through
       array [CR0N CR3W AL0S AL1W]
+            alternate_definition [rewind] c4
+   // Only allow simple case.
+   setup 1x4 1x4 rotate no_cutting_through
+      array [CR0N CR3S AL0S AL3N]
 
 call "fan the top (diamond)" dontshow tag dmdfanthetop
             ends_take_right_hands
@@ -8082,6 +8097,12 @@ call "left touch 1/4" dontshow tag left_touch_1_4
             alternate_definition [stingy] c3
    setup 2x1 1x2 rotate qualifier in in_or_out
       array [ZM1W 0]
+            alternate_definition [2x1] c4
+   setup 3x1 1x3
+      array [AL0W AL1W AL2W]
+            alternate_definition [1x2] c4
+   setup 3x1 1x3
+      array [AL0W AL1W AL2W]
 
 call "touch 3/4" dontshow tag touch_3_4
             rear_back_from_r_wave left_means_mirror
@@ -11902,12 +11923,58 @@ call "_start dixie style" dontshow tag start_dixie
             alternate_definition [singlefile] xyz
    setup 4x1 1x4 qualifier in 2fl_only
       array [ZM0N ZM3N 0 0 ]
+            alternate_definition [2x1] c4
+   setup 3x1 1x3
+      predscantdocallinsetup
+         if 3x1_facing_someone [ZM1N ZM2N 0]
+         if always [ZM0N ZM1N ZM2N]
+            alternate_definition [2x1 singlefile] c4
+   setup 3x1 1x3
+      predscantdocallinsetup
+         if 3x1_facing_someone [ZM1N ZM2N 0]
+         if always [ZM0N ZM1N ZM2N]
+            alternate_definition [1x2] c4
+   setup 3x1 1x3
+      predscantdocallinsetup
+         if 3x1_facing_someone [ZM1N ZM2N 0]
+         if always [ZM0N ZM1N ZM2N]
+            alternate_definition [1x2 singlefile] c4
+   setup 3x1 1x3
+      predscantdocallinsetup
+         if 3x1_facing_someone [ZM1N ZM2N 0]
+         if always [ZM0N ZM1N ZM2N]
+            alternate_definition [3x3] c4
+   setup 6x1 1x6
+      array [ZM0N ZM2N ZM4N 0 0 0 ]
             alternate_definition [3x3 singlefile] c4
    setup 6x1 1x6
       array [ZM0N ZM2N ZM4N 0 0 0 ]
+            alternate_definition [4x4] c4
+   setup 8x1 1x8
+      array [ZM0N ZM3N ZM5N ZM6N 0 0 0 0 ]
             alternate_definition [4x4 singlefile] c4
    setup 8x1 1x8
       array [ZM0N ZM3N ZM5N ZM6N 0 0 0 0 ]
+            alternate_definition [3x1] c4
+   setup 4x1 1x4
+      predscantdocallinsetup
+         if 4x1_facing_someone [ZM1N 0 0 ZM2N]
+         if always [ZM0N ZM1N ZM2N ZM3N]
+            alternate_definition [3x1 singlefile] c4
+   setup 4x1 1x4
+      predscantdocallinsetup
+         if 4x1_facing_someone [ZM1N 0 0 ZM2N]
+         if always [ZM0N ZM1N ZM2N ZM3N]
+            alternate_definition [1x3] c4
+   setup 4x1 1x4
+      predscantdocallinsetup
+         if 4x1_facing_someone [ZM1N 0 0 ZM2N]
+         if always [ZM0N ZM1N ZM2N ZM3N]
+            alternate_definition [1x3 singlefile] c4
+   setup 4x1 1x4
+      predscantdocallinsetup
+         if 4x1_facing_someone [ZM1N 0 0 ZM2N]
+         if always [ZM0N ZM1N ZM2N ZM3N]
             alternate_definition [single] c4
    setup 2x1 1x2
       array [ZM0N 0 ]
@@ -17318,6 +17385,9 @@ call "_leads wheel" dontshow tag leadswheel
             alternate_definition [single] c4
    setup 2x1 1x2 restriction all_facing_same
       array [ZM0N AL1S]
+            alternate_definition [singlefile] c4
+   setup trngl4 2x2
+      array [0 0 0 0 AL0S AL1S ZM2N ZM3N]
             alternate_definition [3x3] c4
    setup 2x3 2x3 restriction all_facing_same
       array [AL2S AL1S AL0S ZM3N ZM4N ZM5N]
@@ -17350,6 +17420,9 @@ call "_everyone wheel" dontshow tag everyonewheel
             alternate_definition [single] c4
    setup 2x1 1x2
       array [0 AL1S]
+            alternate_definition [singlefile] c4
+   setup 4x1 2x2
+      array [0 0 AL1S AL2S]
             alternate_definition [3x3] c4
    setup 2x3 2x3
       array [AL2S AL1S AL0S 0 0 0]
@@ -17490,17 +17563,17 @@ call "_finish wheel to an hourglass" dontshow tag finwheeltohrglass
       array [0 0 0 0 A7W AL4W ACR6N AL5W]
 
 call "leads wheel the ocean" c2
-            reverse_means_mirror single_is_inherited funny_is_inherited
+            reverse_means_mirror single_is_inherited funny_is_inherited singlefile_is_inherited
             nxn_is_inherited mxn_is_inherited bigmatrix_is_inherited visible_fractions
-   seq leadswheel [inherit_reverse inherit_single inherit_funny
+   seq leadswheel [inherit_reverse inherit_single inherit_funny inherit_singlefile
                    inherit_nxn inherit_mxn inherit_bigmatrix]
    // The second part is implicitly funny anyway.
    seq finwheelocean [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix roll_transparent]
 
 call "leads wheel the sea" c2
-            reverse_means_mirror single_is_inherited funny_is_inherited
+            reverse_means_mirror single_is_inherited funny_is_inherited singlefile_is_inherited
             nxn_is_inherited mxn_is_inherited bigmatrix_is_inherited visible_fractions
-   seq leadswheel [inherit_reverse inherit_single inherit_funny
+   seq leadswheel [inherit_reverse inherit_single inherit_funny inherit_singlefile
                    inherit_nxn inherit_mxn inherit_bigmatrix]
    // The second part is implicitly funny anyway.
    seq finwheelsea [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix roll_transparent]
@@ -17516,19 +17589,19 @@ call "leads wheel to an hourglass" c4a
    seq finwheeltohrglass [inherit_reverse]
 
 call "wheel the ocean" c2
-            reverse_means_mirror grand_is_inherited single_is_inherited
+            reverse_means_mirror grand_is_inherited single_is_inherited singlefile_is_inherited
             nxn_is_inherited mxn_is_inherited
             bigmatrix_is_inherited rewind_is_inherited visible_fractions
-   seq everyonewheel [inherit_reverse inherit_grand inherit_single
+   seq everyonewheel [inherit_reverse inherit_grand inherit_single inherit_singlefile
                       inherit_nxn inherit_mxn inherit_bigmatrix inherit_rewind]
    seq finwheelocean [inherit_reverse inherit_grand inherit_single roll_transparent
                       inherit_nxn inherit_mxn inherit_bigmatrix inherit_rewind]
 
 call "wheel the sea" c2
-            reverse_means_mirror grand_is_inherited single_is_inherited
+            reverse_means_mirror grand_is_inherited single_is_inherited singlefile_is_inherited
             nxn_is_inherited mxn_is_inherited
             bigmatrix_is_inherited rewind_is_inherited visible_fractions
-   seq everyonewheel [inherit_reverse inherit_grand inherit_single
+   seq everyonewheel [inherit_reverse inherit_grand inherit_single inherit_singlefile
                       inherit_nxn inherit_mxn inherit_bigmatrix inherit_rewind]
    seq finwheelsea   [inherit_reverse inherit_grand inherit_single roll_transparent
                       inherit_nxn inherit_mxn inherit_bigmatrix inherit_rewind]
@@ -19559,6 +19632,8 @@ call "_ends dream" dontshow tag edream
             alternate_definition [rectify] c4
    setup 2x2 2x2 restriction unusual leads_only
       array [CR1S CR2S CAL1N CAL2N]
+   setup 4x1 1x4 rotate restriction unusual alwaysfail
+      array [CAL2W CAL3W CR2E CR3E]
 
 call "_ends nightmare" dontshow tag enight
    setup 2x2 2x2 restriction unusual leads_only
@@ -19566,6 +19641,8 @@ call "_ends nightmare" dontshow tag enight
             alternate_definition [rectify] c4
    setup 2x2 2x2 restriction unusual leads_only
       array [AL3S AL0S ACR3N ACR0N]
+   setup 4x1 1x4 rotate restriction unusual alwaysfail
+      array [ACR0W ACR1W AL0E AL1E]
 
 call "swing slip slide thru" dontshow tag swingslipslidethru
             visible_fractions yoyo_is_inherited gen_sting_is_inherited step_to_wave diamond_is_legal
@@ -22627,7 +22704,7 @@ call "walk out to a column" c4a
    setup 2x4 2x4 rotate restriction wave_only
       array [CM6E CM1E AM5E AM2E AL7E ZM7W ZM0W CR0E]
 
-call "_flip away for disband" dontshow tag disband2_ctr_to_end
+call "_flip away for disband" dontshow tag flipawayfordisband
    setup 2x2 2x2      // This is legal in a 2x2, of course,
       array [AL0S CR1S CR2S AL3S]
    setup 1x2 1x2      // and in a 1x2, in case we do a disband from a bone6,
@@ -22635,7 +22712,7 @@ call "_flip away for disband" dontshow tag disband2_ctr_to_end
    setup 1x4 1x4      // but NOT in a 1x4.
       array [0 0 0 0]
 
-call "_ends start disband" dontshow tag ends_disbp1
+call "_ends detour for disband" dontshow tag ends_detour_for_disband
             fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq zoomok [force_half]
    seq armturn_n4 [insert_number 1 inherit_fractal inherit_gensting]
@@ -22645,13 +22722,15 @@ call "_disband part 1" dontshow tag disband1
    // on this, we allow the call to be done from either setup.
             fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    conc6p_or_normal splitctrrot [inherit_rectify]
-                    ends_disbp1 [inherit_fractal inherit_gensting conc_force_columns endscando]
+                    ends_detour_for_disband [inherit_fractal inherit_gensting conc_force_columns endscando]
 
 call "_disband part 2" dontshow tag disband2
-   crossconc6p_or_normal disband_new_centers [] disband2_ctr_to_end [conc_force_lines]
+            magic_is_inherited
+   crossconc6p_or_normal disband_new_centers [inherit_magic] flipawayfordisband [conc_force_lines]
 
 call "_disperse part 2" dontshow tag disperse2
-   crossconc6p_or_normal disband_new_centers [] trade [conc_force_lines]
+            magic_is_inherited
+   crossconc6p_or_normal disband_new_centers [inherit_magic] trade [conc_force_lines]
 
 call "_new centers disband" dontshow tag disband_new_centers
    setup 2x2 2x2 qualifier wave_only
@@ -22676,15 +22755,39 @@ call "disband" c3
    setup 4x4 4x4 rotate    // Need to put in restrictions, if anyone cares.
       array [CM9W CM11W CM7W ACR13E CM2W ACR0E CAL12W ACR14E
              AM9E AM11E AM7E CAL13W AM2E CAL0W ACR12E CAL14W]
+            alternate_definition [3x1] c4
+   // Not really in accordance with any published definition.
+   setup pspindle 3x23 rotate
+      array [CAL0S CAL1S CAL2S 0 ACR0N ACR1N ACR2N 0]
+   setup spindle 3x23 rotate restriction controversial alwaysfail
+      array [0 0 0 CM3S 0 0 0 AM3N]
+            alternate_definition [1x3] c4
+   setup pspindle 3x23 rotate
+      array [CAL0S CAL1S CAL2S 0 ACR0N ACR1N ACR2N 0]
+   setup spindle 3x23 rotate restriction controversial alwaysfail
+      array [0 0 0 CM3S 0 0 0 AM3N]
             fractal_is_inherited gen_sting_is_inherited visible_fractions rectify_is_inherited
-            neednumber visible_fractions distribute_repetitions 
+            distribute_repetitions magic_is_inherited
    seq disband1 [inherit_fractal inherit_gensting inherit_rectify]  // Generous/stingy won't actually work.
-   seq disband2 []
+   seq disband2 [inherit_magic]
 
 call "disperse" c4x
+   setup 1x4 1x4
+      array [0 0 0 0]
+            alternate_definition [3x1] c4
+   setup pspindle 3x23 rotate
+      array [CR6S CR5S CR4S 0 AL6N AL5N AL4N 0]
+   setup spindle 3x23 rotate restriction controversial alwaysfail
+      array [0 0 0 CM3S 0 0 0 AM3N]
+            alternate_definition [1x3] c4
+   setup pspindle 3x23 rotate
+      array [CR6S CR5S CR4S 0 AL6N AL5N AL4N 0]
+   setup spindle 3x23 rotate restriction controversial alwaysfail
+      array [0 0 0 CM3S 0 0 0 AM3N]
             fractal_is_inherited gen_sting_is_inherited visible_fractions rectify_is_inherited
+            distribute_repetitions magic_is_inherited
    seq disband1 [inherit_fractal inherit_gensting inherit_rectify]
-   seq disperse2 []   // We're just not going to deal with fractal/generous/stingy.
+   seq disperse2 [inherit_magic]   // We're just not going to deal with fractal/generous/stingy.
 
 call "_start wind the bobbin" dontshow tag startstreaking
    setup 2x2 1x4 restriction unusual wave_only
@@ -23606,6 +23709,10 @@ call "circulate for acey deucey" dontshow tag circulateforacey
    simple_funny
    setup 2x2 2x2 no_cutting_through
       array [CR1S AL0S ZM1N ZM0N]
+   setup dmd dmd restriction forbidden diamond_like
+      array [CR1E 0 AL1W 0]
+   setup pmd dmd restriction forbidden diamond_like
+      array [0 CR2E 0 AL2W]
    setup star star
       array [CR1E 0 AL1W 0]
    setup short6 short6 qualifier didnt_say_triangle
@@ -26199,7 +26306,7 @@ call "scatter scoot chain thru to a wave" c1
 call "quick change" c4a
             visible_fractions yoyo_is_inherited gen_sting_is_inherited
             diamond_is_legal funny_is_inherited rectify_is_inherited
-   conc6p_or_normal trade_and_roll_w_tbone [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
+   conc6p_or_normal_or_2x6_2x3 trade_and_roll_w_tbone [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
                     circ_and_quarter_in [inherit_diamond inherit_funny inherit_rectify conc_force_spots endscando]
 
 call "deuces wild" c4a
@@ -28416,7 +28523,7 @@ call "counter" c2 tag counter
             cross_is_inherited intlk_is_inherited fractal_is_inherited gen_sting_is_inherited
             nxn_is_inherited rectify_is_inherited
    conc ctrscounter [inherit_intlk inherit_cross inherit_nxn inherit_fractal inherit_gensting inherit_rectify]
-        endscounter [inherit_left inherit_cross inherit_nxn inherit_fractal inherit_gensting
+        endscounter [inherit_left inherit_cross inherit_nxn inherit_fractal
                      conc_demand_columns conc_force_lines endscando]
 
 call "cross counter" c3a
@@ -30129,7 +30236,8 @@ call "_breaker part 1" dontshow tag breaker_part_1
 
 call "_detract part 1" dontshow tag detract_part_1
             rectify_is_inherited
-   conc splitctrrot [inherit_rectify] ends_disbp1 [conc_force_columns endscando]
+   conc splitctrrot [inherit_rectify]
+        ends_detour_for_disband [conc_force_columns endscando]
 
 call "_breaker part 2" dontshow tag breaker_part_2
             rectify_is_inherited

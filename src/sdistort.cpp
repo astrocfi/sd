@@ -3972,6 +3972,30 @@ extern void do_concept_rigger(
       0, 2, 4, 6, 8, 10, 12, 14, 1, 7, 5, 11, 9, 15, 13, 3,
       1, 2, 3, 4, 5, 6, 7, 0,
       5, 0, 1, 2, 3, 4};        // For 2x3.
+   static const int8_t map3[24] = {   // For 4x6, northeast rigger
+      -1, -1, 12, 13, -1, -1,  0, 14, 15, 10, 11, 9,
+      -1, -1,  4,  5, -1, -1,  8,  6,  7,  2,  3, 1};
+   static const int8_t map4[24] = {   // For 4x6, southeast rigger
+      -1, -1, 14,  0, -1, -1,  2,  7,  1,  3, 13, 12,
+      -1, -1,  6,  8, -1, -1, 10, 15,  9, 11,  5,  4};
+   static const int8_t map5[24] = {   // For 2x8, northeast rigger
+      -1, -1,  4,  5,  6,  7, -1, -1,  8,  9, 10, 11,
+      -1, -1, 12, 13, 14, 15, -1, -1,  0,  1,  2,  3};
+   static const int8_t map6[24] = {   // For 2x8, southeast rigger
+      -1, -1,  0,  1,  2,  3, -1, -1,  7,  6,  5,  4,
+      -1, -1,  8,  9, 10, 11, -1, -1, 15, 14, 13, 12};
+   static const int8_t map7[26] = {   // For 4x8, northeast rigger
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      0,  1,  2,  4, -1, -1,  6, 11, 15,
+      8,  9, 10, 12, -1, -1, 14,  3,  7};
+   static const int8_t map8[26] = {   // For 4x8, southeast rigger
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, 0,  1,  2,  4,  6, 11, 15,
+      -1, -1, 8,  9, 10, 12, 14,  3,  7};
+   static const int8_t map9[10] = {   // For 2x8, northeast rigger
+      4, 5, 6,           10, 11,         12, 13, 14,     2, 3};
+   static const int8_t map10[10] = {  // For 2x8, southeast rigger
+      1, 2, 3,           5, 4,           9, 10, 11,     13, 12};
 
    int rstuff, indicator, base;
    setup a1;
@@ -4068,24 +4092,26 @@ extern void do_concept_rigger(
    a1.eighth_rotation = 0;
    a1.cmd = ss->cmd;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   a1.cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_AT_ALL;
    a1.cmd.cmd_assume.assumption = cr_none;
    move(&a1, false, &res1);
+   normalize_setup(&res1, plain_normalize, qtag_compress);
 
    // Swap tables for rigger and qtag.
    // Won't happen in C1 phantom, and will raise error if started in short6 or spindle.
    if (((res1.rotation) & 1) && base < 16) base ^= 8;
 
    if (startkind == s_c1phan) {
-      int i;
-      uint32_t evens = 0;
-      uint32_t odds = 0;
-
-      for (i=0; i<16; i+=2) {
-         evens |= res1.people[i].id1;
-         odds |= res1.people[i+1].id1;
-      }
-
       if (res1.kind == s_c1phan) {
+         int i;
+         uint32_t evens = 0;
+         uint32_t odds = 0;
+
+         for (i=0; i<16; i+=2) {
+            evens |= res1.people[i].id1;
+            odds |= res1.people[i+1].id1;
+         }
+
          if (indicator) {
             if (evens) {
                if (odds) fail("Can't do this.");
@@ -4108,7 +4134,7 @@ extern void do_concept_rigger(
       else {
          base ^= 16;
          if (res1.kind != s2x4) fail("Can't do this.");
-         result->kind = base ? s_qtag : s_rigger;
+         result->kind = base ? s_rigger : s_qtag;
       }
    }
    else if (startkind == s2x3) {
@@ -4116,17 +4142,59 @@ extern void do_concept_rigger(
       result->kind = s_short6;
    }
    else {
-      if (res1.kind != s2x4) fail("Can't do this.");
-      if (ss->kind == s_spindle) {
-         if ((res1.rotation) & 1) fail("Can't do this.");
-         result->kind = s_spindle;
+      if (res1.kind == s2x6) {
+         // We normalized too far, a 2x6 can't be what the user wants,
+         // and we wouldn't be able to put back the required 50% offset
+         // and get a reasonable outcome.  Set it back to a 2x8.
+         warn(warn_controversial);
+         res1.do_matrix_expansion(CONCPROP__NEEDK_2X8, false);
       }
-      else {
-         result->kind = base ? s_qtag : s_rigger;
+
+      if (res1.kind == s2x4) {
+         if (ss->kind == s_spindle) {
+            if ((res1.rotation) & 1) fail("Can't do this.");
+            result->kind = s_spindle;
+         }
+         else {
+            result->kind = base ? s_qtag : s_rigger;
+         }
       }
+      else if (res1.kind == s4x4) {
+         if (base != 0) {
+            result->kind = s3x6;
+            rot = 3;
+            res1.rotation++;   // Fix final rotateion.
+            map_ptr = indicator ? map8 : map7;
+         }
+         else {
+            result->kind = s4x6;
+            map_ptr = indicator ? map3 : map4;
+         }
+      }
+      else if (res1.kind == s2x8) {
+         uint32_t the_mask = res1.little_endian_live_mask();
+
+         if ((the_mask & 0xF3F3) == 0x7070 && indicator == 0) {
+            result->kind = s_343;
+            map_ptr = map9;
+            base = 0;
+         }
+         else if ((the_mask & 0xCFCF) == 0x0E0E && indicator == 2) {
+            result->kind = s_343;
+            map_ptr = map10;
+            base = 0;
+         }
+         else {
+            result->kind = s3x8;
+            base = 0;
+            map_ptr = indicator ? map6 : map5;
+         }
+      }
+      else
+         fail("Can't do this.");
    }
 
-   gather(result, &res1, &map_ptr[base], attr::klimit(res1.kind), rot*011);
+   gather(result, &res1, &map_ptr[base], attr::klimit(result->kind), rot*011);
    result->rotation = res1.rotation;
    result->eighth_rotation = 0;
    result->result_flags = res1.result_flags;

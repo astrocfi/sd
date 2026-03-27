@@ -1219,7 +1219,9 @@ static const int32_t x24tabtandem[6]     = {7, 0, 1, 0,      0, 0};
 static const int32_t x24tabantitandem[6] = {7, 2, 1, 0,      0, 0};
 static const int32_t x24tabfacing[6]     = {7, 2, 1, 0x1B1B, 0, 0};
 static const int32_t x21tabfacing[6]     = {7, 2, 1, 0,      (int32_t) 0x00000001L, (int32_t) 0x000000F0L};
+static const int32_t x31tabfacing[6]     = {7, 2, 1, 0,      (int32_t) 0x00000011L, (int32_t) 0x00000FF0L};
 static const int32_t x41tabfacing[6]     = {7, 2, 1, 0,      (int32_t) 0x0000F021L, (int32_t) 0x0000E1F0L};
+static const int32_t x61tabfacing[6]     = {7, 2, 1, 0,      (int32_t) 0x00FF0311L, (int32_t) 0x00D11FF0L};
 static const int32_t x81tabfacing[6]     = {7, 2, 1, 0,      (int32_t) 0xE1F0F421L, (int32_t) 0xFC21E1F0L};
 
 static const int32_t boystuff_no_rh[3]   = {ID2_PERM_BOY,  ID2_PERM_GIRL, 0};
@@ -3291,9 +3293,11 @@ predicate_descriptor pred_table[] = {
       {facing_test,                    x22tabfacing},            // "2x2_facing_someone"
       {facing_test,                    x24tabtandem},            // "2x4_tandem_with_someone"
       {facing_test,                    x24tabantitandem},        // "2x4_antitandem"
-      {facing_test,                    x21tabfacing},            // "2x1_facing_someone"   // WARNING!!  This is tagged as #57.
-      {facing_test,                    x41tabfacing},            // "4x1_facing_someone"   // WARNING!!  This is tagged as #58.
-      {facing_test,                    x81tabfacing},            // "8x1_facing_someone"   // WARNING!!  This is tagged as #59.
+      {facing_test,                    x21tabfacing},            // "2x1_facing_someone"   // WARNING!!  This is tagged as START+5.
+      {facing_test,                    x31tabfacing},            // "3x1_facing_someone"   // WARNING!!  This is tagged as START+6.
+      {facing_test,                    x41tabfacing},            // "4x1_facing_someone"   // WARNING!!  This is tagged as START+7.
+      {facing_test,                    x61tabfacing},            // "6x1_facing_someone"   // WARNING!!  This is tagged as START+8.
+      {facing_test,                    x81tabfacing},            // "8x1_facing_someone"   // WARNING!!  This is tagged as START+9.
       {facing_test,                    x24tabfacediag},          // "2x4_facing_diag"
       {facing_test,                    x24tabfacing},            // "2x4_facing_someone"
       {always,                       (const int32_t *) 0},       // "always"

@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.82
-@set title2 Database version = 39.82 format = 428
+@set title1 RELEASE NOTES FOR VERSION 39.83
+@set title2 Database version = 39.83 format = 430
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.83::
 * 39.82::
 * 39.81::
 * 39.80::
@@ -182,7 +183,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.82, Top, (dir)
+@node Intro, 39.83, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -193,11 +194,36 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2026 William B. Ackerman
 @sp 3
 @menu
-* 39.82::               Changes in the current version
+* 39.83::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.82, 39.81, Intro, Top
+@node 39.83, 39.82, Intro, Top
+@unnumberedsec Version 39.83 changes
+
+Better handling of triple general 1/4 tag setups, with an alternative
+more compact form, in some cases, from which various triangles can be
+identified.
+@sp 1
+Handle @strong{rectify scamper}.
+@sp 1
+Handle @strong{rewind strip the diamond}.
+@sp 1
+Handle @strong{2x1/1x2 (single file) dixie diamond}.
+@sp 1
+Handle @strong{single file wheel the ocean/sea}.
+@sp 1
+Make @strong{nightmare/dream} not legal when centers have left hands.
+@sp 1
+Handle @strong{3x1 disband/disperse}.
+@sp 1
+Handle @strong{acey deucey} and @strong{quick change} in 3x1 diamond.
+@sp 1
+Many improvements in @strong{rigger}, involving concepts like
+@strong{split phantom boxes}.
+
+@c ************
+@node 39.82, 39.81, 39.83, Top
 @unnumberedsec Version 39.82 changes
 
 There was a serious rearrangement of the call attributes word in the
