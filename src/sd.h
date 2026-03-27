@@ -5009,6 +5009,7 @@ extern full_expand::thing rear_2x2_pair;
 extern full_expand::thing rear_bone_pair;
 extern full_expand::thing step_8ch_pair;
 extern full_expand::thing step_qtag_pair;
+extern full_expand::thing step_bone_pair;
 extern full_expand::thing step_2x2h_pair;
 extern full_expand::thing step_2x2v_pair;
 extern full_expand::thing step_spindle_pair;

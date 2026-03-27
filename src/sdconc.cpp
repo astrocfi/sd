@@ -1667,6 +1667,9 @@ static calldef_schema concentrify(
          analyzer_result = schema_concentric_2_6;
       else if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_6p;
+      else if (ss->kind == s3x1dmd) {
+         analyzer_result = schema_concentric_diamond_line;
+      }
       else
          analyzer_result = schema_concentric;
    }
@@ -2016,6 +2019,7 @@ static calldef_schema concentrify(
    case schema_4x4_lines_concentric:
    case schema_4x4_cols_concentric:
    case schema_in_out_triple:
+   case schema_in_out_triple_1x3s:
    case schema_inner_2x4:
    case schema_inner_2x6:
    case schema_3x3_in_out_triple:
@@ -5407,6 +5411,7 @@ void merge_table::merge_setups(setup *ss,
    result->rotation += reinstatement_rotation;
    result->eighth_rotation = reinstatement_eighth;
    canonicalize_rotation(result);
+   normalize_setup(result, plain_normalize, qtag_compress);
 }
 
 

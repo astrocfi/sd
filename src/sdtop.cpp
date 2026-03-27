@@ -1251,6 +1251,14 @@ void setup::touch_or_rear_back(
                tptr = &step_qtag_pair;
                goto found_tptr;
             }
+            else if (step_ok && livemask == 0x0FF0 && directions == 0x09C0) {
+               tptr = &step_bone_pair;
+               goto found_tptr;
+            }
+            else if (step_ok && livemask == 0xF00F && directions == 0x6003) {
+               tptr = &step_bone_pair;
+               goto found_tptr;
+            }
          }
          break;
       case s2x2:
@@ -4115,17 +4123,24 @@ extern callarray *assoc(
 
             switch (ssK) {
             case s1x2:
-               //            case s2x4:
                // This is the index for "2x1_facing_someone",
                pred = &pred_table[start_of_facing_tests+5];
                break;
+            case s1x3:
+               // This is the index for "3x1_facing_someone",
+               pred = &pred_table[start_of_facing_tests+6];
+               break;
             case s1x4:
                // This is the index for "4x1_facing_someone",
-               pred = &pred_table[start_of_facing_tests+6];
+               pred = &pred_table[start_of_facing_tests+7];
+               break;
+            case s1x6:
+               // This is the index for "6x1_facing_someone",
+               pred = &pred_table[start_of_facing_tests+8];
                break;
             case s1x8:
                // This is the index for "8x1_facing_someone",
-               pred = &pred_table[start_of_facing_tests+7];
+               pred = &pred_table[start_of_facing_tests+9];
                break;
             default:
                goto good;

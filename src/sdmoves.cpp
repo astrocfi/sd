@@ -6688,6 +6688,14 @@ static bool do_misc_schema(
    const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
    parse_block *parseptr = ss->cmd.parseptr;
 
+   // Rewind swaps checkpoint with reverse checkpoint.
+   if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_REWIND)) {
+      if (the_schema == schema_rev_checkpoint)
+         the_schema = schema_checkpoint;
+      else if (the_schema == schema_checkpoint)
+         the_schema = schema_rev_checkpoint;
+   }
+
    who_list sel;
    sel.initialize();
    heritflags zeroherit = 0ULL;
@@ -7745,10 +7753,10 @@ void really_inner_move(
       basic_move(ss, callspec, tbonetest, qtfudged, mirror, result);
       break;
    default:
-      /* Must be sequential or some form of concentric. */
+      // Must be sequential or some form of concentric.
 
-      /* We demand that the final concepts that remain be only those in the following list,
-         which includes all of the "heritable" concepts. */
+      // We demand that the final concepts that remain be only those in the following list,
+      // which includes all of the "heritable" concepts.
 
       if (ss->cmd.cmd_final_flags.test_finalbits(
           ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED |

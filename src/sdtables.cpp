@@ -3739,6 +3739,7 @@ full_expand::thing rear_2x2_pair      = {warn__rear_back,  8, &step_2x2v_stuff};
 full_expand::thing rear_bone_pair     = {warn__some_rear_back, 0, &rear_bone_stuffb};
 full_expand::thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
 full_expand::thing step_qtag_pair     = {warn__none,       0, &step_tby_stuff};
+full_expand::thing step_bone_pair     = {warn__none,       0, &step_bn_stuff};
 full_expand::thing step_2x2h_pair     = {warn__none,    16+1, &step_2x2h_stuff};
 full_expand::thing step_2x2v_pair     = {warn__none,    16+2, &step_2x2v_stuff};
 full_expand::thing step_spindle_pair  = {warn__some_touch, 0, &step_spindle_stuff};
@@ -4245,10 +4246,12 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s1x8,           schema_nothing, {0, 1, 4, 5,         3, 2, 7, 6},
              s1x4,     s1x4,     0, 0, 1, 1,  0xAFE, schema_outside_diamond},
 
-   {s3ptpd,         schema_nothing, {9, -1, 10, -1, 4, -1, 3, -1,        11, 1, 5, 7},
+   {s3ptpd,         schema_nothing,            {9, -1, 10, -1, 4, -1, 3, -1,        11, 1, 5, 7},
              s1x4,     sdmd,     0, 0, 1, 2,  0xAFE, schema_in_out_triple},
-   {s3dmd,          schema_in_out_triple, {8, 9, 0, 10, 6, 4, 2, 3,         7, 11, 1, 5},
+   {s3dmd,          schema_in_out_triple,      {8, 9, 0, 10, 6, 4, 2, 3,         7, 11, 1, 5},
              sdmd,     sdmd,     1, 1, 1, 2,  0x8FB, schema_in_out_triple},
+   {s3dmd,          schema_in_out_triple_1x3s, {0, 1, 2, 6, 7, 8,     9, 10, 11, 3, 4, 5},
+             s2x3,     s1x6,     0, 0, 1, 1,  0x8FE, schema_concentric},
    {s_dhrglass,     schema_in_out_triple, {-1, 0, 6, 5, 2, 1, -1, 4,       -1, 7, -1, 3},
              sdmd,     s1x4,     0, 1, 1, 2,  0x8F7, schema_in_out_triple},
    {sd2x7,          schema_in_out_triple, {0, 1, 12, 13, 5, 6, 7, 8,       4, 3, 2, 11, 10, 9},
@@ -4956,6 +4959,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x2,     s2x3,     0, 0, 2, 1,  0x8FA, schema_concentric},
    {s_323,          schema_concentric, {5, 7, 1, 3,   0, 2, 4, 6},
              sdmd,     s2x2,     1, 0, 1, 1,  0x8FA, schema_concentric},
+   {s_323,          schema_in_out_triple, {0, 1, 2, 4, 5, 6,      7, 3},
+             s2x3,     s1x2,     0, 0, 1, 1,  0x8FA, schema_in_out_triple},
    {s_343,          schema_in_out_triple,  {7, 6, 5, 0, 1, 2,     8, 9, 3, 4},
              s1x3,     s1x4,     0, 0, 2, 2,  0x8FA, schema_in_out_triple},
    {s1x3dmd,        schema_checkpoint, {0, 3, 4, 7,    1, 2, 5, 6},
@@ -11152,6 +11157,8 @@ const schema_attr schema_attrs[] = {
     schema_4x4_in_out_triple},           // schema_4x4_in_out_triple_squash
    {SCA_CONC_REV_ORDER,
     schema_nothing},                     // schema_in_out_triple
+   {SCA_CONC_REV_ORDER,
+    schema_nothing},                     // schema_in_out_triple_1x3s
    {SCA_CONC_REV_ORDER,
     schema_nothing},                     // schema_sgl_in_out_triple
    {SCA_CONC_REV_ORDER,
