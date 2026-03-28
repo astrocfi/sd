@@ -813,8 +813,7 @@ extern bool query_for_call()
                if (gg77->iob88.get_popup_string("*Enter comment:", "", "Enter comment:", "", comment) ==
                    POPUP_ACCEPT_WITH_STRING) {
                   comment_block *new_comment_block = new comment_block;
-                  char *temp_text_ptr = new_comment_block->txt;
-                  string_copy(&temp_text_ptr, comment);
+                  new_comment_block->txt = comment;
 
                   *parse_state.concept_write_ptr = parse_block::get_parse_block();
                   (*parse_state.concept_write_ptr)->concept = &concept_marker_concept_comment;
