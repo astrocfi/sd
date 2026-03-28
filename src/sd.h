@@ -6467,8 +6467,7 @@ extern SDLIB_API heritflags simple_herit_bits_table[];              /* in SDTOP 
 
 
 struct comment_block {
-   char txt[MAX_TEXT_LINE_LENGTH];
-   comment_block *nxt;
+   std::string txt;
 };
 
 // A few accessors to let the UI stuff survive.  They are implemented, for now, in SDTOP.
