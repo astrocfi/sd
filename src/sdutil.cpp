@@ -2337,9 +2337,9 @@ void ui_utils::doublespace_file()
 }
 
 
-void ui_utils::writestuff(const char *s)
+void ui_utils::writestuff(std::string_view s)
 {
-   while (*s) writechar(*s++);
+   for (char ch : s) writechar(ch);
 }
 
 void ui_utils::show_match_item()

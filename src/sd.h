@@ -91,6 +91,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <string>
 
 #include "database.h"
 #include "sdchars.h"
@@ -2468,7 +2469,7 @@ public:
    uims_reply_thing full_resolve();
    void write_aproximately();
    void write_resolve_text(bool doing_file);
-   void writestuff(const char *s);
+   void writestuff(std::string_view s);
    void show_match_item();
    void print_error_person(unsigned int person, bool example);  // In sdmain
    void printperson(uint32_t x);
