@@ -97,6 +97,7 @@ and the following external variables:
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <string>
 
 #include "sd.h"
 #include "paths.h"
@@ -131,7 +132,7 @@ const char *new_outfile_string = (char *) 0;
 char abridge_filename[MAX_TEXT_LINE_LENGTH];
 
 static bool file_error;
-static char full_outfile_name[MAX_FILENAME_LENGTH+1];
+static std::string full_outfile_name;
 static FILE *fildes;
 static char fail_errstring[MAX_ERR_LENGTH];
 static char fail_message[MAX_ERR_LENGTH];
@@ -243,8 +244,7 @@ void ui_utils::open_file()
    int this_file_position;
    int i;
 
-   strncpy(full_outfile_name, outfile_prefix, MAX_FILENAME_LENGTH);
-   strncat(full_outfile_name, outfile_string, MAX_FILENAME_LENGTH);
+   full_outfile_name = to_string(outfile_prefix, outfile_string);
 
    file_error = false;
 
@@ -283,7 +283,7 @@ void ui_utils::open_file()
 
    struct stat statbuf;
 
-   if (stat(full_outfile_name, &statbuf))
+   if (stat(full_outfile_name.c_str(), &statbuf))
       this_file_position = 0;   // File doesn't exist.
    else
       this_file_position = statbuf.st_size;
@@ -301,7 +301,7 @@ void ui_utils::open_file()
    // of the file -- seeks do not affect the write position.
    // But it will create the file if it doesn't exist.
 
-   if (!(fildes = fopen(full_outfile_name, "a"))) {
+   if (!(fildes = fopen(full_outfile_name.c_str(), "a"))) {
       strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       strncpy(fail_message, "open", MAX_ERR_LENGTH);
       file_error = true;
@@ -325,7 +325,7 @@ void ui_utils::open_file()
 
    fclose(fildes);
 
-   if (!(fildes = fopen(full_outfile_name, "r+"))) {
+   if (!(fildes = fopen(full_outfile_name.c_str(), "r+"))) {
       strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       strncpy(fail_message, "open", MAX_ERR_LENGTH);
       file_error = true;
@@ -608,7 +608,7 @@ void ui_utils::close_file()
 
    if (fclose(fildes)) goto error;
 
-   if (stat(full_outfile_name, &statbuf))
+   if (stat(full_outfile_name.c_str(), &statbuf))
       goto error;
 
    last_file_position = statbuf.st_size;
@@ -625,7 +625,7 @@ void ui_utils::close_file()
    strncpy(foo, "WARNING!!!  Sequence has not been written!  File ", MAX_ERR_LENGTH);
    strncat(foo, fail_message, MAX_ERR_LENGTH);
    strncat(foo, " failure on \"", MAX_ERR_LENGTH);
-   strncat(foo, full_outfile_name, MAX_ERR_LENGTH);
+   strncat(foo, full_outfile_name.c_str(), MAX_ERR_LENGTH);
    strncat(foo, "\": ", MAX_ERR_LENGTH);
    strncat(foo, fail_errstring, MAX_ERR_LENGTH);
    strncat(foo, " -- try \"change output file\" or \"change output prefix\" operation.", MAX_ERR_LENGTH);
