@@ -1128,13 +1128,13 @@ extern bool install_outfile_string(const char newstring[])
          letter[0]++;
       }
 
-      strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
+      outfile_string = junk2;
       last_file_position = -1;
       rewrite_filename_as_star[0] = test_string[0];
       return true;
    }
 
-   strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
+   outfile_string = test_string;
    last_file_position = -1;
    return true;
 }
@@ -1405,7 +1405,7 @@ extern void close_init_file()
 
 static int write_back_session_line(FILE *wfile)
 {
-   char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string;
+   const char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string.c_str();
    char level_and_abridge_name[MAX_TEXT_LINE_LENGTH];
    strncpy(level_and_abridge_name, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
 
@@ -2181,7 +2181,7 @@ bool open_session(int argc, char **argv)
             if (argno+1 < nargs) database_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "output_prefix") == 0) {
-            if (argno+1 < nargs) strncpy(outfile_prefix, args[argno+1], MAX_FILENAME_LENGTH);
+            if (argno+1 < nargs) outfile_prefix = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "sequence_num") == 0) {
             if (argno+1 < nargs) {
@@ -2312,7 +2312,7 @@ bool open_session(int argc, char **argv)
       the user.  In the latter case, we will do this step again. */
 
    if (calling_level != l_nonexistent_concept)
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH-80);
+      outfile_string += filename_strings[calling_level];
 
    /* At this point, the command-line arguments, and the preferences in the "[Options]"
       section of the initialization file, have been processed.  Some of those things

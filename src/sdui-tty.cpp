@@ -375,7 +375,8 @@ bool iofull::init_step(init_callback_state s, int n)
 
       parse_level(line);
 
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH-80);
+      outfile_string += filename_strings[calling_level];
+
       break;
 
    case init_database1:

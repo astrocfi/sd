@@ -101,8 +101,8 @@ configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 bool wrote_a_sequence = false;
 bool retain_after_error = false;
-char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
-char outfile_prefix[MAX_FILENAME_LENGTH] = "";
+std::string outfile_string = SEQUENCE_FILENAME;
+std::string outfile_prefix;
 char header_comment[MAX_TEXT_LINE_LENGTH];
 bool creating_new_session = false;
 int sequence_number = -1;
@@ -2626,18 +2626,18 @@ void ui_utils::do_change_outfile(bool signal)
 {
    char newfile_string[MAX_FILENAME_LENGTH];
    char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string);
+   sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string.c_str());
 
    if (iob88.get_popup_string(buffer,
                               "*Enter new name (or '+' to base it on today's date)",
                               "Enter new file name (or '+' to base it on today's date):",
-                              outfile_string, newfile_string) == POPUP_ACCEPT_WITH_STRING && newfile_string[0]) {
+                              outfile_string.c_str(), newfile_string) == POPUP_ACCEPT_WITH_STRING && newfile_string[0]) {
       char confirm_message[MAX_FILENAME_LENGTH+25];
       const char *final_message;
 
       if (install_outfile_string(newfile_string)) {
          strncpy(confirm_message, "Output file changed to \"", 25);
-         strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
+         strncat(confirm_message, outfile_string.c_str(), MAX_FILENAME_LENGTH);
          strncat(confirm_message, "\"", 2);
          final_message = confirm_message;
       }
@@ -2659,19 +2659,19 @@ void ui_utils::do_change_outprefix(bool signal)
 {
    char newprefix_string[MAX_FILENAME_LENGTH];
    char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output prefix is \"%s\".", outfile_prefix);
+   sprintf(buffer, "Current sequence output prefix is \"%s\".", outfile_prefix.c_str());
 
    if (iob88.get_popup_string(buffer,
                               "*Enter new prefix",
                               "Enter new prefix:",
-                              outfile_prefix, newprefix_string) == POPUP_DECLINE)
+                              outfile_prefix.c_str(), newprefix_string) == POPUP_DECLINE)
       return;
 
    char confirm_message[MAX_FILENAME_LENGTH+25];
 
-   strncpy(outfile_prefix, newprefix_string, MAX_FILENAME_LENGTH);
+   outfile_prefix = newprefix_string;
    strncpy(confirm_message, "Output prefix changed to \"", 27);
-   strncat(confirm_message, outfile_prefix, MAX_FILENAME_LENGTH);
+   strncat(confirm_message, outfile_prefix.c_str(), MAX_FILENAME_LENGTH);
    strncat(confirm_message, "\"", 2);
 
    if (signal) {

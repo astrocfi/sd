@@ -6540,8 +6540,8 @@ extern SDLIB_API int starting_sequence_number;                      /* in SDUTIL
 extern SDLIB_API const Cstring old_filename_strings[];              /* in SDUTIL */
 extern SDLIB_API const Cstring new_filename_strings[];              /* in SDUTIL */
 extern SDLIB_API const Cstring *filename_strings;                   /* in SDUTIL */
-extern SDLIB_API char outfile_string[MAX_FILENAME_LENGTH];          /* in SDUTIL */
-extern SDLIB_API char outfile_prefix[MAX_FILENAME_LENGTH];          /* in SDUTIL */
+extern SDLIB_API std::string outfile_string;                        /* in SDUTIL */
+extern SDLIB_API std::string outfile_prefix;                        /* in SDUTIL */
 extern SDLIB_API char header_comment[MAX_TEXT_LINE_LENGTH];         /* in SDUTIL */
 extern SDLIB_API bool creating_new_session;                         /* in SDUTIL */
 
