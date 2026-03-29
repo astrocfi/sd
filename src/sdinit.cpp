@@ -63,6 +63,7 @@ and the following external variables:
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <string>
 
 #include "sd.h"
 #include "sort.h"
@@ -1077,22 +1078,22 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 // Returns FALSE if error occurs.  No action taken in that case.
 // We do not allow blanks in the file name.  To do so would make
 // the parsing of session lines ambiguous.
-extern bool install_outfile_string(const char newstring[])
+extern bool install_outfile_string(std::string_view newstring)
 {
-   char test_string[MAX_FILENAME_LENGTH];
-
    rewrite_filename_as_star[0] = '\0';
 
    // Clean off leading blanks, and stop after any internal blank.
-
-   sscanf(newstring, "%s", test_string);
-   if (!test_string[0]) return false;   // Null file name is not allowed.
+   size_t start = newstring.find_first_not_of(" \t\n\r");
+   if (start == std::string_view::npos) return false;  // Null file name is not allowed.
+   std::string_view trimmed = newstring.substr(start);
+   size_t end = trimmed.find_first_of(" \t\n\r");
+   std::string_view test_string = trimmed.substr(0, end);
 
    // Look for special file string of "*" or "+".
    // If so, generate a new file name.
    // If the character is "+", make the name unique.
 
-   if ((test_string[0] == '*' || test_string[0] == '+') && !test_string[1]) {
+   if ((test_string[0] == '*' || test_string[0] == '+') && test_string.size() == 1) {
       time_t clocktime;
       FILE *filetest;
       char junk[30], junk2[30], t1[20], t2[20], t3[20], t4[20], t5[20];

@@ -6590,7 +6590,7 @@ SDLIB_API bool iterate_over_sel_dir_num(
    bool enable_direction_iteration,
    bool enable_number_iteration);
 SDLIB_API void start_sel_dir_num_iterator();
-SDLIB_API bool install_outfile_string(const char newstring[]);
+SDLIB_API bool install_outfile_string(std::string_view);
 SDLIB_API bool get_first_session_line();
 SDLIB_API bool get_next_session_line(char *dest);
 SDLIB_API void prepare_to_read_menus();
