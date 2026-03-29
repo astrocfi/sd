@@ -1025,33 +1025,33 @@ uims_reply_thing iofull::get_resolve_command()
 }
 
 
-popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
-                                      Cstring /*seed*/, char *dest)
+popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                      std::string_view final_inline_prompt,
+                                      std::string_view /*seed*/, std::string *dest)
 {
    // We ignore the "seed".  But Sd might use it.
 
    // Two lines of prompts are allowed.  But if they start with an asterisk,
    // Sd shows it but Sdtty does not.
 
-   if (prompt1 && prompt1[0] && prompt1[0] != '*') {
+   if (!prompt1.empty() && prompt1[0] != '*') {
       get_utils_ptr()->writestuff(prompt1);
       get_utils_ptr()->newline();
    }
 
-   if (prompt2 && prompt2[0] && prompt2[0] != '*') {
+   if (!prompt2.empty() && prompt2[0] != '*') {
       get_utils_ptr()->writestuff(prompt2);
       get_utils_ptr()->newline();
    }
 
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "%s ", final_inline_prompt);
-   put_line(buffer);
-   get_string(dest, MAX_TEXT_LINE_LENGTH);
+   std::string buffer = to_string(final_inline_prompt, " ");
+   put_line(buffer.c_str());
+   get_string<MAX_TEXT_LINE_LENGTH>(dest);
    // Backspace at start of line declines the popup.
-   if (dest[0] == '\b') return POPUP_DECLINE;
+   if (!dest->empty() && (*dest)[0] == '\b') return POPUP_DECLINE;
 
    current_text_line++;
-   return dest[0] ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
+   return !dest->empty() ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
 }
 
 

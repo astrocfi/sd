@@ -103,7 +103,7 @@ bool wrote_a_sequence = false;
 bool retain_after_error = false;
 std::string outfile_string = SEQUENCE_FILENAME;
 std::string outfile_prefix;
-char header_comment[MAX_TEXT_LINE_LENGTH];
+std::string header_comment;
 bool creating_new_session = false;
 int sequence_number = -1;
 int starting_sequence_number;
@@ -2624,14 +2624,14 @@ extern void initialize_parse()
 
 void ui_utils::do_change_outfile(bool signal)
 {
-   char newfile_string[MAX_FILENAME_LENGTH];
+   std::string newfile_string;
    char buffer[MAX_TEXT_LINE_LENGTH];
    sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string.c_str());
 
    if (iob88.get_popup_string(buffer,
                               "*Enter new name (or '+' to base it on today's date)",
                               "Enter new file name (or '+' to base it on today's date):",
-                              outfile_string.c_str(), newfile_string) == POPUP_ACCEPT_WITH_STRING && newfile_string[0]) {
+                              outfile_string, &newfile_string) == POPUP_ACCEPT_WITH_STRING && !newfile_string.empty()) {
       char confirm_message[MAX_FILENAME_LENGTH+25];
       const char *final_message;
 
@@ -2657,14 +2657,14 @@ void ui_utils::do_change_outfile(bool signal)
 
 void ui_utils::do_change_outprefix(bool signal)
 {
-   char newprefix_string[MAX_FILENAME_LENGTH];
+   std::string newprefix_string;
    char buffer[MAX_TEXT_LINE_LENGTH];
    sprintf(buffer, "Current sequence output prefix is \"%s\".", outfile_prefix.c_str());
 
    if (iob88.get_popup_string(buffer,
                               "*Enter new prefix",
                               "Enter new prefix:",
-                              outfile_prefix.c_str(), newprefix_string) == POPUP_DECLINE)
+                              outfile_prefix, &newprefix_string) == POPUP_DECLINE)
       return;
 
    char confirm_message[MAX_FILENAME_LENGTH+25];
@@ -2732,7 +2732,7 @@ bool backup_one_item()
 bool ui_utils::write_sequence_to_file() THROW_DECL
 {
    char date[MAX_TEXT_LINE_LENGTH];
-   char second_header[MAX_TEXT_LINE_LENGTH];
+   std::string second_header;
    char seqstring[20];
    int j;
 
@@ -2740,20 +2740,22 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    popup_return getout_ind;
 
-   if (header_comment[0]) {
+   if (!header_comment.empty()) {
       char buffer[MAX_TEXT_LINE_LENGTH+MAX_FILENAME_LENGTH];
-      sprintf(buffer, "Session title is \"%s\".", header_comment);
+      sprintf(buffer, "Session title is \"%s\".", header_comment.c_str());
       getout_ind = iob88.get_popup_string(buffer,
                                           "You can give an additional comment for just this sequence.",
-                                          "Enter comment:", "", second_header);
+                                          "Enter comment:", "", &second_header);
    }
    else {
       getout_ind = iob88.get_popup_string("",
                                           "Type comment for this sequence, if desired.",
-                                          "Enter comment:", "", second_header);
+                                          "Enter comment:", "", &second_header);
    }
 
-   second_header[MAX_TEXT_LINE_LENGTH-1] = 0;
+   if (second_header.size() > MAX_TEXT_LINE_LENGTH-1) {
+      second_header = second_header.substr(0, MAX_TEXT_LINE_LENGTH-1);
+   }
 
    // Some user interfaces (those with buttons or icons) may have a button to abort the
    // sequence, rather than just decline the comment.  Such an action comes back as
@@ -2762,7 +2764,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    if (getout_ind == POPUP_DECLINE)
       return false;    // User didn't want to end this sequence after all.
-   else if (getout_ind != POPUP_ACCEPT_WITH_STRING) second_header[0] = '\0';
+   else if (getout_ind != POPUP_ACCEPT_WITH_STRING) second_header.clear();
 
    // Open the file and write it.
 
@@ -2791,7 +2793,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    // Write header comment, if it exists.
 
-   if (header_comment[0]) {
+   if (!header_comment.empty()) {
       writestuff("             ");
       writestuff(header_comment);
    }
@@ -2804,12 +2806,12 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    // Write secondary header comment, if it exists.
 
-   if (second_header[0]) {
+   if (!second_header.empty()) {
       writestuff("       ");
       writestuff(second_header);
    }
 
-   if (header_comment[0] || second_header[0] || sequence_number >= 0) newline();
+   if (!header_comment.empty() || !second_header.empty() || sequence_number >= 0) newline();
 
    newline();
 
@@ -3046,12 +3048,12 @@ extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, ui
 
 
 
-popup_return ui_utils::do_header_popup(char *dest)
+popup_return ui_utils::do_header_popup(std::string *dest)
 {
    char myPrompt[MAX_TEXT_LINE_LENGTH];
 
-   if (header_comment[0])
-      sprintf(myPrompt, "Current title is \"%s\".", header_comment);
+   if (!header_comment.empty())
+      sprintf(myPrompt, "Current title is \"%s\".", header_comment.c_str());
    else
       myPrompt[0] = 0;
 
@@ -3223,7 +3225,7 @@ void ui_utils::run_program(iobase & ggg)
 
       if (creating_new_session) {
          do_change_outfile(false);
-         do_header_popup(header_comment);
+         do_header_popup(&header_comment);
          creating_new_session = false;
       }
 
@@ -3249,9 +3251,9 @@ void ui_utils::run_program(iobase & ggg)
          else
             numstuff[0] = '\0';
 
-         if (header_comment[0])
+         if (!header_comment.empty())
             sprintf(title, "%s  %s%s",
-                    &old_filename_strings[calling_level][1], header_comment, numstuff);
+                    &old_filename_strings[calling_level][1], header_comment.c_str(), numstuff);
          else
             sprintf(title, "%s%s",
                     &old_filename_strings[calling_level][1], numstuff);
@@ -3415,7 +3417,7 @@ void ui_utils::run_program(iobase & ggg)
          do_change_outprefix(false);
          goto new_sequence;
       case start_select_change_title:
-         do_header_popup(header_comment);
+         do_header_popup(&header_comment);
          goto new_sequence;
       case start_select_exit:
          goto normal_exit;
@@ -3755,16 +3757,16 @@ void ui_utils::run_program(iobase & ggg)
             goto start_cycle;
          case command_change_title:
             {
-               char newhead_string[MAX_TEXT_LINE_LENGTH];
+               std::string newhead_string;
 
                // Process it even if it's the null string.
-               if (do_header_popup(newhead_string) != POPUP_DECLINE) {
-                  strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
+               if (do_header_popup(&newhead_string) != POPUP_DECLINE) {
+                  header_comment = newhead_string;
 
-                  if (newhead_string[0]) {
+                  if (!newhead_string.empty()) {
                      char confirm_message[MAX_TEXT_LINE_LENGTH+25];
                      strncpy(confirm_message, "Header comment changed to \"", 28);
-                     strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
+                     strncat(confirm_message, header_comment.c_str(), MAX_TEXT_LINE_LENGTH);
                      strncat(confirm_message, "\"", 2);
                      specialfail(confirm_message);
                   }

@@ -1366,9 +1366,9 @@ extern int process_session_info(Cstring *error_msg)
       }
 
       if (num_fields_parsed == 4)
-         strncpy(header_comment, line+ccount, MAX_TEXT_LINE_LENGTH);
+         header_comment = line+ccount;  // substring
       else
-         header_comment[0] = 0;
+         header_comment.clear();
 
       if (!install_outfile_string(filename_string)) {
          *error_msg = "Bad file name in session file, using default instead.";

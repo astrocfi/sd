@@ -807,10 +807,10 @@ extern bool query_for_call()
       if (global_reply.majorpart == ui_user_cancel) goto recurse_entry;
       if (global_reply.majorpart == ui_command_select) {
          switch ((command_kind) global_reply.minorpart) {
-            char comment[MAX_TEXT_LINE_LENGTH];
          case command_create_comment:
             {
-               if (gg77->iob88.get_popup_string("*Enter comment:", "", "Enter comment:", "", comment) ==
+               std::string comment;
+               if (gg77->iob88.get_popup_string("*Enter comment:", "", "Enter comment:", "", &comment) ==
                    POPUP_ACCEPT_WITH_STRING) {
                   comment_block *new_comment_block = new comment_block;
                   new_comment_block->txt = comment;

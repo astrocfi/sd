@@ -2462,7 +2462,7 @@ public:
 
    void write_header_stuff(bool with_ui_version, uint32_t act_phan_flags);
    bool write_sequence_to_file() THROW_DECL;
-   popup_return do_header_popup(char *dest);
+   popup_return do_header_popup(std::string *dest);
    void display_initial_history(int upper_limit, int num_pics);
    void write_history_line(int history_index,
                            bool picture,
@@ -2545,8 +2545,9 @@ class iobase {
    virtual bool print_any() = 0;
    virtual bool help_manual() = 0;
    virtual bool help_faq() = 0;
-   virtual popup_return get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
-                                         Cstring seed, char *dest) = 0;
+   virtual popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                         std::string_view final_inline_prompt,
+                                         std::string_view seed, std::string *dest) = 0;
    virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
    virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
@@ -2588,8 +2589,9 @@ class iofull : public iobase {
    bool print_any();
    bool help_manual();
    bool help_faq();
-   popup_return get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
-                                 Cstring seed, char *dest);
+   popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                 std::string_view final_inline_prompt,
+                                 std::string_view seed, std::string *dest);
    void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
    void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
@@ -6542,7 +6544,7 @@ extern SDLIB_API const Cstring new_filename_strings[];              /* in SDUTIL
 extern SDLIB_API const Cstring *filename_strings;                   /* in SDUTIL */
 extern SDLIB_API std::string outfile_string;                        /* in SDUTIL */
 extern SDLIB_API std::string outfile_prefix;                        /* in SDUTIL */
-extern SDLIB_API char header_comment[MAX_TEXT_LINE_LENGTH];         /* in SDUTIL */
+extern SDLIB_API std::string header_comment;                        /* in SDUTIL */
 extern SDLIB_API bool creating_new_session;                         /* in SDUTIL */
 
 extern SDLIB_API int text_line_count;                               /* in SDTOP */
