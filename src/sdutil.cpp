@@ -79,6 +79,8 @@ and the following external variables:
 
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <iomanip>
 
 #include "sd.h"
 #include "sort.h"
@@ -1046,9 +1048,7 @@ void ui_utils::write_history_line(int history_index,
    if (!enable_file_writing && !ui_options.diagnostic_mode) {
       i = history_index-configuration::whole_sequence_low_lim+1;
       if (i > 0) {
-         char indexbuf[10];
-         sprintf(indexbuf, "%2d:   ", i);
-         writestuff(indexbuf);
+         writestuff(to_string(std::setw(2), i, ":   "));
       }
    }
 
