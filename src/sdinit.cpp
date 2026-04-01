@@ -1341,18 +1341,14 @@ extern int process_session_info(Cstring *error_msg)
       // Look for an abridge list or stats list, immediately after the level,
       // separated by a minus sign and/or colon.
       if (breakpos && *breakpos == '-') {
-         int len = strlen(breakpos+1);
-
          // If there is already a file name, the operator is overriding
          // the name from the session.  Use the override.  Don't take
          // the name from the session.
-         if (abridge_filename[0] == 0) {
-            if (len > MAX_TEXT_LINE_LENGTH-1) len = MAX_TEXT_LINE_LENGTH-1;
-            strncpy(abridge_filename, breakpos+1, len);
-            abridge_filename[len] = 0;
+         if (abridge_filename.empty()) {
+            abridge_filename = breakpos+1;  // substring
          }
 
-         if (abridge_filename[0] != 0) {
+         if (!abridge_filename.empty()) {
             // The session line specifies an abridgement file.
             // Use it, unless the user specified "delete_abridgement",
             // in which case, we specifically don't use it.
@@ -1407,27 +1403,25 @@ extern void close_init_file()
 static int write_back_session_line(FILE *wfile)
 {
    const char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string.c_str();
-   char level_and_abridge_name[MAX_TEXT_LINE_LENGTH];
-   strncpy(level_and_abridge_name, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
+   std::string level_and_abridge_name = getout_strings[calling_level];
 
    // Write the abridge file name, unless the abridgement is being deleted.
-   if (glob_abridge_mode != abridge_mode_none && abridge_filename[0]) {
-      strcat(level_and_abridge_name, "-");
-      strcat(level_and_abridge_name, abridge_filename);
+   if (glob_abridge_mode != abridge_mode_none && !abridge_filename.empty()) {
+      level_and_abridge_name += "-" + abridge_filename;
    }
 
-   if (header_comment[0])
+   if (!header_comment.empty())
       return
          fprintf(wfile, "%-20s %-11s %6d      %s\n",
                  filename,
-                 level_and_abridge_name,
+                 level_and_abridge_name.c_str(),
                  sequence_number,
-                 header_comment);
+                 header_comment.c_str());
    else
       return
          fprintf(wfile, "%-20s %-11s %6d\n",
                  filename,
-                 level_and_abridge_name,
+                 level_and_abridge_name.c_str(),
                  sequence_number);
 }
 
@@ -2163,17 +2157,17 @@ bool open_session(int argc, char **argv)
          if (strcmp(&args[argno][1], "write_list") == 0) {
             glob_abridge_mode = abridge_mode_writing_only;
             if (argno+1 < nargs)
-               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
+               abridge_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "write_full_list") == 0) {
             glob_abridge_mode = abridge_mode_writing_full;
             if (argno+1 < nargs)
-               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
+               abridge_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "abridge") == 0) {
             glob_abridge_mode = abridge_mode_abridging;
             if (argno+1 < nargs)
-               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
+               abridge_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "sequence") == 0) {
 	     if (argno+1 < nargs) new_outfile_string = args[argno+1];
@@ -2431,15 +2425,15 @@ bool open_session(int argc, char **argv)
    // Must do before telling the uims so any open failure messages
    // come out first.
 
-   const char *sourcenames[2] = {database_filename, abridge_filename};
+   const char *sourcenames[2] = {database_filename, abridge_filename.c_str()};
    bool binaryfileflags[2] = {true, false};
    FILE *database_input_files[2];
 
    if (glob_abridge_mode >= abridge_mode_writing_only) {  // Includes abridge_mode_writing_full.
-      database_input_files[1] = fopen(abridge_filename, "w");
+      database_input_files[1] = fopen(abridge_filename.c_str(), "w");
 
       if (!database_input_files[1])
-         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
+         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename.c_str());
    }
 
    {
@@ -2461,7 +2455,7 @@ bool open_session(int argc, char **argv)
          gg77->iob88.fatal_error_exit(1, "Can't open database file.");
 
       if (glob_abridge_mode == abridge_mode_abridging && !abridge_file)
-         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
+         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename.c_str());
 
       char session_error_msg1[200], session_error_msg2[200];
       session_error_msg1[0] = 0;

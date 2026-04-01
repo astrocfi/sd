@@ -2013,7 +2013,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                           szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
             if (szCallListFilename[0])
-               strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
+               abridge_filename = szCallListFilename;
          }
       }
       else if (IsDlgButtonChecked(hwnd, IDC_ABRIDGE)) {
@@ -2027,7 +2027,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                        szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
          if (szCallListFilename[0])
-            strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
+            abridge_filename = szCallListFilename;
       }
 
       // If user specified the output file during startup dialog, install that.
@@ -2076,17 +2076,17 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    case abridge_mode_writing_only:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    case abridge_mode_writing_full:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_FULL_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    case abridge_mode_abridging:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_ABRIDGE);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    default:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_NORMAL);

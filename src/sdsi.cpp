@@ -129,7 +129,7 @@ int random_number;
 int resolve_test_count;
 const char *database_filename = DATABASE_FILENAME;
 const char *new_outfile_string = (char *) 0;
-char abridge_filename[MAX_TEXT_LINE_LENGTH];
+std::string abridge_filename;
 
 static bool file_error;
 static std::string full_outfile_name;

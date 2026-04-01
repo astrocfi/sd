@@ -6534,7 +6534,7 @@ extern SDLIB_API int random_number;                           // in SDSI
 extern SDLIB_API int resolve_test_count;                      // in SDSI
 extern SDLIB_API const char *database_filename;               // in SDSI
 extern SDLIB_API const char *new_outfile_string;              // in SDSI
-extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
+extern SDLIB_API std::string abridge_filename;                // in SDSI
 
 extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL */
 extern SDLIB_API int sequence_number;                               /* in SDUTIL */
