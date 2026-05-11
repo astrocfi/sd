@@ -1096,37 +1096,32 @@ extern bool install_outfile_string(std::string_view newstring)
    if ((test_string[0] == '*' || test_string[0] == '+') && test_string.size() == 1) {
       time_t clocktime;
       FILE *filetest;
-      char junk[30], junk2[30], t1[20], t2[20], t3[20], t4[20], t5[20];
-      char letter[2];
-      char *p;
+      char t1[20], t2[20], t3[20], t4[20], t5[20];
+      char letter = 'a';
 
-      letter[0] = 'a';
-      letter[1] = '\0';
       time(&clocktime);
       sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
 
       // Now t2 = "Jan", t3 = "16", and t5 = "1996".
 
-      strncpy(junk, t3, 3);
-      strncat(junk, t2, 3);
-      strncat(junk, &t5[strlen(t5)-2], 2);
-      for (p=junk ; *p ; p++) *p = tolower(*p);  // Month in lower case.
-      strncpy(junk2, junk, 10);           // This should be "16jan96".
+      std::string junk = to_string(t3, t2, &t5[strlen(t5)-2]);
+      for (char &ch : junk) ch = tolower(ch);  // Month in lower case.
+      std::string junk2 = junk;  // This should be "16jan96".
 
       for (;;) {
-         strcat(junk2, filename_strings[calling_level]);
+         junk2 += filename_strings[calling_level];
 
          // If the given filename is "+", accept it immediately.
          // Otherwise, fuss with the generated name until we get a
          // nonexistent file.
 
-         if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
+         if (test_string[0] == '+' || (filetest = fopen(junk2.c_str(), "r")) == 0) break;
          fclose(filetest);
-         if (letter[0] == 'z'+1) letter[0] = 'A';
-         else if (letter[0] == 'Z'+1) return false;
-         strncpy(junk2, junk, 10);
-         strncat(junk2, letter, 4);     /* Try appending a letter. */
-         letter[0]++;
+         if (letter == 'z'+1) letter = 'A';
+         else if (letter == 'Z'+1) return false;
+         junk2 = junk;
+         junk2 += letter;  // Try appending a letter.
+         letter++;
       }
 
       outfile_string = junk2;
