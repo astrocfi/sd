@@ -2432,14 +2432,13 @@ bool open_session(int argc, char **argv)
    }
 
    {
-      char cachename[MAX_TEXT_LINE_LENGTH];
-      strncpy(cachename, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
-      strcat(cachename, "cache");
+      std::string cachename = getout_strings[calling_level];
+      cachename += "cache";
       uint32_t escape_bit_junk;
 
       MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
                                     sourcenames, database_input_files,
-                                    cachename, 7, binaryfileflags);
+                                    cachename.c_str(), 7, binaryfileflags);
 
       int *mapped_cache = cache_stuff.map_address();
 
