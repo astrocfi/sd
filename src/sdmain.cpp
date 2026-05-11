@@ -488,7 +488,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
          return true;
 
    new_block = parse_block::get_parse_block();
-   new_block->concept = &concept_mark_end_of_list;
+   new_block->concept_ptr = &concept_mark_end_of_list;
    new_block->call = call;
    new_block->call_to_print = call;
    new_block->options = *options;
@@ -505,9 +505,9 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.tagger = tagg;
-      new_block->concept = &concept_marker_concept_mod;
+      new_block->concept_ptr = &concept_marker_concept_mod;
       new_block->next = parse_block::get_parse_block();
-      new_block->next->concept = &concept_marker_concept_mod;
+      new_block->next->concept_ptr = &concept_marker_concept_mod;
 
       // Deposit the index of the base tagging call.  This will of course be replaced.
 
@@ -526,9 +526,9 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.circcer = circc;
-      new_block->concept = &concept_marker_concept_mod;
+      new_block->concept_ptr = &concept_marker_concept_mod;
       new_block->next = parse_block::get_parse_block();
-      new_block->next->concept = &concept_marker_concept_mod;
+      new_block->next->concept_ptr = &concept_marker_concept_mod;
 
       // Deposit the index of the base circcing call.  This will of course be replaced.
 
@@ -587,7 +587,7 @@ extern bool deposit_concept(const concept_descriptor *conc)
    }
 
    new_block = parse_block::get_parse_block();
-   new_block->concept = conc;
+   new_block->concept_ptr = conc;
    new_block->options.who = sel;
    new_block->options.where = dir;
    new_block->options.number_fields = number_list;
@@ -816,7 +816,7 @@ extern bool query_for_call()
                   new_comment_block->txt = comment;
 
                   *parse_state.concept_write_ptr = parse_block::get_parse_block();
-                  (*parse_state.concept_write_ptr)->concept = &concept_marker_concept_comment;
+                  (*parse_state.concept_write_ptr)->concept_ptr = &concept_marker_concept_comment;
 
                   (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
                   (*parse_state.concept_write_ptr)->call_to_print =

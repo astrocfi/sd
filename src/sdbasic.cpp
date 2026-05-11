@@ -6122,8 +6122,8 @@ static uint32_t do_actual_array_call(
          warn(warn__not_funny);
 
       call_with_name *maybe_call = (ss->cmd.parseptr &&
-                                    ss->cmd.parseptr->concept &&
-                                    ss->cmd.parseptr->concept->kind == marker_end_of_list) ?
+                                    ss->cmd.parseptr->concept_ptr &&
+                                    ss->cmd.parseptr->concept_ptr->kind == marker_end_of_list) ?
          ss->cmd.parseptr->call : (call_with_name *) 0;
 
       merge_action_type action = (maybe_call && (maybe_call->the_defn.callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES)) ?

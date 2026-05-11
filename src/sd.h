@@ -1674,7 +1674,7 @@ class parse_block {
 
 public:
 
-   const concept_descriptor *concept; // the concept or end marker
+   const concept_descriptor *concept_ptr; // the concept or end marker
    call_with_name *call;          // if this is end mark, gives the call; otherwise unused
    setup *setup_for_print;        // may need to know actual setup to decide whether we can say "outer pairs".
    call_with_name *call_to_print; // the original call, for printing (sometimes the field
@@ -1698,7 +1698,7 @@ public:
    static parse_block *get_parse_block();         // In sdutil.cpp
 
    // We allow static instantiation of these things with just
-   // the "concept" field filled in.
+   // the "concept_ptr" field filled in.
    parse_block(const concept_descriptor & ccc) { initialize(&ccc); }
    // Which of course means we need to provide the default constructor too.
    parse_block() { initialize((concept_descriptor *) 0); }
@@ -1709,7 +1709,7 @@ public:
    static void final_cleanup();
 
    void set_parse_block_next(parse_block *thing) { next = thing; }
-   void set_parse_block_concept(const concept_descriptor *thing) { concept = thing; }
+   void set_parse_block_concept(const concept_descriptor *thing) { concept_ptr = thing; }
    void set_parse_block_call(call_with_name *thing) { call = thing; }
    void set_parse_block_call_to_print(call_with_name *thing) { call_to_print = thing; }
    void set_parse_block_replacement_key(short int key) { replacement_key = key; }
@@ -5640,10 +5640,10 @@ class fraction_info {
 
          if (corefracs.flags == 0 && pp) {
             while (pp->next &&
-                   (concept_table[pp->concept->kind].concept_prop & (CONCPROP__USES_PARTS|CONCPROP__SECOND_CALL)) == 0)
+                   (concept_table[pp->concept_ptr->kind].concept_prop & (CONCPROP__USES_PARTS|CONCPROP__SECOND_CALL)) == 0)
                pp = pp->next;
 
-            if (pp->concept->kind <= marker_end_of_list &&
+            if (pp->concept_ptr->kind <= marker_end_of_list &&
                 pp->call && pp->call->the_defn.schema == schema_sequential) {
                m_fetch_total = pp->call->the_defn.stuff.seq.howmanyparts-offset;
                m_highlimit = m_fetch_total;

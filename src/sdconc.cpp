@@ -3704,7 +3704,7 @@ extern void concentric_move(
                parse_block *next_parseptr = begin_ptr->cmd.parseptr;
 
                if (!junk_concepts.test_for_any_herit_or_final_bit() &&
-                   next_parseptr->concept->kind == concept_concentric) {
+                   next_parseptr->concept_ptr->kind == concept_concentric) {
                   localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
                   begin_ptr->cmd.parseptr = next_parseptr->next;
                }
@@ -3712,7 +3712,7 @@ extern void concentric_move(
                if (!cmdin)
                   next_parseptr->concentric_4p = true;
 
-               if (next_parseptr->concept->kind == marker_end_of_list &&
+               if (next_parseptr->concept_ptr->kind == marker_end_of_list &&
                    next_parseptr->call == base_calls[base_call_cloverleaf]) {
                   next_parseptr->call = base_calls[base_call_clover];
                   localmodsout1 |= DFM1_CONC_FORCE_COLUMNS;
@@ -3899,7 +3899,7 @@ extern void concentric_move(
                // the subject call, and then restore same when finished.
 
                parse_block *z1 = save_skippable_concept;
-               while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
+               while (z1->concept_ptr->kind > marker_end_of_list) z1 = z1->next;
 
                call_with_name *savecall = z1->call;
                call_with_name *savecall_to_print = z1->call_to_print;
@@ -5636,8 +5636,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    // the setups and finish the call normally.
 
    if ((cmd2word & CMD_MISC2__ANY_WORK) &&
-       (ss->cmd.parseptr->concept->kind == concept_yoyo || ss->cmd.parseptr->concept->kind == concept_generous) &&
-       ss->cmd.parseptr->next->concept->kind == marker_end_of_list &&
+       (ss->cmd.parseptr->concept_ptr->kind == concept_yoyo || ss->cmd.parseptr->concept_ptr->kind == concept_generous) &&
+       ss->cmd.parseptr->next->concept_ptr->kind == marker_end_of_list &&
        (ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_alternate ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_remainder) &&
@@ -5649,12 +5649,12 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_PART_BIT);
    }
    else if ((cmd2word & CMD_MISC2__ANY_WORK) &&
-            ss->cmd.parseptr->concept->kind == concept_fractional &&
-            ss->cmd.parseptr->concept->arg1 == 1 &&
+            ss->cmd.parseptr->concept_ptr->kind == concept_fractional &&
+            ss->cmd.parseptr->concept_ptr->arg1 == 1 &&
             ss->cmd.cmd_fraction.is_null()) {
       doing_do_last_frac = true;
    }
-   else if ((cmd2word & CMD_MISC2__ANY_WORK) && ss->cmd.parseptr->concept->kind == concept_tandem) {
+   else if ((cmd2word & CMD_MISC2__ANY_WORK) && ss->cmd.parseptr->concept_ptr->kind == concept_tandem) {
       normalizer = normalize_before_isolated_callMATRIXMATRIXMATRIX;
    }
 
@@ -5689,7 +5689,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          this_one->cmd.parseptr = foo.m_result_of_skip;
          parseptrcopy = foo.m_old_retval;
 
-         if (foo.m_skipped_concept->concept->kind == concept_supercall)
+         if (foo.m_skipped_concept->concept_ptr->kind == concept_supercall)
             fail("A concept is required.");
       }
       else if (setupcount == 0 &&
@@ -5902,7 +5902,7 @@ extern void selective_move(
       cmd2thing.parseptr = foo.m_result_of_skip;
 
       const parse_block *kkk = foo.m_skipped_concept;
-      const concept_descriptor *kk = kkk->concept;
+      const concept_descriptor *kk = kkk->concept_ptr;
       concept_kind k = kk->kind;
 
       if (k == concept_supercall)
@@ -6562,8 +6562,8 @@ extern void inner_selective_move(
       parse_block *foo = cmd1->parseptr;
 
       // We see through any "N times" concepts.
-      while (foo && foo->concept &&
-             (foo->concept->kind == concept_n_times || foo->concept->kind == concept_n_times_const)) {
+      while (foo && foo->concept_ptr &&
+             (foo->concept_ptr->kind == concept_n_times || foo->concept_ptr->kind == concept_n_times_const)) {
          foo = foo->next;
       }
 
@@ -6573,7 +6573,7 @@ extern void inner_selective_move(
       // We require a "who-you-are" selector, such as "side boys", rather than a positional selector,
       // such as "ends", so that the people can just do it, without getting hung up on all the
       // complex interactions involved with the "select::hash_lookup" mechanism below.
-      if (foo && foo->concept && foo->call && foo->concept->kind == marker_end_of_list) {
+      if (foo && foo->concept_ptr && foo->call && foo->concept_ptr->kind == marker_end_of_list) {
          if ((foo->call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) == 0 &&
              (foo->call->the_defn.schema == schema_matrix || 
               ((foo->call == base_calls[base_call_circulate] || foo->call == base_calls[base_call_motcirc]) &&
@@ -7503,8 +7503,8 @@ extern void inner_selective_move(
       fail("Can't do this with these people designated.");
 
    // Check for special case of "<anyone> work tandem", and fix the normalization action if so.
-   if (orig_indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept &&
-       cmd1->parseptr->concept->kind == concept_tandem)
+   if (orig_indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept_ptr &&
+       cmd1->parseptr->concept_ptr->kind == concept_tandem)
       action = normalize_before_isolated_callMATRIXMATRIXMATRIX;
 
    // Don't normalize if doing triangle stuff.
@@ -7540,8 +7540,8 @@ extern void inner_selective_move(
 
          if (!callspec &&
              cmdp->parseptr &&
-             cmdp->parseptr->concept &&
-             cmdp->parseptr->concept->kind <= marker_end_of_list)
+             cmdp->parseptr->concept_ptr &&
+             cmdp->parseptr->concept_ptr->kind <= marker_end_of_list)
             callspec = cmdp->parseptr->call;
 
          if (callspec) {
@@ -8026,8 +8026,8 @@ extern void inner_selective_move(
             //   do the call for each one.  It has to be a one-person call like "1/4 right".
             if (setupcount == 1 &&
                 this_one->cmd.parseptr &&
-                this_one->cmd.parseptr->concept &&
-                this_one->cmd.parseptr->concept->kind == marker_end_of_list &&
+                this_one->cmd.parseptr->concept_ptr &&
+                this_one->cmd.parseptr->concept_ptr->kind == marker_end_of_list &&
                 this_one->cmd.parseptr->call &&
                 this_one->cmd.parseptr->call->the_defn.schema == schema_matrix &&
                 !(this_one->cmd.parseptr->call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) &&
@@ -8613,13 +8613,13 @@ extern void inner_selective_move(
          ma = merge_strict_matrix;
       else if (indicator == selective_key_dyp &&
                ss->cmd.parseptr &&
-               ss->cmd.parseptr->concept->kind == concept_do_phantom_2x4)
+               ss->cmd.parseptr->concept_ptr->kind == concept_do_phantom_2x4)
          ma = merge_strict_matrix;
       else if (indicator == selective_key_dyp ||
                indicator == selective_key_plain_from_id_bits)
          ma = merge_after_dyp;
-      else if (indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept &&
-               cmd1->parseptr->concept->kind == concept_tandem) {
+      else if (indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept_ptr &&
+               cmd1->parseptr->concept_ptr->kind == concept_tandem) {
          livemask[0] = the_results[0].little_endian_live_mask();
          livemask[1] = the_results[1].little_endian_live_mask();
          if (the_results[0].kind == s2x8 && the_results[1].kind == s2x4 &&

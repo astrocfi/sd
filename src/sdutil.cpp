@@ -1065,8 +1065,8 @@ void ui_utils::write_history_line(int history_index,
    // change the name of this concept from "centers" to the appropriate thing.
 
    if (history_index == 2 &&
-       thing->concept->kind == concept_centers_or_ends &&
-       thing->concept->arg1 == selector_centers) {
+       thing->concept_ptr->kind == concept_centers_or_ends &&
+       thing->concept_ptr->arg1 == selector_centers) {
       if (configuration::history[1].get_startinfo_specific()->into_the_middle) {
          writestuff(configuration::history[1].get_startinfo_specific()->name);
          writestuff(" ");
@@ -1285,7 +1285,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
 
    while (local_cptr) {
       concept_kind k;
-      const concept_descriptor *item = local_cptr->concept;
+      const concept_descriptor *item = local_cptr->concept_ptr;
       k = item->kind;
 
       if (k == concept_comment) {
@@ -1415,7 +1415,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff("DELAY: ");
                }
                else {
-                  switch (local_cptr->concept->arg1) {
+                  switch (local_cptr->concept_ptr->arg1) {
                   case 0:
                      writestuff("replace the last part of ");
                      if (!local_cptr->next) writestuff("this call:");
@@ -1458,7 +1458,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                   if (k == concept_replace_nth_part ||
                       k == concept_replace_last_part ||
                       k == concept_interrupt_at_fraction) {
-                     switch (local_cptr->concept->arg1) {
+                     switch (local_cptr->concept_ptr->arg1) {
                      case 0: case 1: case 8: case 9:
                         writestuff(" with this call:");
                         break;
@@ -1521,7 +1521,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
                writestuff(" BUT ");
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept_ptr->name, true);
                writestuff(" WITH A [");
                request_final_space = false;
             }
@@ -1596,7 +1596,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                // has been entered, and that its name starts with "@g".
                tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, false);
 
-               if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
+               if (tptr && tptr->concept_ptr->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
 
             if (target_call &&
@@ -1634,7 +1634,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                did_concept = false;
 
                // If there is another concept, we need parens.
-               if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
+               if (next_cptr->concept_ptr->kind > marker_end_of_list) deferred_concept_paren |= 1;
 
                if (deferred_concept_paren == 3) writestuff("(");
                if (deferred_concept_paren) writestuff("(");
@@ -1657,12 +1657,12 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                else if (k == concept_c1_phantom &&
                         comma_after_next_concept == 1 &&
                         next_cptr &&
-                        (next_cptr->concept->kind == concept_tandem ||
-                         next_cptr->concept->kind == concept_frac_tandem)) {
+                        (next_cptr->concept_ptr->kind == concept_tandem ||
+                         next_cptr->concept_ptr->kind == concept_frac_tandem)) {
                   comma_after_next_concept = 5;
                }
 
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept_ptr->name, true);
                request_final_space = true;
             }
 
@@ -2089,8 +2089,8 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
 
                   if ((first_replace == 0) &&
                       (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) &&
-                      ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
-                       subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
+                      ((subsidiary_ptr->concept_ptr->kind == marker_end_of_list) ||
+                       subsidiary_ptr->concept_ptr->kind == concept_another_call_next_mod) &&
                       cc &&
                       ((cc->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ||
                        cc->the_defn.schema == schema_nothing)) {
@@ -2168,12 +2168,12 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
       if (deferred_concept_paren & 1) writestuff(")");
       writestuff(" ");
 
-      if (deferred_concept->concept->kind == concept_n_times_const &&
-          deferred_concept->concept->arg2 == 3)
+      if (deferred_concept->concept_ptr->kind == concept_n_times_const &&
+          deferred_concept->concept_ptr->arg2 == 3)
          writestuff("3 TIMES");
       else
          writestuff_with_decorations(&deferred_concept->options,
-                                     deferred_concept->concept->name, true);
+                                     deferred_concept->concept_ptr->name, true);
       if (deferred_concept_paren & 2) writestuff(")");
    }
 
@@ -2358,7 +2358,7 @@ void parse_block::initialize(const concept_descriptor *cc)
 {
    more_finalherit_flags.clear_all_herit_and_final_bits();
    setup_for_print = (setup *) 0;
-   concept = cc;
+   concept_ptr = cc;
    call = (call_with_name *) 0;
    call_to_print = (call_with_name *) 0;
    options.initialize();
@@ -2413,7 +2413,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
    new_root = new_item;
 
    for (;;) {
-      new_item->concept = original_tree->concept;
+      new_item->concept_ptr = original_tree->concept_ptr;
       new_item->call = original_tree->call;
       new_item->setup_for_print = original_tree->setup_for_print;
       new_item->call_to_print = original_tree->call_to_print;
@@ -2448,7 +2448,7 @@ SDLIB_API extern void reset_parse_tree(parse_block *original_tree, parse_block *
 
    for (;;) {
       if (!new_item || !old_item) crash_print(__FILE__, __LINE__, 0, (setup *) 0);
-      new_item->concept = old_item->concept;
+      new_item->concept_ptr = old_item->concept_ptr;
       new_item->call = old_item->call;
       new_item->call_to_print = old_item->call_to_print;
       new_item->options = old_item->options;
@@ -2718,7 +2718,7 @@ bool backup_one_item()
          return true;
       }
 
-      if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
+      if ((*last_ptr)->concept_ptr->kind <= marker_end_of_list) break;
    }
 
    // We did not find our place.
