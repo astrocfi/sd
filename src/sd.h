@@ -6421,7 +6421,7 @@ struct parse_state_type {
    int parse_stack_index;
    parse_block **concept_write_ptr;
    parse_block **concept_write_base;
-   char specialprompt[MAX_TEXT_LINE_LENGTH];
+   std::string specialprompt;
    uint64_t topcallflags1;
    call_list_kind call_list_to_use;
    call_list_kind base_call_list_to_use;

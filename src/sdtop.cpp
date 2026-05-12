@@ -7020,7 +7020,7 @@ bool do_subcall_query(
    bool this_is_tagger_circcer,
    call_with_name *orig_call)
 {
-   char tempstring_text[MAX_TEXT_LINE_LENGTH];
+   std::string tempstring_text;
 
    // Note whether we are using any mandatory substitutions, so that the menu
    // initialization will always accept this call.
@@ -7093,8 +7093,6 @@ bool do_subcall_query(
 
    // Create a reference on the list.  "search" points to the null item at the end.
 
-   tempstring_text[0] = '\0';           // Null string, just to be safe.
-
    // If doing a tagger, just get the call.
 
    if (snumber == 0 && this_is_tagger_circcer)
@@ -7106,9 +7104,9 @@ bool do_subcall_query(
    else if (interactivity != interactivity_normal)
       ;
    else if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
-      sprintf(tempstring_text, "SUBSIDIARY CALL");
+      tempstring_text = "SUBSIDIARY CALL";
    else if (snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
-      sprintf(tempstring_text, "SECOND SUBSIDIARY CALL");
+      tempstring_text = "SECOND SUBSIDIARY CALL";
    else {
 
       // Need to present the popup to the operator
@@ -7123,21 +7121,20 @@ bool do_subcall_query(
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
 
-      const char *line_format;
+      const char *can_be_replaced;
 
       if (this_is_tagger)
-         line_format = "The \"%s\" can be replaced with a tagging call.";
+         can_be_replaced = "can be replaced with a tagging call.";
       else if (this_is_tagger_circcer)
-         line_format = "The \"%s\" can be replaced with a modified circulate-like call.";
+         can_be_replaced = "can be replaced with a modified circulate-like call.";
       else
-         line_format = "The \"%s\" can be replaced.";
+         can_be_replaced = "can be replaced.";
 
-      char tempstuff[200];
-      sprintf(tempstuff, line_format, pretty_call_name);
-      if (gg77->iob88.yesnoconfirm("Replacement", tempstuff, "Do you want to replace it?", false, false)) {
+      std::string tempstuff = to_string("The \"", pretty_call_name, "\" ", can_be_replaced);
+      if (gg77->iob88.yesnoconfirm("Replacement", tempstuff.c_str(), "Do you want to replace it?", false, false)) {
          // User accepted the modification.
          // Set up the prompt and get the concepts and call.
-         sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
+         tempstring_text = to_string("REPLACEMENT FOR THE ", pretty_call_name);
       }
       else {
          // User declined the modification.  Create a null entry
@@ -7169,7 +7166,7 @@ bool do_subcall_query(
 
    parse_state.parse_stack_index = 0;
    parse_state.call_list_to_use = call_list_any;
-   strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
+   parse_state.specialprompt = std::move(tempstring_text);
 
    // Search for special case of "must_be_tag_call" with no other modification bits.
    // That means it is a new-style tagging call.

@@ -2615,7 +2615,7 @@ extern void initialize_parse()
    if (written_history_items > config_history_ptr)
       written_history_items = config_history_ptr;
 
-   parse_state.specialprompt[0] = '\0';
+   parse_state.specialprompt.clear();
    parse_state.topcallflags1 = 0;
 }
 

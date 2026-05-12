@@ -603,7 +603,7 @@ extern bool deposit_concept(const concept_descriptor *conc)
       if (parse_state.parse_stack_index == 39) specialfail("Excessive number of concepts.");
       parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind = conc->kind;
       parse_state.parse_stack[parse_state.parse_stack_index++].concept_write_save_ptr = parse_state.concept_write_ptr;
-      parse_state.specialprompt[0] = '\0';
+      parse_state.specialprompt.clear();
       parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
    }
 
@@ -790,7 +790,7 @@ extern bool query_for_call()
          }
       }
 
-      if (parse_state.specialprompt[0] != '\0') {
+      if (!parse_state.specialprompt.empty()) {
          gg77->writestuff(parse_state.specialprompt);
          gg77->newline();
       }
@@ -941,13 +941,13 @@ extern bool query_for_call()
 
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
       case concept_centers_and_ends:
-         strncpy(parse_state.specialprompt, "ENTER CALL FOR OUTSIDES", MAX_TEXT_LINE_LENGTH);
+         parse_state.specialprompt = "ENTER CALL FOR OUTSIDES";
          break;
       case concept_on_your_own:
-         strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
+         parse_state.specialprompt = "ENTER SECOND (CENTERS) CALL";
          break;
       default:
-         strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
+         parse_state.specialprompt = "ENTER SECOND CALL";
          break;
       }
 
