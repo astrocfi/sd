@@ -453,16 +453,12 @@ void iofull::create_menu(call_list_kind cl)
 
 void iofull::set_window_title(char s[])
 {
-   char full_text[MAX_TEXT_LINE_LENGTH];
-
+   std::string full_text = to_string("Sdtty ", s);
    if (journal_name[0]) {
-      sprintf(full_text, "Sdtty %s {%s}", s, journal_name);
-   }
-   else {
-      sprintf(full_text, "Sdtty %s", s);
+      full_text += to_string(" {", journal_name, "}");
    }
 
-   ttu_set_window_title(full_text);
+   ttu_set_window_title(full_text.c_str());
 }
 
 
