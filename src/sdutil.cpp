@@ -2625,24 +2625,21 @@ extern void initialize_parse()
 void ui_utils::do_change_outfile(bool signal)
 {
    std::string newfile_string;
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string.c_str());
+   std::string prompt1 = to_string("Current sequence output file is \"", outfile_string, "\".");
 
-   if (iob88.get_popup_string(buffer,
+   if (iob88.get_popup_string(prompt1,
                               "*Enter new name (or '+' to base it on today's date)",
                               "Enter new file name (or '+' to base it on today's date):",
                               outfile_string, &newfile_string) == POPUP_ACCEPT_WITH_STRING && !newfile_string.empty()) {
-      char confirm_message[MAX_FILENAME_LENGTH+25];
-      const char *final_message;
+
+      std::string final_message;
 
       if (install_outfile_string(newfile_string)) {
-         strncpy(confirm_message, "Output file changed to \"", 25);
-         strncat(confirm_message, outfile_string.c_str(), MAX_FILENAME_LENGTH);
-         strncat(confirm_message, "\"", 2);
-         final_message = confirm_message;
+         final_message = to_string("Output file changed to \"", outfile_string, "\"");
       }
-      else
+      else {
          final_message = "No write access to that file, no action taken.";
+      }
 
       if (signal) {
          specialfail(final_message);

@@ -1273,18 +1273,18 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
       fprintf(stderr, "%s\n", s1);
    }
 
-   if (s3) fprintf(stderr, "%s\n", s3);
-   fprintf(stderr, "%s", "Use the -help flag for help.\n");
+   if (s3 && s3[0]) fprintf(stderr, "%s\n", s3);
+   fprintf(stderr, "Use the -help flag for help.\n");
    general_final_exit(1);
 }
 
 
-void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
+void iofull::fatal_error_exit(int code, std::string_view s1, std::string_view s2)
 {
-   if (s2 && s2[0])
-      fprintf(stderr, "%s: %s\n", s1, s2);
+   if (!s2.empty())
+      fprintf(stderr, "%.*s: %.*s\n", int(s1.size()), s1.data(), int(s2.size()), s2.data());
    else
-      fprintf(stderr, "%s\n", s1);
+      fprintf(stderr, "%.*s\n", int(s1.size()), s1.data());
 
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);

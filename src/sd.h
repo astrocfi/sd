@@ -694,15 +694,15 @@ enum error_flag_type {
 };
 
 
-void fail(const char s[]) THROW_DECL NORETURN2;
+void fail(std::string_view s) THROW_DECL NORETURN2;
 
-void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
+void fail_no_retry(std::string_view s) THROW_DECL NORETURN2;
 
-extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
+extern void fail2(std::string_view s1, std::string_view s2) THROW_DECL NORETURN2;
 
-extern void failp(uint32_t id1, const char s[]) THROW_DECL NORETURN2;
+extern void failp(uint32_t id1, std::string_view s) THROW_DECL NORETURN2;
 
-void specialfail(const char s[]) THROW_DECL NORETURN2;
+void specialfail(std::string_view s) THROW_DECL NORETURN2;
 
 extern void warn(warning_index w);
 
@@ -2548,7 +2548,7 @@ class iobase {
    virtual popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
                                          std::string_view final_inline_prompt,
                                          std::string_view seed, std::string *dest) = 0;
-   virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
+   virtual void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="") = 0;
    virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
    virtual selector_kind do_selector_popup(matcher_class &matcher) = 0;
@@ -2559,7 +2559,7 @@ class iobase {
    virtual uint32_t get_one_number(matcher_class &matcher) = 0;
    virtual uims_reply_thing get_call_command() = 0;
    virtual void dispose_of_abbreviation(const char *linebuff) = 0;
-   virtual void set_pick_string(Cstring string) = 0;
+   virtual void set_pick_string(std::string_view string) = 0;
    virtual void display_help() = 0;
    virtual void terminate(int code) = 0;
    virtual void process_command_line(int *argcp, char ***argvp) = 0;
@@ -2592,7 +2592,7 @@ class iofull : public iobase {
    popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
                                  std::string_view final_inline_prompt,
                                  std::string_view seed, std::string *dest);
-   void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
+   void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="");
    void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
    selector_kind do_selector_popup(matcher_class &matcher);
@@ -2600,7 +2600,7 @@ class iofull : public iobase {
    int do_circcer_popup();
    int do_tagger_popup(int tagger_class);
    int yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl, bool info);
-   void set_pick_string(Cstring string);
+   void set_pick_string(std::string_view string);
    uint32_t get_one_number(matcher_class &matcher);
    uims_reply_thing get_call_command();
    void dispose_of_abbreviation(const char *linebuff);
@@ -2710,8 +2710,8 @@ public:
 private:
 
    error_flag_type save_error_flag;
-   char save_error_message1[MAX_ERR_LENGTH];
-   char save_error_message2[MAX_ERR_LENGTH];
+   std::string save_error_message1;
+   std::string save_error_message2;
    uint32_t save_collision_person1;
    uint32_t save_collision_person2;
 };
@@ -4904,8 +4904,8 @@ enum split_command_kind {
 /* VARIABLES */
 
 
-extern SDLIB_API char error_message1[MAX_ERR_LENGTH];               /* in SDTOP */
-extern SDLIB_API char error_message2[MAX_ERR_LENGTH];               /* in SDTOP */
+extern SDLIB_API std::string error_message1;                        /* in SDTOP */
+extern SDLIB_API std::string error_message2;                        /* in SDTOP */
 extern SDLIB_API bool enforce_overcast_warning;                     /* in SDTOP */
 extern SDLIB_API uint32_t collision_person1;                        /* in SDTOP */
 extern SDLIB_API uint32_t collision_person2;                        /* in SDTOP */

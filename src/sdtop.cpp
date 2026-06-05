@@ -166,8 +166,8 @@ and the following external variables:
 // *** There are more globals proclaimed at line 235.
 ui_utils *gg77 = 0;
 int text_line_count = 0;
-char error_message1[MAX_ERR_LENGTH];
-char error_message2[MAX_ERR_LENGTH];
+std::string error_message1;
+std::string error_message2;
 uint32_t collision_person1;
 uint32_t collision_person2;
 int config_history_ptr;
@@ -3791,48 +3791,43 @@ extern void crash_print(const char *filename, int linenum, int newtb, setup *ss)
 
 
 
-extern void fail(const char s[]) THROW_DECL
+extern void fail(std::string_view s) THROW_DECL
 {
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_1_line);
 }
 
 
-extern void fail_no_retry(const char s[]) THROW_DECL
+extern void fail_no_retry(std::string_view s) THROW_DECL
 {
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_no_retry);
 }
 
 
-extern void fail2(const char s1[], const char s2[]) THROW_DECL
+extern void fail2(std::string_view s1, std::string_view s2) THROW_DECL
 {
-   strncpy(error_message1, s1, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   strncpy(error_message2, s2, MAX_ERR_LENGTH);
-   error_message2[MAX_ERR_LENGTH-1] = '\0';
+   error_message1 = s1;
+   error_message2 = s2;
    throw error_flag_type(error_flag_2_line);
 }
 
 
-extern void failp(uint32_t id1, const char s[]) THROW_DECL
+extern void failp(uint32_t id1, std::string_view s) THROW_DECL
 {
    collision_person1 = id1;
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_cant_execute);
 }
 
 
-extern void specialfail(const char s[]) THROW_DECL
+extern void specialfail(std::string_view s) THROW_DECL
 {
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_wrong_resolve_command);
 }
 
@@ -3840,16 +3835,16 @@ extern void specialfail(const char s[]) THROW_DECL
 void saved_error_info::collect(error_flag_type flag)
 {
    save_error_flag = flag;
-   strncpy((char *) save_error_message1, error_message1, MAX_ERR_LENGTH);
-   strncpy((char *) save_error_message2, error_message2, MAX_ERR_LENGTH);
+   save_error_message1 = error_message1;
+   save_error_message2 = error_message2;
    save_collision_person1 = collision_person1;
    save_collision_person2 = collision_person2;
 }
 
 void saved_error_info::throw_saved_error() THROW_DECL
 {
-   strncpy(error_message1, (char *) save_error_message1, MAX_ERR_LENGTH);
-   strncpy(error_message2, (char *) save_error_message2, MAX_ERR_LENGTH);
+   error_message1 = save_error_message1;
+   error_message2 = save_error_message2;
    collision_person1 = save_collision_person1;
    collision_person2 = save_collision_person2;
    throw save_error_flag;
