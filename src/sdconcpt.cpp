@@ -1478,7 +1478,7 @@ static void do_concept_parallelogram(
       fail("Can't do this concept with parallelogram.");
 
    if (no_overcast) ss->clear_all_overcasts();
-   divided_setup_move(ss, map_code, phancontrol, true, result);
+   divided_setup_move(ss, map_code, phancontrol, true, result, 0);
    if (no_overcast) result->clear_all_overcasts();
 
    // The split-axis bits are gone.  If someone needs them, we have work to do.
@@ -4137,7 +4137,7 @@ static void do_concept_phan_crazy(
    setup_command cmd = tempsetup.cmd;    // We will modify these flags, and, in any case,
                                          // we need to rematerialize them at each step.
 
-   uint32_t offsetmapcode;
+   uint32_t offsetmapcode = 0;
    uint32_t specialmapcode = ~0U;
 
    phantest_kind phanstuff = phantest_ok;
@@ -4553,6 +4553,23 @@ static void do_concept_stable(
    setup *result) THROW_DECL
 {
    if (process_brute_force_mxn(ss, parseptr, do_concept_stable, result)) return;
+
+   // Check for NXN given *before* stable.  Note that "stable" is not treated as
+   // an ordinary heritable flag, so it won't get combined with any other
+   // such flags.  It will come here directly, and any subsequent heritable flag
+   // will be treated in the natural way, farther down the line.
+   //
+   // But if NXN is set when we get here. we do something special.  First,
+   // we do the downstream call naturally, handling any NXN naturally.
+
+   if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_NXNMASK)) {
+      // Just do the call, with its NXN, and turning on the "stable" bit.
+      // This code is the only place where the "stable" bit gets turned on,
+      // because "stable" is not actually parsed normally.
+      ss->cmd.cmd_final_flags.set_heritbits(INHERITFLAG_STABLE);
+      move(ss, false, result);
+      return;
+   }
 
    if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
       fail("Illegal modifier before \"stable\".");
@@ -6020,7 +6037,7 @@ static void do_concept_inner_outer(
    setup *result) THROW_DECL
 {
    uint32_t livemask;
-   calldef_schema sch;
+   calldef_schema sch = schema_concentric;
    int rot = 0;
    int arg1 = parseptr->concept->arg1;
 
@@ -7644,7 +7661,7 @@ static void do_concept_meta(
       nocmd.cmd_misc3_flags |= CMD_MISC3__META_NOCMD;
 
       // Foo1 finds the boundaries of the first subconcept.  (Foo2 wil show the second subconcept.)
-      skipped_concept_info foo1(specialfirstptr ? specialfirstptr : parseptr->next);
+      skipped_concept_info foo1(specialfirstptr ? specialfirstptr : parseptr->next, key);
 
       if (foo1.m_heritflag != 0ULL) {
          result_of_skip = foo1.m_concept_with_root;
@@ -9500,9 +9517,17 @@ static void do_concept_concentric(
       ss->cmd.parseptr = parseptr;
       divided_setup_move(ss, map_code, phantest_ok, true, result);
       break;
-   case schema_intermediate_diamond: case schema_outside_diamond:
+   case schema_intermediate_diamond:
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
       concentric_move(ss, &sscmd, (setup_command *) 0, schema, 0,
+                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0U, result);
+
+      // 8-person concentric operations do not show the split.
+      result->result_flags.clear_split_info();
+      break;
+   case schema_outside_diamond:
+      ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
+      concentric_move(ss, (setup_command *) 0, &sscmd, schema, 0,
                       DFM1_CONC_CONCENTRIC_RULES, true, false, ~0U, result);
 
       // 8-person concentric operations do not show the split.
@@ -9591,11 +9616,13 @@ extern bool do_big_concept(
    remove_z_distortion(ss);
 
    void (*concept_func)(setup *, parse_block *, setup *);
-   parse_block *this_concept_parse_block = the_concept_parse_block;
-   const concept_descriptor *this_concept = this_concept_parse_block->concept;
+   // Make a local copy; we may need to modify it.
+   parse_block local_concept_parse_block = *the_concept_parse_block;
+   const concept_descriptor *this_concept = local_concept_parse_block.concept;
    concept_kind this_kind = this_concept->kind;
    const concept_table_item *this_table_item = &concept_table[this_kind];
-   const uint32_t prop_bits = this_table_item->concept_prop;
+
+   uint32_t prop_bits = this_table_item->concept_prop;
 
    if (this_kind == concept_multiple_diamonds ||
        this_kind == concept_in_out_nostd ||
@@ -9722,7 +9749,7 @@ extern bool do_big_concept(
       // by going over the "standard" and skipping comments.
 
       junk_concepts.clear_all_herit_and_final_bits();
-      substandard_concptptr = process_final_concepts(the_concept_parse_block->next,
+      substandard_concptptr = process_final_concepts(local_concept_parse_block.next,
                                                      true, &junk_concepts,
                                                      true, false);
 
@@ -9773,7 +9800,7 @@ extern bool do_big_concept(
 
       uint32_t tbonetest;
       uint32_t stdtest;
-      int livemask = get_standard_people(ss, this_concept_parse_block->options.who.who[0],
+      int livemask = get_standard_people(ss, local_concept_parse_block.options.who.who[0],
                                          tbonetest, stdtest);
 
       if (!tbonetest) {
@@ -9864,7 +9891,7 @@ extern bool do_big_concept(
       doing_select = (prop_bits & CONCPROP__USE_SELECTOR) != 0;
 
       if (doing_select) {
-         current_options.who = this_concept_parse_block->options.who;
+         current_options.who = local_concept_parse_block.options.who;
       }
 
       for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
@@ -9895,9 +9922,9 @@ extern bool do_big_concept(
          this_kind == concept_special_sequential_sel_no_2nd))
       ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__PARTS_OVER_THIS_CONCEPT;
 
-   ss->cmd.parseptr->concentric_4p = this_concept_parse_block->concentric_4p;
+   ss->cmd.parseptr->concentric_4p = local_concept_parse_block.concentric_4p;
 
-   (*concept_func)(ss, this_concept_parse_block, result);
+   (*concept_func)(ss, &local_concept_parse_block, result);
    remove_tgl_distortion(result);
    // Beware -- result is not necessarily canonicalized.
    if (!(prop_bits & CONCPROP__SHOW_SPLIT))
@@ -10038,7 +10065,7 @@ const concept_table_item concept_table[] = {
     do_concept_single_diagonal},                            // concept_single_diagonal
    {CONCPROP__NO_STEP | CONCPROP__STANDARD,
     do_concept_double_diagonal},                            // concept_double_diagonal
-   {CONCPROP__GET_MASK,
+   {CONCPROP__GET_MASK | CONCPROP__MATRIX_OBLIVIOUS,
     do_concept_parallelogram},                              // concept_parallelogram
    {CONCPROP__NEED_ARG2_MATRIX | Standard_matrix_phantom,
     do_concept_multiple_lines},                             // concept_multiple_lines

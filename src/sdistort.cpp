@@ -3153,7 +3153,8 @@ extern void distorted_move(
    int8_t the_map[8];
    const parse_block *next_parseptr;
    final_and_herit_flags junk_concepts;
-   int rot, rotz;
+   int rot = 0;
+   int rotz = 0;
    setup_kind k;
    setup a1;
    setup res1;
@@ -3806,7 +3807,7 @@ extern void triple_twin_move(
 {
    ss->clear_all_overcasts();
    uint32_t tbonetest = global_tbonetest;
-   uint32_t mapcode;
+   uint32_t mapcode = 0;
    phantest_kind phan = (phantest_kind) parseptr->concept->arg4;
 
    // Arg1 = 0/1/3 for C/L/W, usual coding.

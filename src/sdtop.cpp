@@ -1569,8 +1569,6 @@ void setup::do_matrix_expansion(
                goto expanded;
             }
          }
-
-
          else if (needpropbits & (NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG))) {
             // Egads!  It turns out that the "CONCPROP__NEEDK_TWINQTAG"
             // indicator is used not just for "twin phantom 1/4 tags", but for
@@ -3650,7 +3648,7 @@ bool check_for_concept_group(
        (get_meta_key_props(this_concept) & MKP_RESTRAIN_1))
       retstuff.m_need_to_restrain |= 1;
 
-   parse_block *skip_a_pair = (parse_block *) 0;
+   parse_block *double_skip = (parse_block *) 0;
    final_and_herit_flags junk_concepts;
 
    junk_concepts.clear_all_herit_and_final_bits();
@@ -3658,7 +3656,7 @@ bool check_for_concept_group(
 
    if (temp && temp != parseptrcopy && temp->concept->kind == concept_concentric &&
        !junk_concepts.bool_test_heritbits(~(INHERITFLAG_GRAND|INHERITFLAG_SINGLE|INHERITFLAG_CROSS))) {
-         skip_a_pair = temp;
+         double_skip = temp;
    }
    else {
       junk_concepts.clear_all_herit_and_final_bits();
@@ -3671,7 +3669,7 @@ bool check_for_concept_group(
             if ((temp->concept->kind == concept_tandem ||
                  temp->concept->kind == concept_frac_tandem) &&
                 (!junk_concepts.test_for_any_herit_or_final_bit())) {
-               skip_a_pair = temp;
+               double_skip = temp;
             }
          }
          else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
@@ -3682,7 +3680,7 @@ bool check_for_concept_group(
                  temp->concept->kind == concept_multiple_boxes) &&
                 temp->concept->arg4 == 3 &&
                 (!junk_concepts.test_for_any_herit_or_final_bit())) {
-               skip_a_pair = temp;
+               double_skip = temp;
             }
          }
          else if (k == concept_parallelogram ||
@@ -3696,27 +3694,32 @@ bool check_for_concept_group(
                  temp->concept->kind == concept_do_phantom_boxes) &&
                 temp->concept->arg3 == MPKIND__SPLIT &&
                 (!junk_concepts.test_for_any_herit_or_final_bit())) {
-               skip_a_pair = temp;
+               // But not if being done "initially" or whatever.
+               // In that case the "parallelogram" (or whatever) and the
+               // "split phantom waves (or whatever)" are treated as one concept.
+               if (retstuff.m_meta_key != meta_key_nth_part_work &&
+                   retstuff.m_meta_key != meta_key_echo)
+                  double_skip = temp;
             }
          }
          else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
             // Look for combinations like "random/initially/echo/nth-part-work <concept>".
-            skip_a_pair = parseptr_skip;
+            double_skip = parseptr_skip;
          }
          else if (k == concept_so_and_so_only &&
                   ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
             // Look for combinations like "<anyone> work <concept>".
-            skip_a_pair = parseptr_skip;
+            double_skip = parseptr_skip;
          }
          else if (k == concept_matrix) {
-            skip_a_pair = parseptr_skip;
+            double_skip = parseptr_skip;
          }
       }
    }
 
-   if (skip_a_pair) {
-      parseptrcopy = skip_a_pair;
-      next_parseptr = skip_a_pair;
+   if (double_skip) {
+      parseptrcopy = double_skip;
+      next_parseptr = double_skip;
       retval = true;
       goto try_again;
    }
@@ -4574,6 +4577,9 @@ extern callarray *assoc(
       case cr_didnt_say_matrix:
          if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) goto bad;
          goto good;
+      case cr_phantom_in_use:
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) goto good;
+         goto bad;
       case cr_occupied_as_h:
          if (ssK != s3x4 ||
              (ss->people[1].id1 | ss->people[2].id1 |
@@ -4836,7 +4842,8 @@ extern callarray *assoc(
          if (ssK == s2x4)
             goto good;
       case cr_people_1_opp_real:
-         if (ss->people[1].id1 != 0 && ss->people[(begin_size>>1)+1].id1 != 0) goto good;
+         if (ss->people[1].id1 != 0 && ss->people[(begin_size>>1)+1].id1 != 0)
+            goto good;
          goto bad;
       case cr_people_12_opp_real:
          if (ss->people[1].id1 != 0 && ss->people[(begin_size>>1)+1].id1 != 0 &&
@@ -4848,6 +4855,14 @@ extern callarray *assoc(
              ss->people[4].id1 != 0 && ss->people[(begin_size>>1)+4].id1 != 0) 
             goto good;
          goto bad;
+      case cr_people_0_opp_phan:
+         // We need 0 and 2 phantom, and, if this is of size 4, everyone else real.
+         // All kind of stupid.
+         if (begin_size == 4 && (ss->people[1].id1 == 0 || ss->people[3].id1 == 0))
+            goto bad;
+         if (ss->people[0].id1 != 0 || ss->people[(begin_size>>1)+0].id1 != 0)
+            goto bad;
+         goto good;
 
       case cr_slide_seems_good:
          {
@@ -5519,7 +5534,8 @@ parse_block *process_final_concepts(
 }
 
 
-skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
+skipped_concept_info::skipped_concept_info(parse_block *incoming,
+                                           meta_key_kind meta_key /* = meta_key_none */) THROW_DECL
 {
    if (!incoming)
       fail("Need a concept.");
@@ -5534,6 +5550,7 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
    m_result_of_skip = m_skipped_concept->next;
    m_need_to_restrain = 0;
    m_root_of_result_of_skip = (parse_block **) 0;
+   m_meta_key = meta_key;
 
    final_and_herit_flags junk_concepts;
    junk_concepts.clear_all_herit_and_final_bits();

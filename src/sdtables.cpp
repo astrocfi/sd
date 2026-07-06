@@ -2118,6 +2118,11 @@ map::map_thing map::map_init_table[] = {
    {{2, 3, 4, 5, 8, 9, 10, 11},
     s2x4,1,MPKIND__OFFS_R_HALF,1, warn__none,  s2x6,      0x000, 0},
 
+   {{0, 1, 2, 3, 4, 5, 6, 7,   12, 13, 14, 15, 16, 17, 18, 19},
+    s2x8,1,MPKIND__OFFS_L_HALF,1, warn__none,  s2x12,      0x000, 0},
+   {{4, 5, 6, 7, 8, 9, 10, 11,   16, 17, 18, 19, 20, 21, 22, 23},
+    s2x8,1,MPKIND__OFFS_R_HALF,1, warn__none,  s2x12,      0x000, 0},
+
    {{15, 16, 17, 3, 6, 7, 8, 12},
     s2x4,1,MPKIND__OFFSPG_L1,1, warn__none,  s3x6,      0x000, 0},
    {{2, 8, 7, 6, 11, 17, 16, 15},
@@ -4099,13 +4104,13 @@ full_expand::thing touch_init_table3[] = {
 // 100 bit: don't allow for synthesize; that is, you can go in, but you can't come out.
 // 80 bit: forbid synthesize if came from schema_rev_checkpoint_concept.
 // 40 bit: forbid synthesize if matrix concept was given.
+// 20 bit: forbid synthesize if outer_elongation = 3 and rotation different
+// 10 bit: forbid synthesize if outer_elongation = 3 and rotation same
 // Low 4 bits forbid synthesize if
 //   8: outside elongation is vertical and rotation different
 //   4: outside elongation is vertical and rotation same
 //   2: outside elongation is horizontal and rotation different
 //   1: outside elongation is horizontal and rotation same
-// 20 bit: forbid synthesize if outer_elongation = 3 and rotation different
-// 10 bit: forbid synthesize if outer_elongation = 3 and rotation same
 
 // First line:
 //   bigsetup    lyzer      ... maps .............
@@ -4218,9 +4223,22 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 
    {s3x1dmd,        schema_intermediate_diamond, {7, 1, 3, 5,         0, 2, 4, 6},
              sdmd,     s1x4,     1, 0, 1, 1,  0x8FD, schema_intermediate_diamond},
-   {s3x1dmd,        schema_outside_diamond, {7, 0, 3, 4,         1, 2, 5, 6},
-             sdmd,     s1x4,     1, 0, 1, 1,  0x8FD, schema_outside_diamond},
-   {s_crosswave,    schema_outside_diamond, {0, 2, 4, 6,         1, 3, 5, 7},
+
+   {s3x1dmd,        schema_outside_diamond, {1, 2, 5, 6,         7, 0, 3, 4},
+             s1x4,     sdmd,     0, 1, 1, 1,  0x8DF, schema_outside_diamond},
+   {s3x1dmd,        schema_outside_diamond, {1, 2, 5, 6,         7, 0, 3, 4},
+             s1x4,     sdmd,     0, 1, 0, 1,  0x8F7, schema_outside_diamond},
+
+   {s3x1dmd,        schema_outside_diamond, {1, 2, 5, 6,         0, 3, 4, 7},
+             s1x4,     sdmd,     0, 0, 1, 1,  0xAEF, schema_outside_diamond},
+
+   {s1x8,           schema_outside_diamond, {3, 2, 7, 6,         0, 1, 4, 5},
+             s1x4,     s1x4,     0, 0, 1, 1,  0x8FA, schema_outside_diamond},
+
+   {s_crosswave,    schema_outside_diamond, {6, 7, 2, 3,         0, 1, 4, 5},
+             s1x4,     s1x4,     1, 0, 1, 1,  0x8F7, schema_outside_diamond},
+
+   {s_crosswave,    schema_outside_diamond, {1, 3, 5, 7,         0, 2, 4, 6},
              sdmd,     sdmd,     0, 0, 1, 1,  0x8FE, schema_outside_diamond},
 
    {s_wingedstar,   schema_intermediate_diamond, {1, 3, 5, 7,         0, 2, 4, 6},
@@ -4231,20 +4249,26 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    // For putting back shape-changers.
    {s1x3dmd,        schema_intermediate_diamond, {1, 3, 5, 7,         0, 2, 4, 6},
              sdmd,     s1x4,     0, 0, 1, 1,  0x8FE, schema_intermediate_diamond},
-   {s1x3dmd,        schema_outside_diamond, {0, 3, 4, 7,         1, 2, 5, 6},
-             sdmd,     s1x4,     0, 0, 1, 1,  0x8FE, schema_outside_diamond},
+   {s1x3dmd,        schema_outside_diamond, {1, 2, 5, 6,         0, 3, 4, 7},
+             s1x4,     sdmd,     0, 0, 1, 1,  0x8FE, schema_outside_diamond},
    {s_crosswave,    schema_nothing, {6, 7, 2, 3,         0, 1, 4, 5},
              s1x4,     s1x4,     1, 0, 1, 1,  0x8FD, schema_intermediate_diamond},
+   {s1x8,           schema_nothing, {3, 2, 7, 6,         0, 1, 4, 5},
+             s1x4,     s1x4,     0, 0, 1, 1,  0x8EF, schema_outside_diamond},
+   // previously                              0xAFE
+
    {s_crosswave,    schema_nothing, {6, 7, 2, 3,         0, 1, 4, 5},
              s1x4,     s1x4,     1, 0, 1, 1,  0x8FD, schema_outside_diamond},
+   {s_crosswave,    schema_nothing, {6, 7, 2, 3,         0, 1, 4, 5},
+             s1x4,     s1x4,     1, 0, 1, 1,  0x8DF, schema_outside_diamond},
    {s_ptpd,         schema_nothing, {1, 7, 5, 3,         0, 2, 4, 6},
              s2x2,     s1x4,     0, 0, 1, 1,  0xAFE, schema_intermediate_diamond},
-   {s_bone,         schema_nothing, {0, 1, 4, 5,         6, 7, 2, 3},
-             s2x2,     s1x4,     0, 0, 1, 1,  0xAFE, schema_outside_diamond},
+   {s_bone,         schema_nothing, {6, 7, 2, 3,         0, 1, 4, 5},
+             s1x4,     s2x2,     0, 0, 1, 1,  0xAFE, schema_outside_diamond},
+   {s_qtag,         schema_nothing, {6, 7, 2, 3,         0, 1, 4, 5},
+             s1x4,     s2x2,     0, 0, 1, 1,  0x8EF, schema_outside_diamond},
    {s1x8,           schema_nothing, {1, 3, 5, 7,         0, 2, 4, 6},
              s1x4,     s1x4,     0, 0, 1, 1,  0xAFE, schema_intermediate_diamond},
-   {s1x8,           schema_nothing, {0, 1, 4, 5,         3, 2, 7, 6},
-             s1x4,     s1x4,     0, 0, 1, 1,  0xAFE, schema_outside_diamond},
 
    {s3ptpd,         schema_nothing,            {9, -1, 10, -1, 4, -1, 3, -1,        11, 1, 5, 7},
              s1x4,     sdmd,     0, 0, 1, 2,  0xAFE, schema_in_out_triple},
@@ -11248,6 +11272,7 @@ const schema_attr schema_attrs[] = {
 
 // BEWARE!!  This list is keyed to the definition of "meta_key_kind" in sd.h .
 const uint32_t meta_key_props[] = {
+   0,                                 // meta_key_none
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_piecewise

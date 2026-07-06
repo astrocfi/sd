@@ -44,8 +44,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.83"
-#define TIME_STAMP "wba@alum.mit.edu Mar 25 2026 $"
+#define VERSION_STRING "39.84"
+#define TIME_STAMP "wba@alum.mit.edu Jul 4 2026 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -433,7 +433,7 @@ static bool find_numbers(int howmanynumbers, bool forbid_zero,
 extern bool deposit_call(call_with_name *call, const call_conc_option_state *options)
 {
    parse_block *new_block;
-   call_with_name *tagger_call;
+   call_with_name *tagger_call = (call_with_name *) 0;
    uint32_t tagg = 0;
    who_list sel;
    direction_kind dir = direction_uninitialized;

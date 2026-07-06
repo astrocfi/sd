@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.83
-@set title2 Database version = 39.83 format = 430
+@set title1 RELEASE NOTES FOR VERSION 39.84
+@set title2 Database version = 39.84 format = 433
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.84::
 * 39.83::
 * 39.82::
 * 39.81::
@@ -183,7 +184,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.83, Top, (dir)
+@node Intro, 39.84, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -194,11 +195,38 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2026 William B. Ackerman
 @sp 3
 @menu
-* 39.83::               Changes in the current version
+* 39.84::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.83, 39.82, Intro, Top
+@node 39.84, 39.83, Intro, Top
+@unnumberedsec Version 39.84 changes
+
+Deal with tricky aspects of @strong{split circulate}.
+@sp 1
+Handle @strong{strut right/left} with single stable in big matrix.
+@sp 1
+Fix bug in @strong{zip the top}.
+@sp 1
+Improve @strong{mesh}.
+@sp 1
+Improve @strong{roll out to a column}.
+@sp 1
+Improve @strong{lock 'em up}.
+@sp 1
+Improve @strong{central interlocked ramble}.
+@sp 1
+Fix the wrong-handed collision in @strong{the action}.
+@sp 1
+Improved handling of @strong{stable}.
+@sp 1
+Improved handling of outside diamonds.
+@sp 1
+Treat @strong{parallelogram} and @strong{split phantom whatever}
+as a single concept when used under stuff like @strong{initially}.
+
+@c ************
+@node 39.83, 39.82, 39.84, Top
 @unnumberedsec Version 39.83 changes
 
 Better handling of triple general 1/4 tag setups, with an alternative

@@ -1728,9 +1728,9 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
          // This is a "marker", so it has a call, perhaps with a selector and/or number.
          // The call may be null if we are printing a partially entered line.  Beware.
 
-         parse_block *sub1_ptr;
-         parse_block *sub2_ptr;
-         parse_block *search;
+         parse_block *sub1_ptr = (parse_block *) 0;
+         parse_block *sub2_ptr = (parse_block *) 0;
+         parse_block *search = (parse_block *) 0;
          bool pending_subst1, pending_subst2;
 
          parse_block *save_cptr = local_cptr;
@@ -2896,7 +2896,7 @@ selector_kind translate_selector_permutation2(uint32_t x)
 
 extern uint32_t translate_selector_fields(parse_block *xx, uint32_t mask)
 {
-   selector_kind z;
+   selector_kind z = selector_uninitialized;
    uint32_t retval = 0;
 
    for ( ; xx ; xx=xx->next) {
@@ -2966,7 +2966,7 @@ extern uint32_t translate_selector_fields(parse_block *xx, uint32_t mask)
       }
 
       if (z == selector_uninitialized) retval = 2;   // Raise error.
-      if (z != xx->options.who.who[0]) retval |= 1;         // Note that we changed something.
+      if (z != xx->options.who.who[0]) retval |= 1;  // Note that we changed something.
       xx->options.who.who[0] = z;
 
    nofix:

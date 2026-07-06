@@ -927,6 +927,7 @@ const char *qualtab[] = {
    "said_galaxy",
    "not_funny",
    "didnt_say_matrix",
+   "phantom_in_use",
    "occupied_as_stars",
    "occupied_as_clumps",
    "occupied_as_blocks",
@@ -945,6 +946,7 @@ const char *qualtab[] = {
    "people_1_opp_real",
    "people_12_opp_real",
    "people_34_opp_real",
+   "people_0_opp_phan",
    "roll_is_consistent",
    "slide_seems_good",
    "centers_sel",
@@ -1160,6 +1162,7 @@ const char *flagtabh[] = {
    "trade_is_inherited",
    "crossover_is_inherited",
    "rectify_is_inherited",
+   "stable_is_inherited",
    ""};
 
 // This table is keyed to the constants "INHERITFLAG_???".
@@ -1212,6 +1215,7 @@ const char *altdeftabh[] = {
    "trade",
    "crossover",
    "rectify",
+   "stable",
    ""};
 
 // See INHERITFLAG_YOYOETCMASK in database.h
@@ -1355,6 +1359,7 @@ const char *defmodtabh[] = {
    "inherit_trade",
    "inherit_crossover",
    "inherit_rectify",
+   "inherit_stable",
    ""};
 
 // This table is keyed to the constants "dfm_***".  These are the heritable
@@ -1411,6 +1416,7 @@ const char *forcetabh[] = {
    "force_trade",
    "force_crossover",
    "force_rectify",
+   "force_stable",
    ""};
 
 // This table is keyed to the constants "MTX_???".

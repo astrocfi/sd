@@ -6,7 +6,7 @@
 CC = g++ -static-libgcc -static-libstdc++
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts -Wno-narrowing \
+DEFS = -Wall -Wno-switch -Wno-char-subscripts -Wno-narrowing \
        -Wno-stringop-truncation -Wno-stringop-overflow -Wno-format-overflow
 
 # This gives the optimization and/or debug info.  These flags presumably

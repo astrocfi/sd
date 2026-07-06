@@ -3677,7 +3677,7 @@ extern void concentric_move(
          // Check for operating on a Z.
 
          uint32_t z_compress_direction99rot = begin_ptr->rotation;
-         uint32_t z_compress_direction99skew;
+         uint32_t z_compress_direction99skew = 0;
 
          if (begin_ptr->kind == s2x3 &&
              (analyzer == schema_concentric_zs ||
@@ -4327,7 +4327,7 @@ extern void concentric_move(
             else if (foocall == base_calls[base_call_circulate])
                localmodsout1 = DFM1_CONC_CONCENTRIC_RULES;
             else
-               localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
+               localmodsout1 |= DFM1_CONC_FORCE_OTHERWAY;
          }
       }
    }
@@ -4960,6 +4960,7 @@ void merge_table::merge_setups(setup *ss,
    bool rose_from_dead = false;
    bool perp_2x4_1x8 = false;
    bool perp_2x4_ptp = false;
+   bool beware_mystic_collision = false;
    normalize_action na = normalize_before_merge;
 
    setup res2copy = *result;
@@ -5029,6 +5030,9 @@ void merge_table::merge_setups(setup *ss,
 
       uint32_t mask1 = res1->little_endian_live_mask();
       uint32_t mask2 = res2->little_endian_live_mask();
+
+      if ((res1->cmd.cmd_misc_flags ^ res2->cmd.cmd_misc_flags) & CMD_MISC__EXPLICIT_MIRROR)
+         beware_mystic_collision = true;
 
       if (res1->kind == s_qtag && res2->kind == s2x3 && !(mask1 & 0xCC)) {
          expand::compress_from_hash_table(res1, plain_normalize, mask1, false);
@@ -5326,7 +5330,7 @@ void merge_table::merge_setups(setup *ss,
              (maybe_the_call->the_defn.callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES))
             action = merge_c1_phantom_real_couples;
 
-         brute_force_merge(res1, res2, action, result);
+         brute_force_merge(res1, res2, action, beware_mystic_collision, result);
          goto final_getout;
       }
 
@@ -5582,7 +5586,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    int crossconc = (cmd2word & CMD_MISC2__ANY_WORK_INVERT) ? 1 : 0;
    bool doing_yoyo = false;
    bool doing_do_last_frac = false;
-   parse_block *parseptrcopy;
+   parse_block *parseptrcopy = (parse_block *) 0;
 
    remove_z_distortion(ss);
 
@@ -8554,6 +8558,8 @@ extern void inner_selective_move(
       }
 
    done_with_this_one:
+
+      this_result->cmd.cmd_misc_flags = this_one->cmd.cmd_misc_flags;
 
       current_options.number_fields = svd_number_fields;
       current_options.howmanynumbers = svd_num_numbers;
