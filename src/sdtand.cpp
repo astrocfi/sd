@@ -3399,7 +3399,7 @@ void mimic_move(
    int trial_number;
    setup trial_results[2];
    int trial_result_mask = 0;
-   error_flag_type err_from_execution;
+   error_flag_type err_from_execution = (error_flag_type) 0;
 
    switch (who) {
    case selector_centers:

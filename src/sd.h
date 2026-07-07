@@ -1827,6 +1827,9 @@ struct resultflag_rec {
    }
 };
 
+// Attempting to increase this will run afoul of many things, including
+// collision_collector::fix_possible_collision, and the various
+// "get_directions" things.
 enum { MAX_PEOPLE = 32 };
 
 struct small_setup {
@@ -4846,6 +4849,7 @@ enum part_key_kind {
 
 // BEWARE!!  This list is keyed to the table "meta_key_props" in sdtables.cpp .
 enum meta_key_kind {
+   meta_key_none,
    meta_key_random,
    meta_key_rev_random,   // Must follow meta_key_random.
    meta_key_piecewise,
@@ -5403,14 +5407,17 @@ struct skipped_concept_info {
    parse_block *m_result_of_skip;
    parse_block **m_root_of_result_of_skip;
    uint32_t m_nocmd_misc3_bits;
+   meta_key_kind m_meta_key = meta_key_none;
 
    skipped_concept_info() : m_nocmd_misc3_bits(0) {}
-   skipped_concept_info(parse_block *incoming) THROW_DECL;    // In SDTOP
+   skipped_concept_info(parse_block *incoming,
+                        meta_key_kind meta_key = meta_key_none) THROW_DECL;    // In SDTOP
    parse_block *get_next() {
       parse_block *t = (m_heritflag != 0ULL) ? m_concept_with_root : m_result_of_skip;
       if (!t)
          fail("Need a concept.");
-      return t; }
+      return t;
+   }
 };
 
 extern bool check_for_concept_group(
@@ -5743,6 +5750,7 @@ public:
 
    // Simple constructor, takes argument saying whether collisions will be legal.
    collision_collector(setup *const result, collision_severity allow):
+      m_beware_mystic_collision(false),
       m_result_ptr(result),
       m_allow_collisions(allow),
       m_collision_mask(0),
@@ -5753,7 +5761,8 @@ public:
       m_cmd_misc_flags(0),
       m_collision_appears_illegal(1),  // Halfway between "appears_illegal"
                                        // and not -- use table item.
-      m_result_mask(0)
+      m_result_mask(0),
+      m_extra_collided_people(*result)
    {
       m_extra_collided_people.clear_people();
    }
@@ -5761,6 +5770,7 @@ public:
    // Glorious constructor, takes all sorts of stuff.
    collision_collector(setup *const result, bool mirror,
                        setup_command *cmd, uint64_t callflags1):
+      m_beware_mystic_collision(false),
       m_result_ptr(result),
       m_allow_collisions(collision_severity_ok),
       m_collision_mask(0),
@@ -5770,7 +5780,8 @@ public:
       m_doing_half_override(false),
       m_cmd_misc_flags(cmd->cmd_misc_flags),
       m_collision_appears_illegal(0),  // May change to 2 as call progresses.
-      m_result_mask(0)
+      m_result_mask(0),
+      m_extra_collided_people(*result)
    {
       m_extra_collided_people.clear_people();
       // If doing half of a call, and doing it left,
@@ -5787,16 +5798,17 @@ public:
    uint32_t * install_with_collision(
       int resultplace,
       const setup *sourcepeople, int sourceplace,
-      int rot,
-      bool stop_on_collision = false) THROW_DECL;
+      int rot) THROW_DECL;
 
    void fix_possible_collision(merge_action_type action = merge_strict_matrix,
                                uint32_t callarray_flags = 0,
                                setup *ss = (setup *) 0) THROW_DECL;
 
+public:
+   bool m_beware_mystic_collision;
+
 private:
    setup *const m_result_ptr;
-   setup m_extra_collided_people;
    const collision_severity m_allow_collisions;
    int m_collision_index;
    uint32_t m_collision_mask;
@@ -5810,6 +5822,7 @@ private:
    // used when a collision occurs between the two groups doing an "own the anyone" operation.
    int m_collision_appears_illegal;
    uint32_t m_result_mask;
+   setup m_extra_collided_people;
 };
 
 extern void mirror_this(setup *s) THROW_DECL;
@@ -5868,7 +5881,8 @@ extern uint32_t do_call_in_series(
    bool qtfudged) THROW_DECL;
 
 extern void brute_force_merge(const setup *res1, const setup *res2,
-                              merge_action_type action, setup *result) THROW_DECL;
+                              merge_action_type action, bool beware_mystic_collision,
+                              setup *result) THROW_DECL;
 
 extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *result) THROW_DECL;
 

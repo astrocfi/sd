@@ -658,8 +658,7 @@ static collision_map collision_map_table[] = {
 uint32_t * collision_collector::install_with_collision(
    int resultplace,
    const setup *sourcepeople, int sourceplace,
-   int rot,
-   bool stop_on_collision /* = false */) THROW_DECL
+   int rot) THROW_DECL
 {
    if (resultplace < 0) fail("This would go into an excessively large matrix.");
    m_result_mask |= 1<<resultplace;
@@ -667,9 +666,8 @@ uint32_t * collision_collector::install_with_collision(
 
    if (m_result_ptr->people[resultplace].id1) {
       // We have a collision.
-      // Prepare the error message, in case it is needed.
-      if (stop_on_collision) return (uint32_t *) 0;
 
+      // Prepare the error message, in case it is needed.
       collision_person1 = m_result_ptr->people[resultplace].id1;
       collision_person2 = sourcepeople->people[sourceplace].id1;
       error_message1[0] = '\0';
@@ -730,15 +728,24 @@ void collision_collector::fix_possible_collision(merge_action_type action /*= me
    if (!m_collision_mask) return;
 
    int i;
-   setup spare_setup = *m_result_ptr;
+   setup local_setup = *m_result_ptr;
    bool kill_ends = false;
    uint64_t lowbitmask = 0ULL;
+   uint64_t junk;
+   uint64_t localdirmask;
+   uint64_t extradirmask;
    collision_map *c_map_ptr;
 
    m_result_ptr->clear_people();
 
+   local_setup.big_endian_get_directions64(localdirmask, junk);
+   m_extra_collided_people.big_endian_get_directions64(extradirmask, junk);
+
+   // **** Can we use some "get_mask" function for this?
+   // If MAX_PEOPLE is more than 32, we are in trouble.
    for (i=0; i<MAX_PEOPLE; i++) {
-      lowbitmask |= ((uint64_t) (spare_setup.people[i].id1) & UINT64_C(1)) << i;
+      // One bit per person.
+      lowbitmask |= ((uint64_t) (local_setup.people[i].id1) & UINT64_C(1)) << i;
       lowbitmask |= ((uint64_t) (m_extra_collided_people.people[i].id1) & UINT64_C(1)) << (i+32);
    }
 
@@ -793,25 +800,27 @@ void collision_collector::fix_possible_collision(merge_action_type action /*= me
          // rather than accept the table entry and deal with the warnings that it raises.
          // So we only do the "goto win" in certain circumstances.
 
-         if (c_map_ptr->warning == warn_bad_collision)
-            goto win;   // Entries with this warning always know exactly what they are doing.
+      if (c_map_ptr->warning == warn_bad_collision)
+         goto win;   // Entries with this warning always know exactly what they are doing.
 
-         // If doing real as_couples call, we reject certain maps and pick up the next one.
-         if (action == merge_c1_phantom_real_couples && (c_map_ptr->assume_key & 0x20000000))
-            continue;
+      // If doing real as_couples call, we reject certain maps and pick up the next one.
+      if (action == merge_c1_phantom_real_couples && (c_map_ptr->assume_key & 0x20000000))
+         continue;
 
-         if ((m_collision_appears_illegal & 6) ||
-             ((m_collision_appears_illegal & 1) &&
-              (c_map_ptr->assume_key & 0x80000000)))
-            continue;
-         else
-            goto win;
+      if ((m_collision_appears_illegal & 6) ||
+          ((m_collision_appears_illegal & 1) &&
+           (c_map_ptr->assume_key & 0x80000000)))
+         continue;
+      else
+         goto win;
    }
 
    // Don't recognize the pattern, report this as normal collision.
    throw error_flag_type(error_flag_collision);
 
  win:
+
+   bool handedness_warning = false;
 
    if ((callarray_flags & CAF__NO_CUTTING_THROUGH) && (c_map_ptr->assume_key & 0x08000000))
       fail("Call's collision has outsides cutting through the middle of the set.");
@@ -835,6 +844,7 @@ void collision_collector::fix_possible_collision(merge_action_type action /*= me
          warn(warn__left_half_pass);
    }
    else {
+      handedness_warning = true;
       if (m_cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
          warn(warn__take_left_hands);
       else if (c_map_ptr->warning != warn__really_no_collision)
@@ -853,10 +863,10 @@ void collision_collector::fix_possible_collision(merge_action_type action /*= me
    for (i=0; i<c_map_ptr->size; i++) {
       int oldperson;
 
-      oldperson = spare_setup.people[c_map_ptr->source[i]].id1;
+      oldperson = local_setup.people[c_map_ptr->source[i]].id1;
       install_rot(m_result_ptr,
                   (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
-                  &spare_setup,
+                  &local_setup,
                   c_map_ptr->source[i],
                   temprot);
 
@@ -867,6 +877,15 @@ void collision_collector::fix_possible_collision(merge_action_type action /*= me
                   c_map_ptr->source[i],
                   temprot);
    }
+
+   // When centers and ends have different handedness, we do not want the original centers,
+   // when they collide and take hands, to be adjacent to each other.  Same with the ends.
+   // We want the final collided setup to have original centers and ends to be interleaved.
+   // Why is this the right thing?  No one knows.  But see Git issue #8, "mystic the action".
+
+   if (localdirmask == 0x802 && extradirmask == 0x208 && m_beware_mystic_collision &&
+       handedness_warning && m_result_ptr->kind == s2x8)
+      fail("Collision among groups of different handedness.");
 
    if (kill_ends) {
       const int8_t m3276[] = {3, 2, 7, 6};
@@ -881,14 +900,14 @@ void collision_collector::fix_possible_collision(merge_action_type action /*= me
            m_result_ptr->people[5].id1))
          fail("Need an assumption in order to take right hands at collision.");
 
-      spare_setup = *m_result_ptr;
+      local_setup = *m_result_ptr;
 
       if (m_result_ptr->kind == s_crosswave) {
-         gather(m_result_ptr, &spare_setup, m2367, 3, 033);
+         gather(m_result_ptr, &local_setup, m2367, 3, 033);
          m_result_ptr->rotation++;
       }
       else {
-         gather(m_result_ptr, &spare_setup, m3276, 3, 0);
+         gather(m_result_ptr, &local_setup, m3276, 3, 0);
       }
 
       m_result_ptr->kind = s1x4;
@@ -6112,7 +6131,6 @@ static uint32_t do_actual_array_call(
 
       CC.fix_possible_collision(action, goodies->callarray_flags, ss);
 
-
       if (specialhetero) {
          // result has line people's result,
          secondresult.kind = Lresult_kind;
@@ -6274,7 +6292,7 @@ extern void basic_move(
    heritflags search_temp_without_funny;
    heritflags search_temp_with_funny;
    int orig_elongation = 0;
-   bool four_way_startsetup;
+   bool four_way_startsetup = false;
    uint32_t newtb = tbonetest;
    uint32_t resultflagsmisc = 0;
    int desired_elongation = 0;

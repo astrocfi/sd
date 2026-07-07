@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 430
+#define DATABASE_FORMAT_VERSION 433
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -375,6 +375,7 @@ const uint64_t INHERITFLAG_ZOOMROLL   = 0x0000080000000000ULL;
 const uint64_t INHERITFLAG_TRADE      = 0x0000100000000000ULL;
 const uint64_t INHERITFLAG_CROSSOVER  = 0x0000200000000000ULL;
 const uint64_t INHERITFLAG_RECTIFY    = 0x0000400000000000ULL;
+const uint64_t INHERITFLAG_STABLE     = 0x0000800000000000ULL;
 
 
 typedef uint64_t heritflags;
@@ -1106,6 +1107,7 @@ enum call_restriction {
    cr_said_galaxy,         // Qualifier only.
    cr_not_funny,           // Qualifier only.
    cr_didnt_say_matrix,    // Qualifier only.
+   cr_phantom_in_use,      // Qualifier only.
    cr_occupied_as_stars,   // Qualifier only.
    cr_occupied_as_clumps,  // Qualifier only.
    cr_occupied_as_blocks,  // Qualifier only.
@@ -1124,6 +1126,7 @@ enum call_restriction {
    cr_people_1_opp_real,   // Qualifier only.
    cr_people_12_opp_real,  // Qualifier only.
    cr_people_34_opp_real,  // Qualifier only.
+   cr_people_0_opp_phan,   // Qualifier only.
    cr_consistent_roll,     // Qualifier only.
    cr_slide_seems_good,
    cr_ctrs_sel,

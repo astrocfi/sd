@@ -2071,6 +2071,11 @@ pgdmdccw    |  6  |  7  |  |  4  |
 normal_concentric  ??????
 
 
+================== ARRAY CALL DEFINITIONS ==================
+
+The fundamental definition mechanism is the "array" call.  All others
+use some keyword to indicate the type.
+
 An important property of these setups, used extensively by the program,
 is that any person's diagonal opposite can be found by adding half the
 setup size modulo the setup size.  Additionally, for setups that have
@@ -2722,6 +2727,76 @@ appear is not significant -- the search is always from the largest
 setup to the smallest.  Multiple specifications with the same
 starting setup are only meaningful if qualifiers are used (see below),
 and, in that case, they are searched in the order in which they appear.
+
+
+================== MATRIX CALL DEFINITIONS ==================
+
+This includes "matrix", "partnermatrix", and "partnerpartialmatrix".  The keyword
+is followed by zero or more attributes, from this list:
+
+use_selector
+stop_and_warn_on_tbone
+tbone_is_ok
+ignore_nonselectees
+must_face_same_way
+find_jaywalkers
+both_selected_ok
+find_squeezers
+find_spreaders
+find_traders
+use_veer_data
+use_number
+lateral_mirror_if_right_of_center
+only_in
+only_out
+add_2n
+include_phantoms
+not_true_invader
+selector_is_trailers
+do_half_of_ctr_rot
+
+For "partnermatrix" and "partnerpartialmatrix", this is followed by 4 groups of
+8 specifiers each.
+
+Each specifier for a person is either:
+   a pair of two tokens, as X offset, with decorations, and Y offset, as just a number.
+or
+   a single zero, meaning that action is illegal
+
+Each specifier is given with an offset, calibrated the usual way --- a matrix position
+counts as 4.  They are in "excess 16" form --- 16 is stationary, 12 is one matrix
+position in the negative X direction, etc.
+The decorations are the usual --- L/M/R for roll, A/C for stability, F/G
+for slide direction, left or right.
+
+The full definition for a call has 2 major groups of 8 specifiers each.  In each group
+The specifiers are the Cartesian product of {non-selected, selected} x {beau, belle} x
+{boy,girl}.
+
+For all calls except "squeeze", only the first group is used, as above, so the
+definition ends with 8 specifiers of zero.  Calls with the "find_squeezers" property
+set ("squeeze" and "<anyone> squeeze") use the second group.  In this case the first
+group is for people who are close (trade and slide apart) and the second is for people
+who are far apart (slide together and trade.)
+
+Here is "@6 shove off":
+   partnermatrix use_selector stop_and_warn_on_tbone
+      [ZGM20N 16 ZGM20N 16 ZFM12N 16 ZFM12N 16 AGL12S 16 AGL12S 16 CFR20S 16 CFR20S 16
+       <- boy -> <-girl -> <- boy -> <-girl -> <- boy -> <-girl -> <- boy -> <-girl -> 
+       <-      beau     -> <-      belle    -> <-      beau     -> <-      belle    ->
+       <-    non-designee (not selected)    -> <-        designee (selected)        ->
+
+      0 0 0 0 0 0 0 0]   // Second group, not used.
+
+For plain "matrix" calls (e.g. "truck"), there are just 4 specifiers, for boy/girl and
+beau/belle.
+
+============= OTHER CALLS (sequential, concentric, etc.) =============
+
+FINISH THIS.
+
+
+
 
         OVERVIEW OF PREDICATES, RESTRICTIONS, AND QUALIFIERS
 
@@ -4069,6 +4144,11 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        T-boned, and it just tests that each person is a
                                        leader or trailer in his 2x2.  This should be used
                                        with the "in" or "out" mofifier, of course.
+
+   people_1_opp_real       R/Q      Person #1, and his opposite in this setup, is real.
+   people_12_opp_real      R/Q      People #1 and 2, and their opposites in this setup, are both real.
+   people_34_opp_real      R/Q      People #3 and 4, and their opposites in this setup, are both real.
+   people_0_opp_phan       R/Q      Person #0, and his opposite in this setup, is not real.
 
    dmd_intlk          Really ought to document this!   Live
    dmd_not_intlk      Really ought to document this!   Live

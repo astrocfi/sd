@@ -1498,9 +1498,10 @@ static int start_matrix_call(
 
    // For trade, we use the accurate info.  You're not allowed to press or truck
    // across the points of an hourglass, but you are allowed to trade.
-   if (the_schema == schema_counter_rotate || (flags & MTX_FIND_TRADERS) != 0) {
-      thingyptr = (ss->kind == s_qtag) ?
-         &supernicethingqtag : nicethingyptr;
+   if (((flags & MTX_FIND_JAYWALKERS) == 0) &&
+       (the_schema == schema_counter_rotate || the_schema == schema_partner_matrix ||
+        the_schema == schema_partner_partial_matrix || (flags & MTX_FIND_TRADERS) != 0)) {
+      thingyptr = (ss->kind == s_qtag) ? &supernicethingqtag : nicethingyptr;
    }
 
    if (flags & (MTX_FIND_SQUEEZERS|MTX_FIND_SPREADERS)) {
@@ -2523,6 +2524,7 @@ static int finish_matrix_call(
    const uint32_t *callstuff,
    bool do_roll_stability,
    collision_severity allow_collisions,
+   bool beware_mystic_collision,
    bool allow_fudging,
    merge_action_type action,
    setup *people,
@@ -2740,6 +2742,7 @@ static int finish_matrix_call(
    result->kind = checkptr->result_kind;
 
    collision_collector CC(result, allow_collisions);
+   CC.m_beware_mystic_collision = beware_mystic_collision;
 
    for (i=0; i<nump; i++) {
       int mx, my;
@@ -3017,7 +3020,7 @@ static int matrixmove(
    // mechanism.  In this case the MTX_FIND_TRADERS flag is on.
    int alldelta = finish_matrix_call(ss, matrix_info, nump, the_schema, flags, callstuff, true,
                                      (flags & MTX_FIND_TRADERS) ? collision_severity_ok : collision_severity_no,
-                                     true, merge_strict_matrix, &people, result);
+                                     false, true, merge_strict_matrix, &people, result);
 
    if (ss->kind == s2x2 && result->kind == s2x4) {
       if ((result->people[0].id1 | result->people[1].id1 | result->people[6].id1 | result->people[7].id1) == 0) {
@@ -3339,7 +3342,7 @@ static int jaywalk_recurse(
 {
    int i, j, k;
    matrix_rec best_info[matrix_info_capacity+1];
-   int best_cost;
+   int best_cost = 0;
 
    // Pre-clean: Clear out any links that aren't bidirectional.
    // First, mark all targets.
@@ -3393,7 +3396,7 @@ static int jaywalk_recurse(
       }
 
       if (choice_count >= 2) {
-         int cost_or_error_code;
+         int cost_or_error_code = 0;
          bool found_a_solution = false;
          bool ambiguous = false;
 
@@ -3682,7 +3685,7 @@ static int partner_matrixmove(
    }
 
    int alldelta = finish_matrix_call(ss, matrix_info, nump, the_schema, flags, (const uint32_t *) 0, true, collision_severity_no,
-                                     true, merge_strict_matrix, &people, result);
+                                     false, true, merge_strict_matrix, &people, result);
    reinstate_rotation(ss, result);
 
    // Take out any active phantoms that we placed.
@@ -3702,11 +3705,13 @@ static int partner_matrixmove(
 // This treats res2 as though it had rotation zero.
 // Res1 is allowed to have rotation.
 extern void brute_force_merge(const setup *res1, const setup *res2,
-                              merge_action_type action, setup *result) THROW_DECL
+                              merge_action_type action, bool beware_mystic_collision,
+                              setup *result) THROW_DECL
 {
    int i;
    int r = res1->rotation & 3;
    collision_severity allow_collisions = collision_severity_no;
+
    if (action > merge_for_own)
       allow_collisions = collision_severity_ok;
    else if (action == merge_for_own)
@@ -3747,7 +3752,7 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
       // "do_roll_stability" argument here.  It would treat the rotation
       // as though the person had actually done a call.
       finish_matrix_call((setup *) 0, matrix_info, nump, schema_matrix, 0, (const uint32_t *) 0, false, allow_collisions,
-                         action > merge_for_own, action, &people, result);
+                         beware_mystic_collision, action > merge_for_own, action, &people, result);
       return;
    }
 
@@ -3907,7 +3912,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    ss->rotation += result->rotation;
    finish_matrix_call(ss, second_matrix_info, final_2nd_nump, schema_matrix, 0, (const uint32_t *) 0, true,
-                      collision_severity_no, true, merge_strict_matrix, &second_people, result);
+                      collision_severity_no, false, true, merge_strict_matrix, &second_people, result);
    reinstate_rotation(ss, result);
    clear_result_flags(result);
 }
@@ -4102,7 +4107,7 @@ static bool try_this_split(uint32_t splitting_indicator,
    }
 
    finish_matrix_call((setup *) 0, after_matrix_info, nump, schema_matrix, 0, (const uint32_t *) 0, false,
-                      collision_severity_no, true, merge_strict_matrix, &after_people, result);
+                      collision_severity_no, false, true, merge_strict_matrix, &after_people, result);
    return true;
 }
 
