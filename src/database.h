@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 433
+#define DATABASE_FORMAT_VERSION 434
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -453,6 +453,7 @@ const uint64_t CFLAG1_IS_STAR_CALL              = 0x0000200000000000ULL;
 const uint64_t CFLAG1_CAN_DO_IN_Z               = 0x0000400000000000ULL;
 const uint64_t CFLAG1_WARN_ON_ELONGATION        = 0x0000800000000000ULL;
 const uint64_t CFLAG1_ALLOW_IF_CENTERS_ONLY     = 0x0001000000000000ULL;
+const uint64_t CFLAG1_CAN_GO_TO_EMPTY_SETUP     = 0x0002000000000000ULL;
 
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
