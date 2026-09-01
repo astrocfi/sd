@@ -375,7 +375,8 @@ bool iofull::init_step(init_callback_state s, int n)
 
       parse_level(line);
 
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH-80);
+      outfile_string += filename_strings[calling_level];
+
       break;
 
    case init_database1:
@@ -452,16 +453,12 @@ void iofull::create_menu(call_list_kind cl)
 
 void iofull::set_window_title(char s[])
 {
-   char full_text[MAX_TEXT_LINE_LENGTH];
-
+   std::string full_text = to_string("Sdtty ", s);
    if (journal_name[0]) {
-      sprintf(full_text, "Sdtty %s {%s}", s, journal_name);
-   }
-   else {
-      sprintf(full_text, "Sdtty %s", s);
+      full_text += to_string(" {", journal_name, "}");
    }
 
-   ttu_set_window_title(full_text);
+   ttu_set_window_title(full_text.c_str());
 }
 
 
@@ -1024,33 +1021,33 @@ uims_reply_thing iofull::get_resolve_command()
 }
 
 
-popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
-                                      Cstring /*seed*/, char *dest)
+popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                      std::string_view final_inline_prompt,
+                                      std::string_view /*seed*/, std::string *dest)
 {
    // We ignore the "seed".  But Sd might use it.
 
    // Two lines of prompts are allowed.  But if they start with an asterisk,
    // Sd shows it but Sdtty does not.
 
-   if (prompt1 && prompt1[0] && prompt1[0] != '*') {
+   if (!prompt1.empty() && prompt1[0] != '*') {
       get_utils_ptr()->writestuff(prompt1);
       get_utils_ptr()->newline();
    }
 
-   if (prompt2 && prompt2[0] && prompt2[0] != '*') {
+   if (!prompt2.empty() && prompt2[0] != '*') {
       get_utils_ptr()->writestuff(prompt2);
       get_utils_ptr()->newline();
    }
 
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "%s ", final_inline_prompt);
-   put_line(buffer);
-   get_string(dest, MAX_TEXT_LINE_LENGTH);
+   std::string buffer = to_string(final_inline_prompt, " ");
+   put_line(buffer.c_str());
+   get_string<MAX_TEXT_LINE_LENGTH>(dest);
    // Backspace at start of line declines the popup.
-   if (dest[0] == '\b') return POPUP_DECLINE;
+   if (!dest->empty() && (*dest)[0] == '\b') return POPUP_DECLINE;
 
    current_text_line++;
-   return dest[0] ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
+   return !dest->empty() ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
 }
 
 
@@ -1276,18 +1273,18 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
       fprintf(stderr, "%s\n", s1);
    }
 
-   if (s3) fprintf(stderr, "%s\n", s3);
-   fprintf(stderr, "%s", "Use the -help flag for help.\n");
+   if (s3 && s3[0]) fprintf(stderr, "%s\n", s3);
+   fprintf(stderr, "Use the -help flag for help.\n");
    general_final_exit(1);
 }
 
 
-void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
+void iofull::fatal_error_exit(int code, std::string_view s1, std::string_view s2)
 {
-   if (s2 && s2[0])
-      fprintf(stderr, "%s: %s\n", s1, s2);
+   if (!s2.empty())
+      fprintf(stderr, "%.*s: %.*s\n", int(s1.size()), s1.data(), int(s2.size()), s2.data());
    else
-      fprintf(stderr, "%s\n", s1);
+      fprintf(stderr, "%.*s\n", int(s1.size()), s1.data());
 
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);

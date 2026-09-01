@@ -488,7 +488,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
          return true;
 
    new_block = parse_block::get_parse_block();
-   new_block->concept = &concept_mark_end_of_list;
+   new_block->concept_ptr = &concept_mark_end_of_list;
    new_block->call = call;
    new_block->call_to_print = call;
    new_block->options = *options;
@@ -505,9 +505,9 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.tagger = tagg;
-      new_block->concept = &concept_marker_concept_mod;
+      new_block->concept_ptr = &concept_marker_concept_mod;
       new_block->next = parse_block::get_parse_block();
-      new_block->next->concept = &concept_marker_concept_mod;
+      new_block->next->concept_ptr = &concept_marker_concept_mod;
 
       // Deposit the index of the base tagging call.  This will of course be replaced.
 
@@ -526,9 +526,9 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.circcer = circc;
-      new_block->concept = &concept_marker_concept_mod;
+      new_block->concept_ptr = &concept_marker_concept_mod;
       new_block->next = parse_block::get_parse_block();
-      new_block->next->concept = &concept_marker_concept_mod;
+      new_block->next->concept_ptr = &concept_marker_concept_mod;
 
       // Deposit the index of the base circcing call.  This will of course be replaced.
 
@@ -587,7 +587,7 @@ extern bool deposit_concept(const concept_descriptor *conc)
    }
 
    new_block = parse_block::get_parse_block();
-   new_block->concept = conc;
+   new_block->concept_ptr = conc;
    new_block->options.who = sel;
    new_block->options.where = dir;
    new_block->options.number_fields = number_list;
@@ -603,7 +603,7 @@ extern bool deposit_concept(const concept_descriptor *conc)
       if (parse_state.parse_stack_index == 39) specialfail("Excessive number of concepts.");
       parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind = conc->kind;
       parse_state.parse_stack[parse_state.parse_stack_index++].concept_write_save_ptr = parse_state.concept_write_ptr;
-      parse_state.specialprompt[0] = '\0';
+      parse_state.specialprompt.clear();
       parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
    }
 
@@ -790,7 +790,7 @@ extern bool query_for_call()
          }
       }
 
-      if (parse_state.specialprompt[0] != '\0') {
+      if (!parse_state.specialprompt.empty()) {
          gg77->writestuff(parse_state.specialprompt);
          gg77->newline();
       }
@@ -807,17 +807,16 @@ extern bool query_for_call()
       if (global_reply.majorpart == ui_user_cancel) goto recurse_entry;
       if (global_reply.majorpart == ui_command_select) {
          switch ((command_kind) global_reply.minorpart) {
-            char comment[MAX_TEXT_LINE_LENGTH];
          case command_create_comment:
             {
-               if (gg77->iob88.get_popup_string("*Enter comment:", "", "Enter comment:", "", comment) ==
+               std::string comment;
+               if (gg77->iob88.get_popup_string("*Enter comment:", "", "Enter comment:", "", &comment) ==
                    POPUP_ACCEPT_WITH_STRING) {
                   comment_block *new_comment_block = new comment_block;
-                  char *temp_text_ptr = new_comment_block->txt;
-                  string_copy(&temp_text_ptr, comment);
+                  new_comment_block->txt = comment;
 
                   *parse_state.concept_write_ptr = parse_block::get_parse_block();
-                  (*parse_state.concept_write_ptr)->concept = &concept_marker_concept_comment;
+                  (*parse_state.concept_write_ptr)->concept_ptr = &concept_marker_concept_comment;
 
                   (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
                   (*parse_state.concept_write_ptr)->call_to_print =
@@ -942,13 +941,13 @@ extern bool query_for_call()
 
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
       case concept_centers_and_ends:
-         strncpy(parse_state.specialprompt, "ENTER CALL FOR OUTSIDES", MAX_TEXT_LINE_LENGTH);
+         parse_state.specialprompt = "ENTER CALL FOR OUTSIDES";
          break;
       case concept_on_your_own:
-         strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
+         parse_state.specialprompt = "ENTER SECOND (CENTERS) CALL";
          break;
       default:
-         strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
+         parse_state.specialprompt = "ENTER SECOND CALL";
          break;
       }
 
@@ -1022,7 +1021,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    interactivity = interactivity_database_init;
    testing_fidelity = false;
    header_comment[0] = 0;
-   abridge_filename[0] = 0;
+   abridge_filename.clear();
    verify_options.who.who[0] = selector_uninitialized;
    verify_options.who.who[1] = selector_uninitialized;
    verify_options.who.who[2] = selector_uninitialized;

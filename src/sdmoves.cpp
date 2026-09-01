@@ -1189,7 +1189,7 @@ extern uint32_t do_call_in_series(
 
    if ((qqqq.cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS) != 0 &&
        (qqqq.cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
-      if (qqqq.cmd.restrained_concept->concept->kind == concept_n_times_const) {
+      if (qqqq.cmd.restrained_concept->concept_ptr->kind == concept_n_times_const) {
          qqqq.cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
          qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_fraction;
          qqqq.cmd.cmd_fraction.set_to_null();
@@ -1198,7 +1198,7 @@ extern uint32_t do_call_in_series(
 
    if ((qqqq.cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS) != 0 &&
        (qqqq.cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
-      if (qqqq.cmd.restrained_concept->concept->kind == concept_dbl_frac_crazy) {
+      if (qqqq.cmd.restrained_concept->concept_ptr->kind == concept_dbl_frac_crazy) {
          qqqq.cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
          qqqq.cmd.parseptr = qqqq.cmd.restrained_concept;
          qqqq.cmd.restrained_concept = 0;
@@ -4412,7 +4412,7 @@ extern bool get_real_subcall(
    if (current_options.star_turn_option != 0 &&
        (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL)) {
       parse_block *xx = parse_block::get_parse_block();
-      xx->concept = &concept_marker_concept_mod;
+      xx->concept_ptr = &concept_marker_concept_mod;
       xx->options = current_options;
       xx->options.star_turn_option = 0;
       xx->replacement_key = 0;
@@ -4469,7 +4469,7 @@ extern bool get_real_subcall(
 
    newsearch = &parseptr->next;
 
-   if (parseptr->concept->kind == concept_another_call_next_mod) {
+   if (parseptr->concept_ptr->kind == concept_another_call_next_mod) {
       if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) &&
           (cmd_in->cmd_misc3_flags & CMD_MISC3__NO_ANYTHINGERS_SUBST) &&
           (item_id == base_call_circulate || item_id == base_call_motcirc)) {
@@ -4512,7 +4512,7 @@ extern bool get_real_subcall(
                // to inherit.
                if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) ||
                    snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT)) {
-                  if (search->concept->kind == concept_supercall) {
+                  if (search->concept_ptr->kind == concept_supercall) {
                      cmd_out->cmd_final_flags.herit = cmd_in->restrained_super8flags;
                      cmd_out->cmd_misc2_flags &= ~CMD_MISC2_RESTRAINED_SUPER;
                   }
@@ -4529,7 +4529,7 @@ extern bool get_real_subcall(
          newsearch = &search->next;
       }
    }
-   else if (parseptr->concept->kind != marker_end_of_list)
+   else if (parseptr->concept_ptr->kind != marker_end_of_list)
       fail_no_retry("wrong marker in get_real_subcall???");
 
    // To be sure any query shows the actual number ("replace the cast off 3/4"
@@ -5309,8 +5309,8 @@ void fraction_info::get_fraction_info(
           m_do_last_half_of_first_part != 0 ||
           m_do_half_of_last_part != (fracfrac) 0)
          fail("Can't do this.");
-      else if ((*restrained_concept_p)->concept->kind == concept_meta &&
-          (*restrained_concept_p)->concept->arg1 == meta_key_revorder) {
+      else if ((*restrained_concept_p)->concept_ptr->kind == concept_meta &&
+          (*restrained_concept_p)->concept_ptr->arg1 == meta_key_revorder) {
          // Swap my_start_point and m_end_point.  They are inclusive integer limits.
          int t = my_start_point;
          my_start_point = m_end_point;
@@ -5318,7 +5318,7 @@ void fraction_info::get_fraction_info(
          m_reverse_order = !m_reverse_order;     // Indicate that we are going the other way.
          *restrained_concept_p = (parse_block *) 0;  // Indicate that it's been taken care of.
       }
-      else if ((*restrained_concept_p)->concept->kind == concept_fractional) {
+      else if ((*restrained_concept_p)->concept_ptr->kind == concept_fractional) {
          int span = m_end_point - my_start_point;
          if (span < 0) span = -span;
          span++;
@@ -5330,7 +5330,7 @@ void fraction_info::get_fraction_info(
          if (num == 0 || den == 0 || num >= den || shorter_span * den != t || shorter_span >= span)
             fail("Can't do this.");
 
-         if ((*restrained_concept_p)->concept->arg1 == 0) {
+         if ((*restrained_concept_p)->concept_ptr->arg1 == 0) {
             // Use shorter span.
             if (m_reverse_order)
                m_end_point = my_start_point + 1 - shorter_span;
@@ -5338,7 +5338,7 @@ void fraction_info::get_fraction_info(
                m_end_point = my_start_point + shorter_span - 1;
             *restrained_concept_p = (parse_block *) 0;
          }
-         else if ((*restrained_concept_p)->concept->arg1 == 1) {
+         else if ((*restrained_concept_p)->concept_ptr->arg1 == 1) {
             // Use shorter span.
             if (m_reverse_order)
                my_start_point = m_end_point + shorter_span - 1;
@@ -5414,7 +5414,7 @@ int try_to_get_parts_from_parse_pointer(setup const *ss, parse_block const *pp) 
         (CMD_MISC2_RESTRAINED_SUPER | CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG |
          CMD_MISC2__ANY_WORK_INVERT | CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__INVERT_SNAG |
          CMD_MISC2__INVERT_MYSTIC | CMD_MISC2__CTR_END_MASK)) ||
-       (!pp || pp->concept->kind != marker_end_of_list) ||
+       (!pp || pp->concept_ptr->kind != marker_end_of_list) ||
        (pp->call->the_defn.schema != schema_sequential) ||
        (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_HALF | INHERITFLAG_REWIND |
                                          INHERITFLAG_LASTHALF | INHERITFLAG_QUARTER)) != 0ULL)
@@ -7037,7 +7037,7 @@ static bool do_misc_schema(
       if (the_schema == schema_single_concentric_together &&
           attr::slimit(ss) == 3 &&
           (callflags1 & CFLAG1_ALLOW_IF_CENTERS_ONLY) != 0 &&
-          foo2.parseptr->concept->kind == marker_end_of_list &&
+          foo2.parseptr->concept_ptr->kind == marker_end_of_list &&
           foo2.callspec == base_calls[base_call_null] &&
           (ss->or_all_people() & 011) != 011) {
          specialoffsetmapcode = ~3U;
@@ -9130,7 +9130,7 @@ void move(
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER)
          fail("Can't nest meta-concepts and supercalls.");
 
-      if (t->concept->kind == concept_another_call_next_mod) {
+      if (t->concept_ptr->kind == concept_another_call_next_mod) {
          // This is a "supercall".
 
          if (ss->cmd.callspec == 0) {
@@ -9144,7 +9144,7 @@ void move(
                while (parseptrtailcheck->next != 0 && parseptrtailcheck->call == 0)
                   parseptrtailcheck = parseptrtailcheck->next;
 
-               if (parseptrtailcheck->concept->kind > marker_end_of_list)
+               if (parseptrtailcheck->concept_ptr->kind > marker_end_of_list)
                   fail("Incomplete supercall.");
             }
             else {
@@ -9154,7 +9154,7 @@ void move(
                if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_RECTIFY)
                   ss->cmd.cmd_misc3_flags |= CMD_MISC3__RECTIFY;
 
-               if (parseptrtemp->concept->kind > marker_end_of_list)
+               if (parseptrtemp->concept_ptr->kind > marker_end_of_list)
                   fail("Incomplete supercall.");
             }
 
@@ -9171,20 +9171,20 @@ void move(
          parse_block p3 = *(p2.subsidiary_root);
 
          p1.next = &p2;
-         p2.concept = &concept_marker_concept_supercall;
+         p2.concept_ptr = &concept_marker_concept_supercall;
          p2.subsidiary_root = &p3;
          p3.call = ss->cmd.callspec;
          p3.call_to_print = p3.call;
 
-         if (!metaconcept_is_fractional && p3.concept->kind != concept_another_call_next_mod) {
-            p3.concept = &concept_mark_end_of_list;
+         if (!metaconcept_is_fractional && p3.concept_ptr->kind != concept_another_call_next_mod) {
+            p3.concept_ptr = &concept_mark_end_of_list;
             p3.next = (parse_block *) 0;
          }
 
          p3.no_check_call_level = true;
 
          // Some parse blocks carry their options with them, and need those options switched to shallow binding.
-         if (concept_table[p3.concept->kind].concept_prop & 
+         if (concept_table[p3.concept_ptr->kind].concept_prop & 
              (CONCPROP__USE_NUMBER|CONCPROP__USE_TWO_NUMBERS|CONCPROP__USE_FOUR_NUMBERS|CONCPROP__USE_SELECTOR))
             current_options = p3.options;
          else
@@ -9208,24 +9208,24 @@ void move(
 
          for ( ; ; ) {
             // Clear "fixme" if we pass a meta-concept like "initially".
-            if (get_meta_key_props(z0->concept) & MKP_RESTRAIN_2) fixme = false;
+            if (get_meta_key_props(z0->concept_ptr) & MKP_RESTRAIN_2) fixme = false;
 
-            if (z0->concept->kind == marker_end_of_list)
+            if (z0->concept_ptr->kind == marker_end_of_list)
                break;
 
-            if (z0->concept->kind < marker_end_of_list && fixme)
+            if (z0->concept_ptr->kind < marker_end_of_list && fixme)
                break;
 
-            if (z0->concept->kind < marker_end_of_list &&
+            if (z0->concept_ptr->kind < marker_end_of_list &&
                 (z0->call->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) != 0) {
                // A tagger call stops immediately.
                break;
             }
-            else if (z0->concept->kind < marker_end_of_list && z0->subsidiary_root) {
+            else if (z0->concept_ptr->kind < marker_end_of_list && z0->subsidiary_root) {
                // For "mod" pairs, watch for tracing downward.
                z0 = z0->subsidiary_root;
             }
-            else if (concept_table[z0->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
+            else if (concept_table[z0->concept_ptr->kind].concept_prop & CONCPROP__SECOND_CALL)
                // Concepts like "sandwich" also trace downward.
                z0 = z0->subsidiary_root;
             else
@@ -9336,7 +9336,7 @@ void move(
          ss->cmd.skippable_heritflags = foo.m_heritflag;
       }
       else {
-         if (!foo.m_root_of_result_of_skip || foo.m_skipped_concept->concept->kind == concept_supercall)
+         if (!foo.m_root_of_result_of_skip || foo.m_skipped_concept->concept_ptr->kind == concept_supercall)
             fail("A concept is required.");
 
          parseptrcopy = *foo.m_root_of_result_of_skip;
@@ -9364,7 +9364,7 @@ void move(
       goto getout;
    }
 
-   if (parseptrcopy->concept->kind <= marker_end_of_list) {
+   if (parseptrcopy->concept_ptr->kind <= marker_end_of_list) {
       call_conc_option_state saved_options = current_options;
       call_with_name *this_call = parseptrcopy->call;
 
@@ -9529,7 +9529,7 @@ void move(
          if (ss->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER)
             fail("Can't nest meta-concepts and supercalls.");
 
-         if (t->concept->kind != concept_another_call_next_mod)
+         if (t->concept_ptr->kind != concept_another_call_next_mod)
             fail("Can't nest meta-concepts and supercalls.");
 
          if (ss->cmd.callspec == 0) {
@@ -9548,7 +9548,7 @@ void move(
          parse_block p3 = *(p2.subsidiary_root);
 
          p1.next = &p2;
-         p2.concept = &concept_marker_concept_supercall;
+         p2.concept_ptr = &concept_marker_concept_supercall;
          p2.subsidiary_root = &p3;
 
          p3.no_check_call_level = true;
@@ -9615,9 +9615,9 @@ void move(
 
          for (p=concept_fixer_table_r ; p->newheritmods | p->newfinalmods ; p++) {
             if (p->newheritmods == extraheritmods && p->newfinalmods == extrafinalmods &&
-                &concept_descriptor_table[useful_concept_indices[p->before]] == ss->cmd.parseptr->concept) {
+                &concept_descriptor_table[useful_concept_indices[p->before]] == ss->cmd.parseptr->concept_ptr) {
                artificial_parse_block = *ss->cmd.parseptr;
-               artificial_parse_block.concept = &concept_descriptor_table[useful_concept_indices[p->after]];
+               artificial_parse_block.concept_ptr = &concept_descriptor_table[useful_concept_indices[p->after]];
                ss->cmd.parseptr = &artificial_parse_block;
                parseptrcopy = ss->cmd.parseptr;
                ss->cmd.cmd_final_flags.clear_heritbits(extraheritmods);   // Take out those mods.
@@ -9641,7 +9641,7 @@ void move(
       heritflags foobar = 0ULL;
       uint32_t fooble = 0;
 
-      const concept_descriptor *ddd = ss->cmd.parseptr->concept;
+      const concept_descriptor *ddd = ss->cmd.parseptr->concept_ptr;
 
       if (!(concept_table[ddd->kind].concept_prop & CONCPROP__PERMIT_MODIFIERS)) {
          foobar |= (INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_DIAMOND |
@@ -9739,7 +9739,7 @@ void move(
          }
          else
             fail2("Can't do this concept with other concepts preceding it:",
-                  parseptrcopy->concept->menu_name);
+                  parseptrcopy->concept_ptr->menu_name);
       }
    }
 
@@ -9752,11 +9752,11 @@ void move(
 
    if (saved_magic_diamond &&
        (result->result_flags.misc & RESULTFLAG__NEED_DIAMOND) &&
-       saved_magic_diamond->concept->arg1 == 0) {
-      if (saved_magic_diamond->concept->kind == concept_magic)
-         saved_magic_diamond->concept = &concept_special_magic;
-      else if (saved_magic_diamond->concept->kind == concept_interlocked)
-         saved_magic_diamond->concept = &concept_special_interlocked;
+       saved_magic_diamond->concept_ptr->arg1 == 0) {
+      if (saved_magic_diamond->concept_ptr->kind == concept_magic)
+         saved_magic_diamond->concept_ptr = &concept_special_magic;
+      else if (saved_magic_diamond->concept_ptr->kind == concept_interlocked)
+         saved_magic_diamond->concept_ptr = &concept_special_interlocked;
    }
 
  really_getout:

@@ -2099,13 +2099,13 @@ extern void do_phantom_2x4_concept(
    // and global_livemask, but may not look at anyone's facing direction other
    // than through global_tbonetest.
 
-   int clw = parseptr->concept->arg2 & 3;
+   int clw = parseptr->concept_ptr->arg2 & 3;
    int linesp = clw & 1;
    int rot = (global_tbonetest ^ linesp ^ 1) & 1;
    uint32_t map_code;
 
    if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) &&
-       parseptr->concept->arg3 != MPKIND__CONCPHAN)
+       parseptr->concept_ptr->arg3 != MPKIND__CONCPHAN)
       fail("Mystic not allowed with this concept.");
 
    if (clw == 3)
@@ -2121,7 +2121,7 @@ extern void do_phantom_2x4_concept(
    // The default value.
    unsigned int noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2;
 
-   if (two_couple_calling && ss->kind == s2x2 && parseptr->concept->arg3 == MPKIND__CONCPHAN)
+   if (two_couple_calling && ss->kind == s2x2 && parseptr->concept_ptr->arg3 == MPKIND__CONCPHAN)
       expand::expand_setup(s_2x2_4x4_ctrs, ss);
 
    switch (ss->kind) {
@@ -2137,24 +2137,24 @@ extern void do_phantom_2x4_concept(
       }
 
       rot = 0;
-      map_code = MAPCODE(s1x8,2,parseptr->concept->arg3,0);
+      map_code = MAPCODE(s1x8,2,parseptr->concept_ptr->arg3,0);
       break;
    case s4x4:
-      if (parseptr->concept->arg3 == MPKIND__NONE)
-         map_code = parseptr->concept->arg4;
-      else if (parseptr->concept->arg3 == MPKIND__OFFS_BOTH_FULL)
-         map_code = MAPCODE(s2x4,2,parseptr->concept->arg3,0);
+      if (parseptr->concept_ptr->arg3 == MPKIND__NONE)
+         map_code = parseptr->concept_ptr->arg4;
+      else if (parseptr->concept_ptr->arg3 == MPKIND__OFFS_BOTH_FULL)
+         map_code = MAPCODE(s2x4,2,parseptr->concept_ptr->arg3,0);
       else
-         map_code = MAPCODE(s2x4,2,parseptr->concept->arg3,1);
+         map_code = MAPCODE(s2x4,2,parseptr->concept_ptr->arg3,1);
 
       // Check for special case of "stagger" or "bigblock", without the word "phantom",
       // when people are not actually on block spots.
 
-      if (parseptr->concept->arg3 == MPKIND__STAG &&
-          parseptr->concept->arg1 == phantest_only_one) {
+      if (parseptr->concept_ptr->arg3 == MPKIND__STAG &&
+          parseptr->concept_ptr->arg1 == phantest_only_one) {
          if (global_livemask != 0x2D2D && global_livemask != 0xD2D2) {
             warn(warn__not_on_block_spots);
-            distorted_move(ss, parseptr, disttest_any, parseptr->concept->arg2, result);
+            distorted_move(ss, parseptr, disttest_any, parseptr->concept_ptr->arg2, result);
             result->clear_all_overcasts();
             return;
          }
@@ -2184,20 +2184,20 @@ extern void do_phantom_2x4_concept(
          // People are T-boned!  This is messy.
          phantom_2x4_move(ss,
                           linesp,
-                          (phantest_kind) parseptr->concept->arg1,
+                          (phantest_kind) parseptr->concept_ptr->arg1,
                           map_code,
                           result);
          result->clear_all_overcasts();
          return;
       }
-      else if (parseptr->concept->arg3 == MPKIND__SPLIT)
+      else if (parseptr->concept_ptr->arg3 == MPKIND__SPLIT)
          // Allow split phantom CLW, triple boxes.
          noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1;
       break;
    case s2x6:
       // Check for special case of split phantom lines/columns in a parallelogram.
 
-      if (parseptr->concept->arg3 == MPKIND__SPLIT) {
+      if (parseptr->concept_ptr->arg3 == MPKIND__SPLIT) {
          if (rot) {
             if (global_tbonetest & 1) fail("There are no split phantom lines here.");
             else                      fail("There are no split phantom columns here.");
@@ -2224,7 +2224,7 @@ extern void do_phantom_2x4_concept(
    canonicalize_rotation(ss);
 
    divided_setup_move(ss, map_code,
-                      (phantest_kind) parseptr->concept->arg1,
+                      (phantest_kind) parseptr->concept_ptr->arg1,
                       true, result, noexpand_bits_to_set);
    result->rotation -= rot;   // Flip the setup back.
    // The split-axis bits are gone.  If someone needs them, we have work to do.
@@ -2254,9 +2254,9 @@ extern void do_phantom_stag_qtg_concept(
    if ((rot & 011) == 011)
       fail("Can't figure this out -- facing directions are too weird.");
 
-   rot = (rot ^ parseptr->concept->arg2) & 1;
+   rot = (rot ^ parseptr->concept_ptr->arg2) & 1;
 
-   ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;  /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+   ss->cmd.cmd_misc_flags |= parseptr->concept_ptr->arg3;  /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
 
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
@@ -2264,7 +2264,7 @@ extern void do_phantom_stag_qtg_concept(
    divided_setup_move(
       ss,
       MAPCODE(s_qtag,2,MPKIND__STAG,1),
-      (phantest_kind) parseptr->concept->arg1,
+      (phantest_kind) parseptr->concept_ptr->arg1,
       true,
       result);
 
@@ -2294,7 +2294,7 @@ extern void do_phantom_diag_qtg_concept(
       else if ((rot & 011) == 011)
          fail("Can't figure this out -- facing directions are too weird.");
 
-      rot = (rot ^ parseptr->concept->arg2) & 1;
+      rot = (rot ^ parseptr->concept_ptr->arg2) & 1;
 
       ss->rotation += rot;   // Just flip the setup around and recanonicalize.
       canonicalize_rotation(ss);
@@ -2306,7 +2306,7 @@ extern void do_phantom_diag_qtg_concept(
          ss->people[6].id1 | ss->people[11].id1 | ss->people[18].id1 | ss->people[23].id1;
 
       if ((dir & 011) == 011 ||
-          !((dir ^ parseptr->concept->arg2) & 1))
+          !((dir ^ parseptr->concept_ptr->arg2) & 1))
          fail("Can't figure this out -- facing directions are too weird.");
 
       mapcode = MAPCODE(s_qtag,2,MPKIND__DIAGQTAG4X6,0);
@@ -2315,10 +2315,10 @@ extern void do_phantom_diag_qtg_concept(
       fail("Can't do this concept in this setup.");
 
    // The thing to verify, like CMD_MISC__VERIFY_1_4_TAG.
-   ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
+   ss->cmd.cmd_misc_flags |= parseptr->concept_ptr->arg3;
 
    divided_setup_move(ss, mapcode,
-                      (phantest_kind) parseptr->concept->arg1,
+                      (phantest_kind) parseptr->concept_ptr->arg1,
                       true, result);
 
    result->rotation -= rot;   // Flip the setup back.
@@ -2479,7 +2479,7 @@ extern void distorted_2x2s_move(
    const int8_t *map_z_restorer = 0;
 
    const concept_descriptor *this_concept =
-      (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) ? &concept_special_z : parseptr->concept;
+      (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) ? &concept_special_z : parseptr->concept_ptr;
 
    ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__IMPOSE_Z_CONCEPT;
 
@@ -3205,7 +3205,7 @@ extern void distorted_move(
             concept_descriptor bar = {"Z", concept_misc_distort, CONCPARSE_PARSE_DIRECT, l_c2,
                                       UC_none, 0, 0, 0, 16+1};
 
-            foo.concept = &bar;
+            foo.concept_ptr = &bar;
 
             distorted_2x2s_move(ss, &foo, result);
                return;
@@ -3400,7 +3400,7 @@ extern void distorted_move(
       break;
    case DISTORTKEY_DIST_QTAG:
       // The thing to verify, like CMD_MISC__VERIFY_1_4_TAG.
-      ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
+      ss->cmd.cmd_misc_flags |= parseptr->concept_ptr->arg3;
 
       switch (ss->kind) {
          uint32_t dirs;
@@ -3420,10 +3420,10 @@ extern void distorted_move(
          if (global_livemask == 0x6C6C) { map_code = spcmap_dqtag3; }
          else if (global_livemask == 0xE2E2) { map_code = spcmap_dqtag4; }
          else if (global_livemask == 0x2D2D && dirs == 0x01100110 &&
-                  parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+                  parseptr->concept_ptr->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
          { map_code = spcmap_dqtag7; }
          else if (global_livemask == 0x2D2D && dirs == 0x40104010 &&
-                  parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+                  parseptr->concept_ptr->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
          { map_code = spcmap_dqtag8; }
          else {
             rotate_back = 1;   // It must be rotated.
@@ -3433,10 +3433,10 @@ extern void distorted_move(
             if (global_livemask == 0xC6C6) { map_code = spcmap_dqtag3; }
             else if (global_livemask == 0x2E2E) { map_code = spcmap_dqtag4; }
             else if (global_livemask == 0xD2D2 && dirs == 0x00440044 &&
-                     parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+                     parseptr->concept_ptr->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
             { map_code = spcmap_dqtag7; }
             else if (global_livemask == 0xD2D2 && dirs == 0x00050005 &&
-                     parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+                     parseptr->concept_ptr->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
             { map_code = spcmap_dqtag8; }
          }
          break;
@@ -3621,7 +3621,7 @@ extern void distorted_move(
       else
          fail("Can't find distorted 1/4 tag.");
 
-      ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
+      ss->cmd.cmd_misc_flags |= parseptr->concept_ptr->arg3;
       goto do_divided_nocheck;
    case DISTORTKEY_OFFS_TRIPLECLW:
       // Offset triple C/L/W.
@@ -3710,7 +3710,7 @@ extern void distorted_move(
    // are no intervening modifiers.  Shut off the concept if there
    // are modifiers.
 
-   kk = next_parseptr->concept->kind;
+   kk = next_parseptr->concept_ptr->kind;
 
    if (junk_concepts.test_for_any_herit_or_final_bit())
       kk = concept_comment;
@@ -3718,7 +3718,7 @@ extern void distorted_move(
    if (ss->kind == s3x8) {
       if (kk == concept_do_phantom_boxes &&
           !junk_concepts.test_for_any_herit_or_final_bit() &&
-          next_parseptr->concept->arg3 == MPKIND__SPLIT) {
+          next_parseptr->concept_ptr->arg3 == MPKIND__SPLIT) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
          ss->cmd.parseptr = next_parseptr->next;
          map_code = MAPCODE(s2x4,2,mk,0);
@@ -3729,8 +3729,8 @@ extern void distorted_move(
    }
    else if (kk == concept_do_phantom_2x4 &&
             !junk_concepts.test_for_any_herit_or_final_bit() &&
-            linesp == (next_parseptr->concept->arg2 & 7) &&  // Demand same "CLW" as original.
-            next_parseptr->concept->arg3 == MPKIND__SPLIT) {
+            linesp == (next_parseptr->concept_ptr->arg2 & 7) &&  // Demand same "CLW" as original.
+            next_parseptr->concept_ptr->arg3 == MPKIND__SPLIT) {
       if (ss->kind == s3x4 || ss->kind == s4x4) {
          goto whuzzzzz;
       }
@@ -3741,7 +3741,7 @@ extern void distorted_move(
    else if (kk == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     // Only allow 50% offset.
             !junk_concepts.test_for_any_herit_or_final_bit() &&
-            next_parseptr->concept->arg3 == MPKIND__SPLIT) {
+            next_parseptr->concept_ptr->arg3 == MPKIND__SPLIT) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       ss->do_matrix_expansion(CONCPROP__NEEDK_3X8, false);
       if (ss->kind != s3x8) fail("Must have a 3x4 setup for this concept.");
@@ -3808,7 +3808,7 @@ extern void triple_twin_move(
    ss->clear_all_overcasts();
    uint32_t tbonetest = global_tbonetest;
    uint32_t mapcode = 0;
-   phantest_kind phan = (phantest_kind) parseptr->concept->arg4;
+   phantest_kind phan = (phantest_kind) parseptr->concept_ptr->arg4;
 
    // Arg1 = 0/1/3 for C/L/W, usual coding.
    // Arg2 = matrix to expand to.
@@ -3852,9 +3852,9 @@ extern void triple_twin_move(
 
    if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-   tbonetest ^= parseptr->concept->arg1;
+   tbonetest ^= parseptr->concept_ptr->arg1;
 
-   switch (parseptr->concept->arg3) {
+   switch (parseptr->concept_ptr->arg3) {
    case 10:
       if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
       mapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
@@ -3867,7 +3867,7 @@ extern void triple_twin_move(
       break;
    case 8:
       if (ss->kind != s3x4) fail("Must have a 3x4 setup for this concept.");
-      mapcode = MAPCODE(s2x3,2,parseptr->concept->arg5,1);
+      mapcode = MAPCODE(s2x3,2,parseptr->concept_ptr->arg5,1);
       break;
    case 7:
       if (ss->kind == s2x8)
@@ -3906,7 +3906,7 @@ extern void triple_twin_move(
       mapcode = MAPCODE(s1x8,3,MPKIND__SPLIT,1);
       break;
    default:
-      if (parseptr->concept->arg3 != 0) tbonetest ^= 1;
+      if (parseptr->concept_ptr->arg3 != 0) tbonetest ^= 1;
 
       if (ss->kind == s4x4) {
          expand::expand_setup(((tbonetest & 1) ? s_4x4_4x6b : s_4x4_4x6a), ss);
@@ -3915,7 +3915,7 @@ extern void triple_twin_move(
 
       if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
 
-      switch (parseptr->concept->arg3) {
+      switch (parseptr->concept_ptr->arg3) {
       case 0:
          mapcode = MAPCODE(s2x4,3,MPKIND__SPLIT,1);
          break;
@@ -3924,23 +3924,23 @@ extern void triple_twin_move(
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
          break;
       case 3:
-         mapcode = MAPCODE(s2x6,2,(mpkind)parseptr->concept->arg5,1);
+         mapcode = MAPCODE(s2x6,2,(mpkind)parseptr->concept_ptr->arg5,1);
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
          break;
       }
 
       if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) &&
-          parseptr->concept->arg3 != 0)
+          parseptr->concept_ptr->arg3 != 0)
          fail("Mystic not allowed with this concept.");
       break;
    }
 
    if (tbonetest & 1) {
-      if (parseptr->concept->arg1 == 0) fail("Can't find the required columns.");
+      if (parseptr->concept_ptr->arg1 == 0) fail("Can't find the required columns.");
       else fail("Can't find the required lines.");
    }
 
-   if (parseptr->concept->arg3 != 8 && parseptr->concept->arg1 == 3)
+   if (parseptr->concept_ptr->arg3 != 8 && parseptr->concept_ptr->arg1 == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    divided_setup_move(ss, mapcode, phan, true, result);
@@ -4005,7 +4005,7 @@ extern void do_concept_rigger(
    setup_kind startkind;
    int rot = 0;
 
-   rstuff = parseptr->concept->arg1;
+   rstuff = parseptr->concept_ptr->arg1;
 
    /* rstuff =
       outrigger   : 0
@@ -4210,7 +4210,7 @@ void do_concept_wing(
    setup *result) THROW_DECL
 {
    ss->clear_all_overcasts();
-   int rstuff = parseptr->concept->arg1;
+   int rstuff = parseptr->concept_ptr->arg1;
 
    if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__SAID_INVERT) && rstuff == 2) {
       ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__SAID_INVERT;
@@ -4843,7 +4843,7 @@ extern void common_spot_move(
    warning_info saved_warnings = configuration::save_warnings();
    saved_error_info saved_error;
 
-   int rstuff = parseptr->concept->arg1;
+   int rstuff = parseptr->concept_ptr->arg1;
    // rstuff =
    // common point galaxy (rigger)             : 0x1
    // common spot columns (4x4 or perhaps 2x4) : 0x2
@@ -4862,7 +4862,7 @@ extern void common_spot_move(
    // common spot tidal line                   : 0x2000
    // common spot tidal wave                   : 0x1000
 
-   if (parseptr->concept->arg3 == s1x16 && ss->kind == s1x8) {
+   if (parseptr->concept_ptr->arg3 == s1x16 && ss->kind == s1x8) {
       ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, false);
    }
 
@@ -4951,8 +4951,8 @@ extern void common_spot_move(
          if (t >= 0) copy_rot(&a1, i, ss, t, r);
       }
 
-      a0.cmd.cmd_misc_flags |= parseptr->concept->arg2;
-      a1.cmd.cmd_misc_flags |= parseptr->concept->arg2;
+      a0.cmd.cmd_misc_flags |= parseptr->concept_ptr->arg2;
+      a1.cmd.cmd_misc_flags |= parseptr->concept_ptr->arg2;
 
       if (0x40000000U & map_ptr->indicator) {
          a0.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_GALAXY;
@@ -5435,7 +5435,7 @@ extern void do_tallshort6_move(
 {
    ss->clear_all_overcasts();
    calldef_schema schema;
-   int indicator = parseptr->concept->arg1;  // 0 for tall 6, 1 for short 6.
+   int indicator = parseptr->concept_ptr->arg1;  // 0 for tall 6, 1 for short 6.
 
    if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
       fail("Illegal modifier for this concept.");

@@ -3375,7 +3375,7 @@ void mimic_move(
    // See if we have an incoming override of the assumed formation.
 
    if (!(ss->cmd.cmd_misc3_flags & (CMD_MISC3__TRY_MIMIC_LINES|CMD_MISC3__TRY_MIMIC_COLS)))
-      MI.setup_hint = parseptr->concept->arg1;
+      MI.setup_hint = parseptr->concept_ptr->arg1;
    else if (ss->cmd.cmd_misc3_flags & CMD_MISC3__TRY_MIMIC_LINES)
       MI.setup_hint = MIMIC_SETUP_LINES;
    else
@@ -3650,7 +3650,7 @@ void mimic_move(
 
    if (ss->cmd.callspec)
       flags1 = ss->cmd.callspec->the_defn.callflags1;
-   else if (ss->cmd.parseptr && ss->cmd.parseptr->concept && ss->cmd.parseptr->concept->kind == marker_end_of_list &&
+   else if (ss->cmd.parseptr && ss->cmd.parseptr->concept_ptr && ss->cmd.parseptr->concept_ptr->kind == marker_end_of_list &&
        ss->cmd.parseptr->call)
       flags1 = ss->cmd.parseptr->call->the_defn.callflags1;
 

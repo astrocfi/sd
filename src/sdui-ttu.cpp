@@ -88,7 +88,7 @@ static void term_handler(int n)
 }
 
 extern void ttu_set_window_title(const char *string) {}
-void iofull::set_pick_string(const char *string) {}
+void iofull::set_pick_string(std::string_view string) {}
 
 
 void iofull::display_help()

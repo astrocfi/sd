@@ -57,6 +57,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <string>
 
 #include "sd.h"
 
@@ -80,8 +81,8 @@ static int window_size_args[4] = {780, 560, 10, 20};
    Windows command user segment. */
 #define SPECIAL_KEY_OFFSET (CM_REINIT-128+1)
 
-static char szMainWindowName[] = "Sd main window class";
-static char szTranscriptWindowName[] = "Sd transcript window class";
+std::string szMainWindowName = "Sd main window class";
+std::string szTranscriptWindowName = "Sd transcript window class";
 
 LRESULT CALLBACK MainWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK TranscriptAreaWndProc(HWND, UINT, WPARAM, LPARAM);
@@ -136,11 +137,11 @@ struct DisplayType {
 #define ui_undefined -999
 
 
-static char szOutFilename     [MAX_TEXT_LINE_LENGTH];
-static char szDatabaseFilename[MAX_TEXT_LINE_LENGTH];
-static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
+std::string szOutFilename;
+std::string szDatabaseFilename;
+std::string szResolveWndTitle;
 static int GLOBStatusBarLength;
-static Cstring szGLOBFirstPane;
+static std::string szGLOBFirstPane;
 static HPALETTE hPalette;   // The palette that the system makes for us.
 static LPBITMAPINFO lpBi;   // Address of the DIB (bitmap file) mapped in memory.
 static LPTSTR lpBits;       // Address of the pixel data in same.
@@ -207,7 +208,7 @@ static RECT CallsClientRect;
 static RECT TranscriptClientRect;
 
 // This is the last title sent by the main program.  We add stuff to it.
-static char szMainTitle[MAX_TEXT_LINE_LENGTH];
+static std::string szMainTitle;
 
 
 
@@ -217,11 +218,11 @@ static void uims_bell()
 }
 
 
-static void UpdateStatusBar(Cstring szFirstPane)
+static void UpdateStatusBar(std::string_view szFirstPane)
 {
    int StatusBarDimensions[7];
 
-   if (szFirstPane)
+   if (!szFirstPane.empty())
       szGLOBFirstPane = szFirstPane;
 
    StatusBarDimensions[0] = (50*GLOBStatusBarLength)>>7;
@@ -261,7 +262,7 @@ static void UpdateStatusBar(Cstring szFirstPane)
       SendMessage(hwndStatusBar, SB_SETPARTS, 1, (LPARAM) StatusBarDimensions);
    }
 
-   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szGLOBFirstPane);
+   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szGLOBFirstPane.c_str());
    SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
    UpdateWindow(hwndStatusBar);
 }
@@ -1092,10 +1093,10 @@ static void Transcript_OnScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 // Process get-text dialog box messages.
 
 static popup_return PopupStatus;
-static char szPrompt1[MAX_TEXT_LINE_LENGTH];
-static char szPrompt2[MAX_TEXT_LINE_LENGTH];
-static char szSeed[MAX_TEXT_LINE_LENGTH];
-static char szTextEntryResult[MAX_TEXT_LINE_LENGTH];
+std::string szPrompt1;
+std::string szPrompt2;
+std::string szSeed;
+char szTextEntryResult[MAX_TEXT_LINE_LENGTH];
 LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam)
 {
    int Len;
@@ -1104,9 +1105,9 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
    case WM_INITDIALOG:
       /* If we did this, it would set the actual window title
          SetWindowText(hDlg, "FOOBAR!"); */
-      SetDlgItemText(hDlg, IDC_FILE_TEXT1, szPrompt1);
-      SetDlgItemText(hDlg, IDC_FILE_TEXT2, szPrompt2);
-      SendDlgItemMessage(hDlg, IDC_FILE_EDIT, WM_SETTEXT, 0, (LPARAM) szSeed);
+      SetDlgItemText(hDlg, IDC_FILE_TEXT1, szPrompt1.c_str());
+      SetDlgItemText(hDlg, IDC_FILE_TEXT2, szPrompt2.c_str());
+      SendDlgItemMessage(hDlg, IDC_FILE_EDIT, WM_SETTEXT, 0, (LPARAM) szSeed.c_str());
       return TRUE;
    case WM_COMMAND:
       switch (LOWORD(wParam)) {
@@ -1139,28 +1140,29 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
 }
 
 
-popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring /*final_inline_prompt*/,
-                                      Cstring seed, char *dest)
+popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                      std::string_view /*final_inline_prompt*/,
+                                      std::string_view seed, std::string *dest)
 {
    // We ignore the "final_inline_prompt".  We assume that the appearance of the
    // edit box will clue the user.  But we show other prompts, even if they have asterisks.
 
-   if (prompt1 && prompt1[0] && prompt1[0] == '*')
-      strncpy(szPrompt1, prompt1+1, MAX_TEXT_LINE_LENGTH);
+   if (!prompt1.empty() && prompt1[0] == '*')
+      szPrompt1 = prompt1.substr(1);
    else
-      strncpy(szPrompt1, prompt1, MAX_TEXT_LINE_LENGTH);
+      szPrompt1 = prompt1;
 
-   if (prompt2 && prompt2[0] && prompt2[0] == '*')
-      strncpy(szPrompt2, prompt2+1, MAX_TEXT_LINE_LENGTH);
+   if (!prompt2.empty() && prompt2[0] == '*')
+      szPrompt2 = prompt2.substr(1);
    else
-      strncpy(szPrompt2, prompt2, MAX_TEXT_LINE_LENGTH);
+      szPrompt2 = prompt2;
 
-   strncpy(szSeed, seed, MAX_TEXT_LINE_LENGTH);
+   szSeed = seed;
    DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_TEXT_ENTRY_DIALOG),
              hwndMain, (DLGPROC) TEXT_ENTRY_DIALOG_WndProc);
    if (PopupStatus == POPUP_ACCEPT_WITH_STRING)
-      lstrcpy(dest, szTextEntryResult);
-   else dest[0] = 0;
+      *dest = szTextEntryResult;
+   else dest->clear();
    return PopupStatus;
 }
 
@@ -1261,7 +1263,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    hwndTranscriptArea = CreateWindow(
-      szTranscriptWindowName, NULL,
+      szTranscriptWindowName.c_str(), NULL,
       WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS | WS_VSCROLL,
       0, 0, 0, 0,
       hwnd, (HMENU) TRANSCRIPT_AREA_INDEX,
@@ -1275,7 +1277,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 
    if (!hwndProgress||!hwndAcceptButton||!hwndCancelButton||!hwndCallMenu||
        !hwndTextInputArea||!hwndTranscriptArea||!hwndStatusBar) {
-      gg77->iob88.fatal_error_exit(1, "Can't create windows", 0);
+      gg77->iob88.fatal_error_exit(1, "Can't create windows", "");
    }
 
    return TRUE;
@@ -1329,7 +1331,7 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 
    MoveWindow(hwndStatusBar, 0, cy, cx, cyy, TRUE);
    GLOBStatusBarLength = cx;
-   UpdateStatusBar((Cstring) 0);
+   UpdateStatusBar("");
 
    TranscriptXSize = cx-TranscriptEdge-TRANSCRIPT_RIGHTMARGIN;
    TranscriptYSize = cy-TRANSCRIPT_BOTMARGIN-TRANSCRIPT_TOPMARGIN;
@@ -1834,16 +1836,16 @@ static void setup_level_menu(HWND hDlg)
 
 static void SetTitle()
 {
-   UpdateStatusBar((Cstring) 0);
-   SetWindowText(hwndMain, (LPSTR) szMainTitle);
+   UpdateStatusBar("");
+   SetWindowText(hwndMain, (LPSTR) szMainTitle.c_str());
 }
 
 
-void iofull::set_pick_string(Cstring string)
+void iofull::set_pick_string(std::string_view string)
 {
-   if (string && *string) {
-      UpdateStatusBar((Cstring) 0);
-      SetWindowText(hwndMain, (LPSTR) string);
+   if (!string.empty()) {
+      UpdateStatusBar("");
+      SetWindowText(hwndMain, (LPSTR) std::string(string).c_str());
    }
    else {
       SetTitle();   // End of pick, reset to our main title.
@@ -1852,8 +1854,7 @@ void iofull::set_pick_string(Cstring string)
 
 void iofull::set_window_title(char s[])
 {
-   lstrcpy(szMainTitle, "Sd ");
-   lstrcat(szMainTitle, s);
+   szMainTitle = to_string("Sd ", s);
    SetTitle();
 }
 
@@ -1874,6 +1875,7 @@ static Cstring session_error_msg;
 static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
    int i;
+   char window_text[MAX_TEXT_LINE_LENGTH];
 
    switch (id) {
    case IDC_START_LIST:
@@ -1893,8 +1895,9 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // User clicked on some call list option.  Enable and seed the file name.
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
       GetWindowText(GetDlgItem(hwnd, IDC_ABRIDGE_NAME),
-                    szDatabaseFilename, MAX_TEXT_LINE_LENGTH);
-      if (!szDatabaseFilename[0])
+                    window_text, MAX_TEXT_LINE_LENGTH);
+      szDatabaseFilename = window_text;
+      if (szDatabaseFilename.empty())
          SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, "abridge.txt");
       return;
    case IDC_NORMAL:
@@ -1905,8 +1908,9 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // User clicked on a special database file.  Enable and seed the file name.
       EnableWindow(GetDlgItem(hwnd, IDC_DATABASE_NAME), TRUE);
       GetWindowText(GetDlgItem(hwnd, IDC_DATABASE_NAME),
-                    szDatabaseFilename, MAX_TEXT_LINE_LENGTH);
-      if (!szDatabaseFilename[0])
+                    window_text, MAX_TEXT_LINE_LENGTH);
+      szDatabaseFilename = window_text;
+      if (szDatabaseFilename.empty())
          SetDlgItemText(hwnd, IDC_DATABASE_NAME, "database.txt");
       return;
    case IDC_DEFAULT:
@@ -1984,7 +1988,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          // In the latter case, we went back and asked for the level.
          // So now we have both, and we can proceed.
          calling_level = (dance_level) i;
-         strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+         outfile_string += filename_strings[calling_level];
       }
 
       // If a session was selected, and that session specified
@@ -2013,7 +2017,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                           szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
             if (szCallListFilename[0])
-               strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
+               abridge_filename = szCallListFilename;
          }
       }
       else if (IsDlgButtonChecked(hwnd, IDC_ABRIDGE)) {
@@ -2027,23 +2031,25 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                        szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
          if (szCallListFilename[0])
-            strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
+            abridge_filename = szCallListFilename;
       }
 
       // If user specified the output file during startup dialog, install that.
       // It overrides anything from the command line.
 
       GetWindowText(GetDlgItem(hwnd, IDC_OUTPUT_NAME),
-                    szOutFilename, MAX_TEXT_LINE_LENGTH);
+                    window_text, MAX_TEXT_LINE_LENGTH);
+      szOutFilename = window_text;
 
-      if (szOutFilename[0])
+      if (!szOutFilename.empty())
          new_outfile_string = szOutFilename;
 
       // Handle user-specified database file.
 
       if (IsDlgButtonChecked(hwnd, IDC_USERDEFINED)) {
          GetWindowText(GetDlgItem(hwnd, IDC_DATABASE_NAME),
-                       szDatabaseFilename, MAX_TEXT_LINE_LENGTH);
+                       window_text, MAX_TEXT_LINE_LENGTH);
+         szDatabaseFilename = window_text;
          database_filename = szDatabaseFilename;
       }
 
@@ -2076,17 +2082,17 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    case abridge_mode_writing_only:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    case abridge_mode_writing_full:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_FULL_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    case abridge_mode_abridging:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_ABRIDGE);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    default:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_NORMAL);
@@ -3101,7 +3107,7 @@ bool iofull::print_this()
    char full_outfile_name[MAX_FILENAME_LENGTH];
    strncpy(full_outfile_name, outfile_prefix, MAX_FILENAME_LENGTH);
    strncat(full_outfile_name, outfile_string, MAX_FILENAME_LENGTH);
-   GLOBprinter->print_this(full_outfile_name, szMainTitle, false);
+   GLOBprinter->print_this(full_outfile_name, szMainTitle.c_str(), false);
    return true;
 }
 

@@ -100,9 +100,9 @@ extern void ttu_set_window_title(const char *string)
 }
 
 
-void iofull::set_pick_string(Cstring string)
+void iofull::set_pick_string(std::string_view string)
 {
-   if (string && *string) SetConsoleTitle(string);
+   if (!string.empty()) SetConsoleTitle(string.data());
    else SetConsoleTitle(szMainTitle);    // End of pick, reset to our main title.
 }
 
