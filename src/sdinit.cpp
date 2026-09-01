@@ -63,6 +63,7 @@ and the following external variables:
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <string>
 
 #include "sd.h"
 #include "sort.h"
@@ -1077,64 +1078,59 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 // Returns FALSE if error occurs.  No action taken in that case.
 // We do not allow blanks in the file name.  To do so would make
 // the parsing of session lines ambiguous.
-extern bool install_outfile_string(const char newstring[])
+extern bool install_outfile_string(std::string_view newstring)
 {
-   char test_string[MAX_FILENAME_LENGTH];
-
    rewrite_filename_as_star[0] = '\0';
 
    // Clean off leading blanks, and stop after any internal blank.
-
-   sscanf(newstring, "%s", test_string);
-   if (!test_string[0]) return false;   // Null file name is not allowed.
+   size_t start = newstring.find_first_not_of(" \t\n\r");
+   if (start == std::string_view::npos) return false;  // Null file name is not allowed.
+   std::string_view trimmed = newstring.substr(start);
+   size_t end = trimmed.find_first_of(" \t\n\r");
+   std::string_view test_string = trimmed.substr(0, end);
 
    // Look for special file string of "*" or "+".
    // If so, generate a new file name.
    // If the character is "+", make the name unique.
 
-   if ((test_string[0] == '*' || test_string[0] == '+') && !test_string[1]) {
+   if ((test_string[0] == '*' || test_string[0] == '+') && test_string.size() == 1) {
       time_t clocktime;
       FILE *filetest;
-      char junk[30], junk2[30], t1[20], t2[20], t3[20], t4[20], t5[20];
-      char letter[2];
-      char *p;
+      char t1[20], t2[20], t3[20], t4[20], t5[20];
+      char letter = 'a';
 
-      letter[0] = 'a';
-      letter[1] = '\0';
       time(&clocktime);
       sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
 
       // Now t2 = "Jan", t3 = "16", and t5 = "1996".
 
-      strncpy(junk, t3, 3);
-      strncat(junk, t2, 3);
-      strncat(junk, &t5[strlen(t5)-2], 2);
-      for (p=junk ; *p ; p++) *p = tolower(*p);  // Month in lower case.
-      strncpy(junk2, junk, 10);           // This should be "16jan96".
+      std::string junk = to_string(t3, t2, &t5[strlen(t5)-2]);
+      for (char &ch : junk) ch = tolower(ch);  // Month in lower case.
+      std::string junk2 = junk;  // This should be "16jan96".
 
       for (;;) {
-         strcat(junk2, filename_strings[calling_level]);
+         junk2 += filename_strings[calling_level];
 
          // If the given filename is "+", accept it immediately.
          // Otherwise, fuss with the generated name until we get a
          // nonexistent file.
 
-         if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
+         if (test_string[0] == '+' || (filetest = fopen(junk2.c_str(), "r")) == 0) break;
          fclose(filetest);
-         if (letter[0] == 'z'+1) letter[0] = 'A';
-         else if (letter[0] == 'Z'+1) return false;
-         strncpy(junk2, junk, 10);
-         strncat(junk2, letter, 4);     /* Try appending a letter. */
-         letter[0]++;
+         if (letter == 'z'+1) letter = 'A';
+         else if (letter == 'Z'+1) return false;
+         junk2 = junk;
+         junk2 += letter;  // Try appending a letter.
+         letter++;
       }
 
-      strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
+      outfile_string = junk2;
       last_file_position = -1;
       rewrite_filename_as_star[0] = test_string[0];
       return true;
    }
 
-   strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
+   outfile_string = test_string;
    last_file_position = -1;
    return true;
 }
@@ -1340,18 +1336,14 @@ extern int process_session_info(Cstring *error_msg)
       // Look for an abridge list or stats list, immediately after the level,
       // separated by a minus sign and/or colon.
       if (breakpos && *breakpos == '-') {
-         int len = strlen(breakpos+1);
-
          // If there is already a file name, the operator is overriding
          // the name from the session.  Use the override.  Don't take
          // the name from the session.
-         if (abridge_filename[0] == 0) {
-            if (len > MAX_TEXT_LINE_LENGTH-1) len = MAX_TEXT_LINE_LENGTH-1;
-            strncpy(abridge_filename, breakpos+1, len);
-            abridge_filename[len] = 0;
+         if (abridge_filename.empty()) {
+            abridge_filename = breakpos+1;  // substring
          }
 
-         if (abridge_filename[0] != 0) {
+         if (!abridge_filename.empty()) {
             // The session line specifies an abridgement file.
             // Use it, unless the user specified "delete_abridgement",
             // in which case, we specifically don't use it.
@@ -1365,9 +1357,9 @@ extern int process_session_info(Cstring *error_msg)
       }
 
       if (num_fields_parsed == 4)
-         strncpy(header_comment, line+ccount, MAX_TEXT_LINE_LENGTH);
+         header_comment = line+ccount;  // substring
       else
-         header_comment[0] = 0;
+         header_comment.clear();
 
       if (!install_outfile_string(filename_string)) {
          *error_msg = "Bad file name in session file, using default instead.";
@@ -1405,28 +1397,26 @@ extern void close_init_file()
 
 static int write_back_session_line(FILE *wfile)
 {
-   char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string;
-   char level_and_abridge_name[MAX_TEXT_LINE_LENGTH];
-   strncpy(level_and_abridge_name, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
+   const char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string.c_str();
+   std::string level_and_abridge_name = getout_strings[calling_level];
 
    // Write the abridge file name, unless the abridgement is being deleted.
-   if (glob_abridge_mode != abridge_mode_none && abridge_filename[0]) {
-      strcat(level_and_abridge_name, "-");
-      strcat(level_and_abridge_name, abridge_filename);
+   if (glob_abridge_mode != abridge_mode_none && !abridge_filename.empty()) {
+      level_and_abridge_name += "-" + abridge_filename;
    }
 
-   if (header_comment[0])
+   if (!header_comment.empty())
       return
          fprintf(wfile, "%-20s %-11s %6d      %s\n",
                  filename,
-                 level_and_abridge_name,
+                 level_and_abridge_name.c_str(),
                  sequence_number,
-                 header_comment);
+                 header_comment.c_str());
    else
       return
          fprintf(wfile, "%-20s %-11s %6d\n",
                  filename,
-                 level_and_abridge_name,
+                 level_and_abridge_name.c_str(),
                  sequence_number);
 }
 
@@ -2162,17 +2152,17 @@ bool open_session(int argc, char **argv)
          if (strcmp(&args[argno][1], "write_list") == 0) {
             glob_abridge_mode = abridge_mode_writing_only;
             if (argno+1 < nargs)
-               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
+               abridge_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "write_full_list") == 0) {
             glob_abridge_mode = abridge_mode_writing_full;
             if (argno+1 < nargs)
-               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
+               abridge_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "abridge") == 0) {
             glob_abridge_mode = abridge_mode_abridging;
             if (argno+1 < nargs)
-               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
+               abridge_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "sequence") == 0) {
 	     if (argno+1 < nargs) new_outfile_string = args[argno+1];
@@ -2181,7 +2171,7 @@ bool open_session(int argc, char **argv)
             if (argno+1 < nargs) database_filename = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "output_prefix") == 0) {
-            if (argno+1 < nargs) strncpy(outfile_prefix, args[argno+1], MAX_FILENAME_LENGTH);
+            if (argno+1 < nargs) outfile_prefix = args[argno+1];
          }
          else if (strcmp(&args[argno][1], "sequence_num") == 0) {
             if (argno+1 < nargs) {
@@ -2312,7 +2302,7 @@ bool open_session(int argc, char **argv)
       the user.  In the latter case, we will do this step again. */
 
    if (calling_level != l_nonexistent_concept)
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH-80);
+      outfile_string += filename_strings[calling_level];
 
    /* At this point, the command-line arguments, and the preferences in the "[Options]"
       section of the initialization file, have been processed.  Some of those things
@@ -2430,26 +2420,25 @@ bool open_session(int argc, char **argv)
    // Must do before telling the uims so any open failure messages
    // come out first.
 
-   const char *sourcenames[2] = {database_filename, abridge_filename};
+   const char *sourcenames[2] = {database_filename, abridge_filename.c_str()};
    bool binaryfileflags[2] = {true, false};
    FILE *database_input_files[2];
 
    if (glob_abridge_mode >= abridge_mode_writing_only) {  // Includes abridge_mode_writing_full.
-      database_input_files[1] = fopen(abridge_filename, "w");
+      database_input_files[1] = fopen(abridge_filename.c_str(), "w");
 
       if (!database_input_files[1])
-         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
+         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename.c_str());
    }
 
    {
-      char cachename[MAX_TEXT_LINE_LENGTH];
-      strncpy(cachename, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
-      strcat(cachename, "cache");
+      std::string cachename = getout_strings[calling_level];
+      cachename += "cache";
       uint32_t escape_bit_junk;
 
       MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
                                     sourcenames, database_input_files,
-                                    cachename, 7, binaryfileflags);
+                                    cachename.c_str(), 7, binaryfileflags);
 
       int *mapped_cache = cache_stuff.map_address();
 
@@ -2460,7 +2449,7 @@ bool open_session(int argc, char **argv)
          gg77->iob88.fatal_error_exit(1, "Can't open database file.");
 
       if (glob_abridge_mode == abridge_mode_abridging && !abridge_file)
-         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
+         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename.c_str());
 
       char session_error_msg1[200], session_error_msg2[200];
       session_error_msg1[0] = 0;

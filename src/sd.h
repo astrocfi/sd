@@ -91,6 +91,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <string>
+#include <sstream>
 
 #include "database.h"
 #include "sdchars.h"
@@ -692,15 +694,15 @@ enum error_flag_type {
 };
 
 
-void fail(const char s[]) THROW_DECL NORETURN2;
+void fail(std::string_view s) THROW_DECL NORETURN2;
 
-void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
+void fail_no_retry(std::string_view s) THROW_DECL NORETURN2;
 
-extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
+extern void fail2(std::string_view s1, std::string_view s2) THROW_DECL NORETURN2;
 
-extern void failp(uint32_t id1, const char s[]) THROW_DECL NORETURN2;
+extern void failp(uint32_t id1, std::string_view s) THROW_DECL NORETURN2;
 
-void specialfail(const char s[]) THROW_DECL NORETURN2;
+void specialfail(std::string_view s) THROW_DECL NORETURN2;
 
 extern void warn(warning_index w);
 
@@ -1672,7 +1674,7 @@ class parse_block {
 
 public:
 
-   const concept_descriptor *concept; // the concept or end marker
+   const concept_descriptor *concept_ptr; // the concept or end marker
    call_with_name *call;          // if this is end mark, gives the call; otherwise unused
    setup *setup_for_print;        // may need to know actual setup to decide whether we can say "outer pairs".
    call_with_name *call_to_print; // the original call, for printing (sometimes the field
@@ -1696,7 +1698,7 @@ public:
    static parse_block *get_parse_block();         // In sdutil.cpp
 
    // We allow static instantiation of these things with just
-   // the "concept" field filled in.
+   // the "concept_ptr" field filled in.
    parse_block(const concept_descriptor & ccc) { initialize(&ccc); }
    // Which of course means we need to provide the default constructor too.
    parse_block() { initialize((concept_descriptor *) 0); }
@@ -1707,7 +1709,7 @@ public:
    static void final_cleanup();
 
    void set_parse_block_next(parse_block *thing) { next = thing; }
-   void set_parse_block_concept(const concept_descriptor *thing) { concept = thing; }
+   void set_parse_block_concept(const concept_descriptor *thing) { concept_ptr = thing; }
    void set_parse_block_call(call_with_name *thing) { call = thing; }
    void set_parse_block_call_to_print(call_with_name *thing) { call_to_print = thing; }
    void set_parse_block_replacement_key(short int key) { replacement_key = key; }
@@ -2460,7 +2462,7 @@ public:
 
    void write_header_stuff(bool with_ui_version, uint32_t act_phan_flags);
    bool write_sequence_to_file() THROW_DECL;
-   popup_return do_header_popup(char *dest);
+   popup_return do_header_popup(std::string *dest);
    void display_initial_history(int upper_limit, int num_pics);
    void write_history_line(int history_index,
                            bool picture,
@@ -2471,7 +2473,7 @@ public:
    uims_reply_thing full_resolve();
    void write_aproximately();
    void write_resolve_text(bool doing_file);
-   void writestuff(const char *s);
+   void writestuff(std::string_view s);
    void show_match_item();
    void print_error_person(unsigned int person, bool example);  // In sdmain
    void printperson(uint32_t x);
@@ -2543,9 +2545,10 @@ class iobase {
    virtual bool print_any() = 0;
    virtual bool help_manual() = 0;
    virtual bool help_faq() = 0;
-   virtual popup_return get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
-                                         Cstring seed, char *dest) = 0;
-   virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
+   virtual popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                         std::string_view final_inline_prompt,
+                                         std::string_view seed, std::string *dest) = 0;
+   virtual void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="") = 0;
    virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
    virtual selector_kind do_selector_popup(matcher_class &matcher) = 0;
@@ -2556,7 +2559,7 @@ class iobase {
    virtual uint32_t get_one_number(matcher_class &matcher) = 0;
    virtual uims_reply_thing get_call_command() = 0;
    virtual void dispose_of_abbreviation(const char *linebuff) = 0;
-   virtual void set_pick_string(Cstring string) = 0;
+   virtual void set_pick_string(std::string_view string) = 0;
    virtual void display_help() = 0;
    virtual void terminate(int code) = 0;
    virtual void process_command_line(int *argcp, char ***argvp) = 0;
@@ -2586,9 +2589,10 @@ class iofull : public iobase {
    bool print_any();
    bool help_manual();
    bool help_faq();
-   popup_return get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
-                                 Cstring seed, char *dest);
-   void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
+   popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                 std::string_view final_inline_prompt,
+                                 std::string_view seed, std::string *dest);
+   void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="");
    void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
    selector_kind do_selector_popup(matcher_class &matcher);
@@ -2596,7 +2600,7 @@ class iofull : public iobase {
    int do_circcer_popup();
    int do_tagger_popup(int tagger_class);
    int yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl, bool info);
-   void set_pick_string(Cstring string);
+   void set_pick_string(std::string_view string);
    uint32_t get_one_number(matcher_class &matcher);
    uims_reply_thing get_call_command();
    void dispose_of_abbreviation(const char *linebuff);
@@ -2706,8 +2710,8 @@ public:
 private:
 
    error_flag_type save_error_flag;
-   char save_error_message1[MAX_ERR_LENGTH];
-   char save_error_message2[MAX_ERR_LENGTH];
+   std::string save_error_message1;
+   std::string save_error_message2;
    uint32_t save_collision_person1;
    uint32_t save_collision_person2;
 };
@@ -4900,8 +4904,8 @@ enum split_command_kind {
 /* VARIABLES */
 
 
-extern SDLIB_API char error_message1[MAX_ERR_LENGTH];               /* in SDTOP */
-extern SDLIB_API char error_message2[MAX_ERR_LENGTH];               /* in SDTOP */
+extern SDLIB_API std::string error_message1;                        /* in SDTOP */
+extern SDLIB_API std::string error_message2;                        /* in SDTOP */
 extern SDLIB_API bool enforce_overcast_warning;                     /* in SDTOP */
 extern SDLIB_API uint32_t collision_person1;                        /* in SDTOP */
 extern SDLIB_API uint32_t collision_person2;                        /* in SDTOP */
@@ -5636,10 +5640,10 @@ class fraction_info {
 
          if (corefracs.flags == 0 && pp) {
             while (pp->next &&
-                   (concept_table[pp->concept->kind].concept_prop & (CONCPROP__USES_PARTS|CONCPROP__SECOND_CALL)) == 0)
+                   (concept_table[pp->concept_ptr->kind].concept_prop & (CONCPROP__USES_PARTS|CONCPROP__SECOND_CALL)) == 0)
                pp = pp->next;
 
-            if (pp->concept->kind <= marker_end_of_list &&
+            if (pp->concept_ptr->kind <= marker_end_of_list &&
                 pp->call && pp->call->the_defn.schema == schema_sequential) {
                m_fetch_total = pp->call->the_defn.stuff.seq.howmanyparts-offset;
                m_highlimit = m_fetch_total;
@@ -6417,7 +6421,7 @@ struct parse_state_type {
    int parse_stack_index;
    parse_block **concept_write_ptr;
    parse_block **concept_write_base;
-   char specialprompt[MAX_TEXT_LINE_LENGTH];
+   std::string specialprompt;
    uint64_t topcallflags1;
    call_list_kind call_list_to_use;
    call_list_kind base_call_list_to_use;
@@ -6465,8 +6469,7 @@ extern SDLIB_API heritflags simple_herit_bits_table[];              /* in SDTOP 
 
 
 struct comment_block {
-   char txt[MAX_TEXT_LINE_LENGTH];
-   comment_block *nxt;
+   std::string txt;
 };
 
 // A few accessors to let the UI stuff survive.  They are implemented, for now, in SDTOP.
@@ -6531,7 +6534,7 @@ extern SDLIB_API int random_number;                           // in SDSI
 extern SDLIB_API int resolve_test_count;                      // in SDSI
 extern SDLIB_API const char *database_filename;               // in SDSI
 extern SDLIB_API const char *new_outfile_string;              // in SDSI
-extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
+extern SDLIB_API std::string abridge_filename;                // in SDSI
 
 extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL */
 extern SDLIB_API int sequence_number;                               /* in SDUTIL */
@@ -6539,9 +6542,9 @@ extern SDLIB_API int starting_sequence_number;                      /* in SDUTIL
 extern SDLIB_API const Cstring old_filename_strings[];              /* in SDUTIL */
 extern SDLIB_API const Cstring new_filename_strings[];              /* in SDUTIL */
 extern SDLIB_API const Cstring *filename_strings;                   /* in SDUTIL */
-extern SDLIB_API char outfile_string[MAX_FILENAME_LENGTH];          /* in SDUTIL */
-extern SDLIB_API char outfile_prefix[MAX_FILENAME_LENGTH];          /* in SDUTIL */
-extern SDLIB_API char header_comment[MAX_TEXT_LINE_LENGTH];         /* in SDUTIL */
+extern SDLIB_API std::string outfile_string;                        /* in SDUTIL */
+extern SDLIB_API std::string outfile_prefix;                        /* in SDUTIL */
+extern SDLIB_API std::string header_comment;                        /* in SDUTIL */
 extern SDLIB_API bool creating_new_session;                         /* in SDUTIL */
 
 extern SDLIB_API int text_line_count;                               /* in SDTOP */
@@ -6589,7 +6592,7 @@ SDLIB_API bool iterate_over_sel_dir_num(
    bool enable_direction_iteration,
    bool enable_number_iteration);
 SDLIB_API void start_sel_dir_num_iterator();
-SDLIB_API bool install_outfile_string(const char newstring[]);
+SDLIB_API bool install_outfile_string(std::string_view);
 SDLIB_API bool get_first_session_line();
 SDLIB_API bool get_next_session_line(char *dest);
 SDLIB_API void prepare_to_read_menus();
@@ -6663,6 +6666,24 @@ extern int get_char();
 /* Get string from input, up to <newline>, with echoing and editing.
    Return it without the final <newline>. */
 extern void get_string(char *dest, int max);
+
+// Temporary wrapper around get_string(char *dest, int max), until I
+// reimplement it using std::string.
+template <int N>
+extern void get_string(std::string *dest) {
+   char buffer[N];
+   get_string(buffer, N);
+   *dest = buffer;
+}
+
+// Concatenate any number of objects into a std::string, useful for
+// replacing sprintf() calls.
+template <typename... Args>
+inline std::string to_string(const Args&... args) {
+   std::stringstream ss;
+   (ss << ... << args);
+   return ss.str();
+}
 
 /* Ring the bell, or whatever. */
 extern void ttu_bell();

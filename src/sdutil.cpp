@@ -79,6 +79,8 @@ and the following external variables:
 
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <iomanip>
 
 #include "sd.h"
 #include "sort.h"
@@ -101,9 +103,9 @@ configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 bool wrote_a_sequence = false;
 bool retain_after_error = false;
-char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
-char outfile_prefix[MAX_FILENAME_LENGTH] = "";
-char header_comment[MAX_TEXT_LINE_LENGTH];
+std::string outfile_string = SEQUENCE_FILENAME;
+std::string outfile_prefix;
+std::string header_comment;
 bool creating_new_session = false;
 int sequence_number = -1;
 int starting_sequence_number;
@@ -1046,9 +1048,7 @@ void ui_utils::write_history_line(int history_index,
    if (!enable_file_writing && !ui_options.diagnostic_mode) {
       i = history_index-configuration::whole_sequence_low_lim+1;
       if (i > 0) {
-         char indexbuf[10];
-         sprintf(indexbuf, "%2d:   ", i);
-         writestuff(indexbuf);
+         writestuff(to_string(std::setw(2), i, ":   "));
       }
    }
 
@@ -1065,8 +1065,8 @@ void ui_utils::write_history_line(int history_index,
    // change the name of this concept from "centers" to the appropriate thing.
 
    if (history_index == 2 &&
-       thing->concept->kind == concept_centers_or_ends &&
-       thing->concept->arg1 == selector_centers) {
+       thing->concept_ptr->kind == concept_centers_or_ends &&
+       thing->concept_ptr->arg1 == selector_centers) {
       if (configuration::history[1].get_startinfo_specific()->into_the_middle) {
          writestuff(configuration::history[1].get_startinfo_specific()->name);
          writestuff(" ");
@@ -1285,7 +1285,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
 
    while (local_cptr) {
       concept_kind k;
-      const concept_descriptor *item = local_cptr->concept;
+      const concept_descriptor *item = local_cptr->concept_ptr;
       k = item->kind;
 
       if (k == concept_comment) {
@@ -1415,7 +1415,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff("DELAY: ");
                }
                else {
-                  switch (local_cptr->concept->arg1) {
+                  switch (local_cptr->concept_ptr->arg1) {
                   case 0:
                      writestuff("replace the last part of ");
                      if (!local_cptr->next) writestuff("this call:");
@@ -1458,7 +1458,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                   if (k == concept_replace_nth_part ||
                       k == concept_replace_last_part ||
                       k == concept_interrupt_at_fraction) {
-                     switch (local_cptr->concept->arg1) {
+                     switch (local_cptr->concept_ptr->arg1) {
                      case 0: case 1: case 8: case 9:
                         writestuff(" with this call:");
                         break;
@@ -1521,7 +1521,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
                writestuff(" BUT ");
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept_ptr->name, true);
                writestuff(" WITH A [");
                request_final_space = false;
             }
@@ -1596,7 +1596,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                // has been entered, and that its name starts with "@g".
                tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, false);
 
-               if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
+               if (tptr && tptr->concept_ptr->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
 
             if (target_call &&
@@ -1634,7 +1634,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                did_concept = false;
 
                // If there is another concept, we need parens.
-               if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
+               if (next_cptr->concept_ptr->kind > marker_end_of_list) deferred_concept_paren |= 1;
 
                if (deferred_concept_paren == 3) writestuff("(");
                if (deferred_concept_paren) writestuff("(");
@@ -1657,12 +1657,12 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                else if (k == concept_c1_phantom &&
                         comma_after_next_concept == 1 &&
                         next_cptr &&
-                        (next_cptr->concept->kind == concept_tandem ||
-                         next_cptr->concept->kind == concept_frac_tandem)) {
+                        (next_cptr->concept_ptr->kind == concept_tandem ||
+                         next_cptr->concept_ptr->kind == concept_frac_tandem)) {
                   comma_after_next_concept = 5;
                }
 
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept_ptr->name, true);
                request_final_space = true;
             }
 
@@ -2089,8 +2089,8 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
 
                   if ((first_replace == 0) &&
                       (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) &&
-                      ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
-                       subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
+                      ((subsidiary_ptr->concept_ptr->kind == marker_end_of_list) ||
+                       subsidiary_ptr->concept_ptr->kind == concept_another_call_next_mod) &&
                       cc &&
                       ((cc->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ||
                        cc->the_defn.schema == schema_nothing)) {
@@ -2168,12 +2168,12 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
       if (deferred_concept_paren & 1) writestuff(")");
       writestuff(" ");
 
-      if (deferred_concept->concept->kind == concept_n_times_const &&
-          deferred_concept->concept->arg2 == 3)
+      if (deferred_concept->concept_ptr->kind == concept_n_times_const &&
+          deferred_concept->concept_ptr->arg2 == 3)
          writestuff("3 TIMES");
       else
          writestuff_with_decorations(&deferred_concept->options,
-                                     deferred_concept->concept->name, true);
+                                     deferred_concept->concept_ptr->name, true);
       if (deferred_concept_paren & 2) writestuff(")");
    }
 
@@ -2337,9 +2337,9 @@ void ui_utils::doublespace_file()
 }
 
 
-void ui_utils::writestuff(const char *s)
+void ui_utils::writestuff(std::string_view s)
 {
-   while (*s) writechar(*s++);
+   for (char ch : s) writechar(ch);
 }
 
 void ui_utils::show_match_item()
@@ -2358,7 +2358,7 @@ void parse_block::initialize(const concept_descriptor *cc)
 {
    more_finalherit_flags.clear_all_herit_and_final_bits();
    setup_for_print = (setup *) 0;
-   concept = cc;
+   concept_ptr = cc;
    call = (call_with_name *) 0;
    call_to_print = (call_with_name *) 0;
    options.initialize();
@@ -2413,7 +2413,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
    new_root = new_item;
 
    for (;;) {
-      new_item->concept = original_tree->concept;
+      new_item->concept_ptr = original_tree->concept_ptr;
       new_item->call = original_tree->call;
       new_item->setup_for_print = original_tree->setup_for_print;
       new_item->call_to_print = original_tree->call_to_print;
@@ -2448,7 +2448,7 @@ SDLIB_API extern void reset_parse_tree(parse_block *original_tree, parse_block *
 
    for (;;) {
       if (!new_item || !old_item) crash_print(__FILE__, __LINE__, 0, (setup *) 0);
-      new_item->concept = old_item->concept;
+      new_item->concept_ptr = old_item->concept_ptr;
       new_item->call = old_item->call;
       new_item->call_to_print = old_item->call_to_print;
       new_item->options = old_item->options;
@@ -2615,7 +2615,7 @@ extern void initialize_parse()
    if (written_history_items > config_history_ptr)
       written_history_items = config_history_ptr;
 
-   parse_state.specialprompt[0] = '\0';
+   parse_state.specialprompt.clear();
    parse_state.topcallflags1 = 0;
 }
 
@@ -2624,25 +2624,22 @@ extern void initialize_parse()
 
 void ui_utils::do_change_outfile(bool signal)
 {
-   char newfile_string[MAX_FILENAME_LENGTH];
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string);
+   std::string newfile_string;
+   std::string prompt1 = to_string("Current sequence output file is \"", outfile_string, "\".");
 
-   if (iob88.get_popup_string(buffer,
+   if (iob88.get_popup_string(prompt1,
                               "*Enter new name (or '+' to base it on today's date)",
                               "Enter new file name (or '+' to base it on today's date):",
-                              outfile_string, newfile_string) == POPUP_ACCEPT_WITH_STRING && newfile_string[0]) {
-      char confirm_message[MAX_FILENAME_LENGTH+25];
-      const char *final_message;
+                              outfile_string, &newfile_string) == POPUP_ACCEPT_WITH_STRING && !newfile_string.empty()) {
+
+      std::string final_message;
 
       if (install_outfile_string(newfile_string)) {
-         strncpy(confirm_message, "Output file changed to \"", 25);
-         strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
-         strncat(confirm_message, "\"", 2);
-         final_message = confirm_message;
+         final_message = to_string("Output file changed to \"", outfile_string, "\"");
       }
-      else
+      else {
          final_message = "No write access to that file, no action taken.";
+      }
 
       if (signal) {
          specialfail(final_message);
@@ -2657,21 +2654,21 @@ void ui_utils::do_change_outfile(bool signal)
 
 void ui_utils::do_change_outprefix(bool signal)
 {
-   char newprefix_string[MAX_FILENAME_LENGTH];
+   std::string newprefix_string;
    char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output prefix is \"%s\".", outfile_prefix);
+   sprintf(buffer, "Current sequence output prefix is \"%s\".", outfile_prefix.c_str());
 
    if (iob88.get_popup_string(buffer,
                               "*Enter new prefix",
                               "Enter new prefix:",
-                              outfile_prefix, newprefix_string) == POPUP_DECLINE)
+                              outfile_prefix, &newprefix_string) == POPUP_DECLINE)
       return;
 
    char confirm_message[MAX_FILENAME_LENGTH+25];
 
-   strncpy(outfile_prefix, newprefix_string, MAX_FILENAME_LENGTH);
+   outfile_prefix = newprefix_string;
    strncpy(confirm_message, "Output prefix changed to \"", 27);
-   strncat(confirm_message, outfile_prefix, MAX_FILENAME_LENGTH);
+   strncat(confirm_message, outfile_prefix.c_str(), MAX_FILENAME_LENGTH);
    strncat(confirm_message, "\"", 2);
 
    if (signal) {
@@ -2718,7 +2715,7 @@ bool backup_one_item()
          return true;
       }
 
-      if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
+      if ((*last_ptr)->concept_ptr->kind <= marker_end_of_list) break;
    }
 
    // We did not find our place.
@@ -2732,7 +2729,7 @@ bool backup_one_item()
 bool ui_utils::write_sequence_to_file() THROW_DECL
 {
    char date[MAX_TEXT_LINE_LENGTH];
-   char second_header[MAX_TEXT_LINE_LENGTH];
+   std::string second_header;
    char seqstring[20];
    int j;
 
@@ -2740,20 +2737,22 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    popup_return getout_ind;
 
-   if (header_comment[0]) {
+   if (!header_comment.empty()) {
       char buffer[MAX_TEXT_LINE_LENGTH+MAX_FILENAME_LENGTH];
-      sprintf(buffer, "Session title is \"%s\".", header_comment);
+      sprintf(buffer, "Session title is \"%s\".", header_comment.c_str());
       getout_ind = iob88.get_popup_string(buffer,
                                           "You can give an additional comment for just this sequence.",
-                                          "Enter comment:", "", second_header);
+                                          "Enter comment:", "", &second_header);
    }
    else {
       getout_ind = iob88.get_popup_string("",
                                           "Type comment for this sequence, if desired.",
-                                          "Enter comment:", "", second_header);
+                                          "Enter comment:", "", &second_header);
    }
 
-   second_header[MAX_TEXT_LINE_LENGTH-1] = 0;
+   if (second_header.size() > MAX_TEXT_LINE_LENGTH-1) {
+      second_header = second_header.substr(0, MAX_TEXT_LINE_LENGTH-1);
+   }
 
    // Some user interfaces (those with buttons or icons) may have a button to abort the
    // sequence, rather than just decline the comment.  Such an action comes back as
@@ -2762,7 +2761,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    if (getout_ind == POPUP_DECLINE)
       return false;    // User didn't want to end this sequence after all.
-   else if (getout_ind != POPUP_ACCEPT_WITH_STRING) second_header[0] = '\0';
+   else if (getout_ind != POPUP_ACCEPT_WITH_STRING) second_header.clear();
 
    // Open the file and write it.
 
@@ -2791,7 +2790,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    // Write header comment, if it exists.
 
-   if (header_comment[0]) {
+   if (!header_comment.empty()) {
       writestuff("             ");
       writestuff(header_comment);
    }
@@ -2804,12 +2803,12 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
    // Write secondary header comment, if it exists.
 
-   if (second_header[0]) {
+   if (!second_header.empty()) {
       writestuff("       ");
       writestuff(second_header);
    }
 
-   if (header_comment[0] || second_header[0] || sequence_number >= 0) newline();
+   if (!header_comment.empty() || !second_header.empty() || sequence_number >= 0) newline();
 
    newline();
 
@@ -3046,12 +3045,12 @@ extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, ui
 
 
 
-popup_return ui_utils::do_header_popup(char *dest)
+popup_return ui_utils::do_header_popup(std::string *dest)
 {
    char myPrompt[MAX_TEXT_LINE_LENGTH];
 
-   if (header_comment[0])
-      sprintf(myPrompt, "Current title is \"%s\".", header_comment);
+   if (!header_comment.empty())
+      sprintf(myPrompt, "Current title is \"%s\".", header_comment.c_str());
    else
       myPrompt[0] = 0;
 
@@ -3223,7 +3222,7 @@ void ui_utils::run_program(iobase & ggg)
 
       if (creating_new_session) {
          do_change_outfile(false);
-         do_header_popup(header_comment);
+         do_header_popup(&header_comment);
          creating_new_session = false;
       }
 
@@ -3249,9 +3248,9 @@ void ui_utils::run_program(iobase & ggg)
          else
             numstuff[0] = '\0';
 
-         if (header_comment[0])
+         if (!header_comment.empty())
             sprintf(title, "%s  %s%s",
-                    &old_filename_strings[calling_level][1], header_comment, numstuff);
+                    &old_filename_strings[calling_level][1], header_comment.c_str(), numstuff);
          else
             sprintf(title, "%s%s",
                     &old_filename_strings[calling_level][1], numstuff);
@@ -3415,7 +3414,7 @@ void ui_utils::run_program(iobase & ggg)
          do_change_outprefix(false);
          goto new_sequence;
       case start_select_change_title:
-         do_header_popup(header_comment);
+         do_header_popup(&header_comment);
          goto new_sequence;
       case start_select_exit:
          goto normal_exit;
@@ -3755,16 +3754,16 @@ void ui_utils::run_program(iobase & ggg)
             goto start_cycle;
          case command_change_title:
             {
-               char newhead_string[MAX_TEXT_LINE_LENGTH];
+               std::string newhead_string;
 
                // Process it even if it's the null string.
-               if (do_header_popup(newhead_string) != POPUP_DECLINE) {
-                  strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
+               if (do_header_popup(&newhead_string) != POPUP_DECLINE) {
+                  header_comment = newhead_string;
 
-                  if (newhead_string[0]) {
+                  if (!newhead_string.empty()) {
                      char confirm_message[MAX_TEXT_LINE_LENGTH+25];
                      strncpy(confirm_message, "Header comment changed to \"", 28);
-                     strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
+                     strncat(confirm_message, header_comment.c_str(), MAX_TEXT_LINE_LENGTH);
                      strncat(confirm_message, "\"", 2);
                      specialfail(confirm_message);
                   }

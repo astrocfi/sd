@@ -1618,7 +1618,7 @@ static bool inner_search(command_kind goal,
       for (j=0; j<MAX_RESOLVE_SIZE; j++) {
          new_resolve->stuph[j] = configuration::history[j+history_insertion_point+1];
          if (j < new_resolve->size) {
-            if (new_resolve->stuph[j].command_root == 0 || new_resolve->stuph[j].command_root->concept == 0) {
+            if (new_resolve->stuph[j].command_root == 0 || new_resolve->stuph[j].command_root->concept_ptr == 0) {
                gg77->iob88.serious_error_print("BUG IN RESOLVER!\n");
                goto cant_consider_this_call;   // What????  Some kind of bug, apparently.
             }

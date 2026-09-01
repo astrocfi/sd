@@ -97,6 +97,7 @@ and the following external variables:
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <string>
 
 #include "sd.h"
 #include "paths.h"
@@ -128,13 +129,13 @@ int random_number;
 int resolve_test_count;
 const char *database_filename = DATABASE_FILENAME;
 const char *new_outfile_string = (char *) 0;
-char abridge_filename[MAX_TEXT_LINE_LENGTH];
+std::string abridge_filename;
 
 static bool file_error;
-static char full_outfile_name[MAX_FILENAME_LENGTH+1];
+static std::string full_outfile_name;
 static FILE *fildes;
-static char fail_errstring[MAX_ERR_LENGTH];
-static char fail_message[MAX_ERR_LENGTH];
+static std::string fail_errstring;
+static std::string fail_message;
 
 
 extern void general_initialize()
@@ -243,8 +244,7 @@ void ui_utils::open_file()
    int this_file_position;
    int i;
 
-   strncpy(full_outfile_name, outfile_prefix, MAX_FILENAME_LENGTH);
-   strncat(full_outfile_name, outfile_string, MAX_FILENAME_LENGTH);
+   full_outfile_name = to_string(outfile_prefix, outfile_string);
 
    file_error = false;
 
@@ -283,7 +283,7 @@ void ui_utils::open_file()
 
    struct stat statbuf;
 
-   if (stat(full_outfile_name, &statbuf))
+   if (stat(full_outfile_name.c_str(), &statbuf))
       this_file_position = 0;   // File doesn't exist.
    else
       this_file_position = statbuf.st_size;
@@ -301,9 +301,9 @@ void ui_utils::open_file()
    // of the file -- seeks do not affect the write position.
    // But it will create the file if it doesn't exist.
 
-   if (!(fildes = fopen(full_outfile_name, "a"))) {
-      strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-      strncpy(fail_message, "open", MAX_ERR_LENGTH);
+   if (!(fildes = fopen(full_outfile_name.c_str(), "a"))) {
+      fail_errstring = get_errstring();
+      fail_message = "open";
       file_error = true;
       return;
    }
@@ -325,9 +325,9 @@ void ui_utils::open_file()
 
    fclose(fildes);
 
-   if (!(fildes = fopen(full_outfile_name, "r+"))) {
-      strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-      strncpy(fail_message, "open", MAX_ERR_LENGTH);
+   if (!(fildes = fopen(full_outfile_name.c_str(), "r+"))) {
+      fail_errstring = get_errstring();
+      fail_message = "open";
       file_error = true;
       return;
    }
@@ -339,8 +339,8 @@ void ui_utils::open_file()
          // It isn't 4 characters long -- forget it.  But first, position at the end.
          if (fseek(fildes, 0, SEEK_END)) {
             fclose(fildes);     // What happened?????
-            strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-            strncpy(fail_message, "seek", MAX_ERR_LENGTH);
+            fail_errstring = get_errstring();
+            fail_message = "seek";
             file_error = true;
             return;
          }
@@ -363,8 +363,8 @@ void ui_utils::open_file()
 
       if (fseek(fildes, i-4, SEEK_END)) {
          fclose(fildes);     // What happened?????
-         strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-         strncpy(fail_message, "seek", MAX_ERR_LENGTH);
+         fail_errstring = get_errstring();
+         fail_message = "seek";
          file_error = true;
          return;
       }
@@ -549,8 +549,8 @@ void ui_utils::open_file()
       }
 
       if ((fwrite("\f", 1, 1, fildes) != 1) || ferror(fildes)) {
-         strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-         strncpy(fail_message, "write formfeed", MAX_ERR_LENGTH);
+         fail_errstring = get_errstring();
+         fail_message = "write formfeed";
          file_error = true;
          return;
       }
@@ -584,16 +584,16 @@ void ui_utils::write_file(const char line[])
 
    if (size != 0) {
       if ((fwrite(line, 1, size, fildes) != size) || ferror(fildes)) {
-         strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-         strncpy(fail_message, "write", MAX_ERR_LENGTH);
+         fail_errstring = get_errstring();
+         fail_message = "write";
          file_error = true;      // Indicate that the sequence will not get written.
          return;
       }
    }
 
    if ((fwrite("\n", 1, 1, fildes) != 1) || ferror(fildes)) {
-      strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-      strncpy(fail_message, "write", MAX_ERR_LENGTH);
+      fail_errstring = get_errstring();
+      fail_message = "write";
       file_error = true;      // Indicate that the sequence will not get written.
    }
 }
@@ -602,13 +602,13 @@ void ui_utils::write_file(const char line[])
 void ui_utils::close_file()
 {
    struct stat statbuf;
-   char foo[MAX_ERR_LENGTH*10];
+   std::string foo;
 
    if (file_error) goto fail;
 
    if (fclose(fildes)) goto error;
 
-   if (stat(full_outfile_name, &statbuf))
+   if (stat(full_outfile_name.c_str(), &statbuf))
       goto error;
 
    last_file_position = statbuf.st_size;
@@ -617,17 +617,18 @@ void ui_utils::close_file()
 
  error:
 
-   strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-   strncpy(fail_message, "close", MAX_ERR_LENGTH);
+   fail_errstring = get_errstring();
+   fail_message = "close";
 
  fail:
 
-   strncpy(foo, "WARNING!!!  Sequence has not been written!  File ", MAX_ERR_LENGTH);
-   strncat(foo, fail_message, MAX_ERR_LENGTH);
-   strncat(foo, " failure on \"", MAX_ERR_LENGTH);
-   strncat(foo, full_outfile_name, MAX_ERR_LENGTH);
-   strncat(foo, "\": ", MAX_ERR_LENGTH);
-   strncat(foo, fail_errstring, MAX_ERR_LENGTH);
-   strncat(foo, " -- try \"change output file\" or \"change output prefix\" operation.", MAX_ERR_LENGTH);
-   specialfail(foo);
+   foo = to_string(
+      "WARNING!!!  Sequence has not been written!  File ",
+      fail_message,
+      " failure on \"",
+      full_outfile_name,
+      "\": ",
+      fail_errstring,
+      " -- try \"change output file\" or \"change output prefix\" operation.");
+   specialfail(foo.c_str());
 }
