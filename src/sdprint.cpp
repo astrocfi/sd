@@ -188,7 +188,7 @@ BOOL CALLBACK PrintAbortProc(HDC hPrinterDC, int iCode)
 #define PRINT_LINE_LENGTH 500
 
 
-void printer::print_this(const char *szFileName, char *szMainTitle, bool pagenums)
+void printer::print_this(const char *szFileName, const char *szMainTitle, bool pagenums)
 {
    BOOL            bSuccess;
    TEXTMETRIC      tm;
@@ -425,7 +425,7 @@ void printer::print_this(const char *szFileName, char *szMainTitle, bool pagenum
 
 
 
-void printer::print_any(char *szMainTitle, bool pagenums)
+void printer::print_any(const char *szMainTitle, bool pagenums)
 {
    char szCurDir[_MAX_PATH];
    char szFileToPrint[_MAX_PATH];

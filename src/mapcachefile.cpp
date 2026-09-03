@@ -46,7 +46,7 @@ struct MAPPED_CACHE_INNARDS {
 #endif
    int *map_address;
    int numsourcefiles;
-   char *mapfilename;
+   std::string mapfilename;
    struct stat *source_stats;
    int filewords;
    int sversion;
@@ -57,9 +57,9 @@ struct MAPPED_CACHE_INNARDS {
 
 
 MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
-                                     const char * const * srcnames,
+                                     const std::string_view *srcnames,
                                      FILE **srcfiles,
-                                     const char *mapext,
+                                     std::string_view mapext,
                                      int clientversion,
                                      const bool *srcbinary)
 {
@@ -71,34 +71,24 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
    innards->map_address = (int *) 0;
    innards->source_stats = new struct stat [numsourcefiles];
 
-   // Figure out the map file name.  Use a conservative estimate for the size.
-   int mapfilenamesize = strlen(mapext) + numsourcefiles;
    int i, j;
-
-   for (i=0 ; i<numsourcefiles ; i++)
-      mapfilenamesize += strlen(srcnames[i]);
-
-   innards->mapfilename = new char [mapfilenamesize];
-
-   int filenamepos = 0;
 
    // Append the source file base names.
    for (i=0 ; i<numsourcefiles ; i++) {
-      const char *this_src = srcnames[i];
-      for (j=strlen(this_src)-1 ; ; j--) {
+     std::string_view this_src = srcnames[i];
+      for (j=this_src.length()-1 ; ; j--) {
          if (j <= 0 || this_src[j] == '.') {
-            if (j <= 0) j = strlen(this_src);
-            ::memcpy(innards->mapfilename+filenamepos, this_src, j);
-            filenamepos += j;
+            if (j <= 0) j = this_src.length();
+            innards->mapfilename += this_src.substr(0, j);
             if (i != numsourcefiles-1)
-               innards->mapfilename[filenamepos++] = '+';
+               innards->mapfilename += '+';
             break;
          }
       }
    }
 
-   innards->mapfilename[filenamepos++] = '.';
-   ::strcpy(innards->mapfilename+filenamepos, mapext);
+   innards->mapfilename += '.';
+   innards->mapfilename += mapext;
 
    // Open the source files.
 
@@ -107,7 +97,7 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
    for (i=0 ; i<innards->numsourcefiles ; i++) {
       // If last argument of constructor isn't given, it defaults to zero,
       // and we will interpret that as making all files text files.
-      srcfiles[i] = fopen(srcnames[i], (srcbinary && srcbinary[i]) ? "rb" : "r");
+      srcfiles[i] = fopen(std::string(srcnames[i]).c_str(), (srcbinary && srcbinary[i]) ? "rb" : "r");
       if (!srcfiles[i]) {
          // We will leave this file descriptor zero, which the client
          // will find.  The client will conclude that we can't proceed
@@ -143,11 +133,11 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
 
 #if defined(WIN32)
    innards->maphandle = (HANDLE) 0;
-   innards->filehandle = CreateFile(innards->mapfilename, GENERIC_READ,
+   innards->filehandle = CreateFile(innards->mapfilename.c_str(), GENERIC_READ,
                                     FILE_SHARE_READ, 0, OPEN_EXISTING,
                                     FILE_ATTRIBUTE_NORMAL, 0);
 
-   if (!innards->filehandle || (int) innards->filehandle == ~0) return;
+   if (!innards->filehandle || innards->filehandle == INVALID_HANDLE_VALUE) return;
 
    innards->maphandle = CreateFileMapping(innards->filehandle, 0,
                                           PAGE_READONLY, 0, 0, 0);
@@ -159,7 +149,7 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
    if (!innards->map_address)
       return;
 #elif defined(__linux__)
-   innards->mapfd = open(innards->mapfilename, O_RDONLY);
+   innards->mapfd = open(innards->mapfilename.c_str(), O_RDONLY);
    if (innards->mapfd < 0) return;
    if ((int) read(innards->mapfd, &innards->filewords, 4) != 4) return;
    innards->filewords >>= 2;
@@ -229,14 +219,14 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
 
    // Close the handles that we had, because they were read-only.
 
-   if (innards->filehandle && (int) innards->filehandle != ~0)
+   if (innards->filehandle && innards->filehandle != INVALID_HANDLE_VALUE)
       CloseHandle(innards->filehandle);
    if (innards->maphandle)
       CloseHandle(innards->maphandle);
 
    // Open the map file again, this time for writing.
 
-   innards->filehandle = CreateFile(innards->mapfilename, GENERIC_READ|GENERIC_WRITE,
+   innards->filehandle = CreateFile(innards->mapfilename.c_str(), GENERIC_READ|GENERIC_WRITE,
                                     0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 
    if (!innards->filehandle) return;
@@ -253,7 +243,7 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
    if (innards->mapfd > 0) close(innards->mapfd);
    innards->map_address = (int *) 0;
    innards->filewords = (clientmapfilesizeinbytes+3) >> 2;
-   innards->mapfd = open(innards->mapfilename, O_WRONLY|O_CREAT|O_TRUNC,
+   innards->mapfd = open(innards->mapfilename.c_str(), O_WRONLY|O_CREAT|O_TRUNC,
                          S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
    if (innards->mapfd < 0) return;
 
@@ -280,7 +270,7 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
 
    // Now we need to close it, and open it again.
    close(innards->mapfd);
-   innards->mapfd = open(innards->mapfilename, O_RDWR);
+   innards->mapfd = open(innards->mapfilename.c_str(), O_RDWR);
    if (innards->mapfd < 0) return;
    innards->map_address = (int *) mmap(0, innards->filewords<<2, PROT_READ|PROT_WRITE,
                                        MAP_SHARED, innards->mapfd, 0);
@@ -344,6 +334,5 @@ MAPPED_CACHE_FILE::~MAPPED_CACHE_FILE()
    }
 
    delete [] innards->source_stats;
-   delete [] innards->mapfilename;
    delete innards;
 }
