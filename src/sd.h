@@ -702,7 +702,7 @@ extern void fail2(std::string_view s1, std::string_view s2) THROW_DECL NORETURN2
 
 extern void failp(uint32_t id1, std::string_view s) THROW_DECL NORETURN2;
 
-void specialfail(std::string_view s) THROW_DECL NORETURN2;
+void specialfail(std::string_view) THROW_DECL NORETURN2;
 
 extern void warn(warning_index w);
 
@@ -2531,8 +2531,8 @@ class iobase {
    virtual int do_abort_popup() = 0;
    virtual void prepare_for_listing() = 0;
    virtual uims_reply_thing get_startup_command() = 0;
-   virtual void set_window_title(char s[]) = 0;
-   virtual void add_new_line(const char the_line[], uint32_t drawing_picture) = 0;
+   virtual void set_window_title(Cstring s) = 0;
+   virtual void add_new_line(std::string_view the_line, uint32_t drawing_picture) = 0;
    virtual void no_erase_before_n(int n) = 0;
    virtual void reduce_line_count(int n) = 0;
    virtual void update_resolve_menu(command_kind goal, int cur, int max,
@@ -2548,7 +2548,7 @@ class iobase {
    virtual popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
                                          std::string_view final_inline_prompt,
                                          std::string_view seed, std::string *dest) = 0;
-   virtual void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="") = 0;
+   virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
    virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
    virtual selector_kind do_selector_popup(matcher_class &matcher) = 0;
@@ -2559,7 +2559,7 @@ class iobase {
    virtual uint32_t get_one_number(matcher_class &matcher) = 0;
    virtual uims_reply_thing get_call_command() = 0;
    virtual void dispose_of_abbreviation(const char *linebuff) = 0;
-   virtual void set_pick_string(std::string_view string) = 0;
+   virtual void set_pick_string(Cstring string) = 0;
    virtual void display_help() = 0;
    virtual void terminate(int code) = 0;
    virtual void process_command_line(int *argcp, char ***argvp) = 0;
@@ -2572,46 +2572,46 @@ class iobase {
 
 class iofull : public iobase {
  public:
-   int do_abort_popup();
-   void prepare_for_listing();
-   uims_reply_thing get_startup_command();
-   void set_window_title(char s[]);
-   void add_new_line(const char the_line[], uint32_t drawing_picture);
-   void no_erase_before_n(int n);
-   void reduce_line_count(int n);
+   int do_abort_popup() override;
+   void prepare_for_listing() override;
+   uims_reply_thing get_startup_command() override;
+   void set_window_title(Cstring s) override;
+   void add_new_line(std::string_view the_line, uint32_t drawing_picture) override;
+   void no_erase_before_n(int n) override;
+   void reduce_line_count(int n) override;
    void update_resolve_menu(command_kind goal, int cur, int max,
-                            resolver_display_state state);
-   void show_match();
-   const char *version_string();
-   uims_reply_thing get_resolve_command();
-   bool choose_font();
-   bool print_this();
-   bool print_any();
-   bool help_manual();
-   bool help_faq();
+                            resolver_display_state state) override;
+   void show_match() override;
+   const char *version_string() override;
+   uims_reply_thing get_resolve_command() override;
+   bool choose_font() override;
+   bool print_this() override;
+   bool print_any() override;
+   bool help_manual() override;
+   bool help_faq() override;
    popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
                                  std::string_view final_inline_prompt,
-                                 std::string_view seed, std::string *dest);
-   void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="");
-   void serious_error_print(Cstring s1);
-   void create_menu(call_list_kind cl);
-   selector_kind do_selector_popup(matcher_class &matcher);
-   direction_kind do_direction_popup(matcher_class &matcher);
-   int do_circcer_popup();
-   int do_tagger_popup(int tagger_class);
-   int yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl, bool info);
-   void set_pick_string(std::string_view string);
-   uint32_t get_one_number(matcher_class &matcher);
-   uims_reply_thing get_call_command();
-   void dispose_of_abbreviation(const char *linebuff);
-   void display_help();
-   void terminate(int code);
-   void process_command_line(int *argcp, char ***argvp);
-   void bad_argument(Cstring s1, Cstring s2, Cstring s3);
-   void final_initialize();
-   bool init_step(init_callback_state s, int n);
-   void set_utils_ptr(ui_utils *utils_ptr);
-   ui_utils *get_utils_ptr();
+                                 std::string_view seed, std::string *dest) override;
+   void fatal_error_exit(int code, Cstring s1, Cstring s2) override;
+   void serious_error_print(Cstring s1) override;
+   void create_menu(call_list_kind cl) override;
+   selector_kind do_selector_popup(matcher_class &matcher) override;
+   direction_kind do_direction_popup(matcher_class &matcher) override;
+   int do_circcer_popup() override;
+   int do_tagger_popup(int tagger_class) override;
+   int yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl, bool info) override;
+   void set_pick_string(Cstring string) override;
+   uint32_t get_one_number(matcher_class &matcher) override;
+   uims_reply_thing get_call_command() override;
+   void dispose_of_abbreviation(const char *linebuff) override;
+   void display_help() override;
+   void terminate(int code) override;
+   void process_command_line(int *argcp, char ***argvp) override;
+   void bad_argument(Cstring s1, Cstring s2, Cstring s3) override;
+   void final_initialize() override;
+   bool init_step(init_callback_state s, int n) override;
+   void set_utils_ptr(ui_utils *utils_ptr) override;
+   ui_utils *get_utils_ptr() override;
 
    ui_utils *m_ui_utils_ptr;
 };
@@ -6594,7 +6594,7 @@ SDLIB_API bool iterate_over_sel_dir_num(
 SDLIB_API void start_sel_dir_num_iterator();
 SDLIB_API bool install_outfile_string(std::string_view);
 SDLIB_API bool get_first_session_line();
-SDLIB_API bool get_next_session_line(char *dest);
+SDLIB_API bool get_next_session_line(std::string *dest);
 SDLIB_API void prepare_to_read_menus();
 SDLIB_API int process_session_info(Cstring *error_msg);
 SDLIB_API void close_init_file();
@@ -6644,8 +6644,8 @@ extern void erase_last_n(int n);
 
 // Write a line.  The text may or may not have a newline at the end.
 // This may or may not be after a prompt and/or echoed user input.
-// This is in sdui-wincon.cpp only.  It is used in sdtty only, not sd.
-extern void put_line(const char the_line[]);
+// This is used in sdtty only, not sd.
+extern void put_line(std::string_view the_line);
 
 // Write a single character on the current output line.
 extern void put_char(int c);
@@ -6670,14 +6670,15 @@ extern void get_string(char *dest, int max);
 // Temporary wrapper around get_string(char *dest, int max), until I
 // reimplement it using std::string.
 template <int N>
-extern void get_string(std::string *dest) {
+inline void get_string(std::string *dest) {
    char buffer[N];
    get_string(buffer, N);
    *dest = buffer;
 }
 
 // Concatenate any number of objects into a std::string, useful for
-// replacing sprintf() calls.
+// replacing sprintf() calls.  If we upgrade the build to C++20, we
+// could use std::format() instead and delete this function.
 template <typename... Args>
 inline std::string to_string(const Args&... args) {
    std::stringstream ss;

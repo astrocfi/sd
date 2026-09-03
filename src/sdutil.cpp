@@ -104,7 +104,7 @@ int clipboard_size = 0;
 bool wrote_a_sequence = false;
 bool retain_after_error = false;
 std::string outfile_string = SEQUENCE_FILENAME;
-std::string outfile_prefix;
+std::string outfile_prefix = "";
 std::string header_comment;
 bool creating_new_session = false;
 int sequence_number = -1;
@@ -2625,14 +2625,13 @@ extern void initialize_parse()
 void ui_utils::do_change_outfile(bool signal)
 {
    std::string newfile_string;
-   std::string prompt1 = to_string("Current sequence output file is \"", outfile_string, "\".");
+   std::string buffer = to_string("Current sequence output file is \"", outfile_string, "\".");
 
-   if (iob88.get_popup_string(prompt1,
+   if (iob88.get_popup_string(buffer,
                               "*Enter new name (or '+' to base it on today's date)",
                               "Enter new file name (or '+' to base it on today's date):",
                               outfile_string, &newfile_string) == POPUP_ACCEPT_WITH_STRING && !newfile_string.empty()) {
-
-      std::string final_message;
+     std::string final_message;
 
       if (install_outfile_string(newfile_string)) {
          final_message = to_string("Output file changed to \"", outfile_string, "\"");
@@ -2655,8 +2654,7 @@ void ui_utils::do_change_outfile(bool signal)
 void ui_utils::do_change_outprefix(bool signal)
 {
    std::string newprefix_string;
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output prefix is \"%s\".", outfile_prefix.c_str());
+   std::string buffer = to_string("Current sequence output prefix is \"", outfile_prefix, "\".");
 
    if (iob88.get_popup_string(buffer,
                               "*Enter new prefix",
@@ -2664,12 +2662,8 @@ void ui_utils::do_change_outprefix(bool signal)
                               outfile_prefix, &newprefix_string) == POPUP_DECLINE)
       return;
 
-   char confirm_message[MAX_FILENAME_LENGTH+25];
-
    outfile_prefix = newprefix_string;
-   strncpy(confirm_message, "Output prefix changed to \"", 27);
-   strncat(confirm_message, outfile_prefix.c_str(), MAX_FILENAME_LENGTH);
-   strncat(confirm_message, "\"", 2);
+   std::string confirm_message = to_string("Output prefix changed to \"", outfile_prefix, "\"");
 
    if (signal) {
       specialfail(confirm_message);
@@ -2730,7 +2724,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 {
    char date[MAX_TEXT_LINE_LENGTH];
    std::string second_header;
-   char seqstring[20];
+   std::string seqstring;
    int j;
 
    // Put up the getout popup to see if the user wants to enter a header string.
@@ -2738,8 +2732,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
    popup_return getout_ind;
 
    if (!header_comment.empty()) {
-      char buffer[MAX_TEXT_LINE_LENGTH+MAX_FILENAME_LENGTH];
-      sprintf(buffer, "Session title is \"%s\".", header_comment.c_str());
+      std::string buffer = to_string("Session title is \"", header_comment, "\".");
       getout_ind = iob88.get_popup_string(buffer,
                                           "You can give an additional comment for just this sequence.",
                                           "Enter comment:", "", &second_header);
@@ -2748,10 +2741,6 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
       getout_ind = iob88.get_popup_string("",
                                           "Type comment for this sequence, if desired.",
                                           "Enter comment:", "", &second_header);
-   }
-
-   if (second_header.size() > MAX_TEXT_LINE_LENGTH-1) {
-      second_header = second_header.substr(0, MAX_TEXT_LINE_LENGTH-1);
    }
 
    // Some user interfaces (those with buttons or icons) may have a button to abort the
@@ -2796,7 +2785,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
    }
 
    if (sequence_number >= 0) {
-      (void) sprintf(seqstring, "%d", sequence_number);
+      seqstring = to_string(sequence_number);
       writestuff("   ");
       writestuff(seqstring);
    }
@@ -3047,12 +3036,10 @@ extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, ui
 
 popup_return ui_utils::do_header_popup(std::string *dest)
 {
-   char myPrompt[MAX_TEXT_LINE_LENGTH];
+   std::string myPrompt;
 
    if (!header_comment.empty())
-      sprintf(myPrompt, "Current title is \"%s\".", header_comment.c_str());
-   else
-      myPrompt[0] = 0;
+      myPrompt = to_string("Current title is \"", header_comment, "\".");
 
    return iob88.get_popup_string(myPrompt, "*Enter new title:", "Enter new title:", "", dest);
 }
@@ -3163,7 +3150,7 @@ void ui_utils::run_program(iobase & ggg)
 
          if (interactivity == interactivity_database_init ||
              interactivity == interactivity_verify)
-            ggg.fatal_error_exit(1, "Unknown error context", error_message1);
+            ggg.fatal_error_exit(1, "Unknown error context", error_message1.c_str());
 
          // If this is a real call execution error, save the call that caused it.
 
@@ -3240,22 +3227,18 @@ void ui_utils::run_program(iobase & ggg)
       // Update the console window title.
 
       {
-         char numstuff[50];
-         char title[MAX_TEXT_LINE_LENGTH];
+         std::string numstuff;
+         std::string title;
 
          if (sequence_number >= 0)
-            sprintf(numstuff, " (%d:%d)", starting_sequence_number, sequence_number);
-         else
-            numstuff[0] = '\0';
+            numstuff = to_string(" (", starting_sequence_number, ":", sequence_number, ")");
 
          if (!header_comment.empty())
-            sprintf(title, "%s  %s%s",
-                    &old_filename_strings[calling_level][1], header_comment.c_str(), numstuff);
+            title = to_string(&old_filename_strings[calling_level][1], "  ", header_comment, numstuff);
          else
-            sprintf(title, "%s%s",
-                    &old_filename_strings[calling_level][1], numstuff);
+            title = to_string(&old_filename_strings[calling_level][1], numstuff);
 
-         ggg.set_window_title(title);
+         ggg.set_window_title(title.c_str());
       }
 
       // Query for the starting setup.
@@ -3681,9 +3664,8 @@ void ui_utils::run_program(iobase & ggg)
 
          case command_help:
             {
-               char help_string[MAX_ERR_LENGTH];
+               std::string help_string;
                const char *prefix;
-               int current_length;
 
                switch (parse_state.call_list_to_use) {
                case call_list_lin:
@@ -3727,23 +3709,16 @@ void ui_utils::run_program(iobase & ggg)
                   break;
                }
 
-               (void) strncpy(help_string, prefix, MAX_ERR_LENGTH);
-               help_string[MAX_ERR_LENGTH-1] = '\0';
-               current_length = strlen(help_string);
+               help_string = prefix;
 
                if (configuration::sequence_is_resolved()) {
-                  (void) strncpy(&help_string[current_length],
-                                 "  You may also write out this finished sequence "
-                                 "by typing 'write this sequence'.",
-                                 MAX_ERR_LENGTH-current_length);
+                  help_string += "  You may also write out this finished sequence "
+                                 "by typing 'write this sequence'.";
                }
                else {
-                  (void) strncpy(&help_string[current_length],
-                                 "  You may also type 'resolve'.",
-                                 MAX_ERR_LENGTH-current_length);
+                  help_string += "  You may also type 'resolve'.";
                }
 
-               help_string[MAX_ERR_LENGTH-1] = '\0';
                specialfail(help_string);
             }
          case command_change_outfile:
@@ -3754,17 +3729,14 @@ void ui_utils::run_program(iobase & ggg)
             goto start_cycle;
          case command_change_title:
             {
-               std::string newhead_string;
+              std::string newhead_string;
 
                // Process it even if it's the null string.
                if (do_header_popup(&newhead_string) != POPUP_DECLINE) {
-                  header_comment = newhead_string;
+                 header_comment = newhead_string;
 
                   if (!newhead_string.empty()) {
-                     char confirm_message[MAX_TEXT_LINE_LENGTH+25];
-                     strncpy(confirm_message, "Header comment changed to \"", 28);
-                     strncat(confirm_message, header_comment.c_str(), MAX_TEXT_LINE_LENGTH);
-                     strncat(confirm_message, "\"", 2);
+                    std::string confirm_message = to_string("Header comment changed to \"", header_comment, "\"");
                      specialfail(confirm_message);
                   }
                   else {
