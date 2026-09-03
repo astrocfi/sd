@@ -3128,9 +3128,8 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
 void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
 {
    if (s2 && s2[0]) {
-      char msg[200];
-      wsprintf(msg, "%s: %s", s1, s2);
-      serious_error_print(msg);
+      std::string msg = to_string(s1, ": ", s2);
+      serious_error_print(msg.c_str());
    }
    else {
       serious_error_print(s1);

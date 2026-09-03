@@ -3039,7 +3039,7 @@ popup_return ui_utils::do_header_popup(std::string *dest)
    std::string myPrompt;
 
    if (!header_comment.empty())
-      myPrompt = to_string("Current title is \"", header_comment, ".");
+      myPrompt = to_string("Current title is \"", header_comment, "\".");
 
    return iob88.get_popup_string(myPrompt, "*Enter new title:", "Enter new title:", "", dest);
 }

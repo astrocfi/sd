@@ -418,7 +418,9 @@ extern void put_line(std::string_view the_line)
       while (it != end) {
          char c = *it++;
          if (c == '\013') {
+            if (it == end) break;
             int personidx = (*it++) & 7;
+            if (it == end) break;
             int persondir = (*it++) & 0xF;
 
             int randomized_person_color = personidx;
