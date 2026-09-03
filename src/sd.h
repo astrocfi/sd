@@ -1679,6 +1679,7 @@ public:
    setup *setup_for_print;        // may need to know actual setup to decide whether we can say "outer pairs".
    call_with_name *call_to_print; // the original call, for printing (sometimes the field
                                   // above gets changed temporarily)
+   std::string comment;           // the comment string, if this is a comment node
    parse_block *next;             // next concept, or, if this is end mark,
                                   // points to substitution list
    parse_block *subsidiary_root;  // for concepts that take a second call,
@@ -6467,10 +6468,6 @@ extern SDLIB_API bool verify_used_direction;                        /* in SDTOP 
 extern SDLIB_API bool verify_used_selector;                         /* in SDTOP */
 extern SDLIB_API heritflags simple_herit_bits_table[];              /* in SDTOP */
 
-
-struct comment_block {
-   std::string txt;
-};
 
 // A few accessors to let the UI stuff survive.  They are implemented, for now, in SDTOP.
 extern SDLIB_API uint32_t get_concparseflags(const concept_descriptor *foo);

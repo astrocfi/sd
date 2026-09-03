@@ -3752,7 +3752,12 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
    for ( ; p ; p = p->next) {
       if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
       if (p->concept_ptr) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept_ptr->name);
-      if (p->call) n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
+      if (p->concept_ptr && p->concept_ptr->kind == concept_comment) {
+         n += sprintf(tempstring_text+n, "  comment %s  ", p->comment.c_str());
+      }
+      else if (p->call) {
+         n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
+      }
       n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
              p->options.who.who[0],
              p->options.where,
