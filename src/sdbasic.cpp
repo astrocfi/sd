@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -4770,13 +4770,15 @@ static uint32_t do_actual_array_call(
       desired_elongation ^= 3;
 
    if (!newtb) {
-      if (ss->kind == s1x4 && linedefinition && linedefinition->get_end_setup() == s2x2)
+      if (ss->kind == s1x4 && linedefinition &&
+          linedefinition->get_end_setup() == s2x2)
          result->result_flags.misc |= RESULTFLAG__EMPTY_1X4_TO_2X2;
-
-      result->kind = nothing;   // Note that we get the benefit of the
-                                // "CFLAG1_PARALLEL_CONC_END" stuff here.
-      return 0;                 // This means that a counter rotate in
-                                // an empty 1x2 will still change shape.
+      if (!(callspec->callflags1 & CFLAG1_CAN_GO_TO_EMPTY_SETUP)) {
+         result->kind = nothing;   // Note that we get the benefit of the
+                                   // "CFLAG1_PARALLEL_CONC_END" stuff here.
+         return 0;                 // This means that a counter rotate in
+                                   // an empty 1x2 will still change shape.
+      }
    }
 
    // Check that "linedefinition" has been set up if we will need it.

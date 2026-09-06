@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -5202,6 +5202,123 @@ static void do_concept_sequential(
 }
 
 
+void do_concept_special_sequential(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL;
+
+
+static void do_paranoid(
+   setup *ss,
+   call_conc_option_state options,
+   setup *result) THROW_DECL
+{
+   setup *presult = result;
+   uint32_t psaved_last_flagmisc;
+   call_with_name *save_subject_call = ss->cmd.parseptr->call;
+   fraction_info pzzz(2);
+
+   current_options.who = options.who;
+
+   call_with_name *the_utb = (current_options.who.who[0] != selector_uninitialized) ?
+      base_calls[base_call_anyoneuturnback] : base_calls[base_call_uturnback];
+
+   who_list saved_selector = current_options.who;
+
+   if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
+      fail("Illegal modifier before \"paranoid\".");
+
+   ss->cmd.cmd_misc3_flags |= CMD_MISC3__PUT_FRAC_ON_FIRST;
+
+   if (!ss->cmd.cmd_fraction.is_null() &&
+       !(ss->cmd.cmd_misc3_flags & CMD_MISC3__PUT_FRAC_ON_FIRST))
+      fail("Can't stack meta or fractional concepts.");
+
+   if (ss->cmd.cmd_fraction.flags & CMD_FRAC_REVERSE)
+      pzzz.m_reverse_order = true;
+
+   pzzz.m_first_call = !pzzz.m_reverse_order;
+
+   prepare_for_call_in_series(result, ss);
+
+   if (ss->cmd.cmd_fraction.flags == 0) {
+      // Pure fractionalization (or nothing) coming in.
+
+      pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
+
+      psaved_last_flagmisc = result->result_flags.misc &
+         (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+
+      result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+      goto try_this;
+   }
+   else {
+      // Special part-analyzing thing coming in.
+      // Find out whether we are doing something like "initially stable paranoid swing thru",
+      // with an intervening concept, or just "initially paranoid swing thru".
+
+      if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__PARTS_OVER_THIS_CONCEPT)) {
+         // Yes, so the part number applies to the "paranoid" concept itself.
+
+         pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
+
+         if ((ss->cmd.cmd_fraction.fraction == FRAC_FRAC_NULL_VALUE) ||   // User said "finally or secondly".
+             ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0)) // User said "last 1/2".
+            result->cmd.cmd_fraction.set_to_null();
+      }
+
+   try_this:
+
+      setup_command save_cmd;
+
+      for (;;) {
+         if (pzzz.not_yet_in_active_section()) goto paranoid_next_cycle;
+         if (pzzz.ran_off_active_section()) break;
+
+         save_cmd = result->cmd;
+
+         if (pzzz.m_fetch_index == 0) {
+            psaved_last_flagmisc = presult->result_flags.misc &
+               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+            presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
+               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
+            do_call_in_series_simple(presult);
+            presult->result_flags.misc |= psaved_last_flagmisc;
+         }
+         else {
+            presult->cmd.initialize();
+            presult->cmd.parseptr = (parse_block *) 0;
+            presult->cmd.callspec = the_utb;
+            psaved_last_flagmisc = presult->result_flags.misc &
+               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+            presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
+               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
+            do_call_in_series_simple(presult);
+            presult->result_flags.misc |= psaved_last_flagmisc;
+         }
+
+         result->cmd = save_cmd;
+
+         if (pzzz.query_instant_stop(result->result_flags.misc)) break;
+
+      paranoid_next_cycle:
+
+         // Increment for next cycle.
+         pzzz.m_fetch_index += pzzz.m_subcall_incr;
+         pzzz.m_client_index += pzzz.m_subcall_incr;
+      }
+   }
+
+   // Repair the damage.
+
+   result->cmd.callspec = save_subject_call;
+   ss->cmd.parseptr->call = save_subject_call;
+   ss->cmd.parseptr->call_to_print = save_subject_call;
+   current_options.who = saved_selector;
+}
+
 static void do_concept_special_sequential(
    setup *ss,
    parse_block *parseptr,
@@ -5219,132 +5336,8 @@ static void do_concept_special_sequential(
    //    part_key_paranoid      (8) - paranoid
 
    if (parseptr->concept_ptr->arg1 == part_key_paranoid) {
-
-      // This is "paranoid".
-
-      struct paranoid_thing {
-         setup *presult;
-         call_with_name *the_utb;
-         uint32_t psaved_last_flagmisc;
-         fraction_info pzzz;
-
-         paranoid_thing(setup *result) : presult(result), pzzz(2)
-         {};
-
-         void do_subject_call() {
-            psaved_last_flagmisc = presult->result_flags.misc &
-               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
-            presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
-               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
-            do_call_in_series_simple(presult);
-            presult->result_flags.misc |= psaved_last_flagmisc;
-         }
-
-         void do_the_utb() {
-            presult->cmd.initialize();
-            presult->cmd.parseptr = (parse_block *) 0;
-            presult->cmd.callspec = the_utb;
-            psaved_last_flagmisc = presult->result_flags.misc &
-               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
-            presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
-               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
-            do_call_in_series_simple(presult);
-            presult->result_flags.misc |= psaved_last_flagmisc;
-         }
-      };
-
-      paranoid_thing P(result);
-
-      if (parseptr->concept_ptr->arg2) current_options.who = parseptr->options.who;
-
-      P.the_utb = result->cmd.callspec = (parseptr->concept_ptr->arg2) ?
-         base_calls[base_call_anyoneuturnback] : base_calls[base_call_uturnback];
-
-      call_with_name *save_subject_call = ss->cmd.parseptr->call;
-      who_list saved_selector = current_options.who;
-
-      if (process_brute_force_mxn(ss, parseptr, do_concept_special_sequential, result))
-         return;
-
-      if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
-         fail("Illegal modifier before \"paranoid\".");
-
-      ss->cmd.cmd_misc3_flags |= CMD_MISC3__PUT_FRAC_ON_FIRST;
-
-      if (!ss->cmd.cmd_fraction.is_null() &&
-          !(ss->cmd.cmd_misc3_flags & CMD_MISC3__PUT_FRAC_ON_FIRST))
-         fail("Can't stack meta or fractional concepts.");
-
-      if (ss->cmd.cmd_fraction.flags & CMD_FRAC_REVERSE)
-         P.pzzz.m_reverse_order = true;
-
-      P.pzzz.m_first_call = !P.pzzz.m_reverse_order;
-
-      prepare_for_call_in_series(result, ss);
-
-      if (ss->cmd.cmd_fraction.flags == 0) {
-         // Pure fractionalization (or nothing) coming in.
-
-         P.pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
-
-         P.psaved_last_flagmisc = result->result_flags.misc &
-            (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
-
-         result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-         goto try_this;
-      }
-      else {
-         // Special part-analyzing thing coming in.
-         // Find out whether we are doing something like "initially stable paranoid swing thru",
-         // with an intervening concept, or just "initially paranoid swing thru".
-
-         if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__PARTS_OVER_THIS_CONCEPT)) {
-            // Yes, so the part number applies to the "paranoid" concept itself.
-
-            P.pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
-
-            if ((ss->cmd.cmd_fraction.fraction == FRAC_FRAC_NULL_VALUE) ||   // User said "finally or secondly".
-                ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0)) // User said "last 1/2".
-                result->cmd.cmd_fraction.set_to_null();
-         }
-
-      try_this:
-
-         setup_command save_cmd;
-
-         for (;;) {
-            if (P.pzzz.not_yet_in_active_section()) goto paranoid_next_cycle;
-            if (P.pzzz.ran_off_active_section()) break;
-
-            save_cmd = result->cmd;
-
-            if (P.pzzz.m_fetch_index == 0) {
-               P.do_subject_call();
-            }
-            else {
-               P.do_the_utb();
-            }
-
-            result->cmd = save_cmd;
-
-            if (P.pzzz.query_instant_stop(result->result_flags.misc)) break;
-
-         paranoid_next_cycle:
-
-            // Increment for next cycle.
-            P.pzzz.m_fetch_index += P.pzzz.m_subcall_incr;
-            P.pzzz.m_client_index += P.pzzz.m_subcall_incr;
-         }
-      }
-
-      // Repair the damage.
-
-      result->cmd.callspec = save_subject_call;
-      ss->cmd.parseptr->call = save_subject_call;
-      ss->cmd.parseptr->call_to_print = save_subject_call;
-      current_options.who = saved_selector;
+      do_paranoid(ss, parseptr->options, result);
+      return;
    }
    else if (parseptr->concept_ptr->arg1 == part_key_half_and_half ||
        parseptr->concept_ptr->arg1 == part_key_frac_and_frac) {
@@ -7352,12 +7345,6 @@ static void do_concept_meta(
             parse_block *pp = ss->cmd.parseptr;
             // We allow nested roundtrips, of course.
             int rountrip_nesting_count = 1;
-            /* Nested things may not work just yet.  Probably related to going off the end of the subject call.
-         while (pp && pp->concept->kind == concept_meta && pp->concept->arg1 == meta_key_roundtrip) {
-            pp = pp->next;
-            rountrip_nesting_count++;
-         }
-         */
 
             int howmanyparts = try_to_get_parts_from_parse_pointer(ss, pp);
 
@@ -9360,6 +9347,21 @@ static void so_and_so_only_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   if (parseptr->concept_ptr->kind == concept_so_and_so_only &&
+       parseptr->concept_ptr->arg1 == selective_key_work_concept) {
+      parse_block *incoming = parseptr->next;
+      while (incoming->concept_ptr->kind == concept_comment)
+         incoming = incoming->next;
+
+      if (incoming->concept_ptr->kind == concept_special_sequential_no_2nd &&
+          incoming->concept_ptr->arg1 == part_key_paranoid) {
+         ss->cmd.parseptr->options = parseptr->options;
+         ss->cmd.parseptr = incoming->next;
+         do_paranoid(ss, parseptr->options, result);
+         return;
+      }
+   }
+
    ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
 
    // The general principle is "reevaluate often".  The thing that the selected people
@@ -9586,22 +9588,22 @@ static void do_concept_matrix(
 }
 
 
-static bool ok_for_expand_1(const concept_descriptor *this_concept)
+static bool ok_for_expand_1(const concept_descriptor *this_concept_ptr)
 {
-   concept_kind this_kind = this_concept->kind;
+   concept_kind this_kind = this_concept_ptr->kind;
 
    return
-      (this_kind == concept_do_phantom_boxes && this_concept->arg3 == MPKIND__SPLIT) ||
+      (this_kind == concept_do_phantom_boxes && this_concept_ptr->arg3 == MPKIND__SPLIT) ||
       this_kind == concept_multiple_boxes ||
       this_kind == concept_triple_boxes_together ||
       this_kind == concept_quad_boxes_together;
 }
-static bool ok_for_expand_2(const concept_descriptor *this_concept)
+static bool ok_for_expand_2(const concept_descriptor *this_concept_ptr)
 {
-   concept_kind this_kind = this_concept->kind;
+   concept_kind this_kind = this_concept_ptr->kind;
 
    return
-      (this_kind == concept_do_phantom_2x4 && this_concept->arg3 == MPKIND__SPLIT) ||
+      (this_kind == concept_do_phantom_2x4 && this_concept_ptr->arg3 == MPKIND__SPLIT) ||
       this_kind == concept_multiple_lines_tog ||
       this_kind == concept_multiple_lines_tog_std;
 }
@@ -9618,8 +9620,8 @@ extern bool do_big_concept(
    void (*concept_func)(setup *, parse_block *, setup *);
    // Make a local copy; we may need to modify it.
    parse_block local_concept_parse_block = *the_concept_parse_block;
-   const concept_descriptor *this_concept = local_concept_parse_block.concept_ptr;
-   concept_kind this_kind = this_concept->kind;
+   const concept_descriptor *this_concept_ptr = local_concept_parse_block.concept_ptr;
+   concept_kind this_kind = this_concept_ptr->kind;
    const concept_table_item *this_table_item = &concept_table[this_kind];
 
    uint32_t prop_bits = this_table_item->concept_prop;
@@ -9634,11 +9636,11 @@ extern bool do_big_concept(
        this_kind == concept_distorted ||
        this_kind == concept_once_removed ||
        this_kind == concept_concentric) {
-      if (this_concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+      if (this_concept_ptr->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
    }
    else if (this_kind == concept_do_phantom_diamonds) {
-      if (this_concept->arg2 == CMD_MISC__VERIFY_DMD_LIKE)
+      if (this_concept_ptr->arg2 == CMD_MISC__VERIFY_DMD_LIKE)
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
    }
 
@@ -9670,8 +9672,8 @@ extern bool do_big_concept(
              this_kind == concept_concentric ||
              this_kind == concept_some_vs_others ||
              (this_kind == concept_meta &&
-              (this_concept->arg1 == meta_key_finish ||
-               this_concept->arg1 == meta_key_revorder)))
+              (this_concept_ptr->arg1 == meta_key_finish ||
+               this_concept_ptr->arg1 == meta_key_revorder)))
             goto this_is_ok;
 
          // Otherwise, if "central" is selected, it must be one of the following ones.
@@ -9682,14 +9684,14 @@ extern bool do_big_concept(
                 this_kind != concept_dbl_frac_crazy &&
                 this_kind != concept_frac_crazy &&
                 (this_kind != concept_meta ||
-                 (this_concept->arg1 != meta_key_like_a &&
-                  this_concept->arg1 != meta_key_skip_last_part &&
-                  this_concept->arg1 != meta_key_echo &&
-                  this_concept->arg1 != meta_key_rev_echo &&
-                  this_concept->arg1 != meta_key_shift_n)) &&
+                 (this_concept_ptr->arg1 != meta_key_like_a &&
+                  this_concept_ptr->arg1 != meta_key_skip_last_part &&
+                  this_concept_ptr->arg1 != meta_key_echo &&
+                  this_concept_ptr->arg1 != meta_key_rev_echo &&
+                  this_concept_ptr->arg1 != meta_key_shift_n)) &&
                 (this_kind != concept_meta_one_arg ||
-                 (this_concept->arg1 != meta_key_skip_nth_part &&
-                  this_concept->arg1 != meta_key_shift_n)))
+                 (this_concept_ptr->arg1 != meta_key_skip_nth_part &&
+                  this_concept_ptr->arg1 != meta_key_shift_n)))
                goto this_is_bad;
          }
 
@@ -9723,7 +9725,7 @@ extern bool do_big_concept(
 
    if (concept_func == 0) return false;
 
-   if (this_concept->level > calling_level) warn_about_concept_level();
+   if (this_concept_ptr->level > calling_level) warn_about_concept_level();
 
    result->clear_people();
 
@@ -9738,7 +9740,7 @@ extern bool do_big_concept(
 
    uint32_t prop_bits_for_expansion = prop_bits;
    if (prop_bits & CONCPROP__NEED_ARG2_MATRIX)
-      prop_bits_for_expansion |= this_concept->arg2;
+      prop_bits_for_expansion |= this_concept_ptr->arg2;
 
    // "Standard" is special -- process it now.
    if (this_kind == concept_standard) {
@@ -9834,8 +9836,8 @@ extern bool do_big_concept(
    // and this concept is split phantom CLW.
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_AT_ALL)) {
-      if ((!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_1) || ok_for_expand_1(this_concept)) &&
-          (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_2) || ok_for_expand_2(this_concept)))
+      if ((!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_1) || ok_for_expand_1(this_concept_ptr)) &&
+          (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_2) || ok_for_expand_2(this_concept_ptr)))
          ss->do_matrix_expansion(prop_bits_for_expansion, false);
    }
 
@@ -9859,9 +9861,9 @@ extern bool do_big_concept(
    // followed by split phantom C/L/W.  We turn on CMD_MISC__NO_EXPAND_2.
 
    if (!(prop_bits & CONCPROP__MATRIX_OBLIVIOUS)) {
-      if (ok_for_expand_2(this_concept))
+      if (ok_for_expand_2(this_concept_ptr))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_1;
-      else if (ok_for_expand_1(this_concept))
+      else if (ok_for_expand_1(this_concept_ptr))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_2;
       else
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_AT_ALL;
@@ -9918,9 +9920,20 @@ extern bool do_big_concept(
 
    // We want the "paranoid" concept to know, if it was called with a concept
    // like "initially", whether some other concept (like "stable") intervened.
-   if (!(this_kind == concept_special_sequential_no_2nd ||
-         this_kind == concept_special_sequential_sel_no_2nd))
+
+   // Because "so-and-so work" is a standalone concept, but "so-and-so are paranoid"
+   // is not, this requires lookahead.
+   parse_block *lookahead_concept_parse_block = the_concept_parse_block;
+   const concept_descriptor *test_concept = lookahead_concept_parse_block->concept_ptr;
+
+   if (test_concept->kind == concept_special_sequential_no_2nd ||
+       test_concept->kind == concept_special_sequential_sel_no_2nd ||
+       (test_concept->kind == concept_so_and_so_only &&
+        test_concept->arg1 == selective_key_work_concept)) {
+   }
+   else {
       ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__PARTS_OVER_THIS_CONCEPT;
+   }
 
    ss->cmd.parseptr->concentric_4p = local_concept_parse_block.concentric_4p;
 

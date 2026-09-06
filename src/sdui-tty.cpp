@@ -103,7 +103,7 @@ and the following other variables:
 // "1.4:db1.5:ui0.6tty"
 // We return the "0.6tty" part.
 
-std::string journal_name;
+static char journal_name[MAX_TEXT_LINE_LENGTH];
 static FILE *journal_file = (FILE *) 0;
 int sdtty_screen_height = 0;  // The "lines" option may set this to something.
                               // Otherwise, any subsystem that sees the value zero
@@ -195,6 +195,7 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 {
    int argno = 1;
    char **argv = *argvp;
+   journal_name[0] = '\0';
 
    while (argno < (*argcp)) {
       int i;
@@ -214,7 +215,7 @@ void iofull::process_command_line(int *argcp, char ***argvp)
          goto remove_two;
       }
       else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
-         journal_name = argv[argno+1];
+         strcpy(journal_name, argv[argno+1]);
          journal_file = fopen(argv[argno+1], "w");
 
          if (!journal_file) {
@@ -270,11 +271,11 @@ static bool really_open_session()
    // in the command line, we don't query about the session.
 
    if (ui_options.force_session == -1000000) {
-      std::string line;
+      char line[MAX_FILENAME_LENGTH];
 
       put_line("Do you want to use one of the following sessions?\n\n");
 
-      while (get_next_session_line(&line)) {
+      while (get_next_session_line(line)) {
          put_line(line);
          put_line("\n");
       }
@@ -282,17 +283,17 @@ static bool really_open_session()
       put_line("Enter the number of the desired session\n");
       put_line("   (or a negative number to delete that session):  ");
 
-      get_string<MAX_FILENAME_LENGTH>(&line);
-      if (line.empty() || line[0] == '\r' || line[0] == '\n')
+      get_string(line, MAX_FILENAME_LENGTH);
+      if (!line[0] || line[0] == '\r' || line[0] == '\n')
          goto no_session;
 
-      if (!sscanf(line.c_str(), "%d", &session_index)) {
+      if (!sscanf(line, "%d", &session_index)) {
          session_index = 0;         // User typed garbage -- exit the program immediately.
          return true;
       }
    }
    else {
-      while (get_next_session_line(nullptr));   // Need to scan the file anyway.
+      while (get_next_session_line((char *) 0));   // Need to scan the file anyway.
       session_index = ui_options.force_session;
    }
 
@@ -374,7 +375,8 @@ bool iofull::init_step(init_callback_state s, int n)
 
       parse_level(line);
 
-      outfile_string = filename_strings[calling_level];
+      outfile_string += filename_strings[calling_level];
+
       break;
 
    case init_database1:
@@ -449,15 +451,11 @@ void iofull::create_menu(call_list_kind cl)
 
 
 
-void iofull::set_window_title(Cstring s)
+void iofull::set_window_title(char s[])
 {
-   std::string full_text;
-
-   if (!journal_name.empty()) {
-      full_text = to_string("Sdtty ", s, " {", journal_name, "}");
-   }
-   else {
-      full_text = to_string("Sdtty ", s);
+   std::string full_text = to_string("Sdtty ", s);
+   if (journal_name[0]) {
+      full_text += to_string(" {", journal_name, "}");
    }
 
    ttu_set_window_title(full_text.c_str());
@@ -1042,17 +1040,18 @@ popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view
       get_utils_ptr()->newline();
    }
 
-   put_line(to_string(final_inline_prompt, " "));
+   std::string buffer = to_string(final_inline_prompt, " ");
+   put_line(buffer.c_str());
    get_string<MAX_TEXT_LINE_LENGTH>(dest);
    // Backspace at start of line declines the popup.
-   if ((*dest)[0] == '\b') return POPUP_DECLINE;
+   if (!dest->empty() && (*dest)[0] == '\b') return POPUP_DECLINE;
 
    current_text_line++;
    return !dest->empty() ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
 }
 
 
-static int confirm(std::string_view question)
+static int confirm(Cstring question)
 {
    for (;;) {
       put_line(question);
@@ -1233,7 +1232,7 @@ uint32_t iofull::get_one_number(matcher_class &matcher)
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-void iofull::add_new_line(std::string_view the_line, uint32_t drawing_picture)
+void iofull::add_new_line(const char the_line[], uint32_t drawing_picture)
 {
     put_line(the_line);
     put_line("\n");
@@ -1274,18 +1273,18 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
       fprintf(stderr, "%s\n", s1);
    }
 
-   if (s3) fprintf(stderr, "%s\n", s3);
-   fprintf(stderr, "%s", "Use the -help flag for help.\n");
+   if (s3 && s3[0]) fprintf(stderr, "%s\n", s3);
+   fprintf(stderr, "Use the -help flag for help.\n");
    general_final_exit(1);
 }
 
 
-void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
+void iofull::fatal_error_exit(int code, std::string_view s1, std::string_view s2)
 {
-   if (s2 && s2[0])
-      fprintf(stderr, "%s: %s\n", s1, s2);
+   if (!s2.empty())
+      fprintf(stderr, "%.*s: %.*s\n", int(s1.size()), s1.data(), int(s2.size()), s2.data());
    else
-      fprintf(stderr, "%s\n", s1);
+      fprintf(stderr, "%.*s\n", int(s1.size()), s1.data());
 
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);

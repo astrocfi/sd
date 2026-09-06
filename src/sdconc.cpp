@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -961,21 +961,38 @@ extern void normalize_concentric(
                i1p->swap_people(0, 3);
                i1p->swap_people(1, 2);
             }
-            else if (!(i1p->people[2].id1)) {
-               i1p->swap_people(2, 3);
+            else if (!(i1p->people[1].id1 | i1p->people[2].id1)) {
+               i1p->swap_people(3, 2);
+               i1p->swap_people(0, 3);
+            }
+            else if (!(i1p->people[1].id1 | i1p->people[3].id1)) {
+               i1p->swap_people(0, 3);
+            }
+            else if (!(i1p->people[0].id1 | i1p->people[2].id1)) {
+               i1p->swap_people(3, 2);
                i1p->swap_people(1, 3);
-               i1p->swap_people(1, 0);
-               warn(warn__compress_carefully);
             }
-            if (!(i0p->people[0].id1 | i0p->people[1].id1)) {
-               i0p->swap_people(0, 3);
-               i0p->swap_people(1, 2);
+            else if (!(i1p->people[0].id1 | i1p->people[3].id1)) {
+               i1p->swap_people(1, 3);
             }
-            else if (!(i0p->people[0].id1)) {
+
+            if (!(i0p->people[0].id3 | i0p->people[1].id3)) {
+               i0p->swap_people(2, 1);
+               i0p->swap_people(3, 0);
+            }
+            else if (!(i0p->people[3].id3 | i0p->people[0].id3)) {
                i0p->swap_people(1, 0);
-               i0p->swap_people(1, 3);
-               i0p->swap_people(2, 3);
-               warn(warn__compress_carefully);
+               i0p->swap_people(2, 1);
+            }
+            else if (!(i0p->people[3].id3 | i0p->people[1].id3)) {
+               i0p->swap_people(2, 1);
+            }
+            else if (!(i0p->people[2].id3 | i0p->people[0].id3)) {
+               i0p->swap_people(1, 0);
+               i0p->swap_people(3, 1);
+            }
+            else if (!(i0p->people[2].id3 | i0p->people[1].id3)) {
+               i0p->swap_people(3, 1);
             }
          }
          else if (i0p->rotation == 0 && outer_elongation == 1) {

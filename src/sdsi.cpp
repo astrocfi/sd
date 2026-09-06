@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -97,6 +97,7 @@ and the following external variables:
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <string>
 
 #include "sd.h"
 #include "paths.h"
@@ -133,8 +134,8 @@ std::string abridge_filename;
 static bool file_error;
 static std::string full_outfile_name;
 static FILE *fildes;
-std::string fail_errstring;
-std::string fail_message;
+static std::string fail_errstring;
+static std::string fail_message;
 
 
 extern void general_initialize()
@@ -243,7 +244,7 @@ void ui_utils::open_file()
    int this_file_position;
    int i;
 
-   full_outfile_name = outfile_prefix + outfile_string;
+   full_outfile_name = to_string(outfile_prefix, outfile_string);
 
    file_error = false;
 
@@ -629,5 +630,5 @@ void ui_utils::close_file()
       "\": ",
       fail_errstring,
       " -- try \"change output file\" or \"change output prefix\" operation.");
-   specialfail(foo);
+   specialfail(foo.c_str());
 }

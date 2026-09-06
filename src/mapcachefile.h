@@ -175,8 +175,6 @@
 // operations, and should be very efficient.
 
 #include <stdio.h>
-#include <string>
-#include <vector>
 
 struct MAPPED_CACHE_INNARDS;
 
@@ -197,9 +195,9 @@ class MAPPED_CACHE_FILE {
    };
 
    MAPPED_CACHE_FILE(int numsourcefiles,
-                     const std::string_view *srcnames,
+                     const char * const * srcnames,
                      FILE **srcfiles,
-                     std::string_view mapext,
+                     const char *mapext,
                      int clientversion,
                      const bool *srcbinary = 0);
    ~MAPPED_CACHE_FILE();

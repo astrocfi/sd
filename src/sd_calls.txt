@@ -1733,6 +1733,39 @@ call "rotate @b while the others @0" c1
             sequence_starter_promenade reverse_means_mirror neednumber single_is_inherited dont_use_in_resolve
    conc_specialpromenade nullcall [mandatory_anycall] rotn [inherit_reverse inherit_single conc_force_lines]
 
+call "ends rotate @b" c1
+            reverse_means_mirror neednumber single_is_inherited dont_use_in_resolve
+   conc nullcall_noroll [] rotn [inherit_reverse inherit_single conc_demand_columns conc_force_lines]
+
+call "ends single rotate @b" c1
+            reverse_means_mirror neednumber dont_use_in_resolve
+   conc nullcall_noroll [] rotn [inherit_reverse force_single conc_demand_columns conc_force_lines]
+
+call "ends reverse rotate @b" c1
+            neednumber single_is_inherited dont_use_in_resolve
+   conc nullcall_noroll [] rotn [force_reverse inherit_single conc_demand_columns conc_force_lines]
+
+call "ends reverse single rotate @b" c1
+            neednumber dont_use_in_resolve
+   conc nullcall_noroll [] rotn [force_reverse force_single conc_demand_columns conc_force_lines]
+
+// Outsides same as ends.  (Callerlab draws a distinction, but we don't.)
+call "outsides rotate @b" c1
+            reverse_means_mirror neednumber single_is_inherited dont_use_in_resolve
+   conc nullcall_noroll [] rotn [inherit_reverse inherit_single conc_demand_columns conc_force_lines]
+
+call "outsides single rotate @b" c1
+            reverse_means_mirror neednumber dont_use_in_resolve
+   conc nullcall_noroll [] rotn [inherit_reverse force_single conc_demand_columns conc_force_lines]
+
+call "outsides reverse rotate @b" c1
+            neednumber single_is_inherited dont_use_in_resolve
+   conc nullcall_noroll [] rotn [force_reverse inherit_single conc_demand_columns conc_force_lines]
+
+call "outsides reverse single rotate @b" c1
+            neednumber dont_use_in_resolve
+   conc nullcall_noroll [] rotn [force_reverse force_single conc_demand_columns conc_force_lines]
+
 call "_just separate" dontshow tag just_separate
    setup 2x2 2x2 qualifier ntbone none
       array [AL0S CR1S CAL2N ACR3N]
@@ -7794,9 +7827,29 @@ call "put centers out" c3x
    setup 2x4 2x4 rotate
       array [ZM6W 0 0 ZM1W ZM2W 0 0 ZM5W]
 
+call "put ends in" c3x
+   setup 4x2 2x4 rotate
+      array [ZM6W ZM7W ZM0W 0 0 ZM3W ZM4W ZM5W]
+   setup 2x4 2x4 rotate
+      array [0 ZM7W ZM0W 0 0 ZM3W ZM4W 0]
+
+call "put ends out" c3x
+   setup 4x2 2x4 rotate
+      array [ZM7W ZM6W ZM1W 0 0 ZM2W ZM5W ZM4W]
+   setup 2x4 2x4 rotate
+      array [0 ZM6W ZM1W 0 0 ZM2W ZM5W 0]
+
+call "put trailers in" c3x
+   setup 4x2 2x4 rotate qualifier in 2fl_only
+      array [ZM6W ZM7W 0 0 0 0 ZM4W ZM5W]
+   setup 4x2 2x4 rotate qualifier out 2fl_only
+      array [0 0 ZM1W ZM0W ZM3W ZM2W 0 0]
+
 call "put trailers out" c3x
    setup 4x2 2x4 rotate qualifier in 2fl_only
       array [ZM7W ZM6W 0 0 0 0 ZM5W ZM4W]
+   setup 4x2 2x4 rotate qualifier out 2fl_only
+      array [0 0 ZM0W ZM1W ZM2W ZM3W 0 0]
 
 call "split the outsides, around 1 to a line" xyz
    setup 4x2 2x4 rotate
@@ -9284,6 +9337,13 @@ call "vertical tag" c1 tag verticaltag
    seq vertical_half_tag [inherit_left inherit_single inherit_singlefile inherit_nxn inherit_mxn]
    seq revert_if_needed [inherit_revert inherit_fractal inherit_nxn]
    seq extend_n [inherit_single inherit_nxn inherit_mxn insert_number 4]
+
+call "vertical tag for tunnel" dontshow tag verticaltagfortunnel
+            left_means_mirror can_go_to_empty_setup
+   setup 2x2 1x4 rotate restriction not_tboned
+      preds "Can't do this with phantoms or T-boned people."
+         if vert1 [C3E A2E Z0W Z1W]
+         if vert2 [0 A3E 0 Z0W]
 
 // We provide this for the other common word order "<anyone> start vertical N/4 tag".
 // When this is done, we don't allow things like "left" or "revert", since they
@@ -14151,7 +14211,7 @@ call "@D cross" c4
 call "@D mix" c3a
             left_means_mirror neednumber visible_fractions
             grand_is_inherited bigmatrix_is_inherited yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited
-   seq odd_frac_by_right [inherit_left inherit_grand inherit_gensting inherit_fractal]
+   seq odd_frac_by_right [inherit_left inherit_grand inherit_gensting inherit_fractal inherit_bigmatrix]
    seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand roll_transparent]
    seq maybegrandslip_in_lw [inherit_left inherit_grand inherit_yoyo inherit_gensting roll_transparent]
 
@@ -16944,6 +17004,8 @@ call "walk and dodge" mainstream tag walkndodge
    // "Magic walk and dodge" isn't a call.  We allow it, but it's controversial.
    setup 2x2 2x2 qualifier magic_only restriction controversial alwaysfail
       array [ZM1N ZM0N ZM0N ZM1N]
+   setup 3x2 2x3 qualifier live none restriction forbidden magic_only
+      array [ZM4N ZM3N ZM3N ZM2N ZM2N ZM1N]
             alternate_definition [grand] c4x
    // This is an incredibly obscure and obsolete usage!
    setup 4x2 2x4 restriction unusual wave_only
@@ -18371,7 +18433,7 @@ call "_centers plan ahead" dontshow tag plan_ctrtoend
 
 call "_ends plan ahead" dontshow tag plan_endtoctr
             left_means_mirror
-   setup 2x2 2x2
+   setup 2x2 2x2 restriction in_or_out
       array [CR3N AACR0S ACR1W CR2W]
 
 call "plan ahead" c3a
@@ -21193,7 +21255,7 @@ call "the axle" c1
    seq cast_off_n4_with_warn [allow_forced_mod inherit_yoyo inherit_gensting insert_number 2]
    seq ctrstrade [allow_forced_mod roll_transparent]
 
-call "the axle but @m" c2
+call "the axle but @m" c1
             visible_fractions yoyo_is_inherited gen_sting_is_inherited
    seq axle1 []
    seq cast_off_n4_with_warn [allow_forced_mod inherit_yoyo inherit_gensting insert_number 2]
@@ -21212,7 +21274,7 @@ call "@2pass @3the axle" c1
    seq cast_off_n4_with_warn [allow_forced_mod inherit_yoyo inherit_gensting insert_number 2]
    seq ctrstrade [allow_forced_mod roll_transparent]
 
-call "@2pass @3the axle but @m" c2
+call "@2pass @3the axle but @m" c1
             visible_fractions twisted_is_inherited yoyo_is_inherited gen_sting_is_inherited
    seq passthru [or_anycall inherit_twisted]
    seq axle1 []
@@ -21233,7 +21295,7 @@ call "@0 the axle" c1
    seq cast_off_n4_with_warn [allow_forced_mod inherit_yoyo inherit_gensting insert_number 2]
    seq ctrstrade [allow_forced_mod roll_transparent]
 
-call "@0 the axle but @m" c2
+call "@0 the axle but @m" c1
             dont_use_in_resolve yoyo_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
    seq axle1 []
@@ -24692,7 +24754,7 @@ call "_tunnel part 1" dontshow tag tunnel1
 
 call "_tunnel thru part 1" dontshow tag tunnelthru1
            single_is_inherited
-   maybesinglecrossconc verticaltag [inherit_single conc_demand_columns]
+   maybesinglecrossconc verticaltagfortunnel [inherit_single conc_demand_columns]
                         partnertagbypairs [inherit_single conc_force_columns]
 
 call "_tunnel @h part 2" dontshow tag tunnel2

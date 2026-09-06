@@ -44,8 +44,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.84"
-#define TIME_STAMP "wba@alum.mit.edu Jul 4 2026 $"
+#define VERSION_STRING "39.85"
+#define TIME_STAMP "wba@alum.mit.edu Sep 5 2026 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -1020,7 +1020,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    enable_file_writing = false;
    interactivity = interactivity_database_init;
    testing_fidelity = false;
-   header_comment.clear();
+   header_comment[0] = 0;
    abridge_filename.clear();
    verify_options.who.who[0] = selector_uninitialized;
    verify_options.who.who[1] = selector_uninitialized;

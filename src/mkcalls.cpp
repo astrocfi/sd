@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1108,6 +1108,7 @@ const char *flagtab1[] = {
    "can_do_in_z",
    "warn_on_elongation",
    "allow_if_centers_only",
+   "can_go_to_empty_setup",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.

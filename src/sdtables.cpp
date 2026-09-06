@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -4172,16 +4172,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s4x6,           schema_nothing, {-1, -1, 15, 14, -1, -1, 2, -1, -1, -1, -1, 3,
                                      11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18},
              s2x3,     s2x6,     1, 0, 1, 2,  0x8F7, schema_in_out_triple},
-
-   //   wanted to get rid of this so that [2x6 col] center triple box peel off would go to 4x5.  Changed my mind.
    {sbigdmd,        schema_nothing, {0, 1, 10, 11, 4, 5, 6, 7,           8, 9, 2, 3},
              s2x2,     s1x4,     0, 1, 2, 2,  0xAF7, schema_in_out_triple},
-
-   // This was the replacement.
-   //   {s4x5,           schema_nothing, {9, 8, 16, 15, 6, 5, 19, 18,           12, 17, 2, 7},
-   //             s2x2,     s1x4,     0, 1, 2, 2,  0xAF7, schema_in_out_triple},
-
-
    {s_hrglass,      schema_nothing, {5, 0, 1, 4,       6, 3, 2, 7},
              s2x2,     sdmd,     1, 0, 1, 1,  0xAF7, schema_in_out_triple},
    {s_dhrglass,     schema_nothing, {0, 1, 4, 5,       6, 3, 2, 7},

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -7116,14 +7116,16 @@ bool do_subcall_query(
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
 
-      std::string tempstuff = to_string("The \"", pretty_call_name, "\" can be replaced");
-      if (this_is_tagger)
-         tempstuff += " with a tagging call.";
-      else if (this_is_tagger_circcer)
-         tempstuff += " with a modified circulate-like call.";
-      else
-         tempstuff += ".";
+      const char *can_be_replaced;
 
+      if (this_is_tagger)
+         can_be_replaced = "can be replaced with a tagging call.";
+      else if (this_is_tagger_circcer)
+         can_be_replaced = "can be replaced with a modified circulate-like call.";
+      else
+         can_be_replaced = "can be replaced.";
+
+      std::string tempstuff = to_string("The \"", pretty_call_name, "\" ", can_be_replaced);
       if (gg77->iob88.yesnoconfirm("Replacement", tempstuff.c_str(), "Do you want to replace it?", false, false)) {
          // User accepted the modification.
          // Set up the prompt and get the concepts and call.
@@ -7159,7 +7161,7 @@ bool do_subcall_query(
 
    parse_state.parse_stack_index = 0;
    parse_state.call_list_to_use = call_list_any;
-   parse_state.specialprompt = tempstring_text;
+   parse_state.specialprompt = std::move(tempstring_text);
 
    // Search for special case of "must_be_tag_call" with no other modification bits.
    // That means it is a new-style tagging call.
