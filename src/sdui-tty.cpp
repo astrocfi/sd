@@ -124,6 +124,20 @@ static resolver_display_state resolver_happiness = resolver_display_failed;
 // Sdtty program on Windows.  The OS should invoke this when the command is given.
 int main(int argc, char *argv[])
 {
+   char szwhuzzis[31];
+   std::string sss("Test string");
+   int n = sss.copy(szwhuzzis, 30);
+   szwhuzzis[n] = 0;
+   // szwhuzzis receives the contents of the string object.
+   // It is not null-terminated.  The returned value shows the length,
+   // which is where the null needs to be placed.
+
+   const char *ttt;
+   ttt = sss.c_str();
+   // ttt points to the string storage internal to the std::string.
+   // It comes out as read-only.  It is null-terminated only if the
+   // user did so.
+
    // In Sdtty, the defaults are reverse video (white-on-black) and pastel colors.
 
    ui_options.reverse_video = true;
@@ -1279,12 +1293,12 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
 }
 
 
-void iofull::fatal_error_exit(int code, std::string_view s1, std::string_view s2)
+void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
 {
-   if (!s2.empty())
-      fprintf(stderr, "%.*s: %.*s\n", int(s1.size()), s1.data(), int(s2.size()), s2.data());
+   if (s2 && s2[0])
+      fprintf(stderr, "%s: %s\n", s1, s2);
    else
-      fprintf(stderr, "%.*s\n", int(s1.size()), s1.data());
+      fprintf(stderr, "%s\n", s1);
 
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);

@@ -695,15 +695,15 @@ enum error_flag_type {
 };
 
 
-void fail(std::string_view s) THROW_DECL NORETURN2;
+void fail(const char s[]) THROW_DECL NORETURN2;
 
-void fail_no_retry(std::string_view s) THROW_DECL NORETURN2;
+void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
 
-extern void fail2(std::string_view s1, std::string_view s2) THROW_DECL NORETURN2;
+extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
 
-extern void failp(uint32_t id1, std::string_view s) THROW_DECL NORETURN2;
+extern void failp(uint32_t id1, const char s[]) THROW_DECL NORETURN2;
 
-void specialfail(std::string_view s) THROW_DECL NORETURN2;
+void specialfail(const char s[]) THROW_DECL NORETURN2;
 
 extern void warn(warning_index w);
 
@@ -2549,7 +2549,7 @@ class iobase {
    virtual popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
                                          std::string_view final_inline_prompt,
                                          std::string_view seed, std::string *dest) = 0;
-   virtual void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="") = 0;
+   virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
    virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
    virtual selector_kind do_selector_popup(matcher_class &matcher) = 0;
@@ -2593,7 +2593,7 @@ class iofull : public iobase {
    popup_return get_popup_string(std::string_view prompt1, std::string_view prompt2,
                                  std::string_view final_inline_prompt,
                                  std::string_view seed, std::string *dest);
-   void fatal_error_exit(int code, std::string_view s1="", std::string_view s2="");
+   void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
    void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
    selector_kind do_selector_popup(matcher_class &matcher);
@@ -2711,8 +2711,8 @@ public:
 private:
 
    error_flag_type save_error_flag;
-   std::string save_error_message1;
-   std::string save_error_message2;
+   char save_error_message1[MAX_ERR_LENGTH];
+   char save_error_message2[MAX_ERR_LENGTH];
    uint32_t save_collision_person1;
    uint32_t save_collision_person2;
 };
@@ -4905,8 +4905,8 @@ enum split_command_kind {
 /* VARIABLES */
 
 
-extern SDLIB_API std::string error_message1;                        /* in SDTOP */
-extern SDLIB_API std::string error_message2;                        /* in SDTOP */
+extern SDLIB_API char error_message1[MAX_ERR_LENGTH];               /* in SDTOP */
+extern SDLIB_API char error_message2[MAX_ERR_LENGTH];               /* in SDTOP */
 extern SDLIB_API bool enforce_overcast_warning;                     /* in SDTOP */
 extern SDLIB_API uint32_t collision_person1;                        /* in SDTOP */
 extern SDLIB_API uint32_t collision_person2;                        /* in SDTOP */

@@ -127,7 +127,7 @@ bool rewrite_with_new_style_filename = false;   // User gave "change to new file
 
 int random_number;
 int resolve_test_count;
-const char *database_filename = DATABASE_FILENAME;
+const char *database_filename = (const char *) DATABASE_FILENAME;
 const char *new_outfile_string = (char *) 0;
 std::string abridge_filename;
 

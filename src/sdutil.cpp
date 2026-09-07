@@ -2632,10 +2632,14 @@ void ui_utils::do_change_outfile(bool signal)
                               "Enter new file name (or '+' to base it on today's date):",
                               outfile_string, &newfile_string) == POPUP_ACCEPT_WITH_STRING && !newfile_string.empty()) {
 
-      std::string final_message;
+      char confirm_message[MAX_FILENAME_LENGTH+25];
+      const char *final_message;
 
       if (install_outfile_string(newfile_string)) {
-         final_message = to_string("Output file changed to \"", outfile_string, "\"");
+         strncpy(confirm_message, "Output file changed to \"", 25);
+         strncat(confirm_message, outfile_string.c_str(), MAX_FILENAME_LENGTH);
+         strncat(confirm_message, "\"", 2);
+         final_message = confirm_message;
       }
       else {
          final_message = "No write access to that file, no action taken.";

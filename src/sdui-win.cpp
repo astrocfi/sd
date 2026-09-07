@@ -81,8 +81,8 @@ static int window_size_args[4] = {780, 560, 10, 20};
    Windows command user segment. */
 #define SPECIAL_KEY_OFFSET (CM_REINIT-128+1)
 
-std::string szMainWindowName = "Sd main window class";
-std::string szTranscriptWindowName = "Sd transcript window class";
+std::string MainWindowName = "Sd main window class";
+std::string TranscriptWindowName = "Sd transcript window class";
 
 LRESULT CALLBACK MainWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK TranscriptAreaWndProc(HWND, UINT, WPARAM, LPARAM);
@@ -137,11 +137,11 @@ struct DisplayType {
 #define ui_undefined -999
 
 
-std::string szOutFilename;
-std::string szDatabaseFilename;
-std::string szResolveWndTitle;
+std::string OutFilename;
+std::string DatabaseFilename;
+static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
 static int GLOBStatusBarLength;
-static std::string szGLOBFirstPane;
+static std::string GLOBFirstPane;
 static HPALETTE hPalette;   // The palette that the system makes for us.
 static LPBITMAPINFO lpBi;   // Address of the DIB (bitmap file) mapped in memory.
 static LPTSTR lpBits;       // Address of the pixel data in same.
@@ -208,7 +208,7 @@ static RECT CallsClientRect;
 static RECT TranscriptClientRect;
 
 // This is the last title sent by the main program.  We add stuff to it.
-static std::string szMainTitle;
+static std::string MainTitle;
 
 
 
@@ -218,12 +218,13 @@ static void uims_bell()
 }
 
 
-static void UpdateStatusBar(std::string_view szFirstPane)
+// This used to take a Cstring, that is, a const char *, as its argument.
+static void UpdateStatusBar(std::string_view FirstPane)
 {
    int StatusBarDimensions[7];
 
-   if (!szFirstPane.empty())
-      szGLOBFirstPane = szFirstPane;
+   if (!FirstPane.empty())
+      GLOBFirstPane = FirstPane;
 
    StatusBarDimensions[0] = (50*GLOBStatusBarLength)>>7;
    StatusBarDimensions[1] = (63*GLOBStatusBarLength)>>7;
@@ -262,7 +263,7 @@ static void UpdateStatusBar(std::string_view szFirstPane)
       SendMessage(hwndStatusBar, SB_SETPARTS, 1, (LPARAM) StatusBarDimensions);
    }
 
-   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) szGLOBFirstPane.c_str());
+   SendMessage(hwndStatusBar, SB_SETTEXT, 0, (LPARAM) GLOBFirstPane.c_str());
    SendMessage(hwndStatusBar, SB_SIMPLE, 0, 0);
    UpdateWindow(hwndStatusBar);
 }
@@ -1093,10 +1094,10 @@ static void Transcript_OnScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 // Process get-text dialog box messages.
 
 static popup_return PopupStatus;
-std::string szPrompt1;
-std::string szPrompt2;
-std::string szSeed;
-char szTextEntryResult[MAX_TEXT_LINE_LENGTH];
+std::string Prompt1;
+std::string Prompt2;
+std::string strSeed;
+char szTextEntryResult[MAX_TEXT_LINE_LENGTH];   // Sorry.
 LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam)
 {
    int Len;
@@ -1105,9 +1106,9 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
    case WM_INITDIALOG:
       /* If we did this, it would set the actual window title
          SetWindowText(hDlg, "FOOBAR!"); */
-      SetDlgItemText(hDlg, IDC_FILE_TEXT1, szPrompt1.c_str());
-      SetDlgItemText(hDlg, IDC_FILE_TEXT2, szPrompt2.c_str());
-      SendDlgItemMessage(hDlg, IDC_FILE_EDIT, WM_SETTEXT, 0, (LPARAM) szSeed.c_str());
+      SetDlgItemText(hDlg, IDC_FILE_TEXT1, Prompt1.c_str());
+      SetDlgItemText(hDlg, IDC_FILE_TEXT2, Prompt2.c_str());
+      SendDlgItemMessage(hDlg, IDC_FILE_EDIT, WM_SETTEXT, 0, (LPARAM) strSeed.c_str());
       return TRUE;
    case WM_COMMAND:
       switch (LOWORD(wParam)) {
@@ -1148,20 +1149,20 @@ popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view
    // edit box will clue the user.  But we show other prompts, even if they have asterisks.
 
    if (!prompt1.empty() && prompt1[0] == '*')
-      szPrompt1 = prompt1.substr(1);
+      Prompt1 = prompt1.substr(1);
    else
-      szPrompt1 = prompt1;
+      Prompt1 = prompt1;
 
    if (!prompt2.empty() && prompt2[0] == '*')
-      szPrompt2 = prompt2.substr(1);
+      Prompt2 = prompt2.substr(1);
    else
-      szPrompt2 = prompt2;
+      Prompt2 = prompt2;
 
-   szSeed = seed;
+   strSeed = seed;
    DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_TEXT_ENTRY_DIALOG),
              hwndMain, (DLGPROC) TEXT_ENTRY_DIALOG_WndProc);
    if (PopupStatus == POPUP_ACCEPT_WITH_STRING)
-      *dest = szTextEntryResult;
+      *dest = std::string_view(szTextEntryResult);
    else dest->clear();
    return PopupStatus;
 }
@@ -1263,7 +1264,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    hwndTranscriptArea = CreateWindow(
-      szTranscriptWindowName.c_str(), NULL,
+      TranscriptWindowName.c_str(), NULL,
       WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS | WS_VSCROLL,
       0, 0, 0, 0,
       hwnd, (HMENU) TRANSCRIPT_AREA_INDEX,
@@ -1837,7 +1838,7 @@ static void setup_level_menu(HWND hDlg)
 static void SetTitle()
 {
    UpdateStatusBar("");
-   SetWindowText(hwndMain, (LPSTR) szMainTitle.c_str());
+   SetWindowText(hwndMain, (LPSTR) MainTitle.c_str());
 }
 
 
@@ -1854,7 +1855,7 @@ void iofull::set_pick_string(std::string_view string)
 
 void iofull::set_window_title(char s[])
 {
-   szMainTitle = to_string("Sd ", s);
+   MainTitle = to_string("Sd ", s);
    SetTitle();
 }
 
@@ -1875,7 +1876,7 @@ static Cstring session_error_msg;
 static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
    int i;
-   char window_text[MAX_TEXT_LINE_LENGTH];
+   char szwindow_text[MAX_TEXT_LINE_LENGTH];
 
    switch (id) {
    case IDC_START_LIST:
@@ -1895,9 +1896,9 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // User clicked on some call list option.  Enable and seed the file name.
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
       GetWindowText(GetDlgItem(hwnd, IDC_ABRIDGE_NAME),
-                    window_text, MAX_TEXT_LINE_LENGTH);
-      szDatabaseFilename = window_text;
-      if (szDatabaseFilename.empty())
+                    szwindow_text, MAX_TEXT_LINE_LENGTH);
+      DatabaseFilename = std::string_view(szwindow_text);
+      if (DatabaseFilename.empty())
          SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, "abridge.txt");
       return;
    case IDC_NORMAL:
@@ -1908,9 +1909,9 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // User clicked on a special database file.  Enable and seed the file name.
       EnableWindow(GetDlgItem(hwnd, IDC_DATABASE_NAME), TRUE);
       GetWindowText(GetDlgItem(hwnd, IDC_DATABASE_NAME),
-                    window_text, MAX_TEXT_LINE_LENGTH);
-      szDatabaseFilename = window_text;
-      if (szDatabaseFilename.empty())
+                    szwindow_text, MAX_TEXT_LINE_LENGTH);
+      DatabaseFilename = std::string_view(szwindow_text);
+      if (DatabaseFilename.empty())
          SetDlgItemText(hwnd, IDC_DATABASE_NAME, "database.txt");
       return;
    case IDC_DEFAULT:
@@ -2038,19 +2039,20 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // It overrides anything from the command line.
 
       GetWindowText(GetDlgItem(hwnd, IDC_OUTPUT_NAME),
-                    window_text, MAX_TEXT_LINE_LENGTH);
-      szOutFilename = window_text;
+                    szwindow_text, MAX_TEXT_LINE_LENGTH);
+      OutFilename = std::string_view(szwindow_text);
 
-      if (!szOutFilename.empty())
-         new_outfile_string = szOutFilename;
+      if (!OutFilename.empty())
+         new_outfile_string = OutFilename.c_str();
 
       // Handle user-specified database file.
 
       if (IsDlgButtonChecked(hwnd, IDC_USERDEFINED)) {
+         char szfootemp[MAX_TEXT_LINE_LENGTH];
+
          GetWindowText(GetDlgItem(hwnd, IDC_DATABASE_NAME),
-                       window_text, MAX_TEXT_LINE_LENGTH);
-         szDatabaseFilename = window_text;
-         database_filename = szDatabaseFilename;
+                       szfootemp, MAX_TEXT_LINE_LENGTH);
+         database_filename = szfootemp;
       }
 
       ui_options.sequence_num_override =
@@ -2277,7 +2279,7 @@ bool iofull::init_step(init_callback_state s, int n)
       wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
       wndclass.hbrBackground  = (HBRUSH) (COLOR_BTNFACE+1);
       wndclass.lpszMenuName = MAKEINTRESOURCE(IDR_MENU1);
-      wndclass.lpszClassName = szMainWindowName;
+      wndclass.lpszClassName = MainWindowName.c_str();
       wndclass.hIconSm = wndclass.hIcon;
       RegisterClassEx(&wndclass);
 
@@ -2296,14 +2298,14 @@ bool iofull::init_step(init_callback_state s, int n)
                        BLACK_BRUSH :
                        (ui_options.no_intensify ? LTGRAY_BRUSH : WHITE_BRUSH));
       wndclass.lpszMenuName = NULL;
-      wndclass.lpszClassName = szTranscriptWindowName;
+      wndclass.lpszClassName = TranscriptWindowName.c_str();
       wndclass.hIconSm = wndclass.hIcon;
       RegisterClassEx(&wndclass);
 
       InitCommonControls();
 
       hwndMain = CreateWindow(
-         szMainWindowName, "Sd",
+         MainWindowName.c_str(), "Sd",
          WS_OVERLAPPEDWINDOW,
          window_size_args[2],
          window_size_args[3],
@@ -2363,7 +2365,7 @@ bool iofull::init_step(init_callback_state s, int n)
 
    case final_level_query:
       calling_level = l_xyz;   // User really doesn't want to tell us the level.
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      outfile_string += filename_strings[calling_level];
       break;
 
    case init_database1:
@@ -3104,16 +3106,15 @@ bool iofull::choose_font()
 
 bool iofull::print_this()
 {
-   char full_outfile_name[MAX_FILENAME_LENGTH];
-   strncpy(full_outfile_name, outfile_prefix, MAX_FILENAME_LENGTH);
-   strncat(full_outfile_name, outfile_string, MAX_FILENAME_LENGTH);
-   GLOBprinter->print_this(full_outfile_name, szMainTitle.c_str(), false);
+   std::string full_outfile_name = outfile_prefix;
+   full_outfile_name += outfile_string;
+   GLOBprinter->print_this(full_outfile_name.c_str(), MainTitle.c_str(), false);
    return true;
 }
 
 bool iofull::print_any()
 {
-   GLOBprinter->print_any(szMainTitle, false);
+   GLOBprinter->print_any(MainTitle.c_str(), false);
    return true;
 }
 
