@@ -7386,7 +7386,7 @@ void really_inner_move(
    uint32_t tbonetest = 0;
    if (attr::slimit(ss) >= 0) {
       tbonetest = ss->or_all_people();
-      if (!(tbonetest & 011) && the_schema != schema_by_array) {
+      if (!(tbonetest & 011) && the_schema != schema_by_array && the_schema != schema_matrix) {
          result->kind = nothing;
          result->rotation = 0;
          result->eighth_rotation = 0;

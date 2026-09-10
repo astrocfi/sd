@@ -695,15 +695,15 @@ enum error_flag_type {
 };
 
 
-void fail(const char s[]) THROW_DECL NORETURN2;
+void fail(const char *s) THROW_DECL NORETURN2;
 
-void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
+void fail_no_retry(const char *s) THROW_DECL NORETURN2;
 
-extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
+extern void fail2(const char *s1, const char *s2) THROW_DECL NORETURN2;
 
-extern void failp(uint32_t id1, const char s[]) THROW_DECL NORETURN2;
+extern void failp(uint32_t id1, const char *s) THROW_DECL NORETURN2;
 
-void specialfail(const char s[]) THROW_DECL NORETURN2;
+void specialfail(const char *s) THROW_DECL NORETURN2;
 
 extern void warn(warning_index w);
 

@@ -3791,7 +3791,7 @@ extern void crash_print(const char *filename, int linenum, int newtb, setup *ss)
 
 
 
-extern void fail(const char s[]) THROW_DECL
+extern void fail(const char *s) THROW_DECL
 {
    strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -3800,7 +3800,7 @@ extern void fail(const char s[]) THROW_DECL
 }
 
 
-extern void fail_no_retry(const char s[]) THROW_DECL
+extern void fail_no_retry(const char *s) THROW_DECL
 {
    strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -3809,7 +3809,7 @@ extern void fail_no_retry(const char s[]) THROW_DECL
 }
 
 
-extern void fail2(const char s1[], const char s2[]) THROW_DECL
+extern void fail2(const char *s1, const char *s2) THROW_DECL
 {
    strncpy(error_message1, s1, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -3819,7 +3819,7 @@ extern void fail2(const char s1[], const char s2[]) THROW_DECL
 }
 
 
-extern void failp(uint32_t id1, const char s[]) THROW_DECL
+extern void failp(uint32_t id1, const char *s) THROW_DECL
 {
    collision_person1 = id1;
    strncpy(error_message1, s, MAX_ERR_LENGTH);
@@ -3828,7 +3828,7 @@ extern void failp(uint32_t id1, const char s[]) THROW_DECL
 }
 
 
-extern void specialfail(const char s[]) THROW_DECL
+extern void specialfail(const char *s) THROW_DECL
 {
    strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';

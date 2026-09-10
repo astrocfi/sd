@@ -1228,7 +1228,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       hwnd, (HMENU) TEXT_INPUT_AREA_INDEX,
       lpCreateStruct->hInstance, NULL);
 
-   OldTextInputAreaWndProc = (WNDPROC) SetWindowLong(hwndTextInputArea, GWL_WNDPROC, (LONG) TextInputAreaWndProc);
+   OldTextInputAreaWndProc = (WNDPROC) SetWindowLongPtr(hwndTextInputArea, GWLP_WNDPROC, (LONG_PTR) TextInputAreaWndProc);
 
    hwndCallMenu = CreateWindow("listbox", NULL,
       WS_CHILD|LBS_NOTIFY|WS_VSCROLL|WS_BORDER,
@@ -1237,7 +1237,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndCallMenu, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   OldCallMenuWndProc = (WNDPROC) SetWindowLong(hwndCallMenu, GWL_WNDPROC, (LONG) CallMenuWndProc);
+   OldCallMenuWndProc = (WNDPROC) SetWindowLongPtr(hwndCallMenu, GWLP_WNDPROC, (LONG_PTR) CallMenuWndProc);
 
    hwndAcceptButton = CreateWindow("button", "Accept",
       WS_CHILD|BS_DEFPUSHBUTTON,
@@ -1246,7 +1246,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndAcceptButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   OldAcceptButtonWndProc = (WNDPROC) SetWindowLong(hwndAcceptButton, GWL_WNDPROC, (LONG) AcceptButtonWndProc);
+   OldAcceptButtonWndProc = (WNDPROC) SetWindowLongPtr(hwndAcceptButton, GWLP_WNDPROC, (LONG_PTR) AcceptButtonWndProc);
 
    hwndCancelButton = CreateWindow("button", "Cancel",
       WS_CHILD,
@@ -1255,7 +1255,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndCancelButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   OldCancelButtonWndProc = (WNDPROC) SetWindowLong(hwndCancelButton, GWL_WNDPROC, (LONG) CancelButtonWndProc);
+   OldCancelButtonWndProc = (WNDPROC) SetWindowLongPtr(hwndCancelButton, GWLP_WNDPROC, (LONG_PTR) CancelButtonWndProc);
 
    hwndProgress = CreateWindow(PROGRESS_CLASS, NULL,
       WS_CHILD|WS_CLIPSIBLINGS,

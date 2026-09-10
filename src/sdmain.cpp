@@ -1022,9 +1022,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    testing_fidelity = false;
    header_comment[0] = 0;
    abridge_filename.clear();
-   verify_options.who.who[0] = selector_uninitialized;
-   verify_options.who.who[1] = selector_uninitialized;
-   verify_options.who.who[2] = selector_uninitialized;
+   verify_options.who.initialize();
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;
    history_allocation = 15;

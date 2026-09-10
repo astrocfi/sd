@@ -4783,9 +4783,7 @@ static uint32_t do_actual_array_call(
 
    // Check that "linedefinition" has been set up if we will need it.
 
-   goodies = (callarray *) 0;
-
-   if ((newtb & 010) || four_way_startsetup) {
+   if (((newtb & 010) != 0) || four_way_startsetup) {
       assumption_thing t;
 
       if (!linedefinition) {
@@ -4833,8 +4831,9 @@ static uint32_t do_actual_array_call(
       if (t.assumption != cr_none)
          check_restriction(ss, t, false,
                            linedefinition->callarray_flags & CAF__RESTR_MASK);
-      goodies = linedefinition;
    }
+
+   goodies = linedefinition;
 
    // Check that "coldefinition" has been set up if we will need it.
 

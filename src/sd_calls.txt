@@ -7484,7 +7484,7 @@ call "face @h" xyz tag face_dir
    matrix only_out lateral_mirror_if_right_of_center [AL16W 16 AL16W 16]
 
    // Otherwise, use the old code.
-            dont_use_in_nice_resolve one_person_call
+            dont_use_in_nice_resolve one_person_call can_go_to_empty_setup
    setup 2x2 2x2
       preds "Illegal direction."
          if rightp   [CR0E CR1E CR2E CR3E]

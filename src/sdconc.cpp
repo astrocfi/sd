@@ -4502,6 +4502,16 @@ extern void concentric_move(
       }
    }
 
+   // Watch for outsides in a non-phantom 2x2, but centers are in a 1x4 occupied only
+   // by phantoms (but not a "nothing".)
+   if (outer_inners[0].kind == s2x2 &&
+       outer_inners[1].kind == s1x4 &&
+       outer_inners[1].or_all_people() == 0 &&
+       ((outer_inners[1].rotation+1) & 2) != 0) {
+      // Prefer a 1/4 tag rather than a bone.
+      outer_inners[1].rotation = 0;
+   }
+
    // The time has come to compute the elongation of the outsides in the final setup.
    // This gets complicated if the outsides' final setup is a 2x2.  Among the
    // procedures we could use are:
