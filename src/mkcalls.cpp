@@ -2219,7 +2219,7 @@ static void write_defmod_flags(int is_seq)
                uint64_t bit = 1ULL << i;
                heritbit |= bit;
             }
-            else if ((i = search(yoyotabforce)) >= 0) 
+            else if ((i = search(yoyotabforce)) >= 0)
                heritbit |= INHERITFLAG_YOYOETCBIT * (i+1);
             else if ((i = search(mxntabforce)) >= 0)
                heritbit |= INHERITFLAG_MXNBIT * (i+1);

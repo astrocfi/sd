@@ -7,7 +7,8 @@ CC = g++ -static-libgcc -static-libstdc++
 
 # This gives any "-D" switches that we always need to send to the compiler.
 DEFS = -Wall -Wno-switch -Wno-char-subscripts -Wno-narrowing \
-       -Wno-stringop-truncation -Wno-stringop-overflow -Wno-format-overflow
+       -Wno-stringop-truncation -Wno-stringop-overflow -Wno-format-overflow \
+       -Wno-deprecated-enum-enum-conversion
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you
@@ -24,7 +25,7 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 # These are the library flags that we must use for the final bind of
 # "sdtty".
 SDTTY_LIBS = -L. -LC:\MinGW64\mingw32 -lsdlib
-SD_LIBS = C:\MinGW64\i686-w64-mingw32\lib\libcomctl32.a -L. -LC:\MinGW64\mingw32 -lsdlib
+SD_LIBS = -L. -lsdlib -lcomctl32
 
 SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
@@ -32,7 +33,7 @@ SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              mapcachefile.o sdpick.o sdsi.o sdmatch.o common.o
 
 HFILES = sdui.h sd.h database.h paths.h mapcachefile.h sort.h \
-             deploy.h resource.h sdprint.h sdmatch.h sdchars.h
+             resource.h sdprint.h sdmatch.h sdchars.h
 
 ICONS = sd.ico sdbg.ico sdbw.ico sdby.ico sdcpl.ico sdgy.ico sdry.ico sdtty.ico
 
@@ -60,9 +61,6 @@ sdlib.dll: $(SDLIB_OBJS)
 sdres.o: sd.rc
 	windres sd.rc sdres.o
 
-# deployres.o: deploy.rc
-# 	windres deploy.rc deployres.o
-
 sdttyres.o: sdtty.rc
 	windres sdtty.rc sdttyres.o
 
@@ -71,19 +69,15 @@ mkcalls.exe: $(MKCALLS_OBJS)
 	strip mkcalls.exe
 
 sdtty.exe: libsdlib.a sdlib.dll $(SDTTY_OBJS) sdttyres.o
-	$(CC) -mconsole -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS)
+	$(CC) -mconsole -m64 -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS)
 	strip sdtty.exe
 
 sd.exe: libsdlib.a sdlib.dll $(SD_OBJS) sdres.o
-	$(CC) -mwindows -o $@ $(SD_OBJS) sdres.o $(SD_LIBS)
+	$(CC) -mwindows -m64 -o $@ $(SD_OBJS) sdres.o $(SD_LIBS)
 	strip sd.exe
 
-# deploy.exe:  deploy.o deployres.o
-# 	$(CC) -mwindows -o $@ deploy.o deployres.o
-# 	strip deploy.exe
-
 sd_calls.dat: sd_calls.txt mkcalls.exe
-	mkcalls
+	./mkcalls.exe
 
 .SUFFIXES: .c .cpp
 
@@ -102,9 +96,6 @@ mkcalls.o: mkcalls.cpp
 
 common.o: common.cpp
 	$(CC) $(CFLAGS) -c $<
-
-# deploy.o: deploy.cpp
-# 	$(CC) $(CFLAGS) -c $<
 
 sdui-tty.o: sdui-tty.cpp
 	$(CC) $(CFLAGS) -c $<
@@ -138,15 +129,15 @@ sdprint.o: sdprint.h
 $(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h sdchars.h sdmatch.h database.h paths.h
 
 clean::
-	-del *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
+	rm *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
                libsdlib.a sdlib.dll ..\sddoc\sd_source.zip
 
 cleanup::
-	-del *.o libsdlib.a
+	rm *.o libsdlib.a
 
 savesource::
-	-del ..\sddoc\sd_source.zip
+	rm ..\sddoc\sd_source.zip
 	zip ..\sddoc\sd_source $(SDLIB_OBJS:.o=.cpp) $(SDTTY_OBJS:.o=.cpp) \
-               $(SD_OBJS:.o=.cpp) $(MKCALLS_OBJS:.o=.cpp) deploy.cpp $(HFILES) \
-               sd.rc sdtty.rc deploy.rc sdui-ttu.cpp $(ICONS) $(SHORTCUTS) \
+               $(SD_OBJS:.o=.cpp) $(MKCALLS_OBJS:.o=.cpp) $(HFILES) \
+               sd.rc sdtty.rc sdui-ttu.cpp $(ICONS) $(SHORTCUTS) \
                sd.bmp $(MAKEFILES) sd_calls.txt db_doc.txt COPYING.txt

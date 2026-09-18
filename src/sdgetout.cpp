@@ -1207,7 +1207,7 @@ static bool inner_search(command_kind goal,
           ui_options.resolve_test_attempts_per_print != 0 &&
           (++resolve_test_count >= ui_options.resolve_test_attempts_per_print)) {
       */
-      if (ui_options.resolve_test_minutes > 0 /* && (resolve_test_count++ & 0xF) == 0 */ && 
+      if (ui_options.resolve_test_minutes > 0 /* && (resolve_test_count++ & 0xF) == 0 */ &&
           ui_options.resolve_test_attempts_per_print != 0) {
          char tempstuff[200];
 

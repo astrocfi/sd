@@ -1025,16 +1025,16 @@ extern bool divide_for_magic(
    saved_warnings = configuration::save_warnings();
 
    // If doing a 3x1/1x3 (but NOT a 3x3) squash out extras spots in subsetups.
-   if ((heritflags_to_use == INHERITFLAGMXNK_1X3) || 
-       (heritflags_to_use == INHERITFLAGMXNK_3X1) || 
-       (heritflags_to_use == INHERITFLAGMXNK_1X2) || 
+   if ((heritflags_to_use == INHERITFLAGMXNK_1X3) ||
+       (heritflags_to_use == INHERITFLAGMXNK_3X1) ||
+       (heritflags_to_use == INHERITFLAGMXNK_1X2) ||
        (heritflags_to_use == INHERITFLAGMXNK_2X1))
       ss->cmd.cmd_misc2_flags |= CMD_MISC2__LOCAL_RECENTER;
 
    impose_assumption_and_move(ss, result);
    result->result_flags.misc |= RESULTFLAG__REQUEST_MXN_COMPRESSION;
 
-   result->result_flags.res_heritflags_to_save_from_mxn_expansion = 
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion =
       heritflags_to_use & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK);
 
    // Shut off "each 2x3" types of warnings -- they will arise spuriously
@@ -3331,7 +3331,7 @@ static void make_matrix_chains(
 
 
 // Return value is one of:
-//    cost          the (nonnegative) cost of the unique best pairing of jaywalkers  
+//    cost          the (nonnegative) cost of the unique best pairing of jaywalkers
 //    -person-1     the indicated person could not find anyone with whom to jaywalk
 //    -0x1000       ambiguous: two or more equally good "best" solutions were found
 static int jaywalk_recurse(
@@ -6509,7 +6509,7 @@ static void do_sequential_call(
          uint64_t mxnbits = H & INHERITFLAG_MXNMASK;
          bool mxnbits_4 = (mxnbits == INHERITFLAGMXNK_4X0 || mxnbits == INHERITFLAGMXNK_0X4);
 
-         result->cmd.cmd_final_flags.herit = 
+         result->cmd.cmd_final_flags.herit =
             (otherbits |
             (mxnbits_4 ?
              (INHERITFLAGNXNK_4X4|INHERITFLAG_16_MATRIX) :
@@ -9113,7 +9113,7 @@ void move(
    // release it now.
    if (metaconcept_is_fractional &&
        ss->cmd.restrained_concept &&
-       ((ss->cmd.cmd_misc3_flags & (CMD_MISC3__RESTRAIN_CRAZINESS|CMD_MISC3__SUPERCALL)) == 
+       ((ss->cmd.cmd_misc3_flags & (CMD_MISC3__RESTRAIN_CRAZINESS|CMD_MISC3__SUPERCALL)) ==
         (CMD_MISC3__RESTRAIN_CRAZINESS|CMD_MISC3__SUPERCALL)) &&
        (ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) == 0) {
       ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
@@ -9184,7 +9184,7 @@ void move(
          p3.no_check_call_level = true;
 
          // Some parse blocks carry their options with them, and need those options switched to shallow binding.
-         if (concept_table[p3.concept_ptr->kind].concept_prop & 
+         if (concept_table[p3.concept_ptr->kind].concept_prop &
              (CONCPROP__USE_NUMBER|CONCPROP__USE_TWO_NUMBERS|CONCPROP__USE_FOUR_NUMBERS|CONCPROP__USE_SELECTOR))
             current_options = p3.options;
          else

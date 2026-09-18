@@ -1,1 +1,1 @@
-mingw32-make -f makefile.mingw64 %*
+\msys64\usr\bin\make.exe  -f makefile.mingw64 %*

@@ -5202,7 +5202,7 @@ static void do_concept_sequential(
 }
 
 
-void do_concept_special_sequential(
+static void do_concept_special_sequential(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL;

@@ -1317,7 +1317,7 @@ static void multiple_move_innards(
    }
 
    if ((z[0].kind == s1x4 || z[0].kind == s1x2) && ((z[0].rotation ^ vert) & 1) == 0 &&
-       (map_kind == MPKIND__OFFS_R_HALF || map_kind == MPKIND__OFFS_L_HALF) && 
+       (map_kind == MPKIND__OFFS_R_HALF || map_kind == MPKIND__OFFS_L_HALF) &&
        !(sscmd->cmd_misc_flags & (CMD_MISC__DISTORTED|CMD_MISC__OFFSET_Z|CMD_MISC__SAID_PG_OFFSET))) {
 
       if (arity == 2) {
@@ -1593,6 +1593,8 @@ extern void divided_setup_move(
    int i, j;
    int vflags[16];
    setup x[16];
+
+   ::memset(vflags, 0, sizeof(int)*16);
 
    const map::map_thing *maps = map::get_map_from_code(map_encoding);
 

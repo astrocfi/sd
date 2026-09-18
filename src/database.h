@@ -687,11 +687,11 @@ enum setup_kind {
    s_bighyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
-   sx1x6,   
+   sx1x6,
    s1x4_1x6,
    s1x4_1x8,
    s1x6_1x8,
-   sx1x8,   
+   sx1x8,
    sx1x16,    // As above.
    shypergal, // Ditto.
    shyper4x8a,// Ditto.

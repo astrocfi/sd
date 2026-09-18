@@ -1312,7 +1312,7 @@ sdbltrngl   |  0  |_____|  3  |_____|     (1 way symmetry)
 
                       _____       _____
                      |     |     |     |
-sdbltrnglu           |  0  |     |  1  |   
+sdbltrnglu           |  0  |     |  1  |
                    __|__ __|_____|_____|__
                   |     |     |     |     |   (1 way symmetry)
                   |  2  |  3  |  4  |  5  |
@@ -2782,7 +2782,7 @@ who are far apart (slide together and trade.)
 Here is "@6 shove off":
    partnermatrix use_selector stop_and_warn_on_tbone
       [ZGM20N 16 ZGM20N 16 ZFM12N 16 ZFM12N 16 AGL12S 16 AGL12S 16 CFR20S 16 CFR20S 16
-       <- boy -> <-girl -> <- boy -> <-girl -> <- boy -> <-girl -> <- boy -> <-girl -> 
+       <- boy -> <-girl -> <- boy -> <-girl -> <- boy -> <-girl -> <- boy -> <-girl ->
        <-      beau     -> <-      belle    -> <-      beau     -> <-      belle    ->
        <-    non-designee (not selected)    -> <-        designee (selected)        ->
 
