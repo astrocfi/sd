@@ -202,10 +202,8 @@ int written_history_nopic;
 //
 // BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
 dance_level level_threshholds_for_pick[] = {
-   l_xyz,
    l_mainstream,
    l_plus,
-   l_pqr,
    l_a1,
    l_a1,      // If a2 is given, an a1 call is OK.
    l_c1,
@@ -221,10 +219,8 @@ dance_level level_threshholds_for_pick[] = {
 
 // BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
 Cstring getout_strings[] = {
-   "Mainstream 2026",
    "Mainstream",
    "Plus",
-   "Plus 2026",
    "A1",
    "A2",
    "C1",
@@ -2579,9 +2575,6 @@ restriction_test_result verify_restriction(
       break;
    case cr_levelplus:
       if (calling_level < l_plus) return restriction_bad_level;
-      goto good;
-   case cr_levelpqr:
-      if (calling_level < l_pqr) return restriction_bad_level;
       goto good;
    case cr_levela1:
       if (calling_level < l_a1) return restriction_bad_level;

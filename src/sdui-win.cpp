@@ -1822,7 +1822,7 @@ static void setup_level_menu(HWND hDlg)
 
    SendDlgItemMessage(hDlg, IDC_START_LIST, LB_RESETCONTENT, 0, 0L);
 
-   for (lev=(int)l_xyz ; ; lev++) {
+   for (lev=(int)l_mainstream ; ; lev++) {
       Cstring this_string = getout_strings[lev];
       if (!this_string[0]) break;
       SendDlgItemMessage(hDlg, IDC_START_LIST, LB_ADDSTRING, 0, (LPARAM) this_string);
@@ -2357,7 +2357,7 @@ bool iofull::init_step(init_callback_state s, int n)
       break;
 
    case final_level_query:
-      calling_level = l_xyz;   // User really doesn't want to tell us the level.
+      calling_level = l_mainstream;   // User really doesn't want to tell us the level.
       outfile_string += filename_strings[calling_level];
       break;
 

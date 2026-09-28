@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -107,10 +107,10 @@ extern bool parse_level(Cstring s, Cstring *break_ptr /*= 0*/)
 
    switch (s[0]) {
       case 'm': case 'M':
-         calling_level = (s[len-1] == '6') ? l_xyz : l_mainstream;
+         calling_level = l_mainstream;
          return true;
       case 'p': case 'P': case '+':
-         calling_level = (s[len-1] == '6') ? l_pqr : l_plus;
+         calling_level = l_plus;
          return true;
       case 'a': case 'A':
          if (s[1] == '1' && len == 2) calling_level = l_a1;
@@ -980,7 +980,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          zz = new calldef_block;
          zz->next = 0;
          zz->modifier_seth = 0ULL;
-         zz->modifier_level = l_xyz;
+         zz->modifier_level = l_mainstream;
          root_to_use->stuff.arr.def_list = zz;
 
          read_array_def_blocks(zz);    // The first group.
@@ -1122,7 +1122,7 @@ extern bool install_outfile_string(std::string_view newstring)
          if (letter == 'z'+1) letter = 'A';
          else if (letter == 'Z'+1) return false;
          junk2 = junk;
-         junk2 += letter;     /* Try appending a letter. */
+         junk2 += letter;  // Try appending a letter.
          letter++;
       }
 

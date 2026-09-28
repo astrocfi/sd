@@ -262,7 +262,7 @@ static const resolve_descriptor resolve_table[] = {
 // in a resolve_tester.  We define these short names to keep the table entries
 // from being unwieldy.
 enum level_abbreviation {
-   MS = l_xyz,
+   MS = l_mainstream,
    XB = cross_by_level,
    DX = dixie_grand_level,
    EX = extend_34_level
@@ -1061,9 +1061,9 @@ static bool inner_search(command_kind goal,
    history_save = history_insertion_point;
 
    // Since these variables are expected to be preserved
-   // across the throw, they must be volatile.
-   volatile int little_count = 0;
-   volatile int attempt_count = 0;
+   // across the throw, they must be volatile.  Well, static.
+   static int little_count = 0;
+   static int attempt_count = 0;
 
    uint64_t air_start_time = clock();
    uint64_t big_resolve_time = 0;

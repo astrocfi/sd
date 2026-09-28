@@ -110,7 +110,7 @@ bool creating_new_session = false;
 int sequence_number = -1;
 int starting_sequence_number;
 
-// Under DJGPP, the default is always old-style filenames, because
+// Under DJGPP, the default was always old-style filenames, because
 // the underlying system (DOS or Windows 3.1) presumably can only
 // handle "8.3" failenames.  Even under Windows NT, the emulation
 // seems to handle only 8.3 filenames.  Under Windows 2000, it
@@ -118,18 +118,18 @@ int starting_sequence_number;
 // respects (compilation with Cygwin crashed in ntvdm.)  The bug
 // has been reported to Microsoft, and, of course, was never fixed.
 
+// This sets the default output filename style.
+// It used to be "old", changed to "new" at 39.85.
 #if defined(DJGPP)
 const Cstring *filename_strings = old_filename_strings;
 #else
-const Cstring *filename_strings = old_filename_strings; // ******** For now
+const Cstring *filename_strings = new_filename_strings;
 #endif
 
 // BEWARE!!  These lists are keyed to the definition of "dance_level" in database.h
 const Cstring old_filename_strings[] = {
-   ".MS_2026",
    ".MS",
    ".Plus",
-   ".Plus_2026",
    ".A1",
    ".A2",
    ".C1",
@@ -145,10 +145,8 @@ const Cstring old_filename_strings[] = {
    ""};
 
 const Cstring new_filename_strings[] = {
-   "_MS2026.txt",
    "_MS.txt",
    "_Plus.txt",
-   "_Plus2026.txt",
    "_A1.txt",
    "_A2.txt",
    "_C1.txt",
@@ -3233,6 +3231,7 @@ void ui_utils::run_program(iobase & ggg)
          if (sequence_number >= 0)
             numstuff = to_string(" (", starting_sequence_number, ":", sequence_number, ")");
 
+         // Skip over the underscore or period before the level, as the case may be.
          if (!header_comment.empty())
             title = to_string(&old_filename_strings[calling_level][1], "  ", header_comment, numstuff);
          else

@@ -234,10 +234,8 @@ struct tagtabitem {
 // They are the level strings that can appear in the database.
 // The reason for the crazy names is to make it easy to search for things.
 const char *leveltab[] = {
-   "xyz",
    "mainstream",
    "plus",
-   "pqr",
    "a1",
    "a2",
    "c1",

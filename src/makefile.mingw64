@@ -3,7 +3,7 @@
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
 # target hardware, etc.)
-CC = g++ -static-libgcc -static-libstdc++
+CC = g++ -m64
 
 # This gives any "-D" switches that we always need to send to the compiler.
 DEFS = -Wall -Wno-switch -Wno-char-subscripts -Wno-narrowing \
@@ -22,9 +22,11 @@ CDEBUGFLAGS = -O4
 
 CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
+LDFLAGS = -static -static-libgcc -static-libstdc++ -lpthread
+
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-SDTTY_LIBS = -L. -LC:\MinGW64\mingw32 -lsdlib
+SDTTY_LIBS = -L. -lsdlib
 SD_LIBS = -L. -lsdlib -lcomctl32
 
 SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
@@ -55,7 +57,7 @@ all: sdtty.exe sd.exe mkcalls.exe sd_calls.dat
 libsdlib.a: sdlib.dll $(SDLIB_OBJS)
 
 sdlib.dll: $(SDLIB_OBJS)
-	$(CC) -shared -o sdlib.dll -Wl,--out-implib,libsdlib.a $(SDLIB_OBJS)
+	$(CC) -shared -o sdlib.dll -Wl,--out-implib,libsdlib.a $(SDLIB_OBJS) $(LDFLAGS)
 	strip sdlib.dll
 
 sdres.o: sd.rc
@@ -65,15 +67,15 @@ sdttyres.o: sdtty.rc
 	windres sdtty.rc sdttyres.o
 
 mkcalls.exe: $(MKCALLS_OBJS)
-	$(CC) -mconsole -o $@ $(MKCALLS_OBJS)
+	$(CC) -mconsole -o $@ $(MKCALLS_OBJS) $(SDTTY_LIBS) $(LDFLAGS)
 	strip mkcalls.exe
 
 sdtty.exe: libsdlib.a sdlib.dll $(SDTTY_OBJS) sdttyres.o
-	$(CC) -mconsole -m64 -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS)
+	$(CC) -mconsole -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS) $(LDFLAGS)
 	strip sdtty.exe
 
 sd.exe: libsdlib.a sdlib.dll $(SD_OBJS) sdres.o
-	$(CC) -mwindows -m64 -o $@ $(SD_OBJS) sdres.o $(SD_LIBS)
+	$(CC) -mwindows -o $@ $(SD_OBJS) sdres.o $(SD_LIBS) $(LDFLAGS)
 	strip sd.exe
 
 sd_calls.dat: sd_calls.txt mkcalls.exe

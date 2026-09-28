@@ -505,14 +505,13 @@ enum {
 // BEWARE!!  This list must track the table "leveltab" in mkcalls.cpp .
 // BEWARE!!  This list must track the table "getout_strings" in sdtop.cpp .
 // BEWARE!!  This list must track the table "old_filename_strings" in sdutil.cpp .
+// BEWARE!!  This list must track the table "new_filename_strings" in sdutil.cpp .
 // BEWARE!!  This list must track the table "filename_strings" in sdutil.cpp .
 // BEWARE!!  This list must track the table "level_threshholds_for_pick" in sdtop.cpp .
 
 enum dance_level {
-   l_xyz,    // Publicly called "Mainstream2026".
    l_mainstream,
    l_plus,
-   l_pqr,    // Publicly called "Plus2026".
    l_a1,
    l_a2,
    l_c1,
