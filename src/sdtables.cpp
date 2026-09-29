@@ -3844,8 +3844,8 @@ full_expand::thing touch_init_table1[] = {
    // Some people rear back from 3&1 line to triangles.
    {warn__some_rear_back,  0, &rear_3n1b_stuff, s2x4,       0xFFFFU,     0xA208U, ~0U},
    // Rear back from a right-hand box to a single 8 chain.
-   {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFU,       0x28U, ~0U},
-   {warn__awful_rear_back, 0, &rear_hrbox_stuff, s2x2,        0xFFU,       0x5FU, ~0U},
+   {warn__awful_rear_back, 0x100, &rear_vrbox_stuff, s2x2,  0xFFU,       0x28U, ~0U},
+   {warn__awful_rear_back, 0x100, &rear_hrbox_stuff, s2x2,  0xFFU,       0x5FU, ~0U},
 
    // Centers rear back from appropriate "diamonds" to T-boned pairs facing.
    {warn__some_rear_back,  0, &rear_funnydmd,  s_qtag,    0xFFFFU,     0x78D2U, ~0U},

@@ -4722,6 +4722,8 @@ class full_expand {
       // from the partially occupied 2x4 that would result from everyone doing a
       // 1/2 press back from a right-hand wave.  We don't allow the touch to a wave
       // if the user gave a phantom concept.
+      // Also, the "0x100" bit means this is forbidden if done from a 2x2 box consisting
+      // of miniwaves that are laterally elongated.
       int forbidden_elongation;
       expand::thing *expand_lists;
       setup_kind kind;

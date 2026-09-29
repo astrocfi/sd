@@ -1060,7 +1060,7 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
       if (tptr->kind == kind &&
           tptr->live == livemask &&
           ((tptr->dir ^ directions) & tptr->dirmask) == 0 &&
-          (!(tptr->forbidden_elongation & 32) || touchflags == CFLAG1_STEP_TO_WAVE))
+          (!(tptr->forbidden_elongation & 0x20) || touchflags == CFLAG1_STEP_TO_WAVE))
          return tptr;
    }
 
@@ -1372,7 +1372,7 @@ void setup::touch_or_rear_back(
    // the centers would touch.  Case is a starting DPT with ends 1/4 left.
    // People are supposed to step to right hands, but the centers on a Fan the Top
    // normally step to left hands.  What are the dancers supposed to do?
-   if ((tptr->forbidden_elongation & 64) && (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) &&
+   if ((tptr->forbidden_elongation & 0x40) && (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) &&
        touchflags == CFLAG1_STEP_TO_WAVE)
       warn(warn__some_touch_evil);
    else
@@ -1383,8 +1383,12 @@ void setup::touch_or_rear_back(
    // right-hand wave, we have a 2x4 from which we allow "swing thru", as long
    // as no phantom concept was given.  (If we said "split phantom waves", we
    // would definitely not want to step to a single wave from this 2x4.)
-   if ((tptr->forbidden_elongation & 128) && (cmd.cmd_misc_flags & CMD_MISC__PHANTOMS))
+   if ((tptr->forbidden_elongation & 0x80) && (cmd.cmd_misc_flags & CMD_MISC__PHANTOMS))
       return;
+
+   if ((tptr->forbidden_elongation & 0x100) && (cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS) &&
+       (cmd.prior_elongation_bits & 1))    // actually, check against real facing directions?
+      fail("People are too far away to work with each other on this call.");
 
    if ((tptr->forbidden_elongation & 4) && (cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS))
       cmd.prior_elongation_bits =
