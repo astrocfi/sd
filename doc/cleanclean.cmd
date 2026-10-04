@@ -1,0 +1,45 @@
+echo on
+REM
+REM Delete all derived objects.
+REM
+del sd_doc.txt
+del sd_doc.pdf
+del sd_doc.html
+del sd_doc_*.html
+del demo.txt
+del demo.pdf
+del demo.html
+del appnote*.txt
+del appnote*.pdf
+del appnote*.html
+del sessions.txt
+del sessions.pdf
+del sessions.html
+del sessions_toc.html
+del relnotes.txt
+del relnotes.pdf
+del relnotes.html
+del relnotes98.txt
+del relnotes98.pdf
+del relnotes98.html
+del relnotes03.txt
+del relnotes03.pdf
+del relnotes03.html
+del relnotes09.txt
+del relnotes09.pdf
+del relnotes09.html
+del faq.html
+del sample.html
+del *.ps
+del *.pdf
+del psdoc.exe
+del textdoc.exe
+del pdfdoc.exe
+del install.exe
+del installw.exe
+del installs.exe
+del *.asc
+del *.gz
+del *.dvi
+
+clean.cmd

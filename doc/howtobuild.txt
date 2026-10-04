@@ -2,14 +2,9 @@ create:    7z a -tzip foo.zip <files>
 look:      7z l foo.zip
 extract 1: 7z e foo.zip <file>
 
-==============================================================
-*********** DO NOT RENAME THIS TO HOWTOBUILD.TXT **************
-Doing so might cause it to be included in the "do_pack" script.
-===============================================================
-
           HOW TO RELEASE A NEW VERSION OF SD
 
-     This file is \wba\sddoc\howtobuild.
+     This file is \wba\sddoc\howtobuild.txt
 
 -------------------------------------------------------------------------------
        MAINTAIN ALL PROGRAM AND DOCUMENTATION SOURCE FILES ON WINDOWS 11.
@@ -18,7 +13,18 @@ Doing so might cause it to be included in the "do_pack" script.
        ALL DEVELOPMENT, DEBUG, AND TEST OF EVERYTHING IS DONE ON WINDOWS 11.
 -------------------------------------------------------------------------------
 
+
+-------------------------------------------------------------------------------
+       PREPARE THE CHANGE LOGS.
+-------------------------------------------------------------------------------
+
+Compare the files with the previous version.  Create preliminary draft of
+sd/editmsg_for_NNNN, bringing in Git issue numbers where possible.
+Write up the customer-visible version of this in relnotes.txi
+
+-------------------------------------------------------------------------------
        UPDATING VERSION NUMBERS AND MAINTAINING THE PROGRAM.
+-------------------------------------------------------------------------------
 
 Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # and date (with year) are visible)
@@ -42,16 +48,6 @@ Be sure the version numbers and dates are correct in:
        SAVING PROGRAM AND DOCUMENTATION SOURCES.
 -------------------------------------------------------------------------------
 
-BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
-BEFORE DOING THIS.
-
-In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
-In \wba\sd\regress:  save _vnnnn
-In \wba\sddoc:       save _vnnnn
-
-It is important that this be done before "new_binary" is run, because
-the manual and faq files are now wrapped into the binary distribution file.
-
 WARNING!!!!!  These scripts require "tar".  I have put tar.exe,
 cygwin1.dll, and cygwinB19.dll into the \bin directory.
 In fact, it requires many arcane things, in the sddoc directory.
@@ -59,13 +55,20 @@ In fact, it requires many arcane things, in the sddoc directory.
 Go to the sddoc directory and do:
 
     setmingw64
-    clean clean
+    cleanclean
     do_plain
     do_pdf
     do_index <poster-child-number>
             (It is important that a poster child number
              always be loaded before running "do_html")
     do_html
+
+In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
+In \wba\sd\regress:  save _vnnnn
+In \wba\sddoc:       save _vnnnn
+
+It is important that this be done before "new_binary" is run, because
+the manual and faq files are now wrapped into the binary distribution file.
 
 -----------------------------------------------------------------
                 POSTER CHILD LOG
@@ -134,14 +137,14 @@ Go to the sddoc directory and do:
 10 Dec 23  -  12 Jan 24  #74  // rectify clear the centers for a [trade]
 12 Jan 24  -  26 May 24  #75  // 1/8 star turns in spin chain the gears
 26 May 24  -  13 Aug 24  #76  // finally tandem paranoid swing thru
-30 Jan 26  -             #77  // reverse order paranoid swing the fractions
+30 Jan 26  -   4 Jul 26  #77  // reverse order paranoid swing the fractions
 13 Aug 24  -   4 Nov 24  #78  // middle 6/7 of cast off 7/8
  4 Nov 24  -  25 Apr 25  #80  // tandem triangle reshape
 25 Apr 25  -  23 Jul 25  #79  // crazy phantom diamonds 3x2 AD
 23 Jul 25  -  30 Jan 26  #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
-                         #60  // really hairy fly the coop with interruption
-                         #68  // echo split grand chain 8
+ 3 Oct 26                #60  // really hairy fly the coop with interruption
+ 4  Jul 26 -   3 Oct 26  #68  // echo split grand chain 8
 
 
 (#25, #26, #48, #30, #47 are also available.)
@@ -248,7 +251,7 @@ The c4 books (book1.pdf etc.) go into the same directory.
 Page 1:  Create new   Next
 Page 2:  Extract files only   Next
 Page 3:  Title = Sd   Next
-Page 4:  Prommpt: This is Sd version 39.58, released Dec. 5 2023.  Do you wish to install it?   Next
+Page 4:  Prompt: This is Sd version 39.58, released Dec. 5 2023.  Do you wish to install it?   Next
 Page 5:  Do NOT show license file.   Next
 Page 6:  Grab all the files, from the list below.  That is, for each line in the list,
          click "Add", then past the line into the popup and click "Open".
@@ -291,19 +294,28 @@ GRABBING THE FILES TO BE CHECKED IN
 ALL   Because of a bug in windows, wiping out a subdirectory is best done
 ALL   with the explorer, not the shell.
 
+ALL   Completely wipe out the contents of wba\sdgitclone, all the way up to,
+ALL   and including, the "sd" subdirectory.
+ALL
+ALL   Start Git CMD, and connect to wba\sdgitclone.
+ALL
+ALL   To avoid messing up version numbers, set the shell variable VER to the 4 digits
+ALL   of the new version number, as in
+ALL      set ver=3984
+ALL
+ALL   Keep this shell around--the variable goes away if the shell is shut down.
+ALL   If in doubt before any of the commands below, do
+ALL      echo %ver%
+ALL   to check it
+ALL
 ALL   Create, if necessary, temporary garbage directories wba\ssss, wba\dddd, and wba\rrrr.
 ALL   Connect to ssss, clear it, and
-ALL   unzip ..\sdfullarchive\v<NNNN>\sd_v<NNNN>.zip
+ALL   unzip ..\sdfullarchive\v%ver%\sd_v%ver%.zip
 ALL   Connect to dddd, clear it, and
-ALL   unzip ..\sdfullarchive\v<NNNN>\doc_v<NNNN>.zip
+ALL   unzip ..\sdfullarchive\v%ver%\doc_v%ver%.zip
 ALL   connect to rrrr, clear it, and
-ALL   unzip ..\sdfullarchive\v<NNNN>\r_v<NNNN>.zip
+ALL   unzip ..\sdfullarchive\v%ver%\r_v%ver%.zip
 
-SRCDOC   Completely wipe out the contents of wba\sdgitclone, all the way up to,
-SRCDOC   and including, the "sd" subdirectory.
-SRCDOC
-SRCDOC   Start Git CMD, and connect to wba\sdgitclone.
-SRCDOC
 SRCDOC   Do
 SRCDOC      git clone https://github.com/astrocfi/sd
 SRCDOC   
@@ -311,8 +323,8 @@ SRCDOC   wba\sdgitclone\sd should now exist, containing subdirectories src and d
 SRCDOC   plus a few supervisory things.
 SRCDOC
 SRCDOC   Find out versions of src and doc are already in git, by examining
-SRCDOC   sdgitclone\sd\src\sdmain.cpp
-SRCDOC   sdgitclone\sd\doc\index2.htmli and
+SRCDOC   sdgitclone\sd\src\sdmain.cpp     and
+SRCDOC   sdgitclone\sd\doc\index2.htmli
 SRCDOC   They should of course match the desired "old" versions.
 SRCDOC
 SRCDOC   STAGING SRC
@@ -334,7 +346,7 @@ SRCDOC   The new stuff, from sdfullarchive, is on the left.
 SRCDOC   The pre-existing stuff, from git, is on the right.
 SRCDOC   Remember:  It's too late to fix stuff now.  We are just checking in existing code.
 SRCDOC   If problems are found, fix them in the next release.
-SRCDOC   This is the important test get the git repository right.  Compose the draft of the
+SRCDOC   This is the important test to get the git repository right.  Compose the draft of the
 SRCDOC   edit message for thie version: wba\sd\editmsg_for_<NNNN>.txt
 SRCDOC   (The release notes have a short "customer" version of this.)
 SRCDOC   
@@ -343,9 +355,6 @@ SRCDOC
 SRCDOC   dddd now needs to be merged onto sdgitclone\sd\doc.
 SRCDOC   
 SRCDOC   Clean up dddd by deleting many things, so it has the same files as sdgitclone\sd\doc.
-SRCDOC   (This state of affairs should probably be fixed at some point, so that
-SRCDOC   sdfullarchive and sdgitclone\sd\doc have the same list of files, with only different
-SRCDOC   content.  But that can be attended to later.)
 SRCDOC   
 SRCDOC   Delete many .html files from dddd:
 SRCDOC   While in dddd, do cleardddd.  It's a script that clean it up.
@@ -382,7 +391,7 @@ SRCDOC   Do git add .
 SRCDOC   
 SRCDOC   Now git status (in sdgitclone\sd) should now show staged files in green.
 SRCDOC   
-SRCDOC   git checkout -b sd<NNNN>  (Actually doesn't matter, but don't reuse
+SRCDOC   git checkout -b sd%ver%  (Actually doesn't matter, but don't reuse
 SRCDOC   these branches.  This is the NEW version number.)
 SRCDOC      It should say Switched to a new branch 'sd<NNNN>'
 SRCDOC   
@@ -392,7 +401,7 @@ SRCDOC   This will bring up a "Notepad" editor.  Edit in the summary of changes.
 SRCDOC   Issue "File->Save" (Ctrl-S) and "File->Exit".
 SRCDOC   It will announce that it has taken the stuff.
 SRCDOC   
-SRCDOC   git push -u origin sd<NNNN>
+SRCDOC   git push -u origin sd%ver%
 SRCDOC   It will say
 SRCDOC     remote: Create a pull request for 'sd<NNNN>' on GitHub by visiting:
 SRCDOC     remote:      https://github.com/astrocfi/sd/pull/new/sd<NNNN>
@@ -402,7 +411,8 @@ SRCDOC      * [new branch]      sd<NNNN> -> sd<NNNN>
 SRCDOC     branch 'sd<NNNN>' set up to track 'origin/sd<NNNN>'.
 SRCDOC   
 SRCDOC   Do so, by control-clicking the link.
-SRCDOC   Insert "This is SRC and DOC for version NNNN" into title box.
+SRCDOC   Insert "This is SRC and DOC for version NNNN" into title box, moving previous
+SRCDOC   down to main description box.
 SRCDOC   Description box should already be set, from the Notepad edit.  Right?
 SRCDOC   Click the green "create pull request" button.
 SRCDOC   Go to "Pull Requests" at very top.  Click "New Pull Request".
@@ -470,7 +480,7 @@ REG   Do git add .
 REG
 REG   Now git status (in sdgitclone\sd-regression) should now show staged files in green.
 REG
-REG   git checkout -b regression_tests<NNNN>
+REG   git checkout -b regression_tests%ver%
 REG        (Actually doesn't matter, but don't reuse these branches.)
 REG   It should say "Switched to new branch 'regression_tests<NNNN>'
 REG   git commit
@@ -478,7 +488,7 @@ REG   This will bring up a "Notepad" editor.  Edit in the summary of changes.
 REG   Issue "Save" (Ctrl-S) and exit.
 REG   It will give a summary of what happened.
 REG
-REG   git push -u origin regression_tests<NNNN>
+REG   git push -u origin regression_tests%ver%
 REG
 REG   It should say
 REG   remote: Create a pull request for 'regression_tests<NNNN>' on GitHub by visiting:
@@ -501,27 +511,338 @@ REG   regression_tests<newNNNN>
 REG   
 REG   Done!
 
-Obsolete stuff.
+NEW STUFF NEW STUFF NEW STUFF NEW STUFF NEW STUFF NEW STUFF NEW STUFF
 
-Log in to github  
-This uses the "Git Credential Manager" for wbawba.
-Then it says
-info: please complete authentication in your browser...
-Total 0 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
-remote:
-remote: Create a pull request for 'sd3975' on GitHub by visiting:
-remote:      https://github.com/astrocfi/sd/pull/new/sd3975
-remote:
-To https://github.com/astrocfi/sd
- * [new branch]      sd3975 -> sd3975
-branch 'sd3975' set up to track 'origin/sd3975'.
+my tree is wba/dev/sd/src (with former sd)
+           wba/dev/sd/doc (with former sddoc)
+           wba/dev/sd-regression/regression-test (with stuff)
+
+(in wba/dev/sd)
+git clone https://github.com/astrocfi/sd
+git pull
+git checkout -b 39.85
+git add .
+git pull
+git branch --set-upstream-to=origin/main 39.85
+git commit
+git push origin HEAD:main
+git push origin -u origin 39.85
 
 
-In the long run, I should be able to do things like
+(in wba/dev/sd-regression)
+git clone https://github.com/astrocfi/sd-regression
+git pull
+git checkout -b 39.85
+    gets fatal: a branch named '39.85' already exists
+git add .
+git pull
+git branch --set-upstream-to=origin/main 39.85
+git commit
+git push origin HEAD:main
+git push origin -u origin 39.85
+    gets fatal: refs/remotes/origin/HEAD cannot be resolved to branch
 
-cd sd
-git checkout v38.40
-cd ../sd-regression
-git checkout v38.40
 
-and see the files from git.
+NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST
+
+DO THIS ONLY ONCE
+
+this is from Rob
+cd \wba\sdgit\sd
+git clone https://github.com/astrocfi/sd
+    [this will create \wba\sdgit\sd, with src and doc, and populate same]
+git clone https://github.com/astrocfi/sd-regression
+    [this will create \wba\sdgit\sd-regression, with regression_tests, and populate same]
+
+EACH TIME YOU WANT TO CREATE A NEW BRANCH AND START WORK ON A NEW VERSION:
+
+Git manages source files in sdgit\sd\src
+    and doc files in        sdgit\sd\doc
+    and regression tests in sdgit\sd-regression\regression_tests
+
+cd \wba\sdgit\sd
+git checkout -b 39.85
+git push --set-upstream origin 39.85
+
+cd \wba\sdgit\sd-regression
+git checkout -b 39.85
+git push --set-upstream origin 39.85
+   It may say to create a pull request at 
+      https://github.com/astrocfi/sd-regression/pull/new/39.85
+   Won't show anything.
+
+AT ANY TIME, TO COMPARE MY FILES WITH GIT'S MANAGED FILES
+
+Code files:
+cd wba\sd
+winmergeu . C:\Users\wba\sdgit\sd\src
+
+Regression files:
+cd wba\sd\regress
+winmergeu . C:\Users\wba\sdgit\sd-regression\regression_tests
+
+Doc files:
+cd wba\sddoc
+winmergeu . C:\Users\wba\sdgit\sd\doc
+
+
+
+
+
+EACH TIME YOU MADE CHANGES TO FILES AND WANT TO TAKE A SNAPSHOT:
+
+First, copy the actual files from wba\sd to wba\sdgit\sd\src
+
+Now git status should show the changed files in red.
+
+Git add .
+
+Now the files are green.
+
+git commit
+git pull
+
+It says "Already up to date."
+
+
+
+cd \wba\sdgit\sd
+git add .   (or git add <list of files>)
+git commit -m "message"
+git pull
+[pray for no merge conflicts, resolve if necessary]
+[if pull did something, re-run the regression tests if you want to]
+git push
+
+cd \wba\sdgit\sd\sd-regression
+git add .   (or git add <list of files>)
+git commit -m "message"
+git pull
+[pray for no merge conflicts, resolve if necessary]
+git push
+
+
+
+Now do
+git pull origin 39.85
+
+
+
+ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
+ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
+ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
+
+When starting github from the web, 4th lines says main <twistie>.  Select 39.85 or whatever.
+This logs in on that branch.  It is not persistent!  It must be done every time!
+
+TO SEE THE FULL HISTORY OF A BRANCH:
+
+Now line 6 should say "commits" on the right.  Click same.  Clicking on any history item
+will show the "diff".
+
+FINAL THING FROM ROB FRENCH
+
+ONE TIME ONLY IN YOUR LIFE:
+
+cd \wba\dev\sd
+git clone https://github.com/astrocfi/sd     [this will create \wba\dev\sd\sd]
+git clone https://github.com/astrocfi/sd-regression      [this will create \wba\dev\sd\sd-regression]
+
+EACH TIME YOU WANT TO CREATE A NEW BRANCH AND START WORK ON A NEW VERSION:
+
+cd \wba\dev\sd\sd
+git checkout -b 39.85
+git push --set-upstream origin 39.85
+
+cd \wba\dev\sd\sd-regression
+git checkout -b 39.85
+git push --set-upstream origin 39.85
+
+EACH TIME YOU MADE CHANGES TO FILES AND WANT TO TAKE A SNAPSHOT:
+
+cd \wba\dev\sd\sd
+git add .   (or git add <list of files>)
+git commit -m "message"
+git pull
+[pray for no merge conflicts, resolve if necessary]
+[if pull did something, re-run the regression tests if you want to]
+git push --set-upstream origin 39.85
+
+cd \wba\dev\sd\sd-regression
+git add .   (or git add <list of files>)
+git commit -m "message"
+git pull
+[pray for no merge conflicts, resolve if necessary]
+git push --set-upstream origin 39.85
+
+*****************************************************************
+Rob's "really final" instructions.  (With minor notes by me.)
+*****************************************************************
+
+BE AWARE: The "sandbox" directories (wba\sdgit\sd\src and doc) are NOT
+plain directories that I have complete ownership of, and that Git
+monitors and that I use to transmit stuff to Git.  They are windows
+onto my branch.  The branch files themselves are legitimately on my
+disk, but the wba\sdgit directories are windows into same, that Git
+can alter.  The windows are selected by the "current branch" in Git.
+The branch is selected by the "git switch" command.  The branch
+selected by "git switch" and by the web do not affect each other.
+
+THEREFORE: Do no do ANYTHING without checking (git status will show
+it) that the branch is correct and that the files in wba\sdgit are the
+expected ones.
+
+** All commands should be duplicated, once in the "sd" directory
+   and once in the "sd-regression" directory.
+
+1) Start a new version (Bill or could be someone else)
+
+git switch main
+git pull
+git checkout -b 39.xx
+git push -u origin 39.xx   [there's nothing to push, but this will
+    create the branch on GitHub so other people can use it]
+
+2) Bill does work directly on 39.xx
+
+BEFORE DOING ANYTHING, CHECK THAT THE CORRECT BRANCH IS SELECTED.
+That's 39.xx.  Do "git switch 39.xx".
+Remember that git forcibly changes the directory wba/sdgit/sd when
+you change branches!!!!
+At every turn, do "git status" to verify.
+If wba/sdgit/sd doesn't contain what you think it should, something
+is wrong.
+
+DO ALL THIS SEPARATELY ON
+   sdgit\sd\src and
+   sdgit\sd-regression\regression-tests
+<edit files>
+git status   [check it makes sense]
+git add <list of files>  (or git add .)
+git status   [check it makes sense]
+git commit -m "Here's what I did"
+git push
+[rinse, repeat]
+
+On Git web page, select the branch (of course) and click on "Pull requests"
+(which should say 1 or something (maybe not)).  Click the big green
+"New pull request".  It should go to "Compare changes", with "base main"
+"compare main".  Change the latter to 39.xx.  If lucky, it might even say
+"Able to merge".  Click the green "create pull request".  There should be
+a "reviewers" thing on the right.  Fuss with it until it lists the right
+people.  Click on "assign yourself".  Then click green "create pull request"
+at bottom.
+
+3) Someone non-Bill does work
+
+git fetch
+git checkout 39.xx
+git pull
+git checkout -b my_sub_branch
+git push -u origin my_sub_branch
+
+<edit files>
+git status   [check it makes sense]
+git add <list of files>
+git status   [check it makes sense]
+git commit -m "Here's what I did"
+git push
+[rinse, repeat]
+
+If Bill has made changes to 39.xx, non-Bill needs to merge them into their sub branch:
+
+git fetch
+git merge origin/39.xx
+[continue working]
+
+4) Bill wants to review the changes made by non-Bill
+
+a) non-Bill makes sure their sub branch is up-to-date with 39.xx
+
+git fetch
+git merge origin/39.xx
+git push
+[if anything was changed by the merge, run tests again]
+
+b) non-Bill goes onto GitHub and creates a pull request for their sub branch. It should be from my_sub_branch to 39.xx. The PR title should say something descriptive and the PR description should include the details of what was done.
+
+c) non-Bill assigns Bill as a reviewer. Bill gets an email.
+
+d) Bill goes onto GitHub and visually inspects the changes using the nice graphic interface provided.
+
+e) Bill actually tests the code to make sure he's happy with it:
+
+[make sure all local changes to 39.xx are committed and pushed]
+
+git status   [this should say there are no changes and no staged files]
+git fetch
+git checkout my_sub_branch   [you can get this branch name from the pull request on GitHub]
+[At this point you should have a copy of non-Bill's changes]
+- Compile, test, do whatever you want
+- Make comments on the pull request on GitHub. Write comments about particular lines, or just comment on the whole thing.
+
+DO NOT MERGE THE PULL REQUEST UNTIL EVERYONE HAS AGREED THAT THE CHANGES ARE CORRECT AND PASS ALL TESTS.
+
+f) Assuming, you had comments that need additional work, Bill goes back to his previous life working on 39.xx:
+
+git status   [this should say there are no changes and no staged files]
+git checkout 39.xx
+[return to "Bill does work"]
+
+non-Bill reconsiders his life choices and makes the fixes Bill asked for. Repeat starting at (4c) and ask Bill to re-review.
+
+g) If the code is perfect and Bill approves:
+
+On GitHub, Bill marks the pull request as "approved".
+On GitHub, Bill merges the pull request by clicking the "merge" button.
+
+Back on Bill's local machine:
+
+git checkout 39.xx
+git pull
+- At this point you are back where you left off, but you also have the new changes.
+[return to "Bill does work"]
+
+5) Someone else wants to look at Bill's changes, or we're just ready for a release:
+
+[This is sort of the opposite of step 4]
+
+a) Bill makes sure 39.xx is clean - everything added, committed, and pushed.
+
+git status
+git push
+
+b) Bill goes onto GitHub and creates a pull request for 39.xx. It should be from 39.xx to main. The PR title should say something descriptive and the PR description should include the details of what was done.
+
+It's fine to create this PR early in the process and it will automatically be kept up-to-date. Just remember to update the title and description as changes are added.
+
+c) Put issue-closing statements in the release PR
+
+Issues ideally remain open until the fix is actually merged into main, since that corresponds to code users can obtain.
+
+For each issue fixed by the release, put a line such as:
+
+Closes #5
+
+in the description of the pull request.
+
+For example:
+
+Closes #5
+Closes #17
+Closes #23
+
+Do not put these in later comments. They need to be in the pull-request description.
+
+If the release PR has not been created yet, keep a list of the issues that have been fixed so they can be added when the PR is created.
+
+d) Bill assigns non-Bill as a reviewer. non-Bill gets an email.
+
+e) non-Bill goes onto GitHub and visually inspects the changes using the nice graphic interface provided.
+
+f) non-Bill actually tests the code to make sure he's happy with it.
+
+g) non-Bill approves the PR, merges the PR, and tags the release.
+
+DO NOT MERGE THE PULL REQUEST UNTIL EVERYONE HAS AGREED THAT THE CHANGES ARE CORRECT AND PASS ALL TESTS.
+

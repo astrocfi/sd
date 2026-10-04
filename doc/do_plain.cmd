@@ -1,20 +1,15 @@
-mingw32-make text.all
-del textdoc.zip textdoc.tar textdoc.tar.gz
-zip textdoc.zip sd_doc.txt demo.txt sessions.txt relnotes.txt relnotes98.txt relnotes03.txt relnotes09.txt appnote1.txt appnote2.txt appnote3.txt appnote4.txt
-crunfix sd_doc.txt %TEMP%\sd_doc.txt
-crunfix demo.txt %TEMP%\demo.txt
-crunfix sessions.txt %TEMP%\sessions.txt
-crunfix relnotes.txt %TEMP%\relnotes.txt
-crunfix relnotes98.txt %TEMP%\relnotes98.txt
-crunfix relnotes03.txt %TEMP%\relnotes03.txt
-crunfix relnotes09.txt %TEMP%\relnotes09.txt
-crunfix appnote1.txt %TEMP%\appnote1.txt
-crunfix appnote2.txt %TEMP%\appnote2.txt
-crunfix appnote3.txt %TEMP%\appnote3.txt
-crunfix appnote4.txt %TEMP%\appnote4.txt
-pushd %TEMP%
-tar cvf textdoc.tar sd_doc.txt demo.txt sessions.txt relnotes.txt relnotes98.txt relnotes03.txt relnotes09.txt appnote1.txt appnote2.txt appnote3.txt appnote4.txt
-popd
-copy %TEMP%\textdoc.tar .
-gzip textdoc.tar -c > textdoc.tar.gz
-del textdoc.tar
+REM \msys64\usr\bin\make.exe text.all
+call do_plain_onefile demo
+call do_plain_onefile sessions
+call do_plain_onefile sd_doc
+call do_plain_onefile demo
+call do_plain_onefile sessions
+call do_plain_onefile sd_doc
+call do_plain_onefile relnotes
+call do_plain_onefile relnotes98
+call do_plain_onefile relnotes03
+call do_plain_onefile relnotes09
+call do_plain_onefile appnote1
+call do_plain_onefile appnote2
+call do_plain_onefile appnote3
+call do_plain_onefile appnote4

@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.84
-@set Time-stamp: Jul 4, 2026
+@set sd-version 39.85
+@set Time-stamp: Sep 5, 2026
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -583,13 +583,6 @@ they will be saved in a folder with a name like @file{C:\Sd_pre3281}
 before the new version is
 installed.  The installation will not damage or delete any sequence
 transcript files or initialization files.
-
-If you have downloaded the documentation files in ``bulk'' form in
-self-extracting zipped archives, you can launch them also.  The files
-are @file{textdoc.exe}, @file{psdoc.exe}, and @file{pdfdoc.exe}.
-Launch them in the same way as @file{install.exe}.
-They will unpack the appropriate text, Postscript, or PDF files into the
-directory.
 
 When the installation is complete, the programs will be in the @file{Sd}
 subfolder of the @file{Programs} folder of the Start Menu.  The installation

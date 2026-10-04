@@ -1,53 +1,9 @@
 echo on
-rem        This command alone cleans temporary stuff and mailing
-rem        files, but not actual derived objects.  With the argument
-rem        "clean" (that is, "clean clean") it deletes all derived
-rem        objects.
-rem
-rem
-if /i "%1" == "clean" goto realclean
-goto plainstuff
-:realclean
-rem
-rem    This is the stuff we delete when we want to make things really clean.
-rem       It deletes a lot of useful derived objects.
-rem
-del sd_doc.html
-del sd_doc_*.html
-del sd_doc.txt
-del sessions.html
-del sessions_toc.html
-del sessions.txt
-del relnotes.html
-del relnotes98.html
-del relnotes03.html
-del relnotes09.html
-del relnotes.txt
-del relnotes98.txt
-del relnotes03.txt
-del relnotes09.txt
-del faq.html
-del appnote*.html
-del appnote*.txt
-del demo.html
-del demo.txt
-del sample.html
-del *.ps
-del *.pdf
-del psdoc.exe
-del textdoc.exe
-del pdfdoc.exe
-del install.exe
-del installw.exe
-del installs.exe
-del *.asc
-del *.gz
-del *.dvi
-:plainstuff
-rem
-rem      This is the stuff we want to clean all the time.  It's just temporary junk.
-rem      Well, it's also the "txt" or "zip" files that we mail to upload.
-rem
+REM This command cleans temporary stuff.
+REM A lot of it is obsolete files that no longer ever exist.
+REM
+REM Do "cleanclean" to delete all derived objects.
+
 del html.txt
 del ps.txt
 del plain.txt
@@ -93,4 +49,3 @@ del *.vr
 del *.tp
 del *.ky
 del *.pg
-
