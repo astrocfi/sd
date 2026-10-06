@@ -203,7 +203,17 @@ notes relating to even older versions.
 @node 39.85, 39.84, Intro, Top
 @unnumberedsec Version 39.85 changes
 
-Customer-facing changes.  Write this.
+The mechanisms for compiling and distributing Sd and Sdtty were
+extensively overhauled.  New compilers (both Visual Studio and MinGW)
+are now in use, along with new management software.
+@sp 1
+Because of changes in the ways people use the World Wide Web, the
+mechanism for downloading documentation files in ``bulk'' form onto
+your computer were removed.  You can browse the files (in http/html
+format) directly from the web page, or download pdf or plain text.
+Certain obsolete file types, like Postscript, are no longer supported.
+@sp 1
+The usual number of reported bugs were fixed.
 
 @c ************
 @node 39.84, 39.83, 39.85, Top

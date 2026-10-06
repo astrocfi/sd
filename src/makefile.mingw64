@@ -132,7 +132,7 @@ $(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h sdchars.h sdmatch.h database.h paths.h
 
 clean::
 	rm *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
-               libsdlib.a sdlib.dll ..\sddoc\sd_source.zip
+               libsdlib.a sdlib.dll ../sddoc/sd_source.zip
 
 cleanup::
 	rm *.o libsdlib.a

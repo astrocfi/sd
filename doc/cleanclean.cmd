@@ -41,5 +41,3 @@ del installs.exe
 del *.asc
 del *.gz
 del *.dvi
-
-clean.cmd

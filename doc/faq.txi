@@ -1400,8 +1400,8 @@ on the command line or in a script or Windows shortcut, or put the line
 
 @strong{This section dates from a time when the state of compiler reliability,
 and of commercial software competitiveness, were quite different from today.
-Microsoft Visual Studio Community 2019 is now used as the secondary compiler
-for Sd and Sdtty, and it works quite reliably.  Mingw64 is used as the primary
+Microsoft Visual Studio Community 2026 is now used as the secondary compiler
+for Sd and Sdtty, and it works quite reliably.  MinGW64 is used as the primary
 compiler for production builds.  The program is rigorously tested on both compilers.}
 @sp 1
 I'm glad you asked.  The Microsoft compiler is not of acceptably high
@@ -1441,23 +1441,27 @@ No version of Sd or Sdtty suffering from this Microsoft compiler bug was
 ever released---the code was modified to avoid the bug.  But that is not
 a workable solution in the long run, since I don't know what other parts
 of the program could be getting compiled incorrectly.  So production builds
-use Gcc.
+use MinGW64/Gcc.
 
 @unnumberedsec So what software is used in the preparation of Sd and Sdtty?
 
 @example
   computer:             HP FHD 15-dy2000
+    historically: TI Explorer Lisp machine,
+    Apollo DN3500 workstation, HP Armada
+    150MHz laptop, various other laptops
   OS:                   Windows 11                   commercial
+    historically: Lisp machine, Domain/OS,
+    Windows NT4.0, various
   editor:               GNU Emacs 21.1.1             free
-  development systems   Visual Studio 2019           free with Windows
-     and                Mingw64                      free
+  development systems   Visual Studio 2019, 2026     free with Windows
+     and                MinGW64                      free
    (program is tested with both compilers)
-  compress utilities:   Info-Zip and/or 7-Zip        free
+  compress utilities:   Info-Zip, WinZip, 7-Zip      free
   compress self extractor  Iexpress                  free with Windows
                         gzip 1.2.4                   free
   document preprocessor:texinfo 1999-03-26.17        free
-  Postscript formatter: MiKTeX 2.9                   free
-  PDF formatter:        MiKTeX 2.9                   free
+  PDF formatter:        MiKTeX 4.8                   free
   HTML formatter:       Perl 5.004-02                free
                         Texi2html 1.51               free
   upload software       WinSCP                       free
