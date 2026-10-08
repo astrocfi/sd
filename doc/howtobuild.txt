@@ -57,19 +57,15 @@ Go to the sddoc directory and do:
     setmingw64
 This can be done as either the shell script clean.cmd / cleanclean.cmd
 or under make.
-    cleanclean      delete all, including derived objects
-    cleanup         just delete junk, keep derived objects
-    mingw64 clean   or do it this way
-This is a shell script.
+    cleanclean      delete junk, but not derived objects
+    cleanup         derived objects, leave the rest.
+    mingw64 cleanup or do it this way
     do_plain
-This hasn't adapted well to being done under a makefile.  Don't do it.
-    mingw64 plain
-This is a script.
-    do_pdf      This does mingw64 pdf.all, could do that directly.
+    do_pdf
     do_index <poster-child-number>
             (It is important that a poster child number
              always be loaded before running "do_html")
-    do_html     Do this.  Perhaps mingw64 html.all would do it too.
+    do_html
 
 In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
 In \wba\sd\regress:  save _vnnnn
@@ -517,7 +513,9 @@ On Git web page, select the branch (of course) and click on "Pull requests"
 (which should say 1 or something (maybe not)).  Click the big green
 "New pull request".  It should go to "Compare changes", with "base main"
 "compare main".  Change the latter to 39.xx.  If lucky, it might even say
-"Able to merge".  Click the green "create pull request".  There should be
+"Able to merge".  Below that, Click on the branch thing: "39.85".
+Click the green "create pull request".  No, only once.  The pull request
+remains active for the rest of the lifetime of that branch.  There should be
 a "reviewers" thing on the right.  Fuss with it until it lists the right
 people.  Click on "assign yourself".  Then click green "create pull request"
 at bottom.

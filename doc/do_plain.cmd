@@ -1,15 +1,1 @@
-REM \msys64\usr\bin\make.exe text.all
-call do_plain_onefile demo
-call do_plain_onefile sessions
-call do_plain_onefile sd_doc
-call do_plain_onefile demo
-call do_plain_onefile sessions
-call do_plain_onefile sd_doc
-call do_plain_onefile relnotes
-call do_plain_onefile relnotes98
-call do_plain_onefile relnotes03
-call do_plain_onefile relnotes09
-call do_plain_onefile appnote1
-call do_plain_onefile appnote2
-call do_plain_onefile appnote3
-call do_plain_onefile appnote4
+\msys64\usr\bin\make.exe -f makefile.mingw64 txt.all
