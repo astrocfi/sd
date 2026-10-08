@@ -61,10 +61,10 @@ class printer {
    void choose_font();
 
    // This prints a specific file.  Not sure what "szMainTitle" actually does.
-   void print_this(const char *filename, char *szMainTitle, bool pagenums);
+   void print_this(const char *filename, const char *szMainTitle, bool pagenums);
 
    // This brings up the "choose file" dialog and lets the user click on things.
-   void print_any(char *szMainTitle, bool pagenums);
+   void print_any(const char *szMainTitle, bool pagenums);
 
  private:
 

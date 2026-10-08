@@ -1,3 +1,9 @@
+# Makefile for Sd documentation, for MingW64
+
+clean::
+	rm sd_doc.html \ sd_doc_*.html \ sd_doc.txt
+
+
 srcdir = .
 
 RM = del

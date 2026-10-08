@@ -80,8 +80,8 @@ static int window_size_args[4] = {780, 560, 10, 20};
    Windows command user segment. */
 #define SPECIAL_KEY_OFFSET (CM_REINIT-128+1)
 
-static char szMainWindowName[] = "Sd main window class";
-static char szTranscriptWindowName[] = "Sd transcript window class";
+static const char szMainWindowName[] = "Sd main window class";
+static const char szTranscriptWindowName[] = "Sd transcript window class";
 
 LRESULT CALLBACK MainWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK TranscriptAreaWndProc(HWND, UINT, WPARAM, LPARAM);
@@ -124,7 +124,7 @@ static bool menu_moved;
 #define DISPLAY_LINE_LENGTH 90
 
 struct DisplayType {
-   char Line [DISPLAY_LINE_LENGTH];
+   std::string Line;
    int in_picture;
    int Height;
    int DeltaToNext;
@@ -136,7 +136,6 @@ struct DisplayType {
 #define ui_undefined -999
 
 
-static char szOutFilename     [MAX_TEXT_LINE_LENGTH];
 static char szDatabaseFilename[MAX_TEXT_LINE_LENGTH];
 static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
 static int GLOBStatusBarLength;
@@ -207,7 +206,7 @@ static RECT CallsClientRect;
 static RECT TranscriptClientRect;
 
 // This is the last title sent by the main program.  We add stuff to it.
-static char szMainTitle[MAX_TEXT_LINE_LENGTH];
+static std::string szMainTitle;
 
 
 
@@ -882,7 +881,7 @@ static void Transcript_OnPaint(HWND hwnd)
       // Or if we have run off the bottom.
       if (Y > TranscriptClientRect.bottom-TVOFFSET) break;
 
-      for (cp=DisplayPtr->Line,x=THOFFSET;
+      for (cp=DisplayPtr->Line.c_str(),x=THOFFSET;
            *cp;
            cp++,x+=xdelta) {
          int xgoodies, ygoodies, glyph_height, glyph_offset;
@@ -1092,9 +1091,9 @@ static void Transcript_OnScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 // Process get-text dialog box messages.
 
 static popup_return PopupStatus;
-static char szPrompt1[MAX_TEXT_LINE_LENGTH];
-static char szPrompt2[MAX_TEXT_LINE_LENGTH];
-static char szSeed[MAX_TEXT_LINE_LENGTH];
+static std::string szPrompt1;
+static std::string szPrompt2;
+static std::string szSeed;
 static char szTextEntryResult[MAX_TEXT_LINE_LENGTH];
 LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -1104,9 +1103,9 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
    case WM_INITDIALOG:
       /* If we did this, it would set the actual window title
          SetWindowText(hDlg, "FOOBAR!"); */
-      SetDlgItemText(hDlg, IDC_FILE_TEXT1, szPrompt1);
-      SetDlgItemText(hDlg, IDC_FILE_TEXT2, szPrompt2);
-      SendDlgItemMessage(hDlg, IDC_FILE_EDIT, WM_SETTEXT, 0, (LPARAM) szSeed);
+      SetDlgItemText(hDlg, IDC_FILE_TEXT1, szPrompt1.c_str());
+      SetDlgItemText(hDlg, IDC_FILE_TEXT2, szPrompt2.c_str());
+      SendDlgItemMessage(hDlg, IDC_FILE_EDIT, WM_SETTEXT, 0, (LPARAM) szSeed.c_str());
       return TRUE;
    case WM_COMMAND:
       switch (LOWORD(wParam)) {
@@ -1139,28 +1138,29 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
 }
 
 
-popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring /*final_inline_prompt*/,
-                                      Cstring seed, char *dest)
+popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                      std::string_view /*final_inline_prompt*/,
+                                      std::string_view seed, std::string *dest)
 {
    // We ignore the "final_inline_prompt".  We assume that the appearance of the
    // edit box will clue the user.  But we show other prompts, even if they have asterisks.
 
-   if (prompt1 && prompt1[0] && prompt1[0] == '*')
-      strncpy(szPrompt1, prompt1+1, MAX_TEXT_LINE_LENGTH);
+   if (!prompt1.empty() && prompt1[0] == '*')
+      szPrompt1 = prompt1.substr(1);
    else
-      strncpy(szPrompt1, prompt1, MAX_TEXT_LINE_LENGTH);
+      szPrompt1 = prompt1;
 
-   if (prompt2 && prompt2[0] && prompt2[0] == '*')
-      strncpy(szPrompt2, prompt2+1, MAX_TEXT_LINE_LENGTH);
+   if (!prompt2.empty() && prompt2[0] == '*')
+      szPrompt2 = prompt2.substr(1);
    else
-      strncpy(szPrompt2, prompt2, MAX_TEXT_LINE_LENGTH);
+      szPrompt2 = prompt2;
 
-   strncpy(szSeed, seed, MAX_TEXT_LINE_LENGTH);
+   szSeed = seed;
    DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_TEXT_ENTRY_DIALOG),
              hwndMain, (DLGPROC) TEXT_ENTRY_DIALOG_WndProc);
    if (PopupStatus == POPUP_ACCEPT_WITH_STRING)
-      lstrcpy(dest, szTextEntryResult);
-   else dest[0] = 0;
+      *dest = szTextEntryResult;
+   else dest->clear();
    return PopupStatus;
 }
 
@@ -1225,7 +1225,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       hwnd, (HMENU) TEXT_INPUT_AREA_INDEX,
       lpCreateStruct->hInstance, NULL);
 
-   OldTextInputAreaWndProc = (WNDPROC) SetWindowLong(hwndTextInputArea, GWL_WNDPROC, (LONG) TextInputAreaWndProc);
+   OldTextInputAreaWndProc = (WNDPROC) SetWindowLongPtr(hwndTextInputArea, GWLP_WNDPROC, (long long int) TextInputAreaWndProc);
 
    hwndCallMenu = CreateWindow("listbox", NULL,
       WS_CHILD|LBS_NOTIFY|WS_VSCROLL|WS_BORDER,
@@ -1234,7 +1234,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndCallMenu, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   OldCallMenuWndProc = (WNDPROC) SetWindowLong(hwndCallMenu, GWL_WNDPROC, (LONG) CallMenuWndProc);
+   OldCallMenuWndProc = (WNDPROC) SetWindowLongPtr(hwndCallMenu, GWLP_WNDPROC, (long long int) CallMenuWndProc);
 
    hwndAcceptButton = CreateWindow("button", "Accept",
       WS_CHILD|BS_DEFPUSHBUTTON,
@@ -1243,7 +1243,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndAcceptButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   OldAcceptButtonWndProc = (WNDPROC) SetWindowLong(hwndAcceptButton, GWL_WNDPROC, (LONG) AcceptButtonWndProc);
+   OldAcceptButtonWndProc = (WNDPROC) SetWindowLongPtr(hwndAcceptButton, GWLP_WNDPROC, (long long int) AcceptButtonWndProc);
 
    hwndCancelButton = CreateWindow("button", "Cancel",
       WS_CHILD,
@@ -1252,7 +1252,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndCancelButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   OldCancelButtonWndProc = (WNDPROC) SetWindowLong(hwndCancelButton, GWL_WNDPROC, (LONG) CancelButtonWndProc);
+   OldCancelButtonWndProc = (WNDPROC) SetWindowLongPtr(hwndCancelButton, GWLP_WNDPROC, (long long int) CancelButtonWndProc);
 
    hwndProgress = CreateWindow(PROGRESS_CLASS, NULL,
       WS_CHILD|WS_CLIPSIBLINGS,
@@ -1275,7 +1275,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 
    if (!hwndProgress||!hwndAcceptButton||!hwndCancelButton||!hwndCallMenu||
        !hwndTextInputArea||!hwndTranscriptArea||!hwndStatusBar) {
-      gg77->iob88.fatal_error_exit(1, "Can't create windows", 0);
+      gg77->iob88.fatal_error_exit(1, "Can't create windows", "");
    }
 
    return TRUE;
@@ -1822,7 +1822,7 @@ static void setup_level_menu(HWND hDlg)
 
    SendDlgItemMessage(hDlg, IDC_START_LIST, LB_RESETCONTENT, 0, 0L);
 
-   for (lev=(int)l_xyz ; ; lev++) {
+   for (lev=(int)l_mainstream ; ; lev++) {
       Cstring this_string = getout_strings[lev];
       if (!this_string[0]) break;
       SendDlgItemMessage(hDlg, IDC_START_LIST, LB_ADDSTRING, 0, (LPARAM) this_string);
@@ -1835,7 +1835,7 @@ static void setup_level_menu(HWND hDlg)
 static void SetTitle()
 {
    UpdateStatusBar((Cstring) 0);
-   SetWindowText(hwndMain, (LPSTR) szMainTitle);
+   SetWindowText(hwndMain, (LPSTR) szMainTitle.c_str());
 }
 
 
@@ -1850,10 +1850,9 @@ void iofull::set_pick_string(Cstring string)
    }
 }
 
-void iofull::set_window_title(char s[])
+void iofull::set_window_title(Cstring s)
 {
-   lstrcpy(szMainTitle, "Sd ");
-   lstrcat(szMainTitle, s);
+   szMainTitle = to_string("Sd ", s);
    SetTitle();
 }
 
@@ -1984,7 +1983,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          // In the latter case, we went back and asked for the level.
          // So now we have both, and we can proceed.
          calling_level = (dance_level) i;
-         strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+         outfile_string += filename_strings[calling_level];
       }
 
       // If a session was selected, and that session specified
@@ -2013,7 +2012,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                           szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
             if (szCallListFilename[0])
-               strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
+               abridge_filename = szCallListFilename;
          }
       }
       else if (IsDlgButtonChecked(hwnd, IDC_ABRIDGE)) {
@@ -2027,11 +2026,13 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
                        szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
          if (szCallListFilename[0])
-            strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
+            abridge_filename = szCallListFilename;
       }
 
       // If user specified the output file during startup dialog, install that.
       // It overrides anything from the command line.
+
+      char szOutFilename[MAX_TEXT_LINE_LENGTH];
 
       GetWindowText(GetDlgItem(hwnd, IDC_OUTPUT_NAME),
                     szOutFilename, MAX_TEXT_LINE_LENGTH);
@@ -2076,17 +2077,17 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    case abridge_mode_writing_only:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    case abridge_mode_writing_full:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_FULL_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    case abridge_mode_abridging:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_ABRIDGE);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (!abridge_filename.empty()) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename.c_str());
       break;
    default:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_NORMAL);
@@ -2110,12 +2111,12 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    // just be looking for a level.  So skip the session part.
 
    if (ui_options.force_session == -1000000 && !get_first_session_line()) {
-      char line[MAX_FILENAME_LENGTH];
+     std::string line;
 
       SetDlgItemText(hwnd, IDC_START_CAPTION, "Choose a session");
 
-      while (get_next_session_line(line))
-         SendDlgItemMessage(hwnd, IDC_START_LIST, LB_ADDSTRING, 0, (LPARAM) line);
+      while (get_next_session_line(&line))
+         SendDlgItemMessage(hwnd, IDC_START_LIST, LB_ADDSTRING, 0, (LPARAM) line.c_str());
       dialog_menu_type = dialog_session;
       SendDlgItemMessage(hwnd, IDC_START_LIST, LB_SETCURSEL, 0, 0L);
    }
@@ -2306,7 +2307,7 @@ bool iofull::init_step(init_callback_state s, int n)
          NULL, NULL, GLOBhInstance, NULL);
 
       if (!hwndMain)
-         fatal_error_exit(1, "Can't create main window", 0);
+         fatal_error_exit(1, "Can't create main window", "");
 
       GLOBprinter = new printer(GLOBhInstance, hwndMain, printer_default_info);
 
@@ -2316,7 +2317,7 @@ bool iofull::init_step(init_callback_state s, int n)
       if (ui_options.force_session != -1000000 &&
           ui_options.force_session != 0 &&
           !get_first_session_line()) {
-         while (get_next_session_line((char *) 0));   // Need to scan the file anyway.
+         while (get_next_session_line(NULL));   // Need to scan the file anyway.
          session_index = ui_options.force_session;
          if (session_index < 0) {
             request_deletion = true;
@@ -2356,8 +2357,8 @@ bool iofull::init_step(init_callback_state s, int n)
       break;
 
    case final_level_query:
-      calling_level = l_xyz;   // User really doesn't want to tell us the level.
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      calling_level = l_mainstream;   // User really doesn't want to tell us the level.
+      outfile_string += filename_strings[calling_level];
       break;
 
    case init_database1:
@@ -2412,7 +2413,7 @@ void iofull::final_initialize()
                               FindResource(GLOBhInstance,
                                            MAKEINTRESOURCE(IDB_BITMAP1), RT_BITMAP));
 
-   if (!hRes) fatal_error_exit(1, "Can't load resources", 0);
+   if (!hRes) fatal_error_exit(1, "Can't load resources", "");
 
    // Map the bitmap file into memory.
    LPBITMAPINFO lpBitsTemp = (LPBITMAPINFO) LockResource(hRes);
@@ -3018,11 +3019,15 @@ uint32_t iofull::get_one_number(matcher_class &matcher)
 }
 
 
-void iofull::add_new_line(const char the_line[], uint32_t drawing_picture)
+void iofull::add_new_line(std::string_view the_line, uint32_t drawing_picture)
 {
    erase_questionable_stuff();
-   lstrcpyn(CurDisplay->Line, the_line, DISPLAY_LINE_LENGTH-1);
-   CurDisplay->Line[DISPLAY_LINE_LENGTH-1] = 0;
+   if (the_line.size() <= DISPLAY_LINE_LENGTH-1) {
+      CurDisplay->Line = the_line;
+   }
+   else {
+      CurDisplay->Line = the_line.substr(0, DISPLAY_LINE_LENGTH-1);
+   }
    CurDisplay->in_picture = drawing_picture;
 
    if ((CurDisplay->in_picture & 1) && ui_options.no_graphics == 0) {
@@ -3098,16 +3103,14 @@ bool iofull::choose_font()
 
 bool iofull::print_this()
 {
-   char full_outfile_name[MAX_FILENAME_LENGTH];
-   strncpy(full_outfile_name, outfile_prefix, MAX_FILENAME_LENGTH);
-   strncat(full_outfile_name, outfile_string, MAX_FILENAME_LENGTH);
-   GLOBprinter->print_this(full_outfile_name, szMainTitle, false);
+   std::string full_outfile_name = outfile_prefix + outfile_string;
+   GLOBprinter->print_this(full_outfile_name.c_str(), szMainTitle.c_str(), false);
    return true;
 }
 
 bool iofull::print_any()
 {
-   GLOBprinter->print_any(szMainTitle, false);
+   GLOBprinter->print_any(szMainTitle.c_str(), false);
    return true;
 }
 
@@ -3125,12 +3128,13 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
 void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
 {
    if (s2 && s2[0]) {
-      char msg[200];
-      wsprintf(msg, "%s: %s", s1, s2);
-      s1 = msg;   // Yeah, we can do that.  Yeah, it's sleazy.
+      std::string msg = to_string(s1, ": ", s2);
+      serious_error_print(msg.c_str());
+   }
+   else {
+      serious_error_print(s1);
    }
 
-   serious_error_print(s1);
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);
 }

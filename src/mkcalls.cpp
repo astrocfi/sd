@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -42,6 +42,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include "paths.h"
 #include "database.h"
 
@@ -62,9 +63,8 @@
 
 FILE *db_input = NULL;
 FILE *db_output = NULL;
-#define FILENAME_LEN 200
-char db_input_filename[FILENAME_LEN];
-char db_output_filename[FILENAME_LEN];
+std::string db_input_filename;
+std::string db_output_filename;
 
 
 typedef enum {
@@ -234,10 +234,8 @@ struct tagtabitem {
 // They are the level strings that can appear in the database.
 // The reason for the crazy names is to make it easy to search for things.
 const char *leveltab[] = {
-   "xyz",
    "mainstream",
    "plus",
-   "pqr",
    "a1",
    "a2",
    "c1",
@@ -1108,6 +1106,7 @@ const char *flagtab1[] = {
    "can_do_in_z",
    "warn_on_elongation",
    "allow_if_centers_only",
+   "can_go_to_empty_setup",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.
@@ -1871,7 +1870,7 @@ static int get_char()
       if (!lineptr) {
          if (!feof(db_input)) {
             fprintf(stderr, "Error reading input file ");
-            perror(db_input_filename);
+            perror(db_input_filename.c_str());
             exit(1);
          }
 
@@ -2078,7 +2077,7 @@ static int get_num(const char s[])
 void db_output_error()
 {
     fprintf(stderr, "Error writing output file ");
-    perror(db_output_filename);
+    perror(db_output_filename.c_str());
     exit(1);
 }
 
@@ -2218,7 +2217,7 @@ static void write_defmod_flags(int is_seq)
                uint64_t bit = 1ULL << i;
                heritbit |= bit;
             }
-            else if ((i = search(yoyotabforce)) >= 0) 
+            else if ((i = search(yoyotabforce)) >= 0)
                heritbit |= INHERITFLAG_YOYOETCBIT * (i+1);
             else if ((i = search(mxntabforce)) >= 0)
                heritbit |= INHERITFLAG_MXNBIT * (i+1);
@@ -2809,33 +2808,33 @@ def2:
 int main(int argc, char *argv[])
 {
    if (argc == 2)
-       strncpy(db_input_filename, argv[1], FILENAME_LEN);
+       db_input_filename = argv[1];
    else
-       strncpy(db_input_filename, CALLS_FILENAME, FILENAME_LEN);
+       db_input_filename = CALLS_FILENAME;
 
-   strncpy(db_output_filename, DATABASE_FILENAME, FILENAME_LEN);
+   db_output_filename = DATABASE_FILENAME;
 
-   db_input = fopen(db_input_filename, "r");
+   db_input = fopen(db_input_filename.c_str(), "r");
    if (!db_input) {
       fprintf(stderr, "Can't open input file ");
-      perror(db_input_filename);
+      perror(db_input_filename.c_str());
       exit(1);
    }
 
-   if (remove(db_output_filename)) {
+   if (remove(db_output_filename.c_str())) {
       if (errno != ENOENT) {
 	 fprintf(stderr, "trouble deleting old output file ");
-	 perror(db_output_filename);
+	 perror(db_output_filename.c_str());
          // This one does NOT abort.
       }
    }
 
    // The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
    // however, require it for correct handling of binary data.
-   db_output = fopen(db_output_filename, "wb");
+   db_output = fopen(db_output_filename.c_str(), "wb");
    if (!db_output) {
       fprintf(stderr, "Can't open output file ");
-      perror(db_output_filename);
+      perror(db_output_filename.c_str());
       exit(1);
    }
 
@@ -3113,7 +3112,7 @@ int main(int argc, char *argv[])
    db_input = NULL;
    if (result != 0) {
       fprintf(stderr, "Error reading input file ");
-      perror(db_input_filename);
+      perror(db_input_filename.c_str());
       exit(1);
    }
 

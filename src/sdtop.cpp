@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -166,8 +166,8 @@ and the following external variables:
 // *** There are more globals proclaimed at line 235.
 ui_utils *gg77 = 0;
 int text_line_count = 0;
-char error_message1[MAX_ERR_LENGTH];
-char error_message2[MAX_ERR_LENGTH];
+std::string error_message1;
+std::string error_message2;
 uint32_t collision_person1;
 uint32_t collision_person2;
 int config_history_ptr;
@@ -202,10 +202,8 @@ int written_history_nopic;
 //
 // BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
 dance_level level_threshholds_for_pick[] = {
-   l_xyz,
    l_mainstream,
    l_plus,
-   l_pqr,
    l_a1,
    l_a1,      // If a2 is given, an a1 call is OK.
    l_c1,
@@ -221,10 +219,8 @@ dance_level level_threshholds_for_pick[] = {
 
 // BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
 Cstring getout_strings[] = {
-   "Mainstream 2026",
    "Mainstream",
    "Plus",
-   "Plus 2026",
    "A1",
    "A2",
    "C1",
@@ -1064,7 +1060,7 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
       if (tptr->kind == kind &&
           tptr->live == livemask &&
           ((tptr->dir ^ directions) & tptr->dirmask) == 0 &&
-          (!(tptr->forbidden_elongation & 32) || touchflags == CFLAG1_STEP_TO_WAVE))
+          (!(tptr->forbidden_elongation & 0x20) || touchflags == CFLAG1_STEP_TO_WAVE))
          return tptr;
    }
 
@@ -1376,7 +1372,7 @@ void setup::touch_or_rear_back(
    // the centers would touch.  Case is a starting DPT with ends 1/4 left.
    // People are supposed to step to right hands, but the centers on a Fan the Top
    // normally step to left hands.  What are the dancers supposed to do?
-   if ((tptr->forbidden_elongation & 64) && (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) &&
+   if ((tptr->forbidden_elongation & 0x40) && (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) &&
        touchflags == CFLAG1_STEP_TO_WAVE)
       warn(warn__some_touch_evil);
    else
@@ -1387,8 +1383,12 @@ void setup::touch_or_rear_back(
    // right-hand wave, we have a 2x4 from which we allow "swing thru", as long
    // as no phantom concept was given.  (If we said "split phantom waves", we
    // would definitely not want to step to a single wave from this 2x4.)
-   if ((tptr->forbidden_elongation & 128) && (cmd.cmd_misc_flags & CMD_MISC__PHANTOMS))
+   if ((tptr->forbidden_elongation & 0x80) && (cmd.cmd_misc_flags & CMD_MISC__PHANTOMS))
       return;
+
+   if ((tptr->forbidden_elongation & 0x100) && (cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS) &&
+       (cmd.prior_elongation_bits & 1))    // actually, check against real facing directions?
+      fail("People are too far away to work with each other on this call.");
 
    if ((tptr->forbidden_elongation & 4) && (cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS))
       cmd.prior_elongation_bits =
@@ -2580,9 +2580,6 @@ restriction_test_result verify_restriction(
    case cr_levelplus:
       if (calling_level < l_plus) return restriction_bad_level;
       goto good;
-   case cr_levelpqr:
-      if (calling_level < l_pqr) return restriction_bad_level;
-      goto good;
    case cr_levela1:
       if (calling_level < l_a1) return restriction_bad_level;
       goto good;
@@ -3545,7 +3542,7 @@ void finalize_sdlib()
 
 static bool check_for_supercall(parse_block *parseptrcopy)
 {
-   concept_kind kk = parseptrcopy->concept->kind;
+   concept_kind kk = parseptrcopy->concept_ptr->kind;
    heritflags zeroherit = 0ULL;
 
    if (kk <= marker_end_of_list) {
@@ -3577,7 +3574,7 @@ static bool check_for_supercall(parse_block *parseptrcopy)
          get_real_subcall(parseptrcopy, &subdef, &bar, &this_defn, false, zeroherit, &foo2junk);
       }
 
-      if (parseptrcopy->concept->kind == concept_another_call_next_mod &&
+      if (parseptrcopy->concept_ptr->kind == concept_another_call_next_mod &&
           parseptrcopy->next &&
           (parseptrcopy->next->call == base_calls[base_call_null] ||
            parseptrcopy->next->call == base_calls[base_call_null_second] ||
@@ -3618,7 +3615,7 @@ bool check_for_concept_group(
 
    parseptr_skip = parseptrcopy->next;
 
-   if (parseptrcopy->concept) {
+   if (parseptrcopy->concept_ptr) {
       kk = parseptrcopy;
 
       if (check_for_supercall(parseptrcopy))
@@ -3627,7 +3624,7 @@ bool check_for_concept_group(
    else
       kk = &pbend;
 
-   const concept_descriptor *this_concept = kk->concept;
+   const concept_descriptor *this_concept = kk->concept_ptr;
    k = this_concept->kind;
 
    if (!retval) {
@@ -3654,7 +3651,7 @@ bool check_for_concept_group(
    junk_concepts.clear_all_herit_and_final_bits();
    parse_block *temp = process_final_concepts(parseptrcopy, false, &junk_concepts, false, false);
 
-   if (temp && temp != parseptrcopy && temp->concept->kind == concept_concentric &&
+   if (temp && temp != parseptrcopy && temp->concept_ptr->kind == concept_concentric &&
        !junk_concepts.bool_test_heritbits(~(INHERITFLAG_GRAND|INHERITFLAG_SINGLE|INHERITFLAG_CROSS))) {
          double_skip = temp;
    }
@@ -3666,33 +3663,33 @@ bool check_for_concept_group(
          if (k == concept_c1_phantom) {
             // Look for combinations like "phantom tandem".
             // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
-            if ((temp->concept->kind == concept_tandem ||
-                 temp->concept->kind == concept_frac_tandem) &&
+            if ((temp->concept_ptr->kind == concept_tandem ||
+                 temp->concept_ptr->kind == concept_frac_tandem) &&
                 (!junk_concepts.test_for_any_herit_or_final_bit())) {
                double_skip = temp;
             }
          }
          else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
             // Look for combinations like "mystic triple boxes".
-            if ((temp->concept->kind == concept_multiple_lines ||
-                 temp->concept->kind == concept_multiple_diamonds ||
-                 temp->concept->kind == concept_multiple_formations ||
-                 temp->concept->kind == concept_multiple_boxes) &&
-                temp->concept->arg4 == 3 &&
+            if ((temp->concept_ptr->kind == concept_multiple_lines ||
+                 temp->concept_ptr->kind == concept_multiple_diamonds ||
+                 temp->concept_ptr->kind == concept_multiple_formations ||
+                 temp->concept_ptr->kind == concept_multiple_boxes) &&
+                temp->concept_ptr->arg4 == 3 &&
                 (!junk_concepts.test_for_any_herit_or_final_bit())) {
                double_skip = temp;
             }
          }
          else if (k == concept_parallelogram ||
                   (k == concept_distorted &&
-                   parseptrcopy->concept->arg1 == disttest_offset &&
-                   parseptrcopy->concept->arg3 == 0 &&
-                   (parseptrcopy->concept->arg4 & ~0xF) == DISTORTKEY_DIST_CLW*16)) {
+                   parseptrcopy->concept_ptr->arg1 == disttest_offset &&
+                   parseptrcopy->concept_ptr->arg3 == 0 &&
+                   (parseptrcopy->concept_ptr->arg4 & ~0xF) == DISTORTKEY_DIST_CLW*16)) {
             // Look for combinations like "parallelogram split phantom C/L/W/B".
             // Similarly with "offset C/L/W split phantom C/L/W/B".
-            if ((temp->concept->kind == concept_do_phantom_2x4 ||
-                 temp->concept->kind == concept_do_phantom_boxes) &&
-                temp->concept->arg3 == MPKIND__SPLIT &&
+            if ((temp->concept_ptr->kind == concept_do_phantom_2x4 ||
+                 temp->concept_ptr->kind == concept_do_phantom_boxes) &&
+                temp->concept_ptr->arg3 == MPKIND__SPLIT &&
                 (!junk_concepts.test_for_any_herit_or_final_bit())) {
                // But not if being done "initially" or whatever.
                // In that case the "parallelogram" (or whatever) and the
@@ -3707,7 +3704,7 @@ bool check_for_concept_group(
             double_skip = parseptr_skip;
          }
          else if (k == concept_so_and_so_only &&
-                  ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
+                  ((selective_key) parseptrcopy->concept_ptr->arg1) == selective_key_work_concept) {
             // Look for combinations like "<anyone> work <concept>".
             double_skip = parseptr_skip;
          }
@@ -3735,7 +3732,7 @@ bool check_for_concept_group(
          else
             retstuff.m_concept_with_root = first_arg;
 
-         if (concept_table[retstuff.m_concept_with_root->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
+         if (concept_table[retstuff.m_concept_with_root->concept_ptr->kind].concept_prop & CONCPROP__SECOND_CALL)
             retstuff.m_root_of_result_of_skip = &retstuff.m_concept_with_root->subsidiary_root;
          else
             retstuff.m_root_of_result_of_skip = &retstuff.m_concept_with_root->next;
@@ -3751,7 +3748,7 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
 {
    for ( ; p ; p = p->next) {
       if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
-      if (p->concept) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept->name);
+      if (p->concept_ptr) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept_ptr->name);
       if (p->call) n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
       n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
              p->options.who.who[0],
@@ -3791,48 +3788,43 @@ extern void crash_print(const char *filename, int linenum, int newtb, setup *ss)
 
 
 
-extern void fail(const char s[]) THROW_DECL
+extern void fail(std::string_view s) THROW_DECL
 {
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_1_line);
 }
 
 
-extern void fail_no_retry(const char s[]) THROW_DECL
+extern void fail_no_retry(std::string_view s) THROW_DECL
 {
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_no_retry);
 }
 
 
-extern void fail2(const char s1[], const char s2[]) THROW_DECL
+extern void fail2(std::string_view s1, std::string_view s2) THROW_DECL
 {
-   strncpy(error_message1, s1, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   strncpy(error_message2, s2, MAX_ERR_LENGTH);
-   error_message2[MAX_ERR_LENGTH-1] = '\0';
+   error_message1 = s1;
+   error_message2 = s2;
    throw error_flag_type(error_flag_2_line);
 }
 
 
-extern void failp(uint32_t id1, const char s[]) THROW_DECL
+extern void failp(uint32_t id1, std::string_view s) THROW_DECL
 {
    collision_person1 = id1;
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_cant_execute);
 }
 
 
-extern void specialfail(const char s[]) THROW_DECL
+extern void specialfail(std::string_view s) THROW_DECL
 {
-   strncpy(error_message1, s, MAX_ERR_LENGTH);
-   error_message1[MAX_ERR_LENGTH-1] = '\0';
-   error_message2[0] = '\0';
+   error_message1 = s;
+   error_message2.clear();
    throw error_flag_type(error_flag_wrong_resolve_command);
 }
 
@@ -3840,16 +3832,16 @@ extern void specialfail(const char s[]) THROW_DECL
 void saved_error_info::collect(error_flag_type flag)
 {
    save_error_flag = flag;
-   strncpy((char *) save_error_message1, error_message1, MAX_ERR_LENGTH);
-   strncpy((char *) save_error_message2, error_message2, MAX_ERR_LENGTH);
+   save_error_message1 = error_message1;
+   save_error_message2 = error_message2;
    save_collision_person1 = collision_person1;
    save_collision_person2 = collision_person2;
 }
 
 void saved_error_info::throw_saved_error() THROW_DECL
 {
-   strncpy(error_message1, (char *) save_error_message1, MAX_ERR_LENGTH);
-   strncpy(error_message2, (char *) save_error_message2, MAX_ERR_LENGTH);
+   error_message1 = save_error_message1;
+   error_message2 = save_error_message2;
    collision_person1 = save_collision_person1;
    collision_person2 = save_collision_person2;
    throw save_error_flag;
@@ -4847,12 +4839,12 @@ extern callarray *assoc(
          goto bad;
       case cr_people_12_opp_real:
          if (ss->people[1].id1 != 0 && ss->people[(begin_size>>1)+1].id1 != 0 &&
-             ss->people[2].id1 != 0 && ss->people[(begin_size>>1)+2].id1 != 0) 
+             ss->people[2].id1 != 0 && ss->people[(begin_size>>1)+2].id1 != 0)
             goto good;
          goto bad;
       case cr_people_34_opp_real:
          if (ss->people[3].id1 != 0 && ss->people[(begin_size>>1)+3].id1 != 0 &&
-             ss->people[4].id1 != 0 && ss->people[(begin_size>>1)+4].id1 != 0) 
+             ss->people[4].id1 != 0 && ss->people[(begin_size>>1)+4].id1 != 0)
             goto good;
          goto bad;
       case cr_people_0_opp_phan:
@@ -5354,12 +5346,12 @@ parse_block *process_final_concepts(
       heritflags heritsetbit = 0ULL;
       heritflags forbidheritbit = 0ULL;
 
-      if (cptr->concept->kind >= FIRST_SIMPLE_HERIT_CONCEPT &&
-          cptr->concept->kind <= LAST_SIMPLE_HERIT_CONCEPT) {
-         heritsetbit = simple_herit_bits_table[cptr->concept->kind - FIRST_SIMPLE_HERIT_CONCEPT];
+      if (cptr->concept_ptr->kind >= FIRST_SIMPLE_HERIT_CONCEPT &&
+          cptr->concept_ptr->kind <= LAST_SIMPLE_HERIT_CONCEPT) {
+         heritsetbit = simple_herit_bits_table[cptr->concept_ptr->kind - FIRST_SIMPLE_HERIT_CONCEPT];
       }
       else {
-         switch (cptr->concept->kind) {
+         switch (cptr->concept_ptr->kind) {
          case concept_comment:
             continue;               // Skip comments.
          case concept_triangle:
@@ -5457,7 +5449,7 @@ parse_block *process_final_concepts(
          case concept_8x8:
             heritsetbit = INHERITFLAGNXNK_8X8; break;
          case concept_revert:
-            heritsetbit = (heritflags) cptr->concept->arg1; break;
+            heritsetbit = (heritflags) cptr->concept_ptr->arg1; break;
          case concept_rectify:
             heritsetbit = INHERITFLAG_RECTIFY; break;
          case concept_split:
@@ -5521,7 +5513,7 @@ parse_block *process_final_concepts(
 
    check_level:
 
-      if (check_errors && cptr->concept->level > calling_level)
+      if (check_errors && cptr->concept_ptr->level > calling_level)
          warn(warn__bad_concept_level);
 
       // Stop now if we have been asked to process only one concept.
@@ -5540,7 +5532,7 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming,
    if (!incoming)
       fail("Need a concept.");
 
-   while (incoming->concept->kind == concept_comment)
+   while (incoming->concept_ptr->kind == concept_comment)
       incoming = incoming->next;
 
    m_nocmd_misc3_bits = 0;
@@ -5571,8 +5563,8 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming,
    else if (junk_concepts.test_for_any_herit_or_final_bit()) {
       parseptrcopy = incoming;
    }
-   else if (parseptrcopy->concept) {
-      concept_kind kk = parseptrcopy->concept->kind;
+   else if (parseptrcopy->concept_ptr) {
+      concept_kind kk = parseptrcopy->concept_ptr->kind;
 
       if (check_for_supercall(parseptrcopy)) {
          if (parseptrcopy->call->the_defn.callflagsf & (CFLAGH__HAS_AT_ZERO | CFLAGH__HAS_AT_M)) {
@@ -5608,12 +5600,12 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming,
          fail("Sorry, can't do this with this concept.");
 
       if ((concept_table[kk].concept_prop & CONCPROP__SECOND_CALL) &&
-          parseptrcopy->concept->kind != concept_checkpoint &&
-          parseptrcopy->concept->kind != concept_sandwich &&
-          parseptrcopy->concept->kind != concept_on_your_own &&
-          (parseptrcopy->concept->kind != concept_some_vs_others ||
-           parseptrcopy->concept->arg1 != selective_key_own) &&
-          parseptrcopy->concept->kind != concept_special_sequential)
+          parseptrcopy->concept_ptr->kind != concept_checkpoint &&
+          parseptrcopy->concept_ptr->kind != concept_sandwich &&
+          parseptrcopy->concept_ptr->kind != concept_on_your_own &&
+          (parseptrcopy->concept_ptr->kind != concept_some_vs_others ||
+           parseptrcopy->concept_ptr->arg1 != selective_key_own) &&
+          parseptrcopy->concept_ptr->kind != concept_special_sequential)
          fail("Can't use a concept that takes a second call.");
    }
 
@@ -6370,7 +6362,7 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
       if (!conceptptr)
          fail("Incomplete parse.");
 
-      if (conceptptr->concept->kind <= marker_end_of_list) {
+      if (conceptptr->concept_ptr->kind <= marker_end_of_list) {
          if (!conceptptr->call)
             fail("Incomplete parse.");
 
@@ -6381,7 +6373,7 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
               (CFLAGH__HAS_AT_ZERO | CFLAGH__HAS_AT_M))) {
 
             // This call requires subcalls.
-            if (conceptptr->concept->kind != concept_another_call_next_mod)
+            if (conceptptr->concept_ptr->kind != concept_another_call_next_mod)
                fail("Incomplete parse.");
 
             bool subst1_in_use = false;
@@ -6419,7 +6411,7 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
          break;
       }
       else {
-         if (concept_table[conceptptr->concept->kind].concept_prop & CONCPROP__SECOND_CALL) {
+         if (concept_table[conceptptr->concept_ptr->kind].concept_prop & CONCPROP__SECOND_CALL) {
             check_concept_parse_tree(conceptptr->subsidiary_root, strict);
          }
 
@@ -6456,7 +6448,7 @@ bool check_for_centers_concept(uint64_t & callflags1_to_examine,   // We rewrite
    while (did_something) {
       did_something = false;
 
-      while (parse_scan->concept->kind == concept_comment)
+      while (parse_scan->concept_ptr->kind == concept_comment)
          parse_scan = parse_scan->next;
 
       if (parse_scan->call)
@@ -6478,22 +6470,22 @@ bool check_for_centers_concept(uint64_t & callflags1_to_examine,   // We rewrite
       // Also skip "stretch" and "once removed", and so on.
       // And "add <call>", which requires tracing the subsidiary_root.
       for ( ;; ) {
-         if ((parse_scan->concept->kind == concept_fractional &&
-              parse_scan->concept->arg1 == 0) ||
-             parse_scan->concept->kind == concept_meta ||
-             parse_scan->concept->kind == concept_once_removed ||
-             parse_scan->concept->kind == concept_stable ||
-             parse_scan->concept->kind == concept_frac_stable ||
-             parse_scan->concept->kind == concept_mirror ||
-             parse_scan->concept->kind == concept_concentric ||
-             parse_scan->concept->kind == concept_tandem ||
-             parse_scan->concept->kind == concept_frac_tandem ||
-             parse_scan->concept->kind == concept_stretched_setup ||
-             parse_scan->concept->kind == concept_stretch) {
+         if ((parse_scan->concept_ptr->kind == concept_fractional &&
+              parse_scan->concept_ptr->arg1 == 0) ||
+             parse_scan->concept_ptr->kind == concept_meta ||
+             parse_scan->concept_ptr->kind == concept_once_removed ||
+             parse_scan->concept_ptr->kind == concept_stable ||
+             parse_scan->concept_ptr->kind == concept_frac_stable ||
+             parse_scan->concept_ptr->kind == concept_mirror ||
+             parse_scan->concept_ptr->kind == concept_concentric ||
+             parse_scan->concept_ptr->kind == concept_tandem ||
+             parse_scan->concept_ptr->kind == concept_frac_tandem ||
+             parse_scan->concept_ptr->kind == concept_stretched_setup ||
+             parse_scan->concept_ptr->kind == concept_stretch) {
             parse_scan = parse_scan->next;
          }
-         else if ((parse_scan->concept->kind == concept_special_sequential &&
-                   parse_scan->concept->arg1 == 0)) {
+         else if ((parse_scan->concept_ptr->kind == concept_special_sequential &&
+                   parse_scan->concept_ptr->arg1 == 0)) {
             parse_scan = parse_scan->subsidiary_root;
          }
          else
@@ -6525,8 +6517,8 @@ bool check_for_centers_concept(uint64_t & callflags1_to_examine,   // We rewrite
       // We do this if the call is something like "<anything> and roll".
       // The test is that it is sequentially defined, and part 1 is
       // a mandatory substitution, replacing the call "nothing".
-      if ((parse_scan->concept->kind == concept_another_call_next_mod ||
-           parse_scan->concept->kind == marker_end_of_list) &&
+      if ((parse_scan->concept_ptr->kind == concept_another_call_next_mod ||
+           parse_scan->concept_ptr->kind == marker_end_of_list) &&
           parse_scan->call &&
           parse_scan->call->the_defn.schema == schema_sequential) {
          calldefn *seqdef = &parse_scan->call->the_defn;
@@ -6766,11 +6758,11 @@ void setup::put_in_absolute_proximity_and_facing_bits()
          if (people[i].id1 & BIT_PERSON) {
             // By adding 64 and truncating, we are turning them into unsigned
             // 8-bit numbers, so we can just concatenate them and compare both at once.
-            uint32_t Vcoord = 
+            uint32_t Vcoord =
                ((rotation & 1) ?
                 setup_attrs[kind].nice_setup_coords->xca[i] :
                 -setup_attrs[kind].nice_setup_coords->yca[i]) + 128;
-            uint32_t Hcoord = 
+            uint32_t Hcoord =
                ((rotation & 1) ?
                 -setup_attrs[kind].nice_setup_coords->yca[i] :
                 setup_attrs[kind].nice_setup_coords->xca[i]) + 128;
@@ -6879,9 +6871,9 @@ void toplevelmove() THROW_DECL
          if (cnext->call &&
              (cnext->call->the_defn.schema == schema_concentric_specialpromenade ||
               cnext->call->the_defn.schema == schema_cross_concentric_specialpromenade)) {
-            conceptptr->concept = (configuration::current_config().startinfoindex == start_select_sides_start) ?
+            conceptptr->concept_ptr = (configuration::current_config().startinfoindex == start_select_sides_start) ?
                &concept_sides_concept : &concept_heads_concept;
-            conceptptr->options.who.who[0] = (selector_kind) conceptptr->concept->arg1;
+            conceptptr->options.who.who[0] = (selector_kind) conceptptr->concept_ptr->arg1;
 
             starting_setup.kind = configuration::startinfolist[start_select_as_they_are].the_setup_p->kind;
             starting_setup.rotation = configuration::startinfolist[start_select_as_they_are].the_setup_p->rotation;
@@ -6952,7 +6944,7 @@ void finish_toplevelmove() THROW_DECL
 
    // Remove outboard phantoms from the resulting setup.
    normalize_setup(&newhist.state,
-                   two_couple_calling ? normalize_to_4 : plain_normalize, 
+                   two_couple_calling ? normalize_to_4 : plain_normalize,
                    two_couple_calling ? qtag_compress_unless_tboned : qtag_no_compress);
    // Resolve needs to know what "near 4" means right now.
    newhist.state.clear_absolute_proximity_and_facing_bits();
@@ -6972,8 +6964,8 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
       // call takes a tagger -- it could have a search chain before we even see it.
       while (save1->next) save1 = save1->next;
       save1->next = tt;
-      save1->concept = &concept_marker_concept_mod;
-      tt->concept = &concept_marker_concept_mod;
+      save1->concept_ptr = &concept_marker_concept_mod;
+      tt->concept_ptr = &concept_marker_concept_mod;
       tt->call = base_calls[(key == DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT) ?
                            base_call_null_second: base_call_null];
       tt->call_to_print = tt->call;
@@ -7020,7 +7012,7 @@ bool do_subcall_query(
    bool this_is_tagger_circcer,
    call_with_name *orig_call)
 {
-   char tempstring_text[MAX_TEXT_LINE_LENGTH];
+   std::string tempstring_text;
 
    // Note whether we are using any mandatory substitutions, so that the menu
    // initialization will always accept this call.
@@ -7088,12 +7080,10 @@ bool do_subcall_query(
    // Set ourselves up for modification by making the null modification list
    // if necessary.  ***** Someday this null list will always be present.
 
-   if (parseptr->concept->kind == marker_end_of_list)
-      parseptr->concept = &concept_marker_concept_mod;
+   if (parseptr->concept_ptr->kind == marker_end_of_list)
+      parseptr->concept_ptr = &concept_marker_concept_mod;
 
    // Create a reference on the list.  "search" points to the null item at the end.
-
-   tempstring_text[0] = '\0';           // Null string, just to be safe.
 
    // If doing a tagger, just get the call.
 
@@ -7106,9 +7096,9 @@ bool do_subcall_query(
    else if (interactivity != interactivity_normal)
       ;
    else if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
-      sprintf(tempstring_text, "SUBSIDIARY CALL");
+      tempstring_text = "SUBSIDIARY CALL";
    else if (snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
-      sprintf(tempstring_text, "SECOND SUBSIDIARY CALL");
+      tempstring_text = "SECOND SUBSIDIARY CALL";
    else {
 
       // Need to present the popup to the operator
@@ -7123,27 +7113,24 @@ bool do_subcall_query(
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
 
-      const char *line_format;
-
+      std::string tempstuff = to_string("The \"", pretty_call_name, "\" can be replaced");
       if (this_is_tagger)
-         line_format = "The \"%s\" can be replaced with a tagging call.";
+         tempstuff += " with a tagging call.";
       else if (this_is_tagger_circcer)
-         line_format = "The \"%s\" can be replaced with a modified circulate-like call.";
+         tempstuff += " with a modified circulate-like call.";
       else
-         line_format = "The \"%s\" can be replaced.";
+         tempstuff += ".";
 
-      char tempstuff[200];
-      sprintf(tempstuff, line_format, pretty_call_name);
-      if (gg77->iob88.yesnoconfirm("Replacement", tempstuff, "Do you want to replace it?", false, false)) {
+      if (gg77->iob88.yesnoconfirm("Replacement", tempstuff.c_str(), "Do you want to replace it?", false, false)) {
          // User accepted the modification.
          // Set up the prompt and get the concepts and call.
-         sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
+         tempstring_text = to_string("REPLACEMENT FOR THE ", pretty_call_name);
       }
       else {
          // User declined the modification.  Create a null entry
          // so that we don't query again.
          *newsearch = parse_block::get_parse_block();
-         (*newsearch)->concept = &concept_marker_concept_mod;
+         (*newsearch)->concept_ptr = &concept_marker_concept_mod;
          (*newsearch)->options = current_options;
          (*newsearch)->replacement_key = snumber;
          (*newsearch)->call = orig_call;
@@ -7153,7 +7140,7 @@ bool do_subcall_query(
    }
 
    *newsearch = parse_block::get_parse_block();
-   (*newsearch)->concept = &concept_marker_concept_mod;
+   (*newsearch)->concept_ptr = &concept_marker_concept_mod;
    (*newsearch)->options = current_options;
    (*newsearch)->replacement_key = snumber;
    (*newsearch)->call = orig_call;
@@ -7169,7 +7156,7 @@ bool do_subcall_query(
 
    parse_state.parse_stack_index = 0;
    parse_state.call_list_to_use = call_list_any;
-   strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
+   parse_state.specialprompt = tempstring_text;
 
    // Search for special case of "must_be_tag_call" with no other modification bits.
    // That means it is a new-style tagging call.

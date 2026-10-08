@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -4770,20 +4770,20 @@ static uint32_t do_actual_array_call(
       desired_elongation ^= 3;
 
    if (!newtb) {
-      if (ss->kind == s1x4 && linedefinition && linedefinition->get_end_setup() == s2x2)
+      if (ss->kind == s1x4 && linedefinition &&
+          linedefinition->get_end_setup() == s2x2)
          result->result_flags.misc |= RESULTFLAG__EMPTY_1X4_TO_2X2;
-
-      result->kind = nothing;   // Note that we get the benefit of the
-                                // "CFLAG1_PARALLEL_CONC_END" stuff here.
-      return 0;                 // This means that a counter rotate in
-                                // an empty 1x2 will still change shape.
+      if (!(callspec->callflags1 & CFLAG1_CAN_GO_TO_EMPTY_SETUP)) {
+         result->kind = nothing;   // Note that we get the benefit of the
+                                   // "CFLAG1_PARALLEL_CONC_END" stuff here.
+         return 0;                 // This means that a counter rotate in
+                                   // an empty 1x2 will still change shape.
+      }
    }
 
    // Check that "linedefinition" has been set up if we will need it.
 
-   goodies = (callarray *) 0;
-
-   if ((newtb & 010) || four_way_startsetup) {
+   if (((newtb & 010) != 0) || four_way_startsetup) {
       assumption_thing t;
 
       if (!linedefinition) {
@@ -4831,8 +4831,9 @@ static uint32_t do_actual_array_call(
       if (t.assumption != cr_none)
          check_restriction(ss, t, false,
                            linedefinition->callarray_flags & CAF__RESTR_MASK);
-      goodies = linedefinition;
    }
+
+   goodies = linedefinition;
 
    // Check that "coldefinition" has been set up if we will need it.
 
@@ -6122,8 +6123,8 @@ static uint32_t do_actual_array_call(
          warn(warn__not_funny);
 
       call_with_name *maybe_call = (ss->cmd.parseptr &&
-                                    ss->cmd.parseptr->concept &&
-                                    ss->cmd.parseptr->concept->kind == marker_end_of_list) ?
+                                    ss->cmd.parseptr->concept_ptr &&
+                                    ss->cmd.parseptr->concept_ptr->kind == marker_end_of_list) ?
          ss->cmd.parseptr->call : (call_with_name *) 0;
 
       merge_action_type action = (maybe_call && (maybe_call->the_defn.callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES)) ?

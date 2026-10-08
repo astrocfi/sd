@@ -10,13 +10,15 @@
 
 @unnumberedsec How can I use the new @strong{mainstream} and @strong{plus} lists?
 
-These programs, as per a vote in Callerlab, will go into effect in
-September 2026.  Sd now recognizes, in addition the @strong{mainstream}
+Two new programs were temporarily added to Sd in early 2026 to handle the
+``Transitionary Implementation Phase of the Program Policy'' (TIPPP).
+These programs, as per a vote in Callerlab, went into effect in
+September 2026.  Sd recognized, in addition the @strong{mainstream}
 and @strong{plus} programs, the new programs called @strong{mainstream26}
 and @strong{plus26}.  When Sd or Sdtty is started at @strong{mainstream}
-or @strong{plus}, its behavior is the same as before.  When started at
-@strong{mainstream26}, it recognizes the new Callerlab mainstream list.
-That means that it will not allow:
+or @strong{plus}, its behavior was the same as before.  When started at
+@strong{mainstream26}, it recognized the new Callerlab mainstream list.
+That means that it would not allow:
 
 @itemize @bullet{}
 @item
@@ -47,8 +49,8 @@ The above calls were moved down, by Callerlab, to the @strong{basic} program,
 which Sd does not support.  But Sd supports them at mainstream and above.
 
 When started at
-@strong{plus26}, it recognizes the new Callerlab plus list.
-That means that it will recognize all of the above calls dropped from mainstream,
+@strong{plus26}, it recognized the new Callerlab plus list.
+That means that it recognized all of the above calls dropped from mainstream,
 in addition to these calls added from A1:
 
 @itemize @bullet{}
@@ -70,15 +72,12 @@ Scoot and dodge
 Triple trade
 @end itemize
 
-The above calls will of course still be available at A1 and above.
+The above calls were of course still available at A1 and above.
 
-In Sd, The names of the new lists are @strong{mainstream26} and
-@strong{plus26}.  Anything starting with ``m'' and ending with ``6''
-will be recognized as @strong{mainstream26}, so you can abbreviate it
-to ``m26''.  Anything starting with ``p'' and ending with ``6'' will
-be recognized as @strong{plus26}, so you can abbreviate it to ``p26''.
-Do not place hyphens or blank spaces in the level name.  Doing so
-would make the parsing of session files ambiguous.
+At release 39.85, in early October, 2026,  Sd's vocabulary changed to the new
+programs, and the transitional programs were removed.  The calls in the first
+list above are supported at mainstream.  The calls in the second
+list above are supported at plus.
 
 @unnumberedsec How does the stuff for calling just to two couples work?
 
@@ -1400,8 +1399,8 @@ on the command line or in a script or Windows shortcut, or put the line
 
 @strong{This section dates from a time when the state of compiler reliability,
 and of commercial software competitiveness, were quite different from today.
-Microsoft Visual Studio Community 2019 is now used as the secondary compiler
-for Sd and Sdtty, and it works quite reliably.  Mingw64 is used as the primary
+Microsoft Visual Studio Community 2026 is now used as the secondary compiler
+for Sd and Sdtty, and it works quite reliably.  MinGW64 is used as the primary
 compiler for production builds.  The program is rigorously tested on both compilers.}
 @sp 1
 I'm glad you asked.  The Microsoft compiler is not of acceptably high
@@ -1441,23 +1440,27 @@ No version of Sd or Sdtty suffering from this Microsoft compiler bug was
 ever released---the code was modified to avoid the bug.  But that is not
 a workable solution in the long run, since I don't know what other parts
 of the program could be getting compiled incorrectly.  So production builds
-use Gcc.
+use MinGW64/Gcc.
 
 @unnumberedsec So what software is used in the preparation of Sd and Sdtty?
 
 @example
   computer:             HP FHD 15-dy2000
+    historically: TI Explorer Lisp machine,
+    Apollo DN3500 workstation, HP Armada
+    150MHz laptop, various other laptops
   OS:                   Windows 11                   commercial
+    historically: Lisp machine, Domain/OS,
+    Windows NT4.0, various
   editor:               GNU Emacs 21.1.1             free
-  development systems   Visual Studio 2019           free with Windows
-     and                Mingw64                      free
+  development systems   Visual Studio 2019, 2026     free with Windows
+     and                MinGW64                      free
    (program is tested with both compilers)
-  compress utilities:   Info-Zip and/or 7-Zip        free
+  compress utilities:   Info-Zip, WinZip, 7-Zip      free
   compress self extractor  Iexpress                  free with Windows
                         gzip 1.2.4                   free
   document preprocessor:texinfo 1999-03-26.17        free
-  Postscript formatter: MiKTeX 2.9                   free
-  PDF formatter:        MiKTeX 2.9                   free
+  PDF formatter:        MiKTeX 4.8                   free
   HTML formatter:       Perl 5.004-02                free
                         Texi2html 1.51               free
   upload software       WinSCP                       free

@@ -103,7 +103,7 @@ and the following other variables:
 // "1.4:db1.5:ui0.6tty"
 // We return the "0.6tty" part.
 
-static char journal_name[MAX_TEXT_LINE_LENGTH];
+std::string journal_name;
 static FILE *journal_file = (FILE *) 0;
 int sdtty_screen_height = 0;  // The "lines" option may set this to something.
                               // Otherwise, any subsystem that sees the value zero
@@ -195,7 +195,6 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 {
    int argno = 1;
    char **argv = *argvp;
-   journal_name[0] = '\0';
 
    while (argno < (*argcp)) {
       int i;
@@ -215,7 +214,7 @@ void iofull::process_command_line(int *argcp, char ***argvp)
          goto remove_two;
       }
       else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
-         strcpy(journal_name, argv[argno+1]);
+         journal_name = argv[argno+1];
          journal_file = fopen(argv[argno+1], "w");
 
          if (!journal_file) {
@@ -271,11 +270,11 @@ static bool really_open_session()
    // in the command line, we don't query about the session.
 
    if (ui_options.force_session == -1000000) {
-      char line[MAX_FILENAME_LENGTH];
+      std::string line;
 
       put_line("Do you want to use one of the following sessions?\n\n");
 
-      while (get_next_session_line(line)) {
+      while (get_next_session_line(&line)) {
          put_line(line);
          put_line("\n");
       }
@@ -283,17 +282,17 @@ static bool really_open_session()
       put_line("Enter the number of the desired session\n");
       put_line("   (or a negative number to delete that session):  ");
 
-      get_string(line, MAX_FILENAME_LENGTH);
-      if (!line[0] || line[0] == '\r' || line[0] == '\n')
+      get_string<MAX_FILENAME_LENGTH>(&line);
+      if (line.empty() || line[0] == '\r' || line[0] == '\n')
          goto no_session;
 
-      if (!sscanf(line, "%d", &session_index)) {
+      if (!sscanf(line.c_str(), "%d", &session_index)) {
          session_index = 0;         // User typed garbage -- exit the program immediately.
          return true;
       }
    }
    else {
-      while (get_next_session_line((char *) 0));   // Need to scan the file anyway.
+      while (get_next_session_line(nullptr));   // Need to scan the file anyway.
       session_index = ui_options.force_session;
    }
 
@@ -363,7 +362,7 @@ bool iofull::init_step(init_callback_state s, int n)
       // a command line.  In that case, we need to query the user for the
       // level.
 
-      calling_level = l_xyz;   // Default in case we fail.
+      calling_level = l_mainstream;   // Default in case we fail.
       put_line("Enter the level: ");
 
       get_string(line, MAX_FILENAME_LENGTH);
@@ -375,7 +374,7 @@ bool iofull::init_step(init_callback_state s, int n)
 
       parse_level(line);
 
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH-80);
+      outfile_string += filename_strings[calling_level];
       break;
 
    case init_database1:
@@ -450,18 +449,18 @@ void iofull::create_menu(call_list_kind cl)
 
 
 
-void iofull::set_window_title(char s[])
+void iofull::set_window_title(Cstring s)
 {
-   char full_text[MAX_TEXT_LINE_LENGTH];
+   std::string full_text;
 
-   if (journal_name[0]) {
-      sprintf(full_text, "Sdtty %s {%s}", s, journal_name);
+   if (!journal_name.empty()) {
+      full_text = to_string("Sdtty ", s, " {", journal_name, "}");
    }
    else {
-      sprintf(full_text, "Sdtty %s", s);
+      full_text = to_string("Sdtty ", s);
    }
 
-   ttu_set_window_title(full_text);
+   ttu_set_window_title(full_text.c_str());
 }
 
 
@@ -1024,37 +1023,36 @@ uims_reply_thing iofull::get_resolve_command()
 }
 
 
-popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring final_inline_prompt,
-                                      Cstring /*seed*/, char *dest)
+popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view prompt2,
+                                      std::string_view final_inline_prompt,
+                                      std::string_view /*seed*/, std::string *dest)
 {
    // We ignore the "seed".  But Sd might use it.
 
    // Two lines of prompts are allowed.  But if they start with an asterisk,
    // Sd shows it but Sdtty does not.
 
-   if (prompt1 && prompt1[0] && prompt1[0] != '*') {
+   if (!prompt1.empty() && prompt1[0] != '*') {
       get_utils_ptr()->writestuff(prompt1);
       get_utils_ptr()->newline();
    }
 
-   if (prompt2 && prompt2[0] && prompt2[0] != '*') {
+   if (!prompt2.empty() && prompt2[0] != '*') {
       get_utils_ptr()->writestuff(prompt2);
       get_utils_ptr()->newline();
    }
 
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "%s ", final_inline_prompt);
-   put_line(buffer);
-   get_string(dest, MAX_TEXT_LINE_LENGTH);
+   put_line(to_string(final_inline_prompt, " "));
+   get_string<MAX_TEXT_LINE_LENGTH>(dest);
    // Backspace at start of line declines the popup.
-   if (dest[0] == '\b') return POPUP_DECLINE;
+   if ((*dest)[0] == '\b') return POPUP_DECLINE;
 
    current_text_line++;
-   return dest[0] ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
+   return !dest->empty() ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
 }
 
 
-static int confirm(Cstring question)
+static int confirm(std::string_view question)
 {
    for (;;) {
       put_line(question);
@@ -1235,7 +1233,7 @@ uint32_t iofull::get_one_number(matcher_class &matcher)
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-void iofull::add_new_line(const char the_line[], uint32_t drawing_picture)
+void iofull::add_new_line(std::string_view the_line, uint32_t drawing_picture)
 {
     put_line(the_line);
     put_line("\n");

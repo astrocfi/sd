@@ -7,18 +7,16 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 39.84</strong>, released on Jul 4, 2026.
+<strong>The current version of Sd/Sdtty is 39.85</strong>, released on Sep 5, 2026.
 <p align="center">
 <strong>This reflects recent changes in the C3 list.</strong>
 
 <p align="center">
-<strong>Two new program levels are supported: "mainstream26" and "plus26",
-in accordance with recent
+<strong>The recent new programs, "mainstream26" and "plus26", have been removed.
 <br>
- Callerlab directives.  These will go into effect (as the new "mainstream" and "plus" levels) on
+The new Callerlab directives relating to the "mainstream" and "plus" programs
 <br>
-September 1, 2026.  The pre-existing "mainstream" and "plus"
-levels are unchanged for now.
+are now fully in effect.
 <br>
 See the <a href="faq.html">Frequently Asked Questions</a> file for details.
 <br>

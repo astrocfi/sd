@@ -407,18 +407,21 @@ extern void erase_last_n(int n)
    }
 }
 
-extern void put_line(const char the_line[])
+extern void put_line(std::string_view the_line)
 {
    if (!sdtty_no_console) {
-      char c;
-
       // We need to watch for escape characters denoting people
       // to be printed in a particularly pretty way.
 
-      while ((c = *the_line++)) {
+      auto it = the_line.begin();
+      auto end = the_line.end();
+      while (it != end) {
+         char c = *it++;
          if (c == '\013') {
-            int personidx = (*the_line++) & 7;
-            int persondir = (*the_line++) & 0xF;
+            if (it == end) break;
+            int personidx = (*it++) & 7;
+            if (it == end) break;
+            int persondir = (*it++) & 0xF;
 
             int randomized_person_color = personidx;
 
@@ -450,7 +453,7 @@ extern void put_line(const char the_line[])
       }
    }
    else {
-      fputs(the_line, stdout);
+      fwrite(the_line.data(), 1, the_line.size(), stdout);
    }
 }
 

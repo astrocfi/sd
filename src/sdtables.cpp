@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -3844,8 +3844,8 @@ full_expand::thing touch_init_table1[] = {
    // Some people rear back from 3&1 line to triangles.
    {warn__some_rear_back,  0, &rear_3n1b_stuff, s2x4,       0xFFFFU,     0xA208U, ~0U},
    // Rear back from a right-hand box to a single 8 chain.
-   {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFU,       0x28U, ~0U},
-   {warn__awful_rear_back, 0, &rear_hrbox_stuff, s2x2,        0xFFU,       0x5FU, ~0U},
+   {warn__awful_rear_back, 0x100, &rear_vrbox_stuff, s2x2,  0xFFU,       0x28U, ~0U},
+   {warn__awful_rear_back, 0x100, &rear_hrbox_stuff, s2x2,  0xFFU,       0x5FU, ~0U},
 
    // Centers rear back from appropriate "diamonds" to T-boned pairs facing.
    {warn__some_rear_back,  0, &rear_funnydmd,  s_qtag,    0xFFFFU,     0x78D2U, ~0U},
@@ -4172,16 +4172,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s4x6,           schema_nothing, {-1, -1, 15, 14, -1, -1, 2, -1, -1, -1, -1, 3,
                                      11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18},
              s2x3,     s2x6,     1, 0, 1, 2,  0x8F7, schema_in_out_triple},
-
-   //   wanted to get rid of this so that [2x6 col] center triple box peel off would go to 4x5.  Changed my mind.
    {sbigdmd,        schema_nothing, {0, 1, 10, 11, 4, 5, 6, 7,           8, 9, 2, 3},
              s2x2,     s1x4,     0, 1, 2, 2,  0xAF7, schema_in_out_triple},
-
-   // This was the replacement.
-   //   {s4x5,           schema_nothing, {9, 8, 16, 15, 6, 5, 19, 18,           12, 17, 2, 7},
-   //             s2x2,     s1x4,     0, 1, 2, 2,  0xAF7, schema_in_out_triple},
-
-
    {s_hrglass,      schema_nothing, {5, 0, 1, 4,       6, 3, 2, 7},
              s2x2,     sdmd,     1, 0, 1, 1,  0xAF7, schema_in_out_triple},
    {s_dhrglass,     schema_nothing, {0, 1, 4, 5,       6, 3, 2, 7},

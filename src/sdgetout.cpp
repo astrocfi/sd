@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2026  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -262,7 +262,7 @@ static const resolve_descriptor resolve_table[] = {
 // in a resolve_tester.  We define these short names to keep the table entries
 // from being unwieldy.
 enum level_abbreviation {
-   MS = l_xyz,
+   MS = l_mainstream,
    XB = cross_by_level,
    DX = dixie_grand_level,
    EX = extend_34_level
@@ -1061,9 +1061,9 @@ static bool inner_search(command_kind goal,
    history_save = history_insertion_point;
 
    // Since these variables are expected to be preserved
-   // across the throw, they must be volatile.
-   volatile int little_count = 0;
-   volatile int attempt_count = 0;
+   // across the throw, they must be volatile.  Well, static.
+   static int little_count = 0;
+   static int attempt_count = 0;
 
    uint64_t air_start_time = clock();
    uint64_t big_resolve_time = 0;
@@ -1207,7 +1207,7 @@ static bool inner_search(command_kind goal,
           ui_options.resolve_test_attempts_per_print != 0 &&
           (++resolve_test_count >= ui_options.resolve_test_attempts_per_print)) {
       */
-      if (ui_options.resolve_test_minutes > 0 /* && (resolve_test_count++ & 0xF) == 0 */ && 
+      if (ui_options.resolve_test_minutes > 0 /* && (resolve_test_count++ & 0xF) == 0 */ &&
           ui_options.resolve_test_attempts_per_print != 0) {
          char tempstuff[200];
 
@@ -1618,7 +1618,7 @@ static bool inner_search(command_kind goal,
       for (j=0; j<MAX_RESOLVE_SIZE; j++) {
          new_resolve->stuph[j] = configuration::history[j+history_insertion_point+1];
          if (j < new_resolve->size) {
-            if (new_resolve->stuph[j].command_root == 0 || new_resolve->stuph[j].command_root->concept == 0) {
+            if (new_resolve->stuph[j].command_root == 0 || new_resolve->stuph[j].command_root->concept_ptr == 0) {
                gg77->iob88.serious_error_print("BUG IN RESOLVER!\n");
                goto cant_consider_this_call;   // What????  Some kind of bug, apparently.
             }

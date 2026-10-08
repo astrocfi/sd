@@ -1,0 +1,54 @@
+srcdir = .
+
+RM = del
+MAKEINFO = makeinfo --no-split
+MAKE_ASCII = makeinfo --no-split --no-headers
+TXI2DVI = tex
+TXI2PDF = pdftex
+DVIPS = dvips
+CRFIX = crfix
+TXI2HTML = makeinfo --html
+
+.SUFFIXES: .dvi .txt .txi .pdf .html
+
+all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all relnotes03.all relnotes09.all sample.html install
+
+.txi.pdf:
+	$(TXI2PDF) $<
+	$(TXI2PDF) $<
+
+.txi.txt:
+	./makeinfo --no-split --no-headers -o $@ $<
+	cp $*.txt blub.txt
+	rm $*.txt
+	C:\bin\crfix blub.txt $*.txt
+	-rm blub.txt
+
+.txi.html:
+	./makeinfo --html --no-split --no-headers -o $@ $<
+
+pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf relnotes98.pdf relnotes03.pdf relnotes09.pdf \
+         appnote1.pdf appnote2.pdf appnote3.pdf appnote4.pdf
+
+txt.all: demo.txt sessions.txt sd_doc.txt demo.txt sessions.txt sd_doc.txt \
+         relnotes.txt relnotes98.txt relnotes03.txt relnotes09.txt \
+         appnote1.txt appnote2.txt appnote3.txt appnote4.txt
+
+html.all: relnotes.html relnotes98.html relnotes03.html relnotes09.html \
+          demo.html sessions.html sd_doc.html sample.html faq.html \
+          appnote1.html appnote2.html appnote3.html appnote4.html
+
+cleanup::
+	-rm sd_doc.txt sd_doc.pdf sd_doc.html sd_doc_*.html \
+           demo.txt demo.pdf demo.html \
+           appnote*.txt appnote*.pdf appnote*.html \
+           sessions.txt sessions.pdf sessions.html sessions_toc.html \
+           relnotes.txt relnotes.pdf relnotes.html \
+           relnotes98.txt relnotes98.pdf relnotes98.html \
+           relnotes03.txt relnotes03.pdf relnotes03.html \
+           relnotes09.txt relnotes09.pdf relnotes09.html \
+           faq.html sample.html \
+           *.ps *.pdf \
+           psdoc.exe textdoc.exe pdfdoc.exe \
+           install.exe installw.exe installs.exe \
+           *.asc *.gz *.dvi

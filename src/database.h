@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 433
+#define DATABASE_FORMAT_VERSION 434
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -453,6 +453,7 @@ const uint64_t CFLAG1_IS_STAR_CALL              = 0x0000200000000000ULL;
 const uint64_t CFLAG1_CAN_DO_IN_Z               = 0x0000400000000000ULL;
 const uint64_t CFLAG1_WARN_ON_ELONGATION        = 0x0000800000000000ULL;
 const uint64_t CFLAG1_ALLOW_IF_CENTERS_ONLY     = 0x0001000000000000ULL;
+const uint64_t CFLAG1_CAN_GO_TO_EMPTY_SETUP     = 0x0002000000000000ULL;
 
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -504,14 +505,13 @@ enum {
 // BEWARE!!  This list must track the table "leveltab" in mkcalls.cpp .
 // BEWARE!!  This list must track the table "getout_strings" in sdtop.cpp .
 // BEWARE!!  This list must track the table "old_filename_strings" in sdutil.cpp .
+// BEWARE!!  This list must track the table "new_filename_strings" in sdutil.cpp .
 // BEWARE!!  This list must track the table "filename_strings" in sdutil.cpp .
 // BEWARE!!  This list must track the table "level_threshholds_for_pick" in sdtop.cpp .
 
 enum dance_level {
-   l_xyz,    // Publicly called "Mainstream2026".
    l_mainstream,
    l_plus,
-   l_pqr,    // Publicly called "Plus2026".
    l_a1,
    l_a2,
    l_c1,
@@ -686,11 +686,11 @@ enum setup_kind {
    s_bighyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
-   sx1x6,   
+   sx1x6,
    s1x4_1x6,
    s1x4_1x8,
    s1x6_1x8,
-   sx1x8,   
+   sx1x8,
    sx1x16,    // As above.
    shypergal, // Ditto.
    shyper4x8a,// Ditto.

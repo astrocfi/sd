@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <15 Feb 2026 wba>
+@c Time-stamp: <5 Sep 2026 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.84
-@set title2 Database version = 39.84 format = 433
+@set title1 RELEASE NOTES FOR VERSION 39.85
+@set title2 Database version = 39.85 format = 434
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.85::
 * 39.84::
 * 39.83::
 * 39.82::
@@ -184,7 +185,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.84, Top, (dir)
+@node Intro, 39.85, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -195,11 +196,27 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2026 William B. Ackerman
 @sp 3
 @menu
-* 39.84::               Changes in the current version
+* 39.85::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.84, 39.83, Intro, Top
+@node 39.85, 39.84, Intro, Top
+@unnumberedsec Version 39.85 changes
+
+The mechanisms for compiling and distributing Sd and Sdtty were
+extensively overhauled.  New compilers (both Visual Studio and MinGW)
+are now in use, along with new management software.
+@sp 1
+Because of changes in the ways people use the World Wide Web, the
+mechanism for downloading documentation files in ``bulk'' form onto
+your computer were removed.  You can browse the files (in http/html
+format) directly from the web page, or download pdf or plain text.
+Certain obsolete file types, like Postscript, are no longer supported.
+@sp 1
+The usual number of reported bugs were fixed.
+
+@c ************
+@node 39.84, 39.83, 39.85, Top
 @unnumberedsec Version 39.84 changes
 
 Deal with tricky aspects of @strong{split circulate}.
