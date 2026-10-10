@@ -1570,7 +1570,7 @@ void matcher_class::scan_concepts_and_calls(
             if (m_only_extension &&
                 get_call_name(this_call)[0] == '@' &&
                 (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T') &&
-                m_user_input[0] == '[') {   // ***** This is probably wrong!!!!
+                firstchar[0] == '[') {
 
                int full_bracket_depth = m_user_bracket_depth + m_extended_bracket_depth;
 
