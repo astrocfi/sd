@@ -8,7 +8,8 @@
 #
 # Scopes (with none, everything except the regression suite runs):
 #   -c, --code         Build Sdtty and the call database, and smoke-test them
-#   -d, --docs         Build the manuals, and run the text checks
+#   -d, --docs         Build the manuals and the developer guide, and run the
+#                      text checks
 #   -m, --text         The text checks only: spelling, prose, Markdown, shell
 #                      scripts, and workflows
 #   -r, --regression   Run the regression suite (needs both repositories)
@@ -16,6 +17,7 @@
 # Single checks (may be combined with each other and with the scopes):
 #   --build            scripts/build-sd.sh
 #   --docs-build       scripts/build-docs.sh
+#   --dev-guide        scripts/build-dev-guide.sh
 #   --codespell        scripts/check-spelling.sh
 #   --prose            scripts/check-doc-prose.sh
 #   --pymarkdown       PyMarkdown over the Markdown in scripts/checks.conf
@@ -27,7 +29,8 @@
 #   -s, --sequential   Run the checks one after another, with their output as
 #                      it happens (easier to read when one fails)
 #   --setup            Create the lint tools' virtual environment (.build/venv)
-#                      from scripts/requirements.txt, then exit
+#                      from scripts/requirements.txt and the developer guide's
+#                      requirements.txt, then exit
 #   -h, --help         Show this help
 #
 # Environment:
@@ -59,7 +62,7 @@ usage() {
 }
 
 # The checks, in the order they run and are reported.
-ALL_CHECKS=(build docs-build codespell prose pymarkdown shellcheck actionlint regression)
+ALL_CHECKS=(build docs-build dev-guide codespell prose pymarkdown shellcheck actionlint regression)
 TEXT_CHECKS=(codespell prose pymarkdown shellcheck actionlint)
 declare -A WANT=()
 PARALLEL=true
@@ -75,11 +78,12 @@ want() {
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -c | --code) want build ;;
-        -d | --docs) want docs-build "${TEXT_CHECKS[@]}" ;;
+        -d | --docs) want docs-build dev-guide "${TEXT_CHECKS[@]}" ;;
         -m | --text | --markdown) want "${TEXT_CHECKS[@]}" ;;
         -r | --regression) want regression ;;
         --build) want build ;;
         --docs-build) want docs-build ;;
+        --dev-guide) want dev-guide ;;
         --codespell) want codespell ;;
         --prose) want prose ;;
         --pymarkdown) want pymarkdown ;;
@@ -107,9 +111,11 @@ if [[ "$SETUP" == true ]]; then
         echo "error: VENV=none means the tools are installed already" >&2
         exit 2
     fi
+    requirements=(-r "$PROJECT_ROOT/scripts/requirements.txt")
+    requirements+=(-r "$PROJECT_ROOT/$DEV_GUIDE_DIR/requirements.txt")
     ensure_build_dir "$BUILD_ROOT"
     python3 -m venv --upgrade-deps "$venv" &&
-        "$venv/bin/pip" install --quiet -r "$PROJECT_ROOT/scripts/requirements.txt" &&
+        "$venv/bin/pip" install --quiet "${requirements[@]}" &&
         echo "run-all-checks: installed the lint tools in $venv"
     exit $?
 fi
@@ -117,7 +123,7 @@ fi
 # With no scope, run everything but the regression suite, which needs the
 # private repository.
 if [[ ${#WANT[@]} -eq 0 ]]; then
-    want build docs-build "${TEXT_CHECKS[@]}"
+    want build docs-build dev-guide "${TEXT_CHECKS[@]}"
 fi
 
 activate_venv
@@ -131,6 +137,10 @@ check_build() {
 
 check_docs-build() {
     scripts/build-docs.sh
+}
+
+check_dev-guide() {
+    scripts/build-dev-guide.sh
 }
 
 check_codespell() {

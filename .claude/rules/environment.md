@@ -55,7 +55,8 @@ can reproduce the CI result before pushing.
   `actionlint-py`, `codespell`, `pymarkdownlnt`, and `shellcheck-py` in `sd`,
   and `actionlint-py`, `pymarkdownlnt`, and `shellcheck-py` in `sd-regression`.
   `scripts/run-all-checks.sh --setup` installs them in a virtual environment in
-  `.build/venv`; never install them into the system Python.
+  `.build/venv`; never install them into the system Python. In `sd`, it also
+  installs Sphinx for the developer guide, from `docs/requirements.txt`.
 - Everything the scripts build goes under `.build/`, which ignores itself.
 
 ## 4. Builds
@@ -67,6 +68,9 @@ can reproduce the CI result before pushing.
 - The documentation, in `sd`, builds with `doc/makefile` (Texinfo). Build it
   through `scripts/build-docs.sh`, which builds out of the source tree and
   checks the warnings against a recorded baseline.
+- The developer guide, in `sd`, is a Sphinx project in `docs/`, pinned in
+  `docs/requirements.txt`. `scripts/build-dev-guide.sh` builds it into
+  `.build/dev-guide`, with every warning an error.
 - Build outputs are never committed.
 
 ## 5. Editor Settings (VS Code / Cursor)
