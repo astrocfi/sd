@@ -1,0 +1,99 @@
+# Build and test Sd, build its manuals, and lint the documentation and tooling.
+#
+# Every job runs scripts/run-all-checks.sh, which is the single source of truth
+# for the checks (see .claude/rules/environment.md); a job only installs what
+# its checks need.
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+      # Version branches, such as 39.99. Work branches are tested through
+      # their pull requests.
+      - "[0-9]*.[0-9]*"
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly, so that a change in the runner image shows up between releases.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Install the lint tools
+        run: pip install -r scripts/requirements.txt
+
+      - name: Spelling, prose, Markdown, shell scripts, and workflows
+        run: scripts/run-all-checks.sh --text --sequential
+        env:
+          VENV: none
+
+  build:
+    name: Build (${{ matrix.makefile }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            makefile: makefile.linux64
+          - os: ubuntu-latest
+            makefile: makefile.linux64debug
+          - os: ubuntu-latest
+            makefile: makefile.linuxnostatic64
+          - os: macos-latest
+            makefile: makefile.mac
+    steps:
+      - uses: actions/checkout@v5
+
+      # The scripts need bash 4 or later; macOS ships bash 3.2.
+      - name: Install bash
+        if: runner.os == 'macOS'
+        run: brew install bash
+
+      - name: Build and smoke-test Sdtty
+        run: scripts/run-all-checks.sh --code --sequential
+        env:
+          SD_MAKEFILE: ${{ matrix.makefile }}
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Texinfo and TeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texinfo texlive-base texlive-binaries
+
+      - name: Build the manuals in every format
+        run: scripts/run-all-checks.sh --docs-build --sequential
+
+      - name: Upload the manuals
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuals
+          path: .build/docs/output
+          if-no-files-found: error
+          retention-days: 14

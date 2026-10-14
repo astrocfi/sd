@@ -43,7 +43,8 @@ load_checks_conf() {
 # output in the tree is ignored, so it never matches.
 list_files() {
     [[ $# -eq 0 ]] && return 0
-    git -C "$PROJECT_ROOT" ls-files --cached --others --exclude-standard -- "$@" |
+    # A pathspec naming a directory that does not exist yet is not an error.
+    git -C "$PROJECT_ROOT" ls-files --cached --others --exclude-standard -- "$@" 2> /dev/null |
         sort -u |
         while IFS= read -r f; do
             # A file deleted in the working tree is still in the index.
