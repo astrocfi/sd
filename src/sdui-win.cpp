@@ -2919,7 +2919,7 @@ int iofull::do_abort_popup()
 }
 
 
-// This returns true if it got a real result, false if user cancelled.
+// This returns true if it got a real result, false if user canceled.
 static bool do_popup(int nWhichOne)
 {
    uims_reply_kind SavedMenuKind = MenuKind;
@@ -2947,7 +2947,7 @@ selector_kind iofull::do_selector_popup(matcher_class &matcher)
 {
    match_result saved_match = matcher.m_final_result;
    // We add 1 to the menu position to get the actual selector enum; the enum effectively starts at 1.
-   // Item zero in the enum is selector_uninitialized, which we return if the user cancelled.
+   // Item zero in the enum is selector_uninitialized, which we return if the user canceled.
    selector_kind retval = do_popup((int) matcher_class::e_match_selectors) ?
       (selector_kind) (matcher.m_final_result.match.index+1) : selector_uninitialized;
    matcher.m_final_result = saved_match;
@@ -2959,7 +2959,7 @@ direction_kind iofull::do_direction_popup(matcher_class &matcher)
 {
    match_result saved_match = matcher.m_final_result;
    // We add 1 to the menu position to get the actual direction enum; the enum effectively starts at 1.
-   // Item zero in the enum is direction_uninitialized, which we return if the user cancelled.
+   // Item zero in the enum is direction_uninitialized, which we return if the user canceled.
    direction_kind retval = do_popup((int) matcher_class::e_match_directions) ?
       (direction_kind) (matcher.m_final_result.match.index+1) : direction_uninitialized;
    matcher.m_final_result = saved_match;
@@ -3012,7 +3012,7 @@ int iofull::do_tagger_popup(int tagger_class)
 uint32_t iofull::get_one_number(matcher_class &matcher)
 {
    match_result saved_match = matcher.m_final_result;
-   // Return excessively high value if user cancelled; client will notice.
+   // Return excessively high value if user canceled; client will notice.
    uint32_t retval = do_popup((int) matcher_class::e_match_number) ? matcher.m_final_result.match.index : NUM_CARDINALS+99;
    matcher.m_final_result = saved_match;
    return retval;

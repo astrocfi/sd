@@ -735,7 +735,7 @@ static void multiple_move_innards(
 
    // If "all 8" results in a 2x2 and a 1x4, "fix_n_results" won't be able to handle it.
    // Just merge the setups, with the 1x4 in the center.  They think they are in a thar,
-   // wheareas the 2x2 people think thay are out on squared set spots.
+   // whereas the 2x2 people think they are out on squared set spots.
    if (arity == 2 && eighth_rot_flag == 0 && map_kind == MPKIND__ALL_8) {
       if (z[0].kind == s2x2 && z[1].kind == s1x4 && z[1].rotation == 0) {
          normalize_concentric((const setup *) 0, schema_concentric, 1, z, 1, 0, result);
@@ -782,7 +782,7 @@ static void multiple_move_innards(
       map_kind == MPKIND__4_QUADRANTS_WITH_45_ROTATION ||
       map_kind == MPKIND__TRIPLETRADEINWINGEDSTAR6;
 
-   // Because of the way heterogenous setups are allowed, we have to mix normal and
+   // Because of the way heterogeneous setups are allowed, we have to mix normal and
    // hetero maps fairly freely.  We use a doctrine that says that even subsetups must
    // match, and odd subsetups must match also.  In the homogeneous case, everything
    // must match, and that's what "fix_n_results" normally tests.  But if they don't
@@ -3415,7 +3415,7 @@ extern void distorted_move(
          ss->big_endian_get_directions32(dirs, lives);
          dirs &= 0x55555555;
 
-         // In order to pick out the diamond spots unambigously from block spots
+         // In order to pick out the diamond spots unambiguously from block spots
          // in a 4x4, the points must be facing in appropriate directions, and
          // the concept must be "DISTORTED DIAMONDS", so that the user will demand
          // such orientation.
@@ -4351,7 +4351,7 @@ void do_concept_wing(
 
    if (!normal_was_ok) {
       // The winged people are OK, but, since the normal people failed, the winged
-      // people are all we have.  Be sure thay include everyone.
+      // people are all we have.  Be sure they include everyone.
       if (all_people == winged_people) {
          *result = the_results[1];
          return;

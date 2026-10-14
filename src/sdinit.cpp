@@ -2337,7 +2337,7 @@ bool open_session(int argc, char **argv)
 
    // If the background is white, bright yellow won't be visible.  Change it to
    // dark yellow.  (If reverse_video or no_intensify, the background is black
-   // or grey, and bright yellow is OK.)
+   // or gray, and bright yellow is OK.)
    if (!ui_options.reverse_video && !ui_options.no_intensify) {
       for (i=0 ; i<8 ; i++) {
          if (color_index_list[i] == 4) color_index_list[i] = 1;

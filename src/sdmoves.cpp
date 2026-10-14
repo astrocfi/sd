@@ -1414,7 +1414,7 @@ struct jaywalkpersonstruct {
 
 struct matrix_rec {
    int x;              // This person's coordinates, calibrated so that a matrix
-   int y;              //   position cooresponds to an increase by 4.
+   int y;              //   position corresponds to an increase by 4.
    int nicex;          // This person's "nice" coordinates, used for
    int nicey;          //   calculating jay walk legality.
    uint32_t id1;       // The actual person, for error printing.
@@ -4453,7 +4453,7 @@ extern bool get_real_subcall(
    if (!(mods1 & DFM1_CALL_MOD_MASK) && !this_is_tagger_circcer)
       return false;
 
-   /* See if we had something from before.  This avoids embarassment if a call is actually
+   /* See if we had something from before.  This avoids embarrassment if a call is actually
       done multiple times.  We want to query the user just once and use that result everywhere.
       We accomplish this by keeping a subcall list showing what modifications the user
       supplied when we queried. */
@@ -7001,7 +7001,7 @@ static bool do_misc_schema(
                uint32_t t3 = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
                if ((t3 & 011) == 011) fail("Can't pick out outside lines.");
                else if (t3 & 1)        rot = 1;
-               /* Otherwise, it either needs a vertical orientaion, or only the center 2x2 is occupied,
+               /* Otherwise, it either needs a vertical orientation, or only the center 2x2 is occupied,
                   in which case it doesn't matter. */
             }
 
@@ -7507,7 +7507,7 @@ void really_inner_move(
 
          // For fairly hairy reasons "<anyone> trade" is given as a matrix call.  That
          // code can't deal with concentric setups, which are presumably setups with
-         // centers and ends at 45 degress to each other.  If the <anyone> are the
+         // centers and ends at 45 degrees to each other.  If the <anyone> are the
          // centers or the ends, we may be able to use the concentric mechanism.
          if (ss->kind == s_normal_concentric && (callspec->stuff.matrix.matrix_flags & MTX_FIND_TRADERS)) {
             if (local_selector == selector_centers) {
@@ -8392,7 +8392,7 @@ static void move_with_real_call(
                   // many parts have effectively been requested.  We plug that number in
                   // for the incoming numeric argument.
 
-                  // But if we were requested to do the last part, and the reult is an
+                  // But if we were requested to do the last part, and the result is an
                   // integral number of iterations, just do it.  Handle this by
                   // subtracting the "m_fetch_index" (normally 0, but could be more)
                   // from the "m_highlimit".
@@ -9059,7 +9059,7 @@ static void handle_expiration(setup *ss, uint32_t *bit_to_set)
    On output, nonzero bits in the low two bits with a 2x2 setup mean that,
       IF RESULT ELONGATION IS REQUIRED, this is what it should be.  It does
       NOT mean that such elongation actually exists.  Whoever called "move" must
-      make that judgement.  These bits are set when, for example, a 1x4 -> 2x2 call
+      make that judgment.  These bits are set when, for example, a 1x4 -> 2x2 call
       is executed, to indicate how to elongate the result, if it turns out that those
       people were working around the outside.  This determination is made not just on
       the "checkpoint rule" that says they go perpendicular to their original axis,
@@ -9587,7 +9587,7 @@ void move(
 
          Now there are two contexts in which we allow modifiers:
 
-         Some concepts (e.g. [reverse] crazy) are explictly coded to allow,
+         Some concepts (e.g. [reverse] crazy) are explicitly coded to allow,
          and check for, modifier bits.  Those are marked with the
          "CONCPROP__PERMIT_MODIFIERS" bit.  For those concepts, we don't do
          the check, and the concept code is responsible for being sure that
