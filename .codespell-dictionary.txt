@@ -1,0 +1,9 @@
+catalogued->cataloged
+cataloguing->cataloging
+neighbourhood->neighborhood
+neighbourhoods->neighborhoods
+neighbouring->neighboring
+quantise->quantize
+quantised->quantized
+quantises->quantizes
+quantising->quantizing

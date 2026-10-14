@@ -1,0 +1,4 @@
+# ShellCheck settings for scripts/*.sh (see scripts/run-all-checks.sh).
+# Follow `source` into the files the directives name, relative to the script.
+external-sources=true
+source-path=SCRIPTDIR

@@ -1,0 +1,46 @@
+# Errors from scripts/check-doc-prose.sh that predate the check, and are accepted.
+# Each line is: check<TAB>file<TAB>prose text. Regenerate with:
+#     scripts/check-doc-prose.sh --update-baseline
+internal-name	doc/install.txi	database.h
+internal-name	doc/install.txi	paths.h
+internal-name	doc/install.txi	sd.h
+internal-name	doc/install.txi	sdmatch.h
+internal-name	doc/relnotes09.txi	to the handling of "maps" in sdistort.cpp.  A lot of ugly special-case code
+md-sentence-space	README.md	Sd is a square dance caller's helper.  The program assists you in
+md-sentence-space	README.md	for Western square dancing by doing the checker pushing.  You tell the
+negative-object	doc/demo.txi	shows that line 2 has nothing on it yet, and gives us another  [has nothing -> doesn't have anything]
+negative-object	doc/faq.txi	X has no complex interactions with other software, and does not  [has no complex -> doesn't have a complex]
+negative-object	doc/faq.txi	subtle.  Humans may have no trouble knowing what to do, but Sd has a difficult time with it.
+negative-object	doc/readme.txi	Sd knows nothing about timing, body flow, or esthetics.  [knows nothing -> doesn't know anything]
+negative-object	doc/readme.txi	This is not to say that computers have no place in the education and training
+negative-object	doc/readme.txi	are developed has no Internet or modem connections at all.  [has no Internet -> doesn't have an Internet]
+negative-object	doc/readme.txi	benefit of any human expertise at that level, and that such people may have no choice but to rely on a computer program as one of their sources of
+negative-object	doc/relnotes.txi	ends do two subparts) and then centers Circulate while the ends do nothing.)
+negative-object	doc/relnotes.txi	while the trailers do nothing.  They are legal from 3/4 tag formations, applying only to the outsides.
+negative-object	doc/relnotes03.txi	The second part has the centers circulate while the ends do nothing.
+negative-object	doc/relnotes03.txi	been called.  This is dictated by Callerlab.  We take no responsibility
+negative-object	doc/relnotes03.txi	for the fact that it makes no sense in terms of any plausible turning  [makes no sense -> doesn't make a sense]
+negative-object	doc/relnotes09.txi	tally ho) from C1 phantom setups.  I have no idea why this was
+negative-object	doc/relnotes09.txi	was moved from C2 to C3X.  At had been at C2 for over 11 years.  I have no idea why.
+negative-object	doc/relnotes98.txi	but they have no effect.  See the reference manual for further details.
+negative-object	doc/sd_doc.txi	Sd knows nothing about timing, body flow, or esthetics.  [knows nothing -> doesn't know anything]
+negative-object	doc/sd_doc.txi	The X/X clipboard has nothing to do with the Windows  [has nothing -> doesn't have anything]
+negative-object	doc/sd_doc.txi	The concepts with the words x make no assumptions at
+negative-object	doc/sd_doc.txi	The program has no tolerance for creative capitalization, stray  [has no tolerance -> doesn't have a tolerance]
+negative-object	doc/sd_doc.txi	This is not to say that computers have no place in the education and training
+negative-object	doc/sd_doc.txi	This means that the designated people do nothing, while the others do
+negative-object	doc/sd_doc.txi	are developed has no Internet or modem connections at all.  [has no Internet -> doesn't have an Internet]
+negative-object	doc/sd_doc.txi	benefit of any human expertise at that level, and that such people may have no choice but to rely on a computer program as one of their sources of
+negative-object	doc/sd_doc.txi	box button in the upper right corner.  This has no effect on X.  [has no effect -> doesn't have an effect]
+negative-object	doc/sd_doc.txi	command.  This only affects printing.  It has no affect on the screen display.  [has no affect -> doesn't have an affect]
+negative-object	doc/sd_doc.txi	concept would have no effect.
+negative-object	doc/sd_doc.txi	only future sequences.  It has no effect on sequences already written.  [has no effect -> doesn't have an effect]
+negative-object	doc/sd_doc.txi	that has no counterpart in X.  It causes a complete clean transcript  [has no counterpart -> doesn't have a counterpart]
+negative-object	doc/sd_doc.txi	the boys are in two miniwaves that have nothing to do with
+negative-object	doc/sd_doc.txi	to be concepts.  When typing things in, this generally makes no difference.  [makes no difference -> doesn't make a difference]
+negative-object	doc/sd_doc.txi	when concepts are in place.  The program simply has no idea what calls  [has no idea -> doesn't have an idea]
+negative-object	doc/sd_doc.txi	x is used.  It has no effect when using the  [has no effect -> doesn't have an effect]
+texi-sentence-space	doc/appnote1.txi	everyone trades and then the centers circulate won't work. The
+texi-sentence-space	doc/faq.txi	all options when editing an icon. For example, ``C:\sd\sdtty.exe
+texi-sentence-space	doc/faq.txi	create it.  Then edit it.  Use a plain text editor such as Emacs. Notepad,
+texi-sentence-space	doc/sd_doc.txi	ends press ahead from waves. The 3x4 matrix version can be formed by
