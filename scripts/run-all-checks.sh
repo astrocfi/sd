@@ -6,11 +6,12 @@
 # Usage:
 #   scripts/run-all-checks.sh [options]
 #
-# Scopes (with none, everything runs):
+# Scopes (with none, everything except the regression suite runs):
 #   -c, --code         Build Sdtty and the call database, and smoke-test them
 #   -d, --docs         Build the manuals, and run the text checks
 #   -m, --text         The text checks only: spelling, prose, Markdown, shell
 #                      scripts, and workflows
+#   -r, --regression   Run the regression suite (needs both repositories)
 #
 # Single checks (may be combined with each other and with the scopes):
 #   --build            scripts/build-sd.sh
@@ -32,8 +33,9 @@
 # Environment:
 #   VENV         The lint tools' virtual environment (default: .build/venv);
 #                "none" uses the tools on PATH, as CI does
-#   SD_DIR, SD_MAKEFILE
-#                Passed through to scripts/build-sd.sh
+#   SD_DIR, SD_REGRESSION_DIR, SD_MAKEFILE
+#                Passed through to scripts/build-sd.sh and
+#                scripts/run-regression-tests.sh
 #
 # Exit status: 0 when every check passed, 1 when any failed, 2 for a usage
 # error. scripts/checks.conf says what each check reads.
@@ -57,7 +59,7 @@ usage() {
 }
 
 # The checks, in the order they run and are reported.
-ALL_CHECKS=(build docs-build codespell prose pymarkdown shellcheck actionlint)
+ALL_CHECKS=(build docs-build codespell prose pymarkdown shellcheck actionlint regression)
 TEXT_CHECKS=(codespell prose pymarkdown shellcheck actionlint)
 declare -A WANT=()
 PARALLEL=true
@@ -75,6 +77,7 @@ while [[ $# -gt 0 ]]; do
         -c | --code) want build ;;
         -d | --docs) want docs-build "${TEXT_CHECKS[@]}" ;;
         -m | --text | --markdown) want "${TEXT_CHECKS[@]}" ;;
+        -r | --regression) want regression ;;
         --build) want build ;;
         --docs-build) want docs-build ;;
         --codespell) want codespell ;;
@@ -111,7 +114,8 @@ if [[ "$SETUP" == true ]]; then
     exit $?
 fi
 
-# With no scope, run everything.
+# With no scope, run everything but the regression suite, which needs the
+# private repository.
 if [[ ${#WANT[@]} -eq 0 ]]; then
     want build docs-build "${TEXT_CHECKS[@]}"
 fi
@@ -172,6 +176,14 @@ check_actionlint() {
     echo "actionlint: ${#files[@]} file(s)"
     # actionlint runs ShellCheck over each run: block, which is on PATH here.
     actionlint "${files[@]}" && echo "actionlint: passed"
+}
+
+check_regression() {
+    if [[ ! -x scripts/run-regression-tests.sh ]]; then
+        echo "regression: scripts/run-regression-tests.sh is missing" >&2
+        return 1
+    fi
+    scripts/run-regression-tests.sh
 }
 
 SELECTED=()
