@@ -1,0 +1,33 @@
+{
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "files.trimTrailingWhitespace": false,
+  "files.insertFinalNewline": false,
+  "files.trimFinalNewlines": false,
+  "editor.rulers": [88],
+  "[cpp]": {
+    "editor.tabSize": 3
+  },
+  "[c]": {
+    "editor.tabSize": 3
+  },
+  "[shellscript]": {
+    "editor.tabSize": 4,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+  },
+  "[markdown]": {
+    "editor.tabSize": 2,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+  },
+  "[yaml]": {
+    "editor.tabSize": 2,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+  },
+  "files.associations": {
+    "*.txi": "texinfo",
+    "*.htmli": "html"
+  }
+}
