@@ -295,7 +295,7 @@ September 1, 2026.  See @uref{faq.html} for details.
 @sp 1
 Better handling of @strong{circle to a wave}.
 @sp 1
-Better handling of @strong{melded}, expecially with @strong{explode}.
+Better handling of @strong{melded}, especially with @strong{explode}.
 @sp 1
 Improve @strong{scoot the tall 6}.
 @sp 1
@@ -870,7 +870,7 @@ Similarly, from the Z's that could be obtained with @strong{1/2 Press
 Ahead} from waves, @strong{Tandem 1/4 Right} is legal.
 
 The ``call frequency'' mechanism was removed.  It was a bad idea from
-the start.  Callers have to use their own judgement about how to use
+the start.  Callers have to use their own judgment about how to use
 the lists effectively.
 
 @c ************
@@ -951,7 +951,7 @@ right hands.  The result will be off-center.  The @code{recenter}
 operation can bring them back.
 
 From a plain 2x2, during two-couple calling, the concepts @code{triple
-boxes working togther/apart/clockwise/counterclockwise} are ambiguous
+boxes working together/apart/clockwise/counterclockwise} are ambiguous
 and illegal, because Sd doesn't know where to place the other two
 boxes.  You must use forward/back/left/right.
 
@@ -1206,7 +1206,7 @@ figure out the words you want to use; this may depend on the context.
 More improvements to two-couple writing.  The goal is to make it almost never necessary
 to type the word @strong{phantom} to the computer (unless you are using the C1 @strong{phantom}
 concept, of course.)  You should be able to get what you want by using the various @strong{assume}
-operatons.  What you say to the dancers is a different matter.
+operations.  What you say to the dancers is a different matter.
 
 New assumptions:  
 @strong{assume 1/4 box}, @strong{assume right 1/4 box},
@@ -1389,7 +1389,7 @@ Many bug fixes, especially relating to complex interactions of meta-concepts and
 @node 39.03, 39.02, 39.04, Top
 @unnumberedsec Version 39.03 changes
 
-There are new triangle designators, at C1.  They are not generally recognized as being part of C1.  They are useed in a 2x4.  An example might be @strong{end girls are the apex of tandem-based [or wave-based] triangles reshape the triangle}.  The two people in that 2x2 box who are not directly in front of or behind the designated apex constitute the base.  The triangle is effectively a right triangle.  Work to those spots.
+There are new triangle designators, at C1.  They are not generally recognized as being part of C1.  They are used in a 2x4.  An example might be @strong{end girls are the apex of tandem-based [or wave-based] triangles reshape the triangle}.  The two people in that 2x2 box who are not directly in front of or behind the designated apex constitute the base.  The triangle is effectively a right triangle.  Work to those spots.
 
 @noindent @strong{Cycle and wheel} was fixed so that it can't be called from facing couples, with everyone doing a facing recycle.
 
@@ -1777,7 +1777,7 @@ actual @code{Z} concept.  To rotate the Z rigidly as a 2x3, use
 @code{EACH Z counter rotate}.  @code{Z} names a concept.  @code{EACH Z}
 names a formation.
 
-Improved tha @code{jay} concept to allow 3x4 matrix positions.
+Improved the @code{jay} concept to allow 3x4 matrix positions.
 
 @c ************
 @node 38.74, 38.73, 38.75, Top
@@ -2405,7 +2405,7 @@ are @strong{center diamond}, @strong{middle (intermediate) diamond}, and @strong
 
 New (unsymmetrical) direction:  @strong{the music}, meaning toward the caller.
 
-New (unsymmetrical) designators:  @strong{near 2}, @strong{near 6}, @strong{far 2}, @strong{far 6}.  Sd aleady
+New (unsymmetrical) designators:  @strong{near 2}, @strong{near 6}, @strong{far 2}, @strong{far 6}.  Sd already
 recognizes @strong{near 4} and @strong{far 4}.
 
 The ability to do hard cases of @strong{touch by} was improved.

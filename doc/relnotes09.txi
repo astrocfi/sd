@@ -118,7 +118,7 @@ be used.
 
 There is a new concept, available at C4, @strong{overlapped siamese}.  This is done
 from a 2x4, usually one in which people are T-boned.  Each person works either as couples
-or in tandem, as if with the other person in his quadrant, regradless of that other person's
+or in tandem, as if with the other person in his quadrant, regardless of that other person's
 facing direction.  Each person's resulting setup is a virtual 2x2 box, and the person
 does the call in that box.
 
@@ -1132,7 +1132,7 @@ print_length 68
 @end group
 @end example
 
-The ability to do @strong{Jay Walk} from C1 Phantom formations was imroved.
+The ability to do @strong{Jay Walk} from C1 Phantom formations was improved.
 
 The ability to fractionalize things, as in @strong{finally snag the boys outpost},
 was improved.
