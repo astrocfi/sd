@@ -21,7 +21,9 @@ governs the sentence and this one governs the markup and the build.
   PostScript -- with `makeinfo` and TeX. The hand-written web pages in `doc/`
   (`*.html` and the `*.htmli` fragments) are not built.
 - Developer documentation is Markdown at the repository root
-  (`CONTRIBUTING.md`) and in `.claude/`. It is not part of the manuals.
+  (`CONTRIBUTING.md`), in `.claude/`, and, in `sd`, in the developer guide: a
+  Sphinx project in `docs/` (MyST Markdown), built by
+  `scripts/build-dev-guide.sh`. It is not part of the manuals.
 - Build outputs are never committed.
 
 ## 2. Markup Conventions

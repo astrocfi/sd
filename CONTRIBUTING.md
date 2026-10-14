@@ -1,7 +1,10 @@
 # Contributing to Sd
 
 Thank you for your interest in contributing to Sd. This document explains how
-the project is laid out, how to build and check it, and how its tests run.
+the project is laid out, how to build and check it, and how its tests run. The
+developer guide in the `sd` repository (`docs/`, built with
+`scripts/build-dev-guide.sh`) covers the same ground in more depth, starting
+with continuous integration.
 
 ## The Two Repositories
 
@@ -39,15 +42,16 @@ The checks need:
 - `make` and a C++ compiler, to build Sdtty;
 - `makeinfo` (Texinfo) and TeX (`texlive-base` on Debian and Ubuntu), to build
   the manuals;
-- Python 3, for the lint tools. Install them once:
+- Python 3, for the lint tools and Sphinx. Install them once:
 
   ```bash
   scripts/run-all-checks.sh --setup
   ```
 
   This creates a virtual environment in `.build/venv` from
-  `scripts/requirements.txt`. The manuals' build goes under `.build/` too, and
-  `.build/` ignores itself.
+  `scripts/requirements.txt` and `docs/requirements.txt`. The builds of the
+  manuals and the developer guide go under `.build/` too, and `.build/` ignores
+  itself.
 
 ## Building
 
@@ -77,6 +81,7 @@ scripts/run-all-checks.sh --help        # the scopes and single checks
 |---|---|
 | `build` | Builds Sdtty, `mkcalls`, and `sd_calls.dat`, and smoke-tests them. |
 | `docs-build` | Builds the manuals in every format, and fails on a new warning. |
+| `dev-guide` | Builds the developer guide, and fails on any Sphinx warning. |
 | `codespell` | Checks spelling, with American spelling enforced. |
 | `prose` | Checks the documentation prose against `.claude/rules/doc_prose_style.md`. |
 | `pymarkdown` | Lints the Markdown. |
@@ -172,6 +177,14 @@ scripts/build-docs.sh        # build every format into .build/docs/output
 scripts/read-docs.sh         # build the HTML and open the main manual
 scripts/check-doc-prose.sh   # check the prose (--warnings for the heuristics)
 scripts/check-spelling.sh    # check the spelling
+```
+
+The developer guide is a Sphinx project in `docs/`, in Markdown (MyST). It
+follows the prose rule like the rest of the developer documentation.
+
+```bash
+scripts/build-dev-guide.sh          # build it into .build/dev-guide/html
+scripts/build-dev-guide.sh --open   # build it and open it in a browser
 ```
 
 ## Pull Requests

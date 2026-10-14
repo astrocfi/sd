@@ -1,5 +1,5 @@
-# Build and test Sd, run the regression suite, build the manuals, and lint the
-# documentation and tooling.
+# Build and test Sd, run the regression suite, build the manuals and the
+# developer guide, and lint the documentation and tooling.
 #
 # Every job runs scripts/run-all-checks.sh, which is the single source of truth
 # for the checks (see .claude/rules/environment.md); a job only installs what
@@ -102,14 +102,33 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y texinfo texlive-base texlive-binaries
 
-      - name: Build the manuals in every format
-        run: scripts/run-all-checks.sh --docs-build --sequential
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Install Sphinx
+        run: pip install -r docs/requirements.txt
+
+      - name: Build the manuals in every format, and the developer guide
+        run: scripts/run-all-checks.sh --docs-build --dev-guide --sequential
+        env:
+          VENV: none
 
       - name: Upload the manuals
         uses: actions/upload-artifact@v4
         with:
           name: manuals
           path: .build/docs/output
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the developer guide
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-guide
+          path: .build/dev-guide/html
           if-no-files-found: error
           retention-days: 14
 
