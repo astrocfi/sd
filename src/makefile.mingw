@@ -40,7 +40,7 @@ SHORTCUTS = "Edit sd.ini.lnk" Faq.lnk "Release Notes.lnk" "SD couple.lnk" "SD hi
 
 MAKEFILES = makefile.linux32 makefile.linux64 \
             makefile.cygnus makefile.cygwin makefile.djgpp \
-            makefile.mingw makefile.mac makefile.solaris
+            makefile.mingw makefile.mac
 
 SDTTY_OBJS = sdui-tty.o sdui-wincon.o
 

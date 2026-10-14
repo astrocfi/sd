@@ -73,7 +73,7 @@ HFILES = sdui.h sd.h database.h paths.h mapcachefile.h sort.h \
 
 MAKEFILES = makefile.linux32 makefile.linux64 makefile.linuxnostatic32 makefile.linuxnostatic64 \
             makefile.cygnus makefile.cygwin makefile.djgpp \
-            makefile.mingw makefile.mac makefile.solaris
+            makefile.mingw makefile.mac
 
 SVG_ICONS = sdtty.svg sd.svg sdbg.svg sdbw.svg sdby.svg sdgy.svg sdry.svg
 

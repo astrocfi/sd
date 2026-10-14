@@ -1,4 +1,4 @@
-# Makefile for Sd/Sdtty for Solaris
+# Makefile for Sd/Sdtty for macOS
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
