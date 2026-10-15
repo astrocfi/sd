@@ -1040,6 +1040,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    global_cache_failed_flag = false;
 
    // The "ui_utils" object is a singleton.  It will be accessed by the global static variable "gg77".
+   // The last access is in general_final_exit, so it must not go out of scope before that.
    //
    // There are two other important global singleton objects inside the "ui_utils" object:
    //    The "matcher_p" field is a pointer to the matcher, which is in sdmatch.cpp.  We instantiate
@@ -1048,11 +1049,13 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    //       This is the base interface class that distinguishes between Sd and Sdtty.
    //       It is instantiated in the top-level Sd/Sdtty file and passed to us as incoming argument ggg.
 
+   ui_utils thingy((matcher_class *) 0, ggg);
+   gg77 = &thingy;
+
    // Create a scope to go into and out of, so that the "matcher_class" destructor will be called.
    {
       matcher_class global_matcher;
-      ui_utils thingy(&global_matcher, ggg);
-      gg77 = &thingy;
+      thingy.matcher_p = &global_matcher;
 
       if (!just_get_out_of_here) {
          // In addition to the "ui_utils" object having a reference ("iob88") to the user interface,
@@ -1064,6 +1067,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
             close_session();
          }
       }
+      thingy.matcher_p = (matcher_class *) 0;
    }
 
    // This does a lot more than just exit.  It updates the init file.
