@@ -28,7 +28,7 @@ error.
 | `build` | `scripts/build-sd.sh` | Builds Sdtty, `mkcalls`, and `sd_calls.dat` from a copy of `src/`, and starts a sequence with them |
 | `docs-build` | `scripts/build-docs.sh` | Builds the manuals in every format, and fails on a warning that is not in the baseline |
 | `dev-guide` | `scripts/build-dev-guide.sh` | Builds this guide, and fails on any Sphinx warning |
-| `codespell` | `scripts/check-spelling.sh` | Checks the spelling of the documentation and tooling, with American spelling enforced |
+| `codespell` | `scripts/check-spelling.sh` | Checks the spelling of the documentation and tooling, and of the comments in the C++ sources, with American spelling enforced |
 | `prose` | `scripts/check-doc-prose.sh` | Checks the documentation prose against `.claude/rules/doc_prose_style.md` |
 | `pymarkdown` | PyMarkdown | Lints the Markdown |
 | `shellcheck` | ShellCheck | Lints `scripts/*.sh` |
@@ -84,6 +84,7 @@ sourced by bash and holds plain assignments:
 | `MARKDOWN_FILES` | the Markdown that PyMarkdown checks |
 | `PROSE_MARKDOWN_FILES` | the Markdown that the prose check reads |
 | `SPELL_FILES` | the files codespell checks |
+| `COMMENT_SPELL_FILES` | the source files whose comments, and nothing else, codespell checks |
 | `SHELL_FILES` | the shell scripts ShellCheck checks |
 | `WORKFLOW_FILES` | the workflows actionlint checks |
 

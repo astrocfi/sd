@@ -56,7 +56,7 @@ repository has.
 | `build` | `scripts/build-sd.sh` | a build error, a missing product, or a smoke test that cannot start a sequence |
 | `docs-build` | `scripts/build-docs.sh` | a build error, or a warning not in `scripts/doc-warnings-baseline.txt` |
 | `dev-guide` | `scripts/build-dev-guide.sh` | any Sphinx warning in the developer guide (`docs/`) |
-| `codespell` | `scripts/check-spelling.sh` | a misspelling on a line not in `scripts/codespell-baseline.txt` |
+| `codespell` | `scripts/check-spelling.sh` | a misspelling on a line not in `scripts/codespell-baseline.txt`; in `sd`, the comments in the C++ sources are checked too, and their code is not |
 | `prose` | `scripts/check-doc-prose.sh` | an error not in `scripts/doc-prose-baseline.txt` |
 | `pymarkdown` | `pymarkdown scan` | any finding in the Markdown listed in `scripts/checks.conf` |
 | `shellcheck` | `shellcheck scripts/*.sh` | any finding |
@@ -69,7 +69,7 @@ repository has.
 | `build` | Fix the code. Do not add warning suppressions to the makefiles. |
 | `docs-build` | Fix the Texinfo (`doc_texinfo`). A baseline entry is only for a warning that cannot be fixed, added with `--update-baseline` and explained in the pull request. |
 | `dev-guide` | Fix the page: a link that does not resolve, a page missing from every `toctree`, or a skipped heading level. |
-| `codespell` | Fix the spelling. If the word is right, end the line with `codespell:ignore <word>`, or add it to `ignore-words-list` in `.codespellrc` with a comment saying why. |
+| `codespell` | Fix the spelling. In a C++ source, change the comment and nothing else. If the word is right, end the line with `codespell:ignore <word>`, or add it to `ignore-words-list` in `.codespellrc` with a comment saying why. |
 | `prose` | Rewrite the sentence (`doc_prose_style`). |
 | `pymarkdown` | Fix the Markdown. |
 | `shellcheck`, `actionlint` | Fix the script or the workflow. Disable a finding only with a comment that says why. |
