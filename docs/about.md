@@ -12,6 +12,14 @@ scripts/build-dev-guide.sh           # builds .build/dev-guide/html
 Docs job does. A broken cross-reference, a page missing from every table of
 contents, and a heading level skipped are all warnings.
 
+## Publishing
+
+`.readthedocs.yaml`, at the repository root, configures Read the Docs to build
+the guide with the same settings: the Sphinx versions pinned in
+`docs/requirements.txt`, with every warning an error. A maintainer imports the
+`sd` repository into Read the Docs once; it then rebuilds the guide on each
+push.
+
 ## How It Is Organized
 
 Each chapter is a directory under `docs/` with an `index.md` that introduces
