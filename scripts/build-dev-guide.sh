@@ -21,7 +21,8 @@
 #   BROWSER  a command to open the page with, instead of the platform default
 #
 # Requirements: the packages in <DEV_GUIDE_DIR>/requirements.txt, which
-# `scripts/run-all-checks.sh --setup` installs.
+# `scripts/run-all-checks.sh --setup` installs. Read the Docs builds the same
+# project, with the same settings, from .readthedocs.yaml.
 
 set -euo pipefail
 
