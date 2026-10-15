@@ -82,7 +82,7 @@ scripts/run-all-checks.sh --help        # the scopes and single checks
 | `build` | Builds Sdtty, `mkcalls`, and `sd_calls.dat`, and smoke-tests them. |
 | `docs-build` | Builds the manuals in every format, and fails on a new warning. |
 | `dev-guide` | Builds the developer guide, and fails on any Sphinx warning. |
-| `codespell` | Checks spelling, with American spelling enforced. |
+| `codespell` | Checks spelling in the documentation, the tooling, and the C++ comments, with American spelling enforced. |
 | `prose` | Checks the documentation prose against `.claude/rules/doc_prose_style.md`. |
 | `pymarkdown` | Lints the Markdown. |
 | `shellcheck` | Lints the shell scripts in `scripts/`. |

@@ -1,5 +1,6 @@
 # codespell settings for scripts/check-spelling.sh, which also chooses the files
-# to check (SPELL_FILES in scripts/checks.conf).
+# to check (SPELL_FILES in scripts/checks.conf) and the source files whose
+# comments alone it checks (COMMENT_SPELL_FILES).
 [codespell]
 # en-GB_to_en-US enforces American spelling; clear and rare catch typos.
 builtin = clear,rare,en-GB_to_en-US
