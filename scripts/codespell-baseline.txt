@@ -1,0 +1,17 @@
+         // Now rfile, which, being the temp file, is writeable.  Copy sd.ini to it,
+         // we got called.  It would need to be passed in to us as a writeable variable.)
+      // Clear pointers so we will notice if it gets erroneously re-used.
+      // For the most part, this follows from the fact that we will not re-use any
+      // Since we re-use some stuff (e.g. 1x10 and 1x12 both use
+   // See if we can re-use some of the safely written history.
+   // We should actually re-use anything there.
+   // to save time: once we decide to search for some two-call resolves, we re-use
+   This attempts to re-use material already displayed on the screen.
+   simply re-uses the stored string where it can, and allocates fresh memory
+//         sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
+//      buf = realloc(oldp, siz);
+//      if (!buf && siz != 0) {
+//      void *buf = calloc(siz, 1);
+//   extern void *get_mem(uint32_t siz)
+//   extern void *get_more_mem(void *oldp, uint32_t siz)
+// of course, writeable.  It may be different from the former mapping
