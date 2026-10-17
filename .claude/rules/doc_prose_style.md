@@ -5,11 +5,11 @@ description: Prose style for all Sd documentation -- audience separation, forbid
 # Documentation Prose Style
 
 This rule governs the words in the manuals (`doc/*.txi`), `README.md`, and the
-developer documentation (`CONTRIBUTING.md` and the GitHub templates). The rules
-and skills in `.claude/` are for Claude Code, and neither this rule nor its
-check governs their wording. It sits alongside `doc_texinfo`, which governs the
-markup and the build. Where the two overlap, this rule governs the sentence and
-that one governs the markup.
+developer documentation (`CONTRIBUTING.md`, the developer guide in `docs/`, and
+the GitHub templates). The rules and skills in `.claude/` are for Claude Code,
+and neither this rule nor its check governs their wording. It sits alongside
+`doc_texinfo`, which governs the markup and the build. Where the two overlap,
+this rule governs the sentence and that one governs the markup.
 
 In `sd`, `scripts/check-doc-prose.sh` enforces the mechanically detectable
 half. Run it before claiming a documentation change is done;
