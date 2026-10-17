@@ -72,11 +72,14 @@ names exactly what is tested.
 
 ### The negation rule
 
-Put a negation on the verb, never on its object: write "doesn't have a
-partner" or "didn't change anything" in place of "has no partner" or "changed
-nothing". A negative subject is fine ("Nothing changes", "No test ran"), and
-so are "there is no", "with no", and the like. `scripts/wording.py` holds the
-verbs the check flags, and the words it deliberately leaves alone.
+Put a negation on the verb, not on its object: write "doesn't accept
+options" or "didn't change anything" in place of "accepts no options" or
+"changed nothing". A negative subject is fine ("Nothing changes", "No test
+ran"), and so are "there is no", "with no", and the like. So are the idioms in
+which a common verb takes a negative object: "has no effect", "have no idea",
+"do nothing", "knows nothing", "makes no sense", and "take no responsibility"
+are good English. `scripts/wording.py` holds the verbs the check flags, and the
+words it deliberately leaves alone.
 
 ## 4. Terminology
 
@@ -129,7 +132,7 @@ The script cannot judge these. Read for them:
 | `md-sentence-space` | error | two spaces after a sentence in Markdown |
 | `internal-name` | error | a source file or internal name in a manual or the README |
 | `regression-content` | error | a path into the regression suite in sd's developer documentation |
-| `negative-object` | error | a verb whose object is a negative ("has no", "changed nothing"), with a suggested rewrite |
+| `negative-object` | error | a verb whose object is a negative ("accepts no", "changed nothing"), with a suggested rewrite |
 | `gate`, `oxford-comma`, `x-not-y`, `so-clause` | warning | the constructions in Section 3 and 5 |
 | `texi-straight-quote` | warning | a straight double quote in Texinfo prose |
 | `time-anchor` | warning | time-anchored words outside the release notes |

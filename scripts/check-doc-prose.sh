@@ -463,15 +463,16 @@ if [[ "$REPO_KIND" == sd && ${#DEV_FILES[@]} -gt 0 ]]; then
         "$(hits '\bregression_tests/[a-z]+[0-9]+t\b|\b[a-z]+[0-9]+t\.(ref|tmp)\b' "$PROSE_DEV")"
 fi
 
-# A negation goes on the verb, never on its object: "doesn't have a partner",
-# not "has no partner". scripts/wording.py finds a verb from its list followed
-# by "no", "nothing", "nobody", "none", or "no one", and appends a suggested
-# rewrite in brackets where the verb form makes one simple.
+# A negation goes on the verb, not on its object: "doesn't accept options",
+# not "accepts no options". Idioms such as "has no effect" and "do nothing" are
+# good English and are not flagged. scripts/wording.py finds a verb from its
+# list followed by "no", "nothing", "nobody", "none", or "no one", and appends a
+# suggested rewrite in brackets where the verb form makes one simple.
 if ! NEGATIVE_OBJECTS=$(printf '%s\n' "$PROSE_ALL" | python3 "$PROJECT_ROOT/scripts/wording.py"); then
     echo 'check-doc-prose: FAILED -- scripts/wording.py did not run' >&2
     exit 1
 fi
-report ERROR negative-object 'put the negation on the verb -- "does not have a partner", not "has no partner"' \
+report ERROR negative-object 'put the negation on the verb -- "does not accept options", not "accepts no options"' \
     "$NEGATIVE_OBJECTS"
 
 # ---------------------------------------------------------------- warnings ----

@@ -2,10 +2,11 @@
 """Find a verb whose object is a negative in a prose stream.
 
 scripts/check-doc-prose.sh runs this for its negative-object check. The prose
-rule puts a negation on the verb, never on its object: write "doesn't have a
-partner" or "didn't change anything", not "has no partner" or "changed
+rule puts a negation on the verb, not on its object: write "doesn't accept
+options" or "didn't change anything", not "accepts no options" or "changed
 nothing". A negative subject reads naturally ("Nothing changes", "No test
-ran") and is never flagged.
+ran") and is never flagged, and neither are the idioms in which a common verb
+takes a negative object ("has no effect", "do nothing"); see ALLOWED_WORDS.
 
 Standard input is a prose stream, one "path:line:text" line for each line of
 prose, as check-doc-prose.sh extracts it. Lines with consecutive numbers in the
@@ -81,7 +82,6 @@ FLAGGED_VERBS = (
     "declare declares declared declared declaring",
     "delete deletes deleted deleted deleting",
     "deliver delivers delivered delivered delivering",
-    "do does did done doing",
     "draw draws drew drawn drawing",
     "drop drops dropped dropped dropping",
     "duplicate duplicates duplicated duplicated duplicating",
@@ -114,7 +114,6 @@ FLAGGED_VERBS = (
     "give gives gave given giving",
     "go goes went gone going",
     "grant grants granted granted granting",
-    "have has had had having",
     "hear hears heard heard hearing",
     "help helps helped helped helping",
     "hide hides hid hidden hiding",
@@ -128,7 +127,6 @@ FLAGGED_VERBS = (
     "issue issues issued issued issuing",
     "join joins joined joined joining",
     "keep keeps kept kept keeping",
-    "know knows knew known knowing",
     "launch launches launched launched launching",
     "lay lays laid laid laying",
     "lead leads led led leading",
@@ -143,7 +141,6 @@ FLAGGED_VERBS = (
     "look looks looked looked looking",
     "lose loses lost lost losing",
     "mail mails mailed mailed mailing",
-    "make makes made made making",
     "manage manages managed managed managing",
     "mark marks marked marked marking",
     "match matches matched matched matching",
@@ -223,7 +220,6 @@ FLAGGED_VERBS = (
     "store stores stored stored storing",
     "submit submits submitted submitted submitting",
     "supply supplies supplied supplied supplying",
-    "take takes took taken taking",
     "tell tells told told telling",
     "terminate terminates terminated terminated terminating",
     "touch touches touched touched touching",
@@ -244,17 +240,23 @@ FLAGGED_VERBS = (
 
 # The words found before a negative that are deliberately left alone, one group
 # per string. Linking and existential verbs ("there is no partner") and modals
-# ("may no longer") state a fact, not an action on an object. Prepositions
-# ("with no phantoms", "for no one"), conjunctions, relative words, and adverbs
-# introduce a negative subject or a noun phrase. A pronoun or an article puts
-# the verb out of reach. A word in neither tuple is left alone too: this one
-# records the decisions.
+# ("may no longer") state a fact, not an action on an object. A few common verbs
+# take a negative object idiomatically ("has no effect", "do nothing", "knows
+# nothing", "makes no sense", "take no responsibility"); that is good English,
+# and the check is for the stilted forms ("accepts no options", "changed
+# nothing"). Prepositions ("with no phantoms", "for no one"), conjunctions,
+# relative words, and adverbs introduce a negative subject or a noun phrase. A
+# pronoun or an article puts the verb out of reach. A word in neither tuple is
+# left alone too: this one records the decisions.
 ALLOWED_WORDS = (
     # Linking and existential verbs.
     "am are be been being exist existed exists is remain remained remains seem seemed",
     "seems stay stayed stays was were",
     # Modals.
     "can could may might must shall should will would",
+    # Verbs whose negative object is idiomatic.
+    "do does did done doing have has had having know knows knew known knowing",
+    "make makes made made making take takes took taken taking",
     # Prepositions.
     "about after against at before by during for from in into of on onto over per plus",
     "since than through to toward towards under until upon via with within without",
