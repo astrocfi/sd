@@ -160,7 +160,7 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
    if (innards->map_address == MAP_FAILED) innards->map_address = (int *) 0;
    if (!innards->map_address) return;
 #else
-   innards->mapfiledesc = fopen(innards->mapfilename, "rb");
+   innards->mapfiledesc = fopen(innards->mapfilename.c_str(), "rb");
 
    if (!innards->mapfiledesc) return;
    if ((int) fread(&innards->filewords, 4, 1, innards->mapfiledesc) != 1) return;
@@ -280,7 +280,7 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
    if (innards->map_address) delete [] innards->map_address;
    innards->map_address = (int *) 0;
    innards->filewords = (clientmapfilesizeinbytes+3) >> 2;
-   innards->mapfiledesc = fopen(innards->mapfilename, "wb");
+   innards->mapfiledesc = fopen(innards->mapfilename.c_str(), "wb");
    if (!innards->mapfiledesc) return;
    innards->map_address = new int [innards->filewords];
 #endif
