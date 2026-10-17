@@ -4778,7 +4778,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 
 
    // Two ways the outsides can surround the center z in a 4x5.
-   // Not competely satisfactory, but it will have to do.
+   // Not completely satisfactory, but it will have to do.
    {s4x5,           schema_in_out_triple_zcom, {14, 13, 12, 10, 11,
                                                 0, 1, 2, 4, 3,
                                                 8, 7, 6, 18, 17, 16},

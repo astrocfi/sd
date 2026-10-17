@@ -2662,7 +2662,7 @@ extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP 
    "active_phantoms_in_this_sequence" tells whether the state of the "active phantoms"
    mode flag was used in this sequence.  If it was read and found to be on,
    active_phantoms_in_this_sequence is set to 2.  If it was read and found to be off,
-   htis is is set to 1.  It is, of course, read any time an "assume <whatever> concept
+   this is set to 1.  It is, of course, read any time an "assume <whatever> concept
    is invoked.  This information is used to tell what kind of annotation to place in the
    transcript file to tell what assumptions were made.  The reason for having both
    states separately is that the state of the active phantoms mode can be toggled at
@@ -3634,7 +3634,7 @@ class tglmap {
 
    // Low two bits have rotation for first triangle.
    // Next two bits give rotation of second triangle, beyond the first,
-   // and beyond the usual 180 degress.  So these bits are usually zero.
+   // and beyond the usual 180 degrees.  So these bits are usually zero.
    enum flags {
       tg99chooseptpdrigger    =  0x400,
       tg99startingrotfieldbit =  0x800,
@@ -4055,7 +4055,7 @@ struct nice_setup_info_item {
    RESULTFLAG__EXPAND_TO_2X3 means that a call was executed that takes a four person
    starting setup (typically a line) and yields a 2x3 result setup.  Two of those
    result spots will be phantoms, of course.  When recombining a divided setup in
-   which such a call was executed, if the recombination wuold yield a 2x6, and if
+   which such a call was executed, if the recombination would yield a 2x6, and if
    the center 4 spots would be empty, this flag directs divided_setup_move to
    collapse the setup to a 2x4.  This is what makes calls like "pair the line"
    and "step and slide" behave correctly from parallel lines and from a grand line.
