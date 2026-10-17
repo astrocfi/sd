@@ -6,10 +6,14 @@ builtin = clear,rare,en-GB_to_en-US
 # .codespell-dictionary.txt adds British words the builtins miss; the trailing
 # "-" keeps the builtins in force.
 dictionary = .codespell-dictionary.txt,-
-# thar: a square dance term ("allemande thar"), not a misspelling of "that".
+# Words that are right where they appear, in lines that cannot carry a
+# comment:
+#   bu:   Sd's abbreviation for "boys U-turn back" (doc/relnotes03.txi).
+#   lew:  a surname, in the acknowledgments.
+#   thar: a square dance term ("allemande thar"), not a misspelling of "that".
 # Anything else stays reportable: silence a single line with a trailing
 # "codespell:ignore <word>" comment instead of widening this list.
-ignore-words-list = thar
+ignore-words-list = bu,lew,thar
 # 35 = 1 + 2 + 32: say nothing about the Latin-1 web pages in doc/, binary
 # files, or the configuration files read.
 quiet-level = 35
