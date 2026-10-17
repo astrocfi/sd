@@ -1,0 +1,14 @@
+# Errors from scripts/check-doc-prose.sh that predate the check, and are accepted.
+# Each line is: check<TAB>file<TAB>prose text. Regenerate with:
+#     scripts/check-doc-prose.sh --update-baseline
+internal-name	doc/install.txi	database.h
+internal-name	doc/install.txi	paths.h
+internal-name	doc/install.txi	sd.h
+internal-name	doc/install.txi	sdmatch.h
+internal-name	doc/relnotes09.txi	to the handling of "maps" in sdistort.cpp.  A lot of ugly special-case code
+md-sentence-space	README.md	Sd is a square dance caller's helper.  The program assists you in
+md-sentence-space	README.md	for Western square dancing by doing the checker pushing.  You tell the
+texi-sentence-space	doc/appnote1.txi	everyone trades and then the centers circulate won't work. The
+texi-sentence-space	doc/faq.txi	all options when editing an icon. For example, ``C:\sd\sdtty.exe
+texi-sentence-space	doc/faq.txi	create it.  Then edit it.  Use a plain text editor such as Emacs. Notepad,
+texi-sentence-space	doc/sd_doc.txi	ends press ahead from waves. The 3x4 matrix version can be formed by
