@@ -2,13 +2,13 @@
 #
 # Build Sdtty and the call database in place, and smoke-test them.
 #
-# Runs one of the makefiles in sd's src/, the way a developer does, and checks
+# Runs one of the makefiles in src/, the way a developer does, and checks
 # that it produced sdtty, mkcalls, and sd_calls.dat. Then runs `sdtty -help` and
 # a short scripted sequence, so that a binary that builds but cannot start fails
 # here. Everything the build writes in src/ is ignored by git.
 #
-# sd and sd-regression are cloned side by side, so in sd-regression this builds
-# ../sd, the checkout the regression suite's scripts run.
+# sd-regression has no copy of this script; scripts/run-regression-tests.sh runs
+# it for both repositories.
 #
 # Usage:
 #   scripts/build-sd.sh [options]
@@ -58,17 +58,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ "$REPO_KIND" == sd ]]; then
-    SD="$PROJECT_ROOT"
-else
-    SD="$(dirname "$PROJECT_ROOT")/sd"
-fi
-SRC="$SD/src"
-if [[ ! -f "$SRC/sd_calls.txt" ]]; then
-    echo "error: $SD is not an sd checkout (no src/sd_calls.txt)." >&2
-    echo "Clone sd and sd-regression side by side, under the same parent directory." >&2
-    exit 1
-fi
+SRC="$PROJECT_ROOT/src"
 if [[ ! -f "$SRC/$MAKEFILE" ]]; then
     echo "error: $SRC has no $MAKEFILE" >&2
     exit 1

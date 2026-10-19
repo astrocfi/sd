@@ -25,6 +25,9 @@ description: Git, CI (GitHub Actions), the local check runner, and editor settin
   requests. The rules and skills about the manuals are in `sd` only, since
   `sd-regression` has no manuals. Everything else, `scripts/` included,
   belongs to its own repository: each has the scripts it uses, and no others.
+  A script that both need has one copy, in `sd`: `sd-regression` runs
+  `build-sd.sh`, `run-regression-tests.sh`, and `companion-ref.sh` from
+  `../sd/scripts`, so they cannot drift apart.
 
 ## 2. CI (GitHub Actions)
 
@@ -64,8 +67,8 @@ can reproduce the CI result before pushing.
 
 - The source, in `sd`, builds with the makefiles in `src/`, each named for its
   platform. There is no default makefile, so every invocation needs `-f` (for
-  example `make -f makefile.linux64`). `scripts/build-sd.sh` builds `sd/src`
-  in place, from either repository, and git ignores what the build writes.
+  example `make -f makefile.linux64`). `scripts/build-sd.sh` builds `src/` in
+  place, and git ignores what the build writes.
 - The regression suite runs in place too: its scripts run `../../sd/src/sdtty`
   from `sd-regression/regression_tests`, so `sd` must be built before it runs.
 - The documentation, in `sd`, builds with `doc/makefile` (Texinfo). Build it

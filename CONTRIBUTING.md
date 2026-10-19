@@ -148,7 +148,9 @@ rm sd-regression-key sd-regression-key.pub
 `SD_REGRESSION_REPOSITORY` Actions variable in `sd` to its `owner/name`.
 
 The `sd-regression` workflow reads the public `sd` repository and doesn't need
-a key.
+a key. It has no copies of the scripts that build Sd and run the suite: it
+runs `scripts/build-sd.sh`, `scripts/run-regression-tests.sh`, and
+`scripts/companion-ref.sh` from its checkout of `sd`.
 
 Because the `sd` repository is public:
 

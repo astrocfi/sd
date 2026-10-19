@@ -12,6 +12,9 @@
 #   4. for a pull request, its base branch;
 #   5. --default, main unless given.
 #
+# Both workflows run this copy: sd's from its own checkout, and sd-regression's
+# from its checkout of sd, which has no copy.
+#
 # The facts about the build come from the GitHub Actions environment
 # (GITHUB_REF_TYPE, GITHUB_REF_NAME, GITHUB_HEAD_REF, and GITHUB_BASE_REF), or
 # from the options below when run by hand.
