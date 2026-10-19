@@ -200,7 +200,7 @@ A somewhat different version runs on Unix systems running the X Window System in
 * Installing on a PC::          Installing on a PC
 * Licensing Terms::             Licensing Terms
 * Author Contact::              How to Contact the Authors
-* Acknowledgments::            Acknowledgments
+* Acknowledgments::             Acknowledgments
 @end menu
 
 @node Getting Sd or Sdtty, Documentation,  , Intro
