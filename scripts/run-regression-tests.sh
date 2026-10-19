@@ -14,11 +14,14 @@
 #      wrote (*.tmp), and reports each test by name: passed, FAILED, or not run.
 #
 # Everything the build and the run write is ignored by git in both checkouts.
+# sd-regression has no copy of this script: its run-all-checks.sh and its
+# workflow run this one, from ../sd/scripts.
 #
 # The tests are private: most are transcriptions of choreography called at real
 # dances. This script prints test names and the number of differing lines, and
-# never their contents, unless --show-diffs is given. In the sd repository on
-# GitHub Actions, whose logs are public, it refuses --show-diffs.
+# never their contents, unless --show-diffs is given. On GitHub Actions it
+# refuses --show-diffs unless the repository whose workflow is running is
+# private, as sd-regression is: sd's logs are public.
 #
 # Usage:
 #   scripts/run-regression-tests.sh [options]
@@ -64,19 +67,33 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ "$SHOW_DIFFS" == true && "$REPO_KIND" == sd && "${GITHUB_ACTIONS:-}" == true ]]; then
-    echo "error: --show-diffs would publish private test content in sd's public CI log" >&2
+# private_ci_log -- succeed when the workflow running this belongs to a private
+# repository. The event that started it says; when it cannot be read, the log
+# is taken to be public.
+private_ci_log() {
+    [[ -n "${GITHUB_EVENT_PATH:-}" && -f "$GITHUB_EVENT_PATH" ]] || return 1
+    python3 -c '
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as f:
+    event = json.load(f)
+sys.exit(0 if event.get("repository", {}).get("private") is True else 1)
+' "$GITHUB_EVENT_PATH"
+}
+
+if [[ "$SHOW_DIFFS" == true && "${GITHUB_ACTIONS:-}" == true ]] && ! private_ci_log; then
+    echo "error: --show-diffs would publish private test content in a public CI log" >&2
     exit 2
 fi
 
 # The suite's scripts name ../../sd/src, so the two checkouts must be siblings
 # named sd and sd-regression.
-parent="$(dirname "$PROJECT_ROOT")"
-SD="$parent/sd"
-REGRESSION="$parent/sd-regression"
-if [[ "$PROJECT_ROOT" != "$SD" && "$PROJECT_ROOT" != "$REGRESSION" ]]; then
-    echo "error: this checkout is $PROJECT_ROOT; the regression suite needs it to be" >&2
-    echo "named sd or sd-regression, beside the other." >&2
+SD="$PROJECT_ROOT"
+REGRESSION="$(dirname "$PROJECT_ROOT")/sd-regression"
+if [[ "$(basename "$SD")" != sd ]]; then
+    echo "error: this checkout is $SD; the regression suite's scripts need it to be" >&2
+    echo "named sd, beside sd-regression." >&2
     exit 1
 fi
 TESTS="$REGRESSION/regression_tests"
