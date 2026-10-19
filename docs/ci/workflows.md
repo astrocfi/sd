@@ -63,7 +63,8 @@ It has two jobs:
 - **Lint** runs PyMarkdown over this repository's Markdown, ShellCheck over
   its scripts, and actionlint over its workflow.
 - **Regression tests** checks out the public `sd` repository (no key is
-  needed), chooses the `sd` branch to test, and runs the suite. This repository
+  needed), chooses the `sd` branch to test, and runs the suite, all with
+  `sd`'s scripts. This repository
   is private, so the job sets `REGRESSION_SHOW_DIFFS` and its log shows the
   differences for each failing test.
 

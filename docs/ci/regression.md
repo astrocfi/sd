@@ -29,6 +29,11 @@ both checkouts where they are:
 
 Git ignores everything the build and the run write, in both checkouts.
 
+These scripts are in `sd` only. `sd-regression` has no copies of
+`run-regression-tests.sh`, `build-sd.sh`, or `companion-ref.sh`: its
+`run-all-checks.sh --regression` runs `sd`'s from `../sd/scripts`, so the two
+repositories always run the same scripts.
+
 ```text
 regression: doit.sh ran in 628s
 regression: 285 passed, 0 failed, 0 not run by doit.sh
@@ -52,8 +57,10 @@ transcript that changes because Sd's output does) needs both repositories.
 It is made on a branch with **the same name** in each, and the two pull
 requests are merged together.
 
-`scripts/companion-ref.sh` chooses which ref of the other repository to test
-against. It takes the first of these that exists there:
+`scripts/companion-ref.sh`, in `sd`, chooses which ref of the other repository
+to test against. Both workflows run it. `sd-regression`'s takes it from the
+`sd` branch with the same name, or else from `main`, before it checks `sd`
+out. It takes the first of these that exists there:
 
 1. The ref given to a manual run (`regression_ref` in `sd`, `sd_ref` in
    `sd-regression`). If it does not exist, the job fails.
@@ -101,7 +108,8 @@ regression job therefore:
 
 - prints test names and the number of differing lines, never a test's
   contents. `scripts/run-regression-tests.sh` refuses `--show-diffs` (and
-  `REGRESSION_SHOW_DIFFS`) when it runs in `sd` on GitHub Actions;
+  `REGRESSION_SHOW_DIFFS`) on GitHub Actions unless the event that started the
+  workflow says its repository is private;
 - doesn't upload an artifact or write to the Actions cache. A pull request
   from a fork can restore a cache written by the base branch.
 
