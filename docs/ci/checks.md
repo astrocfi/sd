@@ -25,7 +25,7 @@ error.
 
 | Check | Script or tool | What it does |
 |---|---|---|
-| `build` | `scripts/build-sd.sh` | Builds Sdtty, `mkcalls`, and `sd_calls.dat` from a copy of `src/`, and starts a sequence with them |
+| `build` | `scripts/build-sd.sh` | Builds Sdtty, `mkcalls`, and `sd_calls.dat` in `src/`, and starts a sequence with them |
 | `docs-build` | `scripts/build-docs.sh` | Builds the manuals in every format, and fails on a warning that is not in the baseline |
 | `dev-guide` | `scripts/build-dev-guide.sh` | Builds this guide, and fails on any Sphinx warning |
 | `codespell` | `scripts/check-spelling.sh` | Checks the spelling of the documentation and tooling, with American spelling enforced |
@@ -50,7 +50,8 @@ Scopes and single checks can be combined. `-s` (`--sequential`) runs the
 checks one after another and prints each one's output as it runs, which is
 easier to read when one fails. CI always runs sequentially. In the default
 parallel mode each check's output is written to `.build/checks/<check>.log`
-and printed when all of them have finished.
+and printed when all of them have finished. The regression suite, which builds
+in `src/` as the `build` check does, waits until the others have finished.
 
 ## Tools
 
@@ -93,15 +94,15 @@ output.
 
 ## Build Output
 
-Everything the scripts build goes under `.build/` at the repository root. The
-first script to write there also writes `.build/.gitignore`, which ignores the
-whole directory, so nothing in it can be committed.
+Sd itself builds in place in `src/`, where git ignores the products, and the
+regression suite runs in place in `sd-regression/regression_tests`. Everything
+else the scripts build goes under `.build/` at the repository root. The first
+script to write there also writes `.build/.gitignore`, which ignores the whole
+directory, so nothing in it can be committed.
 
 | Directory | Contents |
 |---|---|
 | `.build/venv` | the lint tools and Sphinx |
-| `.build/sd` | the Sdtty build from `scripts/build-sd.sh` |
 | `.build/docs` | the manuals; the finished files are in `.build/docs/output` |
 | `.build/dev-guide` | this guide; open `.build/dev-guide/html/index.html` |
-| `.build/regression` | the regression run, including every transcript it wrote |
 | `.build/checks` | the logs of a parallel run |

@@ -13,19 +13,21 @@ that matches the change, and `sd-regression` against the matching `sd` branch.
 
 `scripts/run-all-checks.sh --regression` runs `scripts/run-regression-tests.sh`,
 which runs the suite's own `regression_tests/doit.sh`, exactly as a developer
-does, and only arranges the files around it:
+does. The two repositories are cloned side by side, and the suite's scripts run
+`../../sd/src/sdtty` from `sd-regression/regression_tests`, so the run uses
+both checkouts where they are:
 
-1. It builds Sd with `scripts/build-sd.sh`.
-2. It copies the suite into `.build/regression`, beside a copy of the binaries,
-   laid out so that both path conventions in the suite's scripts find them
-   (`../sdtty` and `../../sd/src/sdtty` from the tests).
-3. It starts Sdtty once at each level, so that the menu cache exists before the
+1. It builds Sd in place in `sd/src` with `scripts/build-sd.sh`.
+2. It runs `doit.sh` in `sd-regression/regression_tests`, and writes its
+   output, which includes the differences and therefore the tests' contents, to
+   `regression_tests/doit.log`, which it does not print. `doit.sh` first starts
+   Sdtty once at each level it uses, so that the menu cache exists before the
    first test at that level. Without the cache, that test reports a cache miss
    that its reference transcript does not contain.
-4. It runs `doit.sh`, and writes its output, which includes the differences
-   and therefore the tests' contents, to a log file that it does not print.
-5. It compares each reference transcript (`.ref`) with the transcript the run
+3. It compares each reference transcript (`.ref`) with the transcript the run
    wrote (`.tmp`), and reports each test by name.
+
+Git ignores everything the build and the run write, in both checkouts.
 
 ```text
 regression: doit.sh ran in 628s
@@ -131,8 +133,8 @@ suite locally with both repositories checked out side by side:
 scripts/run-all-checks.sh --regression
 ```
 
-Then compare `.build/regression/sd-regression/regression_tests/<test>.tmp`
-with `<test>.ref` in the same directory, or rerun with
+Then compare `<test>.tmp` with `<test>.ref` in
+`sd-regression/regression_tests`, or rerun with
 `scripts/run-regression-tests.sh --show-diffs`. The failing run in
 `sd-regression`'s CI, if there is one, also shows the differences.
 
