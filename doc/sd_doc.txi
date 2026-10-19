@@ -132,7 +132,7 @@ Introduction
 * Documentation::               Documentation
 * Getting Sd or Sdtty::         Getting Sd or Sdtty
 * Author Contact::              How to Contact the Authors
-* Acknowledgments::            Acknowledgments
+* Acknowledgments::             Acknowledgments
 
 Calling
 
