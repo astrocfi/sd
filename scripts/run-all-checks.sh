@@ -33,8 +33,7 @@
 # Environment:
 #   VENV         The lint tools' virtual environment (default: .build/venv);
 #                "none" uses the tools on PATH, as CI does
-#   SD_DIR, SD_REGRESSION_DIR, SD_MAKEFILE
-#                Passed through to scripts/build-sd.sh and
+#   SD_MAKEFILE  Passed through to scripts/build-sd.sh and
 #                scripts/run-regression-tests.sh
 #
 # Exit status: 0 when every check passed, 1 when any failed, 2 for a usage
@@ -199,18 +198,28 @@ printf '%brun-all-checks: %s (%s)%b\n' "$BOLD" "${SELECTED[*]}" \
     "$([[ "$PARALLEL" == true ]] && echo parallel || echo sequential)" "$RESET"
 
 if [[ "$PARALLEL" == true ]]; then
+    # The build and the regression suite both build in src/, so the regression
+    # suite waits for the others rather than run make beside the build.
     declare -A PIDS=()
     for c in "${SELECTED[@]}"; do
+        [[ "$c" == regression ]] && continue
         "check_$c" > "$LOG_DIR/$c.log" 2>&1 &
         PIDS[$c]=$!
     done
-    for c in "${SELECTED[@]}"; do
+    for c in "${!PIDS[@]}"; do
         if wait "${PIDS[$c]}"; then
             STATUS[$c]=0
         else
             STATUS[$c]=1
         fi
     done
+    if [[ -n "${WANT[regression]:-}" ]]; then
+        if check_regression > "$LOG_DIR/regression.log" 2>&1; then
+            STATUS[regression]=0
+        else
+            STATUS[regression]=1
+        fi
+    fi
     for c in "${SELECTED[@]}"; do
         printf '\n%b==== %s ====%b\n' "$BOLD" "$c" "$RESET"
         cat "$LOG_DIR/$c.log"

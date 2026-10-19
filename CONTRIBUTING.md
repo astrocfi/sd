@@ -19,8 +19,9 @@ the public `sd` repository, its issues, or its pull requests. Name a test
 
 ## Getting Started
 
-Clone both repositories into the same parent directory. The scripts in each
-repository find the other one there:
+Clone both repositories into the same parent directory, under their own names.
+The scripts in each repository find the other one there, and the regression
+suite's scripts run `../../sd/src/sdtty` from `sd-regression/regression_tests`:
 
 ```bash
 git clone https://github.com/astrocfi/sd.git
@@ -45,8 +46,8 @@ The checks need:
   ```
 
   This creates a virtual environment in `.build/venv` from
-  `scripts/requirements.txt`. Everything the scripts build goes under `.build/`,
-  which ignores itself.
+  `scripts/requirements.txt`. The manuals' build goes under `.build/` too, and
+  `.build/` ignores itself.
 
 ## Building
 
@@ -58,9 +59,9 @@ cd src
 make -f makefile.linux64
 ```
 
-`scripts/build-sd.sh` builds a copy of the sources in `.build/sd`, leaving
-`src/` untouched, and checks that the result can start a sequence. Choose
-another makefile with `--makefile` (for example `makefile.linux64debug`).
+`scripts/build-sd.sh` runs the same build in `src/` and checks that the result
+can start a sequence. Choose another makefile with `--makefile` (for example
+`makefile.linux64debug`). Git ignores everything the build writes.
 
 ## Running the Checks
 
@@ -97,9 +98,9 @@ script to `sdtty` on standard input, writes the transcript to a `.tmp` file,
 and compares it with the reference. `-diagnostic` makes each run reproducible.
 
 `scripts/run-regression-tests.sh` (which `run-all-checks.sh --regression` runs)
-builds Sd, copies the suite into `.build/regression`, warms the menu cache for
-every level, runs `doit.sh`, and reports each test by name. A passing run
-ends:
+builds Sd in place in `src/`, runs `doit.sh` in `../sd-regression/regression_tests`,
+and reports each test by name. `doit.sh` warms the menu cache before the first
+test. A passing run ends:
 
 ```text
 regression: 285 passed, 0 failed, 0 not run by doit.sh
@@ -107,8 +108,8 @@ regression: passed
 ```
 
 A failing test is listed as `FAILED <test> (N line(s) differ)`. To see why,
-compare `.build/regression/sd-regression/regression_tests/<test>.tmp` with
-`<test>.ref` there. `--show-diffs` prints the differences, but only outside
+compare `<test>.tmp` with `<test>.ref` in
+`../sd-regression/regression_tests`. `--show-diffs` prints the differences, but only outside
 the public repository's CI.
 
 When a change to Sd changes a transcript on purpose, update the reference in

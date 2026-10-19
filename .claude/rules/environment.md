@@ -56,14 +56,18 @@ can reproduce the CI result before pushing.
   and `actionlint-py`, `pymarkdownlnt`, and `shellcheck-py` in `sd-regression`.
   `scripts/run-all-checks.sh --setup` installs them in a virtual environment in
   `.build/venv`; never install them into the system Python.
-- Everything the scripts build goes under `.build/`, which ignores itself.
+- The lint tools' virtual environment, the runner's logs, and, in `sd`, the
+  manuals' build go under `.build/`, which ignores itself. Sd itself builds in
+  place, and the regression suite runs in place (Section 4).
 
 ## 4. Builds
 
 - The source, in `sd`, builds with the makefiles in `src/`, each named for its
   platform. There is no default makefile, so every invocation needs `-f` (for
-  example `make -f makefile.linux64`). `scripts/build-sd.sh` builds a copy of
-  the sources, from either repository.
+  example `make -f makefile.linux64`). `scripts/build-sd.sh` builds `sd/src`
+  in place, from either repository, and git ignores what the build writes.
+- The regression suite runs in place too: its scripts run `../../sd/src/sdtty`
+  from `sd-regression/regression_tests`, so `sd` must be built before it runs.
 - The documentation, in `sd`, builds with `doc/makefile` (Texinfo). Build it
   through `scripts/build-docs.sh`, which builds out of the source tree and
   checks the warnings against a recorded baseline.

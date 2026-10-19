@@ -136,6 +136,7 @@ jobs:
             exit 1
           fi
 
+      # The two checkouts side by side, as the suite's scripts expect.
       - uses: actions/checkout@v5
         with:
           path: sd
@@ -158,6 +159,3 @@ jobs:
       # of this public repository can be read by others.
       - name: Run the regression suite
         run: sd/scripts/run-all-checks.sh --regression --sequential
-        env:
-          SD_DIR: ${{ github.workspace }}/sd
-          SD_REGRESSION_DIR: ${{ github.workspace }}/sd-regression
