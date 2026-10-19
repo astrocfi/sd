@@ -1,8 +1,16 @@
-# Build and test Sd, build its manuals, and lint the documentation and tooling.
+# Build and test Sd, run the regression suite, build the manuals, and lint the
+# documentation and tooling.
 #
 # Every job runs scripts/run-all-checks.sh, which is the single source of truth
 # for the checks (see .claude/rules/environment.md); a job only installs what
 # its checks need.
+#
+# The regression suite is in the private sd-regression repository. The
+# regression job reads it with a read-only deploy key, stored in this
+# repository as the SD_REGRESSION_SSH_KEY secret (see CONTRIBUTING.md), and
+# tests against the sd-regression branch with the same name as the one being
+# built (scripts/companion-ref.sh). This repository's logs are public, so the
+# job reports failing tests by name only.
 name: Run Tests
 
 on:
@@ -16,6 +24,13 @@ on:
       - "v*"
   pull_request:
   workflow_dispatch:
+    inputs:
+      regression_ref:
+        description: >-
+          Branch, tag, or commit of sd-regression to test against (empty: the
+          branch with the same name, else main)
+        required: false
+        default: ""
   schedule:
     # Weekly, so that a change in the runner image shows up between releases.
     - cron: "0 6 * * 1"
@@ -97,3 +112,50 @@ jobs:
           path: .build/docs/output
           if-no-files-found: error
           retention-days: 14
+
+  regression:
+    name: Regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # A pull request from a fork, and one from Dependabot, gets no Actions
+    # secrets, so it cannot read the private suite. A maintainer runs the suite
+    # for a fork's change by pushing its branch to this repository.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    env:
+      SD_REGRESSION_REPOSITORY: ${{ vars.SD_REGRESSION_REPOSITORY || format('{0}/sd-regression', github.repository_owner) }}
+    steps:
+      - name: Check for the deploy key
+        env:
+          KEY: ${{ secrets.SD_REGRESSION_SSH_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error title=No deploy key::The SD_REGRESSION_SSH_KEY secret is not set, so this job cannot read $SD_REGRESSION_REPOSITORY. See \"Regression tests in CI\" in CONTRIBUTING.md."
+            exit 1
+          fi
+
+      # The two checkouts side by side, as the suite's scripts expect.
+      - uses: actions/checkout@v5
+        with:
+          path: sd
+
+      # All branches and tags, so that scripts/companion-ref.sh can choose.
+      - uses: actions/checkout@v5
+        with:
+          repository: ${{ env.SD_REGRESSION_REPOSITORY }}
+          ssh-key: ${{ secrets.SD_REGRESSION_SSH_KEY }}
+          path: sd-regression
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Choose the sd-regression ref
+        run: sd/scripts/companion-ref.sh --dir sd-regression --checkout --override "$OVERRIDE"
+        env:
+          OVERRIDE: ${{ inputs.regression_ref }}
+
+      # Never upload or cache anything from sd-regression: artifacts and caches
+      # of this public repository can be read by others.
+      - name: Run the regression suite
+        run: sd/scripts/run-all-checks.sh --regression --sequential

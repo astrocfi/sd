@@ -45,8 +45,9 @@ scripts/run-all-checks.sh --sequential  # everything, one check at a time
 | `--build`, `--docs-build`, `--codespell`, `--prose`, `--pymarkdown`, `--shellcheck`, `--actionlint` | that check only |
 
 `sd-regression` has no source or manuals of its own, so its script runs only
-`pymarkdown`, `shellcheck`, and `actionlint`, with `--lint`.
-`scripts/run-all-checks.sh --help` lists the checks a repository has.
+`pymarkdown`, `shellcheck`, and `actionlint`, with `--lint`, and the regression
+suite with `--regression`. `scripts/run-all-checks.sh --help` lists the checks a
+repository has.
 
 ## What Each Check Does
 
