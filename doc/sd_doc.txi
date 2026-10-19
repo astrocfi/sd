@@ -132,7 +132,7 @@ Introduction
 * Documentation::               Documentation
 * Getting Sd or Sdtty::         Getting Sd or Sdtty
 * Author Contact::              How to Contact the Authors
-* Acknowledgements::            Acknowledgements
+* Acknowledgments::             Acknowledgments
 
 Calling
 
@@ -191,7 +191,7 @@ The Initialization File
 * Session Control::             Session Control
 * Option Control::              Option Control
 * Accelerator Key Control::     Accelerator Key Control
-* Creating an Intialization File:: Creating an Intialization File
+* Creating an Initialization File:: Creating an Initialization File
 
 Invoking Sd via Command Line
 
@@ -396,11 +396,11 @@ If you can't give an answer in terms of your understanding of how the calls
 and concepts really work, or if you don't agree with the program's interpretation,
 you shouldn't be calling that material.
 
-@unnumberedsec Judgement, Controversy, and Warning Messages
+@unnumberedsec Judgment, Controversy, and Warning Messages
 
-Not all callers exercise good judgement in their calling, and occasionally
+Not all callers exercise good judgment in their calling, and occasionally
 some controversial, or even illegal, things are called.  It is not possible
-for a computer program to enforce good judgement or good taste.  Sd
+for a computer program to enforce good judgment or good taste.  Sd
 nevertheless sometimes prints warning messages of various types to alert
 less-experienced callers that something might be unusually difficult or
 controversial, or might violate some definition or some commonly accepted notion.
@@ -443,7 +443,7 @@ this has not been maintained in recent years.
 * Installing on a PC::          Installing on a PC
 * Licensing Terms::             Licensing Terms
 * Author Contact::              How to Contact the Authors
-* Acknowledgements::            Acknowledgements
+* Acknowledgments::            Acknowledgments
 @end menu
 
 @node Getting Sd or Sdtty, Documentation,  , Intro
@@ -609,7 +609,7 @@ if necessary.)
 
 You may delete the
 @file{install.exe} file at this point, along with
-any documentaion archives, perhaps saving copies on diskette.
+any documentation archives, perhaps saving copies on diskette.
 
 You do not need to copy the shortcuts again when upgrading to a new version.
 Installing a new version requires only obtaining and launching @file{install.exe}.
@@ -672,7 +672,7 @@ documents are also distributed with the program.  Permission is given to
 distribute verbatim copies of these documents, either by photocopier or
 by computer, but modification of them is forbidden by copyright law.
 
-@node Author Contact, Acknowledgements, Licensing Terms, Intro
+@node Author Contact, Acknowledgments, Licensing Terms, Intro
 @unnumberedsec How to Contact the Authors
 
 Please send any praise, bug reports, or other comments on Sd
@@ -704,8 +704,8 @@ North Billerica MA 01862-2722
 @end display
 
 @ifset full-manual
-@node Acknowledgements, , Author Contact, Intro
-@unnumberedsec Acknowledgements
+@node Acknowledgments, , Author Contact, Intro
+@unnumberedsec Acknowledgments
 
 Thanks to Kathy Godfrey, Sue Curtis, Chris Stacy, and Lynette Bellini
 for their help, encouragement, suggestions, contributions of calls,
@@ -1008,7 +1008,7 @@ If you decide you don't want that call, click the @samp{Cancel} button.
 The gender designators are @code{boys} and @code{girls}.  This is the way they
 appear in the Callerlab Mainstream list.  The author does not take a position
 on whether the adult terms would be more reasonable words to use in any given context.
-You must use your own judgement in deciding what to say.
+You must use your own judgment in deciding what to say.
 
 Not all designators are legal in all cases; for example, you can't call
 @code{leads run} from a tidal wave.
@@ -1446,7 +1446,7 @@ and @samp{vertical tag your neighbor}.  Some calls can be modified in
 unnatural ways, such as @samp{trade
 the diamond but replace the diamond circulate with explode the diamond}.
 The usual way to perform natural modifications is simply to type the call
-as decribed in @ref{Call Variations}.
+as described in @ref{Call Variations}.
 
 To form an unnatural type of modified call, you must first enable call modifications
 by selecting @code{simple modifications} or @code{allow modifications}
@@ -2619,7 +2619,7 @@ separated from each other by blank lines.
 * Session Control::             Session Control
 * Option Control::              Option Control
 * Accelerator Key Control::     Accelerator Key Control
-* Creating an Intialization File:: Creating an Intialization File
+* Creating an Initialization File:: Creating an Initialization File
 @end menu
 
 @node Session Control, Option Control,  , The Initialization File
@@ -2957,7 +2957,7 @@ if these commands are not working satisfactorily on your terminal.
 This is only legal in @code{Sdtty}, and is meaningless when running Windows.
 @end table
 
-@node Accelerator Key Control, Creating an Intialization File, Option Control, The Initialization File
+@node Accelerator Key Control, Creating an Initialization File, Option Control, The Initialization File
 @section Accelerator Key Control
 
 The text of the @file{sd.ini} initialization file, from the line
@@ -3080,8 +3080,8 @@ Therefore, whenever you change your initialization file, it is a good
 idea to test it by starting the program at C4X to find out if any warning
 messages are printed.
 
-@node Creating an Intialization File, , Accelerator Key Control, The Initialization File
-@section Creating an Intialization File
+@node Creating an Initialization File, , Accelerator Key Control, The Initialization File
+@section Creating an Initialization File
 
 When @code{Sd} or @code{Sdtty} is first installed, no initialization
 file @file{sd.ini} exists.  When you run the program, it will print
@@ -3372,8 +3372,8 @@ different.
 The rationale for this is that it is too hard to make the program always use
 the words that a caller would use.  When writing sequences, be aware that the
 dancers do not necessarily know this computer-ese dialect.  Use the words
-that you think are correct and natural.  Your judgement is much better than any
-program's judgement can ever be.
+that you think are correct and natural.  Your judgment is much better than any
+program's judgment can ever be.
 
 There are some innocent-looking things that the program can generate for which
 appropriate words do not exist.  You must not write sequences containing such
@@ -3847,7 +3847,7 @@ them to mean.
 For many of the less straightforward cases, the words that the
 program uses are not necessarily the words that you would use to get the
 dancers to do the equivalent thing.  You must always use your
-own judgement.  No claim is made that the program's notion
+own judgment.  No claim is made that the program's notion
 of what the words literally mean is the universally accepted
 definition of the concept.
 
@@ -4560,7 +4560,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 These are (reasonably) straightforward.
 @item overlapped siamese
 This is done from a 2x4, usually one in which people are T-boned.  Each person works either as couples
-or in tandem, as if with the other person in his quadrant, regradless of that other person's
+or in tandem, as if with the other person in his quadrant, regardless of that other person's
 facing direction.  Each person's resulting setup is a virtual 2x2 box, and the person
 does the call in that box.
 @item centers
@@ -4664,7 +4664,7 @@ after each of the three parts of @samp{turn the key}.
 These concepts are among the situations in which the program does not attempt
 to print out the exact words that are appropriate to use when calling, but
 instead prints out an unambiguous description of what is supposed to happen.
-The exact words you should use depend on the context and on your judgement.
+The exact words you should use depend on the context and on your judgment.
 You might say ``piecewise add a criss cross the deucey, and turn the key,''
 or ``do a criss cross the deucey after each part, and turn the key,'' or
 something similar.
@@ -4695,7 +4695,7 @@ say the fraction after the call, as in @samp{swing the fractions four fifths}.
 The program will place improper fractions after the call, as in
 @samp{split circulate 1-1/2}.  You still specify the concept first when entering
 it into the program.  That is, you type @code{1-1/2 split circulate}.
-In any case, you must use your judgement when choosing what to say when calling.
+In any case, you must use your judgment when choosing what to say when calling.
 
 In extremely tricky cases, such as @samp{1/2, mix}, @samp{3/4, mix}, @samp{3/4 mix},
 and @samp{2/3, 3/4 mix}, these concepts can lead to ambiguity.  It may
@@ -4780,7 +4780,7 @@ that there are calls for which, while it is technically legal to say such things
 they are not accepted as common usage.  For example, @code{finish shazam} as a way of
 saying @dfn{U-turn back}, or @code{finish mix} or @code{like a mix} as ways
 of saying @dfn{centers trade}, would have to be considered rather peculiar.
-You must exercise your judgement when using these concepts.
+You must exercise your judgment when using these concepts.
 
 One occasionally hears things like @dfn{cross chain reaction, centers
 finish like a wheel the ocean}, in which the final cast off 3/4 of the
@@ -4866,7 +4866,7 @@ It is entered thusly:
 @end group
 @end example
 
-It will apear in the transcript as ``use ah so for the 3rd part:
+It will appear in the transcript as ``use ah so for the 3rd part:
 swing the fractions''.
 
 @item use @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -5050,7 +5050,7 @@ For example, from a parallelogram, the @code{parallelogram} concept must
 be used when giving 8-person calls such as @code{acey deucey}, but it is possible
 to give 4-person calls such as @code{mix} without any concept.  However, the
 program will issue a warning.  Using the @code{each wave} concept will prevent
-the warning.  In either case, the exact words you would use whan calling the card
+the warning.  In either case, the exact words you would use when calling the card
 are up to you.
 
 @item 1x6 matrix
@@ -5664,7 +5664,7 @@ and some are intended for dealing with difficult situations.
 
 Some of these designators will not be understood by dancers below high
 challenge levels, but the program will allow them at any time.  You will
-need to use your judgement in calling.  For example, you may need to use
+need to use your judgment in calling.  For example, you may need to use
 @code{sideliners} to get some particularly tricky effect.  Below C4, you
 would need to read the card as something like @samp{those facing the side
 walls}.
@@ -5725,7 +5725,7 @@ must say so.
 @sp 1
 @item center box
 This is intended for use in a parallelogram or other setup in which there
-is a recognizeable fully occupied 2x2 box in the center.
+is a recognizable fully occupied 2x2 box in the center.
 @sp 1
 @item center 1x4
 @item center column
@@ -5809,7 +5809,7 @@ This will come out as:
 @end example
 
 If the designated people are centers or ends, the program will do
-the call(s) according to its best judgement of what the calls mean.
+the call(s) according to its best judgment of what the calls mean.
 Otherwise, it will find the maximal connected undistorted subsets, and
 do the call in those subsets.  For example, from boy-boy-girl-girl waves,
 the boys are in two miniwaves that have nothing to do with
@@ -6182,7 +6182,7 @@ might simply be inappropriate, or it might be wise to say something along
 the lines of ``be careful; everyone do your part.''
 The significance of a warning may also depend on the level.  Some things
 that are extremely peculiar but barely legal at high challenge levels are
-simply not done at lower levels.  You should use your judgement.
+simply not done at lower levels.  You should use your judgment.
 
 Warning:  The database is not without errors or misunderstandings in
 nonstandard uses of calls.  The program generally tries to be extremely
