@@ -303,8 +303,8 @@ static inline bool user_char_matches_cand(char u, char p)
 
 
 
-// Fast check if user prefix mismatches candidate pattern prefix.
-// Returns true if candidate cannot possibly match user.
+// Fast check if user prefix definitely mismatches candidate pattern prefix.
+// Returns true if candidate cannot possibly match user, and false if it could.
 static inline bool cand_prefix_mismatches(const char *user, const char *cand)
 {
    if (!cand || !user)
@@ -663,6 +663,21 @@ void matcher_initialize()
    int i, j;
    int concept_number;
    const concept_descriptor *p;
+
+   // Pre-index selectors by first character for fast matching in match_wildcard.
+   // Bucket 0 holds all selectors (for when user input is empty), and selectors
+   // starting with a '@' wildcard are added to every bucket.
+   for (i=1; i<selector_INVISIBLE_START; i++) {
+      if (selector_list[i].name[0] == '@') {
+         for (j=0; j<256; j++)
+            gg77->matcher_p->selector_buckets[j].add_one(i);
+      }
+      else {
+         unsigned char c = tolower((unsigned char) selector_list[i].name[0]);
+         gg77->matcher_p->selector_buckets[c].add_one(i);
+         gg77->matcher_p->selector_buckets[0].add_one(i);
+      }
+   }
 
    // Decide whether we allow the "diagnose" concept, by deciding
    // when we will stop the concept list scan.
@@ -1714,7 +1729,11 @@ void matcher_class::match_wildcard(
          // Don't allow recursion deeper than 2 (though the array is big enough for 3.)
          // This would occur if someone did "girl-based triangle-based triangle circulate".
          if (m_current_result->match.call_conc_options.who.who_stack_ptr < who_list::who_stack_size) {
-            for (i=1; i<selector_INVISIBLE_START; i++) {
+            const index_list &sel_bucket =
+               selector_buckets[tolower((unsigned char) user[0])];
+
+            for (int si=0; si<sel_bucket.the_list_size; si++) {
+               i = sel_bucket.the_list[si];
                if (key != 'K' && i >= selector_SOME_START)
                   continue;
                if (key == 'V' && (i == selector_centers || i == selector_ends || i == selector_outsides))
