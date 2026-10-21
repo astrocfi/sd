@@ -4237,8 +4237,8 @@ static int divide_the_setup(
             // The centers and ends are T-boned to each other but each is individually
             // consistent.  We can do the call concentrically *IF* the appropriate type of
             // definition exists for the ends to work with the near person rather than the
-            // far one.  This is what makes "heads into the middle and everbody partner
-            // trade" work, and forbids "heads into the middle and everbody star thru".
+            // far one.  This is what makes "heads into the middle and everybody partner
+            // trade" work, and forbids "heads into the middle and everybody star thru".
             //
             // Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose.
 
@@ -4527,7 +4527,7 @@ static int divide_the_setup(
    // spin the top", we want everyone to step to right or left hands mystically,
    // and then trade mystically.  The centers do the trade in the center.  They
    // don't "do their part".  So we check for the call "trade".  Perhaps there
-   // are other calls in this catagory, and it's quite complicated.  Perhaps
+   // are other calls in this category, and it's quite complicated.  Perhaps
    // the "selective_key_dyp_for_mystic" should only be used if the setup is
    // a rigger or otherwise something for which the centers and ends trade
    // by themselves.  Trade is a complicated call.

@@ -73,7 +73,7 @@ and the following external variables:
 #include "resource.h"
 
 
-// We cause this string (that is, the concatentation of these strings) to appear
+// We cause this string (that is, the concatenation of these strings) to appear
 // in the binary image of the program, so that the Unix "what" and "ident"
 // utilities can print the version.
 

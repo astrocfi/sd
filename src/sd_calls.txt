@@ -8298,14 +8298,14 @@ call "swat the flea" c4
          if girlp [0 CR0E]
          if always [0 0]
 
-call "single circle to a wave" plus
+call "single circle to a wave" mainstream
             reverse_means_mirror
             twisted_is_inherited singlefile_is_inherited visible_fractions
    seq circle4_n [inherit_reverse force_single inherit_twisted
                  inherit_singlefile insert_number 2]
    seq touch [inherit_left]
 
-call "single circle @b to a wave" plus
+call "single circle @b to a wave" mainstream
             reverse_means_mirror neednumber
             twisted_is_inherited singlefile_is_inherited visible_fractions
    seq circle4_n [inherit_reverse force_single inherit_twisted

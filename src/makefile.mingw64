@@ -42,9 +42,19 @@ ICONS = sd.ico sdbg.ico sdbw.ico sdby.ico sdcpl.ico sdgy.ico sdry.ico sdtty.ico
 SHORTCUTS = "Edit sd.ini.lnk" Faq.lnk "Release Notes.lnk" "SD couple.lnk" "SD hidecouple.lnk" "Sd manual.lnk" \
              "SD nocheckers.lnk" "SD plain.lnk" SD.lnk "SDTTY plain.lnk" SDTTY.lnk
 
+# Many of these are nonfunctional, and kept around only as part of the history of Sd,
+# and to show what was needed to compile for Debian Unix and Red-Hat Unix
+# Those historical files are for reference only; they would probably not run today.
 MAKEFILES = makefile.linux32 makefile.linux64 makefile.linuxnostatic32 makefile.linuxnostatic64 \
-            makefile.cygnus makefile.cygwin makefile.djgpp \
-            makefile.mingw makefile.mingw64 makefile.mac makefile.solaris
+            makefile.cygnus makefile.cygwin makefile.djgpp makefile.ubuntu32 \
+            makefile.mingw makefile.mingw64 makefile.mac makefile.solaris makefile.hpux
+
+# These are all nonfunctional, and kept around only as part of the history of Sd,
+# to show how the self-extracting zip file was copied out to the user, to show
+# how the X11 interface (the only other user interface besides Sd and Sdtty) worked,
+# and to show how the ill-fated "curses" package was used.
+# For actual compilations of X11, see makefile.hpux, or solaris, or cygnus, or cygwin ....
+EXTRAFILES = deploy.cpp deploy.h sdui-x11.c sdui-ttu.cpp sdui-ttu.h
 
 SDTTY_OBJS = sdui-tty.o sdui-wincon.o
 
@@ -131,15 +141,15 @@ sdprint.o: sdprint.h
 $(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h sdchars.h sdmatch.h database.h paths.h
 
 clean::
-	rm *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
+	-rm *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
                libsdlib.a sdlib.dll ../sddoc/sd_source.zip
 
 cleanup::
-	rm *.o libsdlib.a
+	-rm *.o libsdlib.a
 
 savesource::
-	rm ..\sddoc\sd_source.zip
-	zip ..\sddoc\sd_source $(SDLIB_OBJS:.o=.cpp) $(SDTTY_OBJS:.o=.cpp) \
+	-rm ../sddoc/sd_source.zip
+	zip ../sddoc/sd_source $(SDLIB_OBJS:.o=.cpp) $(SDTTY_OBJS:.o=.cpp) \
                $(SD_OBJS:.o=.cpp) $(MKCALLS_OBJS:.o=.cpp) $(HFILES) \
-               sd.rc sdtty.rc sdui-ttu.cpp $(ICONS) $(SHORTCUTS) \
+               sd.rc sdtty.rc sdui-ttu.cpp $(ICONS) $(SHORTCUTS) $(EXTRAFILES) \
                sd.bmp $(MAKEFILES) sd_calls.txt db_doc.txt COPYING.txt

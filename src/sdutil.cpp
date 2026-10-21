@@ -256,7 +256,7 @@ void ThingToTryToKeepTheStupidMicrosoftCompilerFromScrewingUp()
 {}
 
 
-/* Getting blanks into all the right places in the presence of substitions,
+/* Getting blanks into all the right places in the presence of substitutions,
    insertions, and elisions is way too complicated to do in the database, or
    to test.  For example, consider calls like "@4keep @5busy@1",
    "fascinat@pe@q@ning@o@t", or "spin the pulley@7 but @8".  So we try to
@@ -3478,7 +3478,7 @@ void ui_utils::run_program(iobase & ggg)
          goto start_cycle;
       }
 
-      // If get here, query_for_call exitted without completing its parse,
+      // If get here, query_for_call exited without completing its parse,
       // because the operator selected something like "quit", "undo",
       // or "resolve", or because we have such a command already pending.
 

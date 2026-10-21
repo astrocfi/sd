@@ -100,7 +100,7 @@
 // I have no interest in supporting such compilers.)  Contemporary usage (that is, 32 bit
 // and 64 bit gcc) seems to be that "int" means 32 bits and "long int" means the longest
 // native type.  In principle, the code should be impervious to using "long int" on a
-// 64 bit sytem (the comment does say "at least 32 bits", doesn't it?), but in practice
+// 64 bit system (the comment does say "at least 32 bits", doesn't it?), but in practice
 // there have been problems.
 
 // Update, 2013:  We now just use the standard C99 things.
