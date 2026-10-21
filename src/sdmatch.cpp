@@ -286,6 +286,53 @@ int translate_keybind_spec(char key_name[])
 
 
 
+// Fast inline check if user input character u matches candidate pattern character p.
+// Handles case-insensitive ASCII letter matching and allows ' ' in user for '-' in
+// pattern, for example, if user types "wave based" instead of "wave-based" or "1 1/2"
+// instead of "1-1/2".
+static inline bool user_char_matches_cand(char u, char p)
+{
+   if (u == p)
+      return true;
+   if ((u ^ p) == 32) {
+      char c = u | 32;
+      return (c >= 'a' && c <= 'z');
+   }
+   return (u == ' ' && p == '-');
+}
+
+
+
+// Fast check if user prefix mismatches candidate pattern prefix.
+// Returns true if candidate cannot possibly match user.
+static inline bool cand_prefix_mismatches(const char *user, const char *cand)
+{
+   if (!cand || !user)
+      return false;
+
+   const char *u = user;
+   const char *p = cand;
+
+   while (*u && *p) {
+      if (*p == '@')
+         return false;
+
+      if (user_char_matches_cand(*u, *p)) {
+         u++;
+         p++;
+      }
+      else if (*p == '\'' || *p == ',') {
+         p++;
+      }
+      else {
+         return true;
+      }
+   }
+   return false;
+}
+
+
+
 // This returns zero if the name was clearly not able to be hashed
 // (contains NUL, comma, atsign, or single quote).  It returns 1
 // if it could clearly be hashed (no blanks).  It returns 2 if it
@@ -1374,13 +1421,15 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
             else {
                char u = *user++;
 
-               if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A')) {
-                  // If user said "wave based" instead of "wave-based", just continue.
-                  if (p != '-' || u != ' ') {
-                     // Also, if user left out apostrophe or comma, just continue.
-                     if (p == '\'' || p == ',') user--;
-                     else break;
-                  }
+               if (user_char_matches_cand(u, p)) {
+                  // match!
+               }
+               else if (p == '\'' || p == ',') {
+                  // If user left out apostrophe or comma, just continue.
+                  user--;
+               }
+               else {
+                  break;
                }
             }
          }
@@ -1671,12 +1720,15 @@ void matcher_class::match_wildcard(
                if (key == 'V' && (i == selector_centers || i == selector_ends || i == selector_outsides))
                   continue;
 
+               Cstring sel_name = (key == 'k') ? selector_list[i].sing_name : selector_list[i].name;
+               if (cand_prefix_mismatches(user, sel_name))
+                  continue;
+
                m_current_result->match.call_conc_options.who.who[m_current_result->match.call_conc_options.who.who_stack_ptr-1] = (selector_kind) i;
                {
                   match_result *save_current = m_current_result;
-                  match_suffix_2(user,
-                                 (key == 'k') ? selector_list[i].sing_name : selector_list[i].name,
-                                 &p2b, patxi); m_current_result = save_current;
+                  match_suffix_2(user, sel_name, &p2b, patxi);
+                  m_current_result = save_current;
                }
             }
 
@@ -1707,6 +1759,8 @@ void matcher_class::match_wildcard(
             direction_kind save_where = m_current_result->match.call_conc_options.where;
 
             for (i=1; i<=last_direction_kind; ++i) {
+               if (cand_prefix_mismatches(user, direction_names[i].name))
+                  continue;
                m_current_result->match.call_conc_options.where = (direction_kind) i;
                match_suffix_2(user, direction_names[i].name, &p2b, patxi);
             }
@@ -1728,11 +1782,12 @@ void matcher_class::match_wildcard(
             else if (key == 'x') tagclass = 2;
             else if (key == 'y') tagclass = 3;
 
-            m_current_result->match.call_conc_options.tagger = tagclass << 5;
-
             for (iu=0; iu<number_of_taggers[tagclass]; iu++) {
-               m_current_result->match.call_conc_options.tagger++;
-               match_suffix_2(user, get_call_name(tagger_calls[tagclass][iu]), &p2b, patxi);
+               Cstring tname = get_call_name(tagger_calls[tagclass][iu]);
+               if (cand_prefix_mismatches(user, tname))
+                  continue;
+               m_current_result->match.call_conc_options.tagger = (tagclass << 5) + iu + 1;
+               match_suffix_2(user, tname, &p2b, patxi);
             }
 
             m_current_result->match.call_conc_options.tagger = 0;
@@ -1746,6 +1801,9 @@ void matcher_class::match_wildcard(
 
             for (iu=0; iu<number_of_circcers; ++iu) {
                const char *fromptr = get_call_name(circcer_calls[iu].the_circcer);
+               if (cand_prefix_mismatches(user, fromptr))
+                  continue;
+
                char *toptr = circname;
                char c;
                do {
@@ -1760,7 +1818,7 @@ void matcher_class::match_wildcard(
                      *toptr++ = c;
                } while (c);
 
-               m_current_result->match.call_conc_options.circcer++;
+               m_current_result->match.call_conc_options.circcer = iu + 1;
                match_suffix_2(user, circname, &p2b, patxi);
             }
 
