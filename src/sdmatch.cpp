@@ -1467,6 +1467,66 @@ static int spiffy_parser = 0;
 
 
 
+/*
+ * Early-rejection lookahead for candidate calls taking bracketed subcalls
+ * (patterns starting with @0, @T, or @m).
+ *
+ * Scans ahead to the matching closing bracket ']' of the nested subcall and
+ * verifies whether the candidate call's literal suffix matches the text
+ * following ']'.  Returns true if the suffix cannot possibly match.
+ */
+static bool call_suffix_mismatches_after_bracket(Cstring user, Cstring call_name)
+{
+   if (call_name[0] != '@' ||
+       (call_name[1] != '0' && call_name[1] != 'T' && call_name[1] != 'm'))
+      return false;
+
+   // In scan_concepts_and_calls, user[0] matches firstchar ('['), so this
+   // candidate's bracketed subcall begins at user[1].
+   if (!user || user[0] != '[' || user[1] != '[')
+      return false;
+
+   // Find the matching ']' for the nested bracket starting at user[1].
+   int depth = 0;
+   const char *u = user + 1;
+   while (*u) {
+      if (*u == '[') depth++;
+      else if (*u == ']') {
+         if (--depth == 0) break;
+      }
+      u++;
+   }
+   if (*u != ']')
+      return false;
+
+   const char *after = u + 1;
+   const char *pat = call_name + 2;
+
+   // For @T, match_suffix_2 splices in " er's" after ']' when foobar(after)
+   // is true.  Advance past that prefix in after (or return false if the
+   // user input ends while still typing it).
+   if (call_name[1] == 'T' && foobar(after)) {
+      const char *ers = " er's";
+      while (*ers && *after) {
+         if (*ers == *after) {
+            ers++;
+            after++;
+         }
+         else if (*ers == '\'') {
+            ers++;
+         }
+         else {
+            return true;
+         }
+      }
+      if (*ers)
+         return false;
+   }
+
+   return cand_prefix_mismatches(after, pat);
+}
+
+
 
 void matcher_class::scan_concepts_and_calls(
    Cstring user,
@@ -1608,6 +1668,11 @@ void matcher_class::scan_concepts_and_calls(
          // This means "6x2 acey deucey", while it is a single call that can be clicked from the menu,
          // will yield to "6x2" + "acey deucey", making it possible to parse "echo 6x2 acey deucey".
          m_current_result->yield_depth = ((get_yield_if_ambiguous_flag(this_call)) ? new_depth+2 : new_depth);
+
+         // Avoid recursively parsing nested subcalls if the candidate's literal text
+         // after ']' already mismatches.
+         if (call_suffix_mismatches_after_bracket(user, get_call_name(this_call)))
+            continue;
 
          if (spiffy_parser && get_call_name(this_call)[0] == '@' &&
              (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T')) {
