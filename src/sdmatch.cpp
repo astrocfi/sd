@@ -662,6 +662,10 @@ void matcher_initialize()
    int concept_number;
    const concept_descriptor *p;
 
+   // Clear selector buckets to allow safe reinitialization.
+   for (j = 0; j < 256; j++)
+      gg77->matcher_p->selector_buckets[j].the_list_size = 0;
+
    // Pre-index selectors by first character for fast matching in match_wildcard.
    // Bucket 0 holds all selectors (for when user input is empty), and selectors
    // starting with a '@' wildcard are added to every bucket.
