@@ -1483,9 +1483,9 @@ static bool call_suffix_mismatches_after_bracket(Cstring user, Cstring call_name
        (call_name[1] != '0' && call_name[1] != 'T' && call_name[1] != 'm'))
       return false;
 
-   // In scan_concepts_and_calls, user[0] matches firstchar ('['), so this
+   // In scan_concepts_and_calls, user[0] matches firstchar ('[' or ' '), so this
    // candidate's bracketed subcall begins at user[1].
-   if (!user || user[0] != '[' || user[1] != '[')
+   if (!user || (user[0] != '[' && user[0] != ' ') || user[1] != '[')
       return false;
 
    // Find the matching ']' for the nested bracket starting at user[1].
