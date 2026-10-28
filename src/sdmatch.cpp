@@ -1650,7 +1650,6 @@ void matcher_class::scan_concepts_and_calls(
       bool got_aborted_subcall = false;
       modifier_block *got_matched_subcall = (modifier_block *) 0;
       int my_patxi = 0;
-      const char *subcall_after_user = (const char *) 0;
 
       for (i = 0; i < menu_length; i++) {
          // Don't waste time after user stops us.
@@ -1684,20 +1683,8 @@ void matcher_class::scan_concepts_and_calls(
                continue;
             }
             else if (got_matched_subcall) {
-               // Skip over "@0" or "@T" so match_suffix_2() only checks the suffix
-               // after ']' without re-parsing the bracketed subcall.  When the user
-               // types text after ']', subcall_after_user points to it; otherwise it
-               // is null.  For "@T" calls, splice in "er's" if present in
-               // subcall_after_user.
-               p2b.car += 2;
-               if (subcall_after_user && get_call_name(this_call)[1] == 'T' &&
-                   foobar(subcall_after_user)) {
-                  pat2_block ers_block(" er's", &p2b);
-                  match_suffix_2(subcall_after_user, "", &ers_block, patxi+my_patxi);
-               }
-               else {
-                  match_suffix_2(subcall_after_user, "", &p2b, patxi+my_patxi);
-               }
+               p2b.car += 2;    // Skip over the "@0".
+               match_suffix_2((Cstring) 0, "", &p2b, patxi+my_patxi);
             }
             else {
                match_suffix_2(user, firstchar, &p2b, patxi);
@@ -1733,8 +1720,8 @@ void matcher_class::scan_concepts_and_calls(
                       m_final_result.match.packed_next_conc_or_subcall &&
                       !m_final_result.match.packed_secondary_subcall) {
 
-                     // Case 1: User input stopped in the middle of the subcall, so the
-                     // closing ']' is in m_full_extension.
+                     // Let's try this.  We're only going to look at stuff for which
+                     // the user input stopped in the middle of the subcall, for now.
                      if (m_user_bracket_depth-local_result.recursion_depth > 0) {
                         // Find out where, in the full extension, the bracket count
                         // went down to zero.
@@ -1747,28 +1734,7 @@ void matcher_class::scan_concepts_and_calls(
                         }
                         // Now my_patxi tells where the close bracket was.
 
-                        subcall_after_user = (const char *) 0;
                         got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
-                     }
-                     // Case 2: User input includes the closing ']' of the subcall, so
-                     // locate the remaining user text after ']' to match the suffix.
-                     // Since user[0] matched firstchar ('['), this candidate's
-                     // bracketed subcall begins at user + 1.
-                     else if (m_user_bracket_depth-local_result.recursion_depth == 0) {
-                        int depth = 0;
-                        const char *u = user + 1;
-                        while (*u) {
-                           if (*u == '[') depth++;
-                           else if (*u == ']') {
-                              if (--depth == 0) break;
-                           }
-                           u++;
-                        }
-                        if (*u == ']') {
-                           subcall_after_user = u + 1;
-                           my_patxi = 0;
-                           got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
-                        }
                      }
                   }
                }
