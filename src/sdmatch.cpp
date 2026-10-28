@@ -287,17 +287,15 @@ int translate_keybind_spec(char key_name[])
 
 
 // Fast inline check if user input character u matches candidate pattern character p.
-// Handles case-insensitive ASCII letter matching and allows ' ' in user for '-' in
-// pattern, for example, if user types "wave based" instead of "wave-based" or "1 1/2"
-// instead of "1-1/2".
+// Allows lowercase user input to match uppercase candidate pattern character, and
+// allows ' ' in user for '-' in pattern, for example, if user types "wave based"
+// instead of "wave-based" or "1 1/2" instead of "1-1/2".
 static inline bool user_char_matches_cand(char u, char p)
 {
    if (u == p)
       return true;
-   if ((u ^ p) == 32) {
-      char c = u | 32;
-      return (c >= 'a' && c <= 'z');
-   }
+   if (p >= 'A' && p <= 'Z' && u == p + ('a' - 'A'))
+      return true;
    return (u == ' ' && p == '-');
 }
 
