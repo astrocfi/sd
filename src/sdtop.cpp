@@ -3744,18 +3744,31 @@ bool check_for_concept_group(
 
 
 
-static void debug_print_parse_block(int level, const parse_block *p, char *tempstring_text, int &n)
+// Keep the offset within the buffer even when snprintf truncates its output.
+template <size_t N, typename... Args>
+static void append_crash_text(char (&buffer)[N], int &offset,
+                              const char *format, Args... args)
+{
+   const size_t remaining = N - static_cast<size_t>(offset);
+   const int written = snprintf(buffer + offset, remaining, format, args...);
+   if (written > 0)
+      offset += static_cast<size_t>(written) < remaining ? written : remaining - 1;
+}
+
+
+static void debug_print_parse_block(int level, const parse_block *p,
+                                    char (&tempstring_text)[10000], int &n)
 {
    for ( ; p ; p = p->next) {
-      if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
-      if (p->concept_ptr) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept_ptr->name);
+      if (level > 0) append_crash_text(tempstring_text, n, "(%d) ", level);
+      if (p->concept_ptr) append_crash_text(tempstring_text, n, "  concept %s  ", p->concept_ptr->name);
       if (p->concept_ptr && p->concept_ptr->kind == concept_comment) {
-         n += sprintf(tempstring_text+n, "  comment %s  ", p->comment.c_str());
+         append_crash_text(tempstring_text, n, "  comment %s  ", p->comment.c_str());
       }
       else if (p->call) {
-         n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
+         append_crash_text(tempstring_text, n, "  call %s  ", p->call->name);
       }
-      n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
+      append_crash_text(tempstring_text, n, " %d %d %d %d %d \n",
              p->options.who.who[0],
              p->options.where,
              p->options.howmanynumbers,
@@ -3768,15 +3781,16 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
 
 extern void crash_print(const char *filename, int linenum, int newtb, setup *ss) THROW_DECL
 {
-   char tempstring_text[10000];  // If this isn't big enough, I guess we lose.
+   char tempstring_text[10000] = {};
 
-   int n = sprintf(tempstring_text, "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n");
-   n += sprintf(tempstring_text+n, "%s %d 0x%08x\n", filename, linenum, newtb);
+   int n = 0;
+   append_crash_text(tempstring_text, n, "%s", "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n");
+   append_crash_text(tempstring_text, n, "%s %d 0x%08x\n", filename, linenum, newtb);
 
    if (ss && attr::slimit(ss) <= 24) {
-      n += sprintf(tempstring_text+n, "%d\n", ss->kind);
+      append_crash_text(tempstring_text, n, "%d\n", ss->kind);
       for (int q = 0 ; q <= attr::slimit(ss) ; q++) {
-         n += sprintf(tempstring_text+n, "  0x%08x\n", ss->people[q].id1);
+         append_crash_text(tempstring_text, n, "  0x%08x\n", ss->people[q].id1);
       }
    }
 

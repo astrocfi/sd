@@ -3112,7 +3112,7 @@ void ui_utils::run_program(iobase & ggg)
    if (ui_options.diagnostic_mode && global_cache_miss_reason[0] != 0) {
       char localreason[500];
 
-      sprintf(localreason, "Cache miss, reloaded: %d %d %d %d %d %d %d.",
+      snprintf(localreason, sizeof(localreason), "Cache miss, reloaded: %d %d %d %d %d %d %d.",
               global_cache_miss_reason[0],
               global_cache_miss_reason[1],
               global_cache_miss_reason[2],

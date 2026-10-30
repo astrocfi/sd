@@ -1,0 +1,35 @@
+# Build Sdtty on macOS with the Xcode command-line tools.
+# Run from src: make -f makefile.macos
+
+CXX = clang++
+CXXFLAGS = -O2 -std=c++17 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts -Wno-narrowing
+# Switches intentionally handle subsets of the setup/concept enums.
+
+SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
+          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
+          sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
+          sdpick.o sdsi.o mapcachefile.o common.o
+TTY_OBJS = sdui-tty.o sdmatch.o sdui-ttu.o
+MKCALLS_OBJS = mkcalls.o common.o
+OBJS = $(sort $(SD_OBJS) $(TTY_OBJS) $(MKCALLS_OBJS))
+DEPS = $(OBJS:.o=.d)
+
+.PHONY: all clean
+all: sdtty sd_calls.dat
+
+sdtty: $(SD_OBJS) $(TTY_OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+mkcalls: $(MKCALLS_OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+sd_calls.dat: sd_calls.txt mkcalls
+	./mkcalls ./sd_calls.txt
+
+%.o: %.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+-include $(DEPS)
+
+clean:
+	$(RM) $(OBJS) $(DEPS) sdtty mkcalls sd_calls.dat
