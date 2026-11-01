@@ -136,6 +136,7 @@ struct DisplayType {
 #define ui_undefined -999
 
 
+static char szOutFilename     [MAX_TEXT_LINE_LENGTH];
 static char szDatabaseFilename[MAX_TEXT_LINE_LENGTH];
 static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
 static int GLOBStatusBarLength;
@@ -2032,8 +2033,6 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
       // If user specified the output file during startup dialog, install that.
       // It overrides anything from the command line.
-
-      char szOutFilename[MAX_TEXT_LINE_LENGTH];
 
       GetWindowText(GetDlgItem(hwnd, IDC_OUTPUT_NAME),
                     szOutFilename, MAX_TEXT_LINE_LENGTH);
