@@ -6671,6 +6671,7 @@ extern void get_string(char *dest, int max);
 template <int N>
 inline void get_string(std::string *dest) {
    char buffer[N];
+   buffer[0] = '\0';
    get_string(buffer, N);
    *dest = buffer;
 }

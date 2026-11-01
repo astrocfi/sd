@@ -1014,7 +1014,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    enable_file_writing = false;
    interactivity = interactivity_database_init;
    testing_fidelity = false;
-   header_comment[0] = 0;
+   header_comment.clear();
    abridge_filename.clear();
    verify_options.who.initialize();
    verify_options.number_fields = 0;
