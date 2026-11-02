@@ -5165,8 +5165,8 @@ extern void install_person(setup *resultpeople, int resultplace, const setup *so
    else if (newperson) {
       collision_person1 = resultpeople->people[resultplace].id1;
       collision_person2 = newperson;
-      error_message1[0] = '\0';
-      error_message2[0] = '\0';
+      error_message1.clear();
+      error_message2.clear();
       throw error_flag_type(error_flag_collision);
    }
 }
@@ -5189,8 +5189,8 @@ extern void install_rot(setup *resultpeople, int resultplace, const setup *sourc
       else {
          collision_person1 = resultpeople->people[resultplace].id1;
          collision_person2 = newperson;
-         error_message1[0] = '\0';
-         error_message2[0] = '\0';
+         error_message1.clear();
+         error_message2.clear();
          throw error_flag_type(error_flag_collision);
       }
    }

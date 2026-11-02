@@ -670,8 +670,8 @@ uint32_t * collision_collector::install_with_collision(
       // Prepare the error message, in case it is needed.
       collision_person1 = m_result_ptr->people[resultplace].id1;
       collision_person2 = sourcepeople->people[sourceplace].id1;
-      error_message1[0] = '\0';
-      error_message2[0] = '\0';
+      error_message1.clear();
+      error_message2.clear();
 
       // ****** but if m_allow_collisions is "collision_severity_controversial", we want to give a fairly serious warning.
       // The "lmask" in the table packs both setups into a 32-bit word, so we don't allow setup bigger than 16.
