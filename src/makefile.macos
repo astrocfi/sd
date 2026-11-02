@@ -14,7 +14,15 @@ MKCALLS_OBJS = mkcalls.o common.o
 OBJS = $(sort $(SD_OBJS) $(TTY_OBJS) $(MKCALLS_OBJS))
 DEPS = $(OBJS:.o=.d)
 
-.PHONY: all clean
+HFILES = sdui.h sd.h database.h paths.h mapcachefile.h sort.h \
+         deploy.h resource.h sdprint.h sdmatch.h sdchars.h
+MAKEFILES = makefile.linux32 makefile.linux64 makefile.linuxnostatic32 makefile.linuxnostatic64 \
+            makefile.cygnus makefile.cygwin makefile.djgpp \
+            makefile.mingw makefile.mac makefile.macos makefile.solaris
+# Include the distribution icons when they are available.
+SVG_ICONS = $(wildcard sdtty.svg sd.svg sdbg.svg sdbw.svg sdby.svg sdgy.svg sdry.svg)
+
+.PHONY: all clean tarball savesource
 all: sdtty sd_calls.dat
 
 sdtty: $(SD_OBJS) $(TTY_OBJS)
@@ -33,3 +41,10 @@ sd_calls.dat: sd_calls.txt mkcalls
 
 clean:
 	$(RM) $(OBJS) $(DEPS) sdtty mkcalls sd_calls.dat
+
+tarball:
+	tar zcvf macos.tgz sdtty mkcalls sd_calls.txt sd_calls.dat COPYING.txt $(SVG_ICONS)
+
+savesource:
+	tar cvf sd_source $(OBJS:.o=.cpp) $(HFILES) $(MAKEFILES) \
+	    sd_calls.txt db_doc.txt COPYING.txt
