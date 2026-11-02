@@ -150,6 +150,13 @@ public:
    index_list m_concept_list;        // indices of all concepts
    index_list m_level_concept_list;  // indices of concepts valid at current level
 
+   // This table is used by match_wildcard to speed up selector matching.  Selectors
+   // whose names begin with an ordinary character are indexed by their lowercase first
+   // character in selector_buckets; those beginning with a '@' wildcard (such as
+   // "@k-based triangles") are added to every bucket so they are always checked, and
+   // bucket 0 holds all selectors for when user input is empty.
+   index_list selector_buckets[256];
+
    index_list *call_hashers;
    index_list *conc_hashers;
    index_list *conclvl_hashers;

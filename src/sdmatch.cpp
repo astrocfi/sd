@@ -286,6 +286,51 @@ int translate_keybind_spec(char key_name[])
 
 
 
+// Fast inline check if user input character u matches candidate pattern character p.
+// Allows lowercase user input to match uppercase candidate pattern character, and
+// allows ' ' in user for '-' in pattern, for example, if user types "wave based"
+// instead of "wave-based" or "1 1/2" instead of "1-1/2".
+static inline bool user_char_matches_cand(char u, char p)
+{
+   if (u == p)
+      return true;
+   if (p >= 'A' && p <= 'Z' && u == p + ('a' - 'A'))
+      return true;
+   return (u == ' ' && p == '-');
+}
+
+
+
+// Fast check if user prefix definitely mismatches candidate pattern prefix.
+// Returns true if candidate cannot possibly match user, and false if it could.
+static inline bool cand_prefix_mismatches(const char *user, const char *cand)
+{
+   if (!cand || !user)
+      return false;
+
+   const char *u = user;
+   const char *p = cand;
+
+   while (*u && *p) {
+      if (*p == '@')
+         return false;
+
+      if (user_char_matches_cand(*u, *p)) {
+         u++;
+         p++;
+      }
+      else if (*p == '\'' || *p == ',') {
+         p++;
+      }
+      else {
+         return true;
+      }
+   }
+   return false;
+}
+
+
+
 // This returns zero if the name was clearly not able to be hashed
 // (contains NUL, comma, atsign, or single quote).  It returns 1
 // if it could clearly be hashed (no blanks).  It returns 2 if it
@@ -616,6 +661,25 @@ void matcher_initialize()
    int i, j;
    int concept_number;
    const concept_descriptor *p;
+
+   // Clear selector buckets to allow safe reinitialization.
+   for (j = 0; j < 256; j++)
+      gg77->matcher_p->selector_buckets[j].the_list_size = 0;
+
+   // Pre-index selectors by first character for fast matching in match_wildcard.
+   // Bucket 0 holds all selectors (for when user input is empty), and selectors
+   // starting with a '@' wildcard are added to every bucket.
+   for (i=1; i<selector_INVISIBLE_START; i++) {
+      if (selector_list[i].name[0] == '@') {
+         for (j=0; j<256; j++)
+            gg77->matcher_p->selector_buckets[j].add_one(i);
+      }
+      else {
+         unsigned char c = tolower((unsigned char) selector_list[i].name[0]);
+         gg77->matcher_p->selector_buckets[c].add_one(i);
+         gg77->matcher_p->selector_buckets[0].add_one(i);
+      }
+   }
 
    // Decide whether we allow the "diagnose" concept, by deciding
    // when we will stop the concept list scan.
@@ -1374,13 +1438,15 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
             else {
                char u = *user++;
 
-               if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A')) {
-                  // If user said "wave based" instead of "wave-based", just continue.
-                  if (p != '-' || u != ' ') {
-                     // Also, if user left out apostrophe or comma, just continue.
-                     if (p == '\'' || p == ',') user--;
-                     else break;
-                  }
+               if (user_char_matches_cand(u, p)) {
+                  // match!
+               }
+               else if (p == '\'' || p == ',') {
+                  // If user left out apostrophe or comma, just continue.
+                  user--;
+               }
+               else {
+                  break;
                }
             }
          }
@@ -1401,6 +1467,66 @@ static int spiffy_parser = 1;
 static int spiffy_parser = 0;
 #endif
 
+
+
+/*
+ * Early-rejection lookahead for candidate calls taking bracketed subcalls
+ * (patterns starting with @0, @T, or @m).
+ *
+ * Scans ahead to the matching closing bracket ']' of the nested subcall and
+ * verifies whether the candidate call's literal suffix matches the text
+ * following ']'.  Returns true if the suffix cannot possibly match.
+ */
+static bool call_suffix_mismatches_after_bracket(Cstring user, Cstring call_name)
+{
+   if (call_name[0] != '@' ||
+       (call_name[1] != '0' && call_name[1] != 'T' && call_name[1] != 'm'))
+      return false;
+
+   // In scan_concepts_and_calls, user[0] matches firstchar ('['), so this
+   // candidate's bracketed subcall begins at user[1].
+   if (!user || user[0] != '[' || user[1] != '[')
+      return false;
+
+   // Find the matching ']' for the nested bracket starting at user[1].
+   int depth = 0;
+   const char *u = user + 1;
+   while (*u) {
+      if (*u == '[') depth++;
+      else if (*u == ']') {
+         if (--depth == 0) break;
+      }
+      u++;
+   }
+   if (*u != ']')
+      return false;
+
+   const char *after = u + 1;
+   const char *pat = call_name + 2;
+
+   // For @T, match_suffix_2 splices in " er's" after ']' when foobar(after)
+   // is true.  Advance past that prefix in after (or return false if the
+   // user input ends while still typing it).
+   if (call_name[1] == 'T' && foobar(after)) {
+      const char *ers = " er's";
+      while (*ers && *after) {
+         if (*ers == *after) {
+            ers++;
+            after++;
+         }
+         else if (*ers == '\'') {
+            ers++;
+         }
+         else {
+            return true;
+         }
+      }
+      if (*ers)
+         return false;
+   }
+
+   return cand_prefix_mismatches(after, pat);
+}
 
 
 
@@ -1544,6 +1670,11 @@ void matcher_class::scan_concepts_and_calls(
          // will yield to "6x2" + "acey deucey", making it possible to parse "echo 6x2 acey deucey".
          m_current_result->yield_depth = ((get_yield_if_ambiguous_flag(this_call)) ? new_depth+2 : new_depth);
 
+         // Avoid recursively parsing nested subcalls if the candidate's literal text
+         // after ']' already mismatches.
+         if (call_suffix_mismatches_after_bracket(user, get_call_name(this_call)))
+            continue;
+
          if (spiffy_parser && get_call_name(this_call)[0] == '@' &&
              (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T')) {
             if (got_aborted_subcall) {
@@ -1570,7 +1701,7 @@ void matcher_class::scan_concepts_and_calls(
             if (m_only_extension &&
                 get_call_name(this_call)[0] == '@' &&
                 (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T') &&
-                m_user_input[0] == '[') {   // ***** This is probably wrong!!!!
+                firstchar[0] == '[') {
 
                int full_bracket_depth = m_user_bracket_depth + m_extended_bracket_depth;
 
@@ -1665,18 +1796,25 @@ void matcher_class::match_wildcard(
          // Don't allow recursion deeper than 2 (though the array is big enough for 3.)
          // This would occur if someone did "girl-based triangle-based triangle circulate".
          if (m_current_result->match.call_conc_options.who.who_stack_ptr < who_list::who_stack_size) {
-            for (i=1; i<selector_INVISIBLE_START; i++) {
+            const index_list &sel_bucket =
+               selector_buckets[tolower((unsigned char) user[0])];
+
+            for (int si=0; si<sel_bucket.the_list_size; si++) {
+               i = sel_bucket.the_list[si];
                if (key != 'K' && i >= selector_SOME_START)
                   continue;
                if (key == 'V' && (i == selector_centers || i == selector_ends || i == selector_outsides))
                   continue;
 
+               Cstring sel_name = (key == 'k') ? selector_list[i].sing_name : selector_list[i].name;
+               if (cand_prefix_mismatches(user, sel_name))
+                  continue;
+
                m_current_result->match.call_conc_options.who.who[m_current_result->match.call_conc_options.who.who_stack_ptr-1] = (selector_kind) i;
                {
                   match_result *save_current = m_current_result;
-                  match_suffix_2(user,
-                                 (key == 'k') ? selector_list[i].sing_name : selector_list[i].name,
-                                 &p2b, patxi); m_current_result = save_current;
+                  match_suffix_2(user, sel_name, &p2b, patxi);
+                  m_current_result = save_current;
                }
             }
 
@@ -1707,6 +1845,8 @@ void matcher_class::match_wildcard(
             direction_kind save_where = m_current_result->match.call_conc_options.where;
 
             for (i=1; i<=last_direction_kind; ++i) {
+               if (cand_prefix_mismatches(user, direction_names[i].name))
+                  continue;
                m_current_result->match.call_conc_options.where = (direction_kind) i;
                match_suffix_2(user, direction_names[i].name, &p2b, patxi);
             }
@@ -1728,11 +1868,12 @@ void matcher_class::match_wildcard(
             else if (key == 'x') tagclass = 2;
             else if (key == 'y') tagclass = 3;
 
-            m_current_result->match.call_conc_options.tagger = tagclass << 5;
-
             for (iu=0; iu<number_of_taggers[tagclass]; iu++) {
-               m_current_result->match.call_conc_options.tagger++;
-               match_suffix_2(user, get_call_name(tagger_calls[tagclass][iu]), &p2b, patxi);
+               Cstring tname = get_call_name(tagger_calls[tagclass][iu]);
+               if (cand_prefix_mismatches(user, tname))
+                  continue;
+               m_current_result->match.call_conc_options.tagger = (tagclass << 5) + iu + 1;
+               match_suffix_2(user, tname, &p2b, patxi);
             }
 
             m_current_result->match.call_conc_options.tagger = 0;
@@ -1746,6 +1887,9 @@ void matcher_class::match_wildcard(
 
             for (iu=0; iu<number_of_circcers; ++iu) {
                const char *fromptr = get_call_name(circcer_calls[iu].the_circcer);
+               if (cand_prefix_mismatches(user, fromptr))
+                  continue;
+
                char *toptr = circname;
                char c;
                do {
@@ -1760,7 +1904,7 @@ void matcher_class::match_wildcard(
                      *toptr++ = c;
                } while (c);
 
-               m_current_result->match.call_conc_options.circcer++;
+               m_current_result->match.call_conc_options.circcer = iu + 1;
                match_suffix_2(user, circname, &p2b, patxi);
             }
 
