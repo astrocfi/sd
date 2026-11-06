@@ -3884,7 +3884,7 @@ static void do_concept_crazy(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   uint32_t finalresultflagsmisc = 0;
+   uint64_t finalresultflagsmisc = 0ULL;
    int this_part;
 
    setup tempsetup = *ss;
@@ -4236,7 +4236,7 @@ static void do_concept_phan_crazy(
    else if ((parseptr->concept_ptr->arg1 & 7) == 5)
       fail("Can't use crazy diamonds here.");
 
-   uint32_t finalresultflagsmisc = 0;
+   uint64_t finalresultflagsmisc = 0ULL;
 
    // This setup rotation stuff is complicated.  What we do may be
    // different for "each side" and "centers".
@@ -4303,7 +4303,7 @@ static void do_concept_fan(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   uint32_t finalresultflagsmisc = 0;
+   uint64_t finalresultflagsmisc = 0ULL;
    /* This is a huge amount of kludgy stuff shoveled in from a variety of sources.
       It needs to be cleaned up and thought about. */
 
@@ -4354,7 +4354,7 @@ static void do_concept_fan(
    tempsetup.cmd.prior_expire_bits = 0;
    move(&tempsetup, false, result);
    finalresultflagsmisc |= result->result_flags.misc;
-   result->result_flags.misc = finalresultflagsmisc & ~3;
+   result->result_flags.misc = finalresultflagsmisc & ~3ULL;
 }
 
 void nose_move(
@@ -5214,7 +5214,7 @@ static void do_paranoid(
    setup *result) THROW_DECL
 {
    setup *presult = result;
-   uint32_t psaved_last_flagmisc;
+   uint64_t psaved_last_flagmisc;
    call_with_name *save_subject_call = ss->cmd.parseptr->call;
    fraction_info pzzz(2);
 
@@ -5485,7 +5485,7 @@ static void do_concept_special_sequential(
          fail("Can't stack meta or fractional concepts.");
 
       setup tttt = *ss;
-      uint32_t finalresultflagsmisc = 0;
+      uint64_t finalresultflagsmisc = 0ULL;
 
       // Do the special first part.
 
@@ -5506,7 +5506,7 @@ static void do_concept_special_sequential(
       finalresultflagsmisc |= result->result_flags.misc;
       normalize_setup(result, simple_normalize, qtag_compress);
 
-      result->result_flags.misc = finalresultflagsmisc & ~3;
+      result->result_flags.misc = finalresultflagsmisc & ~3ULL;
    }
    else {
       // This is
@@ -5533,7 +5533,7 @@ static void do_concept_special_sequential(
          result->cmd.parseptr = parseptr->subsidiary_root;
          result->cmd.cmd_misc2_flags |= CMD_MISC2__DO_NOT_EXECUTE;
          do_call_in_series_simple(result);
-         uint32_t saved_last_flagmisc = result->result_flags.misc &
+         uint64_t saved_last_flagmisc = result->result_flags.misc &
             (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);  // The info we want.
 
          // Now do the actual replacement call.  It gets no fractions.
@@ -7158,7 +7158,7 @@ static void do_concept_meta(
 {
    parse_block *result_of_skip;
    uint32_t expirations_to_clearmisc = 0;
-   uint32_t finalresultflagsmisc = 0;
+   uint64_t finalresultflagsmisc = 0ULL;
    meta_key_kind key = (meta_key_kind) parseptr->concept_ptr->arg1;
    // Will point to things in case of something like "echo in roll circulate"
    parse_block *specialfirstptr = (parse_block *) 0;
@@ -7871,7 +7871,7 @@ static void do_concept_meta(
             fraction_command frac_stuff = corefracs;
             frac_stuff.flags &= ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK);
 
-            uint32_t saved_last_flagmisc = 0;
+            uint64_t saved_last_flagmisc = 0ULL;
 
             foo1.get_next()->say_and = true;
 
@@ -8056,7 +8056,7 @@ static void do_concept_meta(
                         result->result_flags.misc |= RESULTFLAG__DID_LAST_PART;
                   }
 
-                  saved_last_flagmisc = 0;   // Need to recharge before can use it again.
+                  saved_last_flagmisc = 0ULL;   // Need to recharge before can use it again.
                }
                else
                   saved_last_flagmisc = result->result_flags.misc;
@@ -8592,7 +8592,7 @@ static void do_concept_meta(
             frac_stuff = corefracs;
             frac_stuff.flags &= ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK);
 
-            uint32_t saved_last_flagmisc = 0;
+            uint64_t saved_last_flagmisc = 0ULL;
 
             do {
                // Here is where we make use of actual numerical assignments.
@@ -8662,7 +8662,7 @@ static void do_concept_meta(
                         result->result_flags.misc |= RESULTFLAG__DID_LAST_PART;
                   }
 
-                  saved_last_flagmisc = 0;   // Need to recharge before can use it again.
+                  saved_last_flagmisc = 0ULL;   // Need to recharge before can use it again.
                }
                else
                   saved_last_flagmisc = result->result_flags.misc;
@@ -8867,7 +8867,7 @@ static void do_concept_replace_nth_part(
       result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
 
       // Give this call a clean start with respect to expiration stuff.
-      uint32_t suspended_expiration_bitsmisc =
+      uint64_t suspended_expiration_bitsmisc =
          result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
       result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
       do_call_in_series(result, true, true, false);
@@ -8916,16 +8916,16 @@ static void do_concept_interlace(
    if (!ss->cmd.cmd_fraction.is_null())
       fail("Can't stack meta or fractional concepts.");
 
-   uint32_t first_doneflagmisc = 0;
-   uint32_t second_doneflagmisc = 0;
+   uint64_t first_doneflagmisc = 0ULL;
+   uint64_t second_doneflagmisc = 0ULL;
    uint32_t indexa = 0;
    uint32_t indexb = 0;
 
    prepare_for_call_in_series(result, ss);
    uint32_t a_improper = 0;
    uint32_t b_improper = 0;
-   uint32_t calla_expiration_bitsmisc = 0;
-   uint32_t callb_expiration_bitsmisc = 0;
+   uint64_t calla_expiration_bitsmisc = 0ULL;
+   uint64_t callb_expiration_bitsmisc = 0ULL;
 
    // If yoyo/generous/twisted coming in, set callb_expiration, so only calla will do it.
 
@@ -9313,7 +9313,7 @@ static void do_concept_so_and_so_begin(
    the_setups[1].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
 
    merge_table::merge_setups(&the_setups[0], merge_c1_phantom, &the_setups[1]);
-   uint32_t finalresultflagsmisc = the_setups[1].result_flags.misc;
+   uint64_t finalresultflagsmisc = the_setups[1].result_flags.misc;
    normalize_setup(&the_setups[1], simple_normalize, qtag_compress);
 
    if ((incoming_code_and_parts & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY)
@@ -9326,7 +9326,7 @@ static void do_concept_so_and_so_begin(
    if ((incoming_code_and_parts & CMD_FRAC_PART_MASK) == CMD_FRAC_PART_BIT) {
       *result = the_setups[1];
       result->result_flags.misc |= finalresultflagsmisc;
-      result->result_flags.misc &= ~3;
+      result->result_flags.misc &= ~3ULL;
       return;
    }
 
@@ -9337,7 +9337,7 @@ static void do_concept_so_and_so_begin(
    the_setups[1].cmd.cmd_fraction.flags |= FRACS(CMD_FRAC_CODE_FROMTOREV,2,0);
    move(&the_setups[1], false, result);
    result->result_flags.misc = finalresultflagsmisc;
-   result->result_flags.misc &= ~3;
+   result->result_flags.misc &= ~3ULL;
    normalize_setup(result, simple_normalize, qtag_compress);
 }
 

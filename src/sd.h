@@ -1803,7 +1803,7 @@ struct setup_command {
 struct resultflag_rec {
    // BEWARE!!!  If add fields to this, be sure to initialize them in constructor, below.
    uint16_t split_info[2];  // The split stuff.  X in slot 0, Y in slot 1.
-   uint32_t misc;           // Miscellaneous info, with names like RESULTFLAG__???.
+   uint64_t misc;           // Miscellaneous info, with names like RESULTFLAG__???.
    heritflags res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__REQUEST_MXN_COMPRESSION bit on.
                            // Gets copied to command block for next cycle of sequential call.
 
@@ -1823,7 +1823,7 @@ struct resultflag_rec {
       split_info[1] = temp;
    }
 
-   resultflag_rec() : misc(0)
+   resultflag_rec() : misc(0UL)
    {
       res_heritflags_to_save_from_mxn_expansion = 0ULL;
       clear_split_info();
@@ -4084,48 +4084,48 @@ struct nice_setup_info_item {
    could be split either way, so we have no information.
 */
 
-enum {
-   // The two low bits are used for result elongation, so bits start with 0x00000004.
-   // This is a four bit field.
-   RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CU,
-   RESULTFLAG__DID_LAST_PART        = 0x00000004U,
-   RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008U,
-   RESULTFLAG__SECONDARY_DONE       = 0x00000010U,
-   RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020U,
-   RESULTFLAG__NEED_DIAMOND         = 0x00000040U,
-   RESULTFLAG__REQUEST_MXN_COMPRESSION = 0x00000080U,
-   RESULTFLAG__DEFER_MXN_COMPRESSION = 0x00000100U,
-   RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000200U,
-   RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x00000400U,
-   RESULTFLAG__RECTIFY_ACCEPTED     = 0x00000800U,
-   RESULTFLAG__EXPAND_TO_2X3        = 0x00001000U,
-   RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x00002000U,
 
-   // This is a 6 bit field.
-   RESULTFLAG__EXPIRATION_BITS      = 0x000FC000U,
-   RESULTFLAG__RECTIFY_EXPIRED      = 0x00004000U,
-   RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x00008000U,
-   RESULTFLAG__GEN_STING_EXPIRED    = 0x00010000U,
-   RESULTFLAG__TWISTED_EXPIRED      = 0x00020000U,
-   RESULTFLAG__SPLIT_EXPIRED        = 0x00040000U,
-   RESULTFLAG__EXPIRATION_ENAB      = 0x00080000U,
+// The two low bits are used for result elongation, so bits start with 0x00000004.
+// This is a four bit field.
+const uint64_t RESULTFLAG__PART_COMPLETION_BITS = 0x000000000000003CULL;
+const uint64_t RESULTFLAG__DID_LAST_PART        = 0x0000000000000004ULL;
+const uint64_t RESULTFLAG__DID_NEXTTOLAST_PART  = 0x0000000000000008ULL;
+const uint64_t RESULTFLAG__SECONDARY_DONE       = 0x0000000000000010ULL;
+const uint64_t RESULTFLAG__PARTS_ARE_KNOWN      = 0x0000000000000020ULL;
+const uint64_t RESULTFLAG__NEED_DIAMOND         = 0x0000000000000040ULL;
+const uint64_t RESULTFLAG__REQUEST_MXN_COMPRESSION = 0x0000000000000080ULL;
+const uint64_t RESULTFLAG__DEFER_MXN_COMPRESSION = 0x0000000000000100ULL;
+const uint64_t RESULTFLAG__COMPRESSED_FROM_2X3  = 0x0000000000000200ULL;
+const uint64_t RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x0000000000000400ULL;
+const uint64_t RESULTFLAG__RECTIFY_ACCEPTED     = 0x0000000000000800ULL;
+const uint64_t RESULTFLAG__EXPAND_TO_2X3        = 0x0000000000001000ULL;
+const uint64_t RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x0000000000002000ULL;
 
-   RESULTFLAG__DID_TGL_EXPANSION    = 0x00100000U,
-   RESULTFLAG__VERY_ENDS_ODD        = 0x00200000U,
-   RESULTFLAG__VERY_CTRS_ODD        = 0x00400000U,
+// This is a 6 bit field.
+const uint64_t RESULTFLAG__EXPIRATION_BITS      = 0x00000000000FC000ULL;
+const uint64_t RESULTFLAG__RECTIFY_EXPIRED      = 0x0000000000004000ULL;
+const uint64_t RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x0000000000008000ULL;
+const uint64_t RESULTFLAG__GEN_STING_EXPIRED    = 0x0000000000010000ULL;
+const uint64_t RESULTFLAG__TWISTED_EXPIRED      = 0x0000000000020000ULL;
+const uint64_t RESULTFLAG__SPLIT_EXPIRED        = 0x0000000000040000ULL;
+const uint64_t RESULTFLAG__EXPIRATION_ENAB      = 0x0000000000080000ULL;
 
-   // This is a 2 bit field.
-   RESULTFLAG__DID_Z_COMPRESSMASK   = 0x01800000U,
-   RESULTFLAG__DID_Z_COMPRESSBIT    = 0x00800000U,
+const uint64_t RESULTFLAG__DID_TGL_EXPANSION    = 0x0000000000100000ULL;
+const uint64_t RESULTFLAG__VERY_ENDS_ODD        = 0x0000000000200000ULL;
+const uint64_t RESULTFLAG__VERY_CTRS_ODD        = 0x0000000000400000ULL;
 
-   RESULTFLAG__NO_REEVALUATE        = 0x02000000U,
-   RESULTFLAG__REALLY_NO_REEVALUATE = 0x04000000U,
-   RESULTFLAG__IMPRECISE_ROT        = 0x08000000U,
-   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000U,
-   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000U,
-   RESULTFLAG__INVADED_SPACE        = 0x40000000U,
-   RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000U
-};
+// This is a 2 bit field.
+const uint64_t RESULTFLAG__DID_Z_COMPRESSMASK   = 0x0000000001800000ULL;
+const uint64_t RESULTFLAG__DID_Z_COMPRESSBIT    = 0x0000000000800000ULL;
+
+const uint64_t RESULTFLAG__NO_REEVALUATE        = 0x0000000002000000ULL;
+const uint64_t RESULTFLAG__REALLY_NO_REEVALUATE = 0x0000000004000000ULL;
+const uint64_t RESULTFLAG__IMPRECISE_ROT        = 0x0000000008000000ULL;
+const uint64_t RESULTFLAG__DID_SHORT6_2X3       = 0x0000000010000000ULL;
+const uint64_t RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x0000000020000000ULL;
+const uint64_t RESULTFLAG__INVADED_SPACE        = 0x0000000040000000ULL;
+const uint64_t RESULTFLAG__STOP_OVERCAST_CHECK  = 0x0000000080000000ULL;
+const uint64_t RESULTFLAG__DID_MAGIC_EXPANSION  = 0x0000000100000000ULL;  // Prevent infinite recursion from this.
 
 
 
@@ -5687,7 +5687,7 @@ class fraction_info {
    }
 
    // This one is in sdmoves.cpp
-   bool query_instant_stop(uint32_t & result_flag_wordmisc) const;
+   bool query_instant_stop(uint64_t & result_flag_wordmisc) const;
 
    void demand_this_part_exists() const THROW_DECL
       {
@@ -6671,6 +6671,7 @@ extern void get_string(char *dest, int max);
 template <int N>
 inline void get_string(std::string *dest) {
    char buffer[N];
+   buffer[0] = '\0';
    get_string(buffer, N);
    *dest = buffer;
 }

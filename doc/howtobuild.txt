@@ -331,11 +331,11 @@ NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST
 AT ANY TIME, TO COMPARE MY FILES WITH GIT'S MANAGED FILES
 
 Code files:
-cd wba\sd
+cd wba\sd\src
 winmergeu . C:\Users\wba\sdgit\sd\src
 
 Regression files:
-cd wba\sd\regress
+cd wba\sd\newregress
 winmergeu . C:\Users\wba\sdgit\sd-regression\regression_tests
 
 Doc files:
@@ -418,6 +418,10 @@ ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
 
 When starting github from the web, 4th lines says main <twistie>.  Select 39.85 or whatever.
 This logs in on that branch.  It is not persistent!  It must be done every time!
+In the Git shell, the branch is selected by the "git switch" command.  The branch
+selected by "git switch" and by the web do not affect each other.
+It is not persistent!  It must be done every time!
+
 
 TO SEE THE FULL HISTORY OF A BRANCH:
 

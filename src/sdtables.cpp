@@ -6362,6 +6362,18 @@ static const coordrec thing_343 = {s_343, 0x23,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thing_363 = {s_363, 0x23,
+   { -4,   0,   4,  10,   6,   2,   4,   0,  -4, -10,  -6,  -2},
+   {  4,   4,   4,   0,   0,   0,  -4,  -4,  -4,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1,  9, 10, 11,  5,  4,  3, -1,
+      -1, -1, -1,  8,  7,  6, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thing_3223 = {s_3223, 0x23,
    { -6,   6,   6,   2,  -2,   6,  -6,  -6,  -2,   2},
    {  4,   4,   0,   2,   2,  -4,  -4,   0,  -2,  -2}, {
@@ -8194,6 +8206,20 @@ static const id_bit_table id_bit_table_343[] = {
    NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3| ID2_OUTR6 | ID2_CTR1X4),
    NOBIT(ID2_CTRDMD | ID2_NOUTR1X3| ID2_CTR2  | ID2_CTR1X4)};
+
+static const id_bit_table id_bit_table_363[] = {
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3            | ID2_CTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3| ID2_CTR1X4| ID2_CTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_NOUTR1X3| ID2_CTR2  | ID2_CTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3            | ID2_CTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3| ID2_CTR1X4| ID2_CTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_NOUTR1X3| ID2_CTR2  | ID2_CTR1X6)};
 
 static const id_bit_table id_bit_table_23232[] = {
    NOBIT(   ID2_NCTRDMD),
@@ -10616,6 +10642,16 @@ const setup_attr setup_attrs[] = {
     id_bit_table_343,
     {"   5 a  b  c@@   i  j  e  d@@   5 h  g  f",
      "6i@7h6a@76j@7g6b@76e@7f6c@76d"}},
+   {11,                      // s_363
+    &thing_363,
+    &thing_363,
+    {0, 0, 0, 0},
+    {b_363, b_p363},
+    {0, 0},
+    0U,
+    id_bit_table_363,
+    {"   56 a  b  c@@j  k  l  f  e  d@@   56 i  h  g",
+     "6j@6k@7i6a@76l@7h6b@76f@7g6c@76e@6d"}},
    {9,                      // s_3223
     &thing_3223,
     &thing_3223,

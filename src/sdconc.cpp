@@ -2610,8 +2610,8 @@ static bool fix_empty_outers(
       }
    }
    else {
-      uint32_t result_outer_result_flags_misc = result_outer->result_flags.misc;
-      uint32_t orig_elong_flags = result_outer->result_flags.misc & 3;
+      uint64_t result_outer_result_flags_misc = result_outer->result_flags.misc;
+      int orig_elong_flags = result_outer->result_flags.misc & 3;
 
       // We may be in serious trouble -- we have to figure out what setup the ends
       // finish in, and they are all phantoms.
@@ -5831,11 +5831,11 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS |
          FRACS(CMD_FRAC_CODE_FROMTOREV,2,0));
       the_setups[0].cmd.parseptr = parseptrcopy->next;      // Skip over the concept.
-      uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
+      uint64_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
       normalize_setup(result, simple_normalize, qtag_compress);
-      result->result_flags.misc = finalresultflagsmisc & ~3;
+      result->result_flags.misc = finalresultflagsmisc & ~3ULL;
    }
    else if (doing_do_last_frac) {
       the_setups[0] = *result;
@@ -5849,11 +5849,11 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
                                                        the_setups[0].cmd.cmd_fraction);
       the_setups[0].cmd.cmd_fraction.flags = 0;
       the_setups[0].cmd.parseptr = parseptrcopy->next;    // Skip over the concept.
-      uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
+      uint64_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
       normalize_setup(result, simple_normalize, qtag_compress);
-      result->result_flags.misc = finalresultflagsmisc & ~3;
+      result->result_flags.misc = finalresultflagsmisc & ~3ULL;
    }
 }
 

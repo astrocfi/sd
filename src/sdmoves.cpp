@@ -347,7 +347,6 @@ static const expand::thing exprig12b = {{0, 1, 2, 4, 6, 7, 8, 10}, s_spindle, sr
 static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, s_spindle, sd3x4, 0, 0, 05656};
 static const expand::thing expd34s6 = {{9, 11, 1, 3, 5, 7}, s_short6, sd3x4, 1, 0, 05252};
 static const expand::thing expd3423 = {{0, 2, 4, 6, 8, 10}, s2x3, sd3x4, 0, 0, 02525};
-static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8}, s3dmd, sd3x4, 1};
 static const expand::thing exp3d_323 = {{0, 1, 2, -1, -1, 3, 4, 5, 6, -1, -1, 7}, s3dmd, s_323, 0};
 static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, s_323, sd3x4, 1, 0, 06565};
 static const expand::thing exp303 = {{10, 11, 0, 4, 5, 6}, s2x3, sd3x4, 1, 0, 06161};
@@ -357,6 +356,8 @@ static const expand::thing exp2x9a = {{0, 1, 2, 4, 6, 7, 8, 9, 10, 11, 13, 15, 1
 
 static const expand::thing expb51 = {{0, 3, 5, 6, 9, 11},        s_bone6, s3x4, 0, 0, 05151};
 static const expand::thing expb26 = {{8, 10, 1, 2, 4, 7},        s_short6, s3x4, 1, 0, 02626};
+static const expand::thing expb33 = {{-1, 0, 1, -1, -1, -1, 3, 4, 5, -1, 6, 7, -1, -1, -1, 9, 10, 11}, s3x6, s_363, 0, 0, 0};
+static const expand::thing expb66 = {{-1, -1, -1, 1, 2, -1, 3, 4, 5, -1, -1, -1, 7, 8, -1, 9, 10, 11}, s3x6, s_363, 0, 0, 0};
 static const expand::thing expl65 = {{0, 2, 4, 5},               s1x4, s1x6, 0, 0, 065};
 static const expand::thing expl56 = {{1, 2, 3, 5},               s1x4, s1x6, 0, 0, 056};
 static const expand::thing expl72 = {{1, 5, 3, 4},               s1x4, s1x6, 0, 0, 072};
@@ -734,12 +735,12 @@ static bool do_1x3_type_expansion(setup *ss, heritflags heritflags_to_check) THR
       {05200, false, &expl25, &expl52},
       {0}};
 
-   uint32_t directions;
-   uint32_t dblbitlivemask;
+   uint64_t directions;
+   uint64_t dblbitlivemask;
    const Nx1_checker *getin_search;
-   uint32_t full_occupation = (uint32_t) ((1U << ((attr::klimit(ss->kind)+1) << 1)) - 1);
+   uint64_t full_occupation = (uint64_t) ((1U << ((attr::klimit(ss->kind)+1) << 1)) - 1);
 
-   ss->big_endian_get_directions32(directions, dblbitlivemask);
+   ss->big_endian_get_directions64(directions, dblbitlivemask);
 
    if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X3) {
@@ -824,6 +825,23 @@ static bool do_1x3_type_expansion(setup *ss, heritflags heritflags_to_check) THR
          goto do_Nx1_search;
       }
    }
+   else if (heritflags_to_check == INHERITFLAGNXNK_3X3) {
+      if (ss->kind == s3x6) {
+         // These cases can be found in wd51t line 934.  They are bogus, and
+         // the caller who called it says "This caller regrets calling that."
+         if ((dblbitlivemask & 0xFFF03FFC0ULL) == 0x3C000F000ULL) {
+            expand::expand_setup(expb33, ss);
+         }
+         else if ((dblbitlivemask & 0xFFF03FFC0ULL) == 0x03C000F00ULL) {
+            expand::expand_setup(expb66, ss);
+         }
+         else
+            return false;
+
+         warn(warn_controversial);
+         return true;
+      }
+   }
 
    return false;
 
@@ -876,6 +894,7 @@ static bool do_1x3_type_expansion(setup *ss, heritflags heritflags_to_check) THR
 
    if (highquality) {
       expand::expand_setup(*highquality, ss);
+      ss->result_flags.misc |= RESULTFLAG__DID_MAGIC_EXPANSION;
       return true;
    }
 
@@ -890,6 +909,8 @@ extern bool divide_for_magic(
 {
    warning_info saved_warnings;
    uint32_t division_code;
+   bool did_something = false;
+   setup_kind orig_kind = ss->kind;
 
    heritflags heritflags_to_use = ss->cmd.cmd_final_flags.herit;
 
@@ -932,7 +953,7 @@ extern bool divide_for_magic(
 
       break;
    case s3x6:
-      if (heritflags_to_check == INHERITFLAGNXNK_3X3) {
+      if ((heritflags_to_check & INHERITFLAGNXNK_3X3) != 0) {
          goto do_3x3;
       }
       break;
@@ -1010,7 +1031,7 @@ extern bool divide_for_magic(
 
  do_3x3:
 
-   uint32_t mxnstuff = heritflags_to_use & INHERITFLAG_MXNMASK;
+   uint64_t mxnstuff = heritflags_to_use & INHERITFLAG_MXNMASK;
 
    bool sixteen =
       (mxnstuff == INHERITFLAGMXNK_0X4) || (mxnstuff == INHERITFLAGMXNK_4X0);
@@ -1030,6 +1051,29 @@ extern bool divide_for_magic(
        (heritflags_to_use == INHERITFLAGMXNK_1X2) ||
        (heritflags_to_use == INHERITFLAGMXNK_2X1))
       ss->cmd.cmd_misc2_flags |= CMD_MISC2__LOCAL_RECENTER;
+
+   if ((heritflags_to_check & INHERITFLAGNXNK_3X3) != 0) {
+      if (ss->kind != s3x6)
+         return false;
+
+      do_1x3_type_expansion(ss, heritflags_to_check);
+
+      if (orig_kind == ss->kind)
+         fail("Can't figure out what to do.");
+      normalize_setup(ss, simple_normalize, qtag_compress);
+   }
+
+#if 0
+   if ((heritflags_to_use & INHERITFLAG_INTLK))
+      did_something = true;
+#endif
+
+#if 0
+   if (!did_something &&
+       (ss->kind == orig_kind) &&
+       !(ss->result_flags.misc & RESULTFLAG__DID_MAGIC_EXPANSION))
+      fail("Can't figure out what to do.");
+#endif
 
    impose_assumption_and_move(ss, result);
    result->result_flags.misc |= RESULTFLAG__REQUEST_MXN_COMPRESSION;
@@ -2291,6 +2335,9 @@ static const checkitem checktable[] = {
    {0x00A60055, 0x09000480, s3x1dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x005500A6, 0x28004200, s3x1dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A60044, 0x09040400, s_wingedstar, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+
+   {0x00A60044, 0x48040010, s_363,   0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+
    {0x00A30055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A70055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x005500A7, 0x20006200, s3dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -5389,7 +5436,7 @@ fracfrac fraction_info::get_fracs_for_this_part()
 }
 
 
-bool fraction_info::query_instant_stop(uint32_t & result_flag_wordmisc) const
+bool fraction_info::query_instant_stop(uint64_t & result_flag_wordmisc) const
 {
    if (m_instant_stop != 99) {
       // Check whether we honored the last possible request.  That is,
@@ -8996,7 +9043,7 @@ static void move_with_real_call(
 }
 
 
-static void handle_expiration(setup *ss, uint32_t *bit_to_set)
+static void handle_expiration(setup *ss, uint64_t *bit_to_set)
 {
    if (ss->cmd.prior_expire_bits & RESULTFLAG__EXPIRATION_ENAB) {
       if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_TWISTED)) {
@@ -9004,12 +9051,6 @@ static void handle_expiration(setup *ss, uint32_t *bit_to_set)
             ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_TWISTED);   // Already did that.
          *bit_to_set |= RESULTFLAG__TWISTED_EXPIRED;
       }
-
-      //      if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY)) {
-      //         if (ss->cmd.prior_expire_bits & RESULTFLAG__RECTIFY_EXPIRED)
-      //            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_RECTIFY);   // Already did that.
-      //         *bit_to_set |= RESULTFLAG__RECTIFY_EXPIRED;
-      //      }
 
       // Take care of generous and stingy; they are complicated.
 
@@ -9091,7 +9132,7 @@ void move(
    result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0ULL;
    parse_block *saved_magic_diamond = (parse_block *) 0;
    parse_block *parseptr = ss->cmd.parseptr;
-   uint32_t resultflags_to_put_inmisc = 0;
+   uint64_t resultflags_to_put_inmisc = 0ULL;
    final_and_herit_flags save_incoming_final;
 
    /* This shouldn't be necessary, but there have been occasional reports of the

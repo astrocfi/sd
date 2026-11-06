@@ -1045,7 +1045,7 @@ popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view
    put_line(to_string(final_inline_prompt, " "));
    get_string<MAX_TEXT_LINE_LENGTH>(dest);
    // Backspace at start of line declines the popup.
-   if ((*dest)[0] == '\b') return POPUP_DECLINE;
+   if (!dest->empty() && (*dest)[0] == '\b') return POPUP_DECLINE;
 
    current_text_line++;
    return !dest->empty() ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
