@@ -656,7 +656,7 @@ void matcher_initialize()
 
       if (!get_hash(selector_list[i].name, &bucket)) {
          char errbuf[255];
-         sprintf(errbuf, "Can't hash selector %d - 1!", i);
+         snprintf(errbuf, sizeof(errbuf), "Can't hash selector %d - 1!", i);
          gg77->iob88.fatal_error_exit(2, errbuf);
       }
 
@@ -680,7 +680,7 @@ void matcher_initialize()
 
       if (!get_hash(selector_list[i].sing_name, &bucket)) {
          char errbuf[255];
-         sprintf(errbuf, "Can't hash selector %d - 2!", i);
+         snprintf(errbuf, sizeof(errbuf), "Can't hash selector %d - 2!", i);
          gg77->iob88.fatal_error_exit(2, errbuf);
       }
 
@@ -709,7 +709,7 @@ void matcher_initialize()
          if (get_call_name(tagger_calls[i][ku])[0] != '@') {
             if (!get_hash(get_call_name(tagger_calls[i][ku]), &bucket)) {
                char errbuf[255];
-               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
+               snprintf(errbuf, sizeof(errbuf), "Can't hash tagger %d %d!", i, (int) ku);
                gg77->iob88.fatal_error_exit(2, errbuf);
             }
          }

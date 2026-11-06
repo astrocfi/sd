@@ -434,7 +434,7 @@ void iofull::create_menu(call_list_kind cl)
       // just use a vanilla prompt.
       call_menu_prompts[cl] = (char *) "--> ";
    else
-      sprintf(call_menu_prompts[cl], "(%s)--> ", menu_names[cl]);
+      snprintf(call_menu_prompts[cl], 50, "(%s)--> ", menu_names[cl]);
 }
 
 
@@ -791,7 +791,7 @@ static bool get_user_input(const char *prompt, int which)
          if (matches > 0) {
             char tempstuff[200];
 
-            sprintf(tempstuff, "  (%d matches, type ! or ? for list)\n", matches);
+            snprintf(tempstuff, sizeof(tempstuff), "  (%d matches, type ! or ? for list)\n", matches);
             put_line(tempstuff);
          }
          else
