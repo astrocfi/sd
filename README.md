@@ -13,7 +13,7 @@ from the repository root:
 
 ```sh
 cd src
-make -f makefile.macos
+make -f makefile.mac
 ./sdtty
 ```
 
@@ -22,4 +22,4 @@ The build produces the terminal application `sdtty`, the database compiler
 the directory containing `sd_calls.dat`.
 
 If you previously built with different compiler flags, run
-`make -f makefile.macos clean` before rebuilding.
+`make -f makefile.mac clean` before rebuilding.
