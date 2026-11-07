@@ -2865,9 +2865,16 @@ extern void tandem_couples_move(
 }
 
 
+static const expand::thing expCC_qtg_line = {{6, 7, 2, 3}, s1x4, s_qtag, 0};
+static const expand::thing exp33_qtg_box  = {{0, 1, 4, 5}, s2x2, s_qtag, 0};
+
+
 static void fixup_mimic(setup *result, const uint16_t split_info[2],
                  uint32_t division_code, const setup *orig_before_press) THROW_DECL
 {
+   if (result->kind == s3x4)
+      expand::fix_3x4_to_qtag(result);
+
    int orig_width = -1;
    int orig_height = -1;
 
@@ -2913,9 +2920,6 @@ static void fixup_mimic(setup *result, const uint16_t split_info[2],
 
    static const expand::thing expAA_2x4_dmd = {{7, 1, 3, 5}, sdmd, s2x4, 0};
    static const expand::thing exp55_2x4_dmd = {{0, 2, 4, 6}, sdmd, s2x4, 0};
-
-   static const expand::thing expCC_qtg_line = {{6, 7, 2, 3}, s1x4, s_qtag, 0};
-   static const expand::thing exp33_qtg_box  = {{0, 1, 4, 5}, s2x2, s_qtag, 0};
 
    static const expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, sdmd, s_crosswave, 0};
    static const expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, sdmd, s_crosswave, 0};
@@ -3260,15 +3264,25 @@ static void whole_fixup_mimic(setup *result, const setup *ss) THROW_DECL
    // Whatever was going on with splitting is no longer relevant.
    result->result_flags.clear_split_info();
 
-   switch (ss->kind) {
-   case s2x2: case s_short6:
+   if (result->kind == s2x2 && ss->kind == s1x4) {
       result->result_flags.misc &= ~3;
-      result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
-      break;
-   case s1x2: case s1x4: case sdmd:
+      result->result_flags.misc |= 1 + (ss->rotation & 1);
+   }
+   else if (result->kind == s1x4 && ss->kind == s2x2) {
       result->result_flags.misc &= ~3;
-      result->result_flags.misc |= 2 - (ss->rotation & 1);
-      break;
+      result->result_flags.misc |= 2 - (result->rotation & 1);
+   }
+   else {
+      switch (ss->kind) {
+      case s2x2: case s_short6:
+         result->result_flags.misc &= ~3;
+         result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
+         break;
+      case s1x2: case s1x4: case sdmd:
+         result->result_flags.misc &= ~3;
+         result->result_flags.misc |= 2 - (ss->rotation & 1);
+         break;
+      }
    }
 }
 
@@ -3425,6 +3439,63 @@ void mimic_move(
          if ((MI.setup_hint & MIMIC_SETUP_BOXES) != 0)
             fail("Don't specify this setup.");
 
+         if (MI.setup_hint & MIMIC_SETUP_ANY_TAG) {
+            if (centers)
+               fail("Centers of a tag are in a wave or line, not a box.");
+
+            orig_hint = MI.setup_hint;
+            for (trial_number=0 ; trial_number<2 ; trial_number++) {
+               setup a1 = *ss;
+               expand::expand_setup(exp33_qtg_box, &a1);
+               bool try_3_4 = (MI.setup_hint & MIMIC_SETUP_3_4_TAG) ||
+                              ((orig_hint & MIMIC_SETUP_TAG) && trial_number == 1);
+               a1.cmd.cmd_misc_flags |= try_3_4 ?
+                  CMD_MISC__VERIFY_3_4_TAG : CMD_MISC__VERIFY_1_4_TAG;
+               a1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
+               try {
+                  impose_assumption_and_move(&a1, result);
+                  whole_fixup_mimic(result, ss);
+                  trial_results[trial_number] = *result;
+                  trial_result_mask |= 1 << trial_number;
+               }
+               catch(error_flag_type e) {
+                  err_from_execution = e;
+                  if (e == error_flag_no_retry || orig_hint != MIMIC_SETUP_TAG) throw e;
+               }
+
+               if (orig_hint != MIMIC_SETUP_TAG)
+                  break;
+            }
+
+            if (orig_hint != MIMIC_SETUP_TAG) {
+               return;
+            }
+
+            if (trial_result_mask == 0) {
+               throw err_from_execution;
+            }
+            else if (trial_result_mask == 2) {
+               warn(warn__mimic_ambiguity_resolved);
+            }
+            else if (trial_result_mask == 1) {
+               *result = trial_results[0];
+               warn(warn__mimic_ambiguity_resolved);
+            }
+            else {
+               if (trial_results[0].kind != trial_results[1].kind || trial_results[0].rotation != trial_results[1].rotation)
+                  fail_no_retry("Mimic is ambiguous.");
+
+               for (i=0; i<=attr::slimit(result); i++) {
+                  if ((trial_results[0].people[i].id1 ^ trial_results[1].people[i].id1) & 0777)
+                     fail_no_retry("Mimic is ambiguous.");
+               }
+
+               warn(warn__mimic_ambiguity_checked);
+            }
+            return;
+         }
+
          uint32_t tbonetest = ss->or_all_people();
          orig_hint = MI.setup_hint;
 
@@ -3524,19 +3595,137 @@ void mimic_move(
          return;
       }
       else if (ss->kind == s1x4) {
-         if (MI.setup_hint != 0)
-            fail("Don't specify a setup.");
+         if (MI.setup_hint != 0 && !(MI.setup_hint & (MIMIC_SETUP_TIDAL_SETUP | MIMIC_SETUP_LINES |
+                                                       MIMIC_SETUP_WAVES | MIMIC_SETUP_ANY_TAG)))
+            fail("Don't specify this setup.");
 
-         setup a1 = *ss;
+         orig_hint = MI.setup_hint;
 
-         if (centers)
-            expand::expand_setup(s_1x4_1x8_ctrs, &a1);
-         else
+         if (centers) {
+            if (orig_hint & MIMIC_SETUP_ANY_TAG) {
+               for (trial_number=0 ; trial_number<2 ; trial_number++) {
+                  setup a1 = *ss;
+                  expand::expand_setup(expCC_qtg_line, &a1);
+                  bool try_3_4 = (MI.setup_hint & MIMIC_SETUP_3_4_TAG) ||
+                                 ((orig_hint & MIMIC_SETUP_TAG) && trial_number == 1);
+                  a1.cmd.cmd_misc_flags |= try_3_4 ?
+                     CMD_MISC__VERIFY_3_4_TAG : CMD_MISC__VERIFY_1_4_TAG;
+                  a1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
+                  try {
+                     impose_assumption_and_move(&a1, result);
+                     whole_fixup_mimic(result, ss);
+                     trial_results[trial_number] = *result;
+                     trial_result_mask |= 1 << trial_number;
+                  }
+                  catch(error_flag_type e) {
+                     err_from_execution = e;
+                     if (e == error_flag_no_retry || orig_hint != MIMIC_SETUP_TAG) throw e;
+                  }
+
+                  if (orig_hint != MIMIC_SETUP_TAG)
+                     break;
+               }
+
+               if (orig_hint != MIMIC_SETUP_TAG) {
+                  return;
+               }
+
+               if (trial_result_mask == 0) {
+                  throw err_from_execution;
+               }
+               else if (trial_result_mask == 2) {
+                  warn(warn__mimic_ambiguity_resolved);
+               }
+               else if (trial_result_mask == 1) {
+                  *result = trial_results[0];
+                  warn(warn__mimic_ambiguity_resolved);
+               }
+               else {
+                  if (trial_results[0].kind != trial_results[1].kind || trial_results[0].rotation != trial_results[1].rotation)
+                     fail_no_retry("Mimic is ambiguous.");
+
+                  for (i=0; i<=attr::slimit(result); i++) {
+                     if ((trial_results[0].people[i].id1 ^ trial_results[1].people[i].id1) & 0777)
+                        fail_no_retry("Mimic is ambiguous.");
+                  }
+
+                  warn(warn__mimic_ambiguity_checked);
+               }
+               return;
+            }
+            else {
+               // orig_hint is 0 or Tidal.
+               bool tidal_ok = false;
+               try {
+                  setup a1 = *ss;
+                  expand::expand_setup(s_1x4_1x8_ctrs, &a1);
+                  move(&a1, false, result);
+                  whole_fixup_mimic(result, ss);
+                  tidal_ok = true;
+               }
+               catch(error_flag_type e) {
+                  err_from_execution = e;
+                  if (e == error_flag_no_retry || orig_hint != 0) throw e;
+               }
+
+               if (tidal_ok)
+                  return;
+
+               // If orig_hint was 0 and tidal failed, try tag setups!
+               configuration::restore_warnings(saved_warnings);
+               for (trial_number=0 ; trial_number<2 ; trial_number++) {
+                  setup a1 = *ss;
+                  expand::expand_setup(expCC_qtg_line, &a1);
+                  a1.cmd.cmd_misc_flags |= (trial_number == 1) ?
+                     CMD_MISC__VERIFY_3_4_TAG : CMD_MISC__VERIFY_1_4_TAG;
+                  a1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
+                  try {
+                     impose_assumption_and_move(&a1, result);
+                     whole_fixup_mimic(result, ss);
+                     trial_results[trial_number] = *result;
+                     trial_result_mask |= 1 << trial_number;
+                  }
+                  catch(error_flag_type e) {
+                     if (e == error_flag_no_retry) throw e;
+                  }
+               }
+
+               if (trial_result_mask == 0) {
+                  throw err_from_execution;
+               }
+               else if (trial_result_mask == 2) {
+                  warn(warn__mimic_ambiguity_resolved);
+               }
+               else if (trial_result_mask == 1) {
+                  *result = trial_results[0];
+                  warn(warn__mimic_ambiguity_resolved);
+               }
+               else {
+                  if (trial_results[0].kind != trial_results[1].kind || trial_results[0].rotation != trial_results[1].rotation)
+                     fail_no_retry("Mimic is ambiguous.");
+
+                  for (i=0; i<=attr::slimit(result); i++) {
+                     if ((trial_results[0].people[i].id1 ^ trial_results[1].people[i].id1) & 0777)
+                        fail_no_retry("Mimic is ambiguous.");
+                  }
+
+                  warn(warn__mimic_ambiguity_checked);
+               }
+               return;
+            }
+         }
+         else {
+            if (orig_hint & MIMIC_SETUP_ANY_TAG)
+               fail("Ends of a tag are not in a wave or line.");
+
+            setup a1 = *ss;
             expand::expand_setup(s_1x4_1x8_ends, &a1);
-
-         move(&a1, false, result);
-         whole_fixup_mimic(result, ss);
-         return;
+            move(&a1, false, result);
+            whole_fixup_mimic(result, ss);
+            return;
+         }
       }
       else
          fail("Can't do this.");
@@ -3714,7 +3903,7 @@ void mimic_move(
    if (MI.groupsize <= 2) {
       try {
          // Don't split into 1x2's if user requested C/L/W.
-         if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS|MIMIC_SETUP_TIDAL_SETUP)) == 0 &&
+         if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS|MIMIC_SETUP_TIDAL_SETUP|MIMIC_SETUP_ANY_TAG)) == 0 &&
              !((MI.setup_hint & MIMIC_SETUP_BOXES) == 0 && (flags1 & CFLAG1_CAN_BE_ONE_SIDE_LATERAL))) {
             switch (ss->kind) {
             case s1x4:
