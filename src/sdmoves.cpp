@@ -5477,7 +5477,8 @@ void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x
       assumption_thing t;
 
       /* **** actually, we want to allow the case of "assume waves" already in place. */
-      if (ss->cmd.cmd_assume.assumption != cr_none)
+      if (ss->cmd.cmd_assume.assumption != cr_none &&
+          ss->cmd.cmd_assume.assumption != cr_wave_only)
          fail("Redundant or conflicting assumptions.");
 
       t.assump_col = 0;

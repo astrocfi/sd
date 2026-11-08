@@ -3415,11 +3415,35 @@ void mimic_move(
    int trial_result_mask = 0;
    error_flag_type err_from_execution = (error_flag_type) 0;
 
+   bool do_centers_or_ends = false;
+
    switch (who) {
    case selector_centers:
+   case selector_center_wave:
+   case selector_center_line:
+   case selector_center_col:
+   case selector_center_box:
       centers = true;
+      do_centers_or_ends = true;
+      break;
    case selector_ends:
    case selector_outsides:
+      do_centers_or_ends = true;
+      break;
+   case selector_center4:
+      if ((MI.setup_hint & MIMIC_SETUP_ANY_TAG) || attr::slimit(ss) <= 3) {
+         centers = true;
+         do_centers_or_ends = true;
+      }
+      break;
+   case selector_outerpairs:
+      if ((MI.setup_hint & MIMIC_SETUP_ANY_TAG) || attr::slimit(ss) <= 3) {
+         do_centers_or_ends = true;
+      }
+      break;
+   }
+
+   if (do_centers_or_ends) {
       if (attr::slimit(ss) > 3) {
          // We need to divide the setup.  Stuff our concept block back into the parse tree.
          // Based on what we know "do_big_concept" does, the following will always be OK,
@@ -3429,8 +3453,12 @@ void mimic_move(
          setup aa = *ss;
          aa.cmd.parseptr = parseptr;
 
+         split_command_kind split_cmd = split_command_none;
+         if ((MI.setup_hint & MIMIC_SETUP_ANY_TAG) && centers)
+            split_cmd = split_command_1x4_dmd;
+
          // This might throw an error; just let it do it, whether it's a "no_retry" or not.
-         if (do_simple_split(&aa, split_command_none, result))
+         if (do_simple_split(&aa, split_cmd, result))
             fail("Can't split this.");
          return;
       }
@@ -3449,6 +3477,7 @@ void mimic_move(
                expand::expand_setup(exp33_qtg_box, &a1);
                bool try_3_4 = (MI.setup_hint & MIMIC_SETUP_3_4_TAG) ||
                               ((orig_hint & MIMIC_SETUP_TAG) && trial_number == 1);
+               a1.cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
                a1.cmd.cmd_misc_flags |= try_3_4 ?
                   CMD_MISC__VERIFY_3_4_TAG : CMD_MISC__VERIFY_1_4_TAG;
                a1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -3608,6 +3637,7 @@ void mimic_move(
                   expand::expand_setup(expCC_qtg_line, &a1);
                   bool try_3_4 = (MI.setup_hint & MIMIC_SETUP_3_4_TAG) ||
                                  ((orig_hint & MIMIC_SETUP_TAG) && trial_number == 1);
+                  a1.cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
                   a1.cmd.cmd_misc_flags |= try_3_4 ?
                      CMD_MISC__VERIFY_3_4_TAG : CMD_MISC__VERIFY_1_4_TAG;
                   a1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -3677,6 +3707,7 @@ void mimic_move(
                for (trial_number=0 ; trial_number<2 ; trial_number++) {
                   setup a1 = *ss;
                   expand::expand_setup(expCC_qtg_line, &a1);
+                  a1.cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
                   a1.cmd.cmd_misc_flags |= (trial_number == 1) ?
                      CMD_MISC__VERIFY_3_4_TAG : CMD_MISC__VERIFY_1_4_TAG;
                   a1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
