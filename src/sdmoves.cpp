@@ -7756,6 +7756,45 @@ void really_inner_move(
       // If the "reverse" flag is still set in cmd_final_flags, it means a genuine
       // reverse as in reverse cut/flip the diamond or reverse change-O.
 
+      // For a fractional "funny" call (e.g. "1/2 funny circulate"), first run
+      // the full funny call to determine which dancers are in a closed loop,
+      // and then have only those dancers do the fractional call.
+      if ((ss->cmd.cmd_final_flags.herit & INHERITFLAG_FUNNY) &&
+          (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_HALF | INHERITFLAG_LASTHALF)) &&
+          (callspec->stuff.arr.def_list->callarray_list->callarray_flags & CAF__FACING_FUNNY)) {
+
+         // Run the full funny call on a copy of the setup (also emits any funny warnings).
+         setup trial_ss = *ss;
+         trial_ss.cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_HALF | INHERITFLAG_LASTHALF);
+         setup trial_result;
+         basic_move(&trial_ss, callspec, tbonetest, qtfudged, mirror, &trial_result);
+
+         // Identify which dancers moved on the full funny call.
+         uint32_t movers = 0;
+         for (int i = 0; i <= attr::slimit(ss); i++) {
+            if ((ss->people[i].id1 ^ trial_result.people[i].id1) & PID_MASK)
+               movers |= 1U << i;
+         }
+
+         // Clear the funny flag so the subsequent fractional call runs normally.
+         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_FUNNY);
+
+         if (movers == 0) {
+            // No one can move; everyone stays in place.
+            *result = *ss;
+            result->suppress_all_rolls(false);
+            break;
+         }
+         else if (movers != ss->little_endian_live_mask()) {
+            // A proper subset moves; have only those dancers do the fractional call.
+            inner_selective_move(ss, &ss->cmd, (setup_command *) 0,
+                                 selective_key_plain, 0, 0, false, movers,
+                                 sel, 0, 0, result);
+            break;
+         }
+         // Otherwise everyone moves; fall through to basic_move.
+      }
+
       basic_move(ss, callspec, tbonetest, qtfudged, mirror, result);
       break;
    default:
