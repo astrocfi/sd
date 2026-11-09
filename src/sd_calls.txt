@@ -23385,7 +23385,6 @@ call "circulate for motivate" dontshow tag motcirc
       array [ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N CR8S
              AL7S ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N]
             alternate_definition [half] mainstream
-   simple_funny
    // If user said "assume facing lines" or
    // "assume back-to-back lines", use these:
    setup 2x4 1x8 rotate qualifier explicit out in_or_out
@@ -23541,7 +23540,6 @@ call "circulate" mainstream tag circulate
       array [ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N CR8S
              AL7S ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N]
             alternate_definition [half] mainstream
-   simple_funny
    // If user said "assume facing lines" or
    // "assume back-to-back lines", use these:
    setup 2x4 1x8 rotate qualifier explicit out in_or_out
@@ -23611,7 +23609,6 @@ call "circulate" mainstream tag circulate
    setup spindle 2x4
       array [0 0 0 AL3W 0 0 0 CR0E]
             alternate_definition [twisted half] c4
-   simple_funny
    setup 2x4 crosswave rotate
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
    setup 2x2 dmd rotate no_cutting_through
