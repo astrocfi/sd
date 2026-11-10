@@ -18,7 +18,8 @@ DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 # Consult your system, compiler, and debugger vendor for further information.
 CDEBUGFLAGS = -O2
 
-CFLAGS =$(CDEBUGFLAGS) $(DEFS)
+# sd.h uses C++17 features, including fold expressions and std::string_view.
+CFLAGS = -std=c++17 $(CDEBUGFLAGS) $(DEFS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).

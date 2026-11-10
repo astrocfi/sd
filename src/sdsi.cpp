@@ -179,7 +179,7 @@ extern void hash_nonrandom_number(int number)
 //
 //      if (!buf && siz != 0) {
 //         char msg [50];
-//         sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
+//         snprintf(msg, sizeof(msg), "Can't allocate %d bytes of memory.", (int) siz);
 //         gg->fatal_error_exit(2, msg);
 //      }
 //
@@ -201,7 +201,7 @@ extern void hash_nonrandom_number(int number)
 //      buf = realloc(oldp, siz);
 //      if (!buf && siz != 0) {
 //         char msg [50];
-//         sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
+//         snprintf(msg, sizeof(msg), "Can't allocate %d bytes of memory.", (int) siz);
 //         gg->fatal_error_exit(2, msg);
 //      }
 //      return buf;
