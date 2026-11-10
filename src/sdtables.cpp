@@ -5812,6 +5812,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {sdmd,       s1x3dmd, 0,     0xCC, 0x0C, 0x0, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
    {sdmd,          s_galaxy, 0, 0xAA, 0x0C, 0x0, schema_concentric,     sdmd,        s_star,   warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
    {sdmd,          s1x6, 0,      044, 0x0C, 0x0, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
+   {sdmd,          s1x6, 0,      066, 0x0C, 0x0, schema_concentric,     sdmd,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3}},
    {s1x6,         s1x10, 0,    0x39C, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 4, 7, 8, 9},         {0}},
    {s1x4,         s1x10, 0,    0x318, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 4, 8, 9},               {0}},
    {s1x4,          s1x8, 0,     0x66, 0x1D, 0x0, schema_concentric,     s1x4,          s1x4,   warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
@@ -5832,6 +5833,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,          s1x8, 0,     0xCC, 0x0C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
    {s_qtag,        s1x8, 0x33,  0x55, 0x0C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {6, 7, 2, 3},               {1, 3, 5, 7}},
    {s1x4,          s1x6, 0,      044, 0x2C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
+   {s1x4,          s1x6, 0,      066, 0x2C, 0x0, schema_concentric,     s1x4,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3}},
    {s1x4,       s1x3dmd, 0,     0xCC, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, -1, -1, 4, 5, -1, -1}},
    {s1x4,       s1x3dmd, 0,     0xAA, 0x1E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, -1, 1, -1, 4, -1, 5, -1}},
    {s1x2,       s1x3dmd, 0,     0x88, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {3, 7},                     {0}},
@@ -5997,7 +5999,9 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_ntrglcw,    s_323,  0xCC, 0xCC, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, -1, -1, 6, 7, -1, -1},               {0}},
    {s_ntrglccw,   s_323,  0x33, 0x99, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, 3, 4, -1, -1, 7, 0},               {0}},
 
-   {s1x4,      s_short6, 0,      055, 0x2D, 0x0, schema_concentric,     s1x4,        s1x2,     warn__none, 0, 1, {0, 1, 2, 3},            {1, 4}},
+   {s2x2,      s_short6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 2, 3, 5},            {0}},
+   {sdmd,      s_short6, 0,      055, 0x2C, 0x0, schema_concentric,     sdmd,        s1x2,     warn__none, 0, 1, {0, 1, 2, 3},            {1, 4}},
+   {s1x4,      s_short6, 0,      055, 0x2C, 0x0, schema_concentric,     s1x4,        s1x2,     warn__none, 0, 1, {0, 1, 2, 3},            {1, 4}},
    {s1x4,      s_short6, 0xA,      0, 0x0D, 0x0, schema_matrix,         s_rigger,    nothing,  warn__none, 0, 1, {6, -1, 2, -1},             {5, 7, 0, 1, 3, 4}},
 
    // These 2 must be in the order shown.
@@ -8017,12 +8021,12 @@ static const id_bit_table id_bit_table_bone6[] = {
    {ID2_BELLE|ID2_TRAILER,    ID2_LEAD,                ID2_BEAU|ID2_TRAILER,   ID2_TRAILER}};
 
 static const id_bit_table id_bit_table_short6[] = {
-   NWBITS(ID2_CENTER),
+   NWBITS(ID2_CENTER | ID2_CTR4),
    NOBIT(ID2_END),
-   NEBITS(ID2_CENTER),
-   SEBITS(ID2_CENTER),
+   NEBITS(ID2_CENTER | ID2_CTR4),
+   SEBITS(ID2_CENTER | ID2_CTR4),
    NOBIT(ID2_END),
-   SWBITS(ID2_CENTER)};
+   SWBITS(ID2_CENTER | ID2_CTR4)};
 
 static const id_bit_table id_bit_table_dbltrngl[] = {
    NOBIT(0),
