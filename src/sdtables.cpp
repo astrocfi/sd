@@ -9299,7 +9299,7 @@ const setup_attr setup_attrs[] = {
    {5,                      // s_short6
     &thingshort6,
     &thingshort6,
-    {0, 0, 0, 0},
+    {055, 0, 0, 0},
     {b_short6, b_pshort6},
     {0, 0},
     0U,
