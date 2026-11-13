@@ -1725,7 +1725,8 @@ void matcher_class::scan_concepts_and_calls(
          // See if any new matches have come up that can allow us to curtail the scan.
          if (spiffy_parser && m_match_count > matches_as_seen_by_me) {
             if (m_only_extension && is_subcall_cand &&
-                (firstchar[0] == '[' || firstchar[0] == ' ')) {
+                (m_user_input[0] == '[' ||
+                 (m_can_cache_completed_subcalls && (firstchar[0] == '[' || firstchar[0] == ' ')))) {
 
                int full_bracket_depth = m_user_bracket_depth + m_extended_bracket_depth;
 
@@ -1768,7 +1769,7 @@ void matcher_class::scan_concepts_and_calls(
                      // never for Enter, ensuring 100% exact Enter semantics and match counts.
                      else if (m_can_cache_completed_subcalls &&
                               m_user_bracket_depth-local_result.recursion_depth == 0 &&
-                              user && user[1] == '[') {
+                              user && user[0] == firstchar[0] && user[1] == '[') {
                         const char *close_bracket = find_matching_close_bracket(user + 1);
                         if (close_bracket) {
                            subcall_after_user = close_bracket + 1;
