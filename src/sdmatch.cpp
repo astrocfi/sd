@@ -1687,21 +1687,22 @@ void matcher_class::scan_concepts_and_calls(
          // will yield to "6x2" + "acey deucey", making it possible to parse "echo 6x2 acey deucey".
          m_current_result->yield_depth = ((get_yield_if_ambiguous_flag(this_call)) ? new_depth+2 : new_depth);
 
-         // Avoid recursively parsing nested subcalls if the candidate's literal text
-         // after ']' already mismatches.
-         if (call_suffix_mismatches_after_bracket(user, get_call_name(this_call)))
-            continue;
-
          bool is_subcall_cand = (spiffy_parser && get_call_name(this_call)[0] == '@' &&
                                  (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T'));
 
          if (is_subcall_cand && got_aborted_subcall) {
             // We have seen another "@0" call after having seen one whose subcall
             // was incomplete.  There can't possibly be any benefit from parsing
-            // further such calls.
+            // further such calls.  Check this before the ']' suffix lookahead to
+            // compute match counts accurately.
             m_match_count++;
             continue;
          }
+
+         // Avoid recursively parsing nested subcalls if the candidate's literal text
+         // after ']' already mismatches.
+         if (call_suffix_mismatches_after_bracket(user, get_call_name(this_call)))
+            continue;
          else if (is_subcall_cand && got_matched_subcall) {
             // Skip over "@0" or "@T" so match_suffix_2() only checks the suffix
             // after ']' without re-parsing the bracketed subcall.  When the user
