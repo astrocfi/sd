@@ -62,7 +62,7 @@ public:
       e_match_number = -10       // Only used by sdui-win; sdui-tty just reads it and uses atoi.
    };
 
-   void initialize_for_parse(int which_commands, bool show, bool only_want_extension);
+   void initialize_for_parse(int which_commands, bool show, bool only_want_extension, bool can_cache_completed = false);
 
    void copy_sublist(const match_result *outbar, modifier_block *tails);
 
@@ -104,7 +104,8 @@ public:
       int which_commands,
       bool show,
       bool show_verify,
-      bool only_want_extension);
+      bool only_want_extension,
+      bool can_cache_completed = false);
 
    // These are used for allocating and "garbage collecting" blocks dynamically.
    // If this were not a singleton object, these two fields would have to be declared static,
@@ -127,6 +128,7 @@ public:
    match_result m_final_result;
 
    bool m_only_extension;          // Only want extension, short-circuit the search.
+   bool m_can_cache_completed_subcalls; // Safe to cache completed subcalls (Tab and space, not Enter).
    int m_user_bracket_depth;
    int m_match_count;              // The number of matches so far.
    int m_exact_count;              // The number of exact matches so far.
@@ -149,6 +151,13 @@ public:
 
    index_list m_concept_list;        // indices of all concepts
    index_list m_level_concept_list;  // indices of concepts valid at current level
+
+   // This table is used by match_wildcard to speed up selector matching.  Selectors
+   // whose names begin with an ordinary character are indexed by their lowercase first
+   // character in selector_buckets; those beginning with a '@' wildcard (such as
+   // "@k-based triangles") are added to every bucket so they are always checked, and
+   // bucket 0 holds all selectors for when user input is empty.
+   index_list selector_buckets[256];
 
    index_list *call_hashers;
    index_list *conc_hashers;

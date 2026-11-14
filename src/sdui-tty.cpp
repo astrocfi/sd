@@ -719,7 +719,7 @@ static bool get_user_input(const char *prompt, int which)
       }
       else if (c == ' ' || c == '-') {
          // Extend only to one space or hyphen, inclusive.
-         matches = matcher.match_user_input(which, false, false, true);
+         matches = matcher.match_user_input(which, false, false, true, true);
          p = matcher.m_echo_stuff;
 
          if (*p) {
@@ -802,7 +802,7 @@ static bool get_user_input(const char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         matcher.match_user_input(which, false, false, true);
+         matcher.match_user_input(which, false, false, true, true);
          p = matcher.m_echo_stuff;
 
          if (*p) {
