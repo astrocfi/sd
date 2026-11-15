@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Differential stress tests for Sdtty's command completion.
+"""Stress tests for Sdtty's command completion.
 
-Builds Sdtty from two git refs, types the same input into both, and reports
-every session whose output differs.  Given one build, reports only crashes.
+Presses Tab, space, '?', and Enter partway through lines.  Given one build,
+reports every session that crashes, exits with an error, loops forever, or
+prints a sanitizer report.  Given two builds, usually the base branch and a
+pull request, also reports every session whose output differs between them.
 See README.md.
 """
 
