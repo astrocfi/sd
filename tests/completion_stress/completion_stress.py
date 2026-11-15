@@ -2,7 +2,8 @@
 """Differential stress tests for Sdtty's command completion.
 
 Builds Sdtty from two git refs, types the same input into both, and reports
-every session whose output differs.  See README.md.
+every session whose output differs.  Given one build, reports only crashes.
+See README.md.
 """
 
 import argparse
@@ -14,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 
 import cases
@@ -146,8 +148,64 @@ def run_sdtty(build, level, flags, stdin, timeout, memory_gb, logdir=None):
                            timeout=timeout, env=sdtty_env(build.asan, logdir), preexec_fn=limit)
         return p.returncode, normalize(p.stdout.decode('latin-1')), p.stderr.decode('latin-1')
     except subprocess.TimeoutExpired as e:
-        return ('TIMEOUT', normalize((e.stdout or b'').decode('latin-1')),
-                (e.stderr or b'').decode('latin-1'))
+        stdout = normalize((e.stdout or b'').decode('latin-1'))
+        # Builds before 39.86 loop forever printing " XXX" once input runs out.
+        rc = 'EOFLOOP' if stdout[-4000:].count('XXX') > 20 else 'TIMEOUT'
+        return rc, stdout, (e.stderr or b'').decode('latin-1')
+
+
+Result = namedtuple('Result', 'rc stdout stderr reports logdir')
+
+
+def reports_in(logdir):
+    found = []
+    for f in sorted(os.listdir(logdir)):
+        with open(os.path.join(logdir, f), encoding='latin-1') as fh:
+            found += re.findall(r'(SUMMARY: \S+: [^\n]*|runtime error: [^\n]*)', fh.read())
+    return found
+
+
+def startup_reports(builds, out):
+    """The reports that each sanitizer build prints on every run, before any input."""
+    startup = {}
+    for b in builds:
+        startup[b.name] = set()
+        if b.asan:
+            logdir = tempfile.mkdtemp(prefix=f'{b.name}-startup-', dir=out)
+            run_sdtty(b, 'c4x', [], EXIT, 900, 0, logdir)
+            startup[b.name] = set(reports_in(logdir))
+            shutil.rmtree(logdir)
+            if startup[b.name]:
+                print(f'ignoring {len(startup[b.name])} report(s) that {b.name} prints at start-up',
+                      flush=True)
+    return startup
+
+
+def run_checked(build, level, flags, stdin, timeout, memory_gb, out, startup, tag):
+    """Run one session, collecting new sanitizer reports on a sanitizer build."""
+    logdir = tempfile.mkdtemp(prefix=f'{build.name}-{tag}-', dir=out) if build.asan else None
+    rc, stdout, stderr = run_sdtty(build, level, flags, stdin, timeout, memory_gb, logdir)
+    reports = []
+    if logdir:
+        reports = sorted(set(r for r in reports_in(logdir) if r not in startup[build.name]))
+        if not reports:
+            shutil.rmtree(logdir)
+            logdir = None
+    return Result(rc, stdout, stderr, reports, logdir)
+
+
+def failed(r):
+    """A crash, an error exit, an endless loop, or a new sanitizer report."""
+    return r.rc not in (0, 'TIMEOUT') or bool(r.reports)
+
+
+def describe(name, r):
+    text = f'{name}: rc={r.rc}'
+    if r.reports:
+        text += f', {len(r.reports)} sanitizer report(s), first: {r.reports[0]} (logs in {r.logdir})'
+    elif r.rc not in (0, 'TIMEOUT') and r.stderr.strip():
+        text += f', stderr ends {r.stderr.strip()[-120:]!r}'
+    return text
 
 
 def classify(ra, rb):
@@ -168,48 +226,94 @@ def safe_name(idx, key):
     return f'{idx:05d}_{text[:120]}'
 
 
-def compare_jobs(a, jobs):
-    """Run each job on both builds.  A job is (key, level, flags, stdin, timeout)."""
-    A, B = Build(a.build_a), Build(a.build_b)
-    if A.name == B.name:
+def save(out, tag, stdin, results):
+    with open(os.path.join(out, tag + '.input'), 'w', encoding='latin-1') as f:
+        f.write(stdin)
+    for name, r in results.items():
+        with open(os.path.join(out, f'{tag}.{name}'), 'w', encoding='latin-1') as f:
+            f.write(f'rc={r.rc}\n{r.stdout}')
+            if r.stderr:
+                f.write(f'\n---- stderr ----\n{r.stderr}')
+
+
+def run_jobs(a, jobs):
+    """Run each job on one build, checking for crashes, or on two, comparing them.
+
+    A job is (key, level, flags, stdin, timeout).
+    """
+    builds = [Build(n) for n in a.builds]
+    if len(builds) == 2 and builds[0].name == builds[1].name:
         sys.exit('the two builds have the same name')
     if a.limit:
         jobs = jobs[:a.limit]
     out = a.out or os.path.join(OUT, a.command)
     os.makedirs(out, exist_ok=True)
-    print(f'{a.command}: {len(jobs)} sessions, {A.name} vs {B.name}; differences go to {out}', flush=True)
+    if len(builds) == 1:
+        print(f'{a.command}: {len(jobs)} sessions on {builds[0].name}, checking for crashes; '
+              f'failures go to {out}', flush=True)
+    else:
+        print(f'{a.command}: {len(jobs)} sessions, {builds[0].name} vs {builds[1].name}; '
+              f'differences go to {out}', flush=True)
+    startup = startup_reports(builds, out)
 
-    def one(job):
-        key, level, flags, stdin, timeout = job
-        res = {b.name: run_sdtty(b, level, flags, stdin, timeout, a.memory_gb) for b in (A, B)}
-        return job, res
+    def one(item):
+        idx, (key, level, flags, stdin, timeout) = item
+        tag = safe_name(idx, key)
+        res = {b.name: run_checked(b, level, flags, stdin, timeout, a.memory_gb, out, startup, f'{idx:05d}')
+               for b in builds}
+        return key, tag, stdin, res
 
-    counts = {'same': 0, 'differ': 0, 'timeout-a': 0, 'timeout-b': 0}
     t0 = time.time()
     with ThreadPoolExecutor(a.workers) as ex:
-        for idx, (job, res) in enumerate(ex.map(one, jobs)):
-            key, stdin = job[0], job[3]
-            ra, rb = res[A.name][:2], res[B.name][:2]
-            kind = classify(ra, rb)
-            counts[kind] += 1
-            rcs = f'{A.name} rc={ra[0]}, {B.name} rc={rb[0]}'
-            if kind == 'differ':
-                tag = safe_name(idx, key)
-                with open(os.path.join(out, tag + '.input'), 'w', encoding='latin-1') as f:
-                    f.write(stdin)
-                for b in (A, B):
-                    rc, stdout, stderr = res[b.name]
-                    with open(os.path.join(out, f'{tag}.{b.name}'), 'w', encoding='latin-1') as f:
-                        f.write(f'rc={rc}\n{stdout}')
-                print(f'DIFFER {key}: {rcs} -> {tag}.*', flush=True)
-            elif kind != 'same':
-                print(f'TIMEOUT {key}: {rcs}', flush=True)
-            if kind != 'differ' and (ra[0] not in (0, 'TIMEOUT') or rb[0] not in (0, 'TIMEOUT')):
-                print(f'EXIT {key}: {rcs} (same output on both)', flush=True)
-    print(f'done in {time.time() - t0:.0f} s: {len(jobs)} sessions, {counts["same"]} same, '
-          f'{counts["differ"]} differ, {counts["timeout-a"]} timed out on {A.name} and '
-          f'{counts["timeout-b"]} on {B.name} with matching output up to that point', flush=True)
-    return 1 if counts['differ'] else 0
+        results = ex.map(one, enumerate(jobs))
+        if len(builds) == 1:
+            status = check_results(builds[0], results, out)
+        else:
+            status = compare_results(builds, results, out)
+    print(f'done in {time.time() - t0:.0f} s: {len(jobs)} sessions, {status[1]}', flush=True)
+    return status[0]
+
+
+def check_results(build, results, out):
+    nfail = ntime = 0
+    for key, tag, stdin, res in results:
+        r = res[build.name]
+        if failed(r):
+            nfail += 1
+            save(out, tag, stdin, res)
+            print(f'FAIL {key}: {describe(build.name, r)} -> {tag}.*', flush=True)
+        elif r.rc == 'TIMEOUT':
+            ntime += 1
+            print(f'TIMEOUT {key}', flush=True)
+    return (1 if nfail else 0), f'{nfail} failed, {ntime} timed out'
+
+
+def compare_results(builds, results, out):
+    A, B = builds
+    counts = {'same': 0, 'differ': 0, 'timeout-a': 0, 'timeout-b': 0}
+    new = 0
+    for key, tag, stdin, res in results:
+        ra, rb = res[A.name], res[B.name]
+        kind = classify(ra[:2], rb[:2])
+        counts[kind] += 1
+        rcs = f'{A.name} rc={ra.rc}, {B.name} rc={rb.rc}'
+        if kind == 'differ':
+            save(out, tag, stdin, res)
+            print(f'DIFFER {key}: {rcs} -> {tag}.*', flush=True)
+        elif kind != 'same':
+            print(f'TIMEOUT {key}: {rcs}', flush=True)
+        for b, r in ((A, ra), (B, rb)):
+            if failed(r):
+                print(f'FAIL {key}: {describe(b.name, r)}', flush=True)
+        if failed(rb) and not failed(ra):
+            new += 1
+            if kind != 'differ':
+                save(out, tag, stdin, res)
+            print(f'NEW {key}: fails on {B.name} only -> {tag}.*', flush=True)
+    summary = (f'{counts["same"]} same, {counts["differ"]} differ, {new} fail on {B.name} only, '
+               f'{counts["timeout-a"]} timed out on {A.name} and {counts["timeout-b"]} on {B.name} '
+               f'with matching output up to that point')
+    return (1 if counts['differ'] or new else 0), summary
 
 
 def key_probes(line, every_prefix):
@@ -257,7 +361,7 @@ def cmd_suite_keys(a):
                 parts.append(key_probes(ln, every_prefix=True))
             parts.append(ln + '\n')
         jobs.append(((name,), level, flags, ''.join(parts), a.timeout or 3600))
-    return compare_jobs(a, jobs)
+    return run_jobs(a, jobs)
 
 
 def cmd_suite_enter(a):
@@ -269,7 +373,7 @@ def cmd_suite_enter(a):
                 for k in enter_points(ln):
                     stdin = pre + ln[:k] + '\n' + DEL + EXIT
                     jobs.append(((name, j + 1, k), level, flags, stdin, a.timeout or 600))
-    return compare_jobs(a, jobs)
+    return run_jobs(a, jobs)
 
 
 def cmd_lines_keys(a):
@@ -278,7 +382,7 @@ def cmd_lines_keys(a):
         for ln in cases.LINES:
             stdin = cases.SETUPS[s] + key_probes(ln, every_prefix=True) + ln + '\n' + EXIT
             jobs.append(((s, ln), a.level, [], stdin, a.timeout or 1800))
-    return compare_jobs(a, jobs)
+    return run_jobs(a, jobs)
 
 
 def cmd_lines_enter(a):
@@ -288,7 +392,7 @@ def cmd_lines_enter(a):
             for k in range(1, len(ln) + 1):
                 stdin = cases.SETUPS[s] + ln[:k] + '\n' + DEL + EXIT
                 jobs.append(((s, ln, k), a.level, [], stdin, a.timeout or 600))
-    return compare_jobs(a, jobs)
+    return run_jobs(a, jobs)
 
 
 def cmd_yield(a):
@@ -297,7 +401,7 @@ def cmd_yield(a):
         for ln in cases.yield_lines():
             stdin = cases.SETUPS[s] + key_probes(ln, every_prefix=False) + ln + '\n' + DEL + EXIT
             jobs.append(((s, ln), a.level, [], stdin, a.timeout or 900))
-    return compare_jobs(a, jobs)
+    return run_jobs(a, jobs)
 
 
 def cmd_speed(a):
@@ -329,40 +433,13 @@ def cmd_fuzz(a):
     print(f'fuzz: {len(seeds)} sessions from seed {a.first_seed} on {names}; crashes go to {out}',
           flush=True)
 
-    def reports_in(logdir):
-        found = []
-        for f in sorted(os.listdir(logdir)):
-            with open(os.path.join(logdir, f), encoding='latin-1') as fh:
-                found += re.findall(r'(SUMMARY: \S+: [^\n]*|runtime error: [^\n]*)', fh.read())
-        return found
-
-    # Reports that a sanitizer build prints on every run, before any input.
-    startup = {}
-    for b in builds:
-        if b.asan:
-            logdir = tempfile.mkdtemp(prefix=f'{b.name}-startup-', dir=out)
-            run_sdtty(b, 'c4x', [], EXIT, 900, 0, logdir)
-            startup[b.name] = set(reports_in(logdir))
-            shutil.rmtree(logdir)
-            if startup[b.name]:
-                print(f'ignoring {len(startup[b.name])} report(s) that {b.name} prints at start-up',
-                      flush=True)
+    startup = startup_reports(builds, out)
 
     def one(seed):
         stdin = gen.session(seed)
-        res = {}
-        for b in builds:
-            logdir = tempfile.mkdtemp(prefix=f'{b.name}-{seed}-', dir=out) if b.asan else None
-            rc, stdout, stderr = run_sdtty(b, 'c4x', [], stdin, a.timeout or (900 if b.asan else 180),
-                                           a.memory_gb, logdir)
-            reports = []
-            if logdir:
-                reports = [r for r in reports_in(logdir) if r not in startup[b.name]]
-                if not reports:
-                    shutil.rmtree(logdir)
-            if rc == 'TIMEOUT' and stdout.count('XXX') > 20:
-                rc = 'EOFLOOP'   # older builds loop forever once input runs out
-            res[b.name] = (rc, stderr[-300:], sorted(set(reports)), logdir)
+        res = {b.name: run_checked(b, 'c4x', [], stdin, a.timeout or (900 if b.asan else 180),
+                                   a.memory_gb, out, startup, f'seed-{seed}')
+               for b in builds}
         return seed, stdin, res
 
     bad = {b.name: 0 for b in builds}
@@ -370,19 +447,17 @@ def cmd_fuzz(a):
     t0 = time.time()
     with ThreadPoolExecutor(a.workers) as ex:
         for seed, stdin, res in ex.map(one, seeds):
-            failed = {n: r for n, r in res.items() if r[0] not in (0, 'TIMEOUT') or r[2]}
-            for n, (rc, err, reports, logdir) in failed.items():
+            bad_now = {n: r for n, r in res.items() if failed(r)}
+            for n, r in bad_now.items():
                 bad[n] += 1
-                where = f' (logs in {logdir})' if reports else ''
-                print(f'BAD seed={seed} {n}: rc={rc} reports={reports[:3]} stderr={err[-120:]!r}{where}',
-                      flush=True)
+                print(f'FAIL seed={seed} {describe(n, r)}', flush=True)
             for n, r in res.items():
-                if r[0] == 'TIMEOUT':
+                if r.rc == 'TIMEOUT':
                     print(f'TIMEOUT seed={seed} {n}', flush=True)
-            if failed:
+            if bad_now:
                 with open(os.path.join(out, f'seed-{seed}.input'), 'w', encoding='latin-1') as f:
                     f.write(stdin)
-            if len(builds) == 2 and builds[1].name in failed and builds[0].name not in failed:
+            if len(builds) == 2 and builds[1].name in bad_now and builds[0].name not in bad_now:
                 new += 1
                 print(f'NEW seed={seed}: fails on {builds[1].name} only', flush=True)
     summary = ', '.join(f'{n} failed {c}' for n, c in bad.items())
@@ -425,11 +500,12 @@ def main():
     ]
     for name, func, help_text in compare:
         sp = sub.add_parser(name, help=help_text)
-        sp.add_argument('build_a', help='the reference build, usually the base branch')
-        sp.add_argument('build_b', help='the build under test')
+        sp.add_argument('builds', nargs='+', metavar='build',
+                        help='one build to check for crashes, or a reference build (usually '
+                             'the base branch) and the build under test to compare')
         common(sp)
         sp.add_argument('--limit', type=int, help='run only the first N sessions')
-        sp.add_argument('--out', help=f'directory for differences (default: out/{name})')
+        sp.add_argument('--out', help=f'directory for differences and failures (default: out/{name})')
         if name.startswith('suite'):
             sp.add_argument('--regression-dir', default=DEFAULT_REGRESSION,
                             help='sd-regression/regression_tests (default: the sibling checkout)')
@@ -449,8 +525,8 @@ def main():
     sp.set_defaults(func=cmd_fuzz)
 
     a = p.parse_args()
-    if getattr(a, 'builds', None) and len(a.builds) > 2 and a.command == 'fuzz':
-        p.error('fuzz takes one or two builds')
+    if a.command not in ('build', 'speed') and len(a.builds) > 2:
+        p.error(f'{a.command} takes one or two builds')
     sys.exit(a.func(a))
 
 
