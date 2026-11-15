@@ -412,7 +412,7 @@ static void check_text_change(bool doing_escape)
             // **** do we think nLen has the right stuff here?
             matcher.m_user_input_size = strlen(matcher.m_user_input);
             // Extend only to one space or hyphen, inclusive.
-            matches = matcher.match_user_input(nLastOne, false, false, true);
+            matches = matcher.match_user_input(nLastOne, false, false, true, true);
             p = matcher.m_echo_stuff;
 
             if (*p) {
