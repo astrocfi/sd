@@ -4041,6 +4041,8 @@ static bool try_this_split(uint32_t splitting_indicator,
          else if (y < skb_box[0]) j += 2;
          else if (y < 2*skb_box[0]) j += 1;
          break;
+      default:
+         return false;
       }
 
       Eindex[j] = 99;    // We have someone in this group.
