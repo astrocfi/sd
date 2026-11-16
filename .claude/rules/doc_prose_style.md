@@ -92,7 +92,8 @@ words it deliberately leaves alone.
   (`@kbd{sdtty c4}`).
 - A **call** and a **concept** are different things, and the manuals keep them
   apart: a concept modifies a call.
-- American spelling throughout. In `sd`, `codespell` checks it (see
+- American spelling throughout, with one exception: "cancelled" and
+  "cancelling" take two l's. In `sd`, `codespell` checks both (see
   `.codespellrc`).
 - **Define a term before using it**, or link to where it is defined.
 

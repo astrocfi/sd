@@ -1,3 +1,5 @@
+canceled->cancelled
+canceling->cancelling
 catalogued->cataloged
 cataloguing->cataloging
 neighbourhood->neighborhood
