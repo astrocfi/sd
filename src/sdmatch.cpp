@@ -1542,7 +1542,7 @@ void matcher_class::scan_concepts_and_calls(
 
    // See if we can use the hash mechanism.
 
-   if (user[0] || !m_showing) {
+   if (user[0] && user[1]) {
       // We now know that it will do nothing if:
       // (call_or_concept_name has 1st 3 chars with no comma, quote, atsign, or NUL)
       //                         AND
