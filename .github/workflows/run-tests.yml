@@ -78,7 +78,10 @@ jobs:
 
   docs:
     name: Docs
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: scripts/doc-warnings-baseline.txt is recorded
+    # with Ubuntu 24.04's Texinfo (7.1), and a newer Texinfo reports warnings
+    # that are not in it.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
 
