@@ -1181,6 +1181,11 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
                m_current_result->match.concept_ptr = pat2_concept;
                scan_concepts_and_calls(user, " ", pat2,
                                        &m_current_result->real_next_subcall, patxi);
+
+               // Do not let a bare direct-parse concept satisfy a demand_a_call
+               // subcall on its own without a terminating call.
+               if (pat2 && pat2->demand_a_call)
+                  goto getout;
             }
 
             pat2 = (pat2_block *) 0;
