@@ -3757,7 +3757,7 @@ void ui_utils::run_program(iobase & ggg)
             }
 
             if (!write_sequence_to_file())
-               goto start_cycle; // User canceled action.
+               goto start_cycle; // User cancelled action.
 
             goto new_sequence;
          case command_select_print_font:
