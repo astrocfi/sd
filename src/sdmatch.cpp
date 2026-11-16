@@ -325,8 +325,8 @@ static inline bool cand_prefix_mismatches(const char *user, const char *cand)
 int get_hash(Cstring string, int *bucket_p)
 {
    char c1 = string[0];
-   char c2 = string[1];
-   char c3 = string[2];
+   char c2 = c1 ? string[1] : 0;
+   char c3 = c2 ? string[2] : 0;
    int bucket;
 
    if (c1 == '<' && ((int) c2 & ~32) == 'A' && ((int) c3 & ~32) == 'N') {
