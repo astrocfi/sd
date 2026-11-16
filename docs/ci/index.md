@@ -1,7 +1,8 @@
 # Continuous Integration
 
-Every pull request in either repository is built and checked by GitHub Actions
-before it is merged. The checks themselves live in `scripts/`, and CI runs them
+Every pull request in `sd` is built and checked by GitHub Actions before it is
+merged. `sd-regression`'s workflow runs only when it is started by hand. The
+checks themselves live in `scripts/`, and CI runs them
 through the same script a developer runs locally,
 `scripts/run-all-checks.sh`. A result in CI can therefore be reproduced on a
 developer's machine with one command.

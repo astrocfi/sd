@@ -7,15 +7,21 @@ Each repository has one workflow, `.github/workflows/run-tests.yml`, named
 
 | Event | `sd` | `sd-regression` |
 |---|---|---|
-| A pull request is opened or updated | yes | yes |
-| A push to `main` or to a version branch (`39.99`) | yes | yes |
-| A push of a tag (`v39.85`) | yes | yes |
+| A pull request is opened or updated | yes | no |
+| A push to `main` or to a version branch (`39.99`) | yes | no |
+| A push of a tag (`v39.85`) | yes | no |
 | A manual run from the Actions tab | yes | yes |
 | Weekly, on Monday at 06:00 UTC | yes | no |
 
 A push to a work branch doesn't run anything by itself; the branch is tested
 through its pull request. The weekly run of `sd` catches a change in GitHub's
 runner images between releases.
+
+`sd-regression`'s workflow runs only by hand. A change to the suite is still
+tested on every pull request in `sd` that has a branch of the same name, since
+`sd`'s regression job tests against that branch; to test it on its own, start
+`sd-regression`'s workflow on the branch (see
+[Running a Workflow by Hand](#running-a-workflow-by-hand)).
 
 A newer run for the same pull request, or the same branch, cancels the one in
 progress.
@@ -44,8 +50,10 @@ The Windows builds (MinGW and Visual Studio) are not in the matrix.
 ### Docs
 
 Installs Texinfo, TeX, and the packages in `docs/requirements.txt`, and runs
-`scripts/run-all-checks.sh --docs-build --dev-guide`. It uploads two
-artifacts, kept for 14 days:
+`scripts/run-all-checks.sh --docs-build --dev-guide`. It runs on
+`ubuntu-24.04` rather than `ubuntu-latest`: the warnings baseline was recorded
+with that release's Texinfo (7.1), and a newer Texinfo reports warnings that
+are not in it. It uploads two artifacts, kept for 14 days:
 
 - `manuals`: the manuals in every format, from `.build/docs/output`.
 - `dev-guide`: this guide as HTML, from `.build/dev-guide/html`.

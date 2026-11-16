@@ -7,7 +7,8 @@ dances; the callers who own that material allow the Sd developers to use it
 for testing, but not to publish it.
 
 Both repositories run the suite in CI: `sd` against the `sd-regression` branch
-that matches the change, and `sd-regression` against the matching `sd` branch.
+that matches the change, on every pull request, and `sd-regression` against the
+matching `sd` branch, when its workflow is started by hand.
 
 ## How a Run Works
 
