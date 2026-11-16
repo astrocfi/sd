@@ -1478,7 +1478,8 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
           ((!matcher.m_final_result.match.packed_next_conc_or_subcall &&
             !matcher.m_final_result.match.packed_secondary_subcall) ||
            matcher.m_final_result.match.kind == ui_call_select ||
-           matcher.m_final_result.match.kind == ui_concept_select)) {
+           matcher.m_final_result.match.kind == ui_concept_select) &&
+          matcher.subcalls_are_complete()) {
 
          // The matcher found an acceptable (and possibly quite complex)
          // utterance.  Use it directly.

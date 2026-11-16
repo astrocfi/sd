@@ -78,6 +78,9 @@ public:
 
    bool verify_call();
 
+   // Returns true iff every subcall branch in m_final_result reaches a call.
+   bool subcalls_are_complete() const;
+
    void record_a_match();
 
    void match_pattern(Cstring pattern);

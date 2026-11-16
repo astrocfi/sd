@@ -362,6 +362,25 @@ bool matches_ers_suffix(const char *user)
    return !user[3] || user[3] == 's' || user[3] == '\'';
 }
 
+// Verify that every subcall branch below `mb` ends in a ui_call_select
+// rather than an incomplete concept prefix.  At top level (`in_subcall`
+// false), standalone concept chains are allowed.
+bool modifier_subcalls_complete(const modifier_block *mb, bool in_subcall)
+{
+   for (; mb; mb = mb->packed_next_conc_or_subcall) {
+      if (mb->kind == ui_call_select) {
+         return (!mb->packed_next_conc_or_subcall ||
+                 modifier_subcalls_complete(mb->packed_next_conc_or_subcall, true)) &&
+                (!mb->packed_secondary_subcall ||
+                 modifier_subcalls_complete(mb->packed_secondary_subcall, true));
+      }
+      if (mb->kind != ui_concept_select)
+         return true;
+   }
+
+   return !in_subcall;
+}
+
 }   // namespace
 
 void matcher_class::clone_sublist_branch(
@@ -984,6 +1003,12 @@ bool matcher_class::verify_call()
    interactivity = interactivity_normal;
 
    return resultval;
+}
+
+
+bool matcher_class::subcalls_are_complete() const
+{
+   return modifier_subcalls_complete(&m_final_result.match, false);
 }
 
 

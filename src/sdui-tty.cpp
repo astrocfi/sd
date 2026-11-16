@@ -767,7 +767,8 @@ static bool get_user_input(const char *prompt, int which)
              ((!matcher.m_final_result.match.packed_next_conc_or_subcall &&
                !matcher.m_final_result.match.packed_secondary_subcall) ||
               matcher.m_final_result.match.kind == ui_call_select ||
-              matcher.m_final_result.match.kind == ui_concept_select)) {
+              matcher.m_final_result.match.kind == ui_concept_select) &&
+             matcher.subcalls_are_complete()) {
 
             p = matcher.m_echo_stuff;
             while (*p)
