@@ -373,17 +373,15 @@ void hash_me(int bucket, int i)
 }
 
 
-bool foobar(const char *user)
+// Returns true if user is a prefix of " er" or starts with " ers" or " er'".
+bool matches_ers_suffix(const char *user)
 {
-   if (!user[0]) return true;
-   if (user[0] != ' ') return false;
-   if (!user[1]) return true;
-   if (user[1] != 'e') return false;
-   if (!user[2]) return true;
-   if (user[2] != 'r') return false;
-   if (!user[3]) return true;
-   if (user[3] != 's' && user[3] != '\'') return false;
-   return true;
+   static const char prefix[] = " er";
+   for (int i = 0; i < 3; i++) {
+      if (!user[i]) return true;
+      if (user[i] != prefix[i]) return false;
+   }
+   return !user[3] || user[3] == 's' || user[3] == '\'';
 }
 
 }   // namespace
@@ -1274,15 +1272,9 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
             pat1 = pat2->car;
             pat2_concept = pat2->special_concept;
 
-            if (pat2->anythingers) {
-               if (!user || !user[0]) goto yesyes;
-               if (user[0] != ']') goto nono;
-               if (foobar(&user[1])) goto yesyes;
-               else goto nono;
-
-            yesyes:
+            if (pat2->anythingers &&
+                (!user || !user[0] || (user[0] == ']' && matches_ers_suffix(&user[1])))) {
                pat1 = "] er's";
-            nono: ;
             }
 
             pat2 = pat2->cdr;
@@ -1368,35 +1360,40 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
                Cstring ep = get_escape_string(key);
 
                if (u == '<') {
-                  if (ep && *ep) {
-                     int i;
+                  if (!ep || !*ep)
+                     break;
 
-                     for (i=1; ep[i]; i++) {
-                        if (!user[i-1]) {
-                           while (ep[i]) { m_full_extension[patxi++] = ep[i] ; i++; }
-                           user = 0;
-                           if (key == 'T') goto yes;
-                           goto cont;
-                        }
+                  bool matched = true;
+                  bool need_ers = false;
 
-                        if (user[i-1] != tolower(ep[i])) goto getout;
+                  for (int i = 1; ep[i]; i++) {
+                     if (!user[i-1]) {
+                        while (ep[i]) { m_full_extension[patxi++] = ep[i++]; }
+                        user = 0;
+                        need_ers = (key == 'T');
+                        break;
                      }
 
-                     user += ::strlen((char *) ep)-1;
+                     if (user[i-1] != tolower(ep[i])) {
+                        matched = false;
+                        break;
+                     }
+                  }
 
-                     if (key == 'T' && (!user || foobar(user))) goto yes;
-                     goto cont;
+                  if (!matched)
+                     break;
 
-                  yes:
+                  if (user) {
+                     user += ::strlen((char *) ep) - 1;
+                     need_ers = (key == 'T' && matches_ers_suffix(user));
+                  }
+
+                  if (need_ers) {
                      at_t_thing.car = pat1;
                      pat1 = " er's";
                      at_t_thing.cdr = pat2;
                      pat2 = &at_t_thing;
-
-                  cont: ;
                   }
-                  else
-                     break;
                }
                else {
                   if (ep && *ep)
@@ -1526,10 +1523,10 @@ static bool call_suffix_mismatches_after_bracket(Cstring user, Cstring call_name
    const char *after = close_bracket + 1;
    const char *pat = call_name + 2;
 
-   // For @T, match_suffix_2 splices in " er's" after ']' when foobar(after)
+   // For @T, match_suffix_2 splices in " er's" after ']' when matches_ers_suffix(after)
    // is true.  Advance past that prefix in after (or return false if the
    // user input ends while still typing it).
-   if (call_name[1] == 'T' && foobar(after)) {
+   if (call_name[1] == 'T' && matches_ers_suffix(after)) {
       const char *ers = " er's";
       while (*ers && *after) {
          if (*ers == *after) {
@@ -1717,7 +1714,7 @@ void matcher_class::scan_concepts_and_calls(
             // subcall_after_user.
             p2b.car += 2;
             if (subcall_after_user && get_call_name(this_call)[1] == 'T' &&
-                foobar(subcall_after_user)) {
+                matches_ers_suffix(subcall_after_user)) {
                pat2_block ers_block(" er's", &p2b);
                match_suffix_2(subcall_after_user, "", &ers_block, patxi+my_patxi);
             }
