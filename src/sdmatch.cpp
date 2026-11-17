@@ -53,16 +53,9 @@ matcher_class::matcher_class() : s_modifier_active_list((modifier_block *) 0),
    conc_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
    conclvl_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
 
-   m_fcn_key_table_normal = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-   m_fcn_key_table_start = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-   m_fcn_key_table_resolve = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-
-   ::memset(m_fcn_key_table_normal, 0,
-            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   ::memset(m_fcn_key_table_start, 0,
-            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   ::memset(m_fcn_key_table_resolve, 0,
-            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   m_fcn_key_table_normal = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1]();
+   m_fcn_key_table_start = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1]();
+   m_fcn_key_table_resolve = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1]();
 }
 
 // Destructor.
@@ -78,6 +71,28 @@ matcher_class::~matcher_class()
 }
 
 
+void matcher_class::reset_active_result(uims_reply_kind kind)
+{
+   m_active_result.valid = true;
+   m_active_result.exact = false;
+   m_active_result.indent = false;
+   m_active_result.real_next_subcall = (const match_result *) 0;
+   m_active_result.real_secondary_subcall = (const match_result *) 0;
+   m_active_result.recursion_depth = 0;
+   m_active_result.yield_depth = 0;
+
+   m_active_result.match.kind = kind;
+   m_active_result.match.index = 0;
+   m_active_result.match.call_conc_options.initialize();
+   m_active_result.match.call_ptr = (call_with_name *) 0;
+   m_active_result.match.concept_ptr = (const concept_descriptor *) 0;
+   m_active_result.match.packed_next_conc_or_subcall = (modifier_block *) 0;
+   m_active_result.match.packed_secondary_subcall = (modifier_block *) 0;
+   m_active_result.match.gc_ptr = (modifier_block *) 0;
+
+   m_current_result = &m_active_result;
+}
+
 
 void matcher_class::initialize_for_parse(int which_commands, bool show, bool only_want_extension, bool can_cache_completed)
 {
@@ -91,31 +106,7 @@ void matcher_class::initialize_for_parse(int which_commands, bool show, bool onl
       s_modifier_inactive_list = item;
    }
 
-   // (Mostly) clear out m_active_result.  We used to do this as one big memset over the
-   // whole object.  But modern compilers have gotten extremely fussy about this.
-   //
-   // It is of type "match_result", which is defined in sd.h around line 2306.
-   //
-   // Yeah, yeah, we should use nice constructors and do this up real purty.
-
-   m_active_result.valid = true;   // The field we don't clear.
-   m_active_result.exact = false;
-   m_active_result.indent = false;
-   m_active_result.real_next_subcall = (const match_result *) 0;
-   m_active_result.real_secondary_subcall = (const match_result *) 0;
-   m_active_result.recursion_depth = 0;
-   m_active_result.yield_depth = 0;
-
-   m_active_result.match.kind = ui_start_select;
-   m_active_result.match.index = 0;
-   m_active_result.match.call_conc_options.initialize();
-   m_active_result.match.call_ptr = (call_with_name *) 0;
-   m_active_result.match.concept_ptr = (const concept_descriptor *) 0;
-   m_active_result.match.packed_next_conc_or_subcall = (modifier_block *) 0;
-   m_active_result.match.packed_secondary_subcall = (modifier_block *) 0;
-   m_active_result.match.gc_ptr = (modifier_block *) 0;
-
-   m_current_result = &m_active_result;
+   reset_active_result(ui_start_select);
    m_only_extension = only_want_extension;
    m_can_cache_completed_subcalls = can_cache_completed;
    m_user_bracket_depth = 0;
@@ -132,13 +123,6 @@ void matcher_class::initialize_for_parse(int which_commands, bool show, bool onl
    m_final_result.valid = false;
    m_final_result.exact = false;
    m_space_ok = false;
-
-   /* ****  Also need to consider initializing these?
-      int m_extended_bracket_depth;
-      char m_user_input[INPUT_TEXTLINE_SIZE+1];     // the current user input
-      char m_full_extension[INPUT_TEXTLINE_SIZE+1]; // the extension for the current pattern
-      int m_user_input_size;                        // This is always equal to strlen(m_user_input).
-   */
 }
 
 
@@ -1055,29 +1039,23 @@ void matcher_class::record_a_match()
    if (!m_showing) {
       char *s1 = m_echo_stuff;
       const char *s2 = m_full_extension;
+      bool first_match = (m_match_count == 0);
 
-      if (m_match_count == 0) {
-         // This is the first match.  Set m_echo_stuff to the
-         // full extension that we have.  Count brackets.
-         for ( ; ; s1++,s2++) {
+      for ( ; ; s1++, s2++) {
+         if (first_match) {
             *s1 = *s2;
             if (!*s1) break;
-            else if (*s1 == '[') m_extended_bracket_depth++;
-            else if (*s1 == ']') m_extended_bracket_depth--;
          }
-      }
-      else {
-         // Shorten m_echo_stuff to the maximal common prefix.
-         // Count brackets.
-         for ( ; ; s1++,s2++) {
+         else {
             if (!*s1) break;
-            else if (*s1 != *s2) {
+            if (*s1 != *s2) {
                *s1 = 0;
                break;
             }
-            else if (*s1 == '[') m_extended_bracket_depth++;
-            else if (*s1 == ']') m_extended_bracket_depth--;
          }
+
+         if (*s1 == '[') m_extended_bracket_depth++;
+         else if (*s1 == ']') m_extended_bracket_depth--;
       }
    }
 
@@ -2133,17 +2111,7 @@ void matcher_class::search_menu(uims_reply_kind kind)
    char uch = m_user_input[0];
    bool input_is_null = uch == '\0' && !m_showing;
 
-   m_current_result = &m_active_result;
-
-   m_current_result->recursion_depth = 0;
-   m_current_result->valid = true;
-   m_current_result->exact = false;
-   m_current_result->match.kind = kind;
-   m_current_result->match.call_conc_options.initialize();
-   m_current_result->indent = false;
-   m_current_result->real_next_subcall = (match_result *) 0;
-   m_current_result->real_secondary_subcall = (match_result *) 0;
-   m_current_result->yield_depth = 0;
+   reset_active_result(kind);
 
    if (kind == ui_call_select) {
       menu_length = number_of_calls[m_call_menu];
