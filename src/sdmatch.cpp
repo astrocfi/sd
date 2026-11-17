@@ -351,12 +351,6 @@ int get_hash(Cstring string, int *bucket_p)
 }
 
 
-void hash_me(int bucket, int i)
-{
-   gg77->matcher_p->call_hashers[bucket].add_one(i);
-}
-
-
 // Returns true if user is a prefix of " er" or starts with " ers" or " er'".
 bool matches_ers_suffix(const char *user)
 {
@@ -620,6 +614,111 @@ void matcher_class::do_accelerator_spec(Cstring inputline, bool is_accelerator)
 
 
 
+namespace {
+
+bool hash_unique_bucket(index_list &buckets, Cstring name)
+{
+   int bucket;
+   if (!get_hash(name, &bucket)) return false;
+
+   for (int j = 0; j < buckets.the_list_size; j++) {
+      if (buckets.the_list[j] == bucket) return true;
+   }
+
+   buckets.add_one(bucket);
+   return true;
+}
+
+void hash_to_list(index_list *hashers, const index_list &buckets, int item)
+{
+   for (int j = 0; j < buckets.the_list_size; j++)
+      hashers[buckets.the_list[j]].add_one(item);
+}
+
+void hash_by_name_or_all(index_list *hashers, Cstring name, int item)
+{
+   int bucket;
+   if (get_hash(name, &bucket)) {
+      hashers[bucket].add_one(item);
+      return;
+   }
+
+   // If we get here, this item needs to be put into the extra bucket at the end,
+   // and also into EVERY OTHER BUCKET!!!!
+   for (bucket = 0; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1; bucket++)
+      hashers[bucket].add_one(item);
+}
+
+void hash_call_entry(index_list *call_hashers,
+                     Cstring name,
+                     int call_index,
+                     const index_list &selector_hasher,
+                     const index_list &tagger_hasher)
+{
+   int bucket;
+
+   for (;;) {
+      if (name[0] == '@') {
+         switch (name[1]) {
+         case '6': case 'k': case 'K': case 'V':
+            // This is a call like "<anyone> run".  Put it into every bucket
+            // that could match a selector.
+            hash_to_list(call_hashers, selector_hasher, call_index);
+            return;
+         case 'v': case 'w': case 'x': case 'y':
+            // This is a call like "<atc> your neighbor".
+            // Put it into every bucket that could match a tagger.
+            hash_to_list(call_hashers, tagger_hasher, call_index);
+            return;
+         case '0': case 'T': case 'm':
+            // We act as though any string starting with "[" hashes to BRACKET_HASH.
+            call_hashers[matcher_class::BRACKET_HASH].add_one(call_index);
+            return;
+         case 'e':
+            // If this is "@e", hash it to both "left" and to whatever naturally follows.
+            (void) get_hash("left", &bucket);
+            call_hashers[bucket].add_one(call_index);
+            name += 2;
+            continue;
+         default:
+            if (!get_escape_string(name[1])) {
+               // If this escape is something like "@2", as in "@2scoot and plenty",
+               // ignore it.  Hash it under "scoot and plenty".
+               name += 2;
+               continue;
+            }
+            break;
+         }
+      }
+
+      hash_by_name_or_all(call_hashers, name, call_index);
+      return;
+   }
+}
+
+void hash_concept_list(const index_list &concepts,
+                       index_list *hashers,
+                       const index_list &selector_hasher)
+{
+   for (int i = 0; i < concepts.the_list_size; i++) {
+      int the_item = concepts.the_list[i];
+      Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
+
+      if (name[0] == '@' &&
+          (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
+         // This is a call like "<anyone> run".  Put it into every bucket
+         // that could match a selector.
+         hash_to_list(hashers, selector_hasher, the_item);
+         continue;
+      }
+
+      hash_by_name_or_all(hashers, name, the_item);
+   }
+}
+
+} // namespace
+
+
 /* Call MATCHER_INITIALIZE first.
    This function sets up the concept list.  The concepts are found
    in the external array concept_descriptor_table.  For each
@@ -669,208 +768,74 @@ void matcher_initialize()
 
    // Initialize the hash buckets for selectors, concepts, and calls.
 
-   int bucket;
    uint32_t ku;
 
    // First, do the selectors.  Before that, be sure "<anyone>" is hashed.
    // These list all the buckets that selectors can go to.
 
-   if (!get_hash("<an", &bucket))
+   index_list selector_hasher;
+   if (!hash_unique_bucket(selector_hasher, "<an"))
       gg77->iob88.fatal_error_exit(2, "Can't hash selector base");
 
-   index_list selector_hasher;
-   selector_hasher.add_one(bucket);
-
    for (i=1; i<selector_INVISIBLE_START; i++) {
-      if (selector_list[i].name[0] == '@' && (selector_list[i].name[1] == 'k' || selector_list[i].name[1] == '6')) {
-         // This is a selector like "<anyone>-based triangles".  Put it into every bucket
-         // that could match a selector.  Is any of this stuff necessary?
+      if (selector_list[i].name[0] == '@' &&
+          (selector_list[i].name[1] == 'k' || selector_list[i].name[1] == '6')) {
+         // Wildcard selectors like "<anyone>-based triangles" are unhashable (and their
+         // sing_name is too); skip hashing both forms.
          continue;
       }
 
-      if (!get_hash(selector_list[i].name, &bucket)) {
+      if (!hash_unique_bucket(selector_hasher, selector_list[i].name)) {
          char errbuf[255];
          sprintf(errbuf, "Can't hash selector %d - 1!", i);
          gg77->iob88.fatal_error_exit(2, errbuf);
       }
 
-      // See if this bucket is already accounted for.
-
-      for (j=0; j<selector_hasher.the_list_size; j++) {
-         if (selector_hasher.the_list[j] == bucket) goto already_in1;
-      }
-
-      selector_hasher.add_one(bucket);
-
-      // Now do it again for the singular names.
-
-   already_in1:
-
-      if (selector_list[i].sing_name[0] == '@' && (selector_list[i].sing_name[1] == 'k')) {
-         // This is a selector like "<anyone>-based triangle".  Put it into every bucket
-         // that could match a selector.  Is any of this stuff necessary?
+      // Also skip wildcard singular names such as "<anyone>-based triangle".
+      if (selector_list[i].sing_name[0] == '@' && selector_list[i].sing_name[1] == 'k')
          continue;
-      }
 
-      if (!get_hash(selector_list[i].sing_name, &bucket)) {
+      if (!hash_unique_bucket(selector_hasher, selector_list[i].sing_name)) {
          char errbuf[255];
          sprintf(errbuf, "Can't hash selector %d - 2!", i);
          gg77->iob88.fatal_error_exit(2, errbuf);
       }
-
-      for (j=0; j<selector_hasher.the_list_size; j++) {
-         if (selector_hasher.the_list[j] == bucket) goto already_in2;
-      }
-
-      selector_hasher.add_one(bucket);
-
-   already_in2: ;
    }
 
    // Next, do the taggers.  Before that, be sure "<atc>" is hashed.
    // These list all the buckets that taggers can go to.
 
-   if (!get_hash("<at", &bucket))
-      gg77->iob88.fatal_error_exit(2, "Can't hash tagger base!");
-
    index_list tagger_hasher;
-   tagger_hasher.add_one(bucket);
+   if (!hash_unique_bucket(tagger_hasher, "<at"))
+      gg77->iob88.fatal_error_exit(2, "Can't hash tagger base!");
 
    for (i=0; i<NUM_TAGGER_CLASSES; i++) {
       for (ku=0; ku<number_of_taggers[i]; ku++) {
          // Some taggers ("@6 start vertical tag") can't be hashed because
          // of the at sign.  That's OK.
-         if (get_call_name(tagger_calls[i][ku])[0] != '@') {
-            if (!get_hash(get_call_name(tagger_calls[i][ku]), &bucket)) {
-               char errbuf[255];
-               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-               gg77->iob88.fatal_error_exit(2, errbuf);
-            }
+         Cstring tagger_name = get_call_name(tagger_calls[i][ku]);
+         if (tagger_name[0] != '@' && !hash_unique_bucket(tagger_hasher, tagger_name)) {
+            char errbuf[255];
+            sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
+            gg77->iob88.fatal_error_exit(2, errbuf);
          }
-
-         for (j=0; j<tagger_hasher.the_list_size; j++) {
-            if (tagger_hasher.the_list[j] == bucket) goto already_in3;
-         }
-
-         tagger_hasher.add_one(bucket);
-
-      already_in3: ;
       }
    }
 
    /* Now do the calls. */
 
    for (i=0; i<number_of_calls[call_list_any]; i++) {
-      Cstring name = get_call_name(main_call_lists[call_list_any][i]);
-
-   doitagain:
-
-      if (name[0] == '@') {
-         switch (name[1]) {
-         case '6': case 'k': case 'K': case 'V':
-            // This is a call like "<anyone> run".  Put it into every bucket
-            // that could match a selector.
-
-            for (j=0 ; j<selector_hasher.the_list_size ; j++)
-               hash_me(selector_hasher.the_list[j], i);
-
-            continue;
-         case 'v': case 'w': case 'x': case 'y':
-            // This is a call like "<atc> your neighbor".
-            // Put it into every bucket that could match a tagger.
-
-            for (j=0 ; j<tagger_hasher.the_list_size ; j++)
-               hash_me(tagger_hasher.the_list[j], i);
-
-            continue;
-         case '0': case 'T': case 'm':
-            // We act as though any string starting with "[" hashes to BRACKET_HASH.
-            hash_me(matcher_class::BRACKET_HASH, i);
-            continue;
-         case 'e':
-            // If this is "@e", hash it to both "left" and to whatever naturally follows.
-            (void) get_hash("left", &bucket);
-            hash_me(bucket, i);
-            name += 2;
-            goto doitagain;
-         default:
-            if (!get_escape_string(name[1])) {
-               // If this escape is something like "@2", as in "@2scoot and plenty",
-               // ignore it.  Hash it under "scoot and plenty".
-               name += 2;
-               goto doitagain;
-            }
-            break;
-         }
-      }
-
-      if (get_hash(name, &bucket)) {
-         hash_me(bucket, i);
-         continue;
-      }
-
-      // If we get here, this call needs to be put into the extra bucket at the end,
-      // and also into EVERY OTHER BUCKET!!!!
-      for (bucket=0 ; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1 ; bucket++)
-         hash_me(bucket, i);
+      hash_call_entry(gg77->matcher_p->call_hashers,
+                      get_call_name(main_call_lists[call_list_any][i]), i,
+                      selector_hasher, tagger_hasher);
    }
 
-   // Now do the concepts from the full concept list.
+   // Now do the concepts from the full concept list, then the "level concepts".
 
-   for (i=0; i<gg77->matcher_p->m_concept_list.the_list_size; i++) {
-      int the_item = gg77->matcher_p->m_concept_list.the_list[i];
-      Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
-
-      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
-         // This is a call like "<anyone> run".  Put it into every bucket
-         // that could match a selector.
-
-         for (j=0 ; j<selector_hasher.the_list_size ; j++) {
-            bucket = selector_hasher.the_list[j];
-            gg77->matcher_p->conc_hashers[bucket].add_one(the_item);
-         }
-         continue;
-      }
-
-      if (get_hash(name, &bucket)) {
-         gg77->matcher_p->conc_hashers[bucket].add_one(the_item);
-         continue;
-      }
-
-      // If we get here, this concept needs to be put into the extra bucket at the end,
-      // and also into EVERY OTHER BUCKET!!!!
-      for (bucket=0 ; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
-         gg77->matcher_p->conc_hashers[bucket].add_one(the_item);
-      }
-   }
-
-   // Now do the "level concepts".
-
-   for (i=0; i<gg77->matcher_p->m_level_concept_list.the_list_size; i++) {
-      int the_item = gg77->matcher_p->m_level_concept_list.the_list[i];
-      Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
-
-      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
-         // This is a call like "<anyone> run".  Put it into every bucket
-         // that could match a selector.
-
-         for (j=0 ; j<selector_hasher.the_list_size ; j++) {
-            bucket = selector_hasher.the_list[j];
-            gg77->matcher_p->conclvl_hashers[bucket].add_one(the_item);
-         }
-         continue;
-      }
-      else if (get_hash(name, &bucket)) {
-         gg77->matcher_p->conclvl_hashers[bucket].add_one(the_item);
-         continue;
-      }
-
-      // If we get here, this concept needs to be put into the extra bucket at the end,
-      // and also into EVERY OTHER BUCKET!!!!
-      for (bucket=0 ; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
-         gg77->matcher_p->conclvl_hashers[bucket].add_one(the_item);
-      }
-   }
+   hash_concept_list(gg77->matcher_p->m_concept_list,
+                     gg77->matcher_p->conc_hashers, selector_hasher);
+   hash_concept_list(gg77->matcher_p->m_level_concept_list,
+                     gg77->matcher_p->conclvl_hashers, selector_hasher);
 }
 
 
