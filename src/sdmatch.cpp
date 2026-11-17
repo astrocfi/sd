@@ -94,17 +94,23 @@ void matcher_class::reset_active_result(uims_reply_kind kind)
 }
 
 
-void matcher_class::initialize_for_parse(int which_commands, bool show, bool only_want_extension, bool can_cache_completed)
+void matcher_class::reclaim_modifier_blocks(modifier_block *stop_at)
 {
-   // Reclaim all old modifier blocks.  These are global over the entire program.
-   // All other fields get initialized (right here!) for every parse.
-
-   while (s_modifier_active_list) {
+   while (s_modifier_active_list && s_modifier_active_list != stop_at) {
       modifier_block *item = s_modifier_active_list;
       s_modifier_active_list = item->gc_ptr;
       item->gc_ptr = s_modifier_inactive_list;
       s_modifier_inactive_list = item;
    }
+}
+
+
+void matcher_class::initialize_for_parse(int which_commands, bool show, bool only_want_extension, bool can_cache_completed)
+{
+   // Reclaim all old modifier blocks.  These are global over the entire program.
+   // All other fields get initialized (right here!) for every parse.
+
+   reclaim_modifier_blocks();
 
    reset_active_result(ui_start_select);
    m_only_extension = only_want_extension;
@@ -1057,6 +1063,9 @@ void matcher_class::record_a_match()
    // "verify" operation.  Also, copy the first exact match, and any
    // exact match that isn't yielding relative to what we have so far.
 
+   modifier_block *mod_mark = s_modifier_active_list;
+   bool copied_modifiers = false;
+
    if (m_match_count == 0 ||
        m_verify ||
        (*m_full_extension == '\0' &&
@@ -1066,6 +1075,7 @@ void matcher_class::record_a_match()
 
       // We need to copy the modifiers to reasonably stable storage.
       copy_sublist(&m_final_result, &m_final_result.match);
+      copied_modifiers = true;
    }
 
    if (*m_full_extension == '\0') {
@@ -1080,6 +1090,13 @@ void matcher_class::record_a_match()
 
    if (m_showing) {
       if (verify_call()) gg77->iob88.show_match();
+      if (copied_modifiers) {
+         // Listing ignores m_final_result afterward and never caches subcalls;
+         // reclaim per-match blocks so deep '?' scans do not exhaust memory.
+         reclaim_modifier_blocks(mod_mark);
+         m_final_result.match.packed_next_conc_or_subcall = (modifier_block *) 0;
+         m_final_result.match.packed_secondary_subcall = (modifier_block *) 0;
+      }
    }
 }
 
