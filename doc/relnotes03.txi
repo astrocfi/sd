@@ -830,7 +830,7 @@ the Callerlab challenge committee, to allow everyone to roll.
 
 The program recognizes more Dixie Grand getouts.
 
-The call @samp{hinge by} was improved.  It is unforunate that this versatile
+The call @samp{hinge by} was improved.  It is unfortunate that this versatile
 call is not recognized below C4.
 
 New concepts:  @samp{as couples in point-to-point diamonds}, @samp{as couples
@@ -888,7 +888,7 @@ New concept:  @samp{fast}.  This applies to @samp{<ATC> back to a wave},
 @samp{<ATC> reaction}, and similar things.  It directs the @emph{first} people
 on the tagging call to do the trade, rather than the last people.
 
-New concept:  @samp{drag the <anyone>}.  Ths designated people, rather than doing
+New concept:  @samp{drag the <anyone>}.  The designated people, rather than doing
 their part of the call, simply stay rigidly attached to their current partner.
 
 New concepts:  @samp{[fractional] [reverse] crazy offset C/L/W}.  Use these

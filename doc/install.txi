@@ -232,9 +232,9 @@ user interface support for tty version on Unix
 @item sdui-tpc.c
 user interface support for tty version on PCs
 @item mkcalls.c
-top level driver for calls database complier
+top level driver for calls database compiler
 @item dbcomp.c
-guts of calls database complier
+guts of calls database compiler
 @item sd.h
 included by all Sd source files
 @item database.h

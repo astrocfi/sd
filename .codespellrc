@@ -7,13 +7,17 @@ builtin = clear,rare,en-GB_to_en-US
 # single-l "canceled" and "canceling"; the trailing "-" keeps the builtins in
 # force.
 dictionary = .codespell-dictionary.txt,-
-# thar: a square dance term ("allemande thar"), not a misspelling of "that".
+# Words that are right where they appear, in lines that cannot carry a
+# comment:
+#   bu:   Sd's abbreviation for "boys U-turn back" (doc/relnotes03.txi).
+#   lew:  a surname, in the acknowledgments.
+#   thar: a square dance term ("allemande thar"), not a misspelling of "that".
 # cancelled, cancelling: the one exception to American spelling. Sd spells
 # them with two l's, and .codespell-dictionary.txt flags "canceled" and
 # "canceling" instead.
 # Anything else stays reportable: silence a single line with a trailing
 # "codespell:ignore <word>" comment instead of widening this list.
-ignore-words-list = thar,cancelled,cancelling
+ignore-words-list = bu,lew,thar,cancelled,cancelling
 # 35 = 1 + 2 + 32: say nothing about the Latin-1 web pages in doc/, binary
 # files, or the configuration files read.
 quiet-level = 35

@@ -2950,12 +2950,12 @@ To summarize some general properties of predicates:
        people.  They demand that the person being examined be alive
        and facing in a certain direction.  A few predicates are "lax" --
        they only test for the absence of a person facing in the incorrect
-       direction.  Always check the documentation of the spefic predicate
+       direction.  Always check the documentation of the specific predicate
        being used.
    (2) Some predicates are applicable on a number of setups, with
        suitable interpretation of what is meant for each setup.  Others
        are only applicable to one setup.  Always check the documentation
-       of the spefic predicate being used.
+       of the specific predicate being used.
    (3) Some predicates (the more "generic" ones, in general) do their work
        only by returning TRUE or FALSE.  They never raise errors, because
        that would compromise their generality.  Other predicates raise
@@ -3576,7 +3576,7 @@ next_galaxyspot_is_tboned
       the spot to which this person would go on a galaxy circulate is occupied,
       returns TRUE if the person on that spot is T-boned to this person and
       FALSE if not.  If this person is a point but can't galaxy circulate
-      (faces diectly toward or away from the center of the galaxy), or if
+      (faces directly toward or away from the center of the galaxy), or if
       the spot to which this person would go is unoccupied, and error is
       raised.
 
@@ -4616,7 +4616,7 @@ suppress_elongation_warnings
       that warning.
       For the *CENTERS'* part of a concentrically defined call, this says to
       suppress any error (not warning) about the ends being too far apart, in
-      ths event that this call is done with the "invert" concept.  Note that this
+      the event that this call is done with the "invert" concept.  Note that this
       is a completely different sort of thing, and this flag is being overloaded.
       The centers' part of acey deucey is invoked with this flag, which means that
       "invert acey deucey" is legal from lines.  We consider "ends trade" from lines
