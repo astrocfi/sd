@@ -83,7 +83,7 @@ and the following other variables:
 
 
 #define _CRT_SECURE_NO_WARNINGS
-// For "sprintf" and some IO stuff (fflush, printf, stdout) that we use
+// For some IO stuff (fflush, printf, stdout) that we use
 // during the "database tick" printing before the actual IO package is started.
 // During normal operation, we don't do any IO at all in this file.
 #include <stdio.h>
@@ -175,7 +175,7 @@ void refresh_input()
 
 static int current_text_line;
 
-static char *call_menu_prompts[call_list_extent];
+static std::string call_menu_prompts[call_list_extent];
 
 // For the "alternate_glyphs_1" command-line switch.
 static char alt1_names1[] = "        ";
@@ -379,7 +379,8 @@ bool iofull::init_step(init_callback_state s, int n)
 
    case init_database1:
       // The level has been chosen.  We are about to open the database.
-      call_menu_prompts[call_list_empty] = (char *) "--> ";   // This prompt should never be used.
+      // This prompt should never be used.
+      call_menu_prompts[call_list_empty] = "--> ";
       break;
 
    case init_database2:
@@ -426,15 +427,13 @@ bool iofull::init_step(init_callback_state s, int n)
 
 void iofull::create_menu(call_list_kind cl)
 {
-   call_menu_prompts[cl] = new char[50];  /* *** Too lazy to compute it. */
-
    if (cl == call_list_any)
       // The menu name here is "(any setup)".  That may be a sensible
       // name for a menu, but it isn't helpful as a prompt.  So we
       // just use a vanilla prompt.
-      call_menu_prompts[cl] = (char *) "--> ";
+      call_menu_prompts[cl] = "--> ";
    else
-      sprintf(call_menu_prompts[cl], "(%s)--> ", menu_names[cl]);
+      call_menu_prompts[cl] = to_string("(", menu_names[cl], ")--> ");
 }
 
 
@@ -788,12 +787,8 @@ static bool get_user_input(const char *prompt, int which)
             goto diagnostic_error;
 
          /* Tell how bad it is, then redisplay current line. */
-         if (matches > 0) {
-            char tempstuff[200];
-
-            sprintf(tempstuff, "  (%d matches, type ! or ? for list)\n", matches);
-            put_line(tempstuff);
-         }
+         if (matches > 0)
+            put_line(to_string("  (", matches, " matches, type ! or ? for list)\n"));
          else
             put_line("  (no matches)\n");
 
@@ -945,10 +940,10 @@ uims_reply_thing iofull::get_call_command()
       }
 
       strcat(prompt_buffer, "] ");
-      strcat(prompt_buffer, call_menu_prompts[parse_state.call_list_to_use]);
+      strcat(prompt_buffer, call_menu_prompts[parse_state.call_list_to_use].c_str());
    }
    else
-      prompt_ptr = call_menu_prompts[parse_state.call_list_to_use];
+      prompt_ptr = call_menu_prompts[parse_state.call_list_to_use].c_str();
 
    if (get_user_input(prompt_ptr, (int) parse_state.call_list_to_use)) {
       // User typed "help".

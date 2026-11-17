@@ -578,22 +578,22 @@ static uint32_t read_16_from_database()
 }
 
 
-static bool read_database_header(char *msg1, char *msg2)
+static bool read_database_header(std::string *msg1, std::string *msg2)
 {
    int format_version, n, j;
 
    if (read_16_from_database() != DATABASE_MAGIC_NUM) {
-      sprintf(msg1,
-              "Database file \"%s\" has improper format.", database_filename);
+      *msg1 = to_string("Database file \"", database_filename,
+                        "\" has improper format.");
       return true;
    }
 
    format_version = read_16_from_database();
    if (format_version != DATABASE_FORMAT_VERSION) {
-      sprintf(msg1,
-              "Database format version (%d) is not the required one (%d)",
-              format_version, DATABASE_FORMAT_VERSION);
-      strncpy(msg2, "You must recompile the database.", 199);
+      *msg1 = to_string("Database format version (", format_version,
+                        ") is not the required one (",
+                        DATABASE_FORMAT_VERSION, ")");
+      *msg2 = "You must recompile the database.";
       return true;
    }
 
@@ -603,7 +603,7 @@ static bool read_database_header(char *msg1, char *msg2)
    n = read_16_from_database();
 
    if (n > 80) {
-      strncpy(msg1, "Database version string is too long.", 199);
+      *msg1 = "Database version string is too long.";
       return true;
    }
 
@@ -1801,9 +1801,8 @@ static void build_database_1(abridge_mode_t abridge_mode)
 
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]) {
-         char msg [50];
-         sprintf(msg, "%d", i);
-         gg77->iob88.fatal_error_exit(1, "Call didn't identify self", msg);
+         gg77->iob88.fatal_error_exit(1, "Call didn't identify self",
+                                      to_string(i).c_str());
       }
    }
 
@@ -2436,12 +2435,11 @@ bool open_session(int argc, char **argv)
       if (glob_abridge_mode == abridge_mode_abridging && !abridge_file)
          gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename.c_str());
 
-      char session_error_msg1[200], session_error_msg2[200];
-      session_error_msg1[0] = 0;
-      session_error_msg2[0] = 0;
+      std::string session_error_msg1, session_error_msg2;
 
-      if (read_database_header(session_error_msg1, session_error_msg2))
-         gg77->iob88.fatal_error_exit(1, session_error_msg1, session_error_msg2);
+      if (read_database_header(&session_error_msg1, &session_error_msg2))
+         gg77->iob88.fatal_error_exit(1, session_error_msg1.c_str(),
+                                      session_error_msg2.c_str());
 
       // This actually reads the calls database file and creates the
       // "any" menu.  It calls init_step(init_calibrate_tick), which calibrates

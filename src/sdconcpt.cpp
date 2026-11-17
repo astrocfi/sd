@@ -46,9 +46,6 @@ and the following external variables:
    concept_table
 */
 
-// For sprintf.
-#include <stdio.h>
-
 #include "sd.h"
 
 static uint32_t orig_tbonetest;
@@ -3105,16 +3102,16 @@ static void do_concept_diagnose(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   char junk[200];
-
    move(ss, false, result);
 
-   sprintf(junk, "Command flags: 0x%08X, result flags misc/split: 0x%08X/%d/%d.",
-           (unsigned int) ss->cmd.cmd_misc_flags,
-           (unsigned int) result->result_flags.misc,
-           (unsigned int) result->result_flags.split_info[0],
-           (unsigned int) result->result_flags.split_info[1]);
-   fail(junk);
+   fail(to_string("Command flags: 0x",
+                  std::hex, std::uppercase, std::setfill('0'),
+                  std::setw(8), (unsigned int) ss->cmd.cmd_misc_flags,
+                  ", result flags misc/split: 0x",
+                  std::setw(8), (unsigned int) result->result_flags.misc,
+                  std::dec, "/",
+                  (unsigned int) result->result_flags.split_info[0], "/",
+                  (unsigned int) result->result_flags.split_info[1], "."));
 }
 
 

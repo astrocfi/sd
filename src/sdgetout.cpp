@@ -1209,12 +1209,9 @@ static bool inner_search(command_kind goal,
       */
       if (ui_options.resolve_test_minutes > 0 /* && (resolve_test_count++ & 0xF) == 0 */ &&
           ui_options.resolve_test_attempts_per_print != 0) {
-         char tempstuff[200];
-
          if ((resolve_test_count & 3) == 0) {
             //         resolve_test_count = 0;
-            sprintf(tempstuff, "Random number is %d.", random_number);
-            gg77->writestuff(tempstuff);
+            gg77->writestuff(to_string("Random number is ", random_number, "."));
             gg77->newline();
          }
       }
@@ -2122,16 +2119,13 @@ void create_resolve_menu_title(
    resolver_display_state state,
    char *title)
 {
-   char junk[MAX_TEXT_LINE_LENGTH];
    char *titleptr = title;
    if (goal > command_create_any_lines) goal = command_create_any_lines;
 
    string_copy(&titleptr, title_string[goal-command_resolve]);
 
-   if (max > 0) {
-      sprintf(junk, "%d out of %d", cur, max);
-      string_copy(&titleptr, junk);
-   }
+   if (max > 0)
+      string_copy(&titleptr, to_string(cur, " out of ", max).c_str());
    switch (state) {
       case resolver_display_ok:
          break;
