@@ -1,0 +1,9 @@
+# Dependabot opens pull requests that update the GitHub Actions used by the
+# workflows. The project has no package-manager dependencies for it to update;
+# the lint tools in scripts/requirements.txt are pinned by hand.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
