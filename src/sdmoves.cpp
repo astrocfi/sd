@@ -7001,8 +7001,8 @@ static bool do_misc_schema(
                uint32_t t3 = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
                if ((t3 & 011) == 011) fail("Can't pick out outside lines.");
                else if (t3 & 1)        rot = 1;
-               /* Otherwise, it either needs a vertical orientation, or only the center 2x2 is occupied,
-                  in which case it doesn't matter. */
+               // Otherwise, it either needs a vertical orientation,
+               // or only the center 2x2 is occupied, in which case it doesn't matter.
             }
 
             ss->rotation += rot;
