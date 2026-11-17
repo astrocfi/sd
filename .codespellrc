@@ -1,0 +1,23 @@
+# codespell settings for scripts/check-spelling.sh, which also chooses the files
+# to check (SPELL_FILES in scripts/checks.conf).
+[codespell]
+# en-GB_to_en-US enforces American spelling; clear and rare catch typos.
+builtin = clear,rare,en-GB_to_en-US
+# .codespell-dictionary.txt adds British words the builtins miss, and flags the
+# single-l "canceled" and "canceling"; the trailing "-" keeps the builtins in
+# force.
+dictionary = .codespell-dictionary.txt,-
+# thar: a square dance term ("allemande thar"), not a misspelling of "that".
+# cancelled, cancelling: the one exception to American spelling. Sd spells
+# them with two l's, and .codespell-dictionary.txt flags "canceled" and
+# "canceling" instead.
+# Anything else stays reportable: silence a single line with a trailing
+# "codespell:ignore <word>" comment instead of widening this list.
+ignore-words-list = thar,cancelled,cancelling
+# 35 = 1 + 2 + 32: say nothing about the Latin-1 web pages in doc/, binary
+# files, or the configuration files read.
+quiet-level = 35
+# The lines of upstream text whose misspellings predate this check. A line
+# listed here is skipped wherever it appears; scripts/check-spelling.sh
+# --update-baseline regenerates the list.
+exclude-file = scripts/codespell-baseline.txt

@@ -1,0 +1,8 @@
+# Warnings from scripts/build-docs.sh that are known and accepted.
+# Regenerate with: scripts/build-docs.sh --update-baseline
+appnote1.txi: warning: document without nodes
+appnote2.txi: warning: document without nodes
+appnote3.txi: warning: document without nodes
+appnote4.txi: warning: document without nodes
+demo.txi: warning: document without nodes
+sessions.txi: warning: document without nodes
