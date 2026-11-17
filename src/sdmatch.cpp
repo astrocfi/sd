@@ -1793,6 +1793,50 @@ void matcher_class::scan_concepts_and_calls(
 
 
 
+static inline void skip_embedded_pattern(Cstring &pat)
+{
+   while (*pat++ != '@') ;
+   pat++;
+}
+
+static inline Cstring extract_embedded_pattern(Cstring &pat, char *buf)
+{
+   char *out = buf;
+   while ((*out++ = *pat++) != '@') ;
+   pat++;
+   out[-1] = '\0';
+   return buf;
+}
+
+
+
+void matcher_class::match_concept_prefix_wildcard(
+   Cstring user,
+   Cstring pattern,
+   pat2_block &p2b,
+   int patxi,
+   useful_concept_enum uc,
+   Cstring pat)
+{
+   match_result *saved_cross_ptr = m_current_result;
+   match_result saved_cross_result = *m_current_result;
+
+   m_current_result->match.kind = ui_concept_select;
+   m_current_result->match.call_conc_options.initialize();
+   m_current_result->match.concept_ptr =
+      access_concept_descriptor_table(useful_concept_indices[uc]);
+   m_current_result->real_next_subcall = &saved_cross_result;
+   m_current_result->indent = true;
+   p2b.car = pat;
+
+   m_current_result = &saved_cross_result;
+   match_suffix_2(user, pattern, &p2b, patxi);
+   m_current_result = saved_cross_ptr;
+   *m_current_result = saved_cross_result;
+}
+
+
+
 /*
  * Match_wildcard tests for and handles pattern suffixes that begin with
  * a wildcard such as "<anyone>".  A wildcard is handled only if there is
@@ -1807,13 +1851,8 @@ void matcher_class::match_wildcard(
    const concept_descriptor *special)
 {
    Cstring prefix;
-   Cstring *number_table;
    int i;
    uint32_t iu;
-   char crossname[80];
-   char *crossptr;
-   int concidx;
-   Cstring pattern;
    char key = *pat++;
    pat2_block p2b(pat, pat2);
    p2b.special_concept = special;
@@ -1930,10 +1969,8 @@ void matcher_class::match_wildcard(
                do {
                   c = *fromptr++;
                   if (c == '@') {
-                     if (*fromptr++ == 'O') {
-                        while (*fromptr++ != '@') ;
-                        fromptr++;
-                     }
+                     if (*fromptr++ == 'O')
+                        skip_embedded_pattern(fromptr);
                   }
                   else
                      *toptr++ = c;
@@ -1947,14 +1984,24 @@ void matcher_class::match_wildcard(
             return;
          }
          break;
-      case '9':
-         if (*user < '0' || *user > '9') return;
-         number_table = cardinals;
-         goto do_number_stuff;
-      case 'u':
-         if (*user < '0' || *user > '9') return;
-         number_table = ordinals;
-         goto do_number_stuff;
+      case '9': case 'u':
+         if (*user >= '0' && *user <= '9') {
+            Cstring *number_table = (key == '9') ? cardinals : ordinals;
+            int save_howmanynumbers = m_current_result->match.call_conc_options.howmanynumbers;
+            uint32_t save_number_fields = m_current_result->match.call_conc_options.number_fields;
+
+            m_current_result->match.call_conc_options.howmanynumbers++;
+
+            for (i=0; (prefix = number_table[i]); i++) {
+               match_suffix_2(user, prefix, &p2b, patxi);
+               m_current_result->match.call_conc_options.number_fields +=
+                  1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
+            }
+
+            m_current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
+            m_current_result->match.call_conc_options.number_fields = save_number_fields;
+         }
+         return;
       case 'a': case 'b': case 'B': case 'D':
          if ((*user >= '0' && *user <= '9') ||
              *user == 'q' || *user == 'h' ||
@@ -2030,54 +2077,25 @@ void matcher_class::match_wildcard(
       }
 
       return;
-   case 'j':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_cross];
-      goto do_cross_stuff;
-   case 'C':
-      pattern = " cross";
-      concidx = useful_concept_indices[UC_cross];
-      goto do_cross_stuff;
-   case 'J':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_magic];
-      goto do_cross_stuff;
-   case 'Q':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_grand];
-      goto do_cross_stuff;
-   case 'M':
-      concidx = useful_concept_indices[UC_magic];
-      pattern = " magic";
-      goto do_cross_stuff;
-   case 'G':
-      concidx = useful_concept_indices[UC_grand];
-      pattern = " grand";
-      goto do_cross_stuff;
-   case 'E':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_intlk];
-      goto do_cross_stuff;
+   case 'j': case 'J': case 'Q': case 'E':
+      {
+         char crossname[80];
+         Cstring pattern = extract_embedded_pattern(pat, crossname);
+         useful_concept_enum uc =
+            (key == 'j') ? UC_cross :
+            (key == 'J') ? UC_magic :
+            (key == 'Q') ? UC_grand : UC_intlk;
+         match_concept_prefix_wildcard(user, pattern, p2b, patxi, uc, pat);
+      }
+      return;
+   case 'C': case 'M': case 'G':
+      {
+         Cstring pattern = (key == 'C') ? " cross" : (key == 'M') ? " magic" : " grand";
+         useful_concept_enum uc =
+            (key == 'C') ? UC_cross : (key == 'M') ? UC_magic : UC_grand;
+         match_concept_prefix_wildcard(user, pattern, p2b, patxi, uc, pat);
+      }
+      return;
    case 'I':
       {
          char *p = m_full_extension;
@@ -2090,60 +2108,17 @@ void matcher_class::match_wildcard(
             if (p[idx] != "a "[i]) { fixing_an_a = false; break; }
          }
 
-         if (fixing_an_a || (user && user[-1] == 'a' && user[-2] == ' '))
-            pattern = "n interlocked";
-         else
-            pattern = " interlocked";
+         Cstring pattern = (fixing_an_a || (user && user[-1] == 'a' && user[-2] == ' '))
+            ? "n interlocked"
+            : " interlocked";
 
-         concidx = useful_concept_indices[UC_intlk];
+         match_concept_prefix_wildcard(user, pattern, p2b, patxi, UC_intlk, pat);
       }
-      goto do_cross_stuff;
-   case 'e':
-      while (*pat++ != '@');
-      pat++;
-      pattern = "left";
-      concidx = useful_concept_indices[UC_left];
-      goto do_cross_stuff;
-   }
-
-   return;
-
-   do_number_stuff:
-
-   {
-      int save_howmanynumbers = m_current_result->match.call_conc_options.howmanynumbers;
-      uint32_t save_number_fields = m_current_result->match.call_conc_options.number_fields;
-
-      m_current_result->match.call_conc_options.howmanynumbers++;
-
-      for (i=0 ; (prefix = number_table[i]) ; i++) {
-         match_suffix_2(user, prefix, &p2b, patxi);
-         m_current_result->match.call_conc_options.number_fields +=
-            1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
-      }
-
-      m_current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
-      m_current_result->match.call_conc_options.number_fields = save_number_fields;
       return;
-   }
-
- do_cross_stuff:
-
-   {
-      match_result *saved_cross_ptr = m_current_result;
-      match_result saved_cross_result = *m_current_result;
-
-      m_current_result->match.kind = ui_concept_select;
-      m_current_result->match.call_conc_options.initialize();
-      m_current_result->match.concept_ptr = access_concept_descriptor_table(concidx);
-      m_current_result->real_next_subcall = &saved_cross_result;
-      m_current_result->indent = true;
-      p2b.car = pat;
-
-      m_current_result = &saved_cross_result;
-      match_suffix_2(user, pattern, &p2b, patxi);
-      m_current_result = saved_cross_ptr;
-      *m_current_result = saved_cross_result;
+   case 'e':
+      skip_embedded_pattern(pat);
+      match_concept_prefix_wildcard(user, "left", p2b, patxi, UC_left, pat);
+      return;
    }
 }
 

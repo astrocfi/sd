@@ -173,6 +173,16 @@ public:
 
    matcher_class();      // Constructor and destructor are in sdmatch.cpp.
    ~matcher_class();
+
+private:
+
+   void match_concept_prefix_wildcard(
+      Cstring user,
+      Cstring pattern,
+      pat2_block &p2b,
+      int patxi,
+      useful_concept_enum uc,
+      Cstring pat);
 };
 
 
