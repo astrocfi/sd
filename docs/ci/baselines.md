@@ -40,9 +40,12 @@ Do not add a new finding to a baseline to make a change pass: fix it. When a
 finding cannot be fixed, say why in the pull request, and use the check's
 own escape where it has one:
 
-- A word that is right where it appears takes a trailing
-  `codespell:ignore <word>` comment, or, in a line that cannot carry a comment,
-  an entry in `ignore-words-list` in `.codespellrc` with a comment saying why.
+- A word that is right where it appears takes a trailing comment holding
+  `codespell:ignore <word>`, or, in a line that cannot carry a comment, an
+  entry in `ignore-words-list` in `.codespellrc` with a comment saying why.
+  codespell sees the directive only after punctuation, so in C++ write
+  `// codespell:ignore <word>`, even inside a `/* */` comment. It cannot name
+  a hyphenated word: a bare `// codespell:ignore` ignores the whole line.
 - A `makeinfo` or TeX warning that cannot be avoided goes in the warnings
   baseline with `--update-baseline`, and the pull request says why.
 

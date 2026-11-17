@@ -89,11 +89,12 @@ scripts/run-all-checks.sh --help        # the scopes and single checks
 | `actionlint` | Lints the GitHub Actions workflows. |
 | `regression` | Runs the regression suite. |
 
-The manuals and the README are upstream text, written before these checks. The
-findings in them today are recorded in baselines (`scripts/*-baseline.txt`),
-keyed by line text, and only a new finding fails a check. A change that fixes a
-baseline finding regenerates the baseline with the check's `--update-baseline`
-option. A new finding is fixed, not added to a baseline.
+The manuals, the README, and the comments in the source are upstream text,
+written before these checks. The findings in them today are recorded in
+baselines (`scripts/*-baseline.txt`), keyed by line text, and only a new
+finding fails a check. A change that fixes a baseline finding regenerates the
+baseline with the check's `--update-baseline` option. A new finding is fixed,
+not added to a baseline.
 
 ## The Regression Suite
 

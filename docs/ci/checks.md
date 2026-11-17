@@ -107,3 +107,4 @@ directory, so nothing in it can be committed.
 | `.build/docs` | the manuals; the finished files are in `.build/docs/output` |
 | `.build/dev-guide` | this guide; open `.build/dev-guide/html/index.html` |
 | `.build/checks` | the logs of a parallel run |
+| `.build/spelling` | the copies of the C++ sources, with everything but the comments blanked, that the spelling check reads |

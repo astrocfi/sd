@@ -69,7 +69,7 @@ repository has.
 | `build` | Fix the code. Do not add warning suppressions to the makefiles. |
 | `docs-build` | Fix the Texinfo (`doc_texinfo`). A baseline entry is only for a warning that cannot be fixed, added with `--update-baseline` and explained in the pull request. |
 | `dev-guide` | Fix the page: a link that does not resolve, a page missing from every `toctree`, or a skipped heading level. |
-| `codespell` | Fix the spelling. In a C++ source, change the comment and nothing else. If the word is right, end the line with `codespell:ignore <word>`, or add it to `ignore-words-list` in `.codespellrc` with a comment saying why. |
+| `codespell` | Fix the spelling. In a C++ source, change the comment and nothing else. If the word is right, end the line with `// codespell:ignore <word>` (codespell needs punctuation before the directive, and a hyphenated word takes a bare `// codespell:ignore`, which ignores the whole line), or add it to `ignore-words-list` in `.codespellrc` with a comment saying why. |
 | `prose` | Rewrite the sentence (`doc_prose_style`). |
 | `pymarkdown` | Fix the Markdown. |
 | `shellcheck`, `actionlint` | Fix the script or the workflow. Disable a finding only with a comment that says why. |
