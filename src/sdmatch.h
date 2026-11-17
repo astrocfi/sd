@@ -176,6 +176,8 @@ public:
 
 private:
 
+   void clone_sublist_branch(const match_result *sub, modifier_block *&dest_slot);
+
    void match_concept_prefix_wildcard(
       Cstring user,
       Cstring pattern,

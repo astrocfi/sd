@@ -386,47 +386,34 @@ bool matches_ers_suffix(const char *user)
 
 }   // namespace
 
+void matcher_class::clone_sublist_branch(
+   const match_result *sub,
+   modifier_block *&dest_slot)
+{
+   if (!sub) return;
+
+   modifier_block *out;
+   if (s_modifier_inactive_list) {
+      out = s_modifier_inactive_list;
+      s_modifier_inactive_list = out->gc_ptr;
+   }
+   else {
+      out = new modifier_block;
+   }
+
+   *out = sub->match;
+   out->packed_next_conc_or_subcall = (modifier_block *) 0;
+   out->packed_secondary_subcall = (modifier_block *) 0;
+   out->gc_ptr = s_modifier_active_list;
+   s_modifier_active_list = out;
+   dest_slot = out;
+   copy_sublist(sub, out);
+}
+
 void matcher_class::copy_sublist(const match_result *outbar, modifier_block *tails)
 {
-   if (outbar->real_next_subcall) {
-      modifier_block *out;
-      const match_result *newoutbar = outbar->real_next_subcall;
-
-      if (s_modifier_inactive_list) {
-         out = s_modifier_inactive_list;
-         s_modifier_inactive_list = out->gc_ptr;
-      }
-      else
-         out = new modifier_block;
-
-      *out = newoutbar->match;
-      out->packed_next_conc_or_subcall = (modifier_block *) 0;
-      out->packed_secondary_subcall = (modifier_block *) 0;
-      out->gc_ptr = s_modifier_active_list;
-      s_modifier_active_list = out;
-      tails->packed_next_conc_or_subcall = out;
-      copy_sublist(newoutbar, out);
-   }
-
-   if (outbar->real_secondary_subcall) {
-      modifier_block *out;
-      const match_result *newoutbar = outbar->real_secondary_subcall;
-
-      if (s_modifier_inactive_list) {
-         out = s_modifier_inactive_list;
-         s_modifier_inactive_list = out->gc_ptr;
-      }
-      else
-         out = new modifier_block;
-
-      *out = newoutbar->match;
-      out->packed_next_conc_or_subcall = (modifier_block *) 0;
-      out->packed_secondary_subcall = (modifier_block *) 0;
-      out->gc_ptr = s_modifier_active_list;
-      s_modifier_active_list = out;
-      tails->packed_secondary_subcall = out;
-      copy_sublist(newoutbar, out);
-   }
+   clone_sublist_branch(outbar->real_next_subcall, tails->packed_next_conc_or_subcall);
+   clone_sublist_branch(outbar->real_secondary_subcall, tails->packed_secondary_subcall);
 }
 
 
