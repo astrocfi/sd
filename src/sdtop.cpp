@@ -6412,6 +6412,17 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
                  (conceptptr->call->the_defn.callflagsf & CFLAGH__HAS_AT_M)))
                fail("Incomplete parse.");
          }
+         else if (!strict &&
+                  conceptptr->concept_ptr->kind == concept_another_call_next_mod) {
+            // Subcalls need not be present during non-strict verification, but
+            // recursively verify that any attached subcall has a terminating call
+            // (e.g. when verifying partial inputs like "[centers ?" or
+            // "make a pass but [centers ?").
+            for (parse_block *search = conceptptr->next ; search ; search = search->next) {
+               if (search->subsidiary_root)
+                  check_concept_parse_tree(search->subsidiary_root, false);
+            }
+         }
 
          break;
       }
