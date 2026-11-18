@@ -13,9 +13,11 @@ import re
 
 DEL = '\x7f' * 460   # more than the 400-character input limit
 
+# Squared set, facing lines, columns, tidal wave, waves, quarter tag, and two
+# others.
 SETUPS = ['heads start\n', 'heads 1p2p\n', 'heads 1p2p\ntouch 1/4\n',
-          'heads 1p2p\nswing thru\n', 'heads 1p2p\ntouch 1/4\nscoot back\n',
-          'sides start\n', 'just as they are\n']
+          'heads 1p2p\nswing thru\n', 'heads 1p2p\npass the ocean\n',
+          'heads 1p2p\npass the ocean\nextend\n', 'sides start\n', 'just as they are\n']
 WEIRD = ['<anything>', '<anyone>', '<atc>', '<n>', '<n/4>', '<direction>', "er's", 'ers',
          " er'", '@0', '@6', '@', '#', '[', ']', '[[', ']]', '[]', '[ ]', ',', "'", '-', '--',
          '  ', '"', '\\', '%s', '%n', '\x80', '\xe9', '\xff', '\xff\xff', '<', '>', '<<', '>>']

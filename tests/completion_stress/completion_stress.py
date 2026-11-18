@@ -38,8 +38,18 @@ ASAN_FLAGS = '-O1 -g -fsanitize=address,undefined -fsanitize-recover=address -fn
 # the line.  The tests press those keys on lines that often can't be
 # completed, so each build carries this patch: with SD_PROBE set in the
 # environment, Sdtty rings the bell instead, as it does outside -diagnostic.
+# The last such check, for any other unprintable character, is left alone:
+# the tests send none, and on builds before 39.86 it is where end of input
+# lands, so patching it would turn that exit into an endless bell.
 PROBE_RE = re.compile(r'(if \(ui_options\.diagnostic_mode)\)(\s*\n\s*goto diagnostic_error;)')
 PROBE_SUB = r'\1 && !getenv("SD_PROBE"))\2'
+PROBE_SKIP_RE = re.compile(r'else if \(isprint\(c\)\)\s*\n\s*pack_and_echo_character\(c\);\s*\n\s*else $')
+
+# Commands that read their next line as plain text (a comment, a title, or a
+# file name), with no completion.  Probing that line would spill keys into
+# the next call.
+POPUP_COMMANDS = {'insert a comment', 'change output file', 'change output prefix',
+                  'change title', 'write this sequence', 'end this sequence'}
 
 
 # ----------------------------------------------------------------------------
@@ -58,7 +68,15 @@ class Build:
 def patch_probe(path):
     with open(path, encoding='latin-1') as f:
         text = f.read()
-    text, n = PROBE_RE.subn(PROBE_SUB, text)
+    n = 0
+
+    def sub(m):
+        nonlocal n
+        if PROBE_SKIP_RE.search(text, 0, m.start()):
+            return m.group(0)
+        n += 1
+        return m.expand(PROBE_SUB)
+    text = PROBE_RE.sub(sub, text)
     if n == 0:
         sys.exit(f'{path}: found nowhere to apply the SD_PROBE patch')
     with open(path, 'w', encoding='latin-1') as f:
@@ -349,17 +367,24 @@ def regression_files(a):
             lines = f.read().split('\n')
         if lines and lines[-1] == '':
             lines.pop()
-        if any('[' in ln for ln in lines):
+        if any(probed(lines)):
             out.append((name, rule, lines))
     return out
+
+
+def probed(lines):
+    """Tell, for each line, whether to press keys in it: whether it has a
+    bracket and is not the text that a command such as "insert a comment" reads."""
+    prev = [''] + lines[:-1]
+    return ['[' in ln and p.strip().lower() not in POPUP_COMMANDS for p, ln in zip(prev, lines)]
 
 
 def cmd_suite_keys(a):
     jobs = []
     for name, (level, flags), lines in regression_files(a):
         parts = []
-        for ln in lines:
-            if '[' in ln:
+        for ln, probe in zip(lines, probed(lines)):
+            if probe:
                 parts.append(key_probes(ln, every_prefix=True))
             parts.append(ln + '\n')
         jobs.append(((name,), level, flags, ''.join(parts), a.timeout or 3600))
@@ -369,8 +394,8 @@ def cmd_suite_keys(a):
 def cmd_suite_enter(a):
     jobs = []
     for name, (level, flags), lines in regression_files(a):
-        for j, ln in enumerate(lines):
-            if '[' in ln:
+        for j, (ln, probe) in enumerate(zip(lines, probed(lines))):
+            if probe:
                 pre = ''.join(x + '\n' for x in lines[:j])
                 for k in enter_points(ln):
                     stdin = pre + ln[:k] + '\n' + DEL + EXIT
@@ -382,7 +407,7 @@ def cmd_lines_keys(a):
     jobs = []
     for s in cases.LINE_SETUPS:
         for ln in cases.LINES:
-            stdin = cases.SETUPS[s] + key_probes(ln, every_prefix=True) + ln + '\n' + EXIT
+            stdin = cases.SETUPS[s] + key_probes(ln, every_prefix=True) + ln + '\n' + DEL + EXIT
             jobs.append(((s, ln), a.level, [], stdin, a.timeout or 1800))
     return run_jobs(a, jobs)
 
@@ -412,7 +437,7 @@ def cmd_speed(a):
     for ln in cases.SPEED_LINES:
         keys = ''.join(ln[:k] + key + DEL for k in enter_points(ln) if ln[k - 1] == ']'
                        for key in '\t ')
-        stdin = cases.SETUPS[cases.SPEED_SETUP] + keys + ln + '\n' + EXIT
+        stdin = cases.SETUPS[cases.SPEED_SETUP] + keys + ln + '\n' + DEL + EXIT
         outs = {}
         print(ln)
         for b in builds:

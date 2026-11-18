@@ -9,8 +9,8 @@ import fnmatch
 # Starting formations, as the lines typed to reach them.
 SETUPS = {
     'lines': 'heads 1p2p\n',
-    'waves': 'heads 1p2p\ntouch 1/4\n',
-    'qtag': 'heads 1p2p\ntouch 1/4\nscoot back\n',
+    'waves': 'heads 1p2p\npass the ocean\n',
+    'qtag': 'heads 1p2p\npass the ocean\nextend\n',
     'tidal': 'heads 1p2p\nswing thru\n',
     'squared': 'heads start\n',
 }
