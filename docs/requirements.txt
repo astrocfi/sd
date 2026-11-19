@@ -1,0 +1,8 @@
+# Sphinx and its extensions, for the developer guide in docs/.
+# `scripts/run-all-checks.sh --setup` installs these beside the lint tools in
+# scripts/requirements.txt, and CI's Docs job installs them.
+#
+# The versions are pinned so that a local build and CI report the same warnings.
+myst-parser==4.0.1
+sphinx==8.2.3
+sphinx-rtd-theme==3.0.2
