@@ -3109,7 +3109,7 @@ static void do_concept_diagnose(
 
    move(ss, false, result);
 
-   sprintf(junk, "Command flags: 0x%08X, result flags misc/split: 0x%08X/%d/%d.",
+   snprintf(junk, sizeof(junk), "Command flags: 0x%08X, result flags misc/split: 0x%08X/%d/%d.",
            (unsigned int) ss->cmd.cmd_misc_flags,
            (unsigned int) result->result_flags.misc,
            (unsigned int) result->result_flags.split_info[0],

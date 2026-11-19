@@ -1213,7 +1213,7 @@ static bool inner_search(command_kind goal,
 
          if ((resolve_test_count & 3) == 0) {
             //         resolve_test_count = 0;
-            sprintf(tempstuff, "Random number is %d.", random_number);
+            snprintf(tempstuff, sizeof(tempstuff), "Random number is %d.", random_number);
             gg77->writestuff(tempstuff);
             gg77->newline();
          }
@@ -2129,7 +2129,7 @@ void create_resolve_menu_title(
    string_copy(&titleptr, title_string[goal-command_resolve]);
 
    if (max > 0) {
-      sprintf(junk, "%d out of %d", cur, max);
+      snprintf(junk, sizeof(junk), "%d out of %d", cur, max);
       string_copy(&titleptr, junk);
    }
    switch (state) {

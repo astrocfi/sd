@@ -827,7 +827,7 @@ extern void uims_preinitialize(void)
 
     /* add level name to icon */
     XtVaGetValues(toplevel, XtNiconName, &title, NULL);
-    (void) sprintf(icon_name, "%s: %s", title, getout_strings[calling_level]);
+    (void) snprintf(icon_name, sizeof(icon_name), "%s: %s", title, getout_strings[calling_level]);
     XtVaSetValues(toplevel, XtNiconName, icon_name, NULL);
 
     XtOverrideTranslations(toplevel, XtParseTranslationTable(message_trans));
@@ -1598,7 +1598,7 @@ extern int uims_do_outfile_popup(char dest[])
 {
     char outfile_question[MAX_TEXT_LINE_LENGTH];
 
-    (void) sprintf(outfile_question,
+    (void) snprintf(outfile_question, sizeof(outfile_question),
 		   sd_resources.outfile_format, outfile_string);
     XtVaSetValues(outfilebox, XtNlabel, outfile_question, NULL);
     return get_popup_string(outfilepopup, outfilebox, dest);
@@ -1609,7 +1609,7 @@ extern int uims_do_header_popup(char dest[])
 {
    char title_question[MAX_TEXT_LINE_LENGTH];
 
-   (void) sprintf(title_question,
+   (void) snprintf(title_question, sizeof(title_question),
          sd_resources.title_format, header_comment);
    XtVaSetValues(titlebox, XtNlabel, title_question, NULL);
 
@@ -1679,10 +1679,12 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
        line_format = sd_resources.modify_circ_format;
        break;
    }
-   (void) sprintf(modifier_question, line_format, callname);
+   (void) snprintf(modifier_question, sizeof(modifier_question), line_format, callname);
    if (strlen(sd_resources.modify_line_two)) {
-       (void) strcat(modifier_question, "\n");
-       (void) strcat(modifier_question, sd_resources.modify_line_two);
+       (void) strncat(modifier_question, "\n",
+                      sizeof(modifier_question) - strlen(modifier_question) - 1);
+       (void) strncat(modifier_question, sd_resources.modify_line_two,
+                      sizeof(modifier_question) - strlen(modifier_question) - 1);
    }
    return confirm(modifier_question);
 }

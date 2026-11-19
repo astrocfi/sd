@@ -578,19 +578,19 @@ static uint32_t read_16_from_database()
 }
 
 
-static bool read_database_header(char *msg1, char *msg2)
+static bool read_database_header(char (&msg1)[200], char (&msg2)[200])
 {
    int format_version, n, j;
 
    if (read_16_from_database() != DATABASE_MAGIC_NUM) {
-      sprintf(msg1,
+      snprintf(msg1, sizeof(msg1),
               "Database file \"%s\" has improper format.", database_filename);
       return true;
    }
 
    format_version = read_16_from_database();
    if (format_version != DATABASE_FORMAT_VERSION) {
-      sprintf(msg1,
+      snprintf(msg1, sizeof(msg1),
               "Database format version (%d) is not the required one (%d)",
               format_version, DATABASE_FORMAT_VERSION);
       strncpy(msg2, "You must recompile the database.", 199);
@@ -1802,7 +1802,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]) {
          char msg [50];
-         sprintf(msg, "%d", i);
+         snprintf(msg, sizeof(msg), "%d", i);
          gg77->iob88.fatal_error_exit(1, "Call didn't identify self", msg);
       }
    }
