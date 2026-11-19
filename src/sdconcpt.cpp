@@ -7025,8 +7025,8 @@ static void do_concept_all_8(
          uint32_t tbends =
             ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
 
-         if ((((ss->people[1].id1 ^ d_south) |   /* Don't allow it if centers are */
-               (ss->people[2].id1 ^ d_south) |   /* facing directly accross the set. */
+         if ((((ss->people[1].id1 ^ d_south) |   // Don't allow it if centers are
+               (ss->people[2].id1 ^ d_south) |   // facing directly across the set.
                (ss->people[5].id1 ^ d_north) |
                (ss->people[6].id1 ^ d_north)) & d_mask) &&
              (((tbends & 010) == 0 && (tbctrs & 1) == 0) ||    /* Like an alamo line. */
@@ -7647,7 +7647,7 @@ static void do_concept_meta(
       // This makes it complain about things like "initially stable cross concentric mix".
       nocmd.cmd_misc3_flags |= CMD_MISC3__META_NOCMD;
 
-      // Foo1 finds the boundaries of the first subconcept.  (Foo2 wil show the second subconcept.)
+      // Foo1 finds the boundaries of the first subconcept.  (Foo2 will show the second subconcept.)
       skipped_concept_info foo1(specialfirstptr ? specialfirstptr : parseptr->next, key);
 
       if (foo1.m_heritflag != 0ULL) {

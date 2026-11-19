@@ -4544,7 +4544,7 @@ extern void concentric_move(
    // original 1x4 or diamond, using the value in "final_elongation"  If invocation
    // flags like "force lines" or "force columns" are present, we will use those.
 
-   // When we are done, our final judgement will be put back into the variable
+   // When we are done, our final judgment will be put back into the variable
    // "final_elongation".
 
    if (analyzer != schema_in_out_triple &&
@@ -6569,7 +6569,7 @@ extern void inner_selective_move(
 
    // If the call is a "space-invader", and we are simply doing it under a selector, and
    // the call takes no further selector, and "others" is <=0, that means the user
-   // simply said, for example, "boys" and "press ahead" as two seperate actions, rather
+   // simply said, for example, "boys" and "press ahead" as two separate actions, rather
    // than using the single call "boys press ahead".  In that case, we simply do
    // whatever "boys press ahead" would have done -- we have the designated (or
    // non-ignored) people do their part in a strict matrix.  We don't do any of the
