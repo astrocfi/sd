@@ -12683,6 +12683,12 @@ call "more or less peel and trail" c4
    setup 2x2 dmd no_cutting_through restriction peelable_box
       array [AL0E CR2W AL1W CR1E]
 
+call "less or more peel and trail" c4
+   setup 2x2 dmd no_cutting_through qualifier 2fl_only
+      array [AL0W CR2E AL1E CR3W]
+   setup 2x2 dmd no_cutting_through restriction peelable_box
+      array [AL0W CR2E AL3E CR3W]
+
 call "more or less trail off" c4 tag moreorlesstrailoff
    setup 2x2 dmd no_cutting_through qualifier 2fl_only
       array [CR2W AL0E AL1W CR3E]
@@ -18432,7 +18438,7 @@ call "_centers plan ahead" dontshow tag plan_ctrtoend
       array [AL1S 0 0 CR0N]
 
 call "_ends plan ahead" dontshow tag plan_endtoctr
-            left_means_mirror
+            rear_back_from_r_wave left_means_mirror
    setup 2x2 2x2 restriction in_or_out
       array [CR3N AACR0S ACR1W CR2W]
 
@@ -28821,10 +28827,8 @@ call "little more" c2 tag lilmore
       array [0 CR3S CR4S CR6S 0 0 AL8S AL11S AL1S    0 ACR9N ACR10N ACR0N 0 0 CR7S CR5S CR2S]
    setup 3x6 3x4 qualifier people_34_opp_real restriction controversial alwaysfail
       array [0 0 CR3S CR4S CR6S 0 AL8S AL11S AL1S    0 0 ACR9N ACR10N ACR0N 0 CR7S CR5S CR2S]
-   setup 3x6 3x4 qualifier people_12_opp_real restriction controversial alwaysfail
-      array [0 CR3S CR4S CR6S 0 0 AL8S AL11S AL1S    0 ACR9N ACR10N ACR0N 0 0 CR7S CR5S CR2S]
-   setup 3x6 3x4 qualifier people_34_opp_real restriction controversial alwaysfail
-      array [0 0 CR3S CR4S CR6S 0 AL8S AL11S AL1S    0 0 ACR9N ACR10N ACR0N 0 CR7S CR5S CR2S]
+   setup 3x63 3x4 restriction controversial alwaysfail
+      array [CR3S CR4S CR6S AL8S AL11S AL1S ACR9N ACR10N ACR0N CR7S CR5S CR2S]
 
 call "little more but @m" c2 tag lilmorebutsecond
             fudge_to_q_tag left_means_mirror intlk_is_inherited rectify_is_inherited visible_fractions

@@ -4709,7 +4709,7 @@ static int find_casting_partner(int i, const setup *s, uint32_t roll_info_to_use
 
 
 
-static uint32_t do_actual_array_call(
+static uint64_t do_actual_array_call(
    setup *ss,
    const calldefn *callspec,
    callarray *linedefinition,
@@ -4727,7 +4727,7 @@ static uint32_t do_actual_array_call(
    lilresult_mask[0] = 0;
    lilresult_mask[1] = 0;
    int inconsistent_rotation = 0;
-   uint32_t resultflagsmisc = 0;
+   uint64_t resultflagsmisc = ss->result_flags.misc & RESULTFLAG__DID_MAGIC_EXPANSION;
    int inconsistent_setup = 0;
    bool funny_ok1 = false;
    bool funny_ok2 = false;
@@ -6295,7 +6295,7 @@ extern void basic_move(
    int orig_elongation = 0;
    bool four_way_startsetup = false;
    uint32_t newtb = tbonetest;
-   uint32_t resultflagsmisc = 0;
+   uint64_t resultflagsmisc = 0ULL;
    int desired_elongation = 0;
    calldef_block *qq;
    const calldefn *callspec = the_calldefn;

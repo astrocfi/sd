@@ -1501,7 +1501,8 @@ extern void normalize_concentric(
             break;
          }
 
-         table_synthesizer = schema_concentric;   // They are all in the hash table this way.
+         if (!(schema_attrs[table_synthesizer].attrs & SCA_SAME_SYNTHESIZE))
+            table_synthesizer = schema_concentric;   // They are all in the hash table this way.
       }
 
       break;
@@ -1680,8 +1681,31 @@ static calldef_schema concentrify(
    // Need to do this now, so that the "schema_concentric_big2_6" stuff below will be triggered.
    if (analyzer_result == schema_concentric_6p_or_normal_or_2x6_2x3) {
       if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_6X2 ||
-          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X2)
-         analyzer_result = schema_concentric_2_6;
+          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X2) {
+         if (ss->kind == s3x4) {
+            if (livemask == 0xD75) {
+               analyzer_result = schema_concentric_2_6_or_zd75;
+               warn(warn_controversial);
+            }
+            else if (livemask == 0xEBA) {
+               analyzer_result = schema_concentric_2_6_or_zeba;
+               warn(warn_controversial);
+            }
+            else if (livemask == 0xCF3) {
+               analyzer_result = schema_concentric_2_6_or_zcf3;
+               warn(warn_controversial);
+            }
+            else if (livemask == 0xF3C) {
+               analyzer_result = schema_concentric_2_6_or_zf3c;
+               warn(warn_controversial);
+            }
+            else
+               analyzer_result = schema_concentric_2_6;
+         }
+         else
+            analyzer_result = schema_concentric_2_6;
+      }
+
       else if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_6p;
       else if (ss->kind == s3x1dmd) {
@@ -2058,6 +2082,10 @@ static calldef_schema concentrify(
    case schema_concentric_others:
    case schema_concentric_6_2_tgl:
    case schema_concentric_diamonds:
+   case schema_concentric_2_6_or_zd75:
+   case schema_concentric_2_6_or_zeba:
+   case schema_concentric_2_6_or_zcf3:
+   case schema_concentric_2_6_or_zf3c:
    case schema_concentric_2_4:
    case schema_concentric_8_4:
    case schema_concentric_zs:
@@ -2426,6 +2454,8 @@ static calldef_schema concentrify(
 
       *outer_elongation = mapelong;
       if (outers->rotation & 1) *outer_elongation ^= 3;
+      if (schema_attrs[analyzer_result].attrs & SCA_SAME_SYNTHESIZE)
+         analyzer = analyzer_result;
 
       // If the concept is cross-concentric, we have to set the elongation to what
       // the centers (who will, of course, be going to the outside) had.
@@ -2610,8 +2640,8 @@ static bool fix_empty_outers(
       }
    }
    else {
-      uint32_t result_outer_result_flags_misc = result_outer->result_flags.misc;
-      uint32_t orig_elong_flags = result_outer->result_flags.misc & 3;
+      uint64_t result_outer_result_flags_misc = result_outer->result_flags.misc;
+      int orig_elong_flags = result_outer->result_flags.misc & 3;
 
       // We may be in serious trouble -- we have to figure out what setup the ends
       // finish in, and they are all phantoms.
@@ -3659,7 +3689,7 @@ extern void concentric_move(
          begin_ptr->cmd.cmd_final_flags = cmdptr->cmd_final_flags;
          begin_ptr->cmd.cmd_fraction = cmdptr->cmd_fraction;
          begin_ptr->cmd.restrained_fraction = cmdptr->restrained_fraction;
-         begin_ptr->result_flags.misc = ss->result_flags.misc;  // Copy the whole word. &= ~CMD_MISC__VERIFY_MASK;
+         begin_ptr->result_flags.misc = ss->result_flags.misc;  // Copy the whole word.
          begin_ptr->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
          begin_ptr->cmd.cmd_misc_flags |= (CMD_MISC__VERIFY_MASK & cmdptr->cmd_misc_flags);
 
@@ -5831,11 +5861,11 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS |
          FRACS(CMD_FRAC_CODE_FROMTOREV,2,0));
       the_setups[0].cmd.parseptr = parseptrcopy->next;      // Skip over the concept.
-      uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
+      uint64_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
       normalize_setup(result, simple_normalize, qtag_compress);
-      result->result_flags.misc = finalresultflagsmisc & ~3;
+      result->result_flags.misc = finalresultflagsmisc & ~3ULL;
    }
    else if (doing_do_last_frac) {
       the_setups[0] = *result;
@@ -5849,11 +5879,11 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
                                                        the_setups[0].cmd.cmd_fraction);
       the_setups[0].cmd.cmd_fraction.flags = 0;
       the_setups[0].cmd.parseptr = parseptrcopy->next;    // Skip over the concept.
-      uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
+      uint64_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
       normalize_setup(result, simple_normalize, qtag_compress);
-      result->result_flags.misc = finalresultflagsmisc & ~3;
+      result->result_flags.misc = finalresultflagsmisc & ~3ULL;
    }
 }
 

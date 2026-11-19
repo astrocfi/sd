@@ -84,8 +84,8 @@ void iofull::final_initialize()
 
    // Install the pointy triangles.
 
-   if (ui_options.no_graphics < 2)
-      ui_options.direc = "?\020?\021????\036?\037?????";
+   //   if (ui_options.no_graphics < 2)
+   //      ui_options.direc = "?\020?\021????\036?\037?????";
 
    my_directions = ui_options.direc;
 
