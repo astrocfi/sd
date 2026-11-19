@@ -1,7 +1,7 @@
 # Baselines
 
-The manuals and the README are upstream text, written long before the
-documentation checks. Rather than fail on every problem in them, or skip them,
+The manuals, the README, and the comments in the source are upstream text,
+written long before these checks. Rather than fail on every problem in them, or skip them,
 each documentation check records the findings it made when it was added in a
 **baseline**, and fails only on a finding that is not there.
 
@@ -14,8 +14,13 @@ each documentation check records the findings it made when it was added in a
 An entry names a finding by its text, never by its line number, so editing one
 part of a manual does not disturb the entries for the rest.
 
-None of `sd-regression`'s checks has a baseline. The spelling baseline in `sd`
-is empty.
+None of `sd-regression`'s checks has a baseline.
+
+The spelling baseline in `sd` holds lines from the comments in `src/`: a
+parameter name in code that is commented out, and two accepted spellings that
+codespell flags as variants. A comment line is recorded as the check reads it,
+from a copy of the source with everything but the comments blanked. A line that
+is all comment is recorded as it is in the source.
 
 ## Changing a Baseline
 
@@ -35,9 +40,12 @@ Do not add a new finding to a baseline to make a change pass: fix it. When a
 finding cannot be fixed, say why in the pull request, and use the check's
 own escape where it has one:
 
-- A word that is right where it appears takes a trailing
-  `codespell:ignore <word>` comment, or, in a line that cannot carry a comment,
-  an entry in `ignore-words-list` in `.codespellrc` with a comment saying why.
+- A word that is right where it appears takes a trailing comment holding
+  `codespell:ignore <word>`, or, in a line that cannot carry a comment, an
+  entry in `ignore-words-list` in `.codespellrc` with a comment saying why.
+  codespell sees the directive only after punctuation, so in C++ write
+  `// codespell:ignore <word>`, even inside a `/* */` comment. It cannot name
+  a hyphenated word: a bare `// codespell:ignore` ignores the whole line.
 - A `makeinfo` or TeX warning that cannot be avoided goes in the warnings
   baseline with `--update-baseline`, and the pull request says why.
 
