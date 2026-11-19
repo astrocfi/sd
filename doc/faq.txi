@@ -120,8 +120,8 @@ computer.  You would presumably not say that to the dancers.
 You almost never need to type @strong{phantom} to Sd.
 
 Sd can sometimes be cantakerous about doing calls with missing people.  You may
-be able to work around that by giving the @strong{with active phantoms} cammand
-after the @strong{assume} cammand.
+be able to work around that by giving the @strong{with active phantoms} command
+after the @strong{assume} command.
 
 To get @strong{split square thru} types of openings, including things like
 @strong{spin the pulley}, give the @strong{assume split square thru setup}
@@ -464,7 +464,7 @@ digits, you must use some combination of alt or control.  (You can't
 define just @strong{c} as a hot key for concentric---it would make it
 impossible to type @strong{circulate}.)
 
-@unnumberedsec How can I define abreviations for calls?
+@unnumberedsec How can I define abbreviations for calls?
 
 First, read the previous section.  Abbreviations are defined somewhat
 like hot keys, but they don't take effect the instant you press the key.
@@ -501,7 +501,7 @@ in the initialization file.
 As of version 36.63, there are two new startup options, that can be put in your
 initialization file (sd.ini), startup icons, startup scripts, or on the command line.
 They are ``use_magenta'' and ``use_cyan''.  These lighten the red and blue checker
-colors, respectively.  Remember to put a hypen in front of an option in an icon or
+colors, respectively.  Remember to put a hyphen in front of an option in an icon or
 on the command line, but not in the initialization file.
 
 @unnumberedsec How can I abort a sequence in progress?
@@ -980,7 +980,7 @@ happening.
 @unnumberedsec Sd doesn't allow something.  Does that mean it's bogus?
 
 No, no, 1000 times, no!  @code{Sd}, like many other computer programs,
-is an attempt at approximating human knowledge and judgement.  It really
+is an attempt at approximating human knowledge and judgment.  It really
 doesn't come close.
 
 @unnumberedsec Sd allows something.  Does that mean it's legal?
@@ -1176,7 +1176,7 @@ after each of the three parts of @strong{turn the key}.
 These concepts are among the situations in which the program does not attempt
 to print out the exact words that are appropriate to use when calling, but
 instead prints out an unambiguous description of what is supposed to happen.
-The exact words you should use depend on the context and on your judgement.
+The exact words you should use depend on the context and on your judgment.
 You might say ``piecewise add a criss cross the deucey, and turn the key,''
 or ``do a criss cross the deucey after each part, and turn the key,'' or
 something similar.

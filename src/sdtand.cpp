@@ -3942,7 +3942,7 @@ void mimic_move(
 
       configuration::restore_warnings(saved_warnings);
 
-      // Finally, with an implict "split phantom boxes".
+      // Finally, with an implicit "split phantom boxes".
       small_mimic_move(ss, MI, MAPCODE(s2x4,2,MPKIND__SPLIT,0), result);
       return;
    }
