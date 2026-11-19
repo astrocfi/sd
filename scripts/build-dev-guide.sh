@@ -40,8 +40,7 @@ OPEN=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -o | --out)
-            [[ $# -ge 2 ]] || { echo "error: $1 needs a directory" >&2; exit 2; }
-            OUT="$2"
+            OUT="${2:?--out needs a directory}"
             shift
             ;;
         --open) OPEN=true ;;
