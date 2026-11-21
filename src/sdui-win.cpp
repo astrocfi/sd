@@ -354,7 +354,7 @@ static void check_text_change(bool doing_escape)
 
    if (doing_escape) {
       nLen++;
-      matches = matcher.match_user_input(nLastOne, false, false, false);
+      matches = matcher.match_user_input(nLastOne, false, false, true, true);
       p = matcher.m_echo_stuff;
       if (*p) {
          changed_editbox = true;
@@ -1467,7 +1467,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       if (gg77->look_up_abbreviations(nLastOne))
          return;
 
-      matches = matcher.match_user_input(nLastOne, false, false, false);
+      matches = matcher.match_user_input(nLastOne, false, false, true);
 
       /* We forbid a match consisting of two or more "direct parse" concepts, such as
          "grand cross".  Direct parse concepts may only be stacked if they are followed
