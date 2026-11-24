@@ -1483,6 +1483,22 @@ static const char *find_matching_close_bracket(const char *open_bracket)
 
 
 
+// Starting with `open_depth` unmatched '[' brackets before `ext`, returns
+// the index in `ext` just past the ']' that closes them (or the index of
+// the NUL terminator if `ext` ends first).
+static int find_closing_bracket_in_extension(const char *ext, int open_depth)
+{
+   int idx = 0;
+   while (ext[idx] && open_depth != 0) {
+      if (ext[idx] == '[') open_depth++;
+      else if (ext[idx] == ']') open_depth--;
+      idx++;
+   }
+   return idx;
+}
+
+
+
 /*
  * Early-rejection lookahead for candidate calls taking bracketed subcalls
  * (patterns starting with @0, @T, or @m).
@@ -1741,17 +1757,9 @@ void matcher_class::scan_concepts_and_calls(
                      // Case 1: User input stopped in the middle of the subcall, so the
                      // closing ']' is in m_full_extension.
                      if (m_user_bracket_depth-local_result.recursion_depth > 0) {
-                        // Find out where, in the full extension, the bracket count
-                        // went down to zero.
-                        int jj = m_user_bracket_depth-local_result.recursion_depth;
-
-                        for (my_patxi = 0 ; ; my_patxi++) {
-                           if (!m_full_extension[my_patxi] || jj == 0) break;
-                           else if (m_full_extension[my_patxi] == '[') jj++;
-                           else if (m_full_extension[my_patxi] == ']') jj--;
-                        }
-                        // Now my_patxi tells where the close bracket was.
-
+                        my_patxi = find_closing_bracket_in_extension(
+                           m_full_extension,
+                           m_user_bracket_depth - local_result.recursion_depth);
                         subcall_after_user = (const char *) 0;
                         got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
                      }
@@ -2207,13 +2215,14 @@ void matcher_class::search_menu(uims_reply_kind kind)
             //    table for each of them is unwieldy.  At deeper levels,
             //    there is just the "call_list_any" menu to deal with, and
             //    that one is hashed.
-            char pch = get_call_name(this_call)[0];
+            Cstring call_name = get_call_name(this_call);
+            char pch = call_name[0];
 
             if (!m_showing &&
                 uch != pch &&
                 (pch > 'Z' || pch < 'A' || uch != pch+'a'-'A') &&
                 ((pch != '@') ||
-                 ((get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T') && uch != '[' && uch != '<')))
+                 ((call_name[1] == '0' || call_name[1] == 'T') && uch != '[' && uch != '<')))
                continue;
 
             parse_state.call_list_to_use = (call_list_kind) m_call_menu;
@@ -2221,70 +2230,45 @@ void matcher_class::search_menu(uims_reply_kind kind)
             m_active_result.yield_depth = (get_yield_if_ambiguous_flag(this_call)) ? 1 : 0;
             matches_as_seen_by_me = m_match_count;
 
-            pat2_block p2b(get_call_name(this_call));
+            pat2_block p2b(call_name);
+            bool is_subcall_cand = (call_name[0] == '@' &&
+                                    (call_name[1] == '0' || call_name[1] == 'T'));
 
-            if (get_call_name(this_call)[0] == '@' && (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T')) {
-               if (got_aborted_subcall) {
-                  // We have seen another "@0" call after having seen one whose subcall
-                  // was incomplete.  There can't possibly be any benefit from parsing
-                  // further such calls.
-                  m_match_count++;
-                  continue;
-               }
-               else if (got_matched_subcall) {
-                  p2b.car += 2;    // Skip over the "@0".
-                  match_suffix_2((Cstring) 0, "", &p2b, my_patxi);
-               }
-               else {
-                  match_suffix_2(m_user_input, "", &p2b, 0);
-               }
+            if (is_subcall_cand && got_aborted_subcall) {
+               // We have seen another "@0" call after having seen one whose subcall
+               // was incomplete.  There can't possibly be any benefit from parsing
+               // further such calls.
+               m_match_count++;
+               continue;
+            }
+            else if (is_subcall_cand && got_matched_subcall) {
+               p2b.car += 2;    // Skip over the "@0".
+               match_suffix_2((Cstring) 0, "", &p2b, my_patxi);
             }
             else {
                match_suffix_2(m_user_input, "", &p2b, 0);
             }
 
             // See if any new matches have come up that can allow us to curtail the scan.
-            if (m_match_count > matches_as_seen_by_me) {
-               if (m_only_extension &&
-                   get_call_name(this_call)[0] == '@' &&
-                   (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T') &&
-                   uch == '[') {
-                  int full_bracket_depth = m_user_bracket_depth + m_extended_bracket_depth;
-                  if (0 < full_bracket_depth) {
-                     // The subcall was aborted.  Processing future "@0" calls
-                     // can't possibly get nontrivial results, other than to bump
-                     // the match count.
-                     if (!m_verify && !m_showing &&
-                         m_final_result.match.packed_next_conc_or_subcall &&
-                         !m_final_result.match.packed_secondary_subcall)
-                        got_aborted_subcall = true;
-                  }
-                  else if (!got_matched_subcall) {
-                     // The subcall was completely parsed.
-                     // We should take the subcall (if there is one), and simply
-                     // plug it in, without parsing it again, for all future "@0" calls.
-                     if (!m_verify && !m_showing &&
-                         m_final_result.match.packed_next_conc_or_subcall &&
-                         !m_final_result.match.packed_secondary_subcall) {
-
-                        // Let's try this.  We're only going to look at stuff for which
-                        // the user input stopped in the middle of the subcall, for now.
-                        if (m_user_bracket_depth > 0) {
-                           // Find out where, in the full extension, the bracket count
-                           // went down to zero.
-                           int jj = m_user_bracket_depth;
-
-                           for (my_patxi = 0 ; ; my_patxi++) {
-                              if (!m_full_extension[my_patxi] || jj == 0) break;
-                              else if (m_full_extension[my_patxi] == '[') jj++;
-                              else if (m_full_extension[my_patxi] == ']') jj--;
-                           }
-                           // Now my_patxi tells where the close bracket was.
-
-                           got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
-                        }
-                     }
-                  }
+            if (m_match_count > matches_as_seen_by_me &&
+                m_only_extension && is_subcall_cand && uch == '[' &&
+                !m_verify && !m_showing &&
+                m_final_result.match.packed_next_conc_or_subcall &&
+                !m_final_result.match.packed_secondary_subcall) {
+               int full_bracket_depth = m_user_bracket_depth + m_extended_bracket_depth;
+               if (0 < full_bracket_depth) {
+                  // The subcall was aborted.  Processing future "@0" calls
+                  // can't possibly get nontrivial results, other than to bump
+                  // the match count.
+                  got_aborted_subcall = true;
+               }
+               else if (!got_matched_subcall && m_user_bracket_depth > 0) {
+                  // The subcall was completely parsed.
+                  // Take the subcall and simply plug it in, without parsing it again,
+                  // for all future "@0" calls.  We only do this when the user input
+                  // stopped in the middle of the subcall (so ']' is in m_full_extension).
+                  my_patxi = find_closing_bracket_in_extension(m_full_extension, m_user_bracket_depth);
+                  got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
                }
             }
          }
