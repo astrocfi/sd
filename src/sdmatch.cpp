@@ -1460,16 +1460,6 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
 }
 
 
-#define SPIFFY_PARSER
-
-#ifdef SPIFFY_PARSER
-static int spiffy_parser = 1;
-#else
-static int spiffy_parser = 0;
-#endif
-
-
-
 /*
  * Given a pointer to an opening bracket '[', scans forward and returns
  * a pointer to the matching closing bracket ']', or NULL if not found.
@@ -1687,7 +1677,7 @@ void matcher_class::scan_concepts_and_calls(
          // will yield to "6x2" + "acey deucey", making it possible to parse "echo 6x2 acey deucey".
          m_current_result->yield_depth = ((get_yield_if_ambiguous_flag(this_call)) ? new_depth+2 : new_depth);
 
-         bool is_subcall_cand = (spiffy_parser && get_call_name(this_call)[0] == '@' &&
+         bool is_subcall_cand = (get_call_name(this_call)[0] == '@' &&
                                  (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T'));
 
          if (is_subcall_cand && got_aborted_subcall) {
@@ -1724,7 +1714,7 @@ void matcher_class::scan_concepts_and_calls(
          }
 
          // See if any new matches have come up that can allow us to curtail the scan.
-         if (spiffy_parser && m_match_count > matches_as_seen_by_me) {
+         if (m_match_count > matches_as_seen_by_me) {
             if (m_only_extension && is_subcall_cand &&
                 (m_user_input[0] == '[' ||
                  (m_can_cache_completed_subcalls && (firstchar[0] == '[' || firstchar[0] == ' ')))) {
@@ -2233,7 +2223,7 @@ void matcher_class::search_menu(uims_reply_kind kind)
 
             pat2_block p2b(get_call_name(this_call));
 
-            if (spiffy_parser && get_call_name(this_call)[0] == '@' && (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T')) {
+            if (get_call_name(this_call)[0] == '@' && (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T')) {
                if (got_aborted_subcall) {
                   // We have seen another "@0" call after having seen one whose subcall
                   // was incomplete.  There can't possibly be any benefit from parsing
@@ -2254,7 +2244,7 @@ void matcher_class::search_menu(uims_reply_kind kind)
             }
 
             // See if any new matches have come up that can allow us to curtail the scan.
-            if (spiffy_parser && m_match_count > matches_as_seen_by_me) {
+            if (m_match_count > matches_as_seen_by_me) {
                if (m_only_extension &&
                    get_call_name(this_call)[0] == '@' &&
                    (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T') &&
