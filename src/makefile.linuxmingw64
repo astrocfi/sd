@@ -9,9 +9,6 @@ CC = $(CROSS_PREFIX)gcc
 WINDRES = $(CROSS_PREFIX)windres
 STRIP = $(CROSS_PREFIX)strip
 
-# Host compiler for building helper tools during the build process
-HOST_CXX = g++
-
 # Compiler flags
 # Based on makefile.mingw64
 DEFS = -Wall -Wno-switch
@@ -57,12 +54,9 @@ sd.exe: libsdlib.a sdlib.dll $(SD_OBJS) sdres.o
 	$(CXX) $(CXXFLAGS) -mwindows -o $@ $(SD_OBJS) sdres.o $(SD_LIBS)
 	$(STRIP) sd.exe
 
-# To generate sd_calls.dat, we need a native version of mkcalls
-mkcalls_native: mkcalls.cpp common.cpp
-	$(HOST_CXX) -O2 -o mkcalls_native mkcalls.cpp common.cpp
-
-sd_calls.dat: sd_calls.txt mkcalls_native
-	./mkcalls_native ./sd_calls.txt
+# Run the newly built Windows mkcalls.exe under Wine to generate sd_calls.dat
+sd_calls.dat: sd_calls.txt mkcalls.exe
+	wine ./mkcalls.exe ./sd_calls.txt
 
 .SUFFIXES: .c .cpp
 
@@ -105,4 +99,4 @@ sdprint.o: sdprint.h
 $(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h sdchars.h sdmatch.h database.h paths.h
 
 clean:
-	rm -f *.o sd.exe sdtty.exe mkcalls.exe mkcalls_native sdlib.dll libsdlib.a sd_calls.dat
+	rm -f *.o sd.exe sdtty.exe mkcalls.exe sdlib.dll libsdlib.a sd_calls.dat
