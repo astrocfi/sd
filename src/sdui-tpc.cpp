@@ -197,16 +197,14 @@ static void pack_in_buffer(char c)
    }
 }
 
-extern void put_line(const char the_line[])
+extern void put_line(std::string_view the_line)
 {
    if (!sdtty_no_cursor) {
-      const char *p = the_line;
-      char c;
-      while ((c = *p++))
+      for (char c : the_line)
          pack_in_buffer(c);
    }
 
-   (void) fputs(the_line, stdout);
+   (void) fwrite(the_line.data(), 1, the_line.size(), stdout);
 }
 
 extern void put_char(int c)

@@ -4,7 +4,19 @@ extract 1: 7z e foo.zip <file>
 
           HOW TO RELEASE A NEW VERSION OF SD
 
-     This file is \wba\sddoc\howtobuild.txt
+     This file is \wba\sd\doc\howtobuild.txt
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+       NEW DIRECTORY LAYOUT
+
+       The former wba\sd directory is now wba\sd\src.  All of it except regress.
+       The former wba\sddoc directory is now wba\sd\doc.  All of it.
+       The former wba\sd\regress directory is now wba\newregress\regression-test.
+           All of it.  It is the second cousin of wba\sd\src.
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
        MAINTAIN ALL PROGRAM AND DOCUMENTATION SOURCE FILES ON WINDOWS 11.
@@ -52,7 +64,7 @@ WARNING!!!!!  These scripts require "tar".  I have put tar.exe,
 cygwin1.dll, and cygwinB19.dll into the \bin directory.
 In fact, it requires many arcane things, in the sddoc directory.
 
-Go to the sddoc directory and do:
+Go to the sd\doc directory and do:
 
     setmingw64
 This can be done as either the shell script clean.cmd / cleanclean.cmd
@@ -166,7 +178,7 @@ BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
    This is because the html files from document preparation are
    needed by this step.
 
-   In directory sd:
+   In directory sd\src:
    setmingw64
    mingw64 clean
    mingw64 all
@@ -291,38 +303,64 @@ git config --global core.editor C:/Windows\notepad.exe
 
 *************** RELEASE A VERSION INTO GIT
 
+Result of pull, 19 Oct.
+C:\Users\wba\sdgit\sd>git pull
+remote: Enumerating objects: 254, done.
+remote: Counting objects: 100% (249/249), done.
+remote: Compressing objects: 100% (107/107), done.
+remote: Total 254 (delta 140), reused 229 (delta 126), pack-reused 5 (from 1)
+Receiving objects: 100% (254/254), 114.24 KiB | 4.08 MiB/s, done.
+Resolving deltas: 100% (141/141), completed with 36 local objects.
+From https://github.com/astrocfi/sd
+   81186b9..8122dfd  39.85                   -> origin/39.85
+ * [new branch]      39.86                   -> origin/39.86
+ * [new branch]      39.86-comment-block     -> origin/39.86-comment-block
+ * [new branch]      39.86-final-destruction -> origin/39.86-final-destruction
+ * [new branch]      39.86-mac-fopen         -> origin/39.86-mac-fopen
+ * [new branch]      devenv-setup            -> origin/devenv-setup
+ * [new branch]      devenv-setup-1-template -> origin/devenv-setup-1-template
+ * [new branch]      devenv-setup-2-doc-lint -> origin/devenv-setup-2-doc-lint
+ * [new branch]      devenv-setup-3-ci       -> origin/devenv-setup-3-ci
+ * [new branch]      devenv-setup-4-regression -> origin/devenv-setup-4-regression
+ * [new branch]      devenv-setup-5-spelling -> origin/devenv-setup-5-spelling
+ * [new branch]      devenv-setup-6-solaris  -> origin/devenv-setup-6-solaris
+ * [new branch]      devenv-setup-7-comment-spelling -> origin/devenv-setup-7-comment-spelling
+ * [new branch]      devenv-setup-8-dev-guide -> origin/devenv-setup-8-dev-guide
+ * [new branch]      devenv-setup-9-comment-spelling-check -> origin/devenv-setup-9-comment-spelling-check
+   729a2ad..3954fc8  main                    -> origin/main
+Updating 81186b9..8122dfd
+Fast-forward
+ src/sdui-tty.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
 
 NEW STUFF NEW STUFF NEW STUFF NEW STUFF NEW STUFF NEW STUFF NEW STUFF
 
 THIS STILL NOT FINAL.  KEEP READING, AND PROCEED WITH CAUTION.
 
-my tree is wba/dev/sd/src (with former sd)
-           wba/dev/sd/doc (with former sddoc)
-           wba/dev/sd-regression/regression-test (with stuff)
-
-(in wba/dev/sd)
 git clone https://github.com/astrocfi/sd
 git pull
-git checkout -b 39.85
+git checkout -b 39.86
 git add .
 git pull
-git branch --set-upstream-to=origin/main 39.85
+git branch --set-upstream-to=origin/main 39.86
 git commit
 git push origin HEAD:main
-git push origin -u origin 39.85
+git push origin -u origin 39.86
 
 
 (in wba/dev/sd-regression)
 git clone https://github.com/astrocfi/sd-regression
 git pull
-git checkout -b 39.85
-    gets fatal: a branch named '39.85' already exists
+git checkout -b 39.86
+    gets fatal: a branch named '39.86' already exists
 git add .
 git pull
-git branch --set-upstream-to=origin/main 39.85
+git branch --set-upstream-to=origin/main 39.86
 git commit
 git push origin HEAD:main
-git push origin -u origin 39.85
+git push origin -u origin 39.86
     gets fatal: refs/remotes/origin/HEAD cannot be resolved to branch
 
 
@@ -330,16 +368,22 @@ NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST NEWEST
 
 AT ANY TIME, TO COMPARE MY FILES WITH GIT'S MANAGED FILES
 
+ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
+
+git switch <branch-name>
+
+(The "-c" option will create that branch.)
+
 Code files:
-cd wba\sd
+cd wba\sd\src
 winmergeu . C:\Users\wba\sdgit\sd\src
 
 Regression files:
-cd wba\sd\regress
+cd wba\newregress\r
 winmergeu . C:\Users\wba\sdgit\sd-regression\regression_tests
 
 Doc files:
-cd wba\sddoc
+cd wba\sd\doc
 winmergeu . C:\Users\wba\sdgit\sd\doc
 
 
@@ -358,16 +402,21 @@ Git manages source files in sdgit\sd\src
     and doc files in        sdgit\sd\doc
     and regression tests in sdgit\sd-regression\regression_tests
 
+CREATE A PERDSONAL BRANCH
+
+git switch -c 39.86-bill
+
+
 cd \wba\sdgit\sd
 // This is the new branch being created.  Do this only once for a new version.
-git checkout -b 39.85
-git push --set-upstream origin 39.85
+git checkout -b 39.86
+git push --set-upstream origin 39.86
 
 cd \wba\sdgit\sd-regression
-git checkout -b 39.85
-git push --set-upstream origin 39.85
+git checkout -b 39.86
+git push --set-upstream origin 39.86
    It may say to create a pull request at 
-      https://github.com/astrocfi/sd-regression/pull/new/39.85
+      https://github.com/astrocfi/sd-regression/pull/new/39.86
    Won't show anything.
 
 
@@ -384,9 +433,15 @@ Git add .
 Now the files are green.
 
 git commit
+It will open an editor.
+
+Files will disappear from "git status" command; they are in the repository.  Or something.
+
 git pull
 
-It says "Already up to date."
+If nothing, it says "Already up to date."
+Or it may have pulled something into the workarea.
+The workarea will be reported as clean; the files in it will have changed.
 
 
 
@@ -408,7 +463,7 @@ git push
 
 
 Now do
-git pull origin 39.85
+git pull origin 39.86
 
 
 
@@ -416,7 +471,7 @@ ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
 ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
 ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS ALWAYS
 
-When starting github from the web, 4th lines says main <twistie>.  Select 39.85 or whatever.
+When starting github from the web, 4th lines says main <twistie>.  Select 39.86 or whatever.
 This logs in on that branch.  It is not persistent!  It must be done every time!
 
 TO SEE THE FULL HISTORY OF A BRANCH:
@@ -432,15 +487,26 @@ cd \wba\dev\sd
 git clone https://github.com/astrocfi/sd     [this will create \wba\dev\sd\sd]
 git clone https://github.com/astrocfi/sd-regression      [this will create \wba\dev\sd\sd-regression]
 
+ALWAYS
+
+Use plain cmd shell, not "git cmd".  Always cd to 
+wba\sd\sdgit\sd
+   or
+wba\sd\sdgit\sd-regression
+
+git --version
+git remote -v should show stuff.
+
+
 EACH TIME YOU WANT TO CREATE A NEW BRANCH AND START WORK ON A NEW VERSION:
 
 cd \wba\dev\sd\sd
-git checkout -b 39.85
-git push --set-upstream origin 39.85
+git checkout -b 39.86
+git push --set-upstream origin 39.86
 
 cd \wba\dev\sd\sd-regression
-git checkout -b 39.85
-git push --set-upstream origin 39.85
+git checkout -b 39.86
+git push --set-upstream origin 39.86
 
 EACH TIME YOU MADE CHANGES TO FILES AND WANT TO TAKE A SNAPSHOT:
 
@@ -450,14 +516,14 @@ git commit -m "message"
 git pull
 [pray for no merge conflicts, resolve if necessary]
 [if pull did something, re-run the regression tests if you want to]
-git push --set-upstream origin 39.85
+git push --set-upstream origin 39.86
 
 cd \wba\dev\sd\sd-regression
 git add .   (or git add <list of files>)
 git commit -m "message"
 git pull
 [pray for no merge conflicts, resolve if necessary]
-git push --set-upstream origin 39.85
+git push --set-upstream origin 39.86
 
 *****************************************************************
 Rob's "really final" instructions.  (With minor notes by me.)
@@ -513,7 +579,7 @@ On Git web page, select the branch (of course) and click on "Pull requests"
 (which should say 1 or something (maybe not)).  Click the big green
 "New pull request".  It should go to "Compare changes", with "base main"
 "compare main".  Change the latter to 39.xx.  If lucky, it might even say
-"Able to merge".  Below that, Click on the branch thing: "39.85".
+"Able to merge".  Below that, Click on the branch thing: "39.86".
 Click the green "create pull request".  No, only once.  The pull request
 remains active for the rest of the lifetime of that branch.  There should be
 a "reviewers" thing on the right.  Fuss with it until it lists the right
@@ -633,4 +699,15 @@ g) non-Bill approves the PR, merges the PR, and tags the release.
 
 DO NOT MERGE THE PULL REQUEST UNTIL EVERYONE HAS AGREED THAT THE CHANGES ARE CORRECT AND PASS ALL TESTS.
 
+TO PERFORM A MANDATORY REVIEW OF SOMEONE'S PULL REQUEST
 
+(That is, someone has pushed something, and they want me to pull it, but I get to review it first.)
+
+Click on the PR, something like https://github.com/astrocfi/sd-regression/pull/13
+
+It should say "so-and-so has requested your review on this pull request."
+
+Click the green "Add your review" button at the top.
+
+If being a total masochist, look at the "diff" gargage, which is in "patch" format.
+Otherwise, test the change, maybe pull, and submit the review.

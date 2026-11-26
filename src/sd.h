@@ -1679,6 +1679,7 @@ public:
    setup *setup_for_print;        // may need to know actual setup to decide whether we can say "outer pairs".
    call_with_name *call_to_print; // the original call, for printing (sometimes the field
                                   // above gets changed temporarily)
+   std::string comment;           // the comment string, if this is a comment node
    parse_block *next;             // next concept, or, if this is end mark,
                                   // points to substitution list
    parse_block *subsidiary_root;  // for concepts that take a second call,
@@ -1802,7 +1803,7 @@ struct setup_command {
 struct resultflag_rec {
    // BEWARE!!!  If add fields to this, be sure to initialize them in constructor, below.
    uint16_t split_info[2];  // The split stuff.  X in slot 0, Y in slot 1.
-   uint32_t misc;           // Miscellaneous info, with names like RESULTFLAG__???.
+   uint64_t misc;           // Miscellaneous info, with names like RESULTFLAG__???.
    heritflags res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__REQUEST_MXN_COMPRESSION bit on.
                            // Gets copied to command block for next cycle of sequential call.
 
@@ -1822,7 +1823,7 @@ struct resultflag_rec {
       split_info[1] = temp;
    }
 
-   resultflag_rec() : misc(0)
+   resultflag_rec() : misc(0UL)
    {
       res_heritflags_to_save_from_mxn_expansion = 0ULL;
       clear_split_info();
@@ -1923,11 +1924,11 @@ void big_endian_get_directions32(
 
 uint32_t little_endian_live_mask() const;
 
-void update_id_bits();
-void clear_bits_for_update();
-void clear_absolute_proximity_bits();
-void clear_absolute_proximity_and_facing_bits();
-void put_in_absolute_proximity_and_facing_bits();
+void update_id_bits();                            // In SDTOP
+void clear_bits_for_update();                     // In SDTOP
+void clear_absolute_proximity_bits();             // In SDTOP
+void clear_absolute_proximity_and_facing_bits();  // In SDTOP
+void put_in_absolute_proximity_and_facing_bits(); // In SDTOP
 
 void touch_or_rear_back(
    bool did_mirror,
@@ -1937,7 +1938,7 @@ void touch_or_rear_back(
 
 
 struct concept_table_item {
-   uint32_t concept_prop;      /* Takes bits of the form CONCPROP__??? */
+   uint32_t concept_prop;      // Takes bits of the form CONCPROP__???
    // We wish we could put a "throw" clause on this function, but we can't.
    void (*concept_action)(setup *, parse_block *, setup *);
 };
@@ -2055,11 +2056,11 @@ enum {
 
 
 
-extern SDLIB_API const concept_table_item concept_table[];          /* in SDCONCPT */
-extern uint32_t global_tbonetest;                                   /* in SDCONCPT */
-extern uint32_t global_livemask;                                    /* in SDCONCPT */
-extern uint32_t global_selectmask;                                  /* in SDCONCPT */
-extern uint32_t global_tboneselect;                                 /* in SDCONCPT */
+extern SDLIB_API const concept_table_item concept_table[];          // in SDCONCPT
+extern uint32_t global_tbonetest;                                   // in SDCONCPT
+extern uint32_t global_livemask;                                    // in SDCONCPT
+extern uint32_t global_selectmask;                                  // in SDCONCPT
+extern uint32_t global_tboneselect;                                 // in SDCONCPT
 
 
 struct resolve_indicator {
@@ -2656,56 +2657,56 @@ extern SDLIB_API call_with_name **main_call_lists[call_list_extent];
 extern SDLIB_API int number_of_calls[call_list_extent];
 
 
-extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
+extern SDLIB_API bool using_active_phantoms;                               // in SDTOP
 
 /* If "using_active_phantoms" is enabled (a toggleable user option), the state of
    "active_phantoms_in_this_sequence" tells whether the state of the "active phantoms"
    mode flag was used in this sequence.  If it was read and found to be on,
    active_phantoms_in_this_sequence is set to 2.  If it was read and found to be off,
-   htis is is set to 1.  It is, of course, read any time an "assume <whatever> concept
+   this is set to 1.  It is, of course, read any time an "assume <whatever> concept
    is invoked.  This information is used to tell what kind of annotation to place in the
    transcript file to tell what assumptions were made.  The reason for having both
    states separately is that the state of the active phantoms mode can be toggled at
    arbitrary times, so a single card might have both usages.  In that unusual case, we
    want to so indicate on the card. */
 
-extern SDLIB_API int active_phantoms_in_this_sequence;              /* in SDTOP */
-extern SDLIB_API bool two_couple_calling;                           /* in SDTOP */
-extern SDLIB_API bool expanding_database;                           /* in SDTOP */
-extern SDLIB_API int trace_progress;                                /* in SDTOP */
-extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
-extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
-extern SDLIB_API int config_history_ptr;                            /* in SDTOP */
-extern SDLIB_API int abs_max_calls;                                 /* in SDTOP */
-extern SDLIB_API int max_base_calls;                                /* in SDTOP */
-extern SDLIB_API Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];     /* in SDTOP */
-extern SDLIB_API Cstring *selector_menu_list;                       /* in SDTOP */
-extern SDLIB_API Cstring *direction_menu_list;                      /* in SDTOP */
-extern SDLIB_API Cstring *circcer_menu_list;                        /* in SDTOP */
-extern SDLIB_API int num_command_commands;                          /* in SDTOP */
-extern SDLIB_API Cstring *command_commands;                         /* in SDTOP */
-extern SDLIB_API ui_utils *gg77;                                    /* in SDTOP */
+extern SDLIB_API int active_phantoms_in_this_sequence;                     // in SDTOP
+extern SDLIB_API bool two_couple_calling;                                  // in SDTOP
+extern SDLIB_API bool expanding_database;                                  // in SDTOP
+extern SDLIB_API int trace_progress;                                       // in SDTOP
+extern SDLIB_API bool allowing_all_concepts;                               // in SDTOP
+extern SDLIB_API int allowing_modifications;                               // in SDTOP
+extern SDLIB_API int config_history_ptr;                                   // in SDTOP
+extern SDLIB_API int abs_max_calls;                                        // in SDTOP
+extern SDLIB_API int max_base_calls;                                       // in SDTOP
+extern SDLIB_API Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];            // in SDTOP
+extern SDLIB_API Cstring *selector_menu_list;                              // in SDTOP
+extern SDLIB_API Cstring *direction_menu_list;                             // in SDTOP
+extern SDLIB_API Cstring *circcer_menu_list;                               // in SDTOP
+extern SDLIB_API int num_command_commands;                                 // in SDTOP
+extern SDLIB_API Cstring *command_commands;                                // in SDTOP
+extern SDLIB_API ui_utils *gg77;                                           // in SDTOP
 
 
-extern SDLIB_API call_with_name **tagger_calls[NUM_TAGGER_CLASSES];        /* in SDTOP */
-extern SDLIB_API uint32_t number_of_circcers;                              /* in SDTOP */
-extern SDLIB_API uint32_t number_of_circcers_allocated;                    /* in SDTOP */
+extern SDLIB_API call_with_name **tagger_calls[NUM_TAGGER_CLASSES];        // in SDTOP
+extern SDLIB_API uint32_t number_of_circcers;                              // in SDTOP
+extern SDLIB_API uint32_t number_of_circcers_allocated;                    // in SDTOP
 struct circcer_object {
    call_with_name *the_circcer;
    heritflags the_herit_thing;
    const concept_descriptor *the_concept;
  };
-extern SDLIB_API circcer_object *circcer_calls;                            /* in SDTOP */
-extern SDLIB_API uint32_t number_of_taggers[NUM_TAGGER_CLASSES];           /* in SDTOP */
-extern SDLIB_API uint32_t number_of_taggers_allocated[NUM_TAGGER_CLASSES]; /* in SDTOP */
-extern SDLIB_API call_conc_option_state current_options;                   /* in SDTOP */
+extern SDLIB_API circcer_object *circcer_calls;                            // in SDTOP
+extern SDLIB_API uint32_t number_of_taggers[NUM_TAGGER_CLASSES];           // in SDTOP
+extern SDLIB_API uint32_t number_of_taggers_allocated[NUM_TAGGER_CLASSES]; // in SDTOP
+extern SDLIB_API call_conc_option_state current_options;                   // in SDTOP
 
 class saved_error_info {
 
 public:
 
-   void collect(error_flag_type flag);      // in sdtop.cpp.
-   void throw_saved_error() THROW_DECL;     // in sdtop.cpp.
+   void collect(error_flag_type flag);      // in SDTOP
+   void throw_saved_error() THROW_DECL;     // in SDTOP
 
 private:
 
@@ -3634,7 +3635,7 @@ class tglmap {
 
    // Low two bits have rotation for first triangle.
    // Next two bits give rotation of second triangle, beyond the first,
-   // and beyond the usual 180 degress.  So these bits are usually zero.
+   // and beyond the usual 180 degrees.  So these bits are usually zero.
    enum flags {
       tg99chooseptpdrigger    =  0x400,
       tg99startingrotfieldbit =  0x800,
@@ -3957,7 +3958,8 @@ enum {
    SCA_INV_SUP_ELWARN  = 0x00000040U,
    SCA_CONC_REV_ORDER  = 0x00000080U,
    SCA_NO_OVERCAST     = 0x00000100U,
-   SCA_REMOVE_VERIFY   = 0x00000200U
+   SCA_REMOVE_VERIFY   = 0x00000200U,
+   SCA_SAME_SYNTHESIZE = 0x00000400U
 };
 
 struct schema_attr {
@@ -4055,7 +4057,7 @@ struct nice_setup_info_item {
    RESULTFLAG__EXPAND_TO_2X3 means that a call was executed that takes a four person
    starting setup (typically a line) and yields a 2x3 result setup.  Two of those
    result spots will be phantoms, of course.  When recombining a divided setup in
-   which such a call was executed, if the recombination wuold yield a 2x6, and if
+   which such a call was executed, if the recombination would yield a 2x6, and if
    the center 4 spots would be empty, this flag directs divided_setup_move to
    collapse the setup to a 2x4.  This is what makes calls like "pair the line"
    and "step and slide" behave correctly from parallel lines and from a grand line.
@@ -4083,48 +4085,48 @@ struct nice_setup_info_item {
    could be split either way, so we have no information.
 */
 
-enum {
-   // The two low bits are used for result elongation, so bits start with 0x00000004.
-   // This is a four bit field.
-   RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CU,
-   RESULTFLAG__DID_LAST_PART        = 0x00000004U,
-   RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008U,
-   RESULTFLAG__SECONDARY_DONE       = 0x00000010U,
-   RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020U,
-   RESULTFLAG__NEED_DIAMOND         = 0x00000040U,
-   RESULTFLAG__REQUEST_MXN_COMPRESSION = 0x00000080U,
-   RESULTFLAG__DEFER_MXN_COMPRESSION = 0x00000100U,
-   RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000200U,
-   RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x00000400U,
-   RESULTFLAG__RECTIFY_ACCEPTED     = 0x00000800U,
-   RESULTFLAG__EXPAND_TO_2X3        = 0x00001000U,
-   RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x00002000U,
 
-   // This is a 6 bit field.
-   RESULTFLAG__EXPIRATION_BITS      = 0x000FC000U,
-   RESULTFLAG__RECTIFY_EXPIRED      = 0x00004000U,
-   RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x00008000U,
-   RESULTFLAG__GEN_STING_EXPIRED    = 0x00010000U,
-   RESULTFLAG__TWISTED_EXPIRED      = 0x00020000U,
-   RESULTFLAG__SPLIT_EXPIRED        = 0x00040000U,
-   RESULTFLAG__EXPIRATION_ENAB      = 0x00080000U,
+// The two low bits are used for result elongation, so bits start with 0x00000004.
+// This is a four bit field.
+const uint64_t RESULTFLAG__PART_COMPLETION_BITS = 0x000000000000003CULL;
+const uint64_t RESULTFLAG__DID_LAST_PART        = 0x0000000000000004ULL;
+const uint64_t RESULTFLAG__DID_NEXTTOLAST_PART  = 0x0000000000000008ULL;
+const uint64_t RESULTFLAG__SECONDARY_DONE       = 0x0000000000000010ULL;
+const uint64_t RESULTFLAG__PARTS_ARE_KNOWN      = 0x0000000000000020ULL;
+const uint64_t RESULTFLAG__NEED_DIAMOND         = 0x0000000000000040ULL;
+const uint64_t RESULTFLAG__REQUEST_MXN_COMPRESSION = 0x0000000000000080ULL;
+const uint64_t RESULTFLAG__DEFER_MXN_COMPRESSION = 0x0000000000000100ULL;
+const uint64_t RESULTFLAG__COMPRESSED_FROM_2X3  = 0x0000000000000200ULL;
+const uint64_t RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x0000000000000400ULL;
+const uint64_t RESULTFLAG__RECTIFY_ACCEPTED     = 0x0000000000000800ULL;
+const uint64_t RESULTFLAG__EXPAND_TO_2X3        = 0x0000000000001000ULL;
+const uint64_t RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x0000000000002000ULL;
 
-   RESULTFLAG__DID_TGL_EXPANSION    = 0x00100000U,
-   RESULTFLAG__VERY_ENDS_ODD        = 0x00200000U,
-   RESULTFLAG__VERY_CTRS_ODD        = 0x00400000U,
+// This is a 6 bit field.
+const uint64_t RESULTFLAG__EXPIRATION_BITS      = 0x00000000000FC000ULL;
+const uint64_t RESULTFLAG__RECTIFY_EXPIRED      = 0x0000000000004000ULL;
+const uint64_t RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x0000000000008000ULL;
+const uint64_t RESULTFLAG__GEN_STING_EXPIRED    = 0x0000000000010000ULL;
+const uint64_t RESULTFLAG__TWISTED_EXPIRED      = 0x0000000000020000ULL;
+const uint64_t RESULTFLAG__SPLIT_EXPIRED        = 0x0000000000040000ULL;
+const uint64_t RESULTFLAG__EXPIRATION_ENAB      = 0x0000000000080000ULL;
 
-   // This is a 2 bit field.
-   RESULTFLAG__DID_Z_COMPRESSMASK   = 0x01800000U,
-   RESULTFLAG__DID_Z_COMPRESSBIT    = 0x00800000U,
+const uint64_t RESULTFLAG__DID_TGL_EXPANSION    = 0x0000000000100000ULL;
+const uint64_t RESULTFLAG__VERY_ENDS_ODD        = 0x0000000000200000ULL;
+const uint64_t RESULTFLAG__VERY_CTRS_ODD        = 0x0000000000400000ULL;
 
-   RESULTFLAG__NO_REEVALUATE        = 0x02000000U,
-   RESULTFLAG__REALLY_NO_REEVALUATE = 0x04000000U,
-   RESULTFLAG__IMPRECISE_ROT        = 0x08000000U,
-   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000U,
-   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000U,
-   RESULTFLAG__INVADED_SPACE        = 0x40000000U,
-   RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000U
-};
+// This is a 2 bit field.
+const uint64_t RESULTFLAG__DID_Z_COMPRESSMASK   = 0x0000000001800000ULL;
+const uint64_t RESULTFLAG__DID_Z_COMPRESSBIT    = 0x0000000000800000ULL;
+
+const uint64_t RESULTFLAG__NO_REEVALUATE        = 0x0000000002000000ULL;
+const uint64_t RESULTFLAG__REALLY_NO_REEVALUATE = 0x0000000004000000ULL;
+const uint64_t RESULTFLAG__IMPRECISE_ROT        = 0x0000000008000000ULL;
+const uint64_t RESULTFLAG__DID_SHORT6_2X3       = 0x0000000010000000ULL;
+const uint64_t RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x0000000020000000ULL;
+const uint64_t RESULTFLAG__INVADED_SPACE        = 0x0000000040000000ULL;
+const uint64_t RESULTFLAG__STOP_OVERCAST_CHECK  = 0x0000000080000000ULL;
+const uint64_t RESULTFLAG__DID_MAGIC_EXPANSION  = 0x0000000100000000ULL;  // Prevent infinite recursion from this.
 
 
 
@@ -5686,7 +5688,7 @@ class fraction_info {
    }
 
    // This one is in sdmoves.cpp
-   bool query_instant_stop(uint32_t & result_flag_wordmisc) const;
+   bool query_instant_stop(uint64_t & result_flag_wordmisc) const;
 
    void demand_this_part_exists() const THROW_DECL
       {
@@ -6470,10 +6472,6 @@ extern SDLIB_API bool verify_used_selector;                         /* in SDTOP 
 extern SDLIB_API heritflags simple_herit_bits_table[];              /* in SDTOP */
 
 
-struct comment_block {
-   std::string txt;
-};
-
 // A few accessors to let the UI stuff survive.  They are implemented, for now, in SDTOP.
 extern SDLIB_API uint32_t get_concparseflags(const concept_descriptor *foo);
 extern SDLIB_API const char *get_call_name(const call_with_name *foo);
@@ -6674,6 +6672,7 @@ extern void get_string(char *dest, int max);
 template <int N>
 inline void get_string(std::string *dest) {
    char buffer[N];
+   buffer[0] = '\0';
    get_string(buffer, N);
    *dest = buffer;
 }

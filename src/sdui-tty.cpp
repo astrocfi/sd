@@ -719,7 +719,7 @@ static bool get_user_input(const char *prompt, int which)
       }
       else if (c == ' ' || c == '-') {
          // Extend only to one space or hyphen, inclusive.
-         matches = matcher.match_user_input(which, false, false, true);
+         matches = matcher.match_user_input(which, false, false, true, true);
          p = matcher.m_echo_stuff;
 
          if (*p) {
@@ -802,7 +802,7 @@ static bool get_user_input(const char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         matcher.match_user_input(which, false, false, true);
+         matcher.match_user_input(which, false, false, true, true);
          p = matcher.m_echo_stuff;
 
          if (*p) {
@@ -1045,7 +1045,7 @@ popup_return iofull::get_popup_string(std::string_view prompt1, std::string_view
    put_line(to_string(final_inline_prompt, " "));
    get_string<MAX_TEXT_LINE_LENGTH>(dest);
    // Backspace at start of line declines the popup.
-   if ((*dest)[0] == '\b') return POPUP_DECLINE;
+   if (!dest->empty() && (*dest)[0] == '\b') return POPUP_DECLINE;
 
    current_text_line++;
    return !dest->empty() ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;

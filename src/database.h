@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 434
+#define DATABASE_FORMAT_VERSION 437
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -100,7 +100,7 @@
 // I have no interest in supporting such compilers.)  Contemporary usage (that is, 32 bit
 // and 64 bit gcc) seems to be that "int" means 32 bits and "long int" means the longest
 // native type.  In principle, the code should be impervious to using "long int" on a
-// 64 bit sytem (the comment does say "at least 32 bits", doesn't it?), but in practice
+// 64 bit system (the comment does say "at least 32 bits", doesn't it?), but in practice
 // there have been problems.
 
 // Update, 2013:  We now just use the standard C99 things.
@@ -699,6 +699,7 @@ enum setup_kind {
    shyper2x16,// Ditto.
    s_323,
    s_343,
+   s_363,
    s_3223,
    s_525,
    s_545,
@@ -921,6 +922,8 @@ enum begin_kind {
    b_p323,
    b_343,
    b_p343,
+   b_363,
+   b_p363,
    b_3223,
    b_p3223,
    b_525,
@@ -1252,6 +1255,10 @@ enum calldef_schema {
    schema_cross_concentric_6_2,
    schema_concentric_6_2_line,
    schema_concentric_2_6,
+   schema_concentric_2_6_or_zd75,
+   schema_concentric_2_6_or_zeba,
+   schema_concentric_2_6_or_zcf3,
+   schema_concentric_2_6_or_zf3c,
    schema_cross_concentric_2_6,
    schema_concentric_2_4,
    schema_cross_concentric_2_4,
