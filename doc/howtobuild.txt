@@ -402,7 +402,7 @@ Git manages source files in sdgit\sd\src
     and doc files in        sdgit\sd\doc
     and regression tests in sdgit\sd-regression\regression_tests
 
-CREATE A PERDSONAL BRANCH
+CREATE A PERSONAL BRANCH
 
 git switch -c 39.86-bill
 
@@ -709,5 +709,5 @@ It should say "so-and-so has requested your review on this pull request."
 
 Click the green "Add your review" button at the top.
 
-If being a total masochist, look at the "diff" gargage, which is in "patch" format.
+If being a total masochist, look at the "diff" garbage, which is in "patch" format.
 Otherwise, test the change, maybe pull, and submit the review.
