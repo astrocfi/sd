@@ -862,9 +862,10 @@ void configuration::calculate_resolve()
          // The adds of "expected_id" and "firstperson" may overflow out of the "700" bits
          // into the next 2 bits.  (One bit for each add.)
 
-         if (((state.people[testptr->locations[i]].id1 ^
-              (expected_id + firstperson + (directionword & 0xF))) &
-              0777) && (directionword & 0xF) != 0)  // Skip some tests if doing two couple.
+         // Skip unused slots in two-couple tables (where locations[i] == -1).
+         if ((directionword & 0xF) != 0 &&
+             ((state.people[testptr->locations[i]].id1 ^
+               (expected_id + firstperson + (directionword & 0xF))) & 0777))
             goto not_this_one;
       }
 
