@@ -1287,12 +1287,9 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
       k = item->kind;
 
       if (k == concept_comment) {
-         comment_block *fubb;
-
-         fubb = (comment_block *) local_cptr->call_to_print;
          if (request_final_space) writestuff(" ");
          writestuff("{ ");
-         writestuff(fubb->txt);
+         writestuff(local_cptr->comment);
          writestuff(" } ");
          // When advancing, take the setup along.
          // We have test vg05t to credit for this.
@@ -2354,6 +2351,7 @@ parse_block *parse_block::parse_inactive_list = (parse_block *) 0;
 
 void parse_block::initialize(const concept_descriptor *cc)
 {
+   comment.clear();
    more_finalherit_flags.clear_all_herit_and_final_bits();
    setup_for_print = (setup *) 0;
    concept_ptr = cc;
@@ -2415,6 +2413,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
       new_item->call = original_tree->call;
       new_item->setup_for_print = original_tree->setup_for_print;
       new_item->call_to_print = original_tree->call_to_print;
+      new_item->comment = original_tree->comment;
       new_item->options = original_tree->options;
       new_item->replacement_key = original_tree->replacement_key;
       new_item->no_check_call_level = original_tree->no_check_call_level;
@@ -2449,6 +2448,7 @@ SDLIB_API extern void reset_parse_tree(parse_block *original_tree, parse_block *
       new_item->concept_ptr = old_item->concept_ptr;
       new_item->call = old_item->call;
       new_item->call_to_print = old_item->call_to_print;
+      new_item->comment = old_item->comment;
       new_item->options = old_item->options;
 
       // Chop off branches that don't belong.

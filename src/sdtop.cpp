@@ -3749,7 +3749,12 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
    for ( ; p ; p = p->next) {
       if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
       if (p->concept_ptr) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept_ptr->name);
-      if (p->call) n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
+      if (p->concept_ptr && p->concept_ptr->kind == concept_comment) {
+         n += sprintf(tempstring_text+n, "  comment %s  ", p->comment.c_str());
+      }
+      else if (p->call) {
+         n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
+      }
       n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
              p->options.who.who[0],
              p->options.where,
@@ -5160,8 +5165,8 @@ extern void install_person(setup *resultpeople, int resultplace, const setup *so
    else if (newperson) {
       collision_person1 = resultpeople->people[resultplace].id1;
       collision_person2 = newperson;
-      error_message1[0] = '\0';
-      error_message2[0] = '\0';
+      error_message1.clear();
+      error_message2.clear();
       throw error_flag_type(error_flag_collision);
    }
 }
@@ -5184,8 +5189,8 @@ extern void install_rot(setup *resultpeople, int resultplace, const setup *sourc
       else {
          collision_person1 = resultpeople->people[resultplace].id1;
          collision_person2 = newperson;
-         error_message1[0] = '\0';
-         error_message2[0] = '\0';
+         error_message1.clear();
+         error_message2.clear();
          throw error_flag_type(error_flag_collision);
       }
    }
@@ -6406,6 +6411,17 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
                 (!subst2_in_use &&
                  (conceptptr->call->the_defn.callflagsf & CFLAGH__HAS_AT_M)))
                fail("Incomplete parse.");
+         }
+         else if (!strict &&
+                  conceptptr->concept_ptr->kind == concept_another_call_next_mod) {
+            // Subcalls need not be present during non-strict verification, but
+            // recursively verify that any attached subcall has a terminating call
+            // (e.g. when verifying partial inputs like "[centers ?" or
+            // "make a pass but [centers ?").
+            for (parse_block *search = conceptptr->next ; search ; search = search->next) {
+               if (search->subsidiary_root)
+                  check_concept_parse_tree(search->subsidiary_root, false);
+            }
          }
 
          break;

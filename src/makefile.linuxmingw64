@@ -14,7 +14,7 @@ HOST_CXX = g++
 
 # Compiler flags
 # Based on makefile.mingw64
-DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts -Wno-narrowing
+DEFS = -Wall -Wno-switch
 CDEBUGFLAGS = -O4
 CXXFLAGS = $(CDEBUGFLAGS) $(DEFS) -static -static-libgcc -static-libstdc++
 
@@ -86,7 +86,7 @@ sdui-tty.o: sdui-tty.cpp
 	$(CXX) $(CXXFLAGS) -c $<
 
 sdui-win.o: sdui-win.cpp
-	$(CXX) $(CXXFLAGS) -Wno-array-bounds -c $<
+	$(CXX) $(CXXFLAGS) -c $<
 
 sdui-wincon.o: sdui-wincon.cpp
 	$(CXX) $(CXXFLAGS) -c $<
