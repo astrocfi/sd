@@ -1948,7 +1948,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             goto getoutahere;
          }
 
-         // If the user selected the button for canceling the abridgement
+         // If the user selected the button for cancelling the abridgement
          // on the current session, do so.
 
          if (IsDlgButtonChecked(hwnd, IDC_CANCEL_ABRIDGE))

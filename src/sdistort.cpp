@@ -782,7 +782,7 @@ static void multiple_move_innards(
       map_kind == MPKIND__4_QUADRANTS_WITH_45_ROTATION ||
       map_kind == MPKIND__TRIPLETRADEINWINGEDSTAR6;
 
-   // Because of the way heterogenous setups are allowed, we have to mix normal and
+   // Because of the way heterogeneous setups are allowed, we have to mix normal and
    // hetero maps fairly freely.  We use a doctrine that says that even subsetups must
    // match, and odd subsetups must match also.  In the homogeneous case, everything
    // must match, and that's what "fix_n_results" normally tests.  But if they don't

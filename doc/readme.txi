@@ -154,11 +154,11 @@ If you can't give an answer in terms of your understanding of how the calls
 and concepts really work, or if you don't agree with the program's interpretation,
 you shouldn't be calling that material.
 
-@unnumberedsec Judgement, Controversy, and Warning Messages
+@unnumberedsec Judgment, Controversy, and Warning Messages
 
-Not all callers exercise good judgement in their calling, and occasionally
+Not all callers exercise good judgment in their calling, and occasionally
 some controversial, or even illegal, things are called.  It is not possible
-for a computer program to enforce good judgement or good taste.  Sd
+for a computer program to enforce good judgment or good taste.  Sd
 nevertheless sometimes prints warning messages of various types to alert
 less-experienced callers that something might be unusually difficult or
 controversial, or might violate some definition or some commonly accepted notion.
@@ -200,7 +200,7 @@ A somewhat different version runs on Unix systems running the X Window System in
 * Installing on a PC::          Installing on a PC
 * Licensing Terms::             Licensing Terms
 * Author Contact::              How to Contact the Authors
-* Acknowledgements::            Acknowledgements
+* Acknowledgments::             Acknowledgments
 @end menu
 
 @node Getting Sd or Sdtty, Documentation,  , Intro
@@ -379,7 +379,7 @@ if necessary.)
 
 You may delete the
 @file{install.exe} file at this point, along with
-any documentaion archives, perhaps saving copies on diskette.
+any documentation archives, perhaps saving copies on diskette.
 
 You do not need to copy the shortcuts again when upgrading to a new version.
 Installing a new version requires only obtaining and launching @file{install.exe}.
@@ -433,7 +433,7 @@ given to distribute verbatim copies of these documents, either by
 photocopier or by computer,
 but modification of them is forbidden by copyright law.
 
-@node Author Contact, Acknowledgements, Licensing Terms, Intro
+@node Author Contact, Acknowledgments, Licensing Terms, Intro
 @unnumberedsec How to Contact the Authors
 
 Please send any praise, bug reports, or other comments on Sd
@@ -465,8 +465,8 @@ North Billerica MA 01862-2722
 @end display
 
 @ifset full-manual
-@node Acknowledgements, , Author Contact, Intro
-@unnumberedsec Acknowledgements
+@node Acknowledgments, , Author Contact, Intro
+@unnumberedsec Acknowledgments
 
 Thanks to Kathy Godfrey, Sue Curtis, Chris Stacy, and Lynette Bellini
 for their help, encouragement, suggestions, contributions of calls,

@@ -1,0 +1,183 @@
+# Build and test Sd, run the regression suite, build the manuals and the
+# developer guide, and lint the documentation and tooling.
+#
+# Every job runs scripts/run-all-checks.sh, which is the single source of truth
+# for the checks (see .claude/rules/environment.md); a job only installs what
+# its checks need.
+#
+# The regression suite is in the private sd-regression repository. The
+# regression job reads it with a read-only deploy key, stored in this
+# repository as the SD_REGRESSION_SSH_KEY secret (see CONTRIBUTING.md), and
+# tests against the sd-regression branch with the same name as the one being
+# built (scripts/companion-ref.sh). This repository's logs are public, so the
+# job reports failing tests by name only.
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+      # Version branches, such as 39.99. Work branches are tested through
+      # their pull requests.
+      - "[0-9]*.[0-9]*"
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      regression_ref:
+        description: >-
+          Branch, tag, or commit of sd-regression to test against (empty: the
+          branch with the same name, else main)
+        required: false
+        default: ""
+  schedule:
+    # Weekly, so that a change in the runner image shows up between releases.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Install the lint tools
+        run: pip install -r scripts/requirements.txt
+
+      - name: Spelling, prose, Markdown, shell scripts, and workflows
+        run: scripts/run-all-checks.sh --text --sequential
+        env:
+          VENV: none
+
+  build:
+    name: Build (${{ matrix.makefile }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            makefile: makefile.linux64
+          - os: ubuntu-latest
+            makefile: makefile.linux64debug
+          - os: ubuntu-latest
+            makefile: makefile.linuxnostatic64
+          - os: macos-latest
+            makefile: makefile.mac
+    steps:
+      - uses: actions/checkout@v5
+
+      # The scripts need bash 4 or later; macOS ships bash 3.2.
+      - name: Install bash
+        if: runner.os == 'macOS'
+        run: brew install bash
+
+      - name: Build and smoke-test Sdtty
+        run: scripts/run-all-checks.sh --code --sequential
+        env:
+          SD_MAKEFILE: ${{ matrix.makefile }}
+
+  docs:
+    name: Docs
+    # Pinned, not ubuntu-latest: scripts/doc-warnings-baseline.txt is recorded
+    # with Ubuntu 24.04's Texinfo (7.1), and a newer Texinfo reports warnings
+    # that are not in it.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Texinfo and TeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texinfo texlive-base texlive-binaries
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Install Sphinx
+        run: pip install -r docs/requirements.txt
+
+      - name: Build the manuals in every format, and the developer guide
+        run: scripts/run-all-checks.sh --docs-build --dev-guide --sequential
+        env:
+          VENV: none
+
+      - name: Upload the manuals
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuals
+          path: .build/docs/output
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the developer guide
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-guide
+          path: .build/dev-guide/html
+          if-no-files-found: error
+          retention-days: 14
+
+  regression:
+    name: Regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # A pull request from a fork, and one from Dependabot, gets no Actions
+    # secrets, so it cannot read the private suite. A maintainer runs the suite
+    # for a fork's change by pushing its branch to this repository.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    env:
+      SD_REGRESSION_REPOSITORY: ${{ vars.SD_REGRESSION_REPOSITORY || format('{0}/sd-regression', github.repository_owner) }}
+    steps:
+      - name: Check for the deploy key
+        env:
+          KEY: ${{ secrets.SD_REGRESSION_SSH_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error title=No deploy key::The SD_REGRESSION_SSH_KEY secret is not set, so this job cannot read $SD_REGRESSION_REPOSITORY. See \"Regression tests in CI\" in CONTRIBUTING.md."
+            exit 1
+          fi
+
+      # The two checkouts side by side, as the suite's scripts expect.
+      - uses: actions/checkout@v5
+        with:
+          path: sd
+
+      # All branches and tags, so that scripts/companion-ref.sh can choose.
+      - uses: actions/checkout@v5
+        with:
+          repository: ${{ env.SD_REGRESSION_REPOSITORY }}
+          ssh-key: ${{ secrets.SD_REGRESSION_SSH_KEY }}
+          path: sd-regression
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Choose the sd-regression ref
+        run: sd/scripts/companion-ref.sh --dir sd-regression --checkout --override "$OVERRIDE"
+        env:
+          OVERRIDE: ${{ inputs.regression_ref }}
+
+      # Never upload or cache anything from sd-regression: artifacts and caches
+      # of this public repository can be read by others.
+      - name: Run the regression suite
+        run: sd/scripts/run-all-checks.sh --regression --sequential
