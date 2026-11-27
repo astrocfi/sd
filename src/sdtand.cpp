@@ -1160,7 +1160,8 @@ void tandrec::unpack_us(
    if (!my_huge_map)
       fail("This would go to an impossible setup.");
 
-   for (i=0; i<MAX_PEOPLE; i++) {
+   // Several of the maps above are shorter than MAX_PEOPLE.
+   for (i=0; i<=attr::slimit(result); i++) {
       if (my_huge_map[i] >= 0) {
          personrec fb = hyperarray[my_huge_map[i]];
 
