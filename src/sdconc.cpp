@@ -4393,8 +4393,8 @@ extern void concentric_move(
    uint32_t localmods1 = crossing ? localmodsin1 : localmodsout1;
 
    // Will only be used if begin_outer_elongation = 1 or 2.
-   uint32_t elongshift = 3*(begin_outer_elongation - 1);    // So this will be 0 or 3.
-   uint32_t linesfailbit = 1 << elongshift;                 // And these will be 1 or 8.
+   uint32_t elongshift = (begin_outer_elongation == 2) ? 3 : 0;
+   uint32_t linesfailbit = 1 << elongshift;                 // These will be 1 or 8.
    uint32_t columnsfailbit = 8 >> elongshift;
 
    setup_command *outercmd = (inverting) ? cmdin : cmdout;
