@@ -1095,7 +1095,7 @@ extern bool install_outfile_string(std::string_view newstring)
    // If so, generate a new file name.
    // If the character is "+", make the name unique.
 
-   if ((test_string[0] == '*' || test_string[0] == '+') && !test_string[1]) {
+   if (test_string == "*" || test_string == "+") {
       time_t clocktime;
       FILE *filetest;
       char t1[20], t2[20], t3[20], t4[20], t5[20];
@@ -1345,7 +1345,7 @@ extern int process_session_info(Cstring *error_msg)
             abridge_filename = breakpos+1;
          }
 
-         if (abridge_filename[0] != 0) {
+         if (!abridge_filename.empty()) {
             // The session line specifies an abridgement file.
             // Use it, unless the user specified "delete_abridgement",
             // in which case, we specifically don't use it.
@@ -1398,7 +1398,7 @@ static int write_back_session_line(FILE *wfile)
    std::string level_and_abridge_name = getout_strings[calling_level];
 
    // Write the abridge file name, unless the abridgement is being deleted.
-   if (glob_abridge_mode != abridge_mode_none && abridge_filename[0]) {
+   if (glob_abridge_mode != abridge_mode_none && !abridge_filename.empty()) {
       level_and_abridge_name += "-";
       level_and_abridge_name += abridge_filename;
    }

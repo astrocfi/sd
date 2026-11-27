@@ -246,7 +246,10 @@ extern int get_char()
 
    int nc = getchar();
 
-   if (nc == 0x1B) {
+   // Exit gracefully on EOF, for example, at the end of a redirected input file.
+   if (nc == EOF) general_final_exit(0);
+
+   if (nc == 0x1B) {  // ESC
       int ec = getchar();
 
       if (ec == 0x1B) {

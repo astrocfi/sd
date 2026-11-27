@@ -966,7 +966,7 @@ static void multiple_move_innards(
    // (basic_move) knows what is happening and will fix that bit.
    // Also, check that the "did_last_part" bits are the same.
 
-   uint32_t savemisc = result->result_flags.misc;
+   uint64_t savemisc = result->result_flags.misc;
    result->result_flags = get_multiple_parallel_resultflags(z, arity);
    result->result_flags.misc |= savemisc & RESULTFLAG__COMPRESSED_FROM_2X3;
 
