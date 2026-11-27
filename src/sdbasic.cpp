@@ -670,8 +670,8 @@ uint32_t * collision_collector::install_with_collision(
       // Prepare the error message, in case it is needed.
       collision_person1 = m_result_ptr->people[resultplace].id1;
       collision_person2 = sourcepeople->people[sourceplace].id1;
-      error_message1[0] = '\0';
-      error_message2[0] = '\0';
+      error_message1.clear();
+      error_message2.clear();
 
       // ****** but if m_allow_collisions is "collision_severity_controversial", we want to give a fairly serious warning.
       // The "lmask" in the table packs both setups into a 32-bit word, so we don't allow setup bigger than 16.
@@ -4237,8 +4237,8 @@ static int divide_the_setup(
             // The centers and ends are T-boned to each other but each is individually
             // consistent.  We can do the call concentrically *IF* the appropriate type of
             // definition exists for the ends to work with the near person rather than the
-            // far one.  This is what makes "heads into the middle and everbody partner
-            // trade" work, and forbids "heads into the middle and everbody star thru".
+            // far one.  This is what makes "heads into the middle and everybody partner
+            // trade" work, and forbids "heads into the middle and everybody star thru".
             //
             // Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose.
 
@@ -4527,7 +4527,7 @@ static int divide_the_setup(
    // spin the top", we want everyone to step to right or left hands mystically,
    // and then trade mystically.  The centers do the trade in the center.  They
    // don't "do their part".  So we check for the call "trade".  Perhaps there
-   // are other calls in this catagory, and it's quite complicated.  Perhaps
+   // are other calls in this category, and it's quite complicated.  Perhaps
    // the "selective_key_dyp_for_mystic" should only be used if the setup is
    // a rigger or otherwise something for which the centers and ends trade
    // by themselves.  Trade is a complicated call.
@@ -4709,7 +4709,7 @@ static int find_casting_partner(int i, const setup *s, uint32_t roll_info_to_use
 
 
 
-static uint32_t do_actual_array_call(
+static uint64_t do_actual_array_call(
    setup *ss,
    const calldefn *callspec,
    callarray *linedefinition,
@@ -4727,7 +4727,7 @@ static uint32_t do_actual_array_call(
    lilresult_mask[0] = 0;
    lilresult_mask[1] = 0;
    int inconsistent_rotation = 0;
-   uint32_t resultflagsmisc = 0;
+   uint64_t resultflagsmisc = ss->result_flags.misc & RESULTFLAG__DID_MAGIC_EXPANSION;
    int inconsistent_setup = 0;
    bool funny_ok1 = false;
    bool funny_ok2 = false;
@@ -6295,7 +6295,7 @@ extern void basic_move(
    int orig_elongation = 0;
    bool four_way_startsetup = false;
    uint32_t newtb = tbonetest;
-   uint32_t resultflagsmisc = 0;
+   uint64_t resultflagsmisc = 0ULL;
    int desired_elongation = 0;
    calldef_block *qq;
    const calldefn *callspec = the_calldefn;

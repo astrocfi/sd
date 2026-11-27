@@ -276,7 +276,7 @@ void do_number_iteration(int howmanynumbers,
       }
 
       // If the call takes 3 or more numbers, we don't iterate in the
-      // "nice" scans.  The reason is that we don't want to wast a lot
+      // "nice" scans.  The reason is that we don't want to waste a lot
       // of time enumerating lots of combinations of i-j-k-l quarter
       // the deucey.  We will get to them on the random scan in any
       // case.
@@ -302,7 +302,7 @@ bool do_tagger_iteration(uint32_t tagclass,
       tag = tagger_iterator;
 
          /* But we don't allow any call that takes a another tag call (e.g. "revert"),
-            or any other iteratable modifier.  It's just too complicated to iterate
+            or any other iterable modifier.  It's just too complicated to iterate
             over the space of all calls when things like this happen.
             We also reject any that are marked not to be used in resolve. */
 

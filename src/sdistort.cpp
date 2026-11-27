@@ -735,7 +735,7 @@ static void multiple_move_innards(
 
    // If "all 8" results in a 2x2 and a 1x4, "fix_n_results" won't be able to handle it.
    // Just merge the setups, with the 1x4 in the center.  They think they are in a thar,
-   // wheareas the 2x2 people think thay are out on squared set spots.
+   // whereas the 2x2 people think they are out on squared set spots.
    if (arity == 2 && eighth_rot_flag == 0 && map_kind == MPKIND__ALL_8) {
       if (z[0].kind == s2x2 && z[1].kind == s1x4 && z[1].rotation == 0) {
          normalize_concentric((const setup *) 0, schema_concentric, 1, z, 1, 0, result);
@@ -966,7 +966,7 @@ static void multiple_move_innards(
    // (basic_move) knows what is happening and will fix that bit.
    // Also, check that the "did_last_part" bits are the same.
 
-   uint32_t savemisc = result->result_flags.misc;
+   uint64_t savemisc = result->result_flags.misc;
    result->result_flags = get_multiple_parallel_resultflags(z, arity);
    result->result_flags.misc |= savemisc & RESULTFLAG__COMPRESSED_FROM_2X3;
 
@@ -3415,7 +3415,7 @@ extern void distorted_move(
          ss->big_endian_get_directions32(dirs, lives);
          dirs &= 0x55555555;
 
-         // In order to pick out the diamond spots unambigously from block spots
+         // In order to pick out the diamond spots unambiguously from block spots
          // in a 4x4, the points must be facing in appropriate directions, and
          // the concept must be "DISTORTED DIAMONDS", so that the user will demand
          // such orientation.
@@ -4351,7 +4351,7 @@ void do_concept_wing(
 
    if (!normal_was_ok) {
       // The winged people are OK, but, since the normal people failed, the winged
-      // people are all we have.  Be sure thay include everyone.
+      // people are all we have.  Be sure they include everyone.
       if (all_people == winged_people) {
          *result = the_results[1];
          return;

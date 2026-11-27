@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <5 Sep 2026 wba>
+@c Time-stamp: <21 Nov 2026 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.85
-@set title2 Database version = 39.85 format = 434
+@set title1 RELEASE NOTES FOR VERSION 39.86
+@set title2 Database version = 39.86 format = 437
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.86::
 * 39.85::
 * 39.84::
 * 39.83::
@@ -185,7 +186,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.85, Top, (dir)
+@node Intro, 39.86, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -196,11 +197,28 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2026 William B. Ackerman
 @sp 3
 @menu
-* 39.85::               Changes in the current version
+* 39.86::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.85, 39.84, Intro, Top
+@node 39.86, 39.85, Intro, Top
+@unnumberedsec Version 39.86 changes
+
+The mechanisms for compiling Sd and Sdtty were overhauled again.  A
+new compiler (Visual Studio 2026) is now in use, along with new
+management software (Git).
+@sp 1
+The ``pretty triangle'' glyphs for displaying dancers in Sdtty are
+not supported on all PC's, and were removed.  The big ``checker'' icons
+in Sd are still in use.
+@sp 1
+The parser was sped up considerably.  The program can read lines with many brackets
+at a reasonable speed.  (Users will rarely notice this in normal use.)
+@sp 1
+A great many bugs were fixed.
+
+@c ************
+@node 39.85, 39.84, 39.86, Top
 @unnumberedsec Version 39.85 changes
 
 The mechanisms for compiling and distributing Sd and Sdtty were

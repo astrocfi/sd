@@ -4778,7 +4778,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 
 
    // Two ways the outsides can surround the center z in a 4x5.
-   // Not competely satisfactory, but it will have to do.
+   // Not completely satisfactory, but it will have to do.
    {s4x5,           schema_in_out_triple_zcom, {14, 13, 12, 10, 11,
                                                 0, 1, 2, 4, 3,
                                                 8, 7, 6, 18, 17, 16},
@@ -4876,6 +4876,15 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s_bone,         schema_conc_o, {6, 7, 2, 3,    -1, 1, 4, -1, -1, -1, -1, -1,
                          -1, 5, 0, -1, -1, -1, -1, -1},
              s1x4,     s4x4,     0, 0, 1, 1,  0x8FE, schema_conc_o},
+   // These next four must be early, before the 2_6 and 6_2 stuff.
+   {s3x4,           schema_concentric_2_6_or_zd75, {11, 5,   8, 10, 0, 2, 4, 6},
+             s1x2,     s2x3,     0, 1, 2, 1,  0x8F5, schema_concentric_2_6_or_zd75},
+   {s3x4,           schema_concentric_2_6_or_zeba, {11, 5,   9, 10, 1, 3, 4, 7},
+             s1x2,     s2x3,     0, 1, 2, 1,  0x8F5, schema_concentric_2_6_or_zeba},
+   {s3x4,           schema_concentric_2_6_or_zcf3, {11, 5,   7, 10, 0, 1, 4, 6},
+             s1x2,     s2x3,     0, 1, 2, 1,  0x8F5, schema_concentric_2_6_or_zcf3},
+   {s3x4,           schema_concentric_2_6_or_zf3c, {11, 5,   9, 10, 2, 3, 4, 8},
+             s1x2,     s2x3,     0, 1, 2, 1,  0x8F5, schema_concentric_2_6_or_zf3c},
    {s_qtag,         schema_concentric_6_2_tgl, {0, 1, 3, 4, 5, 7,    6, 2},
              s_bone6,  s1x2,     0, 0, 1, 1,  0x900, schema_nothing},
    {s2x3,           schema_concentric_6p, {4, 1,    0, 2, 3, 5},
@@ -6358,6 +6367,18 @@ static const coordrec thing_343 = {s_343, 0x23,
       -1, -1, -1,  0,  1,  2, -1, -1,
       -1, -1,  8,  9,  4,  3, -1, -1,
       -1, -1, -1,  7,  6,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thing_363 = {s_363, 0x23,
+   { -4,   0,   4,  10,   6,   2,   4,   0,  -4, -10,  -6,  -2},
+   {  4,   4,   4,   0,   0,   0,  -4,  -4,  -4,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1,  9, 10, 11,  5,  4,  3, -1,
+      -1, -1, -1,  8,  7,  6, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
@@ -8195,6 +8216,20 @@ static const id_bit_table id_bit_table_343[] = {
    NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3| ID2_OUTR6 | ID2_CTR1X4),
    NOBIT(ID2_CTRDMD | ID2_NOUTR1X3| ID2_CTR2  | ID2_CTR1X4)};
 
+static const id_bit_table id_bit_table_363[] = {
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3            | ID2_CTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3| ID2_CTR1X4| ID2_CTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_NOUTR1X3| ID2_CTR2  | ID2_CTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_OUTR1X3 | ID2_OUTR6 | ID2_NCTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3            | ID2_CTR1X6),
+   NOBIT(ID2_NCTRDMD| ID2_NOUTR1X3| ID2_CTR1X4| ID2_CTR1X6),
+   NOBIT(ID2_CTRDMD | ID2_NOUTR1X3| ID2_CTR2  | ID2_CTR1X6)};
+
 static const id_bit_table id_bit_table_23232[] = {
    NOBIT(   ID2_NCTRDMD),
    NOBIT(   ID2_NCTRDMD),
@@ -8434,17 +8469,17 @@ id_bit_table id_bit_table_3x4_corners[] = {
 
 // Else if the setup is occupied as Z's, use this.
 id_bit_table id_bit_table_3x4_zs[] = {
-   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
-   NOBIT(ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS | ID2_OUTR6),
+   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS | ID2_OUTR6),
    NOBIT(ID2_CTR1X4|ID2_CTR2),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
-   NOBIT(ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X4),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS | ID2_OUTR6),
+   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS | ID2_OUTR6),
    NOBIT(ID2_CTR1X4|ID2_CTR2)};
 
 // If all else fails, use this.
@@ -10616,6 +10651,16 @@ const setup_attr setup_attrs[] = {
     id_bit_table_343,
     {"   5 a  b  c@@   i  j  e  d@@   5 h  g  f",
      "6i@7h6a@76j@7g6b@76e@7f6c@76d"}},
+   {11,                      // s_363
+    &thing_363,
+    &thing_363,
+    {0, 0, 0, 0},
+    {b_363, b_p363},
+    {0, 0},
+    0U,
+    id_bit_table_363,
+    {"   56 a  b  c@@j  k  l  f  e  d@@   56 i  h  g",
+     "6j@6k@7i6a@76l@7h6b@76f@7g6c@76e@6d"}},
    {9,                      // s_3223
     &thing_3223,
     &thing_3223,
@@ -11033,6 +11078,14 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_6_2_line
    {SCA_SNAGOK | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_2_6
+   {SCA_SNAGOK | SCA_REMOVE_VERIFY | SCA_SAME_SYNTHESIZE, 
+    schema_nothing},                     // schema_concentric_2_6_or_zd75
+   {SCA_SNAGOK | SCA_REMOVE_VERIFY | SCA_SAME_SYNTHESIZE, 
+    schema_nothing},                     // schema_concentric_2_6_or_zeba
+   {SCA_SNAGOK | SCA_REMOVE_VERIFY | SCA_SAME_SYNTHESIZE, 
+    schema_nothing},                     // schema_concentric_2_6_or_zcf3
+   {SCA_SNAGOK | SCA_REMOVE_VERIFY | SCA_SAME_SYNTHESIZE, 
+    schema_nothing},                     // schema_concentric_2_6_or_zf3c
    {SCA_CROSS | SCA_REMOVE_VERIFY,
     schema_concentric_2_6},              // schema_cross_concentric_2_6
    {SCA_REMOVE_VERIFY,

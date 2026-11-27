@@ -136,6 +136,7 @@ struct DisplayType {
 #define ui_undefined -999
 
 
+static char szOutFilename     [MAX_TEXT_LINE_LENGTH];
 static char szDatabaseFilename[MAX_TEXT_LINE_LENGTH];
 static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
 static int GLOBStatusBarLength;
@@ -287,7 +288,7 @@ static void Update_text_display()
    int Ystuff;
 
    for (Ystuff=0,DisplayPtr=DisplayRoot;
-        DisplayPtr->Line[0] != -1;
+        DisplayPtr->Height != -1;
         DisplayPtr=DisplayPtr->Next) {
       Ystuff += DisplayPtr->DeltaToNext;
    }
@@ -311,10 +312,11 @@ static void erase_questionable_stuff()
 {
    if (question_stuff_to_erase) {
       CurDisplay = DisplayRoot;
-      while (CurDisplay->Line[0] != -1 && CurDisplay != question_stuff_to_erase)
+      while (CurDisplay->Height != -1 && CurDisplay != question_stuff_to_erase)
          CurDisplay = CurDisplay->Next;
 
-      CurDisplay->Line[0] = -1;
+      CurDisplay->Line.clear();
+      CurDisplay->Height = -1;
       question_stuff_to_erase = (DisplayType *) 0;
       Update_text_display();
    }
@@ -352,7 +354,7 @@ static void check_text_change(bool doing_escape)
 
    if (doing_escape) {
       nLen++;
-      matches = matcher.match_user_input(nLastOne, false, false, false);
+      matches = matcher.match_user_input(nLastOne, false, false, true, true);
       p = matcher.m_echo_stuff;
       if (*p) {
          changed_editbox = true;
@@ -410,7 +412,7 @@ static void check_text_change(bool doing_escape)
             // **** do we think nLen has the right stuff here?
             matcher.m_user_input_size = strlen(matcher.m_user_input);
             // Extend only to one space or hyphen, inclusive.
-            matches = matcher.match_user_input(nLastOne, false, false, true);
+            matches = matcher.match_user_input(nLastOne, false, false, true, true);
             p = matcher.m_echo_stuff;
 
             if (*p) {
@@ -870,7 +872,7 @@ static void Transcript_OnPaint(HWND hwnd)
    DisplayType *DisplayPtr;
 
    for (Y=TVOFFSET-nImageOffTop*TranscriptTextHeight,DisplayPtr=DisplayRoot;
-        DisplayPtr && DisplayPtr->Line[0] != -1;
+        DisplayPtr && DisplayPtr->Height != -1;
         Y+=DisplayPtr->DeltaToNext,DisplayPtr=DisplayPtr->Next) {
       int x, xdelta;
       const char *cp;
@@ -1465,7 +1467,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       if (gg77->look_up_abbreviations(nLastOne))
          return;
 
-      matches = matcher.match_user_input(nLastOne, false, false, false);
+      matches = matcher.match_user_input(nLastOne, false, false, true);
 
       /* We forbid a match consisting of two or more "direct parse" concepts, such as
          "grand cross".  Direct parse concepts may only be stacked if they are followed
@@ -2032,8 +2034,6 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // If user specified the output file during startup dialog, install that.
       // It overrides anything from the command line.
 
-      char szOutFilename[MAX_TEXT_LINE_LENGTH];
-
       GetWindowText(GetDlgItem(hwnd, IDC_OUTPUT_NAME),
                     szOutFilename, MAX_TEXT_LINE_LENGTH);
 
@@ -2554,7 +2554,7 @@ void iofull::final_initialize()
    // Initialize the display window linked list.
 
    DisplayRoot = new DisplayType;
-   DisplayRoot->Line[0] = -1;
+   DisplayRoot->Height = -1;
    DisplayRoot->Next = NULL;
    DisplayRoot->Prev = NULL;
    CurDisplay = DisplayRoot;
@@ -3036,7 +3036,7 @@ void iofull::add_new_line(std::string_view the_line, uint32_t drawing_picture)
          CurDisplay->DeltaToNext = (BMP_PERSON_SIZE+BMP_PERSON_SPACE)/2;
       }
       else {
-         if (!CurDisplay->Line[0])
+         if (CurDisplay->Line.empty())
             CurDisplay->Height = 0;
          else
             CurDisplay->Height = BMP_PERSON_SIZE+BMP_PERSON_SPACE;
@@ -3058,7 +3058,8 @@ void iofull::add_new_line(std::string_view the_line, uint32_t drawing_picture)
    else
       CurDisplay = CurDisplay->Next;
 
-   CurDisplay->Line[0] = -1;
+   CurDisplay->Line.clear();
+   CurDisplay->Height = -1;
 
    Update_text_display();
 }
@@ -3072,11 +3073,12 @@ void iofull::no_erase_before_n(int n)
 void iofull::reduce_line_count(int n)
 {
    CurDisplay = DisplayRoot;
-   while (CurDisplay->Line[0] != -1 && n--) {
+   while (CurDisplay->Height != -1 && n--) {
       CurDisplay = CurDisplay->Next;
    }
 
-   CurDisplay->Line[0] = -1;
+   CurDisplay->Line.clear();
+   CurDisplay->Height = -1;
 
    Update_text_display();
 }
