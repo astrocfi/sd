@@ -909,7 +909,7 @@ extern bool divide_for_magic(
 {
    warning_info saved_warnings;
    uint32_t division_code;
-   bool did_something = false;
+   //bool did_something = false;
    setup_kind orig_kind = ss->kind;
 
    heritflags heritflags_to_use = ss->cmd.cmd_final_flags.herit;
