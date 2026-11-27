@@ -5147,6 +5147,12 @@ extern uint32_t copy_person(setup *resultpeople, int resultplace, const setup *s
 
 extern uint32_t copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount)
 {
+   // A negative sourceplace means an empty slot.
+   if (sourceplace < 0) {
+      resultpeople->clear_person(resultplace);
+      return 0;
+   }
+
    uint32_t newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) newperson = (newperson + rotamount) & ~064;
