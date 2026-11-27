@@ -4128,7 +4128,9 @@ static bool try_this_split(uint32_t splitting_indicator,
       after_matrix_info[i].deltarot += result->rotation;
 
       for (k=0 ; k<numgroups ; k++) {
-         if (((after_matrix_info[i].id1 ^ before_matrix_info[Bindex[k]].id1) & XPID_MASK) == 0)
+         if (Bindex[k] >= 0 &&
+             ((after_matrix_info[i].id1 ^
+               before_matrix_info[Bindex[k]].id1) & XPID_MASK) == 0)
             Aindex[k] = i;
       }
    }
