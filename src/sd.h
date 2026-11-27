@@ -2183,7 +2183,7 @@ enum uims_reply_kind {
                         //    This is the only outcome in startup mode.
    ui_concept_select,   // (normal only) User selected a concept.
    ui_call_select,      // (normal only) User selected a call from the current call menu.
-   ui_user_cancel,      // (normal only) user canceled call entry (waved the mouse away, etc.)
+   ui_user_cancel,      // (normal only) user cancelled call entry (waved the mouse away, etc.)
    ui_help_simple,      // (any) user selected "help"
    ui_help_manual       // (any) user selected "help manual"
 };
