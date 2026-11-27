@@ -94,17 +94,23 @@ void matcher_class::reset_active_result(uims_reply_kind kind)
 }
 
 
-void matcher_class::initialize_for_parse(int which_commands, bool show, bool only_want_extension, bool can_cache_completed)
+void matcher_class::reclaim_modifier_blocks(modifier_block *stop_at)
 {
-   // Reclaim all old modifier blocks.  These are global over the entire program.
-   // All other fields get initialized (right here!) for every parse.
-
-   while (s_modifier_active_list) {
+   while (s_modifier_active_list && s_modifier_active_list != stop_at) {
       modifier_block *item = s_modifier_active_list;
       s_modifier_active_list = item->gc_ptr;
       item->gc_ptr = s_modifier_inactive_list;
       s_modifier_inactive_list = item;
    }
+}
+
+
+void matcher_class::initialize_for_parse(int which_commands, bool show, bool only_want_extension, bool can_cache_completed)
+{
+   // Reclaim all old modifier blocks.  These are global over the entire program.
+   // All other fields get initialized (right here!) for every parse.
+
+   reclaim_modifier_blocks();
 
    reset_active_result(ui_start_select);
    m_only_extension = only_want_extension;
@@ -325,8 +331,8 @@ static inline bool cand_prefix_mismatches(const char *user, const char *cand)
 int get_hash(Cstring string, int *bucket_p)
 {
    char c1 = string[0];
-   char c2 = string[1];
-   char c3 = string[2];
+   char c2 = c1 ? string[1] : 0;
+   char c3 = c2 ? string[2] : 0;
    int bucket;
 
    if (c1 == '<' && ((int) c2 & ~32) == 'A' && ((int) c3 & ~32) == 'N') {
@@ -360,6 +366,25 @@ bool matches_ers_suffix(const char *user)
       if (user[i] != prefix[i]) return false;
    }
    return !user[3] || user[3] == 's' || user[3] == '\'';
+}
+
+// Verify that every subcall branch below `mb` ends in a ui_call_select
+// rather than an incomplete concept prefix.  At top level (`in_subcall`
+// false), standalone concept chains are allowed.
+bool modifier_subcalls_complete(const modifier_block *mb, bool in_subcall)
+{
+   for (; mb; mb = mb->packed_next_conc_or_subcall) {
+      if (mb->kind == ui_call_select) {
+         return (!mb->packed_next_conc_or_subcall ||
+                 modifier_subcalls_complete(mb->packed_next_conc_or_subcall, true)) &&
+                (!mb->packed_secondary_subcall ||
+                 modifier_subcalls_complete(mb->packed_secondary_subcall, true));
+      }
+      if (mb->kind != ui_concept_select)
+         return true;
+   }
+
+   return !in_subcall;
 }
 
 }   // namespace
@@ -987,6 +1012,12 @@ bool matcher_class::verify_call()
 }
 
 
+bool matcher_class::subcalls_are_complete() const
+{
+   return modifier_subcalls_complete(&m_final_result.match, false);
+}
+
+
 
 
 /*
@@ -1032,6 +1063,9 @@ void matcher_class::record_a_match()
    // "verify" operation.  Also, copy the first exact match, and any
    // exact match that isn't yielding relative to what we have so far.
 
+   modifier_block *mod_mark = s_modifier_active_list;
+   bool copied_modifiers = false;
+
    if (m_match_count == 0 ||
        m_verify ||
        (*m_full_extension == '\0' &&
@@ -1041,6 +1075,7 @@ void matcher_class::record_a_match()
 
       // We need to copy the modifiers to reasonably stable storage.
       copy_sublist(&m_final_result, &m_final_result.match);
+      copied_modifiers = true;
    }
 
    if (*m_full_extension == '\0') {
@@ -1055,6 +1090,13 @@ void matcher_class::record_a_match()
 
    if (m_showing) {
       if (verify_call()) gg77->iob88.show_match();
+      if (copied_modifiers) {
+         // Listing ignores m_final_result afterward and never caches subcalls;
+         // reclaim per-match blocks so deep '?' scans do not exhaust memory.
+         reclaim_modifier_blocks(mod_mark);
+         m_final_result.match.packed_next_conc_or_subcall = (modifier_block *) 0;
+         m_final_result.match.packed_secondary_subcall = (modifier_block *) 0;
+      }
    }
 }
 
@@ -1181,6 +1223,11 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
                m_current_result->match.concept_ptr = pat2_concept;
                scan_concepts_and_calls(user, " ", pat2,
                                        &m_current_result->real_next_subcall, patxi);
+
+               // Do not let a bare direct-parse concept satisfy a demand_a_call
+               // subcall on its own without a terminating call.
+               if (pat2 && pat2->demand_a_call)
+                  goto getout;
             }
 
             pat2 = (pat2_block *) 0;
@@ -1542,7 +1589,7 @@ void matcher_class::scan_concepts_and_calls(
 
    // See if we can use the hash mechanism.
 
-   if (user[0] || !m_showing) {
+   if (user[0] && user[1]) {
       // We now know that it will do nothing if:
       // (call_or_concept_name has 1st 3 chars with no comma, quote, atsign, or NUL)
       //                         AND

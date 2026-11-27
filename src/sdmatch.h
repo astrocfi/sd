@@ -78,6 +78,9 @@ public:
 
    bool verify_call();
 
+   // Returns true iff every subcall branch in m_final_result reaches a call.
+   bool subcalls_are_complete() const;
+
    void record_a_match();
 
    void match_pattern(Cstring pattern);
@@ -177,6 +180,7 @@ public:
 private:
 
    void clone_sublist_branch(const match_result *sub, modifier_block *&dest_slot);
+   void reclaim_modifier_blocks(modifier_block *stop_at = (modifier_block *) 0);
    void reset_active_result(uims_reply_kind kind);
 
    void match_concept_prefix_wildcard(
