@@ -3774,7 +3774,12 @@ struct coordrec {
    int get_index_from_coords(int x, int y) const
    {
       int mag = (xfactor >> 4) & 0xF;
-      int place = diagram[32 - (1 << ((xfactor&0xF)-1)) - ((y >> mag) << (xfactor&0xF)) + (x >> mag)];
+      int shift = xfactor & 0xF;
+      // y can be negative, so multiply rather than left-shift.
+      int index = 32 - (1 << (shift-1)) - (y >> mag) * (1 << shift) + (x >> mag);
+      if (index < 0 || index >= 64)
+         return -1;
+      int place = diagram[index];
       if (place < 0 || (xca[place] != x) || (yca[place] != y))
          return -1;
       return place;
