@@ -82,18 +82,19 @@ scripts/run-all-checks.sh --help        # the scopes and single checks
 | `build` | Builds Sdtty, `mkcalls`, and `sd_calls.dat`, and smoke-tests them. |
 | `docs-build` | Builds the manuals in every format, and fails on a new warning. |
 | `dev-guide` | Builds the developer guide, and fails on any Sphinx warning. |
-| `codespell` | Checks spelling, with American spelling enforced. |
+| `codespell` | Checks spelling in the documentation, the tooling, and the C++ comments, with American spelling enforced. |
 | `prose` | Checks the documentation prose against `.claude/rules/doc_prose_style.md`. |
 | `pymarkdown` | Lints the Markdown. |
 | `shellcheck` | Lints the shell scripts in `scripts/`. |
 | `actionlint` | Lints the GitHub Actions workflows. |
 | `regression` | Runs the regression suite. |
 
-The manuals and the README are upstream text, written before these checks. The
-findings in them today are recorded in baselines (`scripts/*-baseline.txt`),
-keyed by line text, and only a new finding fails a check. A change that fixes a
-baseline finding regenerates the baseline with the check's `--update-baseline`
-option. A new finding is fixed, not added to a baseline.
+The manuals, the README, and the comments in the source are upstream text,
+written before these checks. The findings in them today are recorded in
+baselines (`scripts/*-baseline.txt`), keyed by line text, and only a new
+finding fails a check. A change that fixes a baseline finding regenerates the
+baseline with the check's `--update-baseline` option. A new finding is fixed,
+not added to a baseline.
 
 ## The Regression Suite
 
