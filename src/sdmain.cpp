@@ -782,10 +782,8 @@ extern bool query_for_call()
          // No partially entered concepts.  Just do the sequence number.
 
          if (!ui_options.diagnostic_mode) {
-            char indexbuf[200];
-            sprintf (indexbuf, "%2d:",
-                     config_history_ptr-configuration::whole_sequence_low_lim+2);
-            gg77->writestuff(indexbuf);
+            int seqnum = config_history_ptr - configuration::whole_sequence_low_lim + 2;
+            gg77->writestuff(to_string(std::setw(2), seqnum, ":"));
             gg77->newline();
          }
       }

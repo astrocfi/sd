@@ -3110,18 +3110,15 @@ void ui_utils::run_program(iobase & ggg)
 
    // If in diagnostic mode, we print a detailed reason for any cache miss.
    if (ui_options.diagnostic_mode && global_cache_miss_reason[0] != 0) {
-      char localreason[500];
-
-      sprintf(localreason, "Cache miss, reloaded: %d %d %d %d %d %d %d.",
-              global_cache_miss_reason[0],
-              global_cache_miss_reason[1],
-              global_cache_miss_reason[2],
-              global_cache_miss_reason[3],
-              global_cache_miss_reason[4],
-              global_cache_miss_reason[5],
-              global_cache_miss_reason[6]);
       newline();
-      writestuff(localreason);
+      writestuff(to_string("Cache miss, reloaded: ",
+                           global_cache_miss_reason[0], " ",
+                           global_cache_miss_reason[1], " ",
+                           global_cache_miss_reason[2], " ",
+                           global_cache_miss_reason[3], " ",
+                           global_cache_miss_reason[4], " ",
+                           global_cache_miss_reason[5], " ",
+                           global_cache_miss_reason[6], "."));
       newline();
       newline();
    }

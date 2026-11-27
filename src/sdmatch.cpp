@@ -29,7 +29,7 @@
 */
 
 #include <string.h> /* for strcpy */
-#include <stdio.h>  /* for sprintf */
+#include <stdio.h>  /* for sscanf */
 #include <ctype.h>  /* for tolower */
 
 // The definition of "matcher_class" is in sdmatch.h, called from sd.h.
@@ -720,9 +720,8 @@ void matcher_initialize()
       }
 
       if (!get_hash(selector_list[i].name, &bucket)) {
-         char errbuf[255];
-         sprintf(errbuf, "Can't hash selector %d - 1!", i);
-         gg77->iob88.fatal_error_exit(2, errbuf);
+         gg77->iob88.fatal_error_exit(2, to_string("Can't hash selector ", i,
+                                                   " - 1!").c_str());
       }
 
       // See if this bucket is already accounted for.
@@ -744,9 +743,8 @@ void matcher_initialize()
       }
 
       if (!get_hash(selector_list[i].sing_name, &bucket)) {
-         char errbuf[255];
-         sprintf(errbuf, "Can't hash selector %d - 2!", i);
-         gg77->iob88.fatal_error_exit(2, errbuf);
+         gg77->iob88.fatal_error_exit(2, to_string("Can't hash selector ", i,
+                                                   " - 2!").c_str());
       }
 
       for (j=0; j<selector_hasher.the_list_size; j++) {
@@ -773,9 +771,8 @@ void matcher_initialize()
          // of the at sign.  That's OK.
          if (get_call_name(tagger_calls[i][ku])[0] != '@') {
             if (!get_hash(get_call_name(tagger_calls[i][ku]), &bucket)) {
-               char errbuf[255];
-               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-               gg77->iob88.fatal_error_exit(2, errbuf);
+               gg77->iob88.fatal_error_exit(2, to_string("Can't hash tagger ", i,
+                                                         " ", (int) ku, "!").c_str());
             }
          }
 

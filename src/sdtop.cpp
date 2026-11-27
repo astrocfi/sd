@@ -3744,48 +3744,51 @@ bool check_for_concept_group(
 
 
 
-static void debug_print_parse_block(int level, const parse_block *p, char *tempstring_text, int &n)
+static void debug_print_parse_block(int level, const parse_block *p,
+                                    std::string *tempstring_text)
 {
    for ( ; p ; p = p->next) {
-      if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
-      if (p->concept_ptr) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept_ptr->name);
+      if (level > 0) *tempstring_text += to_string("(", level, ") ");
+      if (p->concept_ptr)
+         *tempstring_text += to_string("  concept ", p->concept_ptr->name, "  ");
       if (p->concept_ptr && p->concept_ptr->kind == concept_comment) {
-         n += sprintf(tempstring_text+n, "  comment %s  ", p->comment.c_str());
+         *tempstring_text += to_string("  comment ", p->comment, "  ");
       }
       else if (p->call) {
-         n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
+         *tempstring_text += to_string("  call ", p->call->name, "  ");
       }
-      n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
-             p->options.who.who[0],
-             p->options.where,
-             p->options.howmanynumbers,
-             (int) p->options.number_fields,
-             (int) p->options.tagger);
+      *tempstring_text += to_string(" ", p->options.who.who[0],
+                                    " ", p->options.where,
+                                    " ", p->options.howmanynumbers,
+                                    " ", (int) p->options.number_fields,
+                                    " ", (int) p->options.tagger, " \n");
       if (p->subsidiary_root)
-         debug_print_parse_block(level+1, p->subsidiary_root, tempstring_text, n);
+         debug_print_parse_block(level+1, p->subsidiary_root, tempstring_text);
    }
 }
 
 extern void crash_print(const char *filename, int linenum, int newtb, setup *ss) THROW_DECL
 {
-   char tempstring_text[10000];  // If this isn't big enough, I guess we lose.
-
-   int n = sprintf(tempstring_text, "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n");
-   n += sprintf(tempstring_text+n, "%s %d 0x%08x\n", filename, linenum, newtb);
+   std::string tempstring_text = to_string(
+      "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n",
+      filename, " ", linenum, " 0x",
+      std::hex, std::setfill('0'), std::setw(8), (unsigned int) newtb, "\n");
 
    if (ss && attr::slimit(ss) <= 24) {
-      n += sprintf(tempstring_text+n, "%d\n", ss->kind);
+      tempstring_text += to_string(ss->kind, "\n");
       for (int q = 0 ; q <= attr::slimit(ss) ; q++) {
-         n += sprintf(tempstring_text+n, "  0x%08x\n", ss->people[q].id1);
+         tempstring_text += to_string("  0x", std::hex, std::setfill('0'),
+                                      std::setw(8), ss->people[q].id1, "\n");
       }
    }
 
    int hsize = config_history_ptr+1;
    for (int jjj = 2 ; jjj <= hsize ; jjj++) {
-      debug_print_parse_block(0, configuration::history[jjj].command_root, tempstring_text, n);
+      debug_print_parse_block(0, configuration::history[jjj].command_root,
+                              &tempstring_text);
    }
 
-   gg77->iob88.serious_error_print(tempstring_text);
+   gg77->iob88.serious_error_print(tempstring_text.c_str());
    fail("Crash.");
 }
 

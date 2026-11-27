@@ -93,6 +93,7 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 #include "database.h"
 #include "sdchars.h"
