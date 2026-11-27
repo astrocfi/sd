@@ -53,16 +53,9 @@ matcher_class::matcher_class() : s_modifier_active_list((modifier_block *) 0),
    conc_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
    conclvl_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
 
-   m_fcn_key_table_normal = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-   m_fcn_key_table_start = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-   m_fcn_key_table_resolve = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-
-   ::memset(m_fcn_key_table_normal, 0,
-            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   ::memset(m_fcn_key_table_start, 0,
-            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   ::memset(m_fcn_key_table_resolve, 0,
-            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   m_fcn_key_table_normal = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1]();
+   m_fcn_key_table_start = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1]();
+   m_fcn_key_table_resolve = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1]();
 }
 
 // Destructor.
@@ -78,6 +71,28 @@ matcher_class::~matcher_class()
 }
 
 
+void matcher_class::reset_active_result(uims_reply_kind kind)
+{
+   m_active_result.valid = true;
+   m_active_result.exact = false;
+   m_active_result.indent = false;
+   m_active_result.real_next_subcall = (const match_result *) 0;
+   m_active_result.real_secondary_subcall = (const match_result *) 0;
+   m_active_result.recursion_depth = 0;
+   m_active_result.yield_depth = 0;
+
+   m_active_result.match.kind = kind;
+   m_active_result.match.index = 0;
+   m_active_result.match.call_conc_options.initialize();
+   m_active_result.match.call_ptr = (call_with_name *) 0;
+   m_active_result.match.concept_ptr = (const concept_descriptor *) 0;
+   m_active_result.match.packed_next_conc_or_subcall = (modifier_block *) 0;
+   m_active_result.match.packed_secondary_subcall = (modifier_block *) 0;
+   m_active_result.match.gc_ptr = (modifier_block *) 0;
+
+   m_current_result = &m_active_result;
+}
+
 
 void matcher_class::initialize_for_parse(int which_commands, bool show, bool only_want_extension, bool can_cache_completed)
 {
@@ -91,31 +106,7 @@ void matcher_class::initialize_for_parse(int which_commands, bool show, bool onl
       s_modifier_inactive_list = item;
    }
 
-   // (Mostly) clear out m_active_result.  We used to do this as one big memset over the
-   // whole object.  But modern compilers have gotten extremely fussy about this.
-   //
-   // It is of type "match_result", which is defined in sd.h around line 2306.
-   //
-   // Yeah, yeah, we should use nice constructors and do this up real purty.
-
-   m_active_result.valid = true;   // The field we don't clear.
-   m_active_result.exact = false;
-   m_active_result.indent = false;
-   m_active_result.real_next_subcall = (const match_result *) 0;
-   m_active_result.real_secondary_subcall = (const match_result *) 0;
-   m_active_result.recursion_depth = 0;
-   m_active_result.yield_depth = 0;
-
-   m_active_result.match.kind = ui_start_select;
-   m_active_result.match.index = 0;
-   m_active_result.match.call_conc_options.initialize();
-   m_active_result.match.call_ptr = (call_with_name *) 0;
-   m_active_result.match.concept_ptr = (const concept_descriptor *) 0;
-   m_active_result.match.packed_next_conc_or_subcall = (modifier_block *) 0;
-   m_active_result.match.packed_secondary_subcall = (modifier_block *) 0;
-   m_active_result.match.gc_ptr = (modifier_block *) 0;
-
-   m_current_result = &m_active_result;
+   reset_active_result(ui_start_select);
    m_only_extension = only_want_extension;
    m_can_cache_completed_subcalls = can_cache_completed;
    m_user_bracket_depth = 0;
@@ -132,13 +123,6 @@ void matcher_class::initialize_for_parse(int which_commands, bool show, bool onl
    m_final_result.valid = false;
    m_final_result.exact = false;
    m_space_ok = false;
-
-   /* ****  Also need to consider initializing these?
-      int m_extended_bracket_depth;
-      char m_user_input[INPUT_TEXTLINE_SIZE+1];     // the current user input
-      char m_full_extension[INPUT_TEXTLINE_SIZE+1]; // the extension for the current pattern
-      int m_user_input_size;                        // This is always equal to strlen(m_user_input).
-   */
 }
 
 
@@ -367,68 +351,47 @@ int get_hash(Cstring string, int *bucket_p)
 }
 
 
-void hash_me(int bucket, int i)
+// Returns true if user is a prefix of " er" or starts with " ers" or " er'".
+bool matches_ers_suffix(const char *user)
 {
-   gg77->matcher_p->call_hashers[bucket].add_one(i);
-}
-
-
-bool foobar(const char *user)
-{
-   if (!user[0]) return true;
-   if (user[0] != ' ') return false;
-   if (!user[1]) return true;
-   if (user[1] != 'e') return false;
-   if (!user[2]) return true;
-   if (user[2] != 'r') return false;
-   if (!user[3]) return true;
-   if (user[3] != 's' && user[3] != '\'') return false;
-   return true;
+   static const char prefix[] = " er";
+   for (int i = 0; i < 3; i++) {
+      if (!user[i]) return true;
+      if (user[i] != prefix[i]) return false;
+   }
+   return !user[3] || user[3] == 's' || user[3] == '\'';
 }
 
 }   // namespace
 
+void matcher_class::clone_sublist_branch(
+   const match_result *sub,
+   modifier_block *&dest_slot)
+{
+   if (!sub) return;
+
+   modifier_block *out;
+   if (s_modifier_inactive_list) {
+      out = s_modifier_inactive_list;
+      s_modifier_inactive_list = out->gc_ptr;
+   }
+   else {
+      out = new modifier_block;
+   }
+
+   *out = sub->match;
+   out->packed_next_conc_or_subcall = (modifier_block *) 0;
+   out->packed_secondary_subcall = (modifier_block *) 0;
+   out->gc_ptr = s_modifier_active_list;
+   s_modifier_active_list = out;
+   dest_slot = out;
+   copy_sublist(sub, out);
+}
+
 void matcher_class::copy_sublist(const match_result *outbar, modifier_block *tails)
 {
-   if (outbar->real_next_subcall) {
-      modifier_block *out;
-      const match_result *newoutbar = outbar->real_next_subcall;
-
-      if (s_modifier_inactive_list) {
-         out = s_modifier_inactive_list;
-         s_modifier_inactive_list = out->gc_ptr;
-      }
-      else
-         out = new modifier_block;
-
-      *out = newoutbar->match;
-      out->packed_next_conc_or_subcall = (modifier_block *) 0;
-      out->packed_secondary_subcall = (modifier_block *) 0;
-      out->gc_ptr = s_modifier_active_list;
-      s_modifier_active_list = out;
-      tails->packed_next_conc_or_subcall = out;
-      copy_sublist(newoutbar, out);
-   }
-
-   if (outbar->real_secondary_subcall) {
-      modifier_block *out;
-      const match_result *newoutbar = outbar->real_secondary_subcall;
-
-      if (s_modifier_inactive_list) {
-         out = s_modifier_inactive_list;
-         s_modifier_inactive_list = out->gc_ptr;
-      }
-      else
-         out = new modifier_block;
-
-      *out = newoutbar->match;
-      out->packed_next_conc_or_subcall = (modifier_block *) 0;
-      out->packed_secondary_subcall = (modifier_block *) 0;
-      out->gc_ptr = s_modifier_active_list;
-      s_modifier_active_list = out;
-      tails->packed_secondary_subcall = out;
-      copy_sublist(newoutbar, out);
-   }
+   clone_sublist_branch(outbar->real_next_subcall, tails->packed_next_conc_or_subcall);
+   clone_sublist_branch(outbar->real_secondary_subcall, tails->packed_secondary_subcall);
 }
 
 
@@ -651,6 +614,111 @@ void matcher_class::do_accelerator_spec(Cstring inputline, bool is_accelerator)
 
 
 
+namespace {
+
+bool hash_unique_bucket(index_list &buckets, Cstring name)
+{
+   int bucket;
+   if (!get_hash(name, &bucket)) return false;
+
+   for (int j = 0; j < buckets.the_list_size; j++) {
+      if (buckets.the_list[j] == bucket) return true;
+   }
+
+   buckets.add_one(bucket);
+   return true;
+}
+
+void hash_to_list(index_list *hashers, const index_list &buckets, int item)
+{
+   for (int j = 0; j < buckets.the_list_size; j++)
+      hashers[buckets.the_list[j]].add_one(item);
+}
+
+void hash_by_name_or_all(index_list *hashers, Cstring name, int item)
+{
+   int bucket;
+   if (get_hash(name, &bucket)) {
+      hashers[bucket].add_one(item);
+      return;
+   }
+
+   // If we get here, this item needs to be put into the extra bucket at the end,
+   // and also into EVERY OTHER BUCKET!!!!
+   for (bucket = 0; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1; bucket++)
+      hashers[bucket].add_one(item);
+}
+
+void hash_call_entry(index_list *call_hashers,
+                     Cstring name,
+                     int call_index,
+                     const index_list &selector_hasher,
+                     const index_list &tagger_hasher)
+{
+   int bucket;
+
+   for (;;) {
+      if (name[0] == '@') {
+         switch (name[1]) {
+         case '6': case 'k': case 'K': case 'V':
+            // This is a call like "<anyone> run".  Put it into every bucket
+            // that could match a selector.
+            hash_to_list(call_hashers, selector_hasher, call_index);
+            return;
+         case 'v': case 'w': case 'x': case 'y':
+            // This is a call like "<atc> your neighbor".
+            // Put it into every bucket that could match a tagger.
+            hash_to_list(call_hashers, tagger_hasher, call_index);
+            return;
+         case '0': case 'T': case 'm':
+            // We act as though any string starting with "[" hashes to BRACKET_HASH.
+            call_hashers[matcher_class::BRACKET_HASH].add_one(call_index);
+            return;
+         case 'e':
+            // If this is "@e", hash it to both "left" and to whatever naturally follows.
+            (void) get_hash("left", &bucket);
+            call_hashers[bucket].add_one(call_index);
+            name += 2;
+            continue;
+         default:
+            if (!get_escape_string(name[1])) {
+               // If this escape is something like "@2", as in "@2scoot and plenty",
+               // ignore it.  Hash it under "scoot and plenty".
+               name += 2;
+               continue;
+            }
+            break;
+         }
+      }
+
+      hash_by_name_or_all(call_hashers, name, call_index);
+      return;
+   }
+}
+
+void hash_concept_list(const index_list &concepts,
+                       index_list *hashers,
+                       const index_list &selector_hasher)
+{
+   for (int i = 0; i < concepts.the_list_size; i++) {
+      int the_item = concepts.the_list[i];
+      Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
+
+      if (name[0] == '@' &&
+          (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
+         // This is a call like "<anyone> run".  Put it into every bucket
+         // that could match a selector.
+         hash_to_list(hashers, selector_hasher, the_item);
+         continue;
+      }
+
+      hash_by_name_or_all(hashers, name, the_item);
+   }
+}
+
+} // namespace
+
+
 /* Call MATCHER_INITIALIZE first.
    This function sets up the concept list.  The concepts are found
    in the external array concept_descriptor_table.  For each
@@ -700,208 +768,74 @@ void matcher_initialize()
 
    // Initialize the hash buckets for selectors, concepts, and calls.
 
-   int bucket;
    uint32_t ku;
 
    // First, do the selectors.  Before that, be sure "<anyone>" is hashed.
    // These list all the buckets that selectors can go to.
 
-   if (!get_hash("<an", &bucket))
+   index_list selector_hasher;
+   if (!hash_unique_bucket(selector_hasher, "<an"))
       gg77->iob88.fatal_error_exit(2, "Can't hash selector base");
 
-   index_list selector_hasher;
-   selector_hasher.add_one(bucket);
-
    for (i=1; i<selector_INVISIBLE_START; i++) {
-      if (selector_list[i].name[0] == '@' && (selector_list[i].name[1] == 'k' || selector_list[i].name[1] == '6')) {
-         // This is a selector like "<anyone>-based triangles".  Put it into every bucket
-         // that could match a selector.  Is any of this stuff necessary?
+      if (selector_list[i].name[0] == '@' &&
+          (selector_list[i].name[1] == 'k' || selector_list[i].name[1] == '6')) {
+         // Wildcard selectors like "<anyone>-based triangles" are unhashable (and their
+         // sing_name is too); skip hashing both forms.
          continue;
       }
 
-      if (!get_hash(selector_list[i].name, &bucket)) {
+      if (!hash_unique_bucket(selector_hasher, selector_list[i].name)) {
          char errbuf[255];
          sprintf(errbuf, "Can't hash selector %d - 1!", i);
          gg77->iob88.fatal_error_exit(2, errbuf);
       }
 
-      // See if this bucket is already accounted for.
-
-      for (j=0; j<selector_hasher.the_list_size; j++) {
-         if (selector_hasher.the_list[j] == bucket) goto already_in1;
-      }
-
-      selector_hasher.add_one(bucket);
-
-      // Now do it again for the singular names.
-
-   already_in1:
-
-      if (selector_list[i].sing_name[0] == '@' && (selector_list[i].sing_name[1] == 'k')) {
-         // This is a selector like "<anyone>-based triangle".  Put it into every bucket
-         // that could match a selector.  Is any of this stuff necessary?
+      // Also skip wildcard singular names such as "<anyone>-based triangle".
+      if (selector_list[i].sing_name[0] == '@' && selector_list[i].sing_name[1] == 'k')
          continue;
-      }
 
-      if (!get_hash(selector_list[i].sing_name, &bucket)) {
+      if (!hash_unique_bucket(selector_hasher, selector_list[i].sing_name)) {
          char errbuf[255];
          sprintf(errbuf, "Can't hash selector %d - 2!", i);
          gg77->iob88.fatal_error_exit(2, errbuf);
       }
-
-      for (j=0; j<selector_hasher.the_list_size; j++) {
-         if (selector_hasher.the_list[j] == bucket) goto already_in2;
-      }
-
-      selector_hasher.add_one(bucket);
-
-   already_in2: ;
    }
 
    // Next, do the taggers.  Before that, be sure "<atc>" is hashed.
    // These list all the buckets that taggers can go to.
 
-   if (!get_hash("<at", &bucket))
-      gg77->iob88.fatal_error_exit(2, "Can't hash tagger base!");
-
    index_list tagger_hasher;
-   tagger_hasher.add_one(bucket);
+   if (!hash_unique_bucket(tagger_hasher, "<at"))
+      gg77->iob88.fatal_error_exit(2, "Can't hash tagger base!");
 
    for (i=0; i<NUM_TAGGER_CLASSES; i++) {
       for (ku=0; ku<number_of_taggers[i]; ku++) {
          // Some taggers ("@6 start vertical tag") can't be hashed because
          // of the at sign.  That's OK.
-         if (get_call_name(tagger_calls[i][ku])[0] != '@') {
-            if (!get_hash(get_call_name(tagger_calls[i][ku]), &bucket)) {
-               char errbuf[255];
-               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-               gg77->iob88.fatal_error_exit(2, errbuf);
-            }
+         Cstring tagger_name = get_call_name(tagger_calls[i][ku]);
+         if (tagger_name[0] != '@' && !hash_unique_bucket(tagger_hasher, tagger_name)) {
+            char errbuf[255];
+            sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
+            gg77->iob88.fatal_error_exit(2, errbuf);
          }
-
-         for (j=0; j<tagger_hasher.the_list_size; j++) {
-            if (tagger_hasher.the_list[j] == bucket) goto already_in3;
-         }
-
-         tagger_hasher.add_one(bucket);
-
-      already_in3: ;
       }
    }
 
    /* Now do the calls. */
 
    for (i=0; i<number_of_calls[call_list_any]; i++) {
-      Cstring name = get_call_name(main_call_lists[call_list_any][i]);
-
-   doitagain:
-
-      if (name[0] == '@') {
-         switch (name[1]) {
-         case '6': case 'k': case 'K': case 'V':
-            // This is a call like "<anyone> run".  Put it into every bucket
-            // that could match a selector.
-
-            for (j=0 ; j<selector_hasher.the_list_size ; j++)
-               hash_me(selector_hasher.the_list[j], i);
-
-            continue;
-         case 'v': case 'w': case 'x': case 'y':
-            // This is a call like "<atc> your neighbor".
-            // Put it into every bucket that could match a tagger.
-
-            for (j=0 ; j<tagger_hasher.the_list_size ; j++)
-               hash_me(tagger_hasher.the_list[j], i);
-
-            continue;
-         case '0': case 'T': case 'm':
-            // We act as though any string starting with "[" hashes to BRACKET_HASH.
-            hash_me(matcher_class::BRACKET_HASH, i);
-            continue;
-         case 'e':
-            // If this is "@e", hash it to both "left" and to whatever naturally follows.
-            (void) get_hash("left", &bucket);
-            hash_me(bucket, i);
-            name += 2;
-            goto doitagain;
-         default:
-            if (!get_escape_string(name[1])) {
-               // If this escape is something like "@2", as in "@2scoot and plenty",
-               // ignore it.  Hash it under "scoot and plenty".
-               name += 2;
-               goto doitagain;
-            }
-            break;
-         }
-      }
-
-      if (get_hash(name, &bucket)) {
-         hash_me(bucket, i);
-         continue;
-      }
-
-      // If we get here, this call needs to be put into the extra bucket at the end,
-      // and also into EVERY OTHER BUCKET!!!!
-      for (bucket=0 ; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1 ; bucket++)
-         hash_me(bucket, i);
+      hash_call_entry(gg77->matcher_p->call_hashers,
+                      get_call_name(main_call_lists[call_list_any][i]), i,
+                      selector_hasher, tagger_hasher);
    }
 
-   // Now do the concepts from the full concept list.
+   // Now do the concepts from the full concept list, then the "level concepts".
 
-   for (i=0; i<gg77->matcher_p->m_concept_list.the_list_size; i++) {
-      int the_item = gg77->matcher_p->m_concept_list.the_list[i];
-      Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
-
-      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
-         // This is a call like "<anyone> run".  Put it into every bucket
-         // that could match a selector.
-
-         for (j=0 ; j<selector_hasher.the_list_size ; j++) {
-            bucket = selector_hasher.the_list[j];
-            gg77->matcher_p->conc_hashers[bucket].add_one(the_item);
-         }
-         continue;
-      }
-
-      if (get_hash(name, &bucket)) {
-         gg77->matcher_p->conc_hashers[bucket].add_one(the_item);
-         continue;
-      }
-
-      // If we get here, this concept needs to be put into the extra bucket at the end,
-      // and also into EVERY OTHER BUCKET!!!!
-      for (bucket=0 ; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
-         gg77->matcher_p->conc_hashers[bucket].add_one(the_item);
-      }
-   }
-
-   // Now do the "level concepts".
-
-   for (i=0; i<gg77->matcher_p->m_level_concept_list.the_list_size; i++) {
-      int the_item = gg77->matcher_p->m_level_concept_list.the_list[i];
-      Cstring name = get_concept_name(access_concept_descriptor_table(the_item));
-
-      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
-         // This is a call like "<anyone> run".  Put it into every bucket
-         // that could match a selector.
-
-         for (j=0 ; j<selector_hasher.the_list_size ; j++) {
-            bucket = selector_hasher.the_list[j];
-            gg77->matcher_p->conclvl_hashers[bucket].add_one(the_item);
-         }
-         continue;
-      }
-      else if (get_hash(name, &bucket)) {
-         gg77->matcher_p->conclvl_hashers[bucket].add_one(the_item);
-         continue;
-      }
-
-      // If we get here, this concept needs to be put into the extra bucket at the end,
-      // and also into EVERY OTHER BUCKET!!!!
-      for (bucket=0 ; bucket < matcher_class::NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
-         gg77->matcher_p->conclvl_hashers[bucket].add_one(the_item);
-      }
-   }
+   hash_concept_list(gg77->matcher_p->m_concept_list,
+                     gg77->matcher_p->conc_hashers, selector_hasher);
+   hash_concept_list(gg77->matcher_p->m_level_concept_list,
+                     gg77->matcher_p->conclvl_hashers, selector_hasher);
 }
 
 
@@ -1070,29 +1004,23 @@ void matcher_class::record_a_match()
    if (!m_showing) {
       char *s1 = m_echo_stuff;
       const char *s2 = m_full_extension;
+      bool first_match = (m_match_count == 0);
 
-      if (m_match_count == 0) {
-         // This is the first match.  Set m_echo_stuff to the
-         // full extension that we have.  Count brackets.
-         for ( ; ; s1++,s2++) {
+      for ( ; ; s1++, s2++) {
+         if (first_match) {
             *s1 = *s2;
             if (!*s1) break;
-            else if (*s1 == '[') m_extended_bracket_depth++;
-            else if (*s1 == ']') m_extended_bracket_depth--;
          }
-      }
-      else {
-         // Shorten m_echo_stuff to the maximal common prefix.
-         // Count brackets.
-         for ( ; ; s1++,s2++) {
+         else {
             if (!*s1) break;
-            else if (*s1 != *s2) {
+            if (*s1 != *s2) {
                *s1 = 0;
                break;
             }
-            else if (*s1 == '[') m_extended_bracket_depth++;
-            else if (*s1 == ']') m_extended_bracket_depth--;
          }
+
+         if (*s1 == '[') m_extended_bracket_depth++;
+         else if (*s1 == ']') m_extended_bracket_depth--;
       }
    }
 
@@ -1274,15 +1202,9 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
             pat1 = pat2->car;
             pat2_concept = pat2->special_concept;
 
-            if (pat2->anythingers) {
-               if (!user || !user[0]) goto yesyes;
-               if (user[0] != ']') goto nono;
-               if (foobar(&user[1])) goto yesyes;
-               else goto nono;
-
-            yesyes:
+            if (pat2->anythingers &&
+                (!user || !user[0] || (user[0] == ']' && matches_ers_suffix(&user[1])))) {
                pat1 = "] er's";
-            nono: ;
             }
 
             pat2 = pat2->cdr;
@@ -1368,35 +1290,40 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
                Cstring ep = get_escape_string(key);
 
                if (u == '<') {
-                  if (ep && *ep) {
-                     int i;
+                  if (!ep || !*ep)
+                     break;
 
-                     for (i=1; ep[i]; i++) {
-                        if (!user[i-1]) {
-                           while (ep[i]) { m_full_extension[patxi++] = ep[i] ; i++; }
-                           user = 0;
-                           if (key == 'T') goto yes;
-                           goto cont;
-                        }
+                  bool matched = true;
+                  bool need_ers = false;
 
-                        if (user[i-1] != tolower(ep[i])) goto getout;
+                  for (int i = 1; ep[i]; i++) {
+                     if (!user[i-1]) {
+                        while (ep[i]) { m_full_extension[patxi++] = ep[i++]; }
+                        user = 0;
+                        need_ers = (key == 'T');
+                        break;
                      }
 
-                     user += ::strlen((char *) ep)-1;
+                     if (user[i-1] != tolower(ep[i])) {
+                        matched = false;
+                        break;
+                     }
+                  }
 
-                     if (key == 'T' && (!user || foobar(user))) goto yes;
-                     goto cont;
+                  if (!matched)
+                     break;
 
-                  yes:
+                  if (user) {
+                     user += ::strlen((char *) ep) - 1;
+                     need_ers = (key == 'T' && matches_ers_suffix(user));
+                  }
+
+                  if (need_ers) {
                      at_t_thing.car = pat1;
                      pat1 = " er's";
                      at_t_thing.cdr = pat2;
                      pat2 = &at_t_thing;
-
-                  cont: ;
                   }
-                  else
-                     break;
                }
                else {
                   if (ep && *ep)
@@ -1460,16 +1387,6 @@ void matcher_class::match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2,
 }
 
 
-#define SPIFFY_PARSER
-
-#ifdef SPIFFY_PARSER
-static int spiffy_parser = 1;
-#else
-static int spiffy_parser = 0;
-#endif
-
-
-
 /*
  * Given a pointer to an opening bracket '[', scans forward and returns
  * a pointer to the matching closing bracket ']', or NULL if not found.
@@ -1489,6 +1406,22 @@ static const char *find_matching_close_bracket(const char *open_bracket)
       p++;
    }
    return (const char *) 0;
+}
+
+
+
+// Starting with `open_depth` unmatched '[' brackets before `ext`, returns
+// the index in `ext` just past the ']' that closes them (or the index of
+// the NUL terminator if `ext` ends first).
+static int find_closing_bracket_in_extension(const char *ext, int open_depth)
+{
+   int idx = 0;
+   while (ext[idx] && open_depth != 0) {
+      if (ext[idx] == '[') open_depth++;
+      else if (ext[idx] == ']') open_depth--;
+      idx++;
+   }
+   return idx;
 }
 
 
@@ -1520,10 +1453,10 @@ static bool call_suffix_mismatches_after_bracket(Cstring user, Cstring call_name
    const char *after = close_bracket + 1;
    const char *pat = call_name + 2;
 
-   // For @T, match_suffix_2 splices in " er's" after ']' when foobar(after)
+   // For @T, match_suffix_2 splices in " er's" after ']' when matches_ers_suffix(after)
    // is true.  Advance past that prefix in after (or return false if the
    // user input ends while still typing it).
-   if (call_name[1] == 'T' && foobar(after)) {
+   if (call_name[1] == 'T' && matches_ers_suffix(after)) {
       const char *ers = " er's";
       while (*ers && *after) {
          if (*ers == *after) {
@@ -1687,7 +1620,7 @@ void matcher_class::scan_concepts_and_calls(
          // will yield to "6x2" + "acey deucey", making it possible to parse "echo 6x2 acey deucey".
          m_current_result->yield_depth = ((get_yield_if_ambiguous_flag(this_call)) ? new_depth+2 : new_depth);
 
-         bool is_subcall_cand = (spiffy_parser && get_call_name(this_call)[0] == '@' &&
+         bool is_subcall_cand = (get_call_name(this_call)[0] == '@' &&
                                  (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T'));
 
          if (is_subcall_cand && got_aborted_subcall) {
@@ -1711,7 +1644,7 @@ void matcher_class::scan_concepts_and_calls(
             // subcall_after_user.
             p2b.car += 2;
             if (subcall_after_user && get_call_name(this_call)[1] == 'T' &&
-                foobar(subcall_after_user)) {
+                matches_ers_suffix(subcall_after_user)) {
                pat2_block ers_block(" er's", &p2b);
                match_suffix_2(subcall_after_user, "", &ers_block, patxi+my_patxi);
             }
@@ -1724,7 +1657,7 @@ void matcher_class::scan_concepts_and_calls(
          }
 
          // See if any new matches have come up that can allow us to curtail the scan.
-         if (spiffy_parser && m_match_count > matches_as_seen_by_me) {
+         if (m_match_count > matches_as_seen_by_me) {
             if (m_only_extension && is_subcall_cand &&
                 (m_user_input[0] == '[' ||
                  (m_can_cache_completed_subcalls && (firstchar[0] == '[' || firstchar[0] == ' ')))) {
@@ -1751,17 +1684,9 @@ void matcher_class::scan_concepts_and_calls(
                      // Case 1: User input stopped in the middle of the subcall, so the
                      // closing ']' is in m_full_extension.
                      if (m_user_bracket_depth-local_result.recursion_depth > 0) {
-                        // Find out where, in the full extension, the bracket count
-                        // went down to zero.
-                        int jj = m_user_bracket_depth-local_result.recursion_depth;
-
-                        for (my_patxi = 0 ; ; my_patxi++) {
-                           if (!m_full_extension[my_patxi] || jj == 0) break;
-                           else if (m_full_extension[my_patxi] == '[') jj++;
-                           else if (m_full_extension[my_patxi] == ']') jj--;
-                        }
-                        // Now my_patxi tells where the close bracket was.
-
+                        my_patxi = find_closing_bracket_in_extension(
+                           m_full_extension,
+                           m_user_bracket_depth - local_result.recursion_depth);
                         subcall_after_user = (const char *) 0;
                         got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
                      }
@@ -1798,6 +1723,50 @@ void matcher_class::scan_concepts_and_calls(
 
 
 
+static inline void skip_embedded_pattern(Cstring &pat)
+{
+   while (*pat++ != '@') ;
+   pat++;
+}
+
+static inline Cstring extract_embedded_pattern(Cstring &pat, char *buf)
+{
+   char *out = buf;
+   while ((*out++ = *pat++) != '@') ;
+   pat++;
+   out[-1] = '\0';
+   return buf;
+}
+
+
+
+void matcher_class::match_concept_prefix_wildcard(
+   Cstring user,
+   Cstring pattern,
+   pat2_block &p2b,
+   int patxi,
+   useful_concept_enum uc,
+   Cstring pat)
+{
+   match_result *saved_cross_ptr = m_current_result;
+   match_result saved_cross_result = *m_current_result;
+
+   m_current_result->match.kind = ui_concept_select;
+   m_current_result->match.call_conc_options.initialize();
+   m_current_result->match.concept_ptr =
+      access_concept_descriptor_table(useful_concept_indices[uc]);
+   m_current_result->real_next_subcall = &saved_cross_result;
+   m_current_result->indent = true;
+   p2b.car = pat;
+
+   m_current_result = &saved_cross_result;
+   match_suffix_2(user, pattern, &p2b, patxi);
+   m_current_result = saved_cross_ptr;
+   *m_current_result = saved_cross_result;
+}
+
+
+
 /*
  * Match_wildcard tests for and handles pattern suffixes that begin with
  * a wildcard such as "<anyone>".  A wildcard is handled only if there is
@@ -1812,13 +1781,8 @@ void matcher_class::match_wildcard(
    const concept_descriptor *special)
 {
    Cstring prefix;
-   Cstring *number_table;
    int i;
    uint32_t iu;
-   char crossname[80];
-   char *crossptr;
-   int concidx;
-   Cstring pattern;
    char key = *pat++;
    pat2_block p2b(pat, pat2);
    p2b.special_concept = special;
@@ -1935,10 +1899,8 @@ void matcher_class::match_wildcard(
                do {
                   c = *fromptr++;
                   if (c == '@') {
-                     if (*fromptr++ == 'O') {
-                        while (*fromptr++ != '@') ;
-                        fromptr++;
-                     }
+                     if (*fromptr++ == 'O')
+                        skip_embedded_pattern(fromptr);
                   }
                   else
                      *toptr++ = c;
@@ -1952,14 +1914,24 @@ void matcher_class::match_wildcard(
             return;
          }
          break;
-      case '9':
-         if (*user < '0' || *user > '9') return;
-         number_table = cardinals;
-         goto do_number_stuff;
-      case 'u':
-         if (*user < '0' || *user > '9') return;
-         number_table = ordinals;
-         goto do_number_stuff;
+      case '9': case 'u':
+         if (*user >= '0' && *user <= '9') {
+            Cstring *number_table = (key == '9') ? cardinals : ordinals;
+            int save_howmanynumbers = m_current_result->match.call_conc_options.howmanynumbers;
+            uint32_t save_number_fields = m_current_result->match.call_conc_options.number_fields;
+
+            m_current_result->match.call_conc_options.howmanynumbers++;
+
+            for (i=0; (prefix = number_table[i]); i++) {
+               match_suffix_2(user, prefix, &p2b, patxi);
+               m_current_result->match.call_conc_options.number_fields +=
+                  1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
+            }
+
+            m_current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
+            m_current_result->match.call_conc_options.number_fields = save_number_fields;
+         }
+         return;
       case 'a': case 'b': case 'B': case 'D':
          if ((*user >= '0' && *user <= '9') ||
              *user == 'q' || *user == 'h' ||
@@ -2035,54 +2007,25 @@ void matcher_class::match_wildcard(
       }
 
       return;
-   case 'j':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_cross];
-      goto do_cross_stuff;
-   case 'C':
-      pattern = " cross";
-      concidx = useful_concept_indices[UC_cross];
-      goto do_cross_stuff;
-   case 'J':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_magic];
-      goto do_cross_stuff;
-   case 'Q':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_grand];
-      goto do_cross_stuff;
-   case 'M':
-      concidx = useful_concept_indices[UC_magic];
-      pattern = " magic";
-      goto do_cross_stuff;
-   case 'G':
-      concidx = useful_concept_indices[UC_grand];
-      pattern = " grand";
-      goto do_cross_stuff;
-   case 'E':
-      crossptr = crossname;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      pattern = crossname;
-      concidx = useful_concept_indices[UC_intlk];
-      goto do_cross_stuff;
+   case 'j': case 'J': case 'Q': case 'E':
+      {
+         char crossname[80];
+         Cstring pattern = extract_embedded_pattern(pat, crossname);
+         useful_concept_enum uc =
+            (key == 'j') ? UC_cross :
+            (key == 'J') ? UC_magic :
+            (key == 'Q') ? UC_grand : UC_intlk;
+         match_concept_prefix_wildcard(user, pattern, p2b, patxi, uc, pat);
+      }
+      return;
+   case 'C': case 'M': case 'G':
+      {
+         Cstring pattern = (key == 'C') ? " cross" : (key == 'M') ? " magic" : " grand";
+         useful_concept_enum uc =
+            (key == 'C') ? UC_cross : (key == 'M') ? UC_magic : UC_grand;
+         match_concept_prefix_wildcard(user, pattern, p2b, patxi, uc, pat);
+      }
+      return;
    case 'I':
       {
          char *p = m_full_extension;
@@ -2095,60 +2038,17 @@ void matcher_class::match_wildcard(
             if (p[idx] != "a "[i]) { fixing_an_a = false; break; }
          }
 
-         if (fixing_an_a || (user && user[-1] == 'a' && user[-2] == ' '))
-            pattern = "n interlocked";
-         else
-            pattern = " interlocked";
+         Cstring pattern = (fixing_an_a || (user && user[-1] == 'a' && user[-2] == ' '))
+            ? "n interlocked"
+            : " interlocked";
 
-         concidx = useful_concept_indices[UC_intlk];
+         match_concept_prefix_wildcard(user, pattern, p2b, patxi, UC_intlk, pat);
       }
-      goto do_cross_stuff;
-   case 'e':
-      while (*pat++ != '@');
-      pat++;
-      pattern = "left";
-      concidx = useful_concept_indices[UC_left];
-      goto do_cross_stuff;
-   }
-
-   return;
-
-   do_number_stuff:
-
-   {
-      int save_howmanynumbers = m_current_result->match.call_conc_options.howmanynumbers;
-      uint32_t save_number_fields = m_current_result->match.call_conc_options.number_fields;
-
-      m_current_result->match.call_conc_options.howmanynumbers++;
-
-      for (i=0 ; (prefix = number_table[i]) ; i++) {
-         match_suffix_2(user, prefix, &p2b, patxi);
-         m_current_result->match.call_conc_options.number_fields +=
-            1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
-      }
-
-      m_current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
-      m_current_result->match.call_conc_options.number_fields = save_number_fields;
       return;
-   }
-
- do_cross_stuff:
-
-   {
-      match_result *saved_cross_ptr = m_current_result;
-      match_result saved_cross_result = *m_current_result;
-
-      m_current_result->match.kind = ui_concept_select;
-      m_current_result->match.call_conc_options.initialize();
-      m_current_result->match.concept_ptr = access_concept_descriptor_table(concidx);
-      m_current_result->real_next_subcall = &saved_cross_result;
-      m_current_result->indent = true;
-      p2b.car = pat;
-
-      m_current_result = &saved_cross_result;
-      match_suffix_2(user, pattern, &p2b, patxi);
-      m_current_result = saved_cross_ptr;
-      *m_current_result = saved_cross_result;
+   case 'e':
+      skip_embedded_pattern(pat);
+      match_concept_prefix_wildcard(user, "left", p2b, patxi, UC_left, pat);
+      return;
    }
 }
 
@@ -2176,17 +2076,7 @@ void matcher_class::search_menu(uims_reply_kind kind)
    char uch = m_user_input[0];
    bool input_is_null = uch == '\0' && !m_showing;
 
-   m_current_result = &m_active_result;
-
-   m_current_result->recursion_depth = 0;
-   m_current_result->valid = true;
-   m_current_result->exact = false;
-   m_current_result->match.kind = kind;
-   m_current_result->match.call_conc_options.initialize();
-   m_current_result->indent = false;
-   m_current_result->real_next_subcall = (match_result *) 0;
-   m_current_result->real_secondary_subcall = (match_result *) 0;
-   m_current_result->yield_depth = 0;
+   reset_active_result(kind);
 
    if (kind == ui_call_select) {
       menu_length = number_of_calls[m_call_menu];
@@ -2217,13 +2107,14 @@ void matcher_class::search_menu(uims_reply_kind kind)
             //    table for each of them is unwieldy.  At deeper levels,
             //    there is just the "call_list_any" menu to deal with, and
             //    that one is hashed.
-            char pch = get_call_name(this_call)[0];
+            Cstring call_name = get_call_name(this_call);
+            char pch = call_name[0];
 
             if (!m_showing &&
                 uch != pch &&
                 (pch > 'Z' || pch < 'A' || uch != pch+'a'-'A') &&
                 ((pch != '@') ||
-                 ((get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T') && uch != '[' && uch != '<')))
+                 ((call_name[1] == '0' || call_name[1] == 'T') && uch != '[' && uch != '<')))
                continue;
 
             parse_state.call_list_to_use = (call_list_kind) m_call_menu;
@@ -2231,70 +2122,45 @@ void matcher_class::search_menu(uims_reply_kind kind)
             m_active_result.yield_depth = (get_yield_if_ambiguous_flag(this_call)) ? 1 : 0;
             matches_as_seen_by_me = m_match_count;
 
-            pat2_block p2b(get_call_name(this_call));
+            pat2_block p2b(call_name);
+            bool is_subcall_cand = (call_name[0] == '@' &&
+                                    (call_name[1] == '0' || call_name[1] == 'T'));
 
-            if (spiffy_parser && get_call_name(this_call)[0] == '@' && (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T')) {
-               if (got_aborted_subcall) {
-                  // We have seen another "@0" call after having seen one whose subcall
-                  // was incomplete.  There can't possibly be any benefit from parsing
-                  // further such calls.
-                  m_match_count++;
-                  continue;
-               }
-               else if (got_matched_subcall) {
-                  p2b.car += 2;    // Skip over the "@0".
-                  match_suffix_2((Cstring) 0, "", &p2b, my_patxi);
-               }
-               else {
-                  match_suffix_2(m_user_input, "", &p2b, 0);
-               }
+            if (is_subcall_cand && got_aborted_subcall) {
+               // We have seen another "@0" call after having seen one whose subcall
+               // was incomplete.  There can't possibly be any benefit from parsing
+               // further such calls.
+               m_match_count++;
+               continue;
+            }
+            else if (is_subcall_cand && got_matched_subcall) {
+               p2b.car += 2;    // Skip over the "@0".
+               match_suffix_2((Cstring) 0, "", &p2b, my_patxi);
             }
             else {
                match_suffix_2(m_user_input, "", &p2b, 0);
             }
 
             // See if any new matches have come up that can allow us to curtail the scan.
-            if (spiffy_parser && m_match_count > matches_as_seen_by_me) {
-               if (m_only_extension &&
-                   get_call_name(this_call)[0] == '@' &&
-                   (get_call_name(this_call)[1] == '0' || get_call_name(this_call)[1] == 'T') &&
-                   uch == '[') {
-                  int full_bracket_depth = m_user_bracket_depth + m_extended_bracket_depth;
-                  if (0 < full_bracket_depth) {
-                     // The subcall was aborted.  Processing future "@0" calls
-                     // can't possibly get nontrivial results, other than to bump
-                     // the match count.
-                     if (!m_verify && !m_showing &&
-                         m_final_result.match.packed_next_conc_or_subcall &&
-                         !m_final_result.match.packed_secondary_subcall)
-                        got_aborted_subcall = true;
-                  }
-                  else if (!got_matched_subcall) {
-                     // The subcall was completely parsed.
-                     // We should take the subcall (if there is one), and simply
-                     // plug it in, without parsing it again, for all future "@0" calls.
-                     if (!m_verify && !m_showing &&
-                         m_final_result.match.packed_next_conc_or_subcall &&
-                         !m_final_result.match.packed_secondary_subcall) {
-
-                        // Let's try this.  We're only going to look at stuff for which
-                        // the user input stopped in the middle of the subcall, for now.
-                        if (m_user_bracket_depth > 0) {
-                           // Find out where, in the full extension, the bracket count
-                           // went down to zero.
-                           int jj = m_user_bracket_depth;
-
-                           for (my_patxi = 0 ; ; my_patxi++) {
-                              if (!m_full_extension[my_patxi] || jj == 0) break;
-                              else if (m_full_extension[my_patxi] == '[') jj++;
-                              else if (m_full_extension[my_patxi] == ']') jj--;
-                           }
-                           // Now my_patxi tells where the close bracket was.
-
-                           got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
-                        }
-                     }
-                  }
+            if (m_match_count > matches_as_seen_by_me &&
+                m_only_extension && is_subcall_cand && uch == '[' &&
+                !m_verify && !m_showing &&
+                m_final_result.match.packed_next_conc_or_subcall &&
+                !m_final_result.match.packed_secondary_subcall) {
+               int full_bracket_depth = m_user_bracket_depth + m_extended_bracket_depth;
+               if (0 < full_bracket_depth) {
+                  // The subcall was aborted.  Processing future "@0" calls
+                  // can't possibly get nontrivial results, other than to bump
+                  // the match count.
+                  got_aborted_subcall = true;
+               }
+               else if (!got_matched_subcall && m_user_bracket_depth > 0) {
+                  // The subcall was completely parsed.
+                  // Take the subcall and simply plug it in, without parsing it again,
+                  // for all future "@0" calls.  We only do this when the user input
+                  // stopped in the middle of the subcall (so ']' is in m_full_extension).
+                  my_patxi = find_closing_bracket_in_extension(m_full_extension, m_user_bracket_depth);
+                  got_matched_subcall = m_final_result.match.packed_next_conc_or_subcall;
                }
             }
          }
